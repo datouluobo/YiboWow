@@ -1,0 +1,16 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r YiboQuestBlocker
+## Notes: 任务屏蔽管理器 - 自动拒绝指定任务
+## Author: Reasonix
+## Version: 1.2.2
+## SavedVariables: YiboQuestBlockerDB
+## LoadOnDemand: 0
+
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+Libs\YiboBrokerMinimap\YiboBrokerMinimap.lua
+
+YiboQuestBlocker_Core.lua
+YiboQuestBlocker_UI.lua

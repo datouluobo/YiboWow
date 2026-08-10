@@ -1,0 +1,13 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r YiboAltoBoss
+## Notes: Boss 击杀与位面观察总览
+## Author: YiboSoft
+## Version: 2.0.0
+## SavedVariables: YiboAltoBossDB
+## RequiredDeps: YiboCore
+## LoadOnDemand: 0
+
+Core.lua
+UI.lua
+Settings.lua
+CoreIntegration.lua
