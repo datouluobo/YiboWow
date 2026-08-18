@@ -3,8 +3,8 @@ local ADDON_NAME = ...
 local Addon = _G.YiboLegendary or {}
 _G.YiboLegendary = Addon
 Addon.NAME = "YiboLegendary"
-Addon.VERSION = "0.2.2"
-Addon.REQUIRED_CORE_API = 2
+Addon.VERSION = "0.3"
+Addon.REQUIRED_CORE_API = 3
 
 local DEFAULTS = {
     schemaVersion = 1,
@@ -59,12 +59,12 @@ function Addon:GetCharacterStore()
     return store, character
 end
 
-function Addon:Refresh(reason)
+function Addon:Refresh(reason, currencyID, quantity, quantityChange, quantityGain)
     local store, character = self:GetCharacterStore()
     if not store then
         return
     end
-    local valorProgress = self.Data:TrackValorProgress(store)
+    local valorProgress = self.Data:TrackValorProgress(store, currencyID, quantity, quantityChange, quantityGain)
     store.snapshot = self.Data:BuildSnapshot(character, self.db.settings.phaseAvailability, valorProgress)
     store.snapshot.updatedAt = self:GetTimestamp()
     store.snapshot.reason = reason
@@ -101,6 +101,23 @@ function Addon:Initialize()
     end
     CopyDefaults(self.db, DEFAULTS)
     self.Core:RegisterAddon(self.NAME, { version = self.VERSION, requiredAPI = self.REQUIRED_CORE_API })
+    if self.Core.CharacterCleanup then
+        local cleanupRegistered, cleanupError = self.Core.CharacterCleanup:RegisterOwner(self.NAME, {
+            Inspect = function(character)
+                local hasData = type(Addon.db.byCharacter[character.id]) == "table"
+                return { hasData = hasData, label = "传说之路角色进度", detail = hasData and "已有任务进度快照" or "无角色缓存" }
+            end,
+            Delete = function(character)
+                Addon.db.byCharacter[character.id] = nil
+                if Addon.UI then Addon.UI:Refresh() end
+                return true
+            end,
+        })
+        if not cleanupRegistered then
+            self:Print("角色缓存清理接入失败：" .. tostring(cleanupError))
+            return
+        end
+    end
     self.initialized = true
     self.Probe:Run()
     self:Refresh("initialize")
@@ -123,7 +140,7 @@ frame:SetScript("OnEvent", function(_, event, arg1)
     end
     if Addon.initialized then
         Addon.Probe:Run()
-        Addon:Refresh(event)
+        Addon:Refresh(event, arg1, arg2, arg3, arg4)
     end
 end)
 

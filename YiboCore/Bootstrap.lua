@@ -4,8 +4,8 @@ local Core = _G.YiboCore or {}
 _G.YiboCore = Core
 
 Core.NAME = "YiboCore"
-Core.VERSION = "0.2.0"
-Core.API_VERSION = 2
+Core.VERSION = "0.5.1"
+Core.API_VERSION = 4
 Core._private = Core._private or {}
 Core._private.addonName = ADDON_NAME or Core.NAME
 Core._private.initialized = false

@@ -1,9 +1,10 @@
 -- ============================================================================
 -- YiboQuestBlocker_UI.lua
--- NDui 风格窗口 + 网格 + 小地图图标
+-- 旧业务窗口（账号视图由 YiboCore 承载）
 -- ============================================================================
 
 -- ==================== 常量 ====================
+local Theme = _G.YiboCore.UITheme
 local DEFAULT_W = 520
 local DEFAULT_H = 500
 local MIN_W     = 460
@@ -22,7 +23,6 @@ local CHECK_SIZE     = 16
 local GLOBAL_COL_W   = 40
 local CHAR_COL_W     = 36
 
-local ICON_PATH      = "Interface\\AddOns\\YiboQuestBlocker\\Media\\YQB_MinimapIcon"
 local BACKDROP_BG    = "Interface\\ChatFrame\\ChatFrameBackground"
 local CHECK_TEXTURE  = "Interface\\Buttons\\UI-CheckBox-Check"
 
@@ -61,7 +61,6 @@ local MainFrame
 local RefreshOrderEditor
 local SetRefreshPending
 local ApplySavedWindowSize
-local EntryAdapter
 
 local function SyncUIBindings()
     YQB = _G.YQB or YQB
@@ -77,7 +76,7 @@ end
 
 -- ==================== 基础工具 ====================
 local function ShortName(charKey)
-    local name = string.match(charKey or "", "%-(.+)$")
+    local name = string.match(charKey or "", "^(.-)%-")
     return name or charKey or "?"
 end
 
@@ -155,7 +154,6 @@ local function EnsureCharDB(charKey)
         YQBDB.perChar[charKey] = {
             blocked = {},
             cache = {},
-            minimapPos = 0,
             windowShown = false,
             _foldedBlocked = false,
             _foldedCurrent = false,
@@ -168,7 +166,6 @@ local function EnsureCharDB(charKey)
     if db.windowShown == nil then db.windowShown = false end
     if not db.blocked then db.blocked = {} end
     if not db.cache then db.cache = {} end
-    if db.minimapPos == nil then db.minimapPos = 0 end
     return db
 end
 
@@ -185,22 +182,6 @@ local function EnsureUIConfig()
         YQBDB.ui.headerCharsPerLine = 3
     end
     return YQBDB.ui
-end
-
-local function EnsureMinimapConfig()
-    SyncUIBindings()
-    if YQB and YQB.GetMinimapConfig then
-        return YQB.GetMinimapConfig()
-    end
-
-    YQBDB.minimap = YQBDB.minimap or {}
-    if YQBDB.minimap.hide == nil then
-        YQBDB.minimap.hide = false
-    end
-    if YQBDB.minimap.minimapPos == nil then
-        YQBDB.minimap.minimapPos = EnsureCharDB(curCharKey).minimapPos or 0
-    end
-    return YQBDB.minimap
 end
 
 local function PersistNow()
@@ -327,10 +308,9 @@ local function CreateCellButton(parent, width)
 end
 
 local function CreateInlineCheckbox(parent, text)
-    local check = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
-    check:SetSize(24, 24)
-    check.text = CreateLabel(parent, "GameFontHighlightSmall", text, COL_TEXT[1], COL_TEXT[2], COL_TEXT[3])
-    check.text:SetPoint("LEFT", check, "RIGHT", 2, 0)
+    local check = Theme:CreateCheckbox(parent, text)
+    check:SetWidth(150)
+    check.text = check.label
     check:SetHitRectInsets(0, -(check.text:GetStringWidth() + 8), 0, 0)
     return check
 end
@@ -473,45 +453,11 @@ local headerTask = CreateLabel(HeaderFrame, "GameFontHighlightSmall", "任务", 
 local headerGlobal = CreateLabel(HeaderFrame, "GameFontHighlightSmall", "全局", COL_TEXT[1], COL_TEXT[2], COL_TEXT[3])
 local headerChars = {}
 
-local ScrollFrame = CreateFrame("ScrollFrame", "YQB_ScrollFrame", MainFrame, "UIPanelScrollFrameTemplate")
+local ScrollFrame = Theme:CreateScrollFrame(MainFrame)
 local ScrollChild = CreateFrame("Frame", nil, ScrollFrame)
 ScrollFrame:SetScrollChild(ScrollChild)
 ScrollChild:SetWidth(1)
-local ScrollBar = _G["YQB_ScrollFrameScrollBar"]
-local ScrollUpButton = _G["YQB_ScrollFrameScrollBarScrollUpButton"]
-local ScrollDownButton = _G["YQB_ScrollFrameScrollBarScrollDownButton"]
-local ScrollThumb = ScrollBar and ScrollBar:GetThumbTexture()
-
-if ScrollUpButton then
-    ScrollUpButton:Hide()
-    ScrollUpButton:SetAlpha(0)
-    ScrollUpButton:EnableMouse(false)
-    ScrollUpButton:SetSize(1, 1)
-end
-if ScrollDownButton then
-    ScrollDownButton:Hide()
-    ScrollDownButton:SetAlpha(0)
-    ScrollDownButton:EnableMouse(false)
-    ScrollDownButton:SetSize(1, 1)
-end
-if ScrollBar then
-    local sbBG = CreateFrame("Frame", nil, ScrollBar, "BackdropTemplate")
-    sbBG:SetPoint("TOPLEFT", ScrollBar, "TOPLEFT", 1, 0)
-    sbBG:SetPoint("BOTTOMRIGHT", ScrollBar, "BOTTOMRIGHT", -1, 0)
-    SetBackdropStyle(sbBG, {.03, .03, .03, .72}, COL_BORDER)
-    sbBG:SetFrameLevel(ScrollBar:GetFrameLevel() - 1)
-    ScrollBar.bg = sbBG
-    for _, region in ipairs({ScrollBar:GetRegions()}) do
-        if region and region.IsObjectType and region:IsObjectType("Texture") then
-            region:SetTexture(nil)
-        end
-    end
-end
-if ScrollThumb then
-    ScrollThumb:SetTexture(BACKDROP_BG)
-    ScrollThumb:SetVertexColor(COL_BORDER_RED[1], COL_BORDER_RED[2], COL_BORDER_RED[3], .95)
-    ScrollThumb:SetWidth(8)
-end
+local ScrollBar = ScrollFrame.ScrollBar
 
 -- ==================== 底部区域 ====================
 local BottomFrame = CreateBackdropFrame(MainFrame, COL_PANEL, COL_BORDER, 1)
@@ -1027,30 +973,26 @@ function ApplyLayout()
     ScrollFrame:SetPoint("TOPLEFT", HeaderFrame, "BOTTOMLEFT", 0, -4)
     ScrollFrame:SetPoint("BOTTOMRIGHT", BottomFrame, "TOPRIGHT", 0, 6)
 
-    if ScrollBar then
-        ScrollBar:ClearAllPoints()
-        ScrollBar:SetPoint("TOPRIGHT", ScrollFrame, "TOPRIGHT", -1, 0)
-        ScrollBar:SetPoint("BOTTOMRIGHT", ScrollFrame, "BOTTOMRIGHT", -1, 0)
-        ScrollBar:SetWidth(10)
-    end
-
     ResizeGrip:SetPoint("BOTTOMRIGHT", MainFrame, "BOTTOMRIGHT", -2, 2)
 end
 
 -- ==================== 交互 ====================
 chkDaily:SetScript("OnClick", function(self)
+    self:SetChecked(not self:GetChecked())
     ClearInputFocus()
     YQBDB.filters.showDaily = self:GetChecked()
     RefreshUI()
 end)
 
 chkNormal:SetScript("OnClick", function(self)
+    self:SetChecked(not self:GetChecked())
     ClearInputFocus()
     YQBDB.filters.showNormal = self:GetChecked()
     RefreshUI()
 end)
 
 chkHide:SetScript("OnClick", function(self)
+    self:SetChecked(not self:GetChecked())
     ClearInputFocus()
     YQBDB.filters.hideComplete = self:GetChecked()
     PersistNow()
@@ -1058,6 +1000,7 @@ chkHide:SetScript("OnClick", function(self)
 end)
 
 chkReport:SetScript("OnClick", function(self)
+    self:SetChecked(not self:GetChecked())
     ClearInputFocus()
     YQBDB.filters.reportChat = self:GetChecked()
     RefreshUI()
@@ -1065,6 +1008,7 @@ chkReport:SetScript("OnClick", function(self)
 end)
 
 chkAutoAbandon:SetScript("OnClick", function(self)
+    self:SetChecked(not self:GetChecked())
     ClearInputFocus()
     YQBDB.filters.autoAbandon = self:GetChecked()
     if self:GetChecked() and YQB and YQB.SyncRejectedQuestsToQueue then
@@ -1173,6 +1117,7 @@ HeaderCharsSlider:SetScript("OnValueChanged", function(self, value)
 end)
 
 radioChar:SetScript("OnClick", function(self)
+    self:SetChecked(not self:GetChecked())
     ClearInputFocus()
     if self:GetChecked() then
         radioGlobal:SetChecked(false)
@@ -1183,6 +1128,7 @@ radioChar:SetScript("OnClick", function(self)
 end)
 
 radioGlobal:SetScript("OnClick", function(self)
+    self:SetChecked(not self:GetChecked())
     ClearInputFocus()
     if self:GetChecked() then
         radioChar:SetChecked(false)
@@ -1318,10 +1264,6 @@ function YQB.ToggleWindow()
     end
 end
 
--- ==================== 小地图图标 ====================
-local MINIMAP_RADIUS = 80
-local HOVER_WINDOW_GAP = 0
-
 function YQB.ShowWindow()
     local charDB = EnsureCharDB(curCharKey)
     if MainFrame:IsShown() then
@@ -1335,77 +1277,7 @@ function YQB.ShowWindow()
     RefreshUI()
 end
 
-local function ShowWindowUnderAnchor(anchorFrame)
-    if not anchorFrame then
-        YQB.ShowWindow()
-        return
-    end
-
-    ApplySavedWindowSize()
-    MainFrame:ClearAllPoints()
-    MainFrame:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT", 0, -HOVER_WINDOW_GAP)
-    MainFrame:Show()
-    ApplyLayout()
-    RefreshUI()
-end
-
-local function SetMinimapEntryPos(angle)
-    local minimapConfig = EnsureMinimapConfig()
-    minimapConfig.minimapPos = angle
-    EnsureCharDB(curCharKey).minimapPos = angle
-end
-
-local function GetMinimapEntryPos()
-    local minimapConfig = EnsureMinimapConfig()
-    if minimapConfig.minimapPos == nil then
-        minimapConfig.minimapPos = EnsureCharDB(curCharKey).minimapPos or 0
-    end
-    return minimapConfig.minimapPos or 0
-end
-
-local function HideTransientHover()
-    MainFrame:Hide()
-    OrderEditor:Hide()
-end
-
-EntryAdapter = YiboBrokerMinimap:Init({
-    addonName = "YiboQuestBlocker",
-    iconPath = ICON_PATH,
-    GetMinimapConfig = EnsureMinimapConfig,
-    GetMinimapPosition = GetMinimapEntryPos,
-    SetMinimapPosition = SetMinimapEntryPos,
-    PersistConfig = PersistNow,
-    OnLeftClick = function()
-        YQB.ToggleWindow()
-    end,
-    IsPrimaryWindowShown = function()
-        return EnsureCharDB(curCharKey).windowShown
-    end,
-    ShowTransientHover = function(anchorFrame)
-        ShowWindowUnderAnchor(anchorFrame)
-        return true
-    end,
-    HideTransientHover = HideTransientHover,
-    fallbackButtonName = "YQB_MinimapBtn",
-    fallbackRadius = MINIMAP_RADIUS,
-    CustomizeFallbackButton = function(button)
-        SetBackdropStyle(button, {.04, .04, .04, .9}, COL_BORDER_RED)
-    end,
-})
-
-YQB.EntryAdapter = EntryAdapter
-YQB.BrokerLauncher = EntryAdapter and EntryAdapter.brokerDataObject or nil
-if EntryAdapter then
-    EntryAdapter:RegisterHoverFrame(MainFrame)
-    EntryAdapter:RegisterHoverFrame(OrderEditor)
-end
-
--- ==================== 斜杠命令 ====================
-SLASH_YQB1 = "/yqb"
-SLASH_YQB2 = "/yiboquestblocker"
-SlashCmdList["YQB"] = function()
-    YQB.ToggleWindow()
-end
+-- Broker、小地图、悬停预览和其位置均由 YiboCore 创建、保存和注销。
 
 -- ==================== 初始化 ====================
 ApplyLayout()
@@ -1415,8 +1287,4 @@ do
     UpdateLevelExprVisual(valid, badToken)
 end
 
-if EnsureCharDB(curCharKey).windowShown then
-    ApplySavedWindowSize()
-    MainFrame:Show()
-    RefreshUI()
-end
+-- 不再恢复旧独立窗口；账号页面的显示状态由 YiboCore 保存。

@@ -4,6 +4,7 @@ local Entry = {}
 Core.Entry = Entry
 Entry.businessEntries = Entry.businessEntries or {}
 local HidePreview
+local CORE_ICON = "Interface\\AddOns\\YiboCore\\Media\\YiboCoreIcon-v13"
 
 local ENTRY_MODES = { "none", "broker", "minimap", "both" }
 local ENTRY_MODE_LABELS = {
@@ -30,6 +31,16 @@ local function HasMinimap(mode)
     return mode == "minimap" or mode == "both"
 end
 
+local function BrokerName(addonName, definition)
+    local name = definition and definition.brokerName
+    if type(name) == "string" and name ~= "" then return name end
+    return addonName
+end
+
+local function MinimapFrameName(entryID)
+    return "YiboCoreMinimapEntry_" .. string.gsub(entryID, "[^%w_]", "_")
+end
+
 function Entry:GetBusinessEntryMode(entryID)
     local saved = EntrySettings().pageModes[entryID]
     return ENTRY_MODE_LABELS[saved] and saved or "none"
@@ -41,7 +52,7 @@ end
 
 function Entry:GetBusinessEntryByPageID(pageID)
     for _, entry in pairs(self.businessEntries) do
-        if entry.pageID == pageID then return entry end
+        if entry.pageID == pageID and not entry.disabled then return entry end
     end
 end
 
@@ -95,17 +106,23 @@ local function ShowPreview(anchor, pageID)
 end
 
 function Entry:CreateBusinessBroker(entry)
-    if not entry or entry.broker or EntrySettings().broker.show == false or not HasBroker(self:GetBusinessEntryMode(entry.id)) then return end
+    if not entry or entry.disabled or EntrySettings().broker.show == false or not HasBroker(self:GetBusinessEntryMode(entry.id)) then return end
     local library = type(LibStub) == "table" and LibStub.GetLibrary and LibStub:GetLibrary("LibDataBroker-1.1", true)
     if not library then return end
-    local broker = library.GetDataObjectByName and library:GetDataObjectByName(entry.id)
-    if not broker then broker = library:NewDataObject(entry.id, {}) end
+    local broker = entry.broker or (library.GetDataObjectByName and library:GetDataObjectByName(entry.brokerName))
+    if broker and broker.yiboCoreEntryID ~= entry.id then
+        Core:Print("Broker 名称冲突，未接管数据源: " .. entry.brokerName)
+        return
+    end
+    if not broker then broker = library:NewDataObject(entry.brokerName, {}) end
     if not broker then return end
     entry.broker = broker
+    broker.yiboCoreEntryID = entry.id
     broker.type = "launcher"
     broker.text = entry.text
     broker.icon = entry.icon
     broker.OnClick = function(_, mouseButton)
+        if entry.disabled then return end
         if mouseButton == "RightButton" then
             Toggle(entry.pageID)
             Core.AccountView:ShowSettings()
@@ -113,22 +130,37 @@ function Entry:CreateBusinessBroker(entry)
             Toggle(entry.pageID)
         end
     end
-    broker.OnEnter = function(first, second) ShowPreview(second or first, entry.pageID) end
+    broker.OnEnter = function(first, second)
+        if not entry.disabled then ShowPreview(second or first, entry.pageID) end
+    end
     broker.OnLeave = function() Entry:SchedulePreviewClose() end
     broker.OnTooltipShow = function(tooltip)
         local owner = tooltip and tooltip.GetOwner and tooltip:GetOwner()
-        if ShowPreview(owner, entry.pageID) and tooltip and tooltip.Hide then tooltip:Hide() end
+        if not entry.disabled and ShowPreview(owner, entry.pageID) and tooltip and tooltip.Hide then tooltip:Hide() end
     end
 end
 
+function Entry:DisableBusinessBroker(entry)
+    if not entry or not entry.broker then return end
+
+    -- LibDataBroker has no portable unregister API. Keep the object alive, but
+    -- make it completely inert until the entry mode is enabled again.
+    entry.broker.OnClick = function() end
+    entry.broker.OnEnter = function() end
+    entry.broker.OnLeave = function() end
+    entry.broker.OnTooltipShow = function() end
+    entry.broker.yiboCoreEntryDisabled = true
+end
+
 function Entry:CreateBusinessMinimap(entry)
-    if not entry or entry.button then return end
-    local button = CreateFrame("Button", "YiboCoreMinimap" .. entry.id, Minimap)
+    if not entry or entry.disabled or entry.button then return end
+    local button = CreateFrame("Button", entry.frameName, Minimap)
     button:SetSize(31, 31); button:SetFrameStrata("MEDIUM"); button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     button:SetMovable(true); button:EnableMouse(true); button:RegisterForDrag("LeftButton")
     button.icon = button:CreateTexture(nil, "BACKGROUND"); button.icon:SetTexture(entry.icon); button.icon:SetAllPoints()
     button.border = button:CreateTexture(nil, "OVERLAY"); button.border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder"); button.border:SetSize(53, 53); button.border:SetPoint("TOPLEFT")
     button:SetScript("OnClick", function(_, mouseButton)
+        if entry.disabled then return end
         if mouseButton == "RightButton" then Toggle(entry.pageID); Core.AccountView:ShowSettings() else Toggle(entry.pageID) end
     end)
     button:SetScript("OnDragStart", button.StartMoving)
@@ -141,7 +173,7 @@ function Entry:CreateBusinessMinimap(entry)
         end
         Entry:Refresh()
     end)
-    button:SetScript("OnEnter", function(self) ShowPreview(self, entry.pageID) end)
+    button:SetScript("OnEnter", function(self) if not entry.disabled then ShowPreview(self, entry.pageID) end end)
     button:SetScript("OnLeave", function() Entry:SchedulePreviewClose() end)
     entry.button = button
 end
@@ -150,17 +182,89 @@ function Entry:RegisterBusinessEntry(addonName, definition)
     if type(addonName) ~= "string" or type(definition) ~= "table" or type(definition.id) ~= "string" or type(definition.pageID) ~= "string" then
         return nil, "业务入口必须提供插件名、id 与 pageID。"
     end
+    if not (Core.Registry and Core.Registry:Get(addonName)) then return nil, "入口所属插件尚未注册: " .. addonName end
+    if definition.brokerName ~= nil and (type(definition.brokerName) ~= "string" or definition.brokerName == "") then
+        return nil, "业务入口 brokerName 必须是非空 string。"
+    end
+    if definition.defaultMode ~= nil and not ENTRY_MODE_LABELS[definition.defaultMode] then
+        return nil, "业务入口 defaultMode 无效。"
+    end
+    local page = Core.AccountView and Core.AccountView._pages[definition.pageID]
+    if not page then return nil, "入口目标页面不存在: " .. definition.pageID end
+    if page.addonName ~= addonName then return nil, "入口只能绑定所属插件自己的页面。" end
+    local entryClaim, claimError = Core:ClaimResource("entry", definition.id, addonName)
+    if not entryClaim then return nil, claimError end
+    local brokerName = BrokerName(addonName, definition)
+    local brokerClaim, brokerClaimError = Core:ClaimResource("broker", brokerName, addonName)
+    if not brokerClaim then
+        Core.Registry:ReleaseResource("entry", definition.id, addonName)
+        return nil, brokerClaimError
+    end
+    local frameName = MinimapFrameName(definition.id)
+    local frameClaim, frameClaimError = Core:ClaimResource("minimap-frame", frameName, addonName)
+    if not frameClaim then
+        Core.Registry:ReleaseResource("entry", definition.id, addonName)
+        Core.Registry:ReleaseResource("broker", brokerName, addonName)
+        return nil, frameClaimError
+    end
     local entry = self.businessEntries[definition.id] or {}
     entry.id = definition.id
     entry.addonName = addonName
     entry.pageID = definition.pageID
     entry.text = definition.text or ("[Yibo] " .. definition.pageID)
     entry.icon = definition.icon or "Interface\\Icons\\INV_Misc_GroupLooking"
+    entry.brokerName = brokerName
+    entry.frameName = frameName
+    entry.disabled = false
+    local settings = EntrySettings()
+    if settings.pageModes[entry.id] == nil then
+        for _, legacyID in ipairs(definition.legacyIDs or {}) do
+            if settings.pageModes[legacyID] ~= nil then
+                settings.pageModes[entry.id] = settings.pageModes[legacyID]
+                break
+            end
+        end
+        if settings.pageModes[entry.id] == nil and definition.defaultMode then
+            settings.pageModes[entry.id] = definition.defaultMode
+        end
+    end
+    if settings.pagePositions[entry.id] == nil then
+        for _, legacyID in ipairs(definition.legacyIDs or {}) do
+            if settings.pagePositions[legacyID] ~= nil then
+                settings.pagePositions[entry.id] = settings.pagePositions[legacyID]
+                break
+            end
+        end
+    end
     self.businessEntries[entry.id] = entry
     if HasBroker(self:GetBusinessEntryMode(entry.id)) then self:CreateBusinessBroker(entry) end
     if HasMinimap(self:GetBusinessEntryMode(entry.id)) then self:CreateBusinessMinimap(entry) end
     self:Refresh()
     return entry
+end
+
+function Entry:UnregisterEntriesForPage(pageID)
+    for entryID, entry in pairs(self.businessEntries) do
+        if entry.pageID == pageID then
+            entry.disabled = true
+            if entry.button then entry.button:Hide() end
+            -- LibDataBroker 没有可靠注销协议；保留对象但禁用其交互，防止其它插件抢占同名数据源。
+            if Core.Registry then
+                Core.Registry:ReleaseResource("entry", entryID, entry.addonName)
+                Core.Registry:ReleaseResource("minimap-frame", entry.frameName, entry.addonName)
+            end
+        end
+    end
+    self:Refresh()
+end
+
+function Entry:GetRegisteredBusinessEntries()
+    local entries = {}
+    for _, entry in pairs(self.businessEntries) do
+        if not entry.disabled then entries[#entries + 1] = entry end
+    end
+    table.sort(entries, function(left, right) return left.id < right.id end)
+    return entries
 end
 
 HidePreview = function()
@@ -173,14 +277,29 @@ function Entry:CancelPreviewClose()
     self.previewToken = (self.previewToken or 0) + 1
 end
 
+function Entry:IsMouseOverPreview()
+    local preview = Core.AccountView and Core.AccountView.frame
+    if not (preview and preview.preview) then return false end
+    if preview.IsMouseOver and preview:IsMouseOver() then return true end
+    if not GetMouseFocus then return false end
+    local focus = GetMouseFocus()
+    while focus do
+        if focus == preview then return true end
+        focus = focus.GetParent and focus:GetParent() or nil
+    end
+    return false
+end
+
 function Entry:SchedulePreviewClose()
     self.previewToken = (self.previewToken or 0) + 1
     local token = self.previewToken
     local function CloseIfStillPending()
-        if Entry.previewToken == token then HidePreview() end
+        -- A checkbox, scope button, or row inside the preview becomes the mouse
+        -- focus itself.  Treat every descendant as part of the hover surface.
+        if Entry.previewToken == token and not Entry:IsMouseOverPreview() then HidePreview() end
     end
     if C_Timer and C_Timer.After then
-        C_Timer.After(0.35, CloseIfStillPending)
+        C_Timer.After(0.5, CloseIfStillPending)
     else
         CloseIfStillPending()
     end
@@ -191,7 +310,7 @@ function Entry:Initialize()
         local button = CreateFrame("Button", "YiboCoreMinimapButton", Minimap)
         button:SetSize(31, 31); button:SetFrameStrata("MEDIUM"); button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
         button:SetMovable(true); button:EnableMouse(true); button:RegisterForDrag("LeftButton")
-        button.icon = button:CreateTexture(nil, "BACKGROUND"); button.icon:SetTexture("Interface\\Icons\\INV_Misc_GroupLooking"); button.icon:SetAllPoints()
+        button.icon = button:CreateTexture(nil, "BACKGROUND"); button.icon:SetTexture(CORE_ICON); button.icon:SetAllPoints()
         button.border = button:CreateTexture(nil, "OVERLAY"); button.border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder"); button.border:SetSize(53, 53); button.border:SetPoint("TOPLEFT")
         button:SetScript("OnClick", function(_, mouseButton)
             if mouseButton == "RightButton" then Core.AccountView:ShowSettings() else Toggle() end
@@ -230,7 +349,7 @@ function Entry:Initialize()
         -- 复用同名对象时也覆盖回调，避免热重载后仍保留旧的悬停处理函数。
         broker.type = "launcher"
         broker.text = "[Yibo] 账号总览"
-        broker.icon = "Interface\\Icons\\INV_Misc_GroupLooking"
+        broker.icon = CORE_ICON
         broker.OnClick = function(_, mouseButton)
             if mouseButton == "RightButton" then Core.AccountView:ShowSettings() else Toggle() end
         end
@@ -260,13 +379,18 @@ function Entry:Refresh()
     if self.broker then self.broker.text = "[Yibo] 账号总览" end
     for _, entry in pairs(self.businessEntries) do
         local mode = self:GetBusinessEntryMode(entry.id)
-        if HasBroker(mode) then self:CreateBusinessBroker(entry) end
+        if HasBroker(mode) then
+            self:CreateBusinessBroker(entry)
+            if entry.broker then entry.broker.yiboCoreEntryDisabled = nil end
+        else
+            self:DisableBusinessBroker(entry)
+        end
         if HasMinimap(mode) then self:CreateBusinessMinimap(entry) end
         if entry.button then
             local angle = math.rad(tonumber(EntrySettings().pagePositions[entry.id]) or 225)
             entry.button:ClearAllPoints()
             entry.button:SetPoint("CENTER", Minimap, "CENTER", math.cos(angle) * 80, math.sin(angle) * 80)
-            entry.button:SetShown(HasMinimap(mode))
+            entry.button:SetShown(not entry.disabled and HasMinimap(mode))
         end
     end
 end

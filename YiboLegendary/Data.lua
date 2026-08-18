@@ -26,7 +26,7 @@ local actions = {
     ["ORANGE-C2-07H"] = "完成部落结尾剧情，并向拉西奥领取奖励。",
     ["ORANGE-C3-01"] = "前往迷雾栈道酒馆，与拉西奥联系。",
     ["ORANGE-C3-02"] = "前往酒馆二楼，与拉西奥会面。",
-    ["ORANGE-C3-03"] = "通过天神尾王或每个 10 个至尊石碎块获得帝国秘史，并准备延极锭。",
+    ["ORANGE-C3-03"] = "进入雷电王座收集帝国秘史，并准备 40 个延极锭。",
     ["ORANGE-C3-04"] = "完成黑王子阵营日常或击杀相应敌人，将声望提升至崇拜。",
     ["ORANGE-C3-05"] = "前往雷神岛，解锁并完成雷霆熔炉事件。",
     ["ORANGE-C3-06"] = "前往雷神岛挑战纳拉克，用闪电长矛命中后存活。",
@@ -34,12 +34,12 @@ local actions = {
     ["ORANGE-C3-08"] = "继续挑战雷电王座，收集 12 个泰坦符文石。",
     ["ORANGE-C3-09"] = "进入雷电王座击败雷神，取得雷神之心。",
     ["ORANGE-C3-10"] = "返回拉西奥处，完成雷电王座篇收尾。",
-    ["ORANGE-C4-01"] = "前往昆莱山白虎寺，完成适合职责的天神挑战。",
+    ["ORANGE-C4-01"] = "拜访四天神，并完成适合职责的天神挑战。",
     ["ORANGE-C4-02"] = "从拉西奥提供的奖励中选择一件 600 装等史诗披风。",
     ["ORANGE-C4-03"] = "与拉西奥对话，等待最终阶段开放。",
     ["ORANGE-C5-01"] = "前往永恒岛，与拉西奥交谈。",
     ["ORANGE-C5-02"] = "在永恒岛收集 5,000 枚永恒铸币。",
-    ["ORANGE-C5-03"] = "分别挑战四天神，完成天神试炼。",
+    ["ORANGE-C5-03"] = "在永恒岛分别击败玉珑、赤精、雪怒、砮皂，四项全部完成。",
     ["ORANGE-C5-04"] = "完成最终仪式，将史诗披风升级为传说披风。",
     ["ORANGE-C5-05"] = "进入决战奥格瑞玛，击败加尔鲁什·地狱咆哮。",
 }
@@ -62,7 +62,7 @@ local tableActions = {
     ["ORANGE-C2-07H"] = "完成部落结尾剧情",
     ["ORANGE-C3-01"] = "迷雾栈道酒馆找拉西奥",
     ["ORANGE-C3-02"] = "前往酒馆二楼",
-    ["ORANGE-C3-03"] = "天神尾王或 10 碎块换秘史",
+    ["ORANGE-C3-03"] = "雷电王座收集帝国秘史并制作延极锭",
     ["ORANGE-C3-04"] = "完成黑王子日常提升声望",
     ["ORANGE-C3-05"] = "雷神岛完成雷霆熔炉",
     ["ORANGE-C3-06"] = "雷神岛挑战纳拉克",
@@ -70,12 +70,12 @@ local tableActions = {
     ["ORANGE-C3-08"] = "挑战雷电王座收集符文石",
     ["ORANGE-C3-09"] = "雷电王座击败雷神",
     ["ORANGE-C3-10"] = "返回拉西奥处",
-    ["ORANGE-C4-01"] = "白虎寺完成天神挑战",
+    ["ORANGE-C4-01"] = "拜访四天神并完成适合职责的挑战",
     ["ORANGE-C4-02"] = "选择 600 装等史诗披风",
     ["ORANGE-C4-03"] = "与拉西奥对话",
     ["ORANGE-C5-01"] = "永恒岛找拉西奥",
     ["ORANGE-C5-02"] = "永恒岛收集永恒铸币",
-    ["ORANGE-C5-03"] = "完成四天神试炼",
+    ["ORANGE-C5-03"] = "永恒岛分别击败玉珑、赤精、雪怒、砮皂",
     ["ORANGE-C5-04"] = "完成披风升级仪式",
     ["ORANGE-C5-05"] = "决战奥格瑞玛击败加尔鲁什",
 }
@@ -83,9 +83,9 @@ local tableActions = {
 local definitions = {
     { id="ORANGE-PRE-01", questId=31488, chapter=0, name="陌生之地的陌生人", objective="达到 90 级后，在迷雾栈道接触拉西奥。", level=90 },
     { id="ORANGE-C1-01", questId=31454, chapter=1, name="传说的开端", objective="与拉西奥完成剧情对话。", requires={"ORANGE-PRE-01"} },
-    { id="ORANGE-C1-02", questId=31473, chapter=1, name="敌人的力量", objective="力量印记 10 个；智慧印记 10 个。", requires={"ORANGE-C1-01"} },
-    { id="ORANGE-C1-03", questId=31468, chapter=1, name="黑王子的试炼", objective="黑王子声望达到尊敬。", requires={"ORANGE-C1-01"}, reputation="HONORED" },
-    { id="ORANGE-C1-04", questId=31481, chapter=1, name="恐惧本身", objective="击败惧之煞，获得恐惧奇美拉。", requires={"ORANGE-C1-02", "ORANGE-C1-03"} },
+    { id="ORANGE-C1-02", questId=31473, chapter=1, name="敌人的力量", objective="力量印记 10 个；智慧印记 10 个。", requires={"ORANGE-C1-01"}, parallelGroup="ORANGE-C1-REQUIREMENTS" },
+    { id="ORANGE-C1-03", questId=31468, chapter=1, name="黑王子的试炼", objective="黑王子声望达到尊敬。", requires={"ORANGE-C1-01"}, reputation="HONORED", parallelGroup="ORANGE-C1-REQUIREMENTS" },
+    { id="ORANGE-C1-04", questId=31481, chapter=1, name="恐惧本身", objective="击败惧之煞，获得恐惧奇美拉。", requires={"ORANGE-C1-02", "ORANGE-C1-03"}, requirementMode="all" },
     { id="ORANGE-C1-05", questId=31482, chapter=1, name="黑王子的气息", objective="前往迷雾栈道领取章节奖励。", requires={"ORANGE-C1-04"} },
     { id="ORANGE-C2-01", questId=31483, chapter=2, name="来袭……", objective="联系拉西奥，开启战争篇。", requires={"ORANGE-C1-05"}, phase=true },
     { id="ORANGE-C2-02", questId=32373, chapter=2, name="领袖的衡量标准", objective="在迷雾栈道与拉西奥对话。", requires={"ORANGE-C2-01"} },
@@ -111,7 +111,7 @@ local definitions = {
     { id="ORANGE-C4-03", questId=32870, chapter=4, name="准备出击", objective="与拉西奥对话并等待最终阶段。", requires={"ORANGE-C4-02"} },
     { id="ORANGE-C5-01", questId=33088, chapter=5, name="永恒的发现", objective="前往永恒岛与拉西奥交谈。", requires={"ORANGE-C4-03"}, phase=true },
     { id="ORANGE-C5-02", questId=33098, chapter=5, name="永恒岛的秘密", objective="永恒铸币 5,000 枚。", requires={"ORANGE-C5-01"} },
-    { id="ORANGE-C5-03", questId=33100, chapter=5, name="皇帝之道", objective="分别击败四天神。", requires={"ORANGE-C5-02"} },
+    { id="ORANGE-C5-03", questId=33100, chapter=5, name="帝王之道", objective="玉珑 0/1；赤精 0/1；雪怒 0/1；砮皂 0/1。", requires={"ORANGE-C5-02"}, requirementMode="all", startLocation="永恒岛·拉西奥" },
     { id="ORANGE-C5-04", questId=33104, chapter=5, name="熊猫人传奇", objective="获得精华并将史诗披风转为传说披风。", requires={"ORANGE-C5-03"} },
     { id="ORANGE-C5-05", questId=33105, chapter=5, name="黑王子的审判", objective="击败加尔鲁什·地狱咆哮。", requires={"ORANGE-C5-04"} },
 }
@@ -168,21 +168,51 @@ function Data:GetValorQuantity()
     return nil
 end
 
-function Data:TrackValorProgress(store)
+function Data:TrackValorProgress(store, currencyID, eventQuantity, quantityChange, quantityGain)
     local tracker = store.valorProgress or {}
     store.valorProgress = tracker
     local quantity = self:GetValorQuantity()
     local active = QuestLogEntry(32476) ~= nil and not IsCompleted(32476)
-    if tracker.active and type(quantity) == "number" and type(tracker.lastQuantity) == "number" and quantity > tracker.lastQuantity then
-        tracker.progress = math.min(self.VALOR_TARGET, (tonumber(tracker.progress) or 0) + quantity - tracker.lastQuantity)
-    end
     if active and not tracker.active then
         tracker.progress = 0
         tracker.startedAt = Addon:GetTimestamp()
+        tracker.lastQuantity = quantity
+        tracker.active = true
+        return 0
     end
-    tracker.active = active
-    tracker.lastQuantity = quantity
-    return active and math.min(self.VALOR_TARGET, tonumber(tracker.progress) or 0) or nil
+    if not active then
+        -- 任务已完成或不在任务日志时，不要清掉已记录的累计值；它仍然是
+        -- 角色的历史快照，下一次重新接到任务时才会在上面的分支重置。
+        tracker.active = false
+        tracker.lastQuantity = quantity
+        return nil
+    end
+
+    local gained = 0
+    if currencyID == self.VALOR_CURRENCY_ID then
+        -- MoP Classic 的 CURRENCY_DISPLAY_UPDATE 会报告本次获得量。
+        -- 它比余额差值可靠，因为玩家可以在任务期间花掉勇气。
+        local reportedGain = tonumber(quantityGain) or tonumber(quantityChange)
+        if reportedGain and reportedGain > 0 then
+            gained = reportedGain
+        end
+    end
+    if gained == 0 and type(quantity) == "number" and type(tracker.lastQuantity) == "number" and quantity > tracker.lastQuantity then
+        -- 兼容未提供事件获得量的客户端/API：用余额正差值兜底。
+        gained = quantity - tracker.lastQuantity
+    end
+    if gained > 0 then
+        tracker.progress = math.min(self.VALOR_TARGET, (tonumber(tracker.progress) or 0) + gained)
+        tracker.lastGain = gained
+        tracker.updatedAt = Addon:GetTimestamp()
+    end
+    tracker.active = true
+    if currencyID == self.VALOR_CURRENCY_ID and type(eventQuantity) == "number" then
+        tracker.lastQuantity = eventQuantity
+    else
+        tracker.lastQuantity = quantity
+    end
+    return math.min(self.VALOR_TARGET, tonumber(tracker.progress) or 0)
 end
 
 function Data:BuildSnapshot(character, phaseAvailability, valorProgress)
@@ -210,6 +240,11 @@ function Data:BuildSnapshot(character, phaseAvailability, valorProgress)
     end
     for _, entry in ipairs(entries) do
         local definition = entry.definition
+        if definition.reputation then
+            local requiredRank = self.REPUTATION_RANKS[definition.reputation]
+            entry.reputationMet = rank and rank >= requiredRank or false
+            entry.gateStatus = entry.reputationMet and "satisfied_by_reputation" or "pending"
+        end
         if entry.status == "locked" then
             local requirementsMet = true
             if definition.level and (character.level or 0) < definition.level then requirementsMet = false end
@@ -224,9 +259,6 @@ function Data:BuildSnapshot(character, phaseAvailability, valorProgress)
             end
             entry.prerequisitesMet = requirementsMet
             if definition.reputation then
-                local requiredRank = self.REPUTATION_RANKS[definition.reputation]
-                entry.reputationMet = rank and rank >= requiredRank or false
-                entry.gateStatus = entry.reputationMet and "satisfied_by_reputation" or "pending"
                 requirementsMet = requirementsMet and entry.gateStatus == "satisfied_by_reputation"
             end
             if definition.phase and phaseAvailability[definition.id] == false then
@@ -246,7 +278,7 @@ function Data:BuildSnapshot(character, phaseAvailability, valorProgress)
     end
     local reputationTarget
     for _, entry in ipairs(entries) do
-        if entry.definition.reputation and not entry.completed and (entry.status == "in_progress" or entry.prerequisitesMet) then
+        if entry.definition.reputation and not entry.completed and not entry.reputationMet and (entry.status == "in_progress" or entry.prerequisitesMet) then
             reputationTarget = entry
             break
         end
@@ -268,6 +300,9 @@ end
 
 function Data:GetNextAction(entry)
     if not entry then return "继续完成任务线前置条件。" end
+    if entry.definition.reputation and entry.reputationMet then
+        return "声望门槛已满足，继续任务线。"
+    end
     if entry.status == "in_progress" or entry.status == "available" then return actions[entry.definitionId] or "继续完成当前任务目标。" end
     if entry.status == "unavailable" then
         return "等待服务器开放对应阶段。"
@@ -277,6 +312,9 @@ end
 
 function Data:GetTableAction(entry)
     if not entry then return "—" end
+    if entry.definition.reputation and entry.reputationMet then
+        return "声望门槛已满足，继续任务线"
+    end
     if entry.definition.phase and entry.phaseStatus == "unknown" then
         return "确认服务器阶段后继续"
     end

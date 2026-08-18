@@ -80,49 +80,9 @@
 - [RouteTransforms.lua](E:/Program/YiboBeastPaths/RouteTransforms.lua)：每条路线的定位参数
 - [_NonRelease/DebugCalibrator.lua](E:/Program/YiboBeastPaths/_NonRelease/DebugCalibrator.lua)：路线调试校准面板
 
-## v1.5 更新
+## 更新日志
 
-- 发布结构调整为单包多客户端 TOC，同时承载 Retail / 正式服与 MoP Classic。
-- 新增运行时 flavor 标记，暴露 `ns.FLAVOR`、`ns.IS_RETAIL`、`ns.IS_MISTS` 与 `ns.IS_CLASSIC`。
-- 新增 `FlavorOverrides.lua`，后续 Retail/Mists 的地图、路线、节点、脚印或宠物数据差异可在覆盖层中维护。
-- 当前 Retail 默认复用 MoP Classic 已校准的 Pandaria 共享基线数据。
-- 已知限制：Retail 小地图与世界地图可能存在轻微差别，后续通过脚印采集和数据覆盖逐步细调。
-- 已知限制：Retail 中锦绣谷可能受剧情阶段、旧新版地图或 Zidormi 相位影响，噩兆相关差异计划进入 `v1.5.1` 继续处理。
-
-## v1.3 更新
-
-- 补齐并接入 10 只潘达利亚隐藏猎人宠物的脚印名称数据。
-- 起点节点 tooltip 新增脚印名称显示，并优化长文本宽度避免英文名换行。
-- 持续整理世界地图/小地图调试数据与路线校准资料，便于后续继续修正。
-
-## v1.2.1 更新
-
-- 修复 `50813 / 噩兆 / 锦绣谷` 的一轮小地图路线校准。
-- 重新接回并增强 `/ybpdebug` 调试面板，支持大地图与小地图分离调参。
-- 为小地图新增独立的偏移、缩放、横纵缩放与线宽调试能力。
-- 重排调试面板布局，并补充窗口位置持久化。
-
-## v1.2 更新
-
-- 小地图路线已补齐到全部 10 条潘达利亚隐藏猎人宠物。
-- 新增小地图调试命令 `/ybp mmdebug`，用于快速查看当前地图命中与渲染状态。
-- 新增 `_NonRelease/Tools/generate_curated_routes.py`，可从世界地图覆盖图自动反推小地图路线点数据。
-
-## v1.1 更新
-
-- 新增小地图局部路线显示。
-- 小地图路线支持随玩家位置、小地图缩放与旋转实时更新。
-- 小地图路线已接入与世界地图一致的路线校准参数。
-- 调整小地图路线线宽、边界裁切与分段衔接，减少断点感。
-
-## v1.0.1 更新
-
-- 新增项目主 Logo 与插件列表小图标。
-- 为插件列表接入 `IconTexture`。
-- 调整世界地图开关按钮的大小、位置和状态文案。
-- 修复按钮只显示外框、不显示文本的问题。
-- 修复按钮相关兼容问题导致的路线不显示风险。
-- 移除路线开关时的聊天框提示。
+所有版本更新内容统一维护在 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 说明
 

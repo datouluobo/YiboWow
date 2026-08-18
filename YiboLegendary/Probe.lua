@@ -4,7 +4,14 @@ Addon.Probe = Probe
 
 local function Call(name, callback)
     local ok, first, second = pcall(callback)
-    return { available = ok, firstType = type(first), secondType = type(second), error = ok and nil or tostring(first) }
+    local available = ok and first ~= nil
+    local errorMessage
+    if not ok then
+        errorMessage = tostring(first)
+    elseif not available then
+        errorMessage = "未返回有效数据"
+    end
+    return { available = available, firstType = type(first), secondType = type(second), error = errorMessage }
 end
 
 local function Availability(callback)
@@ -28,7 +35,9 @@ function Probe:Run(verbose)
         if index and index > 0 and GetNumQuestLeaderBoards then return GetNumQuestLeaderBoards(index) end
     end)
     probes.reputation = Call("reputation", function()
-        return GetFactionInfoByID and GetFactionInfoByID(Addon.Data.BLACK_PRINCE_FACTION_ID)
+        if type(GetFactionInfoByID) ~= "function" then return nil end
+        local name = GetFactionInfoByID(Addon.Data.BLACK_PRINCE_FACTION_ID)
+        return name
     end)
     if verbose then
         for name, result in pairs(probes) do

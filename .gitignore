@@ -1,0 +1,9 @@
+# Local test data and generated release artifacts
+tmp/
+**/dist/
+**/_NonRelease/Builds/
+
+# Transient tooling output
+*.log
+*.tmp
+*.bak

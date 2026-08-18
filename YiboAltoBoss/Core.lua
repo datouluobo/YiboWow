@@ -25,7 +25,7 @@ local function GetServerTimestamp()
 end
 
 local DEFAULT_BOSSES = {
-    { key = "ordos", type = "single_npc", id = 72057, name = "奥尔多斯", reset = "weekly", order = 10, group = "world_boss" },
+    { key = "ordos", type = "single_npc", id = 72057, name = "斡耳朵斯", reset = "weekly", order = 10, group = "world_boss" },
     { key = "celestials", type = "single_npc", name = "四天神", reset = "weekly", order = 20, group = "world_boss", allowedNpcIds = { 71952, 71953, 71954, 71955 }, npcNames = { [71952] = "朱鹤赤精", [71953] = "白虎雪怒", [71954] = "玄牛砮皂", [71955] = "青龙玉珑" }, trackPhase = false, hideAction = true, hidePhase = true },
     { key = "nalak", type = "single_npc", id = 69099, name = "纳拉克", reset = "weekly", order = 30, group = "world_boss" },
     { key = "oondasta", type = "single_npc", id = 69161, name = "乌达斯塔", reset = "weekly", order = 40, group = "world_boss" },
@@ -60,7 +60,7 @@ local WORLD_BOSS_LOCKOUT_IDS = {
     [69099] = 32518, -- 纳拉克 / Nalak
     [69161] = 32519, -- 乌达斯塔 / Oondasta
     celestials = 33117, -- 四天神共享周常锁定
-    ordos = 33118, -- 奥尔多斯周常锁定
+    ordos = 33118, -- 斡耳朵斯周常锁定
 }
 
 local function CopyDefaults(target, defaults)
@@ -281,6 +281,29 @@ local function ResolveTargetsByNpcContext(npcId, zone, subZone)
     return matched
 end
 
+-- TrackingV3 is loaded after Core.lua and consumes these narrow adapters.  The
+-- business cache remains private; the tracker never writes character or legacy
+-- world-state tables directly.
+function YAB.GetServerTimestamp()
+    return GetServerTimestamp()
+end
+
+function YAB.ExtractNpcIDFromGUID(guid)
+    return ExtractNpcIDFromGUID(guid)
+end
+
+function YAB.ExtractPhaseIDFromGUID(guid)
+    return ExtractPhaseIDFromGUID(guid)
+end
+
+function YAB.ExtractSpawnInfoFromGUID(guid)
+    return ExtractSpawnInfoFromGUID(guid)
+end
+
+function YAB.ResolveTargetsByNpcContext(npcId, zone, subZone)
+    return ResolveTargetsByNpcContext(npcId, zone, subZone)
+end
+
 local function EnsureRespawnSamplesTable()
     YiboAltoBossDB.respawnSamples = YiboAltoBossDB.respawnSamples or {}
     return YiboAltoBossDB.respawnSamples
@@ -382,7 +405,7 @@ local function MigrateCelestialTargets()
 end
 
 -- v1.5 早期包可能把原有四个世界 Boss 的逐项显示状态保存为 false，
--- 结果主表只剩新增的奥尔多斯与四天神。仅修复这一完整的异常组合一次，
+-- 结果主表只剩新增的斡耳朵斯与四天神。仅修复这一完整的异常组合一次，
 -- 后续用户自行调整的显示勾选始终保留。
 local function RepairV15WorldBossVisibility()
     local meta = YiboAltoBossDB.meta or {}
@@ -917,6 +940,9 @@ local function ClearPhaseKillState(phaseState)
 end
 
 local function RecordBossRespawnSample(realm, bossId, phaseState, phaseKey, phaseLabel, phaseDisplayId, observedAt, observedBy, source, spawnTime)
+    -- Frozen compatibility path. TrackingV3 is the sole writer for new samples;
+    -- legacy samples remain read-only historical input.
+    if YAB.TrackingV3 then return false end
     local killedAt = tonumber(phaseState.lastKilledAt) or 0
     if killedAt <= 0 or observedAt <= killedAt then
         return false
@@ -1123,6 +1149,13 @@ local function EnsureDB()
         filters = {
             levelExpr = "",
         },
+        settings = {
+            previewColumns = {
+                kills = true,
+                action = true,
+                phase = true,
+            },
+        },
         display = {
             groups = {
                 world_boss = true,
@@ -1171,6 +1204,13 @@ local function EnsureDB()
             realms = {},
         },
         respawnSamples = {},
+        trackingV3 = {
+            schemaVersion = 3,
+            realms = {},
+            samples = {},
+            diagnostics = {},
+            meta = {},
+        },
         meta = {
             weeklyResetKey = GetCurrentWeeklyResetKey(),
         },
@@ -1261,13 +1301,17 @@ local function MarkBossKilled(charKey, bossId, source, phaseId, actualNpcId)
     local bossKey = GetTargetKey(boss)
     local existing = charData.kills[bossKey]
     local resetKey = GetCurrentWeeklyResetKey()
-    if existing and existing.killed and existing.resetKey == resetKey then
+    local alreadyCompleted = existing and existing.killed and existing.resetKey == resetKey
+    -- Character completion is intentionally independent from world lifecycle
+    -- tracking.  TrackingV3 owns alive/death evidence and respawn samples.
+    if alreadyCompleted then
         return false
     end
 
+    local killedAt = GetServerTimestamp()
     charData.kills[bossKey] = {
         killed = true,
-        updatedAt = time(),
+        updatedAt = killedAt,
         source = source or "manual",
         resetKey = resetKey,
     }
@@ -1276,18 +1320,6 @@ local function MarkBossKilled(charKey, bossId, source, phaseId, actualNpcId)
         charData.kills[bossKey].actualName = (boss.npcNames and boss.npcNames[actualNpcId]) or boss.name
     end
     RefreshLootLockout(charData, boss)
-
-    local phaseInfo = charData.phases[bossKey]
-    if source ~= "quest_flag" and source ~= "weekly_lockout" and boss.trackPhase ~= false then
-        UpsertWorldPhaseState(GetServerFromKey(charKey or curCharKey), bossKey, phaseInfo and phaseInfo.phase or "未知", charKey or curCharKey, {
-            phaseId = phaseId or (phaseInfo and phaseInfo.phaseId) or nil,
-            observedAt = phaseInfo and phaseInfo.observedAt or nil,
-            zone = phaseInfo and phaseInfo.zone or nil,
-            subZone = phaseInfo and phaseInfo.subZone or nil,
-            killedAt = charData.kills[bossKey].updatedAt,
-            source = source or "manual",
-        })
-    end
     return true
 end
 
@@ -1428,8 +1460,8 @@ function YAB.SetLevelFilterExpr(expr)
     end
     YiboAltoBossDB.filters.levelExpr = normalized
     YAB.PersistDB()
-    if YAB.RefreshAllViews then
-        YAB.RefreshAllViews()
+    if YAB.NotifyCorePageChanged then
+        YAB.NotifyCorePageChanged()
     end
     if YAB.RefreshSettingsUI then
         YAB.RefreshSettingsUI()
@@ -1450,8 +1482,8 @@ function YAB.SetHoverMode(mode)
     }
     YiboAltoBossDB.minimap.hoverMode = allowed[mode] and mode or "full"
     YAB.PersistDB()
-    if YAB.RefreshAllViews then
-        YAB.RefreshAllViews()
+    if YAB.NotifyCorePageChanged then
+        YAB.NotifyCorePageChanged()
     end
     if YAB.RefreshSettingsUI then
         YAB.RefreshSettingsUI()
@@ -1469,8 +1501,8 @@ function YAB.SetHoverScale(scale)
     end
     YiboAltoBossDB.minimap.hoverScale = value
     YAB.PersistDB()
-    if YAB.RefreshAllViews then
-        YAB.RefreshAllViews()
+    if YAB.NotifyCorePageChanged then
+        YAB.NotifyCorePageChanged()
     end
     if YAB.RefreshSettingsUI then
         YAB.RefreshSettingsUI()
@@ -1481,9 +1513,7 @@ end
 function YAB.SetMinimapHidden(hidden)
     YiboAltoBossDB.minimap.hide = not not hidden
     YAB.PersistDB()
-    if YAB.RefreshEntryVisibility then
-        YAB.RefreshEntryVisibility()
-    end
+    if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
 end
 
 function YAB.ToggleBossKill(charKey, bossId)
@@ -1501,8 +1531,8 @@ function YAB.ToggleBossKill(charKey, bossId)
         MarkBossKilled(charKey, bossKey, "manual")
     end
     YAB.PersistDB()
-    if YAB.RefreshAllViews then
-        YAB.RefreshAllViews()
+    if YAB.NotifyCorePageChanged then
+        YAB.NotifyCorePageChanged()
     end
 end
 
@@ -1516,8 +1546,8 @@ function YAB.RecordBossManually(charKey, bossId)
         return false, boss.name .. " 已有本周击杀记录。"
     end
     YAB.PersistDB()
-    if YAB.RefreshAllViews then
-        YAB.RefreshAllViews()
+    if YAB.NotifyCorePageChanged then
+        YAB.NotifyCorePageChanged()
     end
     return true, "已补记当前角色的“" .. boss.name .. "”击杀。"
 end
@@ -1586,8 +1616,8 @@ function YAB.RecordPhase(targetRef, phaseText, charKey)
         source = "RecordPhase",
     })
     YAB.PersistDB()
-    if YAB.RefreshAllViews then
-        YAB.RefreshAllViews()
+    if YAB.NotifyCorePageChanged then
+        YAB.NotifyCorePageChanged()
     end
 end
 
@@ -1651,8 +1681,8 @@ function YAB.AddCustomTarget(input)
     }
     RebuildBossCache()
     YAB.PersistDB()
-    if YAB.RefreshAllViews then
-        YAB.RefreshAllViews()
+    if YAB.NotifyCorePageChanged then
+        YAB.NotifyCorePageChanged()
     end
     if YAB.RefreshSettingsUI then
         YAB.RefreshSettingsUI()
@@ -1705,8 +1735,8 @@ function YAB.RemoveCustomTarget(input)
 
     RebuildBossCache()
     YAB.PersistDB()
-    if YAB.RefreshAllViews then
-        YAB.RefreshAllViews()
+    if YAB.NotifyCorePageChanged then
+        YAB.NotifyCorePageChanged()
     end
     if YAB.RefreshSettingsUI then
         YAB.RefreshSettingsUI()
@@ -1808,8 +1838,8 @@ end
 function YAB.SetDisplayGroupEnabled(groupKey, enabled)
     YiboAltoBossDB.display.groups[groupKey] = not not enabled
     YAB.PersistDB()
-    if YAB.RefreshAllViews then
-        YAB.RefreshAllViews()
+    if YAB.NotifyCorePageChanged then
+        YAB.NotifyCorePageChanged()
     end
     if YAB.RefreshSettingsUI then
         YAB.RefreshSettingsUI()
@@ -1819,8 +1849,8 @@ end
 function YAB.SetDisplayItemEnabled(targetKey, enabled)
     YiboAltoBossDB.display.items[targetKey] = not not enabled
     YAB.PersistDB()
-    if YAB.RefreshAllViews then
-        YAB.RefreshAllViews()
+    if YAB.NotifyCorePageChanged then
+        YAB.NotifyCorePageChanged()
     end
     if YAB.RefreshSettingsUI then
         YAB.RefreshSettingsUI()
@@ -1885,48 +1915,11 @@ function YAB.CanDeleteCharacter(charKey)
 end
 
 function YAB.DeleteCharacter(charKey)
-    local ok, err = YAB.CanDeleteCharacter(charKey)
-    if not ok then
-        return false, err
-    end
-
-    YiboAltoBossDB.knownChars[charKey] = nil
-    YiboAltoBossDB.characters[charKey] = nil
-    YAB.PersistDB()
-    if YAB.RefreshAllViews then
-        YAB.RefreshAllViews()
-    end
-    if YAB.RefreshSettingsUI then
-        YAB.RefreshSettingsUI()
-    end
-    return true
+    return false, "角色缓存删除已统一迁移到 YiboCore 角色档案，请在那里逐个操作。"
 end
 
 function YAB.DeleteCharacters(charKeys)
-    EnsureDB()
-    local deleted = 0
-    local skipped = 0
-    for _, charKey in ipairs(charKeys or {}) do
-        local ok = YAB.CanDeleteCharacter(charKey)
-        if ok then
-            YiboAltoBossDB.knownChars[charKey] = nil
-            YiboAltoBossDB.characters[charKey] = nil
-            deleted = deleted + 1
-        else
-            skipped = skipped + 1
-        end
-    end
-
-    if deleted > 0 then
-        YAB.PersistDB()
-        if YAB.RefreshAllViews then
-            YAB.RefreshAllViews()
-        end
-        if YAB.RefreshSettingsUI then
-            YAB.RefreshSettingsUI()
-        end
-    end
-    return deleted, skipped
+    return 0, #(charKeys or {}), "不支持批量删除角色缓存；请在 YiboCore 角色档案中逐个操作。"
 end
 
 function YAB.GetCharacterKeys(viewMode)
@@ -2065,6 +2058,9 @@ function YAB.GetBossSummary(viewMode)
 end
 
 function YAB.GetPhaseColumns(viewMode)
+    if YAB.TrackingV3 then
+        return YAB.TrackingV3:GetPhaseColumns(viewMode)
+    end
     viewMode = NormalizeViewMode(viewMode)
     CleanupExpiredWorldState()
     local columns = {}
@@ -2144,6 +2140,27 @@ function YAB.GetBossPhaseState(bossId, column)
         return nil
     end
     local bossKey = GetTargetKey(boss)
+    if YAB.TrackingV3 then
+        local state = YAB.TrackingV3:GetPhaseState(column.realm, bossKey, column.phaseKey)
+        if not state then return nil end
+        local estimate = YAB.GetBossRespawnEstimate and YAB.GetBossRespawnEstimate(bossKey) or nil
+        state.respawnEstimateMode = estimate and estimate.mode or nil
+        state.respawnEstimateSeconds = estimate and estimate.estimateSeconds or nil
+        state.respawnEstimateSamples = estimate and estimate.sampleCount or 0
+        state.respawnEstimateEffectiveSamples = estimate and estimate.effectiveSampleCount or 0
+        state.respawnEstimateExcludedSamples = estimate and estimate.excludedSampleCount or 0
+        state.respawnEstimateConfidence = estimate and estimate.confidence or nil
+        state.respawnEstimateObservedMinSeconds = estimate and estimate.minSeconds or nil
+        state.respawnEstimateObservedMaxSeconds = estimate and estimate.maxSeconds or nil
+        state.respawnEstimateMinSeconds = estimate and estimate.windowMinSeconds or nil
+        state.respawnEstimateMaxSeconds = estimate and estimate.windowMaxSeconds or nil
+        state.respawnEstimateRealmCount = estimate and estimate.sampleRealmCount or 0
+        state.respawnEstimateV3Samples = estimate and estimate.v3SampleCount or 0
+        state.respawnEstimateLegacySamples = estimate and estimate.legacySampleCount or 0
+        state.lastRespawnSampleAt = estimate and estimate.lastRespawnSampleAt or nil
+        state.lastRespawnSampleSeconds = estimate and estimate.lastRespawnSampleSeconds or nil
+        return state
+    end
     local realms = EnsureWorldTables()
     local realmState = realms[column.realm]
     local bossState = realmState and realmState.bosses and realmState.bosses[tostring(bossKey)] or nil
@@ -2151,7 +2168,7 @@ function YAB.GetBossPhaseState(bossId, column)
     if not phaseState then
         return nil
     end
-    local estimate = YAB.GetBossRespawnEstimate and YAB.GetBossRespawnEstimate(bossKey, column.realm) or nil
+    local estimate = YAB.GetBossRespawnEstimate and YAB.GetBossRespawnEstimate(bossKey) or nil
     return {
         realm = column.realm,
         phaseKey = column.phaseKey,
@@ -2167,13 +2184,15 @@ function YAB.GetBossPhaseState(bossId, column)
         respawnEstimateSeconds = estimate and estimate.estimateSeconds or nil,
         respawnEstimateSamples = estimate and estimate.sampleCount or 0,
         respawnEstimateEffectiveSamples = estimate and estimate.effectiveSampleCount or 0,
+        respawnEstimateExcludedSamples = estimate and estimate.excludedSampleCount or 0,
         respawnEstimateConfidence = estimate and estimate.confidence or nil,
         respawnEstimateObservedMinSeconds = estimate and estimate.minSeconds or nil,
         respawnEstimateObservedMaxSeconds = estimate and estimate.maxSeconds or nil,
         respawnEstimateMinSeconds = estimate and estimate.windowMinSeconds or nil,
         respawnEstimateMaxSeconds = estimate and estimate.windowMaxSeconds or nil,
-        lastRespawnSampleAt = phaseState.lastRespawnSampleAt,
-        lastRespawnSampleSeconds = phaseState.lastRespawnSampleSeconds,
+        respawnEstimateRealmCount = estimate and estimate.sampleRealmCount or 0,
+        lastRespawnSampleAt = estimate and estimate.lastRespawnSampleAt or phaseState.lastRespawnSampleAt,
+        lastRespawnSampleSeconds = estimate and estimate.lastRespawnSampleSeconds or phaseState.lastRespawnSampleSeconds,
         zone = phaseState.zone,
         subZone = phaseState.subZone,
         rawPhase = phaseState.rawPhase,
@@ -2256,10 +2275,12 @@ local function BuildRespawnEstimate(samples)
     local mad = Quantile(deviations, 0.5)
     local tolerance = math.max(60, mad * 3)
 
-    local filtered = {}
+    local filtered, rejected = {}, {}
     for _, seconds in ipairs(samples) do
         if math.abs(seconds - median) <= tolerance then
             filtered[#filtered + 1] = seconds
+        else
+            rejected[#rejected + 1] = seconds
         end
     end
     if #filtered == 0 then
@@ -2306,6 +2327,7 @@ local function BuildRespawnEstimate(samples)
         rawSampleCount = rawCount,
         effectiveSampleCount = count,
         filteredSampleCount = #filtered,
+        excludedSampleCount = #rejected,
         mode = mode,
         estimateSeconds = estimateSeconds,
         medianSeconds = median,
@@ -2320,22 +2342,50 @@ local function BuildRespawnEstimate(samples)
     }
 end
 
-function YAB.GetBossRespawnEstimate(bossId, realm)
+function YAB.GetBossRespawnEstimate(bossId)
     EnsureDB()
-    local targetRealm = realm or YAB.GetCurrentRealm()
     local boss = GetBossDefinition(bossId)
     local bossKey = boss and GetTargetKey(boss) or tostring(bossId)
     local samples = {}
-    for _, sample in ipairs(EnsureRespawnSamplesTable()) do
-        local sampleTargetKey = sample.targetKey or tostring(sample.bossId)
-        if sample.realm == targetRealm and tostring(sampleTargetKey) == tostring(bossKey) then
+    local sampleRealms = {}
+    local latestSample
+    local capturedCount = 0
+    local v3SampleCount, legacySampleCount = 0, 0
+    local sourceSamples = YAB.TrackingV3 and YAB.TrackingV3:GetSamples(bossKey, true) or EnsureRespawnSamplesTable()
+    for _, sample in ipairs(sourceSamples) do
+        local sampleTargetKey = sample.bossKey or sample.targetKey or tostring(sample.bossId)
+        if tostring(sampleTargetKey) == tostring(bossKey) then
             local elapsed = tonumber(sample.elapsedSeconds) or 0
-            if elapsed >= MIN_RESPAWN_SAMPLE_SECONDS then
+            if sample.status == nil or sample.status == "complete" then
+                capturedCount = capturedCount + 1
+                if sample.provenance == "v3" then v3SampleCount = v3SampleCount + 1
+                elseif sample.provenance == "v2_legacy" then legacySampleCount = legacySampleCount + 1 end
+            end
+            local sampleRealm = sample.realmKey or sample.realm
+            if sampleRealm and sampleRealm ~= "" then sampleRealms[sampleRealm] = true end
+            if elapsed >= MIN_RESPAWN_SAMPLE_SECONDS and sample.modelEligible ~= false then
                 samples[#samples + 1] = elapsed
+                local completedAt = sample.completedAt or sample.observedAt
+                local latestCompletedAt = latestSample and (latestSample.completedAt or latestSample.observedAt)
+                if not latestSample or (tonumber(completedAt) or 0) > (tonumber(latestCompletedAt) or 0) then latestSample = sample end
             end
         end
     end
-    return BuildRespawnEstimate(samples)
+    local estimate = BuildRespawnEstimate(samples)
+    if not estimate then return nil end
+    estimate.sampleCount = capturedCount
+    estimate.rawSampleCount = capturedCount
+    estimate.excludedSampleCount = math.max(0, capturedCount - (tonumber(estimate.effectiveSampleCount) or 0))
+    estimate.v3SampleCount = v3SampleCount
+    estimate.legacySampleCount = legacySampleCount
+
+    local realmCount = 0
+    for _ in pairs(sampleRealms) do realmCount = realmCount + 1 end
+    estimate.sampleRealmCount = realmCount
+    estimate.lastRespawnSampleAt = latestSample and (latestSample.completedAt or latestSample.observedAt) or nil
+    estimate.lastRespawnSampleSeconds = latestSample and latestSample.elapsedSeconds or nil
+    estimate.pendingCycleCount = YAB.TrackingV3 and YAB.TrackingV3:GetPendingCount(bossKey) or 0
+    return estimate
 end
 
 function YAB.GetRespawnPredictionEntries(viewMode, limit, activeOnly)
@@ -2354,7 +2404,7 @@ function YAB.GetRespawnPredictionEntries(viewMode, limit, activeOnly)
                     end
                 end
                 if (not activeOnly) or hasActivePhase then
-                    local estimate = YAB.GetBossRespawnEstimate(bossId, realm)
+                    local estimate = YAB.GetBossRespawnEstimate(bossId)
                     if estimate then
                         local boss = GetBossDefinition(bossId)
                         items[#items + 1] = {
@@ -2447,8 +2497,8 @@ function YAB.CheckForReset()
     local changed = ResetRecurringStateIfNeeded()
     if changed then
         YAB.PersistDB()
-        if YAB.RefreshAllViews then
-            YAB.RefreshAllViews()
+        if YAB.NotifyCorePageChanged then
+            YAB.NotifyCorePageChanged()
         end
     end
     return changed
@@ -2464,17 +2514,51 @@ function YAB.RecordKillByNpcID(npcId, source, charKey, phaseId)
     local subZone = GetSubZoneText and GetSubZoneText() or nil
     local changed = false
     for _, boss in ipairs(ResolveTargetsByNpcContext(tonumber(npcId), zone, subZone)) do
-        if MarkBossKilled(charKey or curCharKey, boss.key, source or "combat", phaseId, tonumber(npcId)) then
+        local characterEligible = source == "weekly_lockout"
+            or source == "quest_flag"
+            or source == "manual_recovery"
+            or boss.reset ~= "weekly"
+        if characterEligible and MarkBossKilled(charKey or curCharKey, boss.key, source or "combat_personal", phaseId, tonumber(npcId)) then
             changed = true
         end
     end
     if changed then
         YAB.PersistDB()
-        if YAB.RefreshAllViews then
-            YAB.RefreshAllViews()
+        if YAB.NotifyCorePageChanged then
+            YAB.NotifyCorePageChanged()
         end
     end
     return changed
+end
+
+local function RecordObservedWorldDeath(guid)
+    local changed = YAB.TrackingV3 and YAB.TrackingV3:ApplyGUID(guid, "DEATH_EVIDENCE", "unit_died") or false
+    local diagnosticChanged = YAB.TrackingV3 and YAB.TrackingV3:ConsumeDiagnosticsDirty() or false
+    if changed or diagnosticChanged then
+        YAB.PersistDB()
+        if changed and YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+    end
+    return changed
+end
+
+local function RememberLiveBossFromCombat(guid)
+    local changed = YAB.TrackingV3 and YAB.TrackingV3:ApplyGUID(guid, "ALIVE_EVIDENCE", "combat_log") or false
+    local diagnosticChanged = YAB.TrackingV3 and YAB.TrackingV3:ConsumeDiagnosticsDirty() or false
+    if changed or diagnosticChanged then YAB.PersistDB() end
+    return changed
+end
+
+local function IsLiveCombatEvidence(subEvent)
+    if type(subEvent) ~= "string" then return false end
+    return subEvent == "SWING_DAMAGE"
+        or subEvent == "SWING_MISSED"
+        or subEvent == "RANGE_DAMAGE"
+        or subEvent == "RANGE_MISSED"
+        or subEvent:find("_DAMAGE$", 1, false) ~= nil
+        or subEvent:find("_MISSED$", 1, false) ~= nil
+        or subEvent:find("^SPELL_CAST_", 1, false) ~= nil
+        or subEvent == "SPELL_AURA_APPLIED"
+        or subEvent == "SPELL_AURA_REFRESH"
 end
 
 function YAB.ObserveUnit(unit, source)
@@ -2482,56 +2566,18 @@ function YAB.ObserveUnit(unit, source)
         return false
     end
 
-    local guid = UnitGUID(unit)
-    local npcId = ExtractNpcIDFromGUID(guid)
-    local phaseId = ExtractPhaseIDFromGUID(guid)
-    local spawnInfo = ExtractSpawnInfoFromGUID(guid)
-    if not npcId then
+    local isDead = (UnitIsDeadOrGhost and UnitIsDeadOrGhost(unit))
+        or (UnitIsDead and UnitIsDead(unit))
+    if isDead then
         return false
     end
 
-    local label = BuildObservationLabel(unit)
-    local charData = EnsureChar(curCharKey)
-    local zone = GetRealZoneText and GetRealZoneText() or nil
-    local subZone = GetSubZoneText and GetSubZoneText() or nil
-    local targets = ResolveTargetsByNpcContext(npcId, zone, subZone)
-    local changed = false
-    for _, boss in ipairs(targets) do
-        if boss.trackPhase ~= false then
-            local key = boss.key
-            local existing = charData.phases[key]
-            if not (existing and existing.phase == label and (time() - (existing.observedAt or 0)) < 30) then
-                charData.phases[key] = {
-                    phaseId = phaseId,
-                    phase = label,
-                    observedAt = time(),
-                    spawnTime = spawnInfo and spawnInfo.spawnTime or nil,
-                    spawnIndex = spawnInfo and spawnInfo.spawnIndex or nil,
-                    spawnSignature = spawnInfo and spawnInfo.signature or nil,
-                    source = source or unit,
-                    unitName = UnitName(unit) or boss.name or tostring(npcId),
-                    zone = zone,
-                    subZone = subZone,
-                }
-                UpsertWorldPhaseState(curRealm, key, label, curCharKey, {
-                    phaseId = phaseId,
-                    observedAt = charData.phases[key].observedAt,
-                    spawnTime = charData.phases[key].spawnTime,
-                    spawnIndex = charData.phases[key].spawnIndex,
-                    spawnSignature = charData.phases[key].spawnSignature,
-                    zone = charData.phases[key].zone,
-                    subZone = charData.phases[key].subZone,
-                    source = source or unit,
-                })
-                changed = true
-            end
-        end
-    end
-    if changed then
+    local guid = UnitGUID(unit)
+    local changed = YAB.TrackingV3 and YAB.TrackingV3:ApplyGUID(guid, "ALIVE_EVIDENCE", source or unit) or false
+    local diagnosticChanged = YAB.TrackingV3 and YAB.TrackingV3:ConsumeDiagnosticsDirty() or false
+    if changed or diagnosticChanged then
         YAB.PersistDB()
-        if YAB.RefreshAllViews then
-            YAB.RefreshAllViews()
-        end
+        if changed and YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
     end
     return changed
 end
@@ -2547,9 +2593,14 @@ local function HasPendingWorldBossQuestChecks()
     if not C_QuestLog or not C_QuestLog.IsQuestFlaggedCompleted then
         return false
     end
-    for _, questId in pairs(WORLD_BOSS_LOCKOUT_IDS) do
-        if not C_QuestLog.IsQuestFlaggedCompleted(questId) then
-            return true
+    local charData = EnsureChar(curCharKey)
+    local resetKey = GetCurrentWeeklyResetKey()
+    for bossId, questId in pairs(WORLD_BOSS_LOCKOUT_IDS) do
+        if C_QuestLog.IsQuestFlaggedCompleted(questId) then
+            local boss = GetBossDefinition(bossId)
+            local bossKey = boss and GetTargetKey(boss)
+            local kill = bossKey and charData.kills[bossKey]
+            if not (kill and kill.killed and kill.resetKey == resetKey) then return true end
         end
     end
     return false
@@ -2572,8 +2623,8 @@ local function SyncWorldBossQuestKills()
 
     if changed then
         YAB.PersistDB()
-        if YAB.RefreshAllViews then
-            YAB.RefreshAllViews()
+        if YAB.NotifyCorePageChanged then
+            YAB.NotifyCorePageChanged()
         end
     end
     return changed
@@ -2594,24 +2645,53 @@ local function HandleCombatLogEvent()
         return
     end
 
-    local _, subEvent, _, _, _, _, _, destGUID = CombatLogGetCurrentEventInfo()
-    if subEvent ~= "UNIT_DIED" and subEvent ~= "PARTY_KILL" then
+    local _, subEvent, _, sourceGUID, _, _, _, destGUID = CombatLogGetCurrentEventInfo()
+    -- A nearby UNIT_DIED is useful for world respawn timing only when this exact
+    -- GUID was observed alive first.  It must not mark the character's weekly
+    -- completion; PARTY_KILL and the weekly lockout flag remain responsible for
+    -- that character-scoped state.
+    if subEvent == "UNIT_DIED" then
+        RecordObservedWorldDeath(destGUID)
+        return
+    end
+    -- Damage, casts, and aura events prove that this GUID is a living spawn.
+    -- Remember either side so raid combat is enough to collect its death timer,
+    -- even when this client never targets or mouses over the boss directly.
+    if IsLiveCombatEvidence(subEvent) then
+        local changed = RememberLiveBossFromCombat(sourceGUID)
+        changed = RememberLiveBossFromCombat(destGUID) or changed
+        if changed and YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+    end
+    if subEvent ~= "PARTY_KILL" then
         return
     end
 
     local npcId = ExtractNpcIDFromGUID(destGUID)
-    local phaseId = ExtractPhaseIDFromGUID(destGUID)
     if not npcId then
         return
     end
 
-    YAB.RecordKillByNpcID(npcId, subEvent == "PARTY_KILL" and "party_kill" or "unit_died", curCharKey, phaseId)
+    local trackingChanged = YAB.TrackingV3 and YAB.TrackingV3:ApplyGUID(destGUID, "DEATH_EVIDENCE", "party_kill", { strongEvidence = true })
+    local diagnosticChanged = YAB.TrackingV3 and YAB.TrackingV3:ConsumeDiagnosticsDirty() or false
+    if trackingChanged or diagnosticChanged then
+        YAB.PersistDB()
+        if trackingChanged and YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+    end
+    YAB.RecordKillByNpcID(npcId, "combat_personal", curCharKey, ExtractPhaseIDFromGUID(destGUID))
+    if C_Timer and C_Timer.After then
+        C_Timer.After(1, function() YAB.SyncWorldBossQuestKillsIfNeeded() end)
+    end
 end
 
 local function HandleWorldEntry()
     EnsureDB()
     YAB.CheckForReset()
     ObserveTrackedUnits()
+    if YAB.TrackingV3 and YAB.TrackingV3:Cleanup() then
+        YAB.TrackingV3:ConsumeDiagnosticsDirty()
+        YAB.PersistDB()
+        if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+    end
     YAB.SyncWorldBossQuestKillsIfNeeded()
 end
 
@@ -2625,10 +2705,12 @@ eventFrame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
 eventFrame:RegisterEvent("PLAYER_FOCUS_CHANGED")
 eventFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 eventFrame:RegisterEvent("QUEST_LOG_UPDATE")
+eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 eventFrame:SetScript("OnEvent", function(_, event, ...)
     local arg1 = ...
     if event == "ADDON_LOADED" and arg1 == ADDON_NAME then
         EnsureDB()
+        if YAB.TrackingV3 then YAB.TrackingV3:Initialize() end
         YAB.PersistDB()
     elseif event == "PLAYER_LOGIN" then
         EnsureDB()
@@ -2640,12 +2722,9 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
                 DEFAULT_CHAT_FRAME:AddMessage("|cffff5555YiboAltoBoss Core 接入失败:|r " .. tostring(errorMessage))
             end
         end
-        if YAB.InitializeUI then
-            YAB.InitializeUI()
-        end
-        if YAB.InitializeSettings then
-            YAB.InitializeSettings()
-        end
+        -- Settings are hosted exclusively by YiboCore's workbench.  Do not
+        -- initialize AltoBoss's retired standalone frame here: keeping that
+        -- shell alive would reintroduce a competing title bar and scroll area.
     elseif event == "PLAYER_ENTERING_WORLD" then
         HandleWorldEntry()
     elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
@@ -2658,41 +2737,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
         YAB.ObserveUnit("focus", "focus")
     elseif event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
         ObserveTrackedUnits()
-    elseif event == "QUEST_LOG_UPDATE" then
+    elseif event == "QUEST_LOG_UPDATE" or event == "PLAYER_REGEN_ENABLED" then
         YAB.SyncWorldBossQuestKillsIfNeeded()
     end
 end)
-
-SLASH_YIBOALTOBOSS1 = "/yab"
-SlashCmdList["YIBOALTOBOSS"] = function(message)
-    YAB.CheckForReset()
-    local command = tostring(message or ""):match("^%s*(.-)%s*$"):lower()
-    if command == "debug" then
-        if DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
-            local bosses = YAB.GetBossList()
-            local allBosses = YAB.GetAllBossList()
-            local names = {}
-            for _, boss in ipairs(bosses) do
-                names[#names + 1] = tostring(boss.key) .. "=" .. tostring(boss.name)
-            end
-            DEFAULT_CHAT_FRAME:AddMessage("|cffFFD84AYiboAltoBoss:|r bossList " .. tostring(#bosses) .. "/" .. tostring(#allBosses) .. " -> " .. table.concat(names, ", "))
-            local display = YiboAltoBossDB.display or {}
-            local groups = display.groups or {}
-            DEFAULT_CHAT_FRAME:AddMessage("|cffFFD84AYiboAltoBoss:|r groups world_boss=" .. tostring(groups.world_boss) .. " warbringer=" .. tostring(groups.warbringer) .. " custom=" .. tostring(groups.custom))
-            if YAB.DebugBrokerState then
-                YAB.DebugBrokerState()
-            end
-        end
-        return
-    end
-    if command == "celestial" or command == "celestials" then
-        local _, result = YAB.RecordBossManually(curCharKey, "celestials")
-        if DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
-            DEFAULT_CHAT_FRAME:AddMessage("|cffFFD84AYiboAltoBoss:|r " .. tostring(result))
-        end
-        return
-    end
-    if YAB.ToggleCurrentServerView then
-        YAB.ToggleCurrentServerView()
-    end
-end

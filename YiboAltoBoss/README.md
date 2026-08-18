@@ -1,6 +1,6 @@
 # YiboAltoBoss
 
-YiboAltoBoss is a World of Warcraft addon for Mists of Pandaria Classic that tracks world boss weekly kills and Warbringer observations across your characters. Version 2.0 requires YiboCore and uses its unified account entry, character directory, and settings navigation.
+YiboAltoBoss is a World of Warcraft addon for Mists of Pandaria Classic that tracks world boss weekly kills and Warbringer observations across your characters. Version 2.1 requires YiboCore API v3 and uses its unified account page, character directory, optional entry, and settings navigation.
 
 ![YiboAltoBoss overview](Screenshots/Snipaste_2026-07-06_06-09-49.png)
 
@@ -13,12 +13,12 @@ YiboAltoBoss is a World of Warcraft addon for Mists of Pandaria Classic that tra
 - Unified YiboCore entry and account-view navigation
 - Configurable overview and settings panels
 
-## Core integration (2.0)
+## Core integration (2.1)
 
 - `YiboAltoBossDB` remains the owner of all Boss, phase, respawn-sample, custom-target, and display data.
 - Known AltoBoss characters are imported into YiboCore's shared character directory without changing their legacy Boss data keys.
 - YiboCore owns the default minimap/Broker entry and exposes AltoBoss in its settings navigation.
-- The existing Boss grid is deliberately retained as a transition view in 2.0. Its renderer will move into the Core business page in 2.1.
+- The formal Boss grid and its hover preview use one AltoBoss renderer inside the Core account view. Page scope, character hiding, sorting, preview limits, and optional entry lifecycle are managed by Core.
 
 ## Release Package
 

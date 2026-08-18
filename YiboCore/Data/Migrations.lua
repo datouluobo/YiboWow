@@ -3,7 +3,7 @@ local Core = _G.YiboCore
 local Migrations = {}
 Core.Migrations = Migrations
 
-Migrations.CURRENT_SCHEMA = 4
+Migrations.CURRENT_SCHEMA = 6
 Migrations._steps = Migrations._steps or {}
 
 function Migrations:Register(version, callback)
@@ -69,6 +69,54 @@ Migrations:Register(4, function(db)
     db.settings.accountView.entry = entry
     entry.pageModes = entry.pageModes or {}
     entry.pagePositions = entry.pagePositions or {}
+end)
+
+Migrations:Register(5, function(db)
+    db.settings = db.settings or {}
+    db.settings.accountView = db.settings.accountView or {}
+    local view = db.settings.accountView
+    local previous = view.characterSort
+
+    view.pageCharacterSorts = type(view.pageCharacterSorts) == "table" and view.pageCharacterSorts or {}
+    view.customCharacterOrder = type(view.customCharacterOrder) == "table" and view.customCharacterOrder or {}
+
+    if type(previous) == "string" then
+        if previous == "seen" then
+            local characters = {}
+            for _, character in pairs(db.characters and db.characters.byID or {}) do
+                characters[#characters + 1] = character
+            end
+            table.sort(characters, function(left, right)
+                local leftOrder, rightOrder = tonumber(left.seenOrder), tonumber(right.seenOrder)
+                if leftOrder ~= rightOrder then
+                    if leftOrder == nil then return false end
+                    if rightOrder == nil then return true end
+                    return leftOrder < rightOrder
+                end
+                return tostring(left.id or "") < tostring(right.id or "")
+            end)
+            local seen = {}
+            for _, character in ipairs(characters) do
+                if type(character.id) == "string" and character.id ~= "" and not seen[character.id] then
+                    seen[character.id] = true
+                    view.customCharacterOrder[#view.customCharacterOrder + 1] = character.id
+                end
+            end
+            view.characterSort = { mode = "custom", direction = "desc", pinCurrent = false }
+        elseif previous == "name" then
+            view.characterSort = { mode = "name", direction = "asc", pinCurrent = false }
+        elseif previous == "level" then
+            view.characterSort = { mode = "level", direction = "desc", pinCurrent = false }
+        else
+            view.characterSort = { mode = "recent", direction = "desc", pinCurrent = false }
+        end
+    elseif type(previous) ~= "table" then
+        view.characterSort = { mode = "recent", direction = "desc", pinCurrent = false }
+    end
+end)
+
+Migrations:Register(6, function(db)
+    db.characterDeletionHistory = type(db.characterDeletionHistory) == "table" and db.characterDeletionHistory or {}
 end)
 
 Core.Capabilities:Register("migrations", 1)

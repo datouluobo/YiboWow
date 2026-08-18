@@ -22,7 +22,13 @@ local DEFAULTS = {
             pages = {},
             fields = {},
             hiddenCharacters = {},
-            characterSort = "seen",
+            characterSort = {
+                mode = "recent",
+                direction = "desc",
+                pinCurrent = false,
+            },
+            pageCharacterSorts = {},
+            customCharacterOrder = {},
             entry = {
                 minimap = { show = true, angle = 225 },
                 broker = { show = true },
@@ -32,6 +38,7 @@ local DEFAULTS = {
         },
     },
     migrationHistory = {},
+    characterDeletionHistory = {},
 }
 
 function Database:GetDB()

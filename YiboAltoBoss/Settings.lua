@@ -1,4 +1,5 @@
 local YAB = _G.YAB
+local Theme = _G.YiboCore.UITheme
 
 local SettingsFrame
 local hoverModeLabel
@@ -263,12 +264,9 @@ local function RaiseSettingsTooltip()
 end
 
 local function CreateCheckbox(parent, labelText)
-    local check = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
-    local label = CreateText(parent, 11, "LEFT")
-    label:SetText(labelText or "")
-    label:SetTextColor(TEXT_COLOR[1], TEXT_COLOR[2], TEXT_COLOR[3])
-    label:SetPoint("LEFT", check, "RIGHT", 4, 1)
-    return check, label
+    local check = Theme:CreateCheckbox(parent, labelText)
+    check.label:SetTextColor(TEXT_COLOR[1], TEXT_COLOR[2], TEXT_COLOR[3])
+    return check, check.label
 end
 
 local function SetCheckboxVisual(check, label, enabled)
@@ -324,6 +322,7 @@ local function RebuildDisplayControls()
             displayGroupChecks[group.key] = groupCheck
             displayLabels[group.key] = groupLabel
             groupCheck:SetScript("OnClick", function(self)
+                self:SetChecked(not self:GetChecked())
                 YAB.SetDisplayGroupEnabled(group.key, self:GetChecked())
             end)
         end
@@ -341,6 +340,7 @@ local function RebuildDisplayControls()
                 displayItemChecks[target.key] = itemCheck
                 displayLabels[target.key] = itemLabel
                 itemCheck:SetScript("OnClick", function(self)
+                    self:SetChecked(not self:GetChecked())
                     YAB.SetDisplayItemEnabled(target.key, self:GetChecked())
                 end)
             end
@@ -370,7 +370,6 @@ local function RefreshCharacterCacheControls()
 
     local showAll = YAB.GetCharacterCacheShowAll and YAB.GetCharacterCacheShowAll()
     local keys = YAB.GetCachedCharacterKeys and YAB.GetCachedCharacterKeys(showAll) or {}
-    local cleanupKeys = YAB.GetFilteredOutCachedCharacterKeys and YAB.GetFilteredOutCachedCharacterKeys() or {}
     local totalPages = math.max(1, math.ceil(#keys / CHARACTER_ROWS_PER_PAGE))
     if characterPage > totalPages then
         characterPage = totalPages
@@ -393,10 +392,7 @@ local function RefreshCharacterCacheControls()
             row.deleteButton.charKey = charKey
             row.deleteButton.label = label
             row.deleteButton.reason = reason
-            row.deleteButton.variant = canDelete and "danger" or "muted"
-            row.deleteButton:SetEnabled(not not canDelete)
-            row.deleteButton:SetText(canDelete and "删" or "当前")
-            SetButtonVisual(row.deleteButton)
+            row.deleteButton:Hide()
             row:Show()
         else
             row.charKey = nil
@@ -414,17 +410,15 @@ local function RefreshCharacterCacheControls()
         characterShowAllCheck:SetChecked(showAll)
         SetCheckboxVisual(characterShowAllCheck, characterShowAllLabel, true)
     end
-    if characterCleanupButton then
-        characterCleanupButton:SetEnabled(#cleanupKeys > 0)
-        SetButtonVisual(characterCleanupButton)
-    end
+    if characterCleanupButton then characterCleanupButton:Hide() end
     if characterCleanupLabel then
         local levelExpr = tostring(YAB.GetLevelFilterExpr and YAB.GetLevelFilterExpr() or "")
         if levelExpr == "" or levelExpr == "0" then
-            characterCleanupLabel:SetText("未启用等级过滤")
+            characterCleanupLabel:SetText("请在 YiboCore 角色档案中逐个删除缓存")
         else
-            characterCleanupLabel:SetText("过滤外: " .. #cleanupKeys .. " 个")
+            characterCleanupLabel:SetText("请在 YiboCore 角色档案中逐个删除缓存")
         end
+        characterCleanupLabel:SetWidth(260)
     end
     characterPrevButton:SetEnabled(characterPage > 1)
     characterNextButton:SetEnabled(characterPage < totalPages)
@@ -719,6 +713,7 @@ function YAB.InitializeSettings()
     characterShowAllCheck, characterShowAllLabel = CreateCheckbox(characterPanel, "显示全部角色")
     characterShowAllCheck:SetPoint("TOPLEFT", characterPanel, "TOPLEFT", 12, -54)
     characterShowAllCheck:SetScript("OnClick", function(self)
+        self:SetChecked(not self:GetChecked())
         characterPage = 1
         if YAB.SetCharacterCacheShowAll then
             YAB.SetCharacterCacheShowAll(self:GetChecked())
@@ -752,11 +747,15 @@ function YAB.InitializeSettings()
             RefreshCharacterCacheControls()
         end
     end)
+    characterCleanupButton:Hide()
 
     characterCleanupLabel = CreateText(characterPanel, 11, "LEFT")
     characterCleanupLabel:SetPoint("LEFT", characterCleanupButton, "RIGHT", 8, 0)
     characterCleanupLabel:SetWidth(92)
     characterCleanupLabel:SetTextColor(SUBTEXT_COLOR[1], SUBTEXT_COLOR[2], SUBTEXT_COLOR[3])
+    characterCleanupLabel:ClearAllPoints()
+    characterCleanupLabel:SetPoint("TOPRIGHT", characterPanel, "TOPRIGHT", -12, -57)
+    characterCleanupLabel:SetWidth(280)
 
     if StaticPopupDialogs and not StaticPopupDialogs.YAB_DELETE_CHARACTER then
         StaticPopupDialogs.YAB_DELETE_CHARACTER = {
@@ -861,6 +860,8 @@ function YAB.InitializeSettings()
                 RefreshCharacterCacheControls()
             end
         end)
+        row.deleteButton:Hide()
+        row.label:SetWidth(202)
 
         characterRows[index] = row
     end
@@ -928,7 +929,7 @@ function YAB.InitializeSettings()
     customListBox = CreateInsetBox(customPanel, 234, 106)
     customListBox:SetPoint("TOPLEFT", customListTitle, "BOTTOMLEFT", 0, -6)
 
-    customListScroll = CreateFrame("ScrollFrame", nil, customListBox, "UIPanelScrollFrameTemplate")
+    customListScroll = Theme:CreateScrollFrame(customListBox)
     customListScroll:SetPoint("TOPLEFT", customListBox, "TOPLEFT", 4, -4)
     customListScroll:SetPoint("BOTTOMRIGHT", customListBox, "BOTTOMRIGHT", -22, 4)
 
@@ -955,4 +956,184 @@ function YAB.InitializeSettings()
         SettingsFrame:Raise()
     end
     YAB.RefreshSettingsUI()
+end
+
+-- 由 YiboCore 的统一设置工作台承载；业务状态和校验仍归 AltoBoss。
+function YAB.CreateCoreSettingsPanel(parent, context)
+    context = context or {}
+    local panel = parent.yabSettingsPanel
+    if not panel then
+        panel = CreateFrame("Frame", nil, parent)
+        panel:SetSize(600, 1)
+        panel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
+        parent.yabSettingsPanel = panel
+        panel.groupChecks, panel.groupExpandButtons, panel.itemChecks = {}, {}, {}
+        -- Unconfigured groups default to expanded.  The per-group preference
+        -- belongs to AltoBoss because it only changes this business editor.
+        YiboAltoBossDB.ui = YiboAltoBossDB.ui or {}
+        YiboAltoBossDB.ui.settingsExpandedGroups = YiboAltoBossDB.ui.settingsExpandedGroups or {}
+        panel.customRows = {}
+        panel.expandedGroups = YiboAltoBossDB.ui.settingsExpandedGroups
+
+        local Section = context.createSection
+        panel.targets = Section(panel, "监控目标", 292, 1)
+        panel.targets:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, 0)
+        panel.targetHint = context.createText(panel.targets, Theme.Font.assist, Theme.Colors.muted, "LEFT")
+        panel.targetHint:SetPoint("TOPLEFT", 12, -40); panel.targetHint:SetPoint("TOPRIGHT", -12, -40)
+        panel.targetHint:SetText("关闭项目会停止后续记录，不会删除已有历史数据。点击 + 展开组内目标。")
+        panel.targetContent = CreateFrame("Frame", nil, panel.targets)
+        panel.targetContent:SetPoint("TOPLEFT", 12, -62); panel.targetContent:SetPoint("TOPRIGHT", -12, -62)
+
+        panel.filter = Section(panel, "角色过滤", 292, 126)
+        panel.filter:SetPoint("TOPLEFT", panel.targets, "TOPRIGHT", 12, 0)
+        local filterHint = context.createText(panel.filter, Theme.Font.assist, Theme.Colors.muted, "LEFT")
+        filterHint:SetPoint("TOPLEFT", 12, -40); filterHint:SetPoint("TOPRIGHT", -12, -40)
+        filterHint:SetText("支持 90、1-20、<=3、>=85；留空或 0 不过滤。")
+        panel.levelInput = CreateFrame("EditBox", nil, panel.filter, "InputBoxTemplate")
+        panel.levelInput:SetSize(174, 24); panel.levelInput:SetPoint("TOPLEFT", 12, -70)
+        panel.levelInput:SetAutoFocus(false)
+        local levelHelp = context.createButton(panel.filter, 72, "格式说明")
+        levelHelp:SetPoint("LEFT", panel.levelInput, "RIGHT", 8, 0)
+        context.bindTooltip(levelHelp, "等级过滤", { "可输入单个等级、区间或比较表达式。", "示例：90、1-20、<=3、>=85。", "留空或 0 表示不过滤。" })
+        panel.levelStatus = context.createText(panel.filter, Theme.Font.assist, Theme.Colors.muted, "LEFT")
+        panel.levelStatus:SetPoint("TOPLEFT", 12, -102); panel.levelStatus:SetPoint("TOPRIGHT", -12, -102)
+        local function CommitEmbeddedFilter()
+            local valid, normalized, badToken = YAB.ValidateLevelExpr(panel.levelInput:GetText())
+            panel.levelInput:SetText(normalized)
+            if valid then
+                YAB.SetLevelFilterExpr(normalized)
+                panel.levelStatus:SetText(normalized == "" or normalized == "0" and "显示全部等级角色。" or ("已过滤：" .. normalized))
+                panel.levelStatus:SetTextColor(Theme.Colors.success[1], Theme.Colors.success[2], Theme.Colors.success[3])
+                if context and context.notifyPageChanged then context.notifyPageChanged() end
+            else
+                panel.levelStatus:SetText("格式无效：" .. tostring(badToken or ""))
+                panel.levelStatus:SetTextColor(Theme.Colors.danger[1], Theme.Colors.danger[2], Theme.Colors.danger[3])
+            end
+        end
+        panel.levelInput:SetScript("OnEnterPressed", function(self) CommitEmbeddedFilter(); self:ClearFocus() end)
+        panel.levelInput:SetScript("OnEditFocusLost", CommitEmbeddedFilter)
+        panel.levelInput:SetScript("OnEscapePressed", function(self) self:SetText(tostring(YAB.GetLevelFilterExpr() or "")); self:ClearFocus() end)
+
+        panel.custom = Section(panel, "自定义目标", 292, 1)
+        panel.custom:SetPoint("TOPRIGHT", panel.filter, "TOPRIGHT", 0, 0)
+        local customHint = context.createText(panel.custom, Theme.Font.assist, Theme.Colors.muted, "LEFT")
+        customHint:SetPoint("TOPLEFT", 12, -40); customHint:SetText("NPC ID（点击下方已添加的目标可回填）")
+        panel.npcInput = CreateFrame("EditBox", nil, panel.custom, "InputBoxTemplate")
+        panel.npcInput:SetSize(92, 24); panel.npcInput:SetPoint("TOPLEFT", 12, -70); panel.npcInput:SetAutoFocus(false); panel.npcInput:SetNumeric(true)
+        local add = context.createButton(panel.custom, 52, "添加"); add:SetState("selected"); add:SetPoint("LEFT", panel.npcInput, "RIGHT", 8, 0)
+        local remove = context.createButton(panel.custom, 52, "删除", "danger"); remove:SetPoint("LEFT", add, "RIGHT", 6, 0)
+        panel.customStatus = context.createText(panel.custom, Theme.Font.assist, Theme.Colors.muted, "LEFT"); panel.customStatus:SetPoint("TOPLEFT", 12, -102); panel.customStatus:SetPoint("TOPRIGHT", -12, -102)
+        local function UpdateCustom(ok, message)
+            panel.customStatus:SetText(message or "")
+            local color = ok and Theme.Colors.success or Theme.Colors.danger
+            panel.customStatus:SetTextColor(color[1], color[2], color[3])
+            if ok then panel.npcInput:SetText("") end
+            if context and context.refreshPage then context.refreshPage() end
+        end
+        add:SetScript("OnClick", function() local ok, message = YAB.AddCustomTarget(panel.npcInput:GetText()); UpdateCustom(ok, message or (ok and "已添加自定义目标。" or "添加失败。")) end)
+        remove:SetScript("OnClick", function() local ok, message = YAB.RemoveCustomTarget(panel.npcInput:GetText()); UpdateCustom(ok, message or (ok and "已删除自定义目标。" or "删除失败。")) end)
+
+    end
+
+    panel.levelInput:SetText(tostring(YAB.GetLevelFilterExpr() or ""))
+    local panelWidth = math.max(600, parent:GetWidth() or 600)
+    local halfWidth = math.floor((panelWidth - 12) / 2)
+    panel:SetWidth(panelWidth)
+    panel.targets:SetWidth(halfWidth)
+    panel.filter:SetWidth(halfWidth)
+    panel.custom:SetWidth(halfWidth)
+    local groups = YAB.GetDisplayGroups and YAB.GetDisplayGroups() or {}
+    for _, check in pairs(panel.groupChecks) do check:Hide() end
+    for _, check in pairs(panel.itemChecks) do check:Hide() end
+    for _, button in pairs(panel.groupExpandButtons) do button:Hide() end
+    for _, button in ipairs(panel.customRows) do button:Hide() end
+    local targetsByGroup = {}
+    for _, target in ipairs(YAB.GetAllBossList and YAB.GetAllBossList() or {}) do
+        local groupKey = target.group or "custom"
+        targetsByGroup[groupKey] = targetsByGroup[groupKey] or {}
+        targetsByGroup[groupKey][#targetsByGroup[groupKey] + 1] = target
+    end
+    local columnHeight = 0
+    local columnWidth = halfWidth - 24
+    for index, group in ipairs(groups) do
+        local check = panel.groupChecks[group.key]
+        if not check then
+            check = context.createCheckbox(panel.targetContent, group.name)
+            check:SetWidth(250); check.label:SetWidth(224)
+            panel.groupChecks[group.key] = check
+            check:SetScript("OnClick", function(self)
+                self:SetChecked(not self:GetChecked())
+                YAB.SetDisplayGroupEnabled(group.key, self:GetChecked())
+                if context and context.notifyPageChanged then context.notifyPageChanged() end
+            end)
+        end
+        check:SetWidth(columnWidth - 30); check.label:SetWidth(columnWidth - 56)
+        check:ClearAllPoints(); check:SetPoint("TOPLEFT", panel.targetContent, "TOPLEFT", 0, -columnHeight)
+        check:SetChecked(YAB.IsDisplayGroupEnabled(group.key)); check.label:SetText(group.name); check:Show()
+        local expand = panel.groupExpandButtons[group.key]
+        if not expand then
+            expand = context.createButton(panel.targetContent, 22, "+")
+            panel.groupExpandButtons[group.key] = expand
+            expand:SetScript("OnClick", function()
+                local expanded = panel.expandedGroups[group.key] ~= false
+                panel.expandedGroups[group.key] = not expanded
+                YAB.PersistDB()
+                if context and context.refreshPage then context.refreshPage() end
+            end)
+        end
+        expand:ClearAllPoints(); expand:SetPoint("TOPLEFT", panel.targetContent, "TOPLEFT", columnWidth - 30, -columnHeight + 3)
+        local expanded = panel.expandedGroups[group.key] ~= false
+        expand:SetText(expanded and "−" or "+"); expand:Show()
+        columnHeight = columnHeight + 28
+        for _, target in ipairs(expanded and (targetsByGroup[group.key] or {}) or {}) do
+            local itemCheck = panel.itemChecks[target.key]
+            if not itemCheck then
+                itemCheck = context.createCheckbox(panel.targetContent, target.name)
+                itemCheck:SetWidth(236); itemCheck.label:SetWidth(210)
+                panel.itemChecks[target.key] = itemCheck
+                itemCheck:SetScript("OnClick", function(self)
+                    self:SetChecked(not self:GetChecked())
+                    YAB.SetDisplayItemEnabled(target.key, self:GetChecked())
+                    if context and context.notifyPageChanged then context.notifyPageChanged() end
+                end)
+            end
+            itemCheck:SetWidth(columnWidth - 44); itemCheck.label:SetWidth(columnWidth - 70)
+            itemCheck:ClearAllPoints(); itemCheck:SetPoint("TOPLEFT", panel.targetContent, "TOPLEFT", 16, -columnHeight)
+            itemCheck:SetChecked(YAB.IsDisplayItemChecked(target.key)); itemCheck.label:SetText(target.name)
+            itemCheck:EnableMouse(YAB.IsDisplayGroupEnabled(group.key))
+            itemCheck:Show()
+            columnHeight = columnHeight + 26
+        end
+        columnHeight = columnHeight + 4
+    end
+    local targetHeight = math.max(88, columnHeight)
+    panel.targetContent:SetHeight(targetHeight)
+    panel.targets:SetHeight(targetHeight + 74)
+
+    panel.filter:ClearAllPoints(); panel.filter:SetPoint("TOPLEFT", panel.targets, "TOPRIGHT", 12, 0)
+    panel.custom:ClearAllPoints(); panel.custom:SetPoint("TOPLEFT", panel.filter, "BOTTOMLEFT", 0, -12)
+    local customTargets = {}
+    for _, target in ipairs(targetsByGroup.custom or {}) do customTargets[#customTargets + 1] = target end
+    local customY = 126
+    for index, target in ipairs(customTargets) do
+        local row = panel.customRows[index]
+        if not row then
+            row = context.createButton(panel.custom, 128, "")
+            row:SetScript("OnClick", function(self)
+                panel.npcInput:SetText(tostring(self.npcID or "")); panel.npcInput:ClearFocus()
+                panel.customStatus:SetText("已回填 NPC ID " .. tostring(self.npcID or "") .. "，可继续删除。")
+                panel.customStatus:SetTextColor(Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3])
+            end)
+            panel.customRows[index] = row
+        end
+        local column = (index - 1) % 2
+        local rowIndex = math.floor((index - 1) / 2)
+        local customButtonWidth = math.floor((panel.custom:GetWidth() - 36) / 2)
+        row:SetWidth(customButtonWidth); row:ClearAllPoints(); row:SetPoint("TOPLEFT", panel.custom, "TOPLEFT", 12 + column * (customButtonWidth + 8), -customY - rowIndex * 28)
+        row.npcID = target.id; row:SetText((target.name or "自定义目标") .. " " .. tostring(target.id)); row:Show()
+    end
+    local customRows = math.ceil(#customTargets / 2)
+    panel.custom:SetHeight(math.max(126, 134 + customRows * 28))
+    panel:SetHeight(math.max(panel.targets:GetHeight(), panel.filter:GetHeight() + 12 + panel.custom:GetHeight()))
+    return panel:GetHeight()
 end

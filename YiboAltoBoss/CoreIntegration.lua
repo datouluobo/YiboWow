@@ -1,12 +1,25 @@
 local Core = _G.YiboCore
 local YAB = _G.YAB
 
--- 2.0 只接管生命周期、账号入口和设置归属。原有网格窗口仍是过渡期
--- 的业务呈现层；2.1 再将其渲染器拆入 Core 页面。
+-- AltoBoss 的账号视图、预览和可选入口均由 YiboCore 承载；此处只保留业务数据适配。
 local Integration = {}
 YAB.CoreIntegration = Integration
 
 local PAGE_ID = "alto-boss"
+
+local function RealmScopeID(realm)
+    return "realm:" .. tostring(realm or "Unknown")
+end
+
+local function BuildScopeDefinition()
+    local currentRealm = YAB.GetCurrentRealm()
+    local values = { { id = RealmScopeID(currentRealm), title = currentRealm } }
+    for _, realm in ipairs(YAB.GetOtherRealmNames()) do
+        values[#values + 1] = { id = RealmScopeID(realm), title = realm }
+    end
+    values[#values + 1] = { id = "all", title = "所有服务器" }
+    return { default = RealmScopeID(currentRealm), values = values }
+end
 
 local function AddText(parent, template, color)
     local text = parent:CreateFontString(nil, "OVERLAY", template or "GameFontNormal")
@@ -50,45 +63,135 @@ local function ImportKnownCharacters()
     end
 end
 
-local function CreatePage(parent)
-    parent.heading = AddText(parent, "GameFontNormalLarge", { 1, 0.86, 0.28 })
-    parent.heading:SetPoint("TOPLEFT", 20, -18)
-    parent.heading:SetText("Boss 击杀与位面观察")
-
-    parent.summary = AddText(parent, "GameFontNormal", { 0.90, 0.96, 0.97 })
-    parent.summary:SetPoint("TOPLEFT", 20, -56)
-    parent.summary:SetPoint("TOPRIGHT", -20, -56)
-
-    parent.notice = AddText(parent, "GameFontNormalSmall", { 0.53, 0.70, 0.73 })
-    parent.notice:SetPoint("TOPLEFT", 20, -92)
-    parent.notice:SetPoint("TOPRIGHT", -20, -92)
-    parent.notice:SetWordWrap(true)
-    parent.notice:SetText("AltoBoss 2.0 已接入 Core 的账号入口、角色目录和设置导航。完整 Boss 网格暂继续使用既有业务窗口；该网格将在 2.1 迁入此页面。")
-
-    parent.openLegacy = CreateButton(parent, "打开 Boss 总览")
-    parent.openLegacy:SetPoint("TOPLEFT", 20, -154)
-    parent.openLegacy:SetScript("OnClick", function()
-        if YAB.ToggleCurrentServerView then
-            YAB.ToggleCurrentServerView()
+local function GetCleanupLegacyKeys(character, aliases)
+    local keys, seen = {}, {}
+    for legacyKey in pairs(YiboAltoBossDB.knownChars or {}) do
+        local resolvedID = Core.Characters:ResolveLegacyKey(legacyKey)
+        if resolvedID == character.id or (aliases and aliases[legacyKey]) then
+            seen[legacyKey] = true
+            keys[#keys + 1] = legacyKey
         end
-    end)
-
-    parent.hint = AddText(parent, "GameFontNormalSmall", { 0.53, 0.70, 0.73 })
-    parent.hint:SetPoint("TOPLEFT", parent.openLegacy, "BOTTOMLEFT", 0, -12)
-    parent.hint:SetText("插件专属配置请在 Core 设置中的“YiboAltoBoss”项打开。")
+    end
+    for legacyKey in pairs(YiboAltoBossDB.characters or {}) do
+        local resolvedID = Core.Characters:ResolveLegacyKey(legacyKey)
+        if not seen[legacyKey] and (resolvedID == character.id or (aliases and aliases[legacyKey])) then
+            seen[legacyKey] = true
+            keys[#keys + 1] = legacyKey
+        end
+    end
+    return keys
 end
 
-local function RefreshPage(parent)
-    ImportKnownCharacters()
-    local killed, total = YAB.GetBossSummary("all")
-    local activeKills, tracked = YAB.GetBossPhaseSummary("all")
-    local characters = #YAB.GetCharacterKeys("all")
-    parent.summary:SetText(string.format("已记录角色 %d 名 · Boss 击杀 %d/%d · 位面观测 %d（击杀计时 %d）", characters, killed, total, tracked, activeKills))
+local function RegisterCharacterCleanupOwner()
+    if not Core.CharacterCleanup then return nil, "YiboCore 角色清理能力不可用。" end
+    return Core.CharacterCleanup:RegisterOwner("YiboAltoBoss", {
+        Inspect = function(character, aliases)
+            local keys = GetCleanupLegacyKeys(character, aliases)
+            return {
+                hasData = #keys > 0,
+                label = "Boss 周常角色记录",
+                detail = #keys > 0 and (tostring(#keys) .. " 组角色缓存") or "无角色缓存",
+            }
+        end,
+        Delete = function(character, aliases)
+            for _, legacyKey in ipairs(GetCleanupLegacyKeys(character, aliases)) do
+                YiboAltoBossDB.knownChars[legacyKey] = nil
+                YiboAltoBossDB.characters[legacyKey] = nil
+            end
+            YAB.PersistDB()
+            if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+            if YAB.RefreshSettingsUI then YAB.RefreshSettingsUI() end
+            return true
+        end,
+    })
 end
 
-local function GetSummary()
-    local killed, total = YAB.GetBossSummary("all")
+local function GetLegacyKeyByCharacterID(characterID)
+    for legacyKey in pairs(YiboAltoBossDB.knownChars or {}) do
+        if Core.Characters:ResolveLegacyKey(legacyKey) == characterID then
+            return legacyKey
+        end
+    end
+end
+
+local function HasEligibleSnapshot(legacyKey)
+    return legacyKey
+        and YiboAltoBossDB.characters[legacyKey] ~= nil
+        and YAB.CharPassLevelFilter(legacyKey)
+end
+
+function YAB.GetAccountCharacterKeys(context)
+    local result = {}
+    for _, character in ipairs(context and context.characters or {}) do
+        local legacyKey = GetLegacyKeyByCharacterID(character.id)
+        if legacyKey then result[#result + 1] = legacyKey end
+    end
+    return result
+end
+
+local function GetEligibleCharacters(characters, context)
+    local eligible = {}
+    local scope = context and context.scope or "all"
+    local selectedRealm = scope:match("^realm:(.+)$")
+    for _, character in ipairs(characters or {}) do
+        local legacyKey = GetLegacyKeyByCharacterID(character.id)
+        local info = legacyKey and YiboAltoBossDB.knownChars[legacyKey]
+        local hasSnapshot = HasEligibleSnapshot(legacyKey)
+        local realm = info and (info.realm or legacyKey:match("-(.+)$"))
+        local visibleByScope = scope == "all" or (selectedRealm and realm == selectedRealm)
+        if hasSnapshot and visibleByScope then
+            eligible[#eligible + 1] = character
+        end
+    end
+    return eligible
+end
+
+local function GetSummary(characters)
+    local killed, total = 0, 0
+    for _, character in ipairs(characters or {}) do
+        local legacyKey = GetLegacyKeyByCharacterID(character.id)
+        if HasEligibleSnapshot(legacyKey) then
+            for _, boss in ipairs(YAB.GetBossList()) do
+                total = total + 1
+                if YAB.IsBossKilled(legacyKey, boss.key) then killed = killed + 1 end
+            end
+        end
+    end
     return string.format("Boss 击杀 %d/%d", killed, total)
+end
+
+local function GetActions(characters)
+    local actions = {}
+    for _, character in ipairs(characters or {}) do
+        local legacyKey = GetLegacyKeyByCharacterID(character.id)
+        if HasEligibleSnapshot(legacyKey) then
+            for _, boss in ipairs(YAB.GetBossList()) do
+                local status = YAB.GetBossKillStatus(legacyKey, boss.key)
+                if status ~= "killed" and status ~= "loot_locked" then
+                    actions[#actions + 1] = {
+                        priority = 3,
+                        title = YAB.GetCharacterLabel(legacyKey, "all"),
+                        text = "可处理：" .. tostring(boss.name),
+                    }
+                    break
+                end
+            end
+        end
+    end
+    return actions
+end
+
+function Integration:GetPreviewFields()
+    local settings = YiboAltoBossDB.settings or {}
+    return settings.previewColumns or {}
+end
+
+function Integration:SetPreviewFieldVisible(fieldID, visible)
+    YiboAltoBossDB.settings = YiboAltoBossDB.settings or {}
+    YiboAltoBossDB.settings.previewColumns = YiboAltoBossDB.settings.previewColumns or {}
+    YiboAltoBossDB.settings.previewColumns[fieldID] = not not visible
+    YAB.PersistDB()
+    YAB.NotifyCorePageChanged()
 end
 
 function Integration:Initialize()
@@ -98,35 +201,62 @@ function Integration:Initialize()
     if not (Core and Core.CheckAPIVersion and Core.AccountView) then
         return nil, "YiboCore 不可用。"
     end
-    local compatible = Core:CheckAPIVersion(2)
+    local compatible = Core:CheckAPIVersion(3)
     if not compatible then
-        return nil, "需要 YiboCore API v2。"
+        return nil, "需要 YiboCore API v3。"
     end
 
-    Core:RegisterAddon("YiboAltoBoss", { version = "2.0.0", requiredAPI = 2 })
+    Core:RegisterAddon("YiboAltoBoss", { version = "2.1.0", requiredAPI = 3 })
+    if Core.CharacterCleanup then
+        local cleanupRegistered, cleanupError = RegisterCharacterCleanupOwner()
+        if not cleanupRegistered then return nil, cleanupError end
+    end
     ImportKnownCharacters()
     local page, errorMessage = Core.AccountView:RegisterPage("YiboAltoBoss", {
         id = PAGE_ID,
-        title = "YiboAltoBoss",
+        title = "Boss 周常",
         order = 30,
+        previewEnabled = true,
+        fields = {
+            { id = "kills", title = "击杀", defaultVisible = true },
+            { id = "action", title = "行动", defaultVisible = true },
+            { id = "phase", title = "位面", defaultVisible = true },
+        },
+        scope = BuildScopeDefinition(),
+        GetEligibleCharacters = GetEligibleCharacters,
+        GetPreviewFields = function() return Integration:GetPreviewFields() end,
+        SetPreviewFieldVisible = function(fieldID, visible) Integration:SetPreviewFieldVisible(fieldID, visible) end,
         defaultEnabled = true,
         settings = {
-            title = "YiboAltoBoss",
+            title = "Boss 周常",
             description = "Boss 击杀、位面观测、刷新样本和自定义目标由 AltoBoss 自行保存。",
-            openLabel = "打开 AltoBoss 业务设置",
-            OpenAddonSettings = function()
-                if YAB.ToggleSettingsWindow then
-                    YAB.ToggleSettingsWindow()
+            CreateSettingsPanel = function(parent, context)
+                if YAB.CreateCoreSettingsPanel then
+                    return YAB.CreateCoreSettingsPanel(parent, context)
                 end
+                return 1
             end,
         },
-        Create = CreatePage,
-        Refresh = RefreshPage,
+        Create = YAB.CreateAccountPage,
+        Refresh = YAB.RefreshAccountPage,
+        GetPreviewSize = YAB.GetAccountPreviewSize,
+        GetHoverMetrics = YAB.GetAccountHoverMetrics,
+        GetLayoutMetrics = YAB.GetAccountLayoutMetrics,
         GetSummary = GetSummary,
+        GetActions = GetActions,
     })
     if not page and errorMessage then
         return nil, errorMessage
     end
+    local entry, entryError = Core.Entry:RegisterBusinessEntry("YiboAltoBoss", {
+        id = "yab",
+        legacyIDs = { "YiboAltoBoss" },
+        brokerName = "YiboAltoBoss",
+        pageID = PAGE_ID,
+        text = "[Yibo] Boss 周常",
+        icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YAB_MinimapIcon",
+    })
+    if not entry and entryError then return nil, entryError end
     self.initialized = true
     return true
 end

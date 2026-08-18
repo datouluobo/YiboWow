@@ -24,15 +24,15 @@
 | 任务列表 | 从任务日志读取，支持过滤器（日常/普通/隐藏已完成） |
 | 等级过滤 | 按角色等级过滤哪些角色列显示（默认 0~90 级全部显示） |
 | 角色排序 | 按名称/等级/登录顺序/屏蔽数排序角色列 |
-| 小地图图标 | 支持内置小地图按钮与 LibDBIcon，左键开关窗口，悬停临时展开主窗口 |
-| 斜杠命令 | `/yqb` 开关窗口 |
+| 统一入口 | 由 YiboCore 提供可选 Broker / 小地图入口，悬停显示同一账号视图预览 |
+| 斜杠命令 | `/yqb` 打开 YiboCore 的“任务屏蔽”账号页 |
 | 数据持久化 | 所有角色共享同一个 SavedVariables 文件 |
 
 ### 1.3 技术栈
 
 - 语言: Lua 5.1 (WoW 内嵌)
 - 框架: WoW Frame API (CreateFrame, BackdropTemplate)
-- 依赖库: LibStub, CallbackHandler-1.0, LibDataBroker-1.1, LibDBIcon-1.0
+- 核心依赖: YiboCore（API v3）
 - 存储: SavedVariables (账号级共享)
 
 ---
@@ -60,43 +60,38 @@ WTF\Account\<账号名>\SavedVariables\YiboQuestBlockerDB.lua
 
 ```lua
 YiboQuestBlockerDB = {
-    -- 已知角色列表（每次登录自动注册/更新等级）
-    knownChars = {
-        ["莫格莱尼-天堂暴风"] = { level = 90, class = "PALADIN" },
-        ["莫格莱尼-伊利丹怒风"] = { level = 85, class = "DRUID" },
-    },
+    schemaVersion = 2,
 
     -- 全局屏蔽列表（所有角色共享）
     globalBlocked = { [12345] = true },
     globalCache   = { [12345] = "熊猫人火锅" },
 
-    -- 各角色个人屏蔽
-    perChar = {
-        ["莫格莱尼-天堂暴风"] = {
+    -- 各角色个人屏蔽；键为 YiboCore characterID。
+    -- 角色名、服务器、职业、等级与账号顺序均不在本插件重复保存。
+    characterData = {
+        ["Player-4512-005A28AA"] = {
             blocked      = { [67890] = true },
             cache        = { [67890] = "雷神岛巡逻" },
-            minimapPos   = 210,
-            windowShown  = true,
             _foldedBlocked = false,
             _foldedCurrent = false,
         },
     },
 
-    -- 过滤器偏好（每个角色独立）
+    -- 账号级过滤器偏好
     filters = {
         showDaily     = true,
         showNormal    = true,
         hideComplete  = true,
-        levelMin      = 0,
-        levelOp       = "至",   -- 至 / 以上 / 以下 / 等于
-        levelMax      = 90,
-        sortBy        = "order", -- name / level / order / count
+        reportChat    = true,
+        autoAbandon   = false,
+        levelExpr     = "",
     },
 
-    -- Broker / LibDBIcon 使用的小地图配置（账号级）
-    minimap = {
-        hide = false,
-        minimapPos = 210,
+    settings = {
+        previewColumns = {
+            global = true,
+            characters = true,
+        },
     },
 }
 ```
@@ -108,7 +103,7 @@ AcceptQuest() 被调用
   ↓
 GetQuestID() 在 globalBlocked 中？ → 是 → DeclineQuest(), return
   ↓ 否
-GetQuestID() 在 perChar[当前角色].blocked 中？ → 是 → DeclineQuest(), return
+GetQuestID() 在 characterData[Core 当前角色 ID].blocked 中？ → 是 → DeclineQuest(), return
   ↓ 否
 放行 → 调用原始 AcceptQuest()
 ```

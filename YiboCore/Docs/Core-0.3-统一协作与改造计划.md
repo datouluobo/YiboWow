@@ -1,8 +1,17 @@
-# YiboCore 0.3：统一协作约定与 Core 改造计划
+# YiboCore 0.3：统一协作约定与改造记录
 
-> 本文是 Yibo 系列插件的长期协作约定，也是 **只改动 YiboCore** 的实施计划。
+> 本文是 Yibo 系列插件的长期协作约定，也是 **只改动 YiboCore** 的 0.3 改造记录。对应版本为 `YiboCore 0.3.0`，公共 API 为 v3；v2 调用在兼容期内仍可通过版本检查。
 >
 > 本轮不迁移、不修改任何业务插件；业务插件的数据、窗口、入口与 SavedVariables 均不在本计划的变更范围内。Core 完成并验证平台能力后，再由独立任务逐个接入业务插件。
+
+## 0.3.1 补充：页面准入与范围 context
+
+为支持已启动的业务插件迁移，`0.3.1` 在 API v3 内补充两项通用页面能力：
+
+- `GetEligibleCharacters(characters, context)`：业务页面接收 Core 已完成隐藏和排序的角色集合，返回满足业务快照与准入条件的子集；Core 将同一结果用于正式页与预览，随后再在预览中限制为 20 人。
+- `scope = { default, values }`：Core 校验并持久化每个页面的当前范围，在 `context.scope`、`context.scopeDefinition` 和 `context:SetScope(scopeID)` 中提供状态。Core 不解释范围含义，业务页面定义其筛选规则与按钮布局。
+
+这两项能力不让 Core 读取业务 SavedVariables，也不改变既有 API v3 调用方式。
 
 ## 1. 目标与非目标
 
@@ -139,6 +148,10 @@ YiboCore.Entry:RegisterBusinessEntry(addonName, {
 
 ## 6. 仅 Core 的实施计划
 
+### 实施状态（2026-08-10）
+
+阶段 A 至 G 的 Core 侧代码已完成：中央资源登记、页面/入口归属检查、统一入口命名与生命周期、预览准入、概览行动预算、调试可观测性以及 Core-only 回归清单均已落地。该计划的边界未包含业务迁移；后续已由独立改造完成 YiboAltoBoss 2.1 与 YiboLegendary 的接入。
+
 ### 阶段 A：冻结边界与兼容基线
 
 - 将本文作为 0.3 设计基线，并在 README 中链接。
@@ -153,7 +166,7 @@ YiboCore.Entry:RegisterBusinessEntry(addonName, {
 
 - 将页面、入口、Broker 对象名和小地图 Frame 名称纳入统一登记；
 - 校验页面归属、入口目标页面和保留名称；
-- 遇到冲突不覆盖已有注册，返回具体原因并通过 `/yco status` 可诊断；
+- 遇到冲突不覆盖已有注册，并向调用方返回具体原因；
 - 为页面卸载补齐关联入口的注销/隐藏路径。
 
 验收：重复 `pageID`、`entryId`、错误 `pageID`、跨插件绑定均被拒绝，原有注册不受影响。
@@ -196,7 +209,7 @@ YiboCore.Entry:RegisterBusinessEntry(addonName, {
 改动仅限 `UI/AccountView.lua`、`Debug/Commands.lua`：
 
 - 每个业务页面的设置统一显示页面开关、快捷入口模式、主表字段和预览字段；
-- `/yco addons` 或 `/yco status` 输出页面、入口、模式、冲突和预览可用性；
+- 由注册接口向调用方返回页面、入口、模式、冲突和预览可用性的诊断结果；
 - 记录业务回调失败的页面 ID、插件名和操作阶段，而不输出业务数据。
 
 验收：玩家可在一个位置控制入口和字段；开发时可从 Core 命令定位注册冲突与回调故障。

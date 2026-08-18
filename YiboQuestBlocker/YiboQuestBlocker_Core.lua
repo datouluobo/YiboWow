@@ -6,76 +6,125 @@
 -- ==================== 数据初始化 ====================
 YiboQuestBlockerDB = YiboQuestBlockerDB or {}
 
--- 当前角色识别
 local ADDON_NAME = ...
-local curCharName = UnitName("player") or "Unknown"
-local curRealm    = GetRealmName() or "Unknown"
-local curCharKey  = curRealm .. "-" .. curCharName
+local Core = assert(_G.YiboCore, "YiboQuestBlocker v2 requires YiboCore")
+local curCharacterID = Core.Characters:GetCurrentID()
 local PersistDB
 
--- 初始化已知角色（首次运行时注册当前角色）
-if not YiboQuestBlockerDB.knownChars then
-    YiboQuestBlockerDB.knownChars = {}
-end
-
-if not YiboQuestBlockerDB.customCharOrder then
-    YiboQuestBlockerDB.customCharOrder = {}
-end
-
-local function nextSeenOrder()
-    local maxOrder = 0
-    for _, data in pairs(YiboQuestBlockerDB.knownChars) do
-        if data.seenOrder and data.seenOrder > maxOrder then
-            maxOrder = data.seenOrder
+local function MergeTables(target, source)
+    target = type(target) == "table" and target or {}
+    if type(source) ~= "table" then return target end
+    for key, value in pairs(source) do
+        if type(value) == "table" then
+            target[key] = MergeTables(target[key], value)
+        elseif target[key] == nil then
+            target[key] = value
+        elseif type(value) == "boolean" then
+            target[key] = target[key] or value
         end
     end
-    return maxOrder + 1
+    return target
 end
 
-if not YiboQuestBlockerDB.knownChars[curCharKey] then
-    YiboQuestBlockerDB.knownChars[curCharKey] = {
-        level = UnitLevel("player") or 1,
-        class = select(2, UnitClass("player")) or "UNKNOWN",
-        seenOrder = nextSeenOrder(),
+local function ResolveV1CharacterID(key)
+    return Core.Characters:ResolveLegacyKey(key)
+end
+
+local function BuildV1RealmSet()
+    local realms, firstPartCounts = {}, {}
+    for _, character in ipairs(Core.Characters:GetAll()) do
+        if character.realm and character.realm ~= "" then realms[character.realm] = true end
+    end
+    for oldKey in pairs(YiboQuestBlockerDB.knownChars or {}) do
+        local left = tostring(oldKey):match("^(.-)%-")
+        if left then firstPartCounts[left] = (firstPartCounts[left] or 0) + 1 end
+    end
+    -- A server appears as the first component for multiple v1 characters;
+    -- character names normally occur only once.  This also recognizes realms
+    -- not yet present in Core without depending on Lua table iteration order.
+    for value, count in pairs(firstPartCounts) do if count >= 2 then realms[value] = true end end
+    return realms
+end
+
+local function BuildV1Identity(oldKey, identity, assumeRealmFirst, knownRealms)
+    local existingID = ResolveV1CharacterID(oldKey)
+    local left, right = tostring(oldKey or ""):match("^(.-)%-(.+)$")
+    if not left or not right then return existingID end
+
+    local realms = knownRealms or BuildV1RealmSet()
+
+    local name, realm
+    if realms[left] and not realms[right] then
+        realm, name = left, right
+    elseif realms[right] and not realms[left] then
+        name, realm = left, right
+    else
+        local current = Core.Characters:GetCurrent()
+        if current and ((left == current.realm and right == current.name) or (left == current.name and right == current.realm)) then
+            name, realm = current.name, current.realm
+        elseif assumeRealmFirst then
+            -- QuestBlocker v1's canonical durable key was `服务器-角色名`.
+            -- Reversed aliases introduced by intermediate builds will already
+            -- resolve through Core before reaching this fallback.
+            realm, name = left, right
+        end
+    end
+    if not name or not realm then return existingID end
+
+    local imported = {
+        name = name,
+        realm = realm,
+        class = identity and identity.class,
+        level = identity and identity.level,
+        seenOrder = identity and identity.seenOrder,
     }
-elseif not YiboQuestBlockerDB.knownChars[curCharKey].seenOrder then
-    YiboQuestBlockerDB.knownChars[curCharKey].seenOrder = nextSeenOrder()
+    return Core.Characters:ImportLegacyCharacter(ADDON_NAME, oldKey, imported)
 end
 
-local function ensureCustomCharOrder(charKey)
-    local order = YiboQuestBlockerDB.customCharOrder
-    for _, existing in ipairs(order) do
-        if existing == charKey then
-            return
+local function MigrateV1Database()
+    local characterData = type(YiboQuestBlockerDB.characterData) == "table" and YiboQuestBlockerDB.characterData or {}
+    local sourceSnapshots = YiboQuestBlockerDB.perChar or {}
+    local sourceCount, migratedCount = 0, 0
+    local knownRealms = BuildV1RealmSet()
+
+    -- One-time upgrade only: hand v1 identity metadata to Core first, then
+    -- translate business snapshots to Core IDs.  v1 fields are erased only
+    -- after every business snapshot has a durable Core identity.
+    for oldKey, identity in pairs(YiboQuestBlockerDB.knownChars or {}) do
+        BuildV1Identity(oldKey, identity, false, knownRealms)
+    end
+    for oldKey, data in pairs(sourceSnapshots) do
+        sourceCount = sourceCount + 1
+        local characterID = ResolveV1CharacterID(oldKey) or BuildV1Identity(oldKey, nil, true, knownRealms)
+        if characterID then
+            characterData[characterID] = MergeTables(characterData[characterID], data)
+            migratedCount = migratedCount + 1
         end
     end
-    table.insert(order, charKey)
+    YiboQuestBlockerDB.characterData = characterData
+    YiboQuestBlockerDB.schemaVersion = 2
+    if migratedCount == sourceCount then
+        YiboQuestBlockerDB.knownChars = nil
+        YiboQuestBlockerDB.perChar = nil
+        YiboQuestBlockerDB.customCharOrder = nil
+        YiboQuestBlockerDB.characterOrder = nil
+        YiboQuestBlockerDB.characterKeyVersion = nil
+        YiboQuestBlockerDB.migrationError = nil
+    else
+        YiboQuestBlockerDB.migrationError = {
+            sourceCount = sourceCount,
+            migratedCount = migratedCount,
+        }
+    end
 end
 
-ensureCustomCharOrder(curCharKey)
+MigrateV1Database()
+YiboQuestBlockerDB.characterData = YiboQuestBlockerDB.characterData or {}
+YiboQuestBlockerDB.characterData[curCharacterID] = YiboQuestBlockerDB.characterData[curCharacterID] or { blocked = {}, cache = {} }
 
 -- 初始化全局屏蔽
 if not YiboQuestBlockerDB.globalBlocked then YiboQuestBlockerDB.globalBlocked = {} end
 if not YiboQuestBlockerDB.globalCache   then YiboQuestBlockerDB.globalCache   = {} end
-
--- 初始化当前角色 perChar
-if not YiboQuestBlockerDB.perChar then YiboQuestBlockerDB.perChar = {} end
-if not YiboQuestBlockerDB.perChar[curCharKey] then
-    YiboQuestBlockerDB.perChar[curCharKey] = {
-        blocked    = {},
-        cache      = {},
-        minimapPos = 0,
-        windowShown = false,
-    }
-end
-
-if not YiboQuestBlockerDB.ui then
-    YiboQuestBlockerDB.ui = {
-        windowWidth = 580,
-        windowHeight = 500,
-        headerCharsPerLine = 3,
-    }
-end
 
 -- 初始化过滤器
 if not YiboQuestBlockerDB.filters then
@@ -86,34 +135,24 @@ if not YiboQuestBlockerDB.filters then
         reportChat    = true,
         autoAbandon   = false,
         levelExpr     = "",
-        sortBy        = "custom", -- custom / name / level / count
     }
 end
-if YiboQuestBlockerDB.filters.sortBy == "order" then
-    YiboQuestBlockerDB.filters.sortBy = "custom"
-end
 
-if not YiboQuestBlockerDB.minimap then
-    YiboQuestBlockerDB.minimap = {
-        hide = false,
-        minimapPos = YiboQuestBlockerDB.perChar[curCharKey].minimapPos or 0,
+-- 账号视图的预览列仍归 QuestBlocker 自己保存；Core 只读取和渲染。
+if not YiboQuestBlockerDB.settings then
+    YiboQuestBlockerDB.settings = {}
+end
+if not YiboQuestBlockerDB.settings.previewColumns then
+    YiboQuestBlockerDB.settings.previewColumns = {
+        global = true,
+        characters = true,
     }
 end
-if YiboQuestBlockerDB.minimap.hide == nil then
-    YiboQuestBlockerDB.minimap.hide = false
-end
-if YiboQuestBlockerDB.minimap.minimapPos == nil then
-    YiboQuestBlockerDB.minimap.minimapPos = YiboQuestBlockerDB.perChar[curCharKey].minimapPos or 0
-end
-
--- 每次加载时更新当前角色等级
-YiboQuestBlockerDB.knownChars[curCharKey].level = UnitLevel("player") or 1
-
 -- 本地引用（加速 + 避免被外部篡改绕过的风险）
 local YQBDB   = YiboQuestBlockerDB
 local blocked = YiboQuestBlockerDB.globalBlocked
 local cache   = YiboQuestBlockerDB.globalCache
-local perChar = YiboQuestBlockerDB.perChar
+local characterData = YiboQuestBlockerDB.characterData
 
 local PREFIX      = "|cff00ccff[YQB]|r"
 local PREFIX_ERR  = "|cffff0000[YQB]|r"
@@ -131,25 +170,24 @@ local MaybeStartAutoAbandonTimer
 
 PersistDB = function()
     YiboQuestBlockerDB = YiboQuestBlockerDB or {}
-    YiboQuestBlockerDB.knownChars = YQBDB.knownChars
-    YiboQuestBlockerDB.customCharOrder = YQBDB.customCharOrder
     YiboQuestBlockerDB.globalBlocked = YQBDB.globalBlocked
     YiboQuestBlockerDB.globalCache = YQBDB.globalCache
-    YiboQuestBlockerDB.perChar = YQBDB.perChar
-    YiboQuestBlockerDB.ui = YQBDB.ui
+    YiboQuestBlockerDB.characterData = YQBDB.characterData
     YiboQuestBlockerDB.filters = YQBDB.filters
-    YiboQuestBlockerDB.minimap = YQBDB.minimap
+    YiboQuestBlockerDB.settings = YQBDB.settings
+    YiboQuestBlockerDB.schemaVersion = 2
 end
 
 local function BindDBReferences()
     YiboQuestBlockerDB = YiboQuestBlockerDB or {}
-    YiboQuestBlockerDB.knownChars = YiboQuestBlockerDB.knownChars or {}
-    YiboQuestBlockerDB.customCharOrder = YiboQuestBlockerDB.customCharOrder or {}
     YiboQuestBlockerDB.globalBlocked = YiboQuestBlockerDB.globalBlocked or {}
     YiboQuestBlockerDB.globalCache = YiboQuestBlockerDB.globalCache or {}
-    YiboQuestBlockerDB.perChar = YiboQuestBlockerDB.perChar or {}
-    YiboQuestBlockerDB.ui = YiboQuestBlockerDB.ui or {}
-    YiboQuestBlockerDB.minimap = YiboQuestBlockerDB.minimap or {}
+    YiboQuestBlockerDB.characterData = YiboQuestBlockerDB.characterData or {}
+    YiboQuestBlockerDB.settings = YiboQuestBlockerDB.settings or {}
+    YiboQuestBlockerDB.settings.previewColumns = YiboQuestBlockerDB.settings.previewColumns or {
+        global = true,
+        characters = true,
+    }
     YiboQuestBlockerDB.filters = YiboQuestBlockerDB.filters or {
         showDaily = true,
         showNormal = true,
@@ -157,7 +195,6 @@ local function BindDBReferences()
         reportChat = true,
         autoAbandon = false,
         levelExpr = "",
-        sortBy = "custom",
     }
     if YiboQuestBlockerDB.filters.reportChat == nil then
         YiboQuestBlockerDB.filters.reportChat = true
@@ -183,67 +220,28 @@ local function BindDBReferences()
         end
     end
 
-    if YiboQuestBlockerDB.ui.windowWidth == nil or YiboQuestBlockerDB.ui.windowHeight == nil then
-        local legacyCharDB = YiboQuestBlockerDB.perChar[curCharKey]
-        YiboQuestBlockerDB.ui.windowWidth = (legacyCharDB and legacyCharDB.windowWidth) or 580
-        YiboQuestBlockerDB.ui.windowHeight = (legacyCharDB and legacyCharDB.windowHeight) or 500
+    local latestID = Core.Characters:GetCurrentID()
+    if latestID ~= curCharacterID then
+        YiboQuestBlockerDB.characterData[latestID] = MergeTables(
+            YiboQuestBlockerDB.characterData[latestID],
+            YiboQuestBlockerDB.characterData[curCharacterID]
+        )
+        YiboQuestBlockerDB.characterData[curCharacterID] = nil
+        curCharacterID = latestID
+        if _G.YQB then _G.YQB.curCharacterID = latestID end
     end
-    if YiboQuestBlockerDB.ui.headerCharsPerLine == nil then
-        YiboQuestBlockerDB.ui.headerCharsPerLine = 3
-    end
-    if YiboQuestBlockerDB.minimap.hide == nil then
-        YiboQuestBlockerDB.minimap.hide = false
-    end
-
-    if YiboQuestBlockerDB.filters.sortBy == "order" then
-        YiboQuestBlockerDB.filters.sortBy = "custom"
-    end
-
-    if not YiboQuestBlockerDB.knownChars[curCharKey] then
-        YiboQuestBlockerDB.knownChars[curCharKey] = {
-            level = UnitLevel("player") or 1,
-            class = select(2, UnitClass("player")) or "UNKNOWN",
-            seenOrder = nextSeenOrder(),
-        }
-    elseif not YiboQuestBlockerDB.knownChars[curCharKey].seenOrder then
-        YiboQuestBlockerDB.knownChars[curCharKey].seenOrder = nextSeenOrder()
-    end
-
-    local order = YiboQuestBlockerDB.customCharOrder
-    local foundOrder
-    for _, existing in ipairs(order) do
-        if existing == curCharKey then
-            foundOrder = true
-            break
-        end
-    end
-    if not foundOrder then
-        table.insert(order, curCharKey)
-    end
-
-    if not YiboQuestBlockerDB.perChar[curCharKey] then
-        YiboQuestBlockerDB.perChar[curCharKey] = {
-            blocked = {},
-            cache = {},
-            minimapPos = 0,
-            windowShown = false,
-        }
-    end
-    if YiboQuestBlockerDB.minimap.minimapPos == nil then
-        YiboQuestBlockerDB.minimap.minimapPos = YiboQuestBlockerDB.perChar[curCharKey].minimapPos or 0
-    end
-
-    YiboQuestBlockerDB.knownChars[curCharKey].level = UnitLevel("player") or 1
+    YiboQuestBlockerDB.characterData[curCharacterID] = YiboQuestBlockerDB.characterData[curCharacterID]
+        or { blocked = {}, cache = {} }
 
     YQBDB = YiboQuestBlockerDB
     blocked = YQBDB.globalBlocked
     cache = YQBDB.globalCache
-    perChar = YQBDB.perChar
+    characterData = YQBDB.characterData
 end
 
 -- 暴露给 UI 模块的引用（UI 会通过全局表 YQB 访问）
 YQB = YQB or {}
-YQB.curCharKey = curCharKey
+YQB.curCharacterID = curCharacterID
 YQB.PREFIX     = PREFIX
 YQB.PREFIX_ERR = PREFIX_ERR
 YQB.PREFIX_INFO = PREFIX_INFO
@@ -259,19 +257,29 @@ YQB.ReportMessage = function(message, isError)
     end
     DEFAULT_CHAT_FRAME:AddMessage((isError and PREFIX_ERR or PREFIX_INFO) .. " " .. message)
 end
+
+Core.Events:Register("CHARACTER_ID_CHANGED", ADDON_NAME, function(_, oldID, newID)
+    if not oldID or not newID or oldID == newID then return end
+    local oldData = characterData[oldID]
+    if oldData then
+        characterData[newID] = MergeTables(characterData[newID], oldData)
+        characterData[oldID] = nil
+    end
+    if curCharacterID == oldID then
+        curCharacterID = newID
+        YQB.curCharacterID = newID
+    end
+    PersistDB()
+    if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged() end
+end)
 YQB.IsAutoAbandonEnabled = function()
     return not not (YQBDB.filters and YQBDB.filters.autoAbandon)
 end
-YQB.GetMinimapConfig = function()
-    YQBDB.minimap = YQBDB.minimap or {}
-    if YQBDB.minimap.hide == nil then
-        YQBDB.minimap.hide = false
-    end
-    if YQBDB.minimap.minimapPos == nil then
-        local charDB = perChar[curCharKey]
-        YQBDB.minimap.minimapPos = (charDB and charDB.minimapPos) or 0
-    end
-    return YQBDB.minimap
+YQB.GetDatabase = function()
+    return YQBDB
+end
+YQB.GetCurrentCharacterID = function()
+    return curCharacterID
 end
 BindDBReferences()
 PersistDB()
@@ -289,8 +297,8 @@ function YQB.GetQuestName(questID)
             local name = select(1, GetQuestLogTitle(idx))
             if name then
                 -- 写入缓存
-                if perChar[curCharKey] and perChar[curCharKey].cache then
-                    perChar[curCharKey].cache[questID] = name
+                if characterData[curCharacterID] and characterData[curCharacterID].cache then
+                    characterData[curCharacterID].cache[questID] = name
                 end
                 cache[questID] = name
                 return name
@@ -304,8 +312,8 @@ function YQB.GetQuestName(questID)
     end
 
     -- 3) 从当前角色缓存找
-    if perChar[curCharKey] and perChar[curCharKey].cache and perChar[curCharKey].cache[questID] then
-        return perChar[curCharKey].cache[questID]
+    if characterData[curCharacterID] and characterData[curCharacterID].cache and characterData[curCharacterID].cache[questID] then
+        return characterData[curCharacterID].cache[questID]
     end
 
     return nil
@@ -315,7 +323,7 @@ end
 function YQB.IsQuestBlocked(questID)
     if not questID then return false end
     if YQBDB.globalBlocked[questID] then return true end
-    if perChar[curCharKey] and perChar[curCharKey].blocked[questID] then return true end
+    if characterData[curCharacterID] and characterData[curCharacterID].blocked[questID] then return true end
     return false
 end
 
@@ -323,7 +331,7 @@ end
 function YQB.IsQuestBlockedByAny(questID)
     if not questID then return false end
     if YQBDB.globalBlocked[questID] then return true end
-    for charKey, data in pairs(perChar) do
+    for _, data in pairs(characterData) do
         if data.blocked and data.blocked[questID] then
             return true
         end
@@ -331,33 +339,23 @@ function YQB.IsQuestBlockedByAny(questID)
     return false
 end
 
--- 获取角色屏蔽状态表
--- 返回: { global = true/false, ["莫格莱尼-天堂暴风"] = true/false, ... }
+-- 获取角色屏蔽状态表，以 Core characterID 为索引。
 function YQB.GetBlockStatus(questID)
     local status = { global = YQBDB.globalBlocked[questID] or false }
-    for charKey, _ in pairs(YQBDB.knownChars) do
-        if perChar[charKey] and perChar[charKey].blocked then
-            status[charKey] = perChar[charKey].blocked[questID] or false
+    for characterID in pairs(characterData) do
+        if characterData[characterID] and characterData[characterID].blocked then
+            status[characterID] = characterData[characterID].blocked[questID] or false
         else
-            status[charKey] = false
+            status[characterID] = false
         end
     end
     return status
 end
 
 -- 获取角色等级
-function YQB.GetCharLevel(charKey)
-    if YQBDB.knownChars and YQBDB.knownChars[charKey] then
-        return YQBDB.knownChars[charKey].level or 0
-    end
-    return 0
-end
-
-function YQB.GetCharSeenOrder(charKey)
-    if YQBDB.knownChars and YQBDB.knownChars[charKey] then
-        return YQBDB.knownChars[charKey].seenOrder or 999999
-    end
-    return 999999
+function YQB.GetCharLevel(characterID)
+    local character = Core.Characters:Get(characterID)
+    return character and character.level or 0
 end
 
 local DAILY_OVERRIDE_IDS = {
@@ -728,66 +726,6 @@ local function GetQuestTypeFlags(questID, idx)
     }
 end
 
-local function normalizeCustomCharOrder()
-    local order = YQBDB.customCharOrder
-    local seen = {}
-    local normalized = {}
-
-    for _, charKey in ipairs(order) do
-        if YQBDB.knownChars[charKey] and not seen[charKey] then
-            seen[charKey] = true
-            table.insert(normalized, charKey)
-        end
-    end
-
-    local missing = {}
-    for charKey in pairs(YQBDB.knownChars) do
-        if not seen[charKey] then
-            table.insert(missing, charKey)
-        end
-    end
-    table.sort(missing, function(a, b)
-        local oa = YQB.GetCharSeenOrder(a)
-        local ob = YQB.GetCharSeenOrder(b)
-        if oa ~= ob then return oa < ob end
-        return a < b
-    end)
-
-    for _, charKey in ipairs(missing) do
-        table.insert(normalized, charKey)
-    end
-
-    YQBDB.customCharOrder = normalized
-    return normalized
-end
-
-function YQB.GetCustomCharOrder()
-    return normalizeCustomCharOrder()
-end
-
-function YQB.MoveCustomCharOrder(charKey, delta)
-    if not charKey or not delta or delta == 0 then return false end
-
-    local order = normalizeCustomCharOrder()
-    local index
-    for i, existing in ipairs(order) do
-        if existing == charKey then
-            index = i
-            break
-        end
-    end
-    if not index then return false end
-
-    local target = index + delta
-    if target < 1 or target > #order then
-        return false
-    end
-
-    order[index], order[target] = order[target], order[index]
-    PersistDB()
-    return true
-end
-
 local levelExprCacheText, levelExprCacheRules, levelExprCacheError
 
 function YQB.NormalizeLevelExpr(expr)
@@ -857,9 +795,9 @@ function YQB.ValidateLevelExpr(expr)
 end
 
 -- 判断角色是否通过等级过滤
-function YQB.CharPassLevelFilter(charKey)
+function YQB.CharPassLevelFilter(characterID)
     local filter = YQBDB.filters
-    local level  = YQB.GetCharLevel(charKey)
+    local level  = YQB.GetCharLevel(characterID)
     local valid, rules = parseLevelExpr(filter.levelExpr)
 
     if not valid or not rules or #rules == 0 then
@@ -1002,7 +940,7 @@ function YQB.GetBlockedQuestList()
     end
 
     -- 各角色个人屏蔽
-    for charKey, charData in pairs(perChar) do
+    for characterID, charData in pairs(characterData) do
         if charData.blocked then
             for questID, _ in pairs(charData.blocked) do
                 if not seen[questID] then
@@ -1027,47 +965,6 @@ function YQB.GetBlockedQuestList()
     return list
 end
 
--- 获取排序后的可见角色列表
-function YQB.GetSortedVisibleChars()
-    local chars = {}
-    for charKey, _ in pairs(YQBDB.knownChars) do
-        if YQB.CharPassLevelFilter(charKey) then
-            tinsert(chars, charKey)
-        end
-    end
-
-    local sortBy = YQBDB.filters.sortBy
-    if sortBy == "custom" or sortBy == "order" then
-        local manualIndex = {}
-        for index, charKey in ipairs(normalizeCustomCharOrder()) do
-            manualIndex[charKey] = index
-        end
-        table.sort(chars, function(a, b)
-            local oa = manualIndex[a] or 999999
-            local ob = manualIndex[b] or 999999
-            if oa ~= ob then return oa < ob end
-            return a < b
-        end)
-    elseif sortBy == "name" then
-        table.sort(chars)
-    elseif sortBy == "level" then
-        table.sort(chars, function(a, b)
-            local la = YQB.GetCharLevel(a) or 0
-            local lb = YQB.GetCharLevel(b) or 0
-            if la ~= lb then return la > lb end
-            return a < b
-        end)
-    elseif sortBy == "count" then
-        table.sort(chars, function(a, b)
-            local ca = perChar[a] and perChar[a].blocked and tableSize(perChar[a].blocked) or 0
-            local cb = perChar[b] and perChar[b].blocked and tableSize(perChar[b].blocked) or 0
-            if ca ~= cb then return ca > cb end
-            return a < b
-        end)
-    end
-    return chars
-end
-
 -- 添加屏蔽
 function YQB.AddBlock(questID, scope)
     -- scope: "global" or "char"
@@ -1076,10 +973,10 @@ function YQB.AddBlock(questID, scope)
     if scope == "global" then
         YQBDB.globalBlocked[questID] = true
     else
-        if not perChar[curCharKey] then
-            perChar[curCharKey] = { blocked = {}, cache = {} }
+        if not characterData[curCharacterID] then
+            characterData[curCharacterID] = { blocked = {}, cache = {} }
         end
-        perChar[curCharKey].blocked[questID] = true
+        characterData[curCharacterID].blocked[questID] = true
     end
 
     -- 尝试缓存名称
@@ -1089,33 +986,33 @@ function YQB.AddBlock(questID, scope)
         MaybeStartAutoAbandonTimer()
     end
     PersistDB()
+    if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged() end
 end
 
-function YQB.AddCharBlock(questID, charKey)
-    if not questID or not charKey then return end
+function YQB.AddCharBlock(questID, characterID)
+    if not questID or not characterID then return end
 
-    if not perChar[charKey] then
-        perChar[charKey] = {
+    if not characterData[characterID] then
+        characterData[characterID] = {
             blocked = {},
             cache = {},
-            minimapPos = 0,
-            windowShown = false,
         }
     end
-    if not perChar[charKey].blocked then
-        perChar[charKey].blocked = {}
+    if not characterData[characterID].blocked then
+        characterData[characterID].blocked = {}
     end
-    if not perChar[charKey].cache then
-        perChar[charKey].cache = {}
+    if not characterData[characterID].cache then
+        characterData[characterID].cache = {}
     end
 
-    perChar[charKey].blocked[questID] = true
+    characterData[characterID].blocked[questID] = true
     YQB.GetQuestName(questID)
-    if charKey == curCharKey and YQB.IsAutoAbandonEnabled() and IsQuestStillInLog(questID) then
+    if characterID == curCharacterID and YQB.IsAutoAbandonEnabled() and IsQuestStillInLog(questID) then
         EnqueueAutoAbandonQuest(questID)
         MaybeStartAutoAbandonTimer()
     end
     PersistDB()
+    if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged() end
 end
 
 -- 移除屏蔽
@@ -1125,8 +1022,8 @@ function YQB.RemoveBlock(questID, scope)
     if scope == "global" then
         YQBDB.globalBlocked[questID] = nil
     else
-        if perChar[curCharKey] and perChar[curCharKey].blocked then
-            perChar[curCharKey].blocked[questID] = nil
+        if characterData[curCharacterID] and characterData[curCharacterID].blocked then
+            characterData[curCharacterID].blocked[questID] = nil
         end
     end
     if YQB.IsQuestBlocked(questID) and IsQuestStillInLog(questID) and YQB.IsAutoAbandonEnabled() then
@@ -1136,20 +1033,22 @@ function YQB.RemoveBlock(questID, scope)
         RemoveAutoAbandonQuest(questID)
     end
     PersistDB()
+    if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged() end
 end
 
 -- 移除指定角色的指定任务屏蔽
-function YQB.RemoveCharBlock(questID, charKey)
-    if not questID or not charKey then return end
-    if perChar[charKey] and perChar[charKey].blocked then
-        perChar[charKey].blocked[questID] = nil
-        if charKey == curCharKey and YQB.IsQuestBlocked(questID) and IsQuestStillInLog(questID) and YQB.IsAutoAbandonEnabled() then
+function YQB.RemoveCharBlock(questID, characterID)
+    if not questID or not characterID then return end
+    if characterData[characterID] and characterData[characterID].blocked then
+        characterData[characterID].blocked[questID] = nil
+        if characterID == curCharacterID and YQB.IsQuestBlocked(questID) and IsQuestStillInLog(questID) and YQB.IsAutoAbandonEnabled() then
             EnqueueAutoAbandonQuest(questID)
             MaybeStartAutoAbandonTimer()
-        elseif charKey == curCharKey then
+        elseif characterID == curCharacterID then
             RemoveAutoAbandonQuest(questID)
         end
         PersistDB()
+        if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged() end
     end
 end
 
@@ -1189,9 +1088,9 @@ end
 -- 统计信息
 function YQB.GetStats()
     local globalCount = tableSize(YQBDB.globalBlocked)
-    local charCount   = perChar[curCharKey] and tableSize(perChar[curCharKey].blocked) or 0
+    local charCount   = characterData[curCharacterID] and tableSize(characterData[curCharacterID].blocked) or 0
     local total       = tableSize(YQBDB.globalBlocked)
-    for _, charData in pairs(perChar) do
+    for _, charData in pairs(characterData) do
         if charData.blocked then
             total = total + tableSize(charData.blocked)
         end
@@ -1209,7 +1108,7 @@ AcceptQuest = function(...)
             QueueRejectedQuest(questID, "global", false)
             return OriginalAcceptQuest(...)
         end
-        if perChar[curCharKey] and perChar[curCharKey].blocked[questID] then
+        if characterData[curCharacterID] and characterData[curCharacterID].blocked[questID] then
             QueueRejectedQuest(questID, "char", false)
             return OriginalAcceptQuest(...)
         end
@@ -1227,7 +1126,7 @@ if ConfirmAcceptQuest then
                 QueueRejectedQuest(questID, "global", true)
                 return OriginalConfirmAcceptQuest(...)
             end
-            if perChar[curCharKey] and perChar[curCharKey].blocked[questID] then
+            if characterData[curCharacterID] and characterData[curCharacterID].blocked[questID] then
                 QueueRejectedQuest(questID, "char", true)
                 return OriginalConfirmAcceptQuest(...)
             end
@@ -1259,6 +1158,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
         end
 
     elseif event == "PLAYER_ENTERING_WORLD" then
+        Core.Characters:RefreshCurrent()
         BindDBReferences()
         if YQB and YQB.SyncUIBindings then
             YQB.SyncUIBindings()
@@ -1266,21 +1166,16 @@ frame:SetScript("OnEvent", function(self, event, ...)
         ResetAutoAbandonState()
         wipe(reportedUnabandonable)
         wipe(recentBlockNotices)
-        -- 更新等级
-        if YQBDB.knownChars and YQBDB.knownChars[curCharKey] then
-            YQBDB.knownChars[curCharKey].level = UnitLevel("player") or 1
-        end
         SyncRejectedQuestsToQueue(true)
         PersistDB()
+        if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged() end
 
     elseif event == "PLAYER_LOGOUT" then
         PersistDB()
 
     elseif event == "PLAYER_LEVEL_UP" then
-        local newLevel = ...
-        if YQBDB.knownChars and YQBDB.knownChars[curCharKey] then
-            YQBDB.knownChars[curCharKey].level = newLevel
-        end
+        Core.Characters:RefreshCurrent()
+        if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged() end
 
     elseif event == "QUEST_DETAIL" then
         local questID = GetQuestID()
@@ -1298,6 +1193,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
         if YQB.IsAutoAbandonEnabled() then
             SyncRejectedQuestsToQueue()
         end
+        if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged() end
 
     elseif event == "QUEST_FINISHED" or event == "GOSSIP_CLOSED" then
         if YQB.IsAutoAbandonEnabled() and autoAbandonWaitingForClose then

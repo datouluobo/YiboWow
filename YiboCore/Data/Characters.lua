@@ -31,7 +31,7 @@ end
 
 local function ReplaceCharacterID(store, oldID, newID)
     if oldID == newID or not store.byID[oldID] or store.byID[newID] then
-        return
+        return false
     end
 
     local record = store.byID[oldID]
@@ -47,6 +47,8 @@ local function ReplaceCharacterID(store, oldID, newID)
             store.aliases[alias] = newID
         end
     end
+    Core.Events:Fire("CHARACTER_ID_CHANGED", oldID, newID, Snapshot(record))
+    return true
 end
 
 local function EnsureSeenOrder(store, characterID)
@@ -151,6 +153,45 @@ function Characters:GetAll()
     return items
 end
 
+function Characters:GetAliases(characterID)
+    local store, aliases = GetStore(), {}
+    if not store then return aliases end
+    for alias, resolvedID in pairs(store.aliases or {}) do
+        if resolvedID == characterID then aliases[alias] = true end
+    end
+    return aliases
+end
+
+function Characters:CanDelete(characterID)
+    local store = GetStore()
+    if type(characterID) ~= "string" or characterID == "" then return false, "未选择角色。" end
+    if characterID == self:GetCurrentID() then return false, "当前登录角色不能删除，请切换到其它角色后再删除。" end
+    if not (store and store.byID and store.byID[characterID]) then return false, "角色缓存不存在。" end
+    return true
+end
+
+function Characters:DeleteCached(characterID)
+    local allowed, errorMessage = self:CanDelete(characterID)
+    if not allowed then return nil, errorMessage end
+    local db, store = Core.Database:GetDB(), GetStore()
+    local deleted = Snapshot(store.byID[characterID])
+    store.byID[characterID] = nil
+    store.seenOrder[characterID] = nil
+    for alias, resolvedID in pairs(store.aliases or {}) do
+        if resolvedID == characterID then store.aliases[alias] = nil end
+    end
+    local view = db.settings and db.settings.accountView
+    if view then
+        if view.hiddenCharacters then view.hiddenCharacters[characterID] = nil end
+        if type(view.customCharacterOrder) == "table" then
+            for index = #view.customCharacterOrder, 1, -1 do
+                if view.customCharacterOrder[index] == characterID then table.remove(view.customCharacterOrder, index) end
+            end
+        end
+    end
+    return deleted
+end
+
 function Characters:ResolveLegacyKey(key)
     local store = GetStore()
     return store and store.aliases[key] or nil
@@ -162,7 +203,27 @@ function Characters:ImportLegacyCharacter(sourceAddon, legacyKey, data)
         return nil, "无有效的角色数据。"
     end
 
+    local proposedID = data.id or self:ResolveLegacyKey(legacyKey)
+    if Core.CharacterCleanup then
+        local blocked = Core.CharacterCleanup:IsLegacyImportBlocked(sourceAddon, legacyKey, proposedID, data)
+        if blocked then return nil, "该角色缓存已由用户删除，拒绝重新导入。" end
+    end
+
     local characterID = self:ResolveLegacyKey(legacyKey)
+    local resolved = characterID and store.byID[characterID] or nil
+    if resolved and data.name and data.realm
+        and (tostring(resolved.name) ~= tostring(data.name) or tostring(resolved.realm) ~= tostring(data.realm)) then
+        -- An alias created from a reversed historical key may point at the
+        -- wrong record.  Prefer an existing exact identity before creating a
+        -- fallback record, and let AddAlias repair the alias below.
+        characterID = nil
+        for id, candidate in pairs(store.byID) do
+            if tostring(candidate.name) == tostring(data.name) and tostring(candidate.realm) == tostring(data.realm) then
+                characterID = id
+                break
+            end
+        end
+    end
     if not characterID then
         characterID = data.id or BuildFallbackID(data.name or legacyKey, data.realm)
     end

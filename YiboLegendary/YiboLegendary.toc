@@ -2,7 +2,8 @@
 ## Title: |cff20e070[Yibo]|r YiboLegendary - 传说之路
 ## Notes: 熊猫人之谜传说披风任务进度助手。
 ## Author: YiboSoft
-## Version: 0.2.2
+## Version: 0.3
+## IconTexture: Interface\AddOns\YiboLegendary\Media\YiboLegendaryIcon-v1
 ## RequiredDeps: YiboCore
 ## SavedVariables: YiboLegendaryDB, YiboCloakProgressDB
 ## LoadOnDemand: 0
