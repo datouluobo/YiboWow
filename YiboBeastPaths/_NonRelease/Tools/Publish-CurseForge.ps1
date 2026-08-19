@@ -19,9 +19,8 @@ if ([string]::IsNullOrWhiteSpace($ApiToken)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($FilePath)) {
-    $buildRoot = Join-Path (Resolve-Path (Join-Path $PSScriptRoot "..")).Path "Builds"
-    $FilePath = Get-ChildItem -Path $buildRoot -Filter "YiboBeastPaths-v*.zip" |
-        Where-Object { $_.Name -notlike "*-debug.zip" } |
+    $buildRoot = Join-Path (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path "Builds"
+    $FilePath = Get-ChildItem -Path $buildRoot -Filter "YiboBeastPaths-v*-curseforge.zip" |
         Sort-Object LastWriteTime -Descending |
         Select-Object -First 1 -ExpandProperty FullName
 }

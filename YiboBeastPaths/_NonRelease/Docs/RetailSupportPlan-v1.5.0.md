@@ -331,20 +331,20 @@ Retail 中锦绣谷可能受到剧情阶段、旧新版地图状态或 Zidormi �
 
 ### 构建结果
 
-`1.5.0` 仍生成两个 zip：
+`1.5.0` 生成统一放在仓库根目录 `Builds/` 的两个 zip：
 
 ```text
-YiboBeastPaths-v1.5.zip
-YiboBeastPaths-v1.5-debug.zip
+YiboBeastPaths-v1.5-curseforge.zip
+YiboBeastPaths-v1.5-github.zip
 ```
 
 其中：
 
-1. release zip 用于 CF 上传。
-2. debug zip 用于本地存档。
-3. release zip 不包含 `_NonRelease/`。
-4. release zip 保留顶级目录 `YiboBeastPaths/`。
-5. release zip 中同时存在两个 TOC。
+1. curseforge zip 用于 CF 上传。
+2. github zip 用于 GitHub Release。
+3. 两个 zip 都不包含 `_NonRelease/`。
+4. 两个 zip 都保留顶级目录 `YiboBeastPaths/`。
+5. curseforge zip 中同时存在两个 TOC。
 
 ### CurseForge 发布
 

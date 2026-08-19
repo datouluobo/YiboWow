@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [string]$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,
-    [string]$OutputRoot = (Join-Path $PSScriptRoot "..\Builds")
+    [string]$OutputRoot = (Join-Path (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path "Builds")
 )
 
 $ErrorActionPreference = "Stop"
@@ -36,7 +36,7 @@ try {
     Compress-Archive -LiteralPath (Join-Path $tempRoot "curseforge\YiboLegendary") -DestinationPath $curseForgeZip -CompressionLevel Optimal
 
     New-Item -ItemType Directory -Path $githubStage -Force | Out-Null
-    $robocopyArgs = @($projectRoot, $githubStage, "/E", "/R:1", "/W:1", "/NFL", "/NDL", "/NJH", "/NJS", "/NP", "/XD", ".git", "dist", "Builds", "tmp", "/XF", "AGENTS.md")
+    $robocopyArgs = @($projectRoot, $githubStage, "/E", "/R:1", "/W:1", "/NFL", "/NDL", "/NJH", "/NJS", "/NP", "/XD", ".git", "dist", "Builds", "tmp", "_NonRelease", "/XF", "AGENTS.md")
     & robocopy @robocopyArgs | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE" }
     if (Test-Path -LiteralPath $githubZip) { Remove-Item -LiteralPath $githubZip -Force }

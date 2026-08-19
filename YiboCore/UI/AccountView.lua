@@ -179,6 +179,23 @@ local function AddText(parent, template, size, color)
     return text
 end
 
+local function GetHeaderIdentity(page)
+    local addonName = page and page.addonName or Core.NAME or "YiboCore"
+    local registered = Core.Registry and Core.Registry:Get(addonName)
+    local version = registered and registered.version
+    if not version and addonName == (Core.NAME or "YiboCore") and Core.GetVersion then
+        version = Core:GetVersion()
+    end
+    return addonName, tostring(version or "?")
+end
+
+local function SetHeaderIdentity(frame, page, subtitle)
+    local addonName, version = GetHeaderIdentity(page)
+    frame.title:SetText(addonName)
+    frame.version:SetText("v" .. version)
+    frame.subtitle:SetText(subtitle or (page and page.title) or "")
+end
+
 local function CreateChromeButton(parent, width, height, label, destructive)
     local button = Theme:CreateButton(parent, width, label, destructive and "danger" or "default")
     button:SetHeight(height or Theme.Size.standard)
@@ -598,11 +615,13 @@ function AccountView:CreateFrame()
     frame.top:SetPoint("TOPLEFT", 1, -1); frame.top:SetPoint("TOPRIGHT", -1, -1); frame.top:SetHeight(46)
     frame.top:SetColorTexture(COLORS.chrome[1], COLORS.chrome[2], COLORS.chrome[3], COLORS.chrome[4])
     frame.brand = AddText(frame, "GameFontNormalLarge", nil, COLORS.accent)
-    frame.brand:SetPoint("TOPLEFT", 16, -13); frame.brand:SetText("[Yibo]")
+    frame.brand:Hide()
     frame.title = AddText(frame, "GameFontNormalLarge", nil, COLORS.text)
-    frame.title:SetPoint("LEFT", frame.brand, "RIGHT", 9, 0); frame.title:SetText("账号总览")
+    frame.title:SetPoint("LEFT", frame, "LEFT", 16, 0); frame.title:SetText("账号总览")
+    frame.version = AddText(frame, "GameFontNormalSmall", 11, COLORS.muted)
+    frame.version:SetPoint("BOTTOMLEFT", frame.title, "BOTTOMRIGHT", 7, 1); frame.version:SetText("v?")
     frame.subtitle = AddText(frame, "GameFontNormalSmall", nil, COLORS.muted)
-    frame.subtitle:SetPoint("LEFT", frame.title, "RIGHT", 12, 0); frame.subtitle:SetText("多角色状态")
+    frame.subtitle:SetPoint("BOTTOMLEFT", frame.version, "BOTTOMRIGHT", 12, 1); frame.subtitle:SetText("多角色状态")
     frame.controls = CreateFrame("Frame", nil, frame)
     frame.controls:SetSize(256, 24)
     frame.controls:SetPoint("TOPRIGHT", -14, -12)
@@ -840,6 +859,7 @@ function AccountView:ShowPage(pageID, options)
         options.autoFit = nil
         self.activePageOptions = options
     end
+    SetHeaderIdentity(self.frame, page, options.preview and ((page.title or "账号") .. " · 账号角色预览") or page.title)
     CallPage(instance, page, "刷新", context)
     self:RefreshNavigation()
     self:UpdateSortButton()
@@ -886,8 +906,7 @@ function AccountView:ApplyNormalLayout()
     frame:ClearAllPoints()
     frame:SetPoint(settings.point or "CENTER", UIParent, settings.relativePoint or "CENTER", settings.x or 0, settings.y or 0)
     frame.nav:Show(); frame.settingsButton:Show(); frame.close:Show(); frame.resize:Show(); self:UpdateSortButton()
-    frame.title:SetText("账号总览")
-    frame.subtitle:SetText("多角色状态")
+    SetHeaderIdentity(frame, self._pages.overview, "账号总览 · 多角色状态")
     frame.content:ClearAllPoints()
     frame.content:SetPoint("TOPLEFT", frame.nav, "TOPRIGHT", 1, 0)
     frame.content:SetPoint("BOTTOMRIGHT", -1, 1)
@@ -1018,7 +1037,7 @@ function AccountView:ShowPreview(pageID, anchor)
     frame.content:ClearAllPoints()
     frame.content:SetPoint("TOPLEFT", frame, "TOPLEFT", 1, -47)
     frame.content:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 1)
-    frame.title:SetText(page.title); frame.subtitle:SetText("账号角色预览")
+    SetHeaderIdentity(frame, page, (page.title or "账号") .. " · 账号角色预览")
     frame:Show()
     self:ShowPage(page.id, { preview = true, fieldOverrides = fields })
     self:TrackPreviewControls(frame)
@@ -1899,24 +1918,28 @@ end
 local ABOUT_ADDONS = {
     {
         name = "YiboAltoBoss",
+        version = "2.0",
         description = "汇总多角色首领进度，快速决定下一步。",
         icon = "Interface\\AddOns\\YiboCore\\Media\\YAB_MinimapIcon",
         url = "https://www.curseforge.com/wow/addons/yiboaltoboss",
     },
     {
         name = "YiboLegendary",
+        version = "0.3",
         description = "追踪多角色传说任务与橙色传说装备进度。",
         icon = "Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon-v1.tga",
         url = "https://www.curseforge.com/wow/addons/yibolegendary",
     },
     {
         name = "YiboQuestBlocker",
+        version = "2.0.0",
         description = "识别任务限制与风险，避免误接关键任务。",
         icon = "Interface\\AddOns\\YiboCore\\Media\\YQB_MinimapIcon",
         url = "https://www.curseforge.com/wow/addons/yiboquestblocker",
     },
     {
         name = "YiboBeastPaths",
+        version = "1.5",
         description = "在地图上显示稀有猎人宠物的巡逻路线。",
         icon = "Interface\\AddOns\\YiboCore\\Media\\YBP_AddonIcon",
         url = "https://www.curseforge.com/wow/addons/yibobeastpaths",
@@ -1962,6 +1985,9 @@ local function CreateAboutAddonRow(parent, addon)
 
     row.name = AddText(row, "GameFontNormal", 14, COLORS.text)
     row.name:SetPoint("TOPLEFT", row.iconFrame, "TOPRIGHT", 12, -2); row.name:SetText(addon.name)
+    row.version = AddText(row, "GameFontNormalSmall", 11, COLORS.muted)
+    row.version:SetPoint("LEFT", row.name, "RIGHT", 8, 0)
+    row.version:SetText(addon.version and ("v" .. addon.version) or "")
     row.description = AddText(row, "GameFontNormalSmall", 12, COLORS.muted)
     row.description:SetPoint("TOPLEFT", row.name, "BOTTOMLEFT", 0, -8); row.description:SetPoint("RIGHT", -154, 0); row.description:SetText(addon.description)
     if addon.independent then
@@ -1994,11 +2020,13 @@ local function CreateAboutAddonRow(parent, addon)
     row.linkBox:Hide(); row.copyHint:Hide()
     row.linkButton:SetScript("OnClick", function() SetAboutLinkOpen(parent, row) end)
     parent.addonRows[#parent.addonRows + 1] = row
+    parent.addonRowsByName[addon.name] = row
     return row
 end
 
 local function CreateAbout(parent)
     parent.addonRows = {}
+    parent.addonRowsByName = {}
     -- The about page is a growing directory. Keep its footer and page chrome
     -- fixed, while only the directory content participates in scrolling.
     parent.scroll = Theme:CreateScrollFrame(parent)
@@ -2082,7 +2110,13 @@ local function RefreshAbout(parent)
     parent.hero.title:SetText("YiboCore v" .. tostring(Core:GetVersion() or "?"))
     local connected = 0
     for _, addon in ipairs(ABOUT_ADDONS) do
-        if not addon.independent and Core.Registry and Core.Registry:Get(addon.name) then connected = connected + 1 end
+        local registered = Core.Registry and Core.Registry:Get(addon.name)
+        if registered then
+            if parent.addonRowsByName[addon.name] then
+                parent.addonRowsByName[addon.name].version:SetText("v" .. tostring(registered.version or addon.version or "?"))
+            end
+            if not addon.independent then connected = connected + 1 end
+        end
     end
     parent.hero.status:SetText("已连接 " .. connected .. " 个子插件")
 end

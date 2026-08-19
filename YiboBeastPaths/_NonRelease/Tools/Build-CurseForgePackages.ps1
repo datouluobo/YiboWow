@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [string]$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,
-    [string]$OutputRoot = (Join-Path (Resolve-Path (Join-Path $PSScriptRoot "..")).Path "Builds")
+    [string]$OutputRoot = (Join-Path (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path "Builds")
 )
 
 $ErrorActionPreference = "Stop"
@@ -86,54 +86,55 @@ $tocPath = Join-Path $projectRoot "YiboBeastPaths.toc"
 $version = Get-AddonVersion -TocPath $tocPath
 $versionTag = $version.TrimStart("vV")
 
-$fullZipPath = Join-Path $outputRoot ("YiboBeastPaths-v{0}-debug.zip" -f $versionTag)
-$releaseZipPath = Join-Path $outputRoot ("YiboBeastPaths-v{0}.zip" -f $versionTag)
+$curseForgeZipPath = Join-Path $outputRoot ("YiboBeastPaths-v{0}-curseforge.zip" -f $versionTag)
+$githubZipPath = Join-Path $outputRoot ("YiboBeastPaths-v{0}-github.zip" -f $versionTag)
 
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("YiboBeastPaths-build-" + [System.Guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
 
 try {
-    $fullStageRoot = Join-Path $tempRoot "full"
-    $releaseStageRoot = Join-Path $tempRoot "release"
+    $githubStageRoot = Join-Path $tempRoot "github"
+    $curseForgeStageRoot = Join-Path $tempRoot "curseforge"
 
     $commonExcludeDirs = @(
         (Join-Path $projectRoot ".git"),
-        (Join-Path $projectRoot "Screenshots"),
-        (Join-Path $projectRoot "_NonRelease\Builds")
+        (Join-Path $projectRoot "Builds"),
+        (Join-Path $projectRoot "_NonRelease")
     )
     $commonExcludeFiles = @(
         "PRODUCT.md"
     )
 
-    $fullStagePath = New-StagingCopy -SourceRoot $projectRoot -StageRoot $fullStageRoot -ExcludeDirectories $commonExcludeDirs -ExcludeFiles $commonExcludeFiles
-    $releaseExcludeDirs = @(
+    $githubStagePath = New-StagingCopy -SourceRoot $projectRoot -StageRoot $githubStageRoot -ExcludeDirectories $commonExcludeDirs -ExcludeFiles $commonExcludeFiles
+    $curseForgeExcludeDirs = @(
         (Join-Path $projectRoot ".git"),
         (Join-Path $projectRoot "Screenshots"),
+        (Join-Path $projectRoot "Builds"),
         (Join-Path $projectRoot "_NonRelease")
     )
-    $releaseExcludeFiles = @(
+    $curseForgeExcludeFiles = @(
         "AGENTS.md",
         "PRODUCT.md"
     )
-    $releaseStagePath = New-StagingCopy -SourceRoot $projectRoot -StageRoot $releaseStageRoot -ExcludeDirectories $releaseExcludeDirs -ExcludeFiles $releaseExcludeFiles
-    Get-ChildItem -LiteralPath $releaseStagePath -Filter "YiboBeastPaths*.toc" | ForEach-Object {
+    $curseForgeStagePath = New-StagingCopy -SourceRoot $projectRoot -StageRoot $curseForgeStageRoot -ExcludeDirectories $curseForgeExcludeDirs -ExcludeFiles $curseForgeExcludeFiles
+    Get-ChildItem -LiteralPath $curseForgeStagePath -Filter "YiboBeastPaths*.toc" | ForEach-Object {
         Remove-NonReleaseTocEntries -TocPath $_.FullName
     }
 
-    if (Test-Path $fullZipPath) {
-        Remove-Item -LiteralPath $fullZipPath -Force
+    if (Test-Path $githubZipPath) {
+        Remove-Item -LiteralPath $githubZipPath -Force
     }
-    if (Test-Path $releaseZipPath) {
-        Remove-Item -LiteralPath $releaseZipPath -Force
+    if (Test-Path $curseForgeZipPath) {
+        Remove-Item -LiteralPath $curseForgeZipPath -Force
     }
 
-    Compress-Archive -LiteralPath $fullStagePath -DestinationPath $fullZipPath -CompressionLevel Optimal
-    Compress-Archive -LiteralPath $releaseStagePath -DestinationPath $releaseZipPath -CompressionLevel Optimal
+    Compress-Archive -LiteralPath $githubStagePath -DestinationPath $githubZipPath -CompressionLevel Optimal
+    Compress-Archive -LiteralPath $curseForgeStagePath -DestinationPath $curseForgeZipPath -CompressionLevel Optimal
 
     [pscustomobject]@{
         Version = $version
-        FullZip = $fullZipPath
-        ReleaseZip = $releaseZipPath
+        CurseForge = $curseForgeZipPath
+        GitHub = $githubZipPath
     } | Format-List
 }
 finally {

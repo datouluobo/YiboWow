@@ -54,7 +54,7 @@ function Integration:Initialize()
     local compatible = Core:CheckAPIVersion(4)
     if not compatible then return nil, "需要 YiboCore API v4。" end
 
-    local addon, addonError = Core:RegisterAddon("YiboQuestBlocker", { version = "2.0.0", requiredAPI = 4 })
+    local addon, addonError = Core:RegisterAddon("YiboQuestBlocker", { version = "2.0", requiredAPI = 4 })
     if not addon then return nil, addonError end
     if Core.CharacterCleanup then
         local cleanupRegistered, cleanupError = Core.CharacterCleanup:RegisterOwner("YiboQuestBlocker", {

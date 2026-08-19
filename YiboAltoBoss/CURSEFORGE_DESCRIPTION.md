@@ -1,6 +1,6 @@
 # YiboAltoBoss
 
-YiboAltoBoss is a World of Warcraft addon for Mists of Pandaria Classic that helps you track world boss kill status and Warbringer phase observations across all of your characters. Version 2.1 requires YiboCore API v3, which provides the shared account page, optional entry, and settings navigation.
+YiboAltoBoss is a World of Warcraft addon for Mists of Pandaria Classic that helps you track world boss kill status and Warbringer phase observations across all of your characters. Version 2.0 requires YiboCore API v3, which provides the shared account page, optional entry, and settings navigation.
 
 It provides a compact account-wide overview so you can quickly see which characters have already killed each boss, which targets still need attention, and what has recently been observed in each Warbringer location.
 

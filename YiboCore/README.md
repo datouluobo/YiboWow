@@ -39,4 +39,4 @@ YiboCore.AccountView:RegisterPage("YiboNewAddon", pageDefinition)
 
 ## 发布打包
 
-运行 `_NonRelease/Tools/Build-ReleasePackages.ps1` 会生成两份带顶级 `YiboCore/` 目录的 zip：`*-curseforge.zip` 只包含 TOC、其加载的运行时代码与 `.tga` 纹理；`*-github.zip` 保留文档、截图和其它公开资源，但排除构建输出。
+运行 `_NonRelease/Tools/Build-ReleasePackages.ps1` 会在仓库根目录 `Builds/` 生成两份带顶级 `YiboCore/` 目录的 zip：`*-curseforge.zip` 只包含 TOC、其加载的运行时代码与 `.tga` 纹理；`*-github.zip` 保留文档、截图和其它公开资源，但排除构建输出。`Builds/` 是 YiboWow 全仓库统一的安装包目录。
