@@ -1,0 +1,20 @@
+local Addon = _G.YiboCurrency
+SLASH_YCU1 = "/ycu"
+SlashCmdList["YCU"] = function(message)
+    message = strtrim(message or "")
+    if message == "" then Addon:OpenAccountPage(); return end
+    if message == "probe" then
+        local core = _G.YiboCore
+        local character = core and core.Characters and core.Characters:GetCurrent()
+        local snapshot = character and core.DataDomains and core.DataDomains:Get(character.id, "economy")
+        local data = snapshot and snapshot.data or {}
+        local count = 0
+        for _ in pairs(data.currencies or {}) do count = count + 1 end
+        Addon:Print(string.format("货币 API：GetCurrencyInfo=%s，C_CurrencyInfo=%s；经济域=%s；金币=%s；已读取标准货币=%d。",
+            GetCurrencyInfo and "可用" or "不可用", C_CurrencyInfo and "可用" or "不可用", snapshot and snapshot.state or "未扫描", tostring(data.money), count))
+        return
+    end
+    local itemID = message:match("^add%s+(%d+)$")
+    if itemID then Addon:Print("自定义物品代币需要在设置页确认客户端名称与图标；该交互将在下一轮目录编辑中开放。"); return end
+    Addon:Print("命令：/ycu（打开货币总览）；/ycu probe（输出货币 API 诊断）")
+end

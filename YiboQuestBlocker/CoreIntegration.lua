@@ -12,11 +12,8 @@ end
 
 local function GetEligibleCharacters(characters, context)
     local result = {}
-    local scope = context and context.scope or "all"
-    local selectedRealm = scope:match("^realm:(.+)$")
     for _, character in ipairs(characters or {}) do
-        local visibleByScope = scope == "all" or (selectedRealm and character.realm == selectedRealm)
-        if HasCharacterSnapshot(character) and visibleByScope and YQB.CharPassLevelFilter(character.id) then
+        if HasCharacterSnapshot(character) then
             result[#result + 1] = character
         end
     end
@@ -51,11 +48,17 @@ function Integration:Initialize()
     if not (Core and Core.CheckAPIVersion and Core.AccountView and Core.Entry and Core.Characters) then
         return nil, "YiboCore 不可用。"
     end
-    local compatible = Core:CheckAPIVersion(4)
-    if not compatible then return nil, "需要 YiboCore API v4。" end
+    local compatible = Core:CheckAPIVersion(5)
+    if not compatible then return nil, "需要 YiboCore API v5。" end
 
-    local addon, addonError = Core:RegisterAddon("YiboQuestBlocker", { version = "2.0", requiredAPI = 4 })
+    local addon, addonError = Core:RegisterAddon("YiboQuestBlocker", { version = "2.1", requiredAPI = 5 })
     if not addon then return nil, addonError end
+    local database = YQB.GetDatabase()
+    database.filters = database.filters or {}
+    if database.filters.levelExpr == nil or database.filters.levelExpr == "" then
+        database.filters.levelExpr = "90"
+        YQB.PersistDB()
+    end
     if Core.CharacterCleanup then
         local cleanupRegistered, cleanupError = Core.CharacterCleanup:RegisterOwner("YiboQuestBlocker", {
         Inspect = function(character)
@@ -85,6 +88,11 @@ function Integration:Initialize()
             { id = "characters", title = "角色屏蔽", defaultVisible = true },
         },
         scope = { mode = "realms", allTitle = "所有服务器" },
+        characterFilter = {
+            defaultExpression = "90",
+            GetExpression = function() return YQB.GetLevelFilterExpr() end,
+            SetExpression = function(expression) return YQB.SetLevelFilterExpr(expression) end,
+        },
         HasCharacterSnapshot = HasCharacterSnapshot,
         GetEligibleCharacters = GetEligibleCharacters,
         GetPreviewFields = PreviewFields,
@@ -93,9 +101,8 @@ function Integration:Initialize()
         settings = { title = "任务屏蔽", description = "角色身份与服务器范围由 Core 管理；任务屏蔽快照由 QuestBlocker 保存。" },
         Create = YQB.AccountPage.Create,
         Refresh = YQB.AccountPage.Refresh,
-        GetPreviewSize = YQB.AccountPage.GetPreviewSize,
-        GetHoverMetrics = YQB.AccountPage.GetHoverMetrics,
-        GetLayoutMetrics = YQB.AccountPage.GetLayoutMetrics,
+        GetSurfaceMetrics = YQB.AccountPage.GetSurfaceMetrics,
+        GetMeasuredHeight = YQB.AccountPage.GetMeasuredHeight,
         GetSummary = GetSummary,
         GetActions = function() return {} end,
     })

@@ -105,6 +105,20 @@ local function ShowPreview(anchor, pageID)
     return true
 end
 
+local function RaiseBrokerTooltip(tooltip)
+    local preview = Core.AccountView and Core.AccountView.frame
+    if not (tooltip and preview and preview.preview) then return end
+
+    -- Some Broker displays call OnTooltipShow before showing their tooltip.
+    -- Native Broker tooltips belong in TOOLTIP; the interactive preview stays
+    -- in DIALOG, so this remains visible above the preview in either order.
+    if tooltip.SetFrameStrata then tooltip:SetFrameStrata("TOOLTIP") end
+    if tooltip.SetFrameLevel and preview.GetFrameLevel then
+        tooltip:SetFrameLevel((preview:GetFrameLevel() or 0) + 50)
+    end
+    if tooltip.Raise then tooltip:Raise() end
+end
+
 function Entry:CreateBusinessBroker(entry)
     if not entry or entry.disabled or EntrySettings().broker.show == false or not HasBroker(self:GetBusinessEntryMode(entry.id)) then return end
     local library = type(LibStub) == "table" and LibStub.GetLibrary and LibStub:GetLibrary("LibDataBroker-1.1", true)
@@ -136,7 +150,7 @@ function Entry:CreateBusinessBroker(entry)
     broker.OnLeave = function() Entry:SchedulePreviewClose() end
     broker.OnTooltipShow = function(tooltip)
         local owner = tooltip and tooltip.GetOwner and tooltip:GetOwner()
-        if not entry.disabled and ShowPreview(owner, entry.pageID) and tooltip and tooltip.Hide then tooltip:Hide() end
+        if not entry.disabled and ShowPreview(owner, entry.pageID) then RaiseBrokerTooltip(tooltip) end
     end
 end
 
@@ -277,6 +291,12 @@ function Entry:CancelPreviewClose()
     self.previewToken = (self.previewToken or 0) + 1
 end
 
+function Entry:SuppressPreviewClose(seconds)
+    local now = GetTime and GetTime() or 0
+    self.previewCloseSuppressedUntil = now + math.max(0, tonumber(seconds) or 0)
+    self:CancelPreviewClose()
+end
+
 function Entry:IsMouseOverPreview()
     local preview = Core.AccountView and Core.AccountView.frame
     if not (preview and preview.preview) then return false end
@@ -291,6 +311,8 @@ function Entry:IsMouseOverPreview()
 end
 
 function Entry:SchedulePreviewClose()
+    local now = GetTime and GetTime() or 0
+    if (self.previewCloseSuppressedUntil or 0) > now then return end
     self.previewToken = (self.previewToken or 0) + 1
     local token = self.previewToken
     local function CloseIfStillPending()
@@ -361,7 +383,7 @@ function Entry:Initialize()
         broker.OnLeave = function() Entry:SchedulePreviewClose() end
         broker.OnTooltipShow = function(tooltip)
             local owner = tooltip and tooltip.GetOwner and tooltip:GetOwner() or Entry.lastBrokerAnchor
-            if ShowPreview(owner) and tooltip and tooltip.Hide then tooltip:Hide() end
+            if ShowPreview(owner) then RaiseBrokerTooltip(tooltip) end
         end
     end
     for _, entry in pairs(self.businessEntries) do self:CreateBusinessBroker(entry) end

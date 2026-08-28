@@ -10,6 +10,7 @@ local DEFAULTS = {
         aliases = {},
         seenOrder = {},
     },
+    characterDisplay = {},
     settings = {
         debug = false,
         accountView = {

@@ -4,8 +4,8 @@ local Core = _G.YiboCore or {}
 _G.YiboCore = Core
 
 Core.NAME = "YiboCore"
-Core.VERSION = "0.5.1"
-Core.API_VERSION = 4
+Core.VERSION = "1.0"
+Core.API_VERSION = 5
 Core._private = Core._private or {}
 Core._private.addonName = ADDON_NAME or Core.NAME
 Core._private.initialized = false
@@ -40,10 +40,14 @@ lifecycleFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 lifecycleFrame:RegisterEvent("PLAYER_LEVEL_UP")
 lifecycleFrame:RegisterEvent("PLAYER_MONEY")
 lifecycleFrame:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
+lifecycleFrame:RegisterEvent("BAG_UPDATE_DELAYED")
+lifecycleFrame:RegisterEvent("BANKFRAME_OPENED")
+lifecycleFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
 lifecycleFrame:RegisterEvent("SKILL_LINES_CHANGED")
 lifecycleFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 lifecycleFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 lifecycleFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+lifecycleFrame:RegisterEvent("UPDATE_FACTION")
 
 lifecycleFrame:SetScript("OnEvent", function(_, event, arg1)
     if event == "ADDON_LOADED" then
@@ -63,10 +67,8 @@ lifecycleFrame:SetScript("OnEvent", function(_, event, arg1)
         if Core.Characters then
             Core.Characters:RefreshCurrent()
         end
-        if Core.Profile then
-            Core.Profile:RefreshCurrent(event)
-        end
-    elseif Core.Profile and event ~= "ADDON_LOADED" then
+    end
+    if Core.Profile and event ~= "ADDON_LOADED" then
         Core.Profile:RefreshCurrent(event)
     end
 

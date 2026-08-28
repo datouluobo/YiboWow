@@ -4,7 +4,7 @@ local C = Theme.Colors
 
 local BOSS_WIDTH, ACTION_WIDTH, PHASE_WIDTH = 120, 88, 72
 local CHARACTER_MIN_WIDTH, CHARACTER_MAX_WIDTH = 72, 96
-local HEADER_H, COMPACT_HEADER_H, ROW_H, CELL_H = 40, 28, 30, 26
+local HEADER_H, COMPACT_HEADER_H, ROW_H, CELL_H = Theme.Table.groupHeight, Theme.Table.headerHeight, Theme.Table.rowHeight, 24
 local GROUP_GAP = 4
 local FIXED_HEADER = { 0.035, 0.18, 0.19, 1 }
 local FIXED_CELL = { 0.025, 0.145, 0.16, 0.98 }
@@ -28,7 +28,14 @@ end
 
 local function CharacterColor(key)
     local info = (YiboAltoBossDB and YiboAltoBossDB.knownChars and YiboAltoBossDB.knownChars[key]) or {}
-    local color = info.class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[info.class]
+    local class = info.class
+    if not class and _G.YiboCore and _G.YiboCore.Characters then
+        local name, realm = CharacterInfo(key)
+        for _, character in ipairs(_G.YiboCore.Characters:GetAll()) do
+            if character.name == name and character.realm == realm then class = character.class; break end
+        end
+    end
+    local color = class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class]
     return color or C.text
 end
 
@@ -56,19 +63,12 @@ end
 
 local function GetCharacterColumnMetrics(key, context)
     local name, realm = CharacterInfo(key)
-    local titleFont = context and context.scope == "all" and Theme.Font.body or (Theme.Font.body + 1)
+    local titleFont = Theme.Font.assist
     local nameWidth = VisualTextUnits(name) * titleFont
     local realmWidth = context and context.scope == "all" and (VisualTextUnits(realm) * Theme.Font.assist) or 0
     local contentWidth = math.max(nameWidth, realmWidth)
     local width = math.ceil(contentWidth + 16)
     return math.max(CHARACTER_MIN_WIDTH, math.min(CHARACTER_MAX_WIDTH, width)), titleFont
-end
-
-local function GetScopeTitle(context)
-    for _, value in ipairs(context.scopeDefinition and context.scopeDefinition.values or {}) do
-        if value.id == context.scope then return value.title end
-    end
-    return "账号范围"
 end
 
 local function ScopeRealm(scope)
@@ -80,7 +80,26 @@ local function ScopeControlsWidth(context)
 end
 
 local function GetHeaderHeight(context)
-    return context and context.scope == "all" and HEADER_H or COMPACT_HEADER_H
+    -- Bosses are the columns in this page.  Realm scope changes the character
+    -- row labels, not the header taxonomy, so it must never create a second
+    -- header line filled with meaningless dashes.
+    return COMPACT_HEADER_H
+end
+
+local function GetCharacterRowLabel(key, context)
+    local name, realm = CharacterInfo(key)
+    if context and context.scope == "all" then return name .. " - " .. realm end
+    return name
+end
+
+local function GetCharacterRowWidth(keys, context)
+    local width = 180
+    for _, key in ipairs(keys or {}) do
+        width = math.max(width, Theme:MeasureText(Theme.Font.body, GetCharacterRowLabel(key, context)) + Theme.Space.lg * 2)
+    end
+    -- A long realm name may widen the identity column, but must not turn the
+    -- boss grid into a mostly-empty character label strip.
+    return math.min(300, width)
 end
 
 local function FormatDuration(seconds)
@@ -94,17 +113,6 @@ end
 
 local function FormatClock(timestamp)
     return date and date("%H:%M", timestamp) or "待定"
-end
-
-local function GetVisibleSummary(keys, bosses)
-    local killed, total = 0, 0
-    for _, key in ipairs(keys) do
-        for _, boss in ipairs(bosses) do
-            total = total + 1
-            if YAB.IsBossKilled(key, boss.key) then killed = killed + 1 end
-        end
-    end
-    return killed, total
 end
 
 local function GetScopedPhaseStates(boss, scope)
@@ -318,9 +326,9 @@ local function GetHeader(instance, index)
     header:SetBackdropColor(C.chrome[1], C.chrome[2], C.chrome[3], 0.96)
     header:SetBackdropBorderColor(C.lineSoft[1], C.lineSoft[2], C.lineSoft[3], C.lineSoft[4])
     header.title = Text(header, Theme.Font.assist, "CENTER", C.muted)
-    header.title:SetPoint("TOPLEFT", 3, -3); header.title:SetPoint("TOPRIGHT", -3, -3); header.title:SetHeight(17)
-    header.sub = Text(header, Theme.Font.assist, "CENTER", C.muted)
-    header.sub:SetPoint("TOPLEFT", 3, -20); header.sub:SetPoint("TOPRIGHT", -3, -20); header.sub:SetHeight(16)
+    header.title:SetPoint("TOPLEFT", 3, -2); header.title:SetPoint("TOPRIGHT", -3, -2); header.title:SetHeight(14)
+    header.sub = Text(header, Theme.Font.meta, "CENTER", C.muted)
+    header.sub:SetPoint("TOPLEFT", 3, -16); header.sub:SetPoint("TOPRIGHT", -3, -16); header.sub:SetHeight(12)
     instance.headers[index] = header
     return header
 end
@@ -372,15 +380,25 @@ local function SetEmptyButton(control)
     control:SetScript("OnClick", nil)
 end
 
-local function SetStatus(cell, killed, key, boss)
+local function SetStatus(cell, status, key, boss)
+    local killed = status == "killed"
     cell:SetText(killed and "已击杀" or "未击杀")
-    cell:SetState(killed and "selected" or "default")
-    if killed then cell:SetBackdropColor(C.success[1], C.success[2], C.success[3], C.success[4]) end
+    cell:SetState("default")
+    if killed then
+        cell:SetBackdropColor(C.successSurface[1], C.successSurface[2], C.successSurface[3], C.successSurface[4])
+        cell:SetBackdropBorderColor(C.success[1], C.success[2], C.success[3], C.success[4])
+        cell.label:SetTextColor(C.success[1], C.success[2], C.success[3])
+    else
+        cell:SetBackdropColor(C.chrome[1], C.chrome[2], C.chrome[3], C.chrome[4])
+        cell:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
+        cell.label:SetTextColor(C.text[1], C.text[2], C.text[3])
+    end
     cell:SetScript("OnLeave", function(control)
-        if killed then control:SetBackdropColor(C.success[1], C.success[2], C.success[3], C.success[4])
+        if killed then control:SetBackdropColor(C.successSurface[1], C.successSurface[2], C.successSurface[3], C.successSurface[4])
         else control:SetBackdropColor(C.chrome[1], C.chrome[2], C.chrome[3], C.chrome[4]) end
-        control.label:SetTextColor(C.text[1], C.text[2], C.text[3])
-        local border = killed and C.accent or C.line
+        local labelColor = killed and C.success or C.text
+        control.label:SetTextColor(labelColor[1], labelColor[2], labelColor[3])
+        local border = killed and C.success or C.matrixLine
         control:SetBackdropBorderColor(border[1], border[2], border[3], border[4] or 1)
     end)
     cell:SetScript("OnClick", function() YAB.ToggleBossKill(key, boss.key) end)
@@ -399,8 +417,8 @@ local function RefreshHeaders(instance, context, keys, showAction, showPhase, sh
         header:ClearAllPoints(); header:SetPoint("TOPLEFT", instance.header, "TOPLEFT", x, 0); header:SetSize(width, headerHeight)
         header.title:ClearAllPoints(); header.sub:ClearAllPoints()
         if headerHeight == HEADER_H then
-            header.title:SetPoint("TOPLEFT", 3, -3); header.title:SetPoint("TOPRIGHT", -3, -3); header.title:SetHeight(17)
-            header.sub:SetPoint("TOPLEFT", 3, -20); header.sub:SetPoint("TOPRIGHT", -3, -20); header.sub:SetHeight(16)
+            header.title:SetPoint("TOPLEFT", 3, -2); header.title:SetPoint("TOPRIGHT", -3, -2); header.title:SetHeight(14)
+            header.sub:SetPoint("TOPLEFT", 3, -16); header.sub:SetPoint("TOPRIGHT", -3, -16); header.sub:SetHeight(12)
             header.sub:Show()
         else
             header.title:SetPoint("TOPLEFT", 3, 0); header.title:SetPoint("BOTTOMRIGHT", -3, 0)
@@ -408,7 +426,7 @@ local function RefreshHeaders(instance, context, keys, showAction, showPhase, sh
         end
         header.title:SetText(title); header.sub:SetText(sub or "")
         header.title:SetFont(STANDARD_TEXT_FONT, titleFont or Theme.Font.assist)
-        header.sub:SetFont(STANDARD_TEXT_FONT, Theme.Font.assist)
+        header.sub:SetFont(STANDARD_TEXT_FONT, Theme.Font.meta)
         local color = titleColor or C.muted
         header.title:SetTextColor(color.r or color[1], color.g or color[2], color.b or color[3])
         header.sub:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
@@ -479,39 +497,48 @@ local function RefreshCurrentColumnOutline(instance, bosses, showKills)
     outline:Show()
 end
 
-function YAB.RefreshAccountPage(instance, context)
+-- Kept as a migration reference only.  The registered renderer below uses
+-- character rows and stable Boss columns.
+local function RefreshAccountPageByCharacterColumns(instance, context)
     local preview = context.preview == true
-    local keys, bosses = YAB.GetAccountCharacterKeys(context), YAB.GetBossList()
+    local allKeys, bosses = YAB.GetAccountCharacterKeys(context), YAB.GetBossList()
     local showKills = context:GetFieldVisible("kills")
     local showAction = context:GetFieldVisible("action")
     local showPhase = context:GetFieldVisible("phase")
-    local killed, total = GetVisibleSummary(keys, bosses)
-    instance.title:SetText("Boss 击杀、行动与位面 · " .. GetScopeTitle(context)); instance.title:SetShown(not preview)
-    instance.summary:SetText("击杀 " .. killed .. "/" .. total); instance.summary:SetShown(not preview)
+    -- Core's title bar and shared scope bar already identify this view and its
+    -- active server range.  Keeping a second page title consumed a full blank
+    -- row between the scope controls and matrix.
+    instance.title:SetShown(false)
+    instance.summary:SetShown(false)
 
-    for index, value in ipairs(context.scopeDefinition and context.scopeDefinition.values or {}) do
-        local scopeID = value.id
-        local control = instance.scopeButtons[index] or Button(instance, 96, value.title)
-        instance.scopeButtons[index] = control
-        control:ClearAllPoints(); control:SetPoint("TOPLEFT", instance, "TOPLEFT", (preview and Theme.Space.xs or Theme.Space.lg) + ((index - 1) * 104), preview and -Theme.Space.xs or -44)
-        control:SetText(value.title); control:SetState(scopeID == context.scope and "selected" or "default")
-        control:SetScript("OnClick", function() context:SetScope(scopeID) end)
-        control:SetShown(true)
-    end
-    Release(instance.scopeButtons, #(context.scopeDefinition and context.scopeDefinition.values or {}) + 1)
+    Release(instance.scopeButtons, 1)
 
     instance.header:ClearAllPoints(); instance.scroll:ClearAllPoints()
-    instance.header:SetPoint("TOPLEFT", preview and Theme.Space.xs or Theme.Space.lg, preview and -44 or -84)
-    instance.header:SetPoint("TOPRIGHT", preview and -Theme.Space.md or -38, preview and -44 or -84)
+    -- The page instance begins immediately below Core's shared scope bar.
+    -- Keep only the compact visual gap before the matrix; the previous 44 px
+    -- offset reserved a now-removed local title/control row.
+    local inset = Theme:GetMatrixInsets(preview)
+    local matrixTop = -inset.top
+    instance.header:SetPoint("TOPLEFT", inset.left, matrixTop)
+    instance.header:SetPoint("TOPRIGHT", -inset.right, matrixTop)
     instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs)
-    instance.scroll:SetPoint("BOTTOMRIGHT", preview and -Theme.Space.md or -38, preview and Theme.Space.xs or Theme.Space.md)
+    instance.scroll:SetPoint("BOTTOMRIGHT", -inset.right, inset.bottom)
+    local fixedWidth = BOSS_WIDTH + (showAction and ACTION_WIDTH or 0) + (showPhase and PHASE_WIDTH or 0) + (showKills and GROUP_GAP or 0)
+    local availableWidth = instance.header:GetWidth() or math.max(fixedWidth + CHARACTER_MIN_WIDTH, (instance:GetWidth() or 0) - 58)
+    local keys, pageInfo = _G.YiboCore.AccountView:GetColumnPage("alto-boss", "characters", allKeys, availableWidth, fixedWidth, CHARACTER_MIN_WIDTH)
+    if pageInfo.pages > 1 then
+        -- Reserve a stable header gutter for the explicit pager, then compute
+        -- the visible columns again.  No character is merely clipped.
+        keys, pageInfo = _G.YiboCore.AccountView:GetColumnPage("alto-boss", "characters", allKeys, availableWidth - _G.YiboCore.AccountView:GetColumnPagerWidth(), fixedWidth, CHARACTER_MIN_WIDTH)
+    end
     RefreshHeaders(instance, context, keys, showAction, showPhase, showKills)
+    _G.YiboCore.AccountView:UpdateColumnPager(instance, "alto-boss", "characters", pageInfo, instance.header)
 
     for rowIndex, boss in ipairs(bosses) do
         local row = GetRow(instance, rowIndex)
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", instance.body, "TOPLEFT", 0, -((rowIndex - 1) * ROW_H)); row:SetSize(instance.gridWidth, ROW_H)
         row:SetBackdropColor(rowIndex % 2 == 0 and 0.035 or 0.025, rowIndex % 2 == 0 and 0.115 or 0.085, rowIndex % 2 == 0 and 0.13 or 0.10, 0.88)
-        row:SetBackdropBorderColor(C.lineSoft[1], C.lineSoft[2], C.lineSoft[3], C.lineSoft[4])
+        row:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
         row.fixedBackground:SetWidth(instance.fixedWidth)
         row.groupGap:ClearAllPoints()
         row.groupGap:SetPoint("TOPLEFT", row, "TOPLEFT", instance.fixedWidth, 0)
@@ -551,7 +578,7 @@ function YAB.RefreshAccountPage(instance, context)
                 local columnWidth = instance.characterWidths[cellIndex] or CHARACTER_MIN_WIDTH
                 cell:SetWidth(columnWidth - 2)
                 cell:ClearAllPoints(); cell:SetPoint("LEFT", x + 1, 0); cell:SetShown(true)
-                SetStatus(cell, YAB.IsBossKilled(key, boss.key), key, boss)
+                SetStatus(cell, YAB.GetBossKillStatus(key, boss.key), key, boss)
                 x = x + columnWidth
             end
         end
@@ -566,37 +593,153 @@ function YAB.RefreshAccountPage(instance, context)
     RefreshCurrentColumnOutline(instance, bosses, showKills)
 end
 
+-- Boss weekly is intentionally character-row oriented.  Bosses are the
+-- stable comparison columns; character count therefore grows vertically and
+-- never turns the matrix into a screen-wide roster strip.
+local function RefreshBossColumnHeaders(instance, context, bosses, showKills, showAction, showPhase, characterWidth)
+    local x, index = 0, 0
+    local headerHeight = GetHeaderHeight(context)
+    instance.header:SetHeight(headerHeight)
+    local function Place(title, width, sub, color, fixed)
+        index = index + 1
+        local header = GetHeader(instance, index)
+        header:ClearAllPoints(); header:SetPoint("TOPLEFT", instance.header, "TOPLEFT", x, 0); header:SetSize(width, headerHeight)
+        header.title:ClearAllPoints(); header.sub:ClearAllPoints()
+        if headerHeight == HEADER_H then
+            header.title:SetPoint("TOPLEFT", 3, -3); header.title:SetPoint("TOPRIGHT", -3, -3); header.title:SetHeight(17)
+            header.sub:SetPoint("TOPLEFT", 3, -20); header.sub:SetPoint("TOPRIGHT", -3, -20); header.sub:SetHeight(16); header.sub:Show()
+        else
+            header.title:SetPoint("TOPLEFT", 3, 0); header.title:SetPoint("BOTTOMRIGHT", -3, 0); header.sub:Hide()
+        end
+        header.title:SetText(title); header.sub:SetText(sub or ""); header.title:SetFont(STANDARD_TEXT_FONT, Theme.Font.assist)
+        local textColor = color or C.muted; header.title:SetTextColor(textColor.r or textColor[1], textColor.g or textColor[2], textColor.b or textColor[3])
+        header.sub:SetTextColor(C.muted[1], C.muted[2], C.muted[3]); local fill = fixed and FIXED_HEADER or C.chrome
+        header:SetBackdropColor(fill[1], fill[2], fill[3], fill[4] or 1); header:SetBackdropBorderColor(C.lineSoft[1], C.lineSoft[2], C.lineSoft[3], C.lineSoft[4]); header:Show()
+        x = x + width
+    end
+    Place("角色", characterWidth, nil, nil, true)
+    if showAction then Place("行动", ACTION_WIDTH, nil, nil, true) end
+    if showPhase then Place("位面", PHASE_WIDTH, nil, nil, true) end
+    if showKills then
+        for _, boss in ipairs(bosses) do
+            Place(boss.name, BOSS_WIDTH)
+        end
+    end
+    Release(instance.headers, index + 1)
+    instance.fixedWidth, instance.gridWidth = x, x + (showKills and GROUP_GAP or 0)
+    instance.header.fixedDivider:Hide()
+end
+
+local function GetCharacterAction(key, bosses)
+    for _, boss in ipairs(bosses or {}) do
+        if YAB.GetBossKillStatus(key, boss.key) ~= "killed" then
+            return "可处理：" .. tostring(boss.name), "soon"
+        end
+    end
+    return "已完成", "window"
+end
+
+local function GetCharacterPhase(key, bosses)
+    local latest
+    for _, boss in ipairs(bosses or {}) do
+        local state = YAB.GetPhaseInfo(key, boss.key)
+        if state and (not latest or (tonumber(state.observedAt) or 0) > (tonumber(latest.observedAt) or 0)) then
+            latest = state
+        end
+    end
+    if not latest then return "—", "weak", nil end
+    local phase = latest.phase or latest.phaseLabel or latest.phaseDisplayId
+    local lines = {}
+    if latest.zone or latest.subZone then
+        AddTooltipPair(lines, "位置", tostring(latest.zone or "未知") .. (latest.subZone and (" · " .. tostring(latest.subZone)) or ""))
+    end
+    AppendPredictionLines(lines, latest, latest.lastKilledAt, "刷新预测")
+    return "位面 " .. tostring(phase or "未知"), "observed", lines
+end
+
+function YAB.RefreshAccountPage(instance, context)
+    -- Keep the original Boss-row renderer as the canonical implementation:
+    -- its action and phase cells are backed by the scoped respawn state and
+    -- expose the full refresh/location tooltip data.
+    return RefreshAccountPageByCharacterColumns(instance, context)
+end
+
 local function GetMatrixSize(context)
     local keys, bosses = YAB.GetAccountCharacterKeys(context), YAB.GetBossList()
+    local fixedWidth = BOSS_WIDTH
+        + (context:GetFieldVisible("action") and ACTION_WIDTH or 0)
+        + (context:GetFieldVisible("phase") and PHASE_WIDTH or 0)
+        + (context:GetFieldVisible("kills") and GROUP_GAP or 0)
+    local budget = math.max(CHARACTER_MIN_WIDTH, (context.surfaceAvailableWidth or math.huge) - fixedWidth - Theme.Space.lg * 2)
+    local visibleCount = math.max(1, math.floor(budget / CHARACTER_MIN_WIDTH))
+    if #keys > visibleCount then
+        budget = math.max(CHARACTER_MIN_WIDTH, budget - _G.YiboCore.AccountView:GetColumnPagerWidth())
+        visibleCount = math.max(1, math.floor(budget / CHARACTER_MIN_WIDTH))
+    end
     local characterWidth = 0
     if context:GetFieldVisible("kills") then
-        for _, key in ipairs(keys) do
+        for index = 1, math.min(#keys, visibleCount) do
+            local key = keys[index]
             local columnWidth = GetCharacterColumnMetrics(key, context)
             characterWidth = characterWidth + columnWidth
         end
     end
-    local width = BOSS_WIDTH
-        + (context:GetFieldVisible("action") and ACTION_WIDTH or 0)
-        + (context:GetFieldVisible("phase") and PHASE_WIDTH or 0)
-        + (context:GetFieldVisible("kills") and GROUP_GAP or 0)
-        + characterWidth
+    local width = fixedWidth + characterWidth
     return width, #bosses
 end
 
+function YAB.GetAccountSurfaceMetrics(context)
+    local bosses = YAB.GetBossList()
+    local keys = YAB.GetAccountCharacterKeys(context) or {}
+    local inset = Theme:GetMatrixInsets(context and context.preview)
+    -- The active renderer is Boss-row oriented.  Keep the surface metrics in
+    -- the same orientation so Core does not reserve Boss columns on the right
+    -- or character rows at the bottom that the page does not actually use.
+    local fixedWidth = BOSS_WIDTH
+        + (context:GetFieldVisible("action") and ACTION_WIDTH or 0)
+        + (context:GetFieldVisible("phase") and PHASE_WIDTH or 0)
+        + (context:GetFieldVisible("kills") and GROUP_GAP or 0)
+    local characterWidth = 0
+    if context:GetFieldVisible("kills") then
+        for _, key in ipairs(keys) do
+            characterWidth = characterWidth + GetCharacterColumnMetrics(key, context)
+        end
+    end
+    return {
+        minContentWidth = math.max(360, fixedWidth + CHARACTER_MIN_WIDTH + inset.left + inset.right),
+        naturalContentWidth = fixedWidth + characterWidth + inset.left + inset.right,
+        minContentHeight = inset.top + GetHeaderHeight(context) + Theme.Space.xs + ROW_H + inset.bottom,
+        naturalContentHeight = inset.top + GetHeaderHeight(context) + Theme.Space.xs + math.max(1, #bosses) * ROW_H + inset.bottom,
+        fixedLeftWidth = fixedWidth,
+        fixedTopHeight = GetHeaderHeight(context),
+        horizontalOverflow = "paginate", verticalOverflow = "content",
+    }
+end
+
+-- Deprecated adapters are retained for third-party integrations during the
+-- API-v5 migration. Bundled registration uses GetAccountSurfaceMetrics only.
 function YAB.GetAccountPreviewSize(context)
-    local matrixWidth, rows = GetMatrixSize(context)
-    -- Core title bar, scope controls, inter-section gaps and the bottom inset
-    -- consume 110 px; add the actual one- or two-line matrix header height.
-    local chromeHeight = 110 + GetHeaderHeight(context)
-    return math.max(matrixWidth + 26, ScopeControlsWidth(context)), math.max(150, chromeHeight + (rows * ROW_H))
+    local metrics = YAB.GetAccountSurfaceMetrics(context)
+    return metrics.naturalContentWidth + 2, metrics.naturalContentHeight + Theme.Geometry.titleBar + 2
 end
 
 function YAB.GetAccountLayoutMetrics(context)
-    local matrixWidth, rows = GetMatrixSize(context)
-    return { minWidth = 582, preferredWidth = math.max(matrixWidth + 38, ScopeControlsWidth(context)), minHeight = 383, preferredHeight = math.max(383, 142 + (rows * ROW_H)), horizontalOverflow = "matrix", verticalOverflow = "content" }
+    local metrics = YAB.GetAccountSurfaceMetrics(context)
+    local geometry = Theme.Geometry
+    local shellWidth = geometry.navigation + geometry.shellBorder * 2 + 1
+    local shellHeight = geometry.titleBar + geometry.shellBorder * 2
+    return { minWidth = metrics.minContentWidth + shellWidth, preferredWidth = metrics.naturalContentWidth + shellWidth, minHeight = metrics.minContentHeight + shellHeight, preferredHeight = metrics.naturalContentHeight + shellHeight, horizontalOverflow = metrics.horizontalOverflow, verticalOverflow = metrics.verticalOverflow }
+end
+
+function YAB.GetAccountMeasuredHeight(instance)
+    local pageHeight = instance:GetHeight() or 0
+    local viewportHeight = instance.scroll and instance.scroll:GetHeight() or 0
+    local bodyHeight = instance.body and instance.body:GetHeight() or 0
+    if pageHeight <= 0 or viewportHeight <= 0 or bodyHeight <= 0 then return nil end
+    return pageHeight - viewportHeight + bodyHeight
 end
 
 function YAB.GetAccountHoverMetrics(context)
     local width, height = YAB.GetAccountPreviewSize(context)
-    return { minWidth = 420, preferredWidth = width, minHeight = 150, preferredHeight = height, horizontalOverflow = "matrix", verticalOverflow = "content" }
+    return { minWidth = 420, preferredWidth = width, minHeight = 150, preferredHeight = height, horizontalOverflow = "paginate", verticalOverflow = "content" }
 end

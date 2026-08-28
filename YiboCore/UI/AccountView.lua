@@ -13,28 +13,13 @@ local SORT_LABELS = { recent = "最近登录", name = "角色名称", level = "�
 local PROFILE_FILTER_LABELS = { all = "全部角色", profiled = "仅有档案", missing = "仅缺少档案" }
 local Settings
 
-local CHARACTER_ARCHIVE_FIELDS = {
-    { id = "identity", title = "角色", width = 210, defaultVisible = true, align = "LEFT", maxWidth = 260 },
-    { id = "level", title = "等级", width = 42, defaultVisible = true, align = "LEFT", gapAfter = 12 },
-    { id = "itemLevel", title = "装等", width = 50, defaultVisible = true, align = "LEFT", gapAfter = 12 },
-    { id = "zone", title = "地点", width = 110, defaultVisible = true, align = "LEFT", maxWidth = 140 },
-    { id = "primary", title = "主专业", width = 92, defaultVisible = true, professionSlot = 1, align = "LEFT" },
-    { id = "secondary", title = "副专业", width = 92, defaultVisible = true, professionSlot = 2, align = "LEFT", gapAfter = 4 },
-    { id = "archaeology", title = "考古", width = 54, defaultVisible = false, skillLine = 794, align = "LEFT" },
-    { id = "fishing", title = "钓鱼", width = 54, defaultVisible = true, skillLine = 356, align = "LEFT" },
-    { id = "cooking", title = "烹饪", width = 54, defaultVisible = true, skillLine = 185, align = "LEFT" },
-    { id = "firstAid", title = "急救", width = 54, defaultVisible = true, skillLine = 129, align = "LEFT" },
-}
-
 local ARCHIVE_COLUMN_GAP = 10
 
-local SECONDARY_PROFESSION_IDS = { [794] = true, [356] = true, [185] = true, [129] = true }
-local SECONDARY_SLOT_IDS = { [3] = 794, [4] = 356, [5] = 185, [6] = 129 }
-local SECONDARY_PROFESSION_NAMES = { ["考古学"] = true, ["考古"] = true, ["钓鱼"] = true, ["烹饪"] = true, ["急救"] = true }
-
 local function HasCharacterProfile(character)
-    local profile = character and character.profile or {}
-    return profile.zone or profile.itemLevel or #(profile.professions or {}) > 0
+    for _, field in ipairs(Core.Fields:GetByConsumer("character-archive")) do
+        if Core.Fields:GetValue(character, field) ~= nil then return true end
+    end
+    return false
 end
 
 local function ArchiveSettings()
@@ -43,6 +28,11 @@ local function ArchiveSettings()
     local archive = settings.characterArchive
     archive.fields = type(archive.fields) == "table" and archive.fields or {}
     archive.previewFields = type(archive.previewFields) == "table" and archive.previewFields or {}
+    local legacyIDs = { identity = "character.identity", level = "character.level", itemLevel = "character.item-level", zone = "character.zone", primary = "character.profession-primary", secondary = "character.profession-secondary", archaeology = "character.archaeology", fishing = "character.fishing", cooking = "character.cooking", firstAid = "character.first-aid" }
+    for oldID, newID in pairs(legacyIDs) do
+        if archive.fields[newID] == nil and archive.fields[oldID] ~= nil then archive.fields[newID] = archive.fields[oldID] end
+        if archive.previewFields[newID] == nil and archive.previewFields[oldID] ~= nil then archive.previewFields[newID] = archive.previewFields[oldID] end
+    end
     archive.filters = type(archive.filters) == "table" and archive.filters or {}
     for _, mode in ipairs({ "page", "preview" }) do
         archive.filters[mode] = type(archive.filters[mode]) == "table" and archive.filters[mode] or {}
@@ -57,16 +47,18 @@ end
 
 local function ArchiveFieldVisible(field, preview)
     local values = preview and ArchiveSettings().previewFields or ArchiveSettings().fields
-    if values[field.id] == nil then return field.defaultVisible == true end
+    if values[field.id] == nil then
+        return preview and field.defaultPreviewVisible == true or (not preview and field.defaultVisible == true)
+    end
     return values[field.id] == true
 end
 
 local function GetArchiveFields(preview)
     local fields = {}
-    for _, field in ipairs(CHARACTER_ARCHIVE_FIELDS) do
+    for _, field in ipairs(Core.Fields:GetByConsumer("character-archive")) do
         if ArchiveFieldVisible(field, preview) then fields[#fields + 1] = field end
     end
-    if #fields == 0 then fields[1] = CHARACTER_ARCHIVE_FIELDS[1] end
+    if #fields == 0 then fields[1] = Core.Fields:GetByConsumer("character-archive")[1] end
     return fields
 end
 
@@ -81,9 +73,11 @@ Settings = function()
     settings.pages = settings.pages or {}
     settings.fields = settings.fields or {}
     settings.pageScopes = settings.pageScopes or {}
+    settings.selectedRealmScope = type(settings.selectedRealmScope) == "string" and settings.selectedRealmScope or "all"
     settings.hiddenCharacters = settings.hiddenCharacters or {}
     settings.characterSort = Core.CharacterSort:NormalizeSettings(settings.characterSort)
     settings.pageCharacterSorts = type(settings.pageCharacterSorts) == "table" and settings.pageCharacterSorts or {}
+    settings.columnPages = type(settings.columnPages) == "table" and settings.columnPages or {}
     settings.customCharacterOrder = Core.CharacterSort:NormalizeOrder(settings.customCharacterOrder)
     settings.layoutMode = settings.layoutMode == "manual" and "manual" or "auto"
     settings.pageLayouts = settings.pageLayouts or {}
@@ -106,6 +100,88 @@ function AccountView:GetSettings()
     return Settings()
 end
 
+-- A matrix owns its fixed left-side identity area; Core owns the remaining
+-- character-column capacity and page state.  This avoids every addon silently
+-- clipping the same account roster in a slightly different way.
+function AccountView:GetColumnPage(pageID, stateKey, columns, availableWidth, fixedWidth, columnWidth)
+    local count = #(columns or {})
+    local capacity = math.max(1, math.floor((math.max(1, availableWidth or 1) - math.max(0, fixedWidth or 0)) / math.max(1, columnWidth or 1)))
+    local totalPages = math.max(1, math.ceil(count / capacity))
+    local pages = Settings().columnPages
+    pages[pageID] = pages[pageID] or {}
+    local current = math.max(1, math.min(tonumber(pages[pageID][stateKey]) or 1, totalPages))
+    pages[pageID][stateKey] = current
+    local first, last = (current - 1) * capacity + 1, math.min(count, current * capacity)
+    local visible = {}
+    for index = first, last do visible[#visible + 1] = columns[index] end
+    return visible, { page = current, pages = totalPages, first = first, last = last, capacity = capacity, total = count }
+end
+
+function AccountView:GetColumnPageByWidth(pageID, stateKey, columns, availableWidth, fixedWidth, getWidth)
+    local pages, page = {}, {}
+    local used = math.max(0, fixedWidth or 0)
+    local limit = math.max(1, availableWidth or 1)
+    for _, column in ipairs(columns or {}) do
+        local width = math.max(1, tonumber(getWidth(column)) or 1)
+        if #page > 0 and used + width > limit then
+            pages[#pages + 1], page, used = page, {}, math.max(0, fixedWidth or 0)
+        end
+        page[#page + 1] = column
+        used = used + width
+    end
+    if #page > 0 or #pages == 0 then pages[#pages + 1] = page end
+    local stored = Settings().columnPages
+    stored[pageID] = stored[pageID] or {}
+    local index = math.max(1, math.min(tonumber(stored[pageID][stateKey]) or 1, #pages))
+    stored[pageID][stateKey] = index
+    local first = 1
+    for pageIndex = 1, index - 1 do first = first + #pages[pageIndex] end
+    local visible = pages[index]
+    return visible, { page = index, pages = #pages, first = first, last = first + #visible - 1, total = #(columns or {}) }
+end
+
+function AccountView:SetColumnPage(pageID, stateKey, page, totalPages)
+    local pages = Settings().columnPages
+    pages[pageID] = pages[pageID] or {}
+    pages[pageID][stateKey] = math.max(1, math.min(tonumber(page) or 1, tonumber(totalPages) or 1))
+    self:RefreshPage()
+end
+
+function AccountView:GetColumnPagerWidth(noun, total)
+    -- Reserve exactly the controls and the widest possible indicator text.
+    -- This is deliberately measured with the same font used by the live
+    -- pager: a fixed 190px reservation made otherwise-fitting data fields
+    -- spill onto a second page.
+    -- Existing matrix callers do not pass a total; their documented preview
+    -- ceiling is 20 characters, which is the safe measurement in that case.
+    local count = math.max(1, tonumber(total) or 20)
+    local label = string.format("%s %d–%d / %d · %d/%d", noun or "角色", count, count, count, count, count)
+    return Theme:MeasureText(Theme.Font.assist, label)
+        + Theme.Space.xs + Theme.Space.xxs + Theme.Size.compact * 2
+end
+
+function AccountView:UpdateColumnPager(parent, pageID, stateKey, info, anchor, noun)
+    parent.yiboColumnPager = parent.yiboColumnPager or {}
+    local pager = parent.yiboColumnPager
+    pager.previous = pager.previous or Theme:CreateButton(parent, Theme.Size.compact, "‹", "secondary")
+    pager.next = pager.next or Theme:CreateButton(parent, Theme.Size.compact, "›", "secondary")
+    pager.label = pager.label or Theme:CreateText(parent, Theme.Font.assist, COLORS.text, "RIGHT")
+    pager.previous:ClearAllPoints(); pager.next:ClearAllPoints(); pager.label:ClearAllPoints()
+    pager.next:SetPoint("RIGHT", anchor or parent, "RIGHT", 0, 0)
+    pager.previous:SetPoint("RIGHT", pager.next, "LEFT", -Theme.Space.xxs, 0)
+    pager.label:SetPoint("RIGHT", pager.previous, "LEFT", -Theme.Space.xs, 0)
+    local show = info and info.pages > 1
+    pager.previous:SetShown(show); pager.next:SetShown(show); pager.label:SetShown(show)
+    if not show then return end
+    local label = string.format("%s %d–%d / %d · %d/%d", noun or "角色", info.first, info.last, info.total, info.page, info.pages)
+    pager.label:SetText(label)
+    pager.label:SetWidth(Theme:MeasureText(Theme.Font.assist, label))
+    pager.previous:SetState(info.page > 1 and "default" or "disabled")
+    pager.next:SetState(info.page < info.pages and "default" or "disabled")
+    pager.previous:SetScript("OnClick", function() if info.page > 1 then AccountView:SetColumnPage(pageID, stateKey, info.page - 1, info.pages) end end)
+    pager.next:SetScript("OnClick", function() if info.page < info.pages then AccountView:SetColumnPage(pageID, stateKey, info.page + 1, info.pages) end end)
+end
+
 function AccountView:ResetWindowLayout()
     local settings = Settings()
     settings.point, settings.relativePoint, settings.x, settings.y = "TOPLEFT", "TOPLEFT", 16, -80
@@ -118,61 +194,78 @@ function AccountView:ResetWindowLayout()
     end
 end
 
-local function GetPageLayout(settings, pageID)
-    local saved = settings.pageLayouts and settings.pageLayouts[pageID]
-    if type(saved) ~= "table" then return { mode = "auto" } end
-    return saved
+local function SafeRect(preview)
+    local safety = preview and Theme.Geometry.previewSafety or Theme.Geometry.mainSafety
+    local width = UIParent:GetWidth() or 1600
+    local height = UIParent:GetHeight() or 900
+    return {
+        left = safety.left, right = math.max(safety.left + 1, width - safety.right),
+        bottom = safety.bottom, top = math.max(safety.bottom + 1, height - safety.top),
+        width = math.max(1, width - safety.left - safety.right),
+        height = math.max(1, height - safety.top - safety.bottom),
+    }
 end
 
 local function ScreenBounds()
-    -- Frame coordinates use UI scale, while GetScreenWidth/Height can return
-    -- physical pixels.  Prefer UIParent so manual sizing never exceeds view.
-    local width = UIParent:GetWidth() or (GetScreenWidth and GetScreenWidth()) or 1600
-    local height = UIParent:GetHeight() or (GetScreenHeight and GetScreenHeight()) or 900
-    return math.max(1, width - 32), math.max(1, height - 80)
+    local safe = SafeRect(false)
+    return safe.width, safe.height
+end
+
+local function ShellMetrics(preview)
+    local geometry = Theme.Geometry
+    if preview then
+        return geometry.shellBorder * 2, geometry.titleBar + geometry.shellBorder * 2
+    end
+    return geometry.navigation + geometry.shellBorder * 2 + 1, geometry.titleBar + geometry.shellBorder * 2
 end
 
 local function ClampWindowSize(width, height)
     local maxWidth, maxHeight = ScreenBounds()
-    local minWidth, minHeight = math.min(760, maxWidth), math.min(430, maxHeight)
+    local minWidth, minHeight = math.min(760, maxWidth), math.min(150, maxHeight)
     width = math.max(minWidth, math.min(tonumber(width) or 1120, maxWidth))
     height = math.max(minHeight, math.min(tonumber(height) or 650, maxHeight))
     return width, height, minWidth, minHeight, maxWidth, maxHeight
 end
 
-local function ApplyResizeBounds(frame)
-    local _, _, minWidth, minHeight, maxWidth, maxHeight = ClampWindowSize(frame:GetWidth(), frame:GetHeight())
-    if frame.SetResizeBounds then
-        frame:SetResizeBounds(minWidth, minHeight, maxWidth, maxHeight)
-    else
-        -- Compatibility with clients predating SetResizeBounds.
-        if frame.SetMinResize then frame:SetMinResize(minWidth, minHeight) end
-        if frame.SetMaxResize then frame:SetMaxResize(maxWidth, maxHeight) end
-    end
-end
-
-local function PageLayoutMetrics(page, context)
-    local metrics = { minWidth = 582, preferredWidth = 942, minHeight = 383, preferredHeight = 603, horizontalOverflow = "content", verticalOverflow = "content" }
-    if type(page.GetLayoutMetrics) ~= "function" then return metrics end
-    local ok, supplied = xpcall(function() return page.GetLayoutMetrics(context) end, function(message) return tostring(message) end)
+local function SurfaceMetrics(page, context)
+    local metrics = { minContentWidth = 582, naturalContentWidth = 942, minContentHeight = 150, naturalContentHeight = 603, fixedLeftWidth = 0, fixedTopHeight = 0, horizontalOverflow = "content", verticalOverflow = "content" }
+    local callback = page.GetSurfaceMetrics or page.GetLayoutMetrics
+    if type(callback) ~= "function" then return metrics end
+    local ok, supplied = xpcall(function() return callback(context) end, function(message) return tostring(message) end)
     if not ok or type(supplied) ~= "table" then
         Core:Print("账号视图页面 “" .. tostring(page.title) .. "”尺寸测量失败，使用兼容尺寸。")
         return metrics
     end
-    for _, key in ipairs({ "minWidth", "preferredWidth", "minHeight", "preferredHeight" }) do
-        local value = tonumber(supplied[key])
-        if value and value > 0 then metrics[key] = math.floor(value + 0.5) end
+    -- GetLayoutMetrics is the removed window-sized API.  Retain it only as a
+    -- load-safe adapter for third-party pages while bundled pages migrate.
+    local legacy = type(page.GetSurfaceMetrics) ~= "function"
+    local widthShell, heightShell = ShellMetrics(false)
+    local values = legacy and {
+        minContentWidth = (tonumber(supplied.minWidth) or 0) - widthShell,
+        naturalContentWidth = (tonumber(supplied.preferredWidth) or 0) - widthShell,
+        minContentHeight = (tonumber(supplied.minHeight) or 0) - heightShell,
+        naturalContentHeight = (tonumber(supplied.preferredHeight) or 0) - heightShell,
+    } or supplied
+    for _, key in ipairs({ "minContentWidth", "naturalContentWidth", "minContentHeight", "naturalContentHeight", "fixedLeftWidth", "fixedTopHeight" }) do
+        local value = tonumber(values[key])
+        if value and value >= 0 then metrics[key] = math.floor(value + 0.5) end
     end
-    metrics.preferredWidth = math.max(metrics.minWidth, metrics.preferredWidth)
-    metrics.preferredHeight = math.max(metrics.minHeight, metrics.preferredHeight)
-    metrics.horizontalOverflow = supplied.horizontalOverflow == "matrix" and "matrix" or "content"
+    metrics.naturalContentWidth = math.max(metrics.minContentWidth, metrics.naturalContentWidth)
+    metrics.naturalContentHeight = math.max(metrics.minContentHeight, metrics.naturalContentHeight)
+    metrics.horizontalOverflow = (supplied.horizontalOverflow == "paginate" or supplied.horizontalOverflow == "matrix") and supplied.horizontalOverflow or "content"
     metrics.verticalOverflow = supplied.verticalOverflow == "none" and "none" or "content"
     return metrics
 end
 
 local function AddText(parent, template, size, color)
     local text = parent:CreateFontString(nil, "OVERLAY", template or "GameFontNormal")
-    if size then text:SetFont(STANDARD_TEXT_FONT, size) end
+    local resolvedSize = size
+    if not resolvedSize then
+        if template == "GameFontNormalLarge" then resolvedSize = Theme.Font.title
+        elseif template == "GameFontNormalSmall" then resolvedSize = Theme.Font.assist
+        else resolvedSize = Theme.Font.body end
+    end
+    Theme:ApplyTextStyle(text, resolvedSize)
     if color then text:SetTextColor(color[1], color[2], color[3]) end
     text:SetJustifyH("LEFT")
     text:SetJustifyV("MIDDLE")
@@ -191,9 +284,36 @@ end
 
 local function SetHeaderIdentity(frame, page, subtitle)
     local addonName, version = GetHeaderIdentity(page)
-    frame.title:SetText(addonName)
-    frame.version:SetText("v" .. version)
-    frame.subtitle:SetText(subtitle or (page and page.title) or "")
+    local pageTitle = subtitle or (page and page.title) or ""
+    if page and page.icon then
+        frame.pageIcon:SetTexture(page.icon)
+        frame.pageIcon:Show()
+        frame.title:ClearAllPoints(); frame.title:SetPoint("LEFT", frame.titleBar, "LEFT", 44, 0)
+    else
+        frame.pageIcon:Hide()
+        frame.title:ClearAllPoints(); frame.title:SetPoint("LEFT", frame.titleBar, "LEFT", 16, 0)
+    end
+    -- Use complete identity levels instead of a clipped title or the old
+    -- redundant “账号角色预览” suffix.
+    local scopeWidth = frame.scopeBar and frame.scopeBar:IsShown() and ((frame.scopeBar:GetWidth() or 0) + Theme.Space.sm) or 0
+    -- Hover previews hide normal controls.  Reserving their invisible width
+    -- caused both an empty title bar and server controls outside the shell.
+    local controlsWidth = frame.controls and frame.controls:IsShown() and (frame.controls:GetWidth() or 0) or 0
+    local available = math.max(0, (frame:GetWidth() or 0) - controlsWidth - scopeWidth - 72)
+    local candidates = {
+        { text = addonName .. " v" .. version .. " · " .. pageTitle, icon = true },
+        { text = addonName .. " · " .. pageTitle, icon = true },
+        { text = pageTitle, icon = true }, { text = pageTitle, icon = false }, { text = "", icon = false },
+    }
+    local selected = candidates[#candidates]
+    for _, candidate in ipairs(candidates) do
+        if Theme:MeasureText(Theme.Font.title, candidate.text) <= available then selected = candidate; break end
+    end
+    frame.title:SetText(selected.text); frame.title:SetWidth(math.max(1, available)); frame.title:SetShown(selected.text ~= "")
+    frame.version:Hide(); frame.subtitle:Hide()
+    frame.pageIcon:SetShown(selected.icon and page and page.icon ~= nil)
+    frame.title:ClearAllPoints()
+    frame.title:SetPoint("LEFT", frame.titleBar, "LEFT", (selected.icon and page and page.icon) and 44 or 16, 0)
 end
 
 local function CreateChromeButton(parent, width, height, label, destructive)
@@ -231,8 +351,20 @@ function AccountView:RegisterPage(addonName, definition)
     if definition.GetEligibleCharacters ~= nil and type(definition.GetEligibleCharacters) ~= "function" then
         return nil, "页面 GetEligibleCharacters 必须是 function。"
     end
+    if definition.characterFilter ~= nil then
+        local filter = definition.characterFilter
+        if type(filter) ~= "table" or type(filter.GetExpression) ~= "function" or type(filter.SetExpression) ~= "function" then
+            return nil, "页面 characterFilter 必须提供 GetExpression 与 SetExpression。"
+        end
+    end
+    if definition.GetSurfaceMetrics ~= nil and type(definition.GetSurfaceMetrics) ~= "function" then
+        return nil, "页面 GetSurfaceMetrics 必须是 function。"
+    end
     if definition.GetLayoutMetrics ~= nil and type(definition.GetLayoutMetrics) ~= "function" then
         return nil, "页面 GetLayoutMetrics 必须是 function。"
+    end
+    if definition.GetMeasuredHeight ~= nil and type(definition.GetMeasuredHeight) ~= "function" then
+        return nil, "页面 GetMeasuredHeight 必须是 function。"
     end
     if definition.GetHoverMetrics ~= nil and type(definition.GetHoverMetrics) ~= "function" then
         return nil, "页面 GetHoverMetrics 必须是 function。"
@@ -271,12 +403,6 @@ function AccountView:RegisterPage(addonName, definition)
     end
     if type(definition.settings) == "table" and definition.settings.description ~= nil and type(definition.settings.description) ~= "string" then
         return nil, "页面 settings.description 必须是 string。"
-    end
-    if type(definition.settings) == "table" and definition.settings.openLabel ~= nil and type(definition.settings.openLabel) ~= "string" then
-        return nil, "页面 settings.openLabel 必须是 string。"
-    end
-    if type(definition.settings) == "table" and definition.settings.OpenAddonSettings ~= nil and type(definition.settings.OpenAddonSettings) ~= "function" then
-        return nil, "页面 settings.OpenAddonSettings 必须是 function。"
     end
     local fieldIDs = {}
     for _, field in ipairs(definition.fields or {}) do
@@ -498,7 +624,7 @@ local function GetScopeDefinition(page, characters)
     if type(page) == "table" and page.scope and page.scope.mode == "realms" then
         local current = Core.Characters:GetCurrent()
         local currentRealm = (current and current.realm) or (GetRealmName and GetRealmName()) or "Unknown"
-        local realms = { [currentRealm] = true }
+        local realms = {}
         for _, character in ipairs(characters or Core.Characters:GetAll()) do
             local admitted = true
             if type(page.HasCharacterSnapshot) == "function" then
@@ -508,10 +634,14 @@ local function GetScopeDefinition(page, characters)
             end
             if admitted and character.realm and character.realm ~= "" then realms[character.realm] = true end
         end
+        -- Keep the current realm first only when this page has an admitted
+        -- character there; empty realm buttons are deliberately not rendered.
+        local currentAdmitted = realms[currentRealm] == true
         local others = {}
         for realm in pairs(realms) do if realm ~= currentRealm then others[#others + 1] = realm end end
         table.sort(others)
-        local values = { { id = "realm:" .. currentRealm, title = currentRealm } }
+        local values = {}
+        if currentAdmitted then values[#values + 1] = { id = "realm:" .. currentRealm, title = currentRealm } end
         for _, realm in ipairs(others) do values[#values + 1] = { id = "realm:" .. realm, title = realm } end
         values[#values + 1] = { id = "all", title = page.scope.allTitle or "所有服务器" }
         return { default = "realm:" .. currentRealm, values = values, mode = "realms" }
@@ -530,7 +660,7 @@ function AccountView:GetPageScope(pageID)
     local page = self._pages[pageID]
     local scopeDefinition = GetScopeDefinition(page, self:GetVisibleCharacters())
     if not scopeDefinition then return nil end
-    local saved = Settings().pageScopes[pageID]
+    local saved = scopeDefinition.mode == "realms" and Settings().selectedRealmScope or Settings().pageScopes[pageID]
     if IsKnownScope(scopeDefinition, saved) then return saved end
     return scopeDefinition.default
 end
@@ -539,8 +669,12 @@ function AccountView:SetPageScope(pageID, scopeID)
     local page = self._pages[pageID]
     local scopeDefinition = GetScopeDefinition(page, self:GetVisibleCharacters())
     if not scopeDefinition or not IsKnownScope(scopeDefinition, scopeID) then return false end
-    Settings().pageScopes[pageID] = scopeID
+    if scopeDefinition.mode == "realms" then Settings().selectedRealmScope = scopeID else Settings().pageScopes[pageID] = scopeID end
     if self.frame and self.frame.preview and self.previewPageID == pageID then
+        -- Rebuilding a preview can shrink it away from the current pointer.
+        -- Treat the server click as an interaction inside the preview rather
+        -- than an accidental leave caused by that geometry change.
+        if Core.Entry and Core.Entry.SuppressPreviewClose then Core.Entry:SuppressPreviewClose(0.75) end
         -- Scope can materially change the number of matrix columns.  Reopen
         -- the same preview against its original anchor so both dimensions and
         -- edge clamping are recomputed before the page is rendered again.
@@ -558,6 +692,107 @@ function AccountView:SetCharacterHidden(characterID, hidden)
     self:RefreshPage()
 end
 
+local function RefreshScopeBar(frame, context)
+    local scope, bar = context.scopeDefinition, frame.scopeBar
+    local pageAllowsScope = not (context.page and type(context.page.ShowScopeBar) == "function")
+        or context.page.ShowScopeBar(context) ~= false
+    local function RestoreHeaderControls()
+        frame.controls:ClearAllPoints()
+        frame.controls:SetSize(256, Theme.Size.standard)
+        frame.controls:SetPoint("TOPRIGHT", frame.titleBar, "TOPRIGHT", -14, -8)
+    end
+    if not (pageAllowsScope and scope and #scope.values > 2) then
+        bar:Hide()
+        if bar.menu then bar.menu:Hide() end
+        frame.compactTitle = false
+        RestoreHeaderControls()
+        return false
+    end
+    -- A server range is never a linear strip of realm buttons.  It is the
+    -- responsive three-control selector required by the window contract:
+    -- current realm, an explicit Other menu, and All realms.
+    local realms, allValue = {}, nil
+    for _, value in ipairs(scope.values) do
+        if value.id == "all" then allValue = value else realms[#realms + 1] = value end
+    end
+    local current = realms[1]
+    if not current or not allValue then bar:Hide(); return false end
+    local selectedOther
+    for index = 2, #realms do if realms[index].id == context.scope then selectedOther = realms[index]; break end end
+    local currentWidth = math.max(88, Theme:MeasureText(Theme.Font.assist, current.title) + 24)
+    -- Use an ASCII disclosure marker: several game fonts render the Unicode
+    -- triangle as a missing-glyph box, which made the selector look broken.
+    local otherCount = math.max(0, #realms - 1)
+    local directOther = otherCount == 1 and realms[2] or nil
+    local otherTitle = directOther and directOther.title or (selectedOther and selectedOther.title or "其它 v")
+    local otherWidth = math.max(82, Theme:MeasureText(Theme.Font.assist, otherTitle) + 24)
+    local allWidth = math.max(72, Theme:MeasureText(Theme.Font.assist, allValue.title) + 24)
+    local barWidth = currentWidth + otherWidth + allWidth + Theme.Space.xs * 2
+    bar.current = bar.current or Theme:CreateButton(bar, currentWidth, "", "secondary")
+    bar.other = bar.other or Theme:CreateButton(bar, otherWidth, "", "secondary")
+    bar.all = bar.all or Theme:CreateButton(bar, allWidth, "", "secondary")
+    bar:ClearAllPoints(); bar:SetSize(barWidth, Theme.Size.standard)
+    RestoreHeaderControls()
+    if frame.preview then
+        -- No hidden normal controls may reserve title-bar space in a preview.
+        bar:SetPoint("RIGHT", frame.titleBar, "RIGHT", -Theme.Space.sm, 0)
+    else
+        bar:SetPoint("RIGHT", frame.controls, "LEFT", -Theme.Space.sm, 0)
+    end
+    bar.current:SetSize(currentWidth, Theme.Size.standard); bar.current:ClearAllPoints(); bar.current:SetPoint("LEFT", bar, "LEFT", 0, 0)
+    bar.other:SetSize(otherWidth, Theme.Size.standard); bar.other:ClearAllPoints(); bar.other:SetPoint("LEFT", bar.current, "RIGHT", Theme.Space.xs, 0)
+    bar.all:SetSize(allWidth, Theme.Size.standard); bar.all:ClearAllPoints(); bar.all:SetPoint("LEFT", bar.other, "RIGHT", Theme.Space.xs, 0)
+    bar.current:SetText(current.title); bar.current:SetState(context.scope == current.id and "selected" or "default")
+    bar.other:SetText(otherTitle); bar.other:SetState(selectedOther and "selected" or "default")
+    bar.all:SetText(allValue.title); bar.all:SetState(context.scope == allValue.id and "selected" or "default")
+    bar.current:SetScript("OnClick", function() if bar.menu then bar.menu:Hide() end; context:SetScope(current.id) end)
+    bar.all:SetScript("OnClick", function() if bar.menu then bar.menu:Hide() end; context:SetScope(allValue.id) end)
+    -- The realm menu must belong to the account frame.  A UIParent popup is
+    -- outside hover-preview hit testing, so entering it immediately closes
+    -- the preview before an option can receive its click.
+    bar.menu = bar.menu or CreateFrame("Frame", nil, frame, "BackdropTemplate")
+    bar.menu:SetFrameStrata(frame:GetFrameStrata() or "DIALOG")
+    bar.menu:SetFrameLevel((frame:GetFrameLevel() or 0) + 30)
+    bar.menu:SetToplevel(true)
+    bar.menu:EnableMouse(true)
+    bar.menu:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    bar.menu:SetBackdropColor(COLORS.panel[1], COLORS.panel[2], COLORS.panel[3], 1)
+    bar.menu:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], COLORS.line[4])
+    bar.menu.buttons = bar.menu.buttons or {}
+    local function ToggleOtherMenu()
+        if bar.menu:IsShown() then bar.menu:Hide(); return end
+        bar.menu:ClearAllPoints(); bar.menu:SetPoint("TOPRIGHT", bar.other, "BOTTOMRIGHT", 0, -Theme.Space.xxs)
+        local width = otherWidth
+        for index = 2, #realms do width = math.max(width, Theme:MeasureText(Theme.Font.assist, realms[index].title) + 24) end
+        bar.menu:SetSize(width, math.max(1, #realms - 1) * Theme.Size.standard + Theme.Space.xxs * 2)
+        for index = 2, #realms do
+            local option = bar.menu.buttons[index - 1] or Theme:CreateButton(bar.menu, width - Theme.Space.xs, "", "secondary")
+            bar.menu.buttons[index - 1] = option
+            option:SetFrameLevel((bar.menu:GetFrameLevel() or 0) + 1)
+            option:SetSize(width - Theme.Space.xs, Theme.Size.standard); option:ClearAllPoints(); option:SetPoint("TOPLEFT", bar.menu, "TOPLEFT", Theme.Space.xxs, -Theme.Space.xxs - (index - 2) * Theme.Size.standard)
+            option:SetText(realms[index].title); option:SetState(realms[index].id == context.scope and "selected" or "default")
+            local scopeID = realms[index].id
+            option:SetScript("OnClick", function() bar.menu:Hide(); context:SetScope(scopeID) end); option:Show()
+        end
+        for index = #realms, #bar.menu.buttons do bar.menu.buttons[index]:Hide() end
+        bar.menu:Show()
+    end
+    if directOther then
+        -- A single alternative realm is a direct range switch, not a menu.
+        bar.other:SetScript("OnClick", function()
+            if bar.menu then bar.menu:Hide() end
+            context:SetScope(directOther.id)
+        end)
+    else
+        bar.other:SetScript("OnClick", ToggleOtherMenu)
+    end
+    bar.current:Show(); bar.other:Show(); bar.all:Show()
+    for _, control in ipairs(bar.buttons) do control:Hide() end
+    frame.compactTitle = (frame.titleBar:GetWidth() or 0) < (barWidth + (frame.preview and 72 or 330))
+    bar:Show()
+    return false
+end
+
 function AccountView:CreateFrame()
     if self.frame then return self.frame end
     local frame = CreateFrame("Frame", "YiboCoreAccountView", UIParent, "BackdropTemplate")
@@ -566,8 +801,16 @@ function AccountView:CreateFrame()
     frame:SetSize(settings.width, settings.height)
     frame:SetPoint(settings.point or "CENTER", UIParent, settings.relativePoint or "CENTER", settings.x or 0, settings.y or 0)
     frame:SetMovable(true)
+    -- No resize affordance is exposed to players, but programmatic autosizing
+    -- must remain unconstrained by stale minimum bounds from older versions.
     frame:SetResizable(true)
-    ApplyResizeBounds(frame)
+    local screenWidth, screenHeight = ScreenBounds()
+    if frame.SetResizeBounds then
+        frame:SetResizeBounds(1, 1, screenWidth, screenHeight)
+    else
+        if frame.SetMinResize then frame:SetMinResize(1, 1) end
+        if frame.SetMaxResize then frame:SetMaxResize(screenWidth, screenHeight) end
+    end
     frame:SetClampedToScreen(true)
     frame:SetToplevel(true)
     frame:EnableMouse(true)
@@ -579,25 +822,15 @@ function AccountView:CreateFrame()
         settings.point, settings.relativePoint, settings.x, settings.y = point, relativePoint, x, y
     end)
     frame:SetScript("OnSizeChanged", function(self, width, height)
-        if not self.preview and width >= 760 and height >= 430 then
+        if not self.preview and width >= 760 and height >= 150 then
             settings.width, settings.height = math.floor(width + 0.5), math.floor(height + 0.5)
-            if not AccountView._applyingPageSize then
-                settings.layoutMode = "manual"
-                settings.pageLayouts = settings.pageLayouts or {}
-                local pageID = AccountView.activePageID or "overview"
-                settings.pageLayouts[pageID] = { mode = "manual", width = settings.width, height = settings.height }
-                -- A resize emits this event once per pixel.  Rebuilding a
-                -- matrix here made QuestBlocker redraw every cell while the
-                -- grip was dragged.  The anchored layout already reflows;
-                -- refresh only once after the mouse is released.
-                AccountView._resizeDirty = true
-            end
         end
     end)
     frame:SetScript("OnShow", function(self)
         if not self.preview then self:Raise() end
     end)
     frame:SetScript("OnHide", function(self)
+        if self.scopeBar and self.scopeBar.menu then self.scopeBar.menu:Hide() end
         -- UISpecialFrames closes the frame directly.  A hover preview must
         -- therefore restore its normal shell here as well, otherwise the next
         -- ordinary open would inherit tooltip layout and strata.
@@ -611,21 +844,31 @@ function AccountView:CreateFrame()
     frame:SetBackdropColor(COLORS.bg[1], COLORS.bg[2], COLORS.bg[3], COLORS.bg[4])
     frame:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], COLORS.line[4])
 
-    frame.top = frame:CreateTexture(nil, "BACKGROUND")
-    frame.top:SetPoint("TOPLEFT", 1, -1); frame.top:SetPoint("TOPRIGHT", -1, -1); frame.top:SetHeight(46)
+    -- Keep the shell header in its own, higher frame level.  Page instances
+    -- are child frames of `content` and can otherwise cover shell regions
+    -- when a page is rebuilt or switched into preview mode.
+    frame.titleBar = CreateFrame("Frame", nil, frame)
+    frame.titleBar:SetPoint("TOPLEFT", 1, -1)
+    frame.titleBar:SetPoint("TOPRIGHT", -1, -1)
+    frame.titleBar:SetHeight(46)
+    frame.titleBar:SetFrameLevel(frame:GetFrameLevel() + 10)
+    frame.top = frame.titleBar:CreateTexture(nil, "BACKGROUND")
+    frame.top:SetAllPoints()
     frame.top:SetColorTexture(COLORS.chrome[1], COLORS.chrome[2], COLORS.chrome[3], COLORS.chrome[4])
-    frame.brand = AddText(frame, "GameFontNormalLarge", nil, COLORS.accent)
+    frame.brand = AddText(frame.titleBar, "GameFontNormalLarge", nil, COLORS.accent)
     frame.brand:Hide()
-    frame.title = AddText(frame, "GameFontNormalLarge", nil, COLORS.text)
-    frame.title:SetPoint("LEFT", frame, "LEFT", 16, 0); frame.title:SetText("账号总览")
-    frame.version = AddText(frame, "GameFontNormalSmall", 11, COLORS.muted)
+    frame.title = AddText(frame.titleBar, "GameFontNormalLarge", nil, COLORS.text)
+    frame.title:SetPoint("LEFT", frame.titleBar, "LEFT", 16, 0); frame.title:SetText("账号总览")
+    frame.pageIcon = frame.titleBar:CreateTexture(nil, "ARTWORK")
+    frame.pageIcon:SetSize(22, 22); frame.pageIcon:SetPoint("LEFT", frame.titleBar, "LEFT", 16, 0); frame.pageIcon:Hide()
+    frame.version = AddText(frame.titleBar, "GameFontNormalSmall", Theme.Font.meta, COLORS.muted)
     frame.version:SetPoint("BOTTOMLEFT", frame.title, "BOTTOMRIGHT", 7, 1); frame.version:SetText("v?")
-    frame.subtitle = AddText(frame, "GameFontNormalSmall", nil, COLORS.muted)
+    frame.subtitle = AddText(frame.titleBar, "GameFontNormalSmall", nil, COLORS.muted)
     frame.subtitle:SetPoint("BOTTOMLEFT", frame.version, "BOTTOMRIGHT", 12, 1); frame.subtitle:SetText("多角色状态")
-    frame.controls = CreateFrame("Frame", nil, frame)
-    frame.controls:SetSize(256, 24)
-    frame.controls:SetPoint("TOPRIGHT", -14, -12)
-    frame.sortButton = CreateChromeButton(frame.controls, 150, 22, "排序：最近登录 ↓")
+    frame.controls = CreateFrame("Frame", nil, frame.titleBar)
+    frame.controls:SetSize(256, Theme.Size.standard)
+    frame.controls:SetPoint("TOPRIGHT", -14, -8)
+    frame.sortButton = CreateChromeButton(frame.controls, 150, Theme.Size.standard, "排序：最近登录 ↓")
     frame.sortButton:SetPoint("LEFT", 0, 0)
     frame.sortButton:SetScript("OnClick", function()
         AccountView:CycleCharacterSort(AccountView.activePageID or "overview", IsShiftKeyDown and IsShiftKeyDown())
@@ -637,12 +880,12 @@ function AccountView:CreateFrame()
         GameTooltip:Show()
     end)
     frame.sortButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    frame.settingsButton = CreateChromeButton(frame.controls, 62, 22, "设置")
+    frame.settingsButton = CreateChromeButton(frame.controls, 62, Theme.Size.standard, "设置")
     frame.settingsButton:SetPoint("LEFT", frame.sortButton, "RIGHT", 10, 0)
     frame.settingsButton:SetScript("OnClick", function() AccountView:ShowSettings() end)
-    frame.close = CreateChromeButton(frame.controls, 28, 24, "×", true)
+    frame.close = CreateChromeButton(frame.controls, 28, Theme.Size.standard, "×", true)
     frame.close:SetPoint("LEFT", frame.settingsButton, "RIGHT", 6, 0)
-    frame.close.label:SetFont(STANDARD_TEXT_FONT, 20)
+    frame.close.label:SetFont(STANDARD_TEXT_FONT, Theme.Font.section)
     -- Closing is an icon affordance, not a destructive text action.  Keep it
     -- visually light beside Settings instead of showing a second red button.
     frame.close.SetState = function(control)
@@ -654,38 +897,13 @@ function AccountView:CreateFrame()
     frame.close:SetScript("OnEnter", function(control) control.label:SetTextColor(COLORS.text[1], COLORS.text[2], COLORS.text[3]) end)
     frame.close:SetScript("OnLeave", function(control) control:SetState() end)
     frame.close:SetScript("OnClick", function() frame:Hide() end)
-    frame.resize = CreateFrame("Button", nil, frame)
-    frame.resize:SetSize(18, 18); frame.resize:SetPoint("BOTTOMRIGHT", -3, 3)
-    frame.resize:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
-    frame.resize:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
-    frame.resize:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
-    frame.resize:SetScript("OnMouseDown", function(_, button)
-        if frame.preview or button ~= "LeftButton" then return end
-        ApplyResizeBounds(frame)
-        -- The grip sits inside the frame corner. Starting from the actual mouse
-        -- position prevents the bottom-right edge snapping to the cursor.
-        frame:StartSizing("BOTTOMRIGHT", true)
-    end)
-    frame.resize:SetScript("OnMouseUp", function()
-        frame:StopMovingOrSizing()
-        local width, height = ClampWindowSize(frame:GetWidth(), frame:GetHeight())
-        if math.abs((frame:GetWidth() or 0) - width) >= 1 or math.abs((frame:GetHeight() or 0) - height) >= 1 then
-            AccountView._applyingPageSize = true
-            frame:SetSize(width, height)
-            AccountView._applyingPageSize = nil
-            settings.width, settings.height = width, height
-        end
-        if AccountView._resizeDirty then
-            AccountView._resizeDirty = nil
-            AccountView:RefreshPage()
-        end
-    end)
-
     frame.nav = CreateFrame("Frame", nil, frame)
-    frame.nav:SetPoint("TOPLEFT", 1, -47); frame.nav:SetPoint("BOTTOMLEFT", 1, 1); frame.nav:SetWidth(176)
+    frame.nav:SetPoint("TOPLEFT", 1, -47); frame.nav:SetPoint("BOTTOMLEFT", 1, 1); frame.nav:SetWidth(140)
     frame.nav.bg = frame.nav:CreateTexture(nil, "BACKGROUND"); frame.nav.bg:SetAllPoints(); frame.nav.bg:SetColorTexture(COLORS.nav[1], COLORS.nav[2], COLORS.nav[3], COLORS.nav[4])
     frame.content = CreateFrame("Frame", nil, frame)
     frame.content:SetPoint("TOPLEFT", frame.nav, "TOPRIGHT", 1, 0); frame.content:SetPoint("BOTTOMRIGHT", -1, 1)
+    frame.scopeBar = CreateFrame("Frame", nil, frame.titleBar)
+    frame.scopeBar:SetSize(1, Theme.Size.standard); frame.scopeBar.buttons = {}; frame.scopeBar:Hide()
     frame.navButtons, frame.instances = {}, {}
     frame:Hide()
     if UISpecialFrames then
@@ -697,31 +915,64 @@ function AccountView:CreateFrame()
     return frame
 end
 
-function AccountView:ApplyPageSize(page, context, allowAutoResize)
+function AccountView:ApplyPageSize(page, context)
     local frame = self:CreateFrame()
     if frame.preview then return end
-    local settings, metrics = Settings(), PageLayoutMetrics(page, context)
     local maxWidth, maxHeight = ScreenBounds()
-    local preferredWidth = metrics.preferredWidth + 178
-    local preferredHeight = metrics.preferredHeight + 47
-    local minWidth = math.max(760, metrics.minWidth + 178)
-    local minHeight = math.max(430, metrics.minHeight + 47)
-    local width, height
-    local saved = GetPageLayout(settings, page.id)
-    if not allowAutoResize then return end
-    if saved.mode == "manual" then
-        width = math.max(tonumber(saved.width) or preferredWidth, minWidth)
-        height = math.max(tonumber(saved.height) or preferredHeight, minHeight)
-    else
-        width, height = preferredWidth, preferredHeight
+    local shellWidth, shellHeight = ShellMetrics(false)
+    -- Pages use this as the width budget for their first pagination pass.
+    -- Their natural size must describe visible columns, never all columns.
+    context.surfaceAvailableWidth = math.max(1, math.floor(maxWidth * 0.80) - shellWidth)
+    local settings, metrics = Settings(), SurfaceMetrics(page, context)
+    local preferredWidth = metrics.naturalContentWidth + shellWidth
+    local preferredHeight = metrics.naturalContentHeight + shellHeight
+    local minWidth = math.max(760, metrics.minContentWidth + shellWidth)
+    -- Natural width follows the documented 80% soft limit.  A page may pass
+    -- it only when its semantic minimum itself needs more space.
+    preferredWidth = math.min(preferredWidth, context.surfaceAvailableWidth + shellWidth)
+    -- Individual pages own their safe minimum height.  A global 430 px floor
+    -- left large empty regions below compact data matrices.
+    local minHeight = math.max(150, metrics.minContentHeight + shellHeight)
+    if page.id == "settings" then
+        minWidth, minHeight = math.max(minWidth, 820), math.max(minHeight, 560)
+        preferredWidth, preferredHeight = math.max(preferredWidth, 960), math.max(preferredHeight, 720)
     end
+    local width, height = preferredWidth, preferredHeight
     width = math.max(math.min(760, maxWidth), math.min(math.max(minWidth, width), maxWidth))
-    height = math.max(math.min(430, maxHeight), math.min(math.max(minHeight, height), maxHeight))
+    height = math.max(math.min(minHeight, maxHeight), math.min(math.max(minHeight, height), maxHeight))
+    -- A vertical scrollbar is never overlaid on a data matrix.  When the
+    -- final safe height genuinely clips a content-scrolling page, grow the
+    -- shell by the shared 16px gutter first; pagination is only the fallback
+    -- after that additional width also reaches the safe bound.
+    if metrics.verticalOverflow == "content" and height + 0.5 < preferredHeight then
+        width = math.min(maxWidth, width + Theme.Geometry.scrollbarGutter)
+    end
     if math.abs((frame:GetWidth() or 0) - width) < 1 and math.abs((frame:GetHeight() or 0) - height) < 1 then return end
     self._applyingPageSize = true
+    frame:SetResizable(true)
+    if frame.SetResizeBounds then frame:SetResizeBounds(1, 1, maxWidth, maxHeight) end
     frame:SetSize(width, height)
     self._applyingPageSize = nil
     settings.width, settings.height = width, height
+end
+
+function AccountView:ApplyMeasuredPageHeight(page, instance, context)
+    if self.frame.preview or type(page.GetMeasuredHeight) ~= "function" then return end
+    local ok, measured = xpcall(function() return page.GetMeasuredHeight(instance, context) end, function(message) return tostring(message) end)
+    if not ok or type(measured) ~= "number" or measured <= 0 then return end
+    local frame = self.frame
+    -- The page instance fills Core's content area.  Preserve the shell's
+    -- actual chrome height, then replace only the content portion with the
+    -- post-layout measurement supplied by the page.
+    local shellHeight = math.max(0, (frame:GetHeight() or 0) - (instance:GetHeight() or 0))
+    local maxWidth, maxHeight = ScreenBounds()
+    local targetHeight = math.max(1, math.min(math.floor(measured + shellHeight + 0.5), maxHeight))
+    if math.abs((frame:GetHeight() or 0) - targetHeight) < 1 then return end
+    self._applyingPageSize = true
+    if frame.SetResizeBounds then frame:SetResizeBounds(1, 1, maxWidth, maxHeight) end
+    frame:SetHeight(targetHeight)
+    self._applyingPageSize = nil
+    Settings().height = targetHeight
 end
 
 function AccountView:SetPreviewHoverCallbacks(onEnter, onLeave)
@@ -742,6 +993,7 @@ function AccountView:RefreshNavigation()
         pages[#pages + 1] = { id = "settings-core", title = "  窗口", settingsTargetID = "core" }
         pages[#pages + 1] = { id = "settings-sorting", title = "  角色与排序", settingsTargetID = "sorting" }
         pages[#pages + 1] = { id = "settings-display", title = "  显示与入口", settingsTargetID = "display" }
+        pages[#pages + 1] = { id = "settings-filters", title = "  角色过滤", settingsTargetID = "filters" }
         for _, page in ipairs(self._pageOrder) do
             if not page.internal then pages[#pages + 1] = { id = "settings-" .. page.id, title = page.addonName or page.title, settingsTargetID = page.id } end
         end
@@ -754,7 +1006,7 @@ function AccountView:RefreshNavigation()
         local button = frame.navButtons[index]
         if not button then
             button = CreateFrame("Button", nil, frame.nav, "BackdropTemplate")
-            button:SetHeight(30); button:SetPoint("TOPLEFT", 8, -10 - ((index - 1) * 34)); button:SetPoint("TOPRIGHT", -8, -10 - ((index - 1) * 34))
+            button:SetHeight(Theme.Table.rowHeight); button:SetPoint("TOPLEFT", 8, -8 - ((index - 1) * 30)); button:SetPoint("TOPRIGHT", -8, -8 - ((index - 1) * 30))
             button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
             button.label = AddText(button, "GameFontNormalSmall", nil, COLORS.text); button.label:SetPoint("LEFT", 9, 0); button.label:SetPoint("RIGHT", -6, 0)
             button:SetScript("OnClick", function(self)
@@ -800,6 +1052,22 @@ function AccountView:BuildContext(page, options)
             characters = {}
         end
     end
+    if page.characterFilter then
+        local expression = page.characterFilter.GetExpression() or ""
+        local matcher = Core.LevelFilter:Compile(expression)
+        local filtered = {}
+        for _, character in ipairs(characters) do
+            if matcher:Matches(character.level) then filtered[#filtered + 1] = character end
+        end
+        characters = filtered
+    end
+    if scopeDefinition and scopeDefinition.mode == "realms" and scope ~= "all" then
+        local realm, filtered = scope:match("^realm:(.+)$"), {}
+        for _, character in ipairs(characters) do
+            if realm and character.realm == realm then filtered[#filtered + 1] = character end
+        end
+        characters = filtered
+    end
     local characterSort = self:GetEffectiveCharacterSort(page.id)
     characters = Core.CharacterSort:Sort(
         characters,
@@ -837,7 +1105,7 @@ function AccountView:ShowPage(pageID, options)
     if not page or (not page.internal and not PageEnabled(page)) then page = self._pages.overview end
     self:CreateFrame()
     local context = self:BuildContext(page, options)
-    if not options.preview then self:ApplyPageSize(page, context, options.autoFit == true) end
+    if not options.preview then self:ApplyPageSize(page, context) end
     for id, instance in pairs(self.frame.instances) do if id ~= page.id then instance:Hide() end end
     local instance = self.frame.instances[page.id]
     if not instance then
@@ -845,6 +1113,13 @@ function AccountView:ShowPage(pageID, options)
         instance:SetAllPoints(self.frame.content)
         self.frame.instances[page.id] = instance
         CallPage(instance, page, "创建", context)
+    end
+    instance:ClearAllPoints()
+    if RefreshScopeBar(self.frame, context) then
+        instance:SetPoint("TOPLEFT", self.frame.scopeBar, "BOTTOMLEFT", -20, -4)
+        instance:SetPoint("BOTTOMRIGHT", self.frame.content, "BOTTOMRIGHT")
+    else
+        instance:SetAllPoints(self.frame.content)
     end
     instance:Show()
     if options.preview then
@@ -854,13 +1129,12 @@ function AccountView:ShowPage(pageID, options)
         self.previewPageOptions = options
     else
         self.activePageID = page.id
-        -- Auto-fit is an opening action, never a persistent page option.  A
-        -- later data refresh must not resize a window the player is using.
         options.autoFit = nil
         self.activePageOptions = options
     end
-    SetHeaderIdentity(self.frame, page, options.preview and ((page.title or "账号") .. " · 账号角色预览") or page.title)
+    SetHeaderIdentity(self.frame, page, page.title)
     CallPage(instance, page, "刷新", context)
+    self:ApplyMeasuredPageHeight(page, instance, context)
     self:RefreshNavigation()
     self:UpdateSortButton()
 end
@@ -899,13 +1173,12 @@ function AccountView:ApplyNormalLayout()
     frame:SetFrameStrata("DIALOG")
     frame:SetToplevel(true)
     settings.width, settings.height = ClampWindowSize(settings.width, settings.height)
-    ApplyResizeBounds(frame)
     self._applyingPageSize = true
     frame:SetSize(settings.width, settings.height)
     self._applyingPageSize = nil
     frame:ClearAllPoints()
     frame:SetPoint(settings.point or "CENTER", UIParent, settings.relativePoint or "CENTER", settings.x or 0, settings.y or 0)
-    frame.nav:Show(); frame.settingsButton:Show(); frame.close:Show(); frame.resize:Show(); self:UpdateSortButton()
+    frame.nav:Show(); frame.settingsButton:Show(); frame.close:Show(); self:UpdateSortButton()
     SetHeaderIdentity(frame, self._pages.overview, "账号总览 · 多角色状态")
     frame.content:ClearAllPoints()
     frame.content:SetPoint("TOPLEFT", frame.nav, "TOPRIGHT", 1, 0)
@@ -938,7 +1211,14 @@ function AccountView:GetPreviewPageOptions()
 end
 
 local function HoverMetrics(page, context)
-    local metrics = { minWidth = 420, preferredWidth = 820, minHeight = 150, preferredHeight = 360, horizontalOverflow = "content", verticalOverflow = "content" }
+    -- Hover previews are content-sized.  A legacy 150 px global floor was
+    -- applied in addition to each page's own measured minimum and left an
+    -- empty footer beneath compact two-row tables.
+    local metrics = { minWidth = 1, preferredWidth = 820, minHeight = 1, preferredHeight = 360, horizontalOverflow = "content", verticalOverflow = "content" }
+    -- A page can use a compact hover projection with different row cadence
+    -- from its full matrix.  Prefer that explicit contract; falling back to
+    -- surface metrics here was what kept the Core character preview taller
+    -- than its thirteen rendered rows.
     if type(page.GetHoverMetrics) == "function" then
         local ok, supplied = xpcall(function() return page.GetHoverMetrics(context) end, function(message) return tostring(message) end)
         if ok and type(supplied) == "table" then
@@ -946,10 +1226,21 @@ local function HoverMetrics(page, context)
                 local value = tonumber(supplied[key])
                 if value and value > 0 then metrics[key] = math.floor(value + 0.5) end
             end
-            metrics.horizontalOverflow = supplied.horizontalOverflow == "matrix" and "matrix" or "content"
+            metrics.horizontalOverflow = supplied.horizontalOverflow == "paginate" and "paginate" or supplied.horizontalOverflow == "matrix" and "matrix" or "content"
             metrics.verticalOverflow = supplied.verticalOverflow == "none" and "none" or "content"
         else
             Core:Print("账号视图页面 “" .. tostring(page.title) .. "”悬停尺寸测量失败，使用兼容尺寸。")
+        end
+    elseif type(page.GetSurfaceMetrics) == "function" then
+        local ok, supplied = xpcall(function() return page.GetSurfaceMetrics(context) end, function(message) return tostring(message) end)
+        if ok and type(supplied) == "table" then
+            local shellWidth, shellHeight = ShellMetrics(true)
+            metrics.minWidth = math.max(metrics.minWidth, (tonumber(supplied.minContentWidth) or 0) + shellWidth)
+            metrics.preferredWidth = math.max(metrics.minWidth, (tonumber(supplied.naturalContentWidth) or 0) + shellWidth)
+            metrics.minHeight = math.max(metrics.minHeight, (tonumber(supplied.minContentHeight) or 0) + shellHeight)
+            metrics.preferredHeight = math.max(metrics.minHeight, (tonumber(supplied.naturalContentHeight) or 0) + shellHeight)
+            metrics.horizontalOverflow = supplied.horizontalOverflow == "paginate" and "paginate" or supplied.horizontalOverflow == "matrix" and "matrix" or "content"
+            metrics.verticalOverflow = supplied.verticalOverflow == "none" and "none" or "content"
         end
     elseif type(page.GetPreviewSize) == "function" then
         local width, height = page.GetPreviewSize(context)
@@ -989,55 +1280,63 @@ function AccountView:ShowPreview(pageID, anchor)
 
     local fields = type(page.GetPreviewFields) == "function" and page.GetPreviewFields() or page.previewFields
     local context = self:BuildContext(page, { preview = true, fieldOverrides = fields })
+    local safe = SafeRect(true)
+    context.surfaceAvailableWidth = safe.width
     local metrics = HoverMetrics(page, context)
     local width, height = metrics.preferredWidth, metrics.preferredHeight
-    local screenWidth = UIParent:GetWidth() or (GetScreenWidth and GetScreenWidth()) or width
-    local screenHeight = UIParent:GetHeight() or (GetScreenHeight and GetScreenHeight()) or height
-    width = math.max(math.min(metrics.minWidth, screenWidth - 32), math.min(width, screenWidth - 32))
+    width = math.max(math.min(metrics.minWidth, safe.width), math.min(width, safe.width))
 
     frame.preview = true
+    -- The normal window installs a large minimum resize bound.  A hover is
+    -- intentionally allowed to shrink to its measured content height.
+    if frame.SetResizeBounds then frame:SetResizeBounds(metrics.minWidth, metrics.minHeight, math.max(metrics.minWidth, safe.width), math.max(metrics.minHeight, safe.height))
+    else
+        if frame.SetMinResize then frame:SetMinResize(metrics.minWidth, metrics.minHeight) end
+        if frame.SetMaxResize then frame:SetMaxResize(math.max(metrics.minWidth, safe.width), math.max(metrics.minHeight, safe.height)) end
+    end
     frame:SetMovable(false)
     frame:EnableMouse(true)
     frame:SetScript("OnEnter", self.previewOnEnter)
     frame:SetScript("OnLeave", self.previewOnLeave)
-    frame:SetFrameStrata("TOOLTIP")
+    -- The account preview is an interactive window, not the Broker's native
+    -- tooltip. Keep it below TOOLTIP so the Broker tooltip always remains
+    -- readable when both are visible.
+    frame:SetFrameStrata("DIALOG")
     frame:ClearAllPoints()
     local anchorFrame = anchor and type(anchor.GetLeft) == "function" and anchor or nil
     self.previewAnchor = anchorFrame
     if anchorFrame then
         local left, right = anchorFrame:GetLeft(), anchorFrame:GetRight()
         local top, bottom = anchorFrame:GetTop(), anchorFrame:GetBottom()
-        local roomBelow = math.max(0, (bottom or 0) - 8)
-        local roomAbove = math.max(0, screenHeight - (top or screenHeight) - 8)
-        local openBelow = roomBelow >= roomAbove
-        local usableHeight = openBelow and roomBelow or roomAbove
-        local centerPreview = height > usableHeight and height <= screenHeight - 32
-        -- Prefer the anchor side, but preserving the guaranteed 20-row
-        -- capacity takes priority when neither side has enough room and the
-        -- screen itself can fit the preview.
-        if not centerPreview then height = math.min(height, math.max(120, usableHeight)) end
-        -- Anchor placement is only a preference.  Clamp against UIParent so
-        -- a broker/minimap control near either screen edge can never push the
-        -- left or right side of the preview out of view.
-        local previewLeft = left or ((screenWidth - width) / 2)
-        previewLeft = math.max(16, math.min(previewLeft, screenWidth - width - 16))
-        if centerPreview then
-            frame:SetPoint("CENTER", UIParent, "CENTER")
-        elseif openBelow then
-            frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", previewLeft, (bottom or 8) - 8)
-        else
-            frame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", previewLeft, (top or screenHeight - 8) + 8)
+        local centerX = ((left or 0) + (right or 0)) / 2
+        local centerY = ((top or 0) + (bottom or 0)) / 2
+        local opensDown = centerY >= (safe.bottom + safe.top) / 2
+        -- A broker preview must be reachable by moving straight up or down.
+        -- The former corner-to-corner anchor left a diagonal gap, so the
+        -- hover closed before the pointer could enter it.
+        local gap = 0
+        local roomWidth = safe.width
+        local roomHeight = opensDown and ((bottom or safe.top) - safe.bottom - gap) or (safe.top - (top or safe.bottom) - gap)
+        width = math.max(math.min(metrics.minWidth, safe.width), math.min(width, math.max(1, roomWidth)))
+        height = math.max(math.min(metrics.minHeight, safe.height), math.min(height, math.max(1, roomHeight)))
+        if metrics.verticalOverflow == "content" and height + 0.5 < metrics.preferredHeight then
+            width = math.min(math.max(1, roomWidth), width + Theme.Geometry.scrollbarGutter)
         end
+        local offsetX = math.max(safe.left + width / 2 - centerX, math.min(safe.right - width / 2 - centerX, 0))
+        frame:SetPoint(opensDown and "TOP" or "BOTTOM", anchorFrame, opensDown and "BOTTOM" or "TOP", offsetX, opensDown and -gap or gap)
     else
-        height = math.max(math.min(metrics.minHeight, screenHeight - 80), math.min(height, screenHeight - 80))
+        height = math.max(math.min(metrics.minHeight, safe.height), math.min(height, safe.height))
+        if metrics.verticalOverflow == "content" and height + 0.5 < metrics.preferredHeight then
+            width = math.min(safe.width, width + Theme.Geometry.scrollbarGutter)
+        end
         frame:SetPoint("CENTER", UIParent, "CENTER")
     end
     frame:SetSize(width, height)
-    frame.nav:Hide(); frame.sortButton:Hide(); frame.settingsButton:Hide(); frame.close:Hide(); frame.resize:Hide()
+    frame.nav:Hide(); frame.sortButton:Hide(); frame.settingsButton:Hide(); frame.close:Hide()
     frame.content:ClearAllPoints()
     frame.content:SetPoint("TOPLEFT", frame, "TOPLEFT", 1, -47)
     frame.content:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 1)
-    SetHeaderIdentity(frame, page, (page.title or "账号") .. " · 账号角色预览")
+    SetHeaderIdentity(frame, page, page.title)
     frame:Show()
     self:ShowPage(page.id, { preview = true, fieldOverrides = fields })
     self:TrackPreviewControls(frame)
@@ -1076,7 +1375,7 @@ function AccountView:ShowSettings()
 end
 
 function AccountView:SelectSettingsTarget(targetID)
-    if targetID ~= "display" and targetID ~= "sorting" and targetID ~= "core" then
+    if targetID ~= "display" and targetID ~= "sorting" and targetID ~= "core" and targetID ~= "filters" then
         local page = self._pages[targetID]
         if not page or page.internal then return false end
     end
@@ -1183,7 +1482,9 @@ local function RefreshOverview(parent, context)
 end
 
 local function CreateCharacters(parent)
-    parent.heading = AddText(parent, "GameFontNormalLarge", nil, COLORS.text); parent.heading:SetPoint("TOPLEFT", 20, -18); parent.heading:SetText("角色档案")
+    -- The shared title bar already names this page.  The body begins with the
+    -- live archive summary so the table earns back a full line of height.
+    parent.heading = AddText(parent, "GameFontNormalLarge", nil, COLORS.text); parent.heading:Hide()
     parent.hint = AddText(parent, "GameFontNormalSmall", nil, COLORS.muted); parent.hint:SetPoint("TOPLEFT", 20, -47); parent.hint:SetText("角色概况会自动保存；隐藏仅影响账号业务视图。")
     parent.search = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
     parent.search:SetSize(174, 20); parent.search:SetPoint("TOPRIGHT", -20, -47); parent.search:SetAutoFocus(false); parent.search:SetMaxLetters(48)
@@ -1218,7 +1519,7 @@ local function CreateCharacters(parent)
     parent.level:SetScript("OnEditFocusLost", SaveLevelFilter)
     parent.level:SetScript("OnEscapePressed", function(self) self:SetText(ArchiveSettings().filters.page.levelExpr or ""); self:ClearFocus() end)
     parent.listHeader = CreateFrame("Frame", nil, parent)
-    parent.listHeader:SetPoint("TOPLEFT", 20, -82); parent.listHeader:SetWidth(850); parent.listHeader:SetHeight(22)
+    parent.listHeader:SetPoint("TOPLEFT", 20, -82); parent.listHeader:SetWidth(850); parent.listHeader:SetHeight(Theme.Table.headerHeight)
     parent.listHeader.bg = parent.listHeader:CreateTexture(nil, "BACKGROUND"); parent.listHeader.bg:SetAllPoints(); parent.listHeader.bg:SetColorTexture(COLORS.chrome[1], COLORS.chrome[2], COLORS.chrome[3], 0.95)
     parent.listHeader.name = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); parent.listHeader.name:SetPoint("LEFT", 9, 0); parent.listHeader.name:SetWidth(246); parent.listHeader.name:SetText("角色")
     parent.listHeader.level = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); parent.listHeader.level:SetPoint("LEFT", parent.listHeader.name, "RIGHT", 6, 0); parent.listHeader.level:SetWidth(32); parent.listHeader.level:SetText("等级")
@@ -1289,62 +1590,8 @@ local function ShowCharacterDeleteConfirmation(characterID)
     StaticPopup_Show(DELETE_POPUP, table.concat(lines, "\n"), nil, characterID)
 end
 
-local function GetProfessionSlots(character)
-    local primary = {}
-    local secondary = {}
-    local primaryCandidates = {}
-    local profile = character.profile or {}
-    for slot, profession in pairs(profile.primaryProfessions or {}) do
-        slot = tonumber(slot)
-        if slot and slot <= 2 and profession then primary[slot] = profession end
-    end
-    for _, profession in ipairs(profile.professions or {}) do
-        local slot = tonumber(profession.slot)
-        local isSecondary = SECONDARY_PROFESSION_IDS[profession.id] or SECONDARY_SLOT_IDS[slot] == profession.id or SECONDARY_PROFESSION_NAMES[profession.name]
-        if slot and slot <= 2 and not isSecondary and not primary[slot] then
-            primary[slot] = profession
-        elseif isSecondary then
-            secondary[profession.id or profession.name or slot] = profession
-        else
-            primaryCandidates[#primaryCandidates + 1] = profession
-        end
-    end
-    local candidateIndex = 1
-    for slot = 1, 2 do
-        if not primary[slot] and primaryCandidates[candidateIndex] then
-            primary[slot] = primaryCandidates[candidateIndex]
-            candidateIndex = candidateIndex + 1
-        end
-    end
-    return primary, secondary
-end
-
-local function GetArchiveProfession(character, field)
-    local profile = character.profile or {}
-    -- The first two entries are the exact primary slots returned by
-    -- GetProfessions(). Prefer them directly; classification is only a
-    -- compatibility fallback for older cached records.
-    if field.professionSlot then
-        local direct = profile.professions and profile.professions[field.professionSlot]
-        if direct then return direct end
-        local stored = profile.primaryProfessions and profile.primaryProfessions[field.professionSlot]
-        if stored then return stored end
-    end
-    local primary, secondary = GetProfessionSlots(character)
-    if field.professionSlot then return primary[field.professionSlot] end
-    for _, profession in ipairs(profile.professions or {}) do
-        if profession.id == field.skillLine or SECONDARY_SLOT_IDS[tonumber(profession.slot)] == field.skillLine then return profession end
-    end
-end
-
 local function ArchiveFieldText(character, field)
-    local profile = character.profile or {}
-    if field.id == "identity" then return tostring(character.name or "未知角色") .. "-" .. tostring(character.realm or "未知服务器") end
-    if field.id == "level" then return tostring(character.level or "?") end
-    if field.id == "zone" then return profile.zone or "未知位置" end
-    if field.id == "itemLevel" then return profile.itemLevel and string.format("%.0f", profile.itemLevel) or "—" end
-    local profession = GetArchiveProfession(character, field)
-    return profession and tostring(profession.skillLevel or "?") or "—"
+    return Core.Fields:FormatValue(character, field)
 end
 
 local function ArchiveCharacters(context)
@@ -1385,6 +1632,7 @@ end
 local function RefreshCharacters(parent, context)
     local current = Core.Characters:GetCurrent()
     local preview = context and context.preview == true
+    local inset = Theme:GetMatrixInsets(preview)
     local characters = (context and ArchiveCharacters(context)) or ArchiveCharacters({ preview = false })
     local query = preview and "" or string.lower(parent.search:GetText() or "")
     local filtered = {}
@@ -1403,6 +1651,13 @@ local function RefreshCharacters(parent, context)
     local arrow = sort.mode == "custom" and "" or (sort.direction == "asc" and " ↑" or " ↓")
     local sortLabel = (SORT_LABELS[sort.mode] or "最近登录") .. arrow
     parent.hint:SetText((preview and "预览 " or "共 ") .. #filtered .. (preview and " 名角色" or " / " .. #characters .. " 名角色") .. " · 排序：" .. sortLabel)
+    -- The archive owns a heading and a one-line summary, but never a blank
+    -- fixed region.  The matrix begins after the documented summary-to-table
+    -- gap and all remaining edges come from the shared directional tokens.
+    parent.heading:Hide()
+    parent.hint:ClearAllPoints(); parent.hint:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top)
+    parent.listHeader:ClearAllPoints(); parent.listHeader:SetPoint("TOPLEFT", parent.hint, "BOTTOMLEFT", 0, -Theme.Space.md)
+    parent.scroll:ClearAllPoints(); parent.scroll:SetPoint("TOPLEFT", parent.listHeader, "BOTTOMLEFT", 0, -Theme.Space.xs); parent.scroll:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset.right, inset.bottom)
     local previousScroll = parent.resetScroll and 0 or parent.scroll:GetVerticalScroll()
     -- The custom scrollbar overlays the scroll frame.  Only the full archive
     -- reserves space for its hidden-state control; hover is deliberately
@@ -1413,8 +1668,9 @@ local function RefreshCharacters(parent, context)
     local fields = GetArchiveFields(preview)
     local widths = GetArchiveColumnWidths(fields)
     local tableWidth = GetArchiveTableWidth(fields, widths)
-    parent.listContent:SetWidth(math.max(contentWidth, tableWidth))
-    parent.listHeader:SetWidth(tableWidth)
+    local surfaceWidth = math.max(contentWidth, tableWidth)
+    parent.listContent:SetWidth(surfaceWidth)
+    parent.listHeader:SetWidth(surfaceWidth)
     parent.listHeader.name:Hide(); parent.listHeader.level:Hide(); parent.listHeader.zone:Hide(); parent.listHeader.itemLevel:Hide(); parent.listHeader.professions:Hide()
     parent.listHeader.dynamicCells = parent.listHeader.dynamicCells or {}
     local x = 8
@@ -1428,9 +1684,9 @@ local function RefreshCharacters(parent, context)
     for index, character in ipairs(filtered) do
         local row = parent.rows[index]
         if not row then
-            row = CreateFrame("Button", nil, parent.listContent, "BackdropTemplate"); row:SetHeight(30); row:SetPoint("TOPLEFT", 0, -((index - 1) * 34)); row:SetWidth(tableWidth)
-            row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 }); row.name = AddText(row, "GameFontNormalSmall", nil, COLORS.text); row.name:SetPoint("LEFT", 9, 0); row.name:SetWidth(246)
-            row.level = AddText(row, "GameFontNormalSmall", nil, COLORS.text); row.level:SetPoint("LEFT", row.name, "RIGHT", 6, 0); row.level:SetWidth(32)
+            row = CreateFrame("Button", nil, parent.listContent, "BackdropTemplate"); row:SetHeight(Theme.Table.rowHeight); row:SetPoint("TOPLEFT", 0, -((index - 1) * 30)); row:SetWidth(tableWidth)
+            row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 }); row.name = AddText(row, "GameFontNormalSmall", Theme.Font.body, COLORS.text); row.name:SetPoint("LEFT", 9, 0); row.name:SetWidth(246)
+            row.level = AddText(row, "GameFontNormalSmall", Theme.Font.body, COLORS.text); row.level:SetPoint("LEFT", row.name, "RIGHT", 6, 0); row.level:SetWidth(32)
             row.zone = AddText(row, "GameFontNormalSmall", nil, COLORS.muted); row.zone:SetPoint("LEFT", row.level, "RIGHT", 6, 0); row.zone:SetWidth(78)
             row.itemLevel = AddText(row, "GameFontNormalSmall", nil, COLORS.muted); row.itemLevel:SetPoint("LEFT", row.zone, "RIGHT", 6, 0); row.itemLevel:SetWidth(42)
             row.professions = AddText(row, "GameFontNormalSmall", nil, COLORS.muted); row.professions:SetPoint("LEFT", row.itemLevel, "RIGHT", 6, 0); row.professions:SetPoint("RIGHT", -86, 0)
@@ -1451,8 +1707,8 @@ local function RefreshCharacters(parent, context)
         end
         -- Hover uses compact rows so its maximum safe height can show twenty
         -- complete characters without activating a scrollbar.
-        local rowHeight, rowStep = preview and 21 or 30, preview and 24 or 34
-        row:SetHeight(rowHeight); row:ClearAllPoints(); row:SetPoint("TOPLEFT", 0, -((index - 1) * rowStep)); row:SetWidth(tableWidth)
+        local rowHeight, rowStep = preview and 21 or Theme.Table.rowHeight, preview and 24 or 30
+        row:SetHeight(rowHeight); row:ClearAllPoints(); row:SetPoint("TOPLEFT", 0, -((index - 1) * rowStep)); row:SetWidth(surfaceWidth)
         row.name:Hide(); row.level:Hide(); row.zone:Hide(); row.itemLevel:Hide(); row.professions:Hide(); row.delete:Hide()
         row.dynamicCells = row.dynamicCells or {}
         x = 8
@@ -1460,27 +1716,21 @@ local function RefreshCharacters(parent, context)
             local cell = row.dynamicCells[fieldIndex]
             if not cell or cell.icon then
                 if cell and cell.icon then cell:Hide() end
-                cell = AddText(row, "GameFontNormalSmall", nil, COLORS.muted)
+                cell = AddText(row, "GameFontNormalSmall", Theme.Font.body, COLORS.muted)
                 cell:SetWordWrap(false); row.dynamicCells[fieldIndex] = cell
             end
             local width = widths[fieldIndex]
             cell:ClearAllPoints(); cell:SetPoint("LEFT", x, 0); cell:SetWidth(width)
-            local profession = field.professionSlot and GetArchiveProfession(character, field)
-            if field.professionSlot then
-                local value = ArchiveFieldText(character, field)
-                local icon = profession and profession.icon
-                if icon and value ~= "—" then
-                    cell:SetText("|T" .. tostring(icon) .. ":16:16:0:0:64:64|t " .. value)
-                else
-                    cell:SetText(value)
-                end
-                cell:SetJustifyH(field.align or "LEFT")
+            local text, value = ArchiveFieldText(character, field)
+            local icon = field.GetIcon and field.GetIcon(value, character)
+            if icon and text ~= "—" then
+                cell:SetText("|T" .. tostring(icon) .. ":16:16:0:0:64:64|t " .. text)
             else
-                cell:SetText(ArchiveFieldText(character, field))
-                cell:SetJustifyH(field.align or "LEFT")
+                cell:SetText(text)
             end
-            local classColor = field.id == "identity" and RAID_CLASS_COLORS and RAID_CLASS_COLORS[character.class or ""]
-            local r, g, b = classColor and classColor.r or COLORS.muted[1], classColor and classColor.g or COLORS.muted[2], classColor and classColor.b or COLORS.muted[3]
+            cell:SetJustifyH(field.align or "LEFT")
+            local color = field.GetColor and field.GetColor(value, character)
+            local r, g, b = color and color[1] or COLORS.muted[1], color and color[2] or COLORS.muted[2], color and color[3] or COLORS.muted[3]
             cell:SetTextColor(r, g, b)
             cell:Show(); x = x + width + GetArchiveColumnGap(fields, fieldIndex)
         end
@@ -1488,18 +1738,18 @@ local function RefreshCharacters(parent, context)
         local isCurrent = current and current.id == character.id
         if isCurrent then
             row:SetBackdropColor(COLORS.current[1], COLORS.current[2], COLORS.current[3], 0.72)
-            row:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.74)
+            row:SetBackdropBorderColor(COLORS.matrixLine[1], COLORS.matrixLine[2], COLORS.matrixLine[3], COLORS.matrixLine[4])
         elseif index % 2 == 0 then
             row:SetBackdropColor(0.025, 0.085, 0.10, 0.88)
-            row:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.28)
+            row:SetBackdropBorderColor(COLORS.matrixLine[1], COLORS.matrixLine[2], COLORS.matrixLine[3], COLORS.matrixLine[4])
         else
             row:SetBackdropColor(0.018, 0.060, 0.075, 0.88)
-            row:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.28)
+            row:SetBackdropBorderColor(COLORS.matrixLine[1], COLORS.matrixLine[2], COLORS.matrixLine[3], COLORS.matrixLine[4])
         end
         row:Show()
     end
     for index = #filtered + 1, #parent.rows do parent.rows[index]:Hide() end
-    local contentHeight = #filtered * (preview and 24 or 34)
+    local contentHeight = #filtered * (preview and 24 or 30)
     local viewportHeight = parent.scroll:GetHeight() or 500
     parent.listContent:SetHeight(math.max(contentHeight, viewportHeight))
     parent.scroll:SetContentHeight(contentHeight)
@@ -1554,6 +1804,14 @@ local function SettingsRow(parent, index, kind)
             row.input = CreateFrame("EditBox", nil, row, "InputBoxTemplate")
             row.input:SetHeight(20); row.input:SetAutoFocus(false); row.input:SetMaxLetters(64)
             row.input:SetTextInsets(7, 7, 0, 0)
+        elseif kind == "short-name" then
+            row = CreateFrame("Frame", nil, parent.content)
+            row:SetHeight(28)
+            row.label = AddText(row, "GameFontNormalSmall", nil, COLORS.text)
+            row.label:SetPoint("LEFT", 2, 0); row.label:SetPoint("RIGHT", -198, 0)
+            row.input = CreateFrame("EditBox", nil, row, "InputBoxTemplate")
+            row.input:SetSize(112, 20); row.input:SetPoint("RIGHT", -80, 0); row.input:SetAutoFocus(false); row.input:SetMaxLetters(32); row.input:SetTextInsets(6, 6, 0, 0)
+            row.clear = CreateChromeButton(row, 70, 20, "清除", false); row.clear:SetPoint("RIGHT", -2, 0)
         else
             row = CreateChromeButton(parent.content, 250, 22, "")
         end
@@ -1597,17 +1855,16 @@ local function RefreshSettings(parent)
     local settingsViewportWidth = parent.scroll:GetWidth() or 0
     if settingsViewportWidth <= 100 then settingsViewportWidth = (parent:GetWidth() or 658) - 38 end
     parent.content:SetWidth(math.max(600, settingsViewportWidth - 18))
-    local activeLayout = GetPageLayout(settings, AccountView.activePageID or "overview")
     local targetID = AccountView.settingsTargetPageID or "display"
     local selected = AccountView._pages[targetID]
-    local displayMode, sortingMode, coreMode = targetID == "display", targetID == "sorting", targetID == "core"
-    if not (displayMode or sortingMode or coreMode or (selected and not selected.internal)) then
+    local displayMode, sortingMode, coreMode, filtersMode = targetID == "display", targetID == "sorting", targetID == "core", targetID == "filters"
+    if not (displayMode or sortingMode or coreMode or filtersMode or (selected and not selected.internal)) then
         targetID, displayMode = "display", true
         AccountView.settingsTargetPageID = targetID
     end
-    local titles = { display = "显示与入口", sorting = "角色与排序", core = "窗口与 Core" }
+    local titles = { display = "显示与入口", sorting = "角色与排序", core = "窗口与 Core", filters = "角色过滤" }
     parent.heading:SetText(titles[targetID] or (selected.title .. "业务设置"))
-    parent.hint:SetText(displayMode and "集中管理插件页面、独立入口与显示字段。" or (sortingMode and "统一设置账号角色的默认排列规则。" or (coreMode and "管理窗口布局与 YiboCore 默认入口。" or "这里只保留该插件自身的业务规则与数据管理。")))
+    parent.hint:SetText(displayMode and "集中管理插件页面、独立入口与显示字段。" or (sortingMode and "统一设置账号角色的默认排列规则。" or (coreMode and "管理窗口布局与 YiboCore 默认入口。" or (filtersMode and "统一管理各业务页面的角色等级准入规则。" or "这里只保留该插件自身的业务规则与数据管理。"))))
     parent.resetLayout:SetShown(coreMode)
 
     local index, y, gridColumn = 0, 0, 0
@@ -1646,11 +1903,12 @@ local function RefreshSettings(parent)
         row.kind = kind or "default"; row:SetText(label); row:SetState(selected and "selected" or "default"); row:SetScript("OnClick", callback); row:Show()
         return row
     end
-    local function Input(label, value, callback)
+    local function Input(label, value, callback, inputWidth)
         index = index + 1; local row = SettingsRow(parent, index, "input")
         PlaceGridControl(row)
         row.label:SetText(label); row.label:SetWidth(math.min(84, math.floor(gridWidth * 0.36)))
-        row.input:ClearAllPoints(); row.input:SetPoint("LEFT", row.label, "RIGHT", 6, 0); row.input:SetPoint("RIGHT", 0, 0)
+        row.input:ClearAllPoints(); row.input:SetPoint("LEFT", row.label, "RIGHT", 6, 0)
+        if inputWidth then row.input:SetWidth(inputWidth) else row.input:SetPoint("RIGHT", 0, 0) end
         row.input:SetText(value or "")
         local function Save(control)
             local valid, normalized, badToken = Core.LevelFilter:Validate(control:GetText())
@@ -1746,7 +2004,17 @@ local function RefreshSettings(parent)
         local byID = {}
         for _, character in ipairs(Core.Characters:GetAll()) do byID[character.id] = character end
         local order = AccountView:GetCustomCharacterOrder()
-        local pageSize = 12
+        local orderGap, orderMinimum = 16, 520
+        local orderColumns = math.max(1, math.floor((parent.content:GetWidth() + orderGap) / (orderMinimum + orderGap)))
+        local orderWidth = math.floor((parent.content:GetWidth() - orderGap * (orderColumns - 1)) / orderColumns)
+        -- Keep the order editor inside the visible workbench whenever possible.
+        -- Reserve the pagination controls first, then derive how many complete
+        -- rows fit in each column from the actual scroll viewport.
+        local controlRows = math.ceil(4 / gridColumns)
+        local orderTop = y + controlRows * (Theme.Size.standard + 4)
+        local availableHeight = math.max(Theme.Size.standard + 4, (parent.scroll:GetHeight() or 0) - orderTop - 8)
+        local rowsPerColumn = math.max(1, math.floor(availableHeight / 28))
+        local pageSize = rowsPerColumn * orderColumns
         local totalPages = math.max(1, math.ceil(#order / pageSize))
         parent.characterOrderPage = math.max(1, math.min(tonumber(parent.characterOrderPage) or 1, totalPages))
         Button("上一页（" .. parent.characterOrderPage .. " / " .. totalPages .. "）", function()
@@ -1758,17 +2026,20 @@ local function RefreshSettings(parent)
         FinishGridRow()
         local first = (parent.characterOrderPage - 1) * pageSize + 1
         local last = math.min(#order, first + pageSize - 1)
-        local orderGap, orderMinimum = 16, 520
-        local orderColumns = math.max(1, math.floor((parent.content:GetWidth() + orderGap) / (orderMinimum + orderGap)))
-        local orderWidth = math.floor((parent.content:GetWidth() - orderGap * (orderColumns - 1)) / orderColumns)
-        local orderColumn = 0
-        for orderIndex = first, last do
+        local visibleCount = math.max(0, last - first + 1)
+        for slot = 0, visibleCount - 1 do
+            local orderIndex = first + slot
             local characterID = order[orderIndex]
             local character = byID[characterID]
             if character then
                 index = index + 1
                 local row = SettingsRow(parent, index, "character-order")
-                row:ClearAllPoints(); row:SetPoint("TOPLEFT", 2 + orderColumn * (orderWidth + orderGap), -y); row:SetWidth(orderWidth)
+                -- Fill down the left column before continuing at the right.
+                -- This preserves the visible sequence when the editor switches
+                -- between one and two columns.
+                local orderColumn = math.floor(slot / rowsPerColumn)
+                local orderRow = slot % rowsPerColumn
+                row:ClearAllPoints(); row:SetPoint("TOPLEFT", 2 + orderColumn * (orderWidth + orderGap), -(y + orderRow * 28)); row:SetWidth(orderWidth)
                 row.label:SetText(tostring(orderIndex) .. ". " .. (character.name or "未知角色") .. "-" .. (character.realm or "未知服务器") .. " · " .. tostring(character.level or "?") .. "级")
                 local classColor = RAID_CLASS_COLORS and RAID_CLASS_COLORS[character.class or ""]
                 row.label:SetTextColor(classColor and classColor.r or COLORS.text[1], classColor and classColor.g or COLORS.text[2], classColor and classColor.b or COLORS.text[3])
@@ -1790,16 +2061,53 @@ local function RefreshSettings(parent)
                 row.delete:EnableMouse(not current)
                 row.delete:SetScript("OnClick", function() ShowCharacterDeleteConfirmation(rowCharacterID) end)
                 row:Show()
-                orderColumn = orderColumn + 1
-                if orderColumn >= orderColumns then y = y + 28; orderColumn = 0 end
             end
         end
-        if orderColumn ~= 0 then y = y + 28 end
+        y = y + math.min(rowsPerColumn, visibleCount) * 28
+    end
+
+    local function ShortNameRows()
+        local characters = Core.Characters:GetAll()
+        local pageSize = 20
+        local totalPages = math.max(1, math.ceil(#characters / pageSize))
+        parent.shortNamePage = math.max(1, math.min(tonumber(parent.shortNamePage) or 1, totalPages))
+        Button("上一页（" .. parent.shortNamePage .. " / " .. totalPages .. "）", function() parent.shortNamePage = math.max(1, parent.shortNamePage - 1); AccountView:RefreshPage() end, 300, "secondary")
+        Button("下一页（" .. parent.shortNamePage .. " / " .. totalPages .. "）", function() parent.shortNamePage = math.min(totalPages, parent.shortNamePage + 1); AccountView:RefreshPage() end, 300, "secondary")
+        FinishGridRow()
+        local duplicates = Core.Characters:GetShortNameDuplicates()
+        local first, last = (parent.shortNamePage - 1) * pageSize + 1, math.min(#characters, parent.shortNamePage * pageSize)
+        for characterIndex = first, last do
+            local character = characters[characterIndex]
+            index = index + 1
+            local row = SettingsRow(parent, index, "short-name")
+            PlaceSettingsRow(row, y); row:SetWidth(parent.content:GetWidth() or 600)
+            local displayName = Core.Characters:GetDisplayName(character, "short")
+            local warning = duplicates[displayName] and " · 短名重复" or ""
+            row.label:SetText((character.name or "未知角色") .. "-" .. (character.realm or "未知服务器") .. warning)
+            row.input:SetText(displayName == character.name and "" or displayName)
+            local characterID = character.id
+            local function Save(control)
+                local result, errorMessage = Core.Characters:SetShortName(characterID, control:GetText())
+                if result == nil then Core:Print("短名保存失败：" .. tostring(errorMessage)); return end
+                AccountView:RefreshPage()
+            end
+            row.input:SetScript("OnEnterPressed", function(control) Save(control); control:ClearFocus() end)
+            row.input:SetScript("OnEditFocusLost", Save)
+            row.input:SetScript("OnEscapePressed", function(control) control:SetText(Core.Characters:GetDisplayName(character, "short") == character.name and "" or Core.Characters:GetDisplayName(character, "short")); control:ClearFocus() end)
+            row.clear:SetScript("OnClick", function() Core.Characters:SetShortName(characterID, ""); AccountView:RefreshPage() end)
+            row:Show(); y = y + 30
+        end
     end
 
     if sortingMode then
         Heading("默认角色排序")
         SortControls(nil)
+        Heading("角色名称")
+        local shortNameToggle = Button(parent.showShortNames and "▾ 收起短名管理" or "▸ 管理自定义短名", function() parent.showShortNames = not parent.showShortNames; AccountView:RefreshPage() end, 300, "disclosure")
+        if parent.showShortNames then
+            FinishGridRow()
+            ShortNameRows()
+        end
         Heading("角色顺序与缓存")
         Button(parent.showCharacterOrder and "▾ 收起顺序与缓存" or "▸ 打开顺序与缓存", function()
             parent.showCharacterOrder = not parent.showCharacterOrder
@@ -1811,11 +2119,8 @@ local function RefreshSettings(parent)
         end
     elseif coreMode then
         Heading("窗口布局")
-        Button("重置窗口布局", function() AccountView:ResetWindowLayout() end)
-        Button("窗口尺寸：" .. (activeLayout.mode == "manual" and "此页面手动固定（恢复自动适配）" or "此页面自动适配"), function()
-            settings.pageLayouts[AccountView.activePageID or "overview"] = { mode = "auto" }
-            AccountView:ShowPage(AccountView.activePageID or "overview", { autoFit = true })
-        end, 300)
+        Button("重置窗口位置", function() AccountView:ResetWindowLayout() end)
+        Heading("窗口尺寸会随当前页面内容自动适配。")
         Heading("Core 入口")
         Check("显示 Core 小地图入口", settings.entry.minimap.show ~= false, function(checked)
             settings.entry.minimap.show = checked
@@ -1835,6 +2140,40 @@ local function RefreshSettings(parent)
             option:SetState(optionPage.id == selectedPreviewPage.id and "selected" or "default")
         end
         FinishGridRow()
+    elseif filtersMode then
+        -- Filters are intentionally a single-column form: each expression is a
+        -- plugin-specific rule and needs enough room to be read and edited.
+        SetGridMinimum(math.max(300, parent.content:GetWidth() or 620))
+        Heading("业务页面角色过滤")
+        FinishGridRow()
+        index = index + 1
+        local ruleHint = SettingsRow(parent, index, "heading")
+        PlaceSettingsRow(ruleHint, y)
+        ruleHint:SetText("填写规则：90 = 仅 90 级；1-20 = 等级范围；<=3 / >=85 = 比较；留空或 0 = 不过滤。")
+        ruleHint:SetTextColor(COLORS.muted[1], COLORS.muted[2], COLORS.muted[3])
+        ruleHint:Show()
+        y = y + 24
+        index = index + 1
+        local installedHint = SettingsRow(parent, index, "heading")
+        PlaceSettingsRow(installedHint, y)
+        installedHint:SetText("仅显示当前已安装并注册账号页面的业务插件。初次安装时由插件写入推荐值。")
+        installedHint:SetTextColor(COLORS.muted[1], COLORS.muted[2], COLORS.muted[3])
+        installedHint:Show()
+        y = y + 28
+        local count = 0
+        for _, page in ipairs(AccountView._pageOrder) do
+            local filter = page.characterFilter
+            if not page.internal and filter then
+                count = count + 1
+                Input(page.title .. " · 等级", filter.GetExpression() or "", function(value)
+                    local ok, errorMessage = filter.SetExpression(value)
+                    if ok == false then Core:Print(page.title .. "等级过滤保存失败：" .. tostring(errorMessage)) end
+                end, 112)
+            end
+        end
+        if count == 0 then
+            Heading("暂无支持角色过滤的业务页面")
+        end
     elseif displayMode then
         local archive = ArchiveSettings()
         local function CycleArchiveProfile(mode)
@@ -1852,7 +2191,7 @@ local function RefreshSettings(parent)
         Input("等级过滤", archive.filters.page.levelExpr, function(value) archive.filters.page.levelExpr = value end)
         Heading("角色档案：显示字段")
         SetGridMinimum(160)
-        for _, field in ipairs(CHARACTER_ARCHIVE_FIELDS) do
+        for _, field in ipairs(Core.Fields:GetByConsumer("character-archive")) do
             Check(field.title, ArchiveFieldVisible(field, false), function(checked) archive.fields[field.id] = checked end)
         end
         Heading("角色档案悬停：显示与筛选")
@@ -1862,7 +2201,7 @@ local function RefreshSettings(parent)
         Input("等级过滤", archive.filters.preview.levelExpr, function(value) archive.filters.preview.levelExpr = value end)
         Heading("角色档案悬停：显示字段")
         SetGridMinimum(160)
-        for _, field in ipairs(CHARACTER_ARCHIVE_FIELDS) do
+        for _, field in ipairs(Core.Fields:GetByConsumer("character-archive")) do
             Check(field.title, ArchiveFieldVisible(field, true), function(checked) archive.previewFields[field.id] = checked end)
         end
         Heading("插件页面与入口")
@@ -1900,12 +2239,6 @@ local function RefreshSettings(parent)
         end
             if type(details.CreateSettingsPanel) == "function" then
                 AddonPanel(details)
-            elseif type(details.OpenAddonSettings) == "function" then
-                Heading("插件专属设置")
-                Button(details.openLabel or "打开详细设置", function()
-                    local ok, errorMessage = xpcall(details.OpenAddonSettings, function(message) return tostring(message) end)
-                    if not ok then Core:Print("插件 “" .. selected.title .. "” 的设置打开失败：" .. errorMessage) end
-                end)
             else
                 Heading("暂无插件专属设置")
             end
@@ -1918,24 +2251,43 @@ end
 local ABOUT_ADDONS = {
     {
         name = "YiboAltoBoss",
-        version = "2.0",
+        version = "2.1",
         description = "汇总多角色首领进度，快速决定下一步。",
         icon = "Interface\\AddOns\\YiboCore\\Media\\YAB_MinimapIcon",
         url = "https://www.curseforge.com/wow/addons/yiboaltoboss",
     },
     {
+        name = "YiboCurrency",
+        version = "0.1",
+        description = "汇总多角色货币余额，统一查看常规货币与物品代币。",
+        icon = "Interface\\AddOns\\YiboCurrency\\Media\\YiboCurrencyIcon-v1",
+    },
+    {
         name = "YiboLegendary",
-        version = "0.3",
+        version = "1.0",
         description = "追踪多角色传说任务与橙色传说装备进度。",
         icon = "Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon-v1.tga",
         url = "https://www.curseforge.com/wow/addons/yibolegendary",
     },
     {
         name = "YiboQuestBlocker",
-        version = "2.0.0",
+        version = "2.1",
         description = "识别任务限制与风险，避免误接关键任务。",
         icon = "Interface\\AddOns\\YiboCore\\Media\\YQB_MinimapIcon",
         url = "https://www.curseforge.com/wow/addons/yiboquestblocker",
+    },
+    {
+        name = "YiboTodo",
+        version = "0.1",
+        description = "汇总多角色待办与专业冷却，明确下一项可做事务。",
+        icon = "Interface\\AddOns\\YiboTodo\\Media\\YiboTodoIcon-v6",
+    },
+    {
+        name = "YiboReputation",
+        version = "1.0",
+        description = "汇总多角色声望，掌握阵营关系与晋升进度。",
+        icon = "Interface\\AddOns\\YiboReputation\\Media\\YiboReputationIcon-v1",
+        url = "https://www.curseforge.com/wow/addons/yiboreputation",
     },
     {
         name = "YiboBeastPaths",
@@ -1949,18 +2301,20 @@ local ABOUT_ADDONS = {
 
 local function SetAboutLinkOpen(parent, target)
     for _, row in ipairs(parent.addonRows) do
-        local open = row == target and not row.linkOpen
-        row.linkOpen = open
-        row.linkBox:SetShown(open)
-        row.copyHint:SetShown(open)
-        row.linkButton:SetText(open and "收起链接" or "获取链接")
-        row:SetHeight(open and 130 or 96)
-        if open then
-            row.linkBox:SetText(row.addon.url)
-            row.linkBox:SetFocus()
-            row.linkBox:HighlightText()
-        else
-            row.linkBox:ClearFocus()
+        if row.linkButton then
+            local open = row == target and not row.linkOpen
+            row.linkOpen = open
+            row.linkBox:SetShown(open)
+            row.copyHint:SetShown(open)
+            row.linkButton:SetText(open and "收起链接" or "获取链接")
+            row:SetHeight(open and 130 or 96)
+            if open then
+                row.linkBox:SetText(row.addon.url)
+                row.linkBox:SetFocus()
+                row.linkBox:HighlightText()
+            else
+                row.linkBox:ClearFocus()
+            end
         end
     end
 
@@ -1983,42 +2337,46 @@ local function CreateAboutAddonRow(parent, addon)
     row.icon = row.iconFrame:CreateTexture(nil, "ARTWORK")
     row.icon:SetPoint("TOPLEFT", 3, -3); row.icon:SetPoint("BOTTOMRIGHT", -3, 3); row.icon:SetTexture(addon.icon)
 
-    row.name = AddText(row, "GameFontNormal", 14, COLORS.text)
+    row.name = AddText(row, "GameFontNormal", Theme.Font.body, COLORS.text)
     row.name:SetPoint("TOPLEFT", row.iconFrame, "TOPRIGHT", 12, -2); row.name:SetText(addon.name)
-    row.version = AddText(row, "GameFontNormalSmall", 11, COLORS.muted)
+    row.version = AddText(row, "GameFontNormalSmall", Theme.Font.meta, COLORS.muted)
     row.version:SetPoint("LEFT", row.name, "RIGHT", 8, 0)
     row.version:SetText(addon.version and ("v" .. addon.version) or "")
-    row.description = AddText(row, "GameFontNormalSmall", 12, COLORS.muted)
-    row.description:SetPoint("TOPLEFT", row.name, "BOTTOMLEFT", 0, -8); row.description:SetPoint("RIGHT", -154, 0); row.description:SetText(addon.description)
+    row.description = AddText(row, "GameFontNormalSmall", Theme.Font.assist, COLORS.muted)
+    row.description:SetPoint("TOPLEFT", row.name, "BOTTOMLEFT", 0, -8); row.description:SetPoint("RIGHT", addon.url and -154 or -12, 0); row.description:SetText(addon.description)
     if addon.independent then
-        row.badge = AddText(row, "GameFontNormalSmall", 11, COLORS.muted)
+        row.badge = AddText(row, "GameFontNormalSmall", Theme.Font.meta, COLORS.muted)
         row.badge:SetJustifyH("RIGHT")
         row.badge:SetPoint("RIGHT", -142, 0); row.badge:SetText("独立作品")
     end
 
-    row.linkButton = CreateChromeButton(row, 112, 26, "获取链接")
-    row.linkButton:SetPoint("TOPRIGHT", -12, -22)
-    row.linkBox = CreateFrame("EditBox", nil, row, "BackdropTemplate")
-    row.linkBox:SetHeight(24); row.linkBox:SetPoint("BOTTOMLEFT", 96, 9); row.linkBox:SetPoint("BOTTOMRIGHT", -128, 9)
-    row.linkBox:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    row.linkBox:SetBackdropColor(COLORS.bg[1], COLORS.bg[2], COLORS.bg[3], 1)
-    row.linkBox:SetBackdropBorderColor(COLORS.accent[1], COLORS.accent[2], COLORS.accent[3], 0.82)
-    row.linkBox:SetFontObject(GameFontHighlightSmall)
-    row.linkBox:SetTextColor(COLORS.text[1], COLORS.text[2], COLORS.text[3])
-    row.linkBox:SetTextInsets(7, 7, 0, 0); row.linkBox:SetAutoFocus(false); row.linkBox:SetMaxLetters(240)
-    row.linkBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    row.linkBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
-    row.linkBox:SetScript("OnMouseUp", function(self) self:HighlightText() end)
-    row.linkBox:SetScript("OnTextChanged", function(self, userInput)
-        if userInput and self:GetText() ~= addon.url then
-            self:SetText(addon.url); self:HighlightText()
-        end
-    end)
-    row.copyHint = AddText(row, "GameFontNormalSmall", 11, COLORS.accent)
-    row.copyHint:SetJustifyH("RIGHT")
-    row.copyHint:SetPoint("LEFT", row.linkBox, "RIGHT", 8, 0); row.copyHint:SetPoint("RIGHT", -12, 0); row.copyHint:SetText("按 Ctrl+C 复制")
-    row.linkBox:Hide(); row.copyHint:Hide()
-    row.linkButton:SetScript("OnClick", function() SetAboutLinkOpen(parent, row) end)
+    if addon.url then
+        row.linkButton = CreateChromeButton(row, 112, 26, "获取链接")
+        row.linkButton:SetPoint("TOPRIGHT", -12, -22)
+        row.linkBox = CreateFrame("EditBox", nil, row, "BackdropTemplate")
+        row.linkBox:SetHeight(24); row.linkBox:SetPoint("BOTTOMLEFT", 96, 9); row.linkBox:SetPoint("BOTTOMRIGHT", -128, 9)
+        row.linkBox:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+        row.linkBox:SetBackdropColor(COLORS.bg[1], COLORS.bg[2], COLORS.bg[3], 1)
+        row.linkBox:SetBackdropBorderColor(COLORS.accent[1], COLORS.accent[2], COLORS.accent[3], 0.82)
+        -- EditBox:SetFont requires the flags argument on the client used by
+        -- this UI.  FontStrings accept two arguments, EditBoxes do not.
+        row.linkBox:SetFont(STANDARD_TEXT_FONT, Theme.Font.assist, "")
+        row.linkBox:SetTextColor(COLORS.text[1], COLORS.text[2], COLORS.text[3])
+        row.linkBox:SetTextInsets(7, 7, 0, 0); row.linkBox:SetAutoFocus(false); row.linkBox:SetMaxLetters(240)
+        row.linkBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+        row.linkBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+        row.linkBox:SetScript("OnMouseUp", function(self) self:HighlightText() end)
+        row.linkBox:SetScript("OnTextChanged", function(self, userInput)
+            if userInput and self:GetText() ~= addon.url then
+                self:SetText(addon.url); self:HighlightText()
+            end
+        end)
+        row.copyHint = AddText(row, "GameFontNormalSmall", Theme.Font.meta, COLORS.accent)
+        row.copyHint:SetJustifyH("RIGHT")
+        row.copyHint:SetPoint("LEFT", row.linkBox, "RIGHT", 8, 0); row.copyHint:SetPoint("RIGHT", -12, 0); row.copyHint:SetText("按 Ctrl+C 复制")
+        row.linkBox:Hide(); row.copyHint:Hide()
+        row.linkButton:SetScript("OnClick", function() SetAboutLinkOpen(parent, row) end)
+    end
     parent.addonRows[#parent.addonRows + 1] = row
     parent.addonRowsByName[addon.name] = row
     return row
@@ -2056,23 +2414,26 @@ local function CreateAbout(parent)
     parent.hero.icon = parent.hero.iconFrame:CreateTexture(nil, "ARTWORK")
     parent.hero.icon:SetPoint("TOPLEFT", 3, -3); parent.hero.icon:SetPoint("BOTTOMRIGHT", -3, 3)
     parent.hero.icon:SetTexture("Interface\\AddOns\\YiboCore\\Media\\YiboCoreLogo-v7")
-    parent.hero.title = AddText(parent.hero, "GameFontNormalLarge", 19, COLORS.text)
+    parent.hero.title = AddText(parent.hero, "GameFontNormalLarge", Theme.Font.title, COLORS.text)
     parent.hero.title:SetPoint("TOPLEFT", 110, -20); parent.hero.title:SetText("YiboCore")
-    parent.hero.description = AddText(parent.hero, "GameFontNormalSmall", 12, COLORS.text)
+    parent.hero.description = AddText(parent.hero, "GameFontNormalSmall", Theme.Font.assist, COLORS.text)
     parent.hero.description:SetPoint("TOPLEFT", parent.hero.title, "BOTTOMLEFT", 0, -9); parent.hero.description:SetText("统一管理 Yibo 系列的账号角色、入口与业务页面")
-    parent.hero.status = AddText(parent.hero, "GameFontNormalSmall", 12, COLORS.muted)
+    parent.hero.status = AddText(parent.hero, "GameFontNormalSmall", Theme.Font.assist, COLORS.muted)
     parent.hero.status:SetJustifyH("RIGHT")
-    parent.hero.status:SetPoint("RIGHT", -18, 0)
+    parent.hero.status:SetPoint("TOPRIGHT", -18, -22)
+    parent.hero.metadata = AddText(parent.hero, "GameFontNormalSmall", Theme.Font.meta, COLORS.muted)
+    parent.hero.metadata:SetJustifyH("RIGHT")
+    parent.hero.metadata:SetPoint("TOPRIGHT", parent.hero.status, "BOTTOMRIGHT", 0, -7)
 
-    parent.childHeading = AddText(parent.content, "GameFontNormal", 14, COLORS.accent)
+    parent.childHeading = AddText(parent.content, "GameFontNormal", Theme.Font.section, COLORS.accent)
     parent.childHeading:SetText("YiboCore 子插件")
-    parent.otherHeading = AddText(parent.content, "GameFontNormal", 14, COLORS.accent)
+    parent.otherHeading = AddText(parent.content, "GameFontNormal", Theme.Font.section, COLORS.accent)
     parent.otherHeading:SetText("探索其它 Yibo 插件")
     parent.otherLine = parent.content:CreateTexture(nil, "ARTWORK")
     parent.otherLine:SetHeight(1)
     parent.otherLine:SetColorTexture(COLORS.lineSoft[1], COLORS.lineSoft[2], COLORS.lineSoft[3], COLORS.lineSoft[4])
     for _, addon in ipairs(ABOUT_ADDONS) do CreateAboutAddonRow(parent, addon) end
-    parent.footer = AddText(parent, "GameFontNormalSmall", 11, COLORS.muted, "RIGHT")
+    parent.footer = AddText(parent, "GameFontNormalSmall", Theme.Font.meta, COLORS.muted, "RIGHT")
     parent.footer:SetPoint("BOTTOMRIGHT", -20, 12); parent.footer:SetText("作者 YiboSoft · CurseForge")
     parent.LayoutAboutContent = function(container)
         local y = 140
@@ -2119,31 +2480,56 @@ local function RefreshAbout(parent)
         end
     end
     parent.hero.status:SetText("已连接 " .. connected .. " 个子插件")
+    parent.hero.metadata:SetText("Public API v" .. tostring(Core.API_VERSION or "?") .. " · 数据库 Schema v" .. tostring(Core.Migrations and Core.Migrations.CURRENT_SCHEMA or "?"))
 end
 
 local function GetAboutLayoutMetrics()
     return { minWidth = 760, preferredWidth = 942, minHeight = 740, preferredHeight = 760, verticalOverflow = "content" }
 end
 
+local function GetOverviewSurfaceMetrics()
+    local visiblePages = 0
+    for _, page in ipairs(AccountView._pageOrder) do if PageEnabled(page) and not page.internal then visiblePages = visiblePages + 1 end end
+    local rows = math.min(visiblePages, 8) + math.min(visiblePages * 2, 8)
+    return { minContentWidth = 582, naturalContentWidth = 680, minContentHeight = 150, naturalContentHeight = 84 + rows * 34, verticalOverflow = "content" }
+end
+
+local function GetCharacterSurfaceMetrics(context)
+    local count = #ArchiveCharacters(context)
+    local fields = GetArchiveFields(false)
+    local tableWidth = GetArchiveTableWidth(fields, GetArchiveColumnWidths(fields))
+    local inset = Theme:GetMatrixInsets(context and context.preview)
+    local gutter = count > 20 and Theme.Geometry.scrollbarGutter or 0
+    return { minContentWidth = 582, naturalContentWidth = tableWidth + inset.left + inset.right + gutter, minContentHeight = 150, naturalContentHeight = inset.top + Theme.Font.assist + Theme.Space.md + Theme.Table.headerHeight + Theme.Space.xs + math.min(count, 20) * 30 + inset.bottom, verticalOverflow = "content" }
+end
+
+local function GetAboutSurfaceMetrics()
+    return { minContentWidth = 582, naturalContentWidth = 764, minContentHeight = 693, naturalContentHeight = 713, verticalOverflow = "content" }
+end
+
 local function GetCharacterHoverMetrics(context)
     local count = #ArchiveCharacters(context)
     local fields = GetArchiveFields(true)
     local tableWidth = GetArchiveTableWidth(fields, GetArchiveColumnWidths(fields))
-    -- Include chrome, heading, table header and bottom padding.  The previous
-    -- formula counted only rows, which made a nominal 20-row preview clip at
-    -- roughly 13 rows before the scrollbar appeared.
+    local inset = Theme:GetMatrixInsets(true)
+    -- Keep this in exact lockstep with RefreshCharacters' preview anchors:
+    -- one summary line, the table header, compact row pitch and the shared
+    -- top/bottom inset.  This is an outer-frame metric, so it also includes
+    -- the preview title chrome.  A generic 168px prefix left a visible footer
+    -- below short account archives.
+    local contentHeight = inset.top + Theme.Font.assist + Theme.Space.md + Theme.Table.headerHeight + Theme.Space.xs + math.max(1, math.min(count, 20)) * 24 + inset.bottom
     return {
         minWidth = 420,
         preferredWidth = math.max(520, tableWidth + 72),
         minHeight = 150,
-        preferredHeight = 168 + math.min(count, 20) * 24,
+        preferredHeight = Theme.Geometry.titleBar + Theme.Geometry.shellBorder * 2 + contentHeight,
         verticalOverflow = "content",
     }
 end
 
-AccountView._pages.overview = { id = "overview", title = "概览", order = -20, internal = true, previewEnabled = true, Create = CreateOverview, Refresh = RefreshOverview }
-AccountView._pages.characters = { id = "characters", title = "角色档案", order = -10, internal = true, previewEnabled = true, Create = CreateCharacters, Refresh = RefreshCharacters, GetHoverMetrics = GetCharacterHoverMetrics }
-AccountView._pages.about = { id = "about", title = "关于", order = 990, internal = true, Create = CreateAbout, Refresh = RefreshAbout, GetLayoutMetrics = GetAboutLayoutMetrics }
+AccountView._pages.overview = { id = "overview", title = "概览", order = -20, internal = true, previewEnabled = true, Create = CreateOverview, Refresh = RefreshOverview, GetSurfaceMetrics = GetOverviewSurfaceMetrics }
+AccountView._pages.characters = { id = "characters", title = "角色档案", order = -10, internal = true, previewEnabled = true, Create = CreateCharacters, Refresh = RefreshCharacters, GetSurfaceMetrics = GetCharacterSurfaceMetrics, GetHoverMetrics = GetCharacterHoverMetrics }
+AccountView._pages.about = { id = "about", title = "关于", order = 990, internal = true, Create = CreateAbout, Refresh = RefreshAbout, GetSurfaceMetrics = GetAboutSurfaceMetrics }
 AccountView._pages.settings = { id = "settings", title = "设置", order = 999, internal = true, Create = CreateSettings, Refresh = RefreshSettings }
 Core.Events:Register("CHARACTER_ID_CHANGED", AccountView, function(self, oldID, newID)
     local settings = Settings()

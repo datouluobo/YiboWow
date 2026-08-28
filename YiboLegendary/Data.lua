@@ -4,14 +4,23 @@ Addon.Data = Data
 
 Data.BLACK_PRINCE_FACTION_ID = 1359
 Data.VALOR_CURRENCY_ID = 396
+Data.VALOR_QUEST_ID = 32476
+Data.VALOR_QUEST_TITLE = "勇气的试炼"
 Data.VALOR_TARGET = 1600
 Data.REPUTATION_RANKS = { FRIENDLY = 5, HONORED = 6, REVERED = 7, EXALTED = 8 }
 Data.REPUTATION_LABELS = { [4] = "中立", [5] = "友善", [6] = "尊敬", [7] = "崇敬", [8] = "崇拜" }
 
+-- 截图确认的商店价格；价格适用于力量印记和智慧印记。
+Data.VENDOR_PRICE_SNAPSHOTS = {
+    ["至尊石碎块"] = { strengthMark = 30, wisdomMark = 30 },
+    ["至尊石碎片"] = { strengthMark = 60, wisdomMark = 60 },
+    ["至尊石聚簇"] = { strengthMark = 15, wisdomMark = 15 },
+}
+
 local actions = {
     ["ORANGE-PRE-01"] = "达到 90 级后，前往迷雾栈道寻找拉西奥。",
     ["ORANGE-C1-01"] = "前往迷雾栈道，与拉西奥完成对话。",
-    ["ORANGE-C1-02"] = "通过天神尾王或每个 10 个至尊石碎块获得印记。",
+    ["ORANGE-C1-02"] = "通过天神尾王获得印记，或按当前商店价格兑换力量/智慧印记。",
     ["ORANGE-C1-03"] = "完成黑王子阵营日常或击杀相应敌人，将声望提升至尊敬。",
     ["ORANGE-C1-04"] = "进入永春台，击败惧之煞并取得任务物品。",
     ["ORANGE-C1-05"] = "返回迷雾栈道，向拉西奥领取第一章奖励。",
@@ -21,15 +30,15 @@ local actions = {
     ["ORANGE-C2-04"] = "完成黑王子阵营日常或击杀相应敌人，将声望提升至崇敬。",
     ["ORANGE-C2-05A"] = "排队寇魔古寺和碎银矿脉，分别取得一场胜利。",
     ["ORANGE-C2-05H"] = "排队寇魔古寺和碎银矿脉，分别取得一场胜利。",
-    ["ORANGE-C2-06"] = "前往卡桑琅丛林，击败敌对阵营指挥官。",
+    ["ORANGE-C2-06"] = "前往卡桑琅丛林敌对阵营营地，建议组队击杀指挥官；少数职业可单刷。",
     ["ORANGE-C2-07A"] = "完成联盟结尾剧情，并向拉西奥领取奖励。",
     ["ORANGE-C2-07H"] = "完成部落结尾剧情，并向拉西奥领取奖励。",
     ["ORANGE-C3-01"] = "前往迷雾栈道酒馆，与拉西奥联系。",
     ["ORANGE-C3-02"] = "前往酒馆二楼，与拉西奥会面。",
     ["ORANGE-C3-03"] = "进入雷电王座收集帝国秘史，并准备 40 个延极锭。",
     ["ORANGE-C3-04"] = "完成黑王子阵营日常或击杀相应敌人，将声望提升至崇拜。",
-    ["ORANGE-C3-05"] = "前往雷神岛，解锁并完成雷霆熔炉事件。",
-    ["ORANGE-C3-06"] = "前往雷神岛挑战纳拉克，用闪电长矛命中后存活。",
+    ["ORANGE-C3-05"] = "完成雷神岛单人战役，解锁雷神之基。",
+    ["ORANGE-C3-06"] = "单人：对纳拉克用长枪，跑到副本门口让 NPC 拉怪；1 分钟后再用一次，躲开追击数秒。",
     ["ORANGE-C3-07"] = "返回拉西奥处，领取传说多彩宝石。",
     ["ORANGE-C3-08"] = "继续挑战雷电王座，收集 12 个泰坦符文石。",
     ["ORANGE-C3-09"] = "进入雷电王座击败雷神，取得雷神之心。",
@@ -47,7 +56,7 @@ local actions = {
 local tableActions = {
     ["ORANGE-PRE-01"] = "迷雾栈道找拉西奥",
     ["ORANGE-C1-01"] = "迷雾栈道找拉西奥",
-    ["ORANGE-C1-02"] = "天神尾王或 10 碎块换印记",
+    ["ORANGE-C1-02"] = "天神尾王掉落或按商店当前价格兑换印记",
     ["ORANGE-C1-03"] = "完成黑王子日常提升声望",
     ["ORANGE-C1-04"] = "进入永春台击败惧之煞",
     ["ORANGE-C1-05"] = "迷雾栈道找拉西奥",
@@ -57,15 +66,15 @@ local tableActions = {
     ["ORANGE-C2-04"] = "完成黑王子日常提升声望",
     ["ORANGE-C2-05A"] = "排队两张战场并获胜",
     ["ORANGE-C2-05H"] = "排队两张战场并获胜",
-    ["ORANGE-C2-06"] = "卡桑琅丛林击杀指挥官",
+    ["ORANGE-C2-06"] = "卡桑琅丛林敌对营地击杀指挥官（建议组队）",
     ["ORANGE-C2-07A"] = "完成联盟结尾剧情",
     ["ORANGE-C2-07H"] = "完成部落结尾剧情",
     ["ORANGE-C3-01"] = "迷雾栈道酒馆找拉西奥",
     ["ORANGE-C3-02"] = "前往酒馆二楼",
     ["ORANGE-C3-03"] = "雷电王座收集帝国秘史并制作延极锭",
     ["ORANGE-C3-04"] = "完成黑王子日常提升声望",
-    ["ORANGE-C3-05"] = "雷神岛完成雷霆熔炉",
-    ["ORANGE-C3-06"] = "雷神岛挑战纳拉克",
+    ["ORANGE-C3-05"] = "完成雷神岛单人战役，解锁雷神之基",
+    ["ORANGE-C3-06"] = "纳拉克用长枪 → NPC 拉怪 → 1 分钟后再用 → 躲避",
     ["ORANGE-C3-07"] = "返回拉西奥处",
     ["ORANGE-C3-08"] = "挑战雷电王座收集符文石",
     ["ORANGE-C3-09"] = "雷电王座击败雷神",
@@ -93,15 +102,15 @@ local definitions = {
     { id="ORANGE-C2-04", questId=32429, chapter=2, name="王子的追猎", objective="黑王子声望达到崇敬。", requires={"ORANGE-C2-03"}, reputation="REVERED" },
     { id="ORANGE-C2-05A", questId=32389, chapter=2, name="雄狮怒吼", objective="寇魔古寺、碎银矿脉各取得 1 场胜利。", requires={"ORANGE-C2-04"}, faction="Alliance" },
     { id="ORANGE-C2-05H", questId=32431, chapter=2, name="为了部落的荣耀", objective="寇魔古寺、碎银矿脉各取得 1 场胜利。", requires={"ORANGE-C2-04"}, faction="Horde" },
-    { id="ORANGE-C2-06", questId=32388, chapter=2, name="指挥官易位", objective="击杀卡桑琅丛林敌对阵营指挥官。", requires={"ORANGE-C2-05A", "ORANGE-C2-05H"}, anyRequirement=true },
+    { id="ORANGE-C2-06", questId=32388, chapter=2, name="朝令夕改", objective="消灭敌对阵营指挥官：0/1。", objectiveByFaction={ Alliance="消灭血柄督军：0/1。", Horde="消灭大元帅双辫：0/1。" }, requires={"ORANGE-C2-05A", "ORANGE-C2-05H"}, anyRequirement=true, pvp=true, groupRecommended=true, soloPossible=true, startLocation="迷雾栈道·拉西奥" },
     { id="ORANGE-C2-07A", questId=32390, chapter=2, name="驭兽者的召唤", objective="完成联盟结尾剧情并领取奖励。", requires={"ORANGE-C2-06"}, faction="Alliance" },
     { id="ORANGE-C2-07H", questId=32432, chapter=2, name="部落之魂", objective="完成部落结尾剧情并领取奖励。", requires={"ORANGE-C2-06"}, faction="Horde" },
     { id="ORANGE-C3-01", questId=32457, chapter=3, name="雷电之王", objective="在迷雾栈道酒馆联系拉西奥。", requires={"ORANGE-C2-07A", "ORANGE-C2-07H"}, anyRequirement=true, phase=true },
     { id="ORANGE-C3-02", questId=32590, chapter=3, name="楼上见", objective="前往酒馆二楼会见拉西奥。", requires={"ORANGE-C3-01"} },
     { id="ORANGE-C3-03", questId=32591, chapter=3, name="第一帝国的秘密", objective="帝国秘史 20 个；延极锭 40 个。", requires={"ORANGE-C3-02"} },
     { id="ORANGE-C3-04", questId=32592, chapter=3, name="我需要一位勇士", objective="黑王子声望达到崇拜。", requires={"ORANGE-C3-03"}, reputation="EXALTED" },
-    { id="ORANGE-C3-05", questId=32593, chapter=3, name="雷霆熔炉", objective="解锁雷霆熔炉并完成拉西奥的任务。", requires={"ORANGE-C3-04"} },
-    { id="ORANGE-C3-06", questId=32594, chapter=3, name="风暴之王的灵魂", objective="用闪电长矛刺中纳拉克并存活。", requires={"ORANGE-C3-05"} },
+    { id="ORANGE-C3-05", questId=32593, chapter=3, name="雷霆熔炉", objective="完成雷神岛单人战役，解锁雷神之基。", requires={"ORANGE-C3-04"}, soloCampaign=true },
+    { id="ORANGE-C3-06", questId=32594, chapter=3, name="暴风领主之魂", objective="解锁雷神之基 1 个；淬冰闪电长枪 1 把。", requires={"ORANGE-C3-05"}, soloPossible=true, itemCooldownSeconds=60 },
     { id="ORANGE-C3-07", questId=32595, chapter=3, name="天神之冠", objective="领取传说多彩宝石。", requires={"ORANGE-C3-06"} },
     { id="ORANGE-C3-08", questId=32596, chapter=3, name="泰坦的回响", objective="泰坦符文石 12 个。", requires={"ORANGE-C3-07"} },
     { id="ORANGE-C3-09", questId=32597, chapter=3, name="雷电之王的心脏", objective="击败雷神，取得雷神之心。", requires={"ORANGE-C3-08"} },
@@ -124,12 +133,50 @@ local function IsCompleted(questID)
     return type(query) == "function" and query(questID) == true
 end
 
+local function QuestLogIndex(questID)
+    -- Some Classic builds expose the modern lookup but return no index for
+    -- legacy quest records.  Try both APIs instead of letting the existence
+    -- of the first one suppress the second.
+    local index
+    if C_QuestLog and type(C_QuestLog.GetLogIndexForQuestID) == "function" then
+        index = C_QuestLog.GetLogIndexForQuestID(questID)
+    end
+    if (not index or index <= 0) and type(GetQuestLogIndexByID) == "function" then
+        index = GetQuestLogIndexByID(questID)
+    end
+    if index and index > 0 then return index end
+
+    -- Last-resort compatibility path for clients where direct ID lookup is
+    -- present but incomplete: scan the active quest log via its stable ID API.
+    local total = type(GetNumQuestLogEntries) == "function" and GetNumQuestLogEntries() or 0
+    for logIndex = 1, total do
+        if C_QuestLog and type(C_QuestLog.GetQuestIDForLogIndex) == "function" then
+            if C_QuestLog.GetQuestIDForLogIndex(logIndex) == questID then return logIndex end
+        end
+        if C_QuestLog and type(C_QuestLog.GetInfo) == "function" then
+            local info = C_QuestLog.GetInfo(logIndex)
+            if info and info.questID == questID then return logIndex end
+        end
+        -- Final fallback for the oldest tuple API.  It is only used while
+        -- scanning, never to reject an index already resolved by an ID API.
+        local title, _, _, isHeader, _, _, _, listedQuestID = GetQuestLogTitle(logIndex)
+        if not isHeader and listedQuestID == questID then return logIndex end
+        -- The Chinese MoP Classic client can expose neither ID lookup for
+        -- this legacy quest, while still returning its title in the log.
+        -- Use this narrow title fallback only for the tracked valor quest.
+        if not isHeader and questID == Data.VALOR_QUEST_ID and title == Data.VALOR_QUEST_TITLE then return logIndex end
+    end
+    return nil
+end
+
 local function QuestLogEntry(questID)
-    local query = (C_QuestLog and C_QuestLog.GetLogIndexForQuestID) or GetQuestLogIndexByID
-    local index = type(query) == "function" and query(questID)
+    local index = QuestLogIndex(questID)
     if not index or index <= 0 then return nil end
-    local title, _, _, _, _, _, _, questId = GetQuestLogTitle(index)
-    if questId ~= questID then return nil end
+    -- GetLogIndexForQuestID / GetQuestLogIndexByID has already resolved this
+    -- exact quest.  Do not validate a positional return value from
+    -- GetQuestLogTitle here: the legacy API's tuple differs by client build,
+    -- and a mismatched position made an active quest look absent.
+    local title = GetQuestLogTitle(index)
     local objectives = {}
     local count = GetNumQuestLeaderBoards and GetNumQuestLeaderBoards(index) or 0
     for i = 1, count do objectives[#objectives + 1] = GetQuestLogLeaderBoard(i, index) end
@@ -168,17 +215,36 @@ function Data:GetValorQuantity()
     return nil
 end
 
-function Data:TrackValorProgress(store, currencyID, eventQuantity, quantityChange, quantityGain)
+function Data:TrackValorProgress(store, currencyID, eventQuantity, quantityChange, quantityGainSource)
     local tracker = store.valorProgress or {}
     store.valorProgress = tracker
     local quantity = self:GetValorQuantity()
-    local active = QuestLogEntry(32476) ~= nil and not IsCompleted(32476)
+    local active = QuestLogEntry(self.VALOR_QUEST_ID) ~= nil and not IsCompleted(self.VALOR_QUEST_ID)
     if active and not tracker.active then
-        tracker.progress = 0
-        tracker.startedAt = Addon:GetTimestamp()
+        -- This is deliberately a fresh baseline, rather than the character's
+        -- current currency balance.  Valor earned before accepting the quest
+        -- (including before the addon was installed) is not recoverable and
+        -- must not be counted toward this quest objective.
+        local existingProgress = tonumber(tracker.progress)
+        -- A Classic API compatibility upgrade can make a task become
+        -- recognizable without the player ever leaving it.  Preserve its
+        -- existing cumulative value in that case instead of treating the
+        -- recognition change as a fresh acceptance.
+        if existingProgress == nil then
+            tracker.progress = 0
+        elseif existingProgress == 0 and (tonumber(tracker.lastGain) or 0) > 0 then
+            -- Repair the one-time reset made by earlier builds: this quest is
+            -- non-repeatable, so a retained last gain with a zeroed progress
+            -- can only be an interrupted saved cumulative value.
+            tracker.progress = math.min(self.VALOR_TARGET, tonumber(tracker.lastGain))
+            tracker.recoveredFromLastGain = true
+        else
+            tracker.progress = math.min(self.VALOR_TARGET, existingProgress)
+        end
+        tracker.startedAt = tracker.startedAt or Addon:GetTimestamp()
         tracker.lastQuantity = quantity
         tracker.active = true
-        return 0
+        return tracker.progress
     end
     if not active then
         -- 任务已完成或不在任务日志时，不要清掉已记录的累计值；它仍然是
@@ -188,11 +254,20 @@ function Data:TrackValorProgress(store, currencyID, eventQuantity, quantityChang
         return nil
     end
 
+    -- The reset happened in builds that had already marked the quest active,
+    -- so repair that saved state once as well.  This is intentionally guarded
+    -- and applies only to this non-repeatable cumulative quest.
+    if (tonumber(tracker.progress) or 0) == 0 and (tonumber(tracker.lastGain) or 0) > 0 and not tracker.recoveredFromLastGain then
+        tracker.progress = math.min(self.VALOR_TARGET, tonumber(tracker.lastGain))
+        tracker.recoveredFromLastGain = true
+    end
+
     local gained = 0
     if currencyID == self.VALOR_CURRENCY_ID then
-        -- MoP Classic 的 CURRENCY_DISPLAY_UPDATE 会报告本次获得量。
-        -- 它比余额差值可靠，因为玩家可以在任务期间花掉勇气。
-        local reportedGain = tonumber(quantityGain) or tonumber(quantityChange)
+        -- CURRENCY_DISPLAY_UPDATE: currencyID, balance, quantityChange,
+        -- quantityGainSource, destroyReason.  The fourth argument is an
+        -- enum source, not a point value; only quantityChange is the gain.
+        local reportedGain = tonumber(quantityChange)
         if reportedGain and reportedGain > 0 then
             gained = reportedGain
         end
@@ -204,6 +279,7 @@ function Data:TrackValorProgress(store, currencyID, eventQuantity, quantityChang
     if gained > 0 then
         tracker.progress = math.min(self.VALOR_TARGET, (tonumber(tracker.progress) or 0) + gained)
         tracker.lastGain = gained
+        tracker.lastGainSource = quantityGainSource
         tracker.updatedAt = Addon:GetTimestamp()
     end
     tracker.active = true
@@ -229,7 +305,11 @@ function Data:BuildSnapshot(character, phaseAvailability, valorProgress)
             local entry = { definitionId = definition.id, questId = definition.questId, status = "locked", definition = definition }
             entry.completed = IsCompleted(definition.questId)
             entry.log = QuestLogEntry(definition.questId)
-            if definition.valor then entry.valorProgress = valorProgress end
+            -- The quest log is authoritative for whether the 1,600-point
+            -- counter should be displayed.  Supplying a zero here also makes
+            -- the first accepted-task snapshot render as 0/1,600 even before
+            -- a later currency event arrives.
+            if definition.valor and entry.log then entry.valorProgress = tonumber(valorProgress) or 0 end
             if entry.completed then
                 entry.status = "completed"
             elseif entry.log then

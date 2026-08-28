@@ -14,13 +14,32 @@ local STATUS_COLORS = {
     unavailable = { 1, 0.48, 0.5 },
 }
 
-local ROW_HEIGHT = Theme.Size.standard
-local ADAPTIVE_HIDE_ORDER = { "action", "task" }
+local ROW_HEIGHT = Theme.Table.rowHeight
+-- A preview shell and its anchored table pass through UI-scale rounding.
+-- Keep one small track of slack so columns whose measured sum exactly matches
+-- the shell do not become a false extra page after that rounding.
+local HOVER_LAYOUT_SLACK = Theme.Space.xs
+-- The full account page should present its enabled business fields together.
+-- Reserve the scrollbar gutter in its natural-width contract so all tracks
+-- still fit after a long roster makes the vertical bar visible.
+local MAIN_LAYOUT_SLACK = Theme.Geometry.scrollbarGutter
+-- The compact summary line needs a little extra room for the shared 12px
+-- assist style.  Keep that breathing room in the surface contract so a
+-- mathematically exact 12-row page does not grow a false scrollbar and lose
+-- a whole data column to its gutter.
+local SUMMARY_LINE_HEIGHT = Theme.Font.assist + Theme.Space.xxs
+-- A matrix column owns a track plus this documented inner padding on both
+-- sides.  The same track value is used for header, body and sizing metrics.
+local CELL_INSET = Theme.Table.cellInset
+local CELL_PADDING = Theme.Table.cellPadding
+-- Hover is a compact projection.  Keep its semantic first column readable,
+-- then share whatever remains between enabled preview fields before asking
+-- the common Core pager whether an unusually narrow screen still overflows.
 local COLUMNS = {
-    { id = "character", key = "character", title = "角色", width = 200, minWidth = 145, defaultVisible = true },
-    { id = "task", key = "task", title = "当前任务", width = 220, minWidth = 150, defaultVisible = true },
-    { id = "objective", key = "objective", title = "目标", width = 400, minWidth = 260, defaultVisible = true },
-    { id = "action", key = "action", title = "行动", width = 300, minWidth = 220, defaultVisible = true },
+    { id = "character", key = "character", title = "角色", width = 160, minWidth = 140, previewMinWidth = 160, previewMaxWidth = 210, defaultVisible = true },
+    { id = "task", key = "task", title = "当前任务", width = 160, minWidth = 140, previewMinWidth = 150, previewMaxWidth = 220, defaultVisible = false },
+    { id = "objective", key = "objective", title = "目标", width = 300, minWidth = 230, previewMinWidth = 180, previewMaxWidth = 360, defaultVisible = true },
+    { id = "action", key = "action", title = "行动", width = 190, minWidth = 160, previewMinWidth = 180, previewMaxWidth = 320, defaultVisible = false },
 }
 
 local function CurrentSnapshot()
@@ -73,10 +92,15 @@ end
 local function ObjectiveText(snapshot, current)
     local definition = CurrentDefinition(current)
     local objective
-    if definition.valor and current.valorProgress ~= nil then
-        objective = string.format("累计获得勇气点数：%s/%s", FormatNumber(current.valorProgress), FormatNumber(Addon.Data.VALOR_TARGET))
+    if definition.valor then
+        -- Always own this target's display.  Some Classic clients expose the
+        -- task as available before their quest-log API resolves it, but the
+        -- current task row must still show the cumulative 1,600-point target.
+        objective = string.format("累计获得勇气点数%d/%d", tonumber(current.valorProgress) or 0, Addon.Data.VALOR_TARGET)
     else
-        objective = current.log and #current.log.objectives > 0 and table.concat(current.log.objectives, "；") or definition.objective
+        objective = current.log and #current.log.objectives > 0 and table.concat(current.log.objectives, "；")
+            or (definition.objectiveByFaction and definition.objectiveByFaction[snapshot and snapshot.faction])
+            or definition.objective
     end
     local reputationTarget = snapshot and snapshot.reputationTarget
     if reputationTarget then
@@ -124,8 +148,9 @@ function UI:GetVisibleCharacters(characters)
     return visible
 end
 
-function UI:CreateText(parent, template, width)
+function UI:CreateText(parent, template, width, size)
     local text = parent:CreateFontString(nil, "OVERLAY", template)
+    Theme:ApplyTextStyle(text, size or (template == "GameFontNormalLarge" and Theme.Font.title or Theme.Font.assist))
     text:SetJustifyH("LEFT")
     text:SetJustifyV("MIDDLE")
     text:SetWordWrap(false)
@@ -137,14 +162,14 @@ function UI:CreateHeader(parent)
     local header = CreateFrame("Frame", nil, parent)
     header:SetHeight(ROW_HEIGHT)
     header:SetPoint("TOPLEFT", Theme.Space.lg, -52)
-    header:SetPoint("TOPRIGHT", -38, -52)
+    header:SetPoint("TOPRIGHT", -Theme.Space.lg, -52)
     header.bg = header:CreateTexture(nil, "BACKGROUND")
     header.bg:SetAllPoints(header)
     header.bg:SetColorTexture(C.chrome[1], C.chrome[2], C.chrome[3], 0.96)
     header.cells = {}
-    local offset = 10
+    local offset = CELL_INSET
     for _, column in ipairs(COLUMNS) do
-        local text = self:CreateText(header, "GameFontNormalSmall", column.width - 8)
+        local text = self:CreateText(header, "GameFontNormalSmall", column.width - CELL_PADDING, Theme.Font.assist)
         text:SetPoint("LEFT", offset, 0)
         text:SetText(column.title)
         text:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
@@ -158,13 +183,14 @@ function UI:CreateAccountPage(parent)
     local frame = CreateFrame("Frame", nil, parent)
     frame:SetAllPoints(parent)
     frame.summary = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    Theme:ApplyTextStyle(frame.summary, Theme.Font.assist)
     frame.summary:SetPoint("TOPLEFT", Theme.Space.lg, -Theme.Space.md)
     frame.summary:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
     frame.header = self:CreateHeader(frame)
 
     frame.scroll = Theme:CreateScrollFrame(frame)
     frame.scroll:SetPoint("TOPLEFT", Theme.Space.lg, -88)
-    frame.scroll:SetPoint("BOTTOMRIGHT", -38, Theme.Space.md)
+    frame.scroll:SetPoint("BOTTOMRIGHT", -Theme.Space.lg, Theme.Space.md)
     frame.content = CreateFrame("Frame", nil, frame.scroll)
     frame.content:SetWidth(1)
     frame.scroll:SetScrollChild(frame.content)
@@ -200,8 +226,8 @@ function UI:CreateRow(index)
     row.currentBorder.right:SetPoint("TOPRIGHT"); row.currentBorder.right:SetPoint("BOTTOMRIGHT"); row.currentBorder.right:SetWidth(1)
     row.cells = {}
     for _, column in ipairs(COLUMNS) do
-        local text = self:CreateText(row, "GameFontNormalSmall", column.width - 8)
-        text:SetPoint("LEFT", 10, 0)
+        local text = self:CreateText(row, "GameFontNormalSmall", column.width - CELL_PADDING, Theme.Font.body)
+        text:SetPoint("LEFT", CELL_INSET, 0)
         row.cells[column.key] = text
     end
     Theme:BindTooltip(row, nil, row.tooltipLines or {})
@@ -223,24 +249,29 @@ function UI:GetNaturalColumnWidths()
     local widths = {}
     for _, column in ipairs(COLUMNS) do
         if self:IsConfiguredColumnVisible(column) then
-            local width = EstimateTextWidth(column.title) + 20
+            local width = EstimateTextWidth(column.title) + CELL_PADDING
             local headerCell = frame and frame.header and frame.header.cells[column.key]
-            if headerCell and headerCell.GetStringWidth then width = math.max(width, headerCell:GetStringWidth() + 20) end
+            if headerCell and headerCell.GetStringWidth then width = math.max(width, headerCell:GetStringWidth() + CELL_PADDING) end
             for _, row in ipairs((frame and frame.rows) or {}) do
                 local cell = row.cells[column.key]
-                if row:IsShown() and cell and cell.GetStringWidth then width = math.max(width, cell:GetStringWidth() + 20) end
+                if row:IsShown() and cell and cell.GetStringWidth then width = math.max(width, cell:GetStringWidth() + CELL_PADDING) end
             end
-            widths[column.id] = math.max(column.minWidth or 40, math.ceil(width))
+            -- Row text must never decide a column's layout width.  In
+            -- particular, a long current-task name used to consume an entire
+            -- horizontal page and push the objective onto the next page.
+            widths[column.id] = math.max(column.minWidth or 40, math.min(column.width or math.huge, math.ceil(width)))
         end
     end
     return widths
 end
 
-function UI:GetEstimatedColumnWidths(context)
+function UI:GetEstimatedColumnWidths(context, preview)
     local widths = {}
     for _, column in ipairs(COLUMNS) do
         if context:GetFieldVisible(column.id) then
-            widths[column.id] = math.max(column.minWidth or 40, EstimateTextWidth(column.title) + 20)
+            local minimum = preview and column.previewMinWidth or column.minWidth or 40
+            local maximum = preview and column.previewMaxWidth or column.width or math.huge
+            widths[column.id] = math.max(minimum, math.min(maximum, EstimateTextWidth(column.title) + CELL_PADDING))
         end
     end
     for _, item in ipairs(self:GetVisibleCharacters(context and context.characters)) do
@@ -262,7 +293,8 @@ function UI:GetEstimatedColumnWidths(context)
         end
         for _, column in ipairs(COLUMNS) do
             if widths[column.id] and values[column.id] then
-                widths[column.id] = math.max(widths[column.id], EstimateTextWidth(values[column.id]) + 20)
+                local maximum = preview and column.previewMaxWidth or column.width or math.huge
+                widths[column.id] = math.max(widths[column.id], math.min(maximum, EstimateTextWidth(values[column.id]) + CELL_PADDING))
             end
         end
     end
@@ -271,64 +303,107 @@ end
 
 function UI:ApplyColumnLayout()
     local frame = self.details
-    local viewportWidth = (frame.scroll:GetWidth() or 0) - 2
-    if viewportWidth <= 0 then viewportWidth = (frame:GetWidth() or 0) - 22 end
-    if viewportWidth <= 0 then viewportWidth = 420 end
-    local availableWidth = math.max(1, viewportWidth - 18)
-    local naturalWidths = self:GetNaturalColumnWidths()
-    local visibleColumns, preferredWidth = {}, 0
+    local compactProjection = self.accountContext and self.accountContext.preview == true
+    local inset = Theme:GetMatrixInsets(compactProjection)
+    local measuredViewportWidth = frame.scroll:GetWidth() or 0
+    -- ScrollFrame can retain its former scroll-child width for one or more
+    -- layout passes.  The page frame is the authoritative surface: its two
+    -- directional insets are exactly the anchors used by this table.
+    -- Prefer that settled width whenever it is available, so neither a normal
+    -- page nor a hover preview creates phantom field pages from stale width.
+    local settledViewportWidth = (frame:GetWidth() or 0) - inset.left - inset.right
+    local viewportWidth = settledViewportWidth > 1 and settledViewportWidth or measuredViewportWidth
+    if viewportWidth <= 1 then return end
+    local contentHeight = 0
+    for _, row in ipairs(frame.rows or {}) do if row:IsShown() then contentHeight = contentHeight + ROW_HEIGHT end end
+    -- Reserve the shared scrollbar gutter only when this exact table really
+    -- overflows vertically.  A hidden scrollbar never consumes a field's
+    -- width budget or creates an avoidable compact-preview page.
+    local scrollbarGutter = contentHeight > (frame.scroll:GetHeight() or 0) and Theme.Geometry.scrollbarGutter or 0
+    -- The scrollbar occupies Core's 16px gutter inside this viewport.  The
+    -- remaining budget contains both matrix cell insets and column tracks.
+    local columnBudget = math.max(1, viewportWidth - scrollbarGutter - CELL_PADDING)
+    local naturalWidths = compactProjection and self:GetEstimatedColumnWidths(self.accountContext, true) or self:GetNaturalColumnWidths()
+    local function ColumnWidth(column)
+        if compactProjection then return naturalWidths[column.id] or column.previewMinWidth or column.minWidth or 40 end
+        return math.max(column.minWidth or 40, naturalWidths[column.id] or column.width or 40)
+    end
+    local configuredColumns = {}
     for _, column in ipairs(COLUMNS) do
         if self:IsConfiguredColumnVisible(column) then
-            visibleColumns[#visibleColumns + 1] = column
-            preferredWidth = preferredWidth + (naturalWidths[column.id] or column.width)
+            configuredColumns[#configuredColumns + 1] = column
         end
     end
-
-    local function RequiredWidth()
-        local width = 0
-        for _, column in ipairs(visibleColumns) do width = width + (naturalWidths[column.id] or column.minWidth or 40) end
-        return width
+    local fixedColumns, pageableColumns = {}, {}
+    for _, column in ipairs(configuredColumns) do
+        if column.id == "character" then fixedColumns[#fixedColumns + 1] = column else pageableColumns[#pageableColumns + 1] = column end
     end
-    for _, columnID in ipairs(ADAPTIVE_HIDE_ORDER) do
-        if RequiredWidth() <= availableWidth then break end
-        for index = #visibleColumns, 1, -1 do
-            if visibleColumns[index].id == columnID then
-                preferredWidth = preferredWidth - (naturalWidths[visibleColumns[index].id] or visibleColumns[index].width)
-                table.remove(visibleColumns, index)
-                break
-            end
-        end
+    local fixedWidth = 0
+    for _, column in ipairs(fixedColumns) do fixedWidth = fixedWidth + ColumnWidth(column) end
+    local function FieldWidth(column)
+        return ColumnWidth(column)
     end
+    local visiblePage, pageInfo
+    if not compactProjection then
+        -- A main window is allowed to grow and must compare every enabled
+        -- business field side by side.  Its surface metrics include the
+        -- necessary gutter above; only a compact hover may field-page.
+        visiblePage = pageableColumns
+        pageInfo = { page = 1, pages = 1, first = 1, last = #pageableColumns, total = #pageableColumns }
+    else
+        -- Hover tracks use their own content-aware bounds.  Paginate only if
+        -- the safe screen area genuinely cannot contain that projection.
+        visiblePage, pageInfo = Addon.Core.AccountView:GetColumnPageByWidth("legendary", "fields", pageableColumns, columnBudget, fixedWidth, FieldWidth)
+    end
+    if compactProjection and pageInfo.pages > 1 then
+        local pagerWidth = Addon.Core.AccountView:GetColumnPagerWidth("字段", #pageableColumns)
+        visiblePage, pageInfo = Addon.Core.AccountView:GetColumnPageByWidth("legendary", "fields", pageableColumns, math.max(1, columnBudget - pagerWidth), fixedWidth, FieldWidth)
+    end
+    local visibleColumns = {}
+    for _, column in ipairs(fixedColumns) do visibleColumns[#visibleColumns + 1] = column end
+    for _, column in ipairs(visiblePage) do visibleColumns[#visibleColumns + 1] = column end
+    Addon.Core.AccountView:UpdateColumnPager(frame, "legendary", "fields", pageInfo, frame.header, "字段")
 
     self.renderColumns = {}
     for _, column in ipairs(visibleColumns) do self.renderColumns[column.id] = true end
-    preferredWidth = 0
-    for _, column in ipairs(visibleColumns) do preferredWidth = preferredWidth + (naturalWidths[column.id] or column.width) end
-    local scale = math.min(1, availableWidth / math.max(1, preferredWidth))
-    local offset = 10
+    local usedWidth = 0
+    for _, column in ipairs(visibleColumns) do
+        column.yiboWidth = ColumnWidth(column)
+        usedWidth = usedWidth + column.yiboWidth
+    end
+    -- The pager already explains which fields are on this page.  Fill the
+    -- final visible track even on a paged result; otherwise a one-field last
+    -- page looks like missing content and leaves most of the matrix blank.
+    if #visibleColumns > 0 and usedWidth < columnBudget then
+        visibleColumns[#visibleColumns].yiboWidth = visibleColumns[#visibleColumns].yiboWidth + (columnBudget - usedWidth)
+    end
+    local offset = CELL_INSET
     for _, column in ipairs(COLUMNS) do
         local visible = self:IsColumnVisible(column)
         local headerCell = frame.header.cells[column.key]
         headerCell:SetShown(visible)
         if visible then
-            local width = math.max(column.minWidth or 40, math.floor((naturalWidths[column.id] or column.width) * scale))
+            local width = column.yiboWidth
             headerCell:ClearAllPoints()
             headerCell:SetPoint("LEFT", offset, 0)
-            headerCell:SetWidth(width - 8)
+            headerCell:SetWidth(math.max(1, width - CELL_PADDING))
         end
         for _, row in ipairs(frame.rows) do
             local cell = row.cells[column.key]
             cell:SetShown(visible)
             if visible then
-                local width = math.max(column.minWidth or 40, math.floor((naturalWidths[column.id] or column.width) * scale))
+                local width = column.yiboWidth
                 cell:ClearAllPoints()
                 cell:SetPoint("LEFT", offset, 0)
-                cell:SetWidth(width - 8)
+                cell:SetWidth(math.max(1, width - CELL_PADDING))
             end
         end
-        if visible then offset = offset + math.max(column.minWidth or 40, math.floor((naturalWidths[column.id] or column.width) * scale)) end
+        if visible then offset = offset + column.yiboWidth end
     end
-    local contentWidth = math.max(1, math.min(viewportWidth, offset + 18))
+    -- If an actual vertical bar is present, its gutter belongs to the
+    -- viewport rather than the final data cell.  Normal views retain only
+    -- their standard right inset.
+    local contentWidth = math.max(1, offset + CELL_INSET)
     frame.content:SetWidth(contentWidth)
 end
 
@@ -375,8 +450,18 @@ function UI:UpdateRow(row, character, snapshot, currentCharacter, index)
     local statusColor = STATUS_COLORS[current.status] or STATUS_COLORS.locked
     row.cells.task:SetText(TaskName(current))
     row.cells.task:SetTextColor(0.92, 0.96, 0.98)
-    row.cells.objective:SetText(ObjectiveText(snapshot, current))
-    row.cells.objective:SetTextColor(0.76, 0.86, 0.88)
+    local definition = CurrentDefinition(current)
+    if definition.valor then
+        local value = tostring(tonumber(current.valorProgress) or 0)
+        -- FontString has no stable per-span weight support across Classic
+        -- clients.  Use its native inline color markup instead of separate
+        -- overlapping FontStrings, which can be clipped after a re-layout.
+        row.cells.objective:SetText(string.format("累计获得勇气点数 |cff20e070%s|r|cffc2dbe0/%d|r", value, Addon.Data.VALOR_TARGET))
+        row.cells.objective:SetTextColor(0.76, 0.86, 0.88)
+    else
+        row.cells.objective:SetText(ObjectiveText(snapshot, current))
+        row.cells.objective:SetTextColor(0.76, 0.86, 0.88)
+    end
     row.cells.action:SetText(Addon.Data:GetTableAction(current))
     row.cells.action:SetTextColor(0.36, 0.9, 0.88)
     row.tooltipLines[#row.tooltipLines + 1] = TooltipLine("状态：" .. (STATUS[current.status] or "未知"), statusColor)
@@ -390,6 +475,17 @@ function UI:RefreshDetails(context)
     if not frame then return end
     local previousScroll = frame.scroll:GetVerticalScroll() or 0
     self.accountContext = context
+    local inset = Theme:GetMatrixInsets(context and context.preview)
+    frame.header:ClearAllPoints()
+    -- The summary is the only fixed page element.  Anchor the table to it so
+    -- a hidden or resized summary can never leave the historical 52px gap.
+    frame.header:SetPoint("TOPLEFT", frame.summary, "BOTTOMLEFT", 0, -Theme.Space.md)
+    frame.header:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -inset.right, 0)
+    frame.scroll:ClearAllPoints()
+    frame.scroll:SetPoint("TOPLEFT", frame.header, "BOTTOMLEFT", 0, -Theme.Space.xs)
+    frame.scroll:SetPoint("BOTTOMRIGHT", -inset.right, inset.bottom)
+    frame.summary:ClearAllPoints()
+    frame.summary:SetPoint("TOPLEFT", frame, "TOPLEFT", inset.left, -inset.top)
     local currentCharacter = Addon.Core.Characters:GetCurrent()
     local visible = self:GetVisibleCharacters(context and context.characters)
     for index, item in ipairs(visible) do
@@ -400,12 +496,27 @@ function UI:RefreshDetails(context)
     for index = #visible + 1, #frame.rows do frame.rows[index]:Hide() end
     self:ApplyColumnLayout()
     local contentHeight = #visible * ROW_HEIGHT
-    local viewportHeight = frame.scroll:GetHeight() or 500
-    frame.content:SetHeight(math.max(contentHeight, viewportHeight))
+    frame.content:SetHeight(math.max(1, contentHeight))
     frame.scroll:SetContentHeight(frame.content:GetHeight())
+    local viewportHeight = frame.scroll:GetHeight() or 0
     frame.scroll:SetVerticalScroll(math.min(previousScroll, math.max(0, contentHeight - viewportHeight)))
     frame.scroll:RefreshScrollbar()
     frame.summary:SetText(string.format("已同步角色：|cff20e070%d|r    悬停行可查看完整文本", #visible))
+
+    -- ShowPreview sizes the shell before this page instance exists.  WoW may
+    -- therefore report its ScrollFrame width one layout pass late.  Reflow in
+    -- the next frame with the settled viewport, so the Core pager receives
+    -- the actual width rather than preserving an erroneous first-page split.
+    if C_Timer and C_Timer.After and not frame.yiboLegendaryReflowQueued then
+        frame.yiboLegendaryReflowQueued = true
+        local refreshContext = context
+        C_Timer.After(0, function()
+            frame.yiboLegendaryReflowQueued = nil
+            if UI.details == frame and UI.accountContext == refreshContext and frame:IsShown() then
+                UI:ApplyColumnLayout()
+            end
+        end)
+    end
 end
 
 function UI:ToggleDetails()
@@ -423,44 +534,86 @@ function UI:SetPreviewFieldVisible(fieldID, visible)
 end
 
 function UI:GetPreviewSize(context)
-    local rows = #self:GetVisibleCharacters(context and context.characters)
-    local widths = self:GetEstimatedColumnWidths(context)
-    local width = 80
-    for _, column in ipairs(COLUMNS) do
-        if context:GetFieldVisible(column.id) then width = width + (widths[column.id] or column.width) end
-    end
-    -- AccountView 的标题栏、摘要、表头和底部留白共占约 160 像素。
-    -- 预览固定最多 20 行，必须让每一行在首屏完整出现，不能依赖滚动条。
-    return math.max(420, width), math.max(150, 160 + (rows * ROW_HEIGHT))
+    local metrics = self:GetSurfaceMetrics(context)
+    return metrics.naturalContentWidth + Theme.Geometry.shellBorder * 2,
+        metrics.naturalContentHeight + Theme.Geometry.titleBar + Theme.Geometry.shellBorder * 2
 end
 
 function UI:GetLayoutMetrics(context)
-    local widths = self:GetEstimatedColumnWidths(context)
-    local width = 0
-    for _, column in ipairs(COLUMNS) do
-        if context:GetFieldVisible(column.id) then width = width + (widths[column.id] or column.width or column.minWidth or 54) end
-    end
-    local rows = #self:GetVisibleCharacters(context and context.characters)
+    local metrics = self:GetSurfaceMetrics(context)
+    local geometry = Theme.Geometry
+    local shellWidth = geometry.navigation + geometry.shellBorder * 2 + 1
+    local shellHeight = geometry.titleBar + geometry.shellBorder * 2
     return {
-        minWidth = math.max(582, width + 60),
-        preferredWidth = math.max(582, width + 60),
-        minHeight = 383,
-        preferredHeight = math.max(383, 104 + (rows * ROW_HEIGHT)),
-        horizontalOverflow = "content",
-        verticalOverflow = "content",
+        minWidth = metrics.minContentWidth + shellWidth,
+        preferredWidth = metrics.naturalContentWidth + shellWidth,
+        minHeight = metrics.minContentHeight + shellHeight,
+        preferredHeight = metrics.naturalContentHeight + shellHeight,
+        horizontalOverflow = metrics.horizontalOverflow,
+        verticalOverflow = metrics.verticalOverflow,
     }
 end
 
 function UI:GetHoverMetrics(context)
-    local width, height = self:GetPreviewSize(context)
+    local metrics = self:GetSurfaceMetrics(context)
     return {
-        minWidth = 420,
-        preferredWidth = width,
-        minHeight = 150,
-        preferredHeight = height,
-        horizontalOverflow = "content",
+        minWidth = metrics.minContentWidth + Theme.Geometry.shellBorder * 2,
+        preferredWidth = metrics.naturalContentWidth + Theme.Geometry.shellBorder * 2,
+        minHeight = metrics.minContentHeight + Theme.Geometry.titleBar + Theme.Geometry.shellBorder * 2,
+        preferredHeight = metrics.naturalContentHeight + Theme.Geometry.titleBar + Theme.Geometry.shellBorder * 2,
+        horizontalOverflow = metrics.horizontalOverflow,
+        verticalOverflow = metrics.verticalOverflow,
+    }
+end
+
+function UI:GetSurfaceMetrics(context)
+    local preview = context and context.preview == true
+    local widths = self:GetEstimatedColumnWidths(context, preview)
+    local width, minimumWidth, rows = 0, 0, #self:GetVisibleCharacters(context and context.characters)
+    for _, column in ipairs(COLUMNS) do
+        if context:GetFieldVisible(column.id) then
+            if preview then
+                -- Hover columns intentionally follow their own content-aware
+                -- bounds.  Objectives and actions need more room than a task
+                -- title; equal-width tracks were compact but unreadable.
+                width = width + (widths[column.id] or column.previewMinWidth or column.minWidth or 40)
+                minimumWidth = minimumWidth + (column.previewMinWidth or column.minWidth or 40)
+            else
+                width = width + (widths[column.id] or column.minWidth or 40)
+                minimumWidth = minimumWidth + (column.minWidth or 40)
+            end
+        end
+    end
+    local inset = Theme:GetMatrixInsets(context.preview)
+    local layoutSlack = preview and HOVER_LAYOUT_SLACK or MAIN_LAYOUT_SLACK
+    -- Surface metrics describe the complete matrix: external directional
+    -- insets plus the documented left/right cell insets around its tracks.
+    -- Hover reserves a compact gap for UI-scale rounding; the full page
+    -- reserves its scrollbar gutter so all enabled fields stay side by side.
+    -- The layout fills either reserve into the final visible column.
+    local naturalWidth = width + CELL_PADDING + inset.left + inset.right + layoutSlack
+    if context and context.surfaceAvailableWidth then naturalWidth = math.min(naturalWidth, context.surfaceAvailableWidth) end
+    return {
+        minContentWidth = minimumWidth + CELL_PADDING + inset.left + inset.right + layoutSlack,
+        naturalContentWidth = naturalWidth,
+        minContentHeight = inset.top + SUMMARY_LINE_HEIGHT + Theme.Space.md + ROW_HEIGHT + Theme.Space.xs + ROW_HEIGHT + inset.bottom,
+        naturalContentHeight = inset.top + SUMMARY_LINE_HEIGHT + Theme.Space.md + ROW_HEIGHT + Theme.Space.xs + rows * ROW_HEIGHT + inset.bottom,
+        fixedLeftWidth = (preview and COLUMNS[1].previewMinWidth or COLUMNS[1].minWidth) + CELL_INSET,
+        fixedTopHeight = ROW_HEIGHT,
+        horizontalOverflow = "paginate",
         verticalOverflow = "content",
     }
+end
+
+function UI:GetMeasuredHeight()
+    local frame = self.details
+    if not (frame and frame.scroll and frame.content) then return nil end
+    local chrome = (frame:GetHeight() or 0) - (frame.scroll:GetHeight() or 0)
+    if chrome <= 0 then return nil end
+    -- Keep only the summary, column header, rendered rows and the documented
+    -- bottom inset.  The scroll viewport must not become artificial blank
+    -- space when every synchronized character already fits on screen.
+    return chrome + (frame.content:GetHeight() or 0) + Theme:GetMatrixInsets(UI.accountContext and UI.accountContext.preview).bottom
 end
 
 function UI:PrintStatus()
@@ -476,6 +629,22 @@ function UI:Initialize()
         order = 20,
         defaultEnabled = true,
         previewEnabled = true,
+        scope = { mode = "realms", allTitle = "所有服务器" },
+        characterFilter = {
+            defaultExpression = "",
+            GetExpression = function() return Addon.db.settings.levelExpr or "" end,
+            SetExpression = function(expression)
+                local valid, normalized, badToken = Addon.Core.LevelFilter:Validate(expression or "")
+                if not valid then return false, badToken end
+                Addon.db.settings.levelExpr = normalized
+                if Addon.UI then Addon.UI:Refresh() end
+                return true, normalized
+            end,
+        },
+        HasCharacterSnapshot = function(character)
+            local store = Addon.db and Addon.db.byCharacter and Addon.db.byCharacter[character.id]
+            return IsEligibleCharacter(character) and store and store.snapshot ~= nil
+        end,
         GetEligibleCharacters = function(characters, context)
             return UI:GetEligibleCharacters(characters, context)
         end,
@@ -486,9 +655,8 @@ function UI:Initialize()
         fields = COLUMNS,
         GetPreviewFields = function() return UI:GetPreviewColumns() end,
         SetPreviewFieldVisible = function(fieldID, visible) UI:SetPreviewFieldVisible(fieldID, visible) end,
-        GetPreviewSize = function(context) return UI:GetPreviewSize(context) end,
-        GetHoverMetrics = function(context) return UI:GetHoverMetrics(context) end,
-        GetLayoutMetrics = function(context) return UI:GetLayoutMetrics(context) end,
+        GetSurfaceMetrics = function(context) return UI:GetSurfaceMetrics(context) end,
+        GetMeasuredHeight = function() return UI:GetMeasuredHeight() end,
         Create = function(parent) UI:CreateAccountPage(parent) end,
         Refresh = function(_, context) UI:RefreshDetails(context) end,
         GetSummary = function(characters)

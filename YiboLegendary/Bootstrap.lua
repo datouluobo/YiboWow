@@ -3,15 +3,16 @@ local ADDON_NAME = ...
 local Addon = _G.YiboLegendary or {}
 _G.YiboLegendary = Addon
 Addon.NAME = "YiboLegendary"
-Addon.VERSION = "0.3"
-Addon.REQUIRED_CORE_API = 3
+Addon.VERSION = "1.0"
+Addon.REQUIRED_CORE_API = 5
 
 local DEFAULTS = {
     schemaVersion = 1,
     settings = {
         showChapter = false,
         phaseAvailability = {},
-        previewColumnsVersion = 3,
+        levelExpr = "",
+        previewColumnsVersion = 4,
         previewColumns = {
             character = true,
             chapter = false,
@@ -99,6 +100,14 @@ function Addon:Initialize()
             action = false,
         }
     end
+    -- “行动”属于正式表格的执行说明；悬停默认只用于快速比较任务与目标。
+    -- Upgrade existing development settings as well, otherwise a previously
+    -- enabled action column keeps making the preview unnecessarily wide.
+    if type(settings) == "table" and (tonumber(settings.previewColumnsVersion) or 0) < 4 then
+        settings.previewColumnsVersion = 4
+        settings.previewColumns = type(settings.previewColumns) == "table" and settings.previewColumns or {}
+        settings.previewColumns.action = false
+    end
     CopyDefaults(self.db, DEFAULTS)
     self.Core:RegisterAddon(self.NAME, { version = self.VERSION, requiredAPI = self.REQUIRED_CORE_API })
     if self.Core.CharacterCleanup then
@@ -131,7 +140,8 @@ frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("QUEST_LOG_UPDATE")
 frame:RegisterEvent("UPDATE_FACTION")
 frame:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
-frame:SetScript("OnEvent", function(_, event, arg1)
+frame:SetScript("OnEvent", function(_, event, ...)
+    local arg1, arg2, arg3, arg4 = ...
     if event == "ADDON_LOADED" then
         if arg1 == ADDON_NAME then
             Addon:Initialize()
@@ -139,6 +149,8 @@ frame:SetScript("OnEvent", function(_, event, arg1)
         return
     end
     if Addon.initialized then
+        -- Keep the complete CURRENCY_DISPLAY_UPDATE payload.  The tracker uses
+        -- its quantityChange field and keeps balance-delta fallback support.
         Addon.Probe:Run()
         Addon:Refresh(event, arg1, arg2, arg3, arg4)
     end

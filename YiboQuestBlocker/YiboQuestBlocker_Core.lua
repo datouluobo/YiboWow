@@ -134,7 +134,7 @@ if not YiboQuestBlockerDB.filters then
         hideComplete  = true,
         reportChat    = true,
         autoAbandon   = false,
-        levelExpr     = "",
+        levelExpr     = "90",
     }
 end
 
@@ -194,7 +194,7 @@ local function BindDBReferences()
         hideComplete = true,
         reportChat = true,
         autoAbandon = false,
-        levelExpr = "",
+        levelExpr = "90",
     }
     if YiboQuestBlockerDB.filters.reportChat == nil then
         YiboQuestBlockerDB.filters.reportChat = true
@@ -792,6 +792,19 @@ end
 function YQB.ValidateLevelExpr(expr)
     local valid, _, badToken = parseLevelExpr(expr)
     return valid, YQB.NormalizeLevelExpr(expr), badToken
+end
+
+function YQB.GetLevelFilterExpr()
+    return (YQBDB.filters and YQBDB.filters.levelExpr) or ""
+end
+
+function YQB.SetLevelFilterExpr(expr)
+    local valid, normalized, badToken = YQB.ValidateLevelExpr(expr)
+    if not valid then return false, badToken end
+    YQBDB.filters.levelExpr = normalized
+    PersistDB()
+    if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged() end
+    return true, normalized
 end
 
 -- 判断角色是否通过等级过滤

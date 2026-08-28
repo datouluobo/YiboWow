@@ -3,7 +3,7 @@ local Core = _G.YiboCore
 local Migrations = {}
 Core.Migrations = Migrations
 
-Migrations.CURRENT_SCHEMA = 6
+Migrations.CURRENT_SCHEMA = 8
 Migrations._steps = Migrations._steps or {}
 
 function Migrations:Register(version, callback)
@@ -117,6 +117,20 @@ end)
 
 Migrations:Register(6, function(db)
     db.characterDeletionHistory = type(db.characterDeletionHistory) == "table" and db.characterDeletionHistory or {}
+end)
+
+Migrations:Register(7, function(db)
+    db.characters = db.characters or {}
+    db.characters.byID = db.characters.byID or {}
+    for _, character in pairs(db.characters.byID) do
+        character.domains = type(character.domains) == "table" and character.domains or {}
+    end
+end)
+
+Migrations:Register(8, function(db)
+    -- Display preferences are deliberately separate from identity records:
+    -- a player nickname must never become a cache key or an imported fact.
+    db.characterDisplay = type(db.characterDisplay) == "table" and db.characterDisplay or {}
 end)
 
 Core.Capabilities:Register("migrations", 1)

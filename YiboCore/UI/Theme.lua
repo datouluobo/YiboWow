@@ -16,11 +16,18 @@ Theme.Colors = {
     selected = { 0.055, 0.23, 0.23, 1 },
     line = { 0.12, 0.42, 0.43, 0.85 },
     lineSoft = { 0.12, 0.42, 0.43, 0.46 },
+    -- Dense data grids use a single low-contrast teal rule.  It remains
+    -- visible on dark surfaces without reading as a white spreadsheet grid.
+    matrixLine = { 0.10, 0.36, 0.37, 0.72 },
     text = { 0.90, 0.96, 0.97 },
     muted = { 0.53, 0.70, 0.73 },
     accent = { 0.125, 0.88, 0.44 },
     current = { 0.055, 0.23, 0.23, 0.92 },
     success = { 0.16, 0.68, 0.24, 0.98 },
+    -- Completion is an informational state in dense matrices.  Keep its
+    -- semantic green border/text without turning the whole cell into a bright
+    -- action button.
+    successSurface = { 0.035, 0.15, 0.075, 0.96 },
     timer = { 0.12, 0.28, 0.48, 0.96 },
     danger = { 0.70, 0.20, 0.20, 0.96 },
     dangerSurface = { 0.17, 0.075, 0.09, 0.98 },
@@ -28,8 +35,43 @@ Theme.Colors = {
 }
 
 Theme.Space = { xxs = 4, xs = 8, sm = 12, md = 16, lg = 20, xl = 24 }
-Theme.Size = { compact = 24, standard = 28, action = 32, double = 44, title = 46 }
-Theme.Font = { title = 16, section = 14, body = 12, assist = 11 }
+-- WoW's UI scale makes the former 11–12px data text too small on modern
+-- displays. Keep the compact hierarchy, but make every shared surface legible.
+Theme.Size = { compact = 26, standard = 30, action = 34, double = 46, title = 48 }
+-- Account data is deliberately denser than settings controls.  Every hosted
+-- page uses these semantic roles instead of inheriting a client template's
+-- implicit GameFont size.
+Theme.Font = { title = 18, section = 16, body = 14, assist = 12, meta = 11 }
+Theme.Table = { headerHeight = 26, rowHeight = 26, groupHeight = 32, cellInset = 4, cellPadding = 8 }
+
+-- Geometry is deliberately kept beside the visual tokens: it is the one
+-- source of truth for every shared surface.  Business pages report content
+-- only and must never guess the width of the account shell.
+Theme.Geometry = {
+    -- Matrix insets are directional on purpose.  Their current values happen
+    -- to match, but pages must consume this table instead of assuming that a
+    -- single arbitrary offset is valid on all four edges.
+    matrixInsets = {
+        main = { top = 10, right = 10, bottom = 10, left = 10 },
+        preview = { top = 8, right = 8, bottom = 8, left = 8 },
+    },
+    mainInset = 10,
+    previewInset = 8,
+    titleBar = 46,
+    navigation = 140,
+    shellBorder = 1,
+    scopeBar = 30,
+    -- A data viewport always keeps its normal inset.  This extra gutter is
+    -- added to the outer measured width only when a vertical scrollbar is
+    -- actually needed, so the bar never overlays its final data column.
+    scrollbarGutter = 16,
+    mainSafety = { left = 16, right = 16, top = 80, bottom = 32 },
+    previewSafety = { left = 16, right = 16, top = 16, bottom = 16, anchorGap = 8 },
+}
+
+function Theme:GetMatrixInsets(preview)
+    return self.Geometry.matrixInsets[preview and "preview" or "main"]
+end
 
 local function Color(color)
     return color[1], color[2], color[3], color[4] or 1
@@ -43,6 +85,23 @@ function Theme:CreateText(parent, size, color, justify)
     text:SetWordWrap(false)
     if color then text:SetTextColor(Color(color)) end
     return text
+end
+
+function Theme:ApplyTextStyle(text, size)
+    text:SetFont(STANDARD_TEXT_FONT, size or self.Font.body)
+    text:SetJustifyH("LEFT")
+    text:SetJustifyV("MIDDLE")
+    return text
+end
+
+function Theme:MeasureText(size, value)
+    if not self._measureText then
+        self._measureText = UIParent:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+        self._measureText:Hide()
+    end
+    self._measureText:SetFont(STANDARD_TEXT_FONT, size or self.Font.body)
+    self._measureText:SetText(tostring(value or ""))
+    return math.ceil(self._measureText:GetStringWidth() or 0)
 end
 
 function Theme:CreateButton(parent, width, label, kind)

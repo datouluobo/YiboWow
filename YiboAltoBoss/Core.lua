@@ -10,6 +10,7 @@ local curRealm = GetRealmName() or "Unknown"
 local curCharKey = curCharName .. "-" .. curRealm
 local PHASE_TTL_SECONDS = 6 * 60 * 60
 local MIN_RESPAWN_SAMPLE_SECONDS = 30
+local CUSTOM_RARE_RESET_SECONDS = 24 * 60 * 60
 local bossById = {}
 local bossByKey = {}
 local npcTargets = {}
@@ -100,6 +101,25 @@ local function GetCurrentWeeklyResetKey()
     end
     local serverTime = GetServerTimestamp()
     return date("%Y-%W", serverTime)
+end
+
+local function GetTargetResetKey(boss)
+    if boss and boss.reset == "weekly" then
+        return GetCurrentWeeklyResetKey()
+    end
+    return nil
+end
+
+local function IsKillActive(killData, boss)
+    if not (killData and killData.killed) then
+        return false
+    end
+    if boss and boss.reset == "respawn" then
+        local killedAt = tonumber(killData.updatedAt) or 0
+        return killedAt > 0 and GetServerTimestamp() - killedAt < CUSTOM_RARE_RESET_SECONDS
+    end
+    local resetKey = GetTargetResetKey(boss)
+    return not resetKey or killData.resetKey == resetKey
 end
 
 local function ExtractNpcIDFromGUID(guid)
@@ -195,13 +215,16 @@ local function RebuildBossCache()
         custom.key = key
         custom.group = "custom"
         custom.type = custom.type or "single_npc"
+        -- Custom NPCs are ordinary rares by default. Their completion
+        -- expires 24 hours after the kill, independent of the daily reset.
+        custom.reset = custom.reset or "respawn"
         local entry = {
             key = key,
             id = custom.id,
             type = custom.type,
             group = "custom",
             name = custom.name,
-            reset = "manual",
+            reset = custom.reset,
             order = custom.order or 9000,
             isCustom = true,
         }
@@ -1147,7 +1170,7 @@ local function EnsureDB()
         characters = {},
         customTargets = {},
         filters = {
-            levelExpr = "",
+            levelExpr = "90",
         },
         settings = {
             previewColumns = {
@@ -1229,26 +1252,28 @@ local function EnsureDB()
 end
 
 local function ResetRecurringStateIfNeeded()
-    local currentKey = GetCurrentWeeklyResetKey()
+    local currentWeeklyKey = GetCurrentWeeklyResetKey()
     local meta = YiboAltoBossDB.meta or {}
-    if meta.weeklyResetKey == currentKey then
-        return false
-    end
+    local weeklyChanged = meta.weeklyResetKey ~= currentWeeklyKey
+    local changed = weeklyChanged
 
     for _, charData in pairs(YiboAltoBossDB.characters or {}) do
         for bossId, killData in pairs(charData.kills or {}) do
             local boss = GetBossDefinition(bossId)
-            if boss and boss.reset == "weekly" then
+            if boss and boss.reset == "weekly" and weeklyChanged then
                 charData.kills[bossId] = nil
-            elseif type(killData) == "table" and killData.resetKey and killData.resetKey ~= currentKey and boss and boss.reset == "daily" then
+            elseif boss and boss.reset == "respawn" and not IsKillActive(killData, boss) then
                 charData.kills[bossId] = nil
+                changed = true
             end
         end
-        charData.lootLockouts = {}
+        if weeklyChanged then
+            charData.lootLockouts = {}
+        end
     end
 
-    YiboAltoBossDB.meta.weeklyResetKey = currentKey
-    return true
+    YiboAltoBossDB.meta.weeklyResetKey = currentWeeklyKey
+    return changed
 end
 
 local function GetLootLockout(charData, groupKey)
@@ -1300,8 +1325,8 @@ local function MarkBossKilled(charKey, bossId, source, phaseId, actualNpcId)
     local charData = EnsureChar(charKey or curCharKey)
     local bossKey = GetTargetKey(boss)
     local existing = charData.kills[bossKey]
-    local resetKey = GetCurrentWeeklyResetKey()
-    local alreadyCompleted = existing and existing.killed and existing.resetKey == resetKey
+    local resetKey = GetTargetResetKey(boss)
+    local alreadyCompleted = IsKillActive(existing, boss)
     -- Character completion is intentionally independent from world lifecycle
     -- tracking.  TrackingV3 owns alive/death evidence and respawn samples.
     if alreadyCompleted then
@@ -1559,7 +1584,7 @@ function YAB.IsBossKilled(charKey, bossId)
         return false
     end
     local bossKey = GetTargetKey(boss)
-    return charData.kills[bossKey] and charData.kills[bossKey].killed or false
+    return IsKillActive(charData.kills[bossKey], boss)
 end
 
 function YAB.GetKillInfo(charKey, bossId)
@@ -1580,7 +1605,7 @@ function YAB.GetBossKillStatus(charKey, bossId)
 
     local bossKey = GetTargetKey(boss)
     local killInfo = charData.kills[bossKey]
-    if killInfo and killInfo.killed and killInfo.resetKey == GetCurrentWeeklyResetKey() then
+    if IsKillActive(killInfo, boss) then
         return "killed", killInfo
     end
 
@@ -1678,6 +1703,7 @@ function YAB.AddCustomTarget(input)
         id = value,
         name = "自定义目标 " .. value,
         group = "custom",
+        reset = "respawn",
     }
     RebuildBossCache()
     YAB.PersistDB()

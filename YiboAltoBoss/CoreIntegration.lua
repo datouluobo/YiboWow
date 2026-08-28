@@ -7,22 +7,9 @@ YAB.CoreIntegration = Integration
 
 local PAGE_ID = "alto-boss"
 
-local function RealmScopeID(realm)
-    return "realm:" .. tostring(realm or "Unknown")
-end
-
-local function BuildScopeDefinition()
-    local currentRealm = YAB.GetCurrentRealm()
-    local values = { { id = RealmScopeID(currentRealm), title = currentRealm } }
-    for _, realm in ipairs(YAB.GetOtherRealmNames()) do
-        values[#values + 1] = { id = RealmScopeID(realm), title = realm }
-    end
-    values[#values + 1] = { id = "all", title = "所有服务器" }
-    return { default = RealmScopeID(currentRealm), values = values }
-end
-
 local function AddText(parent, template, color)
     local text = parent:CreateFontString(nil, "OVERLAY", template or "GameFontNormal")
+    Core.UITheme:ApplyTextStyle(text, template == "GameFontNormalSmall" and Core.UITheme.Font.assist or Core.UITheme.Font.body)
     text:SetJustifyH("LEFT")
     text:SetJustifyV("TOP")
     if color then
@@ -116,8 +103,10 @@ end
 
 local function HasEligibleSnapshot(legacyKey)
     return legacyKey
-        and YiboAltoBossDB.characters[legacyKey] ~= nil
-        and YAB.CharPassLevelFilter(legacyKey)
+        -- A known character is a valid Boss row even before its first combat
+        -- snapshot.  Rendering it as "未击杀" is more useful than silently
+        -- dropping a role from the account comparison.
+        and YiboAltoBossDB.knownChars[legacyKey] ~= nil
 end
 
 function YAB.GetAccountCharacterKeys(context)
@@ -131,15 +120,10 @@ end
 
 local function GetEligibleCharacters(characters, context)
     local eligible = {}
-    local scope = context and context.scope or "all"
-    local selectedRealm = scope:match("^realm:(.+)$")
     for _, character in ipairs(characters or {}) do
         local legacyKey = GetLegacyKeyByCharacterID(character.id)
-        local info = legacyKey and YiboAltoBossDB.knownChars[legacyKey]
         local hasSnapshot = HasEligibleSnapshot(legacyKey)
-        local realm = info and (info.realm or legacyKey:match("-(.+)$"))
-        local visibleByScope = scope == "all" or (selectedRealm and realm == selectedRealm)
-        if hasSnapshot and visibleByScope then
+        if hasSnapshot then
             eligible[#eligible + 1] = character
         end
     end
@@ -201,17 +185,23 @@ function Integration:Initialize()
     if not (Core and Core.CheckAPIVersion and Core.AccountView) then
         return nil, "YiboCore 不可用。"
     end
-    local compatible = Core:CheckAPIVersion(3)
+    local compatible = Core:CheckAPIVersion(5)
     if not compatible then
-        return nil, "需要 YiboCore API v3。"
+        return nil, "需要 YiboCore API v5。"
     end
 
-    Core:RegisterAddon("YiboAltoBoss", { version = "2.0", requiredAPI = 3 })
+    Core:RegisterAddon("YiboAltoBoss", { version = "2.1.1", requiredAPI = 5 })
     if Core.CharacterCleanup then
         local cleanupRegistered, cleanupError = RegisterCharacterCleanupOwner()
         if not cleanupRegistered then return nil, cleanupError end
     end
     ImportKnownCharacters()
+    -- An unconfigured legacy Boss view now follows the shared max-level
+    -- default, while an explicit prior expression remains untouched.
+    YiboAltoBossDB.filters = YiboAltoBossDB.filters or {}
+    if YiboAltoBossDB.filters.levelExpr == nil or YiboAltoBossDB.filters.levelExpr == "" then
+        YiboAltoBossDB.filters.levelExpr = "90"
+    end
     local page, errorMessage = Core.AccountView:RegisterPage("YiboAltoBoss", {
         id = PAGE_ID,
         title = "Boss 周常",
@@ -222,7 +212,15 @@ function Integration:Initialize()
             { id = "action", title = "行动", defaultVisible = true },
             { id = "phase", title = "位面", defaultVisible = true },
         },
-        scope = BuildScopeDefinition(),
+        scope = { mode = "realms", allTitle = "所有服务器" },
+        characterFilter = {
+            defaultExpression = "90",
+            GetExpression = function() return YAB.GetLevelFilterExpr() end,
+            SetExpression = function(expression) return YAB.SetLevelFilterExpr(expression) end,
+        },
+        HasCharacterSnapshot = function(character)
+            return HasEligibleSnapshot(GetLegacyKeyByCharacterID(character.id))
+        end,
         GetEligibleCharacters = GetEligibleCharacters,
         GetPreviewFields = function() return Integration:GetPreviewFields() end,
         SetPreviewFieldVisible = function(fieldID, visible) Integration:SetPreviewFieldVisible(fieldID, visible) end,
@@ -239,9 +237,9 @@ function Integration:Initialize()
         },
         Create = YAB.CreateAccountPage,
         Refresh = YAB.RefreshAccountPage,
-        GetPreviewSize = YAB.GetAccountPreviewSize,
-        GetHoverMetrics = YAB.GetAccountHoverMetrics,
-        GetLayoutMetrics = YAB.GetAccountLayoutMetrics,
+        -- The hosted page reports only its data surface.  Core adds its
+        -- window or hover chrome in one place.
+        GetSurfaceMetrics = YAB.GetAccountSurfaceMetrics,
         GetSummary = GetSummary,
         GetActions = GetActions,
     })

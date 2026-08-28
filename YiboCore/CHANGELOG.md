@@ -1,5 +1,13 @@
 # YiboCore 更新日志
 
+## 0.6.0
+
+- Public API 升至 v5，数据库 Schema 升至 v7；v4 页面、入口和角色档案 API 在 0.6.x 继续可用。
+- 新增数据领域注册与领域存储：身份、经济、声望、专业、装备、地点和专精按各自事件采集，并独立保存状态、更新时间、schema 版本与 revision。
+- 新增 `DATA_DOMAIN_UPDATED` 数据变化协议；旧 `CHARACTER_PROFILE_UPDATED` 由兼容适配器继续提供。
+- `Profile:RefreshCurrent()` 收缩为领域调度与旧采集器适配，不再直接耦合 Core 中性事实的采集实现。
+- 新增资源与字段注册表；角色档案和悬停投影从注册字段自动生成，旧字段设置会映射到稳定的 `character.*` ID。
+
 ## 0.5.0
 
 - 统一 Core 大小 Logo：小图采用高辨识度的六边形环核，大图保留可扩展的机械面板细节。

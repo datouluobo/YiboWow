@@ -19,6 +19,13 @@ local function GetStore()
     return db and db.characters
 end
 
+local function GetDisplayStore()
+    local db = Core.Database:GetDB()
+    if not db then return nil end
+    db.characterDisplay = type(db.characterDisplay) == "table" and db.characterDisplay or {}
+    return db.characterDisplay
+end
+
 local function BuildFallbackID(name, realm)
     return "legacy:" .. tostring(realm or "Unknown") .. ":" .. tostring(name or "Unknown")
 end
@@ -42,6 +49,10 @@ local function ReplaceCharacterID(store, oldID, newID)
     store.seenOrder[newID] = store.seenOrder[oldID]
     store.seenOrder[oldID] = nil
 
+    local display = GetDisplayStore()
+    if display and display[oldID] and not display[newID] then display[newID] = display[oldID] end
+    if display then display[oldID] = nil end
+
     for alias, characterID in pairs(store.aliases) do
         if characterID == oldID then
             store.aliases[alias] = newID
@@ -49,6 +60,53 @@ local function ReplaceCharacterID(store, oldID, newID)
     end
     Core.Events:Fire("CHARACTER_ID_CHANGED", oldID, newID, Snapshot(record))
     return true
+end
+
+local function NormalizeShortName(value)
+    if value == nil then return "" end
+    if type(value) ~= "string" then return nil, "短名必须是文本。" end
+    value = value:match("^%s*(.-)%s*$")
+    if value == "" then return "" end
+    if value:find("[%z\1-\31\127]") then return nil, "短名不能包含控制字符。" end
+    return value
+end
+
+function Characters:GetDisplayName(character, mode)
+    local name = type(character) == "table" and character.name or ""
+    if mode ~= "short" then return name end
+    local display = character and character.id and GetDisplayStore()
+    local shortName = display and display[character.id] and display[character.id].shortName
+    return type(shortName) == "string" and shortName ~= "" and shortName or name
+end
+
+function Characters:SetShortName(characterID, value)
+    local store = GetStore()
+    if type(characterID) ~= "string" or not (store and store.byID[characterID]) then return nil, "角色缓存不存在。" end
+    local normalized, errorMessage = NormalizeShortName(value)
+    if normalized == nil then return nil, errorMessage end
+    local display = GetDisplayStore()
+    if normalized == "" then
+        display[characterID] = nil
+    else
+        display[characterID] = display[characterID] or {}
+        display[characterID].shortName = normalized
+    end
+    Core.Events:Fire("CHARACTER_DISPLAY_UPDATED", characterID, self:Get(characterID))
+    return normalized
+end
+
+function Characters:GetShortNameDuplicates()
+    local duplicates, grouped = {}, {}
+    for _, character in ipairs(self:GetAll()) do
+        local display = GetDisplayStore()
+        local shortName = display and display[character.id] and display[character.id].shortName
+        if type(shortName) == "string" and shortName ~= "" then
+            grouped[shortName] = grouped[shortName] or {}
+            grouped[shortName][#grouped[shortName] + 1] = character
+        end
+    end
+    for shortName, characters in pairs(grouped) do if #characters > 1 then duplicates[shortName] = characters end end
+    return duplicates
 end
 
 local function EnsureSeenOrder(store, characterID)
@@ -177,6 +235,8 @@ function Characters:DeleteCached(characterID)
     local deleted = Snapshot(store.byID[characterID])
     store.byID[characterID] = nil
     store.seenOrder[characterID] = nil
+    local display = GetDisplayStore()
+    if display then display[characterID] = nil end
     for alias, resolvedID in pairs(store.aliases or {}) do
         if resolvedID == characterID then store.aliases[alias] = nil end
     end

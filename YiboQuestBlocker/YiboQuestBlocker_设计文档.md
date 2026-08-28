@@ -32,7 +32,7 @@
 
 - 语言: Lua 5.1 (WoW 内嵌)
 - 框架: WoW Frame API (CreateFrame, BackdropTemplate)
-- 核心依赖: YiboCore（API v3）
+- 核心依赖: YiboCore（API v5）
 - 存储: SavedVariables (账号级共享)
 
 ---

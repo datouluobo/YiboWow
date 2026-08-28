@@ -2,7 +2,7 @@
 
 Yibo WoW 插件的共享运行时、角色档案与账号视图框架。
 
-当前版本 `0.5.1` 提供：
+当前版本 `1.0` 提供：
 
 - API 版本与插件注册
 - 能力查询与 Core 内部事件
@@ -24,12 +24,14 @@ Core 不保存任务、Boss、收藏等业务状态，也不接管业务插件�
 ## Public API
 
 ```lua
-local compatible = YiboCore:CheckAPIVersion(4)
+local compatible = YiboCore:CheckAPIVersion(5)
 local character = YiboCore.Characters:GetCurrent()
 local allCharacters = YiboCore.Characters:GetAll()
-local profile = YiboCore.Profile:Get(character.id)
+local economy = YiboCore.DataDomains:Get(character.id, "economy")
 YiboCore.AccountView:RegisterPage("YiboNewAddon", pageDefinition)
 ```
+
+业务插件接入 API v5、领域读取和刷新协议见：[API v5 业务插件接入指南](Docs/API-v5-业务插件接入指南.md)。`Profile:Get()` 与 `CHARACTER_PROFILE_UPDATED` 仅为 0.6.x 的旧插件兼容层；新功能应读取 `DataDomains`，并在确有 Core 中性数据依赖时订阅 `DATA_DOMAIN_UPDATED`。
 
 依赖 Core 的业务插件必须在 `.toc` 中声明 `## RequiredDeps: YiboCore`，并保留自身的业务 SavedVariables。Core 不接管业务数据；插件只注册页面、摘要和交互。
 

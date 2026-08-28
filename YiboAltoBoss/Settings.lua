@@ -672,6 +672,8 @@ function YAB.InitializeSettings()
     levelHelpButton:SetScript("OnLeave", function()
         GameTooltip:Hide()
     end)
+    -- The expression is now configured once in Core 常规设置 → 角色过滤.
+    levelTitle:Hide(); levelExprBox:Hide(); levelExprInput:Hide(); levelHelpButton:Hide(); levelExprHint:Hide()
 
     displayHint = CreateText(displayPanel, 11, "LEFT")
     displayHint:SetPoint("TOPLEFT", displayPanel, "TOPLEFT", 12, -34)
@@ -1015,7 +1017,7 @@ function YAB.CreateCoreSettingsPanel(parent, context)
         panel.levelInput:SetScript("OnEscapePressed", function(self) self:SetText(tostring(YAB.GetLevelFilterExpr() or "")); self:ClearFocus() end)
 
         panel.custom = Section(panel, "自定义目标", 292, 1)
-        panel.custom:SetPoint("TOPRIGHT", panel.filter, "TOPRIGHT", 0, 0)
+        panel.custom:SetPoint("TOPRIGHT", panel.targets, "TOPRIGHT", 596, 0)
         local customHint = context.createText(panel.custom, Theme.Font.assist, Theme.Colors.muted, "LEFT")
         customHint:SetPoint("TOPLEFT", 12, -40); customHint:SetText("NPC ID（点击下方已添加的目标可回填）")
         panel.npcInput = CreateFrame("EditBox", nil, panel.custom, "InputBoxTemplate")
@@ -1036,6 +1038,7 @@ function YAB.CreateCoreSettingsPanel(parent, context)
     end
 
     panel.levelInput:SetText(tostring(YAB.GetLevelFilterExpr() or ""))
+    panel.filter:Hide()
     local panelWidth = math.max(600, parent:GetWidth() or 600)
     local halfWidth = math.floor((panelWidth - 12) / 2)
     panel:SetWidth(panelWidth)
@@ -1110,8 +1113,8 @@ function YAB.CreateCoreSettingsPanel(parent, context)
     panel.targetContent:SetHeight(targetHeight)
     panel.targets:SetHeight(targetHeight + 74)
 
-    panel.filter:ClearAllPoints(); panel.filter:SetPoint("TOPLEFT", panel.targets, "TOPRIGHT", 12, 0)
-    panel.custom:ClearAllPoints(); panel.custom:SetPoint("TOPLEFT", panel.filter, "BOTTOMLEFT", 0, -12)
+    panel.filter:ClearAllPoints(); panel.filter:SetPoint("TOPLEFT", panel.targets, "TOPRIGHT", 12, 0); panel.filter:Hide()
+    panel.custom:ClearAllPoints(); panel.custom:SetPoint("TOPLEFT", panel.targets, "TOPRIGHT", 12, 0)
     local customTargets = {}
     for _, target in ipairs(targetsByGroup.custom or {}) do customTargets[#customTargets + 1] = target end
     local customY = 126
@@ -1134,6 +1137,6 @@ function YAB.CreateCoreSettingsPanel(parent, context)
     end
     local customRows = math.ceil(#customTargets / 2)
     panel.custom:SetHeight(math.max(126, 134 + customRows * 28))
-    panel:SetHeight(math.max(panel.targets:GetHeight(), panel.filter:GetHeight() + 12 + panel.custom:GetHeight()))
+    panel:SetHeight(math.max(panel.targets:GetHeight(), panel.custom:GetHeight()))
     return panel:GetHeight()
 end

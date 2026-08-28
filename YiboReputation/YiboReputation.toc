@@ -1,0 +1,24 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r YiboReputation - 声望之路
+## Notes: 多角色声望浏览与比较
+## Author: YiboSoft
+## Version: 1.0
+## IconTexture: Interface\AddOns\YiboReputation\Media\YiboReputationIcon-v1
+## SavedVariables: YiboReputationDB
+## RequiredDeps: YiboCore
+## Group: YiboCore
+## LoadOnDemand: 0
+
+Bootstrap.lua
+ReputationCatalog.lua
+ReputationHierarchy.lua
+ReputationFormat.lua
+Friendship.lua
+Nomi.lua
+AccountMatrixView.lua
+CurrentCharacterPreview.lua
+MonitoredPreview.lua
+PreviewController.lua
+Settings.lua
+CoreIntegration.lua
+Commands.lua
