@@ -42,7 +42,10 @@ Theme.Size = { compact = 26, standard = 30, action = 34, double = 46, title = 48
 -- page uses these semantic roles instead of inheriting a client template's
 -- implicit GameFont size.
 Theme.Font = { title = 18, section = 16, body = 14, assist = 12, meta = 11 }
-Theme.Table = { headerHeight = 26, rowHeight = 26, groupHeight = 32, cellInset = 4, cellPadding = 8 }
+-- Matrices are the account view's primary surface.  Keep their geometry
+-- compact and shared so business pages do not trade comparable rows for
+-- local title chrome or arbitrary whitespace.
+Theme.Table = { headerHeight = 24, rowHeight = 24, previewRowHeight = 22, groupHeight = 28, cellInset = 3, cellPadding = 6 }
 
 -- Geometry is deliberately kept beside the visual tokens: it is the one
 -- source of truth for every shared surface.  Business pages report content
@@ -52,11 +55,11 @@ Theme.Geometry = {
     -- to match, but pages must consume this table instead of assuming that a
     -- single arbitrary offset is valid on all four edges.
     matrixInsets = {
-        main = { top = 10, right = 10, bottom = 10, left = 10 },
-        preview = { top = 8, right = 8, bottom = 8, left = 8 },
+        main = { top = 8, right = 8, bottom = 8, left = 8 },
+        preview = { top = 6, right = 6, bottom = 6, left = 6 },
     },
-    mainInset = 10,
-    previewInset = 8,
+    mainInset = 8,
+    previewInset = 6,
     titleBar = 46,
     navigation = 140,
     shellBorder = 1,
@@ -209,10 +212,12 @@ function Theme:CreateScrollFrame(parent)
 
     local syncing = false
     function scroll:UpdateScrollbar()
-        local range = self:GetVerticalScrollRange() or 0
-        if self.contentHeight then
-            range = math.max(0, self.contentHeight - (self:GetHeight() or 0))
-        end
+        local viewportHeight = self:GetHeight() or 0
+        -- Anchored frames can refresh once before WoW has resolved their
+        -- final height.  A zero-height viewport must not be interpreted as
+        -- a fully overflowing list, or it leaves a phantom scrollbar behind.
+        local range = viewportHeight > 1 and (self:GetVerticalScrollRange() or 0) or 0
+        if self.contentHeight and viewportHeight > 1 then range = math.max(0, self.contentHeight - viewportHeight) end
         self.scrollRange = range
         bar:SetMinMaxValues(0, range)
         bar:SetValue(math.min(self:GetVerticalScroll() or 0, range))

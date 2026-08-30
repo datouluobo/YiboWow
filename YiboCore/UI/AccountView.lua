@@ -148,36 +148,29 @@ function AccountView:SetColumnPage(pageID, stateKey, page, totalPages)
 end
 
 function AccountView:GetColumnPagerWidth(noun, total)
-    -- Reserve exactly the controls and the widest possible indicator text.
-    -- This is deliberately measured with the same font used by the live
-    -- pager: a fixed 190px reservation made otherwise-fitting data fields
-    -- spill onto a second page.
-    -- Existing matrix callers do not pass a total; their documented preview
-    -- ceiling is 20 characters, which is the safe measurement in that case.
-    local count = math.max(1, tonumber(total) or 20)
-    local label = string.format("%s %d–%d / %d · %d/%d", noun or "角色", count, count, count, count, count)
-    return Theme:MeasureText(Theme.Font.assist, label)
-        + Theme.Space.xs + Theme.Space.xxs + Theme.Size.compact * 2
+    -- Pagination is chrome, not matrix data.  It is hosted in the title bar,
+    -- so character columns never surrender content width to its controls.
+    return 0
 end
 
 function AccountView:UpdateColumnPager(parent, pageID, stateKey, info, anchor, noun)
     parent.yiboColumnPager = parent.yiboColumnPager or {}
     local pager = parent.yiboColumnPager
-    pager.previous = pager.previous or Theme:CreateButton(parent, Theme.Size.compact, "‹", "secondary")
-    pager.next = pager.next or Theme:CreateButton(parent, Theme.Size.compact, "›", "secondary")
-    pager.label = pager.label or Theme:CreateText(parent, Theme.Font.assist, COLORS.text, "RIGHT")
-    pager.previous:ClearAllPoints(); pager.next:ClearAllPoints(); pager.label:ClearAllPoints()
-    pager.next:SetPoint("RIGHT", anchor or parent, "RIGHT", 0, 0)
+    local chrome = self.frame and not self.frame.preview and self.frame.titleBar or parent
+    pager.previous = pager.previous or Theme:CreateButton(chrome, Theme.Size.compact, "‹", "secondary")
+    pager.next = pager.next or Theme:CreateButton(chrome, Theme.Size.compact, "›", "secondary")
+    pager.previous:ClearAllPoints(); pager.next:ClearAllPoints()
+    local controlAnchor = chrome == (self.frame and self.frame.titleBar) and self.frame.controls or (anchor or parent)
+    pager.next:SetPoint("RIGHT", controlAnchor, "LEFT", -Theme.Space.xxs, 0)
     pager.previous:SetPoint("RIGHT", pager.next, "LEFT", -Theme.Space.xxs, 0)
-    pager.label:SetPoint("RIGHT", pager.previous, "LEFT", -Theme.Space.xs, 0)
     local show = info and info.pages > 1
-    pager.previous:SetShown(show); pager.next:SetShown(show); pager.label:SetShown(show)
+    pager.previous:SetShown(show); pager.next:SetShown(show)
     if not show then return end
-    local label = string.format("%s %d–%d / %d · %d/%d", noun or "角色", info.first, info.last, info.total, info.page, info.pages)
-    pager.label:SetText(label)
-    pager.label:SetWidth(Theme:MeasureText(Theme.Font.assist, label))
     pager.previous:SetState(info.page > 1 and "default" or "disabled")
     pager.next:SetState(info.page < info.pages and "default" or "disabled")
+    local range = string.format("角色 %d–%d / %d · 第 %d/%d 页", info.first or 0, info.last or 0, info.total or 0, info.page, info.pages)
+    Theme:BindTooltip(pager.previous, "上一组角色", { range })
+    Theme:BindTooltip(pager.next, "下一组角色", { range })
     pager.previous:SetScript("OnClick", function() if info.page > 1 then AccountView:SetColumnPage(pageID, stateKey, info.page - 1, info.pages) end end)
     pager.next:SetScript("OnClick", function() if info.page < info.pages then AccountView:SetColumnPage(pageID, stateKey, info.page + 1, info.pages) end end)
 end
@@ -252,6 +245,9 @@ local function SurfaceMetrics(page, context)
     end
     metrics.naturalContentWidth = math.max(metrics.minContentWidth, metrics.naturalContentWidth)
     metrics.naturalContentHeight = math.max(metrics.minContentHeight, metrics.naturalContentHeight)
+    -- A paginated matrix reports its full roster in naturalContentWidth.
+    -- ApplyPageSize consumes that width up to the screen-safe edge; a page's
+    -- column pager is used only after that edge has been reached.
     metrics.horizontalOverflow = (supplied.horizontalOverflow == "paginate" or supplied.horizontalOverflow == "matrix") and supplied.horizontalOverflow or "content"
     metrics.verticalOverflow = supplied.verticalOverflow == "none" and "none" or "content"
     return metrics
@@ -692,6 +688,29 @@ function AccountView:SetCharacterHidden(characterID, hidden)
     self:RefreshPage()
 end
 
+local function GetScopeControlMetrics(scope, selectedScope)
+    if not (scope and #scope.values > 2) then return nil end
+    local realms, allValue = {}, nil
+    for _, value in ipairs(scope.values) do
+        if value.id == "all" then allValue = value else realms[#realms + 1] = value end
+    end
+    local current = realms[1]
+    if not current or not allValue then return nil end
+    local selectedOther
+    for index = 2, #realms do if realms[index].id == selectedScope then selectedOther = realms[index]; break end end
+    local currentWidth = math.max(88, Theme:MeasureText(Theme.Font.assist, current.title) + 24)
+    local otherCount = math.max(0, #realms - 1)
+    local directOther = otherCount == 1 and realms[2] or nil
+    local otherTitle = directOther and directOther.title or (selectedOther and selectedOther.title or "其它 v")
+    local otherWidth = math.max(82, Theme:MeasureText(Theme.Font.assist, otherTitle) + 24)
+    local allWidth = math.max(72, Theme:MeasureText(Theme.Font.assist, allValue.title) + 24)
+    return {
+        current = current, allValue = allValue, selectedOther = selectedOther, directOther = directOther,
+        currentWidth = currentWidth, otherWidth = otherWidth, allWidth = allWidth,
+        otherTitle = otherTitle, width = currentWidth + otherWidth + allWidth + Theme.Space.xs * 2,
+    }
+end
+
 local function RefreshScopeBar(frame, context)
     local scope, bar = context.scopeDefinition, frame.scopeBar
     local pageAllowsScope = not (context.page and type(context.page.ShowScopeBar) == "function")
@@ -711,23 +730,12 @@ local function RefreshScopeBar(frame, context)
     -- A server range is never a linear strip of realm buttons.  It is the
     -- responsive three-control selector required by the window contract:
     -- current realm, an explicit Other menu, and All realms.
-    local realms, allValue = {}, nil
-    for _, value in ipairs(scope.values) do
-        if value.id == "all" then allValue = value else realms[#realms + 1] = value end
-    end
-    local current = realms[1]
-    if not current or not allValue then bar:Hide(); return false end
-    local selectedOther
-    for index = 2, #realms do if realms[index].id == context.scope then selectedOther = realms[index]; break end end
-    local currentWidth = math.max(88, Theme:MeasureText(Theme.Font.assist, current.title) + 24)
-    -- Use an ASCII disclosure marker: several game fonts render the Unicode
-    -- triangle as a missing-glyph box, which made the selector look broken.
-    local otherCount = math.max(0, #realms - 1)
-    local directOther = otherCount == 1 and realms[2] or nil
-    local otherTitle = directOther and directOther.title or (selectedOther and selectedOther.title or "其它 v")
-    local otherWidth = math.max(82, Theme:MeasureText(Theme.Font.assist, otherTitle) + 24)
-    local allWidth = math.max(72, Theme:MeasureText(Theme.Font.assist, allValue.title) + 24)
-    local barWidth = currentWidth + otherWidth + allWidth + Theme.Space.xs * 2
+    local scopeMetrics = GetScopeControlMetrics(scope, context.scope)
+    if not scopeMetrics then bar:Hide(); return false end
+    local current, allValue = scopeMetrics.current, scopeMetrics.allValue
+    local selectedOther, directOther = scopeMetrics.selectedOther, scopeMetrics.directOther
+    local currentWidth, otherWidth, allWidth = scopeMetrics.currentWidth, scopeMetrics.otherWidth, scopeMetrics.allWidth
+    local otherTitle, barWidth = scopeMetrics.otherTitle, scopeMetrics.width
     bar.current = bar.current or Theme:CreateButton(bar, currentWidth, "", "secondary")
     bar.other = bar.other or Theme:CreateButton(bar, otherWidth, "", "secondary")
     bar.all = bar.all or Theme:CreateButton(bar, allWidth, "", "secondary")
@@ -763,6 +771,8 @@ local function RefreshScopeBar(frame, context)
         if bar.menu:IsShown() then bar.menu:Hide(); return end
         bar.menu:ClearAllPoints(); bar.menu:SetPoint("TOPRIGHT", bar.other, "BOTTOMRIGHT", 0, -Theme.Space.xxs)
         local width = otherWidth
+        local realms = {}
+        for _, value in ipairs(scope.values) do if value.id ~= "all" then realms[#realms + 1] = value end end
         for index = 2, #realms do width = math.max(width, Theme:MeasureText(Theme.Font.assist, realms[index].title) + 24) end
         bar.menu:SetSize(width, math.max(1, #realms - 1) * Theme.Size.standard + Theme.Space.xxs * 2)
         for index = 2, #realms do
@@ -920,16 +930,27 @@ function AccountView:ApplyPageSize(page, context)
     if frame.preview then return end
     local maxWidth, maxHeight = ScreenBounds()
     local shellWidth, shellHeight = ShellMetrics(false)
-    -- Pages use this as the width budget for their first pagination pass.
-    -- Their natural size must describe visible columns, never all columns.
-    context.surfaceAvailableWidth = math.max(1, math.floor(maxWidth * 0.80) - shellWidth)
+    -- A matrix may use the whole safe screen width before resorting to
+    -- pagination.  Its natural width describes every character column;
+    -- pagination begins only when that width reaches this hard boundary.
+    context.surfaceAvailableWidth = math.max(1, maxWidth - shellWidth)
     local settings, metrics = Settings(), SurfaceMetrics(page, context)
     local preferredWidth = metrics.naturalContentWidth + shellWidth
     local preferredHeight = metrics.naturalContentHeight + shellHeight
-    local minWidth = math.max(760, metrics.minContentWidth + shellWidth)
-    -- Natural width follows the documented 80% soft limit.  A page may pass
-    -- it only when its semantic minimum itself needs more space.
-    preferredWidth = math.min(preferredWidth, context.surfaceAvailableWidth + shellWidth)
+    -- Most account pages are matrix-like and retain the shared 760px floor.
+    -- A page may explicitly opt into a compact layout when its content has a
+    -- fixed, small column set (for example a short icon-only task table).
+    local widthFloor = page.compactWidth and 360 or 760
+    local minWidth = math.max(widthFloor, metrics.minContentWidth + shellWidth)
+    local scopeMetrics = GetScopeControlMetrics(context.scopeDefinition, context.scope)
+    if scopeMetrics then
+        -- Main windows show normal controls beside the range selector.  Both
+        -- must fit inside the shell; the title may disappear, controls may not.
+        local headerWidth = scopeMetrics.width + 256 + Theme.Space.sm * 2 + 22
+        minWidth = math.max(minWidth, headerWidth)
+    end
+    -- The screen-safe width is the only horizontal ceiling for a data page.
+    preferredWidth = math.min(preferredWidth, maxWidth)
     -- Individual pages own their safe minimum height.  A global 430 px floor
     -- left large empty regions below compact data matrices.
     local minHeight = math.max(150, metrics.minContentHeight + shellHeight)
@@ -938,7 +959,7 @@ function AccountView:ApplyPageSize(page, context)
         preferredWidth, preferredHeight = math.max(preferredWidth, 960), math.max(preferredHeight, 720)
     end
     local width, height = preferredWidth, preferredHeight
-    width = math.max(math.min(760, maxWidth), math.min(math.max(minWidth, width), maxWidth))
+    width = math.max(math.min(widthFloor, maxWidth), math.min(math.max(minWidth, width), maxWidth))
     height = math.max(math.min(minHeight, maxHeight), math.min(math.max(minHeight, height), maxHeight))
     -- A vertical scrollbar is never overlaid on a data matrix.  When the
     -- final safe height genuinely clips a content-scrolling page, grow the
@@ -995,7 +1016,10 @@ function AccountView:RefreshNavigation()
         pages[#pages + 1] = { id = "settings-display", title = "  显示与入口", settingsTargetID = "display" }
         pages[#pages + 1] = { id = "settings-filters", title = "  角色过滤", settingsTargetID = "filters" }
         for _, page in ipairs(self._pageOrder) do
-            if not page.internal then pages[#pages + 1] = { id = "settings-" .. page.id, title = page.addonName or page.title, settingsTargetID = page.id } end
+            -- Settings is user-facing navigation.  Technical addon IDs are
+            -- useful for diagnostics, but must never replace the page title
+            -- users see in the account view.
+            if not page.internal then pages[#pages + 1] = { id = "settings-" .. page.id, title = page.title, settingsTargetID = page.id } end
         end
     else
         pages = { self._pages.overview, self._pages.characters }
@@ -1006,7 +1030,8 @@ function AccountView:RefreshNavigation()
         local button = frame.navButtons[index]
         if not button then
             button = CreateFrame("Button", nil, frame.nav, "BackdropTemplate")
-            button:SetHeight(Theme.Table.rowHeight); button:SetPoint("TOPLEFT", 8, -8 - ((index - 1) * 30)); button:SetPoint("TOPRIGHT", -8, -8 - ((index - 1) * 30))
+            local navigationStep = Theme.Table.rowHeight + Theme.Space.xxs
+            button:SetHeight(Theme.Table.rowHeight); button:SetPoint("TOPLEFT", 8, -8 - ((index - 1) * navigationStep)); button:SetPoint("TOPRIGHT", -8, -8 - ((index - 1) * navigationStep))
             button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
             button.label = AddText(button, "GameFontNormalSmall", nil, COLORS.text); button.label:SetPoint("LEFT", 9, 0); button.label:SetPoint("RIGHT", -6, 0)
             button:SetScript("OnClick", function(self)
@@ -1248,6 +1273,14 @@ local function HoverMetrics(page, context)
     end
     metrics.preferredWidth = math.max(metrics.minWidth, metrics.preferredWidth)
     metrics.preferredHeight = math.max(metrics.minHeight, metrics.preferredHeight)
+    local scopeMetrics = GetScopeControlMetrics(context.scopeDefinition, context.scope)
+    if scopeMetrics then
+        -- Previews hide normal buttons, but their selectable realm range
+        -- remains interactive and must stay completely inside the shell.
+        local selectorWidth = scopeMetrics.width + Theme.Space.sm * 2
+        metrics.minWidth = math.max(metrics.minWidth, selectorWidth)
+        metrics.preferredWidth = math.max(metrics.preferredWidth, selectorWidth)
+    end
     return metrics
 end
 
@@ -1385,10 +1418,14 @@ function AccountView:SelectSettingsTarget(targetID)
 end
 
 local function CreateOverview(parent)
-    parent.heading = AddText(parent, "GameFontNormalLarge", nil, COLORS.text); parent.heading:SetPoint("TOPLEFT", 20, -18); parent.heading:SetText("账号概览")
-    parent.hint = AddText(parent, "GameFontNormalSmall", nil, COLORS.muted); parent.hint:SetPoint("TOPLEFT", 20, -47); parent.hint:SetText("从左侧选择业务页，比较角色的下一步行动。")
-    parent.characterSummary = AddText(parent, "GameFontNormalSmall", nil, COLORS.muted); parent.characterSummary:SetPoint("TOPRIGHT", -20, -18)
-    parent.actionHeading = AddText(parent, "GameFontNormalSmall", nil, COLORS.muted); parent.actionHeading:SetPoint("TOPLEFT", 20, -78); parent.actionHeading:SetText("下一步行动")
+    parent.scroll = Theme:CreateScrollFrame(parent)
+    parent.scroll:SetPoint("TOPLEFT", 0, 0); parent.scroll:SetPoint("BOTTOMRIGHT", -Theme.Geometry.scrollbarGutter, 0)
+    parent.content = CreateFrame("Frame", nil, parent.scroll); parent.scroll:SetScrollChild(parent.content)
+    local content = parent.content
+    parent.heading = AddText(content, "GameFontNormalLarge", nil, COLORS.text); parent.heading:SetPoint("TOPLEFT", 20, -18); parent.heading:SetText("账号概览")
+    parent.hint = AddText(content, "GameFontNormalSmall", nil, COLORS.muted); parent.hint:SetPoint("TOPLEFT", 20, -47); parent.hint:SetText("从左侧选择业务页，比较角色的下一步行动。")
+    parent.characterSummary = AddText(content, "GameFontNormalSmall", nil, COLORS.muted); parent.characterSummary:SetPoint("TOPRIGHT", -20, -18)
+    parent.actionHeading = AddText(content, "GameFontNormalSmall", nil, COLORS.muted); parent.actionHeading:SetPoint("TOPLEFT", 20, -78); parent.actionHeading:SetText("下一步行动")
     parent.lines = {}
     parent.actions = {}
 end
@@ -1439,7 +1476,7 @@ local function RefreshOverview(parent, context)
     for index, line in ipairs(lines) do
         local button = parent.lines[index]
         if not button then
-            button = CreateFrame("Button", nil, parent, "BackdropTemplate"); button:SetHeight(38); button:SetPoint("TOPLEFT", 20, -104 - ((index - 1) * 42)); button:SetPoint("TOPRIGHT", -20, -104 - ((index - 1) * 42))
+            button = CreateFrame("Button", nil, parent.content, "BackdropTemplate"); button:SetHeight(38); button:SetPoint("TOPLEFT", 20, -104 - ((index - 1) * 42)); button:SetPoint("TOPRIGHT", -20, -104 - ((index - 1) * 42))
             button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 }); button:SetBackdropColor(0.03, 0.10, 0.12, 0.85); button:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.45)
             button.title = AddText(button, "GameFontNormalSmall", nil, COLORS.accent); button.title:SetPoint("LEFT", 10, 0); button.title:SetWidth(125)
             button.text = AddText(button, "GameFontNormalSmall", nil, COLORS.text); button.text:SetPoint("LEFT", button.title, "RIGHT", 8, 0); button.text:SetPoint("RIGHT", -10, 0)
@@ -1468,17 +1505,21 @@ local function RefreshOverview(parent, context)
         local action = actions[index]
         local button = parent.actions[index]
         if not button then
-            button = CreateFrame("Button", nil, parent, "BackdropTemplate"); button:SetHeight(34)
+            button = CreateFrame("Button", nil, parent.content, "BackdropTemplate"); button:SetHeight(34)
             button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 }); button:SetBackdropColor(0.035, 0.12, 0.12, 0.9); button:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.45)
             button.title = AddText(button, "GameFontNormalSmall", nil, COLORS.text); button.title:SetPoint("LEFT", 9, 0); button.title:SetWidth(210)
             button.text = AddText(button, "GameFontNormalSmall", nil, COLORS.muted); button.text:SetPoint("LEFT", button.title, "RIGHT", 8, 0); button.text:SetPoint("RIGHT", -9, 0)
             button:SetScript("OnClick", function(self) AccountView:ShowPage(self.pageID) end); parent.actions[index] = button
         end
-        button:ClearAllPoints(); button:SetPoint("TOPLEFT", 20, actionBase - 24 - ((index - 1) * 38)); button:SetPoint("TOPRIGHT", -20, actionBase - 24 - ((index - 1) * 38))
+        button:ClearAllPoints(); button:SetPoint("TOPLEFT", parent.content, "TOPLEFT", 20, actionBase - 24 - ((index - 1) * 38)); button:SetPoint("TOPRIGHT", parent.content, "TOPRIGHT", -20, actionBase - 24 - ((index - 1) * 38))
         button.title:SetText((action.pageTitle or "业务") .. " · " .. (action.title or "角色")); button.text:SetText(action.text or "")
         button.pageID = action.pageID; button:Show()
     end
     for index = visibleActionCount + 1, #parent.actions do parent.actions[index]:Hide() end
+    local contentHeight = 136 + #lines * 42 + visibleActionCount * 38
+    parent.content:SetSize(math.max(1, parent.scroll:GetWidth() or 1), math.max(1, contentHeight))
+    parent.scroll:SetContentHeight(parent.content:GetHeight())
+    parent.scroll:RefreshScrollbar()
 end
 
 local function CreateCharacters(parent)
@@ -1684,7 +1725,7 @@ local function RefreshCharacters(parent, context)
     for index, character in ipairs(filtered) do
         local row = parent.rows[index]
         if not row then
-            row = CreateFrame("Button", nil, parent.listContent, "BackdropTemplate"); row:SetHeight(Theme.Table.rowHeight); row:SetPoint("TOPLEFT", 0, -((index - 1) * 30)); row:SetWidth(tableWidth)
+            row = CreateFrame("Button", nil, parent.listContent, "BackdropTemplate"); row:SetHeight(Theme.Table.rowHeight); row:SetPoint("TOPLEFT", 0, -((index - 1) * Theme.Table.rowHeight)); row:SetWidth(tableWidth)
             row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 }); row.name = AddText(row, "GameFontNormalSmall", Theme.Font.body, COLORS.text); row.name:SetPoint("LEFT", 9, 0); row.name:SetWidth(246)
             row.level = AddText(row, "GameFontNormalSmall", Theme.Font.body, COLORS.text); row.level:SetPoint("LEFT", row.name, "RIGHT", 6, 0); row.level:SetWidth(32)
             row.zone = AddText(row, "GameFontNormalSmall", nil, COLORS.muted); row.zone:SetPoint("LEFT", row.level, "RIGHT", 6, 0); row.zone:SetWidth(78)
@@ -1705,10 +1746,10 @@ local function RefreshCharacters(parent, context)
             row.delete:HookScript("OnLeave", function() GameTooltip:Hide() end)
             parent.rows[index] = row
         end
-        -- Hover uses compact rows so its maximum safe height can show twenty
-        -- complete characters without activating a scrollbar.
-        local rowHeight, rowStep = preview and 21 or Theme.Table.rowHeight, preview and 24 or 30
-        row:SetHeight(rowHeight); row:ClearAllPoints(); row:SetPoint("TOPLEFT", 0, -((index - 1) * rowStep)); row:SetWidth(surfaceWidth)
+        -- Hover uses the same compact matrix rhythm as every other preview;
+        -- no local row-step may create invisible whitespace between records.
+        local rowHeight = preview and Theme.Table.previewRowHeight or Theme.Table.rowHeight
+        row:SetHeight(rowHeight); row:ClearAllPoints(); row:SetPoint("TOPLEFT", 0, -((index - 1) * rowHeight)); row:SetWidth(surfaceWidth)
         row.name:Hide(); row.level:Hide(); row.zone:Hide(); row.itemLevel:Hide(); row.professions:Hide(); row.delete:Hide()
         row.dynamicCells = row.dynamicCells or {}
         x = 8
@@ -1749,7 +1790,7 @@ local function RefreshCharacters(parent, context)
         row:Show()
     end
     for index = #filtered + 1, #parent.rows do parent.rows[index]:Hide() end
-    local contentHeight = #filtered * (preview and 24 or 30)
+    local contentHeight = #filtered * (preview and Theme.Table.previewRowHeight or Theme.Table.rowHeight)
     local viewportHeight = parent.scroll:GetHeight() or 500
     parent.listContent:SetHeight(math.max(contentHeight, viewportHeight))
     parent.scroll:SetContentHeight(contentHeight)
@@ -1934,6 +1975,13 @@ local function RefreshSettings(parent)
         local row = SettingsRow(parent, index, "addon-panel")
         row:SetWidth(parent.content:GetWidth() or 600)
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", 2, -y)
+        -- The same host row is reused when switching business settings.  Hide
+        -- the previous addon's child frame first; otherwise its controls can
+        -- remain above the newly selected page.
+        if row.yiboHostedOwner ~= selected.id then
+            for _, child in ipairs({ row:GetChildren() }) do child:Hide() end
+            row.yiboHostedOwner = selected.id
+        end
         row:Show()
         local ok, heightOrError = xpcall(function()
             return details.CreateSettingsPanel(row, {
@@ -2500,7 +2548,7 @@ local function GetCharacterSurfaceMetrics(context)
     local tableWidth = GetArchiveTableWidth(fields, GetArchiveColumnWidths(fields))
     local inset = Theme:GetMatrixInsets(context and context.preview)
     local gutter = count > 20 and Theme.Geometry.scrollbarGutter or 0
-    return { minContentWidth = 582, naturalContentWidth = tableWidth + inset.left + inset.right + gutter, minContentHeight = 150, naturalContentHeight = inset.top + Theme.Font.assist + Theme.Space.md + Theme.Table.headerHeight + Theme.Space.xs + math.min(count, 20) * 30 + inset.bottom, verticalOverflow = "content" }
+    return { minContentWidth = 582, naturalContentWidth = tableWidth + inset.left + inset.right + gutter, minContentHeight = 150, naturalContentHeight = inset.top + Theme.Font.assist + Theme.Space.md + Theme.Table.headerHeight + Theme.Space.xs + math.min(count, 20) * Theme.Table.rowHeight + inset.bottom, verticalOverflow = "content" }
 end
 
 local function GetAboutSurfaceMetrics()
@@ -2517,7 +2565,7 @@ local function GetCharacterHoverMetrics(context)
     -- top/bottom inset.  This is an outer-frame metric, so it also includes
     -- the preview title chrome.  A generic 168px prefix left a visible footer
     -- below short account archives.
-    local contentHeight = inset.top + Theme.Font.assist + Theme.Space.md + Theme.Table.headerHeight + Theme.Space.xs + math.max(1, math.min(count, 20)) * 24 + inset.bottom
+    local contentHeight = inset.top + Theme.Font.assist + Theme.Space.md + Theme.Table.headerHeight + Theme.Space.xs + math.max(1, math.min(count, 20)) * Theme.Table.previewRowHeight + inset.bottom
     return {
         minWidth = 420,
         preferredWidth = math.max(520, tableWidth + 72),

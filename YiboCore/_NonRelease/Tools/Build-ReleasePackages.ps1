@@ -46,6 +46,22 @@ function Copy-GitHubFiles {
     $destination
 }
 
+function Move-PreviousPackagesToArchive {
+    param([Parameter(Mandatory = $true)][string]$OutputRoot, [Parameter(Mandatory = $true)][string]$AddonName)
+    $archiveRoot = Join-Path $OutputRoot "Archive"
+    New-Item -ItemType Directory -Path $archiveRoot -Force | Out-Null
+    $moved = 0
+    Get-ChildItem -LiteralPath $OutputRoot -File -Filter ("{0}-*.zip" -f $AddonName) | ForEach-Object {
+        $destination = Join-Path $archiveRoot $_.Name
+        if (Test-Path -LiteralPath $destination) {
+            $destination = Join-Path $archiveRoot ("{0}-{1}{2}" -f $_.BaseName, (Get-Date -Format "yyyyMMdd-HHmmssfff"), $_.Extension)
+        }
+        Move-Item -LiteralPath $_.FullName -Destination $destination
+        $moved++
+    }
+    return $moved
+}
+
 $projectRoot = (Resolve-Path $ProjectRoot).Path
 $tocPath = Join-Path $projectRoot "YiboCore.toc"
 $version = Get-AddonVersion -TocPath $tocPath
@@ -57,17 +73,20 @@ $apiTag = "api{0}" -f $apiVersion.Matches[0].Groups[1].Value
 $cfZip = Join-Path $outputRoot ("YiboCore-v{0}-{1}-curseforge.zip" -f $version, $apiTag)
 $githubZip = Join-Path $outputRoot ("YiboCore-v{0}-{1}-github.zip" -f $version, $apiTag)
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("YiboCore-build-" + [guid]::NewGuid().ToString("N"))
+$cfTempZip = Join-Path $tempRoot (Split-Path $cfZip -Leaf)
+$githubTempZip = Join-Path $tempRoot (Split-Path $githubZip -Leaf)
 
 try {
     $cfStage = Join-Path $tempRoot "curseforge"
     $githubStage = Join-Path $tempRoot "github"
     Copy-ReleaseFiles -SourceRoot $projectRoot -StageRoot $cfStage | Out-Null
     Copy-GitHubFiles -SourceRoot $projectRoot -StageRoot $githubStage | Out-Null
-    if (Test-Path -LiteralPath $cfZip) { Remove-Item -LiteralPath $cfZip -Force }
-    if (Test-Path -LiteralPath $githubZip) { Remove-Item -LiteralPath $githubZip -Force }
-    Compress-Archive -LiteralPath (Join-Path $cfStage "YiboCore") -DestinationPath $cfZip -CompressionLevel Optimal
-    Compress-Archive -LiteralPath (Join-Path $githubStage "YiboCore") -DestinationPath $githubZip -CompressionLevel Optimal
-    [pscustomobject]@{ Version = $version; CurseForge = $cfZip; GitHub = $githubZip } | Format-List
+    Compress-Archive -LiteralPath (Join-Path $cfStage "YiboCore") -DestinationPath $cfTempZip -CompressionLevel Optimal
+    Compress-Archive -LiteralPath (Join-Path $githubStage "YiboCore") -DestinationPath $githubTempZip -CompressionLevel Optimal
+    $archived = Move-PreviousPackagesToArchive -OutputRoot $outputRoot -AddonName "YiboCore"
+    Move-Item -LiteralPath $cfTempZip -Destination $cfZip
+    Move-Item -LiteralPath $githubTempZip -Destination $githubZip
+    [pscustomobject]@{ Version = $version; CurseForge = $cfZip; GitHub = $githubZip; Archived = $archived } | Format-List
 }
 finally {
     if (Test-Path -LiteralPath $tempRoot) { Remove-Item -LiteralPath $tempRoot -Recurse -Force }
