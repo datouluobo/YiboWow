@@ -2,7 +2,7 @@
 ## Title: |cff20e070[Yibo]|r YiboAltoBoss
 ## Notes: Boss 击杀与位面观察总览
 ## Author: YiboSoft
-## Version: 2.1.1
+## Version: 2.1.2
 ## IconTexture: Interface\AddOns\YiboAltoBoss\Media\YAB_MinimapIcon
 ## SavedVariables: YiboAltoBossDB
 ## RequiredDeps: YiboCore

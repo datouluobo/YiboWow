@@ -1037,6 +1037,9 @@ function YAB.CreateCoreSettingsPanel(parent, context)
 
     end
 
+    panel.yiboSettingsOwner = "altoboss"
+    panel:Show()
+
     panel.levelInput:SetText(tostring(YAB.GetLevelFilterExpr() or ""))
     panel.filter:Hide()
     local panelWidth = math.max(600, parent:GetWidth() or 600)

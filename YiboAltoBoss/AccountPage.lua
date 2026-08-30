@@ -3,9 +3,9 @@ local Theme = _G.YiboCore.UITheme
 local C = Theme.Colors
 
 local BOSS_WIDTH, ACTION_WIDTH, PHASE_WIDTH = 120, 88, 72
-local CHARACTER_MIN_WIDTH, CHARACTER_MAX_WIDTH = 72, 96
+local CHARACTER_MIN_WIDTH, CHARACTER_MAX_WIDTH = 64, 88
 local HEADER_H, COMPACT_HEADER_H, ROW_H, CELL_H = Theme.Table.groupHeight, Theme.Table.headerHeight, Theme.Table.rowHeight, 24
-local GROUP_GAP = 4
+local GROUP_GAP = 2
 local FIXED_HEADER = { 0.035, 0.18, 0.19, 1 }
 local FIXED_CELL = { 0.025, 0.145, 0.16, 0.98 }
 

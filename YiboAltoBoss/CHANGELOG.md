@@ -1,5 +1,17 @@
 # YiboAltoBoss 更新日志 / Changelog
 
+## v2.1.2
+
+### 中文
+
+- 缩窄角色列宽、减少分组间距。
+- 切换 AltoBoss 设置页时确保面板正确显示。
+
+### English
+
+- Narrowed character columns and reduced group spacing.
+- Ensured the AltoBoss settings panel displays correctly when switching pages.
+
 ## v2.1.1
 
 ### 中文
