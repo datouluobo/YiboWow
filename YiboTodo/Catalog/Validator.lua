@@ -12,13 +12,44 @@ function Addon:ValidateCatalog()
         if group.active and (not group.activityID or not Catalog.activities[group.activityID]) then Add(result, "errors", "missing-activity:" .. id) end
     end
     for id, recipe in pairs(Catalog.recipes) do
-        if recipe.active then
-            if recipe.verificationStatus ~= "verified" or not recipe.verifiedBuild or not recipe.evidence then Add(result, "errors", "unverified-active:" .. id)
-            elseif spells[recipe.recipeSpellID] then Add(result, "errors", "duplicate-spell:" .. tostring(recipe.recipeSpellID))
-            elseif not Catalog.groups[recipe.cooldownGroupID] then Add(result, "errors", "missing-group:" .. id)
-            elseif not (rules and rules.activeGroups and rules.activeGroups[recipe.cooldownGroupID]) then Add(result, "errors", "ruleset-disabled:" .. id)
-            else spells[recipe.recipeSpellID] = id; result.activeRecipes[#result.activeRecipes + 1] = recipe end
-        elseif recipe.verificationStatus == "candidate" then Add(result, "warnings", "candidate:" .. id) end
+        if recipe.catalogEnabled then
+            if not Catalog.groups[recipe.cooldownGroupID] then
+                Add(result, "errors", "missing-group:" .. id)
+            elseif not (rules and rules.activeGroups and rules.activeGroups[recipe.cooldownGroupID]) then
+                Add(result, "errors", "ruleset-disabled:" .. id)
+            elseif recipe.trackCooldown == false or not recipe.recipeSpellID then
+                Add(result, "warnings", "pending-index:" .. id)
+            elseif recipe.verificationStatus ~= "verified" and recipe.verificationStatus ~= "user-confirmed" then
+                Add(result, "errors", "unapproved-active:" .. id)
+            elseif spells[recipe.recipeSpellID] then
+                Add(result, "errors", "duplicate-spell:" .. tostring(recipe.recipeSpellID))
+            else
+                spells[recipe.recipeSpellID] = id
+                result.activeRecipes[#result.activeRecipes + 1] = recipe
+            end
+        elseif recipe.verificationStatus == "excluded-no-cooldown" then
+            Add(result, "warnings", "excluded-no-cooldown:" .. id)
+        end
+    end
+    for id, farm in pairs(Catalog.farmOperations or {}) do
+        if farm.provider ~= "farm-operation-observation" then
+            Add(result, "errors", "invalid-farm-provider:" .. tostring(id))
+        elseif farm.scope ~= "character" or tonumber(farm.mapID) == nil then
+            Add(result, "errors", "invalid-farm-scope:" .. tostring(id))
+        else
+            local spellSeen = {}
+            for spellID, rule in pairs(farm.rules or {}) do
+                if tonumber(spellID) == nil or type(rule) ~= "table" or type(rule.kind) ~= "string" then
+                    Add(result, "errors", "invalid-farm-rule:" .. tostring(id) .. ":" .. tostring(spellID))
+                elseif spellSeen[spellID] then
+                    Add(result, "errors", "duplicate-farm-spell:" .. tostring(spellID))
+                elseif rule.verificationStatus ~= "user-observed" then
+                    Add(result, "errors", "unapproved-farm-rule:" .. tostring(spellID))
+                else
+                    spellSeen[spellID] = true
+                end
+            end
+        end
     end
     self.catalogValidation = result
     return result

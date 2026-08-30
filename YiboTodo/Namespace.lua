@@ -3,11 +3,12 @@ local ADDON_NAME = ...
 local Addon = _G.YiboTodo or {}
 _G.YiboTodo = Addon
 Addon.NAME = ADDON_NAME or "YiboTodo"
-Addon.VERSION = "0.1.0-dev"
+Addon.VERSION = "0.2.1"
 Addon.REQUIRED_CORE_API = 5
-Addon.CATALOG_VERSION = 3
+Addon.CATALOG_VERSION = 12
 Addon.RULESET_ID = "mop-classic-50504"
-Addon.Catalog = Addon.Catalog or { activities = {}, groups = {}, recipes = {}, rulesets = {} }
+Addon.Catalog = Addon.Catalog or { activities = {}, groups = {}, recipes = {}, rulesets = {}, farmOperations = {} }
+Addon.Catalog.farmOperations = Addon.Catalog.farmOperations or {}
 Addon.Model = Addon.Model or {}
 Addon.Providers = Addon.Providers or {}
 Addon.Database = Addon.Database or {}

@@ -52,6 +52,16 @@ local function RemainingCooldown(index)
     return math.max(0, tonumber(first) or 0)
 end
 
+local function RecipeCraftable(index)
+    if type(GetTradeSkillInfo) ~= "function" then return nil end
+    local ok, _, difficulty = pcall(GetTradeSkillInfo, index)
+    if not ok or difficulty == nil then return nil end
+    -- Legacy trade-skill lists expose recipes below the current skill
+    -- requirement as "none".  Keep nil distinct: an unavailable API must
+    -- never be interpreted as a confirmed skill-point shortfall.
+    return difficulty ~= "none"
+end
+
 function Provider:Collect()
     local allowed, reason = self:CanCollect()
     if not allowed then return nil, reason end
@@ -80,6 +90,7 @@ function Provider:Collect()
             group.recipes[recipe.recipeSpellID] = {
                 learned = true, cooldownKnown = remaining ~= nil,
                 remainingAtScan = remaining, readyAt = remaining and (now + remaining) or nil,
+                craftable = RecipeCraftable(index),
             }
             observations[recipe.cooldownGroupID] = group
         end
@@ -104,7 +115,11 @@ function Provider:CollectForCurrentCharacter()
     local record = Addon.Database:GetProvider(character.id, self.id, true)
     record.revision = (tonumber(record.revision) or 0) + 1
     record.lastAttemptAt, record.lastSuccessAt, record.state, record.errorCode = Addon:Now(), Addon:Now(), "known", nil
-    record.observations = observations
+    -- Each profession window only exposes that profession's recipe list.
+    -- Merge its groups into the character record instead of erasing the
+    -- observations collected from the other primary profession.
+    record.observations = record.observations or {}
+    for groupID, observation in pairs(observations) do record.observations[groupID] = observation end
     Addon:NotifyChanged()
     return true, reason
 end

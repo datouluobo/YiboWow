@@ -1,8 +1,8 @@
 ## Interface: 50504
 ## Title: |cff20e070[Yibo]|r YiboTodo - 账号待办
-## Notes: 熊猫人之谜商业技能冷却的账号待办视图。
+## Notes: 熊猫人之谜专业冷却与农场操作记录的账号待办视图。
 ## Author: YiboSoft
-## Version: 0.1.0-dev
+## Version: 0.2.1
 ## IconTexture: Interface\AddOns\YiboTodo\Media\YiboTodoIcon-v6
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
@@ -15,12 +15,14 @@ Catalog\ActivityCatalog.lua
 Catalog\CooldownGroupCatalog.lua
 Catalog\CooldownCatalog_MoP.lua
 Catalog\Ruleset_50504.lua
+Catalog\FarmOperationCatalog.lua
 Catalog\Validator.lua
 Model\Schedule.lua
 Model\State.lua
 Model\Snapshot.lua
 Providers\Registry.lua
 Providers\ProfessionCooldown.lua
+Providers\FarmOperationObservation.lua
 Probe.lua
 Settings.lua
 AccountPage.lua
