@@ -163,6 +163,8 @@ end
 function AccountView:UpdateColumnPager(parent, pageID, stateKey, info, anchor, noun)
     parent.yiboColumnPager = parent.yiboColumnPager or {}
     local pager = parent.yiboColumnPager
+    self._columnPagers = self._columnPagers or {}
+    self._columnPagers[pager] = true
     local chrome = self.frame and not self.frame.preview and self.frame.titleBar or parent
     pager.previous = pager.previous or Theme:CreateButton(chrome, Theme.Size.compact, "‹", "secondary")
     pager.next = pager.next or Theme:CreateButton(chrome, Theme.Size.compact, "›", "secondary")
@@ -180,6 +182,17 @@ function AccountView:UpdateColumnPager(parent, pageID, stateKey, info, anchor, n
     Theme:BindTooltip(pager.next, "下一组角色", { range })
     pager.previous:SetScript("OnClick", function() if info.page > 1 then AccountView:SetColumnPage(pageID, stateKey, info.page - 1, info.pages) end end)
     pager.next:SetScript("OnClick", function() if info.page < info.pages then AccountView:SetColumnPage(pageID, stateKey, info.page + 1, info.pages) end end)
+end
+
+function AccountView:HideColumnPagers()
+    -- Pagers are hosted in the shared title bar so they never consume matrix
+    -- width.  Their lifetime must nevertheless remain page-local: otherwise
+    -- a pager from a character-column matrix survives into a row-oriented
+    -- page, where it is both misleading and inoperative.
+    for pager in pairs(self._columnPagers or {}) do
+        if pager.previous then pager.previous:Hide() end
+        if pager.next then pager.next:Hide() end
+    end
 end
 
 function AccountView:ResetWindowLayout()
@@ -1137,6 +1150,7 @@ function AccountView:ShowPage(pageID, options)
     self:CreateFrame()
     local context = self:BuildContext(page, options)
     if not options.preview then self:ApplyPageSize(page, context) end
+    self:HideColumnPagers()
     for id, instance in pairs(self.frame.instances) do if id ~= page.id then instance:Hide() end end
     local instance = self.frame.instances[page.id]
     if not instance then
@@ -1533,38 +1547,6 @@ local function CreateCharacters(parent)
     -- live archive summary so the table earns back a full line of height.
     parent.heading = AddText(parent, "GameFontNormalLarge", nil, COLORS.text); parent.heading:Hide()
     parent.hint = AddText(parent, "GameFontNormalSmall", nil, COLORS.muted); parent.hint:SetPoint("TOPLEFT", 20, -47); parent.hint:SetText("角色概况会自动保存；隐藏仅影响账号业务视图。")
-    parent.search = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
-    parent.search:SetSize(174, 20); parent.search:SetPoint("TOPRIGHT", -20, -47); parent.search:SetAutoFocus(false); parent.search:SetMaxLetters(48)
-    parent.search:SetTextInsets(7, 7, 0, 0); parent.search:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    parent.search:SetScript("OnTextChanged", function(self, userInput)
-        if userInput then parent.resetScroll = true; AccountView:RefreshPage() end
-    end)
-    parent.searchLabel = AddText(parent, "GameFontNormalSmall", nil, COLORS.muted); parent.searchLabel:SetPoint("RIGHT", parent.search, "LEFT", -6, 0); parent.searchLabel:SetText("搜索")
-    parent.filter = CreateChromeButton(parent, 116, 20, "档案：全部角色")
-    parent.filter:SetPoint("TOPRIGHT", -142, -18)
-    parent.filter:SetScript("OnClick", function()
-        local filter = ArchiveSettings().filters.page
-        local choices = { "all", "profiled", "missing" }
-        for index, choice in ipairs(choices) do if choice == filter.profile then filter.profile = choices[(index % #choices) + 1]; break end end
-        parent.resetScroll = true; AccountView:RefreshPage()
-    end)
-    parent.levelLabel = AddText(parent, "GameFontNormalSmall", nil, COLORS.muted); parent.levelLabel:SetText("等级")
-    parent.levelLabel:SetPoint("RIGHT", parent.searchLabel, "LEFT", -122, 0)
-    parent.level = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
-    parent.level:SetSize(112, 20); parent.level:SetPoint("RIGHT", parent.searchLabel, "LEFT", -6, 0); parent.level:SetAutoFocus(false); parent.level:SetMaxLetters(64); parent.level:SetTextInsets(7, 7, 0, 0)
-    local function SaveLevelFilter(control)
-        local valid, normalized, badToken = Core.LevelFilter:Validate(control:GetText())
-        if not valid then
-            control:SetText(ArchiveSettings().filters.page.levelExpr or "")
-            Core:Print("等级过滤格式无效：" .. tostring(badToken))
-            return
-        end
-        ArchiveSettings().filters.page.levelExpr = normalized
-        control:SetText(normalized); parent.resetScroll = true; AccountView:RefreshPage()
-    end
-    parent.level:SetScript("OnEnterPressed", function(self) SaveLevelFilter(self); self:ClearFocus() end)
-    parent.level:SetScript("OnEditFocusLost", SaveLevelFilter)
-    parent.level:SetScript("OnEscapePressed", function(self) self:SetText(ArchiveSettings().filters.page.levelExpr or ""); self:ClearFocus() end)
     parent.listHeader = CreateFrame("Frame", nil, parent)
     parent.listHeader:SetPoint("TOPLEFT", 20, -82); parent.listHeader:SetWidth(850); parent.listHeader:SetHeight(Theme.Table.headerHeight)
     parent.listHeader.bg = parent.listHeader:CreateTexture(nil, "BACKGROUND"); parent.listHeader.bg:SetAllPoints(); parent.listHeader.bg:SetColorTexture(COLORS.chrome[1], COLORS.chrome[2], COLORS.chrome[3], 0.95)
@@ -1681,23 +1663,10 @@ local function RefreshCharacters(parent, context)
     local preview = context and context.preview == true
     local inset = Theme:GetMatrixInsets(preview)
     local characters = (context and ArchiveCharacters(context)) or ArchiveCharacters({ preview = false })
-    local query = preview and "" or string.lower(parent.search:GetText() or "")
-    local filtered = {}
-    for _, character in ipairs(characters) do
-        local identity = string.lower((character.name or "") .. " " .. (character.realm or ""))
-        if query == "" or string.find(identity, query, 1, true) then
-            filtered[#filtered + 1] = character
-        end
-    end
     local sort = AccountView:GetDefaultCharacterSort()
-    local pageFilter = ArchiveSettings().filters.page
-    parent.filter:SetText("档案：" .. (PROFILE_FILTER_LABELS[pageFilter.profile] or PROFILE_FILTER_LABELS.all))
-    parent.filter:SetShown(not preview)
-    parent.search:SetShown(not preview); parent.searchLabel:SetShown(not preview); parent.level:SetShown(not preview); parent.levelLabel:SetShown(not preview)
-    if not parent.level:HasFocus() then parent.level:SetText(pageFilter.levelExpr or "") end
     local arrow = sort.mode == "custom" and "" or (sort.direction == "asc" and " ↑" or " ↓")
     local sortLabel = (SORT_LABELS[sort.mode] or "最近登录") .. arrow
-    parent.hint:SetText((preview and "预览 " or "共 ") .. #filtered .. (preview and " 名角色" or " / " .. #characters .. " 名角色") .. " · 排序：" .. sortLabel)
+    parent.hint:SetText((preview and "预览 " or "共 ") .. #characters .. " 名角色 · 排序：" .. sortLabel)
     -- The archive owns a heading and a one-line summary, but never a blank
     -- fixed region.  The matrix begins after the documented summary-to-table
     -- gap and all remaining edges come from the shared directional tokens.
@@ -1728,7 +1697,7 @@ local function RefreshCharacters(parent, context)
         cell:ClearAllPoints(); cell:SetPoint("LEFT", x, 0); cell:SetWidth(width); cell:SetJustifyH("LEFT"); cell:SetText(field.title); cell:Show(); x = x + width + GetArchiveColumnGap(fields, fieldIndex)
     end
     for fieldIndex = #fields + 1, #parent.listHeader.dynamicCells do parent.listHeader.dynamicCells[fieldIndex]:Hide() end
-    for index, character in ipairs(filtered) do
+    for index, character in ipairs(characters) do
         local row = parent.rows[index]
         if not row then
             row = CreateFrame("Button", nil, parent.listContent, "BackdropTemplate"); row:SetHeight(Theme.Table.rowHeight); row:SetPoint("TOPLEFT", 0, -((index - 1) * Theme.Table.rowHeight)); row:SetWidth(tableWidth)
@@ -1793,8 +1762,8 @@ local function RefreshCharacters(parent, context)
         Theme:SetCurrentCharacterOutline(row.currentOutline, isCurrent)
         row:Show()
     end
-    for index = #filtered + 1, #parent.rows do parent.rows[index]:Hide() end
-    local contentHeight = #filtered * (preview and Theme.Table.previewRowHeight or Theme.Table.rowHeight)
+    for index = #characters + 1, #parent.rows do parent.rows[index]:Hide() end
+    local contentHeight = #characters * (preview and Theme.Table.previewRowHeight or Theme.Table.rowHeight)
     local viewportHeight = parent.scroll:GetHeight() or 500
     parent.listContent:SetHeight(math.max(contentHeight, viewportHeight))
     parent.scroll:SetContentHeight(contentHeight)

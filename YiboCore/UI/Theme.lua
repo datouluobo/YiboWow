@@ -286,6 +286,10 @@ function Theme:CreateScrollFrame(parent)
     bar:SetScript("OnLeave", function(control) control:GetThumbTexture():SetColorTexture(Color(Theme.Colors.accent)) end)
 
     local syncing = false
+    -- WoW frame coordinates may differ by a fractional UI-scale pixel.  Do
+    -- not turn that rounding residue into a visible, but effectively useless,
+    -- scrollbar on an otherwise fully fitted surface.
+    local SCROLL_RANGE_EPSILON = 1
     function scroll:UpdateScrollbar()
         local viewportHeight = self:GetHeight() or 0
         -- Anchored frames can refresh once before WoW has resolved their
@@ -293,11 +297,13 @@ function Theme:CreateScrollFrame(parent)
         -- a fully overflowing list, or it leaves a phantom scrollbar behind.
         local range = viewportHeight > 1 and (self:GetVerticalScrollRange() or 0) or 0
         if self.contentHeight and viewportHeight > 1 then range = math.max(0, self.contentHeight - viewportHeight) end
-        self.scrollRange = range
-        bar:SetMinMaxValues(0, range)
-        bar:SetValue(math.min(self:GetVerticalScroll() or 0, range))
-        bar:SetShown(range > 0)
-        return range
+        local visibleRange = range > SCROLL_RANGE_EPSILON and range or 0
+        self.scrollRange = visibleRange
+        bar:SetMinMaxValues(0, visibleRange)
+        bar:SetValue(math.min(self:GetVerticalScroll() or 0, visibleRange))
+        if visibleRange == 0 then self:SetVerticalScroll(0) end
+        bar:SetShown(visibleRange > 0)
+        return visibleRange
     end
     function scroll:RefreshScrollbar()
         if self.scrollbarRefreshPending then return end
