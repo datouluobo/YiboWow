@@ -107,6 +107,24 @@ function Theme:MeasureText(size, value)
     return math.ceil(self._measureText:GetStringWidth() or 0)
 end
 
+-- A current character is a navigation aid, not a data state.  Account pages
+-- therefore mark it with this shared accent outline instead of changing the
+-- row/column's semantic fill or adding a text glyph beside the name.
+function Theme:CreateCurrentCharacterOutline(parent)
+    local outline = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    outline:SetAllPoints(parent)
+    outline:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    outline:SetBackdropBorderColor(self.Colors.accent[1], self.Colors.accent[2], self.Colors.accent[3], 0.96)
+    outline:SetFrameLevel((parent:GetFrameLevel() or 0) + 10)
+    outline:EnableMouse(false)
+    outline:Hide()
+    return outline
+end
+
+function Theme:SetCurrentCharacterOutline(outline, shown)
+    if outline then outline:SetShown(shown == true) end
+end
+
 function Theme:CreateButton(parent, width, label, kind)
     local button = CreateFrame("Button", nil, parent, "BackdropTemplate")
     button:SetSize(width or 84, self.Size.standard)
