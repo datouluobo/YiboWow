@@ -48,7 +48,10 @@ end
 local function ProjectTooltip(project)
     local lines = { { kind = "pair", label = "状态", value = project.statusText or STATUS_TEXT[project.state] or "状态异常" } }
     if project.state == "unknown" and not project.optimisticFarm then
-        lines[#lines + 1] = { kind = "text", text = "尚未取得该角色自己的可靠冷却记录，因此不会按可制作处理。" }
+        local detail = project.reason == "recipe-unlearned"
+            and "该角色尚未学会此配方。"
+            or "尚未取得该角色自己的可靠冷却记录，因此不会按可制作处理。"
+        lines[#lines + 1] = { kind = "text", text = detail }
     end
     if project.readyAt and project.state == "cooldown" then
         lines[#lines + 1] = { kind = "pair", label = "恢复", value = date("%m-%d %H:%M", project.readyAt) }

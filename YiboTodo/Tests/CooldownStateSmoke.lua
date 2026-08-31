@@ -55,6 +55,9 @@ assert(State:Evaluate(celestialGroup, nil, 1000, 481).state == "skill-insufficie
 local insufficientSkill = Cooling(143011, 0)
 insufficientSkill.recipes[143011].craftable = false
 assert(State:Evaluate(celestialGroup, insufficientSkill, 1000).state == "skill-insufficient", "skill-point shortfall is distinct from cooldown")
+local unlearnedRecipe = { sourceState = "known", observedAt = 1000, recipes = { [143011] = { learned = false } } }
+local unlearnedState = State:Evaluate(celestialGroup, unlearnedRecipe, 1000, 600)
+assert(unlearnedState.state == "unknown" and unlearnedState.reason == "recipe-unlearned", "unlearned recipe keeps the unknown display state with a specific reason")
 
 GetGameTime = function() return 7, 1 end
 local afterDailyReset = Cooling(143011, 200000)
@@ -130,7 +133,7 @@ Addon.Core = {
     Characters = { GetCurrent = function() return { id = "test-character" } end },
     DataDomains = {
         Get = function()
-            return { state = "known", data = { primaryProfessions = { { id = 197 }, { id = 171 }, { id = 165 } } } }
+            return { state = "known", data = { primaryProfessions = { { id = 197, name = "裁缝" }, { id = 171, name = "炼金术" }, { id = 165, name = "制皮" } } } }
         end,
     },
 }
@@ -140,6 +143,9 @@ assert(observations["mop.tailoring.celestial-cloth"].recipes[143011].readyAt == 
 assert(observations["mop.alchemy.living-steel"].recipes[114780].readyAt == 4600, "provider keeps living steel collection")
 assert(observations["mop.leatherworking.magnificent-fur"].recipes[140040].readyAt == 4600, "provider collects crafted magnificent hide cooldown")
 assert(observations["mop.tailoring.celestial-cloth"].recipes[143011].craftable == false, "provider records skill-point shortfall")
+GetTradeSkillLine = function() return "裁缝" end
+observations = assert(Addon.Providers.Registry:Get("profession-cooldown"):Collect())
+assert(observations["mop.tailoring.imperial-silk"].recipes[125557].learned == false, "identified profession window records an absent recipe as unlearned")
 
 dofile("YiboTodo/Database.lua")
 _G.YiboTodoDB = {

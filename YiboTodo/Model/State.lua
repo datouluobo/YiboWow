@@ -56,7 +56,11 @@ function State:Evaluate(group, observation, now, skillLevel)
             end
         end
     end
-    if learned == 0 then return { state = "unknown", confidence = "unknown" } end
+    -- Keep the visual state as unknown: the marker continues to mean that
+    -- this project is not actionable.  The reason lets the UI explain the
+    -- specific, confirmed case of an unlearned recipe without adding a new
+    -- state or icon treatment.
+    if learned == 0 then return { state = "unknown", confidence = "unknown", reason = "recipe-unlearned" } end
     -- A shared-cooldown group is unavailable only when every observed learned
     -- member is below its recipe skill requirement. One craftable alternative
     -- remains actionable/cooling according to its own cooldown observation.

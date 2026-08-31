@@ -62,6 +62,19 @@ local function RecipeCraftable(index)
     return difficulty ~= "none"
 end
 
+local function CurrentProfessionID(domain)
+    -- A legacy trade-skill window only exposes one profession.  Its title is
+    -- the reliable boundary that lets us distinguish an absent recipe from a
+    -- recipe belonging to the character's other profession.
+    if type(GetTradeSkillLine) ~= "function" then return nil end
+    local ok, name = pcall(GetTradeSkillLine)
+    if not ok or type(name) ~= "string" or name == "" then return nil end
+    for _, profession in ipairs(domain.data.primaryProfessions or {}) do
+        if profession.name == name then return tonumber(profession.id) end
+    end
+    return nil
+end
+
 function Provider:Collect()
     local allowed, reason = self:CanCollect()
     if not allowed then return nil, reason end
@@ -74,24 +87,34 @@ function Provider:Collect()
         if professionID then owned[professionID] = true end
     end
     local now, indexes, active = Addon:Now(), RecipeIndex(), Addon:GetActiveRecipes()
+    local currentProfessionID = CurrentProfessionID(domain)
     local observations = {}
     for _, recipe in ipairs(active) do
         local index = indexes[recipe.recipeSpellID]
-        -- Do not manufacture a "not learned" result for an unrelated open
-        -- profession.  A group enters this scan only after its own recipe has
-        -- appeared in the player's current recipe list.
-        if index and owned[tonumber(recipe.professionID)] then
+        local recipeProfessionID = tonumber(recipe.professionID)
+        -- When the open window identifies its profession, every catalog
+        -- recipe for that profession has a meaningful result: present means
+        -- learned, absent means not learned.  Without that boundary retain
+        -- the conservative legacy behavior and only record recipes observed
+        -- in the list, never guessing about another profession.
+        if owned[recipeProfessionID]
+            and (not currentProfessionID or recipeProfessionID == currentProfessionID)
+            and (index or recipeProfessionID == currentProfessionID) then
             local group = observations[recipe.cooldownGroupID] or {
             provider = self.id, providerSchemaVersion = self.schemaVersion, catalogVersion = Addon.CATALOG_VERSION,
             rulesetID = Addon.RULESET_ID, observedAt = now, sourceState = "known", source = reason,
             recipes = {},
             }
-            local remaining = RemainingCooldown(index)
-            group.recipes[recipe.recipeSpellID] = {
-                learned = true, cooldownKnown = remaining ~= nil,
-                remainingAtScan = remaining, readyAt = remaining and (now + remaining) or nil,
-                craftable = RecipeCraftable(index),
-            }
+            if index then
+                local remaining = RemainingCooldown(index)
+                group.recipes[recipe.recipeSpellID] = {
+                    learned = true, cooldownKnown = remaining ~= nil,
+                    remainingAtScan = remaining, readyAt = remaining and (now + remaining) or nil,
+                    craftable = RecipeCraftable(index),
+                }
+            else
+                group.recipes[recipe.recipeSpellID] = { learned = false }
+            end
             observations[recipe.cooldownGroupID] = group
         end
     end
