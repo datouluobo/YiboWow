@@ -2333,6 +2333,7 @@ local ABOUT_ADDONS = {
         version = "0.1",
         description = "汇总多角色待办与专业冷却，明确下一项可做事务。",
         icon = "Interface\\AddOns\\YiboTodo\\Media\\YiboTodoIcon-v6",
+        url = "https://www.curseforge.com/wow/addons/yibotodo",
     },
     {
         name = "YiboReputation",
@@ -2375,6 +2376,25 @@ local function SetAboutLinkOpen(parent, target)
         end
     end
 
+    parent:LayoutAboutContent()
+end
+
+local CORE_PROJECT_URL = "https://www.curseforge.com/wow/addons/yibocore"
+
+local function SetAboutCoreLinkOpen(parent)
+    local hero = parent.hero
+    hero.linkOpen = not hero.linkOpen
+    hero:SetHeight(hero.linkOpen and 146 or 112)
+    hero.linkBox:SetShown(hero.linkOpen)
+    hero.copyHint:SetShown(hero.linkOpen)
+    hero.linkButton:SetText(hero.linkOpen and "收起链接" or "获取链接")
+    if hero.linkOpen then
+        hero.linkBox:SetText(CORE_PROJECT_URL)
+        hero.linkBox:SetFocus()
+        hero.linkBox:HighlightText()
+    else
+        hero.linkBox:ClearFocus()
+    end
     parent:LayoutAboutContent()
 end
 
@@ -2483,6 +2503,29 @@ local function CreateAbout(parent)
     parent.hero.metadata = AddText(parent.hero, "GameFontNormalSmall", Theme.Font.meta, COLORS.muted)
     parent.hero.metadata:SetJustifyH("RIGHT")
     parent.hero.metadata:SetPoint("TOPRIGHT", parent.hero.status, "BOTTOMRIGHT", 0, -7)
+    parent.hero.linkButton = CreateChromeButton(parent.hero, 112, 26, "获取链接")
+    parent.hero.linkButton:SetPoint("TOPRIGHT", -18, -74)
+    parent.hero.linkBox = CreateFrame("EditBox", nil, parent.hero, "BackdropTemplate")
+    parent.hero.linkBox:SetHeight(24); parent.hero.linkBox:SetPoint("BOTTOMLEFT", 110, 10); parent.hero.linkBox:SetPoint("BOTTOMRIGHT", -128, 10)
+    parent.hero.linkBox:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    parent.hero.linkBox:SetBackdropColor(COLORS.bg[1], COLORS.bg[2], COLORS.bg[3], 1)
+    parent.hero.linkBox:SetBackdropBorderColor(COLORS.accent[1], COLORS.accent[2], COLORS.accent[3], 0.82)
+    parent.hero.linkBox:SetFont(STANDARD_TEXT_FONT, Theme.Font.assist, "")
+    parent.hero.linkBox:SetTextColor(COLORS.text[1], COLORS.text[2], COLORS.text[3])
+    parent.hero.linkBox:SetTextInsets(7, 7, 0, 0); parent.hero.linkBox:SetAutoFocus(false); parent.hero.linkBox:SetMaxLetters(240)
+    parent.hero.linkBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    parent.hero.linkBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+    parent.hero.linkBox:SetScript("OnMouseUp", function(self) self:HighlightText() end)
+    parent.hero.linkBox:SetScript("OnTextChanged", function(self, userInput)
+        if userInput and self:GetText() ~= CORE_PROJECT_URL then
+            self:SetText(CORE_PROJECT_URL); self:HighlightText()
+        end
+    end)
+    parent.hero.copyHint = AddText(parent.hero, "GameFontNormalSmall", Theme.Font.meta, COLORS.accent)
+    parent.hero.copyHint:SetJustifyH("RIGHT")
+    parent.hero.copyHint:SetPoint("LEFT", parent.hero.linkBox, "RIGHT", 8, 0); parent.hero.copyHint:SetPoint("RIGHT", -18, 0); parent.hero.copyHint:SetText("按 Ctrl+C 复制")
+    parent.hero.linkBox:Hide(); parent.hero.copyHint:Hide()
+    parent.hero.linkButton:SetScript("OnClick", function() SetAboutCoreLinkOpen(parent) end)
 
     parent.childHeading = AddText(parent.content, "GameFontNormal", Theme.Font.section, COLORS.accent)
     parent.childHeading:SetText("YiboCore 子插件")
@@ -2495,7 +2538,7 @@ local function CreateAbout(parent)
     parent.footer = AddText(parent, "GameFontNormalSmall", Theme.Font.meta, COLORS.muted, "RIGHT")
     parent.footer:SetPoint("BOTTOMRIGHT", -20, 12); parent.footer:SetText("作者 YiboSoft · CurseForge")
     parent.LayoutAboutContent = function(container)
-        local y = 140
+        local y = (container.hero:GetHeight() or 112) + 28
         container.childHeading:ClearAllPoints(); container.childHeading:SetPoint("TOPLEFT", 0, -y)
         y = y + 26
         for _, row in ipairs(container.addonRows) do

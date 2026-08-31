@@ -39,6 +39,10 @@ function Probe:Run(verbose)
         local name = GetFactionInfoByID(Addon.Data.BLACK_PRINCE_FACTION_ID)
         return name
     end)
+    probes.itemCount = Call("itemCount", function()
+        if type(GetItemCount) ~= "function" then return nil end
+        return GetItemCount(18563, true, false, true)
+    end)
     if verbose then
         for name, result in pairs(probes) do
             if type(result) == "table" and result.available ~= nil then

@@ -1,5 +1,26 @@
 local Addon = _G.YiboReputation
 
+-- Snapshot data is keyed by canonical faction ID in current schemas.  The
+-- legacy fallback below is still useful for an irregular imported snapshot,
+-- but it must not scan every faction for every catalog ID that is absent. A
+-- weak cache keeps the derived index out of SavedVariables and vanishes when
+-- Core replaces a snapshot.
+Addon._factionLookupCache = Addon._factionLookupCache or setmetatable({}, { __mode = "k" })
+
+local function LegacyFactionLookup(snapshot, factions)
+    local lookup = Addon._factionLookupCache[snapshot]
+    if lookup then return lookup end
+    lookup = {}
+    for _, data in pairs(factions) do
+        if type(data) == "table" then
+            local factionID = tonumber(data.factionID)
+            if factionID then lookup[factionID] = data end
+        end
+    end
+    Addon._factionLookupCache[snapshot] = lookup
+    return lookup
+end
+
 function Addon:GetFactionData(snapshot, factionID)
     local factions = snapshot and snapshot.data and snapshot.data.factions
     if not factions then return nil end
@@ -26,11 +47,9 @@ function Addon:GetFactionData(snapshot, factionID)
     local direct = factions[factionID] or factions[tostring(factionID)]
     if direct then return direct end
     -- Older snapshots and some client APIs serialize map keys differently.
-    -- The record's own factionID remains authoritative in both cases.
-    for _, data in pairs(factions) do
-        if type(data) == "table" and tonumber(data.factionID) == tonumber(factionID) then return data end
-    end
-    return nil
+    -- The record's own factionID remains authoritative. Build that fallback
+    -- index once per snapshot instead of repeatedly walking all factions.
+    return LegacyFactionLookup(snapshot, factions)[tonumber(factionID) or factionID]
 end
 
 function Addon:GetFactionState(snapshot, factionID)

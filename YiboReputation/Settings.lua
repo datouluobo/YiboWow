@@ -1,7 +1,7 @@
 local Addon, Core = _G.YiboReputation, _G.YiboCore
 local Theme = Core.UITheme
 function Addon:CreateSettingsPanel(parent, context)
- local panel=parent.yrpSettings or CreateFrame("Frame",nil,parent); parent.yrpSettings=panel; panel:SetPoint("TOPLEFT",parent,"TOPLEFT",0,0); panel:SetWidth(parent:GetWidth()); panel.controls=panel.controls or {}
+ local panel=parent.yrpSettings or CreateFrame("Frame",nil,parent); parent.yrpSettings=panel; panel.yiboSettingsOwner="reputation"; panel:SetPoint("TOPLEFT",parent,"TOPLEFT",0,0); panel:SetWidth(parent:GetWidth()); panel:Show(); panel.controls=panel.controls or {}
  local settings=self:GetSettings(); if settings.defaultMatrixFilter~="monitored" then settings.defaultMatrixFilter="all" end; local items={{"Broker 悬停：监控声望账号对比",nil},{"好友度显示累计进度",function(v) settings.showFriendshipTotal=v end},{"主窗口默认过滤："..({all="全部",monitored="已监控"})[settings.defaultMatrixFilter],function() settings.defaultMatrixFilter=settings.defaultMatrixFilter=="monitored" and "all" or "monitored" end}}
  local y=0; for i,item in ipairs(items) do
   local entry=item; local control=panel.controls[i] or ((i==1 or i==3) and Theme:CreateButton(panel,230,"") or Theme:CreateCheckbox(panel,""));panel.controls[i]=control;control:ClearAllPoints();control:SetPoint("TOPLEFT",panel,"TOPLEFT",((i==1 or i==3) and 0 or 252),-y)

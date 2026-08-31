@@ -1,8 +1,8 @@
 ## Interface: 50504
 ## Title: |cff20e070[Yibo]|r YiboLegendary - 传说之路
-## Notes: 熊猫人之谜传说披风任务进度助手。
+## Notes: MoP Classic 传说物品获取进度管理。
 ## Author: YiboSoft
-## Version: 1.0
+## Version: 2.0.0
 ## IconTexture: Interface\AddOns\YiboLegendary\Media\YiboLegendaryIcon-v1
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
@@ -11,5 +11,7 @@
 
 Bootstrap.lua
 Data.lua
+Catalog.lua
+Model.lua
 Probe.lua
 UI.lua

@@ -7,7 +7,7 @@ local Theme = _G.YiboCore.UITheme
 local Page = {}
 YQB.AccountPage = Page
 
-local ROW_H, GROUP_H, CHARACTER_COL_W, COMPACT_CHARACTER_COL_W, GLOBAL_W, STATUS_HIT = Theme.Table.rowHeight, Theme.Table.groupHeight, 92, 72, 40, 24
+local ROW_H, GROUP_H, CHARACTER_COL_W, COMPACT_CHARACTER_COL_W, GLOBAL_W, STATUS_HIT = Theme.Table.rowHeight, Theme.Table.groupHeight, 84, 64, 36, 20
 local PREVIEW_MARGIN, PREVIEW_SCROLLBAR_GUTTER, CORE_PREVIEW_BORDER = 16, 16, 2
 local COLORS = Theme.Colors
 
@@ -110,45 +110,16 @@ local function Row(instance)
 end
 
 local function SetCharacterBands(row, characters, startX, characterWidth, showCharacters)
-    local currentID = YQB.GetCurrentCharacterID()
-    for index, key in ipairs(characters) do
-        local band = row.characterBands[index]
-        if not band then
-            band = row:CreateTexture(nil, "ARTWORK", nil, -8)
-            row.characterBands[index] = band
-            local edges = {}
-            edges.left = row:CreateTexture(nil, "ARTWORK", nil, -7)
-            edges.right = row:CreateTexture(nil, "ARTWORK", nil, -7)
-            edges.bottom = row:CreateTexture(nil, "ARTWORK", nil, -7)
-            for _, edge in pairs(edges) do edge:SetColorTexture(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.82) end
-            row.characterBandEdges[index] = edges
-        end
-        band:ClearAllPoints()
-        band:SetPoint("TOPLEFT", row, "TOPLEFT", startX + ((index - 1) * characterWidth), 0)
-        band:SetSize(characterWidth, ROW_H)
-        band:SetColorTexture(COLORS.current[1], COLORS.current[2], COLORS.current[3], 0.46)
-        local shown = showCharacters and key == currentID
-        band:SetShown(shown)
-        local edges = row.characterBandEdges[index]
-        edges.left:ClearAllPoints(); edges.left:SetPoint("TOPLEFT", band, "TOPLEFT"); edges.left:SetPoint("BOTTOMLEFT", band, "BOTTOMLEFT"); edges.left:SetWidth(1)
-        edges.right:ClearAllPoints(); edges.right:SetPoint("TOPRIGHT", band, "TOPRIGHT"); edges.right:SetPoint("BOTTOMRIGHT", band, "BOTTOMRIGHT"); edges.right:SetWidth(1)
-        edges.bottom:ClearAllPoints(); edges.bottom:SetPoint("BOTTOMLEFT", band, "BOTTOMLEFT"); edges.bottom:SetPoint("BOTTOMRIGHT", band, "BOTTOMRIGHT"); edges.bottom:SetHeight(1)
-        edges.left:SetShown(shown); edges.right:SetShown(shown); edges.bottom:Hide()
-    end
-    for index = #characters + 1, #row.characterBands do
-        row.characterBands[index]:Hide()
-        for _, edge in pairs(row.characterBandEdges[index]) do edge:Hide() end
+    -- The matrix owns one continuous current-character outline.  Per-row
+    -- fills and stitched edges made the same role look different by row.
+    for _, band in ipairs(row.characterBands or {}) do band:Hide() end
+    for _, edges in ipairs(row.characterBandEdges or {}) do
+        for _, edge in pairs(edges) do edge:Hide() end
     end
 end
 
 local function FinishCharacterColumnBorder(instance, characters)
-    local currentID = YQB.GetCurrentCharacterID()
-    local currentIndex
-    for index, key in ipairs(characters) do if key == currentID then currentIndex = index break end end
-    local lastRow = instance.rows[instance.rowCount]
-    if currentIndex and lastRow and lastRow.characterBandEdges[currentIndex] then
-        lastRow.characterBandEdges[currentIndex].bottom:Show()
-    end
+    -- Positioning happens after the content height is known in Refresh.
 end
 
 local function AddCell(row, index)
@@ -169,7 +140,7 @@ local function SetStatusCheckbox(button, blocked, currentCharacter)
             control.box:SetBackdropBorderColor(COLORS.danger[1], COLORS.danger[2], COLORS.danger[3], 0.92)
         else
             control.box:SetBackdropColor(COLORS.chrome[1], COLORS.chrome[2], COLORS.chrome[3], 0.96)
-            control.box:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], control.currentCharacter and 1 or 0.72)
+            control.box:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.72)
         end
     end
     button:SetChecked(blocked)
@@ -182,6 +153,7 @@ local function Header(instance, characters, showGlobal, showCharacters, showReal
     if showGlobal then instance.headerGlobal:SetPoint("LEFT", instance.header, "LEFT", instance.taskWidth, 0) end
     for _, cell in ipairs(instance.headerCharacters) do cell:Hide() end
     local x = instance.taskWidth + (showGlobal and GLOBAL_W or 0)
+    instance.currentCharacterX, instance.currentCharacterWidth = nil, nil
     local characterWidth = CharacterWidth(instance)
     if showCharacters then
         for index, key in ipairs(characters) do
@@ -192,45 +164,43 @@ local function Header(instance, characters, showGlobal, showCharacters, showReal
                 cell:EnableMouse(true)
                 cell.name = Text(cell, "GameFontNormalSmall", COLORS.text)
                 cell.name:SetJustifyH("CENTER"); cell.name:SetWordWrap(false)
-                cell.name:SetPoint("TOPLEFT", cell, "TOPLEFT", 2, -3)
-                cell.name:SetPoint("TOPRIGHT", cell, "TOPRIGHT", -2, -3)
-                cell.name:SetHeight(14)
+                cell.name:SetPoint("TOPLEFT", cell, "TOPLEFT", 2, -2)
+                cell.name:SetPoint("TOPRIGHT", cell, "TOPRIGHT", -2, -2)
+                cell.name:SetHeight(13)
                 cell.realm = Text(cell, "GameFontNormalSmall", COLORS.muted, Theme.Font.meta)
                 cell.realm:SetJustifyH("CENTER"); cell.realm:SetWordWrap(false)
-                cell.realm:SetPoint("BOTTOMLEFT", cell, "BOTTOMLEFT", 2, 2)
-                cell.realm:SetPoint("BOTTOMRIGHT", cell, "BOTTOMRIGHT", -2, 2)
-                cell.realm:SetHeight(12)
+                cell.realm:SetPoint("BOTTOMLEFT", cell, "BOTTOMLEFT", 2, 1)
+                cell.realm:SetPoint("BOTTOMRIGHT", cell, "BOTTOMRIGHT", -2, 1)
+                cell.realm:SetHeight(10)
                 instance.headerCharacters[index] = cell
             end
             local name, realm = CharacterIdentity(instance.characterRecords[key], key)
             local color = ClassColor(key)
-            if key == YQB.GetCurrentCharacterID() then
-                cell:SetBackdropColor(COLORS.current[1], COLORS.current[2], COLORS.current[3], 0.64)
-                cell:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.72)
-            else
-                cell:SetBackdropColor(0, 0, 0, 0)
-                cell:SetBackdropBorderColor(0, 0, 0, 0)
-            end
+            cell:SetBackdropColor(0, 0, 0, 0)
+            cell:SetBackdropBorderColor(0, 0, 0, 0)
             cell.name:SetTextColor(color.r or color[1], color.g or color[2], color.b or color[3])
             cell.name:SetText(name)
             cell.name:ClearAllPoints()
             if showRealms then
-                cell.name:SetWordWrap(false); cell.name:SetHeight(14)
-                cell.name:SetPoint("TOPLEFT", cell, "TOPLEFT", 2, -3)
-                cell.name:SetPoint("TOPRIGHT", cell, "TOPRIGHT", -2, -3)
+                cell.name:SetWordWrap(false); cell.name:SetHeight(13)
+                cell.name:SetPoint("TOPLEFT", cell, "TOPLEFT", 2, -2)
+                cell.name:SetPoint("TOPRIGHT", cell, "TOPRIGHT", -2, -2)
                 cell.realm:SetText("-" .. realm)
                 cell.realm:Show()
             else
                 -- A character column is a comparable matrix field, so CJK and
                 -- Latin names must share one line and one visual rhythm.  The
                 -- tooltip retains the complete name when it is clipped.
-                cell.name:SetWordWrap(false); cell.name:SetHeight(16)
+                cell.name:SetWordWrap(false); cell.name:SetHeight(14)
                 cell.name:SetPoint("LEFT", cell, "LEFT", 2, 0)
                 cell.name:SetPoint("RIGHT", cell, "RIGHT", -2, 0)
                 cell.realm:Hide()
             end
             cell:ClearAllPoints(); cell:SetPoint("LEFT", instance.header, "LEFT", x, 0)
             cell:SetSize(characterWidth, GROUP_H)
+            if key == YQB.GetCurrentCharacterID() then
+                instance.currentCharacterX, instance.currentCharacterWidth = x, characterWidth
+            end
             Theme:BindTooltip(cell, showRealms and (name .. "-" .. realm) or name)
             cell:Show()
             x = x + characterWidth
@@ -288,9 +258,9 @@ function Page.Create(instance)
     instance.toolbar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     instance.toolbar:SetBackdropColor(COLORS.toolbar[1], COLORS.toolbar[2], COLORS.toolbar[3], 0.9); instance.toolbar:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.52)
     instance.daily = Check(instance.toolbar, "日常"); instance.daily:SetPoint("LEFT", 7, 0)
-    instance.normal = Check(instance.toolbar, "普通"); instance.normal:SetPoint("LEFT", instance.daily.label, "RIGHT", 14, 0)
-    instance.hideComplete = Check(instance.toolbar, "隐藏已完成"); instance.hideComplete:SetPoint("LEFT", instance.normal.label, "RIGHT", 14, 0)
-    instance.autoAbandon = Check(instance.toolbar, "自动放弃"); instance.autoAbandon:SetPoint("LEFT", instance.hideComplete.label, "RIGHT", 14, 0)
+    instance.normal = Check(instance.toolbar, "普通"); instance.normal:SetPoint("LEFT", instance.daily.label, "RIGHT", Theme.Space.sm, 0)
+    instance.hideComplete = Check(instance.toolbar, "隐藏已完成"); instance.hideComplete:SetPoint("LEFT", instance.normal.label, "RIGHT", Theme.Space.sm, 0)
+    instance.autoAbandon = Check(instance.toolbar, "自动放弃"); instance.autoAbandon:SetPoint("LEFT", instance.hideComplete.label, "RIGHT", Theme.Space.sm, 0)
     instance.level = CreateFrame("EditBox", nil, instance.toolbar, "InputBoxTemplate"); instance.level:SetSize(104, 20); instance.level:SetPoint("RIGHT", -7, 0); instance.level:SetAutoFocus(false)
     instance.levelLabel = Text(instance.toolbar, "GameFontNormalSmall", COLORS.muted); instance.levelLabel:SetPoint("RIGHT", instance.level, "LEFT", -6, 0); instance.levelLabel:SetText("等级")
     instance.header = CreateFrame("Frame", nil, instance); instance.header:SetPoint("TOPLEFT", instance.toolbar, "BOTTOMLEFT", 0, -Theme.Space.sm); instance.header:SetPoint("TOPRIGHT", instance.toolbar, "BOTTOMRIGHT", 0, -Theme.Space.sm); instance.header:SetHeight(GROUP_H)
@@ -299,6 +269,7 @@ function Page.Create(instance)
     instance.headerGlobal = Text(instance.header, "GameFontNormalSmall", COLORS.muted); instance.headerGlobal:SetWidth(GLOBAL_W); instance.headerGlobal:SetJustifyH("CENTER"); instance.headerGlobal:SetText("全局")
     instance.scroll = Theme:CreateScrollFrame(instance); instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs)
     instance.content = CreateFrame("Frame", nil, instance.scroll); instance.content:SetWidth(700); instance.scroll:SetScrollChild(instance.content)
+    instance.currentCharacterOutline = Theme:CreateCurrentCharacterOutline(instance)
     instance.rows, instance.headerCharacters, instance.rowCount = {}, {}, 0
     instance.scopeButtons = {}
     instance.addPanel = CreateFrame("Frame", nil, instance, "BackdropTemplate"); instance.addPanel:SetPoint("BOTTOMLEFT", mainInset.left, mainInset.bottom); instance.addPanel:SetPoint("BOTTOMRIGHT", -mainInset.right, mainInset.bottom); instance.addPanel:SetHeight(29)
@@ -424,6 +395,14 @@ function Page.Refresh(instance, context)
     end
     instance.content:SetWidth(contentWidth); instance.content:SetHeight(math.max(44, instance.rowCount * ROW_H))
     instance.scroll:SetContentHeight(instance.content:GetHeight())
+    instance.currentCharacterOutline:ClearAllPoints()
+    if showCharacters and instance.currentCharacterX then
+        instance.currentCharacterOutline:SetPoint("TOPLEFT", instance.header, "TOPLEFT", instance.currentCharacterX, 0)
+        instance.currentCharacterOutline:SetPoint("BOTTOMRIGHT", instance.content, "TOPLEFT", instance.currentCharacterX + instance.currentCharacterWidth, -instance.content:GetHeight())
+        Theme:SetCurrentCharacterOutline(instance.currentCharacterOutline, true)
+    else
+        Theme:SetCurrentCharacterOutline(instance.currentCharacterOutline, false)
+    end
     if preview then instance.scroll:SetVerticalScroll(0) end
     instance.scroll:RefreshScrollbar()
 end
@@ -432,13 +411,10 @@ function Page.GetSurfaceMetrics(context)
     local fixedWidth = 250 + (context:GetFieldVisible("global") and GLOBAL_W or 0)
     local characterCount = #(context.characters or {})
     local columnWidth = PreferredCharacterWidth(context)
-    local available = math.max(columnWidth, (context.surfaceAvailableWidth or math.huge) - fixedWidth - Theme.Space.lg * 2)
-    local visibleCount = math.max(1, math.floor(available / columnWidth))
-    if characterCount > visibleCount then
-        available = math.max(columnWidth, available - Core.AccountView:GetColumnPagerWidth())
-        visibleCount = math.max(1, math.floor(available / columnWidth))
-    end
-    local characterColumns = context:GetFieldVisible("characters") and (math.min(characterCount, visibleCount) * columnWidth) or 0
+    -- Metrics describe the complete role matrix.  AccountView expands the
+    -- outer window to its safe screen edge before the shared pager selects a
+    -- subset of these character columns for rendering.
+    local characterColumns = context:GetFieldVisible("characters") and (characterCount * columnWidth) or 0
     local globalColumn = context:GetFieldVisible("global") and GLOBAL_W or 0
     local blocked = #(YQB.GetBlockedQuestList() or {})
     local characters, currentKey, currentVisible = context.characters or {}, YQB.GetCurrentCharacterID(), false

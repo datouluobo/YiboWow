@@ -14,7 +14,15 @@ end
 
 function Addon:EnsureDB()
     YiboCurrencyDB = YiboCurrencyDB or {}
-    Defaults(YiboCurrencyDB, { version = 1, settings = { visible = {}, monitored = {}, previewColumns = { value = true, weekly = true, cap = false }, customItems = {} } })
+    local version = tonumber(YiboCurrencyDB.version) or 0
+    -- The first development build added a level-90 default without an
+    -- explicit player choice.  Currency is an account ledger, so retain all
+    -- eligible characters unless the player later enters a filter.
+    if version < 2 and YiboCurrencyDB.settings and YiboCurrencyDB.settings.levelExpr == "90" then
+        YiboCurrencyDB.settings.levelExpr = ""
+    end
+    Defaults(YiboCurrencyDB, { version = 2, settings = { visible = {}, monitored = {}, previewColumns = { value = true }, levelExpr = "", customItems = {} } })
+    YiboCurrencyDB.version = math.max(version, 2)
     return YiboCurrencyDB
 end
 function Addon:GetSettings() return self:EnsureDB().settings end

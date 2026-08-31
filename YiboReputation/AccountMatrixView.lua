@@ -1,7 +1,21 @@
 local Addon, Core = _G.YiboReputation, _G.YiboCore
 local Theme = Core.UITheme
+-- Keep the matrix's measurement contract beside the renderer.  Core uses
+-- these values when it chooses the account-window width, so a character is
+-- never paged merely because the measurement and the rendered columns drift.
+Addon.MatrixColumnLayout = { nameWidth = 200, characterWidth = 60, starWidth = 20 }
 local function Text(parent, size, color, justify) return Theme:CreateText(parent, size, color, justify or "LEFT") end
-local function Snapshot(character) return Core.DataDomains:Get(character.id, "reputation") end
+local function Snapshot(character)
+    -- DataDomains returns a defensive deep copy. A matrix refresh consults the
+    -- same character many times while building nodes and cells, so retain that
+    -- immutable-for-render copy until a reputation update invalidates it.
+    Addon._matrixSnapshotCache = Addon._matrixSnapshotCache or {}
+    local cached = Addon._matrixSnapshotCache[character.id]
+    if cached ~= nil then return cached or nil end
+    local snapshot = Core.DataDomains:Get(character.id, "reputation")
+    Addon._matrixSnapshotCache[character.id] = snapshot or false
+    return snapshot
+end
 local function Faction(snapshot, id) return Addon:GetFactionData(snapshot, id) end
 local function NodeFaction(snapshot, node)
     local data = Faction(snapshot, node.factionID)
@@ -13,12 +27,16 @@ local function HideMatrixTooltip()
     if GameTooltip and GameTooltip.YiboReputationMatrix then
         GameTooltip:Hide()
         GameTooltip.YiboReputationMatrix = nil
+        GameTooltip.YiboReputationMatrixRow = nil
     end
 end
 
 local function UpdateMatrixTooltip(row)
     if not (row.tooltipNode and row.tooltipNode.kind == "faction" and row.tooltipColumns) then HideMatrixTooltip(); return end
-    local scale = (UIParent.GetEffectiveScale and UIParent:GetEffectiveScale()) or 1
+    -- Compare coordinates in the row's own effective scale.  UIParent's
+    -- scale is not necessarily the scale of an account view embedded in a
+    -- scaled parent, which could otherwise shift hit testing into a neighbor.
+    local scale = (row.GetEffectiveScale and row:GetEffectiveScale()) or (UIParent.GetEffectiveScale and UIParent:GetEffectiveScale()) or 1
     local cursorX = (GetCursorPosition and GetCursorPosition() or 0) / scale
     local offset = cursorX - (row:GetLeft() or cursorX)
     local columnIndex
@@ -26,7 +44,10 @@ local function UpdateMatrixTooltip(row)
         local column = row.tooltipColumns[index]
         if offset >= column.left and offset < column.left + column.width then columnIndex = index; break end
     end
-    if row.tooltipColumn == columnIndex then return end
+    -- The game uses one shared GameTooltip.  Only retain the per-row cache
+    -- when this exact row still owns that tooltip; otherwise a tooltip left by
+    -- another row must be rebuilt even if it happens to be the same column.
+    if row.tooltipColumn == columnIndex and GameTooltip.YiboReputationMatrixRow == row and GameTooltip:IsShown() then return end
     row.tooltipColumn = columnIndex
     if not columnIndex then HideMatrixTooltip(); return end
     local character = row.tooltipContext.characters[columnIndex - 1]
@@ -40,10 +61,12 @@ local function UpdateMatrixTooltip(row)
     if compact == detail or not string.find(detail, "/", 1, true) then HideMatrixTooltip(); return end
     GameTooltip:SetOwner(row, "ANCHOR_CURSOR")
     GameTooltip:ClearLines()
-    GameTooltip:AddLine(row.tooltipNode.title or "声望", Theme.Colors.accent[1], Theme.Colors.accent[2], Theme.Colors.accent[3])
+    -- The grid already identifies both the faction row and character column.
+    -- Keep this disclosure focused on the progress that the compact cell omits.
     GameTooltip:AddLine(detail, Theme.Colors.text[1], Theme.Colors.text[2], Theme.Colors.text[3])
     GameTooltip:Show()
     GameTooltip.YiboReputationMatrix = true
+    GameTooltip.YiboReputationMatrixRow = row
 end
 
 local function FactionData(id, characters, guildName)
@@ -69,8 +92,22 @@ function Addon:CreateMatrixView(parent)
     parent.matrixScroll = Theme:CreateScrollFrame(parent)
     parent.matrixBody = CreateFrame("Frame", nil, parent.matrixScroll)
     parent.matrixScroll:SetScrollChild(parent.matrixBody)
+    parent.currentCharacterOutline = Theme:CreateCurrentCharacterOutline(parent)
     parent.matrixRows, parent.matrixHeaders = {}, {}
     parent.matrixNodeCache, parent.matrixNodeCacheKey = nil, nil
+end
+
+function Addon:GetMatrixNodeCache(characters)
+    local characterIDs = {}
+    for _, character in ipairs(characters or {}) do characterIDs[#characterIDs + 1] = character.id end
+    local cacheKey = table.concat(characterIDs, "|") .. ":" .. tostring(self._matrixDataRevision or 0)
+    self._matrixNodeCaches = self._matrixNodeCaches or {}
+    local nodes = self._matrixNodeCaches[cacheKey]
+    if not nodes then
+        nodes = self:GetMatrixNodes(characters or {})
+        self._matrixNodeCaches[cacheKey] = nodes
+    end
+    return nodes, cacheKey
 end
 
 function Addon:GetMatrixNodes(characters)
@@ -179,7 +216,7 @@ function Addon:GetMatrixSurfaceRowCount(characters)
             for _, child in ipairs(node.children) do Add(child, forced) end
         end
     end
-    for _, node in ipairs(self:GetMatrixNodes(characters or {})) do Add(node, query ~= "" or filter ~= "all") end
+    for _, node in ipairs(self:GetMatrixNodeCache(characters)) do Add(node, query ~= "" or filter ~= "all") end
     return count
 end
 
@@ -187,15 +224,15 @@ function Addon:RefreshMatrixView(parent, context)
     local settings, expanded = self:GetSettings(), self:EnsureDB().matrixExpanded
     local inset = Theme:GetMatrixInsets(false)
     if settings.matrixFilter ~= "monitored" then settings.matrixFilter = "all" end
-    local toolbar = parent.matrixToolbar; toolbar:ClearAllPoints(); toolbar:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top); toolbar:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -inset.right, -inset.top); toolbar:SetHeight(Theme.Size.standard)
+    local toolbar = parent.matrixToolbar; toolbar:ClearAllPoints(); toolbar:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top); toolbar:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -inset.right, -inset.top); toolbar:SetHeight(Theme.Size.compact)
     if not toolbar.search then
-        toolbar.search = CreateFrame("EditBox", nil, toolbar, "BackdropTemplate"); toolbar.search:SetSize(168, Theme.Size.standard); toolbar.search:SetAutoFocus(false); toolbar.search:SetFont(STANDARD_TEXT_FONT, Theme.Font.body, ""); toolbar.search:SetTextInsets(8, 8, 0, 0); toolbar.search:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 }); toolbar.search:SetBackdropColor(Theme.Colors.bg[1],Theme.Colors.bg[2],Theme.Colors.bg[3],1); toolbar.search:SetBackdropBorderColor(Theme.Colors.lineSoft[1],Theme.Colors.lineSoft[2],Theme.Colors.lineSoft[3],1)
+        toolbar.search = CreateFrame("EditBox", nil, toolbar, "BackdropTemplate"); toolbar.search:SetSize(144, Theme.Size.compact); toolbar.search:SetAutoFocus(false); toolbar.search:SetFont(STANDARD_TEXT_FONT, Theme.Font.body, ""); toolbar.search:SetTextInsets(6, 6, 0, 0); toolbar.search:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 }); toolbar.search:SetBackdropColor(Theme.Colors.bg[1],Theme.Colors.bg[2],Theme.Colors.bg[3],1); toolbar.search:SetBackdropBorderColor(Theme.Colors.lineSoft[1],Theme.Colors.lineSoft[2],Theme.Colors.lineSoft[3],1)
         toolbar.search:SetScript("OnTextChanged", function(box, user) if user then settings.matrixSearch = string.lower(box:GetText() or ""); Addon:NotifyChanged() end end)
     end
     toolbar.search:ClearAllPoints(); toolbar.search:SetPoint("LEFT", toolbar, "LEFT"); if toolbar.search:GetText() ~= (settings.matrixSearch or "") then toolbar.search:SetText(settings.matrixSearch or "") end
-    local x = 180
+    local x = 152
     for index, choice in ipairs({ {"all", "全部"}, {"monitored", "已监控"} }) do
-        local button = toolbar.filterButtons[index] or Theme:CreateButton(toolbar, 76, choice[2], "secondary"); toolbar.filterButtons[index] = button; button:ClearAllPoints(); button:SetPoint("LEFT", toolbar, "LEFT", x, 0); button:SetText(choice[2]); button:SetState(settings.matrixFilter == choice[1] and "selected" or "default"); button:SetScript("OnClick", function() settings.matrixFilter = choice[1]; Addon:RefreshMatrixView(parent, context) end); x = x + 82
+        local button = toolbar.filterButtons[index] or Theme:CreateButton(toolbar, 68, choice[2], "secondary"); toolbar.filterButtons[index] = button; button:SetHeight(Theme.Size.compact); button:ClearAllPoints(); button:SetPoint("LEFT", toolbar, "LEFT", x, 0); button:SetText(choice[2]); button:SetState(settings.matrixFilter == choice[1] and "selected" or "default"); button:SetScript("OnClick", function() settings.matrixFilter = choice[1]; Addon:RefreshMatrixView(parent, context) end); x = x + 72
     end
     for index = 3, #toolbar.filterButtons do toolbar.filterButtons[index]:Hide() end
     local function SetAllExpanded(value)
@@ -206,11 +243,12 @@ function Addon:RefreshMatrixView(parent, context)
         expanded.__all = value
         Addon:RefreshMatrixView(parent, context)
     end
-    toolbar.expand = toolbar.expand or Theme:CreateButton(toolbar, 84, "全部展开", "secondary"); toolbar.expand:ClearAllPoints(); toolbar.expand:SetPoint("LEFT", toolbar, "LEFT", x + 4, 0); toolbar.expand:SetScript("OnClick", function() SetAllExpanded(true) end)
-    toolbar.collapse = toolbar.collapse or Theme:CreateButton(toolbar, 84, "全部折叠", "secondary"); toolbar.collapse:ClearAllPoints(); toolbar.collapse:SetPoint("LEFT", toolbar.expand, "RIGHT", 6, 0); toolbar.collapse:SetScript("OnClick", function() SetAllExpanded(false) end)
-    parent.matrixHeader:ClearAllPoints(); parent.matrixHeader:SetPoint("TOPLEFT", toolbar, "BOTTOMLEFT", 0, -Theme.Space.sm); parent.matrixHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -inset.right, 0); parent.matrixHeader:SetHeight(Theme.Table.headerHeight)
+    toolbar.expand = toolbar.expand or Theme:CreateButton(toolbar, 72, "全部展开", "secondary"); toolbar.expand:SetHeight(Theme.Size.compact); toolbar.expand:ClearAllPoints(); toolbar.expand:SetPoint("LEFT", toolbar, "LEFT", x + Theme.Space.xxs, 0); toolbar.expand:SetScript("OnClick", function() SetAllExpanded(true) end)
+    toolbar.collapse = toolbar.collapse or Theme:CreateButton(toolbar, 72, "全部折叠", "secondary"); toolbar.collapse:SetHeight(Theme.Size.compact); toolbar.collapse:ClearAllPoints(); toolbar.collapse:SetPoint("LEFT", toolbar.expand, "RIGHT", Theme.Space.xxs, 0); toolbar.collapse:SetScript("OnClick", function() SetAllExpanded(false) end)
+    parent.matrixHeader:ClearAllPoints(); parent.matrixHeader:SetPoint("TOPLEFT", toolbar, "BOTTOMLEFT", 0, -Theme.Space.xs); parent.matrixHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -inset.right, 0); parent.matrixHeader:SetHeight(Theme.Table.headerHeight)
     parent.matrixScroll:ClearAllPoints(); parent.matrixScroll:SetPoint("TOPLEFT", parent.matrixHeader, "BOTTOMLEFT", 0, Theme.Space.xxs); parent.matrixScroll:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset.right, inset.bottom)
-    local nameWidth, characterWidth, starWidth = 220, 68, 20
+    local layout = self.MatrixColumnLayout
+    local nameWidth, characterWidth, starWidth = layout.nameWidth, layout.characterWidth, layout.starWidth
     local allCharacters = context.characters or {}
     local availableWidth = parent.matrixHeader:GetWidth() or parent:GetWidth() or 1
     local characters, pageInfo = Core.AccountView:GetColumnPage("reputation", "matrix", allCharacters, availableWidth, nameWidth, characterWidth)
@@ -221,11 +259,12 @@ function Addon:RefreshMatrixView(parent, context)
     local columns = { { title="声望", width=nameWidth } }
     for _, character in ipairs(characters) do columns[#columns + 1] = { title=Core.Characters:GetDisplayName(character, "short") or "未知", width=characterWidth, character=character } end
     local tableWidth = 0
-    for index, column in ipairs(columns) do local header = parent.matrixHeaders[index] or Text(parent.matrixHeader, Theme.Font.assist, Theme.Colors.accent, index == 1 and "LEFT" or "CENTER"); parent.matrixHeaders[index] = header; header:ClearAllPoints(); header:SetPoint("LEFT", parent.matrixHeader, "LEFT", tableWidth + Theme.Space.xxs + (index == 1 and starWidth or 0), 0); header:SetWidth(column.width - Theme.Space.xs - (index == 1 and starWidth or 0)); header:SetJustifyH(index == 1 and "LEFT" or "CENTER"); header:SetText(column.title); local color = column.character and RAID_CLASS_COLORS and RAID_CLASS_COLORS[column.character.class] or Theme.Colors.accent; header:SetTextColor(color.r or color[1], color.g or color[2], color.b or color[3]); header:Show(); tableWidth = tableWidth + column.width end
+    local currentCharacter = Core.Characters:GetCurrent()
+    local currentColumnHeader
+    for index, column in ipairs(columns) do local header = parent.matrixHeaders[index] or Text(parent.matrixHeader, Theme.Font.assist, Theme.Colors.accent, index == 1 and "LEFT" or "CENTER"); parent.matrixHeaders[index] = header; header:ClearAllPoints(); header:SetPoint("LEFT", parent.matrixHeader, "LEFT", tableWidth + Theme.Space.xxs + (index == 1 and starWidth or 0), 0); header:SetWidth(column.width - Theme.Space.xs - (index == 1 and starWidth or 0)); header:SetJustifyH(index == 1 and "LEFT" or "CENTER"); header:SetText(column.title); local color = column.character and RAID_CLASS_COLORS and RAID_CLASS_COLORS[column.character.class] or Theme.Colors.accent; header:SetTextColor(color.r or color[1], color.g or color[2], color.b or color[3]); header:Show(); if currentCharacter and column.character and column.character.id == currentCharacter.id then currentColumnHeader = header end; tableWidth = tableWidth + column.width end
     for index = #columns + 1, #parent.matrixHeaders do parent.matrixHeaders[index]:Hide() end
-    local characterIDs = {}; for _, character in ipairs(characters) do characterIDs[#characterIDs + 1] = character.id end
-    local cacheKey = table.concat(characterIDs, "|") .. ":" .. tostring(self._matrixDataRevision or 0)
-    if parent.matrixNodeCacheKey ~= cacheKey then parent.matrixNodeCache, parent.matrixNodeCacheKey = self:GetMatrixNodes(characters), cacheKey end
+    local nodes, cacheKey = self:GetMatrixNodeCache(characters)
+    if parent.matrixNodeCacheKey ~= cacheKey then parent.matrixNodeCache, parent.matrixNodeCacheKey = nodes, cacheKey end
     local query, filter = string.lower(settings.matrixSearch or ""), settings.matrixFilter or settings.defaultMatrixFilter
     local display = {}
     local function Add(node, depth, forced)
@@ -243,7 +282,7 @@ function Addon:RefreshMatrixView(parent, context)
         local grouped = #node.children > 0; local shade = node.kind == "expansion" and Theme.Colors.selected or (node.kind == "category" and Theme.Colors.toolbar or (rowIndex % 2 == 0 and Theme.Colors.alternate or Theme.Colors.row)); row:SetBackdropColor(shade[1],shade[2],shade[3],shade[4] or 1); row:SetBackdropBorderColor(Theme.Colors.matrixLine[1],Theme.Colors.matrixLine[2],Theme.Colors.matrixLine[3],Theme.Colors.matrixLine[4])
         row.cells = row.cells or {}; row.icon = row.icon or row:CreateTexture(nil,"ARTWORK")
         if not row.star then
-            row.star = Theme:CreateButton(row, starWidth, "☆", "secondary"); row.star:SetHeight(24); row.star:EnableMouse(true); row.star:RegisterForClicks("LeftButtonUp"); row.star:SetFrameLevel(row:GetFrameLevel() + 5)
+            row.star = Theme:CreateButton(row, starWidth, "☆", "secondary"); row.star:SetHeight(20); row.star:EnableMouse(true); row.star:RegisterForClicks("LeftButtonUp"); row.star:SetFrameLevel(row:GetFrameLevel() + 5)
         end
         row.star:ClearAllPoints(); row.star:SetPoint("LEFT", row, "LEFT", 0, 0); row.star:SetShown(node.kind == "faction"); if node.kind == "faction" then local monitored=self:IsMonitored(node.factionID); row.star:SetText(monitored and "★" or "☆"); row.star:SetState(monitored and "selected" or "default"); row.star.factionID=node.factionID; row.star:SetScript("OnClick", function(control) self:ToggleMonitored(control.factionID); Addon:RefreshMatrixView(parent, context) end) end
         local prefix = string.rep("　", entry.depth); local label = prefix .. ((grouped and (IsOpen(expanded,node) and "− " or "+ ")) or "") .. (node.icon and "   " or "") .. node.title; local values = { label }
@@ -253,15 +292,34 @@ function Addon:RefreshMatrixView(parent, context)
             row:SetScript("OnClick", function(control) local current=control.matrixNode;if #(current.children or {})>0 then expanded[current.key]=not IsOpen(expanded,current); Addon:RefreshMatrixView(parent, context) else settings.matrixFocusFactionID=current.factionID end end)
         else row.icon:Hide(); row:SetScript("OnClick", function(control) local current=control.matrixNode;expanded[current.key]=not IsOpen(expanded,current);Addon:RefreshMatrixView(parent, context) end) end
         row.tooltipNode, row.tooltipContext, row.tooltipColumns, row.tooltipColumn = node, { characters = characters }, {}, nil
-        row.columnDividers = row.columnDividers or {}; local left=0; for ci,column in ipairs(columns) do row.tooltipColumns[ci]={left=left,width=column.width};local cell=row.cells[ci] or Text(row,Theme.Font.body,Theme.Colors.text,ci==1 and "LEFT" or "CENTER");row.cells[ci]=cell;cell:ClearAllPoints();cell:SetPoint("LEFT",row,"LEFT",left+Theme.Space.xxs+(ci==1 and starWidth or 0),0);cell:SetWidth(column.width-Theme.Space.xs-(ci==1 and starWidth or 0));cell:SetJustifyH(ci==1 and "LEFT" or "CENTER");cell:SetText(values[ci] or "");if node.kind=="faction" and ci>1 then local data=NodeFaction(Snapshot(characters[ci-1]),node);local color=data and self:GetReputationColor(data) or Theme.Colors.muted;cell:SetTextColor(color[1],color[2],color[3]) else cell:SetTextColor(Theme.Colors.text[1],Theme.Colors.text[2],Theme.Colors.text[3]) end;cell:Show();if ci>1 then local divider=row.columnDividers[ci] or row:CreateTexture(nil,"ARTWORK");row.columnDividers[ci]=divider;divider:ClearAllPoints();divider:SetPoint("TOPLEFT",row,"TOPLEFT",left,0);divider:SetPoint("BOTTOMLEFT",row,"BOTTOMLEFT",left,0);divider:SetWidth(1);divider:SetColorTexture(Theme.Colors.matrixLine[1],Theme.Colors.matrixLine[2],Theme.Colors.matrixLine[3],Theme.Colors.matrixLine[4]);divider:Show() end;left=left+column.width end
-        for ci=#columns+1,#row.columnDividers do row.columnDividers[ci]:Hide() end
-        if not row.matrixTooltipBound then
-            row.matrixTooltipBound=true
-            row:SetScript("OnEnter",function(control) UpdateMatrixTooltip(control) end)
-            row:SetScript("OnLeave",function(control) control.tooltipColumn=nil;HideMatrixTooltip() end)
-        end
+        row.columnDividers = row.columnDividers or {}; local left=0; for ci,column in ipairs(columns) do row.tooltipColumns[ci]={left=left,width=column.width};local cell=row.cells[ci] or Text(row,Theme.Font.body,Theme.Colors.text,ci==1 and "LEFT" or "CENTER");row.cells[ci]=cell;cell:ClearAllPoints();cell:SetPoint("LEFT",row,"LEFT",left+Theme.Space.xxs+(ci==1 and starWidth or 0),0);cell:SetWidth(column.width-Theme.Space.xs-(ci==1 and starWidth or 0));cell:SetJustifyH(ci==1 and "LEFT" or "CENTER");cell:SetText(values[ci] or "");if node.kind=="faction" and ci>1 then local data=NodeFaction(Snapshot(characters[ci-1]),node);local color=data and self:GetReputationColor(data) or Theme.Colors.muted;cell:SetTextColor(color[1],color[2],color[3]) else cell:SetTextColor(Theme.Colors.text[1],Theme.Colors.text[2],Theme.Colors.text[3]) end;cell:Show();left=left+column.width end
+        for _, divider in ipairs(row.columnDividers) do divider:Hide() end
+        row:SetScript("OnEnter",function(control)
+            control.tooltipTracking=true
+            control.tooltipColumn=nil
+            UpdateMatrixTooltip(control)
+        end)
+        -- A matrix row is one hit target.  Refresh while the cursor moves
+        -- inside it so the tooltip follows the character column instead
+        -- of retaining the value from the column first entered.
+        row:SetScript("OnUpdate",function(control)
+            if control.tooltipTracking then UpdateMatrixTooltip(control) end
+        end)
+        row:SetScript("OnLeave",function(control)
+            control.tooltipTracking=false
+            control.tooltipColumn=nil
+            HideMatrixTooltip()
+        end)
         for ci=#columns+1,#row.cells do row.cells[ci]:Hide() end; row:Show()
     end
     for i=#display+1,#parent.matrixRows do parent.matrixRows[i]:Hide() end
     parent.matrixBody:SetSize(tableWidth, math.max(1,#display*Theme.Table.rowHeight)); parent.matrixScroll:SetContentHeight(parent.matrixBody:GetHeight())
+    parent.currentCharacterOutline:ClearAllPoints()
+    if currentColumnHeader then
+        parent.currentCharacterOutline:SetPoint("TOPLEFT", currentColumnHeader, "TOPLEFT", 0, 0)
+        parent.currentCharacterOutline:SetPoint("BOTTOMRIGHT", currentColumnHeader, "BOTTOMRIGHT", 0, -(parent.matrixBody:GetHeight() + Theme.Space.xxs))
+        Theme:SetCurrentCharacterOutline(parent.currentCharacterOutline, true)
+    else
+        Theme:SetCurrentCharacterOutline(parent.currentCharacterOutline, false)
+    end
 end

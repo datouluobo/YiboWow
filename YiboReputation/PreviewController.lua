@@ -12,14 +12,14 @@ end
 function Addon:RefreshPreview(parent,context)
  -- Defensive visibility reset: a page instance may have just been used by
  -- the normal account window. A hover may only ever show its selected preview.
- parent.matrixToolbar:Hide();parent.matrixHeader:Hide();parent.matrixScroll:Hide()
+ parent.matrixToolbar:Hide();parent.matrixHeader:Hide();parent.matrixScroll:Hide();if parent.currentCharacterOutline then parent.currentCharacterOutline:Hide() end
  parent.previewModeButton:Hide();parent.currentPreviewHeading:Hide();parent.currentPreviewNameHeader:Hide();parent.currentPreviewValueHeader:Hide();parent.currentPreviewScroll:Hide();for _,row in ipairs(parent.monitoredRows or {}) do row:Show() end;for _,header in ipairs(parent.monitoredHeaders or {}) do header:Show() end;parent.monitoredDetail:Hide()
  self:RefreshMonitoredPreview(parent,context)
 end
 function Addon:GetPreviewMetrics(context)
  local n=#(context.characters or {})
  local rows=#self:GetSettings().monitoredFactionIDs
- return {minWidth=420,preferredWidth=math.min(1080,150+n*(n>10 and 48 or 86)),minHeight=132,preferredHeight=171+rows*28,horizontalOverflow="matrix",verticalOverflow="none"}
+ return {minWidth=420,preferredWidth=math.min(1080,150+n*(n>10 and 48 or 86)),minHeight=132,preferredHeight=171+rows*Theme.Table.previewRowHeight,horizontalOverflow="matrix",verticalOverflow="none"}
  --[[ Legacy current-character metric path, retained for migration reference.
  local current = _G.YiboCore.Characters:GetCurrent()
  local snapshot = current and _G.YiboCore.DataDomains:Get(current.id, "reputation")
@@ -47,7 +47,7 @@ function Addon:GetPreviewSurfaceMetrics(context)
   minContentWidth = 150 + cellWidth + inset.left + inset.right,
   naturalContentWidth = 150 + #characters * cellWidth + inset.left + inset.right,
   minContentHeight = inset.top + Theme.Size.compact + Theme.Size.compact + inset.bottom,
-  naturalContentHeight = inset.top + Theme.Size.compact + math.max(1, rows) * 28 + inset.bottom,
+  naturalContentHeight = inset.top + Theme.Size.compact + math.max(1, rows) * Theme.Table.previewRowHeight + inset.bottom,
   fixedLeftWidth = 150,
   fixedTopHeight = Theme.Size.standard + Theme.Size.compact,
  horizontalOverflow = "paginate",

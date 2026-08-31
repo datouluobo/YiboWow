@@ -78,6 +78,22 @@ function Remove-NonReleaseTocEntries {
     Set-Content -LiteralPath $TocPath -Value $filtered -Encoding UTF8
 }
 
+function Move-PreviousPackagesToArchive {
+    param([Parameter(Mandatory = $true)][string]$OutputRoot, [Parameter(Mandatory = $true)][string]$AddonName)
+    $archiveRoot = Join-Path $OutputRoot "Archive"
+    New-Item -ItemType Directory -Path $archiveRoot -Force | Out-Null
+    $moved = 0
+    Get-ChildItem -LiteralPath $OutputRoot -File -Filter ("{0}-*.zip" -f $AddonName) | ForEach-Object {
+        $destination = Join-Path $archiveRoot $_.Name
+        if (Test-Path -LiteralPath $destination) {
+            $destination = Join-Path $archiveRoot ("{0}-{1}{2}" -f $_.BaseName, (Get-Date -Format "yyyyMMdd-HHmmssfff"), $_.Extension)
+        }
+        Move-Item -LiteralPath $_.FullName -Destination $destination
+        $moved++
+    }
+    return $moved
+}
+
 $projectRoot = (Resolve-Path $ProjectRoot).Path
 $outputRoot = $OutputRoot
 New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
@@ -86,11 +102,13 @@ $tocPath = Join-Path $projectRoot "YiboBeastPaths.toc"
 $version = Get-AddonVersion -TocPath $tocPath
 $versionTag = $version.TrimStart("vV")
 
-$curseForgeZipPath = Join-Path $outputRoot ("YiboBeastPaths-v{0}-curseforge.zip" -f $versionTag)
+$curseForgeZipPath = Join-Path $outputRoot ("YiboBeastPaths-v{0}.zip" -f $versionTag)
 $githubZipPath = Join-Path $outputRoot ("YiboBeastPaths-v{0}-github.zip" -f $versionTag)
 
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("YiboBeastPaths-build-" + [System.Guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
+$curseForgeTempZipPath = Join-Path $tempRoot (Split-Path $curseForgeZipPath -Leaf)
+$githubTempZipPath = Join-Path $tempRoot (Split-Path $githubZipPath -Leaf)
 
 try {
     $githubStageRoot = Join-Path $tempRoot "github"
@@ -121,20 +139,17 @@ try {
         Remove-NonReleaseTocEntries -TocPath $_.FullName
     }
 
-    if (Test-Path $githubZipPath) {
-        Remove-Item -LiteralPath $githubZipPath -Force
-    }
-    if (Test-Path $curseForgeZipPath) {
-        Remove-Item -LiteralPath $curseForgeZipPath -Force
-    }
-
-    Compress-Archive -LiteralPath $githubStagePath -DestinationPath $githubZipPath -CompressionLevel Optimal
-    Compress-Archive -LiteralPath $curseForgeStagePath -DestinationPath $curseForgeZipPath -CompressionLevel Optimal
+    Compress-Archive -LiteralPath $githubStagePath -DestinationPath $githubTempZipPath -CompressionLevel Optimal
+    Compress-Archive -LiteralPath $curseForgeStagePath -DestinationPath $curseForgeTempZipPath -CompressionLevel Optimal
+    $archived = Move-PreviousPackagesToArchive -OutputRoot $outputRoot -AddonName "YiboBeastPaths"
+    Move-Item -LiteralPath $githubTempZipPath -Destination $githubZipPath
+    Move-Item -LiteralPath $curseForgeTempZipPath -Destination $curseForgeZipPath
 
     [pscustomobject]@{
         Version = $version
         CurseForge = $curseForgeZipPath
         GitHub = $githubZipPath
+        Archived = $archived
     } | Format-List
 }
 finally {

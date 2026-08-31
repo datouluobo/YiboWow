@@ -12,12 +12,21 @@ function Integration:Initialize()
     Addon:EnsureDB(); Addon:RegisterCatalogWithCore()
     local page, pageError = Core.AccountView:RegisterPage(Addon.NAME, {
         id = PAGE_ID, title = "货币总览", icon = ICON, order = 50, previewEnabled = true, defaultEnabled = true, scope = { mode = "realms", allTitle = "所有服务器" },
-        fields = { { id = "value", title = "余额", defaultVisible = true }, { id = "weekly", title = "周获取", defaultVisible = true }, { id = "cap", title = "上限", defaultVisible = false } },
+        fields = { { id = "value", title = "余额", defaultVisible = true } },
+        characterFilter = {
+            defaultExpression = "",
+            GetExpression = function() return Addon:GetSettings().levelExpr or "" end,
+            SetExpression = function(expression)
+                local valid, normalized, badToken = Core.LevelFilter:Validate(expression)
+                if not valid then return false, "无效等级规则：" .. tostring(badToken) end
+                Addon:GetSettings().levelExpr = normalized; Addon:NotifyChanged(); return true
+            end,
+        },
         HasCharacterSnapshot = function(character) return Core.DataDomains:Get(character.id, "economy") ~= nil or Core.DataDomains:Get(character.id, "economy-items") ~= nil end,
         GetEligibleCharacters = function(characters) local result = {}; for _, character in ipairs(characters or {}) do if Core.DataDomains:Get(character.id, "economy") or Core.DataDomains:Get(character.id, "economy-items") then result[#result + 1] = character end end; return result end,
         GetPreviewFields = function() return Addon:GetSettings().previewColumns end,
         SetPreviewFieldVisible = function(fieldID, visible) Addon:GetSettings().previewColumns[fieldID] = not not visible; Addon:NotifyChanged() end,
-        settings = { title = "货币管家", description = "目录显示、悬停监控和自定义物品代币由本插件保存；页面、入口、字段和排序由 Core 管理。", CreateSettingsPanel = function(parent, context) return Addon:CreateSettingsPanel(parent, context) end },
+        settings = { title = "货币总览", description = "货币显示、悬停监控和自定义物品代币由本插件保存；页面、入口、字段和排序由 Core 管理。", CreateSettingsPanel = function(parent, context) return Addon:CreateSettingsPanel(parent, context) end },
         Create = function(parent) Addon:CreateCurrencyPage(parent) end, Refresh = function(parent, context) Addon:RefreshCurrencyPage(parent, context) end,
         GetSurfaceMetrics = function(context) return Addon:GetCurrencySurfaceMetrics(context) end,
         GetHoverMetrics = function(context)

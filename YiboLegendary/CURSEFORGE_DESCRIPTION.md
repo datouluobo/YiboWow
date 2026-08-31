@@ -2,62 +2,46 @@
 
 ## 中文
 
-YiboLegendary 是一个面向《魔兽世界：熊猫人之谜》经典版的传说披风任务线进度助手。
+YiboLegendary 是面向 **MoP Classic 5.5.4** 的账号级传说物品获取进度插件。
 
-它可以按角色记录并展示传说任务线的章节、当前任务、任务目标和下一步行动，方便快速查看账号内多个角色的进度。
+2.0 追踪传说披风与风剑：悬停入口可快速比较各角色对每件目标的获得状态和当前检查点；打开 YiboCore 统一账号窗口后，可查看完整路线、进度与下一步。
 
-### 主要功能
+### 功能
 
-- 跨角色查看传说披风任务线进度
-- 显示当前章节、任务、目标与下一步行动
-- 在统一账号视图中查看角色数据
-- 支持 YiboCore 的 Broker / 小地图入口和设置工作台
-- 通过 SavedVariables 在本地保存数据
-- 命令：`/yle`
+- 角色 × 传说目标的账号矩阵
+- 传说披风：任务章节、并行条件、声望门槛与勇气累计
+- 风剑：关键掉落、元素锭收集和最终事件
+- YiboCore 管理的 Broker、小地图入口、角色范围与设置
+- `/yle` 打开传说之路；`/yle probe` 检查客户端兼容性
 
-### 必需依赖
+### 依赖与版本
 
-本插件必须与 **YiboCore** 一起安装和启用。
-
-YiboCore 提供统一账号窗口、角色目录、页面入口、Broker / 小地图入口以及设置工作台。本插件不包含 YiboCore，请单独下载并安装：
+必须同时安装并启用 **YiboCore**。本插件不包含 Core：
 
 [下载 YiboCore](https://www.curseforge.com/wow/addons/yibocore)
 
-> **重要：YiboCore is required and is not included in this download.**
-
-### 适用版本
-
-- Mists of Pandaria Classic
-- 国服 5.5.4
+支持：Mists of Pandaria Classic / 国服 5.5.4。
 
 ---
 
 ## English
 
-YiboLegendary is a World of Warcraft addon for **Mists of Pandaria Classic** that tracks the legendary cloak questline across your characters.
+YiboLegendary is an account-wide legendary acquisition tracker for **Mists of Pandaria Classic 5.5.4**.
 
-It records and displays each character's chapter, current quest, objectives, and next action, making it easier to check legendary quest progress across an entire account.
+Version 2.0 tracks the Legendary Cloak questline and Thunderfury. The hover preview compares each character against each tracked legendary target, while the YiboCore account page shows the full route, progress, and next action.
 
 ### Features
 
-- Account-wide, character-by-character legendary quest progress
-- Chapter, current quest, objective, and next-action display
-- Unified account view powered by YiboCore
-- YiboCore Broker / minimap entry and settings workbench integration
-- Local data storage through SavedVariables
-- Command: `/yle`
+- Character-by-legendary account matrix
+- Legendary Cloak chapters, parallel requirements, reputation gates, and Valor progress
+- Thunderfury bindings, Elementium Ingots, and final event progress
+- YiboCore-managed Broker/minimap entries, character scope, and settings
+- `/yle` opens the page; `/yle probe` checks client compatibility
 
-### Required dependency
+### Dependency and supported client
 
-This addon **requires YiboCore** to be installed and enabled.
-
-YiboCore provides the shared account window, character directory, page entries, Broker / minimap entry, and settings workbench. YiboCore is not included in this download. Download it separately here:
+**YiboCore is required and is not included in this download.**
 
 [Download YiboCore](https://www.curseforge.com/wow/addons/yibocore)
 
-> **YiboCore is required and is not included in this download.**
-
-### Supported versions
-
-- Mists of Pandaria Classic
-- China region client 5.5.4
+Supported client: Mists of Pandaria Classic / China 5.5.4.

@@ -3,22 +3,20 @@ local ADDON_NAME = ...
 local Addon = _G.YiboLegendary or {}
 _G.YiboLegendary = Addon
 Addon.NAME = "YiboLegendary"
-Addon.VERSION = "1.0"
+Addon.VERSION = "2.0.0"
 Addon.REQUIRED_CORE_API = 5
 
 local DEFAULTS = {
-    schemaVersion = 1,
+    schemaVersion = 2,
     settings = {
-        showChapter = false,
         phaseAvailability = {},
         levelExpr = "",
-        previewColumnsVersion = 4,
+        selectedTargetId = "CLOAK",
+        previewColumnsVersion = 5,
         previewColumns = {
             character = true,
-            chapter = false,
-            task = true,
-            objective = true,
-            action = false,
+            CLOAK = true,
+            THUNDERFURY = true,
         },
     },
     byCharacter = {},
@@ -66,7 +64,7 @@ function Addon:Refresh(reason, currencyID, quantity, quantityChange, quantityGai
         return
     end
     local valorProgress = self.Data:TrackValorProgress(store, currencyID, quantity, quantityChange, quantityGain)
-    store.snapshot = self.Data:BuildSnapshot(character, self.db.settings.phaseAvailability, valorProgress)
+    store.snapshot = self.Model:BuildSnapshot(character, store, self.db.settings.phaseAvailability, valorProgress)
     store.snapshot.updatedAt = self:GetTimestamp()
     store.snapshot.reason = reason
     if self.UI then
@@ -90,23 +88,10 @@ function Addon:Initialize()
     _G.YiboCloakProgressDB = nil
     self.db = _G.YiboLegendaryDB
     local settings = self.db.settings
-    if type(settings) == "table" and (tonumber(settings.previewColumnsVersion) or 0) < 3 then
-        settings.previewColumnsVersion = 3
-        settings.previewColumns = {
-            character = true,
-            chapter = false,
-            task = true,
-            objective = true,
-            action = false,
-        }
-    end
-    -- “行动”属于正式表格的执行说明；悬停默认只用于快速比较任务与目标。
-    -- Upgrade existing development settings as well, otherwise a previously
-    -- enabled action column keeps making the preview unnecessarily wide.
-    if type(settings) == "table" and (tonumber(settings.previewColumnsVersion) or 0) < 4 then
-        settings.previewColumnsVersion = 4
-        settings.previewColumns = type(settings.previewColumns) == "table" and settings.previewColumns or {}
-        settings.previewColumns.action = false
+    if type(settings) == "table" and (tonumber(settings.previewColumnsVersion) or 0) < 5 then
+        settings.previewColumnsVersion = 5
+        settings.previewColumns = { character = true, CLOAK = true, THUNDERFURY = true }
+        settings.selectedTargetId = "CLOAK"
     end
     CopyDefaults(self.db, DEFAULTS)
     self.Core:RegisterAddon(self.NAME, { version = self.VERSION, requiredAPI = self.REQUIRED_CORE_API })
@@ -140,6 +125,8 @@ frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("QUEST_LOG_UPDATE")
 frame:RegisterEvent("UPDATE_FACTION")
 frame:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
+frame:RegisterEvent("BAG_UPDATE_DELAYED")
+frame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 frame:SetScript("OnEvent", function(_, event, ...)
     local arg1, arg2, arg3, arg4 = ...
     if event == "ADDON_LOADED" then
@@ -164,6 +151,12 @@ SlashCmdList.YIBOLEGENDARY = function(command)
         Addon:Print("客户端探针已刷新；使用 /yle probe 查看聊天输出。")
     elseif command == "status" then
         Addon.UI:PrintStatus()
+    elseif command:match("^test%s+") then
+        local targetID, nodeID = command:match("^test%s+(%S+)%s*(%S*)")
+        local store = Addon:GetCharacterStore()
+        local ok, message = store and Addon.Model:SetTestProjection(store, string.upper(targetID or ""), nodeID ~= "" and nodeID or nil)
+        Addon:Print(ok and "测试投影已更新。" or (message or "无法写入测试投影。"))
+        if ok then Addon:Refresh("test") end
     else
         Addon.UI:ToggleDetails()
     end

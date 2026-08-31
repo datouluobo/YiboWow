@@ -476,12 +476,7 @@ function YAB.CreateAccountPage(parent)
     parent.header.fixedDivider:SetColorTexture(C.bg[1], C.bg[2], C.bg[3], 1)
     parent.scroll = Theme:CreateScrollFrame(parent)
     parent.body = CreateFrame("Frame", nil, parent.scroll); parent.scroll:SetScrollChild(parent.body)
-    parent.currentColumnOutline = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    parent.currentColumnOutline:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    parent.currentColumnOutline:SetBackdropBorderColor(C.accent[1], C.accent[2], C.accent[3], 1)
-    parent.currentColumnOutline:SetFrameLevel(math.max(parent.header:GetFrameLevel(), parent.scroll:GetFrameLevel()) + 10)
-    parent.currentColumnOutline:EnableMouse(false)
-    parent.currentColumnOutline:Hide()
+    parent.currentColumnOutline = Theme:CreateCurrentCharacterOutline(parent)
     parent.headers, parent.rows = {}, {}
 end
 
@@ -489,12 +484,12 @@ local function RefreshCurrentColumnOutline(instance, bosses, showKills)
     local outline = instance.currentColumnOutline
     outline:ClearAllPoints()
     if not showKills or not instance.currentColumnX then
-        outline:Hide()
+        Theme:SetCurrentCharacterOutline(outline, false)
         return
     end
     outline:SetPoint("TOPLEFT", instance.header, "TOPLEFT", instance.currentColumnX, 0)
     outline:SetPoint("BOTTOMRIGHT", instance.body, "TOPLEFT", instance.currentColumnX + (instance.currentColumnWidth or CHARACTER_MIN_WIDTH), -(#bosses * ROW_H))
-    outline:Show()
+    Theme:SetCurrentCharacterOutline(outline, true)
 end
 
 -- Kept as a migration reference only.  The registered renderer below uses

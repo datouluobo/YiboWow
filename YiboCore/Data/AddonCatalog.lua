@@ -39,6 +39,7 @@ Core.AddonCatalog = {
         title = "账号待办",
         relation = "core-child",
         description = "账号待办事项。",
+        projectURL = "https://www.curseforge.com/wow/addons/yibotodo",
     },
     {
         name = "YiboReputation",
