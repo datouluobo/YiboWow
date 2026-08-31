@@ -209,6 +209,7 @@ local function Row(frame, index)
     row = CreateFrame("Frame", nil, frame.body, "BackdropTemplate")
     row:SetHeight(ROW_HEIGHT)
     row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    row.currentOutline = Theme:CreateCurrentCharacterOutline(row)
     row.name = Text(row, Theme.Font.body, C.text)
     row.status = Text(row, Theme.Font.body, C.muted, "LEFT")
     frame.rows[index] = row
@@ -294,6 +295,7 @@ function Page.Refresh(frame, context)
         top = frame.account
     end
     local y = 0
+    local current = Addon.Core.Characters:GetCurrent()
     for _, character in ipairs(context.characters or {}) do
         local data = snapshot.characters[character.id]
         if data then
@@ -302,6 +304,7 @@ function Page.Refresh(frame, context)
             row:ClearAllPoints(); row:SetPoint("TOPLEFT", frame.body, "TOPLEFT", 0, -y); row:SetSize(tableWidth, ROW_HEIGHT)
             local fill = count % 2 == 0 and C.alternate or C.row
             row:SetBackdropColor(fill[1], fill[2], fill[3], 0.9); row:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
+            Theme:SetCurrentCharacterOutline(row.currentOutline, current and character.id == current.id)
             row.name:ClearAllPoints(); row.name:SetPoint("LEFT", 8, 0); row.name:SetWidth(characterWidth - 8)
             row.name:SetText(CharacterLabel(character, context.scope == "all")); ApplyCharacterColor(row.name, character)
             Release(row.cells or {}, 1)
