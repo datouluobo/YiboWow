@@ -162,6 +162,63 @@ function Theme:CreateButton(parent, width, label, kind)
     return button
 end
 
+function Theme:CreateDropdown(parent, width, options)
+    local dropdown = self:CreateButton(parent, width or 220, "", "secondary")
+    dropdown.arrow = self:CreateText(dropdown, self.Font.assist, self.Colors.muted, "RIGHT")
+    -- ASCII is guaranteed by every supported WoW font; several CJK client
+    -- fonts render the otherwise preferred triangle as an empty square.
+    dropdown.arrow:SetPoint("RIGHT", -8, 0); dropdown.arrow:SetText("v")
+    dropdown.label:SetPoint("LEFT", 10, 0); dropdown.label:SetPoint("RIGHT", dropdown.arrow, "LEFT", -6, 0)
+    dropdown.options = {}
+    dropdown.value = nil
+    dropdown.menu = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+    dropdown.menu:SetFrameStrata("DIALOG")
+    dropdown.menu:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    dropdown.menu:SetBackdropColor(Color(self.Colors.panel)); dropdown.menu:SetBackdropBorderColor(Color(self.Colors.line))
+    dropdown.menu:Hide()
+    dropdown.menu.buttons = {}
+    function dropdown:SetOptions(nextOptions)
+        self.options = nextOptions or {}
+        for _, button in ipairs(self.menu.buttons) do button:Hide() end
+        for index, option in ipairs(self.options) do
+            local button = self.menu.buttons[index]
+            if not button then
+                button = Theme:CreateButton(self.menu, 1, "", "secondary")
+                self.menu.buttons[index] = button
+            end
+            button:ClearAllPoints(); button:SetPoint("TOPLEFT", 4, -4 - (index - 1) * (Theme.Size.standard + 2)); button:SetPoint("RIGHT", -4, 0)
+            button:SetText(option.label or tostring(option.value or "")); button:SetState(option.value == self.value and "selected" or "default")
+            button:SetScript("OnClick", function()
+                self:SetValue(option.value)
+                self.menu:Hide()
+                if type(self.onValueChanged) == "function" then self.onValueChanged(option.value, option) end
+            end)
+            button:Show()
+        end
+        self.menu:SetHeight(math.max(1, #self.options) * (Theme.Size.standard + 2) + 6)
+    end
+    function dropdown:SetValue(value)
+        self.value = value
+        local label = ""
+        for _, option in ipairs(self.options) do
+            if option.value == value then label = option.label or tostring(value); break end
+        end
+        self:SetText(label)
+        for _, button in ipairs(self.menu.buttons) do
+            local option = self.options[_]
+            if option then button:SetState(option.value == value and "selected" or "default") end
+        end
+    end
+    function dropdown:SetOnValueChanged(callback) self.onValueChanged = callback end
+    dropdown:SetScript("OnClick", function(self)
+        if self.menu:IsShown() then self.menu:Hide(); return end
+        self.menu:ClearAllPoints(); self.menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2); self.menu:SetWidth(self:GetWidth())
+        self.menu:Show(); self.menu:SetFrameLevel((self:GetFrameLevel() or 0) + 20)
+    end)
+    dropdown:SetOptions(options)
+    return dropdown
+end
+
 function Theme:CreateCheckbox(parent, label)
     local button = CreateFrame("Button", nil, parent, "BackdropTemplate")
     button:SetSize(190, self.Size.standard)

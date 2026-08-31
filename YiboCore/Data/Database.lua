@@ -31,6 +31,9 @@ local DEFAULTS = {
             pageCharacterSorts = {},
             customCharacterOrder = {},
             entry = {
+                -- Core's own Broker/minimap visibility is a four-state choice.
+                -- The nested flags remain for compatibility with older releases.
+                coreMode = "both",
                 minimap = { show = true, angle = 225 },
                 broker = { show = true },
                 pageModes = {},

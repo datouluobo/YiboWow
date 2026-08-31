@@ -3,7 +3,7 @@ local Core = _G.YiboCore
 local Migrations = {}
 Core.Migrations = Migrations
 
-Migrations.CURRENT_SCHEMA = 8
+Migrations.CURRENT_SCHEMA = 9
 Migrations._steps = Migrations._steps or {}
 
 function Migrations:Register(version, callback)
@@ -131,6 +131,31 @@ Migrations:Register(8, function(db)
     -- Display preferences are deliberately separate from identity records:
     -- a player nickname must never become a cache key or an imported fact.
     db.characterDisplay = type(db.characterDisplay) == "table" and db.characterDisplay or {}
+end)
+
+Migrations:Register(9, function(db)
+    db.settings = db.settings or {}
+    db.settings.accountView = db.settings.accountView or {}
+    local view = db.settings.accountView
+    view.entry = type(view.entry) == "table" and view.entry or {}
+    local entry = view.entry
+    entry.minimap = type(entry.minimap) == "table" and entry.minimap or { show = true, angle = 225 }
+    entry.broker = type(entry.broker) == "table" and entry.broker or { show = true }
+
+    local validModes = { none = true, broker = true, minimap = true, both = true }
+    if not validModes[entry.coreMode] then
+        local hasBroker = entry.broker.show ~= false
+        local hasMinimap = entry.minimap.show ~= false
+        if hasBroker and hasMinimap then
+            entry.coreMode = "both"
+        elseif hasBroker then
+            entry.coreMode = "broker"
+        elseif hasMinimap then
+            entry.coreMode = "minimap"
+        else
+            entry.coreMode = "none"
+        end
+    end
 end)
 
 Core.Capabilities:Register("migrations", 1)

@@ -50,6 +50,22 @@ function Entry:GetBusinessEntryModeLabel(mode)
     return ENTRY_MODE_LABELS[mode] or ENTRY_MODE_LABELS.none
 end
 
+function Entry:GetCoreEntryMode()
+    local saved = EntrySettings().coreMode
+    return ENTRY_MODE_LABELS[saved] and saved or "both"
+end
+
+function Entry:SetCoreEntryMode(mode)
+    if not ENTRY_MODE_LABELS[mode] then return false end
+    local settings = EntrySettings()
+    settings.coreMode = mode
+    -- Keep the old fields coherent for releases that still read them.
+    settings.broker.show = HasBroker(mode)
+    settings.minimap.show = HasMinimap(mode)
+    self:Refresh()
+    return true
+end
+
 function Entry:GetBusinessEntryByPageID(pageID)
     for _, entry in pairs(self.businessEntries) do
         if entry.pageID == pageID and not entry.disabled then return entry end
@@ -120,7 +136,7 @@ local function RaiseBrokerTooltip(tooltip)
 end
 
 function Entry:CreateBusinessBroker(entry)
-    if not entry or entry.disabled or EntrySettings().broker.show == false or not HasBroker(self:GetBusinessEntryMode(entry.id)) then return end
+    if not entry or entry.disabled or not HasBroker(self:GetBusinessEntryMode(entry.id)) then return end
     local library = type(LibStub) == "table" and LibStub.GetLibrary and LibStub:GetLibrary("LibDataBroker-1.1", true)
     if not library then return end
     local broker = entry.broker or (library.GetDataObjectByName and library:GetDataObjectByName(entry.brokerName))
@@ -164,6 +180,38 @@ function Entry:DisableBusinessBroker(entry)
     entry.broker.OnLeave = function() end
     entry.broker.OnTooltipShow = function() end
     entry.broker.yiboCoreEntryDisabled = true
+end
+
+local function ConfigureCoreBroker(broker)
+    broker.yiboCoreEntryDisabled = nil
+    broker.type = "launcher"
+    broker.text = "[Yibo] 账号总览"
+    broker.icon = CORE_ICON
+    broker.OnClick = function(_, mouseButton)
+        if mouseButton == "RightButton" then Core.AccountView:ShowSettings() else Toggle() end
+    end
+    broker.OnEnter = function(first, second)
+        local owner = second or first
+        Entry.lastBrokerAnchor = owner
+        ShowPreview(owner)
+    end
+    broker.OnLeave = function() Entry:SchedulePreviewClose() end
+    broker.OnTooltipShow = function(tooltip)
+        local owner = tooltip and tooltip.GetOwner and tooltip:GetOwner() or Entry.lastBrokerAnchor
+        if ShowPreview(owner) then RaiseBrokerTooltip(tooltip) end
+    end
+end
+
+local function DisableCoreBroker(broker)
+    if not broker then return end
+    -- LibDataBroker cannot be portably unregistered.  Keep an existing source
+    -- inert until it is enabled again; a reload removes a source that was not
+    -- registered during initialization.
+    broker.OnClick = function() end
+    broker.OnEnter = function() end
+    broker.OnLeave = function() end
+    broker.OnTooltipShow = function() end
+    broker.yiboCoreEntryDisabled = true
 end
 
 function Entry:CreateBusinessMinimap(entry)
@@ -362,43 +410,32 @@ function Entry:Initialize()
         self:Refresh()
         return
     end
-    -- LibDataBroker 没有可靠的注销协议；关闭后仅在下次载入时不注册数据源。
-    local library = EntrySettings().broker.show ~= false and type(LibStub) == "table" and LibStub.GetLibrary and LibStub:GetLibrary("LibDataBroker-1.1", true)
-    if library then
+    -- Business Broker entries remain available even when Core's own Broker
+    -- entry is hidden, so load the library independently from coreMode.
+    local library = type(LibStub) == "table" and LibStub.GetLibrary and LibStub:GetLibrary("LibDataBroker-1.1", true)
+    self.library = library
+    if library and HasBroker(self:GetCoreEntryMode()) then
         local broker = library.GetDataObjectByName and library:GetDataObjectByName("YiboCore")
         if not broker then broker = library:NewDataObject("YiboCore", {}) end
         self.broker = broker
-        -- 复用同名对象时也覆盖回调，避免热重载后仍保留旧的悬停处理函数。
-        broker.type = "launcher"
-        broker.text = "[Yibo] 账号总览"
-        broker.icon = CORE_ICON
-        broker.OnClick = function(_, mouseButton)
-            if mouseButton == "RightButton" then Core.AccountView:ShowSettings() else Toggle() end
-        end
-        broker.OnEnter = function(first, second)
-            local owner = second or first
-            Entry.lastBrokerAnchor = owner
-            ShowPreview(owner)
-        end
-        broker.OnLeave = function() Entry:SchedulePreviewClose() end
-        broker.OnTooltipShow = function(tooltip)
-            local owner = tooltip and tooltip.GetOwner and tooltip:GetOwner() or Entry.lastBrokerAnchor
-            if ShowPreview(owner) then RaiseBrokerTooltip(tooltip) end
-        end
+        ConfigureCoreBroker(broker)
     end
     for _, entry in pairs(self.businessEntries) do self:CreateBusinessBroker(entry) end
     self:Refresh()
 end
 
 function Entry:Refresh()
+    local coreMode = self:GetCoreEntryMode()
     if self.button then
         local minimap = EntrySettings().minimap
         local angle = math.rad(tonumber(minimap.angle) or 225)
         self.button:ClearAllPoints()
         self.button:SetPoint("CENTER", Minimap, "CENTER", math.cos(angle) * 80, math.sin(angle) * 80)
-        self.button:SetShown(minimap.show ~= false)
+        self.button:SetShown(HasMinimap(coreMode))
     end
-    if self.broker then self.broker.text = "[Yibo] 账号总览" end
+    if self.broker then
+        if HasBroker(coreMode) then ConfigureCoreBroker(self.broker) else DisableCoreBroker(self.broker) end
+    end
     for _, entry in pairs(self.businessEntries) do
         local mode = self:GetBusinessEntryMode(entry.id)
         if HasBroker(mode) then

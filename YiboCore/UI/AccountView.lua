@@ -13,6 +13,8 @@ local SORT_LABELS = { recent = "最近登录", name = "角色名称", level = "�
 local PROFILE_FILTER_LABELS = { all = "全部角色", profiled = "仅有档案", missing = "仅缺少档案" }
 local Settings
 
+local CORE_ENTRY_MODES = { none = true, broker = true, minimap = true, both = true }
+
 local ARCHIVE_COLUMN_GAP = 10
 
 local function HasCharacterProfile(character)
@@ -90,6 +92,11 @@ Settings = function()
     settings.entry = settings.entry or {}
     settings.entry.minimap = settings.entry.minimap or { show = true, angle = 225 }
     settings.entry.broker = settings.entry.broker or { show = true }
+    if not CORE_ENTRY_MODES[settings.entry.coreMode] then
+        local hasBroker = settings.entry.broker.show ~= false
+        local hasMinimap = settings.entry.minimap.show ~= false
+        settings.entry.coreMode = hasBroker and hasMinimap and "both" or (hasBroker and "broker" or (hasMinimap and "minimap" or "none"))
+    end
     settings.entry.previewPageID = type(settings.entry.previewPageID) == "string" and settings.entry.previewPageID or "overview"
     settings.entry.pageModes = settings.entry.pageModes or {}
     settings.entry.pagePositions = settings.entry.pagePositions or {}
@@ -1014,7 +1021,6 @@ function AccountView:RefreshNavigation()
         pages[#pages + 1] = { id = "settings-core", title = "  窗口", settingsTargetID = "core" }
         pages[#pages + 1] = { id = "settings-sorting", title = "  角色与排序", settingsTargetID = "sorting" }
         pages[#pages + 1] = { id = "settings-display", title = "  显示与入口", settingsTargetID = "display" }
-        pages[#pages + 1] = { id = "settings-filters", title = "  角色过滤", settingsTargetID = "filters" }
         for _, page in ipairs(self._pageOrder) do
             -- Settings is user-facing navigation.  Technical addon IDs are
             -- useful for diagnostics, but must never replace the page title
@@ -1811,7 +1817,7 @@ end
 
 local function SettingsRow(parent, index, kind)
     local row = parent.rows[index]
-    if row and row.kind ~= kind then row:Hide(); row = nil end
+    if row and row.controlType ~= kind then row:Hide(); row = nil end
     if not row then
         if kind == "check" then
             row = Theme:CreateCheckbox(parent.content, "")
@@ -1843,6 +1849,13 @@ local function SettingsRow(parent, index, kind)
             row.input = CreateFrame("EditBox", nil, row, "InputBoxTemplate")
             row.input:SetHeight(20); row.input:SetAutoFocus(false); row.input:SetMaxLetters(64)
             row.input:SetTextInsets(7, 7, 0, 0)
+        elseif kind == "dropdown" then
+            row = CreateFrame("Frame", nil, parent.content)
+            row:SetHeight(Theme.Size.standard)
+            row.label = AddText(row, "GameFontNormalSmall", nil, COLORS.muted)
+            row.label:SetPoint("LEFT", 0, 0); row.label:SetWidth(104)
+            row.dropdown = Theme:CreateDropdown(row, 180, {})
+            row.dropdown:SetPoint("LEFT", row.label, "RIGHT", 8, 0)
         elseif kind == "short-name" then
             row = CreateFrame("Frame", nil, parent.content)
             row:SetHeight(28)
@@ -1856,7 +1869,7 @@ local function SettingsRow(parent, index, kind)
         end
         parent.rows[index] = row
     end
-    row.kind = kind
+    row.controlType = kind
     return row
 end
 
@@ -1896,14 +1909,14 @@ local function RefreshSettings(parent)
     parent.content:SetWidth(math.max(600, settingsViewportWidth - 18))
     local targetID = AccountView.settingsTargetPageID or "display"
     local selected = AccountView._pages[targetID]
-    local displayMode, sortingMode, coreMode, filtersMode = targetID == "display", targetID == "sorting", targetID == "core", targetID == "filters"
-    if not (displayMode or sortingMode or coreMode or filtersMode or (selected and not selected.internal)) then
+    local displayMode, sortingMode, coreMode = targetID == "display", targetID == "sorting", targetID == "core"
+    if not (displayMode or sortingMode or coreMode or (selected and not selected.internal)) then
         targetID, displayMode = "display", true
         AccountView.settingsTargetPageID = targetID
     end
-    local titles = { display = "显示与入口", sorting = "角色与排序", core = "窗口与 Core", filters = "角色过滤" }
+    local titles = { display = "显示与入口", sorting = "角色与排序", core = "窗口" }
     parent.heading:SetText(titles[targetID] or (selected.title .. "业务设置"))
-    parent.hint:SetText(displayMode and "集中管理插件页面、独立入口与显示字段。" or (sortingMode and "统一设置账号角色的默认排列规则。" or (coreMode and "管理窗口布局与 YiboCore 默认入口。" or (filtersMode and "统一管理各业务页面的角色等级准入规则。" or "这里只保留该插件自身的业务规则与数据管理。"))))
+    parent.hint:SetText(displayMode and "集中管理 Core 与插件页面、独立入口及显示字段。" or (sortingMode and "统一设置角色、排序、缓存和业务页面的角色过滤。" or (coreMode and "管理窗口布局。" or "这里只保留该插件自身的业务规则与数据管理。")))
     parent.resetLayout:SetShown(coreMode)
 
     local index, y, gridColumn = 0, 0, 0
@@ -1963,6 +1976,19 @@ local function RefreshSettings(parent)
         row.input:SetScript("OnEnterPressed", function(control) Save(control); control:ClearFocus() end)
         row.input:SetScript("OnEditFocusLost", Save)
         row.input:SetScript("OnEscapePressed", function(control) control:SetText(value or ""); control:ClearFocus() end)
+        row:Show()
+        return row
+    end
+    local function Dropdown(label, value, options, callback)
+        index = index + 1; local row = SettingsRow(parent, index, "dropdown")
+        PlaceGridControl(row)
+        row.label:SetText(label); row.label:SetWidth(math.min(120, math.floor(gridWidth * 0.38)))
+        row.dropdown:ClearAllPoints(); row.dropdown:SetPoint("LEFT", row.label, "RIGHT", 8, 0); row.dropdown:SetPoint("RIGHT", 0, 0)
+        row.dropdown:SetOptions(options); row.dropdown:SetValue(value)
+        row.dropdown:SetOnValueChanged(function(nextValue)
+            callback(nextValue)
+            AccountView:RefreshPage()
+        end)
         row:Show()
         return row
     end
@@ -2163,17 +2189,61 @@ local function RefreshSettings(parent)
             FinishGridRow()
             CharacterOrderRows()
         end
+        -- Character filters share the same roster context as sorting and cache
+        -- management, so they are a section here rather than a fourth Core
+        -- navigation page.
+        SetGridMinimum(math.max(300, parent.content:GetWidth() or 620))
+        Heading("业务页面角色过滤")
+        FinishGridRow()
+        index = index + 1
+        local ruleHint = SettingsRow(parent, index, "heading")
+        PlaceSettingsRow(ruleHint, y)
+        ruleHint:SetText("填写规则：90 = 仅 90 级；1-20 = 等级范围；<=3 / >=85 = 比较；留空或 0 = 不过滤。")
+        ruleHint:SetTextColor(COLORS.muted[1], COLORS.muted[2], COLORS.muted[3])
+        ruleHint:Show(); y = y + 24
+        local count = 0
+        for _, page in ipairs(AccountView._pageOrder) do
+            local filter = page.characterFilter
+            if not page.internal and filter then
+                count = count + 1
+                Input(page.title .. " · 等级", filter.GetExpression() or "", function(value)
+                    local ok, errorMessage = filter.SetExpression(value)
+                    if ok == false then Core:Print(page.title .. "等级过滤保存失败：" .. tostring(errorMessage)) end
+                end, 112)
+            end
+        end
+        if count == 0 then Heading("暂无支持角色过滤的业务页面") end
+        local archive = ArchiveSettings()
+        local function CycleArchiveProfile(mode)
+            local values = { "all", "profiled", "missing" }
+            local current = archive.filters[mode].profile
+            for position, value in ipairs(values) do
+                if value == current then archive.filters[mode].profile = values[(position % #values) + 1]; break end
+            end
+            AccountView:RefreshPage()
+        end
+        Heading("角色档案角色过滤")
+        Button("主表筛选：" .. (PROFILE_FILTER_LABELS[archive.filters.page.profile] or PROFILE_FILTER_LABELS.all), function() CycleArchiveProfile("page") end, 300)
+        Check("主表筛选时包含已隐藏角色", archive.filters.page.includeHidden == true, function(checked) archive.filters.page.includeHidden = checked end)
+        Input("主表等级过滤", archive.filters.page.levelExpr, function(value) archive.filters.page.levelExpr = value end)
+        Heading("角色档案悬停角色过滤")
+        Button("悬停筛选：" .. (PROFILE_FILTER_LABELS[archive.filters.preview.profile] or PROFILE_FILTER_LABELS.all), function() CycleArchiveProfile("preview") end, 300)
+        Check("悬停筛选时包含已隐藏角色", archive.filters.preview.includeHidden == true, function(checked) archive.filters.preview.includeHidden = checked end)
+        Input("悬停等级过滤", archive.filters.preview.levelExpr, function(value) archive.filters.preview.levelExpr = value end)
     elseif coreMode then
         Heading("窗口布局")
         Button("重置窗口位置", function() AccountView:ResetWindowLayout() end)
         Heading("窗口尺寸会随当前页面内容自动适配。")
-        Heading("Core 入口")
-        Check("显示 Core 小地图入口", settings.entry.minimap.show ~= false, function(checked)
-            settings.entry.minimap.show = checked
-            if Core.Entry then Core.Entry:Refresh() end
-        end)
-        Check("启用 Broker 入口（重载界面后生效）", settings.entry.broker.show ~= false, function(checked)
-            settings.entry.broker.show = checked
+    elseif displayMode then
+        local archive = ArchiveSettings()
+        local entryModeOptions = {
+            { value = "none", label = "不显示" },
+            { value = "broker", label = "仅 Broker" },
+            { value = "minimap", label = "仅小地图" },
+            { value = "both", label = "两者都显示" },
+        }
+        Dropdown("Core 入口", Core.Entry and Core.Entry:GetCoreEntryMode() or "both", entryModeOptions, function(mode)
+            if Core.Entry then Core.Entry:SetCoreEntryMode(mode) end
         end)
         Heading("入口悬停页面")
         local selectedPreviewPage = AccountView:GetPreviewPage()
@@ -2186,97 +2256,60 @@ local function RefreshSettings(parent)
             option:SetState(optionPage.id == selectedPreviewPage.id and "selected" or "default")
         end
         FinishGridRow()
-    elseif filtersMode then
-        -- Filters are intentionally a single-column form: each expression is a
-        -- plugin-specific rule and needs enough room to be read and edited.
-        SetGridMinimum(math.max(300, parent.content:GetWidth() or 620))
-        Heading("业务页面角色过滤")
-        FinishGridRow()
-        index = index + 1
-        local ruleHint = SettingsRow(parent, index, "heading")
-        PlaceSettingsRow(ruleHint, y)
-        ruleHint:SetText("填写规则：90 = 仅 90 级；1-20 = 等级范围；<=3 / >=85 = 比较；留空或 0 = 不过滤。")
-        ruleHint:SetTextColor(COLORS.muted[1], COLORS.muted[2], COLORS.muted[3])
-        ruleHint:Show()
-        y = y + 24
-        index = index + 1
-        local installedHint = SettingsRow(parent, index, "heading")
-        PlaceSettingsRow(installedHint, y)
-        installedHint:SetText("仅显示当前已安装并注册账号页面的业务插件。初次安装时由插件写入推荐值。")
-        installedHint:SetTextColor(COLORS.muted[1], COLORS.muted[2], COLORS.muted[3])
-        installedHint:Show()
-        y = y + 28
-        local count = 0
-        for _, page in ipairs(AccountView._pageOrder) do
-            local filter = page.characterFilter
-            if not page.internal and filter then
-                count = count + 1
-                Input(page.title .. " · 等级", filter.GetExpression() or "", function(value)
-                    local ok, errorMessage = filter.SetExpression(value)
-                    if ok == false then Core:Print(page.title .. "等级过滤保存失败：" .. tostring(errorMessage)) end
-                end, 112)
-            end
-        end
-        if count == 0 then
-            Heading("暂无支持角色过滤的业务页面")
-        end
-    elseif displayMode then
-        local archive = ArchiveSettings()
-        local function CycleArchiveProfile(mode)
-            local values = { "all", "profiled", "missing" }
-            local current = archive.filters[mode].profile
-            for position, value in ipairs(values) do
-                if value == current then archive.filters[mode].profile = values[(position % #values) + 1]; break end
-            end
+        Heading("角色档案显示字段")
+        Button(parent.showArchiveFields and "▾ 收起角色档案字段" or "▸ 配置角色档案字段", function()
+            parent.showArchiveFields = not parent.showArchiveFields
             AccountView:RefreshPage()
-        end
-        SetGridMinimum(260)
-        Heading("角色档案：显示与筛选")
-        Button("角色档案筛选：" .. (PROFILE_FILTER_LABELS[archive.filters.page.profile] or PROFILE_FILTER_LABELS.all), function() CycleArchiveProfile("page") end, 300)
-        Check("筛选时包含已隐藏角色", archive.filters.page.includeHidden == true, function(checked) archive.filters.page.includeHidden = checked end)
-        Input("等级过滤", archive.filters.page.levelExpr, function(value) archive.filters.page.levelExpr = value end)
-        Heading("角色档案：显示字段")
-        SetGridMinimum(160)
-        for _, field in ipairs(Core.Fields:GetByConsumer("character-archive")) do
-            Check(field.title, ArchiveFieldVisible(field, false), function(checked) archive.fields[field.id] = checked end)
-        end
-        Heading("角色档案悬停：显示与筛选")
-        SetGridMinimum(260)
-        Button("悬停筛选：" .. (PROFILE_FILTER_LABELS[archive.filters.preview.profile] or PROFILE_FILTER_LABELS.all), function() CycleArchiveProfile("preview") end, 300)
-        Check("筛选时包含已隐藏角色", archive.filters.preview.includeHidden == true, function(checked) archive.filters.preview.includeHidden = checked end)
-        Input("等级过滤", archive.filters.preview.levelExpr, function(value) archive.filters.preview.levelExpr = value end)
-        Heading("角色档案悬停：显示字段")
-        SetGridMinimum(160)
-        for _, field in ipairs(Core.Fields:GetByConsumer("character-archive")) do
-            Check(field.title, ArchiveFieldVisible(field, true), function(checked) archive.previewFields[field.id] = checked end)
+        end, 300, "disclosure")
+        if parent.showArchiveFields then
+            Heading("主表字段")
+            SetGridMinimum(160)
+            for _, field in ipairs(Core.Fields:GetByConsumer("character-archive")) do
+                Check(field.title, ArchiveFieldVisible(field, false), function(checked) archive.fields[field.id] = checked end)
+            end
+            Heading("悬停字段")
+            for _, field in ipairs(Core.Fields:GetByConsumer("character-archive")) do
+                Check(field.title, ArchiveFieldVisible(field, true), function(checked) archive.previewFields[field.id] = checked end)
+            end
         end
         Heading("插件页面与入口")
         SetGridMinimum(260)
+        local displayPages = {}
+        for _, page in ipairs(AccountView._pageOrder) do
+            if not page.internal then displayPages[#displayPages + 1] = page end
+        end
+        if parent.displayFieldsPageID and not AccountView._pages[parent.displayFieldsPageID] then parent.displayFieldsPageID = nil end
+        if not parent.displayFieldsPageID and displayPages[1] then parent.displayFieldsPageID = displayPages[1].id end
         for _, page in ipairs(AccountView._pageOrder) do
             if not page.internal then
                 local entry = Core.Entry and Core.Entry.GetBusinessEntryByPageID and Core.Entry:GetBusinessEntryByPageID(page.id)
+                Button("字段：" .. page.title, function()
+                    parent.displayFieldsPageID = page.id
+                    AccountView:RefreshPage()
+                end, 300, "disclosure", parent.displayFieldsPageID == page.id)
                 Check(page.title .. "显示在账号视图", PageEnabled(page), function(checked) settings.pages[page.id] = checked end)
                 if entry then
-                    Button(page.title .. "入口：" .. Core.Entry:GetBusinessEntryModeLabel(Core.Entry:GetBusinessEntryMode(entry.id)), function()
-                        local modes = { "none", "broker", "minimap", "both" }
-                        local current = Core.Entry:GetBusinessEntryMode(entry.id)
-                        for i, mode in ipairs(modes) do if mode == current then settings.entry.pageModes[entry.id] = modes[(i % #modes) + 1]; break end end
-                        Core.Entry:Refresh(); AccountView:RefreshPage()
+                    Dropdown(page.title .. "入口", Core.Entry:GetBusinessEntryMode(entry.id), entryModeOptions, function(mode)
+                        settings.entry.pageModes[entry.id] = mode
+                        Core.Entry:Refresh()
                     end)
                 end
             end
         end
         Heading("主表字段与悬停预览")
-        for _, page in ipairs(AccountView._pageOrder) do
-            if not page.internal and #page.fields > 0 then
-                Heading(page.title)
-                for _, field in ipairs(page.fields) do
-                    Check("主表 · " .. field.title, AccountView:GetFieldVisible(page.id, field), function(checked) AccountView:SetFieldVisible(page.id, field.id, checked) end)
-                    if page.previewEnabled and type(page.SetPreviewFieldVisible) == "function" then
-                        Check("悬停 · " .. field.title, GetPreviewFieldVisible(page, field), function(checked) page.SetPreviewFieldVisible(field.id, checked) end)
-                    end
+        local fieldPage = parent.displayFieldsPageID and AccountView._pages[parent.displayFieldsPageID]
+        if fieldPage and #fieldPage.fields > 0 then
+            Heading(fieldPage.title)
+            for _, field in ipairs(fieldPage.fields) do
+                Check("主表 · " .. field.title, AccountView:GetFieldVisible(fieldPage.id, field), function(checked) AccountView:SetFieldVisible(fieldPage.id, field.id, checked) end)
+                if fieldPage.previewEnabled and type(fieldPage.SetPreviewFieldVisible) == "function" then
+                    Check("悬停 · " .. field.title, GetPreviewFieldVisible(fieldPage, field), function(checked) fieldPage.SetPreviewFieldVisible(field.id, checked) end)
                 end
             end
+        elseif #displayPages == 0 then
+            Heading("暂无已注册的业务插件")
+        else
+            Heading("所选插件没有可配置字段")
         end
     else
         local details = selected.settings or {}
@@ -2289,7 +2322,11 @@ local function RefreshSettings(parent)
                 Heading("暂无插件专属设置")
             end
     end
-    for stale = index + 1, #parent.rows do parent.rows[stale]:Hide() end
+    for stale = index + 1, #parent.rows do
+        local row = parent.rows[stale]
+        if row.dropdown and row.dropdown.menu then row.dropdown.menu:Hide() end
+        row:Hide()
+    end
     parent.content:SetHeight(math.max(y + 8, parent.scroll:GetHeight() or 1))
     parent.scroll:RefreshScrollbar()
 end
@@ -2345,6 +2382,11 @@ local ABOUT_ADDONS = {
     },
 }
 
+-- Compatibility fallback for an incomplete local checkout only.  Normal
+-- releases replace this legacy presentation list with the shared catalog so
+-- the UI never owns plugin versions.
+ABOUT_ADDONS = Core.AddonCatalog or ABOUT_ADDONS
+
 local function SetAboutLinkOpen(parent, target)
     for _, row in ipairs(parent.addonRows) do
         if row.linkButton then
@@ -2368,6 +2410,8 @@ local function SetAboutLinkOpen(parent, target)
 end
 
 local function CreateAboutAddonRow(parent, addon)
+    addon.independent = addon.relation == "independent" or addon.independent == true
+    addon.url = addon.projectURL or addon.url
     local row = CreateFrame("Frame", nil, parent.content or parent, "BackdropTemplate")
     row:SetHeight(96)
     row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
@@ -2516,13 +2560,23 @@ end
 local function RefreshAbout(parent)
     parent.hero.title:SetText("YiboCore v" .. tostring(Core:GetVersion() or "?"))
     local connected = 0
+    local stateLabels = {
+        connected = "已连接",
+        ["enabled-not-connected"] = "已启用尚未连接",
+        ["installed-disabled"] = "已安装但未启用",
+        missing = "未安装",
+    }
     for _, addon in ipairs(ABOUT_ADDONS) do
-        local registered = Core.Registry and Core.Registry:Get(addon.name)
-        if registered then
-            if parent.addonRowsByName[addon.name] then
-                parent.addonRowsByName[addon.name].version:SetText("v" .. tostring(registered.version or addon.version or "?"))
-            end
-            if not addon.independent then connected = connected + 1 end
+        local status = Core.AddonStatus and Core.AddonStatus:Get(addon.name) or {}
+        local row = parent.addonRowsByName[addon.name]
+        if row then
+            local installed = status.installedVersion and ("本机 v" .. tostring(status.installedVersion)) or "本机未安装"
+            local packaged = status.packagedVersion and (" · 打包时 v" .. tostring(status.packagedVersion)) or ""
+            row.version:SetText(installed .. packaged)
+            row.description:SetText((stateLabels[status.state] or "状态未知") .. " · " .. tostring(addon.description or ""))
+        end
+        if not addon.independent and status.connected then
+            connected = connected + 1
         end
     end
     parent.hero.status:SetText("已连接 " .. connected .. " 个子插件")

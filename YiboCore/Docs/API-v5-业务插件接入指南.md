@@ -51,6 +51,12 @@ end)
 
 ## 5. 兼容期与禁止项
 
+### 发布兼容承诺
+
+Public API v5 在整个 `1.x` 兼容期内只增不删：较新的 Core 必须继续满足声明 `requiredAPI = 5` 的旧子插件；新增能力必须先以可选方法或 Capability 暴露，不能改变既有注册、页面或入口调用的含义。只有需要移除或改变既有 v5 语义时才升级 API 主版本。
+
+较新的子插件若开始依赖新的 API，必须把 `.toc` 的依赖保持为 `YiboCore`，并把 `requiredAPI` 提升到实际所需版本；旧 Core 会在初始化时给出“需要 API vN”的明确错误并停止注册，而不是半初始化。子插件不得仅根据 Core 的显示版本号猜测功能是否存在；可选能力使用 `Core.Capabilities` 或方法存在性检查后再调用。
+
 `Profile:Get()`、`Profile:RegisterCollector()` 与 `CHARACTER_PROFILE_UPDATED` 在整个 `0.6.x` 仅用于旧插件兼容。所有新功能使用 `DataDomains` 和 `DATA_DOMAIN_UPDATED`。现有业务页不依赖 Core 中性事实时无需为了“使用新事件”而订阅它。
 
 不得直接修改领域快照、直接触碰 `character.domains`，或从业务插件创建窗口壳、Broker、小地图拖拽和入口设置。窗口、悬停预览与入口由 Core 管理；业务插件只提供其数据、页面内容和业务设置。
