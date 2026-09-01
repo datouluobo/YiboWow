@@ -3,7 +3,7 @@
 ## Notes: Shared runtime and account data foundation for Yibo WoW addons.
 ## Notes-zhCN: Yibo 系列插件的运行时与账号数据基础框架。
 ## Author: YiboSoft
-## Version: 1.2.1
+## Version: 0.0.1
 ## IconTexture: Interface\AddOns\YiboCore\Media\YiboCoreIcon-v13
 ## SavedVariables: YiboCoreDB
 ## OptionalDeps: LibDataBroker-1.1
