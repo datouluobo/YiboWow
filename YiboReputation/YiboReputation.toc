@@ -2,7 +2,7 @@
 ## Title: |cff20e070[Yibo]|r YiboReputation - 声望之路
 ## Notes: 多角色声望浏览与比较
 ## Author: YiboSoft
-## Version: 0.0.1
+## Version: 1.1.1
 ## IconTexture: Interface\AddOns\YiboReputation\Media\YiboReputationIcon-v1
 ## SavedVariables: YiboReputationDB
 ## RequiredDeps: YiboCore
