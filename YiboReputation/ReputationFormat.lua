@@ -20,11 +20,11 @@ function Addon:GetReputationColor(data)
  return SystemStandingColor(standing, STANDING_COLORS[standing] or {0.90,0.96,0.97})
 end
 function Addon:FormatState(snapshot)
- if not snapshot then return "? 未扫描" end
+ if not snapshot then return "? 未同步" end
  if (tonumber(snapshot.schemaVersion) or 0) < 4 or not (snapshot.data and snapshot.data.contractVersion) then return "? 需重扫" end
  if snapshot.state == "stale" then return "⌚ 过期" end
  if snapshot.state == "unavailable" then return "不可用" end
- if snapshot.state == "not-yet-scanned" then return "? 未扫描" end
+ if snapshot.state == "not-yet-scanned" then return "? 未同步" end
  return nil
 end
 function Addon:IsComplete(data)
@@ -34,7 +34,7 @@ function Addon:IsComplete(data)
  return current and maximum and current >= maximum - 1
 end
 function Addon:FormatReputation(data, options)
- if not data then return "? 未扫描" end
+ if not data then return "? 未同步" end
  local friend = self:GetFriendship(data)
  if friend then
   if not friend.rank then return "好友度数据未就绪" end
@@ -67,7 +67,7 @@ function Addon:FormatCompact(data)
  return "?"
 end
 function Addon:FormatMatrix(data, showProgress)
- if not data then return "? 未扫描" end
+ if not data then return "? 未同步" end
  local friend = self:GetFriendship(data)
  if friend then
   if not friend.rank then return "好友度未就绪" end
@@ -94,10 +94,10 @@ end
 function Addon:FormatSnapshotValue(snapshot, data, style, factionState)
  local state = self:FormatState(snapshot)
  if state and snapshot and snapshot.state ~= "stale" then
-  return snapshot.state == "unavailable" and "—" or "待扫描"
+  return snapshot.state == "unavailable" and "—" or "未同步"
  end
  if not data then
-  if factionState == "not-yet-scanned" then return "待扫描" end
+  if factionState == "not-yet-scanned" then return "未同步" end
   if factionState == "unavailable" then return "—" end
   return "—"
  end

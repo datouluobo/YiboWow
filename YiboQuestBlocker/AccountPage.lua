@@ -7,7 +7,7 @@ local Theme = _G.YiboCore.UITheme
 local Page = {}
 YQB.AccountPage = Page
 
-local ROW_H, GROUP_H, CHARACTER_COL_W, COMPACT_CHARACTER_COL_W, GLOBAL_W, STATUS_HIT = Theme.Table.rowHeight, Theme.Table.groupHeight, 84, 64, 36, 20
+local ROW_H, GROUP_H, CHARACTER_COL_W, COMPACT_CHARACTER_COL_W, GLOBAL_W, STATUS_HIT = Theme.Table.rowHeight, Theme.Table.groupHeight, Theme.Table.characterColumnWidth, Theme.Table.characterColumnWidth, 36, 20
 local PREVIEW_MARGIN, PREVIEW_SCROLLBAR_GUTTER, CORE_PREVIEW_BORDER = 16, 16, 2
 local COLORS = Theme.Colors
 
@@ -80,12 +80,14 @@ local function ScopeControlsWidth(context)
 end
 
 local function PreferredCharacterWidth(context)
+    if context and context.preview then return COMPACT_CHARACTER_COL_W end
     return IsAllRealms(context) and CHARACTER_COL_W or COMPACT_CHARACTER_COL_W
 end
 
 local function ClearRows(instance)
     for _, row in ipairs(instance.rows) do row:Hide() end
     instance.rowCount = 0
+    instance.dataRowCount = 0
 end
 
 local function Row(instance)
@@ -146,7 +148,10 @@ local function SetStatusCheckbox(button, blocked, currentCharacter)
     button:SetChecked(blocked)
 end
 
-local function Header(instance, characters, showGlobal, showCharacters, showRealms)
+local function Header(instance, characters, showGlobal, showCharacters, context)
+    local showRealms = IsAllRealms(context)
+    local headerHeight = Theme:GetCharacterHeaderHeight(context)
+    instance.header:SetHeight(headerHeight)
     instance.headerTask:SetWidth(instance.taskWidth - 12)
     instance.headerGlobal:SetShown(showGlobal)
     instance.headerGlobal:ClearAllPoints()
@@ -159,49 +164,17 @@ local function Header(instance, characters, showGlobal, showCharacters, showReal
         for index, key in ipairs(characters) do
             local cell = instance.headerCharacters[index]
             if not cell then
-                cell = CreateFrame("Frame", nil, instance.header, "BackdropTemplate")
-                cell:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-                cell:EnableMouse(true)
-                cell.name = Text(cell, "GameFontNormalSmall", COLORS.text)
-                cell.name:SetJustifyH("CENTER"); cell.name:SetWordWrap(false)
-                cell.name:SetPoint("TOPLEFT", cell, "TOPLEFT", 2, -2)
-                cell.name:SetPoint("TOPRIGHT", cell, "TOPRIGHT", -2, -2)
-                cell.name:SetHeight(13)
-                cell.realm = Text(cell, "GameFontNormalSmall", COLORS.muted, Theme.Font.meta)
-                cell.realm:SetJustifyH("CENTER"); cell.realm:SetWordWrap(false)
-                cell.realm:SetPoint("BOTTOMLEFT", cell, "BOTTOMLEFT", 2, 1)
-                cell.realm:SetPoint("BOTTOMRIGHT", cell, "BOTTOMRIGHT", -2, 1)
-                cell.realm:SetHeight(10)
+                cell = Theme:CreateMatrixHeader(instance.header)
                 instance.headerCharacters[index] = cell
             end
             local name, realm = CharacterIdentity(instance.characterRecords[key], key)
             local color = ClassColor(key)
-            cell:SetBackdropColor(0, 0, 0, 0)
-            cell:SetBackdropBorderColor(0, 0, 0, 0)
-            cell.name:SetTextColor(color.r or color[1], color.g or color[2], color.b or color[3])
-            cell.name:SetText(name)
-            cell.name:ClearAllPoints()
-            if showRealms then
-                cell.name:SetWordWrap(false); cell.name:SetHeight(13)
-                cell.name:SetPoint("TOPLEFT", cell, "TOPLEFT", 2, -2)
-                cell.name:SetPoint("TOPRIGHT", cell, "TOPRIGHT", -2, -2)
-                cell.realm:SetText("-" .. realm)
-                cell.realm:Show()
-            else
-                -- A character column is a comparable matrix field, so CJK and
-                -- Latin names must share one line and one visual rhythm.  The
-                -- tooltip retains the complete name when it is clipped.
-                cell.name:SetWordWrap(false); cell.name:SetHeight(14)
-                cell.name:SetPoint("LEFT", cell, "LEFT", 2, 0)
-                cell.name:SetPoint("RIGHT", cell, "RIGHT", -2, 0)
-                cell.realm:Hide()
-            end
+            Theme:SetCharacterHeader(cell, instance.characterRecords[key], context, { name=name, realm=realm, color=color })
             cell:ClearAllPoints(); cell:SetPoint("LEFT", instance.header, "LEFT", x, 0)
-            cell:SetSize(characterWidth, GROUP_H)
+            cell:SetSize(characterWidth, headerHeight)
             if key == YQB.GetCurrentCharacterID() then
                 instance.currentCharacterX, instance.currentCharacterWidth = x, characterWidth
             end
-            Theme:BindTooltip(cell, showRealms and (name .. "-" .. realm) or name)
             cell:Show()
             x = x + characterWidth
         end
@@ -210,10 +183,11 @@ end
 
 local function RenderQuest(instance, item, characters, showGlobal, showCharacters, currentTask)
     local row = Row(instance)
+    instance.dataRowCount = instance.dataRowCount + 1
     row.task:SetText("[" .. item.id .. "] " .. tostring(item.name or "未知任务"))
     row.task:SetTextColor(COLORS.text[1], COLORS.text[2], COLORS.text[3])
     row.task:SetWidth(instance.taskWidth - 12)
-    local tone = currentTask and COLORS.current or (instance.rowCount % 2 == 0 and COLORS.alternate or COLORS.row)
+    local tone = currentTask and COLORS.current or Theme:GetDataRowColor(instance.dataRowCount)
     row:SetBackdropColor(tone[1], tone[2], tone[3], 0.94)
     row:SetBackdropBorderColor(COLORS.matrixLine[1], COLORS.matrixLine[2], COLORS.matrixLine[3], COLORS.matrixLine[4])
     local status = YQB.GetBlockStatus(item.id)
@@ -267,7 +241,7 @@ function Page.Create(instance)
     instance.header.bg = instance.header:CreateTexture(nil, "BACKGROUND"); instance.header.bg:SetAllPoints(); instance.header.bg:SetColorTexture(COLORS.chrome[1], COLORS.chrome[2], COLORS.chrome[3], 0.98)
     instance.headerTask = Text(instance.header, "GameFontNormalSmall", COLORS.muted); instance.headerTask:SetPoint("LEFT", 8, 0); instance.headerTask:SetText("任务")
     instance.headerGlobal = Text(instance.header, "GameFontNormalSmall", COLORS.muted); instance.headerGlobal:SetWidth(GLOBAL_W); instance.headerGlobal:SetJustifyH("CENTER"); instance.headerGlobal:SetText("全局")
-    instance.scroll = Theme:CreateScrollFrame(instance); instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs)
+    instance.scroll = Theme:CreateScrollFrame(instance); instance.scroll:BindScrollbarGutter(instance.header); instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs)
     instance.content = CreateFrame("Frame", nil, instance.scroll); instance.content:SetWidth(700); instance.scroll:SetScrollChild(instance.content)
     instance.currentCharacterOutline = Theme:CreateCurrentCharacterOutline(instance)
     instance.rows, instance.headerCharacters, instance.rowCount = {}, {}, 0
@@ -345,24 +319,13 @@ function Page.Refresh(instance, context)
     local showCharacters = context:GetFieldVisible("characters")
     instance.taskWidth = 250
     local fixedWidth = instance.taskWidth + (showGlobal and GLOBAL_W or 0)
-    local availableWidth = instance.header:GetWidth() or math.max(fixedWidth + COMPACT_CHARACTER_COL_W, (instance:GetWidth() or 0) - 58)
+    local availableWidth = math.max(fixedWidth + COMPACT_CHARACTER_COL_W, (tonumber(context.surfaceAvailableWidth) or instance:GetWidth() or 1) - inset.left - inset.right)
     local visibleCharacters, pageInfo = Core.AccountView:GetColumnPage("quest-blocker", "characters", allCharacters, availableWidth, fixedWidth, COMPACT_CHARACTER_COL_W)
-    if pageInfo.pages > 1 then
-        visibleCharacters, pageInfo = Core.AccountView:GetColumnPage("quest-blocker", "characters", allCharacters, availableWidth - Core.AccountView:GetColumnPagerWidth(), fixedWidth, COMPACT_CHARACTER_COL_W)
-    end
     for _, character in ipairs(visibleCharacters) do characters[#characters + 1] = character.id end
-    Core.AccountView:UpdateColumnPager(instance, "quest-blocker", "characters", pageInfo, instance.header)
-    local columns = #characters
-    local viewportWidth = instance.scroll:GetWidth() or 0
-    local remainingWidth = viewportWidth - instance.taskWidth - (showGlobal and GLOBAL_W or 0) - 6
-    if not IsAllRealms(context) then
-        instance.characterColumnWidth = COMPACT_CHARACTER_COL_W
-    elseif columns > 0 and remainingWidth > 0 then
-        instance.characterColumnWidth = math.max(54, math.min(CHARACTER_COL_W, math.floor(remainingWidth / columns)))
-    else
-        instance.characterColumnWidth = CHARACTER_COL_W
-    end
-    Header(instance, characters, showGlobal, showCharacters, IsAllRealms(context))
+    -- Character columns must remain directly comparable across every account
+    -- page.  Do not stretch a short roster into wider, page-specific cells.
+    instance.characterColumnWidth = Theme.Table.characterColumnWidth
+    Header(instance, characters, showGlobal, showCharacters, context)
     ClearRows(instance)
     local blocked = YQB.GetBlockedQuestList()
     RenderGroup(instance, "拒绝任务 (" .. #blocked .. " 个)", characters, showGlobal, showCharacters)
@@ -391,14 +354,14 @@ function Page.Refresh(instance, context)
         -- like a nameless character column, especially with few characters.
         contentWidth = width
     else
-        contentWidth = math.max(480, width, viewportWidth - 18)
+        contentWidth = math.max(480, width, instance.scroll:GetWidth() or 0)
     end
     instance.content:SetWidth(contentWidth); instance.content:SetHeight(math.max(44, instance.rowCount * ROW_H))
     instance.scroll:SetContentHeight(instance.content:GetHeight())
     instance.currentCharacterOutline:ClearAllPoints()
     if showCharacters and instance.currentCharacterX then
         instance.currentCharacterOutline:SetPoint("TOPLEFT", instance.header, "TOPLEFT", instance.currentCharacterX, 0)
-        instance.currentCharacterOutline:SetPoint("BOTTOMRIGHT", instance.content, "TOPLEFT", instance.currentCharacterX + instance.currentCharacterWidth, -instance.content:GetHeight())
+        instance.currentCharacterOutline:SetPoint("BOTTOMRIGHT", instance.scroll, "BOTTOMLEFT", instance.currentCharacterX + instance.currentCharacterWidth, 0)
         Theme:SetCurrentCharacterOutline(instance.currentCharacterOutline, true)
     else
         Theme:SetCurrentCharacterOutline(instance.currentCharacterOutline, false)
@@ -430,19 +393,24 @@ function Page.GetSurfaceMetrics(context)
     local rows = blocked + 1 + (currentVisible and (current + 1) or 0)
     local mainInset = Theme:GetMatrixInsets(false)
     local previewInset = Theme:GetMatrixInsets(true)
+    -- The hover shell is content-sized.  Its table already anchors to the
+    -- preview matrix inset, so using the full main-page `Space.lg` margin here
+    -- created a visibly wider blank tail after the last character column.
+    local sideInset = context.preview and previewInset or mainInset
     -- The fixed regions mirror the actual anchors in Refresh: toolbar,
     -- header, data gap, bottom action panel, and the shared shell insets.
     -- Keeping this formula structural prevents a future title/control change
     -- from creating a window taller than the matrix it contains.
-    local mainFixedHeight = mainInset.top + Theme.Size.standard + Theme.Space.sm + GROUP_H + Theme.Space.xs + Theme.Space.sm + 29 + mainInset.bottom
-    local previewFixedHeight = previewInset.top + GROUP_H + Theme.Space.xs + previewInset.bottom
+    local headerHeight = Theme:GetCharacterHeaderHeight(context)
+    local mainFixedHeight = mainInset.top + Theme.Size.standard + Theme.Space.sm + headerHeight + Theme.Space.xs + Theme.Space.sm + 29 + mainInset.bottom
+    local previewFixedHeight = previewInset.top + headerHeight + Theme.Space.xs + previewInset.bottom
     return {
-        minContentWidth = fixedWidth + (context:GetFieldVisible("characters") and COMPACT_CHARACTER_COL_W or 0) + Theme.Space.lg * 2,
-        naturalContentWidth = fixedWidth + characterColumns + Theme.Space.lg * 2,
+        minContentWidth = fixedWidth + (context:GetFieldVisible("characters") and COMPACT_CHARACTER_COL_W or 0) + sideInset.left + sideInset.right,
+        naturalContentWidth = fixedWidth + characterColumns + sideInset.left + sideInset.right,
         minContentHeight = (context.preview and previewFixedHeight or mainFixedHeight) + ROW_H,
         naturalContentHeight = (context.preview and previewFixedHeight or mainFixedHeight) + rows * ROW_H,
         fixedLeftWidth = 250 + globalColumn,
-        fixedTopHeight = GROUP_H,
+        fixedTopHeight = headerHeight,
         horizontalOverflow = "paginate",
         verticalOverflow = "content",
     }

@@ -12,6 +12,7 @@ local function FindQuest(definition, questID)
     for _, item in ipairs(definition.stages or {}) do if tonumber(item.questID) == questID then return item, "lesson" end end
     if definition.graduation and tonumber(definition.graduation.questID) == questID then return definition.graduation, "graduation" end
     if definition.daily and tonumber(definition.daily.questID) == questID then return definition.daily, "daily" end
+    for _, item in ipairs(definition.members or {}) do if tonumber(item.questID) == questID then return item, "member" end end
 end
 
 local function ActiveQuest(definition)
@@ -53,11 +54,22 @@ function Provider:GetDefinition()
     return Addon.Catalog.dailyActivities and Addon.Catalog.dailyActivities["mop.nomi"]
 end
 
+function Provider:GetCookingDefinition()
+    return Addon.Catalog.dailyActivities and Addon.Catalog.dailyActivities["mop.halfhill.cooking-daily"]
+end
+
 function Provider:GetCurrentDay(characterID, now)
     local definition = self:GetDefinition()
     local record = Addon.Database:GetProvider(characterID, self.id, false)
     if not (definition and record and record.days) then return nil, definition end
     return record.days[Addon.Model.Schedule:ServerDay(now, definition.resetHour)], definition
+end
+
+function Provider:GetCurrentCookingDay(characterID, now)
+    local definition = self:GetCookingDefinition()
+    local record = Addon.Database:GetProvider(characterID, self.id, false)
+    if not (definition and record and record.cookingDays) then return nil, definition end
+    return record.cookingDays[Addon.Model.Schedule:ServerDay(now, definition.resetHour)], definition
 end
 
 local function IsRepeatableNomiDaily(kind)
@@ -116,20 +128,51 @@ function Provider:RecordTurnIn(characterID, questID)
     local definition = self:GetDefinition()
     local item, kind
     if definition then item, kind = FindQuest(definition, questID) end
+    local cooking = self:GetCookingDefinition()
+    if not item and cooking then
+        item, kind = FindQuest(cooking, questID)
+        if item then definition = cooking end
+    end
     if not item or not characterID then return false, "untracked-quest" end
     local now = Addon:Now()
     local record = Addon.Database:GetProvider(characterID, self.id, true)
-    record.days = record.days or {}
     local dayKey = Addon.Model.Schedule:ServerDay(now, definition.resetHour)
-    local day = record.days[dayKey] or {}
-    record.days[dayKey] = day
+    local days = definition == cooking and (record.cookingDays or {}) or (record.days or {})
+    if definition == cooking then record.cookingDays = days else record.days = days end
+    local day = days[dayKey] or {}
+    days[dayKey] = day
     day.questID, day.label, day.kind, day.state = item.questID, item.label, kind, "completed"
     day.observedAt, day.completedAt, day.nextResetAt = now, now, Addon.Model.Schedule:NextResetAt(now, definition.resetHour)
-    MarkEligible(record, item, kind, now)
+    if definition == self:GetDefinition() then MarkEligible(record, item, kind, now) end
     record.revision = (tonumber(record.revision) or 0) + 1
     record.lastAttemptAt, record.lastSuccessAt, record.state, record.errorCode = now, now, "available", nil
     Addon:NotifyChanged()
     return true
+end
+
+function Provider:ObserveCooking(characterID)
+    local definition = self:GetCookingDefinition()
+    if not definition or not characterID then return false, "missing-definition-or-character" end
+    local now = Addon:Now()
+    local dayKey = Addon.Model.Schedule:ServerDay(now, definition.resetHour)
+    local record = Addon.Database:GetProvider(characterID, self.id, true)
+    record.cookingDays = record.cookingDays or {}
+    local day = record.cookingDays[dayKey] or {}
+    record.cookingDays[dayKey] = day
+    local active, reason = ActiveQuest(definition)
+    day.observedAt, day.nextResetAt = now, Addon.Model.Schedule:NextResetAt(now, definition.resetHour)
+    if active then
+        day.questID, day.label, day.kind = active.item.questID, active.item.label, active.kind
+        day.state = active.complete and "completed" or "actionable"
+        if active.complete then day.completedAt = now end
+    elseif day.state ~= "completed" then
+        day.state, day.reason = "actionable", reason
+    end
+    record.revision = (tonumber(record.revision) or 0) + 1
+    record.providerVersion, record.catalogVersion, record.rulesetID = self.schemaVersion, Addon.CATALOG_VERSION, Addon.RULESET_ID
+    record.lastAttemptAt, record.lastSuccessAt, record.state, record.errorCode = now, now, "available", nil
+    Addon:NotifyChanged()
+    return true, day.state
 end
 
 function Provider:ObserveNomiGossip(characterID)
@@ -171,7 +214,7 @@ function Provider:QueueObserve()
     local function Run()
         self.queued[characterID] = nil
         local active = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
-        if active and active.id == characterID then self:Observe(characterID) end
+        if active and active.id == characterID then self:Observe(characterID); self:ObserveCooking(characterID) end
     end
     if C_Timer and C_Timer.After then C_Timer.After(0.25, Run) else Run() end
 end

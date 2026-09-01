@@ -3,7 +3,7 @@ local Core = _G.YiboCore
 local Migrations = {}
 Core.Migrations = Migrations
 
-Migrations.CURRENT_SCHEMA = 9
+Migrations.CURRENT_SCHEMA = 10
 Migrations._steps = Migrations._steps or {}
 
 function Migrations:Register(version, callback)
@@ -155,6 +155,19 @@ Migrations:Register(9, function(db)
         else
             entry.coreMode = "none"
         end
+    end
+end)
+
+Migrations:Register(10, function(db)
+    db.settings = db.settings or {}
+    db.settings.accountView = db.settings.accountView or {}
+    local view = db.settings.accountView
+    view.entry = type(view.entry) == "table" and view.entry or {}
+    if view.entry.showPreviewWhileMainWindowOpen == nil then
+        -- Preserve the pre-v10 behavior for existing installations.
+        view.entry.showPreviewWhileMainWindowOpen = false
+    else
+        view.entry.showPreviewWhileMainWindowOpen = view.entry.showPreviewWhileMainWindowOpen == true
     end
 end)
 

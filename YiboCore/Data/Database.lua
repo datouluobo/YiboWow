@@ -36,6 +36,7 @@ local DEFAULTS = {
                 coreMode = "both",
                 minimap = { show = true, angle = 225 },
                 broker = { show = true },
+                showPreviewWhileMainWindowOpen = false,
                 pageModes = {},
                 pagePositions = {},
             },

@@ -933,7 +933,7 @@ function YAB.InitializeSettings()
 
     customListScroll = Theme:CreateScrollFrame(customListBox)
     customListScroll:SetPoint("TOPLEFT", customListBox, "TOPLEFT", 4, -4)
-    customListScroll:SetPoint("BOTTOMRIGHT", customListBox, "BOTTOMRIGHT", -22, 4)
+    customListScroll:SetPoint("BOTTOMRIGHT", customListBox, "BOTTOMRIGHT", -4, 4)
 
     customListContent = CreateFrame("Frame", nil, customListScroll)
     customListContent:SetSize(204, 1)

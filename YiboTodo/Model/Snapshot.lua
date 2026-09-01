@@ -132,6 +132,29 @@ local function BuildNomiProject(characterID, now)
     }, true
 end
 
+local function BuildCookingProject(characterID, characterLevel, now)
+    local provider = Addon.Providers.Registry:Get("daily-quest")
+    local definition = provider and provider:GetCookingDefinition()
+    if not definition or Addon.Settings:GetMode("activity", definition.id, definition.defaultMode) == "hidden" then return nil, false end
+    if (tonumber(characterLevel) or 0) < 90 then return nil, true end
+    local day = provider:GetCurrentCookingDay(characterID, now)
+    local state = day and day.state or "actionable"
+    local icon = definition.icon
+    local core = Addon.Core
+    local domain = core and core.DataDomains and core.DataDomains:Get(characterID, "professions")
+    for _, profession in ipairs(domain and domain.data and domain.data.professions or {}) do
+        if tonumber(profession.id) == 185 then icon = profession.icon or icon; break end
+    end
+    return {
+        groupID = definition.id, label = definition.label, order = 1, state = state,
+        iconKind = "texture", icon = icon, fallbackIcon = definition.icon,
+        observedAt = day and day.observedAt,
+        nextResetAt = day and day.nextResetAt or Addon.Model.Schedule:NextResetAt(now, definition.resetHour),
+        statusText = state == "completed" and "本服务器日已完成" or "可处理",
+        providerState = day and "available" or "not-yet-observed",
+    }, true
+end
+
 function Snapshot:Build()
     local now = Addon:Now()
     if not self.dirty and self.value and (not self.nextTransitionAt or now < self.nextTransitionAt) then return self.value end
@@ -143,6 +166,7 @@ function Snapshot:Build()
         local stored = (Addon.db.byCharacter or {})[characterID] or {}
         local farmProject, farmEnabled = BuildFarmProject(characterID, now)
         local nomiProject, nomiEnabled = BuildNomiProject(characterID, now)
+        local cookingProject, cookingEnabled = BuildCookingProject(characterID, coreCharacter.level, now)
         if farmProject and farmProject.nextResetAt and farmProject.nextResetAt > now
             and (not nextTransitionAt or farmProject.nextResetAt < nextTransitionAt) then
             nextTransitionAt = farmProject.nextResetAt
@@ -151,9 +175,13 @@ function Snapshot:Build()
             and (not nextTransitionAt or nomiProject.nextResetAt < nextTransitionAt) then
             nextTransitionAt = nomiProject.nextResetAt
         end
-        if slots or farmEnabled or nomiEnabled then
+        if cookingProject and cookingProject.nextResetAt and cookingProject.nextResetAt > now
+            and (not nextTransitionAt or cookingProject.nextResetAt < nextTransitionAt) then
+            nextTransitionAt = cookingProject.nextResetAt
+        end
+        if slots or farmEnabled or nomiEnabled or cookingEnabled then
             local provider = stored.providers and stored.providers["profession-cooldown"]
-            local character = { updatedAt = provider and provider.lastSuccessAt or 0, providerState = provider and provider.state or "not-yet-scanned", activities = {}, professionSlots = slots or {}, summary = { todo = 0, actionable = 0, cooldown = 0, items = {} }, farmColumn = farmEnabled, farmProjects = farmProject and { farmProject } or {}, nomiColumn = nomiEnabled, nomiProjects = nomiProject and { nomiProject } or {} }
+            local character = { updatedAt = provider and provider.lastSuccessAt or 0, providerState = provider and provider.state or "not-yet-scanned", activities = {}, professionSlots = slots or {}, summary = { todo = 0, actionable = 0, cooldown = 0, items = {} }, farmColumn = farmEnabled, farmProjects = farmProject and { farmProject } or {}, nomiColumn = nomiEnabled, nomiProjects = nomiProject and { nomiProject } or {}, cookingColumn = cookingEnabled, cookingProjects = cookingProject and { cookingProject } or {} }
             for groupID, group in pairs(Addon.Catalog.groups) do
                 if slots and group.active and Addon.Settings:GetMode("cooldownGroup", groupID, group.defaultMode) ~= "hidden" then
                     local builtGroup, observation = BuildGroup(groupID), provider and provider.observations and provider.observations[groupID]

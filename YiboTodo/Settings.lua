@@ -89,5 +89,14 @@ function Settings:CreatePanel(parent, context)
         ConfigureModeCheckbox(panel.nomiCheck, "activity", nomi.id, "display", context)
         panel.nomiCheck:Show(); y = y + 28
     end
+    local cooking = Addon.Catalog.dailyActivities and Addon.Catalog.dailyActivities["mop.halfhill.cooking-daily"]
+    if cooking then
+        panel.cookingCheck = panel.cookingCheck or context.createCheckbox(panel, "")
+        panel.cookingCheck:ClearAllPoints(); panel.cookingCheck:SetPoint("TOPLEFT", 12, -y); panel.cookingCheck:SetWidth(columnWidth * 2 + columnGap)
+        panel.cookingCheck.label:SetText("监控半山烹饪日常（六项轮换任务）")
+        panel.cookingCheck:SetChecked(Settings:GetMode("activity", cooking.id, cooking.defaultMode) ~= "hidden")
+        ConfigureModeCheckbox(panel.cookingCheck, "activity", cooking.id, "display", context)
+        panel.cookingCheck:Show(); y = y + 28
+    end
     panel:SetHeight(y + 4); return y + 4
 end

@@ -116,21 +116,29 @@ local function ValueText(addon, value, state, fields, entry)
     return PrimaryValue(addon, value, state, entry) .. (signal == "full" and "!" or (signal == "near" and "~" or ""))
 end
 
-local function CurrencyRowHeight(item)
-    return Theme.Table.rowHeight
+local function CurrencyRowHeight(item, preview)
+    return preview and Theme.Table.previewRowHeight or Theme.Table.rowHeight
 end
 
 local function FieldLegend(fields)
     return "货币 · 余额"
 end
 
-local function RowsHeight(rows, fields, limit)
+local function SnapshotMeta(character)
+    local economy = Core.DataDomains:Get(character.id, "economy")
+    local items = Core.DataDomains:Get(character.id, "economy-items")
+    local updatedAt = math.max(tonumber(economy and economy.updatedAt) or 0, tonumber(items and items.updatedAt) or 0)
+    local state = economy and economy.state or (items and items.state) or "unsynced"
+    return updatedAt, state
+end
+
+local function RowsHeight(rows, fields, limit, preview)
     local height = 0
     for index, item in ipairs(rows or {}) do
         if limit and index > limit then break end
-        height = height + CurrencyRowHeight(item, fields)
+        height = height + CurrencyRowHeight(item, preview)
     end
-    return math.max(Theme.Table.rowHeight, height)
+    return math.max(preview and Theme.Table.previewRowHeight or Theme.Table.rowHeight, height)
 end
 
 function Addon:CreateCurrencyPage(parent)
@@ -139,6 +147,7 @@ function Addon:CreateCurrencyPage(parent)
     parent.currencyHeader = CreateFrame("Frame", nil, parent)
     parent.currencyHeader:SetClipsChildren(true)
     parent.currencyScroll = Theme:CreateScrollFrame(parent)
+    parent.currencyScroll:BindScrollbarGutter(parent.currencyHeader)
     parent.currencyBody = CreateFrame("Frame", nil, parent.currencyScroll)
     parent.currencyScroll:SetScrollChild(parent.currencyBody)
     parent.currentColumnOutline = Theme:CreateCurrentCharacterOutline(parent)
@@ -203,38 +212,39 @@ function Addon:RefreshCurrencyPage(parent, context)
         parent.currencyHeader:SetPoint("TOPLEFT", top, "BOTTOMLEFT", 0, -Theme.Space.xs)
     end
     parent.currencyHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -inset.right, preview and -inset.top or 0)
-    parent.currencyHeader:SetHeight(Theme.Table.headerHeight)
+    local headerHeight = emptyPreview and Theme.Table.headerHeight or Theme:GetCharacterHeaderHeight(context)
+    parent.currencyHeader:SetHeight(headerHeight)
     parent.currencyScroll:ClearAllPoints()
     if emptyPreview then
         parent.currencyScroll:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top)
     else
-        parent.currencyScroll:SetPoint("TOPLEFT", parent.currencyHeader, "BOTTOMLEFT", 0, Theme.Space.xxs)
+        parent.currencyScroll:SetPoint("TOPLEFT", parent.currencyHeader, "BOTTOMLEFT", 0, 0)
     end
     parent.currencyScroll:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset.right, inset.bottom)
     -- The matrix is designed for a full account roster.  Compact values and
     -- short character names fit in 76px, leaving room for up to 20 columns
     -- on a 2560px screen without pagination.
-    local nameWidth, characterWidth = 136, 64
-    -- ApplyPageSize calculates the target surface before WoW has necessarily
-    -- delivered its resize event.  Use that same width on this first render so
-    -- a full roster is not temporarily cut down to the previous 1120px shell.
-    local measuredWidth = parent.currencyHeader:GetWidth() > 1 and parent.currencyHeader:GetWidth() or parent:GetWidth()
-    local rosterWidth = nameWidth + math.max(1, math.min(20, #characters)) * characterWidth + inset.left + inset.right
-    local width = preview and measuredWidth or math.max(measuredWidth, rosterWidth)
+    local nameWidth, characterWidth = 136, Theme.Table.characterColumnWidth
+    local width = math.max(1, (tonumber(context.surfaceAvailableWidth) or parent:GetWidth() or 1) - inset.left - inset.right)
     local shown, pageInfo = {}, { page = 1, pages = 1, first = 0, last = 0, total = 0 }
     if not emptyPreview then
         shown, pageInfo = Core.AccountView:GetColumnPage(PAGE_ID, preview and "preview" or "matrix", characters, width, nameWidth, characterWidth)
-        if pageInfo.pages > 1 then shown, pageInfo = Core.AccountView:GetColumnPage(PAGE_ID, preview and "preview" or "matrix", characters, width - Core.AccountView:GetColumnPagerWidth(), nameWidth, characterWidth) end
     end
-    Core.AccountView:UpdateColumnPager(parent, PAGE_ID, preview and "preview" or "matrix", pageInfo, parent.currencyHeader, "角色")
     local columns = emptyPreview and { { title = "", width = 420 } } or { { title = FieldLegend(fields), width = nameWidth } }
-    for _, character in ipairs(shown) do columns[#columns + 1] = { title = Core.Characters:GetDisplayName(character, "short") or "未知", width = characterWidth, character = character } end
+    for _, character in ipairs(shown) do columns[#columns + 1] = { width = characterWidth, character = character } end
     local tableWidth = 0
     local current = Core.Characters:GetCurrent()
     local currentColumnX, currentColumnWidth
     for index, column in ipairs(columns) do
-        local header = parent.currencyHeaders[index] or Text(parent.currencyHeader, Theme.Font.assist, Theme.Colors.accent, index == 1 and "LEFT" or "CENTER")
-        parent.currencyHeaders[index] = header; header:ClearAllPoints(); header:SetPoint("LEFT", parent.currencyHeader, "LEFT", tableWidth + Theme.Space.xs, 0); header:SetWidth(column.width - Theme.Space.sm); header:SetJustifyH(index == 1 and "LEFT" or "CENTER"); header:SetText(column.title); header:Show()
+        local header = parent.currencyHeaders[index] or Theme:CreateMatrixHeader(parent.currencyHeader)
+        parent.currencyHeaders[index] = header; header:ClearAllPoints(); header:SetPoint("TOPLEFT", parent.currencyHeader, "TOPLEFT", tableWidth, 0); header:SetSize(column.width, headerHeight)
+        if column.character then
+            local updatedAt, state = SnapshotMeta(column.character)
+            Theme:SetCharacterHeader(header, column.character, context, { updatedAt=updatedAt, state=state, recovery="登录该角色后同步货币与银行数据。" })
+        else
+            Theme:SetMatrixHeader(header, column.title, { height = headerHeight, justify = "LEFT", color = Theme.Colors.accent, inset = Theme.Space.xs })
+            header:SetScript("OnEnter", nil); header:SetScript("OnLeave", nil)
+        end
         if current and column.character and column.character.id == current.id then
             currentColumnX, currentColumnWidth = tableWidth, column.width
         end
@@ -242,12 +252,13 @@ function Addon:RefreshCurrencyPage(parent, context)
     end
     for index = #columns + 1, #parent.currencyHeaders do parent.currencyHeaders[index]:Hide() end
     parent.currencyAnchors = {}
-    local y = 0
+    local y, dataRowIndex = 0, 0
     for index, item in ipairs(rows) do
         local row = parent.currencyRows[index] or CreateFrame("Button", nil, parent.currencyBody, "BackdropTemplate")
-        local rowHeight = CurrencyRowHeight(item)
+        local rowHeight = CurrencyRowHeight(item, preview)
         parent.currencyRows[index] = row; row:ClearAllPoints(); row:SetPoint("TOPLEFT", parent.currencyBody, "TOPLEFT", 0, -y); row:SetSize(tableWidth, rowHeight); row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" }); row.cells = row.cells or {}
-        local colors = item.kind == "expansion" and Theme.Colors.selected or (item.kind == "category" and Theme.Colors.toolbar or (index % 2 == 0 and Theme.Colors.alternate or Theme.Colors.row)); row:SetBackdropColor(colors[1], colors[2], colors[3], colors[4] or 1); row.entry = item.entry
+        if item.kind == "currency" then dataRowIndex = dataRowIndex + 1 end
+        local colors = item.kind == "expansion" and Theme.Colors.selected or (item.kind == "category" and Theme.Colors.toolbar or Theme:GetDataRowColor(dataRowIndex)); row:SetBackdropColor(colors[1], colors[2], colors[3], colors[4] or 1); row.entry = item.entry
         if item.kind == "expansion" then parent.currencyAnchors[item.key] = y end
         for ci, column in ipairs(columns) do
             local cell = row.cells[ci] or Text(row, Theme.Font.body, Theme.Colors.text, ci == 1 and "LEFT" or "CENTER"); row.cells[ci] = cell; cell:ClearAllPoints(); cell:SetPoint("LEFT", row, "LEFT", tableWidth - (function() local total = 0; for n = ci, #columns do total = total + columns[n].width end; return total end)() + Theme.Space.xs, 0); cell:SetWidth(column.width - Theme.Space.sm); cell:SetJustifyH(ci == 1 and "LEFT" or "CENTER")
@@ -274,7 +285,8 @@ function Addon:RefreshCurrencyPage(parent, context)
     parent.currentColumnOutline:ClearAllPoints()
     if currentColumnX then
         parent.currentColumnOutline:SetPoint("TOPLEFT", parent.currencyHeader, "TOPLEFT", currentColumnX, 0)
-        parent.currentColumnOutline:SetPoint("BOTTOMRIGHT", parent.currencyBody, "TOPLEFT", currentColumnX + currentColumnWidth, -y)
+        local rightOffset = currentColumnX + currentColumnWidth
+        parent.currentColumnOutline:SetPoint("BOTTOMRIGHT", parent.currencyScroll, "BOTTOMLEFT", rightOffset, 0)
         Theme:SetCurrentCharacterOutline(parent.currentColumnOutline, true)
     else
         Theme:SetCurrentCharacterOutline(parent.currentColumnOutline, false)
@@ -284,7 +296,7 @@ end
 function Addon:GetCurrencySurfaceMetrics(context)
     local preview = context and context.preview
     local inset, count = Theme:GetMatrixInsets(preview), #Eligible(context and context.characters or {})
-    local label, character = 136, 64
+    local label, character = 136, Theme.Table.characterColumnWidth
     local fields, rows = VisibleFields(context), EntryRows(self:GetCatalog(), preview)
     if preview and #rows == 1 and rows[1].kind == "empty" then
         return {
@@ -300,16 +312,22 @@ function Addon:GetCurrencySurfaceMetrics(context)
     end
     local minimumRows = { { kind = "currency" } }
     local toolbarHeight = preview and 0 or Theme.Size.compact + Theme.Space.xs
+    local headerHeight = Theme:GetCharacterHeaderHeight(context)
+    local bodyHeight = RowsHeight(rows, fields, nil, preview)
+    local viewportBodyHeight = RowsHeight(rows, fields, preview and 12 or 20, preview)
+    -- Reserve the 14px shared scrollbar lane only for an overflowing main
+    -- matrix; compact lists continue to use their full content width.
+    local scrollbarWidth = not preview and bodyHeight > viewportBodyHeight and Theme.Geometry.scrollbarGutter or 0
     return {
         -- Describe every retained character column.  Core grows the account
         -- window through the screen-safe width first, then this page's shared
         -- pager takes over only for columns that physically cannot fit.
         minContentWidth = label + math.max(1, count) * character + inset.left + inset.right,
-        naturalContentWidth = label + math.max(1, count) * character + inset.left + inset.right,
-        minContentHeight = inset.top + toolbarHeight + Theme.Table.headerHeight + RowsHeight(minimumRows, fields) + inset.bottom,
-        naturalContentHeight = inset.top + toolbarHeight + Theme.Table.headerHeight + RowsHeight(rows, fields, preview and 12 or 20) + inset.bottom,
+        naturalContentWidth = label + math.max(1, count) * character + inset.left + inset.right + scrollbarWidth,
+        minContentHeight = inset.top + toolbarHeight + headerHeight + RowsHeight(minimumRows, fields, nil, preview) + inset.bottom,
+        naturalContentHeight = inset.top + toolbarHeight + headerHeight + viewportBodyHeight + inset.bottom,
         fixedLeftWidth = label,
-        fixedTopHeight = Theme.Table.headerHeight,
+        fixedTopHeight = headerHeight,
         horizontalOverflow = "paginate",
         verticalOverflow = "content",
     }

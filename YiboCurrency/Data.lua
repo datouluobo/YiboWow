@@ -64,7 +64,10 @@ function Addon:GetValue(character, entry)
 end
 
 function Addon:FormatValue(value, state)
-    if state ~= "known" then return ({ ["not-yet-scanned"]="未扫描", unavailable="不可用", stale="已过期", error="错误" })[state] or "未知" end
+    if state ~= "known" then
+        local text = Core.UITheme and Core.UITheme.StatusText or {}
+        return ({ ["not-yet-scanned"]=text.unsynced or "未同步", unavailable=text.unavailable or "不可用", stale=text.stale or "已过期", error=text.error or "错误" })[state] or (text.unknown or "未知")
+    end
     if not value then return "—" end
     if value.itemID then
         if value.bankKnown then return BreakUpLargeNumbers(value.total or 0) end

@@ -82,7 +82,7 @@ function Integration:Initialize()
         if not cleanupRegistered then return nil, cleanupError end
     end
     local page, pageError = Core.AccountView:RegisterPage("YiboQuestBlocker", {
-        id = PAGE_ID, title = "任务屏蔽", order = 40, previewEnabled = true,
+        id = PAGE_ID, title = "任务屏蔽", icon = "Interface\\AddOns\\YiboQuestBlocker\\Media\\YQB_MinimapIcon", order = 40, previewEnabled = true,
         fields = {
             { id = "global", title = "全局屏蔽", defaultVisible = true },
             { id = "characters", title = "角色屏蔽", defaultVisible = true },
@@ -102,6 +102,7 @@ function Integration:Initialize()
         Create = YQB.AccountPage.Create,
         Refresh = YQB.AccountPage.Refresh,
         GetSurfaceMetrics = YQB.AccountPage.GetSurfaceMetrics,
+        GetHoverMetrics = YQB.AccountPage.GetHoverMetrics,
         GetMeasuredHeight = YQB.AccountPage.GetMeasuredHeight,
         GetSummary = GetSummary,
         GetActions = function() return {} end,

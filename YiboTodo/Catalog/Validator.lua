@@ -56,7 +56,7 @@ function Addon:ValidateCatalog()
             Add(result, "errors", "invalid-daily-provider:" .. tostring(id))
         elseif activity.scope ~= "character" or activity.scheduleKind ~= "daily-07" then
             Add(result, "errors", "invalid-daily-scope-or-schedule:" .. tostring(id))
-        elseif type(activity.daily) ~= "table" or tonumber(activity.daily.questID) == nil then
+        elseif (type(activity.daily) ~= "table" or tonumber(activity.daily.questID) == nil) and type(activity.members) ~= "table" then
             Add(result, "errors", "missing-daily-quest:" .. tostring(id))
         else
             local questIDs = {}
@@ -65,7 +65,16 @@ function Addon:ValidateCatalog()
                 if not questID or questIDs[questID] then Add(result, "errors", "invalid-or-duplicate-lesson:" .. tostring(id) .. ":" .. tostring(lesson.questID))
                 else questIDs[questID] = true end
             end
-            if #((activity.stages) or {}) ~= 5 then Add(result, "errors", "unexpected-lesson-count:" .. tostring(id)) end
+            if type(activity.daily) == "table" then
+                if #((activity.stages) or {}) ~= 5 then Add(result, "errors", "unexpected-lesson-count:" .. tostring(id)) end
+            elseif #activity.members ~= 6 then
+                Add(result, "errors", "unexpected-member-count:" .. tostring(id))
+            else
+                for _, member in ipairs(activity.members) do
+                    local questID = tonumber(member.questID)
+                    if not questID or questIDs[questID] then Add(result, "errors", "invalid-or-duplicate-member:" .. tostring(id) .. ":" .. tostring(member.questID)) else questIDs[questID] = true end
+                end
+            end
         end
     end
     self.catalogValidation = result

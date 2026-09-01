@@ -34,6 +34,16 @@ Theme.Colors = {
     blocked = { 0.17, 0.075, 0.09, 0.98 },
 }
 
+Theme.StatusText = {
+    empty = "—",
+    unknown = "未知",
+    unsynced = "未同步",
+    ["not-yet-scanned"] = "未同步",
+    unavailable = "不可用",
+    stale = "已过期",
+    error = "错误",
+}
+
 Theme.Space = { xxs = 4, xs = 8, sm = 12, md = 16, lg = 20, xl = 24 }
 -- WoW's UI scale makes the former 11–12px data text too small on modern
 -- displays. Keep the compact hierarchy, but make every shared surface legible.
@@ -45,7 +55,21 @@ Theme.Font = { title = 18, section = 16, body = 14, assist = 12, meta = 11 }
 -- Matrices are the account view's primary surface.  Keep their geometry
 -- compact and shared so business pages do not trade comparable rows for
 -- local title chrome or arbitrary whitespace.
-Theme.Table = { headerHeight = 24, rowHeight = 24, previewRowHeight = 22, groupHeight = 28, cellInset = 3, cellPadding = 6 }
+Theme.Table = {
+    headerHeight = 24,
+    characterHeaderHeight = 28,
+    -- Character matrices are comparison surfaces.  One shared, deliberately
+    -- compact measure prevents each page from quietly consuming a different
+    -- amount of horizontal roster capacity.
+    characterColumnWidth = 54,
+    rowHeight = 24,
+    previewRowHeight = 22,
+    iconRowHeight = 30,
+    groupHeight = 28,
+    cellInset = 3,
+    cellPadding = 6,
+    lineWidth = 1,
+}
 
 -- Geometry is deliberately kept beside the visual tokens: it is the one
 -- source of truth for every shared surface.  Business pages report content
@@ -64,16 +88,24 @@ Theme.Geometry = {
     navigation = 140,
     shellBorder = 1,
     scopeBar = 30,
-    -- A data viewport always keeps its normal inset.  This extra gutter is
-    -- added to the outer measured width only when a vertical scrollbar is
-    -- actually needed, so the bar never overlays its final data column.
-    scrollbarGutter = 16,
+    currentMarker = 5,
+    -- Scrollbars live in this existing outer inset, never on top of matrix
+    -- data and never as permanently reserved empty table width.
+    scrollbarGutter = 14,
     mainSafety = { left = 16, right = 16, top = 80, bottom = 32 },
     previewSafety = { left = 16, right = 16, top = 16, bottom = 16, anchorGap = 8 },
 }
 
 function Theme:GetMatrixInsets(preview)
     return self.Geometry.matrixInsets[preview and "preview" or "main"]
+end
+
+function Theme:GetCharacterHeaderHeight(context)
+    return context and context.scope == "all" and self.Table.characterHeaderHeight or self.Table.headerHeight
+end
+
+function Theme:GetDataRowColor(index)
+    return tonumber(index) and index % 2 == 0 and self.Colors.alternate or self.Colors.row
 end
 
 local function Color(color)
@@ -107,16 +139,100 @@ function Theme:MeasureText(size, value)
     return math.ceil(self._measureText:GetStringWidth() or 0)
 end
 
+-- Shared dense-table header.  Each cell owns only its right and bottom rule,
+-- so adjacent headers never paint the same 1px boundary twice.
+function Theme:CreateMatrixHeader(parent)
+    local header = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    header:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+    header.label = self:CreateText(header, self.Font.assist, self.Colors.muted, "CENTER")
+    header.secondary = self:CreateText(header, self.Font.meta, self.Colors.muted, "CENTER")
+    -- Compatibility aliases let existing business pages migrate without
+    -- keeping a second header implementation.
+    header.title, header.name = header.label, header.label
+    header.sub, header.realm = header.secondary, header.secondary
+    header.rightRule = header:CreateTexture(nil, "ARTWORK")
+    header.rightRule:SetPoint("TOPRIGHT"); header.rightRule:SetPoint("BOTTOMRIGHT")
+    header.rightRule:SetWidth(self.Table.lineWidth)
+    header.bottomRule = header:CreateTexture(nil, "ARTWORK")
+    header.bottomRule:SetPoint("BOTTOMLEFT"); header.bottomRule:SetPoint("BOTTOMRIGHT")
+    header.bottomRule:SetHeight(self.Table.lineWidth)
+    header:EnableMouse(true)
+    return header
+end
+
+function Theme:SetMatrixHeader(header, title, options)
+    options = options or {}
+    local height = options.height or self.Table.headerHeight
+    local inset = options.inset or self.Table.cellInset
+    local justify = options.justify or "CENTER"
+    local fill = options.fill or self.Colors.chrome
+    local rule = options.rule or self.Colors.lineSoft
+    local titleColor = options.color or self.Colors.muted
+    local secondary = options.secondary
+    header:SetHeight(height)
+    header:SetBackdropColor(Color(fill))
+    header.rightRule:SetColorTexture(Color(rule)); header.bottomRule:SetColorTexture(Color(rule))
+    header.label:ClearAllPoints(); header.secondary:ClearAllPoints()
+    header.label:SetJustifyH(justify); header.secondary:SetJustifyH(justify)
+    header.label:SetTextColor(titleColor.r or titleColor[1], titleColor.g or titleColor[2], titleColor.b or titleColor[3])
+    header.secondary:SetTextColor(Color(options.secondaryColor or self.Colors.muted))
+    header.label:SetText(title or "")
+    if secondary and secondary ~= "" then
+        -- A font size is not a safe frame height for CJK glyphs. The former
+        -- 11px font inside a 10px box clipped the realm line.
+        header.label:SetPoint("TOPLEFT", inset, -1); header.label:SetPoint("TOPRIGHT", -inset, -1); header.label:SetHeight(13)
+        header.secondary:SetPoint("BOTTOMLEFT", inset, 0); header.secondary:SetPoint("BOTTOMRIGHT", -inset, 0); header.secondary:SetHeight(12)
+        header.secondary:SetText(secondary); header.secondary:Show()
+    else
+        header.label:SetPoint("TOPLEFT", inset, 0); header.label:SetPoint("BOTTOMRIGHT", -inset, 0)
+        header.secondary:SetText(""); header.secondary:Hide()
+    end
+    header:Show()
+    return header
+end
+
+function Theme:SetCharacterHeader(header, character, context, options)
+    options = options or {}
+    local name = options.name or (Core.Characters and Core.Characters:GetDisplayName(character, options.nameMode or "short")) or (character and character.name) or "未知角色"
+    local realm = options.realm or (character and character.realm) or "未知服务器"
+    local class = options.class or (character and character.class)
+    local color = options.color or (class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class]) or self.Colors.text
+    local showRealm = context and context.scope == "all"
+    options.height = self:GetCharacterHeaderHeight(context)
+    options.color = color
+    options.secondary = showRealm and ("-" .. tostring(realm)) or nil
+    self:SetMatrixHeader(header, tostring(name), options)
+    local fullName = tostring((character and character.name) or name) .. "-" .. tostring(realm)
+    local lines = {}
+    if tostring(name) ~= tostring(character and character.name or name) then
+        lines[#lines + 1] = { kind = "pair", label = "短名", value = tostring(name) }
+    end
+    if tonumber(options.updatedAt) and tonumber(options.updatedAt) > 0 and date then
+        lines[#lines + 1] = { kind = "pair", label = "最近同步", value = date("%m-%d %H:%M", options.updatedAt) }
+    end
+    if options.state and options.state ~= "known" then
+        lines[#lines + 1] = { kind = "pair", label = "数据状态", value = self.StatusText[options.state] or self.StatusText.unknown }
+        lines[#lines + 1] = { text = options.recovery or "登录该角色后同步。", color = self.Colors.muted }
+    end
+    self:BindTooltip(header, fullName, #lines > 0 and lines or nil)
+    return header
+end
+
 -- A current character is a navigation aid, not a data state.  Account pages
--- therefore mark it with this shared accent outline instead of changing the
--- row/column's semantic fill or adding a text glyph beside the name.
+-- therefore keep the semantic fill untouched and combine one shared 1px
+-- outline with a small corner marker.  The extra shape prevents colour from
+-- carrying the identity state by itself without adding text to dense cells.
 function Theme:CreateCurrentCharacterOutline(parent)
     local outline = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     outline:SetAllPoints(parent)
-    outline:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    outline:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = self.Table.lineWidth })
     outline:SetBackdropBorderColor(self.Colors.accent[1], self.Colors.accent[2], self.Colors.accent[3], 0.96)
     outline:SetFrameLevel((parent:GetFrameLevel() or 0) + 10)
     outline:EnableMouse(false)
+    outline.marker = outline:CreateTexture(nil, "OVERLAY")
+    outline.marker:SetSize(self.Geometry.currentMarker, self.Geometry.currentMarker)
+    outline.marker:SetPoint("TOPRIGHT", outline, "TOPRIGHT", -2, -2)
+    outline.marker:SetColorTexture(self.Colors.accent[1], self.Colors.accent[2], self.Colors.accent[3], 1)
     outline:Hide()
     return outline
 end
@@ -260,6 +376,51 @@ function Theme:CreateCheckbox(parent, label)
     return button
 end
 
+local function AnchorUsesRight(point)
+    return type(point) == "string" and string.find(point, "RIGHT", 1, true) ~= nil
+end
+
+local function ApplyGutterAnchors(frame, state)
+    if not (frame and state and frame._yiboGutterPoints) then return end
+    state.applying = true
+    frame._yiboNativeClearAllPoints(frame)
+    for _, original in ipairs(frame._yiboGutterPoints) do
+        local point = {}
+        for index = 1, #original do point[index] = original[index] end
+        if state.visible and AnchorUsesRight(point[1]) then
+            if type(point[2]) == "number" then
+                point[2] = point[2] - state.width
+            elseif point[2] ~= nil and type(point[3]) == "string" then
+                point[4] = (tonumber(point[4]) or 0) - state.width
+                point[5] = tonumber(point[5]) or 0
+            elseif point[2] ~= nil then
+                point[3], point[4], point[5] = point[1], -state.width, 0
+            end
+        end
+        frame._yiboNativeSetPoint(frame, unpack(point))
+    end
+    state.applying = nil
+end
+
+local function CaptureGutterAnchors(frame, state)
+    if not frame or frame._yiboGutterState then return end
+    frame._yiboGutterState = state
+    frame._yiboGutterPoints = {}
+    frame._yiboNativeSetPoint = frame.SetPoint
+    frame._yiboNativeClearAllPoints = frame.ClearAllPoints
+    frame.SetPoint = function(control, ...)
+        if not state.applying then
+            local point = { ... }
+            control._yiboGutterPoints[#control._yiboGutterPoints + 1] = point
+        end
+        ApplyGutterAnchors(control, state)
+    end
+    frame.ClearAllPoints = function(control)
+        if not state.applying then control._yiboGutterPoints = {} end
+        control._yiboNativeClearAllPoints(control)
+    end
+end
+
 -- Scroll frames intentionally avoid UIPanelScrollFrameTemplate so every hosted
 -- page keeps the same compact teal track and thumb instead of the Blizzard art.
 function Theme:CreateScrollFrame(parent)
@@ -267,11 +428,34 @@ function Theme:CreateScrollFrame(parent)
     scroll:SetClipsChildren(true)
     scroll:EnableMouseWheel(true)
 
-    local bar = CreateFrame("Slider", nil, scroll, "BackdropTemplate")
+    local gutter = { width = self.Geometry.scrollbarGutter, visible = false, frames = {} }
+    CaptureGutterAnchors(scroll, gutter)
+    gutter.frames[1] = scroll
+    function scroll:BindScrollbarGutter(...)
+        for index = 1, select("#", ...) do
+            local frame = select(index, ...)
+            if frame then
+                CaptureGutterAnchors(frame, gutter)
+                gutter.frames[#gutter.frames + 1] = frame
+            end
+        end
+    end
+    local function SetGutterVisible(visible)
+        if gutter.visible == visible then return end
+        gutter.visible = visible
+        for _, frame in ipairs(gutter.frames) do ApplyGutterAnchors(frame, gutter) end
+    end
+
+    -- Keep the scrollbar outside the scroll child's data viewport.  It uses
+    -- the page's right matrix inset, so a visible thumb cannot cover the
+    -- last character column and a hidden thumb leaves no phantom gutter.
+    local bar = CreateFrame("Slider", nil, parent, "BackdropTemplate")
     bar:SetOrientation("VERTICAL")
     bar:SetWidth(14)
-    bar:SetPoint("TOPRIGHT", scroll, "TOPRIGHT", -2, -2)
-    bar:SetPoint("BOTTOMRIGHT", scroll, "BOTTOMRIGHT", -2, 2)
+    -- The track occupies the dynamic 14px gutter.  When no overflow exists
+    -- the gutter is released and the hidden track reserves no table width.
+    bar:SetPoint("TOPLEFT", scroll, "TOPRIGHT", 0, -2)
+    bar:SetPoint("BOTTOMLEFT", scroll, "BOTTOMRIGHT", 0, 2)
     bar:SetMinMaxValues(0, 0)
     bar:SetValueStep(1)
     if bar.SetObeyStepOnDrag then bar:SetObeyStepOnDrag(true) end
@@ -303,6 +487,7 @@ function Theme:CreateScrollFrame(parent)
         bar:SetValue(math.min(self:GetVerticalScroll() or 0, visibleRange))
         if visibleRange == 0 then self:SetVerticalScroll(0) end
         bar:SetShown(visibleRange > 0)
+        SetGutterVisible(visibleRange > 0)
         return visibleRange
     end
     function scroll:RefreshScrollbar()

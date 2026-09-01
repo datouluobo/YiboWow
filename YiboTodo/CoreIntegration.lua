@@ -44,6 +44,7 @@ function Integration:Initialize()
             { id = "professionCooldown", title = "专业 CD", defaultVisible = true },
             { id = "farmOperation", title = "农场", defaultVisible = true },
             { id = "nomi", title = "诺米", defaultVisible = true },
+            { id = "cooking", title = "烹饪", defaultVisible = true },
             { id = "commonProjects", title = "通用项目", defaultVisible = true },
         },
         characterFilter = {

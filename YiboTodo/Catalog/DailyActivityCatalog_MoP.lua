@@ -25,3 +25,20 @@ Catalog.dailyActivities["mop.nomi"] = {
     daily = { questID = 31337, label = "诺米每日：感谢的礼物" },
     icon = "Interface\\Icons\\INV_Misc_Food_18.blp",
 }
+
+Catalog.dailyActivities["mop.halfhill.cooking-daily"] = {
+    id = "mop.halfhill.cooking-daily",
+    label = "半山烹饪日常",
+    provider = "daily-quest",
+    scope = "character",
+    defaultMode = "display",
+    scheduleKind = "daily-07",
+    resetHour = 7,
+    completionMode = "any-member-completes-group",
+    verificationStatus = "external-queried",
+    members = {
+        { questID = 30386 }, { questID = 30402 }, { questID = 30408 },
+        { questID = 30414 }, { questID = 30421 }, { questID = 30427 },
+    },
+    icon = "Interface\\Icons\\Trade_Cooking",
+}

@@ -43,13 +43,14 @@ function Addon:GetPreviewSurfaceMetrics(context)
  rows = #self:GetSettings().monitoredFactionIDs
  local inset = Theme:GetMatrixInsets(true)
  local cellWidth = #characters > 10 and 56 or 90
+ local headerHeight = Theme:GetCharacterHeaderHeight(context)
  return {
   minContentWidth = 150 + cellWidth + inset.left + inset.right,
   naturalContentWidth = 150 + #characters * cellWidth + inset.left + inset.right,
-  minContentHeight = inset.top + Theme.Size.compact + Theme.Size.compact + inset.bottom,
-  naturalContentHeight = inset.top + Theme.Size.compact + math.max(1, rows) * Theme.Table.previewRowHeight + inset.bottom,
+  minContentHeight = inset.top + headerHeight + Theme.Table.previewRowHeight + inset.bottom,
+  naturalContentHeight = inset.top + headerHeight + math.max(1, rows) * Theme.Table.previewRowHeight + inset.bottom,
   fixedLeftWidth = 150,
-  fixedTopHeight = Theme.Size.standard + Theme.Size.compact,
+  fixedTopHeight = headerHeight,
  horizontalOverflow = "paginate",
  verticalOverflow = "content",
  }
@@ -69,7 +70,7 @@ function Addon:GetPreviewSurfaceMetrics(context)
  local rowHeight = rows > 36 and 18 or (rows > 28 and 20 or 24)
  return {
   minContentWidth = 450 + Theme.Space.lg * 2,
-  naturalContentWidth = 450 + Theme.Space.lg * 2 + Theme.Geometry.scrollbarGutter,
+  naturalContentWidth = 450 + Theme.Space.lg * 2,
   minContentHeight = Theme.Space.xs + Theme.Size.standard + Theme.Space.xs + Theme.Size.compact + Theme.Space.md,
   naturalContentHeight = Theme.Space.xs + Theme.Size.standard + Theme.Space.xs + Theme.Size.compact + rows * rowHeight + Theme.Space.md,
   fixedLeftWidth = 0,

@@ -36,7 +36,7 @@ Addon.Settings = { GetMode = function() return "display" end }
 Addon.Core = {
     Characters = {
         GetCurrent = function() return { id = "nomi-character" } end,
-        GetAll = function() return { { id = "nomi-character" } } end,
+        GetAll = function() return { { id = "nomi-character", level = 90 } } end,
     },
 }
 
@@ -47,6 +47,19 @@ local day = assert(provider:GetCurrentDay("nomi-character", clock))
 assert(day.questID == 31333 and day.kind == "lesson" and day.state == "actionable", "lesson IDs are tracked as repeating dailies")
 local project = assert(Addon.Snapshot:GetCharacter("nomi-character")).nomiProjects[1]
 assert(project.state == "actionable" and project.label == "第2课：方便面", "Nomi has a separate snapshot project")
+local cookingProject = assert(Addon.Snapshot:GetCharacter("nomi-character")).cookingProjects[1]
+assert(cookingProject.state == "actionable" and cookingProject.icon == "Interface\\Icons\\Trade_Cooking", "cooking group defaults to actionable with cooking icon")
+
+log = { { id = 30427, label = "半山烹饪日常", complete = true } }
+assert(provider:ObserveCooking("nomi-character"), "cooking provider observes a completed rotating member")
+cookingProject = assert(Addon.Snapshot:GetCharacter("nomi-character")).cookingProjects[1]
+assert(cookingProject.state == "completed" and cookingProject.label == "半山烹饪日常", "any cooking member completion completes the group")
+
+Addon.Core.Characters.GetAll = function() return { { id = "low-level", level = 89 } } end
+Addon.Snapshot:Invalidate()
+local lowLevel = assert(Addon.Snapshot:GetCharacter("low-level"))
+assert(#(lowLevel.cookingProjects or {}) == 0 and lowLevel.cookingColumn, "below-level characters show an unavailable cooking cell")
+Addon.Core.Characters.GetAll = function() return { { id = "nomi-character", level = 90 } } end
 
 log = { { id = 31337, label = "感谢的礼物", complete = true } }
 assert(provider:Observe("nomi-character"), "daily provider observes the final daily")

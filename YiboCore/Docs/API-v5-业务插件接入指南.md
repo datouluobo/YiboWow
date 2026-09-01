@@ -10,6 +10,12 @@ Core 负责角色目录、账号窗口、入口生命周期，以及身份、经
 
 ## 2. 最小注册方式
 
+矩阵页面的表头、角色列头、行明暗交替与当前角色提示必须复用
+`Core.UITheme` 的 `CreateMatrixHeader`、`SetMatrixHeader`、
+`SetCharacterHeader`、`GetDataRowColor` 和 `CreateCurrentCharacterOutline`。
+全服务器范围下，`SetCharacterHeader` 会按统一契约显示“角色名 / -服务器”双行列头；
+单服务器范围保持单行。业务插件不得自行复制这些视觉状态。
+
 ```lua
 local compatible = Core:CheckAPIVersion(5)
 if not compatible then

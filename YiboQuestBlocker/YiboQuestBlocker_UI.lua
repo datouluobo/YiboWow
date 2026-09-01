@@ -331,7 +331,7 @@ end
 local function GetTaskColumnWidth()
     local charList = YQB.GetSortedVisibleChars()
     local charColWidth = GetCharColumnWidth()
-    local available = MainFrame:GetWidth() - PAD * 2 - 18
+    local available = MainFrame:GetWidth() - PAD * 2
     local taskWidth = available - GLOBAL_COL_W - #charList * charColWidth - 12
     if taskWidth < 200 then taskWidth = 200 end
     if taskWidth > 460 then taskWidth = 460 end
@@ -348,7 +348,7 @@ end
 
 local function GetContentWidth(charList)
     local width = GetTaskColumnWidth() + 8 + GLOBAL_COL_W + #charList * GetCharColumnWidth()
-    local viewport = MainFrame and (MainFrame:GetWidth() - PAD * 2 - 14) or width
+    local viewport = MainFrame and (MainFrame:GetWidth() - PAD * 2) or width
     if width < viewport then
         width = viewport
     end
@@ -454,6 +454,7 @@ local headerGlobal = CreateLabel(HeaderFrame, "GameFontHighlightSmall", "全局"
 local headerChars = {}
 
 local ScrollFrame = Theme:CreateScrollFrame(MainFrame)
+ScrollFrame:BindScrollbarGutter(HeaderFrame)
 local ScrollChild = CreateFrame("Frame", nil, ScrollFrame)
 ScrollFrame:SetScrollChild(ScrollChild)
 ScrollChild:SetWidth(1)
@@ -951,7 +952,7 @@ function ApplyLayout()
     OrderEditor:SetPoint("TOPLEFT", MainFrame, "TOPRIGHT", 8, -PAD)
 
     HeaderFrame:SetPoint("TOPLEFT", FilterPanel, "BOTTOMLEFT", 0, -6)
-    HeaderFrame:SetPoint("TOPRIGHT", FilterPanel, "BOTTOMRIGHT", -14, -6)
+    HeaderFrame:SetPoint("TOPRIGHT", FilterPanel, "BOTTOMRIGHT", 0, -6)
     HeaderFrame:SetHeight(GetHeaderHeight())
 
     BottomFrame:SetPoint("BOTTOMLEFT", MainFrame, "BOTTOMLEFT", PAD, PAD)

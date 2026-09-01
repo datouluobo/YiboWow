@@ -212,6 +212,11 @@ local function HasNomiColumn()
     return nomi and Addon.Settings:GetMode("activity", nomi.id, nomi.defaultMode) ~= "hidden"
 end
 
+local function HasCookingColumn()
+    local cooking = Addon.Catalog.dailyActivities and Addon.Catalog.dailyActivities["mop.halfhill.cooking-daily"]
+    return cooking and Addon.Settings:GetMode("activity", cooking.id, cooking.defaultMode) ~= "hidden"
+end
+
 local function Row(frame, index)
     local row = frame.rows[index]
     if row then return row end
@@ -242,6 +247,7 @@ function Page.Create(frame)
     frame.account.projects = CreateFrame("Frame", nil, frame.account)
     frame.account.projects.empty = Text(frame.account.projects, Theme.Font.body, C.muted, "CENTER"); frame.account.projects.empty:SetAllPoints()
     frame.scroll = Theme:CreateScrollFrame(frame)
+    frame.scroll:BindScrollbarGutter(frame.header, frame.account)
     frame.body = CreateFrame("Frame", nil, frame.scroll)
     frame.scroll:SetScrollChild(frame.body)
     frame.emptyTitle = Text(frame, Theme.Font.section, C.text)
@@ -249,8 +255,8 @@ function Page.Create(frame)
     frame.rows, frame.headers = {}, {}
 end
 
-local function Layout(characterWidth, professionWidth, hasFarm, hasNomi, hasCommon)
-    return characterWidth, professionWidth, hasFarm and FARM_COLUMN_WIDTH or 0, hasNomi and NOMI_COLUMN_WIDTH or 0, hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0
+local function Layout(characterWidth, professionWidth, hasFarm, hasNomi, hasCooking, hasCommon)
+    return characterWidth, professionWidth, hasFarm and FARM_COLUMN_WIDTH or 0, hasNomi and NOMI_COLUMN_WIDTH or 0, hasCooking and NOMI_COLUMN_WIDTH or 0, hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0
 end
 
 local function ConfigureScroll(frame, top, tableWidth, contentHeight, inset)
@@ -271,12 +277,14 @@ function Page.Refresh(frame, context)
     local showProfession = context:GetFieldVisible("professionCooldown")
     local showFarm = context:GetFieldVisible("farmOperation")
     local showNomi = context:GetFieldVisible("nomi")
+    local showCooking = context:GetFieldVisible("cooking")
     local showCommon = context:GetFieldVisible("commonProjects")
     local hasCommon = showCommon and HasCommonProjects(snapshot, context.characters)
     local hasFarm = showFarm and HasFarmColumn()
     local hasNomi = showNomi and HasNomiColumn()
-    local characterWidth, professionWidth, farmWidth, nomiWidth, commonWidth = Layout(CharacterColumnWidth(context), ProfessionColumnWidth(snapshot, context.characters), hasFarm, hasNomi, hasCommon)
-    local tableWidth = characterWidth + (showProfession and professionWidth or 0) + farmWidth + nomiWidth + commonWidth
+    local hasCooking = showCooking and HasCookingColumn()
+    local characterWidth, professionWidth, farmWidth, nomiWidth, cookingWidth, commonWidth = Layout(CharacterColumnWidth(context), ProfessionColumnWidth(snapshot, context.characters), hasFarm, hasNomi, hasCooking, hasCommon)
+    local tableWidth = characterWidth + (showProfession and professionWidth or 0) + farmWidth + nomiWidth + cookingWidth + commonWidth
     local inset = Theme:GetMatrixInsets(context.preview)
     for _, row in ipairs(frame.rows) do row:Hide() end
     frame.header:ClearAllPoints(); frame.header:SetPoint("TOPLEFT", frame, "TOPLEFT", inset.left, -inset.top); frame.header:SetSize(tableWidth, Theme.Table.headerHeight)
@@ -286,6 +294,7 @@ function Page.Refresh(frame, context)
     end
     if hasFarm then columns[#columns + 1] = { "农场", farmWidth } end
     if hasNomi then columns[#columns + 1] = { "诺米", nomiWidth } end
+    if hasCooking then columns[#columns + 1] = { "烹饪", cookingWidth } end
     if hasCommon then columns[#columns + 1] = { "通用项目", commonWidth } end
     local x = 0
     for index, definition in ipairs(columns) do
@@ -340,6 +349,12 @@ function Page.Refresh(frame, context)
                     RenderProjects(nomi, data.nomiProjects or {})
                     offset, nextCell = offset + nomiWidth, nextCell + 1
                 end
+                if hasCooking then
+                    local cooking = Cell(row, nextCell)
+                    cooking:ClearAllPoints(); cooking:SetPoint("LEFT", offset, 0); cooking:SetSize(cookingWidth, ROW_HEIGHT)
+                    RenderProjects(cooking, data.cookingProjects or {})
+                    offset, nextCell = offset + cookingWidth, nextCell + 1
+                end
                 if hasCommon then
                     local common = Cell(row, nextCell)
                     common:ClearAllPoints(); common:SetPoint("LEFT", offset, 0); common:SetSize(commonWidth, ROW_HEIGHT)
@@ -374,20 +389,22 @@ function Page.GetSurfaceMetrics(context)
     local showProfession = context and context.GetFieldVisible and context:GetFieldVisible("professionCooldown")
     local showFarm = context and context.GetFieldVisible and context:GetFieldVisible("farmOperation")
     local showNomi = context and context.GetFieldVisible and context:GetFieldVisible("nomi")
+    local showCooking = context and context.GetFieldVisible and context:GetFieldVisible("cooking")
     local showCommon = context and context.GetFieldVisible and context:GetFieldVisible("commonProjects")
     local hasCommon = showCommon and HasCommonProjects(snapshot, context and context.characters)
     local hasFarm = showFarm and HasFarmColumn()
     local hasNomi = showNomi and HasNomiColumn()
+    local hasCooking = showCooking and HasCookingColumn()
     local accountHeight = showCommon and #(snapshot.accountActivities or {}) > 0 and ROW_HEIGHT + ROW_GAP or 0
     local visibleRows = math.max(1, math.min(20, count))
     local professionWidth = ProfessionColumnWidth(snapshot, context and context.characters)
-    local tableWidth = CharacterColumnWidth(context) + (showProfession and professionWidth or 0) + (hasFarm and FARM_COLUMN_WIDTH or 0) + (hasNomi and NOMI_COLUMN_WIDTH or 0) + (hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0)
+    local tableWidth = CharacterColumnWidth(context) + (showProfession and professionWidth or 0) + (hasFarm and FARM_COLUMN_WIDTH or 0) + (hasNomi and NOMI_COLUMN_WIDTH or 0) + (hasCooking and NOMI_COLUMN_WIDTH or 0) + (hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0)
     -- The scrollbar uses the page inset rather than a data-column gutter.
     -- The table width therefore remains the same with and without overflow.
     local projectsWidth = tableWidth + Theme.Space.sm * 2
     return {
-        minContentWidth = (showProfession or hasFarm or hasNomi or hasCommon) and projectsWidth or 220,
-        naturalContentWidth = (showProfession or hasFarm or hasNomi or hasCommon) and projectsWidth or 280,
+        minContentWidth = (showProfession or hasFarm or hasNomi or hasCooking or hasCommon) and projectsWidth or 220,
+        naturalContentWidth = (showProfession or hasFarm or hasNomi or hasCooking or hasCommon) and projectsWidth or 280,
         minContentHeight = 120,
         naturalContentHeight = inset.top + Theme.Table.headerHeight + accountHeight + ROW_GAP + visibleRows * (ROW_HEIGHT + ROW_GAP) + inset.bottom,
         horizontalOverflow = "none",

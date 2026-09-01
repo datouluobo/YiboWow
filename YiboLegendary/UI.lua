@@ -12,13 +12,13 @@ local STATUS = {
     completed = { label = "已获得 ✓", color = C.success }, available = { label = "可推进", color = C.accent },
     in_progress = { label = "进行中", color = { 1, 0.78, 0.34 } }, obtainable = { label = "本周可刷", color = { 0.48, 0.76, 0.96 } },
     not_started = { label = "未开始", color = C.muted }, unavailable = { label = "已绝版 ⊘", color = { 1, 0.48, 0.5 } },
-    ineligible = { label = "不适用 —", color = C.muted }, unknown = { label = "未知 ?", color = { 1, 0.48, 0.5 } },
+    ineligible = { label = "— 不适用", color = C.muted }, unknown = { label = "未知", color = { 1, 0.48, 0.5 } },
 }
 
 local PREVIEW_FIELDS = {
-    { id = "character", title = "角色", minWidth = 160, previewMinWidth = 160, defaultVisible = true },
-    { id = "CLOAK", title = "橙披", minWidth = 170, previewMinWidth = 170, defaultVisible = true },
-    { id = "THUNDERFURY", title = "风剑", minWidth = 180, previewMinWidth = 180, defaultVisible = true },
+    { id = "character", title = "角色", minWidth = 160, previewMinWidth = 150, defaultVisible = true },
+    { id = "CLOAK", title = "橙披", minWidth = 170, previewMinWidth = 160, defaultVisible = true },
+    { id = "THUNDERFURY", title = "风剑", minWidth = 180, previewMinWidth = 160, defaultVisible = true },
 }
 
 local function CharacterLabel(character) return (character.name or "未知角色") .. "-" .. (character.realm or "未知服务器") end
@@ -85,16 +85,18 @@ function UI:CreateMain(parent)
     frame.detail.header.bg = frame.detail.header:CreateTexture(nil, "BACKGROUND"); frame.detail.header.bg:SetAllPoints(); frame.detail.header.bg:SetColorTexture(C.chrome[1], C.chrome[2], C.chrome[3], 0.96)
     frame.detail.header.cells = {}
     for _, data in ipairs({ { "character", "角色" }, { "stage", "当前检查点" }, { "progress", "进度" }, { "action", "下一步" } }) do frame.detail.header.cells[data[1]] = self:Text(frame.detail.header, Theme.Font.assist, C.muted); frame.detail.header.cells[data[1]]:SetText(data[2]) end
-    frame.detail.scroll = Theme:CreateScrollFrame(frame.detail); frame.detail.scroll:SetPoint("TOPLEFT", frame.detail.header, "BOTTOMLEFT", 0, -Theme.Space.xxs); frame.detail.scroll:SetPoint("BOTTOMRIGHT", 0, 0)
+    -- Preserve a real right inset for the shared scrollbar; it must not sit
+    -- on the final “下一步” cell when this target has a long roster.
+    frame.detail.scroll = Theme:CreateScrollFrame(frame.detail); frame.detail.scroll:BindScrollbarGutter(frame.detail.header); frame.detail.scroll:SetPoint("TOPLEFT", frame.detail.header, "BOTTOMLEFT", 0, -Theme.Space.xxs); frame.detail.scroll:SetPoint("BOTTOMRIGHT", 0, 0)
     frame.detail.content = CreateFrame("Frame", nil, frame.detail.scroll); frame.detail.content:SetWidth(1); frame.detail.scroll:SetScrollChild(frame.detail.content); frame.detail.rows = {}
     return frame
 end
 
 function UI:CreatePreview(parent)
     local frame = CreateFrame("Frame", nil, parent); frame:SetAllPoints(parent)
-    frame.summary = self:Text(frame, Theme.Font.assist, C.muted); frame.summary:SetPoint("TOPLEFT", Theme.Space.xs, -Theme.Space.xs)
-    frame.header = CreateFrame("Frame", nil, frame); frame.header:SetHeight(ROW_HEIGHT); frame.header:SetPoint("TOPLEFT", Theme.Space.xs, -(Theme.Space.xs + Theme.Font.assist + Theme.Space.xs)); frame.header:SetPoint("TOPRIGHT", -Theme.Space.xs, -(Theme.Space.xs + Theme.Font.assist + Theme.Space.xs)); frame.header.bg = frame.header:CreateTexture(nil, "BACKGROUND"); frame.header.bg:SetAllPoints(); frame.header.bg:SetColorTexture(C.chrome[1], C.chrome[2], C.chrome[3], 0.96); frame.header.cells = {}
-    frame.scroll = Theme:CreateScrollFrame(frame); frame.scroll:SetPoint("TOPLEFT", frame.header, "BOTTOMLEFT", 0, -Theme.Space.xxs); frame.scroll:SetPoint("BOTTOMRIGHT", -Theme.Space.xs, Theme.Space.xs)
+    frame.summary = self:Text(frame, Theme.Font.assist, C.muted); frame.summary:Hide()
+    frame.header = CreateFrame("Frame", nil, frame); frame.header:SetHeight(ROW_HEIGHT); frame.header:SetPoint("TOPLEFT", Theme.Space.xs, -Theme.Space.xs); frame.header:SetPoint("TOPRIGHT", -Theme.Space.xs, -Theme.Space.xs); frame.header.bg = frame.header:CreateTexture(nil, "BACKGROUND"); frame.header.bg:SetAllPoints(); frame.header.bg:SetColorTexture(C.chrome[1], C.chrome[2], C.chrome[3], 0.96); frame.header.cells = {}
+    frame.scroll = Theme:CreateScrollFrame(frame); frame.scroll:BindScrollbarGutter(frame.header); frame.scroll:SetPoint("TOPLEFT", frame.header, "BOTTOMLEFT", 0, -Theme.Space.xxs); frame.scroll:SetPoint("BOTTOMRIGHT", -Theme.Space.xs, Theme.Space.xs)
     frame.content = CreateFrame("Frame", nil, frame.scroll); frame.content:SetWidth(1); frame.scroll:SetScrollChild(frame.content); frame.rows = {}
     return frame
 end
@@ -144,12 +146,13 @@ function UI:RefreshMain(context)
     local currentCharacter = Addon.Core.Characters:GetCurrent()
     for index, item in ipairs(roster) do
         local row = page.detail.rows[index] or self:CreateMainRow(index); local state = TargetState(item.snapshot, target.id); local meta = StateMeta(state)
-        local bg = index % 2 == 0 and C.alternate or C.row; row.bg:SetColorTexture(bg[1], bg[2], bg[3], bg[4]); Theme:SetCurrentCharacterOutline(row.outline, currentCharacter and item.character.id == currentCharacter.id)
+        local bg = Theme:GetDataRowColor(index); row.bg:SetColorTexture(bg[1], bg[2], bg[3], bg[4]); Theme:SetCurrentCharacterOutline(row.outline, currentCharacter and item.character.id == currentCharacter.id)
         local red, green, blue = ClassColor(item.character); row.cells.character:SetText(CharacterLabel(item.character)); row.cells.character:SetTextColor(red, green, blue)
-        row.cells.stage:SetText(state and state.stageLabel or "尚未同步"); row.cells.stage:SetTextColor(C.text[1], C.text[2], C.text[3])
+        row.cells.stage:SetText(state and state.stageLabel or Theme.StatusText.unsynced); row.cells.stage:SetTextColor(C.text[1], C.text[2], C.text[3])
         row.cells.progress:SetText(state and state.progressText or "—"); row.cells.progress:SetTextColor(meta.color[1], meta.color[2], meta.color[3])
         row.cells.action:SetText(state and state.nextAction or "登录该角色后同步。"); row.cells.action:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
-        row.tooltipLines = { { text=CharacterLabel(item.character), color={red,green,blue} }, { text="状态：" .. meta.label, color=meta.color }, { text="检查点：" .. (state and state.stageLabel or "尚未同步"), color=C.text }, { text="进度：" .. (state and state.progressText or "—"), color=C.muted }, { text="下一步：" .. (state and state.nextAction or "登录该角色后同步。"), color=C.muted } }
+        row.tooltipLines = { { text=CharacterLabel(item.character), color={red,green,blue} }, { text="状态：" .. meta.label, color=meta.color }, { text="检查点：" .. (state and state.stageLabel or Theme.StatusText.unsynced), color=C.text }, { text="进度：" .. (state and state.progressText or "—"), color=C.muted }, { text="下一步：" .. (state and state.nextAction or "登录该角色后同步。"), color=C.muted } }
+        if item.snapshot and tonumber(item.snapshot.updatedAt) and tonumber(item.snapshot.updatedAt) > 0 and date then row.tooltipLines[#row.tooltipLines + 1] = { kind="pair", label="最近同步", value=date("%m-%d %H:%M", item.snapshot.updatedAt) } end
         Theme:BindTooltip(row, nil, row.tooltipLines)
         local offset = CELL_INSET
         for _, key in ipairs({ "character", "stage", "progress", "action" }) do local cell = row.cells[key]; cell:ClearAllPoints(); cell:SetPoint("LEFT", offset, 0); cell:SetWidth(tracks[key] - CELL_PADDING); offset = offset + tracks[key] end
@@ -173,8 +176,6 @@ function UI:RefreshPreview(context)
     local page = self.details.preview; local fixed, candidates = self:GetPreviewFields(context); local width = math.max(1, page:GetWidth() - Theme.Space.xs * 2); local fixedWidth = 0
     for _, field in ipairs(fixed) do fixedWidth = fixedWidth + field.previewMinWidth end
     local visible, info = Addon.Core.AccountView:GetColumnPageByWidth("legendary", "targets", candidates, width, fixedWidth, function(field) return field.previewMinWidth end)
-    if info.pages > 1 then local pagerWidth = Addon.Core.AccountView:GetColumnPagerWidth("目标", #candidates); visible, info = Addon.Core.AccountView:GetColumnPageByWidth("legendary", "targets", candidates, math.max(1, width - pagerWidth), fixedWidth, function(field) return field.previewMinWidth end) end
-    Addon.Core.AccountView:UpdateColumnPager(page, "legendary", "targets", info, page.header, "目标")
     local columns = {}; for _, field in ipairs(fixed) do columns[#columns+1]=field end; for _, field in ipairs(visible) do columns[#columns+1]=field end
     local offset = CELL_INSET
     local rendered = {}
@@ -182,16 +183,16 @@ function UI:RefreshPreview(context)
     for _, field in ipairs(PREVIEW_FIELDS) do if not rendered[field.id] and page.header.cells[field.id] then page.header.cells[field.id]:Hide() end end
     local currentCharacter = Addon.Core.Characters:GetCurrent(); local roster = self:GetVisibleCharacters(context.characters)
     for index,item in ipairs(roster) do
-        local row = page.rows[index] or self:CreatePreviewRow(index); local bg = index % 2 == 0 and C.alternate or C.row; row.bg:SetColorTexture(bg[1],bg[2],bg[3],bg[4]); Theme:SetCurrentCharacterOutline(row.outline,currentCharacter and item.character.id==currentCharacter.id)
-        local red,green,blue=ClassColor(item.character); row.tooltipLines={{text=CharacterLabel(item.character),color={red,green,blue}}}
+        local row = page.rows[index] or self:CreatePreviewRow(index); local bg = Theme:GetDataRowColor(index); row.bg:SetColorTexture(bg[1],bg[2],bg[3],bg[4]); Theme:SetCurrentCharacterOutline(row.outline,currentCharacter and item.character.id==currentCharacter.id)
+        local red,green,blue=ClassColor(item.character); row.tooltipLines={{text=CharacterLabel(item.character),color={red,green,blue}}};if item.snapshot and tonumber(item.snapshot.updatedAt) and tonumber(item.snapshot.updatedAt)>0 and date then row.tooltipLines[#row.tooltipLines+1]={kind="pair",label="最近同步",value=date("%m-%d %H:%M",item.snapshot.updatedAt)} end
         for _,field in ipairs(columns) do
             local cell=row.cells[field.id] or self:Text(row,Theme.Font.assist); row.cells[field.id]=cell; cell:ClearAllPoints(); cell:SetPoint("LEFT",field.yiboOffset,0); cell:SetWidth(field.previewMinWidth-CELL_PADDING); cell:Show()
-            if field.id=="character" then cell:SetText(CharacterLabel(item.character));cell:SetTextColor(red,green,blue) else local state=TargetState(item.snapshot,field.id);local meta=StateMeta(state);cell:SetText((state and state.acquired and "已获得 ✓" or meta.label).." · "..(state and state.progressText or "—"));cell:SetTextColor(meta.color[1],meta.color[2],meta.color[3]);row.tooltipLines[#row.tooltipLines+1]={text=field.title.."："..(state and state.stageLabel or "尚未同步"),color=meta.color};row.tooltipLines[#row.tooltipLines+1]={text=state and state.nextAction or "登录该角色后同步。",color=C.muted} end
+            if field.id=="character" then cell:SetText(CharacterLabel(item.character));cell:SetTextColor(red,green,blue) else local state=TargetState(item.snapshot,field.id);local meta=StateMeta(state);cell:SetText((state and state.acquired and "已获得 ✓" or meta.label).." · "..(state and state.progressText or "—"));cell:SetTextColor(meta.color[1],meta.color[2],meta.color[3]);row.tooltipLines[#row.tooltipLines+1]={text=field.title.."："..(state and state.stageLabel or Theme.StatusText.unsynced),color=meta.color};row.tooltipLines[#row.tooltipLines+1]={text=state and state.nextAction or "登录该角色后同步。",color=C.muted} end
         end
         for _,field in ipairs(PREVIEW_FIELDS) do if not rendered[field.id] and row.cells[field.id] then row.cells[field.id]:Hide() end end; Theme:BindTooltip(row,nil,row.tooltipLines); row:Show()
     end
     for index=#roster+1,#page.rows do page.rows[index]:Hide() end
-    page.content:SetWidth(math.max(1,offset+CELL_INSET));page.content:SetHeight(math.max(1,#roster*Theme.Table.previewRowHeight));page.scroll:SetContentHeight(page.content:GetHeight());page.scroll:RefreshScrollbar();page.summary:SetText(string.format("传说之路 · 已同步角色 %d",#roster))
+    page.content:SetWidth(math.max(1,offset+CELL_INSET));page.content:SetHeight(math.max(1,#roster*Theme.Table.previewRowHeight));page.scroll:SetContentHeight(page.content:GetHeight());page.scroll:RefreshScrollbar();page.summary:Hide()
     for _, field in ipairs(PREVIEW_FIELDS) do field.yiboOffset = nil end
 end
 
@@ -202,15 +203,21 @@ function UI:GetPreviewColumns() return Addon.db.settings.previewColumns end
 function UI:SetPreviewFieldVisible(id,visible) Addon.db.settings.previewColumns[id]=not not visible;if Addon.Core.AccountView then Addon.Core.AccountView:RefreshPage() end end
 function UI:GetSurfaceMetrics(context)
     local preview=context and context.preview;local rows=#self:GetVisibleCharacters(context and context.characters)
-    if preview then local width=0;for _,field in ipairs(PREVIEW_FIELDS) do if context:GetFieldVisible(field.id) then width=width+field.previewMinWidth end end;return {minContentWidth=346,naturalContentWidth=width+Theme.Space.md,minContentHeight=100,naturalContentHeight=Theme.Font.assist+ROW_HEIGHT+rows*Theme.Table.previewRowHeight+Theme.Space.xl,fixedLeftWidth=160,fixedTopHeight=ROW_HEIGHT,horizontalOverflow="paginate",verticalOverflow="content"} end
+    if preview then
+        local fixed, targets = self:GetPreviewFields(context)
+        local width = 0
+        for _, field in ipairs(fixed) do width = width + field.previewMinWidth end
+        for _, field in ipairs(targets) do width = width + field.previewMinWidth end
+        return {minContentWidth=310,naturalContentWidth=width+Theme.Space.xs*2,minContentHeight=100,naturalContentHeight=Theme.Space.xs+ROW_HEIGHT+Theme.Space.xxs+rows*Theme.Table.previewRowHeight+Theme.Space.xs,fixedLeftWidth=fixed[1] and fixed[1].previewMinWidth or 0,fixedTopHeight=ROW_HEIGHT,horizontalOverflow="paginate",verticalOverflow="content"}
+    end
     return {minContentWidth=720,naturalContentWidth=910,minContentHeight=270,naturalContentHeight=math.min(640,190+rows*ROW_HEIGHT),horizontalOverflow="none",verticalOverflow="content"}
 end
 function UI:GetMeasuredHeight() return self.details and self.details:GetHeight() or nil end
-function UI:PrintStatus() local store=Addon:GetCharacterStore();local target=self:GetSelectedTarget();local state=store and TargetState(store.snapshot,target.id);Addon:Print(target.shortTitle.."："..(state and state.stageLabel or "尚未同步")) end
+function UI:PrintStatus() local store=Addon:GetCharacterStore();local target=self:GetSelectedTarget();local state=store and TargetState(store.snapshot,target.id);Addon:Print(target.shortTitle.."："..(state and state.stageLabel or Theme.StatusText.unsynced)) end
 function UI:ToggleDetails() Addon.Core.AccountView:Toggle("legendary") end
 
 function UI:Initialize()
-    Addon.Core.AccountView:RegisterPage(Addon.NAME,{id="legendary",title="传说之路",order=20,defaultEnabled=true,previewEnabled=true,scope={mode="realms",allTitle="所有服务器"},characterFilter={defaultExpression="",GetExpression=function()return Addon.db.settings.levelExpr or "" end,SetExpression=function(expression)local valid,normalized,bad=Addon.Core.LevelFilter:Validate(expression or "");if not valid then return false,bad end;Addon.db.settings.levelExpr=normalized;UI:Refresh();return true,normalized end},HasCharacterSnapshot=function(character)return (character.level or 0)>=90 and Addon.db.byCharacter[character.id] and Addon.db.byCharacter[character.id].snapshot~=nil end,GetEligibleCharacters=function(characters)return UI:GetEligibleCharacters(characters) end,settings={title="传说之路",description="页面、入口、角色范围和悬停目标列由 Core 统一管理；传说路线与角色快照由本插件保存。"},fields=PREVIEW_FIELDS,GetPreviewFields=function()return UI:GetPreviewColumns() end,SetPreviewFieldVisible=function(id,visible)UI:SetPreviewFieldVisible(id,visible) end,GetSurfaceMetrics=function(context)return UI:GetSurfaceMetrics(context) end,GetMeasuredHeight=function()return UI:GetMeasuredHeight() end,Create=function(parent)UI:CreateAccountPage(parent) end,Refresh=function(_,context)UI:RefreshDetails(context) end,GetSummary=function(characters)return string.format("传说目标 %d · 已同步角色 %d",#Addon.Catalog:GetTargets(),#UI:GetVisibleCharacters(characters)) end,GetActions=function(characters)local actions={};for _,item in ipairs(UI:GetVisibleCharacters(characters)) do for _,target in ipairs(Addon.Catalog:GetTargets()) do local state=TargetState(item.snapshot,target.id);if state and(state.status=="available" or state.status=="in_progress" or state.status=="obtainable")then actions[#actions+1]={priority=state.status=="available" and 2 or 1,title=CharacterLabel(item.character).." · "..target.shortTitle,text=state.nextAction}end end end;return actions end})
+    Addon.Core.AccountView:RegisterPage(Addon.NAME,{id="legendary",title="传说之路",icon="Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon-v1",order=20,defaultEnabled=true,previewEnabled=true,scope={mode="realms",allTitle="所有服务器"},characterFilter={defaultExpression="",GetExpression=function()return Addon.db.settings.levelExpr or "" end,SetExpression=function(expression)local valid,normalized,bad=Addon.Core.LevelFilter:Validate(expression or "");if not valid then return false,bad end;Addon.db.settings.levelExpr=normalized;UI:Refresh();return true,normalized end},HasCharacterSnapshot=function(character)return (character.level or 0)>=90 and Addon.db.byCharacter[character.id] and Addon.db.byCharacter[character.id].snapshot~=nil end,GetEligibleCharacters=function(characters)return UI:GetEligibleCharacters(characters) end,settings={title="传说之路",description="页面、入口、角色范围和悬停目标列由 Core 统一管理；传说路线与角色快照由本插件保存。"},fields=PREVIEW_FIELDS,GetPreviewFields=function()return UI:GetPreviewColumns() end,SetPreviewFieldVisible=function(id,visible)UI:SetPreviewFieldVisible(id,visible) end,GetSurfaceMetrics=function(context)return UI:GetSurfaceMetrics(context) end,GetMeasuredHeight=function()return UI:GetMeasuredHeight() end,Create=function(parent)UI:CreateAccountPage(parent) end,Refresh=function(_,context)UI:RefreshDetails(context) end,GetSummary=function(characters)return string.format("传说目标 %d · 已同步角色 %d",#Addon.Catalog:GetTargets(),#UI:GetVisibleCharacters(characters)) end,GetActions=function(characters)local actions={};for _,item in ipairs(UI:GetVisibleCharacters(characters)) do for _,target in ipairs(Addon.Catalog:GetTargets()) do local state=TargetState(item.snapshot,target.id);if state and(state.status=="available" or state.status=="in_progress" or state.status=="obtainable")then actions[#actions+1]={priority=state.status=="available" and 2 or 1,title=CharacterLabel(item.character).." · "..target.shortTitle,text=state.nextAction}end end end;return actions end})
     Addon.Core.Entry:RegisterBusinessEntry(Addon.NAME,{id="YiboLegendary",brokerName="YiboLegendary",pageID="legendary",text="[Yibo] 传说之路",icon="Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon-v1"})
 end
 function UI:Refresh() if Addon.Core.AccountView then Addon.Core.AccountView:RefreshPage() end end

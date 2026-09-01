@@ -3,7 +3,7 @@ local Theme = _G.YiboCore.UITheme
 local C = Theme.Colors
 
 local BOSS_WIDTH, ACTION_WIDTH, PHASE_WIDTH = 120, 88, 72
-local CHARACTER_MIN_WIDTH, CHARACTER_MAX_WIDTH = 64, 88
+local CHARACTER_MIN_WIDTH, CHARACTER_MAX_WIDTH = Theme.Table.characterColumnWidth, Theme.Table.characterColumnWidth
 local HEADER_H, COMPACT_HEADER_H, ROW_H, CELL_H = Theme.Table.groupHeight, Theme.Table.headerHeight, Theme.Table.rowHeight, 24
 local GROUP_GAP = 2
 local FIXED_HEADER = { 0.035, 0.18, 0.19, 1 }
@@ -62,13 +62,8 @@ local function VisualTextUnits(value)
 end
 
 local function GetCharacterColumnMetrics(key, context)
-    local name, realm = CharacterInfo(key)
     local titleFont = Theme.Font.assist
-    local nameWidth = VisualTextUnits(name) * titleFont
-    local realmWidth = context and context.scope == "all" and (VisualTextUnits(realm) * Theme.Font.assist) or 0
-    local contentWidth = math.max(nameWidth, realmWidth)
-    local width = math.ceil(contentWidth + 16)
-    return math.max(CHARACTER_MIN_WIDTH, math.min(CHARACTER_MAX_WIDTH, width)), titleFont
+    return CHARACTER_MIN_WIDTH, titleFont
 end
 
 local function ScopeRealm(scope)
@@ -80,10 +75,7 @@ local function ScopeControlsWidth(context)
 end
 
 local function GetHeaderHeight(context)
-    -- Bosses are the columns in this page.  Realm scope changes the character
-    -- row labels, not the header taxonomy, so it must never create a second
-    -- header line filled with meaningless dashes.
-    return COMPACT_HEADER_H
+    return Theme:GetCharacterHeaderHeight(context)
 end
 
 local function GetCharacterRowLabel(key, context)
@@ -321,14 +313,7 @@ end
 local function GetHeader(instance, index)
     local header = instance.headers[index]
     if header then return header end
-    header = CreateFrame("Frame", nil, instance.header, "BackdropTemplate")
-    header:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    header:SetBackdropColor(C.chrome[1], C.chrome[2], C.chrome[3], 0.96)
-    header:SetBackdropBorderColor(C.lineSoft[1], C.lineSoft[2], C.lineSoft[3], C.lineSoft[4])
-    header.title = Text(header, Theme.Font.assist, "CENTER", C.muted)
-    header.title:SetPoint("TOPLEFT", 3, -2); header.title:SetPoint("TOPRIGHT", -3, -2); header.title:SetHeight(14)
-    header.sub = Text(header, Theme.Font.meta, "CENTER", C.muted)
-    header.sub:SetPoint("TOPLEFT", 3, -16); header.sub:SetPoint("TOPRIGHT", -3, -16); header.sub:SetHeight(12)
+    header = Theme:CreateMatrixHeader(instance.header)
     instance.headers[index] = header
     return header
 end
@@ -415,25 +400,12 @@ local function RefreshHeaders(instance, context, keys, showAction, showPhase, sh
         index = index + 1
         local header = GetHeader(instance, index)
         header:ClearAllPoints(); header:SetPoint("TOPLEFT", instance.header, "TOPLEFT", x, 0); header:SetSize(width, headerHeight)
-        header.title:ClearAllPoints(); header.sub:ClearAllPoints()
-        if headerHeight == HEADER_H then
-            header.title:SetPoint("TOPLEFT", 3, -2); header.title:SetPoint("TOPRIGHT", -3, -2); header.title:SetHeight(14)
-            header.sub:SetPoint("TOPLEFT", 3, -16); header.sub:SetPoint("TOPRIGHT", -3, -16); header.sub:SetHeight(12)
-            header.sub:Show()
-        else
-            header.title:SetPoint("TOPLEFT", 3, 0); header.title:SetPoint("BOTTOMRIGHT", -3, 0)
-            header.sub:Hide()
-        end
-        header.title:SetText(title); header.sub:SetText(sub or "")
-        header.title:SetFont(STANDARD_TEXT_FONT, titleFont or Theme.Font.assist)
-        header.sub:SetFont(STANDARD_TEXT_FONT, Theme.Font.meta)
         local color = titleColor or C.muted
-        header.title:SetTextColor(color.r or color[1], color.g or color[2], color.b or color[3])
-        header.sub:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
         local fill = fixedArea and FIXED_HEADER or C.chrome
-        header:SetBackdropColor(fill[1], fill[2], fill[3], fill[4] or 1)
-        header:SetBackdropBorderColor(C.lineSoft[1], C.lineSoft[2], C.lineSoft[3], C.lineSoft[4])
+        Theme:SetMatrixHeader(header, title, { height=headerHeight, secondary=sub, color=color, fill=fill, rule=C.lineSoft })
+        header.title:SetFont(STANDARD_TEXT_FONT, titleFont or Theme.Font.assist)
         header:Show(); x = x + width
+        return header
     end
     Place("Boss / 目标", BOSS_WIDTH, nil, nil, true)
     if showAction then Place("行动", ACTION_WIDTH, nil, nil, true) end
@@ -458,7 +430,8 @@ local function RefreshHeaders(instance, context, keys, showAction, showPhase, sh
                 instance.currentColumnX = x
                 instance.currentColumnWidth = columnWidth
             end
-            Place(name, columnWidth, realmSubtitle, CharacterColor(key), false, titleFont)
+            local header = Place(name, columnWidth, realmSubtitle, CharacterColor(key), false, titleFont)
+            Theme:BindTooltip(header, name .. "-" .. realm)
         end
     end
     Release(instance.headers, index + 1)
@@ -475,6 +448,7 @@ function YAB.CreateAccountPage(parent)
     parent.header.fixedDivider:SetWidth(GROUP_GAP)
     parent.header.fixedDivider:SetColorTexture(C.bg[1], C.bg[2], C.bg[3], 1)
     parent.scroll = Theme:CreateScrollFrame(parent)
+    parent.scroll:BindScrollbarGutter(parent.header)
     parent.body = CreateFrame("Frame", nil, parent.scroll); parent.scroll:SetScrollChild(parent.body)
     parent.currentColumnOutline = Theme:CreateCurrentCharacterOutline(parent)
     parent.headers, parent.rows = {}, {}
@@ -488,7 +462,7 @@ local function RefreshCurrentColumnOutline(instance, bosses, showKills)
         return
     end
     outline:SetPoint("TOPLEFT", instance.header, "TOPLEFT", instance.currentColumnX, 0)
-    outline:SetPoint("BOTTOMRIGHT", instance.body, "TOPLEFT", instance.currentColumnX + (instance.currentColumnWidth or CHARACTER_MIN_WIDTH), -(#bosses * ROW_H))
+    outline:SetPoint("BOTTOMRIGHT", instance.scroll, "BOTTOMLEFT", instance.currentColumnX + (instance.currentColumnWidth or CHARACTER_MIN_WIDTH), 0)
     Theme:SetCurrentCharacterOutline(outline, true)
 end
 
@@ -521,18 +495,13 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
     local fixedWidth = BOSS_WIDTH + (showAction and ACTION_WIDTH or 0) + (showPhase and PHASE_WIDTH or 0) + (showKills and GROUP_GAP or 0)
     local availableWidth = instance.header:GetWidth() or math.max(fixedWidth + CHARACTER_MIN_WIDTH, (instance:GetWidth() or 0) - 58)
     local keys, pageInfo = _G.YiboCore.AccountView:GetColumnPage("alto-boss", "characters", allKeys, availableWidth, fixedWidth, CHARACTER_MIN_WIDTH)
-    if pageInfo.pages > 1 then
-        -- Reserve a stable header gutter for the explicit pager, then compute
-        -- the visible columns again.  No character is merely clipped.
-        keys, pageInfo = _G.YiboCore.AccountView:GetColumnPage("alto-boss", "characters", allKeys, availableWidth - _G.YiboCore.AccountView:GetColumnPagerWidth(), fixedWidth, CHARACTER_MIN_WIDTH)
-    end
     RefreshHeaders(instance, context, keys, showAction, showPhase, showKills)
-    _G.YiboCore.AccountView:UpdateColumnPager(instance, "alto-boss", "characters", pageInfo, instance.header)
 
     for rowIndex, boss in ipairs(bosses) do
         local row = GetRow(instance, rowIndex)
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", instance.body, "TOPLEFT", 0, -((rowIndex - 1) * ROW_H)); row:SetSize(instance.gridWidth, ROW_H)
-        row:SetBackdropColor(rowIndex % 2 == 0 and 0.035 or 0.025, rowIndex % 2 == 0 and 0.115 or 0.085, rowIndex % 2 == 0 and 0.13 or 0.10, 0.88)
+        local rowTone = Theme:GetDataRowColor(rowIndex)
+        row:SetBackdropColor(rowTone[1], rowTone[2], rowTone[3], rowTone[4] or 0.88)
         row:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
         row.fixedBackground:SetWidth(instance.fixedWidth)
         row.groupGap:ClearAllPoints()
@@ -549,7 +518,7 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
                 SetEmptyButton(row.action)
             else
                 local candidate = PickBestAction(boss, context.scope)
-                local fills = { window = C.success, soon = C.success, scheduled = C.selected, weak = C.timer, observed = C.current, overdue = C.dangerSurface }
+                local fills = { window = C.successSurface, soon = C.successSurface, scheduled = C.selected, weak = C.timer, observed = C.current, overdue = C.dangerSurface }
                 SetSemanticButton(row.action, candidate and candidate.text or "—", fills[candidate and candidate.kind or ""] or FIXED_CELL, boss.name .. " / 行动", BuildActionTooltip(boss, candidate, context.scope))
             end
         end
@@ -599,17 +568,8 @@ local function RefreshBossColumnHeaders(instance, context, bosses, showKills, sh
         index = index + 1
         local header = GetHeader(instance, index)
         header:ClearAllPoints(); header:SetPoint("TOPLEFT", instance.header, "TOPLEFT", x, 0); header:SetSize(width, headerHeight)
-        header.title:ClearAllPoints(); header.sub:ClearAllPoints()
-        if headerHeight == HEADER_H then
-            header.title:SetPoint("TOPLEFT", 3, -3); header.title:SetPoint("TOPRIGHT", -3, -3); header.title:SetHeight(17)
-            header.sub:SetPoint("TOPLEFT", 3, -20); header.sub:SetPoint("TOPRIGHT", -3, -20); header.sub:SetHeight(16); header.sub:Show()
-        else
-            header.title:SetPoint("TOPLEFT", 3, 0); header.title:SetPoint("BOTTOMRIGHT", -3, 0); header.sub:Hide()
-        end
-        header.title:SetText(title); header.sub:SetText(sub or ""); header.title:SetFont(STANDARD_TEXT_FONT, Theme.Font.assist)
-        local textColor = color or C.muted; header.title:SetTextColor(textColor.r or textColor[1], textColor.g or textColor[2], textColor.b or textColor[3])
-        header.sub:SetTextColor(C.muted[1], C.muted[2], C.muted[3]); local fill = fixed and FIXED_HEADER or C.chrome
-        header:SetBackdropColor(fill[1], fill[2], fill[3], fill[4] or 1); header:SetBackdropBorderColor(C.lineSoft[1], C.lineSoft[2], C.lineSoft[3], C.lineSoft[4]); header:Show()
+        local textColor = color or C.muted; local fill = fixed and FIXED_HEADER or C.chrome
+        Theme:SetMatrixHeader(header,title,{height=headerHeight,secondary=sub,color=textColor,fill=fill,rule=C.lineSoft});header:Show()
         x = x + width
     end
     Place("角色", characterWidth, nil, nil, true)
@@ -665,16 +625,9 @@ local function GetMatrixSize(context)
         + (context:GetFieldVisible("action") and ACTION_WIDTH or 0)
         + (context:GetFieldVisible("phase") and PHASE_WIDTH or 0)
         + (context:GetFieldVisible("kills") and GROUP_GAP or 0)
-    local budget = math.max(CHARACTER_MIN_WIDTH, (context.surfaceAvailableWidth or math.huge) - fixedWidth - Theme.Space.lg * 2)
-    local visibleCount = math.max(1, math.floor(budget / CHARACTER_MIN_WIDTH))
-    if #keys > visibleCount then
-        budget = math.max(CHARACTER_MIN_WIDTH, budget - _G.YiboCore.AccountView:GetColumnPagerWidth())
-        visibleCount = math.max(1, math.floor(budget / CHARACTER_MIN_WIDTH))
-    end
     local characterWidth = 0
     if context:GetFieldVisible("kills") then
-        for index = 1, math.min(#keys, visibleCount) do
-            local key = keys[index]
+        for _, key in ipairs(keys) do
             local columnWidth = GetCharacterColumnMetrics(key, context)
             characterWidth = characterWidth + columnWidth
         end

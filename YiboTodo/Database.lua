@@ -6,7 +6,7 @@ local DEFAULTS = {
     settings = {
         modeOverrides = { activityType = {}, expansion = {}, profession = {}, cooldownGroup = {}, activity = {} },
         previewColumnsVersion = 4,
-        previewColumns = { professionCooldown = true, farmOperation = true, nomi = true, commonProjects = true },
+        previewColumns = { professionCooldown = true, farmOperation = true, nomi = true, cooking = true, commonProjects = true },
         levelExpr = "",
     },
     byCharacter = {},
@@ -78,7 +78,7 @@ function Addon.Database:Initialize()
         self.db.settings.previewColumnsVersion = 4
         self.db.settings.previewColumns = {
             professionCooldown = visible, farmOperation = visible,
-            nomi = visible, commonProjects = visible,
+            nomi = visible, cooking = visible, commonProjects = visible,
         }
         self.db.schemaVersion = 7
     end

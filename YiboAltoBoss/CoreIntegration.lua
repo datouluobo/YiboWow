@@ -205,6 +205,7 @@ function Integration:Initialize()
     local page, errorMessage = Core.AccountView:RegisterPage("YiboAltoBoss", {
         id = PAGE_ID,
         title = "Boss 周常",
+        icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YAB_MinimapIcon",
         order = 30,
         previewEnabled = true,
         fields = {

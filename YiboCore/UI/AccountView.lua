@@ -98,6 +98,7 @@ Settings = function()
         settings.entry.coreMode = hasBroker and hasMinimap and "both" or (hasBroker and "broker" or (hasMinimap and "minimap" or "none"))
     end
     settings.entry.previewPageID = type(settings.entry.previewPageID) == "string" and settings.entry.previewPageID or "overview"
+    settings.entry.showPreviewWhileMainWindowOpen = settings.entry.showPreviewWhileMainWindowOpen == true
     settings.entry.pageModes = settings.entry.pageModes or {}
     settings.entry.pagePositions = settings.entry.pagePositions or {}
     return settings
@@ -107,44 +108,21 @@ function AccountView:GetSettings()
     return Settings()
 end
 
--- A matrix owns its fixed left-side identity area; Core owns the remaining
--- character-column capacity and page state.  This avoids every addon silently
--- clipping the same account roster in a slightly different way.
+-- Character matrices are a single account surface.  Never split the roster
+-- into horizontal pages: a partial roster is harder to compare than a dense
+-- complete matrix, and page arrows conceal the missing characters.
 function AccountView:GetColumnPage(pageID, stateKey, columns, availableWidth, fixedWidth, columnWidth)
     local count = #(columns or {})
-    local capacity = math.max(1, math.floor((math.max(1, availableWidth or 1) - math.max(0, fixedWidth or 0)) / math.max(1, columnWidth or 1)))
-    local totalPages = math.max(1, math.ceil(count / capacity))
-    local pages = Settings().columnPages
-    pages[pageID] = pages[pageID] or {}
-    local current = math.max(1, math.min(tonumber(pages[pageID][stateKey]) or 1, totalPages))
-    pages[pageID][stateKey] = current
-    local first, last = (current - 1) * capacity + 1, math.min(count, current * capacity)
     local visible = {}
-    for index = first, last do visible[#visible + 1] = columns[index] end
-    return visible, { page = current, pages = totalPages, first = first, last = last, capacity = capacity, total = count }
+    for index, column in ipairs(columns or {}) do visible[index] = column end
+    return visible, { page = 1, pages = 1, first = count > 0 and 1 or 0, last = count, capacity = count, total = count }
 end
 
 function AccountView:GetColumnPageByWidth(pageID, stateKey, columns, availableWidth, fixedWidth, getWidth)
-    local pages, page = {}, {}
-    local used = math.max(0, fixedWidth or 0)
-    local limit = math.max(1, availableWidth or 1)
-    for _, column in ipairs(columns or {}) do
-        local width = math.max(1, tonumber(getWidth(column)) or 1)
-        if #page > 0 and used + width > limit then
-            pages[#pages + 1], page, used = page, {}, math.max(0, fixedWidth or 0)
-        end
-        page[#page + 1] = column
-        used = used + width
-    end
-    if #page > 0 or #pages == 0 then pages[#pages + 1] = page end
-    local stored = Settings().columnPages
-    stored[pageID] = stored[pageID] or {}
-    local index = math.max(1, math.min(tonumber(stored[pageID][stateKey]) or 1, #pages))
-    stored[pageID][stateKey] = index
-    local first = 1
-    for pageIndex = 1, index - 1 do first = first + #pages[pageIndex] end
-    local visible = pages[index]
-    return visible, { page = index, pages = #pages, first = first, last = first + #visible - 1, total = #(columns or {}) }
+    local count = #(columns or {})
+    local visible = {}
+    for index, column in ipairs(columns or {}) do visible[index] = column end
+    return visible, { page = 1, pages = 1, first = count > 0 and 1 or 0, last = count, total = count }
 end
 
 function AccountView:SetColumnPage(pageID, stateKey, page, totalPages)
@@ -155,8 +133,8 @@ function AccountView:SetColumnPage(pageID, stateKey, page, totalPages)
 end
 
 function AccountView:GetColumnPagerWidth(noun, total)
-    -- Pagination is chrome, not matrix data.  It is hosted in the title bar,
-    -- so character columns never surrender content width to its controls.
+    -- Kept as a zero-width compatibility shim for external business pages.
+    -- Character matrices no longer have horizontal pagination chrome.
     return 0
 end
 
@@ -165,23 +143,9 @@ function AccountView:UpdateColumnPager(parent, pageID, stateKey, info, anchor, n
     local pager = parent.yiboColumnPager
     self._columnPagers = self._columnPagers or {}
     self._columnPagers[pager] = true
-    local chrome = self.frame and not self.frame.preview and self.frame.titleBar or parent
-    pager.previous = pager.previous or Theme:CreateButton(chrome, Theme.Size.compact, "‹", "secondary")
-    pager.next = pager.next or Theme:CreateButton(chrome, Theme.Size.compact, "›", "secondary")
-    pager.previous:ClearAllPoints(); pager.next:ClearAllPoints()
-    local controlAnchor = chrome == (self.frame and self.frame.titleBar) and self.frame.controls or (anchor or parent)
-    pager.next:SetPoint("RIGHT", controlAnchor, "LEFT", -Theme.Space.xxs, 0)
-    pager.previous:SetPoint("RIGHT", pager.next, "LEFT", -Theme.Space.xxs, 0)
-    local show = info and info.pages > 1
-    pager.previous:SetShown(show); pager.next:SetShown(show)
-    if not show then return end
-    pager.previous:SetState(info.page > 1 and "default" or "disabled")
-    pager.next:SetState(info.page < info.pages and "default" or "disabled")
-    local range = string.format("角色 %d–%d / %d · 第 %d/%d 页", info.first or 0, info.last or 0, info.total or 0, info.page, info.pages)
-    Theme:BindTooltip(pager.previous, "上一组角色", { range })
-    Theme:BindTooltip(pager.next, "下一组角色", { range })
-    pager.previous:SetScript("OnClick", function() if info.page > 1 then AccountView:SetColumnPage(pageID, stateKey, info.page - 1, info.pages) end end)
-    pager.next:SetScript("OnClick", function() if info.page < info.pages then AccountView:SetColumnPage(pageID, stateKey, info.page + 1, info.pages) end end)
+    if pager.previous then pager.previous:Hide() end
+    if pager.next then pager.next:Hide() end
+    if pager.label then pager.label:Hide() end
 end
 
 function AccountView:HideColumnPagers()
@@ -192,6 +156,7 @@ function AccountView:HideColumnPagers()
     for pager in pairs(self._columnPagers or {}) do
         if pager.previous then pager.previous:Hide() end
         if pager.next then pager.next:Hide() end
+        if pager.label then pager.label:Hide() end
     end
 end
 
@@ -314,22 +279,35 @@ local function SetHeaderIdentity(frame, page, subtitle)
     local scopeWidth = frame.scopeBar and frame.scopeBar:IsShown() and ((frame.scopeBar:GetWidth() or 0) + Theme.Space.sm) or 0
     -- Hover previews hide normal controls.  Reserving their invisible width
     -- caused both an empty title bar and server controls outside the shell.
-    local controlsWidth = frame.controls and frame.controls:IsShown() and (frame.controls:GetWidth() or 0) or 0
-    local available = math.max(0, (frame:GetWidth() or 0) - controlsWidth - scopeWidth - 72)
+    local controlsWidth = not frame.preview and frame.controls and frame.controls:IsShown() and (frame.controls:GetWidth() or 0) or 0
+    local pagerWidth = 0
+    for pager in pairs(AccountView._columnPagers or {}) do
+        if pager.chrome == frame.titleBar and ((pager.previous and pager.previous:IsShown()) or (pager.next and pager.next:IsShown())) then
+            pagerWidth = math.max(pagerWidth, pager.width or (Theme.Size.compact * 2 + Theme.Space.xxs * 2))
+        end
+    end
     local candidates = {
         { text = addonName .. " v" .. version .. " · " .. pageTitle, icon = true },
         { text = addonName .. " · " .. pageTitle, icon = true },
         { text = pageTitle, icon = true }, { text = pageTitle, icon = false }, { text = "", icon = false },
     }
-    local selected = candidates[#candidates]
+    local selected, selectedAvailable = candidates[#candidates], 1
     for _, candidate in ipairs(candidates) do
-        if Theme:MeasureText(Theme.Font.title, candidate.text) <= available then selected = candidate; break end
+        local leftInset = candidate.icon and page and page.icon and 44 or 16
+        local rightInset = frame.preview and Theme.Space.xxs or (14 + Theme.Space.sm)
+        local available = math.max(0, (frame:GetWidth() or 0) - controlsWidth - scopeWidth - pagerWidth - leftInset - rightInset)
+        if Theme:MeasureText(Theme.Font.title, candidate.text) <= available then selected, selectedAvailable = candidate, available; break end
     end
-    frame.title:SetText(selected.text); frame.title:SetWidth(math.max(1, available)); frame.title:SetShown(selected.text ~= "")
+    frame.title:SetText(selected.text); frame.title:SetWidth(math.max(1, selectedAvailable)); frame.title:SetShown(selected.text ~= "")
     frame.version:Hide(); frame.subtitle:Hide()
     frame.pageIcon:SetShown(selected.icon and page and page.icon ~= nil)
     frame.title:ClearAllPoints()
     frame.title:SetPoint("LEFT", frame.titleBar, "LEFT", (selected.icon and page and page.icon) and 44 or 16, 0)
+    if frame.identityHit then
+        local identityWidth = math.max(1, (frame:GetWidth() or 0) - controlsWidth - scopeWidth - Theme.Space.sm)
+        frame.identityHit:SetWidth(identityWidth)
+        Theme:BindTooltip(frame.identityHit, addonName .. " v" .. version .. " · " .. pageTitle)
+    end
 end
 
 local function CreateChromeButton(parent, width, height, label, destructive)
@@ -891,6 +869,16 @@ function AccountView:CreateFrame()
     frame.title:SetPoint("LEFT", frame.titleBar, "LEFT", 16, 0); frame.title:SetText("账号总览")
     frame.pageIcon = frame.titleBar:CreateTexture(nil, "ARTWORK")
     frame.pageIcon:SetSize(22, 22); frame.pageIcon:SetPoint("LEFT", frame.titleBar, "LEFT", 16, 0); frame.pageIcon:Hide()
+    frame.identityHit = CreateFrame("Frame", nil, frame.titleBar)
+    frame.identityHit:SetPoint("TOPLEFT", frame.titleBar, "TOPLEFT", 0, 0)
+    frame.identityHit:SetPoint("BOTTOMLEFT", frame.titleBar, "BOTTOMLEFT", 0, 0)
+    frame.identityHit:SetWidth(1); frame.identityHit:EnableMouse(true); frame.identityHit:RegisterForDrag("LeftButton")
+    frame.identityHit:SetScript("OnDragStart", function() frame:StartMoving() end)
+    frame.identityHit:SetScript("OnDragStop", function()
+        frame:StopMovingOrSizing()
+        local point, _, relativePoint, x, y = frame:GetPoint(1)
+        settings.point, settings.relativePoint, settings.x, settings.y = point, relativePoint, x, y
+    end)
     frame.version = AddText(frame.titleBar, "GameFontNormalSmall", Theme.Font.meta, COLORS.muted)
     frame.version:SetPoint("BOTTOMLEFT", frame.title, "BOTTOMRIGHT", 7, 1); frame.version:SetText("v?")
     frame.subtitle = AddText(frame.titleBar, "GameFontNormalSmall", nil, COLORS.muted)
@@ -945,6 +933,19 @@ function AccountView:CreateFrame()
     return frame
 end
 
+local function NavigationRequiredHeight(page)
+    local count
+    if page and page.id == "settings" then
+        count = 5
+        for _, registered in ipairs(AccountView._pageOrder) do if not registered.internal then count = count + 1 end end
+    else
+        count = 3 -- 概览、角色档案、关于
+        for _, registered in ipairs(AccountView._pageOrder) do if PageEnabled(registered) then count = count + 1 end end
+    end
+    local navigationHeight = Theme.Space.xs * 2 + count * Theme.Table.rowHeight + math.max(0, count - 1) * Theme.Space.xxs
+    return Theme.Geometry.titleBar + Theme.Geometry.shellBorder * 2 + navigationHeight
+end
+
 function AccountView:ApplyPageSize(page, context)
     local frame = self:CreateFrame()
     if frame.preview then return end
@@ -973,7 +974,7 @@ function AccountView:ApplyPageSize(page, context)
     preferredWidth = math.min(preferredWidth, maxWidth)
     -- Individual pages own their safe minimum height.  A global 430 px floor
     -- left large empty regions below compact data matrices.
-    local minHeight = math.max(150, metrics.minContentHeight + shellHeight)
+    local minHeight = math.max(150, metrics.minContentHeight + shellHeight, NavigationRequiredHeight(page))
     if page.id == "settings" then
         minWidth, minHeight = math.max(minWidth, 820), math.max(minHeight, 560)
         preferredWidth, preferredHeight = math.max(preferredWidth, 960), math.max(preferredHeight, 720)
@@ -981,13 +982,6 @@ function AccountView:ApplyPageSize(page, context)
     local width, height = preferredWidth, preferredHeight
     width = math.max(math.min(widthFloor, maxWidth), math.min(math.max(minWidth, width), maxWidth))
     height = math.max(math.min(minHeight, maxHeight), math.min(math.max(minHeight, height), maxHeight))
-    -- A vertical scrollbar is never overlaid on a data matrix.  When the
-    -- final safe height genuinely clips a content-scrolling page, grow the
-    -- shell by the shared 16px gutter first; pagination is only the fallback
-    -- after that additional width also reaches the safe bound.
-    if metrics.verticalOverflow == "content" and height + 0.5 < preferredHeight then
-        width = math.min(maxWidth, width + Theme.Geometry.scrollbarGutter)
-    end
     if math.abs((frame:GetWidth() or 0) - width) < 1 and math.abs((frame:GetHeight() or 0) - height) < 1 then return end
     self._applyingPageSize = true
     frame:SetResizable(true)
@@ -1007,7 +1001,7 @@ function AccountView:ApplyMeasuredPageHeight(page, instance, context)
     -- post-layout measurement supplied by the page.
     local shellHeight = math.max(0, (frame:GetHeight() or 0) - (instance:GetHeight() or 0))
     local maxWidth, maxHeight = ScreenBounds()
-    local targetHeight = math.max(1, math.min(math.floor(measured + shellHeight + 0.5), maxHeight))
+    local targetHeight = math.min(maxHeight, math.max(NavigationRequiredHeight(page), math.floor(measured + shellHeight + 0.5)))
     if math.abs((frame:GetHeight() or 0) - targetHeight) < 1 then return end
     self._applyingPageSize = true
     if frame.SetResizeBounds then frame:SetResizeBounds(1, 1, maxWidth, maxHeight) end
@@ -1166,6 +1160,11 @@ function AccountView:ShowPage(pageID, options)
     else
         instance:SetAllPoints(self.frame.content)
     end
+    local shellWidth = ShellMetrics(context.preview)
+    local contentWidth = math.max(1, (self.frame:GetWidth() or 1) - shellWidth)
+    -- Business renderers must consume the width chosen for this layout pass,
+    -- never a stale frame width left by the previously visible page.
+    context.surfaceAvailableWidth = contentWidth
     instance:Show()
     if options.preview then
         -- 悬停投影不能改变正式窗口最后打开的页面；否则 Core 默认入口会
@@ -1177,8 +1176,10 @@ function AccountView:ShowPage(pageID, options)
         options.autoFit = nil
         self.activePageOptions = options
     end
-    SetHeaderIdentity(self.frame, page, page.title)
     CallPage(instance, page, "刷新", context)
+    -- Pages may create or hide a title-bar pager while refreshing. Resolve
+    -- the identity only after that chrome is final for this pass.
+    SetHeaderIdentity(self.frame, page, page.title)
     self:ApplyMeasuredPageHeight(page, instance, context)
     self:RefreshNavigation()
     self:UpdateSortButton()
@@ -1329,7 +1330,13 @@ end
 function AccountView:ShowPreview(pageID, anchor)
     local page = self._pages[pageID] or self:GetPreviewPage()
     local frame = self:CreateFrame()
-    if not page or not page.previewEnabled or (not page.internal and not PageEnabled(page)) or (frame:IsShown() and not frame.preview) then return false end
+    local allowWhileMainWindowOpen = Settings().entry.showPreviewWhileMainWindowOpen == true
+    if not page or not page.previewEnabled or (not page.internal and not PageEnabled(page)) or (frame:IsShown() and not frame.preview and not allowWhileMainWindowOpen) then return false end
+
+    -- The shared shell can temporarily become a preview when the player has
+    -- opted in.  Remember that it was a normal window so it is restored when
+    -- the pointer leaves the entry instead of remaining in preview layout.
+    self.restoreNormalWindowAfterPreview = frame:IsShown() and not frame.preview
 
     local fields = type(page.GetPreviewFields) == "function" and page.GetPreviewFields() or page.previewFields
     local context = self:BuildContext(page, { preview = true, fieldOverrides = fields })
@@ -1372,16 +1379,10 @@ function AccountView:ShowPreview(pageID, anchor)
         local roomHeight = opensDown and ((bottom or safe.top) - safe.bottom - gap) or (safe.top - (top or safe.bottom) - gap)
         width = math.max(math.min(metrics.minWidth, safe.width), math.min(width, math.max(1, roomWidth)))
         height = math.max(math.min(metrics.minHeight, safe.height), math.min(height, math.max(1, roomHeight)))
-        if metrics.verticalOverflow == "content" and height + 0.5 < metrics.preferredHeight then
-            width = math.min(math.max(1, roomWidth), width + Theme.Geometry.scrollbarGutter)
-        end
         local offsetX = math.max(safe.left + width / 2 - centerX, math.min(safe.right - width / 2 - centerX, 0))
         frame:SetPoint(opensDown and "TOP" or "BOTTOM", anchorFrame, opensDown and "BOTTOM" or "TOP", offsetX, opensDown and -gap or gap)
     else
         height = math.max(math.min(metrics.minHeight, safe.height), math.min(height, safe.height))
-        if metrics.verticalOverflow == "content" and height + 0.5 < metrics.preferredHeight then
-            width = math.min(safe.width, width + Theme.Geometry.scrollbarGutter)
-        end
         frame:SetPoint("CENTER", UIParent, "CENTER")
     end
     frame:SetSize(width, height)
@@ -1399,11 +1400,17 @@ end
 function AccountView:HidePreview()
     local frame = self.frame
     if not frame or not frame.preview then return end
+    local restoreNormalWindow = self.restoreNormalWindowAfterPreview == true
     frame:Hide()
     self:ApplyNormalLayout()
     self.previewPageID = nil
     self.previewPageOptions = nil
     self.previewAnchor = nil
+    self.restoreNormalWindowAfterPreview = nil
+    if restoreNormalWindow then
+        frame:Show()
+        self:ShowPage(self.activePageID or "overview", self.activePageOptions)
+    end
 end
 
 function AccountView:Toggle(pageID)
@@ -1439,12 +1446,12 @@ end
 
 local function CreateOverview(parent)
     parent.scroll = Theme:CreateScrollFrame(parent)
-    parent.scroll:SetPoint("TOPLEFT", 0, 0); parent.scroll:SetPoint("BOTTOMRIGHT", -Theme.Geometry.scrollbarGutter, 0)
+    parent.scroll:SetPoint("TOPLEFT", 0, 0); parent.scroll:SetPoint("BOTTOMRIGHT", 0, 0)
     parent.content = CreateFrame("Frame", nil, parent.scroll); parent.scroll:SetScrollChild(parent.content)
     local content = parent.content
     parent.heading = AddText(content, "GameFontNormalLarge", nil, COLORS.text); parent.heading:SetPoint("TOPLEFT", 20, -18); parent.heading:SetText("账号概览")
     parent.hint = AddText(content, "GameFontNormalSmall", nil, COLORS.muted); parent.hint:SetPoint("TOPLEFT", 20, -47); parent.hint:SetText("从左侧选择业务页，比较角色的下一步行动。")
-    parent.characterSummary = AddText(content, "GameFontNormalSmall", nil, COLORS.muted); parent.characterSummary:SetPoint("TOPRIGHT", -20, -18)
+    parent.characterSummary = AddText(content, "GameFontNormalSmall", nil, COLORS.muted); parent.characterSummary:Hide()
     parent.actionHeading = AddText(content, "GameFontNormalSmall", nil, COLORS.muted); parent.actionHeading:SetPoint("TOPLEFT", 20, -78); parent.actionHeading:SetText("下一步行动")
     parent.lines = {}
     parent.actions = {}
@@ -1453,9 +1460,6 @@ end
 local function RefreshOverview(parent, context)
     local lines = {}
     local actions = {}
-    local allCharacters = Core.Characters:GetAll()
-    local visibleCharacters = AccountView:GetVisibleCharacters()
-    parent.characterSummary:SetText(string.format("已记录 %d 名角色 · 视图显示 %d 名", #allCharacters, #visibleCharacters))
     local actionsPerPage = {}
     local pageCharacters = {}
     local function CollectPageValue(page, callbackName)
@@ -1543,10 +1547,10 @@ local function RefreshOverview(parent, context)
 end
 
 local function CreateCharacters(parent)
-    -- The shared title bar already names this page.  The body begins with the
-    -- live archive summary so the table earns back a full line of height.
+    -- The title bar and its sort control already communicate page identity
+    -- and ordering; a second count/sort sentence only delays the table.
     parent.heading = AddText(parent, "GameFontNormalLarge", nil, COLORS.text); parent.heading:Hide()
-    parent.hint = AddText(parent, "GameFontNormalSmall", nil, COLORS.muted); parent.hint:SetPoint("TOPLEFT", 20, -47); parent.hint:SetText("角色概况会自动保存；隐藏仅影响账号业务视图。")
+    parent.hint = AddText(parent, "GameFontNormalSmall", nil, COLORS.muted); parent.hint:Hide()
     parent.listHeader = CreateFrame("Frame", nil, parent)
     parent.listHeader:SetPoint("TOPLEFT", 20, -82); parent.listHeader:SetWidth(850); parent.listHeader:SetHeight(Theme.Table.headerHeight)
     parent.listHeader.bg = parent.listHeader:CreateTexture(nil, "BACKGROUND"); parent.listHeader.bg:SetAllPoints(); parent.listHeader.bg:SetColorTexture(COLORS.chrome[1], COLORS.chrome[2], COLORS.chrome[3], 0.95)
@@ -1556,7 +1560,7 @@ local function CreateCharacters(parent)
     parent.listHeader.itemLevel = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); parent.listHeader.itemLevel:SetPoint("LEFT", parent.listHeader.zone, "RIGHT", 6, 0); parent.listHeader.itemLevel:SetWidth(42); parent.listHeader.itemLevel:SetText("装等")
     parent.listHeader.professions = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); parent.listHeader.professions:SetPoint("LEFT", parent.listHeader.itemLevel, "RIGHT", 6, 0); parent.listHeader.professions:SetText("专业")
     parent.scroll = Theme:CreateScrollFrame(parent)
-    parent.scroll:SetPoint("TOPLEFT", 20, -106); parent.scroll:SetPoint("BOTTOMRIGHT", -40, 12)
+    parent.scroll:SetPoint("TOPLEFT", 20, -106); parent.scroll:SetPoint("BOTTOMRIGHT", -Theme.Space.xs, 12)
     parent.listContent = CreateFrame("Frame", nil, parent.scroll)
     parent.listContent:SetWidth(850)
     parent.scroll:SetScrollChild(parent.listContent)
@@ -1663,22 +1667,17 @@ local function RefreshCharacters(parent, context)
     local preview = context and context.preview == true
     local inset = Theme:GetMatrixInsets(preview)
     local characters = (context and ArchiveCharacters(context)) or ArchiveCharacters({ preview = false })
-    local sort = AccountView:GetDefaultCharacterSort()
-    local arrow = sort.mode == "custom" and "" or (sort.direction == "asc" and " ↑" or " ↓")
-    local sortLabel = (SORT_LABELS[sort.mode] or "最近登录") .. arrow
-    parent.hint:SetText((preview and "预览 " or "共 ") .. #characters .. " 名角色 · 排序：" .. sortLabel)
-    -- The archive owns a heading and a one-line summary, but never a blank
-    -- fixed region.  The matrix begins after the documented summary-to-table
-    -- gap and all remaining edges come from the shared directional tokens.
+    -- The matrix begins at the normal content inset; count and sorting remain
+    -- available through the actual rows and the title-bar sort control.
     parent.heading:Hide()
-    parent.hint:ClearAllPoints(); parent.hint:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top)
-    parent.listHeader:ClearAllPoints(); parent.listHeader:SetPoint("TOPLEFT", parent.hint, "BOTTOMLEFT", 0, -Theme.Space.md)
+    parent.hint:Hide()
+    parent.listHeader:ClearAllPoints(); parent.listHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top)
     parent.scroll:ClearAllPoints(); parent.scroll:SetPoint("TOPLEFT", parent.listHeader, "BOTTOMLEFT", 0, -Theme.Space.xs); parent.scroll:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset.right, inset.bottom)
     local previousScroll = parent.resetScroll and 0 or parent.scroll:GetVerticalScroll()
     -- The custom scrollbar overlays the scroll frame.  Only the full archive
     -- reserves space for its hidden-state control; hover is deliberately
-    -- read-only and contains no management affordances.
-    local contentWidth = (parent.scroll:GetWidth() or 0) - 18
+    -- The scrollbar lives in the matrix inset, outside the data viewport.
+    local contentWidth = parent.scroll:GetWidth() or 0
     if contentWidth <= 0 then contentWidth = 832 end
     parent.listContent:SetWidth(contentWidth)
     local fields = GetArchiveFields(preview)
@@ -1752,13 +1751,9 @@ local function RefreshCharacters(parent, context)
         end
         for fieldIndex = #fields + 1, #row.dynamicCells do row.dynamicCells[fieldIndex]:Hide() end
         local isCurrent = current and current.id == character.id
-        if index % 2 == 0 then
-            row:SetBackdropColor(0.025, 0.085, 0.10, 0.88)
-            row:SetBackdropBorderColor(COLORS.matrixLine[1], COLORS.matrixLine[2], COLORS.matrixLine[3], COLORS.matrixLine[4])
-        else
-            row:SetBackdropColor(0.018, 0.060, 0.075, 0.88)
-            row:SetBackdropBorderColor(COLORS.matrixLine[1], COLORS.matrixLine[2], COLORS.matrixLine[3], COLORS.matrixLine[4])
-        end
+        local rowTone = Theme:GetDataRowColor(index)
+        row:SetBackdropColor(rowTone[1], rowTone[2], rowTone[3], rowTone[4] or 0.88)
+        row:SetBackdropBorderColor(COLORS.matrixLine[1], COLORS.matrixLine[2], COLORS.matrixLine[3], COLORS.matrixLine[4])
         Theme:SetCurrentCharacterOutline(row.currentOutline, isCurrent)
         row:Show()
     end
@@ -1779,7 +1774,7 @@ local function CreateSettings(parent)
     parent.resetLayout:SetPoint("TOPRIGHT", -20, -18)
     parent.resetLayout:SetScript("OnClick", function() AccountView:ResetWindowLayout() end)
     parent.scroll = Theme:CreateScrollFrame(parent)
-    parent.scroll:SetPoint("TOPLEFT", 20, -76); parent.scroll:SetPoint("BOTTOMRIGHT", -38, 14)
+    parent.scroll:SetPoint("TOPLEFT", 20, -76); parent.scroll:SetPoint("BOTTOMRIGHT", -Theme.Space.xs, 14)
     parent.content = CreateFrame("Frame", nil, parent.scroll); parent.content:SetWidth(620); parent.scroll:SetScrollChild(parent.content)
     parent.rows = {}
 end
@@ -2215,6 +2210,9 @@ local function RefreshSettings(parent)
             if Core.Entry then Core.Entry:SetCoreEntryMode(mode) end
         end)
         Heading("入口悬停页面")
+        Check("主窗口打开时仍显示悬停预览", settings.entry.showPreviewWhileMainWindowOpen == true, function(checked)
+            settings.entry.showPreviewWhileMainWindowOpen = checked == true
+        end)
         local selectedPreviewPage = AccountView:GetPreviewPage()
         for _, page in ipairs(AccountView:GetPreviewPageOptions()) do
             local optionPage = page
@@ -2467,13 +2465,12 @@ local function CreateAbout(parent)
     -- The about page is a growing directory. Keep its footer and page chrome
     -- fixed, while only the directory content participates in scrolling.
     parent.scroll = Theme:CreateScrollFrame(parent)
-    parent.scroll:SetPoint("TOPLEFT", 20, -18); parent.scroll:SetPoint("BOTTOMRIGHT", -38, 34)
+    parent.scroll:SetPoint("TOPLEFT", 20, -18); parent.scroll:SetPoint("BOTTOMRIGHT", -Theme.Space.xs, 34)
     parent.content = CreateFrame("Frame", nil, parent.scroll)
     parent.content:SetPoint("TOPLEFT")
     parent.scroll:SetScrollChild(parent.content)
     local function GetContentWidth(scroll)
-        local scrollbarWidth = scroll.ScrollBar and scroll.ScrollBar:GetWidth() or 14
-        return math.max(1, (scroll:GetWidth() or 1) - scrollbarWidth - 6)
+        return math.max(1, scroll:GetWidth() or 1)
     end
     parent.scroll:SetScript("OnSizeChanged", function(scroll)
         parent.content:SetWidth(GetContentWidth(scroll))
@@ -2611,8 +2608,7 @@ local function GetCharacterSurfaceMetrics(context)
     local fields = GetArchiveFields(false)
     local tableWidth = GetArchiveTableWidth(fields, GetArchiveColumnWidths(fields))
     local inset = Theme:GetMatrixInsets(context and context.preview)
-    local gutter = count > 20 and Theme.Geometry.scrollbarGutter or 0
-    return { minContentWidth = 582, naturalContentWidth = tableWidth + inset.left + inset.right + gutter, minContentHeight = 150, naturalContentHeight = inset.top + Theme.Font.assist + Theme.Space.md + Theme.Table.headerHeight + Theme.Space.xs + math.min(count, 20) * Theme.Table.rowHeight + inset.bottom, verticalOverflow = "content" }
+    return { minContentWidth = 582, naturalContentWidth = tableWidth + inset.left + inset.right, minContentHeight = 150, naturalContentHeight = inset.top + Theme.Table.headerHeight + Theme.Space.xs + math.min(count, 20) * Theme.Table.rowHeight + inset.bottom, verticalOverflow = "content" }
 end
 
 local function GetAboutSurfaceMetrics()
@@ -2624,12 +2620,7 @@ local function GetCharacterHoverMetrics(context)
     local fields = GetArchiveFields(true)
     local tableWidth = GetArchiveTableWidth(fields, GetArchiveColumnWidths(fields))
     local inset = Theme:GetMatrixInsets(true)
-    -- Keep this in exact lockstep with RefreshCharacters' preview anchors:
-    -- one summary line, the table header, compact row pitch and the shared
-    -- top/bottom inset.  This is an outer-frame metric, so it also includes
-    -- the preview title chrome.  A generic 168px prefix left a visible footer
-    -- below short account archives.
-    local contentHeight = inset.top + Theme.Font.assist + Theme.Space.md + Theme.Table.headerHeight + Theme.Space.xs + math.max(1, math.min(count, 20)) * Theme.Table.previewRowHeight + inset.bottom
+    local contentHeight = inset.top + Theme.Table.headerHeight + Theme.Space.xs + math.max(1, math.min(count, 20)) * Theme.Table.previewRowHeight + inset.bottom
     return {
         minWidth = 420,
         preferredWidth = math.max(520, tableWidth + 72),

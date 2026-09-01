@@ -30,8 +30,11 @@ function Addon:CreateSettingsPanel(parent, context)
     for index, entry in ipairs(self:GetCatalog()) do
         local row = panel.rows[index] or CreateFrame("Frame", nil, panel); panel.rows[index] = row; row:SetSize(560, 28); row:ClearAllPoints(); row:SetPoint("TOPLEFT", 0, -y)
         row.label = row.label or Theme:CreateText(row, Theme.Font.assist, Theme.Colors.text, "LEFT"); row.label:SetPoint("LEFT", 0, 0); row.label:SetWidth(250); row.label:SetText(entry.title)
-        row.visible = row.visible or Theme:CreateCheckbox(row, "主窗口显示"); row.visible:ClearAllPoints(); row.visible:SetPoint("LEFT", 258, 0); row.visible.label:SetText("主窗口显示"); row.visible:SetChecked(self:IsVisible(entry)); row.visible:SetScript("OnClick", function(control) control:SetChecked(not control:GetChecked()); self:SetVisible(entry, control:GetChecked()); context.notifyPageChanged() end)
-        row.monitor = row.monitor or Theme:CreateCheckbox(row, "悬停监控"); row.monitor:ClearAllPoints(); row.monitor:SetPoint("LEFT", 390, 0); row.monitor.label:SetText("悬停监控"); row.monitor:SetChecked(self:IsMonitored(entry)); row.monitor:SetScript("OnClick", function(control) control:SetChecked(not control:GetChecked()); self:SetMonitored(entry, control:GetChecked()); context.notifyPageChanged() end); row:Show(); y = y + 28
+        -- CreateCheckbox defaults to a 190px click frame.  These two compact
+        -- controls sit 132px apart, so leaving that default made their hit
+        -- areas overlap even though the labels looked separate.
+        row.visible = row.visible or Theme:CreateCheckbox(row, "主窗口显示"); row.visible:ClearAllPoints(); row.visible:SetSize(118, Theme.Size.standard); row.visible:SetPoint("LEFT", 258, 0); row.visible.label:SetText("主窗口显示"); row.visible:SetChecked(self:IsVisible(entry)); row.visible:SetScript("OnClick", function(control) control:SetChecked(not control:GetChecked()); self:SetVisible(entry, control:GetChecked()); context.notifyPageChanged() end)
+        row.monitor = row.monitor or Theme:CreateCheckbox(row, "悬停监控"); row.monitor:ClearAllPoints(); row.monitor:SetSize(118, Theme.Size.standard); row.monitor:SetPoint("LEFT", 390, 0); row.monitor.label:SetText("悬停监控"); row.monitor:SetChecked(self:IsMonitored(entry)); row.monitor:SetScript("OnClick", function(control) control:SetChecked(not control:GetChecked()); self:SetMonitored(entry, control:GetChecked()); context.notifyPageChanged() end); row:Show(); y = y + 28
     end
     for index = #self:GetCatalog() + 1, #panel.rows do panel.rows[index]:Hide() end
     panel:SetHeight(y + 4); return y + 4
