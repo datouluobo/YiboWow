@@ -2,6 +2,7 @@ _G.YiboTodo = nil
 GetServerTime = function() return 1725105600 end
 time = GetServerTime
 GetGameTime = function() return 12, 0 end
+date = function(format) if format == "%Y-%m-%d" then return "2024-09-01" end return "" end
 C_Map = { GetBestMapForUnit = function() return 376 end }
 UnitName = function() return "生长中的毒蛇荆" end
 UnitGUID = function() return "Creature-0-4891-870-6013-65973-0000000001" end

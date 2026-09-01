@@ -65,7 +65,7 @@ end
 
 local function BuildFarmProject(characterID, now)
     local provider = Addon.Providers.Registry:Get("farm-operation-observation")
-    local day, previousDay, definition
+    local day, eligibility, definition
     if provider then day, definition = provider:GetCurrentDay(characterID, now) end
     if not definition or Addon.Settings:GetMode("activity", definition.id, definition.defaultMode) == "hidden" then return nil, false end
     local operations = day and day.operations or {}
@@ -102,6 +102,33 @@ local function BuildFarmProject(characterID, now)
     }, true
 end
 
+local function BuildNomiProject(characterID, now)
+    local provider = Addon.Providers.Registry:Get("daily-quest")
+    local day, previousDay, definition
+    if provider then day, definition = provider:GetCurrentDay(characterID, now) end
+    if not definition or Addon.Settings:GetMode("activity", definition.id, definition.defaultMode) == "hidden" then return nil, false end
+    if provider and (not day or day.state == "unknown") then eligibility = provider:GetEligibility(characterID) end
+    local inferredFromEligibility = eligibility ~= nil
+    local state = inferredFromEligibility and "actionable" or (day and day.state or "unknown")
+    local label = day and day.label or definition.label
+    local statusText
+    if inferredFromEligibility then statusText = "已确认拥有诺米，今日可处理（待任务日志确认）"
+    elseif state == "actionable" then statusText = "任务日志已确认，可处理"
+    elseif state == "completed" then statusText = "本服务器日已完成"
+    else statusText = "尚未在任务日志中确认当前诺米日常"
+    end
+    return {
+        groupID = definition.id, label = label, order = 1, state = state,
+        iconKind = "texture", icon = definition.icon, fallbackIcon = definition.icon,
+        observedAt = (day and day.observedAt) or (eligibility and eligibility.confirmedAt),
+        nextResetAt = day and day.nextResetAt or Addon.Model.Schedule:NextResetAt(now, definition.resetHour),
+        questID = day and day.questID, questKind = day and day.kind,
+        inferredFromEligibility = inferredFromEligibility,
+        statusText = statusText, reason = day and day.reason,
+        providerState = day and "available" or "not-yet-observed",
+    }, true
+end
+
 function Snapshot:Build()
     local now = Addon:Now()
     if not self.dirty and self.value and (not self.nextTransitionAt or now < self.nextTransitionAt) then return self.value end
@@ -112,13 +139,18 @@ function Snapshot:Build()
         local characterID, slots = coreCharacter.id, ProfessionSlots(coreCharacter.id)
         local stored = (Addon.db.byCharacter or {})[characterID] or {}
         local farmProject, farmEnabled = BuildFarmProject(characterID, now)
+        local nomiProject, nomiEnabled = BuildNomiProject(characterID, now)
         if farmProject and farmProject.nextResetAt and farmProject.nextResetAt > now
             and (not nextTransitionAt or farmProject.nextResetAt < nextTransitionAt) then
             nextTransitionAt = farmProject.nextResetAt
         end
-        if slots or farmEnabled then
+        if nomiProject and nomiProject.nextResetAt and nomiProject.nextResetAt > now
+            and (not nextTransitionAt or nomiProject.nextResetAt < nextTransitionAt) then
+            nextTransitionAt = nomiProject.nextResetAt
+        end
+        if slots or farmEnabled or nomiEnabled then
             local provider = stored.providers and stored.providers["profession-cooldown"]
-            local character = { updatedAt = provider and provider.lastSuccessAt or 0, providerState = provider and provider.state or "not-yet-scanned", activities = {}, professionSlots = slots or {}, summary = { todo = 0, actionable = 0, cooldown = 0, items = {} }, farmColumn = farmEnabled, farmProjects = farmProject and { farmProject } or {} }
+            local character = { updatedAt = provider and provider.lastSuccessAt or 0, providerState = provider and provider.state or "not-yet-scanned", activities = {}, professionSlots = slots or {}, summary = { todo = 0, actionable = 0, cooldown = 0, items = {} }, farmColumn = farmEnabled, farmProjects = farmProject and { farmProject } or {}, nomiColumn = nomiEnabled, nomiProjects = nomiProject and { nomiProject } or {} }
             for groupID, group in pairs(Addon.Catalog.groups) do
                 if slots and group.active and Addon.Settings:GetMode("cooldownGroup", groupID, group.defaultMode) ~= "hidden" then
                     local builtGroup, observation = BuildGroup(groupID), provider and provider.observations and provider.observations[groupID]

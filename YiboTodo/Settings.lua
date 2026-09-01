@@ -80,5 +80,14 @@ function Settings:CreatePanel(parent, context)
         ConfigureModeCheckbox(panel.farmCheck, "activity", farm.id, "display", context)
         panel.farmCheck:Show(); y = y + 28
     end
+    local nomi = Addon.Catalog.dailyActivities and Addon.Catalog.dailyActivities["mop.nomi"]
+    if nomi then
+        panel.nomiCheck = panel.nomiCheck or context.createCheckbox(panel, "")
+        panel.nomiCheck:ClearAllPoints(); panel.nomiCheck:SetPoint("TOPLEFT", 12, -y); panel.nomiCheck:SetWidth(columnWidth * 2 + columnGap)
+        panel.nomiCheck.label:SetText("监控诺米日常（完成过后跨日直接显示可做，任务日志优先）")
+        panel.nomiCheck:SetChecked(Settings:GetMode("activity", nomi.id, nomi.defaultMode) ~= "hidden")
+        ConfigureModeCheckbox(panel.nomiCheck, "activity", nomi.id, "display", context)
+        panel.nomiCheck:Show(); y = y + 28
+    end
     panel:SetHeight(y + 4); return y + 4
 end

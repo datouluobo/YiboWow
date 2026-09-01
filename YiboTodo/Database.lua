@@ -1,12 +1,12 @@
 local Addon = _G.YiboTodo
 
 local DEFAULTS = {
-    schemaVersion = 6,
-    catalogVersion = 12,
+    schemaVersion = 7,
+    catalogVersion = 13,
     settings = {
         modeOverrides = { activityType = {}, expansion = {}, profession = {}, cooldownGroup = {}, activity = {} },
-        previewColumnsVersion = 3,
-        previewColumns = { projects = true },
+        previewColumnsVersion = 4,
+        previewColumns = { professionCooldown = true, farmOperation = true, nomi = true, commonProjects = true },
         levelExpr = "",
     },
     byCharacter = {},
@@ -67,6 +67,20 @@ function Addon.Database:Initialize()
         -- Farm observations live in their own Provider record. No existing
         -- cooldown observation is read, moved, or reinterpreted here.
         self.db.schemaVersion = 6
+    end
+    if version < 7 then
+        self.db.settings = self.db.settings or {}
+        -- The former single project projection becomes four independently
+        -- managed Core fields.  Preserve its enabled state for every new
+        -- field instead of silently hiding a user's preview.
+        local preview = self.db.settings.previewColumns or {}
+        local visible = preview.projects ~= false
+        self.db.settings.previewColumnsVersion = 4
+        self.db.settings.previewColumns = {
+            professionCooldown = visible, farmOperation = visible,
+            nomi = visible, commonProjects = visible,
+        }
+        self.db.schemaVersion = 7
     end
     CopyDefaults(self.db, DEFAULTS)
     self.db.catalogVersion = math.max(tonumber(self.db.catalogVersion) or 0, Addon.CATALOG_VERSION)

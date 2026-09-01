@@ -126,9 +126,14 @@ function Provider:MarkUnavailable(characterID, reason)
     record.lastAttemptAt, record.state, record.errorCode = Addon:Now(), "unavailable", reason
 end
 
-function Provider:CollectForCurrentCharacter()
+function Provider:CollectForCurrentCharacter(expectedCharacterID)
     local character = Addon.Core and Addon.Core.Characters:GetCurrent()
     if not character then return false, "character-unavailable" end
+    if expectedCharacterID and character.id ~= expectedCharacterID then
+        -- Deferred UI events from a previous login are stale. Do not let their
+        -- still-visible profession window overwrite the current character.
+        return false, "character-changed"
+    end
     local observations, reason = self:Collect()
     if not observations then self:MarkUnavailable(character.id, reason); Addon:NotifyChanged(); return false, reason end
     -- A formal activity snapshot is only committed for catalog entries that
@@ -147,10 +152,10 @@ function Provider:CollectForCurrentCharacter()
     return true, reason
 end
 
-function Provider:ObserveWindow()
+function Provider:ObserveWindow(expectedCharacterID)
     local allowed, reason = self:CanCollect()
-    Addon.db.diagnostics.lastWindow = { at = Addon:Now(), source = reason, own = allowed == true, recipeCount = allowed and (tonumber(GetNumTradeSkills()) or 0) or 0 }
-    return self:CollectForCurrentCharacter()
+    Addon.db.diagnostics.lastWindow = { at = Addon:Now(), source = reason, own = allowed == true, recipeCount = allowed and (tonumber(GetNumTradeSkills()) or 0) or 0, characterID = expectedCharacterID }
+    return self:CollectForCurrentCharacter(expectedCharacterID)
 end
 
 Registry:Register(Provider)

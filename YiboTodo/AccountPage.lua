@@ -4,10 +4,11 @@ Addon.AccountPage = Page
 local Theme = _G.YiboCore.UITheme
 local C = Theme.Colors
 
-local ROW_HEIGHT, ROW_GAP, ICON_SIZE, ICON_GAP = 30, 2, 22, 3
+local ROW_HEIGHT, ROW_GAP, ICON_SIZE, ICON_GAP = Theme.Table.iconRowHeight, 0, 22, 3
 local MIN_PROJECT_SLOTS, OVERFLOW_WIDTH = 4, ICON_SIZE
 local FARM_COLUMN_WIDTH = ICON_SIZE + 8
-local STATUS_TEXT = { actionable = "可制作", cooldown = "冷却中", completed = "已完成", estimated = "可制作（按冷却时间）", ["skill-insufficient"] = "专业技能不足", unknown = "状态未确认" }
+local NOMI_COLUMN_WIDTH = ICON_SIZE + 8
+local STATUS_TEXT = { actionable = "可制作", cooldown = "冷却中", completed = "已完成", estimated = "可制作（按冷却时间）", ["skill-insufficient"] = "专业技能不足", unknown = Theme.StatusText.unknown }
 
 local function ProjectColumnWidth(slots)
     slots = math.max(MIN_PROJECT_SLOTS, tonumber(slots) or 0)
@@ -206,6 +207,11 @@ local function HasFarmColumn()
     return farm and Addon.Settings:GetMode("activity", farm.id, farm.defaultMode) ~= "hidden"
 end
 
+local function HasNomiColumn()
+    local nomi = Addon.Catalog.dailyActivities and Addon.Catalog.dailyActivities["mop.nomi"]
+    return nomi and Addon.Settings:GetMode("activity", nomi.id, nomi.defaultMode) ~= "hidden"
+end
+
 local function Row(frame, index)
     local row = frame.rows[index]
     if row then return row end
@@ -222,9 +228,7 @@ end
 local function Header(frame, index)
     local header = frame.headers[index]
     if header then return header end
-    header = CreateFrame("Frame", nil, frame.header, "BackdropTemplate")
-    header:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    header.label = Text(header, Theme.Font.assist, C.muted, "CENTER"); header.label:SetAllPoints()
+    header = Theme:CreateMatrixHeader(frame.header)
     frame.headers[index] = header
     return header
 end
@@ -245,8 +249,8 @@ function Page.Create(frame)
     frame.rows, frame.headers = {}, {}
 end
 
-local function Layout(characterWidth, professionWidth, hasFarm, hasCommon)
-    return characterWidth, professionWidth, hasFarm and FARM_COLUMN_WIDTH or 0, hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0
+local function Layout(characterWidth, professionWidth, hasFarm, hasNomi, hasCommon)
+    return characterWidth, professionWidth, hasFarm and FARM_COLUMN_WIDTH or 0, hasNomi and NOMI_COLUMN_WIDTH or 0, hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0
 end
 
 local function ConfigureScroll(frame, top, tableWidth, contentHeight, inset)
@@ -264,30 +268,35 @@ end
 
 function Page.Refresh(frame, context)
     local snapshot, count = Addon.Snapshot:Build(), 0
-    local showProjects = context:GetFieldVisible("projects")
-    local hasCommon = showProjects and HasCommonProjects(snapshot, context.characters)
-    local hasFarm = showProjects and HasFarmColumn()
-    local characterWidth, professionWidth, farmWidth, commonWidth = Layout(CharacterColumnWidth(context), ProfessionColumnWidth(snapshot, context.characters), hasFarm, hasCommon)
-    local tableWidth = characterWidth + professionWidth + farmWidth + commonWidth
+    local showProfession = context:GetFieldVisible("professionCooldown")
+    local showFarm = context:GetFieldVisible("farmOperation")
+    local showNomi = context:GetFieldVisible("nomi")
+    local showCommon = context:GetFieldVisible("commonProjects")
+    local hasCommon = showCommon and HasCommonProjects(snapshot, context.characters)
+    local hasFarm = showFarm and HasFarmColumn()
+    local hasNomi = showNomi and HasNomiColumn()
+    local characterWidth, professionWidth, farmWidth, nomiWidth, commonWidth = Layout(CharacterColumnWidth(context), ProfessionColumnWidth(snapshot, context.characters), hasFarm, hasNomi, hasCommon)
+    local tableWidth = characterWidth + (showProfession and professionWidth or 0) + farmWidth + nomiWidth + commonWidth
     local inset = Theme:GetMatrixInsets(context.preview)
     for _, row in ipairs(frame.rows) do row:Hide() end
     frame.header:ClearAllPoints(); frame.header:SetPoint("TOPLEFT", frame, "TOPLEFT", inset.left, -inset.top); frame.header:SetSize(tableWidth, Theme.Table.headerHeight)
     local columns = { { "角色", characterWidth } }
-    if showProjects then
+    if showProfession then
         columns[#columns + 1] = { "专业CD", professionWidth }
-        if hasFarm then columns[#columns + 1] = { "农场", farmWidth } end
-        if hasCommon then columns[#columns + 1] = { "通用项目", commonWidth } end
     end
+    if hasFarm then columns[#columns + 1] = { "农场", farmWidth } end
+    if hasNomi then columns[#columns + 1] = { "诺米", nomiWidth } end
+    if hasCommon then columns[#columns + 1] = { "通用项目", commonWidth } end
     local x = 0
     for index, definition in ipairs(columns) do
         local header = Header(frame, index); header:ClearAllPoints(); header:SetPoint("TOPLEFT", frame.header, "TOPLEFT", x, 0); header:SetSize(definition[2], Theme.Table.headerHeight)
-        header.label:SetText(definition[1]); header:SetBackdropColor(C.toolbar[1], C.toolbar[2], C.toolbar[3], C.toolbar[4]); header:SetBackdropBorderColor(C.lineSoft[1], C.lineSoft[2], C.lineSoft[3], C.lineSoft[4]); header:Show(); x = x + definition[2]
+        Theme:SetMatrixHeader(header, definition[1], { height=Theme.Table.headerHeight, fill=C.toolbar, rule=C.lineSoft }); header:Show(); x = x + definition[2]
     end
     Release(frame.headers, #columns + 1)
     local accountProjects = snapshot.accountActivities or {}
-    frame.account:SetShown(showProjects and #accountProjects > 0)
+    frame.account:SetShown(showCommon and #accountProjects > 0)
     local top = frame.header
-    if showProjects and #accountProjects > 0 then
+    if showCommon and #accountProjects > 0 then
         frame.account:ClearAllPoints(); frame.account:SetPoint("TOPLEFT", frame.header, "BOTTOMLEFT", 0, -ROW_GAP); frame.account:SetSize(tableWidth, ROW_HEIGHT)
         frame.account:SetBackdropColor(C.row[1], C.row[2], C.row[3], C.row[4]); frame.account:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
         frame.account.label:SetWidth(characterWidth - 8)
@@ -305,23 +314,31 @@ function Page.Refresh(frame, context)
             count = count + 1
             local row = Row(frame, count)
             row:ClearAllPoints(); row:SetPoint("TOPLEFT", frame.body, "TOPLEFT", 0, -y); row:SetSize(tableWidth, ROW_HEIGHT)
-            local fill = count % 2 == 0 and C.alternate or C.row
+            local fill = Theme:GetDataRowColor(count)
             row:SetBackdropColor(fill[1], fill[2], fill[3], 0.9); row:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
             Theme:SetCurrentCharacterOutline(row.currentOutline, current and character.id == current.id)
             row.name:ClearAllPoints(); row.name:SetPoint("LEFT", 8, 0); row.name:SetWidth(characterWidth - 8)
             row.name:SetText(CharacterLabel(character, context.scope == "all")); ApplyCharacterColor(row.name, character)
             Release(row.cells or {}, 1)
-            if showProjects then
+            if showProfession or hasFarm or hasNomi or hasCommon then
+                local offset, nextCell = characterWidth, 1
+                if showProfession then
                 local profession = Cell(row, 1)
                 profession:ClearAllPoints(); profession:SetPoint("LEFT", characterWidth, 0); profession:SetSize(professionWidth, ROW_HEIGHT)
                 RenderProjects(profession, data.professionProjects or {})
-                local offset = characterWidth + professionWidth
-                local nextCell = 2
+                offset, nextCell = offset + professionWidth, nextCell + 1
+                end
                 if hasFarm then
                     local farm = Cell(row, nextCell)
                     farm:ClearAllPoints(); farm:SetPoint("LEFT", offset, 0); farm:SetSize(farmWidth, ROW_HEIGHT)
                     RenderProjects(farm, data.farmProjects or {})
                     offset, nextCell = offset + farmWidth, nextCell + 1
+                end
+                if hasNomi then
+                    local nomi = Cell(row, nextCell)
+                    nomi:ClearAllPoints(); nomi:SetPoint("LEFT", offset, 0); nomi:SetSize(nomiWidth, ROW_HEIGHT)
+                    RenderProjects(nomi, data.nomiProjects or {})
+                    offset, nextCell = offset + nomiWidth, nextCell + 1
                 end
                 if hasCommon then
                     local common = Cell(row, nextCell)
@@ -345,8 +362,8 @@ function Page.Refresh(frame, context)
     if count > 0 then ConfigureScroll(frame, top, tableWidth, y, inset) end
     frame.emptyTitle:SetShown(count == 0); frame.empty:SetShown(count == 0)
     if count == 0 then
-        frame.emptyTitle:ClearAllPoints(); frame.emptyTitle:SetPoint("TOPLEFT", 24, -26); frame.emptyTitle:SetText("等待专业快照")
-        frame.empty:ClearAllPoints(); frame.empty:SetPoint("TOPLEFT", 24, -56); frame.empty:SetPoint("TOPRIGHT", -24, -56); frame.empty:SetText("YiboCore 尚未确认可显示角色的两项主专业。登录角色后打开一次专业面板，即可采集受支持的冷却配方。")
+        frame.emptyTitle:ClearAllPoints(); frame.emptyTitle:SetPoint("TOPLEFT", 24, -26); frame.emptyTitle:SetText("等待角色快照")
+        frame.empty:ClearAllPoints(); frame.empty:SetPoint("TOPLEFT", 24, -56); frame.empty:SetPoint("TOPRIGHT", -24, -56); frame.empty:SetText("YiboCore 尚未提供可显示角色。登录角色后，专业冷却与诺米任务日志会按各自的采集规则更新。")
     end
 end
 
@@ -354,24 +371,23 @@ function Page.GetSurfaceMetrics(context)
     local snapshot, count = Addon.Snapshot:Build(), 0
     for _, character in ipairs((context and context.characters) or {}) do if snapshot.characters[character.id] then count = count + 1 end end
     local inset = Theme:GetMatrixInsets(context and context.preview)
-    local showProjects = context and context.GetFieldVisible and context:GetFieldVisible("projects")
-    local hasCommon = showProjects and HasCommonProjects(snapshot, context and context.characters)
-    local hasFarm = showProjects and HasFarmColumn()
-    local accountHeight = showProjects and #(snapshot.accountActivities or {}) > 0 and ROW_HEIGHT + ROW_GAP or 0
+    local showProfession = context and context.GetFieldVisible and context:GetFieldVisible("professionCooldown")
+    local showFarm = context and context.GetFieldVisible and context:GetFieldVisible("farmOperation")
+    local showNomi = context and context.GetFieldVisible and context:GetFieldVisible("nomi")
+    local showCommon = context and context.GetFieldVisible and context:GetFieldVisible("commonProjects")
+    local hasCommon = showCommon and HasCommonProjects(snapshot, context and context.characters)
+    local hasFarm = showFarm and HasFarmColumn()
+    local hasNomi = showNomi and HasNomiColumn()
+    local accountHeight = showCommon and #(snapshot.accountActivities or {}) > 0 and ROW_HEIGHT + ROW_GAP or 0
     local visibleRows = math.max(1, math.min(20, count))
     local professionWidth = ProfessionColumnWidth(snapshot, context and context.characters)
-    local tableWidth = CharacterColumnWidth(context) + professionWidth + (hasFarm and FARM_COLUMN_WIDTH or 0) + (hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0)
-    -- Header and rows share the page's horizontal inset.  Include it in the
-    -- requested width so the fourth icon slot is never
-    -- clipped by the compact window measurement.
-    -- Reserve the shared scrollbar gutter only after the row cap is exceeded.
-    -- Otherwise the compact table keeps its full right edge and no phantom
-    -- scrollbar lane is shown.
-    local scrollbarWidth = count > visibleRows and Theme.Geometry.scrollbarGutter or 0
-    local projectsWidth = tableWidth + Theme.Space.sm * 2 + scrollbarWidth
+    local tableWidth = CharacterColumnWidth(context) + (showProfession and professionWidth or 0) + (hasFarm and FARM_COLUMN_WIDTH or 0) + (hasNomi and NOMI_COLUMN_WIDTH or 0) + (hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0)
+    -- The scrollbar uses the page inset rather than a data-column gutter.
+    -- The table width therefore remains the same with and without overflow.
+    local projectsWidth = tableWidth + Theme.Space.sm * 2
     return {
-        minContentWidth = showProjects and projectsWidth or 220,
-        naturalContentWidth = showProjects and projectsWidth or 280,
+        minContentWidth = (showProfession or hasFarm or hasNomi or hasCommon) and projectsWidth or 220,
+        naturalContentWidth = (showProfession or hasFarm or hasNomi or hasCommon) and projectsWidth or 280,
         minContentHeight = 120,
         naturalContentHeight = inset.top + Theme.Table.headerHeight + accountHeight + ROW_GAP + visibleRows * (ROW_HEIGHT + ROW_GAP) + inset.bottom,
         horizontalOverflow = "none",

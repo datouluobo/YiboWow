@@ -2,7 +2,7 @@
 ## Title: |cff20e070[Yibo]|r YiboTodo - 账号待办
 ## Notes: 熊猫人之谜专业冷却与农场操作记录的账号待办视图。
 ## Author: YiboSoft
-## Version: 0.2.2
+## Version: 0.3.0
 ## IconTexture: Interface\AddOns\YiboTodo\Media\YiboTodoIcon-v6
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
@@ -16,6 +16,7 @@ Catalog\CooldownGroupCatalog.lua
 Catalog\CooldownCatalog_MoP.lua
 Catalog\Ruleset_50504.lua
 Catalog\FarmOperationCatalog.lua
+Catalog\DailyActivityCatalog_MoP.lua
 Catalog\Validator.lua
 Model\Schedule.lua
 Model\State.lua
@@ -23,6 +24,7 @@ Model\Snapshot.lua
 Providers\Registry.lua
 Providers\ProfessionCooldown.lua
 Providers\FarmOperationObservation.lua
+Providers\DailyQuest.lua
 Probe.lua
 Settings.lua
 AccountPage.lua

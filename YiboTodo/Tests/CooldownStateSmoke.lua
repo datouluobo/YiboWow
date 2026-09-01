@@ -102,6 +102,7 @@ Addon.Core.Characters.GetAll = function() return { { id = "unscanned-character" 
 Addon.Snapshot:Invalidate()
 assert(Addon.Snapshot:GetCharacter("unscanned-character").activities["mop.tailoring.celestial-cloth"].state == "unknown", "switching to an unscanned character does not show a craft as ready")
 
+Addon.Core.Characters.GetAll = function() return { { id = "snapshot-character" } } end
 Addon.db.settings = { modeOverrides = { cooldownGroup = {} } }
 dofile("YiboTodo/Settings.lua")
 Addon.Settings:SetMode("cooldownGroup", "mop.tailoring.celestial-cloth", "hidden")
@@ -171,5 +172,15 @@ Addon.Database:Initialize()
 assert(Addon.Database:MoveCharacterData("legacy:TestRealm:TestCharacter", "Player-1-00000001"), "legacy character data migrates to GUID")
 assert(Addon.db.byCharacter["legacy:TestRealm:TestCharacter"] == nil, "legacy key is removed after migration")
 assert(Addon.db.byCharacter["Player-1-00000001"].providers["profession-cooldown"].observations["mop.tailoring.celestial-cloth"].observedAt == 2000, "newer legacy cooldown observation survives GUID migration")
+
+-- Deferred profession-window events are captured before a logout. Once the
+-- next character is active, that old scan must be rejected rather than
+-- copying its cooldown state to the new character.
+local activeCharacterID = "first-character"
+Addon.Core.Characters.GetCurrent = function() return { id = activeCharacterID } end
+local provider = Addon.Providers.Registry:Get("profession-cooldown")
+activeCharacterID = "second-character"
+local collected, collectReason = provider:CollectForCurrentCharacter("first-character")
+assert(collected == false and collectReason == "character-changed", "stale profession scan cannot write to the character selected after a switch")
 
 print("YiboTodo cooldown state smoke passed")

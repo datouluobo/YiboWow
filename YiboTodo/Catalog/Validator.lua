@@ -51,6 +51,23 @@ function Addon:ValidateCatalog()
             end
         end
     end
+    for id, activity in pairs(Catalog.dailyActivities or {}) do
+        if activity.provider ~= "daily-quest" then
+            Add(result, "errors", "invalid-daily-provider:" .. tostring(id))
+        elseif activity.scope ~= "character" or activity.scheduleKind ~= "daily-07" then
+            Add(result, "errors", "invalid-daily-scope-or-schedule:" .. tostring(id))
+        elseif type(activity.daily) ~= "table" or tonumber(activity.daily.questID) == nil then
+            Add(result, "errors", "missing-daily-quest:" .. tostring(id))
+        else
+            local questIDs = {}
+            for _, lesson in ipairs(activity.stages or {}) do
+                local questID = tonumber(lesson.questID)
+                if not questID or questIDs[questID] then Add(result, "errors", "invalid-or-duplicate-lesson:" .. tostring(id) .. ":" .. tostring(lesson.questID))
+                else questIDs[questID] = true end
+            end
+            if #((activity.stages) or {}) ~= 5 then Add(result, "errors", "unexpected-lesson-count:" .. tostring(id)) end
+        end
+    end
     self.catalogValidation = result
     return result
 end

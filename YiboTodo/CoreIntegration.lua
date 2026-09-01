@@ -40,7 +40,12 @@ function Integration:Initialize()
     end
     local page, pageErr = Core.AccountView:RegisterPage(Addon.NAME, {
         id = "todo", title = "账号待办", icon = ICON, order = 35, defaultEnabled = true, previewEnabled = true, compactWidth = true, scope = { mode = "realms", allTitle = "所有服务器" },
-        fields = { { id = "projects", title = "制作项目", defaultVisible = true } },
+        fields = {
+            { id = "professionCooldown", title = "专业 CD", defaultVisible = true },
+            { id = "farmOperation", title = "农场", defaultVisible = true },
+            { id = "nomi", title = "诺米", defaultVisible = true },
+            { id = "commonProjects", title = "通用项目", defaultVisible = true },
+        },
         characterFilter = {
             defaultExpression = "",
             GetExpression = function() return Addon.db.settings.levelExpr or "" end,
