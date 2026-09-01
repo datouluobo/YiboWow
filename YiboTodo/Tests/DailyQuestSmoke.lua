@@ -14,6 +14,10 @@ GetQuestLogTitle = function(index)
     local entry = log[index]
     return entry and entry.label, 90, nil, false, false, entry and entry.complete or false, 1, entry and entry.id
 end
+UnitGUID = function(unit)
+    if unit == "target" then return "Creature-0-0-0-0-64337-0000000001" end
+end
+C_GossipInfo = { GetAvailableQuests = function() return {} end }
 
 dofile("YiboTodo/Namespace.lua")
 dofile("YiboTodo/Database.lua")
@@ -58,7 +62,16 @@ assert(Addon.Database:GetProvider("nomi-character", "daily-quest", false).nomiEl
 clock, gameHour, gameMinute = clock + 86400 * 4, 12, 0
 Addon.Snapshot:Invalidate()
 project = assert(Addon.Snapshot:GetCharacter("nomi-character")).nomiProjects[1]
-assert(project.state == "actionable" and project.inferredFromEligibility, "Nomi eligibility remains actionable across later server days")
+assert(project.state == "unknown" and project.eligibilityKnown, "a historical Nomi completion never makes an unobserved new daily actionable")
+assert(provider:ObserveNomiGossip("nomi-character"), "talking to Nomi reconciles an established character")
+project = assert(Addon.Snapshot:GetCharacter("nomi-character")).nomiProjects[1]
+assert(project.state == "completed", "Nomi offering no tracked daily confirms today's completion for an eligible character")
+
+clock, gameHour, gameMinute = clock + 86400, 12, 0
+C_GossipInfo.GetAvailableQuests = function() return { { questID = 31334 } } end
+assert(provider:ObserveNomiGossip("nomi-character"), "talking to Nomi reads today's offered daily")
+project = assert(Addon.Snapshot:GetCharacter("nomi-character")).nomiProjects[1]
+assert(project.state == "actionable" and project.questID == 31334, "Nomi gossip makes only the offered lesson actionable")
 
 local graduationCharacter = "graduation-only"
 assert(provider:RecordTurnIn(graduationCharacter, 31820), "graduation turn-in is stored")

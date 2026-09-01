@@ -104,17 +104,20 @@ end
 
 local function BuildNomiProject(characterID, now)
     local provider = Addon.Providers.Registry:Get("daily-quest")
-    local day, previousDay, definition
+    local day, definition
     if provider then day, definition = provider:GetCurrentDay(characterID, now) end
     if not definition or Addon.Settings:GetMode("activity", definition.id, definition.defaultMode) == "hidden" then return nil, false end
-    if provider and (not day or day.state == "unknown") then eligibility = provider:GetEligibility(characterID) end
-    local inferredFromEligibility = eligibility ~= nil
-    local state = inferredFromEligibility and "actionable" or (day and day.state or "unknown")
+    -- A historical Nomi completion only establishes that this character has
+    -- accessed the repeatable content before.  It cannot prove which daily is
+    -- offered today, so it must never turn a missing current quest-log signal
+    -- into an actionable project during a character switch or snapshot rebuild.
+    local eligibility = provider and provider:GetEligibility(characterID)
+    local state = day and day.state or "unknown"
     local label = day and day.label or definition.label
     local statusText
-    if inferredFromEligibility then statusText = "已确认拥有诺米，今日可处理（待任务日志确认）"
-    elseif state == "actionable" then statusText = "任务日志已确认，可处理"
+    if state == "actionable" then statusText = "任务日志已确认，可处理"
     elseif state == "completed" then statusText = "本服务器日已完成"
+    elseif eligibility then statusText = "曾完成诺米日常，等待今日任务日志确认"
     else statusText = "尚未在任务日志中确认当前诺米日常"
     end
     return {
@@ -123,7 +126,7 @@ local function BuildNomiProject(characterID, now)
         observedAt = (day and day.observedAt) or (eligibility and eligibility.confirmedAt),
         nextResetAt = day and day.nextResetAt or Addon.Model.Schedule:NextResetAt(now, definition.resetHour),
         questID = day and day.questID, questKind = day and day.kind,
-        inferredFromEligibility = inferredFromEligibility,
+        eligibilityKnown = eligibility ~= nil,
         statusText = statusText, reason = day and day.reason,
         providerState = day and "available" or "not-yet-observed",
     }, true

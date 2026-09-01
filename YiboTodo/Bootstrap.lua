@@ -10,6 +10,7 @@ frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 frame:RegisterEvent("QUEST_LOG_UPDATE")
 frame:RegisterEvent("QUEST_ACCEPTED")
 frame:RegisterEvent("QUEST_TURNED_IN")
+frame:RegisterEvent("GOSSIP_SHOW")
 frame:RegisterEvent("PLAYER_TARGET_CHANGED")
 frame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
 frame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
@@ -64,5 +65,9 @@ frame:SetScript("OnEvent", function(_, event, ...)
         local provider = Addon.Providers.Registry:Get("daily-quest")
         if provider and current then provider:RecordTurnIn(current.id, ...) end
         if provider then provider:QueueObserve() end
+    elseif event == "GOSSIP_SHOW" and Addon.initialized then
+        local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+        local provider = Addon.Providers.Registry:Get("daily-quest")
+        if provider and current then provider:ObserveNomiGossip(current.id) end
     end
 end)

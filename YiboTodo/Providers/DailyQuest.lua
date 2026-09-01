@@ -1,6 +1,7 @@
 local Addon = _G.YiboTodo
 local Registry = Addon.Providers.Registry
 local Provider = { id = "daily-quest", schemaVersion = 1, queued = {} }
+local NOMI_NPC_ID = 64337
 
 local function IsComplete(value)
     return value == true or value == 1
@@ -23,6 +24,29 @@ local function ActiveQuest(definition)
         end
     end
     return nil, "no-tracked-quest-in-log"
+end
+
+local function CreatureID(unit)
+    if type(UnitGUID) ~= "function" then return nil end
+    local guid = UnitGUID(unit)
+    return guid and tonumber(guid:match("^Creature%-%d+%-%d+%-%d+%-%d+%-(%d+)")) or nil
+end
+
+local function IsNomiInteraction()
+    -- GOSSIP_SHOW has no NPC argument.  The target remains available for the
+    -- normal click-to-talk flow, while npc covers clients that expose it.
+    return CreatureID("npc") == NOMI_NPC_ID or CreatureID("target") == NOMI_NPC_ID
+end
+
+local function AvailableNomiQuest(definition)
+    if not (C_GossipInfo and type(C_GossipInfo.GetAvailableQuests) == "function") then return nil, "gossip-api-unavailable" end
+    local ok, quests = pcall(C_GossipInfo.GetAvailableQuests)
+    if not ok or type(quests) ~= "table" then return nil, "gossip-api-unavailable" end
+    for _, quest in ipairs(quests) do
+        local item, kind = FindQuest(definition, quest and quest.questID)
+        if item then return { item = item, kind = kind }, "tracked-quest-offered" end
+    end
+    return nil, "no-tracked-quest-offered"
 end
 
 function Provider:GetDefinition()
@@ -106,6 +130,37 @@ function Provider:RecordTurnIn(characterID, questID)
     record.lastAttemptAt, record.lastSuccessAt, record.state, record.errorCode = now, now, "available", nil
     Addon:NotifyChanged()
     return true
+end
+
+function Provider:ObserveNomiGossip(characterID)
+    local definition = self:GetDefinition()
+    if not (definition and characterID and IsNomiInteraction()) then return false, "not-nomi" end
+    local now = Addon:Now()
+    local record = Addon.Database:GetProvider(characterID, self.id, true)
+    record.days = record.days or {}
+    local dayKey = Addon.Model.Schedule:ServerDay(now, definition.resetHour)
+    local day = record.days[dayKey] or {}
+    record.days[dayKey] = day
+    local offered, reason = AvailableNomiQuest(definition)
+    day.observedAt, day.nextResetAt = now, Addon.Model.Schedule:NextResetAt(now, definition.resetHour)
+    if offered then
+        day.questID, day.label, day.kind, day.state = offered.item.questID, offered.item.label, offered.kind, "actionable"
+        day.reason = reason
+    elseif day.state ~= "completed" and self:GetEligibility(characterID) then
+        -- The gossip list is authoritative only while talking to Nomi.  For a
+        -- character that has already proven repeatable Nomi access, no offered
+        -- tracked daily at that moment means today's daily was already done.
+        day.state, day.reason = "completed", reason
+        day.completedAt = now
+    elseif day.state ~= "completed" then
+        day.state, day.reason = "unknown", reason
+        day.questID, day.label, day.kind = nil, nil, nil
+    end
+    record.revision = (tonumber(record.revision) or 0) + 1
+    record.providerVersion, record.catalogVersion, record.rulesetID = self.schemaVersion, Addon.CATALOG_VERSION, Addon.RULESET_ID
+    record.lastAttemptAt, record.lastSuccessAt, record.state, record.errorCode = now, now, "available", nil
+    Addon:NotifyChanged()
+    return true, day.state
 end
 
 function Provider:QueueObserve()
