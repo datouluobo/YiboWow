@@ -88,7 +88,6 @@ Theme.Geometry = {
     navigation = 140,
     shellBorder = 1,
     scopeBar = 30,
-    currentMarker = 5,
     -- Scrollbars live in this existing outer inset, never on top of matrix
     -- data and never as permanently reserved empty table width.
     scrollbarGutter = 14,
@@ -218,10 +217,8 @@ function Theme:SetCharacterHeader(header, character, context, options)
     return header
 end
 
--- A current character is a navigation aid, not a data state.  Account pages
--- therefore keep the semantic fill untouched and combine one shared 1px
--- outline with a small corner marker.  The extra shape prevents colour from
--- carrying the identity state by itself without adding text to dense cells.
+-- A current character is a navigation aid, not a data state. Account pages
+-- therefore keep the semantic fill untouched and use one shared 1px outline.
 function Theme:CreateCurrentCharacterOutline(parent)
     local outline = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     outline:SetAllPoints(parent)
@@ -229,10 +226,6 @@ function Theme:CreateCurrentCharacterOutline(parent)
     outline:SetBackdropBorderColor(self.Colors.accent[1], self.Colors.accent[2], self.Colors.accent[3], 0.96)
     outline:SetFrameLevel((parent:GetFrameLevel() or 0) + 10)
     outline:EnableMouse(false)
-    outline.marker = outline:CreateTexture(nil, "OVERLAY")
-    outline.marker:SetSize(self.Geometry.currentMarker, self.Geometry.currentMarker)
-    outline.marker:SetPoint("TOPRIGHT", outline, "TOPRIGHT", -2, -2)
-    outline.marker:SetColorTexture(self.Colors.accent[1], self.Colors.accent[2], self.Colors.accent[3], 1)
     outline:Hide()
     return outline
 end
@@ -350,29 +343,40 @@ function Theme:CreateCheckbox(parent, label)
     button.mark:SetPoint("CENTER")
     button.mark:SetSize(16, 16)
     button.mark:SetVertexColor(Color(self.Colors.bg))
+    button.mixed = button.box:CreateTexture(nil, "OVERLAY")
+    button.mixed:SetColorTexture(Color(self.Colors.accent))
+    button.mixed:SetSize(8, 2)
+    button.mixed:SetPoint("CENTER")
     button.label = self:CreateText(button, self.Font.body, self.Colors.text, "LEFT"); button.label:SetPoint("LEFT", button.box, "RIGHT", 8, 0); button.label:SetPoint("RIGHT", 0, 0); button.label:SetText(label or "")
     button.checked = false
+    button.checkState = "unchecked"
     button.RefreshVisual = function(control)
         if type(control.visualizer) == "function" then
             control.visualizer(control)
             return
         end
-        local color = control.checked and Theme.Colors.accent or Theme.Colors.line
+        local partial = control.checkState == "partial"
+        local color = (control.checked or partial) and Theme.Colors.accent or Theme.Colors.line
         control.box:SetBackdropColor(Color(control.checked and Theme.Colors.accent or Theme.Colors.chrome))
         control.box:SetBackdropBorderColor(Color(color))
     end
-    button.SetChecked = function(control, checked)
-        control.checked = checked == true
-        control.mark:SetShown(control.checked)
+    button.SetCheckState = function(control, state)
+        state = state == "partial" and "partial" or (state == "checked" and "checked" or "unchecked")
+        control.checkState = state
+        control.checked = state == "checked"
+        control.mark:SetShown(state == "checked")
+        control.mixed:SetShown(state == "partial")
         control:RefreshVisual()
     end
+    button.GetCheckState = function(control) return control.checkState end
+    button.SetChecked = function(control, checked) control:SetCheckState(checked and "checked" or "unchecked") end
     button.GetChecked = function(control) return control.checked end
     button:SetChecked(false)
-    button:SetScript("OnClick", function(control) control:SetChecked(not control:GetChecked()) end)
+    button:SetScript("OnClick", function(control) control:SetChecked(control:GetCheckState() ~= "checked") end)
     button:SetScript("OnEnter", function(control)
         if not control.disableHoverAccent then control.box:SetBackdropBorderColor(Color(Theme.Colors.accent)) end
     end)
-    button:SetScript("OnLeave", function(control) control:SetChecked(control:GetChecked()) end)
+    button:SetScript("OnLeave", function(control) control:SetCheckState(control:GetCheckState()) end)
     return button
 end
 

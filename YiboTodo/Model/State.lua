@@ -4,24 +4,6 @@ Addon.Model.State = State
 
 State.Labels = { actionable = "可制作", cooldown = "冷却中", estimated = "预计可用", ["skill-insufficient"] = "专业技能不足", locked = "未学习", unknown = "待确认", ["not-applicable"] = "不适用" }
 
-local function CrossedDailyReset(observedAt, now, hour)
-    observedAt, now = tonumber(observedAt) or 0, tonumber(now) or Addon:Now()
-    hour = tonumber(hour) or 7
-    -- GetGameTime is the client API that exposes the realm clock.  The
-    -- timestamp itself remains the canonical persistence value; this only
-    -- derives today's realm reset boundary for a previously confirmed recipe.
-    local currentHour, currentMinute
-    if GetGameTime then currentHour, currentMinute = GetGameTime() end
-    if currentHour == nil then
-        local localTime = date("*t", now)
-        currentHour, currentMinute = localTime.hour, localTime.min
-    end
-    local todayStart = now - ((tonumber(currentHour) or 0) * 3600 + (tonumber(currentMinute) or 0) * 60)
-    local resetAt = todayStart + hour * 3600
-    if now < resetAt then resetAt = resetAt - 86400 end
-    return observedAt < resetAt and resetAt <= now
-end
-
 function State:Evaluate(group, observation, now, skillLevel)
     now = tonumber(now) or Addon:Now()
     local requiredSkillLevel = tonumber(group.requiredSkillLevel)
@@ -32,7 +14,7 @@ function State:Evaluate(group, observation, now, skillLevel)
     -- craft the item.  It says nothing about the per-character daily lockout,
     -- so it must never be projected as an actionable cooldown.
     if not observation or observation.sourceState ~= "known" then return { state = "unknown", confidence = "unknown" } end
-    local learned, craftable, insufficient, ready, cooling, expiredSinceScan = 0, 0, 0, 0, 0, false
+    local learned, craftable, insufficient, ready, cooling, expiredSinceScan, dailyCooldownObserved = 0, 0, 0, 0, 0, false, false
     for _, recipe in ipairs(group.members or {}) do
         local value = observation.recipes and observation.recipes[recipe.recipeSpellID]
         if value and value.learned then
@@ -44,6 +26,9 @@ function State:Evaluate(group, observation, now, skillLevel)
             end
             if value.craftable ~= false and value.cooldownKnown then
                 local readyAt = tonumber(value.readyAt) or 0
+                if group.resetKind == "daily-07" and readyAt > (tonumber(observation.observedAt) or 0) then
+                    dailyCooldownObserved = true
+                end
                 if readyAt > now then
                     cooling = cooling + 1
                 else
@@ -68,8 +53,16 @@ function State:Evaluate(group, observation, now, skillLevel)
         return { state = "skill-insufficient", confidence = "confirmed", requiredSkillLevel = requiredSkillLevel, skillLevel = tonumber(skillLevel) }
     end
     if cooling > 0 and ready > 0 then return { state = "unknown", confidence = "unknown", diagnostic = "group-conflict" } end
-    if group.resetKind == "daily-07" and CrossedDailyReset(observation.observedAt, now, group.resetHour) then
+    if group.resetKind == "daily-07" and Addon.Model.Schedule:CrossedReset(observation.observedAt, now, group.resetHour) then
         return { state = "estimated", confidence = "estimated", resetAt = true }
+    end
+    -- Some MoP clients report a daily profession cooldown as a countdown to
+    -- midnight even though the configured server reset is 07:00.  Once the
+    -- scan has confirmed that a daily recipe entered cooldown, do not turn it
+    -- actionable before that server reset merely because this API countdown
+    -- expired early.
+    if group.resetKind == "daily-07" and dailyCooldownObserved then
+        return { state = "cooldown", confidence = "confirmed", readyAt = Addon.Model.Schedule:NextResetAt(now, group.resetHour) }
     end
     if cooling > 0 then
         local nearest

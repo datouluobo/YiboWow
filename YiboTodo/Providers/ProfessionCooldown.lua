@@ -42,14 +42,11 @@ end
 
 local function RemainingCooldown(index)
     if type(GetTradeSkillCooldown) ~= "function" then return nil end
-    local ok, first, second = pcall(GetTradeSkillCooldown, index)
-    if not ok or first == nil then return nil end
-    -- MoP's legacy API normally returns remaining seconds.  The second branch
-    -- keeps the normalizer safe should the client expose start/duration.
-    if tonumber(second) and tonumber(second) > 0 then
-        return math.max(0, (tonumber(first) or 0) + tonumber(second) - Addon:Now())
-    end
-    return math.max(0, tonumber(first) or 0)
+    local ok, remaining = pcall(GetTradeSkillCooldown, index)
+    if not ok or remaining == nil then return nil end
+    -- The legacy trade-skill API returns remaining seconds.  Its optional
+    -- second return is an isDayCooldown flag, not a start/duration pair.
+    return math.max(0, tonumber(remaining) or 0)
 end
 
 local function RecipeCraftable(index)

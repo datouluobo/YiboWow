@@ -50,4 +50,19 @@ assert(character.farmProjects[1].state == "completed" and character.farmProjects
 assert(character.summary.todo == 0, "farm observation never enters todo totals")
 assert(Addon.Snapshot.nextTransitionAt == day.nextResetAt, "farm projection schedules the next 07:00 refresh")
 
+-- A growing-crop mouseover is the only signal available for some characters.
+-- Once that observation expires into the next server day, it still proves the
+-- farm is ready to harvest and must not collapse to an empty cell.
+local record = Addon.Database:GetProvider("farm-character", "farm-operation-observation", false)
+record.days = {
+    previous = {
+        observedAt = Addon:Now() - 86400,
+        nextResetAt = Addon:Now() - 1,
+        operations = { { kind = "growing", label = "生长中的毒蛇荆" } },
+    },
+}
+Addon.Snapshot:Invalidate()
+character = assert(Addon.Snapshot:GetCharacter("farm-character"))
+assert(#character.farmProjects == 1 and character.farmProjects[1].state == "actionable", "a previous growing observation becomes harvest-ready after reset")
+
 print("YiboTodo farm observation smoke passed")

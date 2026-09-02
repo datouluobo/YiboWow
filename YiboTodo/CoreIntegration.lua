@@ -40,13 +40,6 @@ function Integration:Initialize()
     end
     local page, pageErr = Core.AccountView:RegisterPage(Addon.NAME, {
         id = "todo", title = "账号待办", icon = ICON, order = 35, defaultEnabled = true, previewEnabled = true, compactWidth = true, scope = { mode = "realms", allTitle = "所有服务器" },
-        fields = {
-            { id = "professionCooldown", title = "专业 CD", defaultVisible = true },
-            { id = "farmOperation", title = "农场", defaultVisible = true },
-            { id = "nomi", title = "诺米", defaultVisible = true },
-            { id = "cooking", title = "烹饪", defaultVisible = true },
-            { id = "commonProjects", title = "通用项目", defaultVisible = true },
-        },
         characterFilter = {
             defaultExpression = "",
             GetExpression = function() return Addon.db.settings.levelExpr or "" end,
@@ -58,9 +51,7 @@ function Integration:Initialize()
         },
         HasCharacterSnapshot = function(character) return Addon.Snapshot:GetCharacter(character.id) ~= nil end,
         GetEligibleCharacters = function(characters) local result = {}; for _, c in ipairs(characters or {}) do if Addon.Snapshot:GetCharacter(c.id) then result[#result + 1] = c end end; return result end,
-        GetPreviewFields = function() return Addon.db.settings.previewColumns end,
-        SetPreviewFieldVisible = function(id, visible) Addon.db.settings.previewColumns[id] = not not visible; Addon:NotifyChanged() end,
-        settings = { title = "账号待办", description = "页面、入口和字段由 Core 管理；冷却目录与观察数据由账号待办保存。", CreateSettingsPanel = function(parent, context) return Addon.Settings:CreatePanel(parent, context) end },
+        settings = { title = "账号待办", description = "页面和入口由 Core 管理；活动监控组、列与观察数据由账号待办统一保存。", CreateSettingsPanel = function(parent, context) return Addon.Settings:CreatePanel(parent, context) end },
         Create = Addon.AccountPage.Create, Refresh = Addon.AccountPage.Refresh,
         GetSurfaceMetrics = Addon.AccountPage.GetSurfaceMetrics,
         GetHoverMetrics = Addon.AccountPage.GetHoverMetrics,

@@ -69,5 +69,9 @@ frame:SetScript("OnEvent", function(_, event, ...)
         local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
         local provider = Addon.Providers.Registry:Get("daily-quest")
         if provider and current then provider:ObserveNomiGossip(current.id) end
+    elseif event == "PLAYER_TARGET_CHANGED" and Addon.initialized then
+        local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+        local provider = Addon.Providers.Registry:Get("daily-quest")
+        if provider and current then provider:ObserveTargetCompletion(current.id) end
     end
 end)

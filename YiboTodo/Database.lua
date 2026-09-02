@@ -1,13 +1,14 @@
 local Addon = _G.YiboTodo
 
 local DEFAULTS = {
-    schemaVersion = 7,
-    catalogVersion = 13,
+    schemaVersion = 9,
+    catalogVersion = 15,
     settings = {
         modeOverrides = { activityType = {}, expansion = {}, profession = {}, cooldownGroup = {}, activity = {} },
         previewColumnsVersion = 4,
         previewColumns = { professionCooldown = true, farmOperation = true, nomi = true, cooking = true, commonProjects = true },
         levelExpr = "",
+        monitoringGroups = {},
     },
     byCharacter = {},
     byAccount = {},
@@ -81,6 +82,30 @@ function Addon.Database:Initialize()
             nomi = visible, cooking = visible, commonProjects = visible,
         }
         self.db.schemaVersion = 7
+    end
+    if version < 8 then
+        self.db.settings = self.db.settings or {}
+        self.db.settings.monitoringGroups = self.db.settings.monitoringGroups or {}
+        local monitored = self.db.settings.monitoringGroups
+        local modes = self.db.settings.modeOverrides or {}
+        local cooldowns, activities = modes.cooldownGroup or {}, modes.activity or {}
+        local function AddItem(groupID, itemID, oldMode)
+            local group = monitored[groupID] or { enabled = true, items = {} }
+            monitored[groupID] = group
+            if oldMode == "hidden" then group.items[itemID] = false end
+        end
+        for groupID, oldMode in pairs(cooldowns) do AddItem("profession-cooldown", groupID, oldMode) end
+        AddItem("farm", "mop.farm.operation-observed", activities["mop.farm.operation-observed"])
+        AddItem("nomi", "mop.nomi", activities["mop.nomi"])
+        AddItem("cooking-daily", "mop.halfhill.cooking-daily", activities["mop.halfhill.cooking-daily"])
+        self.db.schemaVersion = 8
+    end
+    if version < 9 then
+        -- Candidate probes are deliberately opt-in.  Existing verified
+        -- selections retain their inherited defaults; a later catalog entry
+        -- with defaultEnabled=false stays invisible until the player enables
+        -- it from Todo's business settings.
+        self.db.schemaVersion = 9
     end
     CopyDefaults(self.db, DEFAULTS)
     self.db.catalogVersion = math.max(tonumber(self.db.catalogVersion) or 0, Addon.CATALOG_VERSION)

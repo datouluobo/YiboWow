@@ -18,5 +18,7 @@ Catalog.rulesets[Addon.RULESET_ID] = {
         ["mop.jewelcrafting.serpents-heart"] = true,
         ["mop.leatherworking.magnificent-fur"] = true,
         ["mop.leatherworking.enhanced-magnificent-fur"] = true,
+        ["wlk.inscription.minor-research"] = true,
+        ["wlk.inscription.northrend-research"] = true,
     },
 }

@@ -1,7 +1,7 @@
 local Addon = _G.YiboTodo
 local Catalog = Addon.Catalog
 
--- MoP冷却基线.md is the authoritative 0.1 directory.  Entries with a known
+-- BASELINE.md is the authoritative data baseline. Entries with a known
 -- spell ID are collectable now; entries still missing IDs remain visible as
 -- unknown catalog items so the UI and settings do not silently omit a
 -- maintainer-confirmed requirement.
@@ -68,14 +68,14 @@ local recipes = {
         verificationStatus = "user-confirmed", evidence = "user-confirmed-baseline:2026-08-29", active = true,
     },
     {
-        id = "mop.jewelcrafting.research-pending-1", professionID = 755,
+        id = "mop.jewelcrafting.research-131686", professionID = 755, recipeSpellID = 131686,
         cooldownGroupID = "mop.jewelcrafting.blue-gem-research", label = "潘达利亚蓝宝石研究", order = 14,
-        verificationStatus = "pending-index", catalogEnabled = true, trackCooldown = false,
+        verificationStatus = "verified", verifiedBuild = "5.5.4", evidence = "wowhead-spell:131686", active = true,
     },
     {
-        id = "mop.jewelcrafting.research-pending-2", professionID = 755,
+        id = "mop.jewelcrafting.research-131690", professionID = 755, recipeSpellID = 131690,
         cooldownGroupID = "mop.jewelcrafting.blue-gem-research", label = "潘达利亚蓝宝石研究", order = 15,
-        verificationStatus = "pending-index", catalogEnabled = true, trackCooldown = false,
+        verificationStatus = "verified", verifiedBuild = "5.5.4", evidence = "wowhead-spell:131690", active = true,
     },
     {
         id = "mop.jewelcrafting.serpents-heart", professionID = 755, recipeSpellID = 140050, resultItemID = 95469,
@@ -104,6 +104,16 @@ local recipes = {
         id = "mop.alchemy.balanced-trillium-ingot", professionID = 171, recipeSpellID = 114783, resultItemID = 72095,
         cooldownGroupID = "mop.alchemy.other-transmutes", label = "转化：延极锭",
         verificationStatus = "excluded-no-cooldown", catalogEnabled = false, trackCooldown = false,
+    },
+    {
+        id = "wlk.inscription.minor-research", professionID = 773, recipeSpellID = 61288,
+        cooldownGroupID = "wlk.inscription.minor-research", label = "小型铭文研究",
+        verificationStatus = "verified", verifiedBuild = "5.5.4", evidence = "live-observation:2026-09-02", active = true,
+    },
+    {
+        id = "wlk.inscription.northrend-research", professionID = 773, recipeSpellID = 61177,
+        cooldownGroupID = "wlk.inscription.northrend-research", label = "诺森德铭文研究",
+        verificationStatus = "verified", verifiedBuild = "5.5.4", evidence = "live-observation:2026-09-02", active = true,
     },
 }
 

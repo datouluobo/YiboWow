@@ -28,5 +28,9 @@ SlashCmdList.YIBOTODO = function(input)
         Addon:Print(farmDay and string.format("农场操作（低保真）：今日 %d 次，最近观察 %s。", #(farmDay.operations or {}), date("%Y-%m-%d %H:%M", farmDay.observedAt or 0)) or (farm and "农场操作（低保真）：今日尚未记录。" or "农场操作 Provider 未加载。"))
         local projected = current and Addon.Snapshot:GetCharacter(current.id)
         Addon:Print(projected and string.format("农场列投影：%s。", #(projected.farmProjects or {}) > 0 and "已显示记录" or "当前为无记录") or "农场列投影：当前角色不在账号快照。")
+        for _, activityID in ipairs({ "mop.halfhill.cooking-daily", "wlk.cooking-daily", "tbc.cooking-daily" }) do
+            local enabled = Addon.Settings and Addon.Settings.IsMonitoringItemEnabled and Addon.Settings:IsMonitoringItemEnabled("cooking-daily", activityID)
+            Addon:Print(string.format("烹饪监控 %s：%s。", activityID, enabled and "已启用" or "已关闭"))
+        end
     else Addon:OpenAccountPage() end
 end

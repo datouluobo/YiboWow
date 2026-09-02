@@ -4,18 +4,13 @@ Addon.Snapshot = Snapshot
 
 function Snapshot:Invalidate() self.dirty = true end
 
-local function NextDailyReset(now, hour)
-    hour = tonumber(hour) or 7
-    local currentHour, currentMinute
-    if GetGameTime then currentHour, currentMinute = GetGameTime() end
-    if currentHour == nil then
-        local localTime = date("*t", now)
-        currentHour, currentMinute = localTime.hour, localTime.min
+-- Keep the model usable by older SavedVariables and the isolated smoke-test
+-- harnesses while the settings panel migrates to monitoring groups.
+local function MonitoringItemEnabled(groupID, itemID, legacyKind, fallback)
+    if Addon.Settings and type(Addon.Settings.IsMonitoringItemEnabled) == "function" then
+        return Addon.Settings:IsMonitoringItemEnabled(groupID, itemID)
     end
-    local todayStart = now - ((tonumber(currentHour) or 0) * 3600 + (tonumber(currentMinute) or 0) * 60)
-    local resetAt = todayStart + hour * 3600
-    if now >= resetAt then resetAt = resetAt + 86400 end
-    return resetAt
+    return not (Addon.Settings and Addon.Settings.GetMode and Addon.Settings:GetMode(legacyKind, itemID, fallback) == "hidden")
 end
 
 local function BuildGroup(groupID)
@@ -55,19 +50,30 @@ local function RecipeForGroup(group)
     return fallback
 end
 
+local function ProjectPriority(project)
+    local priority = { ["ready-to-turn-in"] = 1, ["in-progress"] = 1, actionable = 2, estimated = 3, cooldown = 4, ["skill-insufficient"] = 5, unknown = 6 }
+    return priority[project.state] or 99
+end
+
 local function SortProjects(left, right)
-    local priority = { actionable = 1, estimated = 2, cooldown = 3, ["skill-insufficient"] = 4, unknown = 5 }
-    local leftPriority, rightPriority = priority[left.state] or 99, priority[right.state] or 99
+    local leftPriority, rightPriority = ProjectPriority(left), ProjectPriority(right)
     if leftPriority ~= rightPriority then return leftPriority < rightPriority end
     if (left.order or 999) ~= (right.order or 999) then return (left.order or 999) < (right.order or 999) end
     return tostring(left.groupID or "") < tostring(right.groupID or "")
+end
+
+local function SortDailyProjects(left, right)
+    local leftPriority, rightPriority = ProjectPriority(left), ProjectPriority(right)
+    if leftPriority ~= rightPriority then return leftPriority < rightPriority end
+    if (left.order or 999) ~= (right.order or 999) then return (left.order or 999) < (right.order or 999) end
+    return SortProjects(left, right)
 end
 
 local function BuildFarmProject(characterID, now)
     local provider = Addon.Providers.Registry:Get("farm-operation-observation")
     local day, eligibility, definition
     if provider then day, definition = provider:GetCurrentDay(characterID, now) end
-    if not definition or Addon.Settings:GetMode("activity", definition.id, definition.defaultMode) == "hidden" then return nil, false end
+    if not definition or not MonitoringItemEnabled("farm", definition.id, "activity", definition.defaultMode) then return nil, false end
     local operations = day and day.operations or {}
     local kinds = {}
     for _, operation in ipairs(operations) do kinds[operation.kind] = true end
@@ -76,7 +82,10 @@ local function BuildFarmProject(characterID, now)
     for _, operation in ipairs(previousDay and previousDay.operations or {}) do previousKinds[operation.kind] = true end
     local plantedToday = kinds.till or kinds.plant or kinds.growing
     local harvestedToday = kinds.harvest
-    local readyFromPreviousPlant = #operations == 0 and (previousKinds.till or previousKinds.plant)
+    -- Mouseover confirmation of a growing crop is also a reliable indication
+    -- that the previous day's planting completed. It must project to today's
+    -- harvest-ready state even when no till/plant cast was captured.
+    local readyFromPreviousPlant = #operations == 0 and (previousKinds.till or previousKinds.plant or previousKinds.growing)
     if not plantedToday and not harvestedToday and not readyFromPreviousPlant then return nil, true end
     local labels = {}
     for _, kind in ipairs({ "harvest", "till", "plant", "weed", "pest", "care" }) do
@@ -106,26 +115,26 @@ local function BuildNomiProject(characterID, now)
     local provider = Addon.Providers.Registry:Get("daily-quest")
     local day, definition
     if provider then day, definition = provider:GetCurrentDay(characterID, now) end
-    if not definition or Addon.Settings:GetMode("activity", definition.id, definition.defaultMode) == "hidden" then return nil, false end
+    if not definition or not MonitoringItemEnabled("nomi", definition.id, "activity", definition.defaultMode) then return nil, false end
     -- A historical Nomi completion only establishes that this character has
     -- accessed the repeatable content before.  It cannot prove which daily is
     -- offered today, so it must never turn a missing current quest-log signal
     -- into an actionable project during a character switch or snapshot rebuild.
     local eligibility = provider and provider:GetEligibility(characterID)
     local state = day and day.state or "unknown"
-    local label = day and day.label or definition.label
     local statusText
-    if state == "actionable" then statusText = "任务日志已确认，可处理"
+    if state == "ready-to-turn-in" or state == "in-progress" then statusText = "任务目标已完成，待交付"
+    elseif state == "actionable" then statusText = "任务日志已确认，可处理"
     elseif state == "completed" then statusText = "本服务器日已完成"
     elseif eligibility then statusText = "曾完成诺米日常，等待今日任务日志确认"
     else statusText = "尚未在任务日志中确认当前诺米日常"
     end
     return {
-        groupID = definition.id, label = label, order = 1, state = state,
-        iconKind = "texture", icon = definition.icon, fallbackIcon = definition.icon,
+        groupID = definition.id, label = definition.label, order = 1, state = state,
+        iconKind = definition.iconItemID and "item" or "texture", icon = definition.iconItemID or definition.icon, fallbackIcon = definition.icon,
         observedAt = (day and day.observedAt) or (eligibility and eligibility.confirmedAt),
         nextResetAt = day and day.nextResetAt or Addon.Model.Schedule:NextResetAt(now, definition.resetHour),
-        questID = day and day.questID, questKind = day and day.kind,
+        questID = day and day.questID, questKind = day and day.kind, dailyTaskLabel = day and day.label,
         eligibilityKnown = eligibility ~= nil,
         statusText = statusText, reason = day and day.reason,
         providerState = day and "available" or "not-yet-observed",
@@ -135,24 +144,50 @@ end
 local function BuildCookingProject(characterID, characterLevel, now)
     local provider = Addon.Providers.Registry:Get("daily-quest")
     local definition = provider and provider:GetCookingDefinition()
-    if not definition or Addon.Settings:GetMode("activity", definition.id, definition.defaultMode) == "hidden" then return nil, false end
+    if not definition or not MonitoringItemEnabled("cooking-daily", definition.id, "activity", definition.defaultMode) then return nil, false end
     if (tonumber(characterLevel) or 0) < 90 then return nil, true end
     local day = provider:GetCurrentCookingDay(characterID, now)
     local state = day and day.state or "actionable"
-    local icon = definition.icon
-    local core = Addon.Core
-    local domain = core and core.DataDomains and core.DataDomains:Get(characterID, "professions")
-    for _, profession in ipairs(domain and domain.data and domain.data.professions or {}) do
-        if tonumber(profession.id) == 185 then icon = profession.icon or icon; break end
+    local iconKind = definition.iconCurrencyID and "currency" or (definition.iconItemID and "item" or "texture")
+    local icon = definition.iconCurrencyID or definition.iconItemID or definition.icon
+    if not definition.iconCurrencyID and not definition.iconItemID then
+        local core = Addon.Core
+        local domain = core and core.DataDomains and core.DataDomains:Get(characterID, "professions")
+        for _, profession in ipairs(domain and domain.data and domain.data.professions or {}) do
+            if tonumber(profession.id) == 185 then icon = profession.icon or icon; break end
+        end
     end
     return {
         groupID = definition.id, label = definition.label, order = 1, state = state,
-        iconKind = "texture", icon = icon, fallbackIcon = definition.icon,
+        iconKind = iconKind, icon = icon, fallbackIcon = definition.icon,
         observedAt = day and day.observedAt,
         nextResetAt = day and day.nextResetAt or Addon.Model.Schedule:NextResetAt(now, definition.resetHour),
-        statusText = state == "completed" and "本服务器日已完成" or "可处理",
+        dailyTaskLabel = day and day.label,
+        statusText = (state == "ready-to-turn-in" or state == "in-progress") and "任务目标已完成，待交付"
+            or state == "completed" and "本服务器日已完成" or "可处理",
         providerState = day and "available" or "not-yet-observed",
     }, true
+end
+
+local function BuildLegacyDailyProject(characterID, definition, monitoringGroupID, now)
+    if not MonitoringItemEnabled(monitoringGroupID, definition.id, "activity", definition.defaultMode) then return nil end
+    local provider = Addon.Providers.Registry:Get("daily-quest")
+    local day = provider and provider:GetCurrentActivityDay(characterID, definition.id, now)
+    local state = day and day.state or "unknown"
+    local iconKind = definition.iconCurrencyID and "currency" or (definition.iconItemID and "item" or "texture")
+    local icon = definition.iconCurrencyID or definition.iconItemID or definition.icon
+    return {
+        groupID = definition.id, monitoringGroupID = monitoringGroupID,
+        label = definition.label, order = definition.order or 999,
+        state = state, iconKind = iconKind, icon = icon, fallbackIcon = definition.icon,
+        observedAt = day and day.observedAt,
+        nextResetAt = day and day.nextResetAt or Addon.Model.Schedule:NextResetAt(now, definition.resetHour),
+        questID = day and day.questID, dailyTaskLabel = day and day.label,
+        statusText = state == "in-progress" and "任务目标已完成，待交付"
+            or state == "actionable" and "任务日志已确认，可处理"
+            or state == "completed" and "本服务器日已完成" or "等待任务日志确认",
+        providerState = day and "available" or "not-yet-observed", catalogPending = definition.verificationStatus == "needs-live-confirmation",
+    }
 end
 
 function Snapshot:Build()
@@ -181,9 +216,9 @@ function Snapshot:Build()
         end
         if slots or farmEnabled or nomiEnabled or cookingEnabled then
             local provider = stored.providers and stored.providers["profession-cooldown"]
-            local character = { updatedAt = provider and provider.lastSuccessAt or 0, providerState = provider and provider.state or "not-yet-scanned", activities = {}, professionSlots = slots or {}, summary = { todo = 0, actionable = 0, cooldown = 0, items = {} }, farmColumn = farmEnabled, farmProjects = farmProject and { farmProject } or {}, nomiColumn = nomiEnabled, nomiProjects = nomiProject and { nomiProject } or {}, cookingColumn = cookingEnabled, cookingProjects = cookingProject and { cookingProject } or {} }
+            local character = { updatedAt = provider and provider.lastSuccessAt or 0, providerState = provider and provider.state or "not-yet-scanned", activities = {}, professionSlots = slots or {}, summary = { todo = 0, actionable = 0, cooldown = 0, items = {} }, monitoringProjects = {}, farmColumn = farmEnabled, farmProjects = farmProject and { farmProject } or {}, nomiColumn = nomiEnabled, nomiProjects = nomiProject and { nomiProject } or {}, cookingColumn = cookingEnabled, cookingProjects = cookingProject and { cookingProject } or {} }
             for groupID, group in pairs(Addon.Catalog.groups) do
-                if slots and group.active and Addon.Settings:GetMode("cooldownGroup", groupID, group.defaultMode) ~= "hidden" then
+                if slots and group.active and MonitoringItemEnabled("profession-cooldown", groupID, "cooldownGroup", group.defaultMode) then
                     local builtGroup, observation = BuildGroup(groupID), provider and provider.observations and provider.observations[groupID]
                     -- A recipe can only project into the Core-declared primary
                     -- profession slot.  Do not turn the catalog into a source
@@ -198,7 +233,7 @@ function Snapshot:Build()
                     if slot and activity.state ~= "locked" then
                         local recipe = RecipeForGroup(builtGroup)
                         if recipe then
-                            activity.groupID, activity.slot, activity.label = groupID, slot, builtGroup.label or groupID
+                            activity.groupID, activity.monitoringGroupID, activity.slot, activity.label = groupID, "profession-cooldown", slot, builtGroup.label or groupID
                             activity.iconKind = recipe.resultItemID and "item" or (recipe.recipeSpellID and "spell" or "texture")
                             activity.icon = recipe.resultItemID or recipe.recipeSpellID or slots[slot].icon
                             activity.fallbackIcon = slots[slot].icon
@@ -213,7 +248,7 @@ function Snapshot:Build()
                             if activity.state == "cooldown" then
                                 local transitionAt = activity.readyAt
                                 if builtGroup.resetKind == "daily-07" then
-                                    transitionAt = NextDailyReset(value.builtAt, builtGroup.resetHour)
+                                    transitionAt = Addon.Model.Schedule:NextResetAt(value.builtAt, builtGroup.resetHour)
                                 end
                                 if transitionAt and transitionAt > value.builtAt
                                     and (not nextTransitionAt or transitionAt < nextTransitionAt) then
@@ -223,7 +258,7 @@ function Snapshot:Build()
                         end
                     end
                     if slot then
-                        if activity.state == "actionable" then character.summary.todo = character.summary.todo + 1; character.summary.actionable = character.summary.actionable + 1; character.summary.items[#character.summary.items + 1] = group.label or groupID
+                        if activity.state == "actionable" or activity.state == "in-progress" or activity.state == "ready-to-turn-in" then character.summary.todo = character.summary.todo + 1; character.summary.actionable = character.summary.actionable + 1; character.summary.items[#character.summary.items + 1] = group.label or groupID
                         elseif activity.state == "estimated" then character.summary.todo = character.summary.todo + 1; character.summary.items[#character.summary.items + 1] = "预计：" .. (group.label or groupID)
                         elseif activity.state == "cooldown" then
                             character.summary.cooldown = character.summary.cooldown + 1
@@ -243,6 +278,33 @@ function Snapshot:Build()
                 character.professionProjects[#character.professionProjects + 1] = activity
             end
             table.sort(character.professionProjects, SortProjects)
+            character.monitoringProjects["profession-cooldown"] = character.professionProjects
+            character.monitoringProjects.farm = farmProject and { farmProject } or {}
+            character.monitoringProjects.nomi = nomiProject and { nomiProject } or {}
+            character.monitoringProjects["cooking-daily"] = cookingProject and { cookingProject } or {}
+            if farmProject then farmProject.monitoringGroupID = "farm" end
+            if nomiProject then nomiProject.monitoringGroupID = "nomi" end
+            if cookingProject then cookingProject.monitoringGroupID = "cooking-daily" end
+            for monitoringGroupID, monitoring in pairs(Addon.Catalog.monitoringGroups or {}) do
+                if monitoring.memberKind == "daily-activity" then
+                    local projects = character.monitoringProjects[monitoringGroupID] or {}
+                    for _, activityID in ipairs(monitoring.members or {}) do
+                        local definition = Addon.Catalog.dailyActivities[activityID]
+                        local hasRequiredProfession = not definition or not definition.professionID
+                        if definition and definition.professionID then
+                            for slot = 1, 2 do
+                                if slots and slots[slot] and slots[slot].id == tonumber(definition.professionID) then hasRequiredProfession = true; break end
+                            end
+                        end
+                        if definition and hasRequiredProfession and definition.members and definition.id ~= "mop.halfhill.cooking-daily" then
+                            local project = BuildLegacyDailyProject(characterID, definition, monitoringGroupID, now)
+                            if project then projects[#projects + 1] = project end
+                        end
+                    end
+                    table.sort(projects, SortDailyProjects)
+                    character.monitoringProjects[monitoringGroupID] = projects
+                end
+            end
             value.characters[characterID] = character
         end
     end

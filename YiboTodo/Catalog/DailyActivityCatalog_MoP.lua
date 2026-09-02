@@ -23,12 +23,14 @@ Catalog.dailyActivities["mop.nomi"] = {
     },
     graduation = { questID = 31820, label = "诺米：谢师礼" },
     daily = { questID = 31337, label = "诺米每日：感谢的礼物" },
+    -- Cooking School Bell, the stable visual identity for Nomi's lessons.
     icon = "Interface\\Icons\\INV_Misc_Food_18.blp",
+    iconItemID = 86425,
 }
 
 Catalog.dailyActivities["mop.halfhill.cooking-daily"] = {
     id = "mop.halfhill.cooking-daily",
-    label = "半山烹饪日常",
+    label = "MOP 半山烹饪日常",
     provider = "daily-quest",
     scope = "character",
     defaultMode = "display",
@@ -36,9 +38,17 @@ Catalog.dailyActivities["mop.halfhill.cooking-daily"] = {
     resetHour = 7,
     completionMode = "any-member-completes-group",
     verificationStatus = "external-queried",
+    order = 10,
     members = {
-        { questID = 30386 }, { questID = 30402 }, { questID = 30408 },
-        { questID = 30414 }, { questID = 30421 }, { questID = 30427 },
+        -- These are the five Ironpaw Master Chef rotating dailies.  The
+        -- previous IDs belonged to unrelated Tillers friendship quests, so
+        -- QUEST_TURNED_IN never recognized e.g. The Mile-High Grub (30331).
+        { questID = 30328, label = "千年饺", turnInNPCID = 58715 }, -- 严·铁掌
+        { questID = 30329, label = "呛火辣椒", turnInNPCID = 58713 }, -- 安希亚·铁掌
+        { questID = 30330, label = "松露蛋奶酥", turnInNPCID = 58716 }, -- 坚·铁掌
+        { questID = 30331, label = "高地美味", turnInNPCID = 58714 }, -- 美美·铁掌
+        { questID = 30332, label = "肥美的山羊肉排", turnInNPCID = 58712 }, -- 柯·铁掌
     },
     icon = "Interface\\Icons\\Trade_Cooking",
+    iconCurrencyID = 402, -- 铁掌徽记 / Ironpaw Token
 }

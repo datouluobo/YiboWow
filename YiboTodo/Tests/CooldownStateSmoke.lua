@@ -9,6 +9,7 @@ dofile("YiboTodo/Catalog/CooldownGroupCatalog.lua")
 dofile("YiboTodo/Catalog/CooldownCatalog_MoP.lua")
 dofile("YiboTodo/Catalog/Ruleset_50504.lua")
 dofile("YiboTodo/Catalog/Validator.lua")
+dofile("YiboTodo/Model/Schedule.lua")
 dofile("YiboTodo/Model/State.lua")
 dofile("YiboTodo/Providers/Registry.lua")
 
@@ -50,7 +51,8 @@ local celestialGroup = Group("mop.tailoring.celestial-cloth")
 assert(Addon.Catalog.groups["mop.tailoring.imperial-silk"].requiredSkillLevel == 550, "imperial silk keeps its own 550-point requirement")
 assert(State:Evaluate(celestialGroup, nil, 1000).state == "unknown", "unobserved profession cooldown is never actionable")
 assert(State:Evaluate(celestialGroup, Cooling(143011, 2000), 1000).state == "cooldown", "crafted celestial cloth is cooldown")
-assert(State:Evaluate(celestialGroup, Cooling(143011, 2000), 2001).state == "estimated", "celestial cloth recovers without rescan")
+local shortCooldownGroup = { members = celestialGroup.members }
+assert(State:Evaluate(shortCooldownGroup, Cooling(143011, 2000), 2001).state == "estimated", "a non-daily cooldown recovers without rescan")
 assert(State:Evaluate(celestialGroup, nil, 1000, 481).state == "skill-insufficient", "cached 481 skill blocks a 600-point cooldown without a rescan")
 local insufficientSkill = Cooling(143011, 0)
 insufficientSkill.recipes[143011].craftable = false
@@ -59,9 +61,14 @@ local unlearnedRecipe = { sourceState = "known", observedAt = 1000, recipes = { 
 local unlearnedState = State:Evaluate(celestialGroup, unlearnedRecipe, 1000, 600)
 assert(unlearnedState.state == "unknown" and unlearnedState.reason == "recipe-unlearned", "unlearned recipe keeps the unknown display state with a specific reason")
 
-GetGameTime = function() return 7, 1 end
 local afterDailyReset = Cooling(143011, 200000)
 afterDailyReset.observedAt = 70000
+GetGameTime = function() return 0, 1 end
+assert(Addon.Model.Schedule:NextResetAt(100000, 7) == 125140, "all daily activity types keep the next reset at 07:00 after midnight")
+local expiredBeforeSeven = Cooling(143011, 99900)
+expiredBeforeSeven.observedAt = 90000
+assert(State:Evaluate(celestialGroup, expiredBeforeSeven, 100000).state == "cooldown", "a midnight-expiring API countdown does not reset a 07:00 daily cooldown")
+GetGameTime = function() return 7, 1 end
 assert(State:Evaluate(celestialGroup, afterDailyReset, 100000).state == "estimated", "07:00 daily reset overrides stale client cooldown")
 for _, group in pairs(Addon.Catalog.groups) do
     if group.active then assert(group.resetKind == "daily-07" and group.resetHour == 7, "all active groups reset at 07:00") end
@@ -128,7 +135,7 @@ GetTradeSkillRecipeLink = function(index)
     if index == 2 then return "|Henchant:114780|h[转化：活化钢]|h" end
     return "|Henchant:140040|h[华丽制皮秘决]|h"
 end
-GetTradeSkillCooldown = function() return 3600 end
+GetTradeSkillCooldown = function() return 3600, true end
 GetTradeSkillInfo = function() return "神纹布", "none" end
 Addon.Core = {
     Characters = { GetCurrent = function() return { id = "test-character" } end },
@@ -147,6 +154,34 @@ assert(observations["mop.tailoring.celestial-cloth"].recipes[143011].craftable =
 GetTradeSkillLine = function() return "裁缝" end
 observations = assert(Addon.Providers.Registry:Get("profession-cooldown"):Collect())
 assert(observations["mop.tailoring.imperial-silk"].recipes[125557].learned == false, "identified profession window records an absent recipe as unlearned")
+
+GetNumTradeSkills = function() return 2 end
+GetTradeSkillRecipeLink = function(index)
+    return index == 1 and "|Henchant:61288|h[小型铭文研究]|h" or "|Henchant:61177|h[诺森德铭文研究]|h"
+end
+GetTradeSkillCooldown = function(index) return index == 1 and 0 or 7200 end
+GetTradeSkillInfo = function() return "铭文研究", "optimal" end
+GetTradeSkillLine = function() return "铭文" end
+Addon.Core.DataDomains.Get = function()
+    return { state = "known", data = { primaryProfessions = { { id = 773, name = "铭文" } } } }
+end
+observations = assert(Addon.Providers.Registry:Get("profession-cooldown"):Collect())
+assert(observations["wlk.inscription.minor-research"].recipes[61288].cooldownKnown and observations["wlk.inscription.minor-research"].recipes[61288].readyAt == 1000, "minor inscription research refreshes from the open inscription panel")
+assert(observations["wlk.inscription.northrend-research"].recipes[61177].readyAt == 8200, "northrend inscription research refreshes its active cooldown")
+
+GetTradeSkillRecipeLink = function(index)
+    return index == 1 and "|Henchant:131686|h[源红宝石]|h" or "|Henchant:131690|h[朱砂玛瑙]|h"
+end
+GetTradeSkillCooldown = function(index) return index == 1 and 0 or 3600 end
+GetTradeSkillInfo = function() return "潘达利亚宝石研究", "optimal" end
+GetTradeSkillLine = function() return "珠宝加工" end
+Addon.Core.DataDomains.Get = function()
+    return { state = "known", data = { primaryProfessions = { { id = 755, name = "珠宝加工" } } } }
+end
+observations = assert(Addon.Providers.Registry:Get("profession-cooldown"):Collect())
+local jewelcraftingResearch = assert(observations["mop.jewelcrafting.blue-gem-research"])
+assert(jewelcraftingResearch.recipes[131686].readyAt == 1000, "primordial ruby research joins the shared daily cooldown")
+assert(jewelcraftingResearch.recipes[131690].readyAt == 4600, "vermilion onyx research joins the shared daily cooldown")
 
 dofile("YiboTodo/Database.lua")
 _G.YiboTodoDB = {

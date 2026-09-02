@@ -19,6 +19,8 @@ function Addon:ValidateCatalog()
                 Add(result, "errors", "ruleset-disabled:" .. id)
             elseif recipe.trackCooldown == false or not recipe.recipeSpellID then
                 Add(result, "warnings", "pending-index:" .. id)
+            elseif recipe.verificationStatus == "needs-live-confirmation" then
+                Add(result, "warnings", "needs-live-confirmation:" .. id)
             elseif recipe.verificationStatus ~= "verified" and recipe.verificationStatus ~= "user-confirmed" then
                 Add(result, "errors", "unapproved-active:" .. id)
             elseif spells[recipe.recipeSpellID] then
@@ -67,6 +69,9 @@ function Addon:ValidateCatalog()
             end
             if type(activity.daily) == "table" then
                 if #((activity.stages) or {}) ~= 5 then Add(result, "errors", "unexpected-lesson-count:" .. tostring(id)) end
+            elseif activity.verificationStatus == "needs-live-confirmation" or activity.verificationStatus == "external-queried" or activity.verificationStatus == "user-confirmed" or activity.verificationStatus == "verified" then
+                -- Candidate probes intentionally support expansion-specific
+                -- rotating pools of different sizes.
             elseif #activity.members ~= 6 then
                 Add(result, "errors", "unexpected-member-count:" .. tostring(id))
             else

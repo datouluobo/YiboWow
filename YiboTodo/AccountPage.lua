@@ -5,10 +5,11 @@ local Theme = _G.YiboCore.UITheme
 local C = Theme.Colors
 
 local ROW_HEIGHT, ROW_GAP, ICON_SIZE, ICON_GAP = Theme.Table.iconRowHeight, 0, 22, 3
-local MIN_PROJECT_SLOTS, OVERFLOW_WIDTH = 4, ICON_SIZE
+local COLUMN_GAP = Theme.Space.xxs
+local MIN_PROJECT_SLOTS = 1
 local FARM_COLUMN_WIDTH = ICON_SIZE + 8
 local NOMI_COLUMN_WIDTH = ICON_SIZE + 8
-local STATUS_TEXT = { actionable = "可制作", cooldown = "冷却中", completed = "已完成", estimated = "可制作（按冷却时间）", ["skill-insufficient"] = "专业技能不足", unknown = Theme.StatusText.unknown }
+local STATUS_TEXT = { actionable = "可制作", ["ready-to-turn-in"] = "任务目标已完成，待交付", ["in-progress"] = "任务目标已完成，待交付", cooldown = "冷却中", completed = "已完成", estimated = "可制作（按冷却时间）", ["skill-insufficient"] = "专业技能不足", unknown = Theme.StatusText.unknown }
 
 local function ProjectColumnWidth(slots)
     slots = math.max(MIN_PROJECT_SLOTS, tonumber(slots) or 0)
@@ -48,6 +49,7 @@ end
 
 local function ProjectTooltip(project)
     local lines = { { kind = "pair", label = "状态", value = project.statusText or STATUS_TEXT[project.state] or "状态异常" } }
+    if project.dailyTaskLabel then lines[#lines + 1] = { kind = "pair", label = "当日任务", value = project.dailyTaskLabel } end
     if project.state == "unknown" and not project.optimisticFarm then
         local detail = project.reason == "recipe-unlearned"
             and "该角色尚未学会此配方。"
@@ -95,20 +97,18 @@ local function GetIcon(parent, index)
     return button
 end
 
-local function GetOverflow(parent)
-    if parent.overflow then return parent.overflow end
-    local button = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    button:SetSize(OVERFLOW_WIDTH, ICON_SIZE)
-    button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    button.label = Text(button, Theme.Font.assist, C.muted, "CENTER"); button.label:SetAllPoints()
-    parent.overflow = button
-    return button
-end
-
 local function SetIcon(button, project)
     local resolved
     if project.iconKind == "spell" and GetSpellTexture then resolved = GetSpellTexture(project.icon)
     elseif project.iconKind == "texture" then resolved = project.icon
+    elseif project.iconKind == "currency" then
+        if C_CurrencyInfo and type(C_CurrencyInfo.GetCurrencyInfo) == "function" then
+            local ok, info = pcall(C_CurrencyInfo.GetCurrencyInfo, project.icon)
+            if ok and type(info) == "table" then resolved = info.iconFileID or info.icon end
+        elseif type(GetCurrencyInfo) == "function" then
+            local ok, _, _, icon = pcall(GetCurrencyInfo, project.icon)
+            if ok then resolved = icon end
+        end
     elseif GetItemIcon and project.icon then resolved = GetItemIcon(project.icon) end
     if not resolved and project.fallbackSpellID and GetSpellTexture then resolved = GetSpellTexture(project.fallbackSpellID) end
     local texture = resolved or project.fallbackIcon or "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -119,12 +119,15 @@ local function SetIcon(button, project)
     -- it is not missing data: today's operation was witnessed. Do not cover
     -- its harvest basket with the generic missing-information question mark.
     local unknown = project.state == "unknown" and not project.operationObserved
+    local readyToTurnIn = project.state == "ready-to-turn-in" or project.state == "in-progress"
     local completed = project.state == "completed"
+    -- A checkmark on a colored icon means the objectives are ready to hand
+    -- in; grey plus checkmark is reserved for a completed hand-in.
     button.texture:SetDesaturated(project.state == "cooldown" or completed or skillInsufficient or unknown)
     if project.state == "cooldown" or completed then button.texture:SetVertexColor(0.42, 0.48, 0.50, 0.92) else button.texture:SetVertexColor(1, 1, 1, 1) end
     if skillInsufficient then button.texture:SetVertexColor(0.82, 0.53, 0.28, 0.92) end
     if unknown then button.texture:SetVertexColor(C.muted[1], C.muted[2], C.muted[3], 0.76) end
-    button.check:SetShown(project.state == "cooldown" or completed)
+    button.check:SetShown(project.state == "cooldown" or readyToTurnIn or completed)
     button.check:SetVertexColor(C.accent[1], C.accent[2], C.accent[3], 1)
     button.skillInsufficient:SetShown(skillInsufficient)
     button.unknown:SetShown(unknown)
@@ -140,39 +143,19 @@ local function RenderProjects(cell, projects)
     Release(cell.icons or {}, 1)
     cell:Show()
     if #projects == 0 then
-        cell.empty:SetText("—"); cell.empty:Show(); if cell.overflow then cell.overflow:Hide() end
+        cell.empty:SetText("—"); cell.empty:Show()
         return
     end
     cell.empty:Hide()
-    local width, shown, used = math.max(ICON_SIZE, cell:GetWidth() or ICON_SIZE), 0, 0
-    for index in ipairs(projects) do
-        local leadingGap = shown > 0 and ICON_GAP or 0
-        local overflowReserve = index < #projects and (ICON_GAP + OVERFLOW_WIDTH) or 0
-        if shown == 0 or used + leadingGap + ICON_SIZE + overflowReserve <= width then
-            shown = shown + 1
-            used = used + leadingGap + ICON_SIZE
-        else break end
-    end
-    local remaining, overflow = #projects - shown, GetOverflow(cell)
-    local contentWidth = used + (remaining > 0 and (shown > 0 and ICON_GAP or 0) + OVERFLOW_WIDTH or 0)
+    local width = math.max(ICON_SIZE, cell:GetWidth() or ICON_SIZE)
+    local contentWidth = #projects * ICON_SIZE + math.max(0, #projects - 1) * ICON_GAP
     local x = math.max(0, math.floor((width - contentWidth) / 2))
-    for index = 1, shown do
+    for index, project in ipairs(projects) do
         local icon = GetIcon(cell, index)
         icon:ClearAllPoints(); icon:SetPoint("LEFT", cell, "LEFT", x, 0)
-        SetIcon(icon, projects[index])
+        SetIcon(icon, project)
         x = x + ICON_SIZE + ICON_GAP
     end
-    if remaining > 0 then
-        overflow:ClearAllPoints(); overflow:SetPoint("LEFT", cell, "LEFT", x, 0)
-        overflow.label:SetText("+" .. remaining)
-        local lines = {}
-        for index = shown + 1, #projects do
-            local project = projects[index]
-            lines[#lines + 1] = { kind = "section", text = tostring(project.label) }
-            for _, detail in ipairs(ProjectTooltip(project)) do lines[#lines + 1] = detail end
-        end
-        Theme:BindTooltip(overflow, "其余制作项目", lines); overflow:Show()
-    else overflow:Hide() end
 end
 
 local function Cell(row, index)
@@ -203,18 +186,25 @@ local function ProfessionColumnWidth(snapshot, characters)
 end
 
 local function HasFarmColumn()
-    local farm = Addon.Catalog.farmOperations and Addon.Catalog.farmOperations["mop.farm.operation-observed"]
-    return farm and Addon.Settings:GetMode("activity", farm.id, farm.defaultMode) ~= "hidden"
+    return Addon.Settings:IsMonitoringGroupEnabled("farm")
 end
 
 local function HasNomiColumn()
-    local nomi = Addon.Catalog.dailyActivities and Addon.Catalog.dailyActivities["mop.nomi"]
-    return nomi and Addon.Settings:GetMode("activity", nomi.id, nomi.defaultMode) ~= "hidden"
+    return Addon.Settings:IsMonitoringGroupEnabled("nomi")
 end
 
 local function HasCookingColumn()
-    local cooking = Addon.Catalog.dailyActivities and Addon.Catalog.dailyActivities["mop.halfhill.cooking-daily"]
-    return cooking and Addon.Settings:GetMode("activity", cooking.id, cooking.defaultMode) ~= "hidden"
+    return Addon.Settings:IsMonitoringGroupEnabled("cooking-daily")
+end
+
+local function DailyColumnWidth(snapshot, characters, groupID, headerTitle)
+    local slots = MIN_PROJECT_SLOTS
+    for _, character in ipairs(characters or {}) do
+        local data = snapshot.characters[character.id]
+        slots = math.max(slots, #(data and data.monitoringProjects and data.monitoringProjects[groupID] or {}))
+    end
+    local headerWidth = Theme:MeasureText(Theme.Font.assist, headerTitle or "") + Theme.Table.cellPadding * 2
+    return math.max(ProjectColumnWidth(slots), headerWidth)
 end
 
 local function Row(frame, index)
@@ -274,32 +264,40 @@ end
 
 function Page.Refresh(frame, context)
     local snapshot, count = Addon.Snapshot:Build(), 0
-    local showProfession = context:GetFieldVisible("professionCooldown")
-    local showFarm = context:GetFieldVisible("farmOperation")
-    local showNomi = context:GetFieldVisible("nomi")
-    local showCooking = context:GetFieldVisible("cooking")
-    local showCommon = context:GetFieldVisible("commonProjects")
+    local showProfession = Addon.Settings:IsMonitoringGroupEnabled("profession-cooldown")
+    local showFarm = Addon.Settings:IsMonitoringGroupEnabled("farm")
+    local showNomi = Addon.Settings:IsMonitoringGroupEnabled("nomi")
+    local showCooking = Addon.Settings:IsMonitoringGroupEnabled("cooking-daily")
+    local showJewelcrafting = Addon.Settings:IsMonitoringGroupEnabled("jewelcrafting-daily")
+    local showFishing = Addon.Settings:IsMonitoringGroupEnabled("fishing-daily")
+    local showCommon = false
     local hasCommon = showCommon and HasCommonProjects(snapshot, context.characters)
     local hasFarm = showFarm and HasFarmColumn()
     local hasNomi = showNomi and HasNomiColumn()
     local hasCooking = showCooking and HasCookingColumn()
+    local jewelcraftingWidth = showJewelcrafting and DailyColumnWidth(snapshot, context.characters, "jewelcrafting-daily", "珠宝") or 0
+    local fishingWidth = showFishing and DailyColumnWidth(snapshot, context.characters, "fishing-daily", "钓鱼") or 0
     local characterWidth, professionWidth, farmWidth, nomiWidth, cookingWidth, commonWidth = Layout(CharacterColumnWidth(context), ProfessionColumnWidth(snapshot, context.characters), hasFarm, hasNomi, hasCooking, hasCommon)
-    local tableWidth = characterWidth + (showProfession and professionWidth or 0) + farmWidth + nomiWidth + cookingWidth + commonWidth
+    if hasCooking then cookingWidth = DailyColumnWidth(snapshot, context.characters, "cooking-daily", "烹饪") end
+    local tableWidth = characterWidth + (showProfession and professionWidth or 0) + farmWidth + nomiWidth + jewelcraftingWidth + cookingWidth + fishingWidth + commonWidth
     local inset = Theme:GetMatrixInsets(context.preview)
     for _, row in ipairs(frame.rows) do row:Hide() end
     frame.header:ClearAllPoints(); frame.header:SetPoint("TOPLEFT", frame, "TOPLEFT", inset.left, -inset.top); frame.header:SetSize(tableWidth, Theme.Table.headerHeight)
     local columns = { { "角色", characterWidth } }
     if showProfession then
-        columns[#columns + 1] = { "专业CD", professionWidth }
+        columns[#columns + 1] = { "商业冷却", professionWidth }
     end
     if hasFarm then columns[#columns + 1] = { "农场", farmWidth } end
     if hasNomi then columns[#columns + 1] = { "诺米", nomiWidth } end
+    if showJewelcrafting then columns[#columns + 1] = { "珠宝", jewelcraftingWidth } end
     if hasCooking then columns[#columns + 1] = { "烹饪", cookingWidth } end
+    if showFishing then columns[#columns + 1] = { "钓鱼", fishingWidth } end
     if hasCommon then columns[#columns + 1] = { "通用项目", commonWidth } end
+    tableWidth = tableWidth + math.max(0, #columns - 1) * COLUMN_GAP
     local x = 0
     for index, definition in ipairs(columns) do
         local header = Header(frame, index); header:ClearAllPoints(); header:SetPoint("TOPLEFT", frame.header, "TOPLEFT", x, 0); header:SetSize(definition[2], Theme.Table.headerHeight)
-        Theme:SetMatrixHeader(header, definition[1], { height=Theme.Table.headerHeight, fill=C.toolbar, rule=C.lineSoft }); header:Show(); x = x + definition[2]
+        Theme:SetMatrixHeader(header, definition[1], { height=Theme.Table.headerHeight, fill=C.toolbar, rule=C.lineSoft }); header:Show(); x = x + definition[2] + COLUMN_GAP
     end
     Release(frame.headers, #columns + 1)
     local accountProjects = snapshot.accountActivities or {}
@@ -329,31 +327,46 @@ function Page.Refresh(frame, context)
             row.name:ClearAllPoints(); row.name:SetPoint("LEFT", 8, 0); row.name:SetWidth(characterWidth - 8)
             row.name:SetText(CharacterLabel(character, context.scope == "all")); ApplyCharacterColor(row.name, character)
             Release(row.cells or {}, 1)
-            if showProfession or hasFarm or hasNomi or hasCommon then
+            if showProfession or hasFarm or hasNomi or showJewelcrafting or hasCooking or showFishing or hasCommon then
                 local offset, nextCell = characterWidth, 1
                 if showProfession then
                 local profession = Cell(row, 1)
                 profession:ClearAllPoints(); profession:SetPoint("LEFT", characterWidth, 0); profession:SetSize(professionWidth, ROW_HEIGHT)
                 RenderProjects(profession, data.professionProjects or {})
-                offset, nextCell = offset + professionWidth, nextCell + 1
+                    offset, nextCell = offset + professionWidth + COLUMN_GAP, nextCell + 1
                 end
                 if hasFarm then
                     local farm = Cell(row, nextCell)
                     farm:ClearAllPoints(); farm:SetPoint("LEFT", offset, 0); farm:SetSize(farmWidth, ROW_HEIGHT)
                     RenderProjects(farm, data.farmProjects or {})
-                    offset, nextCell = offset + farmWidth, nextCell + 1
+                    offset, nextCell = offset + farmWidth + COLUMN_GAP, nextCell + 1
                 end
                 if hasNomi then
                     local nomi = Cell(row, nextCell)
                     nomi:ClearAllPoints(); nomi:SetPoint("LEFT", offset, 0); nomi:SetSize(nomiWidth, ROW_HEIGHT)
                     RenderProjects(nomi, data.nomiProjects or {})
-                    offset, nextCell = offset + nomiWidth, nextCell + 1
+                    offset, nextCell = offset + nomiWidth + COLUMN_GAP, nextCell + 1
+                end
+                if showJewelcrafting then
+                    local jewelcrafting = Cell(row, nextCell)
+                    jewelcrafting:ClearAllPoints(); jewelcrafting:SetPoint("LEFT", offset, 0); jewelcrafting:SetSize(jewelcraftingWidth, ROW_HEIGHT)
+                    RenderProjects(jewelcrafting, data.monitoringProjects["jewelcrafting-daily"] or {})
+                    offset, nextCell = offset + jewelcraftingWidth + COLUMN_GAP, nextCell + 1
                 end
                 if hasCooking then
                     local cooking = Cell(row, nextCell)
                     cooking:ClearAllPoints(); cooking:SetPoint("LEFT", offset, 0); cooking:SetSize(cookingWidth, ROW_HEIGHT)
-                    RenderProjects(cooking, data.cookingProjects or {})
-                    offset, nextCell = offset + cookingWidth, nextCell + 1
+                    -- The legacy field contains only the original Halfhill
+                    -- projection.  The monitoring-group list also includes
+                    -- the WLK and TBC cooking dailies.
+                    RenderProjects(cooking, data.monitoringProjects["cooking-daily"] or {})
+                    offset, nextCell = offset + cookingWidth + COLUMN_GAP, nextCell + 1
+                end
+                if showFishing then
+                    local fishing = Cell(row, nextCell)
+                    fishing:ClearAllPoints(); fishing:SetPoint("LEFT", offset, 0); fishing:SetSize(fishingWidth, ROW_HEIGHT)
+                    RenderProjects(fishing, data.monitoringProjects["fishing-daily"] or {})
+                    offset, nextCell = offset + fishingWidth + COLUMN_GAP, nextCell + 1
                 end
                 if hasCommon then
                     local common = Cell(row, nextCell)
@@ -386,11 +399,13 @@ function Page.GetSurfaceMetrics(context)
     local snapshot, count = Addon.Snapshot:Build(), 0
     for _, character in ipairs((context and context.characters) or {}) do if snapshot.characters[character.id] then count = count + 1 end end
     local inset = Theme:GetMatrixInsets(context and context.preview)
-    local showProfession = context and context.GetFieldVisible and context:GetFieldVisible("professionCooldown")
-    local showFarm = context and context.GetFieldVisible and context:GetFieldVisible("farmOperation")
-    local showNomi = context and context.GetFieldVisible and context:GetFieldVisible("nomi")
-    local showCooking = context and context.GetFieldVisible and context:GetFieldVisible("cooking")
-    local showCommon = context and context.GetFieldVisible and context:GetFieldVisible("commonProjects")
+    local showProfession = Addon.Settings:IsMonitoringGroupEnabled("profession-cooldown")
+    local showFarm = Addon.Settings:IsMonitoringGroupEnabled("farm")
+    local showNomi = Addon.Settings:IsMonitoringGroupEnabled("nomi")
+    local showCooking = Addon.Settings:IsMonitoringGroupEnabled("cooking-daily")
+    local showJewelcrafting = Addon.Settings:IsMonitoringGroupEnabled("jewelcrafting-daily")
+    local showFishing = Addon.Settings:IsMonitoringGroupEnabled("fishing-daily")
+    local showCommon = false
     local hasCommon = showCommon and HasCommonProjects(snapshot, context and context.characters)
     local hasFarm = showFarm and HasFarmColumn()
     local hasNomi = showNomi and HasNomiColumn()
@@ -398,13 +413,14 @@ function Page.GetSurfaceMetrics(context)
     local accountHeight = showCommon and #(snapshot.accountActivities or {}) > 0 and ROW_HEIGHT + ROW_GAP or 0
     local visibleRows = math.max(1, math.min(20, count))
     local professionWidth = ProfessionColumnWidth(snapshot, context and context.characters)
-    local tableWidth = CharacterColumnWidth(context) + (showProfession and professionWidth or 0) + (hasFarm and FARM_COLUMN_WIDTH or 0) + (hasNomi and NOMI_COLUMN_WIDTH or 0) + (hasCooking and NOMI_COLUMN_WIDTH or 0) + (hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0)
+    local columnCount = 1 + (showProfession and 1 or 0) + (hasFarm and 1 or 0) + (hasNomi and 1 or 0) + (showJewelcrafting and 1 or 0) + (hasCooking and 1 or 0) + (showFishing and 1 or 0) + (hasCommon and 1 or 0)
+    local tableWidth = CharacterColumnWidth(context) + (showProfession and professionWidth or 0) + (hasFarm and FARM_COLUMN_WIDTH or 0) + (hasNomi and NOMI_COLUMN_WIDTH or 0) + (showJewelcrafting and DailyColumnWidth(snapshot, context and context.characters, "jewelcrafting-daily", "珠宝") or 0) + (hasCooking and DailyColumnWidth(snapshot, context and context.characters, "cooking-daily", "烹饪") or 0) + (showFishing and DailyColumnWidth(snapshot, context and context.characters, "fishing-daily", "钓鱼") or 0) + (hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0) + math.max(0, columnCount - 1) * COLUMN_GAP
     -- The scrollbar uses the page inset rather than a data-column gutter.
     -- The table width therefore remains the same with and without overflow.
-    local projectsWidth = tableWidth + Theme.Space.sm * 2
+    local projectsWidth = tableWidth + inset.left + inset.right
     return {
-        minContentWidth = (showProfession or hasFarm or hasNomi or hasCooking or hasCommon) and projectsWidth or 220,
-        naturalContentWidth = (showProfession or hasFarm or hasNomi or hasCooking or hasCommon) and projectsWidth or 280,
+        minContentWidth = (showProfession or hasFarm or hasNomi or showJewelcrafting or hasCooking or showFishing or hasCommon) and projectsWidth or 220,
+        naturalContentWidth = (showProfession or hasFarm or hasNomi or showJewelcrafting or hasCooking or showFishing or hasCommon) and projectsWidth or 280,
         minContentHeight = 120,
         naturalContentHeight = inset.top + Theme.Table.headerHeight + accountHeight + ROW_GAP + visibleRows * (ROW_HEIGHT + ROW_GAP) + inset.bottom,
         horizontalOverflow = "none",
