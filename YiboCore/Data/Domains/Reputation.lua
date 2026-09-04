@@ -28,11 +28,11 @@ end
 -- Store facts by stable factionID so consumers can safely compare snapshots.
 local function Friendship(factionID)
     if not GetFriendshipReputation then return nil end
-    local friendshipFactionID, _, max, name, _, _, reaction, reactionThreshold, nextThreshold = GetFriendshipReputation(factionID)
+    local friendshipFactionID, friendRep, friendMaxRep, friendName, _, _, friendTextLevel, reactionThreshold, nextThreshold = GetFriendshipReputation(factionID)
     if not friendshipFactionID or friendshipFactionID == 0 then return nil end
     local rank, maxRank
     if GetFriendshipReputationRanks then rank, maxRank = GetFriendshipReputationRanks(factionID) end
-    return { reaction = reaction, reactionName = name, rank = rank, maxRank = maxRank, reactionThreshold = reactionThreshold, nextThreshold = nextThreshold, maxValue = max }
+    return { reaction = friendRep, reactionName = friendTextLevel, friendName = friendName, rank = rank, maxRank = maxRank, reactionThreshold = reactionThreshold, nextThreshold = nextThreshold, maxValue = friendMaxRep }
 end
 
 Core.DataDomains:Register("YiboCore", {

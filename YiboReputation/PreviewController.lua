@@ -12,8 +12,8 @@ end
 function Addon:RefreshPreview(parent,context)
  -- Defensive visibility reset: a page instance may have just been used by
  -- the normal account window. A hover may only ever show its selected preview.
- parent.matrixToolbar:Hide();parent.matrixHeader:Hide();parent.matrixScroll:Hide();if parent.currentCharacterOutline then parent.currentCharacterOutline:Hide() end
- parent.previewModeButton:Hide();parent.currentPreviewHeading:Hide();parent.currentPreviewNameHeader:Hide();parent.currentPreviewValueHeader:Hide();parent.currentPreviewScroll:Hide();for _,row in ipairs(parent.monitoredRows or {}) do row:Show() end;for _,header in ipairs(parent.monitoredHeaders or {}) do header:Show() end;parent.monitoredDetail:Hide()
+ parent.matrixToolbar:Hide();parent.matrixHeader:Hide();parent.matrixScroll:Hide();if parent.matrixScroll.ScrollBar then parent.matrixScroll.ScrollBar:Hide() end;if parent.currentCharacterOutline then parent.currentCharacterOutline:Hide() end
+ parent.previewModeButton:Hide();parent.currentPreviewHeading:Hide();parent.currentPreviewNameHeader:Hide();parent.currentPreviewValueHeader:Hide();parent.currentPreviewScroll:Hide();if parent.currentPreviewScroll.ScrollBar then parent.currentPreviewScroll.ScrollBar:Hide() end;for _,row in ipairs(parent.monitoredRows or {}) do row:Show() end;for _,header in ipairs(parent.monitoredHeaders or {}) do header:Show() end;parent.monitoredDetail:Hide()
  self:RefreshMonitoredPreview(parent,context)
 end
 function Addon:GetPreviewMetrics(context)
@@ -52,7 +52,7 @@ function Addon:GetPreviewSurfaceMetrics(context)
   fixedLeftWidth = 150,
   fixedTopHeight = headerHeight,
  horizontalOverflow = "paginate",
- verticalOverflow = "content",
+ verticalOverflow = "none",
  }
  --[[ Legacy current-character surface metrics, retained for migration reference.
  local current = Core.Characters:GetCurrent()

@@ -479,6 +479,18 @@ function Theme:CreateScrollFrame(parent)
     -- scrollbar on an otherwise fully fitted surface.
     local SCROLL_RANGE_EPSILON = 1
     function scroll:UpdateScrollbar()
+        -- The scrollbar is a sibling of the scroll frame, so hiding the
+        -- scroll frame alone cannot suppress a delayed refresh callback from
+        -- a previous layout. Never let that callback resurrect the track
+        -- while this surface is not visible (for example during hover).
+        if not self:IsShown() then
+            self.scrollRange = 0
+            bar:SetMinMaxValues(0, 0)
+            bar:SetValue(0)
+            bar:Hide()
+            SetGutterVisible(false)
+            return 0
+        end
         local viewportHeight = self:GetHeight() or 0
         -- Anchored frames can refresh once before WoW has resolved their
         -- final height.  A zero-height viewport must not be interpreted as
