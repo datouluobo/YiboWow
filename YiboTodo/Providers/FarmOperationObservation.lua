@@ -18,6 +18,38 @@ function Provider:GetDefinition()
     return Addon.Catalog.farmOperations and Addon.Catalog.farmOperations["mop.farm.operation-observed"]
 end
 
+local function SpellName(spellID)
+    if type(GetSpellInfo) ~= "function" then return "" end
+    local ok, name = pcall(GetSpellInfo, spellID)
+    return ok and tostring(name or "") or ""
+end
+
+local function InferPlantType(name)
+    name = tostring(name or "")
+    if name == "" or not string.find(name, "种", 1, true) then return nil end
+    -- Exchange spells may omit the number 30 from their localized name, so
+    -- the conversion verbs are intentionally sufficient when a package term
+    -- is also present.
+    if (string.find(name, "兑换", 1, true) or string.find(name, "交换", 1, true) or string.find(name, "换取", 1, true) or string.find(name, "制作", 1, true) or string.find(name, "合成", 1, true))
+        and (string.find(name, "包", 1, true) or string.find(name, "袋", 1, true) or string.find(name, "箱", 1, true)) then return "bundle" end
+    if string.find(name, "包", 1, true) or string.find(name, "袋", 1, true) or string.find(name, "箱", 1, true) then return "bundle" end
+    if string.find(name, "播种", 1, true) or string.find(name, "种植", 1, true) or string.find(name, "栽种", 1, true) then return "single" end
+    return nil
+end
+
+function Provider:ResolveRule(spellID)
+    local definition = self:GetDefinition()
+    local rules = definition and definition.rules or {}
+    local exact = rules[tonumber(spellID)]
+    if exact then return exact end
+    local name = SpellName(spellID)
+    local plantType = InferPlantType(name)
+    if plantType then
+        return { kind = "plant", plantType = plantType, label = name ~= "" and name or "播种", verificationStatus = "user-observed", inferred = true }
+    end
+    return nil
+end
+
 function Provider:RecordOperation(kind, label, eventKey, source, spellID)
     local definition = self:GetDefinition()
     if not definition then return false, "missing-definition" end
@@ -49,10 +81,16 @@ end
 function Provider:RecordSucceededCast(unit, castGUID, spellID)
     if unit ~= "player" then return false, "not-player" end
     spellID = tonumber(spellID)
-    local definition = self:GetDefinition()
-    local rule = definition and definition.rules and definition.rules[spellID]
+    local rule = self:ResolveRule(spellID)
     if not rule then return false, "untracked-spell" end
-    return self:RecordOperation(rule.kind, rule.label, castGUID, "UNIT_SPELLCAST_SUCCEEDED", spellID)
+    local ok, result = self:RecordOperation(rule.kind, rule.label, castGUID, "UNIT_SPELLCAST_SUCCEEDED", spellID)
+    if ok then
+        local record = Addon.Database:GetProvider(Addon.Core.Characters:GetCurrent().id, self.id, false)
+        local day = record and record.days and record.days[Addon.Model.Schedule:ServerDay(Addon:Now(), self:GetDefinition().resetHour)]
+        local operation = day and day.operations and day.operations[#day.operations]
+        if operation then operation.plantType, operation.inferred = rule.plantType, rule.inferred end
+    end
+    return ok, result
 end
 
 function Provider:RecordGrowingMouseover()

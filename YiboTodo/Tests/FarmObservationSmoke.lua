@@ -6,6 +6,13 @@ date = function(format) if format == "%Y-%m-%d" then return "2024-09-01" end ret
 C_Map = { GetBestMapForUnit = function() return 376 end }
 UnitName = function() return "生长中的毒蛇荆" end
 UnitGUID = function() return "Creature-0-4891-870-6013-65973-0000000001" end
+GetSpellInfo = function(spellID)
+    return ({
+        [900001] = "播种翠玉白菜种子",
+        [900002] = "购买种子包（4块地）",
+        [900003] = "兑换种子包",
+    })[tonumber(spellID)]
+end
 
 dofile("YiboTodo/Namespace.lua")
 dofile("YiboTodo/Database.lua")
@@ -31,6 +38,38 @@ Addon.Core = {
 }
 
 local provider = assert(Addon.Providers.Registry:Get("farm-operation-observation"))
+assert(provider:ResolveRule(129883).plantType == "single", "known single-seed spell is classified")
+assert(provider:ResolveRule(900001).plantType == "single", "single-seed spell is inferred")
+assert(provider:ResolveRule(900002).plantType == "bundle", "direct seed bundle spell is inferred")
+assert(provider:ResolveRule(900003).plantType == "bundle", "30-seed exchange package is normalized to bundle")
+assert(provider:ResolveRule(111108).kind == "operate", "watering-can spell is tracked by spell ID")
+assert(provider:ResolveRule(115481).kind == "operate", "pesticide spell is tracked by spell ID")
+assert(provider:ResolveRule(6478).kind == "operate", "farm-object activation spell is tracked")
+assert(provider:ResolveRule(139977).plantType == "bundle", "snake-root seed bundle spell is tracked")
+assert(provider:ResolveRule(139981).plantType == "bundle", "magic bulb seed bundle spell is tracked")
+assert(provider:ResolveRule(116356).plantType == "bundle", "green cabbage seed bundle spell is tracked")
+assert(provider:ResolveRule(139983).plantType == "bundle", "wind-shear cactus bundle spell is tracked")
+assert(provider:ResolveRule(139975).plantType == "bundle", "joy-singing bell bundle spell is tracked")
+assert(provider:ResolveRule(139978).plantType == "bundle", "mysterious seed bundle spell is tracked")
+assert(provider:ResolveRule(131095).plantType == "bundle", "gourd bundle spell is tracked")
+assert(provider:ResolveRule(139986).plantType == "bundle", "carnivorous plant bundle spell is tracked")
+assert(provider:ResolveRule(131093).plantType == "bundle", "witchberry bundle spell is tracked")
+assert(provider:ResolveRule(131094).plantType == "bundle", "jade squash bundle spell is tracked")
+assert(provider:ResolveRule(123567).plantType == "bundle", "white turnip bundle spell is tracked")
+assert(provider:ResolveRule(123566).plantType == "bundle", "pink turnip bundle spell is tracked")
+assert(provider:ResolveRule(123486).plantType == "bundle", "mogu pumpkin bundle spell is tracked")
+assert(provider:ResolveRule(123537).plantType == "bundle", "red chive bundle spell is tracked")
+assert(provider:ResolveRule(123362).plantType == "bundle", "juicycrunch carrot package spell is tracked")
+assert(provider:ResolveRule(123389).plantType == "bundle", "scallion bundle spell is tracked")
+for _, spellID in ipairs({ 111102, 123388, 123485, 123568, 129974 }) do
+    assert(provider:ResolveRule(spellID).plantType == "single", "new single-seed spell is tracked: " .. spellID)
+end
+for _, spellID in ipairs({ 123361, 123535, 123565, 129978 }) do
+    assert(provider:ResolveRule(spellID).plantType == "single", "previously observed single-seed spell is tracked: " .. spellID)
+end
+for _, spellID in ipairs({ 123773, 123774, 123775, 129623, 129628, 129863, 129976, 133036 }) do
+    assert(provider:ResolveRule(spellID).plantType == "single", "observed single-seed spell is tracked: " .. spellID)
+end
 assert(not provider:RecordSucceededCast("player", "cast-ignored", 1449), "non-farm spell is ignored")
 assert(provider:RecordSucceededCast("player", "cast-till", 111003), "observed till is recorded")
 assert(not provider:RecordSucceededCast("player", "cast-till", 111003), "cast GUID is deduplicated")

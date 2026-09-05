@@ -53,10 +53,16 @@ frame:SetScript("OnEvent", function(_, event, ...)
         QueueProfessionScan()
     elseif event == "UNIT_SPELLCAST_SUCCEEDED" and Addon.initialized then
         local provider = Addon.Providers.Registry:Get("farm-operation-observation")
-        if provider then provider:RecordSucceededCast(...) end
+        if provider then
+            local changed = provider:RecordSucceededCast(...)
+            if changed then Addon:NotifyChanged() end
+        end
     elseif event == "UPDATE_MOUSEOVER_UNIT" and Addon.initialized then
         local provider = Addon.Providers.Registry:Get("farm-operation-observation")
-        if provider then provider:RecordGrowingMouseover() end
+        if provider then
+            local changed = provider:RecordGrowingMouseover()
+            if changed then Addon:NotifyChanged() end
+        end
     elseif (event == "QUEST_LOG_UPDATE" or event == "QUEST_ACCEPTED" or event == "PLAYER_ENTERING_WORLD") and Addon.initialized then
         local provider = Addon.Providers.Registry:Get("daily-quest")
         if provider then provider:QueueObserve() end
@@ -73,5 +79,8 @@ frame:SetScript("OnEvent", function(_, event, ...)
         local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
         local provider = Addon.Providers.Registry:Get("daily-quest")
         if provider and current then provider:ObserveTargetCompletion(current.id) end
+    end
+    if Addon.initialized and (event == "PLAYER_ENTERING_WORLD" or event == "ZONE_CHANGED_NEW_AREA") then
+        Addon:NotifyChanged()
     end
 end)

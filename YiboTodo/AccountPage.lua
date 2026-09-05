@@ -49,6 +49,15 @@ end
 
 local function ProjectTooltip(project)
     local lines = { { kind = "pair", label = "状态", value = project.statusText or STATUS_TEXT[project.state] or "状态异常" } }
+    if project.state == "actionable" then
+        lines[#lines + 1] = { kind = "text", text = "当前角色可以立即处理。" }
+    elseif project.state == "cooldown" then
+        lines[#lines + 1] = { kind = "text", text = "当前正在冷却；图标上的勾号表示已记录为等待中，不代表本周期已完成。" }
+    elseif project.state == "completed" then
+        lines[#lines + 1] = { kind = "text", text = "本周期已完成。" }
+    elseif project.state == "ready-to-turn-in" or project.state == "in-progress" then
+        lines[#lines + 1] = { kind = "text", text = "目标已完成，请返回交付。" }
+    end
     if project.dailyTaskLabel then lines[#lines + 1] = { kind = "pair", label = "当日任务", value = project.dailyTaskLabel } end
     if project.state == "unknown" and not project.optimisticFarm then
         local detail = project.reason == "recipe-unlearned"
@@ -93,11 +102,15 @@ local function GetIcon(parent, index)
     button.estimatedBorder:SetAllPoints()
     button.estimatedBorder:SetBackdrop({ edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 5 })
     button.estimatedBorder:EnableMouse(false)
+    button.actionableBorder = CreateFrame("Frame", nil, button, "BackdropTemplate")
+    button.actionableBorder:SetAllPoints()
+    button.actionableBorder:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    button.actionableBorder:EnableMouse(false)
     parent.icons[index] = button
     return button
 end
 
-local function SetIcon(button, project)
+local function SetIcon(button, project, isCurrentCharacter)
     local resolved
     if project.iconKind == "spell" and GetSpellTexture then resolved = GetSpellTexture(project.icon)
     elseif project.iconKind == "texture" then resolved = project.icon
@@ -133,13 +146,15 @@ local function SetIcon(button, project)
     button.unknown:SetShown(unknown)
     button.estimatedBorder:SetShown(project.state == "estimated")
     button.estimatedBorder:SetBackdropBorderColor(C.accent[1], C.accent[2], C.accent[3], 0.9)
+    button.actionableBorder:SetShown(isCurrentCharacter and project.state == "actionable")
+    button.actionableBorder:SetBackdropBorderColor(C.accent[1], C.accent[2], C.accent[3], 1)
     button:SetBackdropColor(C.chrome[1], C.chrome[2], C.chrome[3], 0.95)
     button:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
     Theme:BindTooltip(button, project.label, ProjectTooltip(project))
     button:Show()
 end
 
-local function RenderProjects(cell, projects)
+local function RenderProjects(cell, projects, isCurrentCharacter)
     Release(cell.icons or {}, 1)
     cell:Show()
     if #projects == 0 then
@@ -153,7 +168,7 @@ local function RenderProjects(cell, projects)
     for index, project in ipairs(projects) do
         local icon = GetIcon(cell, index)
         icon:ClearAllPoints(); icon:SetPoint("LEFT", cell, "LEFT", x, 0)
-        SetIcon(icon, project)
+        SetIcon(icon, project, isCurrentCharacter)
         x = x + ICON_SIZE + ICON_GAP
     end
 end
@@ -332,25 +347,25 @@ function Page.Refresh(frame, context)
                 if showProfession then
                 local profession = Cell(row, 1)
                 profession:ClearAllPoints(); profession:SetPoint("LEFT", characterWidth, 0); profession:SetSize(professionWidth, ROW_HEIGHT)
-                RenderProjects(profession, data.professionProjects or {})
+                    RenderProjects(profession, data.professionProjects or {}, current and character.id == current.id)
                     offset, nextCell = offset + professionWidth + COLUMN_GAP, nextCell + 1
                 end
                 if hasFarm then
                     local farm = Cell(row, nextCell)
                     farm:ClearAllPoints(); farm:SetPoint("LEFT", offset, 0); farm:SetSize(farmWidth, ROW_HEIGHT)
-                    RenderProjects(farm, data.farmProjects or {})
+                    RenderProjects(farm, data.farmProjects or {}, current and character.id == current.id)
                     offset, nextCell = offset + farmWidth + COLUMN_GAP, nextCell + 1
                 end
                 if hasNomi then
                     local nomi = Cell(row, nextCell)
                     nomi:ClearAllPoints(); nomi:SetPoint("LEFT", offset, 0); nomi:SetSize(nomiWidth, ROW_HEIGHT)
-                    RenderProjects(nomi, data.nomiProjects or {})
+                    RenderProjects(nomi, data.nomiProjects or {}, current and character.id == current.id)
                     offset, nextCell = offset + nomiWidth + COLUMN_GAP, nextCell + 1
                 end
                 if showJewelcrafting then
                     local jewelcrafting = Cell(row, nextCell)
                     jewelcrafting:ClearAllPoints(); jewelcrafting:SetPoint("LEFT", offset, 0); jewelcrafting:SetSize(jewelcraftingWidth, ROW_HEIGHT)
-                    RenderProjects(jewelcrafting, data.monitoringProjects["jewelcrafting-daily"] or {})
+                    RenderProjects(jewelcrafting, data.monitoringProjects["jewelcrafting-daily"] or {}, current and character.id == current.id)
                     offset, nextCell = offset + jewelcraftingWidth + COLUMN_GAP, nextCell + 1
                 end
                 if hasCooking then
@@ -359,19 +374,19 @@ function Page.Refresh(frame, context)
                     -- The legacy field contains only the original Halfhill
                     -- projection.  The monitoring-group list also includes
                     -- the WLK and TBC cooking dailies.
-                    RenderProjects(cooking, data.monitoringProjects["cooking-daily"] or {})
+                    RenderProjects(cooking, data.monitoringProjects["cooking-daily"] or {}, current and character.id == current.id)
                     offset, nextCell = offset + cookingWidth + COLUMN_GAP, nextCell + 1
                 end
                 if showFishing then
                     local fishing = Cell(row, nextCell)
                     fishing:ClearAllPoints(); fishing:SetPoint("LEFT", offset, 0); fishing:SetSize(fishingWidth, ROW_HEIGHT)
-                    RenderProjects(fishing, data.monitoringProjects["fishing-daily"] or {})
+                    RenderProjects(fishing, data.monitoringProjects["fishing-daily"] or {}, current and character.id == current.id)
                     offset, nextCell = offset + fishingWidth + COLUMN_GAP, nextCell + 1
                 end
                 if hasCommon then
                     local common = Cell(row, nextCell)
                     common:ClearAllPoints(); common:SetPoint("LEFT", offset, 0); common:SetSize(commonWidth, ROW_HEIGHT)
-                    RenderProjects(common, data.commonProjects or {})
+                    RenderProjects(common, data.commonProjects or {}, current and character.id == current.id)
                 end
                 -- The catalog and Core's profession snapshot are enough to
                 -- decide whether a project belongs to this character.  An
@@ -391,7 +406,7 @@ function Page.Refresh(frame, context)
     frame.emptyTitle:SetShown(count == 0); frame.empty:SetShown(count == 0)
     if count == 0 then
         frame.emptyTitle:ClearAllPoints(); frame.emptyTitle:SetPoint("TOPLEFT", 24, -26); frame.emptyTitle:SetText("等待角色快照")
-        frame.empty:ClearAllPoints(); frame.empty:SetPoint("TOPLEFT", 24, -56); frame.empty:SetPoint("TOPRIGHT", -24, -56); frame.empty:SetText("YiboCore 尚未提供可显示角色。登录角色后，专业冷却与诺米任务日志会按各自的采集规则更新。")
+        frame.empty:ClearAllPoints(); frame.empty:SetPoint("TOPLEFT", 24, -56); frame.empty:SetPoint("TOPRIGHT", -24, -56); frame.empty:SetText("YiboCore 尚未提供可显示角色。第一次或长时间未登录该角色，需要打开对应专业窗口自动同步；完成同步后再打开账号待办即可查看。")
     end
 end
 

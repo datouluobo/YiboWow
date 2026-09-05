@@ -116,6 +116,31 @@ function Provider:GetCurrentActivityDay(characterID, activityID, now)
     return days and days[Addon.Model.Schedule:ServerDay(now, definition.resetHour)], definition
 end
 
+local function LatestExpiredDay(days, currentKey)
+    local latestKey, latest
+    for dayKey, day in pairs(days or {}) do
+        if tostring(dayKey) < tostring(currentKey) and (not latestKey or tostring(dayKey) > latestKey) then
+            latestKey, latest = tostring(dayKey), day
+        end
+    end
+    return latest
+end
+
+function Provider:GetLatestExpiredCookingDay(characterID, now)
+    local definition = self:GetCookingDefinition()
+    local record = Addon.Database:GetProvider(characterID, self.id, false)
+    if not (definition and record and record.cookingDays) then return nil, definition end
+    return LatestExpiredDay(record.cookingDays, Addon.Model.Schedule:ServerDay(now, definition.resetHour)), definition
+end
+
+function Provider:GetLatestExpiredActivityDay(characterID, activityID, now)
+    local definition = Addon.Catalog.dailyActivities and Addon.Catalog.dailyActivities[activityID]
+    local record = Addon.Database:GetProvider(characterID, self.id, false)
+    local days = record and record.activityDays and record.activityDays[activityID]
+    if not (definition and days) then return nil, definition end
+    return LatestExpiredDay(days, Addon.Model.Schedule:ServerDay(now, definition.resetHour)), definition
+end
+
 function Provider:ObserveActivity(characterID, definition)
     if not (characterID and definition and definition.members) then return false end
     local now = Addon:Now()

@@ -4,6 +4,18 @@ Addon.Snapshot = Snapshot
 
 function Snapshot:Invalidate() self.dirty = true end
 
+function Snapshot:ScheduleTransitionRefresh(at)
+    self.transitionAt = at
+    if not (C_Timer and C_Timer.After and at and at > Addon:Now()) then return end
+    local delay = math.max(0.1, at - Addon:Now() + 0.1)
+    C_Timer.After(delay, function()
+        if self.transitionAt == at and Addon:Now() >= at then
+            self.dirty = true
+            Addon:NotifyChanged()
+        end
+    end)
+end
+
 -- Keep the model usable by older SavedVariables and the isolated smoke-test
 -- harnesses while the settings panel migrates to monitoring groups.
 local function MonitoringItemEnabled(groupID, itemID, legacyKind, fallback)
@@ -77,6 +89,7 @@ local function BuildFarmProject(characterID, now)
     local operations = day and day.operations or {}
     local kinds = {}
     for _, operation in ipairs(operations) do kinds[operation.kind] = true end
+    local previousDay
     if #operations == 0 and provider then previousDay = provider:GetLatestExpiredDay(characterID, now) end
     local previousKinds = {}
     for _, operation in ipairs(previousDay and previousDay.operations or {}) do previousKinds[operation.kind] = true end
@@ -116,17 +129,19 @@ local function BuildNomiProject(characterID, now)
     local day, definition
     if provider then day, definition = provider:GetCurrentDay(characterID, now) end
     if not definition or not MonitoringItemEnabled("nomi", definition.id, "activity", definition.defaultMode) then return nil, false end
-    -- A historical Nomi completion only establishes that this character has
-    -- accessed the repeatable content before.  It cannot prove which daily is
-    -- offered today, so it must never turn a missing current quest-log signal
-    -- into an actionable project during a character switch or snapshot rebuild.
+    -- A historical Nomi completion establishes access to the repeatable
+    -- content. Once the server day changes, that proof is enough to reset the
+    -- group to actionable; the exact rotating lesson is still filled in when
+    -- the quest log or Nomi gossip is observed.
     local eligibility = provider and provider:GetEligibility(characterID)
-    local state = day and day.state or "unknown"
+    local observedState = day and day.state
+    local state = observedState and observedState ~= "unknown" and observedState
+        or (eligibility and "actionable" or "unknown")
     local statusText
     if state == "ready-to-turn-in" or state == "in-progress" then statusText = "任务目标已完成，待交付"
-    elseif state == "actionable" then statusText = "任务日志已确认，可处理"
+    elseif state == "actionable" then statusText = observedState == "actionable" and "任务日志已确认，可处理" or "已满足诺米日常条件，今日已重置，可处理"
     elseif state == "completed" then statusText = "本服务器日已完成"
-    elseif eligibility then statusText = "曾完成诺米日常，等待今日任务日志确认"
+    elseif eligibility then statusText = "已满足诺米日常条件，等待今日任务日志确认"
     else statusText = "尚未在任务日志中确认当前诺米日常"
     end
     return {
@@ -137,7 +152,7 @@ local function BuildNomiProject(characterID, now)
         questID = day and day.questID, questKind = day and day.kind, dailyTaskLabel = day and day.label,
         eligibilityKnown = eligibility ~= nil,
         statusText = statusText, reason = day and day.reason,
-        providerState = day and "available" or "not-yet-observed",
+        providerState = day and "available" or (eligibility and "available" or "not-yet-observed"),
     }, true
 end
 
@@ -147,7 +162,13 @@ local function BuildCookingProject(characterID, characterLevel, now)
     if not definition or not MonitoringItemEnabled("cooking-daily", definition.id, "activity", definition.defaultMode) then return nil, false end
     if (tonumber(characterLevel) or 0) < 90 then return nil, true end
     local day = provider:GetCurrentCookingDay(characterID, now)
-    local state = day and day.state or "actionable"
+    local previousDay = (not day or day.state == "unknown") and provider.GetLatestExpiredCookingDay
+        and provider:GetLatestExpiredCookingDay(characterID, now) or nil
+    local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+    local isCurrentCharacter = current and current.id == characterID
+    local observedState = day and day.state
+    local state = observedState and observedState ~= "unknown" and observedState
+        or (previousDay and "actionable" or (isCurrentCharacter and "actionable" or "unknown"))
     local iconKind = definition.iconCurrencyID and "currency" or (definition.iconItemID and "item" or "texture")
     local icon = definition.iconCurrencyID or definition.iconItemID or definition.icon
     if not definition.iconCurrencyID and not definition.iconItemID then
@@ -164,8 +185,11 @@ local function BuildCookingProject(characterID, characterLevel, now)
         nextResetAt = day and day.nextResetAt or Addon.Model.Schedule:NextResetAt(now, definition.resetHour),
         dailyTaskLabel = day and day.label,
         statusText = (state == "ready-to-turn-in" or state == "in-progress") and "任务目标已完成，待交付"
-            or state == "completed" and "本服务器日已完成" or "可处理",
-        providerState = day and "available" or "not-yet-observed",
+            or state == "completed" and "本服务器日已完成"
+            or observedState == "actionable" and "任务日志已确认，可处理"
+            or "每日重置，可处理",
+        providerState = observedState and observedState ~= "unknown" and "available"
+            or (previousDay and "available" or (isCurrentCharacter and "available" or "not-yet-observed")),
     }, true
 end
 
@@ -173,9 +197,23 @@ local function BuildLegacyDailyProject(characterID, definition, monitoringGroupI
     if not MonitoringItemEnabled(monitoringGroupID, definition.id, "activity", definition.defaultMode) then return nil end
     local provider = Addon.Providers.Registry:Get("daily-quest")
     local day = provider and provider:GetCurrentActivityDay(characterID, definition.id, now)
-    local state = day and day.state or "unknown"
+    -- Legacy daily rotations have no tracked prerequisite, but a completely
+    -- unobserved remote character must not be presented as reset after reload.
+    -- A prior server-day record is the evidence that this activity is tracked.
+    local previousDay = (not day or day.state == "unknown") and provider and provider.GetLatestExpiredActivityDay
+        and provider:GetLatestExpiredActivityDay(characterID, definition.id, now) or nil
+    local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+    local isCurrentCharacter = current and current.id == characterID
+    local observedState = day and day.state
+    local state = observedState and observedState ~= "unknown" and observedState
+        or (previousDay and "actionable" or (isCurrentCharacter and "actionable" or "unknown"))
     local iconKind = definition.iconCurrencyID and "currency" or (definition.iconItemID and "item" or "texture")
     local icon = definition.iconCurrencyID or definition.iconItemID or definition.icon
+    local statusText
+    if state == "in-progress" then statusText = "任务目标已完成，待交付"
+    elseif state == "actionable" then statusText = observedState == "actionable" and "任务日志已确认，可处理" or "每日重置，可处理"
+    elseif state == "completed" then statusText = "本服务器日已完成"
+    else statusText = "等待任务日志确认" end
     return {
         groupID = definition.id, monitoringGroupID = monitoringGroupID,
         label = definition.label, order = definition.order or 999,
@@ -183,10 +221,9 @@ local function BuildLegacyDailyProject(characterID, definition, monitoringGroupI
         observedAt = day and day.observedAt,
         nextResetAt = day and day.nextResetAt or Addon.Model.Schedule:NextResetAt(now, definition.resetHour),
         questID = day and day.questID, dailyTaskLabel = day and day.label,
-        statusText = state == "in-progress" and "任务目标已完成，待交付"
-            or state == "actionable" and "任务日志已确认，可处理"
-            or state == "completed" and "本服务器日已完成" or "等待任务日志确认",
-        providerState = day and "available" or "not-yet-observed", catalogPending = definition.verificationStatus == "needs-live-confirmation",
+        statusText = statusText,
+        providerState = observedState and observedState ~= "unknown" and "available"
+            or (previousDay and "available" or (isCurrentCharacter and "available" or "not-yet-observed")), catalogPending = definition.verificationStatus == "needs-live-confirmation",
     }
 end
 
@@ -309,6 +346,7 @@ function Snapshot:Build()
         end
     end
     self.value, self.dirty, self.nextTransitionAt = value, false, nextTransitionAt
+    self:ScheduleTransitionRefresh(nextTransitionAt)
     return value
 end
 

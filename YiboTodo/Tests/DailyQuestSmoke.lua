@@ -124,7 +124,12 @@ assert(Addon.Database:GetProvider("nomi-character", "daily-quest", false).nomiEl
 clock, gameHour, gameMinute = clock + 86400 * 4, 12, 0
 Addon.Snapshot:Invalidate()
 project = assert(Addon.Snapshot:GetCharacter("nomi-character")).nomiProjects[1]
-assert(project.state == "unknown" and project.eligibilityKnown, "a historical Nomi completion never makes an unobserved new daily actionable")
+assert(project.state == "actionable" and project.eligibilityKnown, "a historical Nomi completion resets to actionable after the server day changes")
+log = {}
+assert(provider:Observe("nomi-character"), "a post-reset quest-log scan completes")
+Addon.Snapshot:Invalidate()
+project = assert(Addon.Snapshot:GetCharacter("nomi-character")).nomiProjects[1]
+assert(project.state == "actionable" and project.eligibilityKnown, "an empty post-reset scan does not turn an eligible Nomi into unknown")
 assert(provider:ObserveNomiGossip("nomi-character"), "talking to Nomi reconciles an established character")
 project = assert(Addon.Snapshot:GetCharacter("nomi-character")).nomiProjects[1]
 assert(project.state == "completed", "Nomi offering no tracked daily confirms today's completion for an eligible character")

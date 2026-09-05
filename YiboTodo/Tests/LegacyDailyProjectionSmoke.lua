@@ -23,7 +23,7 @@ _G.YiboTodoDB = {}
 Addon.Database:Initialize()
 Addon.Core = {
     Characters = {
-        GetAll = function() return { { id = "cook", level = 90 } } end,
+        GetAll = function() return { { id = "cook", level = 90 }, { id = "remote", level = 90 } } end,
         GetCurrent = function() return { id = "cook" } end,
     },
     DataDomains = {
@@ -33,8 +33,18 @@ Addon.Core = {
     },
 }
 
+local provider = Addon.Database:GetProvider("cook", "daily-quest", true)
+provider.cookingDays = { ["2024-08-31"] = { state = "completed", observedAt = clock - 86400 } }
+provider.activityDays = {}
+for _, activityID in ipairs({ "ctm.cooking-daily", "wlk.cooking-daily", "tbc.cooking-daily" }) do
+    provider.activityDays[activityID] = { ["2024-08-31"] = { state = "completed", observedAt = clock - 86400 } }
+end
+
 local character = assert(Addon.Snapshot:GetCharacter("cook"))
 local cooking = character.monitoringProjects["cooking-daily"]
 assert(#cooking == 4, "cooking column projects CTM, MoP, WLK, and TBC entries")
 assert(cooking[1].groupID == "mop.halfhill.cooking-daily" and cooking[2].groupID == "ctm.cooking-daily" and cooking[3].groupID == "wlk.cooking-daily" and cooking[4].groupID == "tbc.cooking-daily", "equal-status cooking entries follow their stable catalog order")
+assert(cooking[1].state == "actionable" and cooking[2].state == "actionable" and cooking[3].state == "actionable" and cooking[4].state == "actionable", "daily activities without prerequisites reset to actionable on a new server day")
+local remote = assert(Addon.Snapshot:GetCharacter("remote"))
+assert(remote.cookingProjects[1].state == "unknown", "an unobserved remote character is not reset without daily history")
 print("YiboTodo legacy daily projection smoke passed")

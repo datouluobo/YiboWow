@@ -176,12 +176,13 @@ local function PrintFarmSpellCapture(capture)
     local spellIDs = {}
     for spellID in pairs(grouped) do spellIDs[#spellIDs + 1] = spellID end
     table.sort(spellIDs)
-    Addon:Print(string.format("农场法术采集：开始=%s，地图=%s，成功施法=%d，唯一 ID=%d。", tostring(capture.startedAt), tostring(capture.mapID), #(capture.events or {}), #spellIDs))
+    local lines = {}
     for _, spellID in ipairs(spellIDs) do
         local group, info = grouped[spellID], CaptureSpellInfo(spellID)
-        local raw = not info.available and "不可用" or (not info.ok and ("调用失败：" .. tostring(info.error)) or ("返回 " .. table.concat(info.returns or {}, " | ")))
-        Addon:Print(string.format("农场候选 spell=%d；次数=%d；GetSpellInfo=%s。", spellID, group.count, raw))
+        local name = info.ok and info.values and info.values[1] or "未知法术"
+        lines[#lines + 1] = string.format("spellID=%d×%d %s", spellID, group.count, tostring(name))
     end
+    Addon:Print(string.format("农场采集：地图=%s，事件=%d；%s。", tostring(capture.mapID), #(capture.events or {}), #lines > 0 and table.concat(lines, "；") or "未捕获法术"))
 end
 
 local function CaptureQuestLog()
@@ -328,7 +329,9 @@ function Probe:Run(verbose, questIDs, resetQuestBaseline, farmCaptureMode)
     end
     detail.eventTrace = Addon.db.diagnostics.dailyEventTrace or {}
     Addon.db.diagnostics.lastProbe = detail
-    Addon:Print(string.format("探针：Interface %s，正式条目 %d，任务日志 %d 条，目录错误 %d，候选 %d。", tostring(detail.interface), detail.activeRecipes, #detail.questLog.entries, #detail.errors, #detail.warnings))
+    if farmCaptureMode == nil then
+        Addon:Print(string.format("探针：Interface %s，正式条目 %d，任务日志 %d 条，目录错误 %d，候选 %d。", tostring(detail.interface), detail.activeRecipes, #detail.questLog.entries, #detail.errors, #detail.warnings))
+    end
     if verbose then
         for _, code in ipairs(detail.errors) do Addon:Print("错误：" .. code) end
         for _, code in ipairs(detail.warnings) do Addon:Print("候选：" .. code) end
@@ -372,6 +375,9 @@ function Probe:Run(verbose, questIDs, resetQuestBaseline, farmCaptureMode)
         if farmCaptureMode == "finish" then PrintFarmSpellCapture(detail.farmSpellCapture) end
         Addon:Print(string.format("任务日志 %d 条；已捕获每日活动事件 %d 条。", #detail.questLog.entries, #detail.eventTrace))
         Addon:Print("每日活动探针只记录 diagnostics；农场、任务和账号每日均未写入正式业务快照。")
+    end
+    if not verbose and farmCaptureMode == "finish" then
+        PrintFarmSpellCapture(detail.farmSpellCapture)
     end
     if farmCaptureMode == "start" then
         self.farmSpellCapture = { startedAt = Addon:Now(), mapID = CurrentMapID(), events = {}, castGUIDs = {} }
