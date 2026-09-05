@@ -1023,7 +1023,9 @@ function AccountView:RefreshNavigation()
     if frame.preview then return end
     local pages = {}
     if self.activePageID == "settings" then
-        pages[#pages + 1] = { id = "overview", title = "‹ 返回账号视图" }
+        local target = self._pages[self.settingsTargetPageID or ""]
+        local returnPage = target and not target.internal and target or self._pages.overview
+        pages[#pages + 1] = { id = returnPage.id, title = "‹ 返回" .. returnPage.title }
         pages[#pages + 1] = { id = "settings-core-heading", title = "Core 常规设置", section = true }
         pages[#pages + 1] = { id = "settings-core", title = "  窗口", settingsTargetID = "core" }
         pages[#pages + 1] = { id = "settings-sorting", title = "  角色与排序", settingsTargetID = "sorting" }
@@ -1426,8 +1428,14 @@ function AccountView:Toggle(pageID)
     frame:Show(); self:ShowPage(pageID or self.activePageID or "overview", { autoFit = opening })
 end
 
-function AccountView:ShowSettings()
-    if self.activePageID and self.activePageID ~= "settings" then
+function AccountView:ShowSettings(targetID)
+    if targetID then
+        -- Entry shortcuts provide the business page explicitly.  Validate it
+        -- before changing state so a stale/unregistered entry falls back to
+        -- the normal settings landing page instead of rendering a blank host.
+        if self:SelectSettingsTarget(targetID) == false then targetID = nil end
+    end
+    if not targetID and self.activePageID and self.activePageID ~= "settings" then
         local active = self._pages[self.activePageID]
         self.settingsTargetPageID = active and not active.internal and active.id or "display"
     end

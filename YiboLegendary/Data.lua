@@ -18,8 +18,8 @@ Data.VENDOR_PRICE_SNAPSHOTS = {
 }
 
 local actions = {
-    ["ORANGE-PRE-01"] = "达到 90 级后，前往迷雾栈道寻找拉西奥。",
-    ["ORANGE-C1-01"] = "前往迷雾栈道，与拉西奥完成对话。",
+    ["ORANGE-PRE-01"] = "90 级前往雾沙栈道迷雾酒肆找黑王子",
+    ["ORANGE-C1-01"] = "前往迷雾栈道，与拉西奥喝一杯。",
     ["ORANGE-C1-02"] = "通过天神尾王获得印记，或按当前商店价格兑换力量/智慧印记。",
     ["ORANGE-C1-03"] = "完成黑王子阵营日常或击杀相应敌人，将声望提升至尊敬。",
     ["ORANGE-C1-04"] = "进入永春台，击败惧之煞并取得任务物品。",
@@ -54,8 +54,8 @@ local actions = {
 }
 
 local tableActions = {
-    ["ORANGE-PRE-01"] = "迷雾栈道找拉西奥",
-    ["ORANGE-C1-01"] = "迷雾栈道找拉西奥",
+    ["ORANGE-PRE-01"] = "90 级前往雾沙栈道迷雾酒肆找黑王子",
+    ["ORANGE-C1-01"] = "迷雾栈道与拉西奥喝一杯",
     ["ORANGE-C1-02"] = "天神尾王掉落或按商店当前价格兑换印记",
     ["ORANGE-C1-03"] = "完成黑王子日常提升声望",
     ["ORANGE-C1-04"] = "进入永春台击败惧之煞",
@@ -90,10 +90,10 @@ local tableActions = {
 }
 
 local definitions = {
-    { id="ORANGE-PRE-01", questId=31488, chapter=0, name="陌生之地的陌生人", objective="达到 90 级后，在迷雾栈道接触拉西奥。", level=90 },
-    { id="ORANGE-C1-01", questId=31454, chapter=1, name="传说的开端", objective="与拉西奥完成剧情对话。", requires={"ORANGE-PRE-01"} },
-    { id="ORANGE-C1-02", questId=31473, chapter=1, name="敌人的力量", objective="力量印记 10 个；智慧印记 10 个。", requires={"ORANGE-C1-01"}, parallelGroup="ORANGE-C1-REQUIREMENTS" },
-    { id="ORANGE-C1-03", questId=31468, chapter=1, name="黑王子的试炼", objective="黑王子声望达到尊敬。", requires={"ORANGE-C1-01"}, reputation="HONORED", parallelGroup="ORANGE-C1-REQUIREMENTS" },
+    { id="ORANGE-PRE-01", questId=31488, chapter=0, name="异乡的陌生人", objective="90 级后，在雾沙栈道的迷雾酒肆找到“黑王子”。", level=90, startLocation="雾沙栈道·迷雾酒肆" },
+    { id="ORANGE-C1-01", questId=31454, chapter=1, name="创造传奇", objective="跟拉西奥喝一杯：0/1。", requires={"ORANGE-PRE-01"}, startLocation="迷雾栈道·迷雾酒肆" },
+    { id="ORANGE-C1-02", questId=31473, chapter=1, name="敌人的力量", objective="力量印记：0/10；智慧印记：0/10。", requires={"ORANGE-C1-01"}, parallelGroup="ORANGE-C1-REQUIREMENTS" },
+    { id="ORANGE-C1-03", questId=31468, chapter=1, name="黑王子的试炼", objective="黑王子阵营声望达到尊敬：0/1。", requires={"ORANGE-C1-01"}, reputation="HONORED", parallelGroup="ORANGE-C1-REQUIREMENTS" },
     { id="ORANGE-C1-04", questId=31481, chapter=1, name="恐惧本身", objective="击败惧之煞，获得恐惧奇美拉。", requires={"ORANGE-C1-02", "ORANGE-C1-03"}, requirementMode="all" },
     { id="ORANGE-C1-05", questId=31482, chapter=1, name="黑王子的气息", objective="前往迷雾栈道领取章节奖励。", requires={"ORANGE-C1-04"} },
     { id="ORANGE-C2-01", questId=31483, chapter=2, name="来袭……", objective="联系拉西奥，开启战争篇。", requires={"ORANGE-C1-05"}, phase=true },

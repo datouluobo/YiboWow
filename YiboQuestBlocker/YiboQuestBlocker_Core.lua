@@ -6,8 +6,16 @@
 -- ==================== 数据初始化 ====================
 YiboQuestBlockerDB = YiboQuestBlockerDB or {}
 
+local SCHEMA_VERSION = 3
+local DEFAULT_RUNTIME_SETTINGS = {
+    directReject = true,
+    continueKnownAutomation = true,
+    continueUnknownAutomation = false,
+    grayNPCList = true,
+}
+
 local ADDON_NAME = ...
-local Core = assert(_G.YiboCore, "YiboQuestBlocker v2 requires YiboCore")
+local Core = assert(_G.YiboCore, "YiboQuestBlocker v3 requires YiboCore")
 local curCharacterID = Core.Characters:GetCurrentID()
 local PersistDB
 
@@ -102,7 +110,7 @@ local function MigrateV1Database()
         end
     end
     YiboQuestBlockerDB.characterData = characterData
-    YiboQuestBlockerDB.schemaVersion = 2
+    YiboQuestBlockerDB.schemaVersion = SCHEMA_VERSION
     if migratedCount == sourceCount then
         YiboQuestBlockerDB.knownChars = nil
         YiboQuestBlockerDB.perChar = nil
@@ -148,6 +156,13 @@ if not YiboQuestBlockerDB.settings.previewColumns then
         characters = true,
     }
 end
+YiboQuestBlockerDB.settings.runtime = YiboQuestBlockerDB.settings.runtime or {}
+for key, value in pairs(DEFAULT_RUNTIME_SETTINGS) do
+    if YiboQuestBlockerDB.settings.runtime[key] == nil then
+        YiboQuestBlockerDB.settings.runtime[key] = value
+    end
+end
+YiboQuestBlockerDB.diagnostics = type(YiboQuestBlockerDB.diagnostics) == "table" and YiboQuestBlockerDB.diagnostics or {}
 -- 本地引用（加速 + 避免被外部篡改绕过的风险）
 local YQBDB   = YiboQuestBlockerDB
 local blocked = YiboQuestBlockerDB.globalBlocked
@@ -167,6 +182,23 @@ local autoAbandonProcessing = false
 local reportedUnabandonable = {}
 local syncThrottleUntil = 0
 local MaybeStartAutoAbandonTimer
+local directRejectActions = {}
+local interactionSerial = 0
+local activeBatch
+local guardedFunctions = {}
+local selectionGuards = {}
+local knownAutomation = {
+    ["Questie"] = { label = "Questie", continuationVerified = false },
+    -- !Pig enumerates every available quest in a single QUEST_GREETING pass.
+    -- Filtering SelectAvailableQuest is a verified selection-layer adapter:
+    -- it retains !Pig's own non-trivial filter while preventing blocked IDs
+    -- from replacing the allowed quest detail later in that same loop.
+    ["!Pig"] = { label = "!Pig", continuationVerified = true },
+    ["NDui"] = { label = "NDui QuickQuest", continuationVerified = false },
+    ["Leatrix_Plus"] = { label = "Leatrix Plus", continuationVerified = false },
+    ["DialogueUI"] = { label = "DialogueUI", continuationVerified = false },
+    ["Blitz"] = { label = "Blitz", continuationVerified = false },
+}
 
 PersistDB = function()
     YiboQuestBlockerDB = YiboQuestBlockerDB or {}
@@ -175,7 +207,7 @@ PersistDB = function()
     YiboQuestBlockerDB.characterData = YQBDB.characterData
     YiboQuestBlockerDB.filters = YQBDB.filters
     YiboQuestBlockerDB.settings = YQBDB.settings
-    YiboQuestBlockerDB.schemaVersion = 2
+    YiboQuestBlockerDB.schemaVersion = SCHEMA_VERSION
 end
 
 local function BindDBReferences()
@@ -188,6 +220,13 @@ local function BindDBReferences()
         global = true,
         characters = true,
     }
+    YiboQuestBlockerDB.settings.runtime = YiboQuestBlockerDB.settings.runtime or {}
+    for key, value in pairs(DEFAULT_RUNTIME_SETTINGS) do
+        if YiboQuestBlockerDB.settings.runtime[key] == nil then
+            YiboQuestBlockerDB.settings.runtime[key] = value
+        end
+    end
+    YiboQuestBlockerDB.diagnostics = type(YiboQuestBlockerDB.diagnostics) == "table" and YiboQuestBlockerDB.diagnostics or {}
     YiboQuestBlockerDB.filters = YiboQuestBlockerDB.filters or {
         showDaily = true,
         showNormal = true,
@@ -275,6 +314,51 @@ end)
 YQB.IsAutoAbandonEnabled = function()
     return not not (YQBDB.filters and YQBDB.filters.autoAbandon)
 end
+YQB.GetRuntimeSettings = function()
+    return YQBDB.settings.runtime
+end
+YQB.SetRuntimeSetting = function(key, value)
+    if DEFAULT_RUNTIME_SETTINGS[key] == nil then return false end
+    YQBDB.settings.runtime[key] = not not value
+    PersistDB()
+    if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged() end
+    return true
+end
+YQB.GetDiagnostics = function()
+    return YQBDB.diagnostics
+end
+YQB.ClearDiagnostics = function()
+    wipe(YQBDB.diagnostics)
+    PersistDB()
+    if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged() end
+end
+local function IsKnownAddonLoaded(addonName)
+    if C_AddOns and C_AddOns.IsAddOnLoaded then
+        return C_AddOns.IsAddOnLoaded(addonName) == true
+    end
+    return IsAddOnLoaded and IsAddOnLoaded(addonName) == true
+end
+
+local function GetKnownAddonVersion(addonName)
+    if C_AddOns and C_AddOns.GetAddOnMetadata then
+        return C_AddOns.GetAddOnMetadata(addonName, "Version")
+    end
+    return GetAddOnMetadata and GetAddOnMetadata(addonName, "Version") or nil
+end
+
+YQB.GetAutomationAdapters = function()
+    local result = {}
+    for addonName, adapter in pairs(knownAutomation) do
+        local loaded = IsKnownAddonLoaded(addonName)
+        result[#result + 1] = {
+            addon = addonName, label = adapter.label, loaded = loaded,
+            version = loaded and GetKnownAddonVersion(addonName) or nil,
+            continuationVerified = adapter.continuationVerified,
+        }
+    end
+    table.sort(result, function(a, b) return a.label < b.label end)
+    return result
+end
 YQB.GetDatabase = function()
     return YQBDB
 end
@@ -325,6 +409,59 @@ function YQB.IsQuestBlocked(questID)
     if YQBDB.globalBlocked[questID] then return true end
     if characterData[curCharacterID] and characterData[curCharacterID].blocked[questID] then return true end
     return false
+end
+
+function YQB.GetBlockScope(questID)
+    if not questID then return nil end
+    if YQBDB.globalBlocked[questID] then return "global" end
+    if characterData[curCharacterID] and characterData[curCharacterID].blocked[questID] then return "char" end
+    return nil
+end
+
+local function AddDiagnostic(result, questID, detail)
+    local entries = YQBDB.diagnostics
+    entries[#entries + 1] = {
+        at = time and time() or 0,
+        result = result,
+        questID = questID,
+        detail = detail,
+    }
+    while #entries > 30 do table.remove(entries, 1) end
+end
+
+local function CurrentInteractionIdentity()
+    if UnitGUID then
+        local guid = UnitGUID("npc")
+        if guid then return guid end
+    end
+    return "unknown-npc"
+end
+
+local function EndQuestBatch(reason)
+    if activeBatch and reason then AddDiagnostic("自动续办停止", activeBatch.expectedQuestID, reason) end
+    if activeBatch then
+        local prefix = tostring(activeBatch.serial) .. ":"
+        for key in pairs(directRejectActions) do
+            if string.sub(key, 1, #prefix) == prefix then directRejectActions[key] = nil end
+        end
+    end
+    activeBatch = nil
+end
+
+local function StartRejectedBatch(questID)
+    local identity = CurrentInteractionIdentity()
+    if not activeBatch or activeBatch.identity ~= identity or activeBatch.characterID ~= curCharacterID then
+        interactionSerial = interactionSerial + 1
+        activeBatch = {
+            identity = identity, characterID = curCharacterID, serial = interactionSerial,
+            rejected = {}, maxActions = 1, actions = 0,
+        }
+    end
+    if activeBatch.rejected[questID] then return false end
+    activeBatch.rejected[questID] = true
+    activeBatch.expectedQuestID = questID
+    activeBatch.actions = activeBatch.actions + 1
+    return true
 end
 
 -- 判断任务是否被任何角色屏蔽（用于"屏蔽组"显示）
@@ -1112,41 +1249,89 @@ function YQB.GetStats()
     return globalCount, charCount, total
 end
 
--- ==================== 核心：包裹 AcceptQuest ====================
-local OriginalAcceptQuest = AcceptQuest
-AcceptQuest = function(...)
-    local questID = GetQuestID()
-    if questID then
-        if YQBDB.globalBlocked[questID] then
-            QueueRejectedQuest(questID, "global", false)
-            return OriginalAcceptQuest(...)
-        end
-        if characterData[curCharacterID] and characterData[curCharacterID].blocked[questID] then
-            QueueRejectedQuest(questID, "char", false)
-            return OriginalAcceptQuest(...)
-        end
+-- ==================== 接取前直接拒绝防线 ====================
+-- We deliberately keep this guard narrow: it never selects a replacement
+-- quest.  Unknown automation has opaque candidate rules, so choosing for it
+-- would be more disruptive than stopping after the rejected quest.
+local function RejectCurrentQuest(questID, scope, confirmType)
+    if not questID or not YQB.GetRuntimeSettings().directReject then return false end
+    StartRejectedBatch(questID)
+    local actionKey = tostring(activeBatch and activeBatch.serial or interactionSerial) .. ":" .. tostring(questID)
+    if directRejectActions[actionKey] then return true end
+    directRejectActions[actionKey] = true
+    local name = YQB.GetQuestName(questID) or ("ID: " .. tostring(questID))
+    if DeclineQuest then
+        DeclineQuest()
+        AddDiagnostic("已直接拒绝", questID, scope == "global" and "全局规则" or "当前角色规则")
+        YQB.ReportMessage("已直接拒绝" .. (scope == "global" and "全局" or "个人") .. "任务: " .. name, true)
+    else
+        AddDiagnostic("无法自动处理", questID, "客户端未提供 DeclineQuest")
+        -- Keep the legacy recovery layer available only when direct rejection
+        -- cannot be invoked on this client.
+        QueueRejectedQuest(questID, scope, confirmType)
     end
-    return OriginalAcceptQuest(...)
+    PersistDB()
+    return true
 end
 
--- ==================== 核心：包裹 ConfirmAcceptQuest ====================
-if ConfirmAcceptQuest then
-    local OriginalConfirmAcceptQuest = ConfirmAcceptQuest
-    ConfirmAcceptQuest = function(...)
-        local questID = GetQuestID()
-        if questID then
-            if YQBDB.globalBlocked[questID] then
-                QueueRejectedQuest(questID, "global", true)
-                return OriginalConfirmAcceptQuest(...)
-            end
-            if characterData[curCharacterID] and characterData[curCharacterID].blocked[questID] then
-                QueueRejectedQuest(questID, "char", true)
-                return OriginalConfirmAcceptQuest(...)
-            end
-        end
-        return OriginalConfirmAcceptQuest(...)
-    end
+local function SkipBlockedQuestSelection(questID)
+    if not questID or not YQB.GetRuntimeSettings().directReject then return false end
+    local scope = YQB.GetBlockScope(questID)
+    if not scope then return false end
+
+    StartRejectedBatch(questID)
+    local actionKey = tostring(activeBatch and activeBatch.serial or interactionSerial) .. ":select:" .. tostring(questID)
+    if directRejectActions[actionKey] then return true end
+    directRejectActions[actionKey] = true
+    AddDiagnostic("已在列表跳过", questID, scope == "global" and "全局规则" or "当前角色规则")
+    YQB.ReportMessage("已在列表跳过" .. (scope == "global" and "全局" or "个人") .. "任务: " .. (YQB.GetQuestName(questID) or ("ID: " .. tostring(questID))), true)
+    PersistDB()
+    return true
 end
+
+local function InstallDirectRejectGuard(functionName, confirmType)
+    local current = _G[functionName]
+    local guard = guardedFunctions[functionName]
+    if guard and current == guard.wrapper then return end
+    if type(current) ~= "function" then return end
+    guard = { original = current }
+    guard.wrapper = function(...)
+        local questID = GetQuestID and GetQuestID()
+        local scope = YQB.GetBlockScope(questID)
+        if scope and RejectCurrentQuest(questID, scope, confirmType) then return end
+        return guard.original(...)
+    end
+    guardedFunctions[functionName] = guard
+    _G[functionName] = guard.wrapper
+end
+
+local function InstallSelectionGuard(host, functionName)
+    if type(host) ~= "table" then return end
+    local current = host[functionName]
+    local key = tostring(host) .. ":" .. functionName
+    local guard = selectionGuards[key]
+    if guard and current == guard.wrapper then return end
+    if type(current) ~= "function" then return end
+    guard = { original = current }
+    guard.wrapper = function(questID, ...)
+        if SkipBlockedQuestSelection(questID) then return end
+        return guard.original(questID, ...)
+    end
+    selectionGuards[key] = guard
+    host[functionName] = guard.wrapper
+end
+
+local function InstallDirectRejectGuards()
+    InstallDirectRejectGuard("AcceptQuest", false)
+    InstallDirectRejectGuard("ConfirmAcceptQuest", true)
+    -- This is the selection-layer companion to the final AcceptQuest guard.
+    -- It fixes multi-quest loops such as !Pig without guessing which allowed
+    -- quest an automation addon should choose next.
+    InstallSelectionGuard(C_GossipInfo, "SelectAvailableQuest")
+    InstallSelectionGuard(_G, "SelectAvailableQuest")
+end
+
+InstallDirectRejectGuards()
 
 -- ==================== 事件监听 ====================
 local frame = CreateFrame("Frame")
@@ -1159,10 +1344,16 @@ frame:RegisterEvent("PLAYER_LOGOUT")
 frame:RegisterEvent("QUEST_LOG_UPDATE")
 frame:RegisterEvent("QUEST_FINISHED")
 frame:RegisterEvent("GOSSIP_CLOSED")
+frame:RegisterEvent("QUEST_GREETING")
+frame:RegisterEvent("GOSSIP_SHOW")
 
 frame:SetScript("OnEvent", function(self, event, ...)
     if event == "ADDON_LOADED" then
         local addonName = ...
+        -- Add-ons loaded after YQB can replace global quest API functions.
+        -- Reinstall our final guard after every load without inspecting their
+        -- tables or SavedVariables.
+        InstallDirectRejectGuards()
         if addonName ~= ADDON_NAME then return end
         BindDBReferences()
         PersistDB()
@@ -1179,6 +1370,9 @@ frame:SetScript("OnEvent", function(self, event, ...)
         ResetAutoAbandonState()
         wipe(reportedUnabandonable)
         wipe(recentBlockNotices)
+        wipe(directRejectActions)
+        activeBatch = nil
+        InstallDirectRejectGuards()
         SyncRejectedQuestsToQueue(true)
         PersistDB()
         if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged() end
@@ -1208,7 +1402,13 @@ frame:SetScript("OnEvent", function(self, event, ...)
         end
         if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged() end
 
+    elseif event == "QUEST_GREETING" or event == "GOSSIP_SHOW" then
+        -- A new natural list is a new client interaction boundary.  We never
+        -- choose another quest here; adapters must explicitly earn that role.
+        if activeBatch and activeBatch.identity ~= CurrentInteractionIdentity() then EndQuestBatch() end
+
     elseif event == "QUEST_FINISHED" or event == "GOSSIP_CLOSED" then
+        if event == "GOSSIP_CLOSED" then EndQuestBatch() end
         if YQB.IsAutoAbandonEnabled() and autoAbandonWaitingForClose then
             MaybeStartAutoAbandonTimer()
         end

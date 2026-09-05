@@ -51,7 +51,7 @@ function Integration:Initialize()
     local compatible = Core:CheckAPIVersion(5)
     if not compatible then return nil, "需要 YiboCore API v5。" end
 
-    local addon, addonError = Core:RegisterAddon("YiboQuestBlocker", { version = "2.1", requiredAPI = 5 })
+    local addon, addonError = Core:RegisterAddon("YiboQuestBlocker", { version = "3.0.0", requiredAPI = 5 })
     if not addon then return nil, addonError end
     local database = YQB.GetDatabase()
     database.filters = database.filters or {}
@@ -98,7 +98,10 @@ function Integration:Initialize()
         GetPreviewFields = PreviewFields,
         SetPreviewFieldVisible = SetPreviewField,
         defaultEnabled = true,
-        settings = { title = "任务屏蔽", description = "角色身份与服务器范围由 Core 管理；任务屏蔽快照由 QuestBlocker 保存。" },
+        settings = {
+            title = "任务屏蔽", description = "角色身份、页面、入口、字段与排序由 Core 管理；拒绝规则、运行设置和诊断由 QuestBlocker 保存。",
+            CreateSettingsPanel = function(parent, context) return YQB.CreateSettingsPanel(parent, context) end,
+        },
         Create = YQB.AccountPage.Create,
         Refresh = YQB.AccountPage.Refresh,
         GetSurfaceMetrics = YQB.AccountPage.GetSurfaceMetrics,

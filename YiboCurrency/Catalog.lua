@@ -1,38 +1,72 @@
 local Addon = _G.YiboCurrency
 
--- Every entry is a baseline record: stable key, expansion/category and source
--- are explicit. `verified` documents the 5.5.4 probe status rather than
--- turning an absent API result into a zero balance.
+-- The order below is the native Currency tab's functional grouping. Status is
+-- data provenance, not a visibility rule: legacy balances remain readable.
+local function Currency(id, title, short, expansion, sourceType, status)
+    return { id = "currency:" .. id, currencyID = id, title = title, shortTitle = short, icon = nil,
+        expansion = expansion, source = "currency", sourceType = sourceType or "标准货币",
+        status = status or "仅存量遗留", totalAllowed = true, verified = "pending-client" }
+end
+
+local function Item(id, title, short, expansion, status)
+    return { id = "item:" .. id, itemID = id, title = title, shortTitle = short, icon = nil,
+        expansion = expansion, source = "item", sourceType = "物品代币",
+        status = status or "仅存量遗留", totalAllowed = true, verified = "pending-client" }
+end
+
+local CURRENT = "当前可获取"
+local LEGACY = "仅存量遗留"
+local EXPIRED = "过期"
+
 Addon.Catalog = {
-    { id="money", title="金币", expansion="其它与未归类", category="常规货币", source="money", verified=true },
-    { id="currency:390", currencyID=390, title="征服点数", expansion="熊猫人之谜", category="常规货币", source="currency", verified=false },
-    { id="currency:392", currencyID=392, title="荣誉点数", expansion="熊猫人之谜", category="常规货币", source="currency", verified=false },
-    { id="currency:395", currencyID=395, title="正义点数", expansion="大地的裂变", category="常规货币", source="currency", verified=false },
-    { id="currency:396", currencyID=396, title="勇气点数", expansion="熊猫人之谜", category="常规货币", source="currency", verified=false },
-    { id="currency:697", currencyID=697, title="长者的好运符", expansion="熊猫人之谜", category="专业与系统货币", source="currency", verified=false },
-    { id="currency:738", currencyID=738, title="次级好运符", expansion="熊猫人之谜", category="专业与系统货币", source="currency", verified=false },
-    { id="currency:752", currencyID=752, title="魔古命运符文", expansion="熊猫人之谜", category="专业与系统货币", source="currency", verified=false },
-    { id="currency:776", currencyID=776, title="战火徽记", expansion="熊猫人之谜", category="专业与系统货币", source="currency", verified=false },
-    { id="currency:777", currencyID=777, title="永恒铸币", expansion="熊猫人之谜", category="常规货币", source="currency", verified=false },
-    { id="currency:241", currencyID=241, title="冠军的徽记", expansion="巫妖王之怒", category="常规货币", source="currency", verified=false },
-    { id="currency:61", currencyID=61, title="达拉然珠宝匠硬币", expansion="巫妖王之怒", category="专业与系统货币", source="currency", verified=false },
-    { id="currency:81", currencyID=81, title="美食家奖励", expansion="大地的裂变", category="专业与系统货币", source="currency", verified=false },
-    { id="archaeology:dwarf", currencyID=384, title="矮人考古碎片", expansion="考古", category="专业与系统货币", source="archaeology", verified=false },
-    { id="archaeology:troll", currencyID=385, title="巨魔考古碎片", expansion="考古", category="专业与系统货币", source="archaeology", verified=false },
-    { id="archaeology:fossil", currencyID=393, title="化石考古碎片", expansion="考古", category="专业与系统货币", source="archaeology", verified=false },
-    { id="archaeology:night-elf", currencyID=394, title="暗夜精灵考古碎片", expansion="考古", category="专业与系统货币", source="archaeology", verified=false },
-    { id="archaeology:orc", currencyID=397, title="兽人考古碎片", expansion="考古", category="专业与系统货币", source="archaeology", verified=false },
-    { id="archaeology:draenei", currencyID=398, title="德莱尼考古碎片", expansion="考古", category="专业与系统货币", source="archaeology", verified=false },
-    { id="archaeology:vrykul", currencyID=399, title="维库考古碎片", expansion="考古", category="专业与系统货币", source="archaeology", verified=false },
-    { id="archaeology:nerubian", currencyID=400, title="蛛魔考古碎片", expansion="考古", category="专业与系统货币", source="archaeology", verified=false },
-    { id="archaeology:tolvir", currencyID=401, title="托维尔考古碎片", expansion="考古", category="专业与系统货币", source="archaeology", verified=false },
-    { id="archaeology:pandaren", currencyID=676, title="熊猫人考古碎片", expansion="考古", category="专业与系统货币", source="archaeology", verified=false },
-    { id="archaeology:mogu", currencyID=677, title="魔古考古碎片", expansion="考古", category="专业与系统货币", source="archaeology", verified=false },
-    { id="archaeology:mantid", currencyID=754, title="螳螂妖考古碎片", expansion="考古", category="专业与系统货币", source="archaeology", verified=false },
-    { id="item:29434", itemID=29434, title="公正徽章", expansion="燃烧的远征", category="物品代币", source="item", verified=false },
-    { id="item:20558", itemID=20558, title="战歌峡谷荣誉奖章", expansion="经典旧世（60 年代）", category="物品代币", source="item", verified=false },
-    { id="item:20559", itemID=20559, title="阿拉希盆地荣誉奖章", expansion="经典旧世（60 年代）", category="物品代币", source="item", verified=false },
-    { id="item:20560", itemID=20560, title="奥特兰克山谷荣誉奖章", expansion="经典旧世（60 年代）", category="物品代币", source="item", verified=false },
+    { id = "money", title = "金币", shortTitle = "金币", icon = "Interface\\MoneyFrame\\UI-GoldIcon", expansion = "通用", source = "money", sourceType = "金币", status = CURRENT, totalAllowed = true, verified = "implemented" },
+
+    -- PvP
+    Currency(392, "荣誉点数", "荣誉", "全版本通用", nil, CURRENT),
+    Currency(390, "征服点数", "征服", "大地的裂变/熊猫人之谜", nil, CURRENT),
+    Currency(1900, "竞技场点数", "竞技场", "巫妖王之怒", nil, EXPIRED),
+    Item(43589, "冬拥湖荣誉奖章", "冬拥章", "巫妖王之怒", LEGACY),
+    Item(43228, "岩石守卫者的碎片", "岩石碎片", "巫妖王之怒", LEGACY),
+    Item(20558, "战歌峡谷荣誉奖章", "战歌", "全版本通用", LEGACY),
+    Item(20559, "阿拉希盆地荣誉奖章", "阿拉希", "全版本通用", LEGACY),
+    Item(29024, "风暴之眼荣誉奖章", "风暴眼", "燃烧的远征/巫妖王之怒", LEGACY),
+    Item(47395, "征服之岛荣誉奖章", "征服之岛", "巫妖王之怒/大地的裂变", LEGACY),
+    Item(42425, "远古海滩荣誉奖章", "远古海滩", "巫妖王之怒/大地的裂变", LEGACY),
+    Currency(391, "托尔巴拉德奖章", "托巴奖章", "大地的裂变/熊猫人之谜", nil, LEGACY),
+    Currency(789, "染血铸币", "染血币", "熊猫人之谜", nil, CURRENT),
+    Item(20560, "奥特兰克山谷荣誉奖章", "奥山", "全版本通用", LEGACY),
+
+    -- 地下城与团队
+    Item(29434, "公正徽章", "公正章", "燃烧的远征", LEGACY),
+    Item(40752, "英雄纹章", "英雄章", "巫妖王之怒", LEGACY),
+    Item(45624, "征服纹章", "征服章", "巫妖王之怒", LEGACY),
+    Item(40753, "勇气纹章", "勇气章", "巫妖王之怒", LEGACY),
+    Item(47241, "凯旋纹章", "凯旋章", "巫妖王之怒", LEGACY),
+    Item(49426, "寒冰纹章", "寒冰章", "巫妖王之怒", LEGACY),
+    Currency(2589, "赛德里尔精华", "赛德里尔", "巫妖王之怒（十字军试炼）", nil, LEGACY),
+    Currency(2711, "亵渎者的天灾石", "亵渎天灾石", "巫妖王之怒（冰冠堡垒）", nil, LEGACY),
+    Currency(395, "正义点数", "正义", "大地的裂变/熊猫人之谜", nil, LEGACY),
+    Currency(396, "勇气点数", "勇气", "大地的裂变", nil, LEGACY),
+    Currency(614, "黑暗之尘", "黑暗尘", "大地的裂变（巨龙之魂）", nil, LEGACY),
+    Currency(615, "堕落死亡之翼精华", "死翼精华", "大地的裂变（巨龙之魂）", nil, LEGACY),
+    Currency(3350, "至尊石碎片", "至尊碎片", "熊猫人之谜", nil, CURRENT),
+    Currency(3414, "至尊石碎块", "至尊碎块", "熊猫人之谜", nil, CURRENT),
+    Currency(3416, "至尊石聚簇", "至尊聚簇", "熊猫人之谜", nil, CURRENT),
+
+    -- 熊猫人之谜
+    Currency(776, "战火徽记", "战火章", "熊猫人之谜", nil, CURRENT),
+    Currency(738, "次级好运符", "次级符", "熊猫人之谜", nil, CURRENT),
+    Currency(777, "永恒铸币", "永恒币", "熊猫人之谜", nil, CURRENT),
+    Currency(697, "长者的好运符", "长者符", "大地的裂变/熊猫人之谜", nil, LEGACY),
+    Currency(752, "魔古命运符文", "魔古符", "熊猫人之谜", nil, CURRENT),
+
+    -- 其它
+    Currency(241, "冠军的徽记", "冠军章", "巫妖王之怒", nil, LEGACY),
+    Currency(515, "暗月奖券", "暗月券", "全版本通用", nil, CURRENT),
+    Currency(81, "美食家奖励", "美食奖", "巫妖王之怒/大地的裂变", "专业货币", LEGACY),
+    Currency(402, "铁掌徽记", "铁掌章", "熊猫人之谜", "专业货币", CURRENT),
+    Currency(61, "达拉然珠宝匠硬币", "珠宝币", "巫妖王之怒", "专业货币", LEGACY),
+    Currency(361, "珠宝名匠的荣誉奖章", "名匠奖章", "大地的裂变", "专业货币", LEGACY),
+    Currency(416, "世界之树印记", "世树章", "大地的裂变", nil, LEGACY),
+    Currency(393, "化石考古碎片", "化石", "全版本通用", "考古货币", CURRENT),
 }
-Addon.ExpansionOrder = { "熊猫人之谜", "大地的裂变", "巫妖王之怒", "燃烧的远征", "经典旧世（60 年代）", "自定义货币", "考古", "其它与未归类" }
-Addon.CategoryOrder = { "常规货币", "专业与系统货币", "物品代币" }

@@ -12,6 +12,17 @@ SlashCmdList["YCU"] = function(message)
         for _ in pairs(data.currencies or {}) do count = count + 1 end
         Addon:Print(string.format("货币 API：GetCurrencyInfo=%s，C_CurrencyInfo=%s；经济域=%s；金币=%s；已读取标准货币=%d。",
             GetCurrencyInfo and "可用" or "不可用", C_CurrencyInfo and "可用" or "不可用", snapshot and snapshot.state or "未扫描", tostring(data.money), count))
+        for _, entry in ipairs(Addon:GetCatalog()) do
+            if entry.currencyID then
+                local info = C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo and C_CurrencyInfo.GetCurrencyInfo(entry.currencyID)
+                local name = info and info.name
+                if not name and GetCurrencyInfo then name = GetCurrencyInfo(entry.currencyID) end
+                Addon:Print(string.format("%s · %s · %s", entry.id, name or "客户端未返回名称", entry.status or "待核验"))
+            elseif entry.itemID then
+                local name = GetItemInfo and GetItemInfo(entry.itemID)
+                Addon:Print(string.format("%s · %s · %s", entry.id, name or "客户端未缓存名称", entry.status or "待核验"))
+            end
+        end
         return
     end
     local itemID = message:match("^add%s+(%d+)$")

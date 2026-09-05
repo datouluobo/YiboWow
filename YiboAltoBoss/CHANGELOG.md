@@ -1,5 +1,19 @@
 # YiboAltoBoss 更新日志 / Changelog
 
+## v2.2.1
+
+### 中文
+
+- Boss 周常的 Broker 与小地图悬停预览现在由 YiboCore 统一处理自动关闭。
+- 修复复杂 Boss 矩阵的滚动单元格可能让鼠标离开预览后仍被误判为停留在窗口内的问题。
+- 右键业务入口可直接进入 Boss 周常设置页，避免偶发的空白设置内容。
+
+### English
+
+- Boss Weekly Broker and minimap previews now use YiboCore's unified automatic-close behavior.
+- Fixed interactive Boss matrix cells being able to misreport the cursor as still inside a preview after it had visibly left.
+- Right-clicking a business entry now opens Boss Weekly settings directly, avoiding occasional blank settings content.
+
 ## v2.2
 
 ### 中文

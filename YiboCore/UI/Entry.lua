@@ -154,8 +154,10 @@ function Entry:CreateBusinessBroker(entry)
     broker.OnClick = function(_, mouseButton)
         if entry.disabled then return end
         if mouseButton == "RightButton" then
-            Toggle(entry.pageID)
-            Core.AccountView:ShowSettings()
+            -- Open the business workbench in one layout pass.  Going through
+            -- the account page first can leave the shared settings host at its
+            -- previous page's size while an entry hover is being dismissed.
+            Core.AccountView:ShowSettings(entry.pageID)
         else
             Toggle(entry.pageID)
         end
@@ -223,7 +225,7 @@ function Entry:CreateBusinessMinimap(entry)
     button.border = button:CreateTexture(nil, "OVERLAY"); button.border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder"); button.border:SetSize(53, 53); button.border:SetPoint("TOPLEFT")
     button:SetScript("OnClick", function(_, mouseButton)
         if entry.disabled then return end
-        if mouseButton == "RightButton" then Toggle(entry.pageID); Core.AccountView:ShowSettings() else Toggle(entry.pageID) end
+        if mouseButton == "RightButton" then Core.AccountView:ShowSettings(entry.pageID) else Toggle(entry.pageID) end
     end)
     button:SetScript("OnDragStart", button.StartMoving)
     button:SetScript("OnDragStop", function(self)
@@ -347,20 +349,26 @@ end
 
 function Entry:IsMouseOverPreview()
     local preview = Core.AccountView and Core.AccountView.frame
-    if not (preview and preview.preview) then return false end
-    if preview.IsMouseOver and preview:IsMouseOver() then return true end
-    if not GetMouseFocus then return false end
-    local focus = GetMouseFocus()
-    while focus do
-        if focus == preview then return true end
-        focus = focus.GetParent and focus:GetParent() or nil
-    end
-    return false
+    if not (preview and preview.preview and preview:IsShown()) then return false end
+
+    -- Do not infer this from GetMouseFocus or Frame:IsMouseOver().  A scroll
+    -- child may retain mouse hit-testing outside its clipped viewport; Boss
+    -- weekly has interactive matrix cells, so that made an invisible overflow
+    -- cell keep the preview alive after the pointer had visibly left it.
+    -- Cursor coordinates against the shared preview shell give every business
+    -- page exactly the same close boundary.
+    if not (GetCursorPosition and UIParent and UIParent.GetEffectiveScale) then return false end
+    local scale = UIParent:GetEffectiveScale()
+    if not scale or scale <= 0 then return false end
+    local cursorX, cursorY = GetCursorPosition()
+    local left, right, bottom, top = preview:GetLeft(), preview:GetRight(), preview:GetBottom(), preview:GetTop()
+    if not (cursorX and cursorY and left and right and bottom and top) then return false end
+    cursorX, cursorY = cursorX / scale, cursorY / scale
+    return cursorX >= left and cursorX <= right and cursorY >= bottom and cursorY <= top
 end
 
 function Entry:SchedulePreviewClose()
     local now = GetTime and GetTime() or 0
-    if (self.previewCloseSuppressedUntil or 0) > now then return end
     self.previewToken = (self.previewToken or 0) + 1
     local token = self.previewToken
     local function CloseIfStillPending()
@@ -369,9 +377,14 @@ function Entry:SchedulePreviewClose()
         if Entry.previewToken == token and not Entry:IsMouseOverPreview() then HidePreview() end
     end
     if C_Timer and C_Timer.After then
-        C_Timer.After(0.5, CloseIfStillPending)
+        -- A preview can be rebuilt after an in-preview click.  If its leave
+        -- event lands during that short protected interval, still queue one
+        -- close for after it expires; returning early here stranded the Boss
+        -- weekly preview until another hover event happened.
+        local suppressedFor = math.max(0, (self.previewCloseSuppressedUntil or 0) - now)
+        C_Timer.After(math.max(0.5, suppressedFor + 0.05), CloseIfStillPending)
     else
-        CloseIfStillPending()
+        if (self.previewCloseSuppressedUntil or 0) <= now then CloseIfStillPending() end
     end
 end
 
