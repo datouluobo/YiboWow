@@ -2,7 +2,7 @@
 ## Title: |cff20e070[Yibo]|r YiboCurrency - 货币管家
 ## Notes: 多角色货币余额总览
 ## Author: YiboSoft
-## Version: 0.2.0
+## Version: 0.3.0
 ## IconTexture: Interface\AddOns\YiboCurrency\Media\YiboCurrencyIcon-v1
 ## SavedVariables: YiboCurrencyDB
 ## RequiredDeps: YiboCore

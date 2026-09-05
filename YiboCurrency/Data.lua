@@ -153,18 +153,30 @@ function Addon:FormatExact(value, entry)
 end
 function Addon:FormatWeeklyProgress(value, entry)
     if not entry or not entry.currencyID or not value then return nil end
+    local parts = {}
     local weeklyCap = tonumber(value.maxWeeklyQuantity)
     if weeklyCap and weeklyCap > 0 then
         local earned = tonumber(value.weeklyQuantity) or 0
-        return "本周 " .. BreakUpLargeNumbers(earned) .. " / " .. BreakUpLargeNumbers(weeklyCap)
+        parts[#parts + 1] = "本周 " .. BreakUpLargeNumbers(earned) .. " / " .. BreakUpLargeNumbers(weeklyCap)
     end
     -- Some MoP Classic currencies, including 战火徽记, expose their active
-    -- cap through maxQuantity rather than maxWeeklyQuantity. It is a holding
-    -- cap, so label it separately instead of claiming it is weekly progress.
+    -- cap through maxQuantity rather than maxWeeklyQuantity. Keep this
+    -- separate from weekly progress; a currency can expose both fields.
     local holdingCap = tonumber(value.maxQuantity)
     if holdingCap and holdingCap > 0 then
-        return "持有 " .. BreakUpLargeNumbers(tonumber(value.quantity) or 0) .. " / " .. BreakUpLargeNumbers(holdingCap)
+        parts[#parts + 1] = "当前 / 上限 " .. BreakUpLargeNumbers(tonumber(value.quantity) or 0) .. " / " .. BreakUpLargeNumbers(holdingCap)
     end
+    return #parts > 0 and table.concat(parts, " · ") or nil
+end
+function Addon:GetLimitState(value, entry)
+    if not entry or entry.source ~= "currency" or entry.status ~= "当前可获取" or not value then return nil end
+    local ratio = 0
+    local weeklyCap, weekly = tonumber(value.maxWeeklyQuantity), tonumber(value.weeklyQuantity)
+    if weeklyCap and weeklyCap > 0 and weekly then ratio = math.max(ratio, weekly / weeklyCap) end
+    local holdingCap, quantity = tonumber(value.maxQuantity), tonumber(value.quantity)
+    if holdingCap and holdingCap > 0 and quantity then ratio = math.max(ratio, quantity / holdingCap) end
+    if ratio >= 1 then return "capped" end
+    if ratio >= 0.8 then return "near-cap" end
     return nil
 end
 function Addon:FormatFull(value, entry)

@@ -15,9 +15,9 @@ SlashCmdList["YCU"] = function(message)
         for _, entry in ipairs(Addon:GetCatalog()) do
             if entry.currencyID then
                 local info = C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo and C_CurrencyInfo.GetCurrencyInfo(entry.currencyID)
-                local name = info and info.name
-                if not name and GetCurrencyInfo then name = GetCurrencyInfo(entry.currencyID) end
-                Addon:Print(string.format("%s · %s · %s", entry.id, name or "客户端未返回名称", entry.status or "待核验"))
+                local name, weekly, weeklyMax, maximum = info and info.name, info and info.weeklyQuantity, info and info.maxWeeklyQuantity, info and info.maxQuantity
+                if not name and GetCurrencyInfo then name, _, _, weekly, weeklyMax, maximum = GetCurrencyInfo(entry.currencyID) end
+                Addon:Print(string.format("%s · %s · 本周 %s/%s · 上限 %s · %s", entry.id, name or "客户端未返回名称", tostring(weekly), tostring(weeklyMax), tostring(maximum), entry.status or "待核验"))
             elseif entry.itemID then
                 local name = GetItemInfo and GetItemInfo(entry.itemID)
                 Addon:Print(string.format("%s · %s · %s", entry.id, name or "客户端未缓存名称", entry.status or "待核验"))

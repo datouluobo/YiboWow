@@ -46,7 +46,7 @@ Addon.Catalog = {
     Currency(2589, "赛德里尔精华", "赛德里尔", "巫妖王之怒（十字军试炼）", nil, LEGACY),
     Currency(2711, "亵渎者的天灾石", "亵渎天灾石", "巫妖王之怒（冰冠堡垒）", nil, LEGACY),
     Currency(395, "正义点数", "正义", "大地的裂变/熊猫人之谜", nil, LEGACY),
-    Currency(396, "勇气点数", "勇气", "大地的裂变", nil, LEGACY),
+    Currency(396, "勇气点数", "勇气", "大地的裂变/熊猫人之谜", nil, CURRENT),
     Currency(614, "黑暗之尘", "黑暗尘", "大地的裂变（巨龙之魂）", nil, LEGACY),
     Currency(615, "堕落死亡之翼精华", "死翼精华", "大地的裂变（巨龙之魂）", nil, LEGACY),
     Currency(3350, "至尊石碎片", "至尊碎片", "熊猫人之谜", nil, CURRENT),

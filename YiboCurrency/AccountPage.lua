@@ -56,6 +56,11 @@ local function StateColor(kind)
     if kind == "unknown" or kind == "na" or kind == "bank" then return Theme.Colors.muted end
     return Theme.Colors.text
 end
+local function ValueColor(value, state, entry)
+    local kind = Addon:ValueState(value, state)
+    if kind == "known" and Addon:GetLimitState(value, entry) then return Theme.Colors.warning or { 0.96, 0.70, 0.25 } end
+    return StateColor(kind)
+end
 local function SnapshotMeta(character)
     local economy, items = Core.DataDomains:Get(character.id, "economy"), Core.DataDomains:Get(character.id, "economy-items")
     return math.max(tonumber(economy and economy.updatedAt) or 0, tonumber(items and items.updatedAt) or 0), (economy and economy.state) or (items and items.state) or "not-yet-scanned"
@@ -89,8 +94,11 @@ local function AddEntryTooltip(row)
         local value, state = Addon:GetValue(character, entry); local valueText, kind = Addon:FormatCell(value, state, entry)
         local detail = Addon:StateDescription(value, state)
         local weekly = Addon:FormatWeeklyProgress(value, entry)
+        local capState = Addon:GetLimitState(value, entry)
+        local capHint = capState == "capped" and "已达上限" or (capState == "near-cap" and "接近上限（≥80%）" or nil)
         local exact = (kind == "known" or kind == "bank") and ("（" .. Addon:FormatExact(value, entry) .. "）") or ""
-        GameTooltip:AddDoubleLine(DisplayName(character), valueText .. exact .. (weekly and " · " .. weekly or "") .. (detail and " · " .. detail or ""), Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3], StateColor(kind)[1], StateColor(kind)[2], StateColor(kind)[3])
+        local valueColor = ValueColor(value, state, entry)
+        GameTooltip:AddDoubleLine(DisplayName(character), valueText .. exact .. (weekly and " · " .. weekly or "") .. (capHint and " · " .. capHint or "") .. (detail and " · " .. detail or ""), Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3], valueColor[1], valueColor[2], valueColor[3])
     end
     GameTooltip:AddLine("右键：切换悬停监控", Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3])
     GameTooltip:Show()
@@ -118,7 +126,9 @@ local function HideEmptyHover(parent)
 end
 
 local function PinHeaderToDivider(header, inset)
-    header.label:ClearAllPoints(); header.label:SetPoint("BOTTOMLEFT", header, "BOTTOMLEFT", inset, 1); header.label:SetPoint("BOTTOMRIGHT", header, "BOTTOMRIGHT", -inset, 1); header.label:SetHeight(16)
+    -- Single-line matrix headings use the full header box so the shared
+    -- vertical-middle justification can place them at the visual center.
+    header.label:ClearAllPoints(); header.label:SetPoint("TOPLEFT", header, "TOPLEFT", inset, 0); header.label:SetPoint("BOTTOMRIGHT", header, "BOTTOMRIGHT", -inset, 0)
 end
 
 local function Layout(parent, context, columns, rows, preview)
@@ -140,11 +150,12 @@ local function Layout(parent, context, columns, rows, preview)
     for index, entry in ipairs(rows) do
         local row = parent.currencyRows[index] or CreateFrame("Button", nil, parent.currencyBody, "BackdropTemplate"); parent.currencyRows[index] = row
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", parent.currencyBody, "TOPLEFT", 0, -y); row:SetSize(x, ROW_HEIGHT); row:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8" }); local color = Theme:GetDataRowColor(index); row:SetBackdropColor(color[1], color[2], color[3], color[4] or 1); row.cells = row.cells or {}; row.entry = entry; row.tooltipCharacters = entry.tooltipCharacters or {}
+        if row.currentOutline then Theme:SetCurrentCharacterOutline(row.currentOutline, false) end
         for ci, column in ipairs(columns) do
             local cell = row.cells[ci] or Text(row, column.justify or "CENTER"); row.cells[ci] = cell; cell:ClearAllPoints(); cell:SetPoint("LEFT", row, "LEFT", column.x + Theme.Space.xs, 0); cell:SetWidth(column.width - Theme.Space.sm)
             if column.kind == "currency" then SetCell(cell, IconText(entry, 16), Theme.Colors.text, "LEFT")
             elseif column.kind == "total" then local total = Addon:TotalFor(row.tooltipCharacters or {}, entry); local text = Addon:FormatCompact({ quantity=total.quantity }, entry) .. (total.complete and "" or (total.bankPending and "~" or "?")); SetCell(cell, text, total.complete and Theme.Colors.text or Theme.Colors.muted, "CENTER")
-            else local value, state = Addon:GetValue(column.character, entry); local text, kind = Addon:FormatCell(value, state, entry); SetCell(cell, text, StateColor(kind), "CENTER") end
+            else local value, state = Addon:GetValue(column.character, entry); local text, kind = Addon:FormatCell(value, state, entry); SetCell(cell, text, ValueColor(value, state, entry), "CENTER") end
             cell:Show()
         end
         for ci = #columns + 1, #row.cells do row.cells[ci]:Hide() end
@@ -166,7 +177,13 @@ local function Layout(parent, context, columns, rows, preview)
     end
     for index = #rows + 1, #parent.currencyRows do parent.currencyRows[index]:Hide() end
     parent.currencyBody:SetSize(x, math.max(1, y)); parent.currencyScroll:SetContentHeight(parent.currencyBody:GetHeight()); parent.currencyScroll:RefreshScrollbar()
-    parent.currentColumnOutline:ClearAllPoints(); if currentX then parent.currentColumnOutline:SetPoint("TOPLEFT", parent.currencyHeader, "TOPLEFT", currentX, 0); parent.currentColumnOutline:SetPoint("BOTTOMRIGHT", parent.currencyScroll, "BOTTOMLEFT", currentX + currentWidth, 0); Theme:SetCurrentCharacterOutline(parent.currentColumnOutline, true) else Theme:SetCurrentCharacterOutline(parent.currentColumnOutline, false) end
+    parent.currentColumnOutline:ClearAllPoints(); if currentX then
+        parent.currentColumnOutline:SetPoint("TOPLEFT", parent.currencyHeader, "TOPLEFT", currentX, 0)
+        parent.currentColumnOutline:SetPoint("TOPRIGHT", parent.currencyHeader, "TOPLEFT", currentX + currentWidth, 0)
+        parent.currentColumnOutline:SetPoint("BOTTOMLEFT", parent.currencyScroll, "BOTTOMLEFT", currentX, 0)
+        parent.currentColumnOutline:SetPoint("BOTTOMRIGHT", parent.currencyScroll, "BOTTOMLEFT", currentX + currentWidth, 0)
+        Theme:SetCurrentCharacterOutline(parent.currentColumnOutline, true)
+    else Theme:SetCurrentCharacterOutline(parent.currentColumnOutline, false) end
 end
 
 function Addon:RefreshCurrencyPage(parent, context)
@@ -225,12 +242,15 @@ function Addon:LayoutHover(parent, context, columns, characters, entries)
     parent.currencyScroll:ClearAllPoints(); parent.currencyScroll:SetPoint("TOPLEFT", parent.currencyHeader, "BOTTOMLEFT"); parent.currencyScroll:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset.right, inset.bottom)
     local x = 0; for index, column in ipairs(columns) do column.x=x; local header=parent.currencyHeaders[index] or Theme:CreateMatrixHeader(parent.currencyHeader); parent.currencyHeaders[index]=header; header:ClearAllPoints(); header:SetPoint("TOPLEFT", parent.currencyHeader,"TOPLEFT",x,0); header:SetSize(column.width,headerHeight); Theme:SetMatrixHeader(header,column.title,{height=headerHeight,justify=column.justify,color=Theme.Colors.accent,inset=1}); PinHeaderToDivider(header, 1); if column.entry then Theme:BindTooltip(header,column.entry.title,{{kind="pair",label="来源",value=column.entry.sourceType or "货币"},{kind="pair",label="状态",value=column.entry.status or "待核验"},{kind="pair",label="稳定 ID",value=column.entry.id}}) else header:SetScript("OnEnter",nil); header:SetScript("OnLeave",nil) end; header:Show(); x=x+column.width end
     for index=#columns+1,#parent.currencyHeaders do parent.currencyHeaders[index]:Hide() end
+    local current = Core.Characters:GetCurrent()
     local function DrawRow(index, character, total)
         local row=parent.currencyRows[index] or CreateFrame("Button",nil,parent.currencyBody,"BackdropTemplate"); parent.currencyRows[index]=row; row:ClearAllPoints(); row:SetPoint("TOPLEFT",parent.currencyBody,"TOPLEFT",0,-((index-1)*ROW_HEIGHT)); row:SetSize(x,ROW_HEIGHT); row:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8x8"}); local bg=Theme:GetDataRowColor(index); row:SetBackdropColor(bg[1],bg[2],bg[3],bg[4] or 1); row.cells=row.cells or {}; row.icons=row.icons or {}
+        row.currentOutline = row.currentOutline or Theme:CreateCurrentCharacterOutline(row)
+        Theme:SetCurrentCharacterOutline(row.currentOutline, not total and current and character and character.id == current.id)
         for ci,column in ipairs(columns) do local cell=row.cells[ci] or Text(row,column.justify); row.cells[ci]=cell; cell:ClearAllPoints(); cell:SetPoint("LEFT",row,"LEFT",column.x+Theme.Space.xs,0); cell:SetWidth(column.width-Theme.Space.sm)
             if ci==1 then SetCell(cell,total and "总计" or DisplayIdentity(character, context),total and Theme.Colors.accent or CharacterColor(character),"LEFT")
             else local entry=entries[ci-1]; local icon=row.icons[ci] or row:CreateTexture(nil,"OVERLAY"); row.icons[ci]=icon; icon:ClearAllPoints(); icon:SetPoint("RIGHT",row,"LEFT",column.x+column.width-Theme.Space.xxs,0); icon:SetSize(16,16); icon:SetTexture(Addon:GetIcon(entry)); icon:Show(); cell:SetWidth(column.width-16-Theme.Space.xxs*3)
-                if entry.source == "empty" then SetCell(cell,"",Theme.Colors.muted,"RIGHT") elseif total then local summary=Addon:TotalFor(characters,entry); local value=Addon:FormatFull({quantity=summary.quantity},entry)..(summary.complete and "" or (summary.bankPending and "~" or "?")); SetCell(cell,value,summary.complete and Theme.Colors.text or Theme.Colors.muted,"RIGHT") else local value,state=Addon:GetValue(character,entry); local valueText,kind=Addon:FormatFullCell(value,state,entry); SetCell(cell,valueText,StateColor(kind),"RIGHT") end end; cell:Show()
+                if entry.source == "empty" then SetCell(cell,"",Theme.Colors.muted,"RIGHT") elseif total then local summary=Addon:TotalFor(characters,entry); local value=Addon:FormatFull({quantity=summary.quantity},entry)..(summary.complete and "" or (summary.bankPending and "~" or "?")); SetCell(cell,value,summary.complete and Theme.Colors.text or Theme.Colors.muted,"RIGHT") else local value,state=Addon:GetValue(character,entry); local valueText,kind=Addon:FormatFullCell(value,state,entry); SetCell(cell,valueText,ValueColor(value,state,entry),"RIGHT") end end; cell:Show()
             if ci == 1 and row.icons[ci] then row.icons[ci]:Hide() end
         end
         for ci=#columns+1,#row.cells do row.cells[ci]:Hide() end; for ci,icon in pairs(row.icons) do if ci > #columns then icon:Hide() end end; row:Show()
