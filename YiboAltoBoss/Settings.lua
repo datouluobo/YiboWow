@@ -436,10 +436,10 @@ local function RefreshCustomTargetControls()
     for _, item in pairs(targets) do
         local id = tonumber(item.id)
         if id then
-            items[#items + 1] = id
+            items[#items + 1] = { id = id, name = item.name }
         end
     end
-    table.sort(items)
+    table.sort(items, function(left, right) return left.id < right.id end)
 
     if #items == 0 then
         customList:SetText("当前没有自定义 NPC。")
@@ -454,7 +454,7 @@ local function RefreshCustomTargetControls()
         customListScroll:SetVerticalScroll(0)
     end
 
-    for index, id in ipairs(items) do
+    for index, item in ipairs(items) do
         local row = customListRows[index]
         if not row then
             row = CreateTextButton(customListContent, 1, 18, "", "neutral")
@@ -471,8 +471,8 @@ local function RefreshCustomTargetControls()
             end)
             customListRows[index] = row
         end
-        row.npcId = id
-        row:SetText("NPC " .. tostring(id))
+        row.npcId = item.id
+        row:SetText(tostring(item.name or "自定义目标") .. "（ID: " .. tostring(item.id) .. "）")
         row:ClearAllPoints()
         row:SetPoint("TOPLEFT", customListContent, "TOPLEFT", 0, -4 - ((index - 1) * 18))
         row:SetSize(math.max(customListContent:GetWidth() or 0, 1), 18)
@@ -872,7 +872,7 @@ function YAB.InitializeSettings()
     customHint:SetPoint("TOPLEFT", customPanel, "TOPLEFT", 12, -34)
     customHint:SetPoint("RIGHT", customPanel, "RIGHT", -12, 0)
     customHint:SetWordWrap(true)
-    customHint:SetText("补充监控列表之外的 NPC，便于临时追踪；输入 NPC ID 后可添加或删除。")
+    customHint:SetText("补充监控列表之外的 NPC，便于临时追踪；击杀标记会在 24 小时后自动清除。")
     customHint:SetTextColor(SUBTEXT_COLOR[1], SUBTEXT_COLOR[2], SUBTEXT_COLOR[3])
 
     local npcLabel = CreateText(customPanel, 11, "LEFT")
@@ -1019,11 +1019,12 @@ function YAB.CreateCoreSettingsPanel(parent, context)
         panel.custom = Section(panel, "自定义目标", 292, 1)
         panel.custom:SetPoint("TOPRIGHT", panel.targets, "TOPRIGHT", 596, 0)
         local customHint = context.createText(panel.custom, Theme.Font.assist, Theme.Colors.muted, "LEFT")
-        customHint:SetPoint("TOPLEFT", 12, -40); customHint:SetText("NPC ID（点击下方已添加的目标可回填）")
+        customHint:SetPoint("TOPLEFT", 12, -40); customHint:SetText("NPC ID（击杀标记 24 小时后自动清除；点击下方目标可回填）")
         panel.npcInput = CreateFrame("EditBox", nil, panel.custom, "InputBoxTemplate")
         panel.npcInput:SetSize(92, 24); panel.npcInput:SetPoint("TOPLEFT", 12, -70); panel.npcInput:SetAutoFocus(false); panel.npcInput:SetNumeric(true)
         local add = context.createButton(panel.custom, 52, "添加"); add:SetState("selected"); add:SetPoint("LEFT", panel.npcInput, "RIGHT", 8, 0)
         local remove = context.createButton(panel.custom, 52, "删除", "danger"); remove:SetPoint("LEFT", add, "RIGHT", 6, 0)
+        local addCurrent = context.createButton(panel.custom, 108, "添加当前目标"); addCurrent:SetPoint("LEFT", remove, "RIGHT", 6, 0)
         panel.customStatus = context.createText(panel.custom, Theme.Font.assist, Theme.Colors.muted, "LEFT"); panel.customStatus:SetPoint("TOPLEFT", 12, -102); panel.customStatus:SetPoint("TOPRIGHT", -12, -102)
         local function UpdateCustom(ok, message)
             panel.customStatus:SetText(message or "")
@@ -1034,6 +1035,7 @@ function YAB.CreateCoreSettingsPanel(parent, context)
         end
         add:SetScript("OnClick", function() local ok, message = YAB.AddCustomTarget(panel.npcInput:GetText()); UpdateCustom(ok, message or (ok and "已添加自定义目标。" or "添加失败。")) end)
         remove:SetScript("OnClick", function() local ok, message = YAB.RemoveCustomTarget(panel.npcInput:GetText()); UpdateCustom(ok, message or (ok and "已删除自定义目标。" or "删除失败。")) end)
+        addCurrent:SetScript("OnClick", function() local ok, message = YAB.AddCurrentTarget(); UpdateCustom(ok, message or (ok and "已添加当前目标。" or "添加失败。")) end)
 
     end
 
@@ -1136,7 +1138,7 @@ function YAB.CreateCoreSettingsPanel(parent, context)
         local rowIndex = math.floor((index - 1) / 2)
         local customButtonWidth = math.floor((panel.custom:GetWidth() - 36) / 2)
         row:SetWidth(customButtonWidth); row:ClearAllPoints(); row:SetPoint("TOPLEFT", panel.custom, "TOPLEFT", 12 + column * (customButtonWidth + 8), -customY - rowIndex * 28)
-        row.npcID = target.id; row:SetText((target.name or "自定义目标") .. " " .. tostring(target.id)); row:Show()
+        row.npcID = target.id; row:SetText((target.name or "自定义目标") .. "（ID: " .. tostring(target.id) .. "）"); row:Show()
     end
     local customRows = math.ceil(#customTargets / 2)
     panel.custom:SetHeight(math.max(126, 134 + customRows * 28))

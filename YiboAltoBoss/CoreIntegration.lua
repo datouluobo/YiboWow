@@ -190,7 +190,7 @@ function Integration:Initialize()
         return nil, "需要 YiboCore API v5。"
     end
 
-    Core:RegisterAddon("YiboAltoBoss", { version = "2.1.2", requiredAPI = 5 })
+    Core:RegisterAddon("YiboAltoBoss", { version = "2.2", requiredAPI = 5 })
     if Core.CharacterCleanup then
         local cleanupRegistered, cleanupError = RegisterCharacterCleanupOwner()
         if not cleanupRegistered then return nil, cleanupError end
@@ -263,5 +263,11 @@ end
 function YAB.NotifyCorePageChanged()
     if Core and Core.AccountView then
         Core.AccountView:NotifyPageChanged(PAGE_ID)
+    end
+end
+
+function YAB.RefreshCoreSettingsPage()
+    if Core and Core.AccountView and Core.AccountView.activePageID == "settings" then
+        Core.AccountView:RefreshPage()
     end
 end

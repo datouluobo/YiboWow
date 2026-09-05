@@ -11,10 +11,12 @@ local curCharKey = curCharName .. "-" .. curRealm
 local PHASE_TTL_SECONDS = 6 * 60 * 60
 local MIN_RESPAWN_SAMPLE_SECONDS = 30
 local CUSTOM_RARE_RESET_SECONDS = 24 * 60 * 60
+local PERSONAL_COMBAT_EVIDENCE_TTL_SECONDS = 45
 local bossById = {}
 local bossByKey = {}
 local npcTargets = {}
 local customTargetCache = {}
+local recentPersonalCombatTargets = {}
 local levelExprCacheText, levelExprCacheRules, levelExprCacheError
 local EnsureWorldTables
 
@@ -116,7 +118,14 @@ local function IsKillActive(killData, boss)
     end
     if boss and boss.reset == "respawn" then
         local killedAt = tonumber(killData.updatedAt) or 0
-        return killedAt > 0 and GetServerTimestamp() - killedAt < CUSTOM_RARE_RESET_SECONDS
+        -- Records written before expiresAt existed derive the same deadline
+        -- from their original kill timestamp.
+        local expiresAt = tonumber(killData.expiresAt)
+        if not expiresAt and killedAt > 0 then
+            expiresAt = killedAt + CUSTOM_RARE_RESET_SECONDS
+            killData.expiresAt = expiresAt
+        end
+        return expiresAt and expiresAt > GetServerTimestamp() or false
     end
     local resetKey = GetTargetResetKey(boss)
     return not resetKey or killData.resetKey == resetKey
@@ -1340,6 +1349,9 @@ local function MarkBossKilled(charKey, bossId, source, phaseId, actualNpcId)
         source = source or "manual",
         resetKey = resetKey,
     }
+    if boss.reset == "respawn" then
+        charData.kills[bossKey].expiresAt = killedAt + CUSTOM_RARE_RESET_SECONDS
+    end
     if actualNpcId then
         charData.kills[bossKey].actualNpcId = actualNpcId
         charData.kills[bossKey].actualName = (boss.npcNames and boss.npcNames[actualNpcId]) or boss.name
@@ -1549,10 +1561,11 @@ function YAB.ToggleBossKill(charKey, bossId)
     end
     local bossKey = GetTargetKey(boss)
     local killData = charData.kills[bossKey]
-    if killData and killData.killed then
+    if IsKillActive(killData, boss) then
         charData.kills[bossKey] = nil
         RefreshLootLockout(charData, boss)
     else
+        charData.kills[bossKey] = nil
         MarkBossKilled(charKey, bossKey, "manual")
     end
     YAB.PersistDB()
@@ -1584,7 +1597,14 @@ function YAB.IsBossKilled(charKey, bossId)
         return false
     end
     local bossKey = GetTargetKey(boss)
-    return IsKillActive(charData.kills[bossKey], boss)
+    local killInfo = charData.kills[bossKey]
+    if IsKillActive(killInfo, boss) then
+        return true
+    end
+    if killInfo and boss.reset == "respawn" then
+        charData.kills[bossKey] = nil
+    end
+    return false
 end
 
 function YAB.GetKillInfo(charKey, bossId)
@@ -1607,6 +1627,9 @@ function YAB.GetBossKillStatus(charKey, bossId)
     local killInfo = charData.kills[bossKey]
     if IsKillActive(killInfo, boss) then
         return "killed", killInfo
+    end
+    if killInfo and boss.reset == "respawn" then
+        charData.kills[bossKey] = nil
     end
 
     local lockout = GetLootLockout(charData, boss.lootLockoutGroup)
@@ -1687,7 +1710,7 @@ function YAB.GetPhaseInfo(charKey, npcId)
     return charData.phases[GetTargetKey(boss)]
 end
 
-function YAB.AddCustomTarget(input)
+function YAB.AddCustomTarget(input, localizedName)
     local value = tonumber(input)
     if not value or value <= 0 then
         return false, "请输入有效 NPC ID"
@@ -1698,10 +1721,11 @@ function YAB.AddCustomTarget(input)
         return false, "该 NPC ID 已存在"
     end
 
+    local name = type(localizedName) == "string" and localizedName ~= "" and localizedName or ("自定义目标 " .. value)
     YiboAltoBossDB.customTargets[key] = {
         key = "custom:" .. key,
         id = value,
-        name = "自定义目标 " .. value,
+        name = name,
         group = "custom",
         reset = "respawn",
     }
@@ -1713,6 +1737,36 @@ function YAB.AddCustomTarget(input)
     if YAB.RefreshSettingsUI then
         YAB.RefreshSettingsUI()
     end
+    return true
+end
+
+function YAB.AddCurrentTarget()
+    if not UnitExists or not UnitExists("target") then
+        return false, "请先选中一个 NPC。"
+    end
+
+    local npcId = ExtractNpcIDFromGUID(UnitGUID("target"))
+    if not npcId then
+        return false, "当前目标不是可识别的 NPC。"
+    end
+
+    local name = UnitName and UnitName("target") or nil
+    local ok, err = YAB.AddCustomTarget(npcId, name)
+    if not ok then
+        return false, err
+    end
+    return true, "已添加当前目标：" .. tostring(name or "NPC") .. "（ID: " .. tostring(npcId) .. "）"
+end
+
+function YAB.UpdateCustomTargetName(npcId, localizedName)
+    local name = type(localizedName) == "string" and localizedName or ""
+    local custom = YiboAltoBossDB and YiboAltoBossDB.customTargets and YiboAltoBossDB.customTargets[tostring(npcId)]
+    if not custom or name == "" or custom.name == name then
+        return false
+    end
+
+    custom.name = name
+    RebuildBossCache()
     return true
 end
 
@@ -2599,13 +2653,50 @@ function YAB.ObserveUnit(unit, source)
     end
 
     local guid = UnitGUID(unit)
+    local customNameChanged = false
+    if unit == "target" then
+        local npcId = ExtractNpcIDFromGUID(guid)
+        local name = UnitName and UnitName(unit) or nil
+        if npcId and name then
+            customNameChanged = YAB.UpdateCustomTargetName(npcId, name)
+        end
+    end
     local changed = YAB.TrackingV3 and YAB.TrackingV3:ApplyGUID(guid, "ALIVE_EVIDENCE", source or unit) or false
     local diagnosticChanged = YAB.TrackingV3 and YAB.TrackingV3:ConsumeDiagnosticsDirty() or false
-    if changed or diagnosticChanged then
+    if changed or diagnosticChanged or customNameChanged then
         YAB.PersistDB()
-        if changed and YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+        if (changed or customNameChanged) and YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+        if customNameChanged and YAB.RefreshSettingsUI then YAB.RefreshSettingsUI(true) end
+        if customNameChanged and YAB.RefreshCoreSettingsPage then YAB.RefreshCoreSettingsPage() end
     end
-    return changed
+    return changed or customNameChanged
+end
+
+local function IsCurrentPlayerCombatSource(guid)
+    if not guid or not UnitGUID then
+        return false
+    end
+    return guid == UnitGUID("player")
+        or guid == UnitGUID("pet")
+        or guid == UnitGUID("vehicle")
+end
+
+local function RememberPersonalCombatTarget(guid)
+    if ExtractNpcIDFromGUID(guid) then
+        recentPersonalCombatTargets[guid] = GetServerTimestamp()
+    end
+end
+
+local function HasRecentPersonalCombatEvidence(guid)
+    local observedAt = tonumber(recentPersonalCombatTargets[guid])
+    if not observedAt then
+        return false
+    end
+    if GetServerTimestamp() - observedAt > PERSONAL_COMBAT_EVIDENCE_TTL_SECONDS then
+        recentPersonalCombatTargets[guid] = nil
+        return false
+    end
+    return true
 end
 
 local function ObserveTrackedUnits()
@@ -2672,18 +2763,28 @@ local function HandleCombatLogEvent()
     end
 
     local _, subEvent, _, sourceGUID, _, _, _, destGUID = CombatLogGetCurrentEventInfo()
-    -- A nearby UNIT_DIED is useful for world respawn timing only when this exact
-    -- GUID was observed alive first.  It must not mark the character's weekly
-    -- completion; PARTY_KILL and the weekly lockout flag remain responsible for
-    -- that character-scoped state.
     if subEvent == "UNIT_DIED" then
         RecordObservedWorldDeath(destGUID)
+        -- A death event alone is only world-state evidence.  When the player,
+        -- pet, or vehicle recently damaged this exact NPC, it is also strong
+        -- enough to complete a non-weekly target.  Weekly bosses remain gated
+        -- by their existing lockout flow in RecordKillByNpcID.
+        if HasRecentPersonalCombatEvidence(destGUID) then
+            local npcId = ExtractNpcIDFromGUID(destGUID)
+            if npcId then
+                YAB.RecordKillByNpcID(npcId, "combat_personal", curCharKey, ExtractPhaseIDFromGUID(destGUID))
+            end
+            recentPersonalCombatTargets[destGUID] = nil
+        end
         return
     end
     -- Damage, casts, and aura events prove that this GUID is a living spawn.
     -- Remember either side so raid combat is enough to collect its death timer,
     -- even when this client never targets or mouses over the boss directly.
     if IsLiveCombatEvidence(subEvent) then
+        if IsCurrentPlayerCombatSource(sourceGUID) then
+            RememberPersonalCombatTarget(destGUID)
+        end
         local changed = RememberLiveBossFromCombat(sourceGUID)
         changed = RememberLiveBossFromCombat(destGUID) or changed
         if changed and YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end

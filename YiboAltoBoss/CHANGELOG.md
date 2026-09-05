@@ -1,5 +1,19 @@
 # YiboAltoBoss 更新日志 / Changelog
 
+## v2.2
+
+### 中文
+
+- 自定义目标支持直接添加当前选中的 NPC，并显示客户端本地化名称与 NPC ID。
+- 按 ID 添加的自定义目标在首次选中对应 NPC 时自动补全名称，并刷新矩阵和设置页。
+- 自定义目标的击杀标记保存 24 小时过期时间；当前角色、宠物或载具的战斗死亡证据会同步更新矩阵状态。
+
+### English
+
+- Custom targets can be added from the current NPC target and show the client-localized name with the NPC ID.
+- ID-only custom targets fill in their name when first targeted, then refresh the matrix and settings view.
+- Custom-target kill marks carry a 24-hour expiry; player, pet, and vehicle combat death evidence now updates the matrix status.
+
 ## v2.1.2
 
 ### 中文
