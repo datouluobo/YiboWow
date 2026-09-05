@@ -8,10 +8,14 @@ YiboQuestBlockerDB = YiboQuestBlockerDB or {}
 
 local SCHEMA_VERSION = 3
 local DEFAULT_RUNTIME_SETTINGS = {
-    directReject = true,
-    continueKnownAutomation = true,
-    continueUnknownAutomation = false,
-    grayNPCList = true,
+    -- Kept independently from the old boolean so changing modes is explicit
+    -- and can be represented consistently by every surface.
+    processMode = "direct",
+}
+local PROCESS_MODE_OPTIONS = {
+    { value = "direct", label = "处理模式：拒绝" },
+    { value = "abandon", label = "处理模式：放弃" },
+    { value = "paused", label = "处理模式：暂停" },
 }
 
 local ADDON_NAME = ...
@@ -188,15 +192,34 @@ local activeBatch
 local guardedFunctions = {}
 local selectionGuards = {}
 local knownAutomation = {
-    ["Questie"] = { label = "Questie", continuationVerified = false },
+    ["Questie"] = {
+        label = "Questie",
+        continuationVerified = false,
+        continuationStatus = "incompatible",
+        continuationNote = "请关闭自动接任务功能",
+    },
     -- !Pig enumerates every available quest in a single QUEST_GREETING pass.
     -- Filtering SelectAvailableQuest is a verified selection-layer adapter:
     -- it retains !Pig's own non-trivial filter while preventing blocked IDs
     -- from replacing the allowed quest detail later in that same loop.
-    ["!Pig"] = { label = "!Pig", continuationVerified = true },
-    ["NDui"] = { label = "NDui QuickQuest", continuationVerified = false },
-    ["Leatrix_Plus"] = { label = "Leatrix Plus", continuationVerified = false },
-    ["DialogueUI"] = { label = "DialogueUI", continuationVerified = false },
+    ["!Pig"] = {
+        label = "!Pig",
+        continuationVerified = true,
+        continuationStatus = "supported",
+        continuationNote = "支持自动接任务",
+    },
+    ["NDui"] = {
+        label = "NDui QuickQuest",
+        continuationVerified = true,
+        continuationStatus = "supported",
+        continuationNote = "支持自动接任务",
+    },
+    ["Leatrix_Plus"] = {
+        label = "Leatrix Plus",
+        continuationVerified = false,
+        continuationStatus = "incompatible",
+        continuationNote = "请关闭自动接任务功能",
+    },
     ["Blitz"] = { label = "Blitz", continuationVerified = false },
 }
 
@@ -220,7 +243,16 @@ local function BindDBReferences()
         global = true,
         characters = true,
     }
+    YiboQuestBlockerDB.settings.groupExpanded = YiboQuestBlockerDB.settings.groupExpanded or {
+        blocked = true,
+        current = true,
+    }
     YiboQuestBlockerDB.settings.runtime = YiboQuestBlockerDB.settings.runtime or {}
+    -- Migrate the v3.0 two-state switch without changing an existing user's
+    -- chosen behaviour.  The old boolean remains harmless saved data only.
+    if YiboQuestBlockerDB.settings.runtime.processMode == nil then
+        YiboQuestBlockerDB.settings.runtime.processMode = YiboQuestBlockerDB.settings.runtime.directReject == false and "abandon" or "direct"
+    end
     for key, value in pairs(DEFAULT_RUNTIME_SETTINGS) do
         if YiboQuestBlockerDB.settings.runtime[key] == nil then
             YiboQuestBlockerDB.settings.runtime[key] = value
@@ -312,18 +344,54 @@ Core.Events:Register("CHARACTER_ID_CHANGED", ADDON_NAME, function(_, oldID, newI
     if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged() end
 end)
 YQB.IsAutoAbandonEnabled = function()
-    return not not (YQBDB.filters and YQBDB.filters.autoAbandon)
+    -- Both active modes retain a safe delayed-abandon fallback.  Pausing is
+    -- intentionally absolute: it neither rejects nor changes the quest log.
+    return YQB.GetProcessMode and YQB.GetProcessMode() ~= "paused"
 end
 YQB.GetRuntimeSettings = function()
     return YQBDB.settings.runtime
 end
 YQB.SetRuntimeSetting = function(key, value)
+    if key == "directReject" then
+        return YQB.SetProcessMode(value and "direct" or "abandon")
+    end
     if DEFAULT_RUNTIME_SETTINGS[key] == nil then return false end
     YQBDB.settings.runtime[key] = not not value
     PersistDB()
     if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged() end
     return true
 end
+YQB.GetProcessMode = function()
+    local mode = YQB.GetRuntimeSettings().processMode
+    return (mode == "direct" or mode == "abandon" or mode == "paused") and mode or "direct"
+end
+YQB.GetProcessModeOptions = function()
+    return PROCESS_MODE_OPTIONS
+end
+YQB.IsProcessingPaused = function()
+    return YQB.GetProcessMode() == "paused"
+end
+YQB.SetProcessMode = function(mode)
+    if mode ~= "direct" and mode ~= "abandon" and mode ~= "paused" then return false end
+    YQBDB.settings.runtime.processMode = mode
+    -- Keep the legacy field synchronized for external v3 integrations that
+    -- still inspect it, while the internal behavior is wholly mode-driven.
+    YQBDB.settings.runtime.directReject = mode == "direct"
+    if mode == "paused" then
+        autoAbandonTimerToken = autoAbandonTimerToken + 1
+        autoAbandonTimerActive = false
+        autoAbandonWaitingForClose = false
+        autoAbandonProcessing = false
+        wipe(autoAbandonQueue)
+        wipe(autoAbandonSet)
+    end
+    PersistDB()
+    if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged() end
+    return true
+end
+-- Compatibility API for early v3 consumers; new UI must use ProcessMode.
+YQB.GetRejectMode = YQB.GetProcessMode
+YQB.SetRejectMode = YQB.SetProcessMode
 YQB.GetDiagnostics = function()
     return YQBDB.diagnostics
 end
@@ -354,6 +422,8 @@ YQB.GetAutomationAdapters = function()
             addon = addonName, label = adapter.label, loaded = loaded,
             version = loaded and GetKnownAddonVersion(addonName) or nil,
             continuationVerified = adapter.continuationVerified,
+            continuationStatus = adapter.continuationStatus or (adapter.continuationVerified and "supported" or "unverified"),
+            continuationNote = adapter.continuationNote,
         }
     end
     table.sort(result, function(a, b) return a.label < b.label end)
@@ -764,6 +834,9 @@ MaybeStartAutoAbandonTimer = function()
             return
         end
         autoAbandonTimerActive = false
+        if not YQB.IsAutoAbandonEnabled() then
+            return
+        end
         autoAbandonProcessing = true
 
         PruneAutoAbandonQueue()
@@ -1211,6 +1284,9 @@ function YQB.AbandonQuest(questID)
 end
 
 function YQB.AbandonRejectedQuestsInLog()
+    if YQB.IsProcessingPaused() then
+        return 0
+    end
     local abandoned = 0
     local numEntries = GetNumQuestLogEntries()
     local lastSelection = GetQuestLogSelection and GetQuestLogSelection() or nil
@@ -1254,7 +1330,7 @@ end
 -- quest.  Unknown automation has opaque candidate rules, so choosing for it
 -- would be more disruptive than stopping after the rejected quest.
 local function RejectCurrentQuest(questID, scope, confirmType)
-    if not questID or not YQB.GetRuntimeSettings().directReject then return false end
+    if not questID or YQB.GetProcessMode() ~= "direct" then return false end
     StartRejectedBatch(questID)
     local actionKey = tostring(activeBatch and activeBatch.serial or interactionSerial) .. ":" .. tostring(questID)
     if directRejectActions[actionKey] then return true end
@@ -1275,7 +1351,7 @@ local function RejectCurrentQuest(questID, scope, confirmType)
 end
 
 local function SkipBlockedQuestSelection(questID)
-    if not questID or not YQB.GetRuntimeSettings().directReject then return false end
+    if not questID or YQB.GetProcessMode() ~= "direct" then return false end
     local scope = YQB.GetBlockScope(questID)
     if not scope then return false end
 

@@ -2,7 +2,7 @@
 ## Title: |cff20e070[Yibo]|r YiboQuestBlocker
 ## Notes: 任务屏蔽管理器 - 自动拒绝指定任务
 ## Author: Reasonix
-## Version: 3.0.0
+## Version: 3.0.1
 ## IconTexture: Interface\AddOns\YiboQuestBlocker\Media\YQB_MinimapIcon
 ## SavedVariables: YiboQuestBlockerDB
 ## RequiredDeps: YiboCore

@@ -11,38 +11,27 @@ function YQB.CreateSettingsPanel(parent, context)
     -- zero size and the business page looks empty.
     local width = math.max(560, parent:GetWidth() or 0)
     panel:ClearAllPoints(); panel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0); panel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
-    panel:SetWidth(width); panel:SetHeight(332); panel:Show()
+    panel:SetWidth(width); panel:SetHeight(388); panel:Show()
     panel.controls = panel.controls or {}
 
-    local runtime = YQB.GetRuntimeSettings()
     local y = 0
-    local section = context.createSection(panel, "业务设置", width, 194)
+    local section = context.createSection(panel, "处理模式", width, 250)
     section:ClearAllPoints(); section:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, -y); section:Show()
+    local options = YQB.GetProcessModeOptions()
+    local modeControl = panel.modeControl or Theme:CreateDropdown(section, 188, options)
+    panel.modeControl = modeControl; modeControl:ClearAllPoints(); modeControl:SetPoint("TOPLEFT", section, "TOPLEFT", 14, -42)
+    modeControl:SetOptions(options); modeControl:SetValue(YQB.GetProcessMode())
+    modeControl:SetOnValueChanged(function(mode)
+        YQB.SetProcessMode(mode)
+        context.refreshPage()
+    end)
+    modeControl:Show()
     local note = section.note or context.createText(section, Theme.Font.assist, Theme.Colors.muted, "LEFT")
-    section.note = note; note:ClearAllPoints(); note:SetPoint("TOPLEFT", 12, -38); note:SetPoint("TOPRIGHT", -12, -38)
-    note:SetWordWrap(true); note:SetText("直接拒绝是最终防线。自动续办仅对已验证适配器开放；未知或版本待验证的自动接任务插件会安全停在直接拒绝，不替其选择任务。"); note:Show()
-
-    local definitions = {
-        { key = "directReject", label = "直接拒绝已屏蔽任务" },
-        { key = "continueKnownAutomation", label = "与已验证自动接任务插件续办" },
-        { key = "continueUnknownAutomation", label = "未验证插件续办（不建议）" },
-        { key = "grayNPCList", label = "NPC 列表灰显已屏蔽任务" },
-    }
-    for index, definition in ipairs(definitions) do
-        local control = panel.controls[index] or context.createCheckbox(section, definition.label)
-        panel.controls[index] = control
-        control:ClearAllPoints()
-        local column, row = (index - 1) % 2, math.floor((index - 1) / 2)
-        control:SetPoint("TOPLEFT", section, "TOPLEFT", 14 + column * 280, -88 - row * 34)
-        control.label:SetText(definition.label); control:SetChecked(runtime[definition.key])
-        control:SetScript("OnClick", function(self)
-            self:SetChecked(not self:GetChecked())
-            YQB.SetRuntimeSetting(definition.key, self:GetChecked())
-            context.notifyPageChanged()
-        end)
-        control:Show()
-    end
-    y = y + 204
+    section.note = note; note:ClearAllPoints(); note:SetPoint("TOPLEFT", section, "TOPLEFT", 14, -84); note:SetPoint("TOPRIGHT", section, "TOPRIGHT", -14, -84)
+    note:SetWordWrap(true)
+    note:SetText("拒绝模式（推荐）：在选择与接取阶段跳过或拒绝已屏蔽任务；若任务异常进入日志，会在交互结束后安全放弃。\n\n放弃模式（旧版兼容）：不干预选择与接取；已屏蔽任务进入日志后，在任务交互结束时自动放弃。\n\n暂停模式：不拦截、不自动放弃，也不能使用手动放弃；规则和矩阵继续保留，切回任一处理模式即可恢复。")
+    note:Show()
+    y = y + 260
 
     local adapterSection = context.createSection(panel, "适配状态", width, 118)
     adapterSection:ClearAllPoints(); adapterSection:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, -y); adapterSection:Show()
@@ -51,7 +40,14 @@ function YQB.CreateSettingsPanel(parent, context)
     local lines = {}
     for _, adapter in ipairs(YQB.GetAutomationAdapters()) do
         if adapter.loaded then
-            local status = adapter.continuationVerified and "已验证列表过滤" or "仅直接拒绝，续办待实机验证"
+            local status
+            if adapter.continuationStatus == "incompatible" then
+                status = "不兼容，请关闭自动接任务功能"
+            elseif adapter.continuationVerified then
+                status = "支持自动接任务"
+            else
+                status = "仅直接拒绝，续办待实机验证"
+            end
             lines[#lines + 1] = string.format("%s%s：%s", adapter.label, adapter.version and (" " .. adapter.version) or "", status)
         end
     end

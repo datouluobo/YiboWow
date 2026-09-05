@@ -61,6 +61,34 @@ local function DB()
     return YQB.GetDatabase and YQB.GetDatabase() or _G.YiboQuestBlockerDB or {}
 end
 
+local function IsGroupExpanded(groupKey)
+    local settings = DB().settings or {}
+    settings.groupExpanded = settings.groupExpanded or { blocked = true, current = true }
+    return settings.groupExpanded[groupKey] ~= false
+end
+
+local function SetGroupExpanded(instance, groupKey, expanded)
+    local db = DB()
+    db.settings = db.settings or {}
+    db.settings.groupExpanded = db.settings.groupExpanded or { blocked = true, current = true }
+    db.settings.groupExpanded[groupKey] = expanded == true
+    YQB.PersistDB()
+    if instance.context and instance.context.preview and Core.Entry and Core.Entry.SuppressPreviewClose then
+        Core.Entry:SuppressPreviewClose(0.75)
+    end
+    if instance.context then
+        instance.context:Refresh()
+        -- Re-measure once the scroll child has received the new row count.
+        -- The first refresh updates the matrix immediately; the next frame
+        -- lets Core's measured-height pass shrink or grow the outer shell too.
+        if C_Timer and C_Timer.After then
+            C_Timer.After(0, function()
+                if instance:IsShown() and instance.context then instance.context:Refresh() end
+            end)
+        end
+    end
+end
+
 local function ClassColor(characterID)
     local character = _G.YiboCore.Characters:Get(characterID)
     local class = character and character.class
@@ -112,12 +140,13 @@ local function Row(instance)
 end
 
 local function SetCharacterBands(row, characters, startX, characterWidth, showCharacters)
-    -- The matrix owns one continuous current-character outline.  Per-row
-    -- fills and stitched edges made the same role look different by row.
-    for _, band in ipairs(row.characterBands or {}) do band:Hide() end
-    for _, edges in ipairs(row.characterBandEdges or {}) do
-        for _, edge in pairs(edges) do edge:Hide() end
+    if not showCharacters then
+        for _, tint in ipairs(row.columnTints or {}) do tint:Hide() end
+        return
     end
+    local columns = {}
+    for _ = 1, #(characters or {}) do columns[#columns + 1] = characterWidth end
+    Theme:ApplyDataColumnTints(row, columns, ROW_H, startX)
 end
 
 local function FinishCharacterColumnBorder(instance, characters)
@@ -184,12 +213,17 @@ end
 local function RenderQuest(instance, item, characters, showGlobal, showCharacters, currentTask)
     local row = Row(instance)
     instance.dataRowCount = instance.dataRowCount + 1
+    if row.groupArrow then row.groupArrow:Hide() end
+    row.task:ClearAllPoints(); row.task:SetPoint("LEFT", row, "LEFT", 8, 0)
     row.task:SetText("[" .. item.id .. "] " .. tostring(item.name or "未知任务"))
     row.task:SetTextColor(COLORS.text[1], COLORS.text[2], COLORS.text[3])
     row.task:SetWidth(instance.taskWidth - 12)
-    local tone = currentTask and COLORS.current or Theme:GetDataRowColor(instance.dataRowCount)
+    -- Keep row parity readable even for the current-task group. Its border
+    -- carries that state, so the fill remains comparable with adjacent rows.
+    local tone = Theme:GetDataRowColor(instance.dataRowCount)
     row:SetBackdropColor(tone[1], tone[2], tone[3], 0.94)
-    row:SetBackdropBorderColor(COLORS.matrixLine[1], COLORS.matrixLine[2], COLORS.matrixLine[3], COLORS.matrixLine[4])
+    local rowBorder = currentTask and COLORS.line or COLORS.matrixLine
+    row:SetBackdropBorderColor(rowBorder[1], rowBorder[2], rowBorder[3], rowBorder[4])
     local status = YQB.GetBlockStatus(item.id)
     local x = instance.taskWidth
     local characterWidth = CharacterWidth(instance)
@@ -214,14 +248,27 @@ local function RenderQuest(instance, item, characters, showGlobal, showCharacter
     for index = #characters + 1, #row.cells do row.cells[index]:Hide() end
 end
 
-local function RenderGroup(instance, title, characters, showGlobal, showCharacters)
+local function RenderGroup(instance, title, characters, showGlobal, showCharacters, groupKey)
     local row = Row(instance)
-    row.task:SetText("▾ " .. title); row.task:SetWidth(600)
+    local expanded = IsGroupExpanded(groupKey)
+    row.groupArrow = row.groupArrow or row:CreateTexture(nil, "OVERLAY")
+    row.groupArrow:SetSize(16, 16)
+    row.groupArrow:SetPoint("LEFT", row, "LEFT", 6, 0)
+    row.groupArrow:SetTexture(expanded and "Interface\\Buttons\\UI-MinusButton-Up" or "Interface\\Buttons\\UI-PlusButton-Up")
+    row.groupArrow:SetVertexColor(COLORS.accent[1], COLORS.accent[2], COLORS.accent[3], 1)
+    row.groupArrow:Show()
+    row.task:ClearAllPoints(); row.task:SetPoint("LEFT", row, "LEFT", 28, 0)
+    row.task:SetText(title); row.task:SetWidth(600)
     row.task:SetTextColor(COLORS.accent[1], COLORS.accent[2], COLORS.accent[3])
     row:SetBackdropColor(COLORS.toolbar[1], COLORS.toolbar[2], COLORS.toolbar[3], 0.98)
     row:SetBackdropBorderColor(COLORS.matrixLine[1], COLORS.matrixLine[2], COLORS.matrixLine[3], COLORS.matrixLine[4])
     row.global:Hide(); for _, cell in ipairs(row.cells) do cell:Hide() end
     SetCharacterBands(row, characters or {}, instance.taskWidth + (showGlobal and GLOBAL_W or 0), CharacterWidth(instance), showCharacters)
+    row:EnableMouse(true)
+    row:SetScript("OnMouseUp", function()
+        SetGroupExpanded(instance, groupKey, not IsGroupExpanded(groupKey))
+    end)
+    return expanded
 end
 
 function Page.Create(instance)
@@ -234,7 +281,7 @@ function Page.Create(instance)
     instance.daily = Check(instance.toolbar, "日常"); instance.daily:SetPoint("LEFT", 7, 0)
     instance.normal = Check(instance.toolbar, "普通"); instance.normal:SetPoint("LEFT", instance.daily.label, "RIGHT", Theme.Space.sm, 0)
     instance.hideComplete = Check(instance.toolbar, "隐藏已完成"); instance.hideComplete:SetPoint("LEFT", instance.normal.label, "RIGHT", Theme.Space.sm, 0)
-    instance.autoAbandon = Check(instance.toolbar, "自动放弃"); instance.autoAbandon:SetPoint("LEFT", instance.hideComplete.label, "RIGHT", Theme.Space.sm, 0)
+    instance.processMode = Theme:CreateDropdown(instance.toolbar, 156, YQB.GetProcessModeOptions()); instance.processMode:SetPoint("LEFT", instance.hideComplete.label, "RIGHT", Theme.Space.sm, 0)
     instance.level = CreateFrame("EditBox", nil, instance.toolbar, "InputBoxTemplate"); instance.level:SetSize(104, 20); instance.level:SetPoint("RIGHT", -7, 0); instance.level:SetAutoFocus(false)
     instance.levelLabel = Text(instance.toolbar, "GameFontNormalSmall", COLORS.muted); instance.levelLabel:SetPoint("RIGHT", instance.level, "LEFT", -6, 0); instance.levelLabel:SetText("等级")
     instance.header = CreateFrame("Frame", nil, instance); instance.header:SetPoint("TOPLEFT", instance.toolbar, "BOTTOMLEFT", 0, -Theme.Space.sm); instance.header:SetPoint("TOPRIGHT", instance.toolbar, "BOTTOMRIGHT", 0, -Theme.Space.sm); instance.header:SetHeight(GROUP_H)
@@ -258,7 +305,9 @@ function Page.Create(instance)
     instance.daily:SetScript("OnClick", function(self) self:SetChecked(not self:GetChecked()); DB().filters.showDaily = self:GetChecked(); YQB.PersistDB(); RefreshFromControl() end)
     instance.normal:SetScript("OnClick", function(self) self:SetChecked(not self:GetChecked()); DB().filters.showNormal = self:GetChecked(); YQB.PersistDB(); RefreshFromControl() end)
     instance.hideComplete:SetScript("OnClick", function(self) self:SetChecked(not self:GetChecked()); DB().filters.hideComplete = self:GetChecked(); YQB.PersistDB(); RefreshFromControl() end)
-    instance.autoAbandon:SetScript("OnClick", function(self) self:SetChecked(not self:GetChecked()); DB().filters.autoAbandon = self:GetChecked(); YQB.PersistDB(); RefreshFromControl() end)
+    instance.processMode:SetOnValueChanged(function(mode)
+        YQB.SetProcessMode(mode); RefreshFromControl()
+    end)
     instance.level:SetScript("OnEnterPressed", function(self)
         local valid, normalized = YQB.ValidateLevelExpr(self:GetText())
         if valid then DB().filters.levelExpr = normalized; YQB.PersistDB(); RefreshFromControl() end
@@ -270,7 +319,9 @@ function Page.Create(instance)
     end
     instance.addChar:SetScript("OnClick", function() Add("char") end)
     instance.addGlobal:SetScript("OnClick", function() Add("global") end)
-    instance.abandon:SetScript("OnClick", function() YQB.AbandonRejectedQuestsInLog() end)
+    instance.abandon:SetScript("OnClick", function()
+        if not YQB.IsProcessingPaused() then YQB.AbandonRejectedQuestsInLog() end
+    end)
 end
 
 function Page.Refresh(instance, context)
@@ -282,7 +333,6 @@ function Page.Refresh(instance, context)
     instance.daily:SetShown(not preview); instance.daily.label:SetShown(not preview)
     instance.normal:SetShown(not preview); instance.normal.label:SetShown(not preview)
     instance.hideComplete:SetShown(not preview); instance.hideComplete.label:SetShown(not preview)
-    instance.autoAbandon:SetShown(not preview); instance.autoAbandon.label:SetShown(not preview)
     -- Character admission is configured centrally in Core 常规设置 → 角色过滤.
     instance.level:Hide(); instance.levelLabel:Hide()
     instance.manualLabel:SetShown(not preview); instance.manual:SetShown(not preview); instance.addChar:SetShown(not preview); instance.addGlobal:SetShown(not preview); instance.abandon:SetShown(not preview)
@@ -290,8 +340,9 @@ function Page.Refresh(instance, context)
     instance.header:ClearAllPoints(); instance.scroll:ClearAllPoints()
     local inset = Theme:GetMatrixInsets(preview)
     if preview then
-        -- The preview has no local controls: its matrix starts at the preview
-        -- top inset and ends at the preview bottom inset.
+        -- Preview state belongs in Core's title-bar action slot.  This keeps
+        -- the compact hover projection focused on the matrix itself.
+        context:SetTitleBarControl(instance.processMode, 156)
         instance.header:SetPoint("TOPLEFT", instance, "TOPLEFT", inset.left, -inset.top); instance.header:SetPoint("TOPRIGHT", instance, "TOPRIGHT", -inset.right, -inset.top)
         instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs); instance.scroll:SetPoint("BOTTOMRIGHT", -inset.right, inset.bottom)
     else
@@ -299,11 +350,21 @@ function Page.Refresh(instance, context)
         -- the toolbar by the documented 12px gap and stops 12px above the
         -- persistent bottom action panel; that panel itself keeps the 20px
         -- shell-bottom inset.
+        context:ClearTitleBarControl()
+        instance.processMode:SetParent(instance.toolbar)
+        local mainInset = Theme:GetMatrixInsets(false)
+        instance.toolbar:ClearAllPoints(); instance.toolbar:SetPoint("TOPLEFT", mainInset.left, -mainInset.top); instance.toolbar:SetPoint("TOPRIGHT", -mainInset.right, -mainInset.top)
+        instance.processMode:ClearAllPoints(); instance.processMode:SetPoint("LEFT", instance.hideComplete.label, "RIGHT", Theme.Space.sm, 0)
+        instance.processMode:Show()
         instance.header:SetPoint("TOPLEFT", instance.toolbar, "BOTTOMLEFT", 0, -Theme.Space.sm); instance.header:SetPoint("TOPRIGHT", instance.toolbar, "BOTTOMRIGHT", 0, -Theme.Space.sm)
         instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs); instance.scroll:SetPoint("BOTTOMRIGHT", instance.addPanel, "TOPRIGHT", 0, Theme.Space.sm)
     end
     instance.title:SetText("任务屏蔽")
-    instance.daily:SetChecked(filters.showDaily); instance.normal:SetChecked(filters.showNormal); instance.hideComplete:SetChecked(filters.hideComplete); instance.autoAbandon:SetChecked(filters.autoAbandon)
+    instance.daily:SetChecked(filters.showDaily); instance.normal:SetChecked(filters.showNormal); instance.hideComplete:SetChecked(filters.hideComplete)
+    instance.processMode:SetValue(YQB.GetProcessMode())
+    local paused = YQB.IsProcessingPaused()
+    instance.abandon:SetState(paused and "disabled" or "default")
+    instance.abandon:SetText(paused and "暂停模式：不可手动放弃" or "放弃日志中的已屏蔽任务")
     instance.level:SetText(filters.levelExpr or "")
     local globalCount, charCount, total = YQB.GetStats()
     instance.summary:SetText(string.format("全局 %d · 当前 %d · 总计 %d", globalCount, charCount, total))
@@ -328,15 +389,19 @@ function Page.Refresh(instance, context)
     Header(instance, characters, showGlobal, showCharacters, context)
     ClearRows(instance)
     local blocked = YQB.GetBlockedQuestList()
-    RenderGroup(instance, "拒绝任务 (" .. #blocked .. " 个)", characters, showGlobal, showCharacters)
-    for _, item in ipairs(blocked) do RenderQuest(instance, item, characters, showGlobal, showCharacters, false) end
+    local blockedExpanded = RenderGroup(instance, "拒绝任务 (" .. #blocked .. " 个)", characters, showGlobal, showCharacters, "blocked")
+    if blockedExpanded then
+        for _, item in ipairs(blocked) do RenderQuest(instance, item, characters, showGlobal, showCharacters, false) end
+    end
     local current = YQB.GetCurrentQuestList()
     local currentVisible = false
     for _, key in ipairs(characters) do if key == YQB.GetCurrentCharacterID() then currentVisible = true; break end end
     if currentVisible then
-        RenderGroup(instance, "当前角色任务 (" .. ShortName(YQB.GetCurrentCharacterID()) .. ")", characters, showGlobal, showCharacters)
-        for _, item in ipairs(current) do
-            if not YQB.IsQuestBlockedByAny(item.id) then RenderQuest(instance, item, characters, showGlobal, showCharacters, true) end
+        local currentExpanded = RenderGroup(instance, "当前角色任务 (" .. ShortName(YQB.GetCurrentCharacterID()) .. ")", characters, showGlobal, showCharacters, "current")
+        if currentExpanded then
+            for _, item in ipairs(current) do
+                if not YQB.IsQuestBlockedByAny(item.id) then RenderQuest(instance, item, characters, showGlobal, showCharacters, true) end
+            end
         end
     end
     FinishCharacterColumnBorder(instance, characters)
@@ -390,7 +455,10 @@ function Page.GetSurfaceMetrics(context)
             if not YQB.IsQuestBlockedByAny(item.id) then current = current + 1 end
         end
     end
-    local rows = blocked + 1 + (currentVisible and (current + 1) or 0)
+    local rows = (IsGroupExpanded("blocked") and (blocked + 1) or 1)
+    if currentVisible then
+        rows = rows + (IsGroupExpanded("current") and (current + 1) or 1)
+    end
     local mainInset = Theme:GetMatrixInsets(false)
     local previewInset = Theme:GetMatrixInsets(true)
     -- The hover shell is content-sized.  Its table already anchors to the

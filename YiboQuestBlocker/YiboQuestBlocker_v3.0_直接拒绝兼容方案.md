@@ -183,20 +183,19 @@ Questie、Blitz、Leatrix Plus 分别建立适配器和实机验证矩阵。适�
 
 ### 7.3 当前实际 AddOns 环境的兼容清单
 
-本清单以 `C:\Program Files (x86)\World of Warcraft\_classic_\Interface\AddOns` 的实际目录为准，并与 `Addon_Maintenance_Log.md`、`Addon_Maintenance_Current.xlsx` 交叉核对。维护清单将 Questie 标为任务辅助、DialogueUI 标为任务界面；源码扫描进一步确认了下列会实际选择、接取或自动交付任务的插件。
+本清单以 `C:\Program Files (x86)\World of Warcraft\_classic_\Interface\AddOns` 的实际目录为准，并与 `Addon_Maintenance_Log.md`、`Addon_Maintenance_Current.xlsx` 交叉核对。源码扫描与实机测试确认了下列会实际选择、接取或自动交付任务的插件。
 
 | 插件 | 当前代码路径与行为 | v3 定位 | 适配要求 |
 |---|---|---|---|
-| `Questie` | `Modules/Auto/AutoQuesting.lua` 会选择可用任务，并在任务详情或共享确认时调用接取 | 第一批已验证适配 | 保留其修饰键、NPC 排除、普通/重复/PvP 任务筛选；验证连续任务续办 |
-| `!Pig` | `General/Interaction/AutoDialogue.lua` 会遍历 Gossip 可用任务、选择非低级任务，并自动接取、交付和领奖 | 第一批已验证适配 | 其多任务循环会在一个事件中连续请求选择多个任务；YQB 必须把屏蔽任务排除在该批次之外，并验证不会造成重复选择 |
-| `NDui` | `Plugins/QuickQuest.lua` 会选择允许任务、自动接取、确认共享任务、交付并自动选奖 | 第一批已验证适配 | 保留其 Shift 暂停、NPC 忽略表、低级任务/追踪设置和奖励选择行为；验证其连续循环与 YQB 批次锁协作 |
-| `Leatrix_Plus` | `Leatrix_Plus.lua` 会选择 NPC/Gossip 可用任务，自动接取、确认共享任务和交付 | 第一批已验证适配 | 保留其 `AutomateQuests`、修饰键、NPC 排除和任务条件；验证任务问候与 Gossip 两条路径 |
-| `DialogueUI` | 对话框替换插件；仅对内置允许的少量任务、自动接取任务弹窗和控制器模式触发自动接取/选择 | 特殊适配或安全降级 | 它在加载时缓存了接取函数引用，普通的后装全局 guard 可能无法覆盖；需专门适配其公开界面路径并实测，否则只保留接取后兜底放弃 |
+| `Questie` | `Modules/Auto/AutoQuesting.lua` 会选择可用任务，并在任务详情或共享确认时调用接取 | 不兼容拒绝模式 | 使用 YQB 时关闭 Questie 自动接任务功能；保留 Questie 的任务数据与界面功能 |
+| `!Pig` | `General/Interaction/AutoDialogue.lua` 会遍历 Gossip 可用任务、选择非低级任务，并自动接取、交付和领奖 | 支持自动接任务 | 选择层过滤与自动续办实机测试正常，无重复选择或卡住 |
+| `NDui` | `Plugins/QuickQuest.lua` 会选择允许任务、自动接取、确认共享任务、交付并自动选奖 | 支持自动接任务 | 保留其 Shift 暂停、NPC 忽略表、低级任务/追踪设置和奖励选择行为；自动续办实机测试正常 |
+| `Leatrix_Plus` | `Leatrix_Plus.lua` 会选择 NPC/Gossip 可用任务，自动接取、确认共享任务和交付 | 不兼容拒绝模式 | 使用 YQB 时关闭 Leatrix Plus 自动接任务功能；保留 Leatrix Plus 的其它功能 |
 | `Blitz` | 当前实际目录未安装，但此前已作为目标兼容插件研究 | 第二批适配 | 保留独立适配器与验收项；用户日后安装时自动检测并先以直接拒绝模式运行 |
 
-以下插件在当前源码扫描中只读取、显示或美化任务数据，未发现实际自动选择或接取任务调用，**不纳入自动接取兼容适配器**：`DataStore_Quests`、`AllTheThings`、任务框体皮肤模块、地图任务标记模块、`Outfitter`、`RurutiaSuite` 等。它们仍需纳入普通 UI 共存测试，但不应占用 v3 的自动化兼容开发成本。
+以下插件在当前配置或源码扫描中只读取、显示或美化任务数据，未作为自动接任务插件处理，**不纳入自动接取兼容适配器**：`DialogueUI`、`DataStore_Quests`、`AllTheThings`、任务框体皮肤模块、地图任务标记模块、`Outfitter`、`RurutiaSuite` 等。它们仍需纳入普通 UI 共存测试，但不应占用 v3 的自动化兼容开发成本。
 
-`DialogueUI` 还会替换 NPC 任务界面，因此它即使未启用自动接取，也必须进入“拒绝后是否自然回到任务列表”的 UI 兼容测试。YQB 不得假定默认暴雪任务框体存在或可见。
+`DialogueUI` 会替换 NPC 任务界面，因此仅需进入“拒绝后是否自然回到任务列表”的 UI 共存测试。YQB 不得假定默认暴雪任务框体存在或可见。
 
 当前 SavedVariables 中同一插件的自动任务开关会因账号、角色和配置档案而不同；例如 NDui、Questie 与 `!Pig` 均同时存在开启和关闭记录。v3 不得通过离线存档推断“本次一定会自动接取”，而应在运行时根据已加载插件、当前有效设置和实际发生的任务选择/接取调用决定是否启动续办批次。
 
@@ -287,7 +286,7 @@ NPC 批次、拒绝动作锁、预期候选、超时计数等均为纯运行时�
 - NDui QuickQuest；
 - Blitz；
 - Leatrix Plus；
-- DialogueUI（分别覆盖仅替换界面、内置自动接取和控制器模式）；
+- DialogueUI（仅覆盖任务界面共存与拒绝后返回列表）；
 - 未知自动接任务插件（通用兼容降级）；
 - 不启用任何自动接任务插件。
 
@@ -296,7 +295,7 @@ NPC 批次、拒绝动作锁、预期候选、超时计数等均为纯运行时�
 ## 12. 发布与回滚
 
 1. 先以内部测试版验证“直接拒绝 + 不续办”，确认任务不进入日志。
-2. 再逐个开启 Questie、Blitz、Leatrix Plus 的已验证续办适配器。
+2. 再逐个开启 `!Pig`、NDui QuickQuest 等已验证续办适配器；Questie 与 Leatrix Plus 保持仅直接拒绝。
 3. 正式版默认启用直接拒绝；未知插件保持不续办。
 4. 若某个适配器在游戏补丁或插件更新后失效，通过适配器版本门槛自动降级，不影响直接拒绝与自动放弃兜底。
 5. 用户可关闭直接拒绝，恢复 v2 的“接取后按规则放弃”行为；该开关作为明确的兼容回退，不删除既有数据。

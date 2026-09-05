@@ -6,6 +6,12 @@ YiboQuestBlocker 是一个用于 WoW MoP Classic / 国服 5.5.4 的任务拒绝�
 
 它适合和自动接任务类插件配合使用：你可以把不想接的任务加入拒绝列表，插件会在接取前自动拦截，避免反复误接。
 
+## v3.0.1 更新日志
+
+- `!Pig` 与 NDui QuickQuest：支持与 YiboQuestBlocker 的自动接任务流程配合使用。
+- Questie 与 Leatrix Plus：不兼容 YiboQuestBlocker 的拒绝模式；使用 YiboQuestBlocker 时，请关闭这两个插件的自动接任务功能。
+- DialogueUI：不提供自动接任务功能，不再显示在自动接任务适配状态中。
+
 ## 主要功能
 
 - 自动拒绝已拒绝任务
