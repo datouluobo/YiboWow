@@ -1,4 +1,4 @@
-# YiboQuestBlocker v3.0.1
+# YiboQuestBlocker v3.0.2
 
 ## 更新 / What's New
 

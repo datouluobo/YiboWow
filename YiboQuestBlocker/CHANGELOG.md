@@ -1,5 +1,9 @@
 # YiboQuestBlocker 更新日志
 
+## 3.0.2
+
+- 同步插件元数据、YiboCore 注册版本与发布包版本号。
+
 ## 3.0.1
 
 - 自动接任务兼容性结论：`!Pig` 与 NDui QuickQuest 为支持的自动接任务插件；Questie 与 Leatrix Plus 不兼容拒绝模式，使用 YQB 时须关闭其自动接任务功能。
