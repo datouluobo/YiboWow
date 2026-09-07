@@ -47,15 +47,27 @@ local function GetSurfaceMetrics(context)
  if context and context.preview then return Addon:GetPreviewSurfaceMetrics(context) end
  local inset = Core.UITheme:GetMatrixInsets(false)
  local characters = (context and context.characters) or {}
- local layout = Addon.MatrixColumnLayout or { nameWidth = 200, characterWidth = Core.UITheme.Table.characterColumnWidth }
+ local layout = Addon.MatrixColumnLayout or { nameWidth = 200, characterWidth = Core.UITheme:GetCharacterMatrixColumnWidth(context) }
+ local characterWidth = type(Addon.GetMatrixCharacterColumnWidth) == "function"
+  and Addon:GetMatrixCharacterColumnWidth(context)
+  or layout.characterWidth
+ characterWidth = math.max(1, tonumber(characterWidth) or Core.UITheme:GetCharacterMatrixColumnWidth(context))
  -- The preferred width represents the complete account comparison.  Core
  -- clamps it to the screen's safe width; only that hard boundary may cause
  -- the renderer below to paginate characters.
- local matrixWidth = layout.nameWidth + #characters * layout.characterWidth
- local rows = Addon:GetMatrixSurfaceRowCount(characters)
+ local matrixWidth = layout.nameWidth + #characters * characterWidth
+ -- Row discovery consults every snapshot and may be temporarily unavailable
+ -- while Core is rebuilding its character cache.  It must never make this
+ -- page fall back to Core's 942px default width: that fallback is what made
+ -- a single-realm matrix visibly wider than the all-realm matrix.
+ local rows = 21
+ local rowsOK, measuredRows = xpcall(function()
+  return Addon:GetMatrixSurfaceRowCount(characters)
+ end, function() return nil end)
+ if rowsOK and type(measuredRows) == "number" then rows = math.max(0, measuredRows) end
  local scrollbarWidth = rows > 20 and Core.UITheme.Geometry.scrollbarGutter or 0
  return {
-  minContentWidth=layout.nameWidth+layout.characterWidth+inset.left+inset.right,
+  minContentWidth=layout.nameWidth+characterWidth+inset.left+inset.right,
   -- Reserve the shared vertical track only when this capped matrix actually
   -- overflows.  Otherwise the track appears correctly but trims the final
   -- character column by its 14px lane.

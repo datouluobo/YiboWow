@@ -11,8 +11,11 @@ Theme.Colors = {
     nav = { 0.028, 0.078, 0.094, 1 },
     panel = { 0.035, 0.105, 0.125, 0.96 },
     toolbar = { 0.045, 0.14, 0.16, 0.90 },
-    row = { 0.035, 0.115, 0.13, 0.88 },
-    alternate = { 0.045, 0.135, 0.15, 0.88 },
+    -- Account tables must retain a visible row rhythm over the game's varied
+    -- world backgrounds. These are intentionally opaque enough to remain
+    -- legible through per-addon controls and preview shells.
+    row = { 0.025, 0.090, 0.105, 0.98 },
+    alternate = { 0.052, 0.155, 0.170, 0.98 },
     selected = { 0.055, 0.23, 0.23, 1 },
     line = { 0.12, 0.42, 0.43, 0.85 },
     lineSoft = { 0.12, 0.42, 0.43, 0.46 },
@@ -22,6 +25,9 @@ Theme.Colors = {
     text = { 0.90, 0.96, 0.97 },
     muted = { 0.53, 0.70, 0.73 },
     accent = { 0.125, 0.88, 0.44 },
+    -- Near-limit values use amber: visible in a dense dark matrix without
+    -- competing with the red reserved for destructive or blocked states.
+    warning = { 0.96, 0.70, 0.25 },
     current = { 0.055, 0.23, 0.23, 0.92 },
     success = { 0.16, 0.68, 0.24, 0.98 },
     -- Completion is an informational state in dense matrices.  Keep its
@@ -51,23 +57,26 @@ Theme.Size = { compact = 26, standard = 30, action = 34, double = 46, title = 48
 -- Account data is deliberately denser than settings controls.  Every hosted
 -- page uses these semantic roles instead of inheriting a client template's
 -- implicit GameFont size.
-Theme.Font = { title = 18, section = 16, body = 14, assist = 12, meta = 11 }
+Theme.Font = { title = 18, section = 16, body = 16, assist = 14, meta = 12 }
 -- Matrices are the account view's primary surface.  Keep their geometry
 -- compact and shared so business pages do not trade comparable rows for
 -- local title chrome or arbitrary whitespace.
 Theme.Table = {
-    headerHeight = 24,
-    characterHeaderHeight = 28,
-    -- Character matrices are comparison surfaces.  One shared, deliberately
-    -- compact measure prevents each page from quietly consuming a different
-    -- amount of horizontal roster capacity.
-    characterColumnWidth = 54,
-    rowHeight = 24,
-    previewRowHeight = 22,
-    iconRowHeight = 30,
-    groupHeight = 28,
+    headerHeight = 28,
+    characterHeaderHeight = 34,
+    rowHeight = 28,
+    previewRowHeight = 26,
+    iconRowHeight = 32,
+    groupHeight = 32,
     cellInset = 3,
     cellPadding = 6,
+    iconTextGap = 3,
+    iconTextTrailing = 2,
+    matrixTargetLabelCharacters = 4,
+    -- The CJK font rasterizer can paint several pixels wider than a hidden
+    -- FontString reports through GetStringWidth. Keep that tolerance shared
+    -- in Core so business pages never compensate with local width hacks.
+    iconTextRasterTolerance = 4,
     lineWidth = 1,
 }
 
@@ -90,7 +99,7 @@ Theme.Geometry = {
     scopeBar = 30,
     -- Scrollbars live in this existing outer inset, never on top of matrix
     -- data and never as permanently reserved empty table width.
-    scrollbarGutter = 14,
+    scrollbarGutter = 16,
     mainSafety = { left = 16, right = 16, top = 80, bottom = 32 },
     previewSafety = { left = 16, right = 16, top = 16, bottom = 16, anchorGap = 8 },
 }
@@ -103,8 +112,64 @@ function Theme:GetCharacterHeaderHeight(context)
     return context and context.scope == "all" and self.Table.characterHeaderHeight or self.Table.headerHeight
 end
 
+function Theme:GetCharacterMatrixColumnWidth(context)
+    -- The header must show a complete four-character display name.  This is
+    -- deliberately measured at runtime because WoW's CJK glyph rasterization
+    -- is not equivalent to a hard-coded pixel guess. Realm text is a
+    -- secondary line in all-realm scope and does not narrow the name column.
+    return math.ceil(
+        self:MeasureText(self.Font.assist, "字字字字")
+        + self.Table.cellInset * 2
+        + self.Table.iconTextRasterTolerance
+    )
+end
+
+-- A row-oriented identity column has one semantic measure across every page.
+-- Plugins may request the icon intent, but never add their own icon/padding
+-- compensation around this value.
+function Theme:GetCharacterRowHeaderWidth(withProfessionIcon, context, characters)
+    local identity = self:MeasureText(self.Font.body, "字字字字")
+    if context and context.scope == "all" then
+        for _, character in ipairs(characters or context.characters or {}) do
+            local name = tostring(character and character.name or "未知角色")
+            local realm = tostring(character and character.realm or "未知服务器")
+            identity = math.max(self:MeasureText(self.Font.body, identity), self:MeasureText(self.Font.body, name .. "-" .. realm))
+        end
+    end
+    local width = identity + self.Table.cellPadding * 2
+    if withProfessionIcon then width = width + 16 + self.Table.iconTextGap end
+    return math.ceil(width)
+end
+
 function Theme:GetDataRowColor(index)
     return tonumber(index) and index % 2 == 0 and self.Colors.alternate or self.Colors.row
+end
+
+-- Column striping is a quiet overlay, not a replacement for row or semantic
+-- state colors. Every account matrix uses this helper for comparable columns.
+function Theme:ApplyDataColumnTints(row, columns, height, startX, gap)
+    if not row then return end
+    row.columnTints = row.columnTints or {}
+    local x, spacing = tonumber(startX) or 0, tonumber(gap) or 0
+    for index, column in ipairs(columns or {}) do
+        local width = type(column) == "table" and (tonumber(column.width) or tonumber(column.previewMinWidth) or tonumber(column[2])) or tonumber(column)
+        if width and width > 0 then
+            local tint = row.columnTints[index]
+            if not tint then
+                tint = row:CreateTexture(nil, "ARTWORK", nil, -2)
+                row.columnTints[index] = tint
+            end
+            tint:ClearAllPoints(); tint:SetPoint("TOPLEFT", row, "TOPLEFT", x, 0)
+            tint:SetSize(width, height or row:GetHeight() or 1)
+            if index % 2 == 0 then
+                tint:SetColorTexture(self.Colors.alternate[1], self.Colors.alternate[2], self.Colors.alternate[3], 0.36)
+                tint:Show()
+            else tint:Hide() end
+            local columnGap = type(gap) == "function" and (tonumber(gap(index)) or 0) or spacing
+            x = x + width + columnGap
+        end
+    end
+    for index = #(columns or {}) + 1, #row.columnTints do row.columnTints[index]:Hide() end
 end
 
 local function Color(color)
@@ -138,6 +203,41 @@ function Theme:MeasureText(size, value)
     return math.ceil(self._measureText:GetStringWidth() or 0)
 end
 
+-- Dense table columns are measured by Core so business pages never invent
+-- local gutters around icon-and-label controls.
+function Theme:GetIconTextColumnWidth(iconWidth, fontSize, label, minimumCharacters)
+    local textWidth = self:MeasureText(fontSize, label)
+    local minimum = math.max(0, math.floor(tonumber(minimumCharacters) or 0))
+    if minimum > 0 then
+        textWidth = math.max(textWidth, self:MeasureText(fontSize, string.rep("字", minimum)))
+    end
+    return math.ceil(
+        self.Table.cellPadding
+        + self.Table.cellInset
+        + math.max(0, tonumber(iconWidth) or 0)
+        + self.Table.iconTextGap
+        + textWidth
+        + self.Table.iconTextTrailing
+        + self.Table.iconTextRasterTolerance
+    )
+end
+
+function Theme:GetMatrixTargetColumnWidth(iconWidth, fontSize, label)
+    return self:GetIconTextColumnWidth(iconWidth, fontSize, label, self.Table.matrixTargetLabelCharacters)
+end
+
+-- Matrix paging may consume the raster tolerance before it splits an
+-- otherwise complete target grid. It never contracts the icon, its gap, or
+-- the configured character slots.
+function Theme:GetMatrixTargetColumnWidths(iconWidth, fontSize, label)
+    local preferred = self:GetMatrixTargetColumnWidth(iconWidth, fontSize, label)
+    return preferred, math.max(1, preferred - self.Table.iconTextRasterTolerance)
+end
+
+function Theme:GetTableCellContentWidth(columnWidth)
+    return math.max(1, (tonumber(columnWidth) or 1) - self.Table.cellPadding)
+end
+
 -- Shared dense-table header.  Each cell owns only its right and bottom rule,
 -- so adjacent headers never paint the same 1px boundary twice.
 function Theme:CreateMatrixHeader(parent)
@@ -164,7 +264,7 @@ function Theme:SetMatrixHeader(header, title, options)
     local height = options.height or self.Table.headerHeight
     local inset = options.inset or self.Table.cellInset
     local justify = options.justify or "CENTER"
-    local fill = options.fill or self.Colors.chrome
+    local fill = options.fill or self.Colors.toolbar
     local rule = options.rule or self.Colors.lineSoft
     local titleColor = options.color or self.Colors.muted
     local secondary = options.secondary
@@ -199,7 +299,9 @@ function Theme:SetCharacterHeader(header, character, context, options)
     local showRealm = context and context.scope == "all"
     options.height = self:GetCharacterHeaderHeight(context)
     options.color = color
-    options.secondary = showRealm and ("-" .. tostring(realm)) or nil
+    -- The second line is already visually separated from the character name;
+    -- a leading hyphen wastes one glyph of the narrow account-matrix column.
+    options.secondary = showRealm and tostring(realm) or nil
     self:SetMatrixHeader(header, tostring(name), options)
     local fullName = tostring((character and character.name) or name) .. "-" .. tostring(realm)
     local lines = {}
@@ -221,13 +323,37 @@ end
 -- therefore keep the semantic fill untouched and use one shared 1px outline.
 function Theme:CreateCurrentCharacterOutline(parent)
     local outline = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    outline:SetAllPoints(parent)
-    outline:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = self.Table.lineWidth })
+    local lineWidth = math.max(1, tonumber(self.Table.lineWidth) or 1)
+    -- Backdrop edges paint outward from their frame bounds. Keep this shared
+    -- navigation outline inside the data row so it cannot cross the matrix's
+    -- right edge (or the scrollbar safety gutter).
+    outline:SetPoint("TOPLEFT", parent, "TOPLEFT", lineWidth, -lineWidth)
+    outline:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -lineWidth, lineWidth)
+    outline:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = lineWidth })
     outline:SetBackdropBorderColor(self.Colors.accent[1], self.Colors.accent[2], self.Colors.accent[3], 0.96)
     outline:SetFrameLevel((parent:GetFrameLevel() or 0) + 10)
     outline:EnableMouse(false)
     outline:Hide()
     return outline
+end
+
+-- Character-column pages report their visible column bounds only. Core owns
+-- the inset, viewport clipping and all anchor arithmetic so an outline cannot
+-- escape into a scrollbar gutter or the hidden scroll child.
+function Theme:UpdateCurrentCharacterColumnOutline(outline, header, viewport, x, width, shown, viewportX)
+    if not outline then return end
+    if not shown or not header or not viewport or not x or not width then
+        self:SetCurrentCharacterOutline(outline, false)
+        return
+    end
+    local lineWidth = math.max(1, tonumber(self.Table.lineWidth) or 1)
+    outline:ClearAllPoints()
+    outline:SetPoint("TOPLEFT", header, "TOPLEFT", x + lineWidth, -lineWidth)
+    outline:SetPoint("TOPRIGHT", header, "TOPLEFT", x + width - lineWidth, -lineWidth)
+    local bottomX = viewportX == nil and x or viewportX
+    outline:SetPoint("BOTTOMLEFT", viewport, "BOTTOMLEFT", bottomX + lineWidth, lineWidth)
+    outline:SetPoint("BOTTOMRIGHT", viewport, "BOTTOMLEFT", bottomX + width - lineWidth, lineWidth)
+    self:SetCurrentCharacterOutline(outline, true)
 end
 
 function Theme:SetCurrentCharacterOutline(outline, shown)
@@ -280,8 +406,19 @@ function Theme:CreateDropdown(parent, width, options)
     dropdown.label:SetPoint("LEFT", 10, 0); dropdown.label:SetPoint("RIGHT", dropdown.arrow, "LEFT", -6, 0)
     dropdown.options = {}
     dropdown.value = nil
-    dropdown.menu = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-    dropdown.menu:SetFrameStrata("DIALOG")
+    -- Keep popups inside the owning top-level shell.  A UIParent popup sits
+    -- below our DIALOG account window and, for an interactive hover preview,
+    -- also lies outside the mouse boundary that keeps that preview alive.
+    local popupOwner = parent
+    while popupOwner and popupOwner:GetParent() and popupOwner:GetParent() ~= UIParent do
+        popupOwner = popupOwner:GetParent()
+    end
+    popupOwner = popupOwner or UIParent
+    dropdown.menu = CreateFrame("Frame", nil, popupOwner, "BackdropTemplate")
+    dropdown.menu:SetFrameStrata(popupOwner:GetFrameStrata() or "DIALOG")
+    dropdown.menu:SetFrameLevel((popupOwner:GetFrameLevel() or 0) + 30)
+    dropdown.menu:SetToplevel(true)
+    dropdown.menu:EnableMouse(true)
     dropdown.menu:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     dropdown.menu:SetBackdropColor(Color(self.Colors.panel)); dropdown.menu:SetBackdropBorderColor(Color(self.Colors.line))
     dropdown.menu:Hide()
@@ -295,6 +432,7 @@ function Theme:CreateDropdown(parent, width, options)
                 button = Theme:CreateButton(self.menu, 1, "", "secondary")
                 self.menu.buttons[index] = button
             end
+            button:SetFrameLevel((dropdown.menu:GetFrameLevel() or 0) + 1)
             button:ClearAllPoints(); button:SetPoint("TOPLEFT", 4, -4 - (index - 1) * (Theme.Size.standard + 2)); button:SetPoint("RIGHT", -4, 0)
             button:SetText(option.label or tostring(option.value or "")); button:SetState(option.value == self.value and "selected" or "default")
             button:SetScript("OnClick", function()
@@ -322,7 +460,8 @@ function Theme:CreateDropdown(parent, width, options)
     dropdown:SetScript("OnClick", function(self)
         if self.menu:IsShown() then self.menu:Hide(); return end
         self.menu:ClearAllPoints(); self.menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2); self.menu:SetWidth(self:GetWidth())
-        self.menu:Show(); self.menu:SetFrameLevel((self:GetFrameLevel() or 0) + 20)
+        self.menu:SetFrameLevel((popupOwner:GetFrameLevel() or 0) + 30)
+        self.menu:Show(); self.menu:Raise()
     end)
     dropdown:SetOptions(options)
     return dropdown
@@ -410,6 +549,15 @@ local function CaptureGutterAnchors(frame, state)
     if not frame or frame._yiboGutterState then return end
     frame._yiboGutterState = state
     frame._yiboGutterPoints = {}
+    -- BindScrollbarGutter is commonly called after a table header has already
+    -- been anchored. Preserve those points before wrapping SetPoint; otherwise
+    -- the first asynchronous gutter refresh clears every anchor and collapses
+    -- the header (and its dependent scroll frame) to zero width/height.
+    if type(frame.GetNumPoints) == "function" and type(frame.GetPoint) == "function" then
+        for index = 1, frame:GetNumPoints() do
+            frame._yiboGutterPoints[#frame._yiboGutterPoints + 1] = { frame:GetPoint(index) }
+        end
+    end
     frame._yiboNativeSetPoint = frame.SetPoint
     frame._yiboNativeClearAllPoints = frame.ClearAllPoints
     frame.SetPoint = function(control, ...)
@@ -458,8 +606,8 @@ function Theme:CreateScrollFrame(parent)
     bar:SetWidth(14)
     -- The track occupies the dynamic 14px gutter.  When no overflow exists
     -- the gutter is released and the hidden track reserves no table width.
-    bar:SetPoint("TOPLEFT", scroll, "TOPRIGHT", 0, -2)
-    bar:SetPoint("BOTTOMLEFT", scroll, "BOTTOMRIGHT", 0, 2)
+    bar:SetPoint("TOPLEFT", scroll, "TOPRIGHT", 1, -2)
+    bar:SetPoint("BOTTOMLEFT", scroll, "BOTTOMRIGHT", 1, 2)
     bar:SetMinMaxValues(0, 0)
     bar:SetValueStep(1)
     if bar.SetObeyStepOnDrag then bar:SetObeyStepOnDrag(true) end
@@ -591,4 +739,11 @@ function Theme:BindTooltip(control, title, lines)
         GameTooltip:Hide()
         if GameTooltip.YiboOpaqueBackground then GameTooltip.YiboOpaqueBackground:Hide() end
     end)
+end
+
+function Theme:ClearTooltip(control)
+    if not control then return end
+    control.tooltipTitle, control.tooltipLines = nil, nil
+    control:SetScript("OnEnter", nil)
+    control:SetScript("OnLeave", nil)
 end

@@ -2,11 +2,10 @@ local YAB = _G.YAB
 local Theme = _G.YiboCore.UITheme
 local C = Theme.Colors
 
-local BOSS_WIDTH, ACTION_WIDTH, PHASE_WIDTH = 120, 88, 72
-local CHARACTER_MIN_WIDTH, CHARACTER_MAX_WIDTH = Theme.Table.characterColumnWidth, Theme.Table.characterColumnWidth
+local BOSS_WIDTH, ACTION_WIDTH, PHASE_WIDTH = 88, 88, 72
+local CHARACTER_MIN_WIDTH, CHARACTER_MAX_WIDTH = Theme:GetCharacterMatrixColumnWidth(), Theme:GetCharacterMatrixColumnWidth()
 local HEADER_H, COMPACT_HEADER_H, ROW_H, CELL_H = Theme.Table.groupHeight, Theme.Table.headerHeight, Theme.Table.rowHeight, 24
 local GROUP_GAP = 2
-local FIXED_HEADER = { 0.035, 0.18, 0.19, 1 }
 local FIXED_CELL = { 0.025, 0.145, 0.16, 0.98 }
 
 local function Text(parent, size, justify, color)
@@ -61,9 +60,9 @@ local function VisualTextUnits(value)
     return units
 end
 
-local function GetCharacterColumnMetrics(key, context)
+local function GetCharacterColumnMetrics(key, context, resolvedWidth)
     local titleFont = Theme.Font.assist
-    return CHARACTER_MIN_WIDTH, titleFont
+    return resolvedWidth or CHARACTER_MAX_WIDTH, titleFont
 end
 
 local function ScopeRealm(scope)
@@ -332,6 +331,8 @@ local function GetRow(instance, index)
     row.groupGap:SetWidth(GROUP_GAP)
     row.groupGap:SetColorTexture(C.bg[1], C.bg[2], C.bg[3], 1)
     row.name = Text(row, Theme.Font.body, "LEFT", C.text); row.name:SetWidth(BOSS_WIDTH - 12)
+    row.professionIcon = row:CreateTexture(nil, "ARTWORK"); row.professionIcon:SetSize(16, 16)
+    row.currentOutline = Theme:CreateCurrentCharacterOutline(row)
     row.action = Button(row, ACTION_WIDTH - 2, "—"); row.action:SetHeight(CELL_H)
     row.phase = Button(row, PHASE_WIDTH - 2, "—"); row.phase:SetHeight(CELL_H)
     row.cells = {}
@@ -401,7 +402,7 @@ local function RefreshHeaders(instance, context, keys, showAction, showPhase, sh
         local header = GetHeader(instance, index)
         header:ClearAllPoints(); header:SetPoint("TOPLEFT", instance.header, "TOPLEFT", x, 0); header:SetSize(width, headerHeight)
         local color = titleColor or C.muted
-        local fill = fixedArea and FIXED_HEADER or C.chrome
+        local fill = C.toolbar
         Theme:SetMatrixHeader(header, title, { height=headerHeight, secondary=sub, color=color, fill=fill, rule=C.lineSoft })
         header.title:SetFont(STANDARD_TEXT_FONT, titleFont or Theme.Font.assist)
         header:Show(); x = x + width
@@ -424,7 +425,7 @@ local function RefreshHeaders(instance, context, keys, showAction, showPhase, sh
             -- header line exclusively for the cross-realm comparison where it
             -- disambiguates characters with the same name.
             local realmSubtitle = context.scope == "all" and realm or ""
-            local columnWidth, titleFont = GetCharacterColumnMetrics(key, context)
+            local columnWidth, titleFont = GetCharacterColumnMetrics(key, context, instance.characterColumnWidth)
             instance.characterWidths[characterIndex] = columnWidth
             if key == currentKey then
                 instance.currentColumnX = x
@@ -456,14 +457,11 @@ end
 
 local function RefreshCurrentColumnOutline(instance, bosses, showKills)
     local outline = instance.currentColumnOutline
-    outline:ClearAllPoints()
     if not showKills or not instance.currentColumnX then
         Theme:SetCurrentCharacterOutline(outline, false)
         return
     end
-    outline:SetPoint("TOPLEFT", instance.header, "TOPLEFT", instance.currentColumnX, 0)
-    outline:SetPoint("BOTTOMRIGHT", instance.scroll, "BOTTOMLEFT", instance.currentColumnX + (instance.currentColumnWidth or CHARACTER_MIN_WIDTH), 0)
-    Theme:SetCurrentCharacterOutline(outline, true)
+    Theme:UpdateCurrentCharacterColumnOutline(outline, instance.header, instance.scroll, instance.currentColumnX, instance.currentColumnWidth or CHARACTER_MIN_WIDTH, true)
 end
 
 -- Kept as a migration reference only.  The registered renderer below uses
@@ -493,8 +491,18 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
     instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs)
     instance.scroll:SetPoint("BOTTOMRIGHT", -inset.right, inset.bottom)
     local fixedWidth = BOSS_WIDTH + (showAction and ACTION_WIDTH or 0) + (showPhase and PHASE_WIDTH or 0) + (showKills and GROUP_GAP or 0)
-    local availableWidth = instance.header:GetWidth() or math.max(fixedWidth + CHARACTER_MIN_WIDTH, (instance:GetWidth() or 0) - 58)
-    local keys, pageInfo = _G.YiboCore.AccountView:GetColumnPage("alto-boss", "characters", allKeys, availableWidth, fixedWidth, CHARACTER_MIN_WIDTH)
+    -- Core has already measured the complete roster and selected this pass's
+    -- final surface width.  Header anchors may still report the previous page
+    -- width immediately after that resize, which used to make one extra
+    -- character trigger pagination prematurely.
+    local characterWidth = Theme:GetCharacterMatrixColumnWidth(context)
+    local availableWidth = math.max(
+        fixedWidth + characterWidth,
+        (tonumber(context.surfaceAvailableWidth) or instance:GetWidth() or 1) - inset.left - inset.right
+    )
+    instance.characterColumnWidth = characterWidth
+    local keys, pageInfo = _G.YiboCore.AccountView:GetColumnPage("alto-boss", "characters", allKeys, availableWidth, fixedWidth, instance.characterColumnWidth, YAB.GetCurrentCharKey and YAB.GetCurrentCharKey() or nil)
+    _G.YiboCore.AccountView:UpdateColumnPager(instance, "alto-boss", "characters", pageInfo, instance.header, "角色")
     RefreshHeaders(instance, context, keys, showAction, showPhase, showKills)
 
     for rowIndex, boss in ipairs(bosses) do
@@ -503,6 +511,14 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
         local rowTone = Theme:GetDataRowColor(rowIndex)
         row:SetBackdropColor(rowTone[1], rowTone[2], rowTone[3], rowTone[4] or 0.88)
         row:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
+        -- The frozen boss/action segment is still part of this data row.
+        -- Give it the same parity tone instead of a single flat slab.
+        row.fixedBackground:SetColorTexture(rowTone[1], rowTone[2], rowTone[3], rowTone[4] or 0.88)
+        local columnWidths = { { width = BOSS_WIDTH } }
+        if showAction then columnWidths[#columnWidths + 1] = { width = ACTION_WIDTH } end
+        if showPhase then columnWidths[#columnWidths + 1] = { width = PHASE_WIDTH } end
+        for _ = 1, #keys do columnWidths[#columnWidths + 1] = { width = instance.characterColumnWidth } end
+        Theme:ApplyDataColumnTints(row, columnWidths, ROW_H)
         row.fixedBackground:SetWidth(instance.fixedWidth)
         row.groupGap:ClearAllPoints()
         row.groupGap:SetPoint("TOPLEFT", row, "TOPLEFT", instance.fixedWidth, 0)
@@ -539,7 +555,7 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
             x = x + GROUP_GAP
             for cellIndex, key in ipairs(keys) do
                 local cell = GetCell(row, cellIndex)
-                local columnWidth = instance.characterWidths[cellIndex] or CHARACTER_MIN_WIDTH
+                local columnWidth = instance.characterWidths[cellIndex] or instance.characterColumnWidth or CHARACTER_MIN_WIDTH
                 cell:SetWidth(columnWidth - 2)
                 cell:ClearAllPoints(); cell:SetPoint("LEFT", x + 1, 0); cell:SetShown(true)
                 SetStatus(cell, YAB.GetBossKillStatus(key, boss.key), key, boss)
@@ -560,63 +576,131 @@ end
 -- Boss weekly is intentionally character-row oriented.  Bosses are the
 -- stable comparison columns; character count therefore grows vertically and
 -- never turns the matrix into a screen-wide roster strip.
-local function RefreshBossColumnHeaders(instance, context, bosses, showKills, showAction, showPhase, characterWidth)
+local function RefreshBossColumnHeaders(instance, bosses, showBossColumns, characterWidth)
     local x, index = 0, 0
-    local headerHeight = GetHeaderHeight(context)
+    -- Character identity lives in row headers for this view. Its table header
+    -- is therefore always a normal single-line header in every scope.
+    local headerHeight = Theme.Table.headerHeight
     instance.header:SetHeight(headerHeight)
     local function Place(title, width, sub, color, fixed)
         index = index + 1
         local header = GetHeader(instance, index)
         header:ClearAllPoints(); header:SetPoint("TOPLEFT", instance.header, "TOPLEFT", x, 0); header:SetSize(width, headerHeight)
-        local textColor = color or C.muted; local fill = fixed and FIXED_HEADER or C.chrome
+        local textColor = color or C.muted; local fill = C.toolbar
         Theme:SetMatrixHeader(header,title,{height=headerHeight,secondary=sub,color=textColor,fill=fill,rule=C.lineSoft});header:Show()
         x = x + width
     end
     Place("角色", characterWidth, nil, nil, true)
-    if showAction then Place("行动", ACTION_WIDTH, nil, nil, true) end
-    if showPhase then Place("位面", PHASE_WIDTH, nil, nil, true) end
-    if showKills then
+    if showBossColumns then
         for _, boss in ipairs(bosses) do
             Place(boss.name, BOSS_WIDTH)
         end
     end
     Release(instance.headers, index + 1)
-    instance.fixedWidth, instance.gridWidth = x, x + (showKills and GROUP_GAP or 0)
+    instance.fixedWidth, instance.gridWidth = characterWidth, x
     instance.header.fixedDivider:Hide()
 end
 
-local function GetCharacterAction(key, bosses)
-    for _, boss in ipairs(bosses or {}) do
-        if YAB.GetBossKillStatus(key, boss.key) ~= "killed" then
-            return "可处理：" .. tostring(boss.name), "soon"
-        end
-    end
-    return "已完成", "window"
-end
-
-local function GetCharacterPhase(key, bosses)
-    local latest
-    for _, boss in ipairs(bosses or {}) do
-        local state = YAB.GetPhaseInfo(key, boss.key)
-        if state and (not latest or (tonumber(state.observedAt) or 0) > (tonumber(latest.observedAt) or 0)) then
-            latest = state
-        end
-    end
-    if not latest then return "—", "weak", nil end
-    local phase = latest.phase or latest.phaseLabel or latest.phaseDisplayId
-    local lines = {}
-    if latest.zone or latest.subZone then
-        AddTooltipPair(lines, "位置", tostring(latest.zone or "未知") .. (latest.subZone and (" · " .. tostring(latest.subZone)) or ""))
-    end
-    AppendPredictionLines(lines, latest, latest.lastKilledAt, "刷新预测")
-    return "位面 " .. tostring(phase or "未知"), "observed", lines
-end
-
 function YAB.RefreshAccountPage(instance, context)
-    -- Keep the original Boss-row renderer as the canonical implementation:
-    -- its action and phase cells are backed by the scoped respawn state and
-    -- expose the full refresh/location tooltip data.
-    return RefreshAccountPageByCharacterColumns(instance, context)
+    local preview = context.preview == true
+    local keys, bosses = YAB.GetAccountCharacterKeys(context), YAB.GetBossList()
+    local showKills = context:GetFieldVisible("kills")
+    local showAction = context:GetFieldVisible("action")
+    local showPhase = context:GetFieldVisible("phase")
+    local showBossColumns = showKills or showAction or showPhase
+    local inset = Theme:GetMatrixInsets(preview)
+    local characterWidth = Theme:GetCharacterRowHeaderWidth(true, context, context.characters)
+
+    instance.title:Hide(); instance.summary:Hide(); Release(instance.scopeButtons, 1)
+    instance.header:ClearAllPoints(); instance.scroll:ClearAllPoints()
+    instance.header:SetPoint("TOPLEFT", inset.left, -inset.top)
+    instance.header:SetPoint("TOPRIGHT", -inset.right, -inset.top)
+    instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs)
+    instance.scroll:SetPoint("BOTTOMRIGHT", -inset.right, inset.bottom)
+    RefreshBossColumnHeaders(instance, bosses, showBossColumns, characterWidth)
+
+    local fixedWidth = characterWidth
+    local currentKey = YAB.GetCurrentCharKey and YAB.GetCurrentCharKey() or nil
+    local actionFills = { window = C.successSurface, soon = C.successSurface, scheduled = C.selected, timer = C.timer, weak = C.timer, observed = C.current, overdue = C.dangerSurface }
+    local function PrepareRow(row, rowIndex)
+        row:ClearAllPoints(); row:SetPoint("TOPLEFT", instance.body, "TOPLEFT", 0, -((rowIndex - 1) * ROW_H)); row:SetSize(instance.gridWidth, ROW_H)
+        local tone = Theme:GetDataRowColor(rowIndex)
+        row:SetBackdropColor(tone[1], tone[2], tone[3], tone[4] or 0.88)
+        row:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
+        row.fixedBackground:SetWidth(fixedWidth); row.fixedBackground:SetColorTexture(tone[1], tone[2], tone[3], tone[4] or 0.88)
+        row.groupGap:Hide(); row.action:Hide(); row.phase:Hide()
+        local widths = { { width = characterWidth } }
+        if showBossColumns then for _ = 1, #bosses do widths[#widths + 1] = { width = BOSS_WIDTH } end end
+        Theme:ApplyDataColumnTints(row, widths, ROW_H)
+    end
+    local rowIndex = 0
+    if showAction then
+        rowIndex = rowIndex + 1
+        local row = GetRow(instance, rowIndex); PrepareRow(row, rowIndex)
+        row.professionIcon:Hide(); row.name:ClearAllPoints(); row.name:SetPoint("LEFT", Theme.Table.cellPadding, 0); row.name:SetWidth(Theme:GetTableCellContentWidth(characterWidth)); row.name:SetText("行动"); row.name:SetTextColor(C.muted[1], C.muted[2], C.muted[3]); row.name:Show()
+        local x = characterWidth
+        for bossIndex, boss in ipairs(bosses) do
+            local cell = GetCell(row, bossIndex); cell:SetWidth(BOSS_WIDTH - 2); cell:ClearAllPoints(); cell:SetPoint("LEFT", x + 1, 0); cell:Show()
+            if boss.hideAction then SetEmptyButton(cell) else
+                local candidate = PickBestAction(boss, context.scope)
+                SetSemanticButton(cell, candidate and candidate.text or "—", actionFills[candidate and candidate.kind or ""] or FIXED_CELL, boss.name .. " / 行动", BuildActionTooltip(boss, candidate, context.scope))
+            end
+            x = x + BOSS_WIDTH
+        end
+        Release(row.cells, showBossColumns and (#bosses + 1) or 1); Theme:SetCurrentCharacterOutline(row.currentOutline, false); row:Show()
+    end
+    if showPhase then
+        rowIndex = rowIndex + 1
+        local row = GetRow(instance, rowIndex); PrepareRow(row, rowIndex)
+        row.professionIcon:Hide(); row.name:ClearAllPoints(); row.name:SetPoint("LEFT", Theme.Table.cellPadding, 0); row.name:SetWidth(Theme:GetTableCellContentWidth(characterWidth)); row.name:SetText("位面"); row.name:SetTextColor(C.muted[1], C.muted[2], C.muted[3]); row.name:Show()
+        local x = characterWidth
+        for bossIndex, boss in ipairs(bosses) do
+            local cell = GetCell(row, bossIndex); cell:SetWidth(BOSS_WIDTH - 2); cell:ClearAllPoints(); cell:SetPoint("LEFT", x + 1, 0); cell:Show()
+            if boss.hidePhase then SetEmptyButton(cell) else
+                local summary, lines, hasKill, hasObserve = BuildPhaseSummary(boss, context.scope)
+                SetSemanticButton(cell, summary, hasKill and C.timer or (hasObserve and C.current or FIXED_CELL), boss.name .. " / 位面", lines)
+            end
+            x = x + BOSS_WIDTH
+        end
+        Release(row.cells, showBossColumns and (#bosses + 1) or 1); Theme:SetCurrentCharacterOutline(row.currentOutline, false); row:Show()
+    end
+    for _, key in ipairs(keys) do
+        rowIndex = rowIndex + 1
+        local row = GetRow(instance, rowIndex)
+        PrepareRow(row, rowIndex)
+        Theme:SetCurrentCharacterOutline(row.currentOutline, key == currentKey)
+
+        local name, realm = CharacterInfo(key)
+        local color = CharacterColor(key)
+        local info = (YiboAltoBossDB and YiboAltoBossDB.knownChars and YiboAltoBossDB.knownChars[key]) or {}
+        local class = info.class
+        local coords = class and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[class]
+        local iconOffset = 0
+        if coords then
+            row.professionIcon:SetTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES")
+            row.professionIcon:SetTexCoord(unpack(coords)); row.professionIcon:ClearAllPoints(); row.professionIcon:SetPoint("LEFT", Theme.Table.cellPadding, 0); row.professionIcon:Show()
+            iconOffset = 16 + Theme.Table.iconTextGap
+        else row.professionIcon:Hide() end
+        row.name:ClearAllPoints(); row.name:SetPoint("LEFT", Theme.Table.cellPadding + iconOffset, 0)
+        row.name:SetWidth(Theme:GetTableCellContentWidth(characterWidth) - iconOffset)
+        row.name:SetText(context.scope == "all" and (name .. "-" .. realm) or name); row.name:SetTextColor(color.r or color[1], color.g or color[2], color.b or color[3]); row.name:Show()
+        local x = characterWidth
+        if showKills then
+            for bossIndex, boss in ipairs(bosses) do
+                local cell = GetCell(row, bossIndex)
+                cell:SetWidth(BOSS_WIDTH - 2); cell:ClearAllPoints(); cell:SetPoint("LEFT", x + 1, 0); cell:Show()
+                SetStatus(cell, YAB.GetBossKillStatus(key, boss.key), key, boss); x = x + BOSS_WIDTH
+            end
+        end
+        Release(row.cells, showKills and (#bosses + 1) or 1)
+        row:Show()
+    end
+    Release(instance.rows, rowIndex + 1)
+    instance.body:SetSize(instance.gridWidth, math.max(1, rowIndex * ROW_H))
+    instance.scroll:SetContentHeight(instance.body:GetHeight())
+    if preview then instance.scroll:SetVerticalScroll(0) end
+    instance.scroll:RefreshScrollbar()
+    Theme:SetCurrentCharacterOutline(instance.currentColumnOutline, false)
 end
 
 local function GetMatrixSize(context)
@@ -640,27 +724,21 @@ function YAB.GetAccountSurfaceMetrics(context)
     local bosses = YAB.GetBossList()
     local keys = YAB.GetAccountCharacterKeys(context) or {}
     local inset = Theme:GetMatrixInsets(context and context.preview)
-    -- The active renderer is Boss-row oriented.  Keep the surface metrics in
-    -- the same orientation so Core does not reserve Boss columns on the right
-    -- or character rows at the bottom that the page does not actually use.
-    local fixedWidth = BOSS_WIDTH
-        + (context:GetFieldVisible("action") and ACTION_WIDTH or 0)
-        + (context:GetFieldVisible("phase") and PHASE_WIDTH or 0)
-        + (context:GetFieldVisible("kills") and GROUP_GAP or 0)
-    local characterWidth = 0
-    if context:GetFieldVisible("kills") then
-        for _, key in ipairs(keys) do
-            characterWidth = characterWidth + GetCharacterColumnMetrics(key, context)
-        end
+    local fixedWidth = Theme:GetCharacterRowHeaderWidth(true, context, context.characters)
+    local bossWidth = 0
+    local showBossColumns = context:GetFieldVisible("kills") or context:GetFieldVisible("action") or context:GetFieldVisible("phase")
+    if showBossColumns then
+        bossWidth = #bosses * BOSS_WIDTH
     end
+    local summaryRows = (context:GetFieldVisible("action") and 1 or 0) + (context:GetFieldVisible("phase") and 1 or 0)
     return {
-        minContentWidth = math.max(360, fixedWidth + CHARACTER_MIN_WIDTH + inset.left + inset.right),
-        naturalContentWidth = fixedWidth + characterWidth + inset.left + inset.right,
-        minContentHeight = inset.top + GetHeaderHeight(context) + Theme.Space.xs + ROW_H + inset.bottom,
-        naturalContentHeight = inset.top + GetHeaderHeight(context) + Theme.Space.xs + math.max(1, #bosses) * ROW_H + inset.bottom,
+        minContentWidth = math.max(360, fixedWidth + (showBossColumns and BOSS_WIDTH or 0) + inset.left + inset.right),
+        naturalContentWidth = fixedWidth + bossWidth + inset.left + inset.right,
+        minContentHeight = inset.top + Theme.Table.headerHeight + Theme.Space.xs + ROW_H + inset.bottom,
+        naturalContentHeight = inset.top + Theme.Table.headerHeight + Theme.Space.xs + math.max(1, summaryRows + #keys) * ROW_H + inset.bottom,
         fixedLeftWidth = fixedWidth,
-        fixedTopHeight = GetHeaderHeight(context),
-        horizontalOverflow = "paginate", verticalOverflow = "content",
+        fixedTopHeight = Theme.Table.headerHeight,
+        horizontalOverflow = "content", verticalOverflow = "content",
     }
 end
 

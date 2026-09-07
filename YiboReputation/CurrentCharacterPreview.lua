@@ -29,5 +29,17 @@ function Addon:RefreshCurrentPreview(parent)
         if open then local function Add(node,depth)
             if node.kind=="faction" then local r=Row();r:ClearAllPoints();r:SetPoint("TOPLEFT",parent.currentPreviewBody,"TOPLEFT",0,-y);r:SetBackdropColor(Theme.Colors.row[1],Theme.Colors.row[2],Theme.Colors.row[3],1);r.text:SetText(string.rep(" ",depth*2)..node.title);r.value:SetText(self:FormatSnapshotValue(snapshot,node.data,"matrix",self:GetFactionState(snapshot,node.factionID)));r:SetScript("OnClick",function() self:GetSettings().matrixFocusFactionID=node.factionID;Core.AccountView:ShowPage("reputation",{autoFit=true}) end);y=y+rowHeight end;for _,child in ipairs(node.children or {}) do Add(child,depth+1) end end;for _,child in ipairs(expansion.children) do Add(child,0) end end
     end
-    for i=index+1,#parent.currentPreviewRows do parent.currentPreviewRows[i]:Hide() end;for i=1,index do parent.currentPreviewRows[i]:Show() end;parent.currentPreviewBody:SetSize(430,math.max(1,y));parent.currentPreviewScroll:SetContentHeight(y)
+    for i=index+1,#parent.currentPreviewRows do parent.currentPreviewRows[i]:Hide() end
+    local dataRowIndex = 0
+    for i=1,index do
+        local row = parent.currentPreviewRows[i]
+        row:Show()
+        local label = row.text and row.text:GetText() or ""
+        if string.sub(label, 1, 2) ~= "+ " and string.sub(label, 1, 2) ~= "- " then
+            dataRowIndex = dataRowIndex + 1
+            local tone = Theme:GetDataRowColor(dataRowIndex)
+            row:SetBackdropColor(tone[1], tone[2], tone[3], tone[4])
+        end
+    end
+    parent.currentPreviewBody:SetSize(430,math.max(1,y));parent.currentPreviewScroll:SetContentHeight(y)
 end

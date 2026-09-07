@@ -19,6 +19,17 @@ local function Availability(callback)
     return { available = ok and type(value) == "function", firstType = type(value), error = ok and nil or tostring(value) }
 end
 
+local function Readability(name, callback)
+    local ok, value = pcall(callback)
+    return {
+        readable = ok and value == true,
+        available = ok and value ~= nil,
+        state = (not ok and "unreadable") or (value == true and "normal" or "not_synced"),
+        error = ok and nil or tostring(value),
+        name = name,
+    }
+end
+
 function Probe:Run(verbose)
     if not Addon.db then return end
     local probes = Addon.db.probes
@@ -43,10 +54,21 @@ function Probe:Run(verbose)
         if type(GetItemCount) ~= "function" then return nil end
         return GetItemCount(18563, true, false, true)
     end)
+    probes.finalItem = Readability("finalItem", function()
+        if type(GetItemCount) ~= "function" then return nil end
+        return GetItemCount(19019, true, false, true) ~= nil
+    end)
+    probes.equipment = Readability("equipment", function()
+        return type(GetInventoryItemID) == "function"
+    end)
+    probes.questHistory = Readability("questHistory", function()
+        return type(IsQuestFlaggedCompleted) == "function" or (C_QuestLog and type(C_QuestLog.IsQuestFlaggedCompleted) == "function")
+    end)
     if verbose then
         for name, result in pairs(probes) do
             if type(result) == "table" and result.available ~= nil then
-                Addon:Print(name .. ": " .. (result.available and "可用" or "不可用") .. (result.error and (" (" .. result.error .. ")") or ""))
+                local suffix = result.state and (" · " .. result.state) or ""
+                Addon:Print(name .. ": " .. (result.available and "可用" or "不可用") .. suffix .. (result.error and (" (" .. result.error .. ")") or ""))
             end
         end
     end

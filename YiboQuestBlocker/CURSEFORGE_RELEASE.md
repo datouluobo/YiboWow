@@ -1,68 +1,14 @@
-# CurseForge 发布文案
+# YiboQuestBlocker v3.0.1
 
-## 简介
+## 更新 / What's New
 
-YiboQuestBlocker 是一个用于 WoW MoP Classic / 国服 5.5.4 的任务拒绝管理插件。
+- 已屏蔽任务现在会优先在接取前跳过或拒绝，并保留自动放弃作为异常兜底。 / Blocked quests are now skipped or declined before acceptance, with automatic abandonment retained as a fallback.
+- 新增“拒绝 / 放弃 / 暂停”处理模式。 / Added **Reject / Abandon / Pause** processing modes.
+- 账号页、Broker、小地图入口与悬停预览已统一接入 YiboCore。 / The account page, Broker, minimap entry, and hover preview are now unified through YiboCore.
+- 优化任务矩阵与角色管理，支持折叠任务分组。 / Improved the quest matrix and character management, including collapsible quest groups.
 
-它适合和自动接任务类插件配合使用：你可以把不想接的任务加入拒绝列表，插件会在接取前自动拦截，避免反复误接。
+## 自动接任务兼容性 / Auto-Quest Compatibility
 
-## v3.0.1 更新日志
-
-- `!Pig` 与 NDui QuickQuest：支持与 YiboQuestBlocker 的自动接任务流程配合使用。
-- Questie 与 Leatrix Plus：不兼容 YiboQuestBlocker 的拒绝模式；使用 YiboQuestBlocker 时，请关闭这两个插件的自动接任务功能。
-- DialogueUI：不提供自动接任务功能，不再显示在自动接任务适配状态中。
-
-## 主要功能
-
-- 自动拒绝已拒绝任务
-- 支持全局拒绝和角色独立拒绝
-- 网格界面统一管理任务与角色
-- 当前任务可直接勾选加入拒绝
-- 手动输入任务 ID 添加拒绝
-- 手动执行“放弃已拒绝”，并带倒计时确认
-- 支持已拒绝任务自动放弃队列
-- 支持聊天提示开关
-- 由 YiboCore 统一提供可选 Broker / 小地图入口
-- 支持角色列自定义排序
-- 支持角色表头显示密度调节
-- 支持日常/普通/已完成过滤
-- 支持等级表达式过滤
-
-## 适用版本
-
-- Mists of Pandaria Classic
-- 国服 5.5.4
-
-## 命令
-
-- `/yqb`
-
-## 说明
-
-- “日常”过滤组包含日常、周常、月常以及可重复任务
-- 四风谷农场产品订单类任务会按日常处理
-- 安装 Questie 后，任务过滤分类精度会更高
-- 等级过滤支持 `90`、`1-20`、`<=3`、`>=85` 和英文逗号分隔的多条件组合
-- 可关闭聊天提示，适合更安静地使用
-- 开启自动放弃后，插件会在合适时机处理已进入任务日志的已拒绝任务
-- 手动“放弃已拒绝”带有短暂倒计时，降低误触风险
-- 默认静默启动，不会在进入游戏时自动弹窗
-- Broker 与小地图入口可在 YiboCore 设置中按插件启用
-
-## 适合人群
-
-- 启用了自动接任务插件的玩家
-- 多角色日常玩家
-- 想拒绝重复、无用或不想接任务的玩家
-
-## 更新日志
-
-所有版本更新内容统一维护在 [CHANGELOG.md](CHANGELOG.md)。
-
-## 建议页面补充
-
-发布到 CurseForge 页面时，建议再补：
-
-- 1 张主界面截图
-- 1 张右侧排序窗口截图
-- 1 张当前任务快速勾选示意图
+- 支持：`!Pig`、NDui QuickQuest。 / Supported: `!Pig`, NDui QuickQuest.
+- 不兼容拒绝模式：Questie、Leatrix Plus。使用 YiboQuestBlocker 时，请关闭它们的自动接任务功能；其它功能可继续使用。 / Incompatible with Reject mode: Questie and Leatrix Plus. Disable their auto-quest features when using YiboQuestBlocker; their other features can remain enabled.
+- DialogueUI 不提供自动接任务功能，不列入适配状态。 / DialogueUI does not provide auto-quest functionality and is not included in the compatibility status.

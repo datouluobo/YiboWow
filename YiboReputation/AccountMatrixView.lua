@@ -3,7 +3,14 @@ local Theme = Core.UITheme
 -- Keep the matrix's measurement contract beside the renderer.  Core uses
 -- these values when it chooses the account-window width, so a character is
 -- never paged merely because the measurement and the rendered columns drift.
-Addon.MatrixColumnLayout = { nameWidth = 200, characterWidth = Theme.Table.characterColumnWidth, starWidth = 20 }
+Addon.MatrixColumnLayout = {
+    nameWidth = 200,
+    starWidth = 20,
+}
+
+function Addon:GetMatrixCharacterColumnWidth(context, availableWidth, fixedWidth, characterCount)
+    return Theme:GetCharacterMatrixColumnWidth(context)
+end
 local function Text(parent, size, color, justify) return Theme:CreateText(parent, size, color, justify or "LEFT") end
 local function Snapshot(character)
     -- DataDomains returns a defensive deep copy. A matrix refresh consults the
@@ -250,13 +257,15 @@ function Addon:RefreshMatrixView(parent, context)
     parent.matrixHeader:ClearAllPoints(); parent.matrixHeader:SetPoint("TOPLEFT", toolbar, "BOTTOMLEFT", 0, -Theme.Space.xs); parent.matrixHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -inset.right, 0); parent.matrixHeader:SetHeight(headerHeight)
     parent.matrixScroll:ClearAllPoints(); parent.matrixScroll:SetPoint("TOPLEFT", parent.matrixHeader, "BOTTOMLEFT", 0, 0); parent.matrixScroll:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset.right, inset.bottom)
     local layout = self.MatrixColumnLayout
-    local nameWidth, characterWidth, starWidth = layout.nameWidth, layout.characterWidth, layout.starWidth
+    local nameWidth, starWidth = layout.nameWidth, layout.starWidth
     local allCharacters = context.characters or {}
     local availableWidth = math.max(1, (tonumber(context.surfaceAvailableWidth) or parent:GetWidth() or 1) - inset.left - inset.right)
+    local characterWidth = self:GetMatrixCharacterColumnWidth(context, availableWidth, nameWidth, #allCharacters)
     local characters, pageInfo = Core.AccountView:GetColumnPage("reputation", "matrix", allCharacters, availableWidth, nameWidth, characterWidth)
+    Core.AccountView:UpdateColumnPager(parent, "reputation", "matrix", pageInfo, parent.matrixHeader, "角色")
     local columns = { { title="声望", width=nameWidth } }
     for _, character in ipairs(characters) do columns[#columns + 1] = { width=characterWidth, character=character } end
-    local tableWidth = 0
+    local tableWidth, currentColumnX = 0, nil
     local currentCharacter = Core.Characters:GetCurrent()
     local currentColumnHeader
     for index, column in ipairs(columns) do
@@ -267,10 +276,10 @@ function Addon:RefreshMatrixView(parent, context)
             local snapshot = Snapshot(column.character)
             Theme:SetCharacterHeader(header, column.character, context, { updatedAt=snapshot and snapshot.updatedAt, state=snapshot and snapshot.state or "unsynced", recovery="登录该角色后同步声望数据。" })
         else
-            Theme:SetMatrixHeader(header, column.title, { height=headerHeight, justify="LEFT", color=Theme.Colors.accent, inset=Theme.Space.xxs+starWidth })
+            Theme:SetMatrixHeader(header, column.title, { height=headerHeight, justify="LEFT", color=Theme.Colors.muted, inset=Theme.Space.xxs+starWidth })
             header:SetScript("OnEnter", nil); header:SetScript("OnLeave", nil)
         end
-        if currentCharacter and column.character and column.character.id == currentCharacter.id then currentColumnHeader = header end
+        if currentCharacter and column.character and column.character.id == currentCharacter.id then currentColumnHeader, currentColumnX = header, tableWidth end
         tableWidth = tableWidth + column.width
     end
     for index = #columns + 1, #parent.matrixHeaders do parent.matrixHeaders[index]:Hide() end
@@ -292,7 +301,7 @@ function Addon:RefreshMatrixView(parent, context)
     for rowIndex, entry in ipairs(display) do
         local node, row = entry.node, parent.matrixRows[rowIndex] or CreateFrame("Button", nil, parent.matrixBody, "BackdropTemplate"); parent.matrixRows[rowIndex] = row; row:SetSize(tableWidth, Theme.Table.rowHeight); row:ClearAllPoints(); row:SetPoint("TOPLEFT", parent.matrixBody, "TOPLEFT", 0, -((rowIndex-1)*Theme.Table.rowHeight)); row:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8x8",edgeFile="Interface\\Buttons\\WHITE8x8",edgeSize=1}); row.matrixNode = node
         if node.kind == "faction" then dataRowIndex = dataRowIndex + 1 end
-        local grouped = #node.children > 0; local shade = node.kind == "expansion" and Theme.Colors.selected or (node.kind == "category" and Theme.Colors.toolbar or Theme:GetDataRowColor(dataRowIndex)); row:SetBackdropColor(shade[1],shade[2],shade[3],shade[4] or 1); row:SetBackdropBorderColor(Theme.Colors.matrixLine[1],Theme.Colors.matrixLine[2],Theme.Colors.matrixLine[3],Theme.Colors.matrixLine[4])
+        local grouped = #node.children > 0; local shade = node.kind == "expansion" and Theme.Colors.selected or (node.kind == "category" and Theme.Colors.toolbar or Theme:GetDataRowColor(dataRowIndex)); row:SetBackdropColor(shade[1],shade[2],shade[3],shade[4] or 1); Theme:ApplyDataColumnTints(row, columns, Theme.Table.rowHeight); row:SetBackdropBorderColor(Theme.Colors.matrixLine[1],Theme.Colors.matrixLine[2],Theme.Colors.matrixLine[3],Theme.Colors.matrixLine[4])
         row.cells = row.cells or {}; row.icon = row.icon or row:CreateTexture(nil,"ARTWORK")
         if not row.star then
             row.star = Theme:CreateButton(row, starWidth, "☆", "secondary"); row.star:SetHeight(20); row.star:EnableMouse(true); row.star:RegisterForClicks("LeftButtonUp"); row.star:SetFrameLevel(row:GetFrameLevel() + 5)
@@ -327,15 +336,5 @@ function Addon:RefreshMatrixView(parent, context)
     end
     for i=#display+1,#parent.matrixRows do parent.matrixRows[i]:Hide() end
     parent.matrixBody:SetSize(tableWidth, math.max(1,#display*Theme.Table.rowHeight)); parent.matrixScroll:SetContentHeight(parent.matrixBody:GetHeight())
-    parent.currentCharacterOutline:ClearAllPoints()
-    if currentColumnHeader then
-        parent.currentCharacterOutline:SetPoint("TOPLEFT", currentColumnHeader, "TOPLEFT", 0, 0)
-        -- The outline is a viewport affordance.  Anchor its bottom to the
-        -- scroll frame, not the full (and often much taller) scroll child.
-        local rightOffset = currentColumnHeader:GetRight() - parent.matrixScroll:GetLeft()
-        parent.currentCharacterOutline:SetPoint("BOTTOMRIGHT", parent.matrixScroll, "BOTTOMLEFT", rightOffset, 0)
-        Theme:SetCurrentCharacterOutline(parent.currentCharacterOutline, true)
-    else
-        Theme:SetCurrentCharacterOutline(parent.currentCharacterOutline, false)
-    end
+    Theme:UpdateCurrentCharacterColumnOutline(parent.currentCharacterOutline, parent.matrixHeader, parent.matrixScroll, currentColumnX, characterWidth, currentColumnHeader ~= nil)
 end

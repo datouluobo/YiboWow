@@ -1,6 +1,13 @@
 local Addon = _G.YiboReputation
 local Core = _G.YiboCore
 local Theme = Core.UITheme
+local function MatrixColumnWidth(context)
+ local fallback = Theme:GetCharacterMatrixColumnWidth(context)
+ if type(Addon.GetMatrixCharacterColumnWidth) == "function" then
+  return math.max(1, tonumber(Addon:GetMatrixCharacterColumnWidth(context)) or fallback)
+ end
+ return fallback
+end
 function Addon:CreatePreviewViews(parent)
  parent:SetClipsChildren(true)
  parent.previewModeButton=Core.UITheme:CreateButton(parent,132,"","secondary")
@@ -19,7 +26,8 @@ end
 function Addon:GetPreviewMetrics(context)
  local n=#(context.characters or {})
  local rows=#self:GetSettings().monitoredFactionIDs
- return {minWidth=420,preferredWidth=math.min(1080,150+n*(n>10 and 48 or 86)),minHeight=132,preferredHeight=171+rows*Theme.Table.previewRowHeight,horizontalOverflow="matrix",verticalOverflow="none"}
+ local cellWidth = MatrixColumnWidth(context)
+ return {minWidth=420,preferredWidth=math.min(1080,150+n*cellWidth),minHeight=132,preferredHeight=171+rows*Theme.Table.previewRowHeight,horizontalOverflow="matrix",verticalOverflow="none"}
  --[[ Legacy current-character metric path, retained for migration reference.
  local current = _G.YiboCore.Characters:GetCurrent()
  local snapshot = current and _G.YiboCore.DataDomains:Get(current.id, "reputation")
@@ -42,7 +50,7 @@ function Addon:GetPreviewSurfaceMetrics(context)
  local rows, characters = 0, (context and context.characters) or {}
  rows = #self:GetSettings().monitoredFactionIDs
  local inset = Theme:GetMatrixInsets(true)
- local cellWidth = #characters > 10 and 56 or 90
+ local cellWidth = MatrixColumnWidth(context)
  local headerHeight = Theme:GetCharacterHeaderHeight(context)
  return {
   minContentWidth = 150 + cellWidth + inset.left + inset.right,

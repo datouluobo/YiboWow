@@ -80,6 +80,7 @@ Settings = function()
     settings.characterSort = Core.CharacterSort:NormalizeSettings(settings.characterSort)
     settings.pageCharacterSorts = type(settings.pageCharacterSorts) == "table" and settings.pageCharacterSorts or {}
     settings.columnPages = type(settings.columnPages) == "table" and settings.columnPages or {}
+    settings.columnPageStructures = type(settings.columnPageStructures) == "table" and settings.columnPageStructures or {}
     settings.customCharacterOrder = Core.CharacterSort:NormalizeOrder(settings.customCharacterOrder)
     settings.layoutMode = settings.layoutMode == "manual" and "manual" or "auto"
     settings.pageLayouts = settings.pageLayouts or {}
@@ -108,21 +109,85 @@ function AccountView:GetSettings()
     return Settings()
 end
 
--- Character matrices are a single account surface.  Never split the roster
--- into horizontal pages: a partial roster is harder to compare than a dense
--- complete matrix, and page arrows conceal the missing characters.
-function AccountView:GetColumnPage(pageID, stateKey, columns, availableWidth, fixedWidth, columnWidth)
+-- Resolve one shared width for a repeated matrix column.  A complete roster
+-- may compact down to its semantic minimum before column pagination begins.
+function AccountView:FitRepeatedColumnWidth(availableWidth, fixedWidth, columnCount, preferredWidth, minimumWidth)
+    local preferred = math.max(1, tonumber(preferredWidth) or 1)
+    local minimum = math.max(1, math.min(preferred, tonumber(minimumWidth) or preferred))
+    local count = math.max(0, math.floor(tonumber(columnCount) or 0))
+    if count == 0 then return preferred end
+    -- Keep the fractional remainder.  Flooring each repeated column discards
+    -- almost one logical pixel per character; across a full roster that turns
+    -- into a conspicuous blank strip at the trailing edge of the matrix.
+    local fitted = (math.max(1, tonumber(availableWidth) or 1) - math.max(0, tonumber(fixedWidth) or 0)) / count
+    return math.max(minimum, math.min(preferred, fitted))
+end
+
+-- Character matrices use the complete natural width first.  Paging is only
+-- needed after the caller has reached the screen-safe width; the caller passes
+-- that actual width into this helper on every render.
+function AccountView:GetColumnPage(pageID, stateKey, columns, availableWidth, fixedWidth, columnWidth, currentID)
     local count = #(columns or {})
+    local usableWidth = math.max(1, tonumber(availableWidth) or 1) - math.max(0, tonumber(fixedWidth) or 0)
+    local resolvedColumnWidth = math.max(1, tonumber(columnWidth) or 1)
+    -- FitRepeatedColumnWidth can intentionally return a fractional width that
+    -- fills the viewport exactly.  Tolerate floating-point residue here so an
+    -- exact 13-column fit cannot collapse to a 12-column page.
+    local capacity = math.max(1, math.floor((usableWidth / resolvedColumnWidth) + 0.0001))
+    local totalPages = math.max(1, math.ceil(count / capacity))
+    local pages = Settings().columnPages
+    pages[pageID] = pages[pageID] or {}
+    local current = math.max(1, math.min(tonumber(pages[pageID][stateKey]) or 1, totalPages))
+    -- A structural change (roster, order, range, or capacity) returns the
+    -- initial view to the page containing the current character. Subsequent
+    -- ordinary refreshes preserve the user's manually selected page.
+    local settings = Settings()
+    settings.columnPageStructures[pageID] = settings.columnPageStructures[pageID] or {}
+    local identities, currentIndex = {}, nil
+    local currentCharacter = Core.Characters and Core.Characters:GetCurrent()
+    local currentIdentity = currentID or (currentCharacter and currentCharacter.id)
+    for index, column in ipairs(columns or {}) do
+        local identity = type(column) == "table" and (column.id or column.characterID or (column.character and column.character.id)) or column
+        identities[index] = tostring(identity or index)
+        if currentIdentity and (identity == currentIdentity or (type(column) == "table" and column.character and column.character.id == currentIdentity)) then currentIndex = index end
+    end
+    local structure = table.concat(identities, "\31") .. "|" .. tostring(capacity)
+    if settings.columnPageStructures[pageID][stateKey] ~= structure then
+        settings.columnPageStructures[pageID][stateKey] = structure
+        if currentIndex then current = math.max(1, math.ceil(currentIndex / capacity)) end
+    end
+    pages[pageID][stateKey] = current
+    local first = count > 0 and ((current - 1) * capacity + 1) or 0
+    local last = count > 0 and math.min(count, current * capacity) or 0
     local visible = {}
-    for index, column in ipairs(columns or {}) do visible[index] = column end
-    return visible, { page = 1, pages = 1, first = count > 0 and 1 or 0, last = count, capacity = count, total = count }
+    for index = first, last do visible[#visible + 1] = columns[index] end
+    return visible, { page = current, pages = totalPages, first = first, last = last, capacity = capacity, total = count }
 end
 
 function AccountView:GetColumnPageByWidth(pageID, stateKey, columns, availableWidth, fixedWidth, getWidth)
     local count = #(columns or {})
-    local visible = {}
-    for index, column in ipairs(columns or {}) do visible[index] = column end
-    return visible, { page = 1, pages = 1, first = count > 0 and 1 or 0, last = count, total = count }
+    local limit = math.max(1, tonumber(availableWidth) or 1)
+    local base = math.max(0, tonumber(fixedWidth) or 0)
+    local allPages, currentPage, used = {}, {}, base
+    for _, column in ipairs(columns or {}) do
+        local width = math.max(1, tonumber(getWidth(column)) or 1)
+        -- Repeated-column fitting intentionally produces fractional widths.
+        -- Accept a tiny accumulated residue so an exact fit never ejects the
+        -- final column into an otherwise empty page.
+        if #currentPage > 0 and used + width > limit + 0.0001 then
+            allPages[#allPages + 1], currentPage, used = currentPage, {}, base
+        end
+        currentPage[#currentPage + 1], used = column, used + width
+    end
+    if #currentPage > 0 or #allPages == 0 then allPages[#allPages + 1] = currentPage end
+    local pages = Settings().columnPages
+    pages[pageID] = pages[pageID] or {}
+    local current = math.max(1, math.min(tonumber(pages[pageID][stateKey]) or 1, #allPages))
+    pages[pageID][stateKey] = current
+    local first = 1
+    for index = 1, current - 1 do first = first + #allPages[index] end
+    local visible = allPages[current]
+    return visible, { page = current, pages = #allPages, first = first, last = first + #visible - 1, total = count }
 end
 
 function AccountView:SetColumnPage(pageID, stateKey, page, totalPages)
@@ -133,9 +198,9 @@ function AccountView:SetColumnPage(pageID, stateKey, page, totalPages)
 end
 
 function AccountView:GetColumnPagerWidth(noun, total)
-    -- Kept as a zero-width compatibility shim for external business pages.
-    -- Character matrices no longer have horizontal pagination chrome.
-    return 0
+    local count = math.max(1, tonumber(total) or 20)
+    local label = string.format("%s %d–%d / %d · %d/%d", noun or "角色", count, count, count, count, count)
+    return Theme:MeasureText(Theme.Font.assist, label) + Theme.Space.xs + Theme.Space.xxs + Theme.Size.compact * 2
 end
 
 function AccountView:UpdateColumnPager(parent, pageID, stateKey, info, anchor, noun)
@@ -143,9 +208,22 @@ function AccountView:UpdateColumnPager(parent, pageID, stateKey, info, anchor, n
     local pager = parent.yiboColumnPager
     self._columnPagers = self._columnPagers or {}
     self._columnPagers[pager] = true
-    if pager.previous then pager.previous:Hide() end
-    if pager.next then pager.next:Hide() end
-    if pager.label then pager.label:Hide() end
+    pager.previous = pager.previous or Theme:CreateButton(parent, Theme.Size.compact, "‹", "secondary")
+    pager.next = pager.next or Theme:CreateButton(parent, Theme.Size.compact, "›", "secondary")
+    pager.label = pager.label or Theme:CreateText(parent, Theme.Font.assist, COLORS.text, "RIGHT")
+    pager.previous:ClearAllPoints(); pager.next:ClearAllPoints(); pager.label:ClearAllPoints()
+    pager.next:SetPoint("TOPRIGHT", anchor or parent, "TOPRIGHT", 0, 0)
+    pager.previous:SetPoint("RIGHT", pager.next, "LEFT", -Theme.Space.xxs, 0)
+    pager.label:SetPoint("RIGHT", pager.previous, "LEFT", -Theme.Space.xs, 0)
+    local show = info and info.pages > 1
+    pager.previous:SetShown(show); pager.next:SetShown(show); pager.label:SetShown(show)
+    if not show then return end
+    local text = string.format("%s %d–%d / %d · %d/%d", noun or "角色", info.first, info.last, info.total, info.page, info.pages)
+    pager.label:SetText(text); pager.label:SetWidth(Theme:MeasureText(Theme.Font.assist, text))
+    pager.previous:SetState(info.page > 1 and "default" or "disabled")
+    pager.next:SetState(info.page < info.pages and "default" or "disabled")
+    pager.previous:SetScript("OnClick", function() if info.page > 1 then AccountView:SetColumnPage(pageID, stateKey, info.page - 1, info.pages) end end)
+    pager.next:SetScript("OnClick", function() if info.page < info.pages then AccountView:SetColumnPage(pageID, stateKey, info.page + 1, info.pages) end end)
 end
 
 function AccountView:HideColumnPagers()
@@ -280,6 +358,10 @@ local function SetHeaderIdentity(frame, page, subtitle)
     -- Hover previews hide normal controls.  Reserving their invisible width
     -- caused both an empty title bar and server controls outside the shell.
     local controlsWidth = not frame.preview and frame.controls and frame.controls:IsShown() and (frame.controls:GetWidth() or 0) or 0
+    -- A business page may place one compact state/action control in the
+    -- title bar.  It is laid out by Core, so identity text never overlaps it.
+    local pageControlWidth = frame.pageTitleControl and frame.pageTitleControl:IsShown()
+        and ((frame.pageTitleControlWidth or frame.pageTitleControl:GetWidth() or 0) + Theme.Space.sm) or 0
     local pagerWidth = 0
     for pager in pairs(AccountView._columnPagers or {}) do
         if pager.chrome == frame.titleBar and ((pager.previous and pager.previous:IsShown()) or (pager.next and pager.next:IsShown())) then
@@ -295,7 +377,7 @@ local function SetHeaderIdentity(frame, page, subtitle)
     for _, candidate in ipairs(candidates) do
         local leftInset = candidate.icon and page and page.icon and 44 or 16
         local rightInset = frame.preview and Theme.Space.xxs or (14 + Theme.Space.sm)
-        local available = math.max(0, (frame:GetWidth() or 0) - controlsWidth - scopeWidth - pagerWidth - leftInset - rightInset)
+        local available = math.max(0, (frame:GetWidth() or 0) - controlsWidth - scopeWidth - pageControlWidth - pagerWidth - leftInset - rightInset)
         if Theme:MeasureText(Theme.Font.title, candidate.text) <= available then selected, selectedAvailable = candidate, available; break end
     end
     frame.title:SetText(selected.text); frame.title:SetWidth(math.max(1, selectedAvailable)); frame.title:SetShown(selected.text ~= "")
@@ -304,9 +386,12 @@ local function SetHeaderIdentity(frame, page, subtitle)
     frame.title:ClearAllPoints()
     frame.title:SetPoint("LEFT", frame.titleBar, "LEFT", (selected.icon and page and page.icon) and 44 or 16, 0)
     if frame.identityHit then
-        local identityWidth = math.max(1, (frame:GetWidth() or 0) - controlsWidth - scopeWidth - Theme.Space.sm)
+        local identityWidth = math.max(1, (frame:GetWidth() or 0) - controlsWidth - scopeWidth - pageControlWidth - Theme.Space.sm)
         frame.identityHit:SetWidth(identityWidth)
-        Theme:BindTooltip(frame.identityHit, addonName .. " v" .. version .. " · " .. pageTitle)
+        -- The title bar is a drag handle, not a duplicate page description.
+        -- Keep it mouse-enabled for dragging while deliberately leaving it
+        -- without a hover tooltip on every account page.
+        Theme:ClearTooltip(frame.identityHit)
     end
 end
 
@@ -1064,6 +1149,32 @@ function AccountView:RefreshNavigation()
     for index = #pages + 1, #frame.navButtons do frame.navButtons[index]:Hide() end
 end
 
+-- Page-owned title-bar controls are deliberately constrained to one compact
+-- control.  The title remains the left-side identity, while state/actions
+-- occupy the right side before scope controls and the window's own buttons.
+function AccountView:ClearTitleBarControl()
+    local frame = self.frame
+    if not frame then return end
+    if frame.pageTitleControl then frame.pageTitleControl:Hide() end
+    frame.pageTitleControl, frame.pageTitleControlWidth = nil, nil
+end
+
+function AccountView:SetTitleBarControl(control, width)
+    local frame = self:CreateFrame()
+    if frame.pageTitleControl and frame.pageTitleControl ~= control then frame.pageTitleControl:Hide() end
+    if not control then self:ClearTitleBarControl(); return end
+    frame.pageTitleControl, frame.pageTitleControlWidth = control, width or control:GetWidth()
+    control:SetParent(frame.titleBar)
+    control:SetFrameLevel((frame.titleBar:GetFrameLevel() or 0) + 2)
+    control:ClearAllPoints()
+    if frame.scopeBar and frame.scopeBar:IsShown() then
+        control:SetPoint("RIGHT", frame.scopeBar, "LEFT", -Theme.Space.sm, 0)
+    else
+        control:SetPoint("RIGHT", frame.titleBar, "RIGHT", -Theme.Space.sm, 0)
+    end
+    control:Show()
+end
+
 function AccountView:BuildContext(page, options)
     options = options or {}
     local overrides = options.fieldOverrides
@@ -1134,6 +1245,8 @@ function AccountView:BuildContext(page, options)
         scopeDefinition = scopeDefinition,
         SetScope = function(_, scopeID) return self:SetPageScope(page.id, scopeID) end,
         Refresh = function() self:RefreshPage() end,
+        SetTitleBarControl = function(_, control, width) return self:SetTitleBarControl(control, width) end,
+        ClearTitleBarControl = function() self:ClearTitleBarControl() end,
         preview = options.preview == true,
         characterSort = characterSort,
     }
@@ -1178,6 +1291,10 @@ function AccountView:ShowPage(pageID, options)
         options.autoFit = nil
         self.activePageOptions = options
     end
+    -- The refreshing page may opt back in through context.SetTitleBarControl.
+    -- Hide the previous page's control first so page switches never leave
+    -- stale actions in the shared chrome.
+    self:ClearTitleBarControl()
     CallPage(instance, page, "刷新", context)
     -- Pages may create or hide a title-bar pager while refreshing. Resolve
     -- the identity only after that chrome is final for this pass.
@@ -1190,7 +1307,10 @@ end
 function AccountView:RefreshPage()
     if not (self.frame and self.frame:IsShown()) then return end
     if self.frame.preview and self.previewPageID then
-        self:ShowPage(self.previewPageID, self.previewPageOptions)
+        -- Preview geometry is derived from page metrics before rendering.  A
+        -- fold/unfold changes those metrics, so rebuild the same preview from
+        -- its original anchor instead of only repainting the old-sized page.
+        self:ShowPreview(self.previewPageID, self.previewAnchor)
     elseif self.activePageID then
         self:ShowPage(self.activePageID, self.activePageOptions)
     end
@@ -1761,6 +1881,7 @@ local function RefreshCharacters(parent, context)
         local isCurrent = current and current.id == character.id
         local rowTone = Theme:GetDataRowColor(index)
         row:SetBackdropColor(rowTone[1], rowTone[2], rowTone[3], rowTone[4] or 0.88)
+        Theme:ApplyDataColumnTints(row, widths, rowHeight, 8, function(fieldIndex) return GetArchiveColumnGap(fields, fieldIndex) end)
         row:SetBackdropBorderColor(COLORS.matrixLine[1], COLORS.matrixLine[2], COLORS.matrixLine[3], COLORS.matrixLine[4])
         Theme:SetCurrentCharacterOutline(row.currentOutline, isCurrent)
         row:Show()

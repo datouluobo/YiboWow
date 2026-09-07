@@ -13,8 +13,10 @@ Core 负责角色目录、账号窗口、入口生命周期，以及身份、经
 矩阵页面的表头、角色列头、行明暗交替与当前角色提示必须复用
 `Core.UITheme` 的 `CreateMatrixHeader`、`SetMatrixHeader`、
 `SetCharacterHeader`、`GetDataRowColor` 和 `CreateCurrentCharacterOutline`。
-全服务器范围下，`SetCharacterHeader` 会按统一契约显示“角色名 / -服务器”双行列头；
+全服务器范围下，`SetCharacterHeader` 会按统一契约显示“角色名 / 服务器”双行列头；
 单服务器范围保持单行。业务插件不得自行复制这些视觉状态。
+
+业务插件只提供列定义、业务数据和当前角色列的标识；Core 独占矩阵保护间距、角色身份列测量、顶部角色列宽、交替行/列底纹、当前角色框的锚定与 viewport 裁切、列分页器和纵向滚动条沟槽。禁止以本地常量补偿 padding、图标间隔、滚动条宽度或分页按钮位置；禁止自行调用 `SetPoint` 重锚定当前角色框。
 
 ```lua
 local compatible = Core:CheckAPIVersion(5)
@@ -66,3 +68,10 @@ Public API v5 在整个 `1.x` 兼容期内只增不删：较新的 Core 必须�
 `Profile:Get()`、`Profile:RegisterCollector()` 与 `CHARACTER_PROFILE_UPDATED` 在整个 `0.6.x` 仅用于旧插件兼容。所有新功能使用 `DataDomains` 和 `DATA_DOMAIN_UPDATED`。现有业务页不依赖 Core 中性事实时无需为了“使用新事件”而订阅它。
 
 不得直接修改领域快照、直接触碰 `character.domains`，或从业务插件创建窗口壳、Broker、小地图拖拽和入口设置。窗口、悬停预览与入口由 Core 管理；业务插件只提供其数据、页面内容和业务设置。
+
+### 矩阵接入补充契约
+
+- 角色为行时，业务插件请求 Core 身份列布局；仅当角色行头确实显示职业图标时传入 `16`px 图标意图，不能自行把图标宽度或两侧留白加入列宽。
+- 角色为列时，使用 Core 的短名等宽表头和 tooltip；不得因完整角色名、服务器或数值而扩张某一列，也不得在顶部角色列添加职业图标。
+- 页面必须使用 `Theme:CreateScrollFrame()` 和 `BindScrollbarGutter()`；不得常驻预留滚动条空间或创建私有滑轨。页面度量只报告真实内容，不重复加 `16`px 沟槽。
+- 使用 `GetColumnPage()` 或 `GetColumnPageByWidth()` 和 `UpdateColumnPager()`；分页器属于数据表头右侧，业务工具栏不得复制上一页、下一页和页码控件。

@@ -7,7 +7,7 @@ local Theme = _G.YiboCore.UITheme
 local Page = {}
 YQB.AccountPage = Page
 
-local ROW_H, GROUP_H, CHARACTER_COL_W, COMPACT_CHARACTER_COL_W, GLOBAL_W, STATUS_HIT = Theme.Table.rowHeight, Theme.Table.groupHeight, Theme.Table.characterColumnWidth, Theme.Table.characterColumnWidth, 36, 20
+local ROW_H, GROUP_H, CHARACTER_COL_W, COMPACT_CHARACTER_COL_W, GLOBAL_W, STATUS_HIT = Theme.Table.rowHeight, Theme.Table.groupHeight, Theme:GetCharacterMatrixColumnWidth(), Theme:GetCharacterMatrixColumnWidth(), 36, 20
 local PREVIEW_MARGIN, PREVIEW_SCROLLBAR_GUTTER, CORE_PREVIEW_BORDER = 16, 16, 2
 local COLORS = Theme.Colors
 
@@ -108,8 +108,7 @@ local function ScopeControlsWidth(context)
 end
 
 local function PreferredCharacterWidth(context)
-    if context and context.preview then return COMPACT_CHARACTER_COL_W end
-    return IsAllRealms(context) and CHARACTER_COL_W or COMPACT_CHARACTER_COL_W
+    return Theme:GetCharacterMatrixColumnWidth(context)
 end
 
 local function ClearRows(instance)
@@ -381,11 +380,12 @@ function Page.Refresh(instance, context)
     instance.taskWidth = 250
     local fixedWidth = instance.taskWidth + (showGlobal and GLOBAL_W or 0)
     local availableWidth = math.max(fixedWidth + COMPACT_CHARACTER_COL_W, (tonumber(context.surfaceAvailableWidth) or instance:GetWidth() or 1) - inset.left - inset.right)
-    local visibleCharacters, pageInfo = Core.AccountView:GetColumnPage("quest-blocker", "characters", allCharacters, availableWidth, fixedWidth, COMPACT_CHARACTER_COL_W)
+    local visibleCharacters, pageInfo = Core.AccountView:GetColumnPage("quest-blocker", "characters", allCharacters, availableWidth, fixedWidth, Theme:GetCharacterMatrixColumnWidth(context), YQB.GetCurrentCharacterID())
+    Core.AccountView:UpdateColumnPager(instance, "quest-blocker", "characters", pageInfo, instance.header, "角色")
     for _, character in ipairs(visibleCharacters) do characters[#characters + 1] = character.id end
     -- Character columns must remain directly comparable across every account
     -- page.  Do not stretch a short roster into wider, page-specific cells.
-    instance.characterColumnWidth = Theme.Table.characterColumnWidth
+    instance.characterColumnWidth = Theme:GetCharacterMatrixColumnWidth(context)
     Header(instance, characters, showGlobal, showCharacters, context)
     ClearRows(instance)
     local blocked = YQB.GetBlockedQuestList()
@@ -423,14 +423,7 @@ function Page.Refresh(instance, context)
     end
     instance.content:SetWidth(contentWidth); instance.content:SetHeight(math.max(44, instance.rowCount * ROW_H))
     instance.scroll:SetContentHeight(instance.content:GetHeight())
-    instance.currentCharacterOutline:ClearAllPoints()
-    if showCharacters and instance.currentCharacterX then
-        instance.currentCharacterOutline:SetPoint("TOPLEFT", instance.header, "TOPLEFT", instance.currentCharacterX, 0)
-        instance.currentCharacterOutline:SetPoint("BOTTOMRIGHT", instance.scroll, "BOTTOMLEFT", instance.currentCharacterX + instance.currentCharacterWidth, 0)
-        Theme:SetCurrentCharacterOutline(instance.currentCharacterOutline, true)
-    else
-        Theme:SetCurrentCharacterOutline(instance.currentCharacterOutline, false)
-    end
+    Theme:UpdateCurrentCharacterColumnOutline(instance.currentCharacterOutline, instance.header, instance.scroll, instance.currentCharacterX, instance.currentCharacterWidth, showCharacters and instance.currentCharacterX ~= nil)
     if preview then instance.scroll:SetVerticalScroll(0) end
     instance.scroll:RefreshScrollbar()
 end

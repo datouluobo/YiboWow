@@ -48,7 +48,11 @@ end
 
 local function ActiveQuest(definition)
     if type(GetNumQuestLogEntries) ~= "function" then return nil, "quest-log-unavailable" end
-    for index = 1, tonumber(GetNumQuestLogEntries()) or 0 do
+    -- On supported Classic clients this API can return additional values. Store
+    -- the entry count first so Lua does not pass a second return value as
+    -- tonumber's optional base argument.
+    local entryCount = GetNumQuestLogEntries()
+    for index = 1, tonumber(entryCount) or 0 do
         local isHeader, isComplete, questID, title = QuestLogEntry(index)
         if not isHeader then
             local item, kind = FindQuest(definition, questID)

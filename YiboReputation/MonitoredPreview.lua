@@ -1,62 +1,114 @@
 local Addon, Core = _G.YiboReputation, _G.YiboCore
 local Theme = Core.UITheme
-local function Text(parent,size,color,justify) return Theme:CreateText(parent,size,color,justify or "LEFT") end
-local function Snapshot(c) return Core.DataDomains:Get(c.id,"reputation") end
-local function Data(c,id) return Addon:GetFactionData(Snapshot(c), id) end
-local function CharacterName(character)
-    -- The hover is a projection of the main matrix, so it must use the same
-    -- short-name preference rather than falling back to the full character name.
- local shortName = character and Core.Characters:GetDisplayName(character, "short")
- if shortName and shortName ~= "" then return shortName end
- if character and character.name and character.name ~= "" then return character.name end
- return "未知角色"
+
+local function Text(parent, size, color, justify)
+    return Theme:CreateText(parent, size, color, justify or "LEFT")
 end
-local function CharacterColor(character)
- local color = character and RAID_CLASS_COLORS and RAID_CLASS_COLORS[character.class or ""]
- return color or Theme.Colors.text
+
+local function Snapshot(character)
+    return Core.DataDomains:Get(character.id, "reputation")
 end
+
+local function Data(character, factionID)
+    return Addon:GetFactionData(Snapshot(character), factionID)
+end
+
 local function ShowMonitoredTooltip(row)
- local context=row.monitoredTooltip
- if not context then return end
- local scale=(row.GetEffectiveScale and row:GetEffectiveScale()) or (UIParent.GetEffectiveScale and UIParent:GetEffectiveScale()) or 1
- local cursorX=(GetCursorPosition and GetCursorPosition() or 0)/scale
- local relative=cursorX-(row:GetLeft() or cursorX)
- if relative < context.nameWidth then row.monitoredTooltipCharacterIndex=nil;GameTooltip:Hide();return end
- local characterIndex=context.first+math.floor((relative-context.nameWidth)/context.cellWidth)
- if row.monitoredTooltipCharacterIndex==characterIndex then return end
- row.monitoredTooltipCharacterIndex=characterIndex
- local character=context.characters[characterIndex]
- if not character then row.monitoredTooltipCharacterIndex=nil;GameTooltip:Hide();return end
- local data=Data(character,context.factionID)
- if not data then row.monitoredTooltipCharacterIndex=nil;GameTooltip:Hide();return end
- local compact,detail=Addon:FormatCompact(data),Addon:FormatReputation(data)
- -- The row and column already identify the faction and character.  A tooltip
- -- earns its space only when it expands the compact cell with real progress.
- if compact==detail or not string.find(detail,"/",1,true) then row.monitoredTooltipCharacterIndex=nil;GameTooltip:Hide();return end
- GameTooltip:SetOwner(row,"ANCHOR_CURSOR");GameTooltip:ClearLines()
- GameTooltip:AddLine(detail,Theme.Colors.text[1],Theme.Colors.text[2],Theme.Colors.text[3])
- GameTooltip:Show()
+    local context = row.monitoredTooltip
+    if not context then return end
+    local scale = (row.GetEffectiveScale and row:GetEffectiveScale()) or 1
+    local cursorX = (GetCursorPosition and GetCursorPosition() or 0) / scale
+    local relative = cursorX - (row:GetLeft() or cursorX)
+    if relative < context.nameWidth then GameTooltip:Hide(); return end
+    local character = context.characters[context.first + math.floor((relative - context.nameWidth) / context.cellWidth)]
+    local data = character and Data(character, context.factionID)
+    local compact, detail = data and Addon:FormatCompact(data), data and Addon:FormatReputation(data)
+    if not detail or compact == detail or not detail:find("/", 1, true) then GameTooltip:Hide(); return end
+    GameTooltip:SetOwner(row, "ANCHOR_CURSOR"); GameTooltip:ClearLines()
+    GameTooltip:AddLine(detail, Theme.Colors.text[1], Theme.Colors.text[2], Theme.Colors.text[3]); GameTooltip:Show()
 end
+
 function Addon:CreateMonitoredPreview(parent)
- parent.monitoredRows={};parent.monitoredDetail=Text(parent,Theme.Font.assist,Theme.Colors.muted,"LEFT");parent.monitoredHeaders={};parent.monitoredCurrentOutline=Theme:CreateCurrentCharacterOutline(parent)
- parent.monitoredPrev=Theme:CreateButton(parent,26,"<","secondary");parent.monitoredNext=Theme:CreateButton(parent,26,">","secondary")
+    parent.monitoredRows, parent.monitoredHeaders = {}, {}
+    parent.monitoredDetail = Text(parent, Theme.Font.assist, Theme.Colors.muted, "LEFT")
+    parent.monitoredCurrentOutline = Theme:CreateCurrentCharacterOutline(parent)
+    parent.monitoredPagerAnchor = CreateFrame("Frame", nil, parent)
 end
-function Addon:RefreshMonitoredPreview(parent,context)
- local ids=self:GetSettings().monitoredFactionIDs;parent.monitoredDetail:Hide()
- if #ids==0 then parent.monitoredPrev:Hide();parent.monitoredNext:Hide();parent.monitoredCurrentOutline:Hide();for _,r in ipairs(parent.monitoredRows) do r:Hide() end;for _,header in ipairs(parent.monitoredHeaders) do header:Hide() end;return end
- local inset=Theme:GetMatrixInsets(true);local compact=#context.characters>10;local nameWidth,cellWidth=150,(compact and 56 or 90);local visible=math.max(1,math.floor(((parent:GetWidth() or 420)-nameWidth-inset.left-inset.right)/cellWidth));local pages=math.max(1,math.ceil(#context.characters/visible));local settings=self:GetSettings();settings.monitoredPage=math.max(1,math.min(tonumber(settings.monitoredPage) or 1,pages));local first=(settings.monitoredPage-1)*visible+1;local last=math.min(#context.characters,first+visible-1);local y=inset.top
- local headerY,headerHeight=y,Theme:GetCharacterHeaderHeight(context)
- for ci=0,last-first+1 do
-  local character=ci>0 and context.characters[first+ci-1] or nil
-  local header=parent.monitoredHeaders[ci+1] or Theme:CreateMatrixHeader(parent)
-  parent.monitoredHeaders[ci+1]=header
-  header:ClearAllPoints();header:SetPoint("TOPLEFT",parent,"TOPLEFT",inset.left+(ci==0 and 0 or nameWidth+(ci-1)*cellWidth),-headerY);header:SetSize(ci==0 and nameWidth or cellWidth,headerHeight)
-  if character then Theme:SetCharacterHeader(header,character,context) else Theme:SetMatrixHeader(header,"声望",{height=headerHeight,justify="LEFT",inset=Theme.Space.xxs}) end
- end
- for ci=last-first+3,#parent.monitoredHeaders do parent.monitoredHeaders[ci]:Hide() end
- local current=Core.Characters:GetCurrent();local currentColumnX;if current then for ci=first,last do if context.characters[ci] and context.characters[ci].id==current.id then currentColumnX=inset.left+nameWidth+(ci-first)*cellWidth;break end end end;y=y+headerHeight
- for index,id in ipairs(ids) do local row=parent.monitoredRows[index] or CreateFrame("Button",nil,parent,"BackdropTemplate");parent.monitoredRows[index]=row;row:SetSize(nameWidth+(last-first+1)*cellWidth,Theme.Table.previewRowHeight);row:ClearAllPoints();row:SetPoint("TOPLEFT",parent,"TOPLEFT",inset.left,-y);row:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8x8",edgeFile="Interface\\Buttons\\WHITE8x8",edgeSize=1});local rowTone=Theme:GetDataRowColor(index);row:SetBackdropColor(rowTone[1],rowTone[2],rowTone[3],1);row:SetBackdropBorderColor(Theme.Colors.matrixLine[1],Theme.Colors.matrixLine[2],Theme.Colors.matrixLine[3],Theme.Colors.matrixLine[4]);row.cells=row.cells or {};row.columnTints=row.columnTints or {};row.columnDividers=row.columnDividers or {};local vals={self:GetFactionName(id)};for ci=first,last do local c=context.characters[ci];local s=Snapshot(c);vals[#vals+1]=self:FormatSnapshotValue(s,Data(c,id),"compact",self:GetFactionState(s,id)) end;local x=0;for ci,v in ipairs(vals) do if ci>1 then local tint=row.columnTints[ci] or row:CreateTexture(nil,"ARTWORK",nil,-2);row.columnTints[ci]=tint;tint:ClearAllPoints();tint:SetPoint("TOPLEFT",row,"TOPLEFT",x,0);tint:SetSize(cellWidth,Theme.Table.previewRowHeight);local tone=(ci%2==0) and Theme.Colors.current or Theme.Colors.selected;tint:SetColorTexture(tone[1],tone[2],tone[3],0.06);tint:Show();local divider=row.columnDividers[ci] or row:CreateTexture(nil,"OVERLAY");row.columnDividers[ci]=divider;divider:ClearAllPoints();divider:SetPoint("TOPLEFT",row,"TOPLEFT",x,0);divider:SetPoint("BOTTOMLEFT",row,"BOTTOMLEFT",x,0);divider:SetWidth(Theme.Table.lineWidth);divider:SetColorTexture(Theme.Colors.matrixLine[1],Theme.Colors.matrixLine[2],Theme.Colors.matrixLine[3],Theme.Colors.matrixLine[4]);divider:Show() end;local cell=row.cells[ci] or Text(row,Theme.Font.assist,Theme.Colors.text,"LEFT");row.cells[ci]=cell;cell:ClearAllPoints();cell:SetPoint("LEFT",row,"LEFT",x+4,0);cell:SetWidth((ci==1 and nameWidth or cellWidth)-6);cell:SetText(v);if ci>1 then local character=context.characters[first+ci-2];local data=Data(character,id);local color=data and self:GetReputationColor(data) or Theme.Colors.muted;cell:SetTextColor(color[1],color[2],color[3]) else cell:SetTextColor(Theme.Colors.text[1],Theme.Colors.text[2],Theme.Colors.text[3]) end;cell:Show();x=x+(ci==1 and nameWidth or cellWidth) end;row.monitoredTooltip={characters=context.characters,first=first,nameWidth=nameWidth,cellWidth=cellWidth,factionID=id};row.monitoredTooltipCharacterIndex=nil;row:SetScript("OnEnter",function(control) control.monitoredTooltipTracking=true;ShowMonitoredTooltip(control) end);row:SetScript("OnUpdate",function(control) if control.monitoredTooltipTracking then ShowMonitoredTooltip(control) end end);row:SetScript("OnLeave",function(control) control.monitoredTooltipTracking=false;control.monitoredTooltipCharacterIndex=nil;GameTooltip:Hide() end);for ci=#vals+1,#row.cells do row.cells[ci]:Hide() end;for ci=#vals+1,#row.columnTints do row.columnTints[ci]:Hide() end;for ci=#vals+1,#row.columnDividers do row.columnDividers[ci]:Hide() end;row:Show();y=y+Theme.Table.previewRowHeight end
- for i=#ids+1,#parent.monitoredRows do parent.monitoredRows[i]:Hide() end
- parent.monitoredCurrentOutline:ClearAllPoints();if currentColumnX then parent.monitoredCurrentOutline:SetPoint("TOPLEFT",parent,"TOPLEFT",currentColumnX,-headerY);parent.monitoredCurrentOutline:SetPoint("BOTTOMRIGHT",parent,"TOPLEFT",currentColumnX+cellWidth,-y);Theme:SetCurrentCharacterOutline(parent.monitoredCurrentOutline,true) else Theme:SetCurrentCharacterOutline(parent.monitoredCurrentOutline,false) end
- parent.monitoredNext:ClearAllPoints();parent.monitoredNext:SetPoint("TOPRIGHT",parent,"TOPRIGHT",-inset.right,-headerY);parent.monitoredPrev:ClearAllPoints();parent.monitoredPrev:SetPoint("RIGHT",parent.monitoredNext,"LEFT",4,0);parent.monitoredPrev:SetShown(pages>1);parent.monitoredNext:SetShown(pages>1);parent.monitoredPrev:SetState(settings.monitoredPage>1 and "default" or "disabled");parent.monitoredNext:SetState(settings.monitoredPage<pages and "default" or "disabled");parent.monitoredPrev:SetScript("OnClick",function() if settings.monitoredPage>1 then settings.monitoredPage=settings.monitoredPage-1;self:NotifyChanged() end end);parent.monitoredNext:SetScript("OnClick",function() if settings.monitoredPage<pages then settings.monitoredPage=settings.monitoredPage+1;self:NotifyChanged() end end)
+
+function Addon:RefreshMonitoredPreview(parent, context)
+    local factionIDs = self:GetSettings().monitoredFactionIDs
+    parent.monitoredDetail:Hide()
+    if #factionIDs == 0 then
+        parent.monitoredCurrentOutline:Hide()
+        for _, row in ipairs(parent.monitoredRows) do row:Hide() end
+        for _, header in ipairs(parent.monitoredHeaders) do header:Hide() end
+        return
+    end
+
+    local inset, nameWidth = Theme:GetMatrixInsets(true), 150
+    local availableWidth = math.max(1, (tonumber(context.surfaceAvailableWidth) or parent:GetWidth() or 1) - inset.left - inset.right)
+    local cellWidth = Theme:GetCharacterMatrixColumnWidth(context)
+    local current = Core.Characters:GetCurrent()
+    local shown, pageInfo = Core.AccountView:GetColumnPage("reputation", "monitored", context.characters, availableWidth, nameWidth, cellWidth, current and current.id)
+    local columns = { { width = nameWidth } }
+    for _ = 1, #shown do columns[#columns + 1] = { width = cellWidth } end
+
+    local headerHeight, y = Theme:GetCharacterHeaderHeight(context), inset.top
+    local currentHeader, currentColumnX
+    for index = 0, #shown do
+        local character = index > 0 and shown[index] or nil
+        local width, x = index == 0 and nameWidth or cellWidth, inset.left + (index == 0 and 0 or nameWidth + (index - 1) * cellWidth)
+        local header = parent.monitoredHeaders[index + 1] or Theme:CreateMatrixHeader(parent)
+        parent.monitoredHeaders[index + 1] = header
+        header:ClearAllPoints(); header:SetPoint("TOPLEFT", parent, "TOPLEFT", x, -y); header:SetSize(width, headerHeight)
+        if character then
+            Theme:SetCharacterHeader(header, character, context)
+            if current and character.id == current.id then currentHeader, currentColumnX = header, x end
+        else
+            Theme:SetMatrixHeader(header, "声望", { height = headerHeight, justify = "LEFT", inset = Theme.Space.xxs })
+            header:SetScript("OnEnter", nil); header:SetScript("OnLeave", nil)
+        end
+        header:Show()
+    end
+    for index = #shown + 2, #parent.monitoredHeaders do parent.monitoredHeaders[index]:Hide() end
+    y = y + headerHeight
+
+    for rowIndex, factionID in ipairs(factionIDs) do
+        local row = parent.monitoredRows[rowIndex] or CreateFrame("Button", nil, parent, "BackdropTemplate")
+        parent.monitoredRows[rowIndex] = row
+        row:SetSize(nameWidth + #shown * cellWidth, Theme.Table.previewRowHeight)
+        row:ClearAllPoints(); row:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -y)
+        row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+        local tone = Theme:GetDataRowColor(rowIndex)
+        row:SetBackdropColor(tone[1], tone[2], tone[3], 1); row:SetBackdropBorderColor(Theme.Colors.matrixLine[1], Theme.Colors.matrixLine[2], Theme.Colors.matrixLine[3], Theme.Colors.matrixLine[4])
+        Theme:ApplyDataColumnTints(row, columns, Theme.Table.previewRowHeight)
+        row.cells = row.cells or {}
+        local values = { self:GetFactionName(factionID) }
+        for _, character in ipairs(shown) do
+            values[#values + 1] = self:FormatSnapshotValue(Snapshot(character), Data(character, factionID), "compact", self:GetFactionState(Snapshot(character), factionID))
+        end
+        local x = 0
+        for columnIndex, value in ipairs(values) do
+            local width = columns[columnIndex].width
+            local cell = row.cells[columnIndex] or Text(row, Theme.Font.assist, Theme.Colors.text, columnIndex == 1 and "LEFT" or "CENTER")
+            row.cells[columnIndex] = cell
+            cell:ClearAllPoints(); cell:SetPoint("LEFT", row, "LEFT", x + Theme.Table.cellInset, 0); cell:SetWidth(width - Theme.Table.cellInset * 2); cell:SetText(value)
+            if columnIndex > 1 then
+                local data = Data(shown[columnIndex - 1], factionID)
+                local color = data and self:GetReputationColor(data) or Theme.Colors.muted
+                cell:SetTextColor(color[1], color[2], color[3])
+            else cell:SetTextColor(Theme.Colors.text[1], Theme.Colors.text[2], Theme.Colors.text[3]) end
+            cell:Show(); x = x + width
+        end
+        for index = #values + 1, #row.cells do row.cells[index]:Hide() end
+        row.monitoredTooltip = { characters = context.characters, first = pageInfo.first, nameWidth = nameWidth, cellWidth = cellWidth, factionID = factionID }
+        row:SetScript("OnEnter", function(control) control.monitoredTooltipTracking = true; ShowMonitoredTooltip(control) end)
+        row:SetScript("OnUpdate", function(control) if control.monitoredTooltipTracking then ShowMonitoredTooltip(control) end end)
+        row:SetScript("OnLeave", function(control) control.monitoredTooltipTracking = false; GameTooltip:Hide() end)
+        row:Show(); y = y + Theme.Table.previewRowHeight
+    end
+    for index = #factionIDs + 1, #parent.monitoredRows do parent.monitoredRows[index]:Hide() end
+    Theme:UpdateCurrentCharacterColumnOutline(parent.monitoredCurrentOutline, currentHeader, parent, 0, cellWidth, currentHeader ~= nil, currentColumnX)
+    parent.monitoredPagerAnchor:ClearAllPoints(); parent.monitoredPagerAnchor:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -inset.right, -inset.top); parent.monitoredPagerAnchor:SetSize(1, 1)
+    Core.AccountView:UpdateColumnPager(parent, "reputation", "monitored", pageInfo, parent.monitoredPagerAnchor, "角色")
 end

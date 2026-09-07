@@ -25,12 +25,15 @@ local function CharacterLabel(character, showRealm)
 end
 
 local function CharacterColumnWidth(context)
-    local showRealm = context and context.scope == "all"
-    local width = 96
-    for _, character in ipairs(context and context.characters or {}) do
-        width = math.max(width, Theme:MeasureText(Theme.Font.body, CharacterLabel(character, showRealm)) + Theme.Space.lg)
-    end
-    return width
+    return Theme:GetCharacterRowHeaderWidth(true, context, context and context.characters)
+end
+
+local function SetProfessionIcon(icon, character)
+    local coords = CLASS_ICON_TCOORDS and character and CLASS_ICON_TCOORDS[character.class]
+    if not coords then icon:Hide(); return false end
+    icon:SetTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES")
+    icon:SetTexCoord(unpack(coords)); icon:Show()
+    return true
 end
 
 local function ApplyCharacterColor(text, character)
@@ -229,6 +232,8 @@ local function Row(frame, index)
     row:SetHeight(ROW_HEIGHT)
     row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     row.currentOutline = Theme:CreateCurrentCharacterOutline(row)
+    row.professionIcon = row:CreateTexture(nil, "ARTWORK")
+    row.professionIcon:SetSize(16, 16)
     row.name = Text(row, Theme.Font.body, C.text)
     row.status = Text(row, Theme.Font.body, C.muted, "LEFT")
     frame.rows[index] = row
@@ -338,9 +343,12 @@ function Page.Refresh(frame, context)
             row:ClearAllPoints(); row:SetPoint("TOPLEFT", frame.body, "TOPLEFT", 0, -y); row:SetSize(tableWidth, ROW_HEIGHT)
             local fill = Theme:GetDataRowColor(count)
             row:SetBackdropColor(fill[1], fill[2], fill[3], 0.9); row:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
+            Theme:ApplyDataColumnTints(row, columns, ROW_HEIGHT, 0, COLUMN_GAP)
             Theme:SetCurrentCharacterOutline(row.currentOutline, current and character.id == current.id)
-            row.name:ClearAllPoints(); row.name:SetPoint("LEFT", 8, 0); row.name:SetWidth(characterWidth - 8)
-            row.name:SetText(CharacterLabel(character, context.scope == "all")); ApplyCharacterColor(row.name, character)
+            local hasIcon = SetProfessionIcon(row.professionIcon, character)
+            if hasIcon then row.professionIcon:ClearAllPoints(); row.professionIcon:SetPoint("LEFT", Theme.Table.cellPadding, 0) end
+            row.name:ClearAllPoints(); row.name:SetPoint("LEFT", Theme.Table.cellPadding + (hasIcon and (16 + Theme.Table.iconTextGap) or 0), 0); row.name:SetWidth(Theme:GetTableCellContentWidth(characterWidth) - (hasIcon and (16 + Theme.Table.iconTextGap) or 0))
+            row.name:SetText(CharacterLabel(character, context and context.scope == "all")); ApplyCharacterColor(row.name, character)
             Release(row.cells or {}, 1)
             if showProfession or hasFarm or hasNomi or showJewelcrafting or hasCooking or showFishing or hasCommon then
                 local offset, nextCell = characterWidth, 1
