@@ -124,6 +124,9 @@ try {
     )
 
     $githubStagePath = New-StagingCopy -SourceRoot $projectRoot -StageRoot $githubStageRoot -ExcludeDirectories $commonExcludeDirs -ExcludeFiles $commonExcludeFiles
+    Get-ChildItem -LiteralPath $githubStagePath -Filter "YiboBeastPaths*.toc" | ForEach-Object {
+        Remove-NonReleaseTocEntries -TocPath $_.FullName
+    }
     $curseForgeExcludeDirs = @(
         (Join-Path $projectRoot ".git"),
         (Join-Path $projectRoot "Screenshots"),
