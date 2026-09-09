@@ -53,6 +53,19 @@ local function ProfessionSlots(characterID)
     return slots
 end
 
+local function CharacterProfessionInfo(characterID, slots)
+    local core = Addon.Core
+    local domain = core and core.DataDomains and core.DataDomains:Get(characterID, "professions")
+    local professions = {}
+    for _, profession in ipairs(domain and domain.data and domain.data.professions or {}) do
+        if profession.id then professions[tonumber(profession.id)] = profession end
+    end
+    for slot = 1, 2 do
+        if slots and slots[slot] and slots[slot].id then professions[tonumber(slots[slot].id)] = slots[slot] end
+    end
+    return professions
+end
+
 local function RecipeForGroup(group)
     local fallback
     for _, recipe in ipairs(group.members or {}) do
@@ -227,6 +240,39 @@ local function BuildLegacyDailyProject(characterID, definition, monitoringGroupI
     }
 end
 
+local function BuildSpecialProjects(characterID, slots, now)
+    local provider = Addon.Providers.Registry:Get("special-activity")
+    local grouped, enabled = {}, false
+    local professions = CharacterProfessionInfo(characterID, slots)
+    for groupID, group in pairs(Addon.Catalog.monitoringGroups or {}) do
+        if group.memberKind == "special-activity" and Addon.Settings:IsMonitoringGroupEnabled(groupID) then
+            enabled = true
+            local projects = {}
+            for _, activityID in ipairs(group.members or {}) do
+                local definition = Addon.Catalog.specialActivities[activityID]
+                local profession = definition and definition.professionID and professions[tonumber(definition.professionID)] or nil
+                local eligible = not definition or not definition.professionID or profession ~= nil
+                if definition and eligible and MonitoringItemEnabled(groupID, activityID, "activity", definition.defaultMode) and provider then
+                    local project = provider:GetProject(characterID, definition, now)
+                    if project then
+                        -- Profession data is the source of truth for the
+                        -- actual client icon.  This includes life skills such
+                        -- as First Aid, whose spell icon is not its profession
+                        -- panel icon.
+                        if profession and profession.icon then
+                            project.iconKind, project.icon, project.fallbackIcon = "texture", profession.icon, profession.icon
+                        end
+                        projects[#projects + 1] = project
+                    end
+                end
+            end
+            table.sort(projects, SortDailyProjects)
+            grouped[groupID] = projects
+        end
+    end
+    return grouped, enabled
+end
+
 function Snapshot:Build()
     local now = Addon:Now()
     if not self.dirty and self.value and (not self.nextTransitionAt or now < self.nextTransitionAt) then return self.value end
@@ -239,6 +285,7 @@ function Snapshot:Build()
         local farmProject, farmEnabled = BuildFarmProject(characterID, now)
         local nomiProject, nomiEnabled = BuildNomiProject(characterID, now)
         local cookingProject, cookingEnabled = BuildCookingProject(characterID, coreCharacter.level, now)
+        local specialProjects, specialEnabled = BuildSpecialProjects(characterID, slots, now)
         if farmProject and farmProject.nextResetAt and farmProject.nextResetAt > now
             and (not nextTransitionAt or farmProject.nextResetAt < nextTransitionAt) then
             nextTransitionAt = farmProject.nextResetAt
@@ -251,7 +298,7 @@ function Snapshot:Build()
             and (not nextTransitionAt or cookingProject.nextResetAt < nextTransitionAt) then
             nextTransitionAt = cookingProject.nextResetAt
         end
-        if slots or farmEnabled or nomiEnabled or cookingEnabled then
+        if slots or farmEnabled or nomiEnabled or cookingEnabled or specialEnabled then
             local provider = stored.providers and stored.providers["profession-cooldown"]
             local character = { updatedAt = provider and provider.lastSuccessAt or 0, providerState = provider and provider.state or "not-yet-scanned", activities = {}, professionSlots = slots or {}, summary = { todo = 0, actionable = 0, cooldown = 0, items = {} }, monitoringProjects = {}, farmColumn = farmEnabled, farmProjects = farmProject and { farmProject } or {}, nomiColumn = nomiEnabled, nomiProjects = nomiProject and { nomiProject } or {}, cookingColumn = cookingEnabled, cookingProjects = cookingProject and { cookingProject } or {} }
             for groupID, group in pairs(Addon.Catalog.groups) do
@@ -342,6 +389,7 @@ function Snapshot:Build()
                     character.monitoringProjects[monitoringGroupID] = projects
                 end
             end
+            for groupID, projects in pairs(specialProjects) do character.monitoringProjects[groupID] = projects end
             value.characters[characterID] = character
         end
     end

@@ -53,7 +53,9 @@ function Settings:GetMonitoringItems(groupID)
         end
     else
         for _, id in ipairs(definition.members or {}) do
-            local source = definition.memberKind == "farm-operation" and Addon.Catalog.farmOperations[id] or Addon.Catalog.dailyActivities[id]
+            local source = definition.memberKind == "farm-operation" and Addon.Catalog.farmOperations[id]
+                or definition.memberKind == "special-activity" and Addon.Catalog.specialActivities[id]
+                or Addon.Catalog.dailyActivities[id]
             if source then
                 local defaultEnabled = source.defaultEnabled
                 if defaultEnabled == nil then defaultEnabled = source.verificationStatus ~= "needs-live-confirmation" end

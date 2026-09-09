@@ -14,6 +14,9 @@ frame:RegisterEvent("GOSSIP_SHOW")
 frame:RegisterEvent("PLAYER_TARGET_CHANGED")
 frame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
 frame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+frame:RegisterEvent("LOOT_OPENED")
+frame:RegisterEvent("LOOT_CLOSED")
+frame:RegisterEvent("CHAT_MSG_LOOT")
 -- A trade-skill update can arrive immediately before a character switch while
 -- its deferred scan runs just after the new character enters the world. Keep
 -- the pending work bound to the character that raised the update: a cooldown
@@ -47,6 +50,9 @@ frame:SetScript("OnEvent", function(_, event, ...)
             Addon.initialized = true
             local provider = Addon.Providers.Registry:Get("daily-quest")
             if provider then provider:QueueObserve() end
+            local special = Addon.Providers.Registry:Get("special-activity")
+            local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+            if special and current then special:ObserveCharacter(current.id) end
             Addon:NotifyChanged()
         end
     elseif event == "TRADE_SKILL_SHOW" or event == "TRADE_SKILL_LIST_UPDATE" or event == "TRADE_SKILL_UPDATE" then
@@ -66,10 +72,15 @@ frame:SetScript("OnEvent", function(_, event, ...)
     elseif (event == "QUEST_LOG_UPDATE" or event == "QUEST_ACCEPTED" or event == "PLAYER_ENTERING_WORLD") and Addon.initialized then
         local provider = Addon.Providers.Registry:Get("daily-quest")
         if provider then provider:QueueObserve() end
+        local special = Addon.Providers.Registry:Get("special-activity")
+        local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+        if special and current then special:ObserveCharacter(current.id) end
     elseif event == "QUEST_TURNED_IN" and Addon.initialized then
         local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
         local provider = Addon.Providers.Registry:Get("daily-quest")
         if provider and current then provider:RecordTurnIn(current.id, ...) end
+        local special = Addon.Providers.Registry:Get("special-activity")
+        if special and current then special:RecordTurnIn(current.id, ...) end
         if provider then provider:QueueObserve() end
     elseif event == "GOSSIP_SHOW" and Addon.initialized then
         local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()

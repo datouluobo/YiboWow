@@ -5,7 +5,9 @@ local Theme = _G.YiboCore.UITheme
 local C = Theme.Colors
 
 local ROW_HEIGHT, ROW_GAP, ICON_SIZE, ICON_GAP = Theme.Table.iconRowHeight, 0, 22, 3
-local COLUMN_GAP = Theme.Space.xxs
+-- Use the theme's standard small gutter to make adjacent icon families
+-- scannable without adding a foreign divider treatment.
+local COLUMN_GAP = Theme.Space.xs
 local MIN_PROJECT_SLOTS = 1
 local FARM_COLUMN_WIDTH = ICON_SIZE + 8
 local NOMI_COLUMN_WIDTH = ICON_SIZE + 8
@@ -157,10 +159,10 @@ local function SetIcon(button, project, isCurrentCharacter)
     button:Show()
 end
 
-local function RenderProjects(cell, projects, isCurrentCharacter)
+local function RenderProjects(cell, projects, isCurrentCharacter, groupIndex)
     Release(cell.icons or {}, 1)
     cell:Show()
-    if #projects == 0 then
+    if #projects == 0 or (#projects == 1 and projects[1].state == "not-applicable") then
         cell.empty:SetText("—"); cell.empty:Show()
         return
     end
@@ -215,12 +217,13 @@ local function HasCookingColumn()
     return Addon.Settings:IsMonitoringGroupEnabled("cooking-daily")
 end
 
-local function DailyColumnWidth(snapshot, characters, groupID, headerTitle)
+local function DailyColumnWidth(snapshot, characters, groupID, headerTitle, contentOnly)
     local slots = MIN_PROJECT_SLOTS
     for _, character in ipairs(characters or {}) do
         local data = snapshot.characters[character.id]
         slots = math.max(slots, #(data and data.monitoringProjects and data.monitoringProjects[groupID] or {}))
     end
+    if contentOnly then return ProjectColumnWidth(slots) end
     local headerWidth = Theme:MeasureText(Theme.Font.assist, headerTitle or "") + Theme.Table.cellPadding * 2
     return math.max(ProjectColumnWidth(slots), headerWidth)
 end
@@ -290,6 +293,9 @@ function Page.Refresh(frame, context)
     local showCooking = Addon.Settings:IsMonitoringGroupEnabled("cooking-daily")
     local showJewelcrafting = Addon.Settings:IsMonitoringGroupEnabled("jewelcrafting-daily")
     local showFishing = Addon.Settings:IsMonitoringGroupEnabled("fishing-daily")
+    local showNat = Addon.Settings:IsMonitoringGroupEnabled("nat-pagle")
+    local showDarkmoon = Addon.Settings:IsMonitoringGroupEnabled("darkmoon-faire")
+    local showBrilltron = Addon.Settings:IsMonitoringGroupEnabled("brilltron-4000")
     local showCommon = false
     local hasCommon = showCommon and HasCommonProjects(snapshot, context.characters)
     local hasFarm = showFarm and HasFarmColumn()
@@ -297,9 +303,14 @@ function Page.Refresh(frame, context)
     local hasCooking = showCooking and HasCookingColumn()
     local jewelcraftingWidth = showJewelcrafting and DailyColumnWidth(snapshot, context.characters, "jewelcrafting-daily", "珠宝") or 0
     local fishingWidth = showFishing and DailyColumnWidth(snapshot, context.characters, "fishing-daily", "钓鱼") or 0
+    local natWidth = showNat and DailyColumnWidth(snapshot, context.characters, "nat-pagle", "纳特·帕格") or 0
+    local darkmoonWidth = showDarkmoon and DailyColumnWidth(snapshot, context.characters, "darkmoon-faire", "暗月") or 0
+    -- 布林顿表头使用物品图标，与单一内容格同宽；不要为了标题文字把
+    -- 一整列撑宽。
+    local brilltronWidth = showBrilltron and DailyColumnWidth(snapshot, context.characters, "brilltron-4000", nil, true) or 0
     local characterWidth, professionWidth, farmWidth, nomiWidth, cookingWidth, commonWidth = Layout(CharacterColumnWidth(context), ProfessionColumnWidth(snapshot, context.characters), hasFarm, hasNomi, hasCooking, hasCommon)
     if hasCooking then cookingWidth = DailyColumnWidth(snapshot, context.characters, "cooking-daily", "烹饪") end
-    local tableWidth = characterWidth + (showProfession and professionWidth or 0) + farmWidth + nomiWidth + jewelcraftingWidth + cookingWidth + fishingWidth + commonWidth
+    local tableWidth = characterWidth + (showProfession and professionWidth or 0) + farmWidth + nomiWidth + jewelcraftingWidth + cookingWidth + fishingWidth + natWidth + darkmoonWidth + brilltronWidth + commonWidth
     local inset = Theme:GetMatrixInsets(context.preview)
     for _, row in ipairs(frame.rows) do row:Hide() end
     frame.header:ClearAllPoints(); frame.header:SetPoint("TOPLEFT", frame, "TOPLEFT", inset.left, -inset.top); frame.header:SetSize(tableWidth, Theme.Table.headerHeight)
@@ -312,12 +323,24 @@ function Page.Refresh(frame, context)
     if showJewelcrafting then columns[#columns + 1] = { "珠宝", jewelcraftingWidth } end
     if hasCooking then columns[#columns + 1] = { "烹饪", cookingWidth } end
     if showFishing then columns[#columns + 1] = { "钓鱼", fishingWidth } end
+    if showNat then columns[#columns + 1] = { "纳特·帕格", natWidth } end
+    if showDarkmoon then columns[#columns + 1] = { "暗月", darkmoonWidth } end
+    if showBrilltron then columns[#columns + 1] = { "布林顿 4000", brilltronWidth, "brilltron-4000" } end
     if hasCommon then columns[#columns + 1] = { "通用项目", commonWidth } end
     tableWidth = tableWidth + math.max(0, #columns - 1) * COLUMN_GAP
     local x = 0
     for index, definition in ipairs(columns) do
         local header = Header(frame, index); header:ClearAllPoints(); header:SetPoint("TOPLEFT", frame.header, "TOPLEFT", x, 0); header:SetSize(definition[2], Theme.Table.headerHeight)
-        Theme:SetMatrixHeader(header, definition[1], { height=Theme.Table.headerHeight, fill=C.toolbar, rule=C.lineSoft }); header:Show(); x = x + definition[2] + COLUMN_GAP
+        Theme:SetMatrixHeader(header, definition[1], { height=Theme.Table.headerHeight, fill=C.toolbar, rule=C.lineSoft })
+        header.projectIcon = header.projectIcon or header:CreateTexture(nil, "OVERLAY")
+        if definition[3] == "brilltron-4000" then
+            header.label:SetText("")
+            header.projectIcon:SetTexture((GetItemIcon and GetItemIcon(87214)) or "Interface\\Icons\\INV_Misc_QuestionMark")
+            header.projectIcon:SetSize(18, 18); header.projectIcon:ClearAllPoints(); header.projectIcon:SetPoint("CENTER"); header.projectIcon:Show()
+        else
+            header.projectIcon:Hide()
+        end
+        header:Show(); x = x + definition[2] + COLUMN_GAP
     end
     Release(frame.headers, #columns + 1)
     local accountProjects = snapshot.accountActivities or {}
@@ -350,30 +373,33 @@ function Page.Refresh(frame, context)
             row.name:ClearAllPoints(); row.name:SetPoint("LEFT", Theme.Table.cellPadding + (hasIcon and (16 + Theme.Table.iconTextGap) or 0), 0); row.name:SetWidth(Theme:GetTableCellContentWidth(characterWidth) - (hasIcon and (16 + Theme.Table.iconTextGap) or 0))
             row.name:SetText(CharacterLabel(character, context and context.scope == "all")); ApplyCharacterColor(row.name, character)
             Release(row.cells or {}, 1)
-            if showProfession or hasFarm or hasNomi or showJewelcrafting or hasCooking or showFishing or hasCommon then
-                local offset, nextCell = characterWidth, 1
+            if showProfession or hasFarm or hasNomi or showJewelcrafting or hasCooking or showFishing or showNat or showDarkmoon or showBrilltron or hasCommon then
+                -- Headers begin after the first column's gutter.  Starting
+                -- data cells at the same coordinate keeps every column true
+                -- to its header, including when the profession column hides.
+                local offset, nextCell = characterWidth + COLUMN_GAP, 1
                 if showProfession then
                 local profession = Cell(row, 1)
-                profession:ClearAllPoints(); profession:SetPoint("LEFT", characterWidth, 0); profession:SetSize(professionWidth, ROW_HEIGHT)
-                    RenderProjects(profession, data.professionProjects or {}, current and character.id == current.id)
+                profession:ClearAllPoints(); profession:SetPoint("LEFT", offset, 0); profession:SetSize(professionWidth, ROW_HEIGHT)
+                    RenderProjects(profession, data.professionProjects or {}, current and character.id == current.id, nextCell)
                     offset, nextCell = offset + professionWidth + COLUMN_GAP, nextCell + 1
                 end
                 if hasFarm then
                     local farm = Cell(row, nextCell)
                     farm:ClearAllPoints(); farm:SetPoint("LEFT", offset, 0); farm:SetSize(farmWidth, ROW_HEIGHT)
-                    RenderProjects(farm, data.farmProjects or {}, current and character.id == current.id)
+                    RenderProjects(farm, data.farmProjects or {}, current and character.id == current.id, nextCell)
                     offset, nextCell = offset + farmWidth + COLUMN_GAP, nextCell + 1
                 end
                 if hasNomi then
                     local nomi = Cell(row, nextCell)
                     nomi:ClearAllPoints(); nomi:SetPoint("LEFT", offset, 0); nomi:SetSize(nomiWidth, ROW_HEIGHT)
-                    RenderProjects(nomi, data.nomiProjects or {}, current and character.id == current.id)
+                    RenderProjects(nomi, data.nomiProjects or {}, current and character.id == current.id, nextCell)
                     offset, nextCell = offset + nomiWidth + COLUMN_GAP, nextCell + 1
                 end
                 if showJewelcrafting then
                     local jewelcrafting = Cell(row, nextCell)
                     jewelcrafting:ClearAllPoints(); jewelcrafting:SetPoint("LEFT", offset, 0); jewelcrafting:SetSize(jewelcraftingWidth, ROW_HEIGHT)
-                    RenderProjects(jewelcrafting, data.monitoringProjects["jewelcrafting-daily"] or {}, current and character.id == current.id)
+                    RenderProjects(jewelcrafting, data.monitoringProjects["jewelcrafting-daily"] or {}, current and character.id == current.id, nextCell)
                     offset, nextCell = offset + jewelcraftingWidth + COLUMN_GAP, nextCell + 1
                 end
                 if hasCooking then
@@ -382,19 +408,37 @@ function Page.Refresh(frame, context)
                     -- The legacy field contains only the original Halfhill
                     -- projection.  The monitoring-group list also includes
                     -- the WLK and TBC cooking dailies.
-                    RenderProjects(cooking, data.monitoringProjects["cooking-daily"] or {}, current and character.id == current.id)
+                    RenderProjects(cooking, data.monitoringProjects["cooking-daily"] or {}, current and character.id == current.id, nextCell)
                     offset, nextCell = offset + cookingWidth + COLUMN_GAP, nextCell + 1
                 end
                 if showFishing then
                     local fishing = Cell(row, nextCell)
                     fishing:ClearAllPoints(); fishing:SetPoint("LEFT", offset, 0); fishing:SetSize(fishingWidth, ROW_HEIGHT)
-                    RenderProjects(fishing, data.monitoringProjects["fishing-daily"] or {}, current and character.id == current.id)
+                    RenderProjects(fishing, data.monitoringProjects["fishing-daily"] or {}, current and character.id == current.id, nextCell)
                     offset, nextCell = offset + fishingWidth + COLUMN_GAP, nextCell + 1
+                end
+                if showNat then
+                    local nat = Cell(row, nextCell)
+                    nat:ClearAllPoints(); nat:SetPoint("LEFT", offset, 0); nat:SetSize(natWidth, ROW_HEIGHT)
+                    RenderProjects(nat, data.monitoringProjects["nat-pagle"] or {}, current and character.id == current.id, nextCell)
+                    offset, nextCell = offset + natWidth + COLUMN_GAP, nextCell + 1
+                end
+                if showDarkmoon then
+                    local darkmoon = Cell(row, nextCell)
+                    darkmoon:ClearAllPoints(); darkmoon:SetPoint("LEFT", offset, 0); darkmoon:SetSize(darkmoonWidth, ROW_HEIGHT)
+                    RenderProjects(darkmoon, data.monitoringProjects["darkmoon-faire"] or {}, current and character.id == current.id, nextCell)
+                    offset, nextCell = offset + darkmoonWidth + COLUMN_GAP, nextCell + 1
+                end
+                if showBrilltron then
+                    local brilltron = Cell(row, nextCell)
+                    brilltron:ClearAllPoints(); brilltron:SetPoint("LEFT", offset, 0); brilltron:SetSize(brilltronWidth, ROW_HEIGHT)
+                    RenderProjects(brilltron, data.monitoringProjects["brilltron-4000"] or {}, current and character.id == current.id, nextCell)
+                    offset, nextCell = offset + brilltronWidth + COLUMN_GAP, nextCell + 1
                 end
                 if hasCommon then
                     local common = Cell(row, nextCell)
                     common:ClearAllPoints(); common:SetPoint("LEFT", offset, 0); common:SetSize(commonWidth, ROW_HEIGHT)
-                    RenderProjects(common, data.commonProjects or {}, current and character.id == current.id)
+                    RenderProjects(common, data.commonProjects or {}, current and character.id == current.id, nextCell)
                 end
                 -- The catalog and Core's profession snapshot are enough to
                 -- decide whether a project belongs to this character.  An
@@ -428,6 +472,9 @@ function Page.GetSurfaceMetrics(context)
     local showCooking = Addon.Settings:IsMonitoringGroupEnabled("cooking-daily")
     local showJewelcrafting = Addon.Settings:IsMonitoringGroupEnabled("jewelcrafting-daily")
     local showFishing = Addon.Settings:IsMonitoringGroupEnabled("fishing-daily")
+    local showNat = Addon.Settings:IsMonitoringGroupEnabled("nat-pagle")
+    local showDarkmoon = Addon.Settings:IsMonitoringGroupEnabled("darkmoon-faire")
+    local showBrilltron = Addon.Settings:IsMonitoringGroupEnabled("brilltron-4000")
     local showCommon = false
     local hasCommon = showCommon and HasCommonProjects(snapshot, context and context.characters)
     local hasFarm = showFarm and HasFarmColumn()
@@ -436,8 +483,8 @@ function Page.GetSurfaceMetrics(context)
     local accountHeight = showCommon and #(snapshot.accountActivities or {}) > 0 and ROW_HEIGHT + ROW_GAP or 0
     local visibleRows = math.max(1, math.min(20, count))
     local professionWidth = ProfessionColumnWidth(snapshot, context and context.characters)
-    local columnCount = 1 + (showProfession and 1 or 0) + (hasFarm and 1 or 0) + (hasNomi and 1 or 0) + (showJewelcrafting and 1 or 0) + (hasCooking and 1 or 0) + (showFishing and 1 or 0) + (hasCommon and 1 or 0)
-    local tableWidth = CharacterColumnWidth(context) + (showProfession and professionWidth or 0) + (hasFarm and FARM_COLUMN_WIDTH or 0) + (hasNomi and NOMI_COLUMN_WIDTH or 0) + (showJewelcrafting and DailyColumnWidth(snapshot, context and context.characters, "jewelcrafting-daily", "珠宝") or 0) + (hasCooking and DailyColumnWidth(snapshot, context and context.characters, "cooking-daily", "烹饪") or 0) + (showFishing and DailyColumnWidth(snapshot, context and context.characters, "fishing-daily", "钓鱼") or 0) + (hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0) + math.max(0, columnCount - 1) * COLUMN_GAP
+    local columnCount = 1 + (showProfession and 1 or 0) + (hasFarm and 1 or 0) + (hasNomi and 1 or 0) + (showJewelcrafting and 1 or 0) + (hasCooking and 1 or 0) + (showFishing and 1 or 0) + (showNat and 1 or 0) + (showDarkmoon and 1 or 0) + (showBrilltron and 1 or 0) + (hasCommon and 1 or 0)
+    local tableWidth = CharacterColumnWidth(context) + (showProfession and professionWidth or 0) + (hasFarm and FARM_COLUMN_WIDTH or 0) + (hasNomi and NOMI_COLUMN_WIDTH or 0) + (showJewelcrafting and DailyColumnWidth(snapshot, context and context.characters, "jewelcrafting-daily", "珠宝") or 0) + (hasCooking and DailyColumnWidth(snapshot, context and context.characters, "cooking-daily", "烹饪") or 0) + (showFishing and DailyColumnWidth(snapshot, context and context.characters, "fishing-daily", "钓鱼") or 0) + (showNat and DailyColumnWidth(snapshot, context and context.characters, "nat-pagle", "纳特·帕格") or 0) + (showDarkmoon and DailyColumnWidth(snapshot, context and context.characters, "darkmoon-faire", "暗月") or 0) + (showBrilltron and DailyColumnWidth(snapshot, context and context.characters, "brilltron-4000", nil, true) or 0) + (hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0) + math.max(0, columnCount - 1) * COLUMN_GAP
     -- The scrollbar uses the page inset rather than a data-column gutter.
     -- The table width therefore remains the same with and without overflow.
     local projectsWidth = tableWidth + inset.left + inset.right

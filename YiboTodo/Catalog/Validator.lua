@@ -82,6 +82,20 @@ function Addon:ValidateCatalog()
             end
         end
     end
+    for id, activity in pairs(Catalog.specialActivities or {}) do
+        local group = Catalog.monitoringGroups and Catalog.monitoringGroups[activity.monitoringGroupID]
+        if not group or group.memberKind ~= "special-activity" then
+            Add(result, "errors", "missing-special-monitoring-group:" .. tostring(id))
+        elseif activity.scope ~= "character" and activity.scope ~= "account" then
+            Add(result, "errors", "invalid-special-scope:" .. tostring(id))
+        elseif activity.scheduleKind == "daily-07" and tonumber(activity.questID) == nil then
+            Add(result, "errors", "missing-special-daily-quest:" .. tostring(id))
+        elseif activity.scheduleKind == "event-weekly" and tonumber(activity.questID) == nil and type(activity.questIDs) ~= "table" then
+            Add(result, "errors", "missing-special-event-quests:" .. tostring(id))
+        elseif activity.verificationStatus ~= "verified" and activity.verificationStatus ~= "user-confirmed" then
+            Add(result, "errors", "unapproved-special-activity:" .. tostring(id))
+        end
+    end
     self.catalogValidation = result
     return result
 end

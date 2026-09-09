@@ -1,8 +1,8 @@
 local Addon = _G.YiboTodo
 
 local DEFAULTS = {
-    schemaVersion = 9,
-    catalogVersion = 15,
+    schemaVersion = 10,
+    catalogVersion = 16,
     settings = {
         modeOverrides = { activityType = {}, expansion = {}, profession = {}, cooldownGroup = {}, activity = {} },
         previewColumnsVersion = 4,
@@ -106,6 +106,11 @@ function Addon.Database:Initialize()
         -- with defaultEnabled=false stays invisible until the player enables
         -- it from Todo's business settings.
         self.db.schemaVersion = 9
+    end
+    if version < 10 then
+        -- Special activities have dedicated per-character and per-account
+        -- records; no legacy daily state is reinterpreted during migration.
+        self.db.schemaVersion = 10
     end
     CopyDefaults(self.db, DEFAULTS)
     self.db.catalogVersion = math.max(tonumber(self.db.catalogVersion) or 0, Addon.CATALOG_VERSION)

@@ -261,34 +261,126 @@ end
 
 local function PrintEventTrace(events)
     local first = math.max(1, #events - 11)
-    if #events == 0 then Addon:Print("每日活动事件：无"); return end
+    if #events == 0 then Addon:Print("专项事件：无"); return end
     for index = first, #events do
         local event, args = events[index], {}
         for argIndex, value in ipairs(event.args or {}) do args[#args + 1] = ValueText(value) end
-        Addon:Print(string.format("每日活动事件：%s；参数=%s。", tostring(event.event), table.concat(args, " | ")))
+        Addon:Print(string.format("专项事件：%s；参数=%s。", tostring(event.event), table.concat(args, " | ")))
     end
+end
+
+local SPECIAL_LABELS = { nat = "纳特·帕格（纳格兰三条鱼）", brilltron = "布林顿 4000" }
+local SPECIAL_EVENTS = {
+    QUEST_ACCEPTED = true, QUEST_TURNED_IN = true, QUEST_LOG_UPDATE = true,
+    GOSSIP_SHOW = true, PLAYER_TARGET_CHANGED = true,
+}
+local BRILLTRON_LOOT_EVENTS = { LOOT_OPENED = true, LOOT_CLOSED = true, CHAT_MSG_LOOT = true }
+
+local function CaptureSpecialSnapshot(kind)
+    return {
+        at = Addon:Now(), kind = kind, label = SPECIAL_LABELS[kind],
+        questLog = CaptureQuestLog(), completedQuestSet = CaptureCompletedQuestSet(),
+        target = CaptureUnit("target"), mouseover = CaptureUnit("mouseover"),
+    }
+end
+
+local function QuestLogState(entries)
+    local result = {}
+    for _, entry in ipairs(entries or {}) do
+        if entry.id then result[tonumber(entry.id) or entry.id] = entry.complete == true or entry.complete == 1 end
+    end
+    return result
+end
+
+local function CompareQuestLogs(beforeEntries, afterEntries)
+    local before, after = QuestLogState(beforeEntries), QuestLogState(afterEntries)
+    local added, removed, completed = {}, {}, {}
+    for questID, isComplete in pairs(after) do
+        if before[questID] == nil then added[#added + 1] = tostring(questID)
+        elseif isComplete and not before[questID] then completed[#completed + 1] = tostring(questID) end
+    end
+    for questID in pairs(before) do if after[questID] == nil then removed[#removed + 1] = tostring(questID) end end
+    table.sort(added); table.sort(removed); table.sort(completed)
+    return { added = added, removed = removed, completed = completed }
+end
+
+local function HasQuestLogDelta(delta)
+    return delta and (#(delta.added or {}) > 0 or #(delta.removed or {}) > 0 or #(delta.completed or {}) > 0)
+end
+
+local function PrintQuestLogDelta(delta)
+    if not HasQuestLogDelta(delta) then return end
+    PrintList("任务新增：", delta.added)
+    PrintList("任务目标完成：", delta.completed)
+    PrintList("任务移除：", delta.removed)
+end
+
+local function PrintSpecialSnapshot(snapshot, phase)
+    Addon:Print(string.format("%s探针%s：目标 NPC=%s；完成任务集合=%s。", snapshot.label, phase, tostring(snapshot.target.creatureID), snapshot.completedQuestSet.available and "可读取" or "不可用"))
+end
+
+function Probe:StartSpecial(kind)
+    if not SPECIAL_LABELS[kind] then return false, "unknown-special-probe" end
+    local snapshot = CaptureSpecialSnapshot(kind)
+    self.specialCapture = { kind = kind, label = snapshot.label, startedAt = snapshot.at, snapshots = { snapshot }, eventTrace = {}, completedQuestBaseline = snapshot.completedQuestSet.ids, questLogBaseline = snapshot.questLog.entries }
+    Addon.db.diagnostics.specialActivityCapture = self.specialCapture
+    PrintSpecialSnapshot(snapshot, "已开始")
+    Addon:Print("请接取、完成并交付任务；任务日志变化会自动记录。全部完成后执行 finish。")
+    return true, snapshot
+end
+
+function Probe:SnapshotSpecial(kind)
+    local capture = self.specialCapture
+    if not capture or capture.kind ~= kind then return false, "special-probe-not-active" end
+    local snapshot = CaptureSpecialSnapshot(kind)
+    snapshot.questLogDelta = CompareQuestLogs(capture.questLogBaseline, snapshot.questLog.entries)
+    capture.questLogBaseline = snapshot.questLog.entries
+    if snapshot.completedQuestSet.ok then
+        local added, removed = CompareQuestSets(capture.completedQuestBaseline, snapshot.completedQuestSet.ids)
+        snapshot.completedQuestDelta = { added = added, removed = removed }
+        capture.completedQuestBaseline = snapshot.completedQuestSet.ids
+    end
+    capture.snapshots[#capture.snapshots + 1] = snapshot
+    Addon.db.diagnostics.specialActivityCapture = capture
+    PrintSpecialSnapshot(snapshot, "快照")
+    if snapshot.completedQuestDelta then
+        PrintList("完成任务集合新增：", snapshot.completedQuestDelta.added)
+        PrintList("完成任务集合移除：", snapshot.completedQuestDelta.removed)
+    end
+    PrintQuestLogDelta(snapshot.questLogDelta)
+    return true, snapshot
+end
+
+function Probe:FinishSpecial(kind)
+    local capture = self.specialCapture
+    if not capture or capture.kind ~= kind then return false, "special-probe-not-active" end
+    local ok, snapshot = self:SnapshotSpecial(kind)
+    if not ok then return false, snapshot end
+    capture.finishedAt, capture.eventTrace = snapshot.at, capture.eventTrace or {}
+    Addon.db.diagnostics.specialActivityCapture = capture
+    PrintEventTrace(capture.eventTrace)
+    Addon:Print(string.format("%s探针已结束：共 %d 个快照、%d 条事件；结果仅保存在 diagnostics。", capture.label or SPECIAL_LABELS[kind], #(capture.snapshots or {}), #(capture.eventTrace or {})))
+    self.specialCapture = nil
+    return true, capture
 end
 
 function Probe:CaptureEvent(event, ...)
     local diagnostics = Addon.db and Addon.db.diagnostics
-    if not diagnostics or not diagnostics.dailyProbeEnabled then return end
-    local capture = self.farmSpellCapture
-    if capture and event == "UNIT_SPELLCAST_SUCCEEDED" then
-        local unit, castGUID, spellID = ...
-        local mapID = CurrentMapID()
-        if unit == "player" and capture.mapID and mapID == capture.mapID and tonumber(spellID) then
-            local key = tostring(castGUID or "")
-            capture.castGUIDs = capture.castGUIDs or {}
-            if key == "" or not capture.castGUIDs[key] then
-                if key ~= "" then capture.castGUIDs[key] = true end
-                capture.events[#capture.events + 1] = { at = Addon:Now(), spellID = tonumber(spellID), castGUID = castGUID, mapID = mapID }
-            end
+    local special = self.specialCapture
+    if not diagnostics or not special or not (SPECIAL_EVENTS[event] or (special.kind == "brilltron" and BRILLTRON_LOOT_EVENTS[event])) then return end
+    special.eventTrace[#special.eventTrace + 1] = { at = Addon:Now(), event = event, args = { ... } }
+    while #special.eventTrace > 40 do table.remove(special.eventTrace, 1) end
+    if event == "QUEST_LOG_UPDATE" then
+        local snapshot = CaptureSpecialSnapshot(special.kind)
+        snapshot.phase = "quest-log-update"
+        snapshot.questLogDelta = CompareQuestLogs(special.questLogBaseline, snapshot.questLog.entries)
+        special.questLogBaseline = snapshot.questLog.entries
+        if HasQuestLogDelta(snapshot.questLogDelta) then
+            special.snapshots[#special.snapshots + 1] = snapshot
+            Addon.db.diagnostics.specialActivityCapture = special
+            PrintQuestLogDelta(snapshot.questLogDelta)
         end
     end
-    diagnostics.dailyEventTrace = diagnostics.dailyEventTrace or {}
-    local trace = diagnostics.dailyEventTrace
-    trace[#trace + 1] = { at = Addon:Now(), event = event, args = { ... } }
-    while #trace > 80 do table.remove(trace, 1) end
 end
 
 function Probe:Run(verbose, questIDs, resetQuestBaseline, farmCaptureMode)
