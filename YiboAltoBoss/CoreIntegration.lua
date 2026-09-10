@@ -213,6 +213,10 @@ function Integration:Initialize()
             { id = "action", title = "行动", defaultVisible = true },
             { id = "phase", title = "位面", defaultVisible = true },
         },
+        viewModes = {
+            { id = "character-rows", title = "角色为行" },
+            { id = "character-columns", title = "角色为列" },
+        },
         scope = { mode = "realms", allTitle = "所有服务器" },
         characterFilter = {
             defaultExpression = "90",

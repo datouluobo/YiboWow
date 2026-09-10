@@ -74,6 +74,7 @@ Settings = function()
     local settings = db.settings.accountView
     settings.pages = settings.pages or {}
     settings.fields = settings.fields or {}
+    settings.pageViewModes = type(settings.pageViewModes) == "table" and settings.pageViewModes or {}
     settings.pageScopes = settings.pageScopes or {}
     settings.selectedRealmScope = type(settings.selectedRealmScope) == "string" and settings.selectedRealmScope or "all"
     settings.hiddenCharacters = settings.hiddenCharacters or {}
@@ -445,6 +446,19 @@ function AccountView:RegisterPage(addonName, definition)
     if definition.GetMeasuredHeight ~= nil and type(definition.GetMeasuredHeight) ~= "function" then
         return nil, "页面 GetMeasuredHeight 必须是 function。"
     end
+    if definition.viewModes ~= nil then
+        if type(definition.viewModes) ~= "table" or #definition.viewModes < 2 then
+            return nil, "页面 viewModes 至少需要两个选项。"
+        end
+        local ids = {}
+        for _, mode in ipairs(definition.viewModes) do
+            if type(mode) ~= "table" or type(mode.id) ~= "string" or mode.id == "" or type(mode.title) ~= "string" then
+                return nil, "页面 viewModes 必须提供 id 与 title。"
+            end
+            if ids[mode.id] then return nil, "页面 viewMode ID 重复: " .. mode.id end
+            ids[mode.id] = true
+        end
+    end
     if definition.GetHoverMetrics ~= nil and type(definition.GetHoverMetrics) ~= "function" then
         return nil, "页面 GetHoverMetrics 必须是 function。"
     end
@@ -557,6 +571,26 @@ function AccountView:SetFieldVisible(pageID, fieldID, visible)
     fields[pageID] = fields[pageID] or {}
     fields[pageID][fieldID] = not not visible
     self:RefreshPage()
+end
+
+function AccountView:GetPageViewMode(pageID, modes)
+    local saved = Settings().pageViewModes[pageID]
+    for _, mode in ipairs(modes or {}) do
+        if mode.id == saved then return saved end
+    end
+    return modes and modes[1] and modes[1].id or nil
+end
+
+function AccountView:SetPageViewMode(pageID, modeID)
+    local page = self._pages[pageID]
+    for _, mode in ipairs(page and page.viewModes or {}) do
+        if mode.id == modeID then
+            Settings().pageViewModes[pageID] = modeID
+            self:RefreshPage()
+            return true
+        end
+    end
+    return false
 end
 
 local function GetPreviewFieldVisible(page, field)
@@ -1241,6 +1275,7 @@ function AccountView:BuildContext(page, options)
         characters = characters,
         fields = self:GetVisibleFields(page.id, overrides),
         GetFieldVisible = function(_, field) return self:GetFieldVisible(page.id, field, overrides) end,
+        viewMode = self:GetPageViewMode(page.id, page.viewModes),
         scope = scope,
         scopeDefinition = scopeDefinition,
         SetScope = function(_, scopeID) return self:SetPageScope(page.id, scopeID) end,
@@ -2396,6 +2431,15 @@ local function RefreshSettings(parent)
         local fieldPage = parent.displayFieldsPageID and AccountView._pages[parent.displayFieldsPageID]
         if fieldPage and #fieldPage.fields > 0 then
             Heading(fieldPage.title)
+            if fieldPage.viewModes then
+                local viewModeOptions = {}
+                for _, mode in ipairs(fieldPage.viewModes) do
+                    viewModeOptions[#viewModeOptions + 1] = { value = mode.id, label = mode.title }
+                end
+                Dropdown("矩阵方向", AccountView:GetPageViewMode(fieldPage.id, fieldPage.viewModes), viewModeOptions, function(mode)
+                    AccountView:SetPageViewMode(fieldPage.id, mode)
+                end)
+            end
             for _, field in ipairs(fieldPage.fields) do
                 Check("主表 · " .. field.title, AccountView:GetFieldVisible(fieldPage.id, field), function(checked) AccountView:SetFieldVisible(fieldPage.id, field.id, checked) end)
                 if fieldPage.previewEnabled and type(fieldPage.SetPreviewFieldVisible) == "function" then

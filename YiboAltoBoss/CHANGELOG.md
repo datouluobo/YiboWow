@@ -1,5 +1,19 @@
 # YiboAltoBoss 更新日志 / Changelog
 
+## v2.3
+
+### 中文
+
+- 账号矩阵新增“角色为行 / 角色为列”方向切换，并由 Core 统一保存设置与刷新页面。
+- 转置视图按 Boss、行动、位面和同一角色列切片计算宽度；切换后立即重排并在必要时分页。
+- 角色列按当前可见角色名在四至六字间自适应；跨服查看时服务器名显示为第二行，且不会覆盖相邻列。
+
+### English
+
+- Added a Core-managed “characters as rows / characters as columns” matrix direction setting.
+- The transposed view measures Boss, Action, Phase, and one consistent character-column slice together; it reflows immediately and paginates only when needed.
+- Character columns now adapt to visible names from four to six CJK glyphs. In the all-realms scope, realm names appear on a second line without overlapping adjacent columns.
+
 ## v2.2.1
 
 ### 中文

@@ -112,26 +112,39 @@ function Theme:GetCharacterHeaderHeight(context)
     return context and context.scope == "all" and self.Table.characterHeaderHeight or self.Table.headerHeight
 end
 
-function Theme:GetCharacterMatrixColumnWidth(context)
-    -- The header must show a complete four-character display name.  This is
-    -- deliberately measured at runtime because WoW's CJK glyph rasterization
-    -- is not equivalent to a hard-coded pixel guess. Realm text is a
-    -- secondary line in all-realm scope and does not narrow the name column.
-    return math.ceil(
-        self:MeasureText(self.Font.assist, "字字字字")
-        + self.Table.cellInset * 2
-        + self.Table.iconTextRasterTolerance
-    )
+function Theme:GetCharacterMatrixColumnWidth(context, characters)
+    -- Character names are player-entered data, not a fixed-width field. Use
+    -- the visible roster between a compact four-CJK-glyph floor and the
+    -- supported six-glyph ceiling. Realm text is a secondary line in
+    -- all-realm scope and does not widen a character-status column.
+    local minimum = self:MeasureText(self.Font.assist, "字字字字")
+    local maximum = self:MeasureText(self.Font.assist, "字字字字字字")
+    local identity = minimum
+    for _, character in ipairs(characters or (context and context.characters) or {}) do
+        local name = tostring(character and character.name or "未知角色")
+        identity = math.max(identity, math.min(maximum, self:MeasureText(self.Font.assist, name)))
+        -- In the cross-realm projection the realm is rendered on the second
+        -- line. Reserve enough of the same 4–6 glyph budget for that smaller
+        -- label, so it cannot paint into the adjacent character column.
+        if context and context.scope == "all" then
+            local realm = tostring(character and character.realm or "未知服务器")
+            identity = math.max(identity, math.min(maximum, self:MeasureText(self.Font.meta, realm)))
+        end
+    end
+    return math.ceil(identity + self.Table.cellInset * 2 + self.Table.iconTextRasterTolerance)
 end
 
 -- A row-oriented identity column has one semantic measure across every page.
 -- Plugins may request the icon intent, but never add their own icon/padding
 -- compensation around this value.
 function Theme:GetCharacterRowHeaderWidth(withProfessionIcon, context, characters)
-    local identity = self:MeasureText(self.Font.body, "字字字字")
-    if context and context.scope == "all" then
-        for _, character in ipairs(characters or context.characters or {}) do
-            local name = tostring(character and character.name or "未知角色")
+    local minimum = self:MeasureText(self.Font.body, "字字字字")
+    local maximum = self:MeasureText(self.Font.body, "字字字字字字")
+    local identity = minimum
+    for _, character in ipairs(characters or (context and context.characters) or {}) do
+        local name = tostring(character and character.name or "未知角色")
+        identity = math.max(identity, math.min(maximum, self:MeasureText(self.Font.body, name)))
+        if context and context.scope == "all" then
             local realm = tostring(character and character.realm or "未知服务器")
             identity = math.max(self:MeasureText(self.Font.body, identity), self:MeasureText(self.Font.body, name .. "-" .. realm))
         end

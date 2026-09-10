@@ -3,7 +3,9 @@ local Theme = _G.YiboCore.UITheme
 local C = Theme.Colors
 
 local BOSS_WIDTH, ACTION_WIDTH, PHASE_WIDTH = 88, 88, 72
-local CHARACTER_MIN_WIDTH, CHARACTER_MAX_WIDTH = Theme:GetCharacterMatrixColumnWidth(), Theme:GetCharacterMatrixColumnWidth()
+-- The shared width uses the live roster between four and six CJK glyphs, so
+-- pooled cells cannot cause header overlap when the matrix direction changes.
+local CHARACTER_MIN_WIDTH = Theme:GetCharacterMatrixColumnWidth()
 local HEADER_H, COMPACT_HEADER_H, ROW_H, CELL_H = Theme.Table.groupHeight, Theme.Table.headerHeight, Theme.Table.rowHeight, 24
 local GROUP_GAP = 2
 local FIXED_CELL = { 0.025, 0.145, 0.16, 0.98 }
@@ -62,7 +64,7 @@ end
 
 local function GetCharacterColumnMetrics(key, context, resolvedWidth)
     local titleFont = Theme.Font.assist
-    return resolvedWidth or CHARACTER_MAX_WIDTH, titleFont
+    return resolvedWidth or Theme:GetCharacterMatrixColumnWidth(context), titleFont
 end
 
 local function ScopeRealm(scope)
@@ -91,6 +93,17 @@ local function GetCharacterRowWidth(keys, context)
     -- A long realm name may widen the identity column, but must not turn the
     -- boss grid into a mostly-empty character label strip.
     return math.min(300, width)
+end
+
+-- In the transposed layout this is the frozen Boss identity column, not a
+-- compact data column. Measure the current target names so Chinese labels
+-- remain fully legible instead of inheriting the 88px status-cell width.
+local function GetBossRowLabelWidth(bosses)
+    local width = Theme:MeasureText(Theme.Font.body, "Boss / 目标")
+    for _, boss in ipairs(bosses or {}) do
+        width = math.max(width, Theme:MeasureText(Theme.Font.body, boss.name or ""))
+    end
+    return math.ceil(width + Theme.Table.cellPadding * 2 + Theme.Table.iconTextRasterTolerance)
 end
 
 local function FormatDuration(seconds)
@@ -390,7 +403,7 @@ local function SetStatus(cell, status, key, boss)
     cell:SetScript("OnClick", function() YAB.ToggleBossKill(key, boss.key) end)
 end
 
-local function RefreshHeaders(instance, context, keys, showAction, showPhase, showKills)
+local function RefreshHeaders(instance, context, keys, showAction, showPhase, showKills, bossNameWidth)
     local x, index = 0, 0
     local headerHeight = GetHeaderHeight(context)
     instance.currentColumnX = nil
@@ -408,7 +421,7 @@ local function RefreshHeaders(instance, context, keys, showAction, showPhase, sh
         header:Show(); x = x + width
         return header
     end
-    Place("Boss / 目标", BOSS_WIDTH, nil, nil, true)
+    Place("Boss / 目标", bossNameWidth, nil, nil, true)
     if showAction then Place("行动", ACTION_WIDTH, nil, nil, true) end
     if showPhase then Place("位面", PHASE_WIDTH, nil, nil, true) end
     instance.fixedWidth = x
@@ -464,14 +477,15 @@ local function RefreshCurrentColumnOutline(instance, bosses, showKills)
     Theme:UpdateCurrentCharacterColumnOutline(outline, instance.header, instance.scroll, instance.currentColumnX, instance.currentColumnWidth or CHARACTER_MIN_WIDTH, true)
 end
 
--- Kept as a migration reference only.  The registered renderer below uses
--- character rows and stable Boss columns.
+-- Transposed matrix: Bosses stay on rows while Core paginates character
+-- columns as one consistent header/data slice.
 local function RefreshAccountPageByCharacterColumns(instance, context)
     local preview = context.preview == true
     local allKeys, bosses = YAB.GetAccountCharacterKeys(context), YAB.GetBossList()
     local showKills = context:GetFieldVisible("kills")
     local showAction = context:GetFieldVisible("action")
     local showPhase = context:GetFieldVisible("phase")
+    local bossNameWidth = GetBossRowLabelWidth(bosses)
     -- Core's title bar and shared scope bar already identify this view and its
     -- active server range.  Keeping a second page title consumed a full blank
     -- row between the scope controls and matrix.
@@ -490,7 +504,7 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
     instance.header:SetPoint("TOPRIGHT", -inset.right, matrixTop)
     instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs)
     instance.scroll:SetPoint("BOTTOMRIGHT", -inset.right, inset.bottom)
-    local fixedWidth = BOSS_WIDTH + (showAction and ACTION_WIDTH or 0) + (showPhase and PHASE_WIDTH or 0) + (showKills and GROUP_GAP or 0)
+    local fixedWidth = bossNameWidth + (showAction and ACTION_WIDTH or 0) + (showPhase and PHASE_WIDTH or 0) + (showKills and GROUP_GAP or 0)
     -- Core has already measured the complete roster and selected this pass's
     -- final surface width.  Header anchors may still report the previous page
     -- width immediately after that resize, which used to make one extra
@@ -503,7 +517,7 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
     instance.characterColumnWidth = characterWidth
     local keys, pageInfo = _G.YiboCore.AccountView:GetColumnPage("alto-boss", "characters", allKeys, availableWidth, fixedWidth, instance.characterColumnWidth, YAB.GetCurrentCharKey and YAB.GetCurrentCharKey() or nil)
     _G.YiboCore.AccountView:UpdateColumnPager(instance, "alto-boss", "characters", pageInfo, instance.header, "角色")
-    RefreshHeaders(instance, context, keys, showAction, showPhase, showKills)
+    RefreshHeaders(instance, context, keys, showAction, showPhase, showKills, bossNameWidth)
 
     for rowIndex, boss in ipairs(bosses) do
         local row = GetRow(instance, rowIndex)
@@ -514,7 +528,7 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
         -- The frozen boss/action segment is still part of this data row.
         -- Give it the same parity tone instead of a single flat slab.
         row.fixedBackground:SetColorTexture(rowTone[1], rowTone[2], rowTone[3], rowTone[4] or 0.88)
-        local columnWidths = { { width = BOSS_WIDTH } }
+        local columnWidths = { { width = bossNameWidth } }
         if showAction then columnWidths[#columnWidths + 1] = { width = ACTION_WIDTH } end
         if showPhase then columnWidths[#columnWidths + 1] = { width = PHASE_WIDTH } end
         for _ = 1, #keys do columnWidths[#columnWidths + 1] = { width = instance.characterColumnWidth } end
@@ -525,7 +539,7 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
         row.groupGap:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", instance.fixedWidth, 0)
         row.groupGap:SetShown(showKills)
         local x = 0
-        row.name:ClearAllPoints(); row.name:SetPoint("LEFT", row, "LEFT", 8, 0); row.name:SetText(boss.name); x = x + BOSS_WIDTH
+        row.name:ClearAllPoints(); row.name:SetPoint("LEFT", row, "LEFT", Theme.Table.cellPadding, 0); row.name:SetWidth(Theme:GetTableCellContentWidth(bossNameWidth)); row.name:SetText(boss.name); x = x + bossNameWidth
 
         row.action:ClearAllPoints(); row.action:SetShown(showAction)
         if showAction then
@@ -573,9 +587,9 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
     RefreshCurrentColumnOutline(instance, bosses, showKills)
 end
 
--- Boss weekly is intentionally character-row oriented.  Bosses are the
--- stable comparison columns; character count therefore grows vertically and
--- never turns the matrix into a screen-wide roster strip.
+-- Default matrix: characters are rows and Bosses are the stable comparison
+-- columns. The alternate, transposed arrangement is selected in Core's
+-- display settings above.
 local function RefreshBossColumnHeaders(instance, bosses, showBossColumns, characterWidth)
     local x, index = 0, 0
     -- Character identity lives in row headers for this view. Its table header
@@ -602,6 +616,9 @@ local function RefreshBossColumnHeaders(instance, bosses, showBossColumns, chara
 end
 
 function YAB.RefreshAccountPage(instance, context)
+    if context.viewMode == "character-columns" then
+        return RefreshAccountPageByCharacterColumns(instance, context)
+    end
     local preview = context.preview == true
     local keys, bosses = YAB.GetAccountCharacterKeys(context), YAB.GetBossList()
     local showKills = context:GetFieldVisible("kills")
@@ -705,7 +722,7 @@ end
 
 local function GetMatrixSize(context)
     local keys, bosses = YAB.GetAccountCharacterKeys(context), YAB.GetBossList()
-    local fixedWidth = BOSS_WIDTH
+    local fixedWidth = GetBossRowLabelWidth(bosses)
         + (context:GetFieldVisible("action") and ACTION_WIDTH or 0)
         + (context:GetFieldVisible("phase") and PHASE_WIDTH or 0)
         + (context:GetFieldVisible("kills") and GROUP_GAP or 0)
@@ -724,6 +741,23 @@ function YAB.GetAccountSurfaceMetrics(context)
     local bosses = YAB.GetBossList()
     local keys = YAB.GetAccountCharacterKeys(context) or {}
     local inset = Theme:GetMatrixInsets(context and context.preview)
+    if context and context.viewMode == "character-columns" then
+        local matrixWidth = GetMatrixSize(context)
+        local fixedWidth = GetBossRowLabelWidth(bosses)
+            + (context:GetFieldVisible("action") and ACTION_WIDTH or 0)
+            + (context:GetFieldVisible("phase") and PHASE_WIDTH or 0)
+            + (context:GetFieldVisible("kills") and GROUP_GAP or 0)
+        local characterWidth = Theme:GetCharacterMatrixColumnWidth(context)
+        return {
+            minContentWidth = math.max(360, fixedWidth + characterWidth + inset.left + inset.right),
+            naturalContentWidth = matrixWidth + inset.left + inset.right,
+            minContentHeight = inset.top + GetHeaderHeight(context) + Theme.Space.xs + ROW_H + inset.bottom,
+            naturalContentHeight = inset.top + GetHeaderHeight(context) + Theme.Space.xs + math.max(1, #bosses) * ROW_H + inset.bottom,
+            fixedLeftWidth = fixedWidth,
+            fixedTopHeight = GetHeaderHeight(context),
+            horizontalOverflow = "paginate", verticalOverflow = "content",
+        }
+    end
     local fixedWidth = Theme:GetCharacterRowHeaderWidth(true, context, context.characters)
     local bossWidth = 0
     local showBossColumns = context:GetFieldVisible("kills") or context:GetFieldVisible("action") or context:GetFieldVisible("phase")
