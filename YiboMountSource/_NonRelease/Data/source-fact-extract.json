@@ -1,0 +1,9660 @@
+{
+  "schemaVersion": 1,
+  "purpose": "offline numeric game-fact research; not runtime data",
+  "mountCount": 475,
+  "mounts": [
+    {
+      "spellID": 458,
+      "hints": [
+        {
+          "itemIDs": [
+            5656
+          ],
+          "npcIDs": [
+            4885
+          ]
+        },
+        {
+          "itemIDs": [
+            5656
+          ],
+          "npcIDs": [
+            43694
+          ]
+        },
+        {
+          "itemIDs": [
+            5656
+          ],
+          "npcIDs": [
+            384
+          ]
+        },
+        {
+          "itemIDs": [
+            5656
+          ],
+          "npcIDs": [
+            1460
+          ]
+        },
+        {
+          "itemIDs": [
+            5656
+          ],
+          "npcIDs": [
+            2357
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 459,
+      "hints": [
+        {
+          "itemIDs": [
+            1134
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 468,
+      "hints": [
+        {
+          "itemIDs": [
+            901
+          ]
+        },
+        {
+          "itemIDs": [
+            2415
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 470,
+      "hints": [
+        {
+          "itemIDs": [
+            2411
+          ],
+          "npcIDs": [
+            43694
+          ]
+        },
+        {
+          "itemIDs": [
+            2411
+          ],
+          "npcIDs": [
+            1460
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 472,
+      "hints": [
+        {
+          "itemIDs": [
+            2414
+          ],
+          "npcIDs": [
+            4885
+          ]
+        },
+        {
+          "itemIDs": [
+            2414
+          ],
+          "npcIDs": [
+            43694
+          ]
+        },
+        {
+          "itemIDs": [
+            2414
+          ],
+          "npcIDs": [
+            384
+          ]
+        },
+        {
+          "itemIDs": [
+            2414
+          ],
+          "npcIDs": [
+            1460
+          ]
+        },
+        {
+          "itemIDs": [
+            2414
+          ],
+          "npcIDs": [
+            2357
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 578,
+      "hints": [
+        {
+          "itemIDs": [
+            1041
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 579,
+      "hints": [
+        {
+          "itemIDs": [
+            5663
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 580,
+      "hints": [
+        {
+          "itemIDs": [
+            1132
+          ],
+          "npcIDs": [
+            3362
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 581,
+      "hints": [
+        {
+          "itemIDs": [
+            1133
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 5784,
+      "hints": [
+        {
+          "questIDs": [
+            4490
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 6648,
+      "hints": [
+        {
+          "itemIDs": [
+            5655
+          ],
+          "npcIDs": [
+            4885
+          ]
+        },
+        {
+          "itemIDs": [
+            5655
+          ],
+          "npcIDs": [
+            43694
+          ]
+        },
+        {
+          "itemIDs": [
+            5655
+          ],
+          "npcIDs": [
+            384
+          ]
+        },
+        {
+          "itemIDs": [
+            5655
+          ],
+          "npcIDs": [
+            1460
+          ]
+        },
+        {
+          "itemIDs": [
+            5655
+          ],
+          "npcIDs": [
+            2357
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 6653,
+      "hints": [
+        {
+          "itemIDs": [
+            5665
+          ],
+          "npcIDs": [
+            3362
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 6654,
+      "hints": [
+        {
+          "itemIDs": [
+            5668
+          ],
+          "npcIDs": [
+            3362
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 6777,
+      "hints": [
+        {
+          "itemIDs": [
+            5864
+          ],
+          "npcIDs": [
+            1261
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 6896,
+      "hints": [
+        {
+          "itemIDs": [
+            5874
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 6898,
+      "hints": [
+        {
+          "itemIDs": [
+            5873
+          ],
+          "npcIDs": [
+            1261
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 6899,
+      "hints": [
+        {
+          "itemIDs": [
+            5872
+          ],
+          "npcIDs": [
+            1261
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 8394,
+      "hints": [
+        {
+          "itemIDs": [
+            8631
+          ],
+          "npcIDs": [
+            4730
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 8395,
+      "hints": [
+        {
+          "itemIDs": [
+            8588
+          ],
+          "npcIDs": [
+            7952
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 8980,
+      "hints": [
+        {
+          "itemIDs": [
+            8583
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 10789,
+      "hints": [
+        {
+          "itemIDs": [
+            8632
+          ],
+          "npcIDs": [
+            4730
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 10790,
+      "hints": [
+        {
+          "itemIDs": [
+            8630
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 10793,
+      "hints": [
+        {
+          "itemIDs": [
+            8629
+          ],
+          "npcIDs": [
+            4730
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 10795,
+      "hints": [
+        {
+          "itemIDs": [
+            8589
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 10796,
+      "hints": [
+        {
+          "itemIDs": [
+            8591
+          ],
+          "npcIDs": [
+            7952
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 10799,
+      "hints": [
+        {
+          "itemIDs": [
+            8592
+          ],
+          "npcIDs": [
+            7952
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 10873,
+      "hints": [
+        {
+          "itemIDs": [
+            8563
+          ],
+          "npcIDs": [
+            7955
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 10969,
+      "hints": [
+        {
+          "itemIDs": [
+            8595
+          ],
+          "npcIDs": [
+            7955
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 13819,
+      "hints": [
+        {
+          "questIDs": [
+            1661
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 15779,
+      "hints": [
+        {
+          "itemIDs": [
+            13326
+          ],
+          "npcIDs": [
+            7955
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 16056,
+      "hints": [
+        {
+          "itemIDs": [
+            12302
+          ],
+          "npcIDs": [
+            4730
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 16080,
+      "hints": [
+        {
+          "itemIDs": [
+            12330
+          ],
+          "npcIDs": [
+            3362
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 16082,
+      "hints": [
+        {
+          "itemIDs": [
+            12354
+          ],
+          "npcIDs": [
+            6749
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 16083,
+      "hints": [
+        {
+          "itemIDs": [
+            12353
+          ],
+          "npcIDs": [
+            6749
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 16084,
+      "hints": [
+        {
+          "itemIDs": [
+            8586
+          ],
+          "npcIDs": [
+            7952
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 17229,
+      "hints": [
+        {
+          "itemIDs": [
+            13086
+          ],
+          "questIDs": [
+            29034
+          ]
+        },
+        {
+          "itemIDs": [
+            13086
+          ],
+          "npcIDs": [
+            10618
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 17450,
+      "hints": [
+        {
+          "itemIDs": [
+            13317
+          ],
+          "npcIDs": [
+            7952
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 17453,
+      "hints": [
+        {
+          "itemIDs": [
+            13321
+          ],
+          "npcIDs": [
+            7955
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 17454,
+      "hints": [
+        {
+          "itemIDs": [
+            13322
+          ],
+          "npcIDs": [
+            7955
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 17459,
+      "hints": [
+        {
+          "itemIDs": [
+            13327
+          ],
+          "npcIDs": [
+            7955
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 17460,
+      "hints": [
+        {
+          "itemIDs": [
+            13329
+          ],
+          "npcIDs": [
+            1261
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 17461,
+      "hints": [
+        {
+          "itemIDs": [
+            13328
+          ],
+          "npcIDs": [
+            1261
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 17462,
+      "hints": [
+        {
+          "itemIDs": [
+            13331
+          ],
+          "npcIDs": [
+            4731
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 17463,
+      "hints": [
+        {
+          "itemIDs": [
+            13332
+          ],
+          "npcIDs": [
+            4731
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 17464,
+      "hints": [
+        {
+          "itemIDs": [
+            13333
+          ],
+          "npcIDs": [
+            4731
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 17465,
+      "hints": [
+        {
+          "itemIDs": [
+            13334
+          ],
+          "npcIDs": [
+            4731
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 17481,
+      "hints": [
+        {
+          "itemIDs": [
+            13335
+          ],
+          "instanceIDs": [
+            236
+          ],
+          "encounterIDs": [
+            456
+          ],
+          "npcIDs": [
+            45412
+          ]
+        },
+        {
+          "itemIDs": [
+            13335
+          ]
+        },
+        {
+          "itemIDs": [
+            13335
+          ],
+          "instanceIDs": [
+            1292
+          ],
+          "encounterIDs": [
+            456
+          ],
+          "npcIDs": [
+            45412
+          ]
+        },
+        {
+          "itemIDs": [
+            13335
+          ],
+          "instanceIDs": [
+            236
+          ],
+          "mapIDs": [
+            318
+          ],
+          "encounterIDs": [
+            456
+          ],
+          "npcIDs": [
+            10440
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 18363,
+      "hints": [
+        {
+          "itemIDs": [
+            14062
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 18989,
+      "hints": [
+        {
+          "itemIDs": [
+            15277
+          ],
+          "npcIDs": [
+            3685
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 18990,
+      "hints": [
+        {
+          "itemIDs": [
+            15290
+          ],
+          "npcIDs": [
+            3685
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 18991,
+      "hints": [
+        {
+          "itemIDs": [
+            15292
+          ],
+          "npcIDs": [
+            3685
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 18992,
+      "hints": [
+        {
+          "itemIDs": [
+            15293
+          ],
+          "npcIDs": [
+            3685
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 22717,
+      "hints": [
+        {
+          "itemIDs": [
+            29468
+          ],
+          "npcIDs": [
+            12783
+          ]
+        },
+        {
+          "itemIDs": [
+            18241
+          ],
+          "npcIDs": [
+            12783
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 22718,
+      "hints": [
+        {
+          "itemIDs": [
+            29466
+          ],
+          "npcIDs": [
+            12796
+          ]
+        },
+        {
+          "itemIDs": [
+            18247
+          ],
+          "npcIDs": [
+            12796
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 22719,
+      "hints": [
+        {
+          "itemIDs": [
+            29465
+          ],
+          "npcIDs": [
+            12783
+          ]
+        },
+        {
+          "itemIDs": [
+            18243
+          ],
+          "npcIDs": [
+            12783
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 22720,
+      "hints": [
+        {
+          "itemIDs": [
+            29467
+          ],
+          "npcIDs": [
+            12783
+          ]
+        },
+        {
+          "itemIDs": [
+            18244
+          ],
+          "npcIDs": [
+            12783
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 22721,
+      "hints": [
+        {
+          "itemIDs": [
+            29472
+          ],
+          "npcIDs": [
+            12796
+          ]
+        },
+        {
+          "itemIDs": [
+            18246
+          ],
+          "npcIDs": [
+            12796
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 22722,
+      "hints": [
+        {
+          "itemIDs": [
+            29470
+          ],
+          "npcIDs": [
+            12796
+          ]
+        },
+        {
+          "itemIDs": [
+            18248
+          ],
+          "npcIDs": [
+            12796
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 22723,
+      "hints": [
+        {
+          "itemIDs": [
+            29471
+          ],
+          "npcIDs": [
+            12783
+          ]
+        },
+        {
+          "itemIDs": [
+            18242
+          ],
+          "npcIDs": [
+            12783
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 22724,
+      "hints": [
+        {
+          "itemIDs": [
+            29469
+          ],
+          "npcIDs": [
+            12796
+          ]
+        },
+        {
+          "itemIDs": [
+            18245
+          ],
+          "npcIDs": [
+            12796
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23161,
+      "hints": [
+        {
+          "instanceIDs": [
+            230
+          ],
+          "mapIDs": [
+            234,
+            236,
+            237,
+            238,
+            240
+          ],
+          "questIDs": [
+            7631
+          ]
+        },
+        {
+          "instanceIDs": [
+            230
+          ],
+          "mapIDs": [
+            234,
+            240
+          ],
+          "questIDs": [
+            7631
+          ]
+        },
+        {
+          "instanceIDs": [
+            230
+          ],
+          "mapIDs": [
+            236,
+            237,
+            238,
+            240
+          ],
+          "questIDs": [
+            7631
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23214,
+      "hints": [
+        {
+          "instanceIDs": [
+            246
+          ],
+          "mapIDs": [
+            306,
+            307,
+            308,
+            309
+          ],
+          "questIDs": [
+            7647
+          ]
+        },
+        {
+          "instanceIDs": [
+            246
+          ],
+          "mapIDs": [
+            477,
+            478,
+            479
+          ],
+          "questIDs": [
+            7647
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23219,
+      "hints": [
+        {
+          "itemIDs": [
+            18767
+          ],
+          "npcIDs": [
+            4730
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23221,
+      "hints": [
+        {
+          "itemIDs": [
+            18766
+          ],
+          "npcIDs": [
+            4730
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23222,
+      "hints": [
+        {
+          "itemIDs": [
+            18774
+          ],
+          "npcIDs": [
+            7955
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23223,
+      "hints": [
+        {
+          "itemIDs": [
+            18773
+          ],
+          "npcIDs": [
+            7955
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23225,
+      "hints": [
+        {
+          "itemIDs": [
+            18772
+          ],
+          "npcIDs": [
+            7955
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23227,
+      "hints": [
+        {
+          "itemIDs": [
+            18776
+          ],
+          "npcIDs": [
+            4885
+          ]
+        },
+        {
+          "itemIDs": [
+            18776
+          ],
+          "npcIDs": [
+            43694
+          ]
+        },
+        {
+          "itemIDs": [
+            18776
+          ],
+          "npcIDs": [
+            384
+          ]
+        },
+        {
+          "itemIDs": [
+            18776
+          ],
+          "npcIDs": [
+            2357
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23228,
+      "hints": [
+        {
+          "itemIDs": [
+            18778
+          ],
+          "npcIDs": [
+            4885
+          ]
+        },
+        {
+          "itemIDs": [
+            18778
+          ],
+          "npcIDs": [
+            43694
+          ]
+        },
+        {
+          "itemIDs": [
+            18778
+          ],
+          "npcIDs": [
+            384
+          ]
+        },
+        {
+          "itemIDs": [
+            18778
+          ],
+          "npcIDs": [
+            2357
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23229,
+      "hints": [
+        {
+          "itemIDs": [
+            18777
+          ],
+          "npcIDs": [
+            4885
+          ]
+        },
+        {
+          "itemIDs": [
+            18777
+          ],
+          "npcIDs": [
+            43694
+          ]
+        },
+        {
+          "itemIDs": [
+            18777
+          ],
+          "npcIDs": [
+            384
+          ]
+        },
+        {
+          "itemIDs": [
+            18777
+          ],
+          "npcIDs": [
+            2357
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23238,
+      "hints": [
+        {
+          "itemIDs": [
+            18786
+          ],
+          "npcIDs": [
+            1261
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23239,
+      "hints": [
+        {
+          "itemIDs": [
+            18787
+          ],
+          "npcIDs": [
+            1261
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23240,
+      "hints": [
+        {
+          "itemIDs": [
+            18785
+          ],
+          "npcIDs": [
+            1261
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23241,
+      "hints": [
+        {
+          "itemIDs": [
+            18788
+          ],
+          "npcIDs": [
+            7952
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23242,
+      "hints": [
+        {
+          "itemIDs": [
+            18789
+          ],
+          "npcIDs": [
+            7952
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23243,
+      "hints": [
+        {
+          "itemIDs": [
+            18790
+          ],
+          "npcIDs": [
+            7952
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23246,
+      "hints": [
+        {
+          "itemIDs": [
+            18791
+          ],
+          "npcIDs": [
+            4731
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23247,
+      "hints": [
+        {
+          "itemIDs": [
+            18793
+          ],
+          "npcIDs": [
+            3685
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23248,
+      "hints": [
+        {
+          "itemIDs": [
+            18795
+          ],
+          "npcIDs": [
+            3685
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23249,
+      "hints": [
+        {
+          "itemIDs": [
+            18794
+          ],
+          "npcIDs": [
+            3685
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23250,
+      "hints": [
+        {
+          "itemIDs": [
+            18796
+          ],
+          "npcIDs": [
+            3362
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23251,
+      "hints": [
+        {
+          "itemIDs": [
+            18797
+          ],
+          "npcIDs": [
+            3362
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23252,
+      "hints": [
+        {
+          "itemIDs": [
+            18798
+          ],
+          "npcIDs": [
+            3362
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23338,
+      "hints": [
+        {
+          "itemIDs": [
+            18902
+          ],
+          "npcIDs": [
+            4730
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23509,
+      "hints": [
+        {
+          "itemIDs": [
+            19029
+          ],
+          "npcIDs": [
+            13218
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 23510,
+      "hints": [
+        {
+          "itemIDs": [
+            19030
+          ],
+          "npcIDs": [
+            13216
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 24242,
+      "hints": [
+        {
+          "itemIDs": [
+            19872
+          ],
+          "instanceIDs": [
+            76
+          ],
+          "mapIDs": [
+            233,
+            337
+          ],
+          "npcIDs": [
+            11382
+          ]
+        },
+        {
+          "itemIDs": [
+            19872
+          ]
+        },
+        {
+          "itemIDs": [
+            19872
+          ],
+          "instanceIDs": [
+            76
+          ],
+          "mapIDs": [
+            233
+          ],
+          "npcIDs": [
+            11382
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 24252,
+      "hints": [
+        {
+          "itemIDs": [
+            19902
+          ],
+          "instanceIDs": [
+            76
+          ],
+          "mapIDs": [
+            233,
+            337
+          ],
+          "npcIDs": [
+            14509
+          ]
+        },
+        {
+          "itemIDs": [
+            19902
+          ]
+        },
+        {
+          "itemIDs": [
+            19902
+          ],
+          "instanceIDs": [
+            76
+          ],
+          "mapIDs": [
+            233
+          ],
+          "npcIDs": [
+            14509
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 25953,
+      "hints": [
+        {
+          "itemIDs": [
+            21218
+          ],
+          "instanceIDs": [
+            744
+          ],
+          "mapIDs": [
+            319,
+            320,
+            321
+          ]
+        },
+        {
+          "itemIDs": [
+            21218
+          ],
+          "instanceIDs": [
+            744
+          ],
+          "mapIDs": [
+            319,
+            321
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 26054,
+      "hints": [
+        {
+          "itemIDs": [
+            21321
+          ],
+          "instanceIDs": [
+            744
+          ],
+          "mapIDs": [
+            319,
+            320,
+            321
+          ]
+        },
+        {
+          "itemIDs": [
+            21321
+          ],
+          "instanceIDs": [
+            744
+          ],
+          "mapIDs": [
+            319,
+            321
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 26055,
+      "hints": [
+        {
+          "itemIDs": [
+            21324
+          ],
+          "instanceIDs": [
+            744
+          ],
+          "mapIDs": [
+            319,
+            320,
+            321
+          ]
+        },
+        {
+          "itemIDs": [
+            21324
+          ],
+          "instanceIDs": [
+            744
+          ],
+          "mapIDs": [
+            319,
+            321
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 26056,
+      "hints": [
+        {
+          "itemIDs": [
+            21323
+          ],
+          "instanceIDs": [
+            744
+          ],
+          "mapIDs": [
+            319,
+            320,
+            321
+          ]
+        },
+        {
+          "itemIDs": [
+            21323
+          ],
+          "instanceIDs": [
+            744
+          ],
+          "mapIDs": [
+            319,
+            321
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 26656,
+      "hints": [
+        {
+          "itemIDs": [
+            21176
+          ],
+          "questIDs": [
+            8743
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 30174,
+      "hints": [
+        {
+          "itemIDs": [
+            23720
+          ]
+        },
+        {
+          "itemIDs": [
+            103630
+          ]
+        },
+        {
+          "itemIDs": [
+            23720
+          ],
+          "npcIDs": [
+            85715
+          ]
+        },
+        {
+          "itemIDs": [
+            23720
+          ],
+          "npcIDs": [
+            81171
+          ]
+        },
+        {
+          "itemIDs": [
+            23720
+          ],
+          "npcIDs": [
+            234746
+          ]
+        },
+        {
+          "itemIDs": [
+            23720
+          ],
+          "npcIDs": [
+            268180
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 32235,
+      "hints": [
+        {
+          "itemIDs": [
+            25470
+          ],
+          "npcIDs": [
+            43768
+          ]
+        },
+        {
+          "itemIDs": [
+            25470
+          ],
+          "npcIDs": [
+            35101
+          ]
+        },
+        {
+          "itemIDs": [
+            25470
+          ],
+          "npcIDs": [
+            20510
+          ]
+        },
+        {
+          "itemIDs": [
+            25470
+          ],
+          "npcIDs": [
+            32216
+          ]
+        },
+        {
+          "itemIDs": [
+            25470
+          ],
+          "npcIDs": [
+            35131
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 32239,
+      "hints": [
+        {
+          "itemIDs": [
+            25471
+          ],
+          "npcIDs": [
+            43768
+          ]
+        },
+        {
+          "itemIDs": [
+            25471
+          ],
+          "npcIDs": [
+            35101
+          ]
+        },
+        {
+          "itemIDs": [
+            25471
+          ],
+          "npcIDs": [
+            20510
+          ]
+        },
+        {
+          "itemIDs": [
+            25471
+          ],
+          "npcIDs": [
+            32216
+          ]
+        },
+        {
+          "itemIDs": [
+            25471
+          ],
+          "npcIDs": [
+            35131
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 32240,
+      "hints": [
+        {
+          "itemIDs": [
+            25472
+          ],
+          "npcIDs": [
+            43768
+          ]
+        },
+        {
+          "itemIDs": [
+            25472
+          ],
+          "npcIDs": [
+            35101
+          ]
+        },
+        {
+          "itemIDs": [
+            25472
+          ],
+          "npcIDs": [
+            20510
+          ]
+        },
+        {
+          "itemIDs": [
+            25472
+          ],
+          "npcIDs": [
+            32216
+          ]
+        },
+        {
+          "itemIDs": [
+            25472
+          ],
+          "npcIDs": [
+            35131
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 32242,
+      "hints": [
+        {
+          "itemIDs": [
+            25473
+          ],
+          "npcIDs": [
+            43768
+          ]
+        },
+        {
+          "itemIDs": [
+            25473
+          ],
+          "npcIDs": [
+            35101
+          ]
+        },
+        {
+          "itemIDs": [
+            25473
+          ],
+          "npcIDs": [
+            20510
+          ]
+        },
+        {
+          "itemIDs": [
+            25473
+          ],
+          "npcIDs": [
+            32216
+          ]
+        },
+        {
+          "itemIDs": [
+            25473
+          ],
+          "npcIDs": [
+            35131
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 32243,
+      "hints": [
+        {
+          "itemIDs": [
+            25474
+          ],
+          "npcIDs": [
+            44918
+          ]
+        },
+        {
+          "itemIDs": [
+            25474
+          ],
+          "npcIDs": [
+            35099
+          ]
+        },
+        {
+          "itemIDs": [
+            25474
+          ],
+          "npcIDs": [
+            20494
+          ]
+        },
+        {
+          "itemIDs": [
+            25474
+          ],
+          "npcIDs": [
+            32216
+          ]
+        },
+        {
+          "itemIDs": [
+            25474
+          ],
+          "npcIDs": [
+            35132
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 32244,
+      "hints": [
+        {
+          "itemIDs": [
+            25475
+          ],
+          "npcIDs": [
+            44918
+          ]
+        },
+        {
+          "itemIDs": [
+            25475
+          ],
+          "npcIDs": [
+            35099
+          ]
+        },
+        {
+          "itemIDs": [
+            25475
+          ],
+          "npcIDs": [
+            20494
+          ]
+        },
+        {
+          "itemIDs": [
+            25475
+          ],
+          "npcIDs": [
+            32216
+          ]
+        },
+        {
+          "itemIDs": [
+            25475
+          ],
+          "npcIDs": [
+            35132
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 32245,
+      "hints": [
+        {
+          "itemIDs": [
+            25476
+          ],
+          "npcIDs": [
+            44918
+          ]
+        },
+        {
+          "itemIDs": [
+            25476
+          ],
+          "npcIDs": [
+            35099
+          ]
+        },
+        {
+          "itemIDs": [
+            25476
+          ],
+          "npcIDs": [
+            20494
+          ]
+        },
+        {
+          "itemIDs": [
+            25476
+          ],
+          "npcIDs": [
+            32216
+          ]
+        },
+        {
+          "itemIDs": [
+            25476
+          ],
+          "npcIDs": [
+            35132
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 32246,
+      "hints": [
+        {
+          "itemIDs": [
+            25477
+          ],
+          "npcIDs": [
+            44918
+          ]
+        },
+        {
+          "itemIDs": [
+            25477
+          ],
+          "npcIDs": [
+            35099
+          ]
+        },
+        {
+          "itemIDs": [
+            25477
+          ],
+          "npcIDs": [
+            20494
+          ]
+        },
+        {
+          "itemIDs": [
+            25477
+          ],
+          "npcIDs": [
+            32216
+          ]
+        },
+        {
+          "itemIDs": [
+            25477
+          ],
+          "npcIDs": [
+            35132
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 32289,
+      "hints": [
+        {
+          "itemIDs": [
+            25527
+          ],
+          "npcIDs": [
+            43768
+          ]
+        },
+        {
+          "itemIDs": [
+            25527
+          ],
+          "npcIDs": [
+            35101
+          ]
+        },
+        {
+          "itemIDs": [
+            25527
+          ],
+          "npcIDs": [
+            20510
+          ]
+        },
+        {
+          "itemIDs": [
+            25527
+          ],
+          "npcIDs": [
+            32216
+          ]
+        },
+        {
+          "itemIDs": [
+            25527
+          ],
+          "npcIDs": [
+            35131
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 32290,
+      "hints": [
+        {
+          "itemIDs": [
+            25528
+          ],
+          "npcIDs": [
+            43768
+          ]
+        },
+        {
+          "itemIDs": [
+            25528
+          ],
+          "npcIDs": [
+            35101
+          ]
+        },
+        {
+          "itemIDs": [
+            25528
+          ],
+          "npcIDs": [
+            20510
+          ]
+        },
+        {
+          "itemIDs": [
+            25528
+          ],
+          "npcIDs": [
+            32216
+          ]
+        },
+        {
+          "itemIDs": [
+            25528
+          ],
+          "npcIDs": [
+            35131
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 32292,
+      "hints": [
+        {
+          "itemIDs": [
+            25529
+          ],
+          "npcIDs": [
+            43768
+          ]
+        },
+        {
+          "itemIDs": [
+            25529
+          ],
+          "npcIDs": [
+            35101
+          ]
+        },
+        {
+          "itemIDs": [
+            25529
+          ],
+          "npcIDs": [
+            20510
+          ]
+        },
+        {
+          "itemIDs": [
+            25529
+          ],
+          "npcIDs": [
+            32216
+          ]
+        },
+        {
+          "itemIDs": [
+            25529
+          ],
+          "npcIDs": [
+            35131
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 32295,
+      "hints": [
+        {
+          "itemIDs": [
+            25531
+          ],
+          "npcIDs": [
+            44918
+          ]
+        },
+        {
+          "itemIDs": [
+            25531
+          ],
+          "npcIDs": [
+            35099
+          ]
+        },
+        {
+          "itemIDs": [
+            25531
+          ],
+          "npcIDs": [
+            20494
+          ]
+        },
+        {
+          "itemIDs": [
+            25531
+          ],
+          "npcIDs": [
+            32216
+          ]
+        },
+        {
+          "itemIDs": [
+            25531
+          ],
+          "npcIDs": [
+            35132
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 32296,
+      "hints": [
+        {
+          "itemIDs": [
+            25532
+          ],
+          "npcIDs": [
+            44918
+          ]
+        },
+        {
+          "itemIDs": [
+            25532
+          ],
+          "npcIDs": [
+            35099
+          ]
+        },
+        {
+          "itemIDs": [
+            25532
+          ],
+          "npcIDs": [
+            20494
+          ]
+        },
+        {
+          "itemIDs": [
+            25532
+          ],
+          "npcIDs": [
+            32216
+          ]
+        },
+        {
+          "itemIDs": [
+            25532
+          ],
+          "npcIDs": [
+            35132
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 32297,
+      "hints": [
+        {
+          "itemIDs": [
+            25533
+          ],
+          "npcIDs": [
+            44918
+          ]
+        },
+        {
+          "itemIDs": [
+            25533
+          ],
+          "npcIDs": [
+            35099
+          ]
+        },
+        {
+          "itemIDs": [
+            25533
+          ],
+          "npcIDs": [
+            20494
+          ]
+        },
+        {
+          "itemIDs": [
+            25533
+          ],
+          "npcIDs": [
+            32216
+          ]
+        },
+        {
+          "itemIDs": [
+            25533
+          ],
+          "npcIDs": [
+            35132
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 33660,
+      "hints": [
+        {
+          "itemIDs": [
+            28936
+          ],
+          "npcIDs": [
+            16264
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 34406,
+      "hints": [
+        {
+          "itemIDs": [
+            28481
+          ],
+          "npcIDs": [
+            17584
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 34767,
+      "hints": [
+        {
+          "questIDs": [
+            9737
+          ],
+          "mapIDs": [
+            317
+          ]
+        },
+        {
+          "questIDs": [
+            9737
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 34790,
+      "hints": [
+        {
+          "itemIDs": [
+            29228
+          ],
+          "npcIDs": [
+            21485
+          ]
+        },
+        {
+          "itemIDs": [
+            29228
+          ],
+          "npcIDs": [
+            21474
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 34795,
+      "hints": [
+        {
+          "itemIDs": [
+            28927
+          ],
+          "npcIDs": [
+            16264
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 34896,
+      "hints": [
+        {
+          "itemIDs": [
+            29102
+          ],
+          "npcIDs": [
+            20241
+          ]
+        },
+        {
+          "itemIDs": [
+            29227
+          ],
+          "npcIDs": [
+            20240
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 34897,
+      "hints": [
+        {
+          "itemIDs": [
+            29103
+          ],
+          "npcIDs": [
+            20241
+          ]
+        },
+        {
+          "itemIDs": [
+            29231
+          ],
+          "npcIDs": [
+            20240
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 34898,
+      "hints": [
+        {
+          "itemIDs": [
+            29104
+          ],
+          "npcIDs": [
+            20241
+          ]
+        },
+        {
+          "itemIDs": [
+            29229
+          ],
+          "npcIDs": [
+            20240
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 34899,
+      "hints": [
+        {
+          "itemIDs": [
+            29105
+          ],
+          "npcIDs": [
+            20241
+          ]
+        },
+        {
+          "itemIDs": [
+            29230
+          ],
+          "npcIDs": [
+            20240
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 35018,
+      "hints": [
+        {
+          "itemIDs": [
+            29222
+          ],
+          "npcIDs": [
+            16264
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 35020,
+      "hints": [
+        {
+          "itemIDs": [
+            29220
+          ],
+          "npcIDs": [
+            16264
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 35022,
+      "hints": [
+        {
+          "itemIDs": [
+            29221
+          ],
+          "npcIDs": [
+            16264
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 35025,
+      "hints": [
+        {
+          "itemIDs": [
+            29223
+          ],
+          "npcIDs": [
+            16264
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 35027,
+      "hints": [
+        {
+          "itemIDs": [
+            29224
+          ],
+          "npcIDs": [
+            16264
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 35028,
+      "hints": [
+        {
+          "itemIDs": [
+            34129
+          ],
+          "npcIDs": [
+            12796
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 35710,
+      "hints": [
+        {
+          "itemIDs": [
+            29744
+          ],
+          "npcIDs": [
+            17584
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 35711,
+      "hints": [
+        {
+          "itemIDs": [
+            29743
+          ],
+          "npcIDs": [
+            17584
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 35712,
+      "hints": [
+        {
+          "itemIDs": [
+            29746
+          ],
+          "npcIDs": [
+            17584
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 35713,
+      "hints": [
+        {
+          "itemIDs": [
+            29745
+          ],
+          "npcIDs": [
+            17584
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 35714,
+      "hints": [
+        {
+          "itemIDs": [
+            29747
+          ],
+          "npcIDs": [
+            17584
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 36702,
+      "hints": [
+        {
+          "itemIDs": [
+            30480
+          ],
+          "instanceIDs": [
+            745
+          ],
+          "mapIDs": [
+            350,
+            351,
+            352,
+            353,
+            354,
+            355,
+            356,
+            357,
+            358,
+            359,
+            360,
+            361,
+            362,
+            363,
+            364,
+            365,
+            366
+          ],
+          "encounterIDs": [
+            1553
+          ]
+        },
+        {
+          "itemIDs": [
+            30480
+          ]
+        },
+        {
+          "itemIDs": [
+            30480
+          ],
+          "instanceIDs": [
+            745
+          ],
+          "mapIDs": [
+            351,
+            352,
+            353,
+            354,
+            355,
+            356,
+            357,
+            358,
+            359,
+            360,
+            361,
+            362,
+            363,
+            364,
+            365,
+            366
+          ],
+          "encounterIDs": [
+            1553
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 37015,
+      "hints": [
+        {
+          "itemIDs": [
+            30609
+          ]
+        },
+        {
+          "itemIDs": [
+            30609
+          ],
+          "achievementIDs": [
+            15019
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 39315,
+      "hints": [
+        {
+          "itemIDs": [
+            31829
+          ],
+          "npcIDs": [
+            20241
+          ]
+        },
+        {
+          "itemIDs": [
+            31830
+          ],
+          "npcIDs": [
+            20240
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 39316,
+      "hints": [
+        {
+          "itemIDs": [
+            28915
+          ],
+          "npcIDs": [
+            21485
+          ]
+        },
+        {
+          "itemIDs": [
+            28915
+          ],
+          "npcIDs": [
+            21474
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 39317,
+      "hints": [
+        {
+          "itemIDs": [
+            31831
+          ],
+          "npcIDs": [
+            20241
+          ]
+        },
+        {
+          "itemIDs": [
+            31832
+          ],
+          "npcIDs": [
+            20240
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 39318,
+      "hints": [
+        {
+          "itemIDs": [
+            31833
+          ],
+          "npcIDs": [
+            20241
+          ]
+        },
+        {
+          "itemIDs": [
+            31834
+          ],
+          "npcIDs": [
+            20240
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 39319,
+      "hints": [
+        {
+          "itemIDs": [
+            31835
+          ],
+          "npcIDs": [
+            20241
+          ]
+        },
+        {
+          "itemIDs": [
+            31836
+          ],
+          "npcIDs": [
+            20240
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 39798,
+      "hints": [
+        {
+          "itemIDs": [
+            32314
+          ],
+          "npcIDs": [
+            23367
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 39800,
+      "hints": [
+        {
+          "itemIDs": [
+            32317
+          ],
+          "npcIDs": [
+            23367
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 39801,
+      "hints": [
+        {
+          "itemIDs": [
+            32316
+          ],
+          "npcIDs": [
+            23367
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 39802,
+      "hints": [
+        {
+          "itemIDs": [
+            32318
+          ],
+          "npcIDs": [
+            23367
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 39803,
+      "hints": [
+        {
+          "itemIDs": [
+            32319
+          ],
+          "npcIDs": [
+            23367
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 40192,
+      "hints": [
+        {
+          "itemIDs": [
+            32458
+          ],
+          "instanceIDs": [
+            749
+          ],
+          "encounterIDs": [
+            1576
+          ],
+          "npcIDs": [
+            19622
+          ]
+        },
+        {
+          "itemIDs": [
+            32458
+          ]
+        },
+        {
+          "itemIDs": [
+            32458
+          ],
+          "questIDs": [
+            47523
+          ]
+        },
+        {
+          "itemIDs": [
+            32458
+          ],
+          "npcIDs": [
+            19622,
+            157113
+          ],
+          "mapIDs": [
+            1553,
+            1554,
+            1555,
+            1556,
+            1557,
+            1558,
+            1559,
+            1561,
+            1563
+          ],
+          "encounterIDs": [
+            1576
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 41252,
+      "hints": [
+        {
+          "itemIDs": [
+            32768
+          ],
+          "instanceIDs": [
+            252
+          ],
+          "mapIDs": [
+            258,
+            259
+          ],
+          "encounterIDs": [
+            542
+          ],
+          "npcIDs": [
+            23035
+          ]
+        },
+        {
+          "itemIDs": [
+            32768
+          ]
+        },
+        {
+          "itemIDs": [
+            32768
+          ],
+          "instanceIDs": [
+            252
+          ],
+          "mapIDs": [
+            259
+          ],
+          "encounterIDs": [
+            542
+          ],
+          "npcIDs": [
+            23035
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 41513,
+      "hints": [
+        {
+          "itemIDs": [
+            32857
+          ],
+          "questIDs": [
+            11111
+          ]
+        },
+        {
+          "itemIDs": [
+            32857
+          ],
+          "npcIDs": [
+            23489
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 41514,
+      "hints": [
+        {
+          "itemIDs": [
+            32858
+          ],
+          "questIDs": [
+            11112
+          ]
+        },
+        {
+          "itemIDs": [
+            32858
+          ],
+          "npcIDs": [
+            23489
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 41515,
+      "hints": [
+        {
+          "itemIDs": [
+            32859
+          ],
+          "questIDs": [
+            11109
+          ]
+        },
+        {
+          "itemIDs": [
+            32859
+          ],
+          "npcIDs": [
+            23489
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 41516,
+      "hints": [
+        {
+          "itemIDs": [
+            32860
+          ],
+          "questIDs": [
+            11110
+          ]
+        },
+        {
+          "itemIDs": [
+            32860
+          ],
+          "npcIDs": [
+            23489
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 41517,
+      "hints": [
+        {
+          "itemIDs": [
+            32861
+          ],
+          "questIDs": [
+            11114
+          ]
+        },
+        {
+          "itemIDs": [
+            32861
+          ],
+          "npcIDs": [
+            23489
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 41518,
+      "hints": [
+        {
+          "itemIDs": [
+            32862
+          ],
+          "questIDs": [
+            11113
+          ]
+        },
+        {
+          "itemIDs": [
+            32862
+          ],
+          "npcIDs": [
+            23489
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 42776,
+      "hints": [
+        {
+          "itemIDs": [
+            49283
+          ]
+        },
+        {
+          "itemIDs": [
+            33224
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 42777,
+      "hints": [
+        {
+          "itemIDs": [
+            49284
+          ]
+        },
+        {
+          "itemIDs": [
+            33225
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 43688,
+      "hints": [
+        {
+          "itemIDs": [
+            33809
+          ],
+          "instanceIDs": [
+            77
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 43899,
+      "hints": [
+        {
+          "itemIDs": [
+            33976
+          ],
+          "npcIDs": [
+            24510
+          ]
+        },
+        {
+          "itemIDs": [
+            33976
+          ],
+          "npcIDs": [
+            24468
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 43900,
+      "hints": [
+        {
+          "itemIDs": [
+            33977
+          ],
+          "npcIDs": [
+            23872
+          ],
+          "mapIDs": [
+            242,
+            243
+          ]
+        },
+        {
+          "itemIDs": [
+            33977
+          ],
+          "npcIDs": [
+            24510
+          ]
+        },
+        {
+          "itemIDs": [
+            33977
+          ],
+          "npcIDs": [
+            24468
+          ]
+        },
+        {
+          "itemIDs": [
+            33977
+          ],
+          "npcIDs": [
+            23872
+          ],
+          "mapIDs": [
+            242
+          ],
+          "questIDs": [
+            12062
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 43927,
+      "hints": [
+        {
+          "itemIDs": [
+            33999
+          ],
+          "npcIDs": [
+            17904
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 44151,
+      "hints": [
+        {
+          "professionIDs": [
+            202
+          ],
+          "itemIDs": [
+            34061
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 44153,
+      "hints": [
+        {
+          "professionIDs": [
+            202
+          ],
+          "itemIDs": [
+            34060
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 44744,
+      "hints": [
+        {
+          "itemIDs": [
+            34092
+          ]
+        },
+        {
+          "itemIDs": [
+            34092
+          ],
+          "achievementIDs": [
+            15199
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 46197,
+      "hints": [
+        {
+          "itemIDs": [
+            49285
+          ]
+        },
+        {
+          "itemIDs": [
+            35225
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 46199,
+      "hints": [
+        {
+          "itemIDs": [
+            49286
+          ]
+        },
+        {
+          "itemIDs": [
+            35226
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 46628,
+      "hints": [
+        {
+          "itemIDs": [
+            35513
+          ],
+          "instanceIDs": [
+            249
+          ],
+          "mapIDs": [
+            348,
+            349
+          ],
+          "encounterIDs": [
+            533
+          ],
+          "npcIDs": [
+            24664
+          ]
+        },
+        {
+          "itemIDs": [
+            35513
+          ]
+        },
+        {
+          "itemIDs": [
+            35513
+          ],
+          "instanceIDs": [
+            249
+          ],
+          "encounterIDs": [
+            533
+          ],
+          "npcIDs": [
+            24664
+          ]
+        },
+        {
+          "itemIDs": [
+            35513
+          ],
+          "instanceIDs": [
+            249
+          ],
+          "mapIDs": [
+            349
+          ],
+          "encounterIDs": [
+            533
+          ],
+          "npcIDs": [
+            24664
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 48025,
+      "hints": [
+        {
+          "itemIDs": [
+            37012
+          ],
+          "npcIDs": [
+            23682
+          ],
+          "mapIDs": [
+            435,
+            436
+          ]
+        },
+        {
+          "itemIDs": [
+            37012
+          ],
+          "npcIDs": [
+            23682
+          ]
+        },
+        {
+          "itemIDs": [
+            37012
+          ],
+          "npcIDs": [
+            23682
+          ],
+          "mapIDs": [
+            435,
+            436
+          ],
+          "questIDs": [
+            11392
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 48027,
+      "hints": [
+        {
+          "itemIDs": [
+            35906
+          ],
+          "npcIDs": [
+            12783
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 48778,
+      "hints": [
+        {
+          "questIDs": [
+            12687
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 49193,
+      "hints": [
+        {
+          "itemIDs": [
+            37676
+          ]
+        },
+        {
+          "itemIDs": [
+            37676
+          ],
+          "achievementIDs": [
+            15204
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 49378,
+      "hints": [
+        {
+          "itemIDs": [
+            37827
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 49379,
+      "hints": [
+        {
+          "itemIDs": [
+            37828
+          ],
+          "npcIDs": [
+            23872
+          ],
+          "mapIDs": [
+            242,
+            243
+          ]
+        },
+        {
+          "itemIDs": [
+            37828
+          ],
+          "npcIDs": [
+            23872
+          ],
+          "mapIDs": [
+            242
+          ],
+          "questIDs": [
+            12062
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 51412,
+      "hints": [
+        {
+          "itemIDs": [
+            38576
+          ]
+        },
+        {
+          "itemIDs": [
+            49282
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 54729,
+      "hints": [
+        {
+          "itemIDs": [
+            40775
+          ],
+          "npcIDs": [
+            29587
+          ]
+        },
+        {
+          "itemIDs": [
+            40775
+          ],
+          "npcIDs": [
+            93550
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 54753,
+      "hints": [
+        {
+          "itemIDs": [
+            43962
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 55531,
+      "hints": [
+        {
+          "itemIDs": [
+            41508
+          ],
+          "professionIDs": [
+            202
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 58615,
+      "hints": [
+        {
+          "itemIDs": [
+            43516
+          ]
+        },
+        {
+          "itemIDs": [
+            43516
+          ],
+          "achievementIDs": [
+            15200
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 58983,
+      "hints": [
+        {
+          "itemIDs": [
+            43599
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 59567,
+      "hints": [
+        {
+          "itemIDs": [
+            43952
+          ],
+          "instanceIDs": [
+            756
+          ],
+          "encounterIDs": [
+            1617
+          ],
+          "npcIDs": [
+            28859
+          ]
+        },
+        {
+          "itemIDs": [
+            43952
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 59568,
+      "hints": [
+        {
+          "itemIDs": [
+            43953
+          ],
+          "instanceIDs": [
+            756
+          ],
+          "encounterIDs": [
+            1617
+          ],
+          "npcIDs": [
+            28859
+          ]
+        },
+        {
+          "itemIDs": [
+            43953
+          ],
+          "instanceIDs": [
+            282
+          ],
+          "mapIDs": [
+            143,
+            144,
+            145,
+            146
+          ],
+          "encounterIDs": [
+            625
+          ],
+          "npcIDs": [
+            27656
+          ]
+        },
+        {
+          "itemIDs": [
+            43953
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 59569,
+      "hints": [
+        {
+          "itemIDs": [
+            43951
+          ],
+          "instanceIDs": [
+            279
+          ],
+          "mapIDs": [
+            131
+          ],
+          "npcIDs": [
+            32273
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 59570,
+      "hints": [
+        {
+          "itemIDs": [
+            43955
+          ],
+          "npcIDs": [
+            32533
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 59571,
+      "hints": [
+        {
+          "itemIDs": [
+            43954
+          ],
+          "instanceIDs": [
+            755
+          ],
+          "encounterIDs": [
+            1616
+          ],
+          "npcIDs": [
+            28860
+          ],
+          "achievementIDs": [
+            2054
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 59572,
+      "hints": [
+        {
+          "itemIDs": [
+            43964
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 59650,
+      "hints": [
+        {
+          "itemIDs": [
+            43986
+          ],
+          "instanceIDs": [
+            755
+          ],
+          "encounterIDs": [
+            1616
+          ],
+          "npcIDs": [
+            28860
+          ],
+          "achievementIDs": [
+            2051
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 59785,
+      "hints": [
+        {
+          "itemIDs": [
+            43956
+          ],
+          "npcIDs": [
+            32294
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 59788,
+      "hints": [
+        {
+          "itemIDs": [
+            44077
+          ],
+          "npcIDs": [
+            32296
+          ]
+        },
+        {
+          "itemIDs": [
+            44077
+          ],
+          "npcIDs": [
+            39173
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 59791,
+      "hints": [
+        {
+          "itemIDs": [
+            44230
+          ],
+          "npcIDs": [
+            32216
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 59793,
+      "hints": [
+        {
+          "itemIDs": [
+            44231
+          ],
+          "npcIDs": [
+            32216
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 59797,
+      "hints": [
+        {
+          "itemIDs": [
+            44080
+          ],
+          "npcIDs": [
+            32540
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 59799,
+      "hints": [
+        {
+          "itemIDs": [
+            43958
+          ],
+          "npcIDs": [
+            32540
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 59961,
+      "hints": [
+        {
+          "itemIDs": [
+            44160
+          ],
+          "achievementIDs": [
+            2136
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 59976,
+      "hints": [
+        {
+          "itemIDs": [
+            44164
+          ],
+          "achievementIDs": [
+            2138
+          ],
+          "mapIDs": [
+            141,
+            155,
+            162
+          ]
+        },
+        {
+          "itemIDs": [
+            44164
+          ],
+          "achievementIDs": [
+            2138
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 59996,
+      "hints": [
+        {
+          "itemIDs": [
+            44151
+          ],
+          "instanceIDs": [
+            286
+          ],
+          "mapIDs": [
+            137
+          ],
+          "encounterIDs": [
+            643
+          ],
+          "npcIDs": [
+            26693
+          ]
+        },
+        {
+          "itemIDs": [
+            44151
+          ]
+        },
+        {
+          "itemIDs": [
+            44151
+          ],
+          "instanceIDs": [
+            286
+          ],
+          "encounterIDs": [
+            643
+          ],
+          "npcIDs": [
+            26693
+          ]
+        },
+        {
+          "itemIDs": [
+            44151
+          ],
+          "npcIDs": [
+            174062
+          ],
+          "questIDs": [
+            62340
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 60002,
+      "hints": [
+        {
+          "itemIDs": [
+            44168
+          ],
+          "npcIDs": [
+            32491
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 60021,
+      "hints": [
+        {
+          "itemIDs": [
+            44175
+          ],
+          "achievementIDs": [
+            2137
+          ],
+          "mapIDs": [
+            141,
+            155,
+            162
+          ]
+        },
+        {
+          "itemIDs": [
+            44175
+          ]
+        },
+        {
+          "itemIDs": [
+            44175
+          ],
+          "achievementIDs": [
+            2137
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 60024,
+      "hints": [
+        {
+          "itemIDs": [
+            44177
+          ],
+          "achievementIDs": [
+            2144
+          ]
+        },
+        {
+          "itemIDs": [
+            44177
+          ],
+          "achievementIDs": [
+            2145
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 60025,
+      "hints": [
+        {
+          "itemIDs": [
+            44178
+          ],
+          "achievementIDs": [
+            2143
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 60114,
+      "hints": [
+        {
+          "itemIDs": [
+            44225
+          ],
+          "npcIDs": [
+            32216
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 60116,
+      "hints": [
+        {
+          "itemIDs": [
+            44226
+          ],
+          "npcIDs": [
+            32216
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 60118,
+      "hints": [
+        {
+          "itemIDs": [
+            44223
+          ],
+          "achievementIDs": [
+            614
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 60119,
+      "hints": [
+        {
+          "itemIDs": [
+            44224
+          ],
+          "achievementIDs": [
+            619
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 60424,
+      "hints": [
+        {
+          "itemIDs": [
+            44413
+          ],
+          "professionIDs": [
+            202
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 61229,
+      "hints": [
+        {
+          "itemIDs": [
+            44689
+          ],
+          "npcIDs": [
+            32216
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 61230,
+      "hints": [
+        {
+          "itemIDs": [
+            44690
+          ],
+          "npcIDs": [
+            32216
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 61294,
+      "hints": [
+        {
+          "itemIDs": [
+            44707
+          ],
+          "npcIDs": [
+            31910
+          ]
+        },
+        {
+          "itemIDs": [
+            44707
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 61309,
+      "hints": [
+        {
+          "professionIDs": [
+            197
+          ],
+          "itemIDs": [
+            44558
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 61425,
+      "hints": [
+        {
+          "itemIDs": [
+            44235
+          ],
+          "npcIDs": [
+            32216
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 61447,
+      "hints": [
+        {
+          "itemIDs": [
+            44234
+          ],
+          "npcIDs": [
+            32216
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 61451,
+      "hints": [
+        {
+          "professionIDs": [
+            197
+          ],
+          "itemIDs": [
+            44554
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 61465,
+      "hints": [
+        {
+          "itemIDs": [
+            43959
+          ],
+          "instanceIDs": [
+            753
+          ]
+        },
+        {
+          "itemIDs": [
+            43959
+          ]
+        },
+        {
+          "itemIDs": [
+            43959
+          ],
+          "npcIDs": [
+            167749
+          ],
+          "questIDs": [
+            60214
+          ]
+        },
+        {
+          "itemIDs": [
+            43959
+          ],
+          "npcIDs": [
+            227257
+          ],
+          "questIDs": [
+            84256
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 61467,
+      "hints": [
+        {
+          "itemIDs": [
+            44083
+          ],
+          "instanceIDs": [
+            753
+          ]
+        },
+        {
+          "itemIDs": [
+            44083
+          ]
+        },
+        {
+          "itemIDs": [
+            44083
+          ],
+          "npcIDs": [
+            167749
+          ],
+          "questIDs": [
+            60214
+          ]
+        },
+        {
+          "itemIDs": [
+            44083
+          ],
+          "npcIDs": [
+            227257
+          ],
+          "questIDs": [
+            84256
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 61469,
+      "hints": [
+        {
+          "itemIDs": [
+            44086
+          ],
+          "npcIDs": [
+            32540
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 61470,
+      "hints": [
+        {
+          "itemIDs": [
+            43961
+          ],
+          "npcIDs": [
+            32540
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 61996,
+      "hints": [
+        {
+          "itemIDs": [
+            44843
+          ],
+          "achievementIDs": [
+            2536
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 61997,
+      "hints": [
+        {
+          "itemIDs": [
+            44842
+          ],
+          "achievementIDs": [
+            2537
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 62048,
+      "hints": [
+        {
+          "itemIDs": [
+            186469
+          ],
+          "npcIDs": [
+            167749
+          ],
+          "questIDs": [
+            60214
+          ]
+        },
+        {
+          "itemIDs": [
+            186469
+          ],
+          "npcIDs": [
+            158061
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 63232,
+      "hints": [
+        {
+          "itemIDs": [
+            45125
+          ],
+          "npcIDs": [
+            33307
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 63635,
+      "hints": [
+        {
+          "itemIDs": [
+            45593
+          ],
+          "npcIDs": [
+            33554
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 63636,
+      "hints": [
+        {
+          "itemIDs": [
+            45586
+          ],
+          "npcIDs": [
+            33310
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 63637,
+      "hints": [
+        {
+          "itemIDs": [
+            45591
+          ],
+          "npcIDs": [
+            33653
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 63638,
+      "hints": [
+        {
+          "itemIDs": [
+            45589
+          ],
+          "npcIDs": [
+            33650
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 63639,
+      "hints": [
+        {
+          "itemIDs": [
+            45590
+          ],
+          "npcIDs": [
+            33657
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 63640,
+      "hints": [
+        {
+          "itemIDs": [
+            45595
+          ],
+          "npcIDs": [
+            33553
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 63641,
+      "hints": [
+        {
+          "itemIDs": [
+            45592
+          ],
+          "npcIDs": [
+            33556
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 63642,
+      "hints": [
+        {
+          "itemIDs": [
+            45596
+          ],
+          "npcIDs": [
+            33557
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 63643,
+      "hints": [
+        {
+          "itemIDs": [
+            45597
+          ],
+          "npcIDs": [
+            33555
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 63796,
+      "hints": [
+        {
+          "itemIDs": [
+            45693
+          ],
+          "instanceIDs": [
+            759
+          ],
+          "mapIDs": [
+            148,
+            149,
+            150,
+            151,
+            152
+          ],
+          "encounterIDs": [
+            1649
+          ],
+          "npcIDs": [
+            33288
+          ],
+          "achievementIDs": [
+            3164
+          ]
+        },
+        {
+          "itemIDs": [
+            45693
+          ]
+        },
+        {
+          "itemIDs": [
+            45693
+          ],
+          "questIDs": [
+            50316
+          ]
+        },
+        {
+          "itemIDs": [
+            45693
+          ],
+          "instanceIDs": [
+            759
+          ],
+          "encounterIDs": [
+            1649
+          ],
+          "npcIDs": [
+            33288
+          ],
+          "achievementIDs": [
+            12388
+          ]
+        },
+        {
+          "itemIDs": [
+            45693
+          ],
+          "instanceIDs": [
+            759
+          ],
+          "mapIDs": [
+            148,
+            149,
+            150,
+            151,
+            152
+          ],
+          "encounterIDs": [
+            1649
+          ],
+          "npcIDs": [
+            33288
+          ],
+          "achievementIDs": [
+            12388
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 63844,
+      "hints": [
+        {
+          "itemIDs": [
+            45725
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 63956,
+      "hints": [
+        {
+          "itemIDs": [
+            45801
+          ],
+          "instanceIDs": [
+            759
+          ],
+          "mapIDs": [
+            148,
+            149,
+            150,
+            151,
+            152
+          ],
+          "achievementIDs": [
+            2958
+          ]
+        },
+        {
+          "itemIDs": [
+            45801
+          ],
+          "instanceIDs": [
+            759
+          ],
+          "mapIDs": [
+            148,
+            149,
+            150,
+            151,
+            152
+          ],
+          "achievementIDs": [
+            12401
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 63963,
+      "hints": [
+        {
+          "itemIDs": [
+            45802
+          ],
+          "instanceIDs": [
+            759
+          ],
+          "mapIDs": [
+            148,
+            149,
+            150,
+            151,
+            152
+          ],
+          "achievementIDs": [
+            2957
+          ]
+        },
+        {
+          "itemIDs": [
+            45802
+          ]
+        },
+        {
+          "itemIDs": [
+            45802
+          ],
+          "instanceIDs": [
+            759
+          ],
+          "mapIDs": [
+            148,
+            149,
+            150,
+            151,
+            152
+          ],
+          "achievementIDs": [
+            12401
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 64656,
+      "hints": [
+        {
+          "itemIDs": [
+            46101
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 64657,
+      "hints": [
+        {
+          "itemIDs": [
+            46100
+          ],
+          "npcIDs": [
+            3685
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 64658,
+      "hints": [
+        {
+          "itemIDs": [
+            46099
+          ],
+          "npcIDs": [
+            3362
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 64659,
+      "hints": [
+        {
+          "itemIDs": [
+            46102
+          ],
+          "questIDs": [
+            13906
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 64731,
+      "hints": [
+        {
+          "itemIDs": [
+            46109
+          ],
+          "professionIDs": [
+            356
+          ]
+        },
+        {
+          "itemIDs": [
+            46109
+          ],
+          "npcIDs": [
+            85715
+          ]
+        },
+        {
+          "itemIDs": [
+            46109
+          ],
+          "npcIDs": [
+            81171
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 64927,
+      "hints": [
+        {
+          "itemIDs": [
+            46708
+          ]
+        },
+        {
+          "itemIDs": [
+            46708
+          ],
+          "achievementIDs": [
+            16314
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 64977,
+      "hints": [
+        {
+          "itemIDs": [
+            46308
+          ],
+          "npcIDs": [
+            4731
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 65439,
+      "hints": [
+        {
+          "itemIDs": [
+            46171
+          ]
+        },
+        {
+          "itemIDs": [
+            46171
+          ],
+          "achievementIDs": [
+            17416
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 65637,
+      "hints": [
+        {
+          "itemIDs": [
+            46745
+          ],
+          "npcIDs": [
+            33657
+          ]
+        },
+        {
+          "itemIDs": [
+            46756
+          ],
+          "npcIDs": [
+            33657
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 65638,
+      "hints": [
+        {
+          "itemIDs": [
+            46744
+          ],
+          "npcIDs": [
+            33653
+          ]
+        },
+        {
+          "itemIDs": [
+            46759
+          ],
+          "npcIDs": [
+            33653
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 65639,
+      "hints": [
+        {
+          "itemIDs": [
+            46751
+          ],
+          "npcIDs": [
+            33557
+          ]
+        },
+        {
+          "itemIDs": [
+            46761
+          ],
+          "npcIDs": [
+            33557
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 65640,
+      "hints": [
+        {
+          "itemIDs": [
+            46752
+          ],
+          "npcIDs": [
+            33307
+          ]
+        },
+        {
+          "itemIDs": [
+            46758
+          ],
+          "npcIDs": [
+            33307
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 65641,
+      "hints": [
+        {
+          "itemIDs": [
+            46750
+          ],
+          "npcIDs": [
+            33556
+          ]
+        },
+        {
+          "itemIDs": [
+            46755
+          ],
+          "npcIDs": [
+            33556
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 65642,
+      "hints": [
+        {
+          "itemIDs": [
+            46747
+          ],
+          "npcIDs": [
+            33650
+          ]
+        },
+        {
+          "itemIDs": [
+            46763
+          ],
+          "npcIDs": [
+            33650
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 65643,
+      "hints": [
+        {
+          "itemIDs": [
+            46748
+          ],
+          "npcIDs": [
+            33310
+          ]
+        },
+        {
+          "itemIDs": [
+            46762
+          ],
+          "npcIDs": [
+            33310
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 65644,
+      "hints": [
+        {
+          "itemIDs": [
+            46743
+          ],
+          "npcIDs": [
+            33554
+          ]
+        },
+        {
+          "itemIDs": [
+            46760
+          ],
+          "npcIDs": [
+            33554
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 65645,
+      "hints": [
+        {
+          "itemIDs": [
+            46746
+          ],
+          "npcIDs": [
+            33555
+          ]
+        },
+        {
+          "itemIDs": [
+            46764
+          ],
+          "npcIDs": [
+            33555
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 65646,
+      "hints": [
+        {
+          "itemIDs": [
+            46757
+          ],
+          "npcIDs": [
+            33553
+          ]
+        },
+        {
+          "itemIDs": [
+            46749
+          ],
+          "npcIDs": [
+            33553
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 65917,
+      "hints": [
+        {
+          "itemIDs": [
+            265787
+          ],
+          "npcIDs": [
+            257969
+          ]
+        },
+        {
+          "itemIDs": [
+            265787
+          ],
+          "npcIDs": [
+            258126
+          ]
+        },
+        {
+          "itemIDs": [
+            46778
+          ]
+        },
+        {
+          "itemIDs": [
+            49290
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 66087,
+      "hints": [
+        {
+          "itemIDs": [
+            46813
+          ],
+          "npcIDs": [
+            34881
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 66088,
+      "hints": [
+        {
+          "itemIDs": [
+            46814
+          ],
+          "npcIDs": [
+            34772
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 66090,
+      "hints": [
+        {
+          "itemIDs": [
+            46815
+          ],
+          "npcIDs": [
+            34881
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 66091,
+      "hints": [
+        {
+          "itemIDs": [
+            46816
+          ],
+          "npcIDs": [
+            34772
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 66846,
+      "hints": [
+        {
+          "itemIDs": [
+            47101
+          ],
+          "npcIDs": [
+            4731
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 66847,
+      "hints": [
+        {
+          "itemIDs": [
+            47100
+          ],
+          "npcIDs": [
+            4730
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 66906,
+      "hints": [
+        {
+          "itemIDs": [
+            47179
+          ],
+          "npcIDs": [
+            34885
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 67336,
+      "hints": [
+        {
+          "itemIDs": [
+            47840
+          ]
+        },
+        {
+          "itemIDs": [
+            47840
+          ],
+          "achievementIDs": [
+            18545
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 67466,
+      "hints": [
+        {
+          "itemIDs": [
+            47180
+          ],
+          "npcIDs": [
+            34885
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 68056,
+      "hints": [
+        {
+          "itemIDs": [
+            49046
+          ],
+          "instanceIDs": [
+            757
+          ],
+          "mapIDs": [
+            173
+          ],
+          "achievementIDs": [
+            3810
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 68057,
+      "hints": [
+        {
+          "itemIDs": [
+            49044
+          ],
+          "instanceIDs": [
+            757
+          ],
+          "mapIDs": [
+            173
+          ],
+          "achievementIDs": [
+            3810
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 68187,
+      "hints": [
+        {
+          "itemIDs": [
+            49096
+          ],
+          "instanceIDs": [
+            757
+          ],
+          "mapIDs": [
+            173
+          ],
+          "achievementIDs": [
+            4156
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 68188,
+      "hints": [
+        {
+          "itemIDs": [
+            49098
+          ],
+          "instanceIDs": [
+            757
+          ],
+          "mapIDs": [
+            173
+          ],
+          "achievementIDs": [
+            4079
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 69395,
+      "hints": [
+        {
+          "itemIDs": [
+            49636
+          ],
+          "instanceIDs": [
+            760
+          ],
+          "encounterIDs": [
+            1651
+          ],
+          "npcIDs": [
+            10184
+          ]
+        },
+        {
+          "itemIDs": [
+            49636
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 71342,
+      "hints": [
+        {
+          "itemIDs": [
+            50250
+          ],
+          "npcIDs": [
+            36296
+          ],
+          "mapIDs": [
+            310,
+            311,
+            312,
+            313,
+            314,
+            315,
+            316
+          ]
+        },
+        {
+          "itemIDs": [
+            50250
+          ],
+          "npcIDs": [
+            36296
+          ]
+        },
+        {
+          "itemIDs": [
+            50250
+          ],
+          "npcIDs": [
+            36296
+          ],
+          "mapIDs": [
+            310,
+            311,
+            312,
+            313,
+            314,
+            315,
+            316
+          ],
+          "questIDs": [
+            14488
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 71810,
+      "hints": [
+        {
+          "itemIDs": [
+            50435
+          ]
+        },
+        {
+          "itemIDs": [
+            50435
+          ],
+          "achievementIDs": [
+            18551
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 72286,
+      "hints": [
+        {
+          "itemIDs": [
+            50818
+          ],
+          "instanceIDs": [
+            758
+          ],
+          "mapIDs": [
+            187,
+            188,
+            189,
+            190,
+            191,
+            192,
+            193
+          ],
+          "encounterIDs": [
+            1636
+          ],
+          "npcIDs": [
+            36597
+          ]
+        },
+        {
+          "itemIDs": [
+            50818
+          ]
+        },
+        {
+          "itemIDs": [
+            50818
+          ],
+          "questIDs": [
+            50316
+          ]
+        },
+        {
+          "itemIDs": [
+            50818
+          ],
+          "npcIDs": [
+            36597,
+            157113
+          ],
+          "mapIDs": [
+            1553,
+            1554,
+            1555,
+            1556,
+            1557,
+            1558,
+            1559,
+            1561,
+            1563
+          ],
+          "encounterIDs": [
+            1636
+          ]
+        },
+        {
+          "itemIDs": [
+            50818
+          ],
+          "instanceIDs": [
+            758
+          ],
+          "mapIDs": [
+            187,
+            188,
+            189,
+            190,
+            191,
+            192,
+            193,
+            699,
+            1359
+          ],
+          "encounterIDs": [
+            1636
+          ],
+          "npcIDs": [
+            36597
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 72807,
+      "hints": [
+        {
+          "itemIDs": [
+            51955
+          ],
+          "instanceIDs": [
+            758
+          ],
+          "mapIDs": [
+            187,
+            188,
+            189,
+            190,
+            191,
+            192,
+            193
+          ],
+          "achievementIDs": [
+            4603
+          ]
+        },
+        {
+          "itemIDs": [
+            51955
+          ],
+          "instanceIDs": [
+            758
+          ],
+          "mapIDs": [
+            187,
+            188,
+            189,
+            190,
+            191,
+            192,
+            193,
+            699,
+            1359
+          ],
+          "achievementIDs": [
+            4603
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 72808,
+      "hints": [
+        {
+          "itemIDs": [
+            51954
+          ],
+          "instanceIDs": [
+            758
+          ],
+          "mapIDs": [
+            187,
+            188,
+            189,
+            190,
+            191,
+            192,
+            193
+          ],
+          "achievementIDs": [
+            4602
+          ]
+        },
+        {
+          "itemIDs": [
+            51954
+          ],
+          "instanceIDs": [
+            758
+          ],
+          "mapIDs": [
+            187,
+            188,
+            189,
+            190,
+            191,
+            192,
+            193,
+            699,
+            1359
+          ],
+          "achievementIDs": [
+            4602
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 73313,
+      "hints": [
+        {
+          "itemIDs": [
+            52200
+          ],
+          "instanceIDs": [
+            758
+          ],
+          "mapIDs": [
+            187,
+            188,
+            189,
+            190,
+            191,
+            192,
+            193
+          ]
+        },
+        {
+          "itemIDs": [
+            52200
+          ],
+          "instanceIDs": [
+            758
+          ],
+          "mapIDs": [
+            187,
+            188,
+            189,
+            190,
+            191,
+            192,
+            193,
+            699,
+            1359
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 74856,
+      "hints": [
+        {
+          "itemIDs": [
+            74269
+          ]
+        },
+        {
+          "itemIDs": [
+            54069
+          ]
+        },
+        {
+          "itemIDs": [
+            54069
+          ],
+          "npcIDs": [
+            234746
+          ]
+        },
+        {
+          "itemIDs": [
+            54069
+          ],
+          "npcIDs": [
+            268180
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 74918,
+      "hints": [
+        {
+          "itemIDs": [
+            54068
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 75207,
+      "hints": [
+        {
+          "itemIDs": [
+            54465
+          ],
+          "questIDs": [
+            25371
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 75596,
+      "hints": [
+        {
+          "professionIDs": [
+            197
+          ],
+          "itemIDs": [
+            54797
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 75973,
+      "hints": [
+        {
+          "itemIDs": [
+            54860
+          ]
+        },
+        {
+          "itemIDs": [
+            54860
+          ],
+          "npcIDs": [
+            234746
+          ]
+        },
+        {
+          "itemIDs": [
+            54860
+          ],
+          "npcIDs": [
+            268180
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 84751,
+      "hints": [
+        {
+          "itemIDs": [
+            60954
+          ],
+          "professionIDs": [
+            794
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 87090,
+      "hints": [
+        {
+          "itemIDs": [
+            62461
+          ],
+          "npcIDs": [
+            48510
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 87091,
+      "hints": [
+        {
+          "itemIDs": [
+            62462
+          ],
+          "npcIDs": [
+            48510
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 88331,
+      "hints": [
+        {
+          "itemIDs": [
+            62900
+          ],
+          "achievementIDs": [
+            4845
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 88335,
+      "hints": [
+        {
+          "itemIDs": [
+            62901
+          ],
+          "achievementIDs": [
+            4853
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 88718,
+      "hints": [
+        {
+          "itemIDs": [
+            63042
+          ],
+          "npcIDs": [
+            50062
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 88741,
+      "hints": [
+        {
+          "itemIDs": [
+            65356
+          ],
+          "npcIDs": [
+            48531
+          ]
+        },
+        {
+          "itemIDs": [
+            63039
+          ],
+          "npcIDs": [
+            47328
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 88742,
+      "hints": [
+        {
+          "itemIDs": [
+            63040
+          ],
+          "npcIDs": [
+            234135
+          ]
+        },
+        {
+          "itemIDs": [
+            63040
+          ],
+          "instanceIDs": [
+            68
+          ],
+          "encounterIDs": [
+            115
+          ],
+          "npcIDs": [
+            43873
+          ]
+        },
+        {
+          "itemIDs": [
+            63040
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 88744,
+      "hints": [
+        {
+          "itemIDs": [
+            63041
+          ],
+          "npcIDs": [
+            234135
+          ]
+        },
+        {
+          "itemIDs": [
+            63041
+          ],
+          "instanceIDs": [
+            74
+          ],
+          "encounterIDs": [
+            155
+          ],
+          "npcIDs": [
+            46753
+          ]
+        },
+        {
+          "itemIDs": [
+            63041
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 88746,
+      "hints": [
+        {
+          "itemIDs": [
+            63043
+          ],
+          "npcIDs": [
+            234135
+          ]
+        },
+        {
+          "itemIDs": [
+            63043
+          ],
+          "instanceIDs": [
+            67
+          ],
+          "encounterIDs": [
+            111
+          ],
+          "npcIDs": [
+            43214
+          ]
+        },
+        {
+          "itemIDs": [
+            63043
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 88748,
+      "hints": [
+        {
+          "itemIDs": [
+            63044
+          ],
+          "npcIDs": [
+            48617
+          ]
+        },
+        {
+          "itemIDs": [
+            63044
+          ],
+          "npcIDs": [
+            122463
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 88749,
+      "hints": [
+        {
+          "itemIDs": [
+            63045
+          ],
+          "npcIDs": [
+            48617
+          ]
+        },
+        {
+          "itemIDs": [
+            63045
+          ],
+          "npcIDs": [
+            122463
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 88750,
+      "hints": [
+        {
+          "itemIDs": [
+            63046
+          ],
+          "npcIDs": [
+            50409
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 88990,
+      "hints": [
+        {
+          "itemIDs": [
+            63125
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 90621,
+      "hints": [
+        {
+          "itemIDs": [
+            62298
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 92155,
+      "hints": [
+        {
+          "itemIDs": [
+            64883
+          ],
+          "professionIDs": [
+            794
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 92231,
+      "hints": [
+        {
+          "itemIDs": [
+            64998
+          ],
+          "npcIDs": [
+            47328
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 92232,
+      "hints": [
+        {
+          "itemIDs": [
+            64999
+          ],
+          "npcIDs": [
+            48531
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 93326,
+      "hints": [
+        {
+          "itemIDs": [
+            65891
+          ],
+          "professionIDs": [
+            171
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 93623,
+      "hints": [
+        {
+          "itemIDs": [
+            68008
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 93644,
+      "hints": [
+        {
+          "itemIDs": [
+            67107
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 96491,
+      "hints": [
+        {
+          "itemIDs": [
+            68823
+          ],
+          "instanceIDs": [
+            76
+          ],
+          "encounterIDs": [
+            176
+          ],
+          "npcIDs": [
+            52151
+          ]
+        },
+        {
+          "itemIDs": [
+            68823
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 96499,
+      "hints": [
+        {
+          "itemIDs": [
+            68824
+          ],
+          "instanceIDs": [
+            76
+          ],
+          "encounterIDs": [
+            181
+          ],
+          "npcIDs": [
+            52059
+          ]
+        },
+        {
+          "itemIDs": [
+            68824
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 96503,
+      "hints": [
+        {
+          "itemIDs": [
+            68825
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 97359,
+      "hints": [
+        {
+          "itemIDs": [
+            69213
+          ],
+          "achievementIDs": [
+            5866
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 97493,
+      "hints": [
+        {
+          "itemIDs": [
+            69224
+          ]
+        },
+        {
+          "itemIDs": [
+            69224
+          ],
+          "instanceIDs": [
+            78
+          ],
+          "mapIDs": [
+            367,
+            368,
+            369
+          ],
+          "encounterIDs": [
+            198
+          ],
+          "npcIDs": [
+            52409
+          ]
+        },
+        {
+          "itemIDs": [
+            69224
+          ],
+          "questIDs": [
+            57637
+          ]
+        },
+        {
+          "itemIDs": [
+            69224
+          ],
+          "instanceIDs": [
+            78
+          ],
+          "encounterIDs": [
+            198
+          ],
+          "npcIDs": [
+            52409
+          ]
+        },
+        {
+          "itemIDs": [
+            69224
+          ],
+          "npcIDs": [
+            52409,
+            157113
+          ],
+          "mapIDs": [
+            1553,
+            1554,
+            1555,
+            1556,
+            1557,
+            1558,
+            1559,
+            1561,
+            1563
+          ],
+          "encounterIDs": [
+            198
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 97501,
+      "hints": [
+        {
+          "itemIDs": [
+            69226
+          ],
+          "achievementIDs": [
+            9598
+          ]
+        },
+        {
+          "itemIDs": [
+            69226
+          ],
+          "achievementIDs": [
+            9599
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 97560,
+      "hints": [
+        {
+          "itemIDs": [
+            69230
+          ],
+          "instanceIDs": [
+            78
+          ],
+          "mapIDs": [
+            367,
+            368,
+            369
+          ],
+          "achievementIDs": [
+            5828
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 97581,
+      "hints": [
+        {
+          "itemIDs": [
+            69228
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 98204,
+      "hints": [
+        {
+          "itemIDs": [
+            69747
+          ],
+          "instanceIDs": [
+            77
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 98718,
+      "hints": [
+        {
+          "itemIDs": [
+            67151
+          ],
+          "npcIDs": [
+            50005
+          ],
+          "mapIDs": [
+            203
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 98727,
+      "hints": [
+        {
+          "itemIDs": [
+            69846
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 100332,
+      "hints": [
+        {
+          "itemIDs": [
+            70909
+          ],
+          "achievementIDs": [
+            5328
+          ]
+        },
+        {
+          "itemIDs": [
+            70909
+          ],
+          "achievementIDs": [
+            5823
+          ]
+        },
+        {
+          "itemIDs": [
+            70909
+          ],
+          "npcIDs": [
+            73190
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 100333,
+      "hints": [
+        {
+          "itemIDs": [
+            70910
+          ],
+          "achievementIDs": [
+            5325
+          ]
+        },
+        {
+          "itemIDs": [
+            70910
+          ],
+          "achievementIDs": [
+            5824
+          ]
+        },
+        {
+          "itemIDs": [
+            70910
+          ],
+          "npcIDs": [
+            73151
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 101282,
+      "hints": [
+        {
+          "itemIDs": [
+            71339
+          ],
+          "achievementIDs": [
+            40969
+          ]
+        },
+        {
+          "itemIDs": [
+            71339
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 101542,
+      "hints": [
+        {
+          "itemIDs": [
+            71665
+          ]
+        },
+        {
+          "itemIDs": [
+            71665
+          ],
+          "instanceIDs": [
+            78
+          ],
+          "mapIDs": [
+            367,
+            368,
+            369
+          ],
+          "encounterIDs": [
+            194
+          ],
+          "npcIDs": [
+            52530
+          ]
+        },
+        {
+          "itemIDs": [
+            71665
+          ],
+          "questIDs": [
+            57637
+          ]
+        },
+        {
+          "itemIDs": [
+            71665
+          ],
+          "instanceIDs": [
+            78
+          ],
+          "encounterIDs": [
+            194
+          ],
+          "npcIDs": [
+            52530
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 101573,
+      "hints": [
+        {
+          "itemIDs": [
+            71718
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 101821,
+      "hints": [
+        {
+          "itemIDs": [
+            71954
+          ],
+          "achievementIDs": [
+            41336
+          ]
+        },
+        {
+          "itemIDs": [
+            71954
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 102346,
+      "hints": [
+        {
+          "itemIDs": [
+            72140
+          ],
+          "npcIDs": [
+            14846
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 102349,
+      "hints": [
+        {
+          "itemIDs": [
+            72145
+          ]
+        },
+        {
+          "itemIDs": [
+            72145
+          ],
+          "npcIDs": [
+            32837
+          ]
+        },
+        {
+          "itemIDs": [
+            72145
+          ],
+          "npcIDs": [
+            32836
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 102350,
+      "hints": [
+        {
+          "itemIDs": [
+            72146
+          ],
+          "npcIDs": [
+            37674
+          ]
+        },
+        {
+          "itemIDs": [
+            72146
+          ],
+          "npcIDs": [
+            211812
+          ]
+        },
+        {
+          "itemIDs": [
+            72146
+          ],
+          "npcIDs": [
+            214481
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 102488,
+      "hints": [
+        {
+          "itemIDs": [
+            72575
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 102514,
+      "hints": [
+        {
+          "itemIDs": [
+            72582
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 103081,
+      "hints": [
+        {
+          "itemIDs": [
+            73766
+          ],
+          "npcIDs": [
+            14846
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 103195,
+      "hints": [
+        {
+          "itemIDs": [
+            73838
+          ],
+          "npcIDs": [
+            55285
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 103196,
+      "hints": [
+        {
+          "itemIDs": [
+            73839
+          ],
+          "npcIDs": [
+            55285
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 107203,
+      "hints": [
+        {
+          "itemIDs": [
+            76755
+          ]
+        },
+        {
+          "itemIDs": [
+            76755
+          ],
+          "npcIDs": [
+            205490,
+            205722
+          ],
+          "mapIDs": [
+            2346
+          ]
+        },
+        {
+          "itemIDs": [
+            76755
+          ],
+          "npcIDs": [
+            268180
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 107516,
+      "hints": [
+        {
+          "itemIDs": [
+            76889
+          ]
+        },
+        {
+          "itemIDs": [
+            76889
+          ],
+          "npcIDs": [
+            234746
+          ]
+        },
+        {
+          "itemIDs": [
+            76889
+          ],
+          "npcIDs": [
+            268180
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 107517,
+      "hints": [
+        {
+          "itemIDs": [
+            76902
+          ]
+        },
+        {
+          "itemIDs": [
+            76902
+          ],
+          "npcIDs": [
+            234746
+          ]
+        },
+        {
+          "itemIDs": [
+            76902
+          ],
+          "npcIDs": [
+            268180
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 107842,
+      "hints": [
+        {
+          "itemIDs": [
+            77067
+          ],
+          "instanceIDs": [
+            187
+          ],
+          "mapIDs": [
+            410,
+            411,
+            412,
+            413,
+            414,
+            415
+          ],
+          "encounterIDs": [
+            333
+          ],
+          "npcIDs": [
+            56173
+          ]
+        },
+        {
+          "itemIDs": [
+            77067
+          ]
+        },
+        {
+          "itemIDs": [
+            77067
+          ],
+          "questIDs": [
+            57637
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 107844,
+      "hints": [
+        {
+          "itemIDs": [
+            77068
+          ],
+          "instanceIDs": [
+            187
+          ],
+          "mapIDs": [
+            410,
+            411,
+            412,
+            413,
+            414,
+            415
+          ],
+          "achievementIDs": [
+            6169
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 107845,
+      "hints": [
+        {
+          "itemIDs": [
+            77069
+          ],
+          "instanceIDs": [
+            187
+          ],
+          "mapIDs": [
+            410,
+            411,
+            412,
+            413,
+            414,
+            415
+          ],
+          "encounterIDs": [
+            333
+          ],
+          "npcIDs": [
+            56173
+          ]
+        },
+        {
+          "itemIDs": [
+            77069
+          ]
+        },
+        {
+          "itemIDs": [
+            77069
+          ],
+          "questIDs": [
+            57637
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 110039,
+      "hints": [
+        {
+          "itemIDs": [
+            78919
+          ],
+          "instanceIDs": [
+            187
+          ],
+          "mapIDs": [
+            410,
+            411,
+            412,
+            413,
+            414,
+            415
+          ],
+          "encounterIDs": [
+            331
+          ],
+          "npcIDs": [
+            55294
+          ]
+        },
+        {
+          "itemIDs": [
+            78919
+          ]
+        },
+        {
+          "itemIDs": [
+            78919
+          ],
+          "questIDs": [
+            57637
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 110051,
+      "hints": [
+        {
+          "itemIDs": [
+            78924
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 113120,
+      "hints": [
+        {
+          "itemIDs": [
+            79771
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 113199,
+      "hints": [
+        {
+          "itemIDs": [
+            79802
+          ],
+          "questIDs": [
+            30188
+          ]
+        },
+        {
+          "itemIDs": [
+            79802
+          ],
+          "npcIDs": [
+            58414
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 118089,
+      "hints": [
+        {
+          "itemIDs": [
+            81354
+          ],
+          "npcIDs": [
+            63721
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 118737,
+      "hints": [
+        {
+          "itemIDs": [
+            81559
+          ],
+          "achievementIDs": [
+            6827
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 120043,
+      "hints": [
+        {
+          "itemIDs": [
+            82453
+          ],
+          "professionIDs": [
+            755
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 120395,
+      "hints": [
+        {
+          "itemIDs": [
+            91004
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            82765
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            82765
+          ],
+          "npcIDs": [
+            65068
+          ]
+        },
+        {
+          "itemIDs": [
+            91004
+          ],
+          "npcIDs": [
+            65068
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 120822,
+      "hints": [
+        {
+          "itemIDs": [
+            91010
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            82811
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            82811
+          ],
+          "npcIDs": [
+            65068
+          ]
+        },
+        {
+          "itemIDs": [
+            91010
+          ],
+          "npcIDs": [
+            65068
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 121820,
+      "hints": [
+        {
+          "itemIDs": [
+            83086
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 121836,
+      "hints": [
+        {
+          "itemIDs": [
+            83090
+          ],
+          "professionIDs": [
+            755
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 121837,
+      "hints": [
+        {
+          "itemIDs": [
+            83088
+          ],
+          "professionIDs": [
+            755
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 121838,
+      "hints": [
+        {
+          "itemIDs": [
+            83087
+          ],
+          "professionIDs": [
+            755
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 121839,
+      "hints": [
+        {
+          "itemIDs": [
+            83089
+          ],
+          "professionIDs": [
+            755
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 122708,
+      "hints": [
+        {
+          "itemIDs": [
+            84101
+          ],
+          "npcIDs": [
+            64518
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 123182,
+      "hints": [
+        {
+          "itemIDs": [
+            84753
+          ],
+          "npcIDs": [
+            248108
+          ]
+        },
+        {
+          "itemIDs": [
+            84753
+          ],
+          "npcIDs": [
+            267317
+          ]
+        },
+        {
+          "itemIDs": [
+            84753
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 123886,
+      "hints": [
+        {
+          "itemIDs": [
+            85262
+          ],
+          "npcIDs": [
+            64599
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 123992,
+      "hints": [
+        {
+          "itemIDs": [
+            85430
+          ],
+          "questIDs": [
+            31810
+          ]
+        },
+        {
+          "itemIDs": [
+            85430
+          ],
+          "npcIDs": [
+            58414
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 123993,
+      "hints": [
+        {
+          "itemIDs": [
+            85429
+          ],
+          "questIDs": [
+            31811
+          ]
+        },
+        {
+          "itemIDs": [
+            85429
+          ],
+          "npcIDs": [
+            58414
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 124408,
+      "hints": [
+        {
+          "itemIDs": [
+            85666
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 124550,
+      "hints": [
+        {
+          "itemIDs": [
+            85785
+          ],
+          "achievementIDs": [
+            42777
+          ]
+        },
+        {
+          "itemIDs": [
+            85785
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 124659,
+      "hints": [
+        {
+          "itemIDs": [
+            85870
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 126507,
+      "hints": [
+        {
+          "itemIDs": [
+            87250
+          ],
+          "professionIDs": [
+            202,
+            20222
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 126508,
+      "hints": [
+        {
+          "itemIDs": [
+            87251
+          ],
+          "professionIDs": [
+            202,
+            20219
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127154,
+      "hints": [
+        {
+          "itemIDs": [
+            87768
+          ],
+          "questIDs": [
+            31277
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127156,
+      "hints": [
+        {
+          "itemIDs": [
+            87769
+          ],
+          "achievementIDs": [
+            6927
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127158,
+      "hints": [
+        {
+          "itemIDs": [
+            87771
+          ],
+          "npcIDs": [
+            248108
+          ]
+        },
+        {
+          "itemIDs": [
+            87771
+          ],
+          "encounterIDs": [
+            691
+          ],
+          "mapIDs": [
+            380,
+            381,
+            382,
+            383,
+            384,
+            385,
+            386,
+            387,
+            434
+          ],
+          "npcIDs": [
+            60491
+          ],
+          "questIDs": [
+            32099
+          ]
+        },
+        {
+          "itemIDs": [
+            87771
+          ]
+        },
+        {
+          "itemIDs": [
+            87771
+          ],
+          "npcIDs": [
+            226646
+          ],
+          "questIDs": [
+            84282
+          ]
+        },
+        {
+          "itemIDs": [
+            87771
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127161,
+      "hints": [
+        {
+          "itemIDs": [
+            87773
+          ],
+          "achievementIDs": [
+            6932
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127164,
+      "hints": [
+        {
+          "itemIDs": [
+            87774
+          ],
+          "npcIDs": [
+            73306
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127165,
+      "hints": [
+        {
+          "itemIDs": [
+            87775
+          ],
+          "npcIDs": [
+            118828
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127169,
+      "hints": [
+        {
+          "itemIDs": [
+            87776
+          ],
+          "achievementIDs": [
+            10356
+          ]
+        },
+        {
+          "itemIDs": [
+            87776
+          ],
+          "achievementIDs": [
+            10355
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127170,
+      "hints": [
+        {
+          "itemIDs": [
+            87777
+          ],
+          "npcIDs": [
+            248108
+          ]
+        },
+        {
+          "itemIDs": [
+            87777
+          ],
+          "instanceIDs": [
+            317
+          ],
+          "mapIDs": [
+            471,
+            472,
+            473
+          ],
+          "encounterIDs": [
+            726
+          ],
+          "npcIDs": [
+            60410
+          ]
+        },
+        {
+          "itemIDs": [
+            87777
+          ]
+        },
+        {
+          "itemIDs": [
+            87777
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127174,
+      "hints": [
+        {
+          "itemIDs": [
+            87781
+          ],
+          "npcIDs": [
+            59908
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127176,
+      "hints": [
+        {
+          "itemIDs": [
+            87782
+          ],
+          "npcIDs": [
+            59908
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127177,
+      "hints": [
+        {
+          "itemIDs": [
+            87783
+          ],
+          "npcIDs": [
+            59908
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127178,
+      "hints": [
+        {
+          "itemIDs": [
+            87784
+          ],
+          "npcIDs": [
+            248108
+          ]
+        },
+        {
+          "itemIDs": [
+            87784
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127209,
+      "hints": [
+        {
+          "itemIDs": [
+            87786
+          ],
+          "npcIDs": [
+            248108
+          ]
+        },
+        {
+          "itemIDs": [
+            87786
+          ],
+          "npcIDs": [
+            267317
+          ]
+        },
+        {
+          "itemIDs": [
+            87786
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127213,
+      "hints": [
+        {
+          "itemIDs": [
+            87787
+          ],
+          "npcIDs": [
+            248108
+          ]
+        },
+        {
+          "itemIDs": [
+            87787
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127216,
+      "hints": [
+        {
+          "itemIDs": [
+            87788
+          ],
+          "npcIDs": [
+            64518
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127220,
+      "hints": [
+        {
+          "itemIDs": [
+            87789
+          ],
+          "npcIDs": [
+            64518
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127271,
+      "hints": [
+        {
+          "itemIDs": [
+            87791
+          ],
+          "npcIDs": [
+            248108
+          ]
+        },
+        {
+          "itemIDs": [
+            87791
+          ],
+          "npcIDs": [
+            85984
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127272,
+      "hints": [
+        {
+          "itemIDs": [
+            87792
+          ],
+          "npcIDs": [
+            248108
+          ]
+        },
+        {
+          "itemIDs": [
+            87792
+          ],
+          "npcIDs": [
+            258121
+          ]
+        },
+        {
+          "itemIDs": [
+            87792
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127274,
+      "hints": [
+        {
+          "itemIDs": [
+            87793
+          ],
+          "npcIDs": [
+            248108
+          ]
+        },
+        {
+          "itemIDs": [
+            87793
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127278,
+      "hints": [
+        {
+          "itemIDs": [
+            87794
+          ],
+          "npcIDs": [
+            248108
+          ]
+        },
+        {
+          "itemIDs": [
+            87794
+          ],
+          "npcIDs": [
+            258121
+          ]
+        },
+        {
+          "itemIDs": [
+            87794
+          ],
+          "npcIDs": [
+            267317
+          ]
+        },
+        {
+          "itemIDs": [
+            87794
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127286,
+      "hints": [
+        {
+          "itemIDs": [
+            91008
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87795
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87795
+          ],
+          "npcIDs": [
+            65068
+          ]
+        },
+        {
+          "itemIDs": [
+            91008
+          ],
+          "npcIDs": [
+            65068
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127287,
+      "hints": [
+        {
+          "itemIDs": [
+            91009
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87796
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87796
+          ],
+          "npcIDs": [
+            65068
+          ]
+        },
+        {
+          "itemIDs": [
+            91009
+          ],
+          "npcIDs": [
+            65068
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127288,
+      "hints": [
+        {
+          "itemIDs": [
+            91005
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87797
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87797
+          ],
+          "npcIDs": [
+            65068
+          ]
+        },
+        {
+          "itemIDs": [
+            91005
+          ],
+          "npcIDs": [
+            65068
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127289,
+      "hints": [
+        {
+          "itemIDs": [
+            91006
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87799
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87799
+          ],
+          "npcIDs": [
+            65068
+          ]
+        },
+        {
+          "itemIDs": [
+            91006
+          ],
+          "npcIDs": [
+            65068
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127290,
+      "hints": [
+        {
+          "itemIDs": [
+            91007
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87800
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87800
+          ],
+          "npcIDs": [
+            65068
+          ]
+        },
+        {
+          "itemIDs": [
+            91007
+          ],
+          "npcIDs": [
+            65068
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127293,
+      "hints": [
+        {
+          "itemIDs": [
+            91012
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87801
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87801
+          ],
+          "npcIDs": [
+            65068
+          ]
+        },
+        {
+          "itemIDs": [
+            91012
+          ],
+          "npcIDs": [
+            65068
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127295,
+      "hints": [
+        {
+          "itemIDs": [
+            91011
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87802
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87802
+          ],
+          "npcIDs": [
+            65068
+          ]
+        },
+        {
+          "itemIDs": [
+            91011
+          ],
+          "npcIDs": [
+            65068
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127302,
+      "hints": [
+        {
+          "itemIDs": [
+            91013
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87803
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87803
+          ],
+          "npcIDs": [
+            65068
+          ]
+        },
+        {
+          "itemIDs": [
+            91013
+          ],
+          "npcIDs": [
+            65068
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127308,
+      "hints": [
+        {
+          "itemIDs": [
+            91014
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87804
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87804
+          ],
+          "npcIDs": [
+            65068
+          ]
+        },
+        {
+          "itemIDs": [
+            91014
+          ],
+          "npcIDs": [
+            65068
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 127310,
+      "hints": [
+        {
+          "itemIDs": [
+            91015
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87805
+          ],
+          "npcIDs": [
+            66022
+          ]
+        },
+        {
+          "itemIDs": [
+            87805
+          ],
+          "npcIDs": [
+            65068
+          ]
+        },
+        {
+          "itemIDs": [
+            91015
+          ],
+          "npcIDs": [
+            65068
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 129552,
+      "hints": [
+        {
+          "itemIDs": [
+            89154
+          ],
+          "npcIDs": [
+            257969
+          ]
+        },
+        {
+          "itemIDs": [
+            89154
+          ],
+          "npcIDs": [
+            258126
+          ]
+        },
+        {
+          "itemIDs": [
+            89154
+          ],
+          "npcIDs": [
+            66973
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 129918,
+      "hints": [
+        {
+          "itemIDs": [
+            89304
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 129932,
+      "hints": [
+        {
+          "itemIDs": [
+            89305
+          ],
+          "npcIDs": [
+            64595
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 129934,
+      "hints": [
+        {
+          "itemIDs": [
+            89307
+          ],
+          "npcIDs": [
+            64595
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 129935,
+      "hints": [
+        {
+          "itemIDs": [
+            89306
+          ],
+          "npcIDs": [
+            64595
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 130086,
+      "hints": [
+        {
+          "itemIDs": [
+            89362
+          ],
+          "npcIDs": [
+            58706
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 130092,
+      "hints": [
+        {
+          "itemIDs": [
+            89363
+          ],
+          "npcIDs": [
+            64605
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 130137,
+      "hints": [
+        {
+          "itemIDs": [
+            89390
+          ],
+          "npcIDs": [
+            58706
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 130138,
+      "hints": [
+        {
+          "itemIDs": [
+            89391
+          ],
+          "npcIDs": [
+            58706
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 130965,
+      "hints": [
+        {
+          "itemIDs": [
+            89783
+          ],
+          "npcIDs": [
+            258121
+          ]
+        },
+        {
+          "itemIDs": [
+            89783
+          ],
+          "encounterIDs": [
+            725
+          ],
+          "mapIDs": [
+            377
+          ],
+          "npcIDs": [
+            62346
+          ],
+          "questIDs": [
+            32098
+          ]
+        },
+        {
+          "itemIDs": [
+            89783
+          ]
+        },
+        {
+          "itemIDs": [
+            89783
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 130985,
+      "hints": [
+        {
+          "itemIDs": [
+            89785
+          ],
+          "achievementIDs": [
+            6828
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 132036,
+      "hints": [
+        {
+          "itemIDs": [
+            90655
+          ],
+          "npcIDs": [
+            64403
+          ]
+        },
+        {
+          "itemIDs": [
+            90655
+          ]
+        },
+        {
+          "itemIDs": [
+            224374
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 132117,
+      "hints": [
+        {
+          "itemIDs": [
+            90710
+          ],
+          "npcIDs": [
+            257969
+          ]
+        },
+        {
+          "itemIDs": [
+            90710
+          ],
+          "npcIDs": [
+            258126
+          ]
+        },
+        {
+          "itemIDs": [
+            90710
+          ],
+          "npcIDs": [
+            66973
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 132118,
+      "hints": [
+        {
+          "itemIDs": [
+            90711
+          ],
+          "npcIDs": [
+            257969
+          ]
+        },
+        {
+          "itemIDs": [
+            90711
+          ],
+          "npcIDs": [
+            258126
+          ]
+        },
+        {
+          "itemIDs": [
+            90711
+          ],
+          "npcIDs": [
+            66973
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 132119,
+      "hints": [
+        {
+          "itemIDs": [
+            90712
+          ],
+          "npcIDs": [
+            257969
+          ]
+        },
+        {
+          "itemIDs": [
+            90712
+          ],
+          "npcIDs": [
+            258126
+          ]
+        },
+        {
+          "itemIDs": [
+            90712
+          ],
+          "npcIDs": [
+            66973
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 133023,
+      "hints": [
+        {
+          "itemIDs": [
+            91802
+          ],
+          "achievementIDs": [
+            7860
+          ]
+        },
+        {
+          "itemIDs": [
+            91802
+          ],
+          "achievementIDs": [
+            7862
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 134359,
+      "hints": [
+        {
+          "itemIDs": [
+            95416
+          ],
+          "professionIDs": [
+            202
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 134573,
+      "hints": [
+        {
+          "itemIDs": [
+            92724
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 135416,
+      "hints": [
+        {
+          "itemIDs": [
+            93168
+          ],
+          "npcIDs": [
+            69059
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 135418,
+      "hints": [
+        {
+          "itemIDs": [
+            93169
+          ],
+          "npcIDs": [
+            69060
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 136163,
+      "hints": [
+        {
+          "itemIDs": [
+            93385
+          ],
+          "questIDs": [
+            32455
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 136164,
+      "hints": [
+        {
+          "itemIDs": [
+            93386
+          ],
+          "questIDs": [
+            32399
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 136400,
+      "hints": [
+        {
+          "itemIDs": [
+            93662
+          ],
+          "instanceIDs": [
+            362
+          ],
+          "mapIDs": [
+            508,
+            509,
+            510,
+            511,
+            512,
+            513,
+            514,
+            515
+          ],
+          "achievementIDs": [
+            8124
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 136471,
+      "hints": [
+        {
+          "itemIDs": [
+            93666
+          ],
+          "npcIDs": [
+            258121
+          ]
+        },
+        {
+          "itemIDs": [
+            93666
+          ],
+          "npcIDs": [
+            267317
+          ]
+        },
+        {
+          "itemIDs": [
+            93666
+          ],
+          "instanceIDs": [
+            362
+          ],
+          "mapIDs": [
+            508,
+            509,
+            510,
+            511,
+            512,
+            513,
+            514,
+            515
+          ],
+          "encounterIDs": [
+            819
+          ],
+          "npcIDs": [
+            68476
+          ]
+        },
+        {
+          "itemIDs": [
+            93666
+          ]
+        },
+        {
+          "itemIDs": [
+            93666
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 136505,
+      "hints": [
+        {
+          "itemIDs": [
+            93671
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 138423,
+      "hints": [
+        {
+          "itemIDs": [
+            94228
+          ],
+          "npcIDs": [
+            258121
+          ]
+        },
+        {
+          "itemIDs": [
+            94228
+          ],
+          "encounterIDs": [
+            826
+          ],
+          "npcIDs": [
+            69161
+          ],
+          "questIDs": [
+            32519
+          ]
+        },
+        {
+          "itemIDs": [
+            94228
+          ]
+        },
+        {
+          "itemIDs": [
+            94228
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 138424,
+      "hints": [
+        {
+          "itemIDs": [
+            94230
+          ],
+          "npcIDs": [
+            258121
+          ]
+        },
+        {
+          "itemIDs": [
+            94230
+          ],
+          "npcIDs": [
+            69841
+          ]
+        },
+        {
+          "itemIDs": [
+            94230
+          ]
+        },
+        {
+          "itemIDs": [
+            94230
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 138425,
+      "hints": [
+        {
+          "itemIDs": [
+            94229
+          ],
+          "npcIDs": [
+            258121
+          ]
+        },
+        {
+          "itemIDs": [
+            94229
+          ],
+          "npcIDs": [
+            69769
+          ]
+        },
+        {
+          "itemIDs": [
+            94229
+          ]
+        },
+        {
+          "itemIDs": [
+            94229
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 138426,
+      "hints": [
+        {
+          "itemIDs": [
+            94231
+          ],
+          "npcIDs": [
+            258121
+          ]
+        },
+        {
+          "itemIDs": [
+            94231
+          ],
+          "npcIDs": [
+            267317
+          ]
+        },
+        {
+          "itemIDs": [
+            94231
+          ],
+          "npcIDs": [
+            69842
+          ]
+        },
+        {
+          "itemIDs": [
+            94231
+          ]
+        },
+        {
+          "itemIDs": [
+            94231
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 138640,
+      "hints": [
+        {
+          "itemIDs": [
+            94290
+          ],
+          "questIDs": [
+            32617
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 138641,
+      "hints": [
+        {
+          "itemIDs": [
+            94291
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 138642,
+      "hints": [
+        {
+          "itemIDs": [
+            94292
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 138643,
+      "hints": [
+        {
+          "itemIDs": [
+            94293
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 139407,
+      "hints": [
+        {
+          "itemIDs": [
+            95041
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 139442,
+      "hints": [
+        {
+          "itemIDs": [
+            95057
+          ],
+          "npcIDs": [
+            258121
+          ]
+        },
+        {
+          "itemIDs": [
+            95057
+          ],
+          "encounterIDs": [
+            814
+          ],
+          "mapIDs": [
+            505,
+            506,
+            516,
+            517
+          ],
+          "npcIDs": [
+            69099
+          ],
+          "questIDs": [
+            32518
+          ]
+        },
+        {
+          "itemIDs": [
+            95057
+          ]
+        },
+        {
+          "itemIDs": [
+            95057
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 139448,
+      "hints": [
+        {
+          "itemIDs": [
+            95059
+          ]
+        },
+        {
+          "itemIDs": [
+            95059
+          ],
+          "npcIDs": [
+            258121
+          ]
+        },
+        {
+          "itemIDs": [
+            95059
+          ],
+          "npcIDs": [
+            267317
+          ]
+        },
+        {
+          "itemIDs": [
+            95059
+          ],
+          "instanceIDs": [
+            362
+          ],
+          "mapIDs": [
+            508,
+            509,
+            510,
+            511,
+            512,
+            513,
+            514,
+            515
+          ],
+          "encounterIDs": [
+            828
+          ],
+          "npcIDs": [
+            69712
+          ]
+        },
+        {
+          "itemIDs": [
+            95059
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 139595,
+      "hints": [
+        {
+          "itemIDs": [
+            95341
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 140249,
+      "hints": [
+        {
+          "itemIDs": [
+            95564
+          ],
+          "npcIDs": [
+            68000
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 140250,
+      "hints": [
+        {
+          "itemIDs": [
+            95565
+          ],
+          "npcIDs": [
+            67672
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 142073,
+      "hints": [
+        {
+          "itemIDs": [
+            98618
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 142266,
+      "hints": [
+        {
+          "itemIDs": [
+            98104
+          ],
+          "achievementIDs": [
+            8302
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 142478,
+      "hints": [
+        {
+          "itemIDs": [
+            98259
+          ],
+          "achievementIDs": [
+            8304
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 142641,
+      "hints": [
+        {
+          "itemIDs": [
+            98405
+          ],
+          "npcIDs": [
+            68364
+          ]
+        },
+        {
+          "itemIDs": [
+            98405
+          ],
+          "npcIDs": [
+            68363
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 142878,
+      "hints": [
+        {
+          "itemIDs": [
+            97989
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 142910,
+      "hints": [
+        {
+          "itemIDs": [
+            129922
+          ],
+          "npcIDs": [
+            98690
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 146615,
+      "hints": [
+        {
+          "itemIDs": [
+            102514
+          ],
+          "npcIDs": [
+            73190
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 146622,
+      "hints": [
+        {
+          "itemIDs": [
+            102533
+          ],
+          "npcIDs": [
+            73151
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 148392,
+      "hints": [
+        {
+          "itemIDs": [
+            104208
+          ],
+          "instanceIDs": [
+            369
+          ],
+          "mapIDs": [
+            557,
+            558,
+            559,
+            560,
+            561,
+            562,
+            563,
+            564,
+            565,
+            566,
+            567,
+            568,
+            569,
+            570
+          ],
+          "achievementIDs": [
+            8454
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 148396,
+      "hints": [
+        {
+          "itemIDs": [
+            104246
+          ],
+          "instanceIDs": [
+            369
+          ],
+          "mapIDs": [
+            557,
+            558,
+            559,
+            560,
+            561,
+            562,
+            563,
+            564,
+            565,
+            566,
+            567,
+            568,
+            569,
+            570
+          ],
+          "encounterIDs": [
+            869
+          ],
+          "npcIDs": [
+            71865
+          ],
+          "achievementIDs": [
+            8398
+          ]
+        },
+        {
+          "itemIDs": [
+            104246
+          ],
+          "instanceIDs": [
+            369
+          ],
+          "mapIDs": [
+            557,
+            558,
+            559,
+            560,
+            561,
+            562,
+            563,
+            564,
+            565,
+            566,
+            567,
+            568,
+            569,
+            570
+          ],
+          "encounterIDs": [
+            869
+          ],
+          "npcIDs": [
+            71865
+          ],
+          "achievementIDs": [
+            8399
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 148417,
+      "hints": [
+        {
+          "itemIDs": [
+            104253
+          ],
+          "instanceIDs": [
+            369
+          ],
+          "mapIDs": [
+            557,
+            558,
+            559,
+            560,
+            561,
+            562,
+            563,
+            564,
+            565,
+            566,
+            567,
+            568,
+            569,
+            570
+          ],
+          "encounterIDs": [
+            869
+          ],
+          "npcIDs": [
+            71865
+          ]
+        },
+        {
+          "itemIDs": [
+            104253
+          ]
+        },
+        {
+          "itemIDs": [
+            104253
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 148428,
+      "hints": [
+        {
+          "itemIDs": [
+            103638
+          ],
+          "npcIDs": [
+            73307
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 148476,
+      "hints": [
+        {
+          "itemIDs": [
+            104269
+          ],
+          "npcIDs": [
+            73167
+          ],
+          "questIDs": [
+            33311
+          ]
+        },
+        {
+          "itemIDs": [
+            104269
+          ]
+        },
+        {
+          "itemIDs": [
+            104269
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 148618,
+      "hints": [
+        {
+          "itemIDs": [
+            104325
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 148619,
+      "hints": [
+        {
+          "itemIDs": [
+            104326
+          ],
+          "achievementIDs": [
+            8644
+          ]
+        },
+        {
+          "itemIDs": [
+            104326
+          ],
+          "achievementIDs": [
+            61352
+          ]
+        },
+        {
+          "itemIDs": [
+            104326
+          ],
+          "achievementIDs": [
+            61360
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 148620,
+      "hints": [
+        {
+          "itemIDs": [
+            104327
+          ],
+          "achievementIDs": [
+            8667
+          ]
+        },
+        {
+          "itemIDs": [
+            104327
+          ],
+          "achievementIDs": [
+            61353
+          ]
+        },
+        {
+          "itemIDs": [
+            104327
+          ],
+          "achievementIDs": [
+            61361
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 149801,
+      "hints": [
+        {
+          "itemIDs": [
+            106246
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 153489,
+      "hints": [
+        {
+          "itemIDs": [
+            107951
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 155741,
+      "hints": [
+        {
+          "itemIDs": [
+            109013
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 163024,
+      "hints": [
+        {
+          "itemIDs": [
+            112326
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 163025,
+      "hints": [
+        {
+          "itemIDs": [
+            112327
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 348459,
+      "hints": [
+        {
+          "itemIDs": [
+            184865
+          ]
+        },
+        {
+          "itemIDs": [
+            184865
+          ],
+          "questIDs": [
+            63450
+          ],
+          "mapIDs": [
+            1453,
+            1454,
+            1455,
+            1456,
+            1458,
+            1947,
+            1954,
+            1955
+          ]
+        },
+        {
+          "itemIDs": [
+            184865
+          ],
+          "questIDs": [
+            63450
+          ],
+          "mapIDs": [
+            84,
+            85,
+            87,
+            88,
+            103,
+            110,
+            111,
+            998
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 372677,
+      "hints": [
+        {
+          "itemIDs": [
+            192455
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 387308,
+      "hints": [
+        {
+          "itemIDs": [
+            198631
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 387311,
+      "hints": [
+        {
+          "itemIDs": [
+            198628
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 387319,
+      "hints": [
+        {
+          "itemIDs": [
+            198632
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 387320,
+      "hints": [
+        {
+          "itemIDs": [
+            198630
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 387321,
+      "hints": [
+        {
+          "itemIDs": [
+            198633
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 387323,
+      "hints": [
+        {
+          "itemIDs": [
+            198629
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 388516,
+      "hints": [
+        {
+          "itemIDs": [
+            199931
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 394209,
+      "hints": [
+        {
+          "itemIDs": [
+            201699
+          ],
+          "questIDs": [
+            72523
+          ],
+          "mapIDs": [
+            1453,
+            1454,
+            1455,
+            1456,
+            1458,
+            1947,
+            1954,
+            1955
+          ]
+        },
+        {
+          "itemIDs": [
+            201699
+          ]
+        },
+        {
+          "itemIDs": [
+            201699
+          ],
+          "questIDs": [
+            72523
+          ],
+          "mapIDs": [
+            84,
+            85,
+            87,
+            88,
+            103,
+            110,
+            111,
+            998
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 416158,
+      "hints": [
+        {
+          "itemIDs": [
+            207097
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 435115,
+      "hints": [
+        {
+          "itemIDs": [
+            213601
+          ],
+          "npcIDs": [
+            219032
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 446902,
+      "hints": [
+        {
+          "itemIDs": [
+            265937
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 459538,
+      "hints": [
+        {
+          "itemIDs": [
+            226812
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 471440,
+      "hints": [
+        {
+          "itemIDs": [
+            232614
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 473739,
+      "hints": [
+        {
+          "itemIDs": [
+            233282
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 473741,
+      "hints": [
+        {
+          "itemIDs": [
+            233283
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 473743,
+      "hints": [
+        {
+          "itemIDs": [
+            233284
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 473744,
+      "hints": [
+        {
+          "itemIDs": [
+            233285
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 473745,
+      "hints": [
+        {
+          "itemIDs": [
+            233286
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1247591,
+      "hints": [
+        {
+          "itemIDs": [
+            248741
+          ],
+          "npcIDs": [
+            248108
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1247596,
+      "hints": [
+        {
+          "itemIDs": [
+            248743
+          ],
+          "npcIDs": [
+            267317
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1247597,
+      "hints": [
+        {
+          "itemIDs": [
+            248744
+          ],
+          "achievementIDs": [
+            62060
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1247598,
+      "hints": [
+        {
+          "itemIDs": [
+            248742
+          ],
+          "achievementIDs": [
+            62055
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1249659,
+      "hints": [
+        {
+          "itemIDs": [
+            258883
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1250045,
+      "hints": [
+        {
+          "itemIDs": [
+            265944
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1266345,
+      "hints": [
+        {
+          "itemIDs": [
+            260438
+          ]
+        },
+        {
+          "itemIDs": [
+            260438
+          ],
+          "questIDs": [
+            93824
+          ],
+          "mapIDs": [
+            1453,
+            1454,
+            1455,
+            1456,
+            1458,
+            1947,
+            1954,
+            1955
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1266866,
+      "hints": [
+        {
+          "itemIDs": [
+            260759
+          ]
+        },
+        {
+          "itemIDs": [
+            260759
+          ],
+          "questIDs": [
+            93824
+          ],
+          "mapIDs": [
+            1453,
+            1454,
+            1455,
+            1456,
+            1458,
+            1947,
+            1954,
+            1955
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1266982,
+      "hints": [
+        {
+          "itemIDs": [
+            269659
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1267077,
+      "hints": [
+        {
+          "itemIDs": [
+            262344
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1272988,
+      "hints": [
+        {
+          "itemIDs": [
+            264986
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1284044,
+      "hints": [
+        {
+          "itemIDs": [
+            268924
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1284679,
+      "hints": [
+        {
+          "itemIDs": [
+            269012
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1285725,
+      "hints": [
+        {
+          "itemIDs": [
+            254735
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1285897,
+      "hints": [
+        {
+          "itemIDs": [
+            269640
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1291315,
+      "hints": [
+        {
+          "itemIDs": [
+            272920
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1298510,
+      "hints": [
+        {
+          "itemIDs": [
+            275928
+          ],
+          "achievementIDs": [
+            62059
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1298512,
+      "hints": [
+        {
+          "itemIDs": [
+            276075
+          ],
+          "npcIDs": [
+            257969
+          ]
+        },
+        {
+          "itemIDs": [
+            276075
+          ],
+          "npcIDs": [
+            258126
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1298516,
+      "hints": [
+        {
+          "itemIDs": [
+            276081
+          ],
+          "npcIDs": [
+            257969
+          ]
+        },
+        {
+          "itemIDs": [
+            276081
+          ],
+          "npcIDs": [
+            258126
+          ]
+        }
+      ]
+    },
+    {
+      "spellID": 1302506,
+      "hints": [
+        {
+          "itemIDs": [
+            277652
+          ],
+          "npcIDs": [
+            257969
+          ]
+        },
+        {
+          "itemIDs": [
+            277652
+          ],
+          "npcIDs": [
+            258126
+          ]
+        }
+      ]
+    }
+  ]
+}

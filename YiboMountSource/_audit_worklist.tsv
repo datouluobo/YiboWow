@@ -1,0 +1,528 @@
+spellID	key	status	enUS	zhCN	srcType	avail	path	price	notes	nSources	factions	classes	itemIDs	clientSourceType	clientSourceText	clientFaction	inInventory
+458	provisional-458	candidate	Mount 458	棕马	vendor	unknown	暴风城 > 艾尔文森林 > 东谷伐木场 > 格瑞戈·玛克温斯	10金币（声望折扣）		1			5656	0		1	True
+459	fact-459	candidate	Mount 459	灰狼	vendor	obtainable	奥格瑞玛 > 杜隆塔尔 > 奥格瑞玛 > 奥古纳罗		10金币（声望折扣）。	1	HORDE			0			True
+468	fact-468	candidate	Mount 468	白马	vendor	obtainable	暴风城 > 暴风城 > 凯蒂·斯托克斯		10金币（声望折扣）。	1	ALLIANCE			0			True
+470	provisional-470	candidate	Mount 470	黑马	vendor	unknown	暴风城 > 暴风城 > 凯蒂·斯托克斯	10金币（声望折扣）		1			2411	0		1	True
+472	provisional-472	candidate	Mount 472	杂色马	vendor	unknown	暴风城 > 艾尔文森林 > 东谷伐木场 > 格瑞戈·玛克温斯	10金币（声望折扣）		1			2414	0		1	True
+578	fact-578	candidate	Mount 578	黑狼	vendor	obtainable	奥格瑞玛 > 杜隆塔尔 > 奥格瑞玛 > 奥古纳罗		10金币（声望折扣）。	1	HORDE			0			True
+579	fact-579	candidate	Mount 579	赤狼	vendor	obtainable	奥格瑞玛 > 杜隆塔尔 > 奥格瑞玛 > 奥古纳罗		10金币（声望折扣）。	1	HORDE			0			True
+580	provisional-580	candidate	Mount 580	森林狼	vendor	unknown	奥格瑞玛 > 杜隆塔尔 > 奥格瑞玛 > 奥古纳罗	10金币（声望折扣）		1			1132	0		0	True
+581	fact-581	candidate	Mount 581	冬狼	vendor	obtainable	奥格瑞玛 > 杜隆塔尔 > 奥格瑞玛 > 奥古纳罗		10金币（声望折扣）。	1	HORDE			0			True
+5784	fact-5784	candidate	Mount 5784	地狱战马	class_reward	obtainable	术士 > 20级职业训练师 > 召唤地狱战马		术士专属召唤法术；20级由职业训练师教授，非背包物品。	1		WARLOCK		0			True
+6648	provisional-6648	candidate	Mount 6648	栗色马	vendor	unknown	暴风城 > 艾尔文森林 > 东谷伐木场 > 格瑞戈·玛克温斯	10金币（声望折扣）		1			5655	0		1	True
+6653	provisional-6653	candidate	Mount 6653	恐狼	vendor	unknown	奥格瑞玛 > 杜隆塔尔 > 奥格瑞玛 > 奥古纳罗	10金币（声望折扣）		1			5665	0		0	True
+6654	provisional-6654	candidate	Mount 6654	棕狼	vendor	unknown	奥格瑞玛 > 杜隆塔尔 > 奥格瑞玛 > 奥古纳罗	10金币（声望折扣）		1			5668	0		0	True
+6777	provisional-6777	candidate	Mount 6777	灰山羊	vendor	unknown	铁炉堡 > 丹莫罗 > 铁炉堡 > 维隆·冻石	10金币（声望折扣）		1			5864	0		1	True
+6896	fact-6896	candidate	Mount 6896	黑山羊	vendor	obtainable	铁炉堡 > 丹莫罗 > 铁炉堡 > 维隆·冻石		10金币（声望折扣）。	1	ALLIANCE			0			True
+6898	provisional-6898	candidate	Mount 6898	白山羊	vendor	unknown	铁炉堡 > 丹莫罗 > 铁炉堡 > 维隆·冻石	10金币（声望折扣）		1			5873	0		1	True
+6899	provisional-6899	candidate	Mount 6899	棕山羊	vendor	unknown	铁炉堡 > 丹莫罗 > 铁炉堡 > 维隆·冻石	10金币（声望折扣）		1			5872	0		1	True
+8394	provisional-8394	candidate	Mount 8394	条纹霜刃豹	vendor	unknown	达纳苏斯 > 泰达希尔 > 多兰纳尔 > 莱兰奈	10金币（声望折扣）		1			8631	0		1	True
+8395	provisional-8395	candidate	Mount 8395	绿色迅猛龙	vendor	unknown	暗矛巨魔 > 杜隆塔尔 > 森金村 > 祖尼尔	10金币（声望折扣）		1			8588	0		0	True
+8980	fact-8980	candidate	Mount 8980	骸骨战马	vendor	obtainable	幽暗城 > 提瑞斯法林地 > 布瑞尔 > 撒迦利亚·普斯特		10金币（声望折扣）。	1	HORDE			0			True
+10789	provisional-10789	candidate	Mount 10789	斑点霜刃豹	vendor	unknown	达纳苏斯 > 泰达希尔 > 多兰纳尔 > 莱兰奈	10金币（声望折扣）		1			8632	0		1	True
+10790	fact-10790	candidate	Mount 10790	黑纹虎	vendor	obtainable	达纳苏斯 > 泰达希尔 > 多兰纳尔 > 莱兰奈		10金币（声望折扣）。	1	ALLIANCE			0			True
+10793	provisional-10793	candidate	Mount 10793	条纹夜刃豹	vendor	unknown	达纳苏斯 > 泰达希尔 > 多兰纳尔 > 莱兰奈	10金币（声望折扣）		1			8629	0		1	True
+10795	fact-10795	candidate	Mount 10795	白色迅猛龙	vendor	obtainable	暗矛巨魔 > 杜隆塔尔 > 森金村 > 祖尼尔		10金币（声望折扣）。	1	HORDE			0			True
+10796	provisional-10796	candidate	Mount 10796	青色迅猛龙	vendor	unknown	暗矛巨魔 > 杜隆塔尔 > 森金村 > 祖尼尔	10金币（声望折扣）		1			8591	0		0	True
+10799	provisional-10799	candidate	Mount 10799	紫色迅猛龙	vendor	unknown	暗矛巨魔 > 杜隆塔尔 > 森金村 > 祖尼尔	10金币（声望折扣）		1			8592	0		0	True
+10873	provisional-10873	candidate	Mount 10873	红色机械陆行鸟	vendor	unknown	诺莫瑞根 > 丹莫罗 > 卡拉诺斯 > 米利·羽哨	10金币（声望折扣）		1			8563	0		1	True
+10969	provisional-10969	candidate	Mount 10969	蓝色机械陆行鸟	vendor	unknown	诺莫瑞根 > 丹莫罗 > 卡拉诺斯 > 米利·羽哨	10金币（声望折扣）		1			8595	0		1	True
+13819	fact-13819	candidate	Mount 13819	军马	class_reward	obtainable	人类/矮人圣骑士 > 20级职业训练师 > 召唤军马		仅限人类或矮人圣骑士的召唤法术；20级由职业训练师教授，非背包物品。	1	ALLIANCE	PALADIN		0		1	True
+15779	fact-15779	candidate	Mount 15779	白色机械陆行鸟B型	vendor	unknown	诺莫瑞根 > 丹莫罗 > 卡拉诺斯 > 米利·羽哨	10金币（声望折扣）		1				0		1	True
+15780	excluded-15780	candidate	Mount 15780	绿色机械陆行鸟	vendor	obtainable	诺莫瑞根 > 丹莫罗 > 卡拉诺斯 > 米利·羽哨		10金币（声望折扣）。	1	ALLIANCE			0			True
+16056	fact-16056	candidate	Mount 16056	上古霜刃豹	vendor	unknown	达纳苏斯 > 泰达希尔 > 多兰纳尔 > 莱兰奈	10金币（声望折扣）		1				0		1	True
+16080	fact-16080	candidate	Mount 16080	赤狼	vendor	unknown	奥格瑞玛 > 杜隆塔尔 > 奥格瑞玛 > 奥古纳罗	10金币（声望折扣）		1				0		0	True
+16082	fact-16082	candidate	Mount 16082	褐色马	vendor	unknown	暴风城 > 艾尔文森林 > 东谷伐木场 > 艾玛	10金币（声望折扣）		1				0		1	True
+16083	fact-16083	candidate	Mount 16083	白马	vendor	unknown	暴风城 > 艾尔文森林 > 东谷伐木场 > 艾玛	10金币（声望折扣）		1				0		1	True
+16084	fact-16084	candidate	Mount 16084	杂斑红色迅猛龙	vendor	unknown	暗矛巨魔 > 杜隆塔尔 > 森金村 > 祖尼尔	10金币（声望折扣）		1				0		0	True
+17229	provisional-17229	candidate	Mount 17229	冬泉霜刃豹	quest	unknown	飞速成长			1			13086	0		1	True
+17450	fact-17450	candidate	Mount 17450	白色迅猛龙	vendor	unknown	暗矛巨魔 > 杜隆塔尔 > 森金村 > 祖尼尔	10金币（声望折扣）		1				0		0	True
+17453	provisional-17453	candidate	Mount 17453	绿色机械陆行鸟	vendor	unknown	诺莫瑞根 > 丹莫罗 > 卡拉诺斯 > 米利·羽哨	10金币（声望折扣）		1			13321	0		1	True
+17454	fact-17454	candidate	Mount 17454	未涂色的机械陆行鸟	vendor	unknown	诺莫瑞根 > 丹莫罗 > 卡拉诺斯 > 米利·羽哨	10金币（声望折扣）		1				0		1	True
+17459	fact-17459	candidate	Mount 17459	冰蓝色机械陆行鸟A型	vendor	unknown	诺莫瑞根 > 丹莫罗 > 卡拉诺斯 > 米利·羽哨	10金币（声望折扣）		1				0		1	True
+17460	fact-17460	candidate	Mount 17460	霜山羊	vendor	unknown	铁炉堡 > 丹莫罗 > 铁炉堡 > 维隆·冻石	10金币（声望折扣）		1				0		1	True
+17461	fact-17461	candidate	Mount 17461	黑山羊	vendor	unknown	铁炉堡 > 丹莫罗 > 铁炉堡 > 维隆·冻石	10金币（声望折扣）		1				0		1	True
+17462	provisional-17462	candidate	Mount 17462	红色骸骨军马	vendor	unknown	幽暗城 > 提瑞斯法林地 > 布瑞尔 > 撒迦利亚·普斯特	10金币（声望折扣）		1			13331	0		0	True
+17463	provisional-17463	candidate	Mount 17463	蓝色骸骨军马	vendor	unknown	幽暗城 > 提瑞斯法林地 > 布瑞尔 > 撒迦利亚·普斯特	10金币（声望折扣）		1			13332	0		0	True
+17464	provisional-17464	candidate	Mount 17464	棕色骸骨军马	vendor	unknown	幽暗城 > 提瑞斯法林地 > 布瑞尔 > 撒迦利亚·普斯特	10金币（声望折扣）		1			13333	0		0	True
+17465	provisional-17465	candidate	Mount 17465	绿色骸骨战马	vendor	unknown	幽暗城 > 提瑞斯法林地 > 布瑞尔 > 撒迦利亚·普斯特	10金币（声望折扣）		1			13334	0		0	True
+17481	rivendares-deathcharger	candidate	Rivendare's Deathcharger	瑞文戴尔的死亡战马	boss_drop	obtainable	东瘟疫之地 > 斯坦索姆 > 瑞文戴尔男爵			1			13335	0			True
+18363	fact-18363	candidate	Mount 18363	科多兽坐骑	research	unknown	来源待补全			1				0			True
+18989	provisional-18989	candidate	Mount 18989	灰色科多兽	vendor	unknown	雷霆崖 > 莫高雷 > 血蹄村 > 哈布·爪蹄	10金币（声望折扣）		1			15277	0		0	True
+18990	provisional-18990	candidate	Mount 18990	棕色科多兽	vendor	unknown	雷霆崖 > 莫高雷 > 血蹄村 > 哈布·爪蹄	10金币（声望折扣）		1			15290	0		0	True
+18991	fact-18991	candidate	Mount 18991	绿色科多兽	vendor	unknown	雷霆崖 > 莫高雷 > 血蹄村 > 哈布·爪蹄	10金币（声望折扣）		1				0		0	True
+18992	fact-18992	candidate	Mount 18992	蓝色科多兽	vendor	unknown	雷霆崖 > 莫高雷 > 血蹄村 > 哈布·爪蹄	10金币（声望折扣）		1				0		0	True
+22717	provisional-22717	candidate	Mount 22717	黑色战驹	vendor	unknown	联盟 > 暴风城 > 勇士大厅 > 卡特尔中尉	2,000荣誉点数	 PVP 荣誉点数商人坐骑。	1			29468	0		1	True
+22718	provisional-22718	candidate	Mount 22718	黑色作战科多兽	vendor	unknown	部落 > 奥格瑞玛 > 传说大厅 > 狼骑兵波尔克	2,000荣誉点数	 PVP 荣誉点数商人坐骑。	1			29466	0		0	True
+22719	provisional-22719	candidate	Mount 22719	黑色作战机械陆行鸟	vendor	unknown	联盟 > 暴风城 > 勇士大厅 > 卡特尔中尉	2,000荣誉点数	 PVP 荣誉点数商人坐骑。	1			29465	0		1	True
+22720	provisional-22720	candidate	Mount 22720	黑色战羊	vendor	unknown	联盟 > 暴风城 > 勇士大厅 > 卡特尔中尉	2,000荣誉点数	 PVP 荣誉点数商人坐骑。	1			29467	0		1	True
+22721	provisional-22721	candidate	Mount 22721	黑色作战迅猛龙	vendor	unknown	部落 > 奥格瑞玛 > 传说大厅 > 狼骑兵波尔克	2,000荣誉点数	 PVP 荣誉点数商人坐骑。	1			29472	0		0	True
+22722	provisional-22722	candidate	Mount 22722	红色骷髅战马	vendor	unknown	部落 > 奥格瑞玛 > 传说大厅 > 狼骑兵波尔克	2,000荣誉点数	 PVP 荣誉点数商人坐骑。	1			29470	0		0	True
+22723	provisional-22723	candidate	Mount 22723	黑色战豹	vendor	unknown	联盟 > 暴风城 > 勇士大厅 > 卡特尔中尉	2,000荣誉点数	 PVP 荣誉点数商人坐骑。	1			29471	0		1	True
+22724	provisional-22724	candidate	Mount 22724	黑色战狼	vendor	unknown	部落 > 奥格瑞玛 > 传说大厅 > 狼骑兵波尔克	2,000荣誉点数	 PVP 荣誉点数商人坐骑。	1			29469	0		0	True
+23161	fact-23161	candidate	Mount 23161	恐惧战马	class_reward	obtainable	术士 > 40级职业训练师 > 召唤恐惧战马		术士专属召唤法术；40级由职业训练师教授，非背包物品。	1		WARLOCK		0			True
+23214	fact-23214	candidate	Mount 23214	战马	class_reward	obtainable	人类/矮人圣骑士 > 40级职业训练师 > 召唤战马		仅限人类或矮人圣骑士的召唤法术；40级由职业训练师教授，非背包物品。	1	ALLIANCE	PALADIN		0		1	True
+23219	provisional-23219	candidate	Mount 23219	迅捷雾刃豹	vendor	unknown	达纳苏斯 > 泰达希尔 > 多兰纳尔 > 莱兰奈	100金币（声望折扣）		1			18767	0		1	True
+23221	provisional-23221	candidate	Mount 23221	迅捷霜刃豹	vendor	unknown	达纳苏斯 > 泰达希尔 > 多兰纳尔 > 莱兰奈	100金币（声望折扣）		1			18766	0		1	True
+23222	provisional-23222	candidate	Mount 23222	迅捷黄色机械陆行鸟	vendor	unknown	诺莫瑞根 > 丹莫罗 > 卡拉诺斯 > 米利·羽哨	10金币（声望折扣）		1			18774	0		1	True
+23223	provisional-23223	candidate	Mount 23223	迅捷白色机械陆行鸟	vendor	unknown	诺莫瑞根 > 丹莫罗 > 卡拉诺斯 > 米利·羽哨	10金币（声望折扣）		1			18773	0		1	True
+23225	provisional-23225	candidate	Mount 23225	迅捷绿色机械陆行鸟	vendor	unknown	诺莫瑞根 > 丹莫罗 > 卡拉诺斯 > 米利·羽哨	10金币（声望折扣）		1			18772	0		1	True
+23227	provisional-23227	candidate	Mount 23227	迅捷褐色马	vendor	unknown	暴风城 > 艾尔文森林 > 东谷伐木场 > 格瑞戈·玛克温斯	100金币（声望折扣）		1			18776	0		1	True
+23228	provisional-23228	candidate	Mount 23228	迅捷白马	vendor	unknown	暴风城 > 艾尔文森林 > 东谷伐木场 > 格瑞戈·玛克温斯	100金币（声望折扣）		1			18778	0		1	True
+23229	provisional-23229	candidate	Mount 23229	迅捷棕马	vendor	unknown	暴风城 > 艾尔文森林 > 东谷伐木场 > 格瑞戈·玛克温斯	100金币（声望折扣）		1			18777	0		1	True
+23238	provisional-23238	candidate	Mount 23238	迅捷棕山羊	vendor	unknown	铁炉堡 > 丹莫罗 > 铁炉堡 > 维隆·冻石	100金币（声望折扣）		1			18786	0		1	True
+23239	provisional-23239	candidate	Mount 23239	迅捷灰山羊	vendor	unknown	铁炉堡 > 丹莫罗 > 铁炉堡 > 维隆·冻石	100金币（声望折扣）		1			18787	0		1	True
+23240	provisional-23240	candidate	Mount 23240	迅捷白山羊	vendor	unknown	铁炉堡 > 丹莫罗 > 铁炉堡 > 维隆·冻石	100金币（声望折扣）		1			18785	0		1	True
+23241	provisional-23241	candidate	Mount 23241	迅捷蓝色迅猛龙	vendor	unknown	暗矛巨魔 > 杜隆塔尔 > 森金村 > 祖尼尔	100金币（声望折扣）		1			18788	0		0	True
+23242	provisional-23242	candidate	Mount 23242	迅捷绿色迅猛龙	vendor	unknown	暗矛巨魔 > 杜隆塔尔 > 森金村 > 祖尼尔	100金币（声望折扣）		1			18789	0		0	True
+23243	provisional-23243	candidate	Mount 23243	迅捷橙色迅猛龙	vendor	unknown	暗矛巨魔 > 杜隆塔尔 > 森金村 > 祖尼尔	100金币（声望折扣）		1			18790	0		0	True
+23246	provisional-23246	candidate	Mount 23246	紫色骷髅战马	vendor	unknown	幽暗城 > 提瑞斯法林地 > 布瑞尔 > 撒迦利亚·普斯特	100金币（声望折扣）		1			18791	0		0	True
+23247	provisional-23247	candidate	Mount 23247	迅捷白色科多兽	vendor	unknown	雷霆崖 > 莫高雷 > 血蹄村 > 哈布·爪蹄	100金币（声望折扣）		1			18793	0		0	True
+23248	provisional-23248	candidate	Mount 23248	大型灰色科多兽	vendor	unknown	雷霆崖 > 莫高雷 > 血蹄村 > 哈布·爪蹄	100金币（声望折扣）		1			18795	0		0	True
+23249	provisional-23249	candidate	Mount 23249	大型棕色科多兽	vendor	unknown	雷霆崖 > 莫高雷 > 血蹄村 > 哈布·爪蹄	100金币（声望折扣）		1			18794	0		0	True
+23250	provisional-23250	candidate	Mount 23250	迅捷棕狼	vendor	unknown	奥格瑞玛 > 杜隆塔尔 > 奥格瑞玛 > 奥古纳罗	100金币（声望折扣）		1			18796	0		0	True
+23251	provisional-23251	candidate	Mount 23251	迅捷森林狼	vendor	unknown	奥格瑞玛 > 杜隆塔尔 > 奥格瑞玛 > 奥古纳罗	100金币（声望折扣）		1			18797	0		0	True
+23252	provisional-23252	candidate	Mount 23252	迅捷灰狼	vendor	unknown	奥格瑞玛 > 杜隆塔尔 > 奥格瑞玛 > 奥古纳罗	100金币（声望折扣）		1			18798	0		0	True
+23338	provisional-23338	candidate	Mount 23338	迅捷雷刃豹	vendor	unknown	达纳苏斯 > 泰达希尔 > 多兰纳尔 > 莱兰奈	100金币（声望折扣）		1			18902	0		1	True
+23509	provisional-23509	candidate	Mount 23509	霜狼嗥叫者	reputation_vendor	obtainable	霜狼氏族（崇拜） > 奥特兰克山谷 > 格伦达·狼心	2,000荣誉点数	 奥特兰克山谷战场声望坐骑。 奥特兰克山谷战场声望坐骑。	1			19029	0		0	True
+23510	provisional-23510	candidate	Mount 23510	雷矛军用坐骑	reputation_vendor	obtainable	雷矛卫队（崇拜） > 奥特兰克山谷 > 盖尔丁	2,000荣誉点数	 奥特兰克山谷战场声望坐骑。 奥特兰克山谷战场声望坐骑。	1			19030	0		1	True
+24242	fact-24242	candidate	Mount 24242	拉扎什迅猛龙	rare_drop	unknown	荆棘谷 > 祖尔格拉布20人 > 血领主曼多基尔			1				0			True
+24252	fact-24252	candidate	Mount 24252	迅捷祖利安猛虎	rare_drop	unknown	荆棘谷 > 祖尔格拉布20人 > 高阶祭司塞卡尔			1				0			True
+25863	excluded-25863	verified	Mount 25863	黑色其拉作战坦克	event	unavailable	希利苏斯 > 安其拉开门事件 > 敲响甲虫之锣		甲虫之王任务线和服务器开门窗口限定；窗口结束后不可新获得。	1				0			True
+25953	provisional-25953	candidate	Mount 25953	蓝色其拉作战坦克	boss_drop	unknown	希利苏斯 > 安其拉废墟20人 > 无疤者奥斯里安			1			21218	0			True
+26054	provisional-26054	candidate	Mount 26054	红色其拉作战坦克	boss_drop	unknown	希利苏斯 > 安其拉废墟20人 > 无疤者奥斯里安			1			21321	0			True
+26055	provisional-26055	candidate	Mount 26055	黄色其拉作战坦克	boss_drop	unknown	希利苏斯 > 安其拉废墟20人 > 无疤者奥斯里安			1			21324	0			True
+26056	provisional-26056	candidate	Mount 26056	绿色其拉作战坦克	boss_drop	unknown	希利苏斯 > 安其拉废墟20人 > 无疤者奥斯里安			1			21323	0			True
+26655	excluded-26655	verified	Mount 26655	黑色其拉作战坦克	event	unavailable	希利苏斯 > 安其拉开门事件 > 敲响甲虫之锣		甲虫之王任务线和服务器开门窗口限定；窗口结束后不可新获得。	1				0			True
+26656	fact-26656	verified	Mount 26656	黑色其拉作战坦克	event	unavailable	希利苏斯 > 安其拉开门事件 > 敲响甲虫之锣		黑色其拉作战坦克的另一召唤法术变体；甲虫之王任务线和服务器开门窗口限定。	1				0			True
+28828	excluded-28828	verified	Mount 28828	虚空幼龙	reputation_vendor	obtainable	灵翼之龙（崇拜） > 影月谷 > 灵翼浮岛 > 灵翼幼龙管理员		灵翼之龙崇拜后选择奖励；并非绝版。	1				0			True
+30174	fact-30174	verified	Mount 30174	骑乘乌龟	event	limited_time	流沙秘宝库			1				0			True
+32235	provisional-32235	candidate	Mount 32235	金色狮鹫	vendor	unknown	联盟 > 影月谷 > 蛮锤要塞 > 塔尼克·石喙	50金币		1			25470	0		1	True
+32239	fact-32239	candidate	Mount 32239	黑色狮鹫	vendor	unknown	联盟 > 影月谷 > 蛮锤要塞 > 塔尼克·石喙	50金币		1				0		1	True
+32240	provisional-32240	candidate	Mount 32240	雪色狮鹫	vendor	unknown	联盟 > 影月谷 > 蛮锤要塞 > 塔尼克·石喙	50金币		1			25472	0		1	True
+32242	provisional-32242	candidate	Mount 32242	迅捷蓝色狮鹫	vendor	unknown	联盟 > 影月谷 > 蛮锤要塞 > 塔尼克·石喙	50金币		1			25473	0		1	True
+32243	provisional-32243	candidate	Mount 32243	茶色驭风者	vendor	unknown	部落 > 影月谷 > 影月村 > 卓卡玛	50金币		1			25474	0		0	True
+32244	provisional-32244	candidate	Mount 32244	蓝色驭风者	vendor	unknown	部落 > 影月谷 > 影月村 > 卓卡玛	50金币		1			25475	0		0	True
+32245	provisional-32245	candidate	Mount 32245	绿色驭风者	vendor	unknown	部落 > 影月谷 > 影月村 > 卓卡玛	50金币		1			25476	0		0	True
+32246	provisional-32246	candidate	Mount 32246	迅捷红色驭风者	vendor	unknown	部落 > 影月谷 > 影月村 > 卓卡玛	50金币		1			25477	0		0	True
+32289	provisional-32289	candidate	Mount 32289	迅捷红色狮鹫	vendor	unknown	联盟 > 影月谷 > 蛮锤要塞 > 塔尼克·石喙	50金币		1			25527	0		1	True
+32290	provisional-32290	candidate	Mount 32290	迅捷绿色狮鹫	vendor	unknown	联盟 > 影月谷 > 蛮锤要塞 > 塔尼克·石喙	50金币		1			25528	0		1	True
+32292	provisional-32292	candidate	Mount 32292	迅捷紫色狮鹫	vendor	unknown	联盟 > 影月谷 > 蛮锤要塞 > 塔尼克·石喙	50金币		1			25529	0		1	True
+32295	provisional-32295	candidate	Mount 32295	迅捷绿色驭风者	vendor	unknown	部落 > 影月谷 > 影月村 > 卓卡玛	50金币		1			25531	0		0	True
+32296	provisional-32296	candidate	Mount 32296	迅捷黄色驭风者	vendor	unknown	部落 > 影月谷 > 影月村 > 卓卡玛	50金币		1			25532	0		0	True
+32297	provisional-32297	candidate	Mount 32297	迅捷紫色驭风者	vendor	unknown	部落 > 影月谷 > 影月村 > 卓卡玛	50金币		1			25533	0		0	True
+33630	excluded-33630	candidate	Mount 33630	蓝色机械陆行鸟	vendor	obtainable	诺莫瑞根 > 丹莫罗 > 卡拉诺斯 > 米利·羽哨		10金币（声望折扣）。	1	ALLIANCE			0			True
+33660	provisional-33660	candidate	Mount 33660	迅捷粉色陆行鸟	vendor	unknown	银月城 > 永歌森林 > 银月城 > 维奈丝特拉	10金币（声望折扣）		1			28936	0		0	True
+34406	provisional-34406	candidate	Mount 34406	棕色雷象	vendor	unknown	埃索达 > 秘蓝岛 > 埃索达 > 象群管理者妥拉留斯	10金币（声望折扣）		1			28481	0		1	True
+34767	fact-34767	candidate	Mount 34767	奎尔萨拉斯战马	class_reward	obtainable	血精灵圣骑士 > 30级职业训练师 > 召唤奎尔萨拉斯战马		血精灵圣骑士专属召唤法术；学习专家骑术后由职业训练师教授，非背包物品。	1	HORDE	PALADIN		0		0	True
+34769	excluded-34769	candidate	Mount 34769	奎尔萨拉斯军马	class_reward	obtainable	血精灵圣骑士 > 60级职业训练师 > 召唤奎尔萨拉斯军马		血精灵圣骑士专属召唤法术；学习高级骑术后由职业训练师教授，非背包物品。	1	HORDE	PALADIN		0		0	True
+34790	provisional-34790	candidate	Mount 34790	暗色作战塔布羊	reputation_vendor	obtainable	玛格汉（崇拜） > 纳格兰 > 加拉达尔 > 阿尔德兰	100金币（声望折扣）		1			29228	0			True
+34795	provisional-34795	candidate	Mount 34795	红色陆行鸟	vendor	unknown	银月城 > 永歌森林 > 银月城 > 维奈丝特拉	10金币（声望折扣）		1			28927	0		0	True
+34896	provisional-34896	candidate	Mount 34896	蓝色作战塔布羊	reputation_vendor	obtainable	库雷尼（崇拜） > 纳格兰 > 塔拉 > 补给官纳瑟拉	100金币（声望折扣）		1			29227	0			True
+34897	provisional-34897	candidate	Mount 34897	白色作战塔布羊	reputation_vendor	obtainable	库雷尼（崇拜） > 纳格兰 > 塔拉 > 补给官纳瑟拉	100金币（声望折扣）		1			29103	0			True
+34898	provisional-34898	candidate	Mount 34898	银色作战塔布羊	reputation_vendor	obtainable	库雷尼（崇拜） > 纳格兰 > 塔拉 > 补给官纳瑟拉	100金币（声望折扣）		1			29229	0			True
+34899	provisional-34899	candidate	Mount 34899	褐色作战塔布羊	reputation_vendor	obtainable	库雷尼（崇拜） > 纳格兰 > 塔拉 > 补给官纳瑟拉	100金币（声望折扣）		1			29105	0			True
+35018	provisional-35018	candidate	Mount 35018	紫色陆行鸟	vendor	unknown	银月城 > 永歌森林 > 银月城 > 维奈丝特拉	10金币（声望折扣）		1			29222	0		0	True
+35020	provisional-35020	candidate	Mount 35020	蓝色陆行鸟	vendor	unknown	银月城 > 永歌森林 > 银月城 > 维奈丝特拉	10金币（声望折扣）		1			29220	0		0	True
+35022	provisional-35022	candidate	Mount 35022	黑色陆行鸟	vendor	unknown	银月城 > 永歌森林 > 银月城 > 维奈丝特拉	10金币（声望折扣）		1			29221	0		0	True
+35025	provisional-35025	candidate	Mount 35025	迅捷绿色陆行鸟	vendor	unknown	银月城 > 永歌森林 > 银月城 > 维奈丝特拉	10金币（声望折扣）		1			29223	0		0	True
+35027	provisional-35027	candidate	Mount 35027	迅捷紫色陆行鸟	vendor	unknown	银月城 > 永歌森林 > 银月城 > 维奈丝特拉	10金币（声望折扣）		1			29224	0		0	True
+35028	provisional-35028	candidate	Mount 35028	迅捷作战陆行鸟	vendor	unknown	部落 > 奥格瑞玛 > 传说大厅 > 狼骑兵波尔克	2,000荣誉点数		1			34129	0		0	True
+35710	provisional-35710	candidate	Mount 35710	灰色雷象	vendor	unknown	埃索达 > 秘蓝岛 > 埃索达 > 象群管理者妥拉留斯	10金币（声望折扣）		1			29744	0		1	True
+35711	provisional-35711	candidate	Mount 35711	紫色雷象	vendor	unknown	埃索达 > 秘蓝岛 > 埃索达 > 象群管理者妥拉留斯	10金币（声望折扣）		1			29743	0		1	True
+35712	provisional-35712	candidate	Mount 35712	重型绿色雷象	vendor	unknown	埃索达 > 秘蓝岛 > 埃索达 > 象群管理者妥拉留斯	10金币（声望折扣）		1			29746	0		1	True
+35713	provisional-35713	candidate	Mount 35713	重型蓝色雷象	vendor	unknown	埃索达 > 秘蓝岛 > 埃索达 > 象群管理者妥拉留斯	10金币（声望折扣）		1			29745	0		1	True
+35714	provisional-35714	candidate	Mount 35714	重型紫色雷象	vendor	unknown	埃索达 > 秘蓝岛 > 埃索达 > 象群管理者妥拉留斯	10金币（声望折扣）		1			29747	0		1	True
+36702	fiery-warhorse	candidate	Fiery Warhorse	炽热战马	boss_drop	obtainable	逆风小径 > 卡拉赞10人 > 猎手阿图门			1			30480	0			True
+37015	fact-37015	candidate	Mount 37015	迅捷虚空幼龙	achievement	limited_time	竞技场 3v3 > 第 1 赛季 > 角斗士赛季奖励		PVP 竞技场 第 1 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
+39315	provisional-39315	candidate	Mount 39315	蓝色骑乘塔布羊	reputation_vendor	obtainable	库雷尼（崇拜） > 纳格兰 > 塔拉 > 补给官纳瑟拉	100金币（声望折扣）		1			31829	0			True
+39316	provisional-39316	candidate	Mount 39316	暗色骑乘塔布羊	reputation_vendor	obtainable	玛格汉（崇拜） > 纳格兰 > 加拉达尔 > 阿尔德兰	100金币（声望折扣）		1			28915	0			True
+39317	provisional-39317	candidate	Mount 39317	银色骑乘塔布羊	reputation_vendor	obtainable	库雷尼（崇拜） > 纳格兰 > 塔拉 > 补给官纳瑟拉	100金币（声望折扣）		1			31832	0			True
+39318	provisional-39318	candidate	Mount 39318	褐色骑乘塔布羊	reputation_vendor	obtainable	库雷尼（崇拜） > 纳格兰 > 塔拉 > 补给官纳瑟拉	100金币（声望折扣）		1			31834	0			True
+39319	provisional-39319	candidate	Mount 39319	白色骑乘塔布羊	reputation_vendor	obtainable	库雷尼（崇拜） > 纳格兰 > 塔拉 > 补给官纳瑟拉	100金币（声望折扣）		1			31836	0			True
+39798	provisional-39798	candidate	Mount 39798	绿色骑乘虚空鳐	reputation_vendor	obtainable	沙塔尔天空卫队（崇拜） > 泰罗卡森林 > 斯克提斯 > 格蕾拉	200金币		1			32314	0			True
+39800	provisional-39800	candidate	Mount 39800	红色骑乘虚空鳐	reputation_vendor	obtainable	沙塔尔天空卫队（崇拜） > 泰罗卡森林 > 斯克提斯 > 格蕾拉	200金币		1			32317	0			True
+39801	provisional-39801	candidate	Mount 39801	紫色骑乘虚空鳐	reputation_vendor	obtainable	沙塔尔天空卫队（崇拜） > 泰罗卡森林 > 斯克提斯 > 格蕾拉	200金币		1			32316	0			True
+39802	provisional-39802	candidate	Mount 39802	银色骑乘虚空鳐	reputation_vendor	obtainable	沙塔尔天空卫队（崇拜） > 泰罗卡森林 > 斯克提斯 > 格蕾拉	200金币		1			32318	0			True
+39803	provisional-39803	candidate	Mount 39803	蓝色骑乘虚空鳐	reputation_vendor	obtainable	沙塔尔天空卫队（崇拜） > 泰罗卡森林 > 斯克提斯 > 格蕾拉	200金币		1			32319	0			True
+40192	ashes-of-alar	candidate	Ashes of Al'ar	奥的灰烬	boss_drop	obtainable	虚空风暴 > 风暴要塞 > 凯尔萨斯·逐日者			1			32458	0			True
+41252	raven-lord	candidate	Raven Lord	乌鸦之神	boss_drop	obtainable	泰罗卡森林 > 塞泰克大厅H > 安苏			1			32768	0			True
+41513	provisional-41513	candidate	Mount 41513	黑色灵翼幼龙	reputation_vendor	obtainable	灵翼之龙（崇拜） > 影月谷 > 灵翼浮岛 > 霍尔伦克	200金币		1			32857	0			True
+41514	provisional-41514	candidate	Mount 41514	青色灵翼幼龙	reputation_vendor	obtainable	灵翼之龙（崇拜） > 影月谷 > 灵翼浮岛 > 霍尔伦克	200金币		1			32858	0			True
+41515	provisional-41515	candidate	Mount 41515	蓝色灵翼幼龙	reputation_vendor	obtainable	灵翼之龙（崇拜） > 影月谷 > 灵翼浮岛 > 霍尔伦克	200金币		1			32859	0			True
+41516	provisional-41516	candidate	Mount 41516	紫色灵翼幼龙	reputation_vendor	obtainable	灵翼之龙（崇拜） > 影月谷 > 灵翼浮岛 > 霍尔伦克	200金币		1			32860	0			True
+41517	provisional-41517	candidate	Mount 41517	绿色灵翼幼龙	reputation_vendor	obtainable	灵翼之龙（崇拜） > 影月谷 > 灵翼浮岛 > 霍尔伦克	200金币		1			32861	0			True
+41518	provisional-41518	candidate	Mount 41518	红色灵翼幼龙	quest	unknown	沃兰纳库，红色灵翼幼龙			1			32862	0			True
+42776	fact-42776	verified	Mount 42776	幽灵虎	event	limited_time	国服怀旧服限时活动 > 2026 兰德鲁金色礼盒		2026 兰德鲁金色礼盒可投递至熊猫人之谜怀旧服；限时活动，当前是否开放以国服公告为准。	1				0			True
+42777	fact-42777	verified	Mount 42777	迅捷幽灵虎	event	limited_time	国服怀旧服限时礼包 > 2022 虎年特别礼包		国服燃烧的远征怀旧服曾以虎年特别礼包投放迅捷幽灵虎；限时礼包已结束。	1				0			True
+43688	fact-43688	candidate	Mount 43688	阿曼尼战熊	boss_drop	unknown	幽魂之地 > 祖阿曼10人 > 限时宝箱奖励			1				0			True
+43899	fact-43899	candidate	Mount 43899	美酒节山羊	vendor	unknown	美酒节 > 美酒节营地 > 德利兹·塔波奎克	200枚美酒节奖币		1				0			True
+43900	provisional-43900	candidate	Mount 43900	迅捷美酒节赛羊	rare_drop	unknown	黑石山 > 黑石深渊 > 科林·烈酒			1			33977	0			True
+43927	provisional-43927	candidate	Mount 43927	塞纳里奥作战角鹰兽	reputation_vendor	obtainable	塞纳里奥远征队（崇拜） > 赞加沼泽 > 塞纳里奥庇护所 > 芬德雷·迅矛	2,000金币		1			33999	0			True
+44151	provisional-44151	candidate	Mount 44151	涡轮加速飞行器	crafted	unknown	工程学			1			34061	0			True
+44153	provisional-44153	candidate	Mount 44153	飞行器	crafted	unknown	工程学			1			34060	0			True
+44317	excluded-44317	candidate	Mount 44317	残酷角斗士的虚空幼龙	achievement	limited_time	竞技场 3v3 > 第 2 赛季 > 角斗士赛季奖励		PVP 竞技场 第 2 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
+44744	fact-44744	candidate	Mount 44744	残酷角斗士的虚空幼龙	achievement	limited_time	竞技场 3v3 > 第 2 赛季 > 角斗士赛季奖励		PVP 竞技场 第 2 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
+46197	fact-46197	verified	Mount 46197	X-51虚空火箭	event	limited_time	国服怀旧服限时活动 > 2026 兰德鲁金色礼盒		2026 兰德鲁金色礼盒可投递至熊猫人之谜怀旧服；限时活动，当前是否开放以国服公告为准。	1				0			True
+46199	fact-46199	verified	Mount 46199	X-51虚空火箭特别加强版	event	limited_time	国服怀旧服限时活动 > 2026 兰德鲁金色礼盒		2026 兰德鲁金色礼盒可投递至熊猫人之谜怀旧服；限时活动，当前是否开放以国服公告为准。	1				0			True
+46628	swift-white-hawkstrider	candidate	Swift White Hawkstrider	迅捷白色陆行鸟	boss_drop	obtainable	奎尔丹纳斯岛 > 魔导师平台H > 凯尔萨斯·逐日者			1			35513	0			True
+48025	headless-horseman-mount	candidate	Headless Horseman's Mount	无头骑士的缰绳	event	limited_time	万圣节			1			37012	0			True
+48027	provisional-48027	candidate	Mount 48027	黑色作战雷象	vendor	unknown	联盟 > 暴风城 > 勇士大厅 > 卡特尔中尉	2,000荣誉点数	 PVP 荣誉点数商人坐骑。	1			35906	0		1	True
+48778	fact-48778	candidate	Mount 48778	阿彻鲁斯死亡战马	class_reward	obtainable	死亡骑士 > 东瘟疫之地 > 黑锋要塞 > 初始任务：踏入暗影界		死亡骑士专属召唤法术；完成黑锋要塞初始任务获得，非背包物品。	1		DEATHKNIGHT		0			True
+49193	fact-49193	candidate	Mount 49193	复仇角斗士的虚空幼龙	achievement	limited_time	竞技场 3v3 > 第 3 赛季 > 角斗士赛季奖励		PVP 竞技场 第 3 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
+49378	fact-49378	candidate	Mount 49378	美酒节科多兽	rare_drop	limited_time	黑石山 > 黑石深渊 > 科林·烈酒			1				0			True
+49379	provisional-49379	candidate	Mount 49379	大型美酒节科多兽	rare_drop	unknown	黑石山 > 黑石深渊 > 科林·烈酒			1			37828	0			True
+51412	fact-51412	verified	Mount 51412	大战熊	event	unavailable	国服怀旧服限时活动 > 2024 国庆小程序签到		2024-10-01 至 2024-10-14，官方微信小程序累计签到 7 天领取；奖励适用于国服怀旧服，活动已结束。	1				0			True
+54729	fact-54729	candidate	Mount 54729	黑锋骸骨狮鹫	reputation_vendor	obtainable	黑锋骑士团（崇拜） > 冰冠冰川 > 暗影拱顶 > 恐怖指挥官萨拉诺尔	2,000金币		1				0			True
+54753	provisional-54753	candidate	Mount 54753	白色北极熊坐骑	quest	obtainable	风暴峭壁 > 布伦希尔达村 > 女人村日常任务奖励			1			43962	0			True
+55164	excluded-55164	verified	Mount 55164	迅捷幽灵狮鹫	quest	unavailable	龙骨荒野 > 冬卫要塞防御者飞行任务		任务临时载具法术，不是可永久收藏的坐骑；因此不属于绝版坐骑。	1				0			True
+55531	provisional-55531	candidate	Mount 55531	机械路霸	crafted	unknown	工程学			1			41508	0		0	True
+58615	fact-58615	candidate	Mount 58615	野蛮角斗士的虚空幼龙	achievement	limited_time	竞技场 3v3 > 第 4 赛季 > 角斗士赛季奖励		PVP 竞技场 第 4 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
+58983	provisional-58983	candidate	Mount 58983	暴雪巨熊	promotion	unknown	详细地点待核实			1			43599	0			True
+59567	azure-drake	candidate	Azure Drake	碧蓝幼龙	boss_drop	obtainable	北风苔原 > 永恒之眼25人 > 玛里苟斯			1			43952	0			True
+59568	blue-drake	candidate	Blue Drake	蓝色幼龙	boss_drop	obtainable	北风苔原 > 永恒之眼10人 > 玛里苟斯			1			43953	0			True
+59569	bronze-drake	candidate	Bronze Drake	青铜幼龙	boss_drop	obtainable	塔纳利斯 > 净化斯坦索姆H > 永恒腐蚀者			1			43951	0			True
+59570	provisional-59570	candidate	Mount 59570	红色幼龙	reputation_vendor	obtainable	龙眠联军（崇拜） > 龙骨荒野 > 龙眠神殿 > 希尔丝塔萨	2,000金币		1			43955	0			True
+59571	twilight-drake	candidate	Twilight Drake	暮光幼龙	boss_drop	obtainable	龙骨荒野 > 黑曜石圣殿25人（保留3条暮光幼龙） > 萨塔里奥			1			43954	0			True
+59572	fact-59572	candidate	Mount 59572	黑色北极熊	quest	obtainable	风暴峭壁 > 布伦希尔达村 > 女人村日常任务奖励			1				0			True
+59650	black-drake	candidate	Black Drake	黑色幼龙	boss_drop	obtainable	龙骨荒野 > 黑曜石圣殿10人（保留3条暮光幼龙） > 萨塔里奥			1			43986	0			True
+59785	provisional-59785	candidate	Mount 59785	黑色猛犸战象	vendor	unknown	联盟 > 达拉然 > 银色领地 > 骑士达米隆	2,000金币		1			43956	0		1	True
+59788	provisional-59788	candidate	Mount 59788	黑色猛犸战象	vendor	unknown	部落 > 达拉然 > 夺日者圣殿 > 石头守卫穆卡尔	2,000金币		1			44077	0		0	True
+59791	provisional-59791	candidate	Mount 59791	长毛猛犸象	vendor	unknown	达拉然 > 坐骑商人 > 梅尔·弗兰希斯	10,000金币		1			44230	0		1	True
+59793	provisional-59793	candidate	Mount 59793	长毛猛犸象	vendor	unknown	达拉然 > 坐骑商人 > 梅尔·弗兰希斯	10,000金币		1			44231	0		0	True
+59797	provisional-59797	candidate	Mount 59797	冰雪猛犸象	vendor	unknown	达拉然 > 坐骑商人 > 李奥霍夫	10,000金币		1			44080	0		0	True
+59799	provisional-59799	candidate	Mount 59799	冰雪猛犸象	vendor	unknown	达拉然 > 坐骑商人 > 李奥霍夫	10,000金币		1			43958	0		1	True
+59961	provisional-59961	candidate	Mount 59961	红色始祖幼龙	achievement	unknown	英雄的荣耀			1			44160	0			True
+59976	fact-59976	candidate	Mount 59976	黑色始祖幼龙	achievement	unknown	团队的荣耀（25人）			1				0			True
+59996	blue-proto-drake	candidate	Blue Proto-Drake	蓝色始祖幼龙	boss_drop	obtainable	风暴峭壁 > 乌特加德之巅H > 残忍的斯卡迪			1			44151	0			True
+60002	violet-proto-drake	verified	Violet Proto-Drake	紫色始祖幼龙	achievement	obtainable	千奇百怪的漫长旅行		完成节日元成就获得；并非绝版。	1			44177	0			True
+60021	fact-60021	candidate	Mount 60021	被感染的始祖幼龙	achievement	unknown	团队的荣耀（10人）			1				0			True
+60024	provisional-60024	candidate	Mount 60024	紫色始祖幼龙	achievement	unknown	千奇百怪的漫长旅行			1			44177	0			True
+60025	provisional-60025	candidate	Mount 60025	白色幼龙	achievement	unknown	骑兵队长			1			44178	0			True
+60114	provisional-60114	candidate	Mount 60114	装甲棕熊	vendor	unknown	达拉然 > 坐骑商人 > 梅尔·弗兰希斯	10,000金币		1			44225	0		1	True
+60116	provisional-60116	candidate	Mount 60116	装甲棕熊	vendor	unknown	达拉然 > 坐骑商人 > 梅尔·弗兰希斯	10,000金币		1			44226	0		0	True
+60118	provisional-60118	candidate	Mount 60118	黑色战熊	achievement	obtainable	敌对阵营主城首领 > 为了联盟！		PVP 阵营领袖击杀成就“为了联盟！”奖励，非背包物品。	1			44223	0		1	True
+60119	provisional-60119	candidate	Mount 60119	黑色战熊	achievement	obtainable	敌对阵营主城首领 > 为了部落！		PVP 阵营领袖击杀成就“为了部落！”奖励，非背包物品。	1			44224	0		0	True
+60136	excluded-60136	verified	Mount 60136	召唤重型旅行猛犸象	vendor	obtainable	达拉然 > 梅·弗朗西斯	20,000金币	20,000金币；并非绝版。	1				0			True
+60140	excluded-60140	verified	Mount 60140	召唤重型旅行猛犸象	vendor	obtainable	达拉然 > 梅·弗朗西斯	20,000金币	20,000金币；并非绝版。	1				0			True
+60424	provisional-60424	candidate	Mount 60424	机械师的摩托车	crafted	unknown	工程学			1			44413	0		1	True
+61229	provisional-61229	candidate	Mount 61229	装甲雪色狮鹫	vendor	unknown	达拉然 > 坐骑商人 > 梅尔·弗兰希斯	10,000金币		1			44689	0		1	True
+61230	provisional-61230	candidate	Mount 61230	装甲蓝色驭风者	vendor	unknown	达拉然 > 坐骑商人 > 梅尔·弗兰希斯	10,000金币		1			44690	0		0	True
+61294	provisional-61294	candidate	Mount 61294	绿色始祖幼龙	vendor	unknown	神谕者（崇敬） > 索拉查盆地 > 雨声树屋 > 吉恩	未成熟的毒囊		1			44707	0			True
+61309	provisional-61309	candidate	Mount 61309	华丽的飞毯	crafted	unknown	裁缝			1			44558	0			True
+61425	provisional-61425	candidate	Mount 61425	旅行者的苔原猛犸象	vendor	unknown	达拉然 > 坐骑商人 > 梅尔·弗兰希斯	20,000金币		1			44235	0		1	True
+61447	provisional-61447	candidate	Mount 61447	旅行者的苔原猛犸象	vendor	unknown	达拉然 > 坐骑商人 > 梅尔·弗兰希斯	20,000金币		1			44234	0		0	True
+61451	provisional-61451	candidate	Mount 61451	飞毯	crafted	unknown	裁缝			1			44554	0			True
+61465	provisional-61465	candidate	Mount 61465	重型黑色猛犸战象	boss_drop	unknown	冬拥湖 > 阿尔卡冯的宝库 > 阿尔卡冯			1			43959	0		1	True
+61467	provisional-61467	candidate	Mount 61467	重型黑色猛犸战象	boss_drop	unknown	冬拥湖 > 阿尔卡冯的宝库 > 阿尔卡冯			1			44083	0		0	True
+61469	provisional-61469	candidate	Mount 61469	重型冰雪猛犸象	vendor	unknown	达拉然 > 坐骑商人 > 李奥霍夫	10,000金币		1			44086	0		0	True
+61470	provisional-61470	candidate	Mount 61470	重型冰雪猛犸象	vendor	unknown	达拉然 > 坐骑商人 > 李奥霍夫	10,000金币		1			43961	0		1	True
+61996	provisional-61996	candidate	Mount 61996	蓝色龙鹰	achievement	unknown	坐骑成堆			1			44843	0		1	True
+61997	provisional-61997	candidate	Mount 61997	红色龙鹰	achievement	unknown	坐骑成堆			1			44842	0		0	True
+62048	fact-62048	candidate	Mount 62048	黑色龙鹰坐骑	vendor	unknown	旧版本商城 > 黑色龙鹰坐骑	黑色龙鹰坐骑：已绝版		1				0			True
+63232	provisional-63232	candidate	Mount 63232	暴风城战马	vendor	unknown	暴风城勇士 > 冰冠冰川 > 银色锦标赛 > 下士亚瑟·弗卢	100枚冠军的徽记		1			45125	0		1	True
+63635	provisional-63635	candidate	Mount 63635	暗矛迅猛龙	vendor	unknown	暗矛巨魔勇士 > 冰冠冰川 > 银色锦标赛 > 萨玛巴	100枚冠军的徽记		1			45593	0		0	True
+63636	provisional-63636	candidate	Mount 63636	铁炉堡战羊	vendor	unknown	铁炉堡勇士 > 冰冠冰川 > 银色锦标赛 > 德里克·斑须	100枚冠军的徽记		1			45586	0		1	True
+63637	provisional-63637	candidate	Mount 63637	达纳苏斯夜刃豹	vendor	unknown	达纳苏斯勇士 > 冰冠冰川 > 银色锦标赛 > 鲁克·鹰爪	100枚冠军的徽记		1			45591	0		1	True
+63638	provisional-63638	candidate	Mount 63638	诺莫瑞根机械陆行鸟	vendor	unknown	诺莫瑞根勇士 > 冰冠冰川 > 银色锦标赛 > 莉蕾·转轴	100枚冠军的徽记		1			45589	0		1	True
+63639	provisional-63639	candidate	Mount 63639	埃索达雷象	vendor	unknown	埃索达勇士 > 冰冠冰川 > 银色锦标赛 > 艾蕾希	100枚冠军的徽记		1			45590	0		1	True
+63640	provisional-63640	candidate	Mount 63640	奥格瑞玛战狼	vendor	unknown	奥格瑞玛勇士 > 冰冠冰川 > 银色锦标赛 > 弗蕾卡·血斧	100枚冠军的徽记		1			45595	0		0	True
+63641	provisional-63641	candidate	Mount 63641	雷霆崖科多兽	vendor	unknown	雷霆崖勇士 > 冰冠冰川 > 银色锦标赛 > 杜尔鲁·雷角	100枚冠军的徽记		1			45592	0		0	True
+63642	provisional-63642	candidate	Mount 63642	银月城陆行鸟	vendor	unknown	银月城勇士 > 冰冠冰川 > 银色锦标赛 > 特雷利斯·晨日	100枚冠军的徽记		1			45596	0		0	True
+63643	provisional-63643	candidate	Mount 63643	被遗忘者战马	vendor	unknown	幽暗城勇士 > 冰冠冰川 > 银色锦标赛 > 伊莉莎·基连	100枚冠军的徽记		1			45597	0		0	True
+63796	mimirons-head	candidate	Mimiron's Head	米米尔隆的头部	boss_drop	obtainable	风暴峭壁 > 奥杜尔25人（0守护者） > 尤格-萨隆			1			45693	0			True
+63844	provisional-63844	candidate	Mount 63844	银色角鹰兽	reputation_vendor	obtainable	银色北伐军（崇拜） > 冰冠冰川 > 银色锦标赛 > 银色角鹰兽	150枚冠军的徽记		1			45725	0			True
+63956	provisional-63956	candidate	Mount 63956	铁箍始祖幼龙	achievement	unknown	奥杜尔团队的荣耀（25人）			1			45801	0			True
+63963	provisional-63963	candidate	Mount 63963	铁锈始祖幼龙	achievement	unknown	奥杜尔团队的荣耀（10人）			1			45802	0			True
+64656	fact-64656	candidate	Mount 64656	蓝色骷髅战马	research	unknown	来源待补全			1				0			True
+64657	provisional-64657	candidate	Mount 64657	白色科多兽	vendor	unknown	雷霆崖 > 莫高雷 > 血蹄村 > 哈布·爪蹄	10金币（声望折扣）		1			46100	0		0	True
+64658	provisional-64658	candidate	Mount 64658	黑狼	vendor	unknown	奥格瑞玛 > 杜隆塔尔 > 奥格瑞玛 > 奥古纳罗	10金币（声望折扣）		1			46099	0		0	True
+64659	provisional-64659	candidate	Mount 64659	毒皮暴掠龙	quest	obtainable	安戈洛环形山 > 毒皮暴掠龙任务线			1			46102	0		0	True
+64731	provisional-64731	candidate	Mount 64731	海龟	crafted	unknown	钓鱼			1			46109	0			True
+64927	fact-64927	candidate	Mount 64927	致命角斗士的冰霜巨龙	achievement	limited_time	竞技场 3v3 > 第 5 赛季 > 角斗士赛季奖励		PVP 竞技场 第 5 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
+64977	provisional-64977	candidate	Mount 64977	黑色骷髅战马	vendor	unknown	幽暗城 > 提瑞斯法林地 > 布瑞尔 > 撒迦利亚·普斯特	10金币（声望折扣）		1			46308	0		0	True
+65439	fact-65439	candidate	Mount 65439	狂怒角斗士的冰霜巨龙	achievement	limited_time	竞技场 3v3 > 第 6 赛季 > 角斗士赛季奖励		PVP 竞技场 第 6 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
+65637	fact-65637	candidate	Mount 65637	重型红色雷象	vendor	unknown	埃索达勇士 > 冰冠冰川 > 银色锦标赛 > 艾蕾希	100枚冠军的徽记		1				0		1	True
+65638	fact-65638	candidate	Mount 65638	迅捷月刃豹	vendor	unknown	达纳苏斯勇士 > 冰冠冰川 > 银色锦标赛 > 鲁克·鹰爪	100枚冠军的徽记		1				0		1	True
+65639	fact-65639	candidate	Mount 65639	迅捷红色陆行鸟	vendor	unknown	银月城勇士 > 冰冠冰川 > 银色锦标赛 > 特雷利斯·晨日	100枚冠军的徽记		1				0		0	True
+65640	fact-65640	candidate	Mount 65640	迅捷灰色战马	vendor	unknown	暴风城勇士 > 冰冠冰川 > 银色锦标赛 > 下士亚瑟·弗卢	100枚冠军的徽记		1				0		1	True
+65641	fact-65641	candidate	Mount 65641	大型金色科多兽	vendor	unknown	雷霆崖勇士 > 冰冠冰川 > 银色锦标赛 > 杜尔鲁·雷角	100枚冠军的徽记		1				0		0	True
+65642	fact-65642	candidate	Mount 65642	涡轮机械陆行鸟	vendor	unknown	诺莫瑞根勇士 > 冰冠冰川 > 银色锦标赛 > 莉蕾·转轴	100枚冠军的徽记		1				0		1	True
+65643	fact-65643	candidate	Mount 65643	迅捷紫色战羊	vendor	unknown	铁炉堡勇士 > 冰冠冰川 > 银色锦标赛 > 德里克·斑须	100枚冠军的徽记		1				0		1	True
+65644	fact-65644	candidate	Mount 65644	迅捷紫色迅猛龙	vendor	unknown	暗矛巨魔勇士 > 冰冠冰川 > 银色锦标赛 > 萨玛巴	100枚冠军的徽记		1				0		0	True
+65645	fact-65645	candidate	Mount 65645	白骨战马	vendor	unknown	幽暗城勇士 > 冰冠冰川 > 银色锦标赛 > 伊莉莎·基连	100枚冠军的徽记		1				0		0	True
+65646	fact-65646	candidate	Mount 65646	迅捷紫鬃战狼	vendor	unknown	奥格瑞玛勇士 > 冰冠冰川 > 银色锦标赛 > 弗蕾卡·血斧	100枚冠军的徽记		1				0		0	True
+65917	fact-65917	verified	Mount 65917	魔法公鸡	store	limited_time	国服怀旧服商城 > 魔法公鸡	¥298	2022 年巫妖王之怒怀旧服国服商城限时上架；当前是否返场以商城公告为准。	1				0			True
+66087	provisional-66087	verified	Mount 66087	银色盟约角鹰兽	reputation_vendor	obtainable	银色盟约（崇拜） > 冰冠冰川 > 银色锦标赛 > 海伦·慧歌	150枚冠军的徽记	联盟专属	1			46813	0		1	True
+66088	provisional-66088	verified	Mount 66088	夺日者龙鹰	reputation_vendor	obtainable	夺日者（崇拜） > 冰冠冰川 > 银色锦标赛 > 瓦萨林·赤晨	150枚冠军的徽记	部落专属	1			46814	0		0	True
+66090	provisional-66090	verified	Mount 66090	奎尔多雷战马	reputation_vendor	obtainable	银色盟约（崇拜） > 冰冠冰川 > 银色锦标赛 > 海伦·慧歌	100枚冠军的徽记	联盟专属	1			46815	0		1	True
+66091	provisional-66091	verified	Mount 66091	夺日者陆行鸟	reputation_vendor	obtainable	夺日者（崇拜） > 冰冠冰川 > 银色锦标赛 > 瓦萨林·赤晨	100枚冠军的徽记	部落专属	1			46816	0		0	True
+66122	excluded-66122	verified	Mount 66122	魔法公鸡	store	limited_time	国服怀旧服商城 > 魔法公鸡	¥298	2022 年巫妖王之怒怀旧服国服商城限时上架；当前是否返场以商城公告为准。	1				0			True
+66123	excluded-66123	verified	Mount 66123	魔法公鸡	store	limited_time	国服怀旧服商城 > 魔法公鸡	¥298	2022 年巫妖王之怒怀旧服国服商城限时上架；当前是否返场以商城公告为准。	1				0			True
+66124	excluded-66124	verified	Mount 66124	魔法公鸡	store	limited_time	国服怀旧服商城 > 魔法公鸡	¥298	2022 年巫妖王之怒怀旧服国服商城限时上架；当前是否返场以商城公告为准。	1				0			True
+66846	provisional-66846	candidate	Mount 66846	赭色骷髅战马	vendor	unknown	幽暗城 > 提瑞斯法林地 > 布瑞尔 > 撒迦利亚·普斯特	10金币（声望折扣）		1			47101	0		0	True
+66847	provisional-66847	candidate	Mount 66847	条纹晨刃豹	vendor	unknown	达纳苏斯 > 泰达希尔 > 多兰纳尔 > 莱兰奈	10金币（声望折扣）		1			47100	0		1	True
+66906	fact-66906	candidate	Mount 66906	银色军马	reputation_vendor	obtainable	银色北伐军（崇拜） > 冰冠冰川 > 银色锦标赛 > 卡普萨里斯夫人	100枚冠军的徽记		1				0			True
+67336	fact-67336	candidate	Mount 67336	无情角斗士的冰霜巨龙	achievement	limited_time	竞技场 3v3 > 第 7 赛季 > 角斗士赛季奖励		PVP 竞技场 第 7 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
+67466	provisional-67466	candidate	Mount 67466	银色战马	reputation_vendor	obtainable	银色北伐军（崇拜） > 冰冠冰川 > 银色锦标赛 > 卡普萨里斯夫人	100枚冠军的徽记		1			47180	0			True
+68056	fact-68056	candidate	Mount 68056	迅捷部落战狼	achievement	obtainable	评级战场 > 评级战场成就：对疯狂的嘉奖（10 人）		PVP 评级战场成就：对疯狂的嘉奖（10 人）奖励，非背包物品。	1				0		0	True
+68057	fact-68057	candidate	Mount 68057	迅捷联盟战马	achievement	obtainable	评级战场 > 评级战场成就：对疯狂的嘉奖（10 人）		PVP 评级战场成就：对疯狂的嘉奖（10 人）奖励，非背包物品。	1				0		1	True
+68187	fact-68187	verified	Mount 68187	十字军的白色战马	achievement	unavailable	冰冠冰川 > 大十字军的试炼25H（50箱、全程无人死亡） > 对不朽的嘉奖		巫妖王之怒阶段限定；奖励来自银色北伐军的嘉奖宝箱。	1	ALLIANCE			0		1	True
+68188	fact-68188	verified	Mount 68188	十字军的黑色战马	achievement	unavailable	冰冠冰川 > 大十字军的试炼25H（50箱、全程无人死亡） > 对不朽的嘉奖		巫妖王之怒阶段限定；奖励来自银色北伐军的嘉奖宝箱。	1	HORDE			0		0	True
+69395	onyxian-drake	candidate	Onyxian Drake	奥妮克希亚座龙	boss_drop	obtainable	尘泥沼泽 > 奥妮克希亚的巢穴 > 奥妮克希亚			1			49636	0			True
+69820	excluded-69820	candidate	Mount 69820	召唤烈日行者科多兽	class_reward	obtainable	牛头人圣骑士（烈日行者） > 20级职业训练师 > 召唤烈日行者科多兽		仅限牛头人圣骑士的召唤法术；20级由职业训练师教授，非背包物品。	1	HORDE	PALADIN		0		0	True
+69826	excluded-69826	candidate	Mount 69826	召唤巨型烈日行者科多兽	class_reward	obtainable	牛头人圣骑士（烈日行者） > 40级职业训练师 > 召唤巨型烈日行者科多兽		仅限牛头人圣骑士的召唤法术；40级由职业训练师教授，非背包物品。	1	HORDE	PALADIN		0		0	True
+71342	provisional-71342	candidate	Mount 71342	X-45偷心火箭	holiday	unknown	情人节 > 药剂师汉摩尔			1			50250	0			True
+71810	fact-71810	candidate	Mount 71810	暴怒角斗士的冰霜巨龙	achievement	limited_time	竞技场 3v3 > 第 8 赛季 > 角斗士赛季奖励		PVP 竞技场 第 8 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
+72286	invincible	candidate	Invincible	无敌	boss_drop	obtainable	冰冠冰川 > 冰冠堡垒25H > 巫妖王			1			50818	0			True
+72807	provisional-72807	candidate	Mount 72807	缚寒冰霜征服者	achievement	unknown	冰河踏破者的荣耀（25人）			1			51955	0			True
+72808	provisional-72808	candidate	Mount 72808	浴血冰霜征服者	achievement	unknown	冰河踏破者的荣耀（10人）			1			51954	0			True
+73313	provisional-73313	candidate	Mount 73313	血色死亡战马	quest	obtainable	冰冠堡垒 > 影之哀伤任务线奖励			1			52200	0			True
+73629	excluded-73629	candidate	Mount 73629	召唤主教的雷象	class_reward	obtainable	德莱尼圣骑士 > 20级职业训练师 > 召唤主教的雷象		德莱尼圣骑士专属召唤法术；20级由职业训练师教授，非背包物品。	1	ALLIANCE	PALADIN		0		1	True
+73630	excluded-73630	candidate	Mount 73630	召唤大主教的雷象	class_reward	obtainable	德莱尼圣骑士 > 40级职业训练师 > 召唤大主教的雷象		德莱尼圣骑士专属召唤法术；40级由职业训练师教授，非背包物品。	1	ALLIANCE	PALADIN		0		1	True
+74856	fact-74856	candidate	Mount 74856	炽焰角鹰兽	vendor	unknown	旧版本商城 > 游戏商城 > 炽焰角鹰兽	炽焰角鹰兽：已绝版		1				0			True
+74918	fact-74918	verified	Mount 74918	白毛犀牛	store	limited_time	国服怀旧服商城 > 白毛犀牛	¥218	2022 年巫妖王之怒怀旧服国服商城限时上架；当前是否返场以商城公告为准。	1				0			True
+75207	provisional-75207	candidate	Mount 75207	深渊海马	quest	obtainable	瓦丝琪尔 > 深海任务线			1			54465	0			True
+75596	provisional-75596	candidate	Mount 75596	凝霜飞毯	crafted	unknown	裁缝			1			54797	0			True
+75614	celestial-steed	candidate	Celestial Steed	星骓	store	obtainable	暴雪商城			1			54811				False
+75973	provisional-75973	candidate	Mount 75973	X-53型观光火箭	promotion	unknown	详细地点待核实			1			54860	0			True
+84751	provisional-84751	candidate	Mount 84751	化石迅猛龙	crafted	unknown	考古学			1			60954	0			True
+87090	provisional-87090	candidate	Mount 87090	地精三轮摩托	reputation_vendor	obtainable	锈水财阀（崇拜） > 奥格瑞玛 > 卡尔·万金	100金币（声望折扣）		1			62461	0			True
+87091	provisional-87091	candidate	Mount 87091	地精三轮摩托涡轮增压型	reputation_vendor	obtainable	锈水财阀（崇拜） > 奥格瑞玛 > 卡尔·万金	100金币（声望折扣）		1			62462	0			True
+88331	provisional-88331	candidate	Mount 88331	火山石幼龙	achievement	unknown	《大地的裂变》英雄的荣耀			1			62900	0			True
+88335	provisional-88335	candidate	Mount 88335	东风幼龙	achievement	unknown	《大地的裂变》团队的荣耀			1			62901	0			True
+88718	phosphorescent-stone-drake	candidate	Phosphorescent Stone Drake	磷光石幼龙	rare_drop	obtainable	深岩之洲 > 奥艾娜克斯			1			63042	0			True
+88741	provisional-88741	verified	Mount 88741	西风幼龙	reputation_vendor	obtainable	地狱咆哮近卫军（崇拜） > 托尔巴拉德半岛 > 普格	200枚托尔巴拉德奖章	部落购买；联盟对应购买条件为巴拉丁守卫者（崇拜）	1			65356	0			True
+88742	drake-of-the-north-wind	candidate	Drake of the North Wind	北风幼龙	boss_drop	obtainable	奥丹姆 > 旋云之巅H > 阿尔泰鲁斯			1			63040	0			True
+88744	drake-of-the-south-wind	candidate	Drake of the South Wind	南风幼龙	boss_drop	obtainable	奥丹姆 > 风神王座 > 奥拉基尔			1			63041	0			True
+88746	vitreous-stone-drake	candidate	Vitreous Stone Drake	琉璃石幼龙	boss_drop	obtainable	深岩之洲 > 石岩之心H > 岩皮			1			63043	0			True
+88748	provisional-88748	candidate	Mount 88748	棕色骑乘骆驼	vendor	unknown	奥丹姆 > 拉穆卡恒 > 铁匠阿巴西	80金币		1			63044	0			True
+88749	provisional-88749	candidate	Mount 88749	褐色骑乘骆驼	vendor	unknown	奥丹姆 > 拉穆卡恒 > 铁匠阿巴西	80金币		1			63045	0			True
+88750	provisional-88750	candidate	Mount 88750	灰色骑乘骆驼	vendor	unknown	奥丹姆 > 神秘的骆驼雕像	骆驼雕像事件奖励		1			63046	0			True
+88990	provisional-88990	verified	Mount 88990	暗色凤凰	event	limited_time	流沙秘宝库			1			63125	0			True
+90621	provisional-90621	candidate	Mount 90621	黄金狮王	vendor	unknown	联盟 > 暴风城 > 黄金狮王	100金币（声望折扣）		1			62298	0		1	True
+92155	provisional-92155	candidate	Mount 92155	深蓝其拉作战坦克	crafted	unknown	考古学			1			64883	0			True
+92231	provisional-92231	verified	Mount 92231	鬼灵战马	reputation_vendor	obtainable	巴拉丁守卫者（崇拜） > 托尔巴拉德半岛 > 军需官布雷泽	165枚托尔巴拉德奖章 + 50金币	联盟专属	1			64998	0		1	True
+92232	provisional-92232	verified	Mount 92232	鬼灵座狼	reputation_vendor	obtainable	地狱咆哮近卫军（崇拜） > 托尔巴拉德半岛 > 普格	165枚托尔巴拉德奖章 + 50金币	部落专属	1			64999	0		0	True
+93326	provisional-93326	candidate	Mount 93326	沙石幼龙	crafted	unknown	炼金术			1			65891	0			True
+93623	fact-93623	candidate	Mount 93623	斑纹幼龙	research	unknown	来源待补全			1				0			True
+93644	provisional-93644	candidate	Mount 93644	库卡隆横扫者	vendor	unknown	部落 > 奥格瑞玛 > 库卡隆横扫者	100金币（声望折扣）		1			67107	0		0	True
+96491	armored-razzashi-raptor	candidate	Armored Razzashi Raptor	装甲拉扎什迅猛龙	boss_drop	obtainable	荆棘谷 > 祖尔格拉布H > 血领主曼多基尔			1			68823	0			True
+96499	swift-zulian-panther	candidate	Swift Zulian Panther	迅捷祖利安黑豹	boss_drop	obtainable	荆棘谷 > 祖尔格拉布H > 高阶祭司基尔娜拉			1			68824	0			True
+96503	fact-96503	candidate	Amani Dragonhawk	阿曼尼龙鹰	research	unknown	怀旧服投放待核实		原版 TCG 实体卡兑换码无法在怀旧服兑换；仅在核实国服怀旧服官方复刻渠道后才显示玩家来源。	1				0			True
+97359	provisional-97359	candidate	Mount 97359	浴火角鹰兽	achievement	unknown	熔火前线的攻势			1			69213	0			True
+97493	pureblood-fire-hawk	candidate	Pureblood Fire Hawk	纯血火鹰	boss_drop	obtainable	海加尔山 > 火焰之地H > 拉格纳罗斯			1			69224	0			True
+97501	provisional-97501	candidate	Mount 97501	绿焰火鹰	achievement	obtainable	海加尔山 > 火焰之地 > 火焰之地团队成就			1			69226	0			True
+97560	provisional-97560	candidate	Mount 97560	堕落火鹰	boss_drop	unknown	海加尔山 > 火焰之地 > 拉格纳罗斯			1			69230	0			True
+97581	fact-97581	candidate	Savage Raptor	野蛮迅猛龙	research	unknown	怀旧服投放待核实		原版 TCG 实体卡兑换码无法在怀旧服兑换；仅在核实国服怀旧服官方复刻渠道后才显示玩家来源。	1				0			True
+98204	amani-battle-bear	candidate	Amani Battle Bear	阿曼尼斗熊	boss_drop	obtainable	幽魂之地 > 祖阿曼H（限时挑战） > 达卡拉			1			69747	0			True
+98718	tamed-seahorse	candidate	Tamed Seahorse	驯服的海马	rare_drop	obtainable	瓦丝琪尔 > 波赛冬斯			1			67151	0			True
+98727	provisional-98727	candidate	Mount 98727	飞翼守护者	store	unknown	详细地点待核实			1			69846	0			True
+100332	provisional-100332	candidate	Mount 100332	勇猛的战驹	achievement	obtainable	评级战场 > 评级战场成就：联盟精兵		PVP 评级战场成就：联盟精兵奖励，非背包物品。	1			70909	0		1	True
+100333	provisional-100333	candidate	Mount 100333	勇猛的战狼	achievement	obtainable	评级战场 > 评级战场成就：部落精兵		PVP 评级战场成就：部落精兵奖励，非背包物品。	1			70910	0		0	True
+101282	fact-101282	candidate	Mount 101282	残忍角斗士的暮光幼龙	achievement	limited_time	竞技场 3v3 > 第 9 赛季 > 角斗士赛季奖励		PVP 竞技场 第 9 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
+101542	flametalon-of-alysrazor	candidate	Flametalon of Alysrazor	奥利瑟拉佐尔的烈焰之爪	boss_drop	obtainable	海加尔山 > 火焰之地 > 奥利瑟拉佐尔			1			71665	0			True
+101573	fact-101573	candidate	Swift Shorestrider	迅捷海滨陆行鸟	research	unknown	怀旧服投放待核实		原版 TCG 实体卡兑换码无法在怀旧服兑换；仅在核实国服怀旧服官方复刻渠道后才显示玩家来源。	1				0			True
+101821	fact-101821	candidate	Mount 101821	冷酷角斗士的暮光幼龙	achievement	limited_time	竞技场 3v3 > 第 9 赛季 > 角斗士赛季奖励		PVP 竞技场 第 9 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
+102346	provisional-102346	candidate	Mount 102346	迅捷森林陆行鸟	vendor	unknown	暗月马戏团 > 暗月岛 > 兰拉	180张暗月奖券		1			72140	0			True
+102349	provisional-102349	candidate	Mount 102349	迅捷春日陆行鸟	vendor	unknown	复活节 > 复活节商人 > 复活节商人	500个复活节巧克力		1			72145	0			True
+102350	provisional-102350	candidate	Mount 102350	迅捷爱情鸟	vendor	unknown	情人节 > 暴风城 / 奥格瑞玛 > 可爱的商贩	270个爱情信物		1			72146	0			True
+102488	fact-102488	candidate	Mount 102488	白色骑乘骆驼	rare_drop	obtainable	奥丹姆 > 多姆斯·驼贮			1				0			True
+102514	fact-102514	candidate	Corrupted Hippogryph	堕落角鹰兽	research	unknown	怀旧服投放待核实		原版 TCG 实体卡兑换码无法在怀旧服兑换；仅在核实国服怀旧服官方复刻渠道后才显示玩家来源。	1				0			True
+103081	provisional-103081	candidate	Mount 103081	暗月跳舞熊	vendor	unknown	暗月马戏团 > 暗月岛 > 兰拉	180张暗月奖券		1			73766	0			True
+103195	provisional-103195	candidate	Mount 103195	高山马	vendor	unknown	吉尔尼斯 > 格雷迈恩庄园 > 阿斯特丽德·长袜	10,000金币		1			73838	0			True
+103196	provisional-103196	candidate	Mount 103196	迅捷高山马	vendor	unknown	吉尔尼斯 > 格雷迈恩庄园 > 阿斯特丽德·长袜	10,000金币		1			73839	0			True
+107203	provisional-107203	candidate	Mount 107203	泰瑞尔的天使战马	promotion	unknown	详细地点待核实			1			76755	0			True
+107516	provisional-107516	candidate	Mount 107516	幽灵狮鹫	promotion	unknown	详细地点待核实			1			76889	0			True
+107517	provisional-107517	candidate	Mount 107517	幽灵驭风者	promotion	unknown	详细地点待核实			1			76902	0			True
+107842	blazing-drake	candidate	Blazing Drake	炽炎幼龙	boss_drop	obtainable	时光之穴 > 巨龙之魂 > 死亡之翼的疯狂			1			77067	0			True
+107844	provisional-107844	candidate	Mount 107844	暮光先驱者	boss_drop	unknown	时光之穴 > 巨龙之魂H > 死亡之翼的疯狂			1			77068	0			True
+107845	life-binders-handmaiden	candidate	Life-Binder's Handmaiden	生命缚誓者的仆从	boss_drop	obtainable	时光之穴 > 巨龙之魂 > 死亡之翼的疯狂			1			77069	0			True
+110039	experiment-12-b	candidate	Experiment 12-B	实验体12-B	boss_drop	obtainable	时光之穴 > 巨龙之魂 > 奥卓克希昂			1			78919	0			True
+110051	provisional-110051	candidate	Mount 110051	守护巨龙之心	store	unknown	详细地点待核实			1			78924	0			True
+113120	fact-113120	candidate	Feldrake	邪能幼龙	research	unknown	怀旧服投放待核实		原版 TCG 实体卡兑换码无法在怀旧服兑换；仅在核实国服怀旧服官方复刻渠道后才显示玩家来源。	1				0			True
+113199	provisional-113199	candidate	Mount 113199	翠绿云端翔龙	quest	unknown	展翅高飞			1			79802	0			True
+118089	provisional-118089	candidate	Mount 118089	天蓝水黾	reputation_vendor	obtainable	垂钓翁（崇拜） > 卡桑琅丛林 > 垂钓翁码头 > 纳特·帕格尔	4,000金币	需垂钓翁崇拜购买。	1			81354	0			True
+118737	provisional-118737	candidate	Mount 118737	熊猫人风筝	achievement	unknown	熊猫人特使			1			81559	0		0	True
+120043	provisional-120043	candidate	Mount 120043	宝石玛瑙猎豹	crafted	unknown	珠宝加工			1			82453	0			True
+120395	fact-120395	candidate	Mount 120395	绿色龙龟	vendor	unknown	熊猫人：直接购买；其他种族：火金派或土水派（崇拜） > 奥格瑞玛 > 荣誉谷 / 暴风城 > 乌龟大师吴玳（部落）/ 老白鼻（联盟）	1金币	普通龙龟 6 只、巨型龙龟 6 只；均为召唤法术，非背包物品。	1				0			True
+120822	fact-120822	candidate	Mount 120822	巨型红色龙龟	vendor	unknown	熊猫人：直接购买；其他种族：火金派或土水派（崇拜） > 奥格瑞玛 > 荣誉谷 / 暴风城 > 乌龟大师吴玳（部落）/ 老白鼻（联盟）	10金币	普通龙龟 6 只、巨型龙龟 6 只；均为召唤法术，非背包物品。	1				0			True
+121820	provisional-121820	candidate	Mount 121820	黑曜夜行者	promotion	unknown	详细地点待核实			1			83086	0			True
+121836	provisional-121836	candidate	Mount 121836	蓝宝石猎豹	crafted	unknown	珠宝加工			1			83090	0			True
+121837	provisional-121837	candidate	Mount 121837	翡翠猎豹	crafted	unknown	珠宝加工			1			83088	0			True
+121838	provisional-121838	candidate	Mount 121838	红宝石猎豹	crafted	unknown	珠宝加工			1			83087	0			True
+121839	provisional-121839	candidate	Mount 121839	日长石猎豹	crafted	unknown	珠宝加工			1			83089	0			True
+122708	provisional-122708	candidate	Mount 122708	雄壮远足牦牛	vendor	unknown	昆莱山 > 野牛人前线 > 表叔大口袋	120,000金币		1			84101	0			True
+123182	fact-123182	candidate	Mount 123182	白色骑乘牦牛	reputation_vendor	obtainable	至尊天神（崇拜） > 锦绣谷 > 至尊天神庭院 > 至尊天神的化身	2,500金币		1				0			True
+123886	provisional-123886	candidate	Mount 123886	琥珀巨蝎	reputation_vendor	obtainable	卡拉克西（崇拜） > 恐惧废土 > 卡拉克西维斯 > 琥珀匠师齐克	2,000金币		1			85262	0			True
+123992	provisional-123992	candidate	Mount 123992	碧蓝云端翔龙	quest	unknown	展翅高飞			1			85430	0			True
+123993	provisional-123993	candidate	Mount 123993	金色云端翔龙	quest	unknown	展翅高飞			1			85429	0			True
+124408	provisional-124408	candidate	Mount 124408	雷霆翡翠云端翔龙	reputation_vendor	obtainable	云端翔龙骑士团（崇拜） > 翡翠林 > 百木园 > 雷霆翡翠云端翔龙	3,000金币		1			85666	0			True
+124550	fact-124550	candidate	Mount 124550	灾变角斗士暮光幼龙	achievement	limited_time	竞技场 3v3 > 第 11 赛季 > 角斗士赛季奖励		PVP 竞技场 第 11 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
+124659	provisional-124659	candidate	Mount 124659	皇家魁麟	promotion	unknown	详细地点待核实			1			85870	0			True
+126507	provisional-126507	candidate	Mount 126507	衰变凯帕铀火箭	crafted	unknown	工程学			1			87250	0			True
+126508	provisional-126508	candidate	Mount 126508	对地同步世界旋转器	crafted	unknown	工程学			1			87251	0			True
+127154	provisional-127154	candidate	Mount 127154	玛瑙云端翔龙	quest	unknown	突袭！			1			87768	0			True
+127156	provisional-127156	candidate	Mount 127156	猩红云端翔龙	achievement	unknown	《熊猫人之谜》英雄的荣耀			1			87769	0			True
+127158	heavenly-onyx-cloud-serpent	candidate	Heavenly Onyx Cloud Serpent	神圣玛瑙云端翔龙	boss_drop	obtainable	昆莱山 > 怒之煞 > 怒之煞			1			87771	0			True
+127161	provisional-127161	candidate	Mount 127161	神圣猩红云端翔龙	achievement	unknown	潘达利亚团队的荣耀			1			87773	0			True
+127164	provisional-127164	candidate	Mount 127164	神圣金色云端翔龙	reputation_vendor	obtainable	云端翔龙骑士团（崇拜） > 翡翠林 > 百木园 > 织雾者顾严	3,000金币		1			87774	0			True
+127165	provisional-127165	candidate	Mount 127165	神圣翠绿云端翔龙	event	unknown	详细地点待核实			1			87775	0			True
+127169	provisional-127169	candidate	Mount 127169	神圣碧蓝云端翔龙	achievement	unknown	详细地点待核实			1			87776	0			True
+127170	astral-cloud-serpent	candidate	Astral Cloud Serpent	星光云端翔龙	boss_drop	obtainable	昆莱山 > 魔古山宝库 > 伊拉贡			1			87777	0			True
+127174	provisional-127174	candidate	Mount 127174	天蓝骑乘仙鹤	reputation_vendor	obtainable	金莲教（崇拜） > 锦绣谷 > 双月殿 / 七星殿 > 宽仁的贾鲁	2,500金币		1			87781	0			True
+127176	provisional-127176	candidate	Mount 127176	金黄骑乘仙鹤	reputation_vendor	obtainable	金莲教（崇拜） > 锦绣谷 > 双月殿 / 七星殿 > 宽仁的贾鲁	2,500金币		1			87782	0			True
+127177	provisional-127177	candidate	Mount 127177	帝王骑乘仙鹤	reputation_vendor	obtainable	金莲教（崇拜） > 锦绣谷 > 双月殿 / 七星殿 > 宽仁的贾鲁	2,500金币		1			87783	0			True
+127178	fact-127178	candidate	Mount 127178	丛林骑乘仙鹤	reputation_vendor	obtainable	至尊天神（崇拜） > 锦绣谷 > 至尊天神庭院 > 至尊天神的化身	2,500金币		1				0			True
+127209	fact-127209	candidate	Mount 127209	黑色骑乘牦牛	reputation_vendor	obtainable	至尊天神（崇拜） > 锦绣谷 > 至尊天神庭院 > 至尊天神的化身	2,500金币		1				0			True
+127213	fact-127213	candidate	Mount 127213	棕色骑乘牦牛	reputation_vendor	obtainable	至尊天神（崇拜） > 锦绣谷 > 至尊天神庭院 > 至尊天神的化身	2,500金币		1				0			True
+127216	provisional-127216	candidate	Mount 127216	灰色骑乘牦牛	vendor	unknown	昆莱山 > 野牛人前线 > 表叔大口袋	3,000金币		1			87788	0			True
+127220	provisional-127220	candidate	Mount 127220	金色骑乘牦牛	vendor	unknown	昆莱山 > 野牛人前线 > 表叔大口袋	3,000金币		1			87789	0			True
+127271	fact-127271	candidate	Mount 127271	猩红水黾	reputation_vendor	obtainable	至尊天神（崇拜） > 锦绣谷 > 至尊天神庭院 > 至尊天神的化身	2,500金币		1				0			True
+127272	fact-127272	candidate	Mount 127272	橙色水黾	reputation_vendor	obtainable	至尊天神（崇拜） > 锦绣谷 > 至尊天神庭院 > 至尊天神的化身	2,500金币		1				0			True
+127274	fact-127274	candidate	Mount 127274	碧玉水黾	reputation_vendor	obtainable	至尊天神（崇拜） > 锦绣谷 > 至尊天神庭院 > 至尊天神的化身	2,500金币		1				0			True
+127278	fact-127278	candidate	Mount 127278	金色水黾	reputation_vendor	obtainable	至尊天神（崇拜） > 锦绣谷 > 至尊天神庭院 > 至尊天神的化身	2,500金币		1				0			True
+127286	fact-127286	candidate	Mount 127286	黑色龙龟	vendor	unknown	熊猫人：直接购买；其他种族：火金派或土水派（崇拜） > 奥格瑞玛 > 荣誉谷 / 暴风城 > 乌龟大师吴玳（部落）/ 老白鼻（联盟）	1金币	普通龙龟 6 只、巨型龙龟 6 只；均为召唤法术，非背包物品。	1				0			True
+127287	fact-127287	candidate	Mount 127287	蓝色龙龟	vendor	unknown	熊猫人：直接购买；其他种族：火金派或土水派（崇拜） > 奥格瑞玛 > 荣誉谷 / 暴风城 > 乌龟大师吴玳（部落）/ 老白鼻（联盟）	1金币	普通龙龟 6 只、巨型龙龟 6 只；均为召唤法术，非背包物品。	1				0			True
+127288	fact-127288	candidate	Mount 127288	棕色龙龟	vendor	unknown	熊猫人：直接购买；其他种族：火金派或土水派（崇拜） > 奥格瑞玛 > 荣誉谷 / 暴风城 > 乌龟大师吴玳（部落）/ 老白鼻（联盟）	1金币	普通龙龟 6 只、巨型龙龟 6 只；均为召唤法术，非背包物品。	1				0			True
+127289	fact-127289	candidate	Mount 127289	紫色龙龟	vendor	unknown	熊猫人：直接购买；其他种族：火金派或土水派（崇拜） > 奥格瑞玛 > 荣誉谷 / 暴风城 > 乌龟大师吴玳（部落）/ 老白鼻（联盟）	1金币	普通龙龟 6 只、巨型龙龟 6 只；均为召唤法术，非背包物品。	1				0			True
+127290	fact-127290	candidate	Mount 127290	红色龙龟	vendor	unknown	熊猫人：直接购买；其他种族：火金派或土水派（崇拜） > 奥格瑞玛 > 荣誉谷 / 暴风城 > 乌龟大师吴玳（部落）/ 老白鼻（联盟）	1金币	普通龙龟 6 只、巨型龙龟 6 只；均为召唤法术，非背包物品。	1				0			True
+127293	fact-127293	candidate	Mount 127293	巨型绿色龙龟	vendor	unknown	熊猫人：直接购买；其他种族：火金派或土水派（崇拜） > 奥格瑞玛 > 荣誉谷 / 暴风城 > 乌龟大师吴玳（部落）/ 老白鼻（联盟）	10金币	普通龙龟 6 只、巨型龙龟 6 只；均为召唤法术，非背包物品。	1				0			True
+127295	fact-127295	candidate	Mount 127295	巨型黑色龙龟	vendor	unknown	熊猫人：直接购买；其他种族：火金派或土水派（崇拜） > 奥格瑞玛 > 荣誉谷 / 暴风城 > 乌龟大师吴玳（部落）/ 老白鼻（联盟）	10金币	普通龙龟 6 只、巨型龙龟 6 只；均为召唤法术，非背包物品。	1				0			True
+127302	fact-127302	candidate	Mount 127302	巨型蓝色龙龟	vendor	unknown	熊猫人：直接购买；其他种族：火金派或土水派（崇拜） > 奥格瑞玛 > 荣誉谷 / 暴风城 > 乌龟大师吴玳（部落）/ 老白鼻（联盟）	10金币	普通龙龟 6 只、巨型龙龟 6 只；均为召唤法术，非背包物品。	1				0			True
+127308	fact-127308	candidate	Mount 127308	巨型棕色龙龟	vendor	unknown	熊猫人：直接购买；其他种族：火金派或土水派（崇拜） > 奥格瑞玛 > 荣誉谷 / 暴风城 > 乌龟大师吴玳（部落）/ 老白鼻（联盟）	10金币	普通龙龟 6 只、巨型龙龟 6 只；均为召唤法术，非背包物品。	1				0			True
+127310	fact-127310	candidate	Mount 127310	巨型紫色龙龟	vendor	unknown	熊猫人：直接购买；其他种族：火金派或土水派（崇拜） > 奥格瑞玛 > 荣誉谷 / 暴风城 > 乌龟大师吴玳（部落）/ 老白鼻（联盟）	10金币	普通龙龟 6 只、巨型龙龟 6 只；均为召唤法术，非背包物品。	1				0			True
+129552	fact-129552	candidate	Mount 129552	赤红熊猫人凤凰	research	unknown	国服怀旧服投放待核实		现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。	1				0			True
+129918	provisional-129918	candidate	Mount 129918	雷霆天神云端翔龙	reputation_vendor	obtainable	金莲教（崇拜） > 锦绣谷 > 双月殿 / 七星殿 > 雷霆天神云端翔龙	2,500金币		1			89304	0			True
+129932	provisional-129932	candidate	Mount 129932	绿色影踪派骑乘虎	reputation_vendor	obtainable	影踪派（崇拜） > 螳螂高原 > 影踪卫戍营 > 狡狐鲁西	2,500金币		1			89305	0			True
+129934	provisional-129934	candidate	Mount 129934	蓝色影踪派骑乘虎	reputation_vendor	obtainable	影踪派（崇拜） > 螳螂高原 > 影踪卫戍营 > 狡狐鲁西	2,500金币		1			89307	0			True
+129935	provisional-129935	candidate	Mount 129935	红色影踪派骑乘虎	reputation_vendor	obtainable	影踪派（崇拜） > 螳螂高原 > 影踪卫戍营 > 狡狐鲁西	2,500金币		1			89306	0			True
+130086	provisional-130086	candidate	Mount 130086	棕色骑乘山羊	reputation_vendor	obtainable	阡陌客（崇拜） > 四风谷 > 半山 > 吉娜·泥爪	2,000金币		1			89362	0			True
+130092	provisional-130092	candidate	Mount 130092	红色筋斗云	reputation_vendor	obtainable	游学者周卓（崇拜） > 锦绣谷 > 魔古山宫殿 > 谭欣眺	600金币		1			89363	0			True
+130137	provisional-130137	candidate	Mount 130137	白色骑乘山羊	reputation_vendor	obtainable	阡陌客（崇拜） > 四风谷 > 半山 > 吉娜·泥爪	2,000金币		1			89390	0			True
+130138	provisional-130138	candidate	Mount 130138	黑色骑乘山羊	reputation_vendor	obtainable	阡陌客（崇拜） > 四风谷 > 半山 > 吉娜·泥爪	2,000金币		1			89391	0			True
+130965	son-of-galleon	candidate	Son of Galleon	炮舰之子	boss_drop	obtainable	四风谷 > 炮舰 > 炮舰			1			89783	0			True
+130985	provisional-130985	candidate	Mount 130985	熊猫人风筝	achievement	unknown	熊猫人特使			1			89785	0		1	True
+132036	thundering-ruby-cloud-serpent	candidate	Thundering Ruby Cloud Serpent	雷霆红玉云端翔龙	boss_drop	obtainable	锦绣谷 > 阿拉尼 > 阿拉尼			1			90655	0			True
+132117	fact-132117	candidate	Mount 132117	燃灰熊猫人凤凰	research	unknown	国服怀旧服投放待核实		现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。	1				0			True
+132118	fact-132118	candidate	Mount 132118	翠绿熊猫人凤凰	research	unknown	国服怀旧服投放待核实		现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。	1				0			True
+132119	fact-132119	candidate	Mount 132119	蓝紫熊猫人凤凰	research	unknown	国服怀旧服投放待核实		现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。	1				0			True
+133023	provisional-133023	candidate	Mount 133023	翠绿熊猫人风筝	achievement	unknown	鞍座紧缺			1			91802	0			True
+134359	sky-golem	candidate	Sky Golem	飞天魔像	crafted	obtainable	工程学			1			95416	0			True
+134573	provisional-134573	candidate	Mount 134573	追风	store	unknown	详细地点待核实			1			92724	0			True
+135416	provisional-135416	verified	Mount 135416	重装狮鹫	reputation_vendor	obtainable	雄狮港先遣军（崇拜） > 卡桑琅丛林 > 特工马尔利	2,000金币	联盟专属	1			93168	0		1	True
+135418	provisional-135418	verified	Mount 135418	重装双足飞龙	reputation_vendor	obtainable	统御先锋军（崇拜） > 卡桑琅丛林 > 撕咬者古卡纳	2,000金币	部落专属	1			93169	0		0	True
+136163	provisional-136163	candidate	Mount 136163	雄壮狮鹫	quest	unknown	寂静无声			1			93385	0		1	True
+136164	provisional-136164	verified	Mount 136164	雄壮双足飞龙	quest	obtainable	统御先锋军（崇拜） > 卡桑琅丛林 > 最黑暗的阴影之息		部落专属；统御先锋军战役最终任务奖励，并非绝版。	1	HORDE		93386	0		0	True
+136400	provisional-136400	candidate	Mount 136400	装甲啸天龙	boss_drop	unknown	雷神岛 > 雷电王座 > 季鹍			1			93662	0			True
+136471	spawn-of-horridon	candidate	Spawn of Horridon	赫利东的子嗣	boss_drop	obtainable	雷神岛 > 雷电王座 > 赫利东			1			93666	0			True
+136505	fact-136505	candidate	Ghastly Charger	幽灵军马	research	unknown	怀旧服投放待核实		原版 TCG 实体卡兑换码无法在怀旧服兑换；仅在核实国服怀旧服官方复刻渠道后才显示玩家来源。	1				0			True
+138423	provisional-138423	candidate	Mount 138423	冰蓝原始恐角龙	vendor	unknown	巨兽岛 > 乌达斯塔	乌达斯塔掉落		1			94228	0			True
+138424	provisional-138424	candidate	Mount 138424	珀光原始恐角龙	vendor	unknown	巨兽岛 > 永恒者森达拉	9,999根巨兽骨头		1			94230	0			True
+138425	provisional-138425	candidate	Mount 138425	岩灰原始恐角龙	vendor	unknown	巨兽岛 > 永恒者森达拉	9,999根巨兽骨头		1			94229	0			True
+138426	provisional-138426	candidate	Mount 138426	翡翠原始恐角龙	vendor	unknown	巨兽岛 > 永恒者森达拉	9,999根巨兽骨头		1			94231	0			True
+138640	provisional-138640	candidate	Mount 138640	白色原始迅猛龙	quest	unknown	堆积如山的巨型恐龙骨头			1			94290	0			True
+138641	provisional-138641	candidate	Mount 138641	红色原始迅猛龙	boss_drop	unknown	巨兽岛 > 赞达拉战争使者 > 赞达拉战争使者			1			94291	0			True
+138642	provisional-138642	candidate	Mount 138642	黑色原始迅猛龙	boss_drop	unknown	巨兽岛 > 赞达拉战争使者 > 赞达拉战争使者			1			94292	0			True
+138643	provisional-138643	candidate	Mount 138643	绿色原始迅猛龙	boss_drop	unknown	巨兽岛 > 赞达拉战争使者 > 赞达拉战争使者			1			94293	0			True
+139407	fact-139407	candidate	Mount 139407	恶毒角斗士云端翔龙	achievement	limited_time	竞技场 3v3 > 第 12 赛季 > 角斗士赛季奖励		PVP 竞技场 第 12 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
+139442	thundering-cobalt-cloud-serpent	candidate	Thundering Cobalt Cloud Serpent	雷霆蓝晶云端翔龙	boss_drop	obtainable	雷神岛 > 纳拉克 > 纳拉克			1			95057	0			True
+139448	spawn-of-jikun	verified	Spawn of Ji-Kun	季鹍之嗣	event	limited_time	国服 21 周年庆			1			95059	0			True
+139595	provisional-139595	candidate	Mount 139595	装甲血翼蝠	store	unknown	详细地点待核实			1			95341	0			True
+140249	provisional-140249	verified	Mount 140249	黄金原始恐角龙	reputation_vendor	obtainable	肯瑞托先锋军（崇拜） > 雷神岛 > 海伦·慧歌	3,000金币	联盟专属	1			95564	0		1	True
+140250	provisional-140250	verified	Mount 140250	深红原始恐角龙	reputation_vendor	obtainable	夺日者先锋军（崇拜） > 雷神岛 > 瓦萨林·赤晨	3,000金币	部落专属	1			95565	0		0	True
+142073	hearthsteed	candidate	Hearthsteed	炉石天马	promotion	limited_time	炉石传说			1			98618	0			True
+142266	provisional-142266	candidate	Mount 142266	红色装甲龙鹰	achievement	unknown	坐骑大巡游			1			98104	0		0	True
+142478	provisional-142478	candidate	Mount 142478	蓝色装甲龙鹰	achievement	unknown	坐骑大巡游			1			98259	0		1	True
+142641	provisional-142641	candidate	Mount 142641	拳手的健壮穆山兽	event	unknown	详细地点待核实			1			98405	0			True
+142878	provisional-142878	candidate	Mount 142878	魔法灵龙	store	unknown	详细地点待核实			1			97989	0			True
+142910	fact-142910	candidate	Mount 142910	钢铁战马	vendor	unknown	旧版本商城 > 游戏商城 > 钢铁战马	钢铁战马：已绝版		1				0			True
+146615	provisional-146615	candidate	Mount 146615	邪恶作战刃豹	vendor	unknown	挑战模式 > 潘达利亚挑战模式商人 > 通灵领主赛普	挑战模式：黄金		1			102514	0		1	True
+146622	provisional-146622	candidate	Mount 146622	邪恶骷髅战马	vendor	unknown	挑战模式 > 潘达利亚挑战模式商人 > 亡灵卫兵奈萨里安	挑战模式：黄金		1			102533	0		0	True
+148392	provisional-148392	candidate	Mount 148392	迦拉卡斯的子嗣	achievement	obtainable	锦绣谷 > 决战奥格瑞玛 > 团队的荣耀：决战奥格瑞玛		完成团队成就，不是加尔鲁什掉落。	1			104208	0			True
+148396	fact-148396	candidate	Mount 148396	库卡隆战狼	achievement	unavailable	锦绣谷 > 决战奥格瑞玛 > 千钧一发：加尔鲁什·地狱咆哮		10人普通或更高难度、版本阶段限定；不是首领掉落。	1				0			True
+148417	kor-kron-juggernaut	candidate	Kor'kron Juggernaut	库卡隆战蝎	boss_drop	obtainable	锦绣谷 > 决战奥格瑞玛25H > 加尔鲁什·地狱咆哮			1			104253	0			True
+148428	fact-148428	candidate	Mount 148428	灰皮穆山兽	reputation_vendor	obtainable	皇帝少昊（崇拜） > 永恒岛 > 天神庭院 > 发言人古兰	2,000枚永恒铸币		1				0			True
+148476	thundering-onyx-cloud-serpent	candidate	Thundering Onyx Cloud Serpent	雷霆玛瑙云端翔龙	rare_drop	obtainable	永恒岛 > 火龙		世界稀有精英掉落，不是加尔鲁什掉落。	1			104269	0			True
+148618	fact-148618	candidate	Mount 148618	暴虐角斗士云端翔龙	achievement	limited_time	竞技场 3v3 > 第 13 赛季 > 角斗士赛季奖励		PVP 竞技场 第 13 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
+148619	fact-148619	candidate	Mount 148619	恶孽角斗士云端翔龙	achievement	limited_time	竞技场 3v3 > 第 14 赛季 > 角斗士赛季奖励		PVP 竞技场 第 14 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
+148620	fact-148620	candidate	Mount 148620	骄矜角斗士云端翔龙	achievement	limited_time	竞技场 3v3 > 第 15 赛季 > 角斗士赛季奖励		PVP 竞技场 第 15 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
+149801	provisional-149801	candidate	Mount 149801	翡翠角鹰兽	promotion	unknown	详细地点待核实			1			106246	0			True
+153489	provisional-153489	candidate	Mount 153489	钢铁碎天兽	store	unknown	详细地点待核实			1			107951	0			True
+155741	fact-155741	candidate	Mount 155741	恐惧渡鸦	promotion	unavailable	《德拉诺之王》数字豪华版/典藏版奖励		恐惧渡鸦为《德拉诺之王》数字豪华版或典藏版奖励；目标客户端当前不可新获取。	1				0			True
+163024	provisional-163024	candidate	Mount 163024	战火梦魇兽	store	unknown	详细地点待核实			1			112326	0			True
+163025	provisional-163025	candidate	Mount 163025	狞笑掠夺者	store	unknown	详细地点待核实			1			112327	0			True
+348459	fact-348459	verified	Mount 348459	再度觉醒的相位捕猎者	store	obtainable	战网商城 > 再度觉醒的相位捕猎者	¥98	经典怀旧服商品	1				0			True
+372677	fact-372677	verified	Mount 372677	卡鲁亚克鲸须风筝	store	obtainable	战网商城 > 卡鲁亚克鲸须风筝	¥168	经典怀旧服商品	1				0			True
+387308	fact-387308	verified	Mount 387308	魔法公鸡	store	obtainable	战网商城 > 魔法鸡蛋 > 魔法公鸡	¥298	魔法鸡蛋可开出多种配色；此条对应当前客户端 spellID	1				0			True
+387311	fact-387311	verified	Mount 387311	X-51虚空火箭特别加强版	store	obtainable	战网商城 > X-51虚空火箭特别加强版	¥498	经典怀旧服商品	1				0			True
+387319	fact-387319	verified	Mount 387319	大战熊	event	limited_time	流沙秘宝库			1				0			True
+387320	fact-387320	candidate	Blazing Hippogryph	炽焰角鹰兽	research	unknown	怀旧服投放待核实		原版 TCG 实体卡兑换码无法在怀旧服兑换；仅在核实国服怀旧服官方复刻渠道后才显示玩家来源。	1				0			True
+387321	fact-387321	verified	Mount 387321	白毛犀牛	store	obtainable	战网商城 > 白毛犀牛	¥218	经典怀旧服商品	1				0			True
+387323	fact-387323	verified	X-51 Nether-Rocket	X-51虚空火箭	event	unavailable	2026 兰德鲁金色礼盒 > X-51虚空火箭		国服怀旧服官方复刻投放；该期活动结束后不可再获取。	1				0			True
+388516	fact-388516	candidate	Mount 388516	皓儿，天河先知	research	unknown	来源待补全			1				0			True
+394209	fact-394209	candidate	Mount 394209	腐溃翡翠幼龙	event	limited_time	网易运营活动		网易运营活动赠送。	1				0			True
+416158	fact-416158	candidate	Mount 416158	梦魇翡翠幼龙	event	limited_time	网易运营活动		网易运营活动赠送。	1				0			True
+423869	excluded-423869	verified	Mount 423869	烈焰化身	store	unavailable	大灾变怀旧服 > 炽炎英雄版组合包		2023 年大灾变怀旧服组合包奖励；该历史组合包已结束。	1				0			True
+435115	fact-435115	candidate	Mount 435115	护卫魁麟	vendor	unknown	旧版本商城 > 游戏商城 > 护卫魁麟	护卫魁麟：已绝版		1				0			True
+440915	excluded-440915	verified	Mount 440915	福星木蛟	event	unavailable	2024 国服游戏时间优惠 > 购买 90 天游戏时间		2024 年国服《巫妖王之怒》游戏时间优惠奖励；限时投放已结束。	1				0			True
+446902	fact-446902	candidate	Mount 446902	波利·罗杰	event	limited_time	网易运营活动		网易运营活动赠送。	1				0	|cFFFFD200阵营：|r桶腿船团|n|cFFFFD200名望：|r39		True
+457485	excluded-457485	verified	Mount 457485	灰熊丘陵巨熊	event	unavailable	2026 猩红之潮秘宝		2026 年怀旧服/时光服限时活动奖励；活动已结束。	1				0			True
+459486	excluded-459486	verified	Mount 459486	金色炽焰凤凰	event	unavailable	2025 兰德鲁的豪华礼物盒		2025 年国服限时礼物盒活动奖励；活动已结束。	1				0			True
+459538	fact-459538	verified	Mount 459538	迎福巨熊	event	limited_time	流沙秘宝库			1				0			True
+463045	manual-463045	verified	Mount 463045	熔岩幼龙	store	unavailable	年卡			1				0			True
+466948	excluded-466948	verified	Mount 466948	混沌异生恐翼蝙蝠	store	unavailable	魔兽系列 30 周年纪念坐骑礼包 > 经典怀旧服：混沌异生恐翼蝙蝠		礼包销售截止于 2025-01-07。	1				0			True
+466977	excluded-466977	verified	Mount 466977	混沌异生驭风者	store	unavailable	魔兽系列 30 周年纪念坐骑礼包 > 经典怀旧服：混沌异生驭风者		礼包销售截止于 2025-01-07。	1				0			True
+466980	excluded-466980	verified	Mount 466980	混沌异生角鹰兽	store	unavailable	魔兽系列 30 周年纪念坐骑礼包 > 经典怀旧服：混沌异生角鹰兽		礼包销售截止于 2025-01-07。	1				0			True
+466983	excluded-466983	verified	Mount 466983	混沌异生狮鹫	store	unavailable	魔兽系列 30 周年纪念坐骑礼包 > 经典怀旧服：混沌异生狮鹫		礼包销售截止于 2025-01-07。	1				0			True
+471440	fact-471440	candidate	Mount 471440	天缚幽灵虎	research	unknown	来源待补全			1				0			True
+473478	excluded-473478	verified	Mount 473478	染煞骑乘虎	store	obtainable	熊猫人之谜怀旧服升级礼包 > 宿煞英雄/史诗礼包 > 染煞骑乘虎		可在熊猫人之谜怀旧服与泰坦重铸服务器「时光」使用；并非绝版。	1				0			True
+473487	excluded-473487	verified	Mount 473487	染煞云端翔龙	store	obtainable	熊猫人之谜怀旧服升级礼包 > 宿煞英雄/史诗礼包 > 染煞云端翔龙		可在熊猫人之谜怀旧服与泰坦重铸服务器「时光」使用；并非绝版。	1				0			True
+473739	fact-473739	candidate	Mount 473739	绒毛米克西	research	unknown	来源待补全			1				10	|cFFFFD200游戏商城|r|n		True
+473741	fact-473741	candidate	Mount 473741	柔爪米克西	research	unknown	来源待补全			1				10	|cFFFFD200游戏商城|r|n		True
+473743	fact-473743	candidate	Mount 473743	滚爪米克西	research	unknown	来源待补全			1				10	|cFFFFD200游戏商城|r|n		True
+473744	fact-473744	candidate	Mount 473744	茶毛米克西	research	unknown	来源待补全			1				10	|cFFFFD200游戏商城|r|n		True
+473745	fact-473745	candidate	Mount 473745	酿盗米克西	research	unknown	来源待补全			1				10	|cFFFFD200游戏商城|r|n		True
+1217476	excluded-1217476	verified	Mount 1217476	祥云锦绣火鹰	event	unavailable	2025 新春狂欢季 > 藏宝工坊		中国刺绣馆联名坐骑；2025 年限时抽奖活动已结束。	1				0			True
+1224596	manual-1224596	verified	Mount 1224596	茶绒米克西	store	obtainable	战网商城 > 威风米克西收藏 > 茶绒米克西	¥120	红色；经典怀旧服主线服务器可用	1				0			True
+1224643	manual-1224643	verified	Mount 1224643	轻爪米克西	store	obtainable	战网商城 > 威风米克西收藏 > 轻爪米克西	¥120	灰色；经典怀旧服主线服务器可用	1				0			True
+1224645	manual-1224645	verified	Mount 1224645	蓬鬃米克西	store	obtainable	战网商城 > 威风米克西收藏 > 蓬鬃米克西	¥120	蓝色；经典怀旧服主线服务器可用	1				0			True
+1224646	manual-1224646	verified	Mount 1224646	游爪米克西	store	obtainable	战网商城 > 威风米克西收藏 > 游爪米克西	¥120	橙色；经典怀旧服主线服务器可用	1				0			True
+1224647	manual-1224647	verified	Mount 1224647	酿匪米克西	store	obtainable	战网商城 > 威风米克西收藏 > 酿匪米克西	¥120	紫色；经典怀旧服主线服务器可用	1				0			True
+1229670	excluded-1229670	candidate	Mount 1229670	先知的巨鹊	research	unavailable	目标版本外		此商品不适用于经典怀旧服，因此不作为怀旧服坐骑来源。	1				0			True
+1229672	excluded-1229672	candidate	Mount 1229672	大法师的巨鹊	research	unavailable	目标版本外		此商品不适用于经典怀旧服，因此不作为怀旧服坐骑来源。	1				0			True
+1238816	excluded-1238816	candidate	Mount 1238816	萨巴卡的使节	research	unavailable	目标版本外		此商品不适用于经典怀旧服，因此不作为怀旧服坐骑来源。	1				0			True
+1239204	excluded-1239204	verified	Mount 1239204	暴风城巡天战机	event	unavailable	2025 国服抖音直播活动 > 暴风城巡天战机返场		联盟专属；2025-05-15 限时直播购买返场，活动已结束。	1	ALLIANCE			0		1	True
+1239240	excluded-1239240	verified	Mount 1239240	奥格瑞玛哨戒飞艇	event	unavailable	2025 国服抖音直播活动 > 奥格瑞玛哨戒飞艇返场		部落专属；2025-05-15 限时直播购买返场，活动已结束。	1	HORDE			0		0	True
+1239372	excluded-1239372	verified	Mount 1239372	星骓	store	unknown	经典怀旧服商城 > 星骓		巫妖王之怒怀旧服商城曾投放；当前是否在售需以商城实时列表为准。	1				0			True
+1247591	fact-1247591	candidate	Mount 1247591	天神骑乘仙鹤	reputation_vendor	obtainable	至尊天神（崇拜） > 锦绣谷 > 至尊天神庭院 > 至尊天神的化身	2,500金币		1				0			True
+1247596	fact-1247596	candidate	Mount 1247596	天神骑乘翔龙	reputation_vendor	obtainable	至尊天神（崇拜） > 锦绣谷 > 至尊天神庭院 > 天神使者	2,500金币		1				0			True
+1247597	fact-1247597	candidate	Mount 1247597	天神骑乘神牛	achievement	unknown	迷雾传人			1				0			True
+1247598	fact-1247598	candidate	Mount 1247598	天神骑乘虎	achievement	unknown	迷雾行者			1				0			True
+1249659	fact-1249659	verified	Mount 1249659	煞痕幼龙	store	obtainable	年卡			1				0			True
+1250045	fact-1250045	candidate	Mount 1250045	烬灭灾变者	research	unknown	来源待补全			1				0			True
+1257516	excluded-1257516	verified	Mount 1257516	兰娜瑟尔的喋血瀑流	store	obtainable	经典怀旧服商城 > 兰娜瑟尔的喋血瀑流		怀旧服主线服务器角色可用；商城售价以实时列表为准。	1				0			True
+1257673	manual-1257673	verified	Mount 1257673	雪落翔林者	store	obtainable	战网商城 > 飞掠翔林者收藏 > 雪落翔林者	¥168（单只）	蓝色；合集 ¥420，已拥有内容时动态调价；经典怀旧服主线服务器可用	1				0			True
+1257674	manual-1257674	verified	Mount 1257674	烬簇翔林者	store	obtainable	战网商城 > 飞掠翔林者收藏 > 烬簇翔林者	¥168（单只）	橙色；合集 ¥420，已拥有内容时动态调价；经典怀旧服主线服务器可用	1				0			True
+1257676	manual-1257676	verified	Mount 1257676	瓣枝翔林者	store	obtainable	战网商城 > 飞掠翔林者收藏 > 瓣枝翔林者	¥168（单只）	粉色；合集 ¥420，已拥有内容时动态调价；经典怀旧服主线服务器可用	1				0			True
+1257677	manual-1257677	verified	Mount 1257677	影桠翔林者	store	obtainable	战网商城 > 飞掠翔林者收藏 > 影桠翔林者	¥168（单只）	紫色；合集 ¥420，已拥有内容时动态调价；经典怀旧服主线服务器可用	1				0			True
+1266345	fact-1266345	candidate	Mount 1266345	天蓝相位捕猎者	research	unknown	来源待补全			1				0			True
+1266866	fact-1266866	candidate	Mount 1266866	星辰虚空幼龙的缰绳	research	unknown	来源待补全			1				0			True
+1266982	fact-1266982	candidate	Mount 1266982	伯爵的猩红行驾	research	unknown	来源待补全			1				0			True
+1267077	fact-1267077	candidate	Mount 1267077	绯红女爵	research	unknown	来源待补全			1				0			True
+1272988	fact-1272988	candidate	Mount 1272988	伊纳瑞斯的天使战马	research	unknown	来源待补全			1				0			True
+1280068	excluded-1280068	verified	Mount 1280068	炽燃烈驹	store	obtainable	经典怀旧服商城 > 炽燃烈驹		怀旧服商城坐骑；并非绝版。	1				0			True
+1283471	excluded-1283471	verified	Mount 1283471	金色烬灭灾变者	event	unavailable	2026 兰德鲁金色礼盒		2026 新春限时礼盒奖励；活动结束后绝版。	1				0			True
+1284044	fact-1284044	candidate	Mount 1284044	炽焰魁麟	research	unknown	来源待补全			1				0			True
+1284679	fact-1284679	candidate	Mount 1284679	染煞恐狼	research	unknown	来源待补全			1				10			True
+1285724	excluded-1285724	verified	Mount 1285724	金辉破霄	event	unavailable	2026 兰德鲁金色礼盒		2026 新春限时礼盒奖励；活动结束后绝版。	1				10			True
+1285725	fact-1285725	candidate	Mount 1285725	苍雷踏云	research	unknown	来源待补全			1				10			True
+1285897	fact-1285897	candidate	Mount 1285897	染煞猫头鹰	research	unknown	来源待补全			1				10			True
+1291315	fact-1291315	candidate	Mount 1291315	栖竹者森森	research	unknown	来源待补全			1				0	|n		True
+1298510	fact-1298510	candidate	Mount 1298510	烈焰幼龙的缰绳	achievement	unknown	雾裔			1				0			True
+1298512	fact-1298512	candidate	Mount 1298512	风暴乌鸦	research	unknown	国服怀旧服投放待核实		现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。	1				0			True
+1298515	excluded-1298515	verified	Mount 1298515	幽灵狮鹫	promotion	unavailable	复活卷轴活动 > 唤醒长期未登录玩家		2012-03 至 2014-02 的复活卷轴奖励；活动已结束。	1				0			True
+1298516	fact-1298516	candidate	Mount 1298516	幽灵驭风者	research	unknown	国服怀旧服投放待核实		现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。	1				0			True
+1301737	manual-1301737	verified	Mount 1301737	日灿流蛾	store	obtainable	战网商城 > 日灿流蛾（半年卡/单独购买）	¥168（单独购买）/¥360（半年卡）	怀旧服专属；自动适配骑术，骑术不足时作为地面坐骑	1				0			True
+1302506	fact-1302506	candidate	Mount 1302506	冰霜巨龙	research	unknown	国服怀旧服投放待核实		现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。	1				0			True
+1309841	excluded-1309841	verified	Mount 1309841	霜壳行者·卡鲁亚克的巨钳伙伴	event	limited_time	碧蓝林海秘宝		2026-08-14 至 2026-09-11 限时活动奖励；提供主城传送功能。	1				0			True

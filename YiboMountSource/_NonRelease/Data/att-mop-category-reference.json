@@ -1,0 +1,2248 @@
+{
+  "schemaVersion": 1,
+  "purpose": "non-release research queue only; not runtime data",
+  "sourceRepository": "https://github.com/query-csharp/AllTheThings-MoP",
+  "fetchedAt": "2026-09-08T18:16:23Z",
+  "candidates": [
+    {
+      "spellID": 580,
+      "itemID": 1132,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 470,
+      "itemID": 2411,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 472,
+      "itemID": 2414,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 6648,
+      "itemID": 5655,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 458,
+      "itemID": 5656,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 6653,
+      "itemID": 5665,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 6654,
+      "itemID": 5668,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 6777,
+      "itemID": 5864,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 6899,
+      "itemID": 5872,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 6898,
+      "itemID": 5873,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 10873,
+      "itemID": 8563,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 8395,
+      "itemID": 8588,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 10796,
+      "itemID": 8591,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 10799,
+      "itemID": 8592,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 10969,
+      "itemID": 8595,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 10793,
+      "itemID": 8629,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 8394,
+      "itemID": 8631,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 10789,
+      "itemID": 8632,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 17229,
+      "itemID": 13086,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 17453,
+      "itemID": 13321,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 17462,
+      "itemID": 13331,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 17463,
+      "itemID": 13332,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 17464,
+      "itemID": 13333,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 17465,
+      "itemID": 13334,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 17481,
+      "itemID": 13335,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 18989,
+      "itemID": 15277,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 18990,
+      "itemID": 15290,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23221,
+      "itemID": 18766,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23219,
+      "itemID": 18767,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23225,
+      "itemID": 18772,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23223,
+      "itemID": 18773,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23222,
+      "itemID": 18774,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23227,
+      "itemID": 18776,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23229,
+      "itemID": 18777,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23228,
+      "itemID": 18778,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23240,
+      "itemID": 18785,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23238,
+      "itemID": 18786,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23239,
+      "itemID": 18787,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23241,
+      "itemID": 18788,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23242,
+      "itemID": 18789,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23243,
+      "itemID": 18790,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23246,
+      "itemID": 18791,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23247,
+      "itemID": 18793,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23249,
+      "itemID": 18794,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23248,
+      "itemID": 18795,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23250,
+      "itemID": 18796,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23251,
+      "itemID": 18797,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23252,
+      "itemID": 18798,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23338,
+      "itemID": 18902,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23509,
+      "itemID": 19029,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 23510,
+      "itemID": 19030,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 25953,
+      "itemID": 21218,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 26054,
+      "itemID": 21321,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 26056,
+      "itemID": 21323,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 26055,
+      "itemID": 21324,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 32235,
+      "itemID": 25470,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 32240,
+      "itemID": 25472,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 32242,
+      "itemID": 25473,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 32243,
+      "itemID": 25474,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 32244,
+      "itemID": 25475,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 32245,
+      "itemID": 25476,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 32246,
+      "itemID": 25477,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 32289,
+      "itemID": 25527,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 32290,
+      "itemID": 25528,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 32292,
+      "itemID": 25529,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 32295,
+      "itemID": 25531,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 32296,
+      "itemID": 25532,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 32297,
+      "itemID": 25533,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 34406,
+      "itemID": 28481,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 39316,
+      "itemID": 28915,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 34795,
+      "itemID": 28927,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 33660,
+      "itemID": 28936,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 34897,
+      "itemID": 29103,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 34899,
+      "itemID": 29105,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 35020,
+      "itemID": 29220,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 35022,
+      "itemID": 29221,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 35018,
+      "itemID": 29222,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 35025,
+      "itemID": 29223,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 35027,
+      "itemID": 29224,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 34896,
+      "itemID": 29227,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 34790,
+      "itemID": 29228,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 34898,
+      "itemID": 29229,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 22719,
+      "itemID": 29465,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 22718,
+      "itemID": 29466,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 22720,
+      "itemID": 29467,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 22717,
+      "itemID": 29468,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 22724,
+      "itemID": 29469,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 22722,
+      "itemID": 29470,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 22723,
+      "itemID": 29471,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 22721,
+      "itemID": 29472,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 35711,
+      "itemID": 29743,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 35710,
+      "itemID": 29744,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 35713,
+      "itemID": 29745,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 35712,
+      "itemID": 29746,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 35714,
+      "itemID": 29747,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 36702,
+      "itemID": 30480,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 39315,
+      "itemID": 31829,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 39317,
+      "itemID": 31832,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 39318,
+      "itemID": 31834,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 39319,
+      "itemID": 31836,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 39798,
+      "itemID": 32314,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 39801,
+      "itemID": 32316,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 39800,
+      "itemID": 32317,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 39802,
+      "itemID": 32318,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 39803,
+      "itemID": 32319,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 40192,
+      "itemID": 32458,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 41252,
+      "itemID": 32768,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 41513,
+      "itemID": 32857,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 41514,
+      "itemID": 32858,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 41515,
+      "itemID": 32859,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 41516,
+      "itemID": 32860,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 41517,
+      "itemID": 32861,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 41518,
+      "itemID": 32862,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 43900,
+      "itemID": 33977,
+      "categories": [
+        "event"
+      ]
+    },
+    {
+      "spellID": 43927,
+      "itemID": 33999,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 44153,
+      "itemID": 34060,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 44151,
+      "itemID": 34061,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 35028,
+      "itemID": 34129,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 46628,
+      "itemID": 35513,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 48027,
+      "itemID": 35906,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 48025,
+      "itemID": 37012,
+      "categories": [
+        "event"
+      ]
+    },
+    {
+      "spellID": 49322,
+      "itemID": 37719,
+      "categories": [
+        "promotion"
+      ]
+    },
+    {
+      "spellID": 49379,
+      "itemID": 37828,
+      "categories": [
+        "event"
+      ]
+    },
+    {
+      "spellID": 55531,
+      "itemID": 41508,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 58983,
+      "itemID": 43599,
+      "categories": [
+        "promotion"
+      ]
+    },
+    {
+      "spellID": 59569,
+      "itemID": 43951,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 59567,
+      "itemID": 43952,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 59568,
+      "itemID": 43953,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 59571,
+      "itemID": 43954,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 59570,
+      "itemID": 43955,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 59785,
+      "itemID": 43956,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 59799,
+      "itemID": 43958,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 61465,
+      "itemID": 43959,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 61470,
+      "itemID": 43961,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 54753,
+      "itemID": 43962,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 59650,
+      "itemID": 43986,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 59788,
+      "itemID": 44077,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 59797,
+      "itemID": 44080,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 61467,
+      "itemID": 44083,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 61469,
+      "itemID": 44086,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 59996,
+      "itemID": 44151,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 59961,
+      "itemID": 44160,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 60002,
+      "itemID": 44168,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 60024,
+      "itemID": 44177,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 60025,
+      "itemID": 44178,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 60118,
+      "itemID": 44223,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 60119,
+      "itemID": 44224,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 60114,
+      "itemID": 44225,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 60116,
+      "itemID": 44226,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 59791,
+      "itemID": 44230,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 59793,
+      "itemID": 44231,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 61447,
+      "itemID": 44234,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 61425,
+      "itemID": 44235,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 60424,
+      "itemID": 44413,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 61451,
+      "itemID": 44554,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 61309,
+      "itemID": 44558,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 61229,
+      "itemID": 44689,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 61230,
+      "itemID": 44690,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 61294,
+      "itemID": 44707,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 61997,
+      "itemID": 44842,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 61996,
+      "itemID": 44843,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 63232,
+      "itemID": 45125,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 63636,
+      "itemID": 45586,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 63638,
+      "itemID": 45589,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 63639,
+      "itemID": 45590,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 63637,
+      "itemID": 45591,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 63641,
+      "itemID": 45592,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 63635,
+      "itemID": 45593,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 63640,
+      "itemID": 45595,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 63642,
+      "itemID": 45596,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 63643,
+      "itemID": 45597,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 63796,
+      "itemID": 45693,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 63844,
+      "itemID": 45725,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 63956,
+      "itemID": 45801,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 63963,
+      "itemID": 45802,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 64658,
+      "itemID": 46099,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 64657,
+      "itemID": 46100,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 64659,
+      "itemID": 46102,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 64731,
+      "itemID": 46109,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 64977,
+      "itemID": 46308,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 66087,
+      "itemID": 46813,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 66088,
+      "itemID": 46814,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 66090,
+      "itemID": 46815,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 66091,
+      "itemID": 46816,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 66847,
+      "itemID": 47100,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 66846,
+      "itemID": 47101,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 67466,
+      "itemID": 47180,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 69395,
+      "itemID": 49636,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 71342,
+      "itemID": 50250,
+      "categories": [
+        "event"
+      ]
+    },
+    {
+      "spellID": 72286,
+      "itemID": 50818,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 72808,
+      "itemID": 51954,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 72807,
+      "itemID": 51955,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 73313,
+      "itemID": 52200,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 75207,
+      "itemID": 54465,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 75596,
+      "itemID": 54797,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 75614,
+      "itemID": 54811,
+      "categories": [
+        "store"
+      ]
+    },
+    {
+      "spellID": 75973,
+      "itemID": 54860,
+      "categories": [
+        "promotion"
+      ]
+    },
+    {
+      "spellID": 84751,
+      "itemID": 60954,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 90621,
+      "itemID": 62298,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 87090,
+      "itemID": 62461,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 87091,
+      "itemID": 62462,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 88331,
+      "itemID": 62900,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 88335,
+      "itemID": 62901,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 88742,
+      "itemID": 63040,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 88744,
+      "itemID": 63041,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 88718,
+      "itemID": 63042,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 88746,
+      "itemID": 63043,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 88748,
+      "itemID": 63044,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 88749,
+      "itemID": 63045,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 88750,
+      "itemID": 63046,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 88990,
+      "itemID": 63125,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 92155,
+      "itemID": 64883,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 92231,
+      "itemID": 64998,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 92232,
+      "itemID": 64999,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 88741,
+      "itemID": 65356,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 93326,
+      "itemID": 65891,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 93644,
+      "itemID": 67107,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 98718,
+      "itemID": 67151,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 96491,
+      "itemID": 68823,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 96499,
+      "itemID": 68824,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 97359,
+      "itemID": 69213,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 97493,
+      "itemID": 69224,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 97501,
+      "itemID": 69226,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 97560,
+      "itemID": 69230,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 98204,
+      "itemID": 69747,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 98727,
+      "itemID": 69846,
+      "categories": [
+        "store"
+      ]
+    },
+    {
+      "spellID": 100332,
+      "itemID": 70909,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 100333,
+      "itemID": 70910,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 101542,
+      "itemID": 71665,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 102346,
+      "itemID": 72140,
+      "categories": [
+        "event"
+      ]
+    },
+    {
+      "spellID": 102349,
+      "itemID": 72145,
+      "categories": [
+        "event"
+      ]
+    },
+    {
+      "spellID": 102350,
+      "itemID": 72146,
+      "categories": [
+        "event"
+      ]
+    },
+    {
+      "spellID": 103081,
+      "itemID": 73766,
+      "categories": [
+        "event"
+      ]
+    },
+    {
+      "spellID": 103195,
+      "itemID": 73838,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 103196,
+      "itemID": 73839,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 107203,
+      "itemID": 76755,
+      "categories": [
+        "promotion"
+      ]
+    },
+    {
+      "spellID": 107516,
+      "itemID": 76889,
+      "categories": [
+        "promotion"
+      ]
+    },
+    {
+      "spellID": 107517,
+      "itemID": 76902,
+      "categories": [
+        "promotion"
+      ]
+    },
+    {
+      "spellID": 107842,
+      "itemID": 77067,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 107844,
+      "itemID": 77068,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 107845,
+      "itemID": 77069,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 110039,
+      "itemID": 78919,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 110051,
+      "itemID": 78924,
+      "categories": [
+        "store"
+      ]
+    },
+    {
+      "spellID": 113199,
+      "itemID": 79802,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 118089,
+      "itemID": 81354,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 118737,
+      "itemID": 81559,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 120043,
+      "itemID": 82453,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 121820,
+      "itemID": 83086,
+      "categories": [
+        "promotion"
+      ]
+    },
+    {
+      "spellID": 121838,
+      "itemID": 83087,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 121837,
+      "itemID": 83088,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 121839,
+      "itemID": 83089,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 121836,
+      "itemID": 83090,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 122708,
+      "itemID": 84101,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 123886,
+      "itemID": 85262,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 123993,
+      "itemID": 85429,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 123992,
+      "itemID": 85430,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 124408,
+      "itemID": 85666,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 124659,
+      "itemID": 85870,
+      "categories": [
+        "promotion"
+      ]
+    },
+    {
+      "spellID": 126507,
+      "itemID": 87250,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 126508,
+      "itemID": 87251,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 127154,
+      "itemID": 87768,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 127156,
+      "itemID": 87769,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 127158,
+      "itemID": 87771,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 127161,
+      "itemID": 87773,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 127164,
+      "itemID": 87774,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 127165,
+      "itemID": 87775,
+      "categories": [
+        "event"
+      ]
+    },
+    {
+      "spellID": 127169,
+      "itemID": 87776,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 127170,
+      "itemID": 87777,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 127174,
+      "itemID": 87781,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 127176,
+      "itemID": 87782,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 127177,
+      "itemID": 87783,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 127216,
+      "itemID": 87788,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 127220,
+      "itemID": 87789,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 129918,
+      "itemID": 89304,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 129932,
+      "itemID": 89305,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 129935,
+      "itemID": 89306,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 129934,
+      "itemID": 89307,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 130086,
+      "itemID": 89362,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 130092,
+      "itemID": 89363,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 130137,
+      "itemID": 89390,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 130138,
+      "itemID": 89391,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 130965,
+      "itemID": 89783,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 130985,
+      "itemID": 89785,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 132036,
+      "itemID": 90655,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 133023,
+      "itemID": 91802,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 134573,
+      "itemID": 92724,
+      "categories": [
+        "store"
+      ]
+    },
+    {
+      "spellID": 135416,
+      "itemID": 93168,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 135418,
+      "itemID": 93169,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 136163,
+      "itemID": 93385,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 136164,
+      "itemID": 93386,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 136400,
+      "itemID": 93662,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 136471,
+      "itemID": 93666,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 138423,
+      "itemID": 94228,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 138425,
+      "itemID": 94229,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 138424,
+      "itemID": 94230,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 138426,
+      "itemID": 94231,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 138640,
+      "itemID": 94290,
+      "categories": [
+        "quest"
+      ]
+    },
+    {
+      "spellID": 138641,
+      "itemID": 94291,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 138642,
+      "itemID": 94292,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 138643,
+      "itemID": 94293,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 139442,
+      "itemID": 95057,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 139448,
+      "itemID": 95059,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 139595,
+      "itemID": 95341,
+      "categories": [
+        "store"
+      ]
+    },
+    {
+      "spellID": 134359,
+      "itemID": 95416,
+      "categories": [
+        "crafted"
+      ]
+    },
+    {
+      "spellID": 140249,
+      "itemID": 95564,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 140250,
+      "itemID": 95565,
+      "categories": [
+        "vendor"
+      ]
+    },
+    {
+      "spellID": 142878,
+      "itemID": 97989,
+      "categories": [
+        "store"
+      ]
+    },
+    {
+      "spellID": 142266,
+      "itemID": 98104,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 142478,
+      "itemID": 98259,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 142641,
+      "itemID": 98405,
+      "categories": [
+        "event"
+      ]
+    },
+    {
+      "spellID": 142073,
+      "itemID": 98618,
+      "categories": [
+        "promotion"
+      ]
+    },
+    {
+      "spellID": 146615,
+      "itemID": 102514,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 146622,
+      "itemID": 102533,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 148392,
+      "itemID": 104208,
+      "categories": [
+        "achievement"
+      ]
+    },
+    {
+      "spellID": 148417,
+      "itemID": 104253,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 148476,
+      "itemID": 104269,
+      "categories": [
+        "boss_drop"
+      ]
+    },
+    {
+      "spellID": 149801,
+      "itemID": 106246,
+      "categories": [
+        "promotion"
+      ]
+    },
+    {
+      "spellID": 153489,
+      "itemID": 107951,
+      "categories": [
+        "store"
+      ]
+    },
+    {
+      "spellID": 163024,
+      "itemID": 112326,
+      "categories": [
+        "store"
+      ]
+    },
+    {
+      "spellID": 163025,
+      "itemID": 112327,
+      "categories": [
+        "store"
+      ]
+    }
+  ]
+}

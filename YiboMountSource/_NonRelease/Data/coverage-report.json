@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "baseline": {
+    "rawTotal": 526,
+    "visibleForSnapshotCharacter": 335
+  },
+  "catalog": {
+    "covered": 526,
+    "missing": 0,
+    "extraSpellIDs": [
+      75614
+    ]
+  },
+  "missingMounts": []
+}

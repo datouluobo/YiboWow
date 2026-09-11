@@ -1,0 +1,22 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r YiboMountSource - 坐骑来源
+## Notes: Shows compact mount source details in aura and hovered-unit tooltips.
+## Notes-zhCN: 在坐骑光环与鼠标悬停单位提示中显示紧凑的来源信息。
+## Author: YiboSoft
+## Version: 0.5
+## Group: Yibo
+## SavedVariables: YiboMountSourceDiagnostics
+## IconTexture: Interface\AddOns\YiboMountSource\Media\YiboMountSourceIcon-v1
+
+Namespace.lua
+Locale\enUS.lua
+Locale\zhCN.lua
+Data\MountCatalog.generated.lua
+Catalog.lua
+SourceFormatter.lua
+Probe.lua
+InventoryProbe.lua
+Data\SourceFacts.generated.lua
+SourceFactProbe.lua
+Tooltip.lua
+Bootstrap.lua
