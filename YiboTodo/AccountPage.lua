@@ -63,6 +63,18 @@ local function ProjectTooltip(project)
     elseif project.state == "ready-to-turn-in" or project.state == "in-progress" then
         lines[#lines + 1] = { kind = "text", text = "目标已完成，请返回交付。" }
     end
+    if project.action then
+        if project.action.actionMode == "use-item" and project.action.itemID then
+            lines[#lines + 1] = { kind = "text", text = "左键：召唤/解散诺米；右键：选中诺米" }
+        elseif project.action.actionMode == "direct-craft" and project.action.castSpellID then
+            lines[#lines + 1] = { kind = "text", text = "左键：首次打开专业面板，载入后制作" }
+            lines[#lines + 1] = { kind = "text", text = "右键：打开对应专业面板" }
+        elseif project.action.fallbackMode == "open-and-select-recipe" then
+            lines[#lines + 1] = { kind = "text", text = "左键：打开专业面板并定位配方" }
+        else
+            lines[#lines + 1] = { kind = "text", text = "左键：打开专业面板" }
+        end
+    end
     if project.dailyTaskLabel then lines[#lines + 1] = { kind = "pair", label = "当日任务", value = project.dailyTaskLabel } end
     if project.state == "unknown" and not project.optimisticFarm then
         local detail = project.reason == "recipe-unlearned"
@@ -89,8 +101,24 @@ local function GetIcon(parent, index)
     parent.icons = parent.icons or {}
     local button = parent.icons[index]
     if button then return button end
-    button = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    button = CreateFrame("Button", nil, parent, "SecureActionButtonTemplate,BackdropTemplate")
     button:SetSize(ICON_SIZE, ICON_SIZE)
+    -- This is a bare Button rather than a click-enabled template.  Register
+    -- the hardware click explicitly so its OnClick action is reliable on the
+    -- target client instead of depending on template/default behavior.
+    button:EnableMouse(true)
+    button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    button:SetAttribute("useOnKeyDown", false)
+    -- Do not replace SecureActionButtonTemplate's OnClick handler.  It owns
+    -- the protected item action; a post-click hook preserves that handler and
+    -- still lets ordinary project icons run their Lua-side action afterward.
+    button:HookScript("PostClick", function(self, mouseButton)
+        if mouseButton == "LeftButton" and self.secureLeftAction then return end
+        if mouseButton == "RightButton" and self.secureRightAction then return end
+        if not self.actionProject or not self.actionIsCurrent or not Addon.Actions then return end
+        local ok = Addon.Actions:Execute(self.actionProject, self.actionIsCurrent)
+        if ok then self:SetAlpha(0.65); C_Timer.After(0.35, function() if self:IsShown() then self:SetAlpha(1) end end) end
+    end)
     button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     button.texture = button:CreateTexture(nil, "ARTWORK")
     button.texture:SetPoint("TOPLEFT", 2, -2); button.texture:SetPoint("BOTTOMRIGHT", -2, 2)
@@ -155,6 +183,81 @@ local function SetIcon(button, project, isCurrentCharacter)
     button.actionableBorder:SetBackdropBorderColor(C.accent[1], C.accent[2], C.accent[3], 1)
     button:SetBackdropColor(C.chrome[1], C.chrome[2], C.chrome[3], 0.95)
     button:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
+    button.actionProject = project.action and project or nil
+    button.actionIsCurrent = isCurrentCharacter == true
+    local action = project.action
+    local itemID = action and action.actionMode == "use-item" and tonumber(action.itemID)
+    local itemName = itemID and (action.itemName or (GetItemInfo and GetItemInfo(itemID)))
+    local interactName = itemID and action.interactName
+    local spellID = action and action.actionMode == "direct-craft" and tonumber(action.castSpellID)
+    -- Nomi uses a secure item action. A loaded profession uses the player's
+    -- verified DoTradeSkill macro on left click; right click stays on the
+    -- normal action path and opens that profession panel.
+    if not (InCombatLockdown and InCombatLockdown()) then
+        local secureItem = itemID and isCurrentCharacter and (itemName or ("item:" .. itemID)) or nil
+        local spellName
+        if spellID and C_Spell and type(C_Spell.GetSpellInfo) == "function" then
+            local info = C_Spell.GetSpellInfo(spellID)
+            spellName = info and info.name
+        elseif spellID and GetSpellInfo then
+            spellName = GetSpellInfo(spellID)
+        end
+        local professionProvider = Addon.Providers.Registry:Get("profession-cooldown")
+        local professionLoaded = spellID and professionProvider
+            and professionProvider:IsProfessionLoaded(project.characterID, project.professionID)
+        local professionName = spellID and isCurrentCharacter and project.professionName
+        local recipeName = spellName or (spellID and project.label)
+        local escapedRecipeName = recipeName and string.gsub(string.gsub(recipeName, "\\", "\\\\"), '"', '\\"')
+        local escapedProfessionName = professionName and string.gsub(string.gsub(professionName, "\\", "\\\\"), '"', '\\"')
+        local openProfessionMacro = escapedProfessionName and string.format('/run if not TradeSkillFrame or not TradeSkillFrame:IsShown()or GetTradeSkillLine()~="%s"then CastSpellByName("%s")end', escapedProfessionName, escapedProfessionName) or nil
+        local craftMacro = escapedRecipeName and escapedProfessionName and string.format('/run for i=1,GetNumTradeSkills()do if GetTradeSkillInfo(i)=="%s"then DoTradeSkill(i,1);return end end;if GetTradeSkillLine()~="%s"then CastSpellByName("%s")end', escapedRecipeName, escapedProfessionName, escapedProfessionName) or nil
+        local secureSpell = nil
+        local baseType = secureItem and "item" or nil
+        local leftMacro = craftMacro or openProfessionMacro
+        local leftType = secureItem and "item" or (leftMacro and "macro" or nil)
+        button:SetAttribute("type", baseType)
+        button:SetAttribute("item", secureItem)
+        button:SetAttribute("spell", nil)
+        button:SetAttribute("macrotext", nil)
+        button:SetAttribute("type1", leftType)
+        button:SetAttribute("item1", secureItem)
+        button:SetAttribute("spell1", nil)
+        button:SetAttribute("macrotext1", leftMacro)
+        -- WoW exposes no secure action type for InteractUnit. Keep the right
+        -- click truthful and useful by selecting the summoned Nomi only;
+        -- opening gossip remains the player's built-in interaction action.
+        local interactMacro = interactName and isCurrentCharacter and string.format("/targetexact %s", interactName) or nil
+        local rightMacro = interactMacro or openProfessionMacro
+        button:SetAttribute("type2", rightMacro and "macro" or nil)
+        button:SetAttribute("macrotext2", rightMacro)
+        button.secureItemAction = itemID ~= nil and isCurrentCharacter == true
+        button.secureLeftAction = button.secureItemAction or leftMacro ~= nil
+        button.secureRightAction = rightMacro ~= nil
+        button.professionAction = spellID ~= nil and isCurrentCharacter == true
+        if spellID and isCurrentCharacter then
+            Addon.professionActionDiagnostics = Addon.professionActionDiagnostics or {}
+            Addon.professionActionDiagnostics[#Addon.professionActionDiagnostics + 1] = {
+                label = project.label, groupID = project.groupID, spellID = spellID, spellName = spellName,
+                secureSpell = secureSpell, state = project.state, type = button:GetAttribute("type"),
+                spell = button:GetAttribute("spell"), type1 = button:GetAttribute("type1"),
+                spell1 = button:GetAttribute("spell1"), macrotext1 = button:GetAttribute("macrotext1"),
+                macrotext2 = button:GetAttribute("macrotext2"), professionLoaded = professionLoaded == true,
+                professionName = professionName, openProfessionMacro = openProfessionMacro,
+                protected = button.IsProtected and button:IsProtected() or false,
+            }
+        end
+        if itemID and isCurrentCharacter then
+            Addon.nomiActionDiagnostic = {
+                itemID = itemID, itemName = itemName, characterID = project.characterID, isCurrentCharacter = true,
+                secureItem = secureItem, spellID = spellID, spellName = spellName, type = button:GetAttribute("type"), item = button:GetAttribute("item"), spell = button:GetAttribute("spell"),
+                type1 = button:GetAttribute("type1"), item1 = button:GetAttribute("item1"), spell1 = button:GetAttribute("spell1"), type2 = button:GetAttribute("type2"),
+                protected = button.IsProtected and button:IsProtected() or false,
+            }
+        end
+    end
+    button:SetScript("OnHide", function(self)
+        self.actionProject = nil; self.actionIsCurrent = false; self.secureLeftAction = false; self.secureRightAction = false; self.professionAction = false; self:SetAlpha(1)
+    end)
     Theme:BindTooltip(button, project.label, ProjectTooltip(project))
     button:Show()
 end
@@ -192,6 +295,14 @@ local function HasCommonProjects(snapshot, characters)
     for _, character in ipairs(characters or {}) do
         local data = snapshot.characters[character.id]
         if data and #(data.commonProjects or {}) > 0 then return true end
+    end
+    return false
+end
+
+local function HasMonitoringProjects(snapshot, characters, groupID)
+    for _, character in ipairs(characters or {}) do
+        local data = snapshot.characters[character.id]
+        if data and data.monitoringProjects and #(data.monitoringProjects[groupID] or {}) > 0 then return true end
     end
     return false
 end
@@ -287,6 +398,10 @@ end
 
 function Page.Refresh(frame, context)
     local snapshot, count = Addon.Snapshot:Build(), 0
+    -- The diagnostic concerns only the actual character's secure button.
+    -- Clear the prior frame's record before rebuilding pooled icon controls.
+    Addon.nomiActionDiagnostic = nil
+    Addon.professionActionDiagnostics = nil
     local showProfession = Addon.Settings:IsMonitoringGroupEnabled("profession-cooldown")
     local showFarm = Addon.Settings:IsMonitoringGroupEnabled("farm")
     local showNomi = Addon.Settings:IsMonitoringGroupEnabled("nomi")
@@ -294,8 +409,9 @@ function Page.Refresh(frame, context)
     local showJewelcrafting = Addon.Settings:IsMonitoringGroupEnabled("jewelcrafting-daily")
     local showFishing = Addon.Settings:IsMonitoringGroupEnabled("fishing-daily")
     local showNat = Addon.Settings:IsMonitoringGroupEnabled("nat-pagle")
-    local showDarkmoon = Addon.Settings:IsMonitoringGroupEnabled("darkmoon-faire")
+    local showDarkmoon = Addon.Settings:IsMonitoringGroupEnabled("darkmoon-faire") and HasMonitoringProjects(snapshot, context.characters, "darkmoon-faire")
     local showBrilltron = Addon.Settings:IsMonitoringGroupEnabled("brilltron-4000")
+    local showHoliday = Addon.Settings:IsMonitoringGroupEnabled("holiday")
     local showCommon = false
     local hasCommon = showCommon and HasCommonProjects(snapshot, context.characters)
     local hasFarm = showFarm and HasFarmColumn()
@@ -308,9 +424,10 @@ function Page.Refresh(frame, context)
     -- 布林顿表头使用物品图标，与单一内容格同宽；不要为了标题文字把
     -- 一整列撑宽。
     local brilltronWidth = showBrilltron and DailyColumnWidth(snapshot, context.characters, "brilltron-4000", nil, true) or 0
+    local holidayWidth = showHoliday and DailyColumnWidth(snapshot, context.characters, "holiday", "节日") or 0
     local characterWidth, professionWidth, farmWidth, nomiWidth, cookingWidth, commonWidth = Layout(CharacterColumnWidth(context), ProfessionColumnWidth(snapshot, context.characters), hasFarm, hasNomi, hasCooking, hasCommon)
     if hasCooking then cookingWidth = DailyColumnWidth(snapshot, context.characters, "cooking-daily", "烹饪") end
-    local tableWidth = characterWidth + (showProfession and professionWidth or 0) + farmWidth + nomiWidth + jewelcraftingWidth + cookingWidth + fishingWidth + natWidth + darkmoonWidth + brilltronWidth + commonWidth
+    local tableWidth = characterWidth + (showProfession and professionWidth or 0) + farmWidth + nomiWidth + jewelcraftingWidth + cookingWidth + fishingWidth + natWidth + darkmoonWidth + brilltronWidth + holidayWidth + commonWidth
     local inset = Theme:GetMatrixInsets(context.preview)
     for _, row in ipairs(frame.rows) do row:Hide() end
     frame.header:ClearAllPoints(); frame.header:SetPoint("TOPLEFT", frame, "TOPLEFT", inset.left, -inset.top); frame.header:SetSize(tableWidth, Theme.Table.headerHeight)
@@ -326,6 +443,7 @@ function Page.Refresh(frame, context)
     if showNat then columns[#columns + 1] = { "纳特·帕格", natWidth } end
     if showDarkmoon then columns[#columns + 1] = { "暗月", darkmoonWidth } end
     if showBrilltron then columns[#columns + 1] = { "布林顿 4000", brilltronWidth, "brilltron-4000" } end
+    if showHoliday then columns[#columns + 1] = { "节日", holidayWidth } end
     if hasCommon then columns[#columns + 1] = { "通用项目", commonWidth } end
     tableWidth = tableWidth + math.max(0, #columns - 1) * COLUMN_GAP
     local x = 0
@@ -373,7 +491,7 @@ function Page.Refresh(frame, context)
             row.name:ClearAllPoints(); row.name:SetPoint("LEFT", Theme.Table.cellPadding + (hasIcon and (16 + Theme.Table.iconTextGap) or 0), 0); row.name:SetWidth(Theme:GetTableCellContentWidth(characterWidth) - (hasIcon and (16 + Theme.Table.iconTextGap) or 0))
             row.name:SetText(CharacterLabel(character, context and context.scope == "all")); ApplyCharacterColor(row.name, character)
             Release(row.cells or {}, 1)
-            if showProfession or hasFarm or hasNomi or showJewelcrafting or hasCooking or showFishing or showNat or showDarkmoon or showBrilltron or hasCommon then
+            if showProfession or hasFarm or hasNomi or showJewelcrafting or hasCooking or showFishing or showNat or showDarkmoon or showBrilltron or showHoliday or hasCommon then
                 -- Headers begin after the first column's gutter.  Starting
                 -- data cells at the same coordinate keeps every column true
                 -- to its header, including when the profession column hides.
@@ -435,6 +553,12 @@ function Page.Refresh(frame, context)
                     RenderProjects(brilltron, data.monitoringProjects["brilltron-4000"] or {}, current and character.id == current.id, nextCell)
                     offset, nextCell = offset + brilltronWidth + COLUMN_GAP, nextCell + 1
                 end
+                if showHoliday then
+                    local holiday = Cell(row, nextCell)
+                    holiday:ClearAllPoints(); holiday:SetPoint("LEFT", offset, 0); holiday:SetSize(holidayWidth, ROW_HEIGHT)
+                    RenderProjects(holiday, data.monitoringProjects.holiday or {}, current and character.id == current.id, nextCell)
+                    offset, nextCell = offset + holidayWidth + COLUMN_GAP, nextCell + 1
+                end
                 if hasCommon then
                     local common = Cell(row, nextCell)
                     common:ClearAllPoints(); common:SetPoint("LEFT", offset, 0); common:SetSize(commonWidth, ROW_HEIGHT)
@@ -473,8 +597,9 @@ function Page.GetSurfaceMetrics(context)
     local showJewelcrafting = Addon.Settings:IsMonitoringGroupEnabled("jewelcrafting-daily")
     local showFishing = Addon.Settings:IsMonitoringGroupEnabled("fishing-daily")
     local showNat = Addon.Settings:IsMonitoringGroupEnabled("nat-pagle")
-    local showDarkmoon = Addon.Settings:IsMonitoringGroupEnabled("darkmoon-faire")
+    local showDarkmoon = Addon.Settings:IsMonitoringGroupEnabled("darkmoon-faire") and HasMonitoringProjects(snapshot, context and context.characters, "darkmoon-faire")
     local showBrilltron = Addon.Settings:IsMonitoringGroupEnabled("brilltron-4000")
+    local showHoliday = Addon.Settings:IsMonitoringGroupEnabled("holiday")
     local showCommon = false
     local hasCommon = showCommon and HasCommonProjects(snapshot, context and context.characters)
     local hasFarm = showFarm and HasFarmColumn()
@@ -483,8 +608,8 @@ function Page.GetSurfaceMetrics(context)
     local accountHeight = showCommon and #(snapshot.accountActivities or {}) > 0 and ROW_HEIGHT + ROW_GAP or 0
     local visibleRows = math.max(1, math.min(20, count))
     local professionWidth = ProfessionColumnWidth(snapshot, context and context.characters)
-    local columnCount = 1 + (showProfession and 1 or 0) + (hasFarm and 1 or 0) + (hasNomi and 1 or 0) + (showJewelcrafting and 1 or 0) + (hasCooking and 1 or 0) + (showFishing and 1 or 0) + (showNat and 1 or 0) + (showDarkmoon and 1 or 0) + (showBrilltron and 1 or 0) + (hasCommon and 1 or 0)
-    local tableWidth = CharacterColumnWidth(context) + (showProfession and professionWidth or 0) + (hasFarm and FARM_COLUMN_WIDTH or 0) + (hasNomi and NOMI_COLUMN_WIDTH or 0) + (showJewelcrafting and DailyColumnWidth(snapshot, context and context.characters, "jewelcrafting-daily", "珠宝") or 0) + (hasCooking and DailyColumnWidth(snapshot, context and context.characters, "cooking-daily", "烹饪") or 0) + (showFishing and DailyColumnWidth(snapshot, context and context.characters, "fishing-daily", "钓鱼") or 0) + (showNat and DailyColumnWidth(snapshot, context and context.characters, "nat-pagle", "纳特·帕格") or 0) + (showDarkmoon and DailyColumnWidth(snapshot, context and context.characters, "darkmoon-faire", "暗月") or 0) + (showBrilltron and DailyColumnWidth(snapshot, context and context.characters, "brilltron-4000", nil, true) or 0) + (hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0) + math.max(0, columnCount - 1) * COLUMN_GAP
+    local columnCount = 1 + (showProfession and 1 or 0) + (hasFarm and 1 or 0) + (hasNomi and 1 or 0) + (showJewelcrafting and 1 or 0) + (hasCooking and 1 or 0) + (showFishing and 1 or 0) + (showNat and 1 or 0) + (showDarkmoon and 1 or 0) + (showBrilltron and 1 or 0) + (showHoliday and 1 or 0) + (hasCommon and 1 or 0)
+    local tableWidth = CharacterColumnWidth(context) + (showProfession and professionWidth or 0) + (hasFarm and FARM_COLUMN_WIDTH or 0) + (hasNomi and NOMI_COLUMN_WIDTH or 0) + (showJewelcrafting and DailyColumnWidth(snapshot, context and context.characters, "jewelcrafting-daily", "珠宝") or 0) + (hasCooking and DailyColumnWidth(snapshot, context and context.characters, "cooking-daily", "烹饪") or 0) + (showFishing and DailyColumnWidth(snapshot, context and context.characters, "fishing-daily", "钓鱼") or 0) + (showNat and DailyColumnWidth(snapshot, context and context.characters, "nat-pagle", "纳特·帕格") or 0) + (showDarkmoon and DailyColumnWidth(snapshot, context and context.characters, "darkmoon-faire", "暗月") or 0) + (showBrilltron and DailyColumnWidth(snapshot, context and context.characters, "brilltron-4000", nil, true) or 0) + (showHoliday and DailyColumnWidth(snapshot, context and context.characters, "holiday", "节日") or 0) + (hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0) + math.max(0, columnCount - 1) * COLUMN_GAP
     -- The scrollbar uses the page inset rather than a data-column gutter.
     -- The table width therefore remains the same with and without overflow.
     local projectsWidth = tableWidth + inset.left + inset.right

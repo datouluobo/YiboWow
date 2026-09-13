@@ -26,6 +26,8 @@ Catalog.dailyActivities["mop.nomi"] = {
     -- Cooking School Bell, the stable visual identity for Nomi's lessons.
     icon = "Interface\\Icons\\INV_Misc_Food_18.blp",
     iconItemID = 86425,
+    itemName = "烹饪学校大钟",
+    interactName = "诺米",
 }
 
 Catalog.dailyActivities["mop.halfhill.cooking-daily"] = {

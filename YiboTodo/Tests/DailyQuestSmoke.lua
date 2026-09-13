@@ -63,6 +63,7 @@ local day = assert(provider:GetCurrentDay("nomi-character", clock))
 assert(day.questID == 31333 and day.kind == "lesson" and day.state == "actionable", "lesson IDs are tracked as repeating dailies")
 local project = assert(Addon.Snapshot:GetCharacter("nomi-character")).nomiProjects[1]
 assert(project.state == "actionable" and project.label == "诺米" and project.dailyTaskLabel == "第2课：方便面", "Nomi keeps a stable group title and exposes today's lesson separately")
+assert(project.action and project.action.actionMode == "use-item" and project.action.itemName == "烹饪学校大钟" and project.action.interactName == "诺米", "Nomi project binds the bell and interaction target for secure actions")
 local cookingProject = assert(Addon.Snapshot:GetCharacter("nomi-character")).cookingProjects[1]
 assert(cookingProject.state == "actionable" and cookingProject.iconKind == "currency" and cookingProject.icon == 402, "cooking group uses the Ironpaw Token currency icon")
 

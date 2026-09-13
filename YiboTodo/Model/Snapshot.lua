@@ -159,12 +159,14 @@ local function BuildNomiProject(characterID, now)
     end
     return {
         groupID = definition.id, label = definition.label, order = 1, state = state,
+        characterID = characterID,
         iconKind = definition.iconItemID and "item" or "texture", icon = definition.iconItemID or definition.icon, fallbackIcon = definition.icon,
         observedAt = (day and day.observedAt) or (eligibility and eligibility.confirmedAt),
         nextResetAt = day and day.nextResetAt or Addon.Model.Schedule:NextResetAt(now, definition.resetHour),
         questID = day and day.questID, questKind = day and day.kind, dailyTaskLabel = day and day.label,
         eligibilityKnown = eligibility ~= nil,
         statusText = statusText, reason = day and day.reason,
+        action = definition.iconItemID and { actionMode = "use-item", itemID = definition.iconItemID, itemName = definition.itemName, interactName = definition.interactName } or nil,
         providerState = day and "available" or (eligibility and "available" or "not-yet-observed"),
     }, true
 end
@@ -278,6 +280,9 @@ function Snapshot:Build()
     if not self.dirty and self.value and (not self.nextTransitionAt or now < self.nextTransitionAt) then return self.value end
     local value = { revision = (self.value and self.value.revision or 0) + 1, builtAt = now, characters = {}, accountActivities = {} }
     local nextTransitionAt
+    if Addon.Settings and type(Addon.Settings.IsMonitoringGroupEnabled) == "function" and Addon.Settings:IsMonitoringGroupEnabled("darkmoon-faire") then
+        nextTransitionAt = Addon.Model.Schedule:NextResetAt(now, 0)
+    end
     local characters = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetAll() or {}
     for _, coreCharacter in ipairs(characters) do
         local characterID, slots = coreCharacter.id, ProfessionSlots(coreCharacter.id)
@@ -324,6 +329,12 @@ function Snapshot:Build()
                             activity.fallbackSpellID = recipe.recipeSpellID
                             activity.order, activity.period = builtGroup.order, builtGroup.resetKind
                             activity.professionID, activity.professionName = builtGroup.professionID, slots[slot].name
+                            activity.characterID = characterID
+                            activity.action = { castSpellID = recipe.action and recipe.action.castSpellID or recipe.recipeSpellID, selectRecipeID = recipe.action and recipe.action.selectRecipeID, selectSpellID = recipe.action and recipe.action.selectSpellID or recipe.recipeSpellID, actionMode = recipe.action and recipe.action.actionMode or "direct-craft", fallbackMode = recipe.action and recipe.action.fallbackMode or "open-and-select-recipe", actionStatus = recipe.action and recipe.action.actionStatus or "pending-live-action-test", members = {} }
+                            for _, member in ipairs(builtGroup.members or {}) do
+                                local memberObservation = observation and observation.recipes and observation.recipes[member.recipeSpellID]
+                                activity.action.members[#activity.action.members + 1] = { id = member.id, recipeSpellID = member.recipeSpellID, castSpellID = member.action and member.action.castSpellID or member.recipeSpellID, selectRecipeID = member.action and member.action.selectRecipeID, selectSpellID = member.action and member.action.selectSpellID or member.recipeSpellID, actionMode = member.action and member.action.actionMode or activity.action.actionMode, fallbackMode = member.action and member.action.fallbackMode or activity.action.fallbackMode, actionStatus = member.action and member.action.actionStatus or "pending-live-action-test", learned = memberObservation and memberObservation.learned, craftable = memberObservation and memberObservation.craftable, readyAt = memberObservation and memberObservation.readyAt, order = member.order or 999 }
+                            end
                             local catalogActivity = Addon.Catalog.activities[builtGroup.activityID]
                             activity.sourceExpansion = catalogActivity and catalogActivity.sourceExpansion or recipe.introducedIn
                             activity.catalogPending = recipe.trackCooldown == false or recipe.recipeSpellID == nil

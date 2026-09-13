@@ -92,6 +92,10 @@ function Addon:ValidateCatalog()
             Add(result, "errors", "missing-special-daily-quest:" .. tostring(id))
         elseif activity.scheduleKind == "event-weekly" and tonumber(activity.questID) == nil and type(activity.questIDs) ~= "table" then
             Add(result, "errors", "missing-special-event-quests:" .. tostring(id))
+        elseif activity.scheduleKind == "event-daily-07" and (tonumber(activity.questID) == nil or type(activity.eventTitleAliases) ~= "table") then
+            Add(result, "errors", "missing-special-holiday-evidence:" .. tostring(id))
+        elseif activity.registrationStatus == "pending-client-verification" then
+            Add(result, "warnings", "pending-special-registration:" .. tostring(id))
         elseif activity.verificationStatus ~= "verified" and activity.verificationStatus ~= "user-confirmed" then
             Add(result, "errors", "unapproved-special-activity:" .. tostring(id))
         end

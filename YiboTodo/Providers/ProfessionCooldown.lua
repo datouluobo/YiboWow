@@ -85,6 +85,8 @@ function Provider:Collect()
     end
     local now, indexes, active = Addon:Now(), RecipeIndex(), Addon:GetActiveRecipes()
     local currentProfessionID = CurrentProfessionID(domain)
+    self.loadedCharacterID = current.id
+    self.loadedProfessionID = currentProfessionID
     local observations = {}
     for _, recipe in ipairs(active) do
         local index = indexes[recipe.recipeSpellID]
@@ -118,6 +120,11 @@ function Provider:Collect()
     return observations, reason
 end
 
+function Provider:IsProfessionLoaded(characterID, professionID)
+    return characterID ~= nil and characterID == self.loadedCharacterID
+        and tonumber(professionID) == tonumber(self.loadedProfessionID)
+end
+
 function Provider:MarkUnavailable(characterID, reason)
     local record = Addon.Database:GetProvider(characterID, self.id, true)
     record.lastAttemptAt, record.state, record.errorCode = Addon:Now(), "unavailable", reason
@@ -132,7 +139,7 @@ function Provider:CollectForCurrentCharacter(expectedCharacterID)
         return false, "character-changed"
     end
     local observations, reason = self:Collect()
-    if not observations then self:MarkUnavailable(character.id, reason); Addon:NotifyChanged(); return false, reason end
+    if not observations then self:MarkUnavailable(character.id, reason); Addon:NotifyChanged(true); return false, reason end
     -- A formal activity snapshot is only committed for catalog entries that
     -- have already passed the shipped verification gate.
     if #Addon:GetActiveRecipes() == 0 then return true, "baseline-window-observed" end
@@ -145,7 +152,7 @@ function Provider:CollectForCurrentCharacter(expectedCharacterID)
     -- observations collected from the other primary profession.
     record.observations = record.observations or {}
     for groupID, observation in pairs(observations) do record.observations[groupID] = observation end
-    Addon:NotifyChanged()
+    Addon:NotifyChanged(true)
     return true, reason
 end
 

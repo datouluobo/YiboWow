@@ -31,11 +31,20 @@ local function IsCompleted(questID)
 end
 
 local function IsDarkmoonOpen()
-    if not (C_Calendar and type(C_Calendar.GetNumDayEvents) == "function" and type(C_Calendar.GetDayEvent) == "function") then return nil end
     local today = date and date("*t")
     if not today then return nil end
+    local function ScheduledThisWeek()
+        -- Darkmoon opens on the first Sunday of each month and closes at the
+        -- end of the following Saturday. Calendar data is preferred, but some
+        -- clients do not populate C_Calendar until its UI is opened.
+        local first = date("*t", time({ year = today.year, month = today.month, day = 1, hour = 12 }))
+        if not first then return nil end
+        local firstSunday = 1 + ((8 - tonumber(first.wday or 1)) % 7)
+        return today.day >= firstSunday and today.day <= firstSunday + 6
+    end
+    if not (C_Calendar and type(C_Calendar.GetNumDayEvents) == "function" and type(C_Calendar.GetDayEvent) == "function") then return ScheduledThisWeek() end
     local ok, count = pcall(C_Calendar.GetNumDayEvents, 0, today.day)
-    if not ok then return nil end
+    if not ok then return ScheduledThisWeek() end
     for index = 1, tonumber(count) or 0 do
         local eventOK, event = pcall(C_Calendar.GetDayEvent, 0, today.day, index)
         local title = eventOK and event and string.lower(tostring(event.title or "")) or ""
@@ -44,12 +53,32 @@ local function IsDarkmoonOpen()
     return false
 end
 
+local function IsHolidayOpen(definition)
+    if not (definition and C_Calendar and type(C_Calendar.GetNumDayEvents) == "function" and type(C_Calendar.GetDayEvent) == "function") then return false end
+    local today = date and date("*t")
+    if not today then return false end
+    local ok, count = pcall(C_Calendar.GetNumDayEvents, 0, today.day)
+    if not ok then return false end
+    for index = 1, tonumber(count) or 0 do
+        local eventOK, event = pcall(C_Calendar.GetDayEvent, 0, today.day, index)
+        local title = eventOK and event and string.lower(tostring(event.title or "")) or ""
+        for _, alias in ipairs(definition.eventTitleAliases or {}) do
+            if title == string.lower(tostring(alias)) then return true end
+        end
+    end
+    return false
+end
+
+local function IsRegistered(definition)
+    return definition and definition.registrationStatus ~= "pending-client-verification"
+end
+
 function Provider:ObserveCharacter(characterID)
     if not characterID then return false end
     local now, record = Addon:Now(), Addon.Database:GetProvider(characterID, self.id, true)
     record.days = record.days or {}
     for id, definition in pairs(Addon.Catalog.specialActivities or {}) do
-        if definition.scope == "character" and definition.scheduleKind == "daily-07" then
+        if definition.scope == "character" and (definition.scheduleKind == "daily-07" or (definition.scheduleKind == "event-daily-07" and IsRegistered(definition) and IsHolidayOpen(definition))) then
             local days = record.days[id] or {}; record.days[id] = days
             local key, day = ServerDay(definition, now), nil
             day = days[key] or {}; days[key] = day
@@ -63,6 +92,32 @@ function Provider:ObserveCharacter(characterID)
     record.revision, record.lastSuccessAt, record.state = (tonumber(record.revision) or 0) + 1, now, "available"
     Addon:NotifyChanged()
     return true
+end
+
+function Provider:RecordLoot(characterID, message, recipient)
+    if not characterID or type(message) ~= "string" then return false end
+    local itemID = tonumber(string.match(message, "item:(%d+)"))
+    if not itemID then return false end
+    local currentName = UnitName and UnitName("player")
+    local recipientName = type(recipient) == "string" and string.match(recipient, "^([^%-]+)") or recipient
+    if recipientName and currentName and recipientName ~= currentName then return false end
+    for id, definition in pairs(Addon.Catalog.specialActivities or {}) do
+        if definition.scheduleKind == "event-daily-07" and IsRegistered(definition) and IsHolidayOpen(definition) then
+            for _, rewardID in ipairs(definition.rewardItemIDs or {}) do
+                if tonumber(rewardID) == itemID then
+                    local now, record = Addon:Now(), Addon.Database:GetProvider(characterID, self.id, true)
+                    record.days = record.days or {}
+                    local days = record.days[id] or {}; record.days[id] = days
+                    local key, day = ServerDay(definition, now), days[ServerDay(definition, now)] or {}
+                    days[key] = day
+                    day.state, day.completedAt, day.observedAt, day.nextResetAt = "completed", now, now, NextReset(definition, now)
+                    Addon:NotifyChanged()
+                    return true
+                end
+            end
+        end
+    end
+    return false
 end
 
 function Provider:RecordTurnIn(characterID, questID)
@@ -98,11 +153,22 @@ function Provider:GetProject(characterID, definition, now)
         local isOwner = completed and stored.completedByCharacterID == characterID
         return { groupID = definition.id, monitoringGroupID = definition.monitoringGroupID, label = definition.label, order = definition.order, state = completed and (isOwner and "completed" or "not-applicable") or "actionable", iconKind = iconKind, icon = icon, fallbackIcon = definition.icon, nextResetAt = completed and stored.nextResetAt or NextReset(definition, now), statusText = completed and (isOwner and "本账号今日已领取" or "本账号已由其它角色领取") or "本账号今日可领取" }
     end
+    if definition.scheduleKind == "event-daily-07" then
+        if not IsRegistered(definition) or not IsHolidayOpen(definition) then return nil end
+        local record = Addon.Database:GetProvider(characterID, self.id, false)
+        local day = record and record.days and record.days[definition.id] and record.days[definition.id][ServerDay(definition, now)]
+        local completed = day and day.state == "completed"
+        return { groupID = definition.id, monitoringGroupID = definition.monitoringGroupID, label = definition.label, order = definition.order, state = completed and "completed" or "actionable", iconKind = iconKind, icon = icon, fallbackIcon = definition.icon, nextResetAt = NextReset(definition, now), questID = definition.questID, observedAt = day and day.observedAt, statusText = completed and "本服务器日已领取节日奖励" or (day and day.observedAt and "今日尚未领取节日奖励" or "尚未观察，按可领取提醒") }
+    end
     if definition.scheduleKind ~= "daily-07" then
         local open = IsDarkmoonOpen()
+        -- The fair is not a pending/unknown daily. Outside its confirmed
+        -- window the whole monitoring group must disappear, rather than
+        -- leaving a column of question-mark placeholders.
+        if open ~= true then return nil end
         local record = Addon.Database:GetProvider(characterID, self.id, false)
         local day = record and record.days and record.days[definition.id] and record.days[definition.id][EventKey(now)]
-        return { groupID = definition.id, monitoringGroupID = definition.monitoringGroupID, label = definition.label, order = definition.order, state = day and day.state == "completed" and "completed" or (open == true and "actionable" or "unknown"), iconKind = iconKind, icon = icon, fallbackIcon = definition.icon, dailyTaskLabel = definition.taskLabel, statusText = day and day.state == "completed" and "本次暗月活动已完成" or open == true and "暗月马戏团正在开放" or open == false and "暗月马戏团当前未开放" or "等待暗月活动窗口状态确认" }
+        return { groupID = definition.id, monitoringGroupID = definition.monitoringGroupID, label = definition.label, order = definition.order, state = day and day.state == "completed" and "completed" or "actionable", iconKind = iconKind, icon = icon, fallbackIcon = definition.icon, dailyTaskLabel = definition.taskLabel, statusText = day and day.state == "completed" and "本次暗月活动已完成" or "暗月马戏团正在开放" }
     end
     local record = Addon.Database:GetProvider(characterID, self.id, false)
     local day = record and record.days and record.days[definition.id] and record.days[definition.id][ServerDay(definition, now)]

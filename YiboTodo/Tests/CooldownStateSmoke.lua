@@ -124,7 +124,8 @@ local livingSteelGroup = Group("mop.alchemy.living-steel")
 assert(State:Evaluate(livingSteelGroup, Cooling(114780, 2000), 1000).state == "cooldown", "crafted living steel remains cooldown")
 
 local magnificentFurGroup = Group("mop.leatherworking.magnificent-fur")
-assert(magnificentFurGroup.aggregation == "shared-cooldown", "magnificent hide alternatives share one cooldown group")
+assert(magnificentFurGroup.aggregation == "single-recipe", "magnificent fur uses the 20-leather cooldown recipe only")
+assert(#magnificentFurGroup.members == 1 and magnificentFurGroup.members[1].recipeSpellID == 140040, "the 50-leather no-cooldown recipe is excluded")
 assert(State:Evaluate(magnificentFurGroup, Cooling(140040, 2000), 1000).state == "cooldown", "crafted magnificence of leather is cooldown")
 
 Addon.Now = function() return 1000 end

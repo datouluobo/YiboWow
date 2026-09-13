@@ -23,6 +23,15 @@ frame:RegisterEvent("CHAT_MSG_LOOT")
 -- observation belongs to that character only and must never be written under
 -- whoever happens to be logged in when the timer fires.
 local scanQueuedByCharacter = {}
+local function IsTrackedProfessionSpell(spellID)
+    spellID = tonumber(spellID)
+    if not spellID then return false end
+    for _, recipe in ipairs(Addon:GetActiveRecipes()) do
+        if tonumber(recipe.recipeSpellID) == spellID then return true end
+    end
+    return false
+end
+
 local function QueueProfessionScan()
     if not Addon.initialized then return end
     local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
@@ -58,11 +67,13 @@ frame:SetScript("OnEvent", function(_, event, ...)
     elseif event == "TRADE_SKILL_SHOW" or event == "TRADE_SKILL_LIST_UPDATE" or event == "TRADE_SKILL_UPDATE" then
         QueueProfessionScan()
     elseif event == "UNIT_SPELLCAST_SUCCEEDED" and Addon.initialized then
+        local _, _, spellID = ...
         local provider = Addon.Providers.Registry:Get("farm-operation-observation")
         if provider then
             local changed = provider:RecordSucceededCast(...)
             if changed then Addon:NotifyChanged() end
         end
+        if IsTrackedProfessionSpell(spellID) then QueueProfessionScan() end
     elseif event == "UPDATE_MOUSEOVER_UNIT" and Addon.initialized then
         local provider = Addon.Providers.Registry:Get("farm-operation-observation")
         if provider then
@@ -82,6 +93,10 @@ frame:SetScript("OnEvent", function(_, event, ...)
         local special = Addon.Providers.Registry:Get("special-activity")
         if special and current then special:RecordTurnIn(current.id, ...) end
         if provider then provider:QueueObserve() end
+    elseif event == "CHAT_MSG_LOOT" and Addon.initialized then
+        local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+        local special = Addon.Providers.Registry:Get("special-activity")
+        if special and current then special:RecordLoot(current.id, ...) end
     elseif event == "GOSSIP_SHOW" and Addon.initialized then
         local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
         local provider = Addon.Providers.Registry:Get("daily-quest")

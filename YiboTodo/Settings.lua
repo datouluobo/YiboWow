@@ -56,7 +56,7 @@ function Settings:GetMonitoringItems(groupID)
             local source = definition.memberKind == "farm-operation" and Addon.Catalog.farmOperations[id]
                 or definition.memberKind == "special-activity" and Addon.Catalog.specialActivities[id]
                 or Addon.Catalog.dailyActivities[id]
-            if source then
+            if source and source.registrationStatus ~= "pending-client-verification" then
                 local defaultEnabled = source.defaultEnabled
                 if defaultEnabled == nil then defaultEnabled = source.verificationStatus ~= "needs-live-confirmation" end
                 items[#items + 1] = { id = id, label = source.label or id, order = source.order, kind = definition.memberKind, defaultEnabled = defaultEnabled, candidate = source.verificationStatus == "needs-live-confirmation" }

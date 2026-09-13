@@ -10,6 +10,9 @@ local recipes = {
         id = "mop.engineering.jards-energy-source", professionID = 202, recipeSpellID = 139176, resultItemID = 94113,
         cooldownGroupID = "mop.engineering.jards-energy-source", label = "贾德的特制能量源",
         verificationStatus = "verified", verifiedBuild = "5.5.4", evidence = "live-observation:2026-08-29",
+        -- Confirmed in-game: with an engineering anvil nearby, this spell can
+        -- be cast directly from the Todo icon to create one energy source.
+        action = { actionStatus = "live-verified" },
         active = true,
     },
     {
@@ -93,7 +96,7 @@ local recipes = {
     {
         id = "mop.leatherworking.magnificence-of-scales", professionID = 165, recipeSpellID = 140041, resultItemID = 72163,
         cooldownGroupID = "mop.leatherworking.magnificent-fur", label = "华丽毛皮", order = 11,
-        verificationStatus = "verified", verifiedBuild = "5.5.4", evidence = "shared-cooldown:140040", active = true,
+        verificationStatus = "excluded-no-cooldown", catalogEnabled = false, trackCooldown = false,
     },
     {
         id = "mop.leatherworking.enhanced-magnificent-fur", professionID = 165, recipeSpellID = 142976, resultItemID = 98617,
@@ -121,5 +124,11 @@ for _, recipe in ipairs(recipes) do
     recipe.introducedIn = recipe.introducedIn or "5.x"
     if recipe.catalogEnabled == nil then recipe.catalogEnabled = recipe.active == true end
     if recipe.trackCooldown == nil then recipe.trackCooldown = recipe.catalogEnabled and recipe.recipeSpellID ~= nil end
+    recipe.action = recipe.action or {}
+    recipe.action.castSpellID = recipe.action.castSpellID or recipe.recipeSpellID
+    recipe.action.selectSpellID = recipe.action.selectSpellID or recipe.recipeSpellID
+    recipe.action.actionMode = recipe.action.actionMode or "direct-craft"
+    recipe.action.fallbackMode = recipe.action.fallbackMode or "open-and-select-recipe"
+    recipe.action.actionStatus = recipe.action.actionStatus or "pending-live-action-test"
     Catalog.recipes[recipe.id] = recipe
 end
