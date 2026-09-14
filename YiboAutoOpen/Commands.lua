@@ -9,7 +9,7 @@ SlashCmdList.YIBOAUTOOPEN = function(message)
         local id, errorCode, candidates = Addon.ItemResolver:Resolve(argument)
         if not id then Addon:Print(errorCode == "ambiguous" and ("名称不唯一，请使用链接或 ID：" .. table.concat(candidates, ", ")) or "未找到物品，请使用物品链接或 ID。"); return end
         local ok, result = command == "add" and Addon.Database:AddItem(id) or Addon.Database:RemoveItem(id)
-        if ok then Addon:Print(command == "add" and ("已加入目录并进入自动开启队列：" .. ItemText(id)) or ("已从目录删除：" .. ItemText(id))); Addon:Refresh(command) else Addon:Print(result == "already_exists" and "该物品已在目录中。" or "该物品不在目录中。") end
+        if ok then Addon:Print(command == "add" and ("已加入目录并进入自动开启队列：" .. ItemText(id)) or ("已从目录删除：" .. ItemText(id))); Addon:Refresh() else Addon:Print(result == "already_exists" and "该物品已在目录中。" or "该物品不在目录中。") end
     elseif command == "list" then
         local items, page = Addon.Database:GetOrderedItems(), tonumber(argument) or 1; page = math.floor(page)
         local pages = math.max(1, math.ceil(#items / Addon.LIMITS.listPageSize)); if page < 1 or page > pages then Addon:Print("页码范围：1–" .. pages); return end

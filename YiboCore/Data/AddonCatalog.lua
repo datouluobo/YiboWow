@@ -52,6 +52,13 @@ Core.AddonCatalog = {
         projectURL = "https://www.curseforge.com/wow/addons/yibo-reputation",
     },
     {
+        name = "YiboAutoOpen",
+        title = "自动开包",
+        relation = "optional-core",
+        icon = "Interface\\AddOns\\YiboAutoOpen\\Media\\YiboAutoOpenIcon-v2",
+        description = "安全地自动开启账号目录中的容器物品。",
+    },
+    {
         name = "YiboBeastPaths",
         title = "猎人宠物路线图",
         relation = "independent",

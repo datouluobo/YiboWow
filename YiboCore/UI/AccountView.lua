@@ -2582,6 +2582,13 @@ local ABOUT_ADDONS = {
         url = "https://www.curseforge.com/wow/addons/yiboreputation",
     },
     {
+        name = "YiboAutoOpen",
+        version = "1.0",
+        description = "安全地自动开启账号目录中的容器物品。",
+        icon = "Interface\\AddOns\\YiboAutoOpen\\Media\\YiboAutoOpenIcon-v2",
+        relation = "optional-core",
+    },
+    {
         name = "YiboBeastPaths",
         version = "1.5",
         description = "在地图上显示稀有猎人宠物的巡逻路线。",
@@ -2638,7 +2645,6 @@ local function SetAboutCoreLinkOpen(parent)
 end
 
 local function CreateAboutAddonRow(parent, addon)
-    addon.independent = addon.relation == "independent" or addon.independent == true
     addon.url = addon.projectURL or addon.url
     local row = CreateFrame("Frame", nil, parent.content or parent, "BackdropTemplate")
     row:SetHeight(96)
@@ -2662,10 +2668,14 @@ local function CreateAboutAddonRow(parent, addon)
     row.version:SetText(addon.version and ("v" .. addon.version) or "")
     row.description = AddText(row, "GameFontNormalSmall", Theme.Font.assist, COLORS.muted)
     row.description:SetPoint("TOPLEFT", row.name, "BOTTOMLEFT", 0, -8); row.description:SetPoint("RIGHT", addon.url and -154 or -12, 0); row.description:SetText(addon.description)
-    if addon.independent then
+    row.relation = addon.relation or (addon.independent and "independent" or "core-child")
+    row.isIndependent = row.relation == "independent"
+    row.isOptionalCore = row.relation == "optional-core"
+    if row.isIndependent or row.isOptionalCore then
         row.badge = AddText(row, "GameFontNormalSmall", Theme.Font.meta, COLORS.muted)
         row.badge:SetJustifyH("RIGHT")
-        row.badge:SetPoint("RIGHT", -142, 0); row.badge:SetText("独立作品")
+        row.badge:SetPoint("RIGHT", -142, 0)
+        row.badge:SetText(row.isOptionalCore and "可选接入" or "独立作品")
     end
 
     if addon.url then
@@ -2766,7 +2776,12 @@ local function CreateAbout(parent)
     parent.hero.linkButton:SetScript("OnClick", function() SetAboutCoreLinkOpen(parent) end)
 
     parent.childHeading = AddText(parent.content, "GameFontNormal", Theme.Font.section, COLORS.accent)
-    parent.childHeading:SetText("YiboCore 子插件")
+    parent.childHeading:SetText("强依赖子插件")
+    parent.optionalHeading = AddText(parent.content, "GameFontNormal", Theme.Font.section, COLORS.accent)
+    parent.optionalHeading:SetText("可选接入插件")
+    parent.optionalLine = parent.content:CreateTexture(nil, "ARTWORK")
+    parent.optionalLine:SetHeight(1)
+    parent.optionalLine:SetColorTexture(COLORS.lineSoft[1], COLORS.lineSoft[2], COLORS.lineSoft[3], COLORS.lineSoft[4])
     parent.otherHeading = AddText(parent.content, "GameFontNormal", Theme.Font.section, COLORS.accent)
     parent.otherHeading:SetText("探索其它 Yibo 插件")
     parent.otherLine = parent.content:CreateTexture(nil, "ARTWORK")
@@ -2780,7 +2795,19 @@ local function CreateAbout(parent)
         container.childHeading:ClearAllPoints(); container.childHeading:SetPoint("TOPLEFT", 0, -y)
         y = y + 26
         for _, row in ipairs(container.addonRows) do
-            if not row.addon.independent then
+            if not row.isIndependent and not row.isOptionalCore then
+                row:ClearAllPoints()
+                row:SetPoint("TOPLEFT", 0, -y); row:SetPoint("TOPRIGHT", 0, -y)
+                y = y + row:GetHeight() + 6
+            end
+        end
+        y = y + 14
+        container.optionalHeading:ClearAllPoints(); container.optionalHeading:SetPoint("TOPLEFT", 0, -y)
+        y = y + 22
+        container.optionalLine:ClearAllPoints(); container.optionalLine:SetPoint("TOPLEFT", 0, -y); container.optionalLine:SetPoint("TOPRIGHT", 0, -y)
+        y = y + 12
+        for _, row in ipairs(container.addonRows) do
+            if row.isOptionalCore then
                 row:ClearAllPoints()
                 row:SetPoint("TOPLEFT", 0, -y); row:SetPoint("TOPRIGHT", 0, -y)
                 y = y + row:GetHeight() + 6
@@ -2792,7 +2819,7 @@ local function CreateAbout(parent)
         container.otherLine:ClearAllPoints(); container.otherLine:SetPoint("TOPLEFT", 0, -y); container.otherLine:SetPoint("TOPRIGHT", 0, -y)
         y = y + 12
         for _, row in ipairs(container.addonRows) do
-            if row.addon.independent then
+            if row.isIndependent then
                 row:ClearAllPoints()
                 row:SetPoint("TOPLEFT", 0, -y); row:SetPoint("TOPRIGHT", 0, -y)
                 y = y + row:GetHeight() + 6
@@ -2825,11 +2852,11 @@ local function RefreshAbout(parent)
             row.version:SetText(installed .. packaged)
             row.description:SetText((stateLabels[status.state] or "状态未知") .. " · " .. tostring(addon.description or ""))
         end
-        if not addon.independent and status.connected then
+        if row and not row.isIndependent and status.connected then
             connected = connected + 1
         end
     end
-    parent.hero.status:SetText("已连接 " .. connected .. " 个子插件")
+    parent.hero.status:SetText("已连接 " .. connected .. " 个接入插件")
     parent.hero.metadata:SetText("Public API v" .. tostring(Core.API_VERSION or "?") .. " · 数据库 Schema v" .. tostring(Core.Migrations and Core.Migrations.CURRENT_SCHEMA or "?"))
 end
 

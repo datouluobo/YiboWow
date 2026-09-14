@@ -1,6 +1,7 @@
 local Addon = _G.YiboAutoOpen
 local Integration = {}; Addon.CoreIntegration = Integration
 function Integration:Initialize()
+    if self.initialized then return true end
     local Core = _G.YiboCore
     if not Core then return true end
     local compatible = Core:CheckAPIVersion(6)
@@ -13,7 +14,7 @@ function Integration:Initialize()
         CreateSettingsPanel = function(parent, host) return Addon.Settings:CreatePanel(parent, host) end,
     })
     if not panel then Addon:NotifyIssue("core-panel", "Core 设置注册失败，已继续使用命令模式：" .. tostring(panelError)) end
-    Addon.Core = Core
+    self.initialized = panel ~= nil
     if panel and Core.AccountView and Core.AccountView.activePageID == "settings" then
         Core.AccountView:RefreshNavigation()
         Core.AccountView:RefreshPage()

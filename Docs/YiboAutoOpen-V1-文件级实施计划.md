@@ -1,6 +1,6 @@
 # YiboAutoOpen V1 文件级实施计划
 
-> 状态：已完成需求访谈，待实施
+> 状态：已实施
 > 目标客户端：魔兽世界熊猫人之谜经典版（Interface `50504`）
 > 首版版本：`YiboAutoOpen 1.0.0`
 > Core 集成：可选；独立安装时自动开包与目录命令完整可用
@@ -463,7 +463,7 @@ SlashCmdList.YIBOAUTOOPEN = function(message) ... end
   - 未缓存名称时显示 `物品 #<ID>`，异步缓存成功后不主动重复刷屏。
   - 页码小于 1、非整数或大于总页数时给出有效范围。
   - 有下一页时末尾输出：`更多项目：输入 /yao list N 查看第 N 页`。
-- 空命令、未知子命令或缺少参数：只打印三行正式用法，不创建隐藏别名。
+- 空命令、未知子命令或缺少参数：只打印正式用法，不创建隐藏别名。
 
 目录修改与查询的命令反馈始终输出，不受通知模式影响。
 
@@ -475,8 +475,6 @@ SlashCmdList.YIBOAUTOOPEN = function(message) ... end
 
 ```lua
 Addon.Settings:CreatePanel(parent, host)
-Addon.Settings:Refresh()
-Addon.Settings:Release()
 ```
 
 页面结构：
@@ -738,7 +736,7 @@ Core:GetRegisteredSettingsPanels()
 - 战斗中获得容器不打开，脱战后恢复。
 - 商人、银行、邮箱、交易、拍卖行、公会银行或虚空仓库打开时不使用物品。
 - 通用空位低于 5 时暂停；专业包空位不计入。
-- `hasLoot == false` 的目录物品不被使用。
+- 目录允许列表中的容器不因缺少 `hasLoot` 标记而被跳过。
 - 自动拾取关闭时，拾取窗口出现后队列暂停；玩家关闭后继续。
 - 同一物品堆叠和分散在多个格子时最终全部处理。
 - 连续失败项目被隔离后，其它目录容器继续处理。

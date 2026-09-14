@@ -23,7 +23,7 @@ function Database:MigrateCatalog()
 end
 function Database:Initialize() self.db = type(YiboAutoOpenDB) == "table" and YiboAutoOpenDB or {}; YiboAutoOpenDB = self.db; self:Normalize(); self:MigrateCatalog(); Addon.db = self.db end
 function Database:EnsureInitialized()
-    Addon:Initialize()
+    if not self.db then Addon:Initialize() end
     return self.db
 end
 function Database:AddItem(itemID) self:EnsureInitialized(); itemID = tonumber(itemID); if not itemID or itemID < 1 or itemID ~= math.floor(itemID) then return nil, "invalid" end; if self.db.catalog.entries[itemID] then return nil, "already_exists" end; Addon:ResetItemRuntimeState(itemID); self.db.catalog.entries[itemID] = true; self.db.catalog.order[#self.db.catalog.order + 1] = itemID; return true end

@@ -62,7 +62,9 @@ function AddonStatus:GetAll()
         result[#result + 1] = item
     end
     table.sort(result, function(left, right)
-        if left.relation ~= right.relation then return left.relation == "core-child" end
+        local order = { ["core-child"] = 1, ["optional-core"] = 2, independent = 3 }
+        local leftOrder, rightOrder = order[left.relation] or 99, order[right.relation] or 99
+        if leftOrder ~= rightOrder then return leftOrder < rightOrder end
         return left.name < right.name
     end)
     return result

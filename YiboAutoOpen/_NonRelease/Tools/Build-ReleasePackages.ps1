@@ -5,8 +5,11 @@ $addon = Join-Path $root 'YiboAutoOpen'; $builds = Join-Path $root 'Builds'
 New-Item -ItemType Directory -Force $builds | Out-Null
 $temporary = Join-Path ([System.IO.Path]::GetTempPath()) ('YiboAutoOpen-' + [guid]::NewGuid())
 New-Item -ItemType Directory -Force (Join-Path $temporary 'YiboAutoOpen') | Out-Null
-$runtime = @('YiboAutoOpen.toc','Bootstrap.lua','Defaults.lua','Database.lua','Catalog.lua','ItemResolver.lua','BagAdapter.lua','Safety.lua','Queue.lua','Commands.lua','Settings.lua','CoreIntegration.lua','Media')
+$runtime = @('YiboAutoOpen.toc','Bootstrap.lua','Defaults.lua','Database.lua','Catalog.lua','ItemResolver.lua','BagAdapter.lua','Safety.lua','Queue.lua','Commands.lua','Settings.lua','CoreIntegration.lua')
 foreach ($item in $runtime) { Copy-Item -Recurse -Force (Join-Path $addon $item) (Join-Path $temporary 'YiboAutoOpen') }
+$releaseMedia = Join-Path $temporary 'YiboAutoOpen\Media'
+New-Item -ItemType Directory -Force $releaseMedia | Out-Null
+Copy-Item -Force (Join-Path $addon 'Media\YiboAutoOpenIcon-v2.tga') $releaseMedia
 Compress-Archive -Path (Join-Path $temporary 'YiboAutoOpen') -DestinationPath (Join-Path $builds "YiboAutoOpen-v$Version-curseforge.zip") -Force
 Copy-Item -Recurse -Force (Join-Path $addon 'README.md'),(Join-Path $addon 'CHANGELOG.md'),(Join-Path $addon 'CURSEFORGE_DESCRIPTION.md'),(Join-Path $addon 'TEST_CHECKLIST.md') (Join-Path $temporary 'YiboAutoOpen')
 Compress-Archive -Path (Join-Path $temporary 'YiboAutoOpen') -DestinationPath (Join-Path $builds "YiboAutoOpen-v$Version-github.zip") -Force

@@ -35,7 +35,7 @@ local function RunNextTimer()
     timer.callback()
 end
 
-YiboAutoOpen.Queue:RequestScan("login")
+YiboAutoOpen.Queue:RequestScan()
 RunNextTimer()
 assert(YiboAutoOpen.runtime.queueState == "WAITING_READY", "temporarily blocked items should wait instead of becoming idle")
 assert(#scheduled == 1 and scheduled[1].delay == 0.5, "the queue should schedule an eligibility retry")

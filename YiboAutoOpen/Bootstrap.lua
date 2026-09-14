@@ -1,8 +1,7 @@
-local ADDON_NAME = ...
 local Addon = _G.YiboAutoOpen or {}
 _G.YiboAutoOpen = Addon
 Addon.NAME, Addon.VERSION = "YiboAutoOpen", "1.0.0"
-Addon.runtime = { initialized = false, loggedIn = false, startupScansStarted = false, queueState = "IDLE", generation = 0, pending = nil, scanQueued = false, deferredScanGeneration = 0, lastScanReason = nil, quarantined = {}, failures = {}, warned = {}, sensitiveFrames = {}, eventRegistration = nil }
+Addon.runtime = { initialized = false, loggedIn = false, startupScansStarted = false, queueState = "IDLE", pauseReason = nil, generation = 0, pending = nil, scanQueued = false, deferredScanGeneration = 0, quarantined = {}, failures = {}, warned = {}, sensitiveFrames = {} }
 
 function Addon:Print(message, level)
     if level == "verbose" and self.db and self.db.notificationMode ~= "verbose" then return end
@@ -29,21 +28,20 @@ function Addon:ResetAllItemRuntimeState()
 end
 function Addon:Initialize()
     if self.runtime.initialized and self.Database and self.Database.db then
-        if IsLoggedIn and IsLoggedIn() then self:StartPostLogin() end
         return true
     end
     self.Database:Initialize(); self.runtime.initialized = true
     if IsLoggedIn and IsLoggedIn() then self:StartPostLogin() end
     return true
 end
-function Addon:StartPostLogin(reason)
+function Addon:StartPostLogin()
     local firstStart = not self.runtime.loggedIn
     self.runtime.loggedIn = true
     if not firstStart then return false end
     if self.CoreIntegration then self.CoreIntegration:Initialize() end
-    if self.db and self.db.scanExistingOnLogin then self:Refresh(reason or "login") end
+    if self.db and self.db.scanExistingOnLogin then self:Refresh() end
     return true
 end
-function Addon:Refresh(reason)
-    if self.Queue then self.Queue:RequestScan(reason) end
+function Addon:Refresh()
+    if self.Queue then self.Queue:RequestScan() end
 end

@@ -5,10 +5,8 @@ local DELETE_POPUP = "YIBOAUTOOPEN_DELETE_CATALOG_ITEM"
 StaticPopupDialogs[DELETE_POPUP] = {
     text = "确定从自动开包目录删除“%s”吗？\n这不会删除背包中的物品。",
     button1 = "删除", button2 = "取消", timeout = 0, whileDead = true, hideOnEscape = true,
-    OnAccept = function(_, data) Addon.Database:RemoveItem(data); Addon:Refresh("settings-delete"); if Addon.Settings.panel and Addon.Settings.panel.host then Addon.Settings.panel.host.refreshPage() end end,
+    OnAccept = function(_, data) Addon.Database:RemoveItem(data); Addon:Refresh(); if Addon.Settings.panel and Addon.Settings.panel.host then Addon.Settings.panel.host.refreshPage() end end,
 }
-function Settings:Release() end
-function Settings:Refresh() if self.panel and self.panel.host then self:CreatePanel(self.panel:GetParent(), self.panel.host) end end
 function Settings:CreatePanel(parent, host)
     -- Core can render this settings-only panel immediately after addon files
     -- load, before our ADDON_LOADED handler initializes SavedVariables.
@@ -17,7 +15,6 @@ function Settings:CreatePanel(parent, host)
     local panel = parent.autoOpenSettingsPanel
     if not panel then
         panel = CreateFrame("Frame", nil, parent); parent.autoOpenSettingsPanel = panel; panel:SetPoint("TOPLEFT"); panel:SetPoint("TOPRIGHT"); panel.checks, panel.rows = {}, {}
-        panel.title = Text(panel, 14, colors.text); panel.title:SetPoint("TOPLEFT", 12, -12)
         panel.status = Text(panel, theme.Font.meta, colors.muted); panel.status:SetPoint("TOPLEFT", 12, -8)
         panel.spaceLabel = Text(panel, theme.Font.meta, colors.muted); panel.spaceLabel:SetPoint("TOPLEFT", 12, -68)
         panel.space = CreateFrame("EditBox", nil, panel, "InputBoxTemplate"); panel.space:SetSize(64, 22); panel.space:SetAutoFocus(false); panel.space:SetPoint("LEFT", panel.spaceLabel, "RIGHT", 8, 0)
@@ -44,18 +41,24 @@ function Settings:CreatePanel(parent, host)
         end)
         if host.bindTooltip then host.bindTooltip(panel.refresh, "刷新目录", { "重新请求目录物品名称。", "同时清除本次登录的失败隔离并重新扫描背包。" }) end
     end
-    panel.host = host; self.panel = panel; panel:Show(); panel.title:Hide()
+    panel.host = host; self.panel = panel; panel:Show()
     local function Refresh() host.refreshPage() end
-    panel.checks[1]:SetChecked(Addon.db.enabled); panel.checks[1]:SetScript("OnClick", function(c) Addon.db.enabled = not c:GetChecked(); if not Addon.db.enabled then Addon.Queue:Clear() else Addon:Refresh("enabled") end; Refresh() end)
-    panel.checks[2]:SetChecked(Addon.db.scanExistingOnLogin); panel.checks[2]:SetScript("OnClick", function(c) Addon.db.scanExistingOnLogin = c:GetChecked(); Refresh() end)
+    panel.checks[1]:SetChecked(Addon.db.enabled); panel.checks[1]:SetScript("OnClick", function(c) Addon.db.enabled = not c:GetChecked(); if not Addon.db.enabled then Addon.Queue:Clear() else Addon:Refresh() end; Refresh() end)
+    panel.checks[2]:SetChecked(Addon.db.scanExistingOnLogin); panel.checks[2]:SetScript("OnClick", function(c) Addon.db.scanExistingOnLogin = not c:GetChecked(); Refresh() end)
     panel.spaceLabel:SetText("最低通用背包空位（1–20）") ; panel.space:SetText(Addon.db.minFreeSlots)
-    local function SaveSpace(c) local value = tonumber(c:GetText()); if value and value >= 1 and value <= 20 and value == math.floor(value) then Addon.db.minFreeSlots = value; Addon:Refresh("space") else c:SetText(Addon.db.minFreeSlots) end end
-    panel.space:SetScript("OnEnterPressed", function(c) SaveSpace(c); c:ClearFocus(); Refresh() end); panel.space:SetScript("OnEditFocusLost", SaveSpace)
+    local function SaveSpace(c)
+        local value = tonumber(c:GetText())
+        if not value or value < 1 or value > 20 or value ~= math.floor(value) then c:SetText(Addon.db.minFreeSlots); return false end
+        if value == Addon.db.minFreeSlots then return false end
+        Addon.db.minFreeSlots = value; Addon:Refresh(); return true
+    end
+    panel.space:SetScript("OnEnterPressed", function(c) SaveSpace(c); c:ClearFocus() end)
+    panel.space:SetScript("OnEditFocusLost", function(c) if SaveSpace(c) then Refresh() end end)
     panel.mode:SetOptions({ { value="silent", label="聊天提示：静默" }, { value="issues", label="聊天提示：仅问题" }, { value="verbose", label="聊天提示：详细" } }); panel.mode:SetValue(Addon.db.notificationMode); panel.mode:SetOnValueChanged(function(v) Addon.db.notificationMode = v; Refresh() end)
     local state, reason = Addon.Queue:GetStatus(); local quarantined = 0; for _ in pairs(Addon.runtime.quarantined) do quarantined = quarantined + 1 end
     local catalogued = Addon.BagAdapter:CountCatalogued(Addon.db.catalog.entries)
     panel.status:SetText("当前状态：" .. state .. (reason and (" · " .. reason) or "") .. " · 背包目录物品 " .. catalogued .. " 项 · 本次登录隔离 " .. quarantined .. " 项")
-    panel.retry:SetShown(quarantined > 0); panel.retry:SetScript("OnClick", function() Addon:ResetAllItemRuntimeState(); Addon:Refresh("retry-all"); Refresh() end)
+    panel.retry:SetShown(quarantined > 0); panel.retry:SetScript("OnClick", function() Addon:ResetAllItemRuntimeState(); Addon:Refresh(); Refresh() end)
     local items = Addon.Database:GetOrderedItems()
     -- Core resolves the hosted row width before invoking this panel.  Using
     -- that stable width avoids locking the catalog to a stale two-column
@@ -76,7 +79,7 @@ function Settings:CreatePanel(parent, host)
             if GetItemInfo then GetItemInfo(id) end
         end
         panel.message:SetText("已刷新目录名称、清除本次登录隔离并重新扫描背包。")
-        Addon:Refresh("settings-refresh")
+        Addon:Refresh()
         Refresh()
     end)
     for i = 1, #items do
@@ -100,7 +103,7 @@ function Settings:CreatePanel(parent, host)
         if not id then panel.message:SetText(err == "ambiguous" and "名称不唯一，请使用链接或 ID。" or "未找到物品，请使用物品链接或 ID。"); return end
         local ok, result = Addon.Database:AddItem(id)
         if ok then
-            panel.add:SetText(""); panel.message:SetText(fromDrop and "已通过拖放加入目录。" or "已加入目录。"); Addon:Refresh("settings-add")
+            panel.add:SetText(""); panel.message:SetText(fromDrop and "已通过拖放加入目录。" or "已加入目录。"); Addon:Refresh()
         else panel.message:SetText(result == "already_exists" and "该物品已在目录中。" or "无法添加物品。") end
         Refresh()
     end

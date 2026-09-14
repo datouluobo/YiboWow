@@ -1,6 +1,6 @@
 local Addon = _G.YiboAutoOpen
 local Bags = {}; Addon.BagAdapter = Bags
-function Bags:GetNumSlots(bag) return C_Container and C_Container.GetContainerNumSlots and C_Container.GetContainerNumSlots(bag) or GetContainerNumSlots(bag) or 0 end
+function Bags:GetNumSlots(bag) return C_Container and C_Container.GetContainerNumSlots and C_Container.GetContainerNumSlots(bag) or (GetContainerNumSlots and GetContainerNumSlots(bag)) or 0 end
 function Bags:GetItemInfo(bag, slot)
     if C_Container and C_Container.GetContainerItemInfo then
         local info = C_Container.GetContainerItemInfo(bag, slot)
@@ -10,11 +10,11 @@ function Bags:GetItemInfo(bag, slot)
         if not itemID and C_Container.GetContainerItemID then itemID = C_Container.GetContainerItemID(bag, slot) end
         if not link and C_Container.GetContainerItemLink then link = C_Container.GetContainerItemLink(bag, slot) end
         itemID = itemID or (link and tonumber(link:match("item:(%d+)")))
-        return { itemID = itemID, link = link, locked = info.isLocked, canOpen = info.hasLoot == true or info.isReadable == true, count = info.stackCount or 1 }
+        return { itemID = itemID, link = link, locked = info.isLocked }
     end
     if GetContainerItemInfo then
-        local texture, count, locked, _, isReadable, hasLoot, link, _, _, itemID = GetContainerItemInfo(bag, slot)
-        return texture and { itemID = itemID or (link and tonumber(link:match("item:(%d+)"))), link = link, locked = locked, canOpen = hasLoot == true or isReadable == true, count = count or 1 } or nil
+        local texture, _, locked, _, _, _, link, _, _, itemID = GetContainerItemInfo(bag, slot)
+        return texture and { itemID = itemID or (link and tonumber(link:match("item:(%d+)"))), link = link, locked = locked } or nil
     end
     -- Some Classic clients expose the C_Container slot ID/link helpers but
     -- not the full item-info table.  They are sufficient for an allowlisted
@@ -22,7 +22,7 @@ function Bags:GetItemInfo(bag, slot)
     local itemID = C_Container and C_Container.GetContainerItemID and C_Container.GetContainerItemID(bag, slot)
     local link = C_Container and C_Container.GetContainerItemLink and C_Container.GetContainerItemLink(bag, slot)
     itemID = itemID or (link and tonumber(link:match("item:(%d+)")))
-    return itemID and { itemID = itemID, link = link, locked = false, canOpen = false, count = 1 } or nil
+    return itemID and { itemID = itemID, link = link, locked = false } or nil
 end
 function Bags:CountCatalogued(entries)
     local count = 0
@@ -64,7 +64,7 @@ end
 function Bags:FindNextEligible(entries, quarantined)
     -- The catalog is the explicit opt-in allowlist.  Some valid MoP containers
     -- (including Nomi's treats) do not expose hasLoot/isReadable, so those
-    -- flags may inform diagnostics but must not veto a catalogued item.
+    -- optional flags are intentionally ignored for catalogued items.
     local retryAfter
     local now = GetTime and GetTime() or 0
     for bag = 4, 0, -1 do for slot = self:GetNumSlots(bag), 1, -1 do

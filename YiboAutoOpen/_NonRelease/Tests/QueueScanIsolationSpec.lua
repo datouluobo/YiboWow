@@ -1,11 +1,12 @@
 local scheduled = {}
 local itemCount = 1
 local eventHandler
+local registeredEvents = {}
 
 C_Timer = { After = function(delay, callback) scheduled[#scheduled + 1] = { delay = delay, callback = callback } end }
 CreateFrame = function()
     return {
-        RegisterEvent = function(_, event) if event == "PLAYER_UNGHOST" then error("unsupported event") end end,
+        RegisterEvent = function(_, event) if event == "PLAYER_UNGHOST" then error("unsupported event") end; registeredEvents[event] = true end,
         SetScript = function(_, script, handler) if script == "OnEvent" then eventHandler = handler end end,
     }
 end
@@ -26,8 +27,8 @@ YiboAutoOpen = {
 
 dofile("YiboAutoOpen/Queue.lua")
 assert(eventHandler, "the OnEvent handler must be installed even when an optional event is unsupported")
-assert(YiboAutoOpen.runtime.eventRegistration.registered > 0, "supported events should continue registering")
-assert(YiboAutoOpen.runtime.eventRegistration.unsupported[1] == "PLAYER_UNGHOST", "unsupported events should be recorded")
+assert(registeredEvents.PLAYER_LOGIN, "core events should register before an unsupported event")
+assert(registeredEvents.UNIT_SPELLCAST_INTERRUPTED, "events after an unsupported event should continue registering")
 
 local function RunNextTimer()
     assert(#scheduled > 0, "expected a scheduled callback")
@@ -39,14 +40,14 @@ local function RunNextTimer()
     timer.callback()
 end
 
-YiboAutoOpen.Queue:RequestScan("initial")
-YiboAutoOpen.Queue:RequestScan("coalesced-bag-event")
+YiboAutoOpen.Queue:RequestScan()
+YiboAutoOpen.Queue:RequestScan()
 assert(YiboAutoOpen.runtime.generation == 0, "scan requests must not cancel operations")
 RunNextTimer()
 
 local pending = YiboAutoOpen.runtime.pending
 assert(pending and pending.itemID == 90735, "the item should be pending after use")
-YiboAutoOpen.Queue:RequestScan("spell-event-during-use")
+YiboAutoOpen.Queue:RequestScan()
 RunNextTimer()
 assert(YiboAutoOpen.runtime.pending == pending, "a scan event must preserve the pending operation")
 assert(not YiboAutoOpen.runtime.quarantined[90735], "normal events must not quarantine the item")
