@@ -4,8 +4,8 @@ local Core = _G.YiboCore or {}
 _G.YiboCore = Core
 
 Core.NAME = "YiboCore"
-Core.VERSION = "1.3"
-Core.API_VERSION = 5
+Core.VERSION = "1.4"
+Core.API_VERSION = 6
 Core._private = Core._private or {}
 Core._private.addonName = ADDON_NAME or Core.NAME
 Core._private.initialized = false
@@ -48,6 +48,7 @@ lifecycleFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 lifecycleFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 lifecycleFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 lifecycleFrame:RegisterEvent("UPDATE_FACTION")
+lifecycleFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 
 lifecycleFrame:SetScript("OnEvent", function(_, event, arg1)
     if event == "ADDON_LOADED" then

@@ -27,16 +27,35 @@ end
 -- Faction list indices are UI state and may change when headers are expanded.
 -- Store facts by stable factionID so consumers can safely compare snapshots.
 local function Friendship(factionID)
-    if not GetFriendshipReputation then return nil end
-    local friendshipFactionID, friendRep, friendMaxRep, friendName, _, _, friendTextLevel, reactionThreshold, nextThreshold = GetFriendshipReputation(factionID)
+    local friendshipFactionID, friendRep, friendMaxRep, friendName, friendTextLevel, reactionThreshold, nextThreshold
+    if GetFriendshipReputation then
+        friendshipFactionID, friendRep, friendMaxRep, friendName, _, _, friendTextLevel, reactionThreshold, nextThreshold = GetFriendshipReputation(factionID)
+    elseif GetFriendshipReputationByID then
+        -- The legacy client exposes friendship data through this compatibility
+        -- API.  Its useful return values have the same leading order, but it
+        -- does not reliably include the friend name or next-rank threshold.
+        friendshipFactionID, friendRep, friendMaxRep, _, _, friendTextLevel, reactionThreshold = GetFriendshipReputationByID(factionID)
+    elseif C_GossipInfo and C_GossipInfo.GetFriendshipReputation then
+        local info = C_GossipInfo.GetFriendshipReputation(factionID)
+        if info then
+            friendshipFactionID = info.friendshipFactionID
+            friendRep, friendMaxRep = info.standing, info.maxRep
+            friendName, friendTextLevel = info.name, info.reaction
+            reactionThreshold, nextThreshold = info.reactionThreshold, info.nextThreshold
+        end
+    else
+        return nil
+    end
     if not friendshipFactionID or friendshipFactionID == 0 then return nil end
     local rank, maxRank
-    if GetFriendshipReputationRanks then rank, maxRank = GetFriendshipReputationRanks(factionID) end
+    -- The ranks API accepts the friendship ID returned above, not necessarily
+    -- the faction ID passed to the lookup (notably relevant to Nat Pagle).
+    if GetFriendshipReputationRanks then rank, maxRank = GetFriendshipReputationRanks(friendshipFactionID) end
     return { reaction = friendRep, reactionName = friendTextLevel, friendName = friendName, rank = rank, maxRank = maxRank, reactionThreshold = reactionThreshold, nextThreshold = nextThreshold, maxValue = friendMaxRep }
 end
 
 Core.DataDomains:Register("YiboCore", {
-    id = "reputation", version = 4,
+    id = "reputation", version = 5,
     events = { PLAYER_LOGIN = true, PLAYER_ENTERING_WORLD = true, UPDATE_FACTION = true },
     Collect = function()
         if not GetNumFactions or not GetFactionInfo then return {}, "unavailable" end
@@ -44,7 +63,12 @@ Core.DataDomains:Register("YiboCore", {
         local enumeratedCount, registeredCount = 0, 0
         local function Store(factionID, name, standingID, barMin, barMax, barValue, isHeader, nativeGroup)
             factionID = tonumber(factionID)
-            if name and factionID and not isHeader and tonumber(standingID) then
+            local metadata = factionID and Core.ReputationRegistry[factionID]
+            -- Most headers are structural and have no useful fact to save.
+            -- A catalog primary may however be a header *and* an actual
+            -- reputation (for example, 阡陌客 on the MoP client).
+            local retainHeader = isHeader and metadata and metadata.isPrimaryFaction == true
+            if name and factionID and (not isHeader or retainHeader) and tonumber(standingID) then
                 if not Core.ReputationRegistry[factionID] then
                     Core.ReputationRegistry[factionID] = { factionID = factionID, discovered = true }
                 end
@@ -59,6 +83,7 @@ Core.DataDomains:Register("YiboCore", {
         for index = 1, GetNumFactions() do
             local name, _, standingID, barMin, barMax, barValue, _, _, isHeader, _, _, _, _, factionID = GetFactionInfo(index)
             if isHeader then
+                Store(factionID, name, standingID, barMin, barMax, barValue, true, nativeGroup)
                 nativeGroup = name
             elseif Store(factionID, name, standingID, barMin, barMax, barValue, false, nativeGroup) then
                 enumeratedCount = enumeratedCount + 1

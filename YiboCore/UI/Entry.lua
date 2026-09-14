@@ -103,7 +103,7 @@ local function ShowPreview(anchor, pageID)
     local token = Entry.previewToken
     GameTooltip:Hide()
     local resolvedAnchor = ResolveAnchor(anchor)
-    Core.AccountView:ShowPreview(pageID, resolvedAnchor)
+    if Core.AccountView:ShowPreview(pageID, resolvedAnchor) then Entry:StartPreviewWatch() end
 
     -- 某些 Broker 显示插件会在 OnTooltipShow 返回后才完成锚点布局。
     -- 首帧没有进入预览状态时，仅补一次短延迟重试。
@@ -112,7 +112,7 @@ local function ShowPreview(anchor, pageID)
         local frame = Core.AccountView.frame
         if not (frame and frame.preview) then
             GameTooltip:Hide()
-            Core.AccountView:ShowPreview(pageID, resolvedAnchor)
+            if Core.AccountView:ShowPreview(pageID, resolvedAnchor) then Entry:StartPreviewWatch() end
         end
     end
     if C_Timer and C_Timer.After then
@@ -121,18 +121,16 @@ local function ShowPreview(anchor, pageID)
     return true
 end
 
-local function RaiseBrokerTooltip(tooltip)
+local function HideBrokerTooltip(tooltip)
     local preview = Core.AccountView and Core.AccountView.frame
     if not (tooltip and preview and preview.preview) then return end
 
-    -- Some Broker displays call OnTooltipShow before showing their tooltip.
-    -- Native Broker tooltips belong in TOOLTIP; the interactive preview stays
-    -- in DIALOG, so this remains visible above the preview in either order.
-    if tooltip.SetFrameStrata then tooltip:SetFrameStrata("TOOLTIP") end
-    if tooltip.SetFrameLevel and preview.GetFrameLevel then
-        tooltip:SetFrameLevel((preview:GetFrameLevel() or 0) + 50)
-    end
-    if tooltip.Raise then tooltip:Raise() end
+    -- The account preview contains real buttons.  A Broker host's native
+    -- tooltip otherwise occupies the top-most hit-test layer and makes those
+    -- visible controls inert.  The preview already supplies the same summary,
+    -- so dismiss the redundant tooltip as soon as its interactive projection
+    -- is available.
+    if tooltip.Hide then tooltip:Hide() end
 end
 
 function Entry:CreateBusinessBroker(entry)
@@ -168,7 +166,7 @@ function Entry:CreateBusinessBroker(entry)
     broker.OnLeave = function() Entry:SchedulePreviewClose() end
     broker.OnTooltipShow = function(tooltip)
         local owner = tooltip and tooltip.GetOwner and tooltip:GetOwner()
-        if not entry.disabled and ShowPreview(owner, entry.pageID) then RaiseBrokerTooltip(tooltip) end
+        if not entry.disabled and ShowPreview(owner, entry.pageID) then HideBrokerTooltip(tooltip) end
     end
 end
 
@@ -200,7 +198,7 @@ local function ConfigureCoreBroker(broker)
     broker.OnLeave = function() Entry:SchedulePreviewClose() end
     broker.OnTooltipShow = function(tooltip)
         local owner = tooltip and tooltip.GetOwner and tooltip:GetOwner() or Entry.lastBrokerAnchor
-        if ShowPreview(owner) then RaiseBrokerTooltip(tooltip) end
+        if ShowPreview(owner) then HideBrokerTooltip(tooltip) end
     end
 end
 
@@ -333,6 +331,7 @@ end
 
 HidePreview = function()
     Entry.previewToken = (Entry.previewToken or 0) + 1
+    Entry:StopPreviewWatch()
     GameTooltip:Hide()
     if Core.AccountView then Core.AccountView:HidePreview() end
 end
@@ -347,24 +346,67 @@ function Entry:SuppressPreviewClose(seconds)
     self:CancelPreviewClose()
 end
 
-function Entry:IsMouseOverPreview()
-    local preview = Core.AccountView and Core.AccountView.frame
-    if not (preview and preview.preview and preview:IsShown()) then return false end
-
+function Entry:IsMouseOverFrame(frame)
+    if not (frame and frame.IsShown and frame:IsShown()) then return false end
     -- Do not infer this from GetMouseFocus or Frame:IsMouseOver().  A scroll
     -- child may retain mouse hit-testing outside its clipped viewport; Boss
     -- weekly has interactive matrix cells, so that made an invisible overflow
     -- cell keep the preview alive after the pointer had visibly left it.
-    -- Cursor coordinates against the shared preview shell give every business
-    -- page exactly the same close boundary.
+    -- Cursor coordinates provide every business page the same close boundary.
     if not (GetCursorPosition and UIParent and UIParent.GetEffectiveScale) then return false end
     local scale = UIParent:GetEffectiveScale()
     if not scale or scale <= 0 then return false end
     local cursorX, cursorY = GetCursorPosition()
-    local left, right, bottom, top = preview:GetLeft(), preview:GetRight(), preview:GetBottom(), preview:GetTop()
+    local left, right, bottom, top = frame:GetLeft(), frame:GetRight(), frame:GetBottom(), frame:GetTop()
     if not (cursorX and cursorY and left and right and bottom and top) then return false end
     cursorX, cursorY = cursorX / scale, cursorY / scale
     return cursorX >= left and cursorX <= right and cursorY >= bottom and cursorY <= top
+end
+
+function Entry:IsMouseOverPreview()
+    local preview = Core.AccountView and Core.AccountView.frame
+    return preview and preview.preview and self:IsMouseOverFrame(preview) or false
+end
+
+function Entry:IsMouseOverPreviewAnchor()
+    local anchor = Core.AccountView and Core.AccountView.previewAnchor
+    return self:IsMouseOverFrame(anchor)
+end
+
+function Entry:StopPreviewWatch()
+    if self.previewWatchFrame then self.previewWatchFrame:Hide() end
+    self.previewWatchGraceUntil = nil
+end
+
+function Entry:StartPreviewWatch()
+    -- Entry and preview OnLeave are normally enough.  This watcher is a
+    -- common fallback for controls rebuilt by business pages after they have
+    -- been registered for hover callbacks, where WoW may not deliver a final
+    -- leave event from the replaced child.
+    local frame = self.previewWatchFrame
+    if not frame then
+        frame = CreateFrame("Frame")
+        frame.elapsed = 0
+        frame:SetScript("OnUpdate", function(watcher, elapsed)
+            watcher.elapsed = (watcher.elapsed or 0) + elapsed
+            if watcher.elapsed < 0.10 then return end
+            watcher.elapsed = 0
+            local preview = Core.AccountView and Core.AccountView.frame
+            if not (preview and preview.preview and preview:IsShown()) then
+                Entry:StopPreviewWatch()
+                return
+            end
+            local now = GetTime and GetTime() or 0
+            if now < (Entry.previewWatchGraceUntil or 0) then return end
+            if not Entry:IsMouseOverPreview() and not Entry:IsMouseOverPreviewAnchor() then HidePreview() end
+        end)
+        self.previewWatchFrame = frame
+    end
+    frame.elapsed = 0
+    -- Preserve the direct path from entry to preview, including Broker hosts
+    -- that finish their anchor layout one frame after OnEnter.
+    self.previewWatchGraceUntil = (GetTime and GetTime() or 0) + 0.60
+    frame:Show()
 end
 
 function Entry:SchedulePreviewClose()
@@ -374,7 +416,7 @@ function Entry:SchedulePreviewClose()
     local function CloseIfStillPending()
         -- A checkbox, scope button, or row inside the preview becomes the mouse
         -- focus itself.  Treat every descendant as part of the hover surface.
-        if Entry.previewToken == token and not Entry:IsMouseOverPreview() then HidePreview() end
+        if Entry.previewToken == token and not Entry:IsMouseOverPreview() and not Entry:IsMouseOverPreviewAnchor() then HidePreview() end
     end
     if C_Timer and C_Timer.After then
         -- A preview can be rebuilt after an in-preview click.  If its leave

@@ -920,6 +920,23 @@ local function RefreshScopeBar(frame, context)
     return false
 end
 
+-- The account shell can contain secure action controls supplied by a business
+-- page.  A normal Lua Frame:Hide() is therefore blocked once combat starts.
+-- This state handler runs the visibility change in WoW's secure environment.
+function AccountView:EnsureCombatSettingsHider()
+    if self.combatSettingsHider or not self.frame or (InCombatLockdown and InCombatLockdown()) then return end
+    local hider = CreateFrame("Frame", nil, UIParent, "SecureHandlerStateTemplate")
+    hider:SetFrameRef("settingsFrame", self.frame)
+    hider:SetAttribute("_onstate-combat", [[
+        local settingsFrame = self:GetFrameRef("settingsFrame")
+        if newstate == "1" and settingsFrame:GetAttribute("yibo-settings-open") then
+            settingsFrame:Hide()
+        end
+    ]])
+    RegisterStateDriver(hider, "combat", "[combat] 1; 0")
+    self.combatSettingsHider = hider
+end
+
 function AccountView:CreateFrame()
     if self.frame then return self.frame end
     local frame = CreateFrame("Frame", "YiboCoreAccountView", UIParent, "BackdropTemplate")
@@ -1049,6 +1066,7 @@ function AccountView:CreateFrame()
         if not registered then tinsert(UISpecialFrames, "YiboCoreAccountView") end
     end
     self.frame = frame
+    self:EnsureCombatSettingsHider()
     return frame
 end
 
@@ -1057,6 +1075,7 @@ local function NavigationRequiredHeight(page)
     if page and page.id == "settings" then
         count = 5
         for _, registered in ipairs(AccountView._pageOrder) do if not registered.internal then count = count + 1 end end
+        for _ in ipairs(Core:GetRegisteredSettingsPanels()) do count = count + 1 end
     else
         count = 3 -- 概览、角色档案、关于
         for _, registered in ipairs(AccountView._pageOrder) do if PageEnabled(registered) then count = count + 1 end end
@@ -1149,12 +1168,15 @@ function AccountView:RefreshNavigation()
         pages[#pages + 1] = { id = "settings-core", title = "  窗口", settingsTargetID = "core" }
         pages[#pages + 1] = { id = "settings-sorting", title = "  角色与排序", settingsTargetID = "sorting" }
         pages[#pages + 1] = { id = "settings-display", title = "  显示与入口", settingsTargetID = "display" }
+        local businessSettings = {}
         for _, page in ipairs(self._pageOrder) do
-            -- Settings is user-facing navigation.  Technical addon IDs are
-            -- useful for diagnostics, but must never replace the page title
-            -- users see in the account view.
-            if not page.internal then pages[#pages + 1] = { id = "settings-" .. page.id, title = page.title, settingsTargetID = page.id } end
+            if not page.internal then businessSettings[#businessSettings + 1] = { id = "settings-" .. page.id, title = page.title, settingsTargetID = page.id, addonName = page.addonName or page.id } end
         end
+        for _, panel in ipairs(Core:GetRegisteredSettingsPanels()) do
+            businessSettings[#businessSettings + 1] = { id = "addon-settings:" .. panel.id, title = panel.title, settingsTargetID = "addon-settings:" .. panel.id, addonName = panel.addonName }
+        end
+        table.sort(businessSettings, function(left, right) return left.addonName < right.addonName end)
+        for _, item in ipairs(businessSettings) do pages[#pages + 1] = item end
     else
         pages = { self._pages.overview, self._pages.characters }
         for _, page in ipairs(self._pageOrder) do if PageEnabled(page) then pages[#pages + 1] = page end end
@@ -1289,9 +1311,20 @@ end
 
 function AccountView:ShowPage(pageID, options)
     options = options or {}
+    -- Some hosted pages (for example YiboTodo) contain secure action buttons.
+    -- Switching pages hides every inactive page instance, which WoW forbids
+    -- while in combat when any of them is protected.  Keep the requested
+    -- refresh and apply it immediately after combat instead.
+    if InCombatLockdown and InCombatLockdown() then
+        self._pendingPageID = pageID
+        self._pendingPageOptions = options
+        self._refreshPendingAfterCombat = true
+        return false
+    end
     local page = self._pages[pageID] or self._pages.overview
     if not page or (not page.internal and not PageEnabled(page)) then page = self._pages.overview end
     self:CreateFrame()
+    self.frame:SetAttribute("yibo-settings-open", not self.frame.preview and page.id == "settings")
     local context = self:BuildContext(page, options)
     if not options.preview then self:ApplyPageSize(page, context) end
     self:HideColumnPagers()
@@ -1341,6 +1374,10 @@ end
 
 function AccountView:RefreshPage()
     if not (self.frame and self.frame:IsShown()) then return end
+    if InCombatLockdown and InCombatLockdown() then
+        self._refreshPendingAfterCombat = true
+        return false
+    end
     if self.frame.preview and self.previewPageID then
         -- Preview geometry is derived from page metrics before rendering.  A
         -- fold/unfold changes those metrics, so rebuild the same preview from
@@ -1584,6 +1621,12 @@ function AccountView:Toggle(pageID)
 end
 
 function AccountView:ShowSettings(targetID)
+    if InCombatLockdown and InCombatLockdown() then
+        Core:Print("战斗中不能打开设置。脱离战斗后再试。")
+        return false
+    end
+    self:CreateFrame()
+    self:EnsureCombatSettingsHider()
     if targetID then
         -- Entry shortcuts provide the business page explicitly.  Validate it
         -- before changing state so a stale/unregistered entry falls back to
@@ -1595,10 +1638,32 @@ function AccountView:ShowSettings(targetID)
         self.settingsTargetPageID = active and not active.internal and active.id or "display"
     end
     self:Toggle("settings")
+    return true
 end
 
+-- Refreshing a hosted page can hide another page instance.  That operation is
+-- deferred until combat ends; visibility itself is handled by the secure
+-- state driver installed above.
+Core.Events:Register("PLAYER_REGEN_ENABLED", AccountView, function(view)
+    if view._refreshPendingAfterCombat then
+        local pageID = view._pendingPageID
+        local options = view._pendingPageOptions
+        view._refreshPendingAfterCombat = nil
+        view._pendingPageID = nil
+        view._pendingPageOptions = nil
+        if pageID then
+            view:ShowPage(pageID, options)
+        else
+            view:RefreshPage()
+        end
+    end
+end)
+
 function AccountView:SelectSettingsTarget(targetID)
-    if targetID ~= "display" and targetID ~= "sorting" and targetID ~= "core" and targetID ~= "filters" then
+    local settingsOnlyID = type(targetID) == "string" and targetID:match("^addon%-settings:(.+)$")
+    if settingsOnlyID then
+        if not (Core.SettingsRegistry and Core.SettingsRegistry._panels[settingsOnlyID]) then return false end
+    elseif targetID ~= "display" and targetID ~= "sorting" and targetID ~= "core" and targetID ~= "filters" then
         local page = self._pages[targetID]
         if not page or page.internal then return false end
     end
@@ -2036,14 +2101,16 @@ local function RefreshSettings(parent)
     if settingsViewportWidth <= 100 then settingsViewportWidth = (parent:GetWidth() or 658) - 38 end
     parent.content:SetWidth(math.max(600, settingsViewportWidth - 18))
     local targetID = AccountView.settingsTargetPageID or "display"
+    local settingsOnlyID = type(targetID) == "string" and targetID:match("^addon%-settings:(.+)$")
     local selected = AccountView._pages[targetID]
+    local settingsOnly = settingsOnlyID and Core.SettingsRegistry and Core.SettingsRegistry._panels[settingsOnlyID]
     local displayMode, sortingMode, coreMode = targetID == "display", targetID == "sorting", targetID == "core"
-    if not (displayMode or sortingMode or coreMode or (selected and not selected.internal)) then
+    if not (displayMode or sortingMode or coreMode or settingsOnly or (selected and not selected.internal)) then
         targetID, displayMode = "display", true
         AccountView.settingsTargetPageID = targetID
     end
     local titles = { display = "显示与入口", sorting = "角色与排序", core = "窗口" }
-    parent.heading:SetText(titles[targetID] or (selected.title .. "业务设置"))
+    parent.heading:SetText(titles[targetID] or ((selected and selected.title) or (settingsOnly and settingsOnly.title) or "插件") .. "业务设置")
     parent.hint:SetText(displayMode and "集中管理 Core 与插件页面、独立入口及显示字段。" or (sortingMode and "统一设置角色、排序、缓存和业务页面的角色过滤。" or (coreMode and "管理窗口布局。" or "这里只保留该插件自身的业务规则与数据管理。")))
     parent.resetLayout:SetShown(coreMode)
 
@@ -2130,15 +2197,16 @@ local function RefreshSettings(parent)
         -- The same host row is reused when switching business settings.  Hide
         -- the previous addon's child frame first; otherwise its controls can
         -- remain above the newly selected page.
-        if row.yiboHostedOwner ~= selected.id then
+        local hostedOwner = (selected and selected.id) or (settingsOnly and ("addon-settings:" .. settingsOnly.id))
+        if row.yiboHostedOwner ~= hostedOwner then
             for _, child in ipairs({ row:GetChildren() }) do child:Hide() end
-            row.yiboHostedOwner = selected.id
+            row.yiboHostedOwner = hostedOwner
         end
         row:Show()
         local ok, heightOrError = xpcall(function()
             return details.CreateSettingsPanel(row, {
                 refreshPage = function() AccountView:RefreshPage() end,
-                notifyPageChanged = function() AccountView:NotifyPageChanged(selected.id) end,
+                notifyPageChanged = function() if selected then AccountView:NotifyPageChanged(selected.id) end end,
                 createSection = CreateHostedSettingsSection,
                 createText = function(owner, size, color, justify) return Theme:CreateText(owner, size, color, justify) end,
                 createButton = function(owner, width, label, kind) return Theme:CreateButton(owner, width, label, kind) end,
@@ -2148,7 +2216,7 @@ local function RefreshSettings(parent)
             })
         end, function(message) return tostring(message) end)
         if not ok then
-            Core:Print("插件 “" .. selected.title .. "” 的嵌入设置创建失败：" .. tostring(heightOrError))
+            Core:Print("插件 “" .. tostring((selected and selected.title) or (settingsOnly and settingsOnly.title) or "未知") .. "” 的嵌入设置创建失败：" .. tostring(heightOrError))
             if not row.errorLabel then
                 row.errorLabel = AddText(row, "GameFontNormalSmall", nil, COLORS.danger)
                 row.errorLabel:SetPoint("TOPLEFT", 2, 0); row.errorLabel:SetPoint("RIGHT", -2, 0)
@@ -2452,7 +2520,7 @@ local function RefreshSettings(parent)
             Heading("所选插件没有可配置字段")
         end
     else
-        local details = selected.settings or {}
+        local details = settingsOnly or (selected and selected.settings) or {}
         if details.description then
             local text = SettingsRow(parent, index + 1, "heading"); index = index + 1; PlaceSettingsRow(text, y); text:SetText(details.description); text:SetTextColor(COLORS.muted[1], COLORS.muted[2], COLORS.muted[3]); text:Show(); y = y + 28
         end
