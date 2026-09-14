@@ -68,11 +68,16 @@ Core.DataDomains:Register("YiboCore", {
             -- A catalog primary may however be a header *and* an actual
             -- reputation (for example, 阡陌客 on the MoP client).
             local retainHeader = isHeader and metadata and metadata.isPrimaryFaction == true
-            if name and factionID and (not isHeader or retainHeader) and tonumber(standingID) then
+            local ordinaryStanding = (not isHeader or retainHeader) and tonumber(standingID)
+            -- A capped friendship can omit the ordinary standing ID even
+            -- though its native faction row and friendship facts are valid.
+            -- Preserve that row so it is not rendered as “? 未同步”.
+            local friendship = Friendship(factionID)
+            if name and factionID and (ordinaryStanding or friendship) then
                 if not Core.ReputationRegistry[factionID] then
                     Core.ReputationRegistry[factionID] = { factionID = factionID, discovered = true }
                 end
-                factions[factionID] = { factionID = factionID, state = "known", name = name, standingID = standingID, value = barValue, min = barMin, max = barMax, friendship = Friendship(factionID), nativeGroup = nativeGroup }
+                factions[factionID] = { factionID = factionID, state = "known", name = name, standingID = standingID, value = barValue, min = barMin, max = barMax, friendship = friendship, nativeGroup = nativeGroup }
                 statuses[factionID] = "known"
                 return true
             end

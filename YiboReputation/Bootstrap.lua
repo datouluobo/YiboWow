@@ -1,7 +1,7 @@
 local ADDON_NAME = ...
 local Addon = _G.YiboReputation or {}
 _G.YiboReputation = Addon
-Addon.NAME, Addon.VERSION = "YiboReputation", "1.2.0"
+Addon.NAME, Addon.VERSION = "YiboReputation", "1.3"
 YiboReputationDB = YiboReputationDB or {}
 
 local function Defaults(target, values)

@@ -20,7 +20,10 @@ Addon.Catalog = {
  }},
  { id="cata", title="大地的裂变", categories={{id="major",title="主要阵营",flat=true,factions={1133,1134,1135,1158,1171,1172,1173,1174,1177,1178,1204}}}},
  { id="mop", title="熊猫人之谜", categories={
-  {id="academy",title="熊猫人阵营",factions={1216,1228,1242,1352,1353}},
+  -- The expansion header already identifies this group.  Keep these as
+  -- direct rows so “熊猫人之谜 → 熊猫人阵营” does not create a redundant
+  -- second hierarchy level in the account matrix.
+  {id="academy",title="熊猫人阵营",flat=true,factions={1216,1228,1242,1352,1353}},
   {id="black-prince",title="黑王子",primaryFactionID=1359,factions={1359}},
   {id="tillers",title="阡陌客",primaryFactionID=1272,factions={1272,1273,1275,1276,1277,1278,1279,1280,1281,1282,1283}},
   {id="anglers",title="垂钓翁",primaryFactionID=1302,factions={1302,1358}},
@@ -46,7 +49,14 @@ do
  for _, expansion in ipairs(Addon.Catalog) do
   for _, category in ipairs(expansion.categories) do
    for _, factionID in ipairs(category.factions) do
-    if not seen[factionID] then seen[factionID] = true; entries[#entries + 1] = {factionID=factionID,expansionID=expansion.id,expansionTitle=expansion.title,categoryID=category.id,categoryTitle=category.title} end
+    if not seen[factionID] then
+     seen[factionID] = true
+     -- Some client faction headers (notably 阡陌客) also carry a real
+     -- reputation value.  Mark only the catalog's declared primary faction
+     -- so Core can retain that header while continuing to ignore ordinary
+     -- non-data section headers.
+     entries[#entries + 1] = { factionID=factionID, expansionID=expansion.id, expansionTitle=expansion.title, categoryID=category.id, categoryTitle=category.title, isPrimaryFaction=category.primaryFactionID == factionID }
+    end
    end
   end
  end
