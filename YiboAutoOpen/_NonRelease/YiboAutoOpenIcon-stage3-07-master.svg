@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <!-- Stage 3 editable 32px skeleton. Transparent canvas; no material, color, or light treatment. -->
+  <g stroke="#11191B" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="square">
+    <!-- Shared Yibo hexagonal frame: 28 × 30 px coverage. -->
+    <path d="M16 1.5 29 8.8v14.4L16 30.5 3 23.2V8.8z"/>
+    <!-- Short opening rays: an accent, never the primary reading. -->
+    <path d="M16 13.5V8.5"/>
+    <path d="m13.2 14-2.7-3"/>
+    <path d="m18.8 14 2.7-3"/>
+    <!-- Raised lid and deep opening; the two shapes separate at 24px. -->
+    <path d="m4.8 17.5 11.2-5 11.2 5L16 22z" fill="#F4F7F6"/>
+    <path d="m4.8 17.5 11.2 4.5 11.2-4.5"/>
+    <!-- Broad chest body, with only one central latch block. -->
+    <path d="M5.8 19.5 16 23l10.2-3.5v6L16 29l-10.2-3.5z" fill="#F4F7F6"/>
+    <path d="M13.6 23.8h4.8v3.8h-4.8z" fill="#11191B"/>
+  </g>
+</svg>

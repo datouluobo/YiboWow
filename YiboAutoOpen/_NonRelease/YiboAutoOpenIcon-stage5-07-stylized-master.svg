@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <!-- Stage 5 draft only. Same approved Stage 3 geometry, now with restrained Yibo styling. -->
+  <defs>
+    <linearGradient id="frame" x1="4" y1="3" x2="28" y2="30" gradientUnits="userSpaceOnUse"><stop stop-color="#20383B"/><stop offset=".52" stop-color="#081416"/><stop offset="1" stop-color="#172B2E"/></linearGradient>
+    <linearGradient id="lid" x1="16" y1="12" x2="16" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FFD572"/><stop offset=".55" stop-color="#D88B32"/><stop offset="1" stop-color="#8B481C"/></linearGradient>
+    <linearGradient id="body" x1="6" y1="20" x2="26" y2="29" gradientUnits="userSpaceOnUse"><stop stop-color="#C56D29"/><stop offset=".45" stop-color="#8A421B"/><stop offset="1" stop-color="#4B2417"/></linearGradient>
+    <linearGradient id="open" x1="16" y1="12" x2="16" y2="21" gradientUnits="userSpaceOnUse"><stop stop-color="#6DFFF0"/><stop offset="1" stop-color="#0B817F"/></linearGradient>
+  </defs>
+  <!-- Deep teal-black Yibo frame; canvas beyond this line remains fully transparent. -->
+  <path fill="url(#frame)" stroke="#061011" stroke-width="2.5" stroke-linejoin="round" d="M16 1.5 29 8.8v14.4L16 30.5 3 23.2V8.8z"/>
+  <path fill="none" stroke="#11B6AE" stroke-width="1" stroke-linejoin="round" d="M16 3.5 27.2 9.8v12.4L16 28.5 4.8 22.2V9.8z"/>
+  <!-- One compact cyan opening signal: three thick rays read as one visual block. -->
+  <g stroke="url(#open)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="square">
+    <path d="M16 13.5V8.5"/><path d="m13.2 14-2.7-3"/><path d="m18.8 14 2.7-3"/>
+  </g>
+  <!-- Open lid, dark opening seam, and chest body stay exactly within the approved silhouette. -->
+  <path fill="url(#lid)" stroke="#281914" stroke-width="2.5" stroke-linejoin="round" d="m4.8 17.5 11.2-5 11.2 5L16 22z"/>
+  <path stroke="url(#open)" stroke-width="2" stroke-linejoin="round" d="m6.1 17.5 9.9 3.8 9.9-3.8"/>
+  <path fill="url(#body)" stroke="#281914" stroke-width="2.5" stroke-linejoin="round" d="M5.8 19.5 16 23l10.2-3.5v6L16 29l-10.2-3.5z"/>
+  <path fill="#F8CF5F" stroke="#392311" stroke-width="1.4" stroke-linejoin="round" d="M13.6 23.8h4.8v3.8h-4.8z"/>
+  <!-- Two broad face highlights, not pixel-detail texture. -->
+  <path fill="#E7A446" opacity=".72" d="m7.3 20.8 7.6 2.6v2L7.3 23z"/>
+  <path fill="#672B17" opacity=".7" d="m24.7 20.8-7.6 2.6v2l7.6-2.4z"/>
+</svg>

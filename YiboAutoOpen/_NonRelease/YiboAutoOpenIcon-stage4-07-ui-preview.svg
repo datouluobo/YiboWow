@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="560" viewBox="0 0 980 560">
+  <!-- Stage 4 validation preview only. Geometry is copied from the confirmed Stage 3 master. -->
+  <rect width="980" height="560" rx="16" fill="#101719"/>
+  <style>text{font-family:Segoe UI,Arial,sans-serif;fill:#e1f2ef}.muted{font-size:14px;fill:#9bb4b0}.small{font-size:12px;fill:#9bb4b0}.panel{fill:#1a2527;stroke:#3a5152;stroke-width:1}</style>
+  <text x="26" y="35" font-size="22" font-weight="700">YAO · 阶段 4 / 实尺寸与 WoW 深色 UI 模拟</text>
+  <text x="26" y="59" class="muted">同一确认骨架；仅验证比例、对比与透明边缘，尚未加入材质或光效。</text>
+  <defs>
+    <g id="mark" stroke="#11191B" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="square">
+      <path d="M16 1.5 29 8.8v14.4L16 30.5 3 23.2V8.8z"/><path d="M16 13.5V8.5"/><path d="m13.2 14-2.7-3"/><path d="m18.8 14 2.7-3"/>
+      <path fill="#F4F7F6" d="m4.8 17.5 11.2-5 11.2 5L16 22z"/><path d="m4.8 17.5 11.2 4.5 11.2-4.5"/>
+      <path fill="#F4F7F6" d="M5.8 19.5 16 23l10.2-3.5v6L16 29l-10.2-3.5z"/><path fill="#11191B" d="M13.6 23.8h4.8v3.8h-4.8z"/>
+    </g>
+  </defs>
+  <!-- Native-size checks: no zoom inside the sample areas. -->
+  <rect class="panel" x="26" y="91" width="375" height="160" rx="10"/><text x="44" y="119" font-size="16" font-weight="700">原生尺寸检查</text>
+  <text class="small" x="44" y="145">24px / Broker 与紧凑列表</text><rect x="44" y="159" width="24" height="24" fill="#090e0f"/><use href="#mark" transform="translate(44 159) scale(.75)"/><text class="small" x="83" y="176">箱体仍是第一读法</text>
+  <text class="small" x="44" y="205">32px / 小地图入口</text><rect x="44" y="215" width="32" height="32" fill="#090e0f"/><use href="#mark" transform="translate(44 215)"/><text class="small" x="90" y="235">光束不压缩箱盖</text>
+  <text class="small" x="235" y="145">64px / 设置页与列表</text><rect x="235" y="159" width="64" height="64" fill="#090e0f"/><use href="#mark" transform="translate(235 159) scale(2)"/><text class="small" x="315" y="191">结构不新增细节</text>
+  <!-- WoW minimap / 32px button simulation. -->
+  <rect class="panel" x="426" y="91" width="528" height="230" rx="10"/><text x="444" y="119" font-size="16" font-weight="700">小地图入口模拟（32px）</text>
+  <circle cx="694" cy="218" r="86" fill="#26363a" stroke="#536c6d" stroke-width="5"/><circle cx="694" cy="218" r="68" fill="#152225"/>
+  <path d="M645 193c31-38 75-39 107-1M649 239c27 28 72 27 97 1" fill="none" stroke="#314649" stroke-width="7" opacity=".8"/>
+  <circle cx="768" cy="276" r="23" fill="#070c0d" stroke="#647b79" stroke-width="2"/><use href="#mark" transform="translate(752 260)"/>
+  <text class="small" x="444" y="294">32px 图标与深色小地图边缘保持 2px 以上分离；透明画布无方形底。</text>
+  <!-- Broker list / 24px simulation. -->
+  <rect class="panel" x="26" y="276" width="375" height="258" rx="10"/><text x="44" y="304" font-size="16" font-weight="700">Broker 行与紧凑列表（24px）</text>
+  <rect x="44" y="324" width="339" height="38" rx="5" fill="#0c1314"/><use href="#mark" transform="translate(51 331) scale(.75)"/><text x="84" y="348" font-size="14">[Yibo] 自动开包</text><text class="small" x="287" y="348">已就绪</text>
+  <rect x="44" y="370" width="339" height="38" rx="5" fill="#202e30"/><use href="#mark" transform="translate(51 377) scale(.75)"/><text x="84" y="394" font-size="14">目录容器</text><text class="small" x="314" y="394">12</text>
+  <rect x="44" y="416" width="339" height="38" rx="5" fill="#0c1314"/><use href="#mark" transform="translate(51 423) scale(.75)"/><text x="84" y="440" font-size="14">安全暂停</text><text class="small" x="300" y="440">战斗中</text>
+  <text class="small" x="44" y="491">图标不依赖暖色或青绿才可与其他行区分。</text>
+  <!-- Settings / 64px simulation. -->
+  <rect class="panel" x="426" y="346" width="528" height="188" rx="10"/><text x="444" y="374" font-size="16" font-weight="700">设置页条目（64px）</text>
+  <rect x="444" y="392" width="486" height="118" rx="8" fill="#0c1314"/><use href="#mark" transform="translate(467 419) scale(2)"/>
+  <text x="552" y="429" font-size="18" font-weight="700">自动开包</text><text class="muted" x="552" y="455">安全地逐个开启目录中的可拾取容器</text><text class="small" x="552" y="481">64px 只让相同骨架更清楚，不引入另一套图形。</text>
+</svg>

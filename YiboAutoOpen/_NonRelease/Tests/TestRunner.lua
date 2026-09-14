@@ -1,0 +1,1 @@
+-- Load individual specs in the WoW client after the addon when manual smoke testing is needed.

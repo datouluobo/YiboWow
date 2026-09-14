@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" shape-rendering="crispEdges">
+  <!-- Transparent 24px master: silhouette first, detail second. -->
+  <path fill="#10191b" d="M3 1h18v2h2v7h-2v12h-2v2H5v-2H3V10H1V3h2z"/>
+  <!-- Raised lid -->
+  <path fill="#5d351b" d="M4 3h16v2h1v4h-2V7H5v2H3V5h1z"/>
+  <path fill="#a6672c" d="M6 3h12v2H6z"/>
+  <path fill="#261b16" d="M5 5h14v2H5z"/>
+  <!-- Teal light visible through the opened chest -->
+  <path fill="#126a70" d="M4 8h16v7H4z"/>
+  <path fill="#0daeb3" d="M6 8h12v6H6z"/>
+  <path fill="#69f5e8" d="M9 8h6v5H9z"/>
+  <!-- Chest body and broad latch -->
+  <path fill="#6d3b1b" d="M4 15h16v6h-2v1H6v-1H4z"/>
+  <path fill="#a46127" d="M6 16h12v5H6z"/>
+  <path fill="#3c2519" d="M5 17h14v2H5z"/>
+  <path fill="#e8ba42" d="M10 17h4v3h-1v1h-2v-1h-1z"/>
+  <!-- Dark iron side bands keep the chest readable at 24px. -->
+  <path fill="#172527" d="M4 10h2v12H4zm14 0h2v12h-2z"/>
+  <path fill="#d98a32" d="M4 11h2v2H4zm14 0h2v2h-2z"/>
+</svg>

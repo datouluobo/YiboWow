@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <!-- Stage 5 draft: approved 07D open-lid geometry; intentionally no outer frame or decorative panels. -->
+  <defs>
+    <linearGradient id="lid" x1="16" y1="10" x2="16" y2="16" gradientUnits="userSpaceOnUse"><stop stop-color="#FFE39A"/><stop offset=".6" stop-color="#E5A242"/><stop offset="1" stop-color="#A55A22"/></linearGradient>
+    <linearGradient id="body" x1="6" y1="19" x2="26" y2="29" gradientUnits="userSpaceOnUse"><stop stop-color="#CF792D"/><stop offset=".7" stop-color="#8B421A"/><stop offset="1" stop-color="#602819"/></linearGradient>
+    <linearGradient id="energy" x1="16" y1="2" x2="16" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#9DFFF3" stop-opacity=".9"/><stop offset="1" stop-color="#14A9A5"/></linearGradient>
+  </defs>
+  <!-- Soft, separate energy strokes preserve the confirmed outward direction. -->
+  <g stroke="url(#energy)" stroke-width="2.15" stroke-linecap="round"><path d="M11.5 9c-1.05-1.25-2.35-2.55-4-4"/><path d="M16 8.5V2.5"/><path d="M20.5 9c1.05-1.25 2.35-2.55 4-4"/></g>
+  <!-- Raised lid, long dark mouth, then one calm body plane. -->
+  <path fill="url(#lid)" stroke="#382112" stroke-width="2.5" stroke-linejoin="round" d="M5 16 8.5 10.5h15L27 16z"/>
+  <path fill="#0D3435" stroke="#061718" stroke-width="1.7" d="M5.5 16.5h21v3h-21z"/>
+  <path fill="url(#body)" stroke="#382112" stroke-width="2.5" stroke-linejoin="round" d="M6.5 19.5h19v9h-19z"/>
+  <path fill="#F0AD50" opacity=".4" d="M8.5 21h4v5h-4z"/>
+</svg>

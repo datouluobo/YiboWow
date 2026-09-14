@@ -1,0 +1,1 @@
+-- Covered by Database:Initialize / Normalize / MigrateCatalog in the in-game test harness.

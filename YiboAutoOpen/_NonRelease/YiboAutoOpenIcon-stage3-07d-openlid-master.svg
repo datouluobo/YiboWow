@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <!-- Stage 3 rework: explicit open-lid chest, deliberately reduced to four large blocks. -->
+  <g stroke="#11191B" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Three outward signals; geometry only, color is deferred. -->
+    <g stroke="#F4F7F6"><path d="m11.5 9-4-4"/><path d="M16 8.5V2.5"/><path d="m20.5 9 4-4"/></g>
+    <!-- Raised lid, visibly behind the opening. -->
+    <path fill="#F4F7F6" d="M5 16 8.5 10.5h15L27 16z"/>
+    <!-- Long dark opening; it separates lid from the box body at every target size. -->
+    <path fill="#11191B" d="M5.5 16.5h21v3h-21z"/>
+    <!-- Simple broad box body; no latch, bevel, or decorative panels. -->
+    <path fill="#F4F7F6" d="M6.5 19.5h19v9h-19z"/>
+  </g>
+</svg>

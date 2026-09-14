@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <!-- Stage 3 rework: deliberately literal open-chest construction, no styling. -->
+  <g stroke="#11191B" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="square">
+    <!-- Yibo frame, kept as a quiet containment shape. -->
+    <path d="M16 1.5 29 8.8v14.4L16 30.5 3 23.2V8.8z"/>
+    <!-- One short opening signal. -->
+    <path d="M16 9.5V6.5"/>
+    <!-- A raised rectangular lid, visibly separated behind the box opening. -->
+    <path fill="#F4F7F6" d="M6.5 9.5h19v8h-19z"/>
+    <path d="M9 12h14"/>
+    <!-- Dark open mouth: its long horizontal seam is the chest recognition cue. -->
+    <path fill="#11191B" d="M5.2 17.5 16 15l10.8 2.5L16 21z"/>
+    <!-- Broad front box: one large, stable body with a central latch. -->
+    <path fill="#F4F7F6" d="M5.2 17.5 16 21l10.8-3.5v8.4L16 29.5 5.2 25.9z"/>
+    <path d="M7.5 21 16 24l8.5-3"/>
+    <path fill="#11191B" d="M13.5 23.1h5v4.2h-5z"/>
+  </g>
+</svg>

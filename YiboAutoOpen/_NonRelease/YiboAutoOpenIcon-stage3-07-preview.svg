@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="530" height="220" viewBox="0 0 530 220">
+  <!-- Stage 3 preview only. The master is the source of truth. -->
+  <rect width="530" height="220" rx="14" fill="#172426"/>
+  <style>text{font-family:Segoe UI,Arial,sans-serif;fill:#d7f5ef}.muted{font-size:14px;fill:#91aaa6}</style>
+  <text x="22" y="32" font-size="20" font-weight="700">YAO · 07 开口光束箱 / 骨架</text>
+  <text class="muted" x="22" y="55">单色、可编辑、32px 网格；未加入材质或光效</text>
+  <defs>
+    <g id="mark" stroke="#11191B" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="square">
+      <path d="M16 1.5 29 8.8v14.4L16 30.5 3 23.2V8.8z"/><path d="M16 13.5V8.5"/><path d="m13.2 14-2.7-3"/><path d="m18.8 14 2.7-3"/>
+      <path fill="#F4F7F6" d="m4.8 17.5 11.2-5 11.2 5L16 22z"/><path d="m4.8 17.5 11.2 4.5 11.2-4.5"/>
+      <path fill="#F4F7F6" d="M5.8 19.5 16 23l10.2-3.5v6L16 29l-10.2-3.5z"/><path fill="#11191B" d="M13.6 23.8h4.8v3.8h-4.8z"/>
+    </g>
+  </defs>
+  <rect x="22" y="78" width="208" height="118" rx="10" fill="#0d1516"/><text x="36" y="104" font-size="15">32px 实尺寸</text>
+  <rect x="300" y="78" width="208" height="118" rx="10" fill="#0d1516"/><text x="314" y="104" font-size="15">24px 实尺寸</text>
+  <!-- Each icon is drawn at its physical grid size, then surrounded by a viewing guide only. -->
+  <g transform="translate(110 126)"><use href="#mark"/></g><rect x="110" y="126" width="32" height="32" fill="none" stroke="#a3b9b6" stroke-dasharray="2 2"/>
+  <g transform="translate(388 130) scale(.75)"><use href="#mark"/></g><rect x="388" y="130" width="24" height="24" fill="none" stroke="#a3b9b6" stroke-dasharray="2 2"/>
+  <text class="muted" x="36" y="180">外轮廓 2.5px · 4 个主视觉块</text><text class="muted" x="314" y="180">透明画布 · 不依赖颜色区分</text>
+</svg>

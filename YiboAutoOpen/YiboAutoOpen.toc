@@ -1,0 +1,21 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r YiboAutoOpen - 自动开包
+## Notes: 安全地自动开启账号目录中的容器物品。
+## Author: YiboSoft
+## Version: 1.0.0
+## IconTexture: Interface\AddOns\YiboAutoOpen\Media\YiboAutoOpenIcon-v2
+## SavedVariables: YiboAutoOpenDB
+## OptionalDeps: YiboCore
+## LoadOnDemand: 0
+
+Bootstrap.lua
+Defaults.lua
+Database.lua
+Catalog.lua
+ItemResolver.lua
+BagAdapter.lua
+Safety.lua
+Queue.lua
+Commands.lua
+Settings.lua
+CoreIntegration.lua

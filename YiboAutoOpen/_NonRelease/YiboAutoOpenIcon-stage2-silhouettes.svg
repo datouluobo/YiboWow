@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="430" viewBox="0 0 1180 430">
+  <!-- Stage 2 draft only: monochrome silhouette directions. No production asset. -->
+  <rect width="1180" height="430" fill="#11191b"/>
+  <style>text{font-family:Segoe UI,Arial,sans-serif;fill:#d7f5ef} .sub{fill:#8ba9a5;font-size:13px}.n{font-weight:700;font-size:18px}.cap{font-size:14px}.cell{fill:#172426;stroke:#315a58;stroke-width:1}</style>
+  <text x="24" y="31" font-size="22" font-weight="700">YAO · 阶段 2 / 轮廓候选（仅黑白）</text>
+  <text class="sub" x="24" y="54">每个候选左为 32px，右为 24px；白色是业务主体，深色六边形仅表示 Yibo frame 的占位关系。</text>
+  <defs>
+    <g id="frame"><path fill="#071011" d="M16 1 29 8v16l-13 7L3 24V8z"/><path fill="none" stroke="#5a7775" stroke-width="1.5" d="M16 2.5 27.7 9v14L16 29.5 4.3 23V9z"/></g>
+    <!-- 01: tilted open chest -->
+    <g id="a"><use href="#frame"/><path fill="#fff" d="m7 14 13-7 5 3-13 7zM6 16l14-7 7 4v10l-14 7-7-4zm3 2v8l4 2v-8zm6-3v8l8-4v-8z"/></g>
+    <!-- 02: front chest with a broad, raised lid -->
+    <g id="b"><use href="#frame"/><path fill="#fff" d="M6 9h20v6H6zm2-3h16v2H8zm-1 11h18v10H7zm8 2h3v6h-3z"/></g>
+    <!-- 03: pouch with a folded flap -->
+    <g id="c"><use href="#frame"/><path fill="#fff" d="M8 8h16l3 7-5 13H10L5 15zm3 2-2 4h14l-2-4zm1 7h8l-4 6z"/></g>
+    <!-- 04: crate with lid opening upward -->
+    <g id="d"><use href="#frame"/><path fill="#fff" d="M7 16h18v10H7zM6 13l15-8 4 3-15 8zm5 5h3v6h-3zm6 0h3v6h-3z"/></g>
+    <!-- 05: chest plus one continuous automatic-flow line -->
+    <g id="e"><use href="#frame"/><path fill="#fff" d="M8 15h16v11H8zm-1-5h18v4H7zm8 8h3v5h-3zM5 22V7h8v3H8v12z"/></g>
+    <!-- 06: open satchel, diagonal flap -->
+    <g id="f"><use href="#frame"/><path fill="#fff" d="M7 13h18v13H7zm4-7h10l5 6H6zm3 10h4v6h-4z"/></g>
+    <!-- 07: opening seam radiates from a box -->
+    <g id="g"><use href="#frame"/><path fill="#fff" d="M8 16h16v11H8zm-1-5h18v3H7zm8-5h2v4h-2zm-7 2 2-2 3 3-2 2zm14 1 3-3 2 2-3 3z"/></g>
+    <!-- 08: half-open cube, strongest diagonal -->
+    <g id="h"><use href="#frame"/><path fill="#fff" d="m7 15 11-6 8 4v11l-11 6-8-4zm3 2v7l5 3v-7zm7-4v7l6-3v-7zM8 11l10-6 6 3-10 6z"/></g>
+    <!-- 09: top-down box, open central seam -->
+    <g id="i"><use href="#frame"/><path fill="#fff" d="m5 12 11-6 11 6-11 6zm0 2 11 6 11-6v10l-11 6L5 24zm9 8h4v5h-4z"/></g>
+    <!-- 10: compact chest, lid becomes an arrow-like flap -->
+    <g id="j"><use href="#frame"/><path fill="#fff" d="M7 16h18v11H7zm1-6h13V6l7 7-7 7v-4H8zm6 9h4v5h-4z"/></g>
+  </defs>
+  <g transform="translate(24 75)">
+    <g transform="translate(0 0)"><rect class="cell" width="210" height="155" rx="8"/><text class="n" x="12" y="25">01</text><text class="cap" x="12" y="49">斜掀宝箱</text><use href="#a" transform="translate(65 53) scale(2)"/><use href="#a" transform="translate(154 63) scale(1.5)"/></g>
+    <g transform="translate(225 0)"><rect class="cell" width="210" height="155" rx="8"/><text class="n" x="12" y="25">02</text><text class="cap" x="12" y="49">正面开箱</text><use href="#b" transform="translate(65 53) scale(2)"/><use href="#b" transform="translate(154 63) scale(1.5)"/></g>
+    <g transform="translate(450 0)"><rect class="cell" width="210" height="155" rx="8"/><text class="n" x="12" y="25">03</text><text class="cap" x="12" y="49">翻盖包裹</text><use href="#c" transform="translate(65 53) scale(2)"/><use href="#c" transform="translate(154 63) scale(1.5)"/></g>
+    <g transform="translate(675 0)"><rect class="cell" width="210" height="155" rx="8"/><text class="n" x="12" y="25">04</text><text class="cap" x="12" y="49">上掀木箱</text><use href="#d" transform="translate(65 53) scale(2)"/><use href="#d" transform="translate(154 63) scale(1.5)"/></g>
+    <g transform="translate(900 0)"><rect class="cell" width="210" height="155" rx="8"/><text class="n" x="12" y="25">05</text><text class="cap" x="12" y="49">自动流线箱</text><use href="#e" transform="translate(65 53) scale(2)"/><use href="#e" transform="translate(154 63) scale(1.5)"/></g>
+    <g transform="translate(0 175)"><rect class="cell" width="210" height="155" rx="8"/><text class="n" x="12" y="25">06</text><text class="cap" x="12" y="49">斜翻旅行包</text><use href="#f" transform="translate(65 53) scale(2)"/><use href="#f" transform="translate(154 63) scale(1.5)"/></g>
+    <g transform="translate(225 175)"><rect class="cell" width="210" height="155" rx="8"/><text class="n" x="12" y="25">07</text><text class="cap" x="12" y="49">开口光束箱</text><use href="#g" transform="translate(65 53) scale(2)"/><use href="#g" transform="translate(154 63) scale(1.5)"/></g>
+    <g transform="translate(450 175)"><rect class="cell" width="210" height="155" rx="8"/><text class="n" x="12" y="25">08</text><text class="cap" x="12" y="49">立体开启方盒</text><use href="#h" transform="translate(65 53) scale(2)"/><use href="#h" transform="translate(154 63) scale(1.5)"/></g>
+    <g transform="translate(675 175)"><rect class="cell" width="210" height="155" rx="8"/><text class="n" x="12" y="25">09</text><text class="cap" x="12" y="49">俯视开盖箱</text><use href="#i" transform="translate(65 53) scale(2)"/><use href="#i" transform="translate(154 63) scale(1.5)"/></g>
+    <g transform="translate(900 175)"><rect class="cell" width="210" height="155" rx="8"/><text class="n" x="12" y="25">10</text><text class="cap" x="12" y="49">箭翼掀盖箱</text><use href="#j" transform="translate(65 53) scale(2)"/><use href="#j" transform="translate(154 63) scale(1.5)"/></g>
+  </g>
+</svg>
