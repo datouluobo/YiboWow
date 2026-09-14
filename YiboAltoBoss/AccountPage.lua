@@ -367,6 +367,7 @@ local function SetSemanticButton(control, text, fill, title, lines)
     control:SetState("default")
     control:SetBackdropColor(fill[1], fill[2], fill[3], fill[4] or 1)
     control.label:SetTextColor(C.text[1], C.text[2], C.text[3])
+    control:SetScript("OnClick", nil)
     Theme:BindTooltip(control, title, lines)
 end
 
@@ -380,6 +381,30 @@ local function SetEmptyButton(control)
 end
 
 local function SetStatus(cell, status, key, boss)
+    if YAB.Holiday and YAB.Holiday:IsBoss(boss) then
+        local completed = status == "completed"
+        local labels = { completed = "已领取", available = "今日可领", unobserved = "尚未观察" }
+        local text = labels[status] or "不可用"
+        cell:SetText(text); cell:SetState("default")
+        local fill, border, labelColor = C.chrome, C.matrixLine, C.text
+        if completed then fill, border, labelColor = C.successSurface, C.success, C.success
+        elseif status == "unobserved" then fill, border, labelColor = FIXED_CELL, C.muted, C.muted end
+        cell:SetBackdropColor(fill[1], fill[2], fill[3], fill[4] or 1)
+        cell:SetBackdropBorderColor(border[1], border[2], border[3], border[4] or 1)
+        cell.label:SetTextColor(labelColor[1], labelColor[2], labelColor[3])
+        local _, record = YAB.Holiday:GetStatus(key, boss)
+        local sourceLabels = { quest = "每日任务", ["lfg-reward"] = "副本完成奖励", manual = "人工标记" }
+        local lines = { { text = completed and "今日节日奖励已记录。" or (status == "unobserved" and "该角色今日尚未登录观察，按可领取提醒。" or "今日节日奖励尚未记录。"), color = labelColor } }
+        if record and record.source then lines[#lines + 1] = { text = "来源：" .. (sourceLabels[record.source] or tostring(record.source)), color = C.muted } end
+        if not (record and record.source and record.source ~= "manual") then
+            lines[#lines + 1] = { text = "点击可添加或取消人工标记。", color = C.muted }
+            cell:SetScript("OnClick", function() YAB.Holiday:ToggleManual(boss, key) end)
+        else
+            cell:SetScript("OnClick", nil)
+        end
+        Theme:BindTooltip(cell, boss.name .. " / 每日奖励", lines)
+        return
+    end
     local killed = status == "killed"
     cell:SetText(killed and "已击杀" or "未击杀")
     cell:SetState("default")
@@ -403,6 +428,34 @@ local function SetStatus(cell, status, key, boss)
     cell:SetScript("OnClick", function() YAB.ToggleBossKill(key, boss.key) end)
 end
 
+local function PhaseTitle()
+    return YAB.Holiday and YAB.Holiday:HasActiveBosses() and "位面 / 职责" or "位面"
+end
+
+local function SetHolidayAction(control, boss)
+    local queue = YAB.Holiday:GetQueueState(boss)
+    local text, lines = "排队", {}
+    if queue.state == "queued" then
+        text = "取消排队"; lines[1] = { text = "当前角色正在该节日副本队列中。点击立即取消。", color = C.accent }
+    elseif queue.state == "ready" then
+        lines[1] = { text = "使用当前已选职责加入节日副本队列。", color = C.text }
+        lines[#lines + 1] = { text = "职责：" .. table.concat(queue.roles or {}, " / "), color = C.muted }
+    else
+        text = "不可排队"; lines[1] = { text = queue.reason or "当前角色暂不可排队。", color = C.muted }
+    end
+    SetSemanticButton(control, text, queue.state == "ready" and C.successSurface or (queue.state == "queued" and C.timer or FIXED_CELL), boss.name .. " / 行动", lines)
+    if queue.state == "ready" or queue.state == "queued" then
+        control:SetScript("OnClick", function() YAB.Holiday:ToggleQueue(boss) end)
+    end
+end
+
+local function SetHolidayPhase(control, boss)
+    local roles, note = YAB.Holiday:GetRoles()
+    local text = #roles > 0 and table.concat(roles, "/") or "未选职责"
+    local lines = { { text = #roles > 0 and ("当前已选职责：" .. table.concat(roles, " / ")) or (note or "请先在地下城查找器选择职责。"), color = #roles > 0 and C.text or C.muted } }
+    SetSemanticButton(control, text, #roles > 0 and C.current or FIXED_CELL, boss.name .. " / 职责", lines)
+end
+
 local function RefreshHeaders(instance, context, keys, showAction, showPhase, showKills, bossNameWidth)
     local x, index = 0, 0
     local headerHeight = GetHeaderHeight(context)
@@ -423,7 +476,7 @@ local function RefreshHeaders(instance, context, keys, showAction, showPhase, sh
     end
     Place("Boss / 目标", bossNameWidth, nil, nil, true)
     if showAction then Place("行动", ACTION_WIDTH, nil, nil, true) end
-    if showPhase then Place("位面", PHASE_WIDTH, nil, nil, true) end
+    if showPhase then Place(PhaseTitle(), PHASE_WIDTH, nil, nil, true) end
     instance.fixedWidth = x
     instance.header.fixedDivider:ClearAllPoints()
     instance.header.fixedDivider:SetPoint("TOPLEFT", instance.header, "TOPLEFT", instance.fixedWidth, 0)
@@ -544,7 +597,9 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
         row.action:ClearAllPoints(); row.action:SetShown(showAction)
         if showAction then
             row.action:SetPoint("LEFT", x + 1, 0); x = x + ACTION_WIDTH
-            if boss.hideAction then
+            if YAB.Holiday and YAB.Holiday:IsBoss(boss) then
+                SetHolidayAction(row.action, boss)
+            elseif boss.hideAction then
                 SetEmptyButton(row.action)
             else
                 local candidate = PickBestAction(boss, context.scope)
@@ -556,7 +611,9 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
         row.phase:ClearAllPoints(); row.phase:SetShown(showPhase)
         if showPhase then
             row.phase:SetPoint("LEFT", x + 1, 0); x = x + PHASE_WIDTH
-            if boss.hidePhase then
+            if YAB.Holiday and YAB.Holiday:IsBoss(boss) then
+                SetHolidayPhase(row.phase, boss)
+            elseif boss.hidePhase then
                 SetEmptyButton(row.phase)
             else
                 local summary, lines, hasKill, hasObserve = BuildPhaseSummary(boss, context.scope)
@@ -658,7 +715,8 @@ function YAB.RefreshAccountPage(instance, context)
         local x = characterWidth
         for bossIndex, boss in ipairs(bosses) do
             local cell = GetCell(row, bossIndex); cell:SetWidth(BOSS_WIDTH - 2); cell:ClearAllPoints(); cell:SetPoint("LEFT", x + 1, 0); cell:Show()
-            if boss.hideAction then SetEmptyButton(cell) else
+            if YAB.Holiday and YAB.Holiday:IsBoss(boss) then SetHolidayAction(cell, boss)
+            elseif boss.hideAction then SetEmptyButton(cell) else
                 local candidate = PickBestAction(boss, context.scope)
                 SetSemanticButton(cell, candidate and candidate.text or "—", actionFills[candidate and candidate.kind or ""] or FIXED_CELL, boss.name .. " / 行动", BuildActionTooltip(boss, candidate, context.scope))
             end
@@ -669,11 +727,12 @@ function YAB.RefreshAccountPage(instance, context)
     if showPhase then
         rowIndex = rowIndex + 1
         local row = GetRow(instance, rowIndex); PrepareRow(row, rowIndex)
-        row.professionIcon:Hide(); row.name:ClearAllPoints(); row.name:SetPoint("LEFT", Theme.Table.cellPadding, 0); row.name:SetWidth(Theme:GetTableCellContentWidth(characterWidth)); row.name:SetText("位面"); row.name:SetTextColor(C.muted[1], C.muted[2], C.muted[3]); row.name:Show()
+        row.professionIcon:Hide(); row.name:ClearAllPoints(); row.name:SetPoint("LEFT", Theme.Table.cellPadding, 0); row.name:SetWidth(Theme:GetTableCellContentWidth(characterWidth)); row.name:SetText(PhaseTitle()); row.name:SetTextColor(C.muted[1], C.muted[2], C.muted[3]); row.name:Show()
         local x = characterWidth
         for bossIndex, boss in ipairs(bosses) do
             local cell = GetCell(row, bossIndex); cell:SetWidth(BOSS_WIDTH - 2); cell:ClearAllPoints(); cell:SetPoint("LEFT", x + 1, 0); cell:Show()
-            if boss.hidePhase then SetEmptyButton(cell) else
+            if YAB.Holiday and YAB.Holiday:IsBoss(boss) then SetHolidayPhase(cell, boss)
+            elseif boss.hidePhase then SetEmptyButton(cell) else
                 local summary, lines, hasKill, hasObserve = BuildPhaseSummary(boss, context.scope)
                 SetSemanticButton(cell, summary, hasKill and C.timer or (hasObserve and C.current or FIXED_CELL), boss.name .. " / 位面", lines)
             end

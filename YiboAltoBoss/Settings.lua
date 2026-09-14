@@ -1026,6 +1026,18 @@ function YAB.CreateCoreSettingsPanel(parent, context)
         local remove = context.createButton(panel.custom, 52, "删除", "danger"); remove:SetPoint("LEFT", add, "RIGHT", 6, 0)
         local addCurrent = context.createButton(panel.custom, 108, "添加当前目标"); addCurrent:SetPoint("LEFT", remove, "RIGHT", 6, 0)
         panel.customStatus = context.createText(panel.custom, Theme.Font.assist, Theme.Colors.muted, "LEFT"); panel.customStatus:SetPoint("TOPLEFT", 12, -102); panel.customStatus:SetPoint("TOPRIGHT", -12, -102)
+        panel.holiday = Section(panel, "节日 Boss", 292, 88)
+        panel.holiday:SetPoint("TOPLEFT", panel.custom, "BOTTOMLEFT", 0, -12)
+        panel.holidayCheck = context.createCheckbox(panel.holiday, "节日 Boss")
+        panel.holidayCheck:SetPoint("TOPLEFT", 12, -42)
+        panel.holidayHint = context.createText(panel.holiday, Theme.Font.assist, Theme.Colors.muted, "LEFT")
+        panel.holidayHint:SetPoint("TOPLEFT", 32, -64); panel.holidayHint:SetPoint("TOPRIGHT", -12, -64)
+        panel.holidayHint:SetText("活动期自动加入账号矩阵；关闭后不显示。")
+        panel.holidayCheck:SetScript("OnClick", function(self)
+            self:SetChecked(not self:GetChecked())
+            if YAB.Holiday then YAB.Holiday:SetEnabled(self:GetChecked()) end
+            if context and context.refreshPage then context.refreshPage() end
+        end)
         local function UpdateCustom(ok, message)
             panel.customStatus:SetText(message or "")
             local color = ok and Theme.Colors.success or Theme.Colors.danger
@@ -1050,6 +1062,7 @@ function YAB.CreateCoreSettingsPanel(parent, context)
     panel.targets:SetWidth(halfWidth)
     panel.filter:SetWidth(halfWidth)
     panel.custom:SetWidth(halfWidth)
+    panel.holiday:SetWidth(halfWidth)
     local groups = YAB.GetDisplayGroups and YAB.GetDisplayGroups() or {}
     for _, check in pairs(panel.groupChecks) do check:Hide() end
     for _, check in pairs(panel.itemChecks) do check:Hide() end
@@ -1142,6 +1155,8 @@ function YAB.CreateCoreSettingsPanel(parent, context)
     end
     local customRows = math.ceil(#customTargets / 2)
     panel.custom:SetHeight(math.max(126, 134 + customRows * 28))
-    panel:SetHeight(math.max(panel.targets:GetHeight(), panel.custom:GetHeight()))
+    panel.holiday:ClearAllPoints(); panel.holiday:SetPoint("TOPLEFT", panel.custom, "BOTTOMLEFT", 0, -12)
+    panel.holidayCheck:SetChecked(not (YiboAltoBossDB.settings and YiboAltoBossDB.settings.showHolidayBosses == false))
+    panel:SetHeight(math.max(panel.targets:GetHeight(), panel.custom:GetHeight() + 100))
     return panel:GetHeight()
 end

@@ -255,6 +255,10 @@ local function GetTargetKey(target)
 end
 
 local function GetBossDefinition(target)
+    if YAB.Holiday and YAB.Holiday.GetBoss then
+        local holiday = YAB.Holiday:GetBoss(target)
+        if holiday then return holiday end
+    end
     if type(target) == "number" then
         return bossById[target]
     end
@@ -1182,6 +1186,7 @@ local function EnsureDB()
             levelExpr = "90",
         },
         settings = {
+            showHolidayBosses = true,
             previewColumns = {
                 kills = true,
                 action = true,
@@ -1554,6 +1559,10 @@ function YAB.SetMinimapHidden(hidden)
 end
 
 function YAB.ToggleBossKill(charKey, bossId)
+    if YAB.Holiday and YAB.Holiday:IsBoss(bossId) then
+        YAB.Holiday:ToggleManual(bossId, charKey)
+        return
+    end
     local charData = EnsureChar(charKey)
     local boss = GetBossDefinition(bossId)
     if not boss or not IsTargetEnabled(boss) then
@@ -1576,6 +1585,10 @@ end
 
 function YAB.RecordBossManually(charKey, bossId)
     YAB.CheckForReset()
+    if YAB.Holiday and YAB.Holiday:IsBoss(bossId) then
+        local changed = YAB.Holiday:ToggleManual(bossId, charKey or curCharKey)
+        return changed, changed and "已更新节日 Boss 的人工标记。" or "该状态由自动证据记录，不能手动覆盖。"
+    end
     local boss = GetBossDefinition(bossId)
     if not boss or not IsTargetEnabled(boss) then
         return false, "目标不可用。"
@@ -1591,6 +1604,9 @@ function YAB.RecordBossManually(charKey, bossId)
 end
 
 function YAB.IsBossKilled(charKey, bossId)
+    if YAB.Holiday and YAB.Holiday:IsBoss(bossId) then
+        return YAB.Holiday:GetStatus(charKey, bossId) == "completed"
+    end
     local charData = EnsureChar(charKey)
     local boss = GetBossDefinition(bossId)
     if not boss then
@@ -1608,6 +1624,10 @@ function YAB.IsBossKilled(charKey, bossId)
 end
 
 function YAB.GetKillInfo(charKey, bossId)
+    if YAB.Holiday and YAB.Holiday:IsBoss(bossId) then
+        local _, record = YAB.Holiday:GetStatus(charKey, bossId)
+        return record
+    end
     local charData = EnsureChar(charKey)
     local boss = GetBossDefinition(bossId)
     if not boss then
@@ -1617,6 +1637,9 @@ function YAB.GetKillInfo(charKey, bossId)
 end
 
 function YAB.GetBossKillStatus(charKey, bossId)
+    if YAB.Holiday and YAB.Holiday:IsBoss(bossId) then
+        return YAB.Holiday:GetStatus(charKey, bossId)
+    end
     local charData = EnsureChar(charKey)
     local boss = GetBossDefinition(bossId)
     if not boss then
@@ -1863,6 +1886,16 @@ function YAB.GetBossList()
         end
     end
     AppendMissingStandardWorldBosses(items)
+    if YAB.Holiday and YAB.Holiday.GetActiveBosses then
+        for _, boss in ipairs(YAB.Holiday:GetActiveBosses()) do
+            items[#items + 1] = boss
+        end
+    end
+    table.sort(items, function(left, right)
+        local leftOrder, rightOrder = tonumber(left.order) or 9999, tonumber(right.order) or 9999
+        if leftOrder ~= rightOrder then return leftOrder < rightOrder end
+        return tostring(left.name) < tostring(right.name)
+    end)
     return items
 end
 
@@ -2813,6 +2846,9 @@ end
 local function HandleWorldEntry()
     EnsureDB()
     YAB.CheckForReset()
+    if YAB.Holiday and YAB.Holiday.ObserveCurrent and YAB.Holiday:ObserveCurrent() then
+        YAB.PersistDB()
+    end
     ObserveTrackedUnits()
     if YAB.TrackingV3 and YAB.TrackingV3:Cleanup() then
         YAB.TrackingV3:ConsumeDiagnosticsDirty()
@@ -2832,6 +2868,7 @@ eventFrame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
 eventFrame:RegisterEvent("PLAYER_FOCUS_CHANGED")
 eventFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 eventFrame:RegisterEvent("QUEST_LOG_UPDATE")
+eventFrame:RegisterEvent("LFG_COMPLETION_REWARD")
 eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 eventFrame:SetScript("OnEvent", function(_, event, ...)
     local arg1 = ...
@@ -2864,7 +2901,16 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
         YAB.ObserveUnit("focus", "focus")
     elseif event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
         ObserveTrackedUnits()
+    elseif event == "LFG_COMPLETION_REWARD" then
+        if YAB.Holiday and YAB.Holiday.RecordCompletionReward and YAB.Holiday:RecordCompletionReward() then
+            YAB.PersistDB()
+            if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+        end
     elseif event == "QUEST_LOG_UPDATE" or event == "PLAYER_REGEN_ENABLED" then
         YAB.SyncWorldBossQuestKillsIfNeeded()
+        if event == "QUEST_LOG_UPDATE" and YAB.Holiday and YAB.Holiday.ObserveCurrent and YAB.Holiday:ObserveCurrent() then
+            YAB.PersistDB()
+            if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+        end
     end
 end)

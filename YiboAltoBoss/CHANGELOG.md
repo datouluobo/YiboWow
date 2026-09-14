@@ -1,5 +1,23 @@
 # YiboAltoBoss 更新日志 / Changelog
 
+## v2.4
+
+### 中文
+
+- 新增节日 Boss 目录；美酒节开放期间自动显示科林·烈酒，后续节日目标可按同一目录扩展。
+- 节日 Boss 状态按服务器日追踪，支持每日任务、副本完成奖励和明确标注的人工标记。
+- 行动格可直接排入或取消节日副本队列，并显示客户端返回的不可排原因；“位面 / 职责”格显示当前已选职责。
+- 新增 Boss 周常业务设置“节日 Boss”，默认开启且可持久关闭。
+- Todo 不再维护节日 Boss 专属目录、矩阵列和探针，保留通用特殊活动与暗月马戏团逻辑。
+
+### English
+
+- Added a seasonal-Boss catalog. Coren Direbrew appears automatically during Brewfest, and future holiday targets can use the same catalog.
+- Seasonal completion is tracked per server day from daily quests, LFG completion rewards, and explicitly labeled manual marks.
+- The Action field can join or leave the seasonal queue and reports client-provided eligibility failures; the “Phase / Role” field shows the selected LFG roles.
+- Added a persistent, default-on “Holiday Boss” option in Boss Weekly settings.
+- Todo no longer owns seasonal-Boss-specific catalog, matrix, or probe behavior while retaining its shared special-activity and Darkmoon Faire support.
+
 ## v2.3
 
 ### 中文

@@ -46,5 +46,16 @@ SlashCmdList["YIBOALTOBOSS"] = function(message)
         Print(result)
         return
     end
-    Print("支持 /yab debug [boss]、/yab trace on|off、/yab selftest、/yab celestial。")
+    if command == "holiday" then
+        if not YAB.Holiday then Print("节日 Boss 模块不可用。") return end
+        local bosses = YAB.Holiday:GetActiveBosses()
+        if #bosses == 0 then Print("当前没有已确认开放的节日 Boss。") return end
+        for _, boss in ipairs(bosses) do
+            local status, record = YAB.Holiday:GetStatus(YAB.GetCurrentCharKey(), boss)
+            local queue = YAB.Holiday:GetQueueState(boss)
+            Print(boss.name .. "：状态=" .. tostring(status) .. "，队列=" .. tostring(queue.state) .. "，来源=" .. tostring(record and record.source or "—"))
+        end
+        return
+    end
+    Print("支持 /yab debug [boss]、/yab trace on|off、/yab selftest、/yab celestial、/yab holiday。")
 end

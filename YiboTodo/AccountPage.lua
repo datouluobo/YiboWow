@@ -411,7 +411,6 @@ function Page.Refresh(frame, context)
     local showNat = Addon.Settings:IsMonitoringGroupEnabled("nat-pagle")
     local showDarkmoon = Addon.Settings:IsMonitoringGroupEnabled("darkmoon-faire") and HasMonitoringProjects(snapshot, context.characters, "darkmoon-faire")
     local showBrilltron = Addon.Settings:IsMonitoringGroupEnabled("brilltron-4000")
-    local showHoliday = Addon.Settings:IsMonitoringGroupEnabled("holiday")
     local showCommon = false
     local hasCommon = showCommon and HasCommonProjects(snapshot, context.characters)
     local hasFarm = showFarm and HasFarmColumn()
@@ -424,10 +423,9 @@ function Page.Refresh(frame, context)
     -- 布林顿表头使用物品图标，与单一内容格同宽；不要为了标题文字把
     -- 一整列撑宽。
     local brilltronWidth = showBrilltron and DailyColumnWidth(snapshot, context.characters, "brilltron-4000", nil, true) or 0
-    local holidayWidth = showHoliday and DailyColumnWidth(snapshot, context.characters, "holiday", "节日") or 0
     local characterWidth, professionWidth, farmWidth, nomiWidth, cookingWidth, commonWidth = Layout(CharacterColumnWidth(context), ProfessionColumnWidth(snapshot, context.characters), hasFarm, hasNomi, hasCooking, hasCommon)
     if hasCooking then cookingWidth = DailyColumnWidth(snapshot, context.characters, "cooking-daily", "烹饪") end
-    local tableWidth = characterWidth + (showProfession and professionWidth or 0) + farmWidth + nomiWidth + jewelcraftingWidth + cookingWidth + fishingWidth + natWidth + darkmoonWidth + brilltronWidth + holidayWidth + commonWidth
+    local tableWidth = characterWidth + (showProfession and professionWidth or 0) + farmWidth + nomiWidth + jewelcraftingWidth + cookingWidth + fishingWidth + natWidth + darkmoonWidth + brilltronWidth + commonWidth
     local inset = Theme:GetMatrixInsets(context.preview)
     for _, row in ipairs(frame.rows) do row:Hide() end
     frame.header:ClearAllPoints(); frame.header:SetPoint("TOPLEFT", frame, "TOPLEFT", inset.left, -inset.top); frame.header:SetSize(tableWidth, Theme.Table.headerHeight)
@@ -443,7 +441,6 @@ function Page.Refresh(frame, context)
     if showNat then columns[#columns + 1] = { "纳特·帕格", natWidth } end
     if showDarkmoon then columns[#columns + 1] = { "暗月", darkmoonWidth } end
     if showBrilltron then columns[#columns + 1] = { "布林顿 4000", brilltronWidth, "brilltron-4000" } end
-    if showHoliday then columns[#columns + 1] = { "节日", holidayWidth } end
     if hasCommon then columns[#columns + 1] = { "通用项目", commonWidth } end
     tableWidth = tableWidth + math.max(0, #columns - 1) * COLUMN_GAP
     local x = 0
@@ -491,7 +488,7 @@ function Page.Refresh(frame, context)
             row.name:ClearAllPoints(); row.name:SetPoint("LEFT", Theme.Table.cellPadding + (hasIcon and (16 + Theme.Table.iconTextGap) or 0), 0); row.name:SetWidth(Theme:GetTableCellContentWidth(characterWidth) - (hasIcon and (16 + Theme.Table.iconTextGap) or 0))
             row.name:SetText(CharacterLabel(character, context and context.scope == "all")); ApplyCharacterColor(row.name, character)
             Release(row.cells or {}, 1)
-            if showProfession or hasFarm or hasNomi or showJewelcrafting or hasCooking or showFishing or showNat or showDarkmoon or showBrilltron or showHoliday or hasCommon then
+            if showProfession or hasFarm or hasNomi or showJewelcrafting or hasCooking or showFishing or showNat or showDarkmoon or showBrilltron or hasCommon then
                 -- Headers begin after the first column's gutter.  Starting
                 -- data cells at the same coordinate keeps every column true
                 -- to its header, including when the profession column hides.
@@ -553,12 +550,6 @@ function Page.Refresh(frame, context)
                     RenderProjects(brilltron, data.monitoringProjects["brilltron-4000"] or {}, current and character.id == current.id, nextCell)
                     offset, nextCell = offset + brilltronWidth + COLUMN_GAP, nextCell + 1
                 end
-                if showHoliday then
-                    local holiday = Cell(row, nextCell)
-                    holiday:ClearAllPoints(); holiday:SetPoint("LEFT", offset, 0); holiday:SetSize(holidayWidth, ROW_HEIGHT)
-                    RenderProjects(holiday, data.monitoringProjects.holiday or {}, current and character.id == current.id, nextCell)
-                    offset, nextCell = offset + holidayWidth + COLUMN_GAP, nextCell + 1
-                end
                 if hasCommon then
                     local common = Cell(row, nextCell)
                     common:ClearAllPoints(); common:SetPoint("LEFT", offset, 0); common:SetSize(commonWidth, ROW_HEIGHT)
@@ -599,7 +590,6 @@ function Page.GetSurfaceMetrics(context)
     local showNat = Addon.Settings:IsMonitoringGroupEnabled("nat-pagle")
     local showDarkmoon = Addon.Settings:IsMonitoringGroupEnabled("darkmoon-faire") and HasMonitoringProjects(snapshot, context and context.characters, "darkmoon-faire")
     local showBrilltron = Addon.Settings:IsMonitoringGroupEnabled("brilltron-4000")
-    local showHoliday = Addon.Settings:IsMonitoringGroupEnabled("holiday")
     local showCommon = false
     local hasCommon = showCommon and HasCommonProjects(snapshot, context and context.characters)
     local hasFarm = showFarm and HasFarmColumn()
@@ -608,8 +598,8 @@ function Page.GetSurfaceMetrics(context)
     local accountHeight = showCommon and #(snapshot.accountActivities or {}) > 0 and ROW_HEIGHT + ROW_GAP or 0
     local visibleRows = math.max(1, math.min(20, count))
     local professionWidth = ProfessionColumnWidth(snapshot, context and context.characters)
-    local columnCount = 1 + (showProfession and 1 or 0) + (hasFarm and 1 or 0) + (hasNomi and 1 or 0) + (showJewelcrafting and 1 or 0) + (hasCooking and 1 or 0) + (showFishing and 1 or 0) + (showNat and 1 or 0) + (showDarkmoon and 1 or 0) + (showBrilltron and 1 or 0) + (showHoliday and 1 or 0) + (hasCommon and 1 or 0)
-    local tableWidth = CharacterColumnWidth(context) + (showProfession and professionWidth or 0) + (hasFarm and FARM_COLUMN_WIDTH or 0) + (hasNomi and NOMI_COLUMN_WIDTH or 0) + (showJewelcrafting and DailyColumnWidth(snapshot, context and context.characters, "jewelcrafting-daily", "珠宝") or 0) + (hasCooking and DailyColumnWidth(snapshot, context and context.characters, "cooking-daily", "烹饪") or 0) + (showFishing and DailyColumnWidth(snapshot, context and context.characters, "fishing-daily", "钓鱼") or 0) + (showNat and DailyColumnWidth(snapshot, context and context.characters, "nat-pagle", "纳特·帕格") or 0) + (showDarkmoon and DailyColumnWidth(snapshot, context and context.characters, "darkmoon-faire", "暗月") or 0) + (showBrilltron and DailyColumnWidth(snapshot, context and context.characters, "brilltron-4000", nil, true) or 0) + (showHoliday and DailyColumnWidth(snapshot, context and context.characters, "holiday", "节日") or 0) + (hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0) + math.max(0, columnCount - 1) * COLUMN_GAP
+    local columnCount = 1 + (showProfession and 1 or 0) + (hasFarm and 1 or 0) + (hasNomi and 1 or 0) + (showJewelcrafting and 1 or 0) + (hasCooking and 1 or 0) + (showFishing and 1 or 0) + (showNat and 1 or 0) + (showDarkmoon and 1 or 0) + (showBrilltron and 1 or 0) + (hasCommon and 1 or 0)
+    local tableWidth = CharacterColumnWidth(context) + (showProfession and professionWidth or 0) + (hasFarm and FARM_COLUMN_WIDTH or 0) + (hasNomi and NOMI_COLUMN_WIDTH or 0) + (showJewelcrafting and DailyColumnWidth(snapshot, context and context.characters, "jewelcrafting-daily", "珠宝") or 0) + (hasCooking and DailyColumnWidth(snapshot, context and context.characters, "cooking-daily", "烹饪") or 0) + (showFishing and DailyColumnWidth(snapshot, context and context.characters, "fishing-daily", "钓鱼") or 0) + (showNat and DailyColumnWidth(snapshot, context and context.characters, "nat-pagle", "纳特·帕格") or 0) + (showDarkmoon and DailyColumnWidth(snapshot, context and context.characters, "darkmoon-faire", "暗月") or 0) + (showBrilltron and DailyColumnWidth(snapshot, context and context.characters, "brilltron-4000", nil, true) or 0) + (hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0) + math.max(0, columnCount - 1) * COLUMN_GAP
     -- The scrollbar uses the page inset rather than a data-column gutter.
     -- The table width therefore remains the same with and without overflow.
     local projectsWidth = tableWidth + inset.left + inset.right

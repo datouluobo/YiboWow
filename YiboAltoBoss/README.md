@@ -1,6 +1,6 @@
 # YiboAltoBoss
 
-YiboAltoBoss is a World of Warcraft addon for Mists of Pandaria Classic that tracks world boss weekly kills and Warbringer observations across your characters. Version 2.2 requires YiboCore API v5 and uses its unified account page, character directory, optional entry, and settings navigation.
+YiboAltoBoss is a World of Warcraft addon for Mists of Pandaria Classic that tracks world boss weekly kills, seasonal Boss rewards, and Warbringer observations across your characters. Version 2.4 requires YiboCore API v5 and uses its unified account page, character directory, optional entry, and settings navigation.
 
 ![YiboAltoBoss overview](Screenshots/Snipaste_2026-07-06_06-09-49.png)
 
@@ -10,6 +10,8 @@ YiboAltoBoss is a World of Warcraft addon for Mists of Pandaria Classic that tra
 - Per-character tracking for Sha of Anger, Galleon, Nalak, Oondasta, the combined Four Celestials encounter, and Ordos
 - The Four Celestials are a single weekly row; the recorded kill tooltip identifies the specific Celestial defeated
 - Warbringer observation tracking by zone and realm
+- Seasonal Boss tracking during confirmed holiday windows, starting with Brewfest Coren Direbrew
+- Direct seasonal Dungeon Finder queue and cancellation actions using the current selected roles
 - Unified YiboCore entry and account-view navigation
 - Configurable overview and settings panels
 

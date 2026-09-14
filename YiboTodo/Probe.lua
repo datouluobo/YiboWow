@@ -269,7 +269,7 @@ local function PrintEventTrace(events)
     end
 end
 
-local SPECIAL_LABELS = { nat = "纳特·帕格（纳格兰三条鱼）", brilltron = "布林顿 4000", brewfest = "美酒节·科林·烈酒" }
+local SPECIAL_LABELS = { nat = "纳特·帕格（纳格兰三条鱼）", brilltron = "布林顿 4000" }
 local SPECIAL_EVENTS = {
     QUEST_ACCEPTED = true, QUEST_TURNED_IN = true, QUEST_LOG_UPDATE = true,
     GOSSIP_SHOW = true, PLAYER_TARGET_CHANGED = true,
@@ -367,7 +367,7 @@ end
 function Probe:CaptureEvent(event, ...)
     local diagnostics = Addon.db and Addon.db.diagnostics
     local special = self.specialCapture
-    if not diagnostics or not special or not (SPECIAL_EVENTS[event] or ((special.kind == "brilltron" or special.kind == "brewfest") and REWARD_LOOT_EVENTS[event])) then return end
+    if not diagnostics or not special or not (SPECIAL_EVENTS[event] or (special.kind == "brilltron" and REWARD_LOOT_EVENTS[event])) then return end
     special.eventTrace[#special.eventTrace + 1] = { at = Addon:Now(), event = event, args = { ... } }
     while #special.eventTrace > 40 do table.remove(special.eventTrace, 1) end
     if event == "QUEST_LOG_UPDATE" then

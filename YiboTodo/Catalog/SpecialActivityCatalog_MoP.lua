@@ -4,17 +4,6 @@ local Catalog = Addon.Catalog
 -- Quest, NPC, and item identities were verified in-game.  These are the
 -- quest-triggering fish items, not generic fishing silhouettes.
 Catalog.specialActivities = {
-    -- The Dungeon Finder quest flow is verified.  The target-client reward
-    -- container item ID is intentionally still pending a live capture, so
-    -- this cannot yet appear in a player's official Holiday column.
-    ["mop.brewfest.coren-direbrew"] = {
-        id = "mop.brewfest.coren-direbrew", label = "美酒节·科林·烈酒",
-        questID = 25483, scope = "character", scheduleKind = "event-daily-07", resetHour = 7,
-        monitoringGroupID = "holiday", order = 10,
-        icon = "Interface\\Icons\\INV_Misc_QuestionMark",
-        eventTitleAliases = { "美酒节", "Brewfest" }, rewardItemIDs = {},
-        registrationStatus = "pending-client-verification", verificationStatus = "needs-live-confirmation",
-    },
     ["mop.nat-pagle.flying-tiger-gourami"] = { id = "mop.nat-pagle.flying-tiger-gourami", label = "飞行虎皮丝足鱼", questID = 31443, scope = "character", scheduleKind = "daily-07", resetHour = 7, monitoringGroupID = "nat-pagle", order = 10, iconItemID = 86542, defaultEnabled = true, verificationStatus = "verified", turnInNPCID = 63721 },
     ["mop.nat-pagle.spinefish-alpha"] = { id = "mop.nat-pagle.spinefish-alpha", label = "霸王刺皮鱼", questID = 31444, scope = "character", scheduleKind = "daily-07", resetHour = 7, monitoringGroupID = "nat-pagle", order = 20, iconItemID = 86544, defaultEnabled = true, verificationStatus = "verified", turnInNPCID = 63721 },
     ["mop.nat-pagle.mimic-octopus"] = { id = "mop.nat-pagle.mimic-octopus", label = "拟态章鱼", questID = 31446, scope = "character", scheduleKind = "daily-07", resetHour = 7, monitoringGroupID = "nat-pagle", order = 30, iconItemID = 86545, defaultEnabled = true, verificationStatus = "verified", turnInNPCID = 63721 },
