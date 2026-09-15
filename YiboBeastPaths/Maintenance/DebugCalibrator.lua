@@ -15,8 +15,6 @@ local debugDefaults = {
         footprintListOffset = 0,
         activeTab = "calibrate",
         exportView = "current",
-        panelWidth = 760,
-        panelHeight = 720,
         collapsedSections = {
             routeNav = false,
             mapAdjust = false,
@@ -177,18 +175,44 @@ function YBP:SetDebugEnabled(enabled)
     if not db then
         return
     end
-    db.enabled = enabled
-    if not enabled then
-        self:HideDebugPanel()
-    else
-        self:ShowDebugPanel()
-    end
+    db.enabled = not not enabled
     self:RefreshMapLayer()
+    if self.RefreshMinimapLayer then
+        self:RefreshMinimapLayer(true)
+    end
     self:RefreshDebugPanel()
+    if self.NotifyCoreDebugPage then
+        self:NotifyCoreDebugPage()
+    end
+end
+
+function YBP:GetDebugContextMapID()
+    local selectedMapID = self:GetCurrentWorldMapID()
+    -- A visible world map is authoritative: changing its selection must keep
+    -- driving the maintenance page, just as it did before Core embedding.
+    if WorldMapFrame and WorldMapFrame.IsShown and WorldMapFrame:IsShown() then
+        return selectedMapID
+    end
+
+    -- When the world map is closed, its retained map ID can be a previously
+    -- browsed zone.  Prefer the player's current zone (or its nearest parent
+    -- with routes) when opening the maintenance window.
+    local playerMapID = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
+    local candidate = playerMapID
+    for _ = 1, 12 do
+        if not candidate then break end
+        local petIDs = self:GetVisiblePetIDsForMap(candidate)
+        if petIDs and #petIDs > 0 then return candidate end
+        local info = C_Map.GetMapInfo and C_Map.GetMapInfo(candidate)
+        local parentMapID = info and info.parentMapID
+        if not parentMapID or parentMapID <= 0 or parentMapID == candidate then break end
+        candidate = parentMapID
+    end
+    return playerMapID or selectedMapID
 end
 
 function YBP:GetDebugPetIDsForCurrentMap()
-    local mapID = self:GetCurrentWorldMapID()
+    local mapID = self:GetDebugContextMapID()
     if not mapID then
         return {}
     end
@@ -200,17 +224,18 @@ function YBP:GetSelectedDebugPetID()
     if not db then
         return nil
     end
-    local mapID = self:GetCurrentWorldMapID()
+    local mapID = self:GetDebugContextMapID()
     if not mapID then
         return nil
     end
-    -- 从每地图记录中取
-    if db.selectedPetIDByMap[mapID] then
-        return db.selectedPetIDByMap[mapID]
-    end
-    -- 默认取该地图第一条
+    -- Retain an existing choice only while it is still a route on this map.
     local petIDs = self:GetVisiblePetIDsForMap(mapID)
-    if #petIDs > 0 then
+    local selected = db.selectedPetIDByMap[mapID]
+    for _, petID in ipairs(petIDs) do
+        if petID == selected then return petID end
+    end
+    if petIDs[1] then
+        db.selectedPetIDByMap[mapID] = petIDs[1]
         return petIDs[1]
     end
     return nil
@@ -221,7 +246,7 @@ function YBP:SetSelectedDebugPetID(petID)
     if not db then
         return
     end
-    local mapID = self:GetCurrentWorldMapID()
+    local mapID = self:GetDebugContextMapID()
     if not mapID then
         return
     end
@@ -1118,6 +1143,23 @@ local panel = nil
 local panelElements = {}
 local FOOTPRINT_LIST_PAGE_SIZE = 6
 
+StaticPopupDialogs["YIBO_BEAST_PATHS_CONFIRM_DEBUG_ACTION"] = {
+    text = "%s",
+    button1 = "确认",
+    button2 = "取消",
+    OnAccept = function(_, action)
+        if type(action) == "function" then action() end
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
+function YBP:ConfirmDebugAction(message, action)
+    StaticPopup_Show("YIBO_BEAST_PATHS_CONFIRM_DEBUG_ACTION", message, nil, action)
+end
+
 GetDebugUIState = function()
     local db = _G.YiboBeastPathsDebugDB
     if not db then
@@ -1155,50 +1197,6 @@ function YBP:ShouldShowRouteNodesOnMap(petID)
     end
 
     return true
-end
-
-local function ApplySavedPanelPosition(frame)
-    local db = _G.YiboBeastPathsDebugDB
-    local ui = db and db.ui or nil
-    frame:ClearAllPoints()
-    if ui and ui.panelPoint and ui.panelRelativePoint and ui.panelX and ui.panelY then
-        frame:SetPoint(ui.panelPoint, UIParent, ui.panelRelativePoint, ui.panelX, ui.panelY)
-    else
-        frame:SetPoint("RIGHT", UIParent, "RIGHT", -20, 0)
-    end
-end
-
-local function SavePanelPosition(frame)
-    local db = _G.YiboBeastPathsDebugDB
-    if not db then
-        return
-    end
-
-    db.ui = db.ui or {}
-    local point, _, relativePoint, x, y = frame:GetPoint(1)
-    db.ui.panelPoint = point or "RIGHT"
-    db.ui.panelRelativePoint = relativePoint or "RIGHT"
-    db.ui.panelX = x or -20
-    db.ui.panelY = y or 0
-end
-
-local function ApplySavedPanelSize(frame)
-    local db = _G.YiboBeastPathsDebugDB
-    local ui = db and db.ui or nil
-    local width = ui and ui.panelWidth or debugDefaults.ui.panelWidth or 760
-    local height = ui and ui.panelHeight or debugDefaults.ui.panelHeight or 720
-    frame:SetSize(math.max(620, width), math.max(520, height))
-end
-
-local function SavePanelSize(frame)
-    local db = _G.YiboBeastPathsDebugDB
-    if not db then
-        return
-    end
-
-    db.ui = db.ui or {}
-    db.ui.panelWidth = math.floor(frame:GetWidth() + 0.5)
-    db.ui.panelHeight = math.floor(frame:GetHeight() + 0.5)
 end
 
 local function SetElementShown(element, shown)
@@ -1390,13 +1388,9 @@ ApplyDynamicLayout = function()
     if panelTop and lowestBottom then
         local contentHeight = math.ceil((panelTop - lowestBottom) + 20)
         local minHeight = layout.minPanelHeight or 320
-        local ui = GetDebugUIState()
-        local preferredHeight = ui and ui.panelHeight or minHeight
-        panel:SetHeight(math.max(minHeight, preferredHeight, contentHeight))
+        panel:SetHeight(math.max(minHeight, contentHeight))
     elseif fallbackHeight then
-        local ui = GetDebugUIState()
-        local preferredHeight = ui and ui.panelHeight or fallbackHeight
-        panel:SetHeight(math.max(fallbackHeight, preferredHeight))
+        panel:SetHeight(math.max(fallbackHeight, 1))
     end
 end
 
@@ -1424,22 +1418,25 @@ ApplySectionVisibility = function()
     local activeTab = YBP:GetActiveDebugTab()
     for tabKey, button in pairs(panelElements.tabButtons or {}) do
         if button and button.SetText then
-            button:SetText(string.format("%s %s", activeTab == tabKey and "[当前]" or "[切换]", tabLabels[tabKey] or tabKey))
+            button:SetText(tabLabels[tabKey] or tabKey)
+            local active = tabKey == activeTab
         end
     end
 end
 
-local function GetOrCreatePanel()
+local function GetOrCreatePanel(parent)
     if panel then
         return panel
     end
 
-    -- 根面板
-    panel = CreateFrame("Frame", "TTRDebugPanel", UIParent, "BackdropTemplate")
-    panel:SetFrameStrata("DIALOG")
-    panel:SetFrameLevel(100)
-    ApplySavedPanelPosition(panel)
-    ApplySavedPanelSize(panel)
+    if not parent then
+        return nil
+    end
+
+    -- 此面板只能作为 Core 页面内容的滚动子项创建，绝不再成为顶层窗口。
+    panel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    panel:SetSize(math.max(620, parent:GetWidth() or 620), 1160)
+    panel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     panel:SetBackdrop({
         bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
         edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -1450,64 +1447,11 @@ local function GetOrCreatePanel()
     })
     panel:SetBackdropColor(0.05, 0.05, 0.12, 0.92)
     panel:SetBackdropBorderColor(0.40, 0.55, 0.90, 0.85)
-    panel:SetMovable(true)
-    if panel.SetResizable then
-        panel:SetResizable(true)
-    end
-    if panel.SetResizeBounds then
-        panel:SetResizeBounds(620, 520)
-    elseif panel.SetMinResize then
-        panel:SetMinResize(620, 520)
-    end
-    if panel.SetClampedToScreen then
-        panel:SetClampedToScreen(true)
-    end
     panel:EnableMouse(true)
-    panel:RegisterForDrag("LeftButton")
-    panel:SetScript("OnDragStart", function(self)
-        self:StartMoving()
-    end)
-    panel:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        SavePanelPosition(self)
-        SavePanelSize(self)
-    end)
-    panel:SetScript("OnSizeChanged", function(self)
-        SavePanelSize(self)
-        ApplyDynamicLayout()
-    end)
+    panel:SetScript("OnSizeChanged", ApplyDynamicLayout)
     panel:Hide()
 
-    panelElements.title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    panelElements.title:SetPoint("TOP", panel, "TOP", 0, -6)
-    panelElements.title:SetText("调试校准工作台")
-    panelElements.title:SetTextColor(0.70, 0.85, 1.0)
-
-    -- 关闭按钮
-    local closeBtn = CreateFrame("Button", nil, panel, "UIPanelCloseButton")
-    closeBtn:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -2, -2)
-    closeBtn:SetScript("OnClick", function()
-        YBP:SetDebugEnabled(false)
-    end)
-    panelElements.closeBtn = closeBtn
-
-    local resizeHandle = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-    resizeHandle:SetSize(20, 20)
-    resizeHandle:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -6, 6)
-    resizeHandle:SetText("↘")
-    resizeHandle:SetScript("OnMouseDown", function()
-        if panel.StartSizing then
-            panel:StartSizing("BOTTOMRIGHT")
-        end
-    end)
-    resizeHandle:SetScript("OnMouseUp", function()
-        panel:StopMovingOrSizing()
-        SavePanelSize(panel)
-        ApplyDynamicLayout()
-    end)
-    panelElements.resizeHandle = resizeHandle
-
-    local yOff = -30
+    local yOff = -10
 
     -- === 区块 1：当前状态区 ===
     local stateY = yOff
@@ -1595,7 +1539,7 @@ local function GetOrCreatePanel()
     local navY = stateY - 186
 
     panelElements.routeSection = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    panelElements.routeSection:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, navY + 4)
+    panelElements.routeSection:SetPoint("TOPLEFT", panel, "TOPLEFT", 14, navY + 4)
     panelElements.routeSection:SetText("当前路线")
     panelElements.routeSection:SetTextColor(0.95, 0.82, 0.28)
 
@@ -1607,8 +1551,8 @@ local function GetOrCreatePanel()
     end)
 
     local prevBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-    prevBtn:SetSize(120, 22)
-    prevBtn:SetPoint("TOPLEFT", panel, "TOPLEFT", 126, navY)
+    prevBtn:SetSize(112, 26)
+    prevBtn:SetPoint("TOPLEFT", panel, "TOPLEFT", 122, navY - 2)
     prevBtn:SetText("上一条")
     prevBtn:SetScript("OnClick", function()
         local petIDs = YBP:GetDebugPetIDsForCurrentMap()
@@ -1632,8 +1576,8 @@ local function GetOrCreatePanel()
     panelElements.prevBtn = prevBtn
 
     local nextBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-    nextBtn:SetSize(120, 22)
-    nextBtn:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -126, navY)
+    nextBtn:SetSize(112, 26)
+    nextBtn:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -14, navY - 2)
     nextBtn:SetText("下一条")
     nextBtn:SetScript("OnClick", function()
         local petIDs = YBP:GetDebugPetIDsForCurrentMap()
@@ -1666,22 +1610,21 @@ local function GetOrCreatePanel()
     local tabsY = navY - 34
 
     panelElements.tabsSection = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    panelElements.tabsSection:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, tabsY + 10)
-    panelElements.tabsSection:SetText("工作区")
-    panelElements.tabsSection:SetTextColor(0.72, 0.86, 1.00)
+    panelElements.tabsSection:Hide()
 
     panelElements.tabButtons = {}
     local tabOrder = { "calibrate", "fusion", "footprints", "export" }
-    local tabLeft = 104
+    local tabLeft = 14
+    local tabWidth = math.floor(((panel:GetWidth() or 620) - 28 - 24) / 4)
     for _, tabKey in ipairs(tabOrder) do
         local btn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-        btn:SetSize(110, 22)
+        btn:SetSize(tabWidth, 26)
         btn:SetPoint("TOPLEFT", panel, "TOPLEFT", tabLeft, tabsY)
         btn:SetScript("OnClick", function()
             YBP:SetActiveDebugTab(tabKey)
         end)
         panelElements.tabButtons[tabKey] = btn
-        tabLeft = tabLeft + 118
+        tabLeft = tabLeft + tabWidth + 8
     end
 
     local dividerTabs = panel:CreateTexture(nil, "OVERLAY")
@@ -1889,7 +1832,9 @@ local function GetOrCreatePanel()
     panelElements.btnMMReset:SetScript("OnClick", function()
         local pid = YBP:GetSelectedDebugPetID()
         if pid then
-            YBP:ResetDebugMinimapTransform(pid)
+            YBP:ConfirmDebugAction("确定清除当前宠物的小地图变换吗？", function()
+                YBP:ResetDebugMinimapTransform(pid)
+            end)
         end
     end)
 
@@ -1903,9 +1848,11 @@ local function GetOrCreatePanel()
     resetBtn:SetScript("OnClick", function()
         local petID = YBP:GetSelectedDebugPetID()
         if petID then
-            YBP:ResetDebugTransform(petID)
-            YBP:ResetDebugMinimapTransform(petID)
-            YBP:ResetDebugRouteNode(petID, "start")
+            YBP:ConfirmDebugAction("确定重置当前宠物的路线、节点与小地图变换吗？", function()
+                YBP:ResetDebugTransform(petID)
+                YBP:ResetDebugMinimapTransform(petID)
+                YBP:ResetDebugRouteNode(petID, "start")
+            end)
         end
     end)
     panelElements.resetBtn = resetBtn
@@ -1963,8 +1910,10 @@ local function GetOrCreatePanel()
     panelElements.btnUndoFootprint:SetText("删最后点")
     panelElements.btnUndoFootprint:SetScript("OnClick", function()
         local petID = YBP:GetSelectedDebugPetID()
-        if petID and YBP.RemoveLastFootprintAnchor and YBP:RemoveLastFootprintAnchor(petID) then
-            YBP:RefreshDebugPanel()
+        if petID and YBP.RemoveLastFootprintAnchor then
+            YBP:ConfirmDebugAction("确定删除最后一个脚印点吗？", function()
+                if YBP:RemoveLastFootprintAnchor(petID) then YBP:RefreshDebugPanel() end
+            end)
         end
     end)
 
@@ -1975,8 +1924,10 @@ local function GetOrCreatePanel()
     panelElements.btnClearFootprint:SetScript("OnClick", function()
         local petID = YBP:GetSelectedDebugPetID()
         if petID and YBP.ClearFootprintAnchors then
-            YBP:ClearFootprintAnchors(petID)
-            YBP:RefreshDebugPanel()
+            YBP:ConfirmDebugAction("确定清空当前宠物的全部脚印点吗？此操作不可恢复。", function()
+                YBP:ClearFootprintAnchors(petID)
+                YBP:RefreshDebugPanel()
+            end)
         end
     end)
 
@@ -2617,18 +2568,23 @@ local function GetOrCreatePanel()
     return panel
 end
 
+-- Exposed only for the optional Core adapter.  Keeping the constructor here
+-- lets the calibration business module retain ownership of its controls while
+-- Core owns the surrounding page, navigation and scroll lifecycle.
+function YBP:CreateCoreDebugPanel(parent)
+    return GetOrCreatePanel(parent)
+end
+
 function YBP:ShowDebugPanel()
-    local p = GetOrCreatePanel()
-    if p then
-        p:Show()
-        self:RefreshDebugPanel()
+    if self.OpenCoreRouteMaintenance then
+        return self:OpenCoreRouteMaintenance()
     end
+    return false
 end
 
 function YBP:HideDebugPanel()
-    if panel then
-        panel:Hide()
-    end
+    -- Core owns the page lifecycle and hides its content when navigation or
+    -- combat state changes.  No standalone panel is retained as a fallback.
 end
 
 function YBP:RefreshDebugPanel()
@@ -2842,7 +2798,9 @@ function YBP:RefreshDebugPanel()
                     YBP:SetFootprintAnchorEnabled(selectedPetID, pointIndex, point.enabled == false)
                 end)
                 row.deleteBtn:SetScript("OnClick", function()
-                    YBP:RemoveFootprintAnchor(selectedPetID, pointIndex)
+                    YBP:ConfirmDebugAction("确定删除此脚印点吗？", function()
+                        YBP:RemoveFootprintAnchor(selectedPetID, pointIndex)
+                    end)
                 end)
                 row.label:Show()
                 row.toggleBtn:Show()
@@ -2916,12 +2874,6 @@ end
 -- 命令处理
 ----------------------------------------------------------------
 
-SLASH_YBPDEBUG1 = "/ybpdebug"
-SlashCmdList.YBPDEBUG = function(msg)
-    YBP:SetDebugEnabled(true)
-    print("|cff4fd8ff[YBP调试]|r 调试面板已显示。")
-end
-
 ----------------------------------------------------------------
 -- 集成：ADDON_LOADED 事件初始化调试模块
 ----------------------------------------------------------------
@@ -2942,11 +2894,23 @@ local mapHookFrame = CreateFrame("Frame")
 mapHookFrame:RegisterEvent("ADDON_LOADED")
 mapHookFrame:SetScript("OnEvent", function(self, event, arg1)
     if arg1 == "Blizzard_WorldMap" and WorldMapFrame then
+        local elapsed, lastMapID = 0, nil
         WorldMapFrame:HookScript("OnShow", function()
+            lastMapID = YBP:GetCurrentWorldMapID()
             YBP:RefreshDebugPanel()
         end)
-        WorldMapFrame:HookScript("OnUpdate", function()
-            YBP:RefreshDebugPanel()
+        -- Map selection can change while the Core page remains open.  Poll the
+        -- map ID at a modest cadence and refresh only after it actually
+        -- changes; do not rebuild the hosted page every frame.
+        WorldMapFrame:HookScript("OnUpdate", function(_, delta)
+            elapsed = elapsed + (delta or 0)
+            if elapsed < 0.25 then return end
+            elapsed = 0
+            local mapID = YBP:GetCurrentWorldMapID()
+            if mapID ~= lastMapID then
+                lastMapID = mapID
+                YBP:RefreshDebugPanel()
+            end
         end)
     end
 end)

@@ -4,8 +4,6 @@
 
 ## 分类
 
-- `DebugCalibrator.lua`
-  - 调试面板代码，正式 `.toc` 已关闭默认加载。
 - `Docs/`
   - 方案文档、参考资料，不参与运行。
 - `Tools/`
@@ -26,6 +24,8 @@
 ## 正式发布通常仍需保留
 
 - 根目录 `.toc` 与核心 `.lua`
+- `Maintenance/`
+  - 路线维护模块；仅在 Mists Classic 且安装 YiboCore API v6 时注册 Core 内的维护界面。
 - `Libs/`
 - `Assets/ExtractedRoutes/Overlays/*.tga`
 - `Assets/ReferencePets/Textures/*.tga`

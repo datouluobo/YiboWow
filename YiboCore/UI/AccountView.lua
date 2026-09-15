@@ -2590,11 +2590,11 @@ local ABOUT_ADDONS = {
     },
     {
         name = "YiboBeastPaths",
-        version = "1.5",
+        version = "1.6",
         description = "在地图上显示稀有猎人宠物的巡逻路线。",
         icon = "Interface\\AddOns\\YiboCore\\Media\\YBP_AddonIcon",
         url = "https://www.curseforge.com/wow/addons/yibobeastpaths",
-        independent = true,
+        relation = "optional-core",
     },
 }
 
@@ -2626,6 +2626,12 @@ local function SetAboutLinkOpen(parent, target)
 end
 
 local CORE_PROJECT_URL = "https://www.curseforge.com/wow/addons/yibocore"
+
+local function FormatVersion(version)
+    if version == nil then return "" end
+    local normalized = tostring(version):gsub("^[vV]+", "")
+    return normalized ~= "" and "v" .. normalized or ""
+end
 
 local function SetAboutCoreLinkOpen(parent)
     local hero = parent.hero
@@ -2662,10 +2668,10 @@ local function CreateAboutAddonRow(parent, addon)
     row.icon:SetPoint("TOPLEFT", 3, -3); row.icon:SetPoint("BOTTOMRIGHT", -3, 3); row.icon:SetTexture(addon.icon)
 
     row.name = AddText(row, "GameFontNormal", Theme.Font.body, COLORS.text)
-    row.name:SetPoint("TOPLEFT", row.iconFrame, "TOPRIGHT", 12, -2); row.name:SetText(addon.name)
+    row.name:SetPoint("TOPLEFT", row.iconFrame, "TOPRIGHT", 12, -2); row.name:SetText(addon.title or addon.name)
     row.version = AddText(row, "GameFontNormalSmall", Theme.Font.meta, COLORS.muted)
     row.version:SetPoint("LEFT", row.name, "RIGHT", 8, 0)
-    row.version:SetText(addon.version and ("v" .. addon.version) or "")
+    row.version:SetText(FormatVersion(addon.version))
     row.description = AddText(row, "GameFontNormalSmall", Theme.Font.assist, COLORS.muted)
     row.description:SetPoint("TOPLEFT", row.name, "BOTTOMLEFT", 0, -8); row.description:SetPoint("RIGHT", addon.url and -154 or -12, 0); row.description:SetText(addon.description)
     row.relation = addon.relation or (addon.independent and "independent" or "core-child")
@@ -2835,7 +2841,8 @@ local function CreateAbout(parent)
 end
 
 local function RefreshAbout(parent)
-    parent.hero.title:SetText("YiboCore v" .. tostring(Core:GetVersion() or "?"))
+    local coreVersion = FormatVersion(Core:GetVersion())
+    parent.hero.title:SetText("YiboCore " .. (coreVersion ~= "" and coreVersion or "v?"))
     local connected = 0
     local stateLabels = {
         connected = "已连接",
@@ -2847,8 +2854,10 @@ local function RefreshAbout(parent)
         local status = Core.AddonStatus and Core.AddonStatus:Get(addon.name) or {}
         local row = parent.addonRowsByName[addon.name]
         if row then
-            local installed = status.installedVersion and ("本机 v" .. tostring(status.installedVersion)) or "本机未安装"
-            local packaged = status.packagedVersion and (" · 打包时 v" .. tostring(status.packagedVersion)) or ""
+            local installedVersion = FormatVersion(status.installedVersion)
+            local packagedVersion = FormatVersion(status.packagedVersion)
+            local installed = installedVersion ~= "" and ("本机 " .. installedVersion) or "本机未安装"
+            local packaged = packagedVersion ~= "" and (" · 打包时 " .. packagedVersion) or ""
             row.version:SetText(installed .. packaged)
             row.description:SetText((stateLabels[status.state] or "状态未知") .. " · " .. tostring(addon.description or ""))
         end

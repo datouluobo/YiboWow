@@ -1,5 +1,10 @@
 # YiboBeastPaths 更新日志
 
+## 1.6
+
+- 将路线维护模块纳入发行包；仅在 Mists Classic 且检测到 YiboCore API v6 时注册 Core 维护页与设置入口，单独安装时保持不可见。
+- 插件列表与 Core 相关页面新增简体中文显示名“隐兽寻踪”；其它客户端保持 `YiboBeastPaths`。
+
 ## 1.5
 
 - 发布结构调整为单包多客户端 TOC，同时支持 Retail 与 MoP Classic。

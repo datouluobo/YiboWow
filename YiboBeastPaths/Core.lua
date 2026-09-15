@@ -161,6 +161,15 @@ SlashCmdList.YIBOBEASTPATHS = function(msg)
         return
     end
 
+    if msg == "debug" then
+        if YBP.OpenCoreRouteMaintenance then
+            YBP:OpenCoreRouteMaintenance()
+        else
+            print("|cffffcc00[YiboBeastPaths]|r 路线维护功能需要 YiboCore API v6。")
+        end
+        return
+    end
+
     if msg == "" or msg == "toggle" then
         YBP:ToggleRoutes()
         return
@@ -186,7 +195,7 @@ SlashCmdList.YIBOBEASTPATHS = function(msg)
         return
     end
 
-    print("|cffffcc00[YiboBeastPaths]|r 用法: /ybp, /ybp show, /ybp hide, /ybp mmdebug")
+    print("|cffffcc00[YiboBeastPaths]|r 用法: /ybp, /ybp show, /ybp hide, /ybp debug, /ybp mmdebug")
 end
 
 YBP:SetScript("OnEvent", function(self, event, arg1)

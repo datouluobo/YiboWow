@@ -1,4 +1,5 @@
 local Core = _G.YiboCore
+local beastPathsTitle = GetLocale and GetLocale() == "zhCN" and "隐兽寻踪" or "YiboBeastPaths"
 
 -- Static presentation metadata only.  Versions deliberately live in the
 -- generated packaging manifest and in the player's installed TOCs.
@@ -60,8 +61,8 @@ Core.AddonCatalog = {
     },
     {
         name = "YiboBeastPaths",
-        title = "猎人宠物路线图",
-        relation = "independent",
+        title = beastPathsTitle,
+        relation = "optional-core",
         icon = "Interface\\AddOns\\YiboCore\\Media\\YBP_AddonIcon",
         description = "潘达利亚隐藏猎人宠物路线图。",
         projectURL = "https://www.curseforge.com/wow/addons/yibo-beastpaths",

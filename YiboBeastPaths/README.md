@@ -3,7 +3,7 @@
 潘达利亚隐藏猎人宠物路线图插件。  
 作用是把部分稀有猎人宠物的巡逻/活动路线直接覆盖显示在世界地图上，方便在游戏内快速查看和蹲守。
 
-当前版本：`v1.5`
+当前版本：`v1.6`
 
 ![Logo](Assets/Brand/logo-main.png)
 
@@ -19,7 +19,7 @@
 - 已提供插件列表图标资源。
 - 已为每条路线提供起点标记与悬浮信息。
 - 已移除按钮切换时的聊天框刷屏提示。
-- 仓库内包含 `_NonRelease/DebugCalibrator.lua` 调试校准工具，供路线微调用。
+- 已提供随插件发行的 `Maintenance/` 路线维护模块；仅 Mists Classic 且安装 YiboCore API v6 时可通过 Core 使用。
 
 ## 当前收录宠物
 
@@ -47,8 +47,8 @@
   - `/ybp`
   - `/ybp show`
   - `/ybp hide`
+  - `/ybp debug`（仅 Mists Classic；需要 YiboCore API v6）
   - `/ybp mmdebug`
-  - `/ybpdebug`
 
 ## 安装方式
 
@@ -78,7 +78,7 @@
 - [RouteOverlays.lua](E:/Program/YiboBeastPaths/RouteOverlays.lua)：路线覆盖图资源映射
 - [RouteNodes.lua](E:/Program/YiboBeastPaths/RouteNodes.lua)：路线节点与提示数据
 - [RouteTransforms.lua](E:/Program/YiboBeastPaths/RouteTransforms.lua)：每条路线的定位参数
-- [_NonRelease/DebugCalibrator.lua](E:/Program/YiboBeastPaths/_NonRelease/DebugCalibrator.lua)：路线调试校准面板
+- [Maintenance/DebugCalibrator.lua](E:/Program/YiboBeastPaths/Maintenance/DebugCalibrator.lua)：路线调试校准面板
 
 ## 更新日志
 
@@ -87,4 +87,4 @@
 ## 说明
 
 - 当前路线效果依赖覆盖图资源与定位参数。
-- 如果某条路线位置仍需微调，可使用 `/ybpdebug` 打开调试校准面板继续修正。
+- 如果某条路线位置仍需微调，可在 Mists Classic 安装 YiboCore 后使用 `/ybp debug` 打开路线维护设置；显式开启“路线维护模式”后，工作台会显示在 Core 窗口内。

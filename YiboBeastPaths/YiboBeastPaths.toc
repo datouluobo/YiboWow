@@ -1,12 +1,13 @@
 ## Interface: 120007
 ## Title: |cff20e070[Yibo]|r YiboBeastPaths
-## Title-zhCN: |cff20e070[Yibo]|r YiboBeastPaths - 潘达利亚隐藏猎人宠物路线图
+## Title-zhCN: |cff20e070[Yibo]|r YiboBeastPaths - 隐兽寻踪
 ## Notes: World map route overlays for Pandaria hidden hunter pets.
 ## Notes-zhCN: 直接在世界地图显示潘达利亚隐藏猎人宠物路线图。
 ## Author: 天堂暴风
-## Version: v1.5
+## Version: v1.6
 ## IconTexture: Interface\AddOns\YiboBeastPaths\Assets\Brand\icon-addon
 ## SavedVariables: YiboBeastPathsDB, YiboBeastPathsDebugDB
+## OptionalDeps: YiboCore
 ## X-GameFlavor: Mainline
 
 Libs\LibStub\LibStub.lua
@@ -33,4 +34,6 @@ Core.lua
 RouteResolver.lua
 Renderer.lua
 MinimapRenderer.lua
-_NonRelease\DebugCalibrator.lua
+Maintenance\DebugCalibrator.lua
+Maintenance\CoreDebugView.lua
+Maintenance\CoreDebugAdapter.lua
