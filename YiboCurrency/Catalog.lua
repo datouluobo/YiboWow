@@ -11,7 +11,10 @@ end
 local function Item(id, title, short, expansion, status)
     return { id = "item:" .. id, itemID = id, title = title, shortTitle = short, icon = nil,
         expansion = expansion, source = "item", sourceType = "物品代币",
-        status = status or "仅存量遗留", totalAllowed = true, verified = "pending-client" }
+        -- Curated item IDs are stable.  Their balance may be readable before
+        -- the client caches an item tooltip, so that cache must not turn a
+        -- valid zero into an unknown value in the account matrix.
+        status = status or "仅存量遗留", totalAllowed = true, verified = "implemented" }
 end
 
 local CURRENT = "当前可获取"

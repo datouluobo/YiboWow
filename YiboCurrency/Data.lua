@@ -119,7 +119,6 @@ end
 function Addon:ValueState(value, state)
     if state ~= "known" then return "unknown" end
     if not value then return "na" end
-    if value.itemID and not value.bankKnown then return "bank" end
     if value.quantity == nil then return "na" end
     return "known"
 end
@@ -130,7 +129,6 @@ function Addon:StateDescription(value, state)
     if state == "unavailable" then return "货币 API 当前不可用" end
     if state == "stale" then return "角色数据已过期" end
     if state == "error" then return "读取货币时发生错误" end
-    if value and value.itemID and not value.bankKnown then return "银行尚未完整扫描" end
     return nil
 end
 function Addon:FormatCompact(value, entry)

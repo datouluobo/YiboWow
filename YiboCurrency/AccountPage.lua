@@ -21,12 +21,23 @@ end
 local function EntryColumnWidth(entry, iconSize, fontSize)
     return math.max(52, Theme:MeasureText(fontSize or Theme.Font.assist, entry.title) + (iconSize or 18) + Theme.Space.md)
 end
-local function PreviewColumnWidth(entry)
-    -- Header labels deliberately sit almost flush to their vertical dividers: the
-    -- column width is driven by the text itself rather than decorative padding.
-    local headerWidth = Theme:MeasureText(Theme.Font.assist, entry.title) + 2
-    local valueWidth = 16 + Theme:MeasureText(Theme.Font.body, "294,000") + Theme.Space.xxs * 3
-    return math.max(headerWidth, valueWidth, 44)
+local function PreviewColumnWidth(entry, characters)
+    -- The hover repeats a currency's icon beside every value, so it must not
+    -- also reserve the full display name in every narrow data column.  Short
+    -- names keep headers scannable; the full name remains available on hover.
+    -- Currency headers in the hover are dense labels, not controls: retain
+    -- exactly 2px on each side instead of the shared 8px table padding.
+    local headerWidth = Theme:MeasureText(Theme.Font.assist, entry.shortTitle or entry.title) + 4
+    local valueWidth = Theme:MeasureText(Theme.Font.body, "0")
+    for _, character in ipairs(characters or {}) do
+        local value, state = Addon:GetValue(character, entry)
+        local text = Addon:FormatFullCell(value, state, entry)
+        valueWidth = math.max(valueWidth, Theme:MeasureText(Theme.Font.body, text))
+    end
+    local total = Addon:TotalFor(characters or {}, entry)
+    local totalText = Addon:FormatFull({ quantity = total.quantity }, entry) .. (total.complete and "" or (total.bankPending and "~" or "?"))
+    valueWidth = math.max(valueWidth, Theme:MeasureText(Theme.Font.body, totalText))
+    return math.max(headerWidth, 16 + valueWidth + Theme.Space.xxs * 3, 32)
 end
 local function CharacterColor(character)
     local color = RAID_CLASS_COLORS and character and RAID_CLASS_COLORS[character.class or ""]
@@ -188,7 +199,7 @@ function Addon:RefreshCurrencyPage(parent, context)
     local columns, shown, pageInfo
     if preview then
         columns = { { kind="currency", title="角色", width=CharacterLabelColumnWidth(characters, context), justify="LEFT" } }
-        for _, entry in ipairs(entries) do columns[#columns + 1] = { kind="preview-entry", entry=entry, title=entry.title, width=PreviewColumnWidth(entry), justify="CENTER" } end
+        for _, entry in ipairs(entries) do columns[#columns + 1] = { kind="preview-entry", entry=entry, title=entry.shortTitle or entry.title, width=PreviewColumnWidth(entry, characters), justify="CENTER" } end
         -- The hover is transposed: construct character rows below, not currency rows.
         local characterRows = {}; for _, character in ipairs(characters) do characterRows[#characterRows + 1] = character end
         if #characterRows == 0 then characterRows[1] = { id="empty", name="暂无已同步角色" } end
@@ -227,7 +238,7 @@ function Addon:LayoutHover(parent, context, columns, characters, entries)
     HideEmptyHover(parent)
     local inset, headerHeight = Theme:GetMatrixInsets(true), Theme.Table.headerHeight; parent.currencyHeader:ClearAllPoints(); parent.currencyHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top); parent.currencyHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -inset.right, -inset.top); parent.currencyHeader:SetHeight(headerHeight); parent.currencyHeader:Show()
     parent.currencyScroll:ClearAllPoints(); parent.currencyScroll:SetPoint("TOPLEFT", parent.currencyHeader, "BOTTOMLEFT"); parent.currencyScroll:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset.right, inset.bottom)
-    local x = 0; for index, column in ipairs(columns) do column.x=x; local header=parent.currencyHeaders[index] or Theme:CreateMatrixHeader(parent.currencyHeader); parent.currencyHeaders[index]=header; header:ClearAllPoints(); header:SetPoint("TOPLEFT", parent.currencyHeader,"TOPLEFT",x,0); header:SetSize(column.width,headerHeight); Theme:SetMatrixHeader(header,column.title,{height=headerHeight,justify=column.justify,color=Theme.Colors.muted,inset=1}); PinHeaderToDivider(header, 1); if column.entry then Theme:BindTooltip(header,column.entry.title,{{kind="pair",label="来源",value=column.entry.sourceType or "货币"},{kind="pair",label="状态",value=column.entry.status or "待核验"},{kind="pair",label="稳定 ID",value=column.entry.id}}) else header:SetScript("OnEnter",nil); header:SetScript("OnLeave",nil) end; header:Show(); x=x+column.width end
+    local x = 0; for index, column in ipairs(columns) do local headerInset = index == 1 and 1 or 2; column.x=x; local header=parent.currencyHeaders[index] or Theme:CreateMatrixHeader(parent.currencyHeader); parent.currencyHeaders[index]=header; header:ClearAllPoints(); header:SetPoint("TOPLEFT", parent.currencyHeader,"TOPLEFT",x,0); header:SetSize(column.width,headerHeight); Theme:SetMatrixHeader(header,column.title,{height=headerHeight,justify=column.justify,color=Theme.Colors.muted,inset=headerInset}); PinHeaderToDivider(header, headerInset); if column.entry then Theme:BindTooltip(header,column.entry.title,{{kind="pair",label="来源",value=column.entry.sourceType or "货币"},{kind="pair",label="状态",value=column.entry.status or "待核验"},{kind="pair",label="稳定 ID",value=column.entry.id}}) else header:SetScript("OnEnter",nil); header:SetScript("OnLeave",nil) end; header:Show(); x=x+column.width end
     for index=#columns+1,#parent.currencyHeaders do parent.currencyHeaders[index]:Hide() end
     local current = Core.Characters:GetCurrent()
     local function DrawRow(index, character, total)
@@ -252,7 +263,7 @@ function Addon:GetCurrencySurfaceMetrics(context)
     if preview and #entries == 0 then return { minContentWidth=420+inset.left+inset.right, naturalContentWidth=420+inset.left+inset.right, minContentHeight=68+inset.top+inset.bottom, naturalContentHeight=68+inset.top+inset.bottom, horizontalOverflow="none",verticalOverflow="none" } end
     if preview then
         local width = CharacterLabelColumnWidth(characters, context)
-        for _, entry in ipairs(entries) do width = width + PreviewColumnWidth(entry) end
+        for _, entry in ipairs(entries) do width = width + PreviewColumnWidth(entry, characters) end
         return { minContentWidth=width+inset.left+inset.right, naturalContentWidth=width+inset.left+inset.right, minContentHeight=inset.top+Theme.Table.headerHeight+ROW_HEIGHT+inset.bottom, naturalContentHeight=inset.top+Theme.Table.headerHeight+math.min(#characters+1,21)*ROW_HEIGHT+inset.bottom, fixedLeftWidth=CharacterLabelColumnWidth(characters, context),fixedTopHeight=Theme.Table.headerHeight,horizontalOverflow="content",verticalOverflow="content" }
     end
     local currencyWidth, totalWidth = MainFixedWidths(entries); local characterWidth = 0
