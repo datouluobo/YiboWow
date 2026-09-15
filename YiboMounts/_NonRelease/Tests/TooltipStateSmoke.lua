@@ -22,14 +22,23 @@ end
 NS.Tooltip:Apply(FakeTooltip, "player", 40192, "SetUnitBuff")
 NS.Tooltip:Apply(FakeTooltip, "player", 40192, "SetUnitBuff")
 Expect(#FakeTooltip.lines, 1, "same tooltip does not append duplicate source lines")
-Expect(FakeTooltip.lines[1].wrap, false, "source path keeps its natural tooltip width")
+Expect(FakeTooltip.lines[1].wrap, true, "source path respects the tooltip safe width")
 
 FakeTooltip.__yiboMountsSignature = nil
-FakeTooltip.spellID = 60002
-NS.Tooltip:Apply(FakeTooltip, "player", 60002, "SetUnitAura")
+FakeTooltip.spellID = 107516
+NS.Tooltip:Apply(FakeTooltip, "player", 107516, "SetUnitAura")
 Expect(#FakeTooltip.lines, 3, "unavailable source appends path and availability")
-Expect(FakeTooltip.lines[2].wrap, false, "every source path avoids fragmented wrapping")
+Expect(FakeTooltip.lines[2].wrap, true, "every source path may wrap at the tooltip safe width")
 Expect(FakeTooltip.lines[3].wrap, true, "secondary requirements may still wrap")
+
+local MultiSourceTooltip = { unit = "player", spellID = 127170, lines = {} }
+function MultiSourceTooltip:GetUnit() return "Tester", self.unit end
+function MultiSourceTooltip:GetSpell() return "Astral Cloud Serpent", nil, self.spellID end
+function MultiSourceTooltip:AddLine(text) table.insert(self.lines, text) end
+function MultiSourceTooltip:Show() end
+NS.Tooltip:Apply(MultiSourceTooltip, "player", 127170, "SetUnitAura")
+NS.Tooltip:Apply(MultiSourceTooltip, "player", 127170, "SetUnitAura")
+Expect(#MultiSourceTooltip.lines, 2, "two acquisition channels append two source lines without duplication")
 
 local scannedAuras = { 40192, 98765 }
 UnitBuff = function(_, index)

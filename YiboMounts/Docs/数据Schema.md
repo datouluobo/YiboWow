@@ -248,7 +248,9 @@ V1 枚举：
 | `event` | Event / 活动 | 活动 > 来源 |
 | `promotion` | Promotion / 推广 | 活动或推广名称 |
 | `store` | Store / 商城 | 商城渠道 |
+| `auction_house` | Auction House / 拍卖行 | 黑市拍卖行或玩家拍卖行 |
 | `crafted` | Crafted / 制造 | 专业 > 配方或制造物 |
+| `container` | Container / 宝袋 | 宝箱、礼包或可开启容器 |
 
 可获取状态不是来源类型，不得创建 `unavailable` 类型。
 
@@ -258,9 +260,9 @@ V1 枚举：
 
 1. `primarySourceID` 指向存在的来源；
 2. V1 至少存在一个来源；
-3. Tooltip 优先使用 `primarySourceID`；
+3. Tooltip 先使用 `primarySourceID`，再按 `priority` 降序显示其它 `active` 来源；
 4. 如果主要来源被标记为非当前主要来源，数据维护者必须显式更新 `primarySourceID`，运行时不猜测替代项；
-5. V2/V3 可以读取全部 `sources[]`，V1 只渲染主要来源。
+5. V1 渲染全部有效来源但保持每个渠道独立成组；V2/V3 可以读取全部来源及审计字段。
 
 `priority` 用于未来目录排序和候选审计，不替代明确的 `primarySourceID`。
 
@@ -360,7 +362,11 @@ V1 枚举：
   "questID": null,
   "achievementID": null,
   "eventKey": null,
-  "notes": {
+    "tooltipNote": {
+      "enUS": null,
+      "zhCN": null
+    },
+    "notes": {
     "enUS": null,
     "zhCN": null
   }
@@ -370,12 +376,13 @@ V1 枚举：
 规则：
 
 - 条件对象只保存获取所必需的事实。
-- `notes` 仅用于无法结构化但对获取判断必要的短说明，不得写成长攻略。
+- `notes` 是维护者核验资料，不进入 Tooltip，可以记录必要的版本差异与证据摘要，但不得写成长攻略。
+- `tooltipNote` 是唯一允许进入 Tooltip 的自由文本字段；只用于无法结构化但对获取判断必要的短说明，每种语言不得超过 24 个字符。
 - `price` 是维护表导入的人工可读价格补充（例如兑换价格、暂未映射稳定货币 ID 的价格）；优先用于 Tooltip 显示。
 - 金钱统一保存铜币整数，不保存 `10,000 Gold` 这类最终显示文本；已具备稳定 ID 的价格应同时或优先使用 `costs`。
 - 货币和物品成本使用稳定 ID 与数量。
 - 难度、声望等级、职业和阵营名称由 Locale 格式化。
-- 第二条逻辑行按照统一顺序压缩：限制 → 难度 → 声望 → 成本 → 活动状态 → 不可获取状态。
+- 第二条逻辑行按照统一顺序压缩：限制 · 难度 · 声望 · 成本 · `tooltipNote` · 可用性状态。
 - 条件过多时仍保持一个逻辑字符串，让 Tooltip 自然换行；不得静默丢弃关键条件。
 
 ## 8. Locale 回退

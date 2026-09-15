@@ -25,14 +25,15 @@ local function AppendSource(tooltip, unit, spellID, source)
     end
     if signatures[signature] then return end
 
-    local primary, secondary = NS.SourceFormatter:Format(record)
-    if not primary then return end
+    local entries = NS.SourceFormatter:FormatAll(record)
+    if #entries == 0 then return end
 
-    -- The source path is the tooltip's primary, scan-oriented value.  Let it
-    -- establish the natural tooltip width instead of wrapping just its final
-    -- segment and leaving the rest of the row empty.
-    tooltip:AddLine(primary, 0.12, 0.88, 0.44, false)
-    if secondary then tooltip:AddLine(secondary, 0.12, 0.88, 0.44, true) end
+    for _, entry in ipairs(entries) do
+        -- Each acquisition channel owns one prominent source line. A quieter
+        -- condition line follows only when that channel needs it.
+        tooltip:AddLine(entry.primary, 0.12, 0.88, 0.44, true)
+        if entry.secondary then tooltip:AddLine(entry.secondary, 0.82, 0.82, 0.82, true) end
+    end
     signatures[signature] = true
     tooltip:Show()
 end

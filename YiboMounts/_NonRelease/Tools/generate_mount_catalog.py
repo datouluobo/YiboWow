@@ -14,7 +14,7 @@ from typing import Any
 KEY_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SOURCE_TYPES = {
     "boss_drop", "rare_drop", "achievement", "reputation_vendor", "vendor",
-    "quest", "class_reward", "holiday", "event", "promotion", "store", "crafted", "research",
+    "quest", "class_reward", "holiday", "event", "promotion", "store", "auction_house", "crafted", "container", "research",
 }
 AVAILABILITY = {"obtainable", "limited_time", "rotation", "unavailable", "unknown"}
 STATUSES = {"candidate", "verified", "rejected"}
@@ -146,6 +146,12 @@ def validate_catalog(root: Any, channel: str) -> list[str]:
             requirements = source.get("requirements")
             if not isinstance(requirements, dict):
                 fail(source_path + ".requirements", "must be an object")
+            tooltip_note = requirements.get("tooltipNote")
+            if tooltip_note is not None:
+                validate_labels(tooltip_note, source_path + ".requirements.tooltipNote", channel)
+                for locale, text in tooltip_note.items():
+                    if isinstance(text, str) and len(text) > 24:
+                        fail(source_path + f".requirements.tooltipNote.{locale}", "must not exceed 24 characters")
             for cost_index, cost in enumerate(requirements.get("costs", [])):
                 cost_path = f"{source_path}.requirements.costs[{cost_index}]"
                 if not isinstance(cost, dict) or cost.get("type") not in {"money", "currency", "item"}:

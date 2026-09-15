@@ -3,7 +3,7 @@
 ## Notes: Shows compact mount catalog details in aura and hovered-unit tooltips.
 ## Notes-zhCN: 在坐骑光环与鼠标悬停单位提示中显示紧凑的图鉴信息。
 ## Author: YiboSoft
-## Version: 0.5
+## Version: 0.6
 ## Group: Yibo
 ## SavedVariables: YiboMountsDiagnostics
 ## IconTexture: Interface\AddOns\YiboMounts\Media\YiboMountsIcon-v1

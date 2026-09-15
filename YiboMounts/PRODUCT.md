@@ -99,14 +99,14 @@ Alpha 是公开技术验证版本，不承诺完整坐骑覆盖、全部来源�
   - 职业限定；
   - 阵营限定；
   - 节日或限时活动；
-  - 商城、推广或已经绝版的历史来源。
+  - 商城、拍卖行、推广或已经绝版的历史来源。
   - 专业制造坐骑。
 
 ### Explicitly Deferred
 
 - YiboCore 页面与注册逻辑。
 - 收藏状态、账号完成度和稀有度。
-- Tooltip 中的完整备选来源。
+- 按角色阵营、职业或版本分支自动隐藏不适用的备选来源。
 - 焦点、队伍、团队、姓名板及任意第三方单位框架的兼容承诺。
 - 用户设置、SavedVariables、字段开关和正式设置命令。
 - 跌落率、坐标、刷新时间、路线和完整攻略。
@@ -145,17 +145,17 @@ Alpha 是公开技术验证版本，不承诺完整坐骑覆盖、全部来源�
 来源使用紧凑的层级路径，视觉含义类似面包屑，但不承担导航交互：
 
 ```text
-Drop > Mogu'shan Vaults > Elegon
-Normal / Heroic
+Drop: Mogu'shan Vaults > Elegon
+Normal · Heroic
 ```
 
 ```text
-Vendor > The Klaxxi Quartermaster
-Exalted > 10,000 Gold
+Vendor: The Klaxxi Quartermaster
+Exalted · 10,000 Gold
 ```
 
 ```text
-Promotion > Annual Pass
+Promotion: Annual Pass
 No longer obtainable
 ```
 
@@ -164,8 +164,13 @@ No longer obtainable
 - 不增加插件标题行。
 - 第一条逻辑行只显示主要来源路径。
 - 第二条逻辑行只在存在关键条件或不可获取状态时显示。
+- 来源类型是标签，不作为路径节点；中文以 `｜` 分隔标签与路径，路径节点以 ` › ` 分隔。
+- 条件是并列关系，以 ` · ` 分隔，不使用路径分隔符。
+- `requirements.notes` 只供数据核验，永不进入 Tooltip；只有显式维护且不超过 24 个字符的 `requirements.tooltipNote` 可以作为短条件显示。
+- `research` / “待核实”来源保持静默，不向玩家展示内部研究说明。
 - 长路径允许由 Tooltip 根据安全宽度自然换行，不截断关键实体名称。
-- 多来源记录只显示当前有效且优先级最高的一条；完整来源留给未来目录页面。
+- 多来源记录按“主要来源优先、其余有效来源按优先级”的顺序逐条显示；每个渠道独占一条来源路径及其紧邻条件，不把多个渠道拼成一条长路径。
+- `sources[].active = false`、`research` 或格式化后完全重复的来源不显示。
 - 绝版记录显示历史主要来源，并在条件行明确当前不可获取。
 - 原始结构字段不直接拼成不可本地化的自由文本。
 

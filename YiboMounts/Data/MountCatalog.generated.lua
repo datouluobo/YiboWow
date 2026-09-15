@@ -3,7 +3,7 @@
 local _, NS = ...
 
 NS.Data = {
-  catalogVersion = "0.5",
+  catalogVersion = "0.6",
   mountKeyBySpellID = {
     [458] = "provisional-458",
     [459] = "fact-459",
@@ -309,13 +309,16 @@ NS.Data = {
     [92231] = "provisional-92231",
     [92232] = "provisional-92232",
     [93326] = "provisional-93326",
+    [93623] = "fact-93623",
     [93644] = "provisional-93644",
     [96491] = "armored-razzashi-raptor",
     [96499] = "swift-zulian-panther",
+    [96503] = "fact-96503",
     [97359] = "provisional-97359",
     [97493] = "pureblood-fire-hawk",
     [97501] = "provisional-97501",
     [97560] = "provisional-97560",
+    [97581] = "fact-97581",
     [98204] = "amani-battle-bear",
     [98718] = "tamed-seahorse",
     [98727] = "provisional-98727",
@@ -323,11 +326,13 @@ NS.Data = {
     [100333] = "provisional-100333",
     [101282] = "fact-101282",
     [101542] = "flametalon-of-alysrazor",
+    [101573] = "fact-101573",
     [101821] = "fact-101821",
     [102346] = "provisional-102346",
     [102349] = "provisional-102349",
     [102350] = "provisional-102350",
     [102488] = "fact-102488",
+    [102514] = "fact-102514",
     [103081] = "provisional-103081",
     [103195] = "provisional-103195",
     [103196] = "provisional-103196",
@@ -339,6 +344,7 @@ NS.Data = {
     [107845] = "life-binders-handmaiden",
     [110039] = "experiment-12-b",
     [110051] = "provisional-110051",
+    [113120] = "fact-113120",
     [113199] = "provisional-113199",
     [118089] = "provisional-118089",
     [118737] = "provisional-118737",
@@ -410,6 +416,7 @@ NS.Data = {
     [136164] = "provisional-136164",
     [136400] = "provisional-136400",
     [136471] = "spawn-of-horridon",
+    [136505] = "fact-136505",
     [138423] = "provisional-138423",
     [138424] = "provisional-138424",
     [138425] = "provisional-138425",
@@ -450,6 +457,7 @@ NS.Data = {
     [387308] = "fact-387308",
     [387311] = "fact-387311",
     [387319] = "fact-387319",
+    [387320] = "fact-387320",
     [387321] = "fact-387321",
     [387323] = "fact-387323",
     [394209] = "fact-394209",
@@ -492,7 +500,9 @@ NS.Data = {
     [1257677] = "manual-1257677",
     [1280068] = "excluded-1280068",
     [1283471] = "excluded-1283471",
+    [1284679] = "fact-1284679",
     [1285724] = "excluded-1285724",
+    [1285897] = "fact-1285897",
     [1298510] = "fact-1298510",
     [1298515] = "excluded-1298515",
     [1301737] = "manual-1301737",
@@ -514,7 +524,7 @@ NS.Data = {
         mountJournalID = 419
       },
       mountKey = "amani-battle-bear",
-      primarySourceID = "zulaman-timed-run",
+      primarySourceID = "manual-source-98204",
       restrictions = {
         classes = {},
         factions = {}
@@ -525,7 +535,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "幽魂之地",
                 zhCN = "幽魂之地"
@@ -533,7 +543,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "祖阿曼H（限时挑战）",
                 zhCN = "祖阿曼H（限时挑战）"
@@ -541,7 +551,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "达卡拉",
                 zhCN = "达卡拉"
@@ -553,16 +563,21 @@ NS.Data = {
           requirements = {
             achievementID = nil,
             costs = {},
-            difficulties = {
-              "HEROIC"
-            },
-            difficultyInPath = true,
+            difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "zulaman-timed-run",
+          sourceID = "manual-source-98204",
           type = "boss_drop"
         }
       },
@@ -583,7 +598,7 @@ NS.Data = {
         mountJournalID = 409
       },
       mountKey = "armored-razzashi-raptor",
-      primarySourceID = "mandokir-drop",
+      primarySourceID = "manual-source-96491",
       restrictions = {
         classes = {},
         factions = {}
@@ -594,7 +609,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "荆棘谷",
                 zhCN = "荆棘谷"
@@ -602,7 +617,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "祖尔格拉布H",
                 zhCN = "祖尔格拉布H"
@@ -610,7 +625,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "血领主曼多基尔",
                 zhCN = "血领主曼多基尔"
@@ -622,16 +637,21 @@ NS.Data = {
           requirements = {
             achievementID = nil,
             costs = {},
-            difficulties = {
-              "HEROIC"
-            },
-            difficultyInPath = true,
+            difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "mandokir-drop",
+          sourceID = "manual-source-96491",
           type = "boss_drop"
         }
       },
@@ -652,7 +672,7 @@ NS.Data = {
         mountJournalID = nil
       },
       mountKey = "ashes-of-alar",
-      primarySourceID = "kaelthas-drop",
+      primarySourceID = "manual-source-40192",
       restrictions = {
         classes = {},
         factions = {}
@@ -663,7 +683,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "虚空风暴",
                 zhCN = "虚空风暴"
@@ -671,7 +691,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "风暴要塞",
                 zhCN = "风暴要塞"
@@ -679,7 +699,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "凯尔萨斯·逐日者",
                 zhCN = "凯尔萨斯·逐日者"
@@ -692,13 +712,20 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "kaelthas-drop",
+          sourceID = "manual-source-40192",
           type = "boss_drop"
         }
       },
@@ -719,7 +746,7 @@ NS.Data = {
         mountJournalID = 478
       },
       mountKey = "astral-cloud-serpent",
-      primarySourceID = "elegon-drop",
+      primarySourceID = "manual-source-127170",
       restrictions = {
         classes = {},
         factions = {}
@@ -730,7 +757,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "昆莱山",
                 zhCN = "昆莱山"
@@ -738,7 +765,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "魔古山宝库",
                 zhCN = "魔古山宝库"
@@ -746,7 +773,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "伊拉贡",
                 zhCN = "伊拉贡"
@@ -759,14 +786,55 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表：天神机缘之袋。",
+              zhCN = "另一个有效来源维护于多渠道表：天神机缘之袋。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "elegon-drop",
+          sourceID = "manual-source-127170",
           type = "boss_drop"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Celestial Fortune Bag",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "celestial-fortune-bag-127170",
+          type = "container"
         }
       },
       status = "candidate"
@@ -786,7 +854,7 @@ NS.Data = {
         mountJournalID = 304
       },
       mountKey = "azure-drake",
-      primarySourceID = "malygos-azure-drop",
+      primarySourceID = "manual-source-59567",
       restrictions = {
         classes = {},
         factions = {}
@@ -797,7 +865,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "北风苔原",
                 zhCN = "北风苔原"
@@ -805,7 +873,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "永恒之眼25人",
                 zhCN = "永恒之眼25人"
@@ -813,7 +881,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "玛里苟斯",
                 zhCN = "玛里苟斯"
@@ -826,13 +894,20 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "malygos-azure-drop",
+          sourceID = "manual-source-59567",
           type = "boss_drop"
         }
       },
@@ -853,7 +928,7 @@ NS.Data = {
         mountJournalID = 253
       },
       mountKey = "black-drake",
-      primarySourceID = "sartharion-black-drop",
+      primarySourceID = "manual-source-59650",
       restrictions = {
         classes = {},
         factions = {}
@@ -864,7 +939,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "龙骨荒野",
                 zhCN = "龙骨荒野"
@@ -872,7 +947,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "黑曜石圣殿10人（保留3条暮光幼龙）",
                 zhCN = "黑曜石圣殿10人（保留3条暮光幼龙）"
@@ -880,7 +955,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "萨塔里奥",
                 zhCN = "萨塔里奥"
@@ -893,13 +968,20 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "sartharion-black-drop",
+          sourceID = "manual-source-59650",
           type = "boss_drop"
         }
       },
@@ -920,7 +1002,7 @@ NS.Data = {
         mountJournalID = 442
       },
       mountKey = "blazing-drake",
-      primarySourceID = "madness-blazing-drop",
+      primarySourceID = "manual-source-107842",
       restrictions = {
         classes = {},
         factions = {}
@@ -931,7 +1013,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "时光之穴",
                 zhCN = "时光之穴"
@@ -939,7 +1021,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "巨龙之魂",
                 zhCN = "巨龙之魂"
@@ -947,7 +1029,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "死亡之翼的疯狂",
                 zhCN = "死亡之翼的疯狂"
@@ -960,13 +1042,20 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "madness-blazing-drop",
+          sourceID = "manual-source-107842",
           type = "boss_drop"
         }
       },
@@ -987,7 +1076,7 @@ NS.Data = {
         mountJournalID = 305
       },
       mountKey = "blue-drake",
-      primarySourceID = "malygos-blue-drop",
+      primarySourceID = "manual-source-59568",
       restrictions = {
         classes = {},
         factions = {}
@@ -998,7 +1087,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "北风苔原",
                 zhCN = "北风苔原"
@@ -1006,7 +1095,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "永恒之眼10人",
                 zhCN = "永恒之眼10人"
@@ -1014,7 +1103,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "玛里苟斯",
                 zhCN = "玛里苟斯"
@@ -1027,13 +1116,20 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "malygos-blue-drop",
+          sourceID = "manual-source-59568",
           type = "boss_drop"
         }
       },
@@ -1054,7 +1150,7 @@ NS.Data = {
         mountJournalID = 308
       },
       mountKey = "blue-proto-drake",
-      primarySourceID = "skadi-drop",
+      primarySourceID = "manual-source-59996",
       restrictions = {
         classes = {},
         factions = {}
@@ -1065,7 +1161,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "风暴峭壁",
                 zhCN = "风暴峭壁"
@@ -1073,7 +1169,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "乌特加德之巅H",
                 zhCN = "乌特加德之巅H"
@@ -1081,7 +1177,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "残忍的斯卡迪",
                 zhCN = "残忍的斯卡迪"
@@ -1093,16 +1189,21 @@ NS.Data = {
           requirements = {
             achievementID = nil,
             costs = {},
-            difficulties = {
-              "HEROIC"
-            },
-            difficultyInPath = true,
+            difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "skadi-drop",
+          sourceID = "manual-source-59996",
           type = "boss_drop"
         }
       },
@@ -1123,7 +1224,7 @@ NS.Data = {
         mountJournalID = 303
       },
       mountKey = "bronze-drake",
-      primarySourceID = "infinite-corruptor-drop",
+      primarySourceID = "manual-source-59569",
       restrictions = {
         classes = {},
         factions = {}
@@ -1134,7 +1235,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "塔纳利斯",
                 zhCN = "塔纳利斯"
@@ -1142,7 +1243,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "净化斯坦索姆H",
                 zhCN = "净化斯坦索姆H"
@@ -1150,7 +1251,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "永恒腐蚀者",
                 zhCN = "永恒腐蚀者"
@@ -1162,16 +1263,21 @@ NS.Data = {
           requirements = {
             achievementID = nil,
             costs = {},
-            difficulties = {
-              "HEROIC"
-            },
-            difficultyInPath = true,
+            difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "infinite-corruptor-drop",
+          sourceID = "manual-source-59569",
           type = "boss_drop"
         }
       },
@@ -1242,7 +1348,7 @@ NS.Data = {
         mountJournalID = 395
       },
       mountKey = "drake-of-the-north-wind",
-      primarySourceID = "altairus-drop",
+      primarySourceID = "manual-source-88742",
       restrictions = {
         classes = {},
         factions = {}
@@ -1253,15 +1359,15 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
-                enUS = "Uldum",
+                enUS = "奥丹姆",
                 zhCN = "奥丹姆"
               },
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "旋云之巅H",
                 zhCN = "旋云之巅H"
@@ -1269,7 +1375,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "阿尔泰鲁斯",
                 zhCN = "阿尔泰鲁斯"
@@ -1281,16 +1387,21 @@ NS.Data = {
           requirements = {
             achievementID = nil,
             costs = {},
-            difficulties = {
-              "HEROIC"
-            },
-            difficultyInPath = true,
+            difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "altairus-drop",
+          sourceID = "manual-source-88742",
           type = "boss_drop"
         }
       },
@@ -1311,7 +1422,7 @@ NS.Data = {
         mountJournalID = 396
       },
       mountKey = "drake-of-the-south-wind",
-      primarySourceID = "alakir-drop",
+      primarySourceID = "manual-source-88744",
       restrictions = {
         classes = {},
         factions = {}
@@ -1322,15 +1433,15 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
-                enUS = "Uldum",
+                enUS = "奥丹姆",
                 zhCN = "奥丹姆"
               },
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "风神王座",
                 zhCN = "风神王座"
@@ -1338,9 +1449,9 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
-                enUS = "Al'Akir",
+                enUS = "奥拉基尔",
                 zhCN = "奥拉基尔"
               },
               refID = nil
@@ -1351,13 +1462,20 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "alakir-drop",
+          sourceID = "manual-source-88744",
           type = "boss_drop"
         }
       },
@@ -1376,21 +1494,29 @@ NS.Data = {
         mountJournalID = 2485
       },
       mountKey = "excluded-1217476",
-      primarySourceID = "retired-audit-source-1217476",
+      primarySourceID = "manual-source-1217476",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
-                enUS = "2025 新春狂欢季 > 藏宝工坊",
-                zhCN = "2025 新春狂欢季 > 藏宝工坊"
+                enUS = "2025 新春狂欢季",
+                zhCN = "2025 新春狂欢季"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "藏宝工坊",
+                zhCN = "藏宝工坊"
               },
               refID = nil
             }
@@ -1410,9 +1536,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-1217476",
+          sourceID = "manual-source-1217476",
           type = "event"
         }
       },
@@ -1596,7 +1723,7 @@ NS.Data = {
         mountJournalID = 2596
       },
       mountKey = "excluded-1239204",
-      primarySourceID = "retired-audit-source-1239204",
+      primarySourceID = "manual-source-1239204",
       restrictions = {
         classes = {},
         factions = {
@@ -1605,11 +1732,11 @@ NS.Data = {
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
                 enUS = "2025 国服抖音直播活动",
                 zhCN = "2025 国服抖音直播活动"
@@ -1640,9 +1767,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-1239204",
+          sourceID = "manual-source-1239204",
           type = "event"
         }
       },
@@ -1661,7 +1789,7 @@ NS.Data = {
         mountJournalID = 2597
       },
       mountKey = "excluded-1239240",
-      primarySourceID = "retired-audit-source-1239240",
+      primarySourceID = "manual-source-1239240",
       restrictions = {
         classes = {},
         factions = {
@@ -1670,11 +1798,11 @@ NS.Data = {
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
                 enUS = "2025 国服抖音直播活动",
                 zhCN = "2025 国服抖音直播活动"
@@ -1705,9 +1833,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-1239240",
+          sourceID = "manual-source-1239240",
           type = "event"
         }
       },
@@ -1726,7 +1855,7 @@ NS.Data = {
         mountJournalID = 2599
       },
       mountKey = "excluded-1239372",
-      primarySourceID = "retired-audit-source-1239372",
+      primarySourceID = "manual-source-1239372",
       restrictions = {
         classes = {},
         factions = {}
@@ -1737,7 +1866,7 @@ NS.Data = {
           availability = "unknown",
           path = {
             {
-              kind = "store",
+              kind = "custom",
               labels = {
                 enUS = "经典怀旧服商城",
                 zhCN = "经典怀旧服商城"
@@ -1768,9 +1897,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-1239372",
+          sourceID = "manual-source-1239372",
           type = "store"
         }
       },
@@ -1789,7 +1919,7 @@ NS.Data = {
         mountJournalID = 2735
       },
       mountKey = "excluded-1257516",
-      primarySourceID = "retired-audit-source-1257516",
+      primarySourceID = "manual-source-1257516",
       restrictions = {
         classes = {},
         factions = {}
@@ -1800,7 +1930,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "store",
+              kind = "custom",
               labels = {
                 enUS = "经典怀旧服商城",
                 zhCN = "经典怀旧服商城"
@@ -1831,9 +1961,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-1257516",
+          sourceID = "manual-source-1257516",
           type = "store"
         }
       },
@@ -1852,7 +1983,7 @@ NS.Data = {
         mountJournalID = 2924
       },
       mountKey = "excluded-1280068",
-      primarySourceID = "retired-audit-source-1280068",
+      primarySourceID = "manual-source-1280068",
       restrictions = {
         classes = {},
         factions = {}
@@ -1863,7 +1994,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "store",
+              kind = "custom",
               labels = {
                 enUS = "经典怀旧服商城",
                 zhCN = "经典怀旧服商城"
@@ -1894,9 +2025,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-1280068",
+          sourceID = "manual-source-1280068",
           type = "store"
         }
       },
@@ -1915,18 +2047,18 @@ NS.Data = {
         mountJournalID = 2936
       },
       mountKey = "excluded-1283471",
-      primarySourceID = "retired-audit-source-1283471",
+      primarySourceID = "manual-source-1283471",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
                 enUS = "2026 兰德鲁金色礼盒",
                 zhCN = "2026 兰德鲁金色礼盒"
@@ -1949,9 +2081,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-1283471",
+          sourceID = "manual-source-1283471",
           type = "event"
         }
       },
@@ -1970,18 +2103,18 @@ NS.Data = {
         mountJournalID = 2743
       },
       mountKey = "excluded-1285724",
-      primarySourceID = "retired-audit-source-1285724",
+      primarySourceID = "manual-source-1285724",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
                 enUS = "2026 兰德鲁金色礼盒",
                 zhCN = "2026 兰德鲁金色礼盒"
@@ -2004,9 +2137,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-1285724",
+          sourceID = "manual-source-1285724",
           type = "event"
         }
       },
@@ -2088,7 +2222,7 @@ NS.Data = {
         mountJournalID = 3131
       },
       mountKey = "excluded-1309841",
-      primarySourceID = "retired-audit-source-1309841",
+      primarySourceID = "manual-source-1309841",
       restrictions = {
         classes = {},
         factions = {}
@@ -2099,7 +2233,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
                 enUS = "碧蓝林海秘宝",
                 zhCN = "碧蓝林海秘宝"
@@ -2122,9 +2256,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-1309841",
+          sourceID = "manual-source-1309841",
           type = "event"
         }
       },
@@ -2143,7 +2278,7 @@ NS.Data = {
         mountJournalID = 43
       },
       mountKey = "excluded-15780",
-      primarySourceID = "confirmed-source-15780",
+      primarySourceID = "manual-source-15780",
       restrictions = {
         classes = {},
         factions = {
@@ -2166,13 +2301,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 卡拉诺斯",
-                zhCN = "丹莫罗 > 卡拉诺斯"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
+              labels = {
+                enUS = "卡拉诺斯",
+                zhCN = "卡拉诺斯"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
               labels = {
                 enUS = "米利·羽哨",
                 zhCN = "米利·羽哨"
@@ -2195,9 +2338,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-15780",
+          sourceID = "manual-source-15780",
           type = "vendor"
         }
       },
@@ -2216,18 +2360,18 @@ NS.Data = {
         mountJournalID = 116
       },
       mountKey = "excluded-25863",
-      primarySourceID = "retired-audit-source-25863",
+      primarySourceID = "manual-source-25863",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "希利苏斯",
                 zhCN = "希利苏斯"
@@ -2235,10 +2379,18 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "event",
+              kind = "custom",
               labels = {
-                enUS = "安其拉开门事件 > 敲响甲虫之锣",
-                zhCN = "安其拉开门事件 > 敲响甲虫之锣"
+                enUS = "安其拉开门事件",
+                zhCN = "安其拉开门事件"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "敲响甲虫之锣",
+                zhCN = "敲响甲虫之锣"
               },
               refID = nil
             }
@@ -2258,9 +2410,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-25863",
+          sourceID = "manual-source-25863",
           type = "event"
         }
       },
@@ -2279,18 +2432,18 @@ NS.Data = {
         mountJournalID = 121
       },
       mountKey = "excluded-26655",
-      primarySourceID = "retired-audit-source-26655",
+      primarySourceID = "manual-source-26655",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "希利苏斯",
                 zhCN = "希利苏斯"
@@ -2298,10 +2451,18 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "event",
+              kind = "custom",
               labels = {
-                enUS = "安其拉开门事件 > 敲响甲虫之锣",
-                zhCN = "安其拉开门事件 > 敲响甲虫之锣"
+                enUS = "安其拉开门事件",
+                zhCN = "安其拉开门事件"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "敲响甲虫之锣",
+                zhCN = "敲响甲虫之锣"
               },
               refID = nil
             }
@@ -2321,9 +2482,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-26655",
+          sourceID = "manual-source-26655",
           type = "event"
         }
       },
@@ -2342,7 +2504,7 @@ NS.Data = {
         mountJournalID = 123
       },
       mountKey = "excluded-28828",
-      primarySourceID = "retired-audit-source-28828",
+      primarySourceID = "manual-source-28828",
       restrictions = {
         classes = {},
         factions = {}
@@ -2363,13 +2525,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 灵翼浮岛",
-                zhCN = "影月谷 > 灵翼浮岛"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
+              labels = {
+                enUS = "灵翼浮岛",
+                zhCN = "灵翼浮岛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
               labels = {
                 enUS = "灵翼幼龙管理员",
                 zhCN = "灵翼幼龙管理员"
@@ -2392,12 +2562,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = {
-              faction = "灵翼之龙",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-28828",
+          sourceID = "manual-source-28828",
           type = "reputation_vendor"
         }
       },
@@ -2416,7 +2584,7 @@ NS.Data = {
         mountJournalID = 145
       },
       mountKey = "excluded-33630",
-      primarySourceID = "confirmed-source-33630",
+      primarySourceID = "manual-source-33630",
       restrictions = {
         classes = {},
         factions = {
@@ -2439,13 +2607,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 卡拉诺斯",
-                zhCN = "丹莫罗 > 卡拉诺斯"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
+              labels = {
+                enUS = "卡拉诺斯",
+                zhCN = "卡拉诺斯"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
               labels = {
                 enUS = "米利·羽哨",
                 zhCN = "米利·羽哨"
@@ -2468,9 +2644,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-33630",
+          sourceID = "manual-source-33630",
           type = "vendor"
         }
       },
@@ -2489,7 +2666,7 @@ NS.Data = {
         mountJournalID = 150
       },
       mountKey = "excluded-34769",
-      primarySourceID = "confirmed-source-34769",
+      primarySourceID = "manual-source-34769",
       restrictions = {
         classes = {
           "PALADIN"
@@ -2504,7 +2681,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "class",
+              kind = "custom",
               labels = {
                 enUS = "血精灵圣骑士",
                 zhCN = "血精灵圣骑士"
@@ -2543,9 +2720,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-34769",
+          sourceID = "manual-source-34769",
           type = "class_reward"
         }
       },
@@ -2564,18 +2742,18 @@ NS.Data = {
         mountJournalID = 1807
       },
       mountKey = "excluded-423869",
-      primarySourceID = "retired-audit-source-423869",
+      primarySourceID = "manual-source-423869",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "store",
+              kind = "custom",
               labels = {
                 enUS = "大灾变怀旧服",
                 zhCN = "大灾变怀旧服"
@@ -2606,9 +2784,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-423869",
+          sourceID = "manual-source-423869",
           type = "store"
         }
       },
@@ -2627,18 +2806,18 @@ NS.Data = {
         mountJournalID = 1806
       },
       mountKey = "excluded-440915",
-      primarySourceID = "retired-audit-source-440915",
+      primarySourceID = "manual-source-440915",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
                 enUS = "2024 国服游戏时间优惠",
                 zhCN = "2024 国服游戏时间优惠"
@@ -2669,9 +2848,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-440915",
+          sourceID = "manual-source-440915",
           type = "event"
         }
       },
@@ -2690,7 +2870,7 @@ NS.Data = {
         mountJournalID = 206
       },
       mountKey = "excluded-44317",
-      primarySourceID = "pvp-arena-44317",
+      primarySourceID = "manual-source-44317",
       restrictions = {
         classes = {},
         factions = {}
@@ -2701,7 +2881,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "竞技场 3v3",
                 zhCN = "竞技场 3v3"
@@ -2709,7 +2889,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "season",
+              kind = "custom",
               labels = {
                 enUS = "第 2 赛季",
                 zhCN = "第 2 赛季"
@@ -2740,9 +2920,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-arena-44317",
+          sourceID = "manual-source-44317",
           type = "achievement"
         }
       },
@@ -2761,18 +2942,18 @@ NS.Data = {
         mountJournalID = 2237
       },
       mountKey = "excluded-457485",
-      primarySourceID = "retired-audit-source-457485",
+      primarySourceID = "manual-source-457485",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
                 enUS = "2026 猩红之潮秘宝",
                 zhCN = "2026 猩红之潮秘宝"
@@ -2795,9 +2976,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-457485",
+          sourceID = "manual-source-457485",
           type = "event"
         }
       },
@@ -2816,18 +2998,18 @@ NS.Data = {
         mountJournalID = 2250
       },
       mountKey = "excluded-459486",
-      primarySourceID = "retired-audit-source-459486",
+      primarySourceID = "manual-source-459486",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
                 enUS = "2025 兰德鲁的豪华礼物盒",
                 zhCN = "2025 兰德鲁的豪华礼物盒"
@@ -2850,9 +3032,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-459486",
+          sourceID = "manual-source-459486",
           type = "event"
         }
       },
@@ -2871,18 +3054,18 @@ NS.Data = {
         mountJournalID = 2309
       },
       mountKey = "excluded-466948",
-      primarySourceID = "retired-audit-source-466948",
+      primarySourceID = "manual-source-466948",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "store",
+              kind = "custom",
               labels = {
                 enUS = "魔兽系列 30 周年纪念坐骑礼包",
                 zhCN = "魔兽系列 30 周年纪念坐骑礼包"
@@ -2913,9 +3096,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-466948",
+          sourceID = "manual-source-466948",
           type = "store"
         }
       },
@@ -2934,18 +3118,18 @@ NS.Data = {
         mountJournalID = 2310
       },
       mountKey = "excluded-466977",
-      primarySourceID = "retired-audit-source-466977",
+      primarySourceID = "manual-source-466977",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "store",
+              kind = "custom",
               labels = {
                 enUS = "魔兽系列 30 周年纪念坐骑礼包",
                 zhCN = "魔兽系列 30 周年纪念坐骑礼包"
@@ -2976,9 +3160,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-466977",
+          sourceID = "manual-source-466977",
           type = "store"
         }
       },
@@ -2997,18 +3182,18 @@ NS.Data = {
         mountJournalID = 2311
       },
       mountKey = "excluded-466980",
-      primarySourceID = "retired-audit-source-466980",
+      primarySourceID = "manual-source-466980",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "store",
+              kind = "custom",
               labels = {
                 enUS = "魔兽系列 30 周年纪念坐骑礼包",
                 zhCN = "魔兽系列 30 周年纪念坐骑礼包"
@@ -3039,9 +3224,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-466980",
+          sourceID = "manual-source-466980",
           type = "store"
         }
       },
@@ -3060,18 +3246,18 @@ NS.Data = {
         mountJournalID = 2312
       },
       mountKey = "excluded-466983",
-      primarySourceID = "retired-audit-source-466983",
+      primarySourceID = "manual-source-466983",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "store",
+              kind = "custom",
               labels = {
                 enUS = "魔兽系列 30 周年纪念坐骑礼包",
                 zhCN = "魔兽系列 30 周年纪念坐骑礼包"
@@ -3102,9 +3288,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-466983",
+          sourceID = "manual-source-466983",
           type = "store"
         }
       },
@@ -3123,7 +3310,7 @@ NS.Data = {
         mountJournalID = 2340
       },
       mountKey = "excluded-473478",
-      primarySourceID = "retired-audit-source-473478",
+      primarySourceID = "manual-source-473478",
       restrictions = {
         classes = {},
         factions = {}
@@ -3134,7 +3321,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "store",
+              kind = "custom",
               labels = {
                 enUS = "熊猫人之谜怀旧服升级礼包",
                 zhCN = "熊猫人之谜怀旧服升级礼包"
@@ -3144,8 +3331,16 @@ NS.Data = {
             {
               kind = "custom",
               labels = {
-                enUS = "宿煞英雄/史诗礼包 > 染煞骑乘虎",
-                zhCN = "宿煞英雄/史诗礼包 > 染煞骑乘虎"
+                enUS = "宿煞英雄/史诗礼包",
+                zhCN = "宿煞英雄/史诗礼包"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "染煞骑乘虎",
+                zhCN = "染煞骑乘虎"
               },
               refID = nil
             }
@@ -3165,9 +3360,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-473478",
+          sourceID = "manual-source-473478",
           type = "store"
         }
       },
@@ -3186,7 +3382,7 @@ NS.Data = {
         mountJournalID = 2341
       },
       mountKey = "excluded-473487",
-      primarySourceID = "retired-audit-source-473487",
+      primarySourceID = "manual-source-473487",
       restrictions = {
         classes = {},
         factions = {}
@@ -3197,7 +3393,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "store",
+              kind = "custom",
               labels = {
                 enUS = "熊猫人之谜怀旧服升级礼包",
                 zhCN = "熊猫人之谜怀旧服升级礼包"
@@ -3207,8 +3403,16 @@ NS.Data = {
             {
               kind = "custom",
               labels = {
-                enUS = "宿煞英雄/史诗礼包 > 染煞云端翔龙",
-                zhCN = "宿煞英雄/史诗礼包 > 染煞云端翔龙"
+                enUS = "宿煞英雄/史诗礼包",
+                zhCN = "宿煞英雄/史诗礼包"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "染煞云端翔龙",
+                zhCN = "染煞云端翔龙"
               },
               refID = nil
             }
@@ -3228,9 +3432,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-473487",
+          sourceID = "manual-source-473487",
           type = "store"
         }
       },
@@ -3249,18 +3454,18 @@ NS.Data = {
         mountJournalID = 238
       },
       mountKey = "excluded-55164",
-      primarySourceID = "retired-audit-source-55164",
+      primarySourceID = "manual-source-55164",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "龙骨荒野",
                 zhCN = "龙骨荒野"
@@ -3268,7 +3473,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "quest",
+              kind = "custom",
               labels = {
                 enUS = "冬卫要塞防御者飞行任务",
                 zhCN = "冬卫要塞防御者飞行任务"
@@ -3291,9 +3496,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-55164",
+          sourceID = "manual-source-55164",
           type = "quest"
         }
       },
@@ -3627,7 +3833,7 @@ NS.Data = {
         mountJournalID = 350
       },
       mountKey = "excluded-69820",
-      primarySourceID = "confirmed-source-69820",
+      primarySourceID = "manual-source-69820",
       restrictions = {
         classes = {
           "PALADIN"
@@ -3642,7 +3848,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "class",
+              kind = "custom",
               labels = {
                 enUS = "牛头人圣骑士（烈日行者）",
                 zhCN = "牛头人圣骑士（烈日行者）"
@@ -3681,9 +3887,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-69820",
+          sourceID = "manual-source-69820",
           type = "class_reward"
         }
       },
@@ -3702,7 +3909,7 @@ NS.Data = {
         mountJournalID = 351
       },
       mountKey = "excluded-69826",
-      primarySourceID = "confirmed-source-69826",
+      primarySourceID = "manual-source-69826",
       restrictions = {
         classes = {
           "PALADIN"
@@ -3717,7 +3924,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "class",
+              kind = "custom",
               labels = {
                 enUS = "牛头人圣骑士（烈日行者）",
                 zhCN = "牛头人圣骑士（烈日行者）"
@@ -3756,9 +3963,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-69826",
+          sourceID = "manual-source-69826",
           type = "class_reward"
         }
       },
@@ -3777,7 +3985,7 @@ NS.Data = {
         mountJournalID = 367
       },
       mountKey = "excluded-73629",
-      primarySourceID = "confirmed-source-73629",
+      primarySourceID = "manual-source-73629",
       restrictions = {
         classes = {
           "PALADIN"
@@ -3792,7 +4000,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "class",
+              kind = "custom",
               labels = {
                 enUS = "德莱尼圣骑士",
                 zhCN = "德莱尼圣骑士"
@@ -3831,9 +4039,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-73629",
+          sourceID = "manual-source-73629",
           type = "class_reward"
         }
       },
@@ -3852,7 +4061,7 @@ NS.Data = {
         mountJournalID = 368
       },
       mountKey = "excluded-73630",
-      primarySourceID = "confirmed-source-73630",
+      primarySourceID = "manual-source-73630",
       restrictions = {
         classes = {
           "PALADIN"
@@ -3867,7 +4076,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "class",
+              kind = "custom",
               labels = {
                 enUS = "德莱尼圣骑士",
                 zhCN = "德莱尼圣骑士"
@@ -3906,9 +4115,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-73630",
+          sourceID = "manual-source-73630",
           type = "class_reward"
         }
       },
@@ -3929,7 +4139,7 @@ NS.Data = {
         mountJournalID = 445
       },
       mountKey = "experiment-12-b",
-      primarySourceID = "ultraxion-drop",
+      primarySourceID = "manual-source-110039",
       restrictions = {
         classes = {},
         factions = {}
@@ -3940,7 +4150,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "时光之穴",
                 zhCN = "时光之穴"
@@ -3948,7 +4158,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "巨龙之魂",
                 zhCN = "巨龙之魂"
@@ -3956,7 +4166,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "奥卓克希昂",
                 zhCN = "奥卓克希昂"
@@ -3969,13 +4179,20 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "ultraxion-drop",
+          sourceID = "manual-source-110039",
           type = "boss_drop"
         }
       },
@@ -3994,7 +4211,7 @@ NS.Data = {
         mountJournalID = 424
       },
       mountKey = "fact-101282",
-      primarySourceID = "pvp-arena-101282",
+      primarySourceID = "manual-source-101282",
       restrictions = {
         classes = {},
         factions = {}
@@ -4005,7 +4222,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "竞技场 3v3",
                 zhCN = "竞技场 3v3"
@@ -4013,7 +4230,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "season",
+              kind = "custom",
               labels = {
                 enUS = "第 9 赛季",
                 zhCN = "第 9 赛季"
@@ -4044,13 +4261,104 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-arena-101282",
+          sourceID = "manual-source-101282",
           type = "achievement"
         }
       },
       status = "candidate"
+    },
+    ["fact-101573"] = {
+      identity = {
+        iconFileID = 132198,
+        names = {
+          enUS = "Swift Shorestrider",
+          zhCN = "迅捷海滨陆行鸟"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 426
+      },
+      mountKey = "fact-101573",
+      primarySourceID = "manual-source-101573",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "黑市拍卖行",
+                zhCN = "黑市拍卖行"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-101573",
+          type = "auction_house"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "国服运营活动",
+                zhCN = "国服运营活动"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "event-101573",
+          type = "event"
+        }
+      },
+      status = "verified"
     },
     ["fact-101821"] = {
       identity = {
@@ -4065,7 +4373,7 @@ NS.Data = {
         mountJournalID = 428
       },
       mountKey = "fact-101821",
-      primarySourceID = "pvp-arena-101821",
+      primarySourceID = "manual-source-101821",
       restrictions = {
         classes = {},
         factions = {}
@@ -4076,7 +4384,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "竞技场 3v3",
                 zhCN = "竞技场 3v3"
@@ -4084,7 +4392,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "season",
+              kind = "custom",
               labels = {
                 enUS = "第 9 赛季",
                 zhCN = "第 9 赛季"
@@ -4115,9 +4423,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-arena-101821",
+          sourceID = "manual-source-101821",
           type = "achievement"
         }
       },
@@ -4136,7 +4445,7 @@ NS.Data = {
         mountJournalID = 432
       },
       mountKey = "fact-102488",
-      primarySourceID = "clean-source-102488",
+      primarySourceID = "manual-source-102488",
       restrictions = {
         classes = {},
         factions = {}
@@ -4144,21 +4453,13 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "obtainable",
+          availability = "rotation",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
-                enUS = "Uldum",
-                zhCN = "奥丹姆"
-              },
-              refID = nil
-            },
-            {
-              kind = "rare",
-              labels = {
-                enUS = "多姆斯·驼贮",
-                zhCN = "多姆斯·驼贮"
+                enUS = "黑市拍卖行",
+                zhCN = "黑市拍卖行"
               },
               refID = nil
             }
@@ -4168,24 +4469,148 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = false,
             eventKey = nil,
             notes = {
-              enUS = nil,
-              zhCN = nil
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
             },
             price = {
               enUS = nil,
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "clean-source-102488",
-          type = "rare_drop"
+          sourceID = "manual-source-102488",
+          type = "auction_house"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "国服运营活动",
+                zhCN = "国服运营活动"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "event-102488",
+          type = "event"
         }
       },
-      status = "candidate"
+      status = "verified"
+    },
+    ["fact-102514"] = {
+      identity = {
+        iconFileID = 132265,
+        names = {
+          enUS = "Corrupted Hippogryph",
+          zhCN = "堕落角鹰兽"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 433
+      },
+      mountKey = "fact-102514",
+      primarySourceID = "manual-source-102514",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "黑市拍卖行",
+                zhCN = "黑市拍卖行"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-102514",
+          type = "auction_house"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "国服运营活动",
+                zhCN = "国服运营活动"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "event-102514",
+          type = "event"
+        }
+      },
+      status = "verified"
     },
     ["fact-10790"] = {
       identity = {
@@ -4200,7 +4625,7 @@ NS.Data = {
         mountJournalID = 32
       },
       mountKey = "fact-10790",
-      primarySourceID = "confirmed-source-10790",
+      primarySourceID = "manual-source-10790",
       restrictions = {
         classes = {},
         factions = {
@@ -4223,13 +4648,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "泰达希尔 > 多兰纳尔",
-                zhCN = "泰达希尔 > 多兰纳尔"
+                enUS = "泰达希尔",
+                zhCN = "泰达希尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
+              labels = {
+                enUS = "多兰纳尔",
+                zhCN = "多兰纳尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
               labels = {
                 enUS = "莱兰奈",
                 zhCN = "莱兰奈"
@@ -4252,9 +4685,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-10790",
+          sourceID = "manual-source-10790",
           type = "vendor"
         }
       },
@@ -4273,7 +4707,7 @@ NS.Data = {
         mountJournalID = 35
       },
       mountKey = "fact-10795",
-      primarySourceID = "confirmed-source-10795",
+      primarySourceID = "manual-source-10795",
       restrictions = {
         classes = {},
         factions = {
@@ -4296,13 +4730,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 森金村",
-                zhCN = "杜隆塔尔 > 森金村"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
+              labels = {
+                enUS = "森金村",
+                zhCN = "森金村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
               labels = {
                 enUS = "祖尼尔",
                 zhCN = "祖尼尔"
@@ -4325,13 +4767,104 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-10795",
+          sourceID = "manual-source-10795",
           type = "vendor"
         }
       },
       status = "candidate"
+    },
+    ["fact-113120"] = {
+      identity = {
+        iconFileID = 587740,
+        names = {
+          enUS = "Feldrake",
+          zhCN = "邪能幼龙"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 447
+      },
+      mountKey = "fact-113120",
+      primarySourceID = "manual-source-113120",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "黑市拍卖行",
+                zhCN = "黑市拍卖行"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-113120",
+          type = "auction_house"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "国服运营活动",
+                zhCN = "国服运营活动"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "event-113120",
+          type = "event"
+        }
+      },
+      status = "verified"
     },
     ["fact-120395"] = {
       identity = {
@@ -4488,7 +5021,7 @@ NS.Data = {
         mountJournalID = 462
       },
       mountKey = "fact-123182",
-      primarySourceID = "enriched-source-123182",
+      primarySourceID = "manual-source-123182",
       restrictions = {
         classes = {},
         factions = {}
@@ -4499,55 +5032,79 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "faction",
+              kind = "custom",
               labels = {
-                enUS = "至尊天神（崇拜）",
-                zhCN = "至尊天神（崇拜）"
+                enUS = "永恒岛",
+                zhCN = "永恒岛"
               },
               refID = nil
             },
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
-                enUS = "锦绣谷 > 至尊天神庭院",
-                zhCN = "锦绣谷 > 至尊天神庭院"
+                enUS = "四大天神世界首领",
+                zhCN = "四大天神世界首领"
               },
               refID = nil
-            },
-            {
-              kind = "npc",
-              labels = {
-                enUS = "NPC 248108",
-                zhCN = "至尊天神的化身"
-              },
-              refID = 248108
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
               enUS = nil,
               zhCN = nil
             },
-            price = {
-              enUS = "2,500金币",
-              zhCN = "2,500金币"
-            },
             questID = nil,
-            reputation = {
-              faction = "至尊天神",
-              standing = "EXALTED"
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-123182",
+          type = "boss_drop"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "天神机缘之袋",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
             }
           },
-          sourceID = "enriched-source-123182",
-          type = "reputation_vendor"
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "container-123182",
+          type = "container"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["fact-124550"] = {
       identity = {
@@ -4562,7 +5119,7 @@ NS.Data = {
         mountJournalID = 467
       },
       mountKey = "fact-124550",
-      primarySourceID = "pvp-arena-124550",
+      primarySourceID = "manual-source-124550",
       restrictions = {
         classes = {},
         factions = {}
@@ -4573,7 +5130,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "竞技场 3v3",
                 zhCN = "竞技场 3v3"
@@ -4581,7 +5138,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "season",
+              kind = "custom",
               labels = {
                 enUS = "第 11 赛季",
                 zhCN = "第 11 赛季"
@@ -4612,9 +5169,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-arena-124550",
+          sourceID = "manual-source-124550",
           type = "achievement"
         }
       },
@@ -4633,7 +5191,7 @@ NS.Data = {
         mountJournalID = 2636
       },
       mountKey = "fact-1247591",
-      primarySourceID = "enriched-source-1247591",
+      primarySourceID = "manual-source-1247591",
       restrictions = {
         classes = {},
         factions = {}
@@ -4644,55 +5202,71 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "faction",
+              kind = "custom",
               labels = {
-                enUS = "至尊天神（崇拜）",
-                zhCN = "至尊天神（崇拜）"
+                enUS = "潘达利亚天神英雄",
+                zhCN = "潘达利亚天神英雄"
               },
               refID = nil
-            },
-            {
-              kind = "zone",
-              labels = {
-                enUS = "锦绣谷 > 至尊天神庭院",
-                zhCN = "锦绣谷 > 至尊天神庭院"
-              },
-              refID = nil
-            },
-            {
-              kind = "npc",
-              labels = {
-                enUS = "NPC 248108",
-                zhCN = "至尊天神的化身"
-              },
-              refID = 248108
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
               enUS = nil,
               zhCN = nil
             },
-            price = {
-              enUS = "2,500金币",
-              zhCN = "2,500金币"
-            },
             questID = nil,
-            reputation = {
-              faction = "至尊天神",
-              standing = "EXALTED"
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-1247591",
+          type = "achievement"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "天神机缘之袋",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
             }
           },
-          sourceID = "enriched-source-1247591",
-          type = "reputation_vendor"
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "container-1247591",
+          type = "container"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["fact-1247596"] = {
       identity = {
@@ -4707,7 +5281,7 @@ NS.Data = {
         mountJournalID = 2639
       },
       mountKey = "fact-1247596",
-      primarySourceID = "enriched-source-1247596",
+      primarySourceID = "manual-source-1247596",
       restrictions = {
         classes = {},
         factions = {}
@@ -4715,58 +5289,40 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "obtainable",
+          availability = "unavailable",
           path = {
             {
-              kind = "faction",
+              kind = "custom",
               labels = {
-                enUS = "至尊天神（崇拜）",
-                zhCN = "至尊天神（崇拜）"
+                enUS = "挑战模式第2赛季排行榜（头衔「雾裔」）奖励",
+                zhCN = "挑战模式第2赛季排行榜（头衔「雾裔」）奖励"
               },
               refID = nil
-            },
-            {
-              kind = "zone",
-              labels = {
-                enUS = "锦绣谷 > 至尊天神庭院",
-                zhCN = "锦绣谷 > 至尊天神庭院"
-              },
-              refID = nil
-            },
-            {
-              kind = "npc",
-              labels = {
-                enUS = "NPC 267317",
-                zhCN = "天神使者"
-              },
-              refID = 267317
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
+              enUS = "S2已结算。",
+              zhCN = "S2已结算。"
+            },
+            price = {
               enUS = nil,
               zhCN = nil
             },
-            price = {
-              enUS = "2,500金币",
-              zhCN = "2,500金币"
-            },
             questID = nil,
-            reputation = {
-              faction = "至尊天神",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-1247596",
-          type = "reputation_vendor"
+          sourceID = "manual-source-1247596",
+          type = "achievement"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["fact-1247597"] = {
       identity = {
@@ -4911,7 +5467,8 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
           sourceID = "manual-source-1249659",
           type = "store"
@@ -4932,7 +5489,7 @@ NS.Data = {
         mountJournalID = 482
       },
       mountKey = "fact-127178",
-      primarySourceID = "enriched-source-127178",
+      primarySourceID = "manual-source-127178",
       restrictions = {
         classes = {},
         factions = {}
@@ -4943,55 +5500,79 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "faction",
+              kind = "custom",
               labels = {
-                enUS = "至尊天神（崇拜）",
-                zhCN = "至尊天神（崇拜）"
+                enUS = "永恒岛",
+                zhCN = "永恒岛"
               },
               refID = nil
             },
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
-                enUS = "锦绣谷 > 至尊天神庭院",
-                zhCN = "锦绣谷 > 至尊天神庭院"
+                enUS = "四大天神世界首领",
+                zhCN = "四大天神世界首领"
               },
               refID = nil
-            },
-            {
-              kind = "npc",
-              labels = {
-                enUS = "NPC 248108",
-                zhCN = "至尊天神的化身"
-              },
-              refID = 248108
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
               enUS = nil,
               zhCN = nil
             },
-            price = {
-              enUS = "2,500金币",
-              zhCN = "2,500金币"
-            },
             questID = nil,
-            reputation = {
-              faction = "至尊天神",
-              standing = "EXALTED"
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-127178",
+          type = "boss_drop"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "天神机缘之袋",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
             }
           },
-          sourceID = "enriched-source-127178",
-          type = "reputation_vendor"
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "container-127178",
+          type = "container"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["fact-127209"] = {
       identity = {
@@ -5006,7 +5587,7 @@ NS.Data = {
         mountJournalID = 484
       },
       mountKey = "fact-127209",
-      primarySourceID = "enriched-source-127209",
+      primarySourceID = "manual-source-127209",
       restrictions = {
         classes = {},
         factions = {}
@@ -5017,55 +5598,79 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "faction",
+              kind = "custom",
               labels = {
-                enUS = "至尊天神（崇拜）",
-                zhCN = "至尊天神（崇拜）"
+                enUS = "永恒岛",
+                zhCN = "永恒岛"
               },
               refID = nil
             },
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
-                enUS = "锦绣谷 > 至尊天神庭院",
-                zhCN = "锦绣谷 > 至尊天神庭院"
+                enUS = "四大天神世界首领",
+                zhCN = "四大天神世界首领"
               },
               refID = nil
-            },
-            {
-              kind = "npc",
-              labels = {
-                enUS = "NPC 248108",
-                zhCN = "至尊天神的化身"
-              },
-              refID = 248108
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
               enUS = nil,
               zhCN = nil
             },
-            price = {
-              enUS = "2,500金币",
-              zhCN = "2,500金币"
-            },
             questID = nil,
-            reputation = {
-              faction = "至尊天神",
-              standing = "EXALTED"
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-127209",
+          type = "boss_drop"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "天神机缘之袋",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
             }
           },
-          sourceID = "enriched-source-127209",
-          type = "reputation_vendor"
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "container-127209",
+          type = "container"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["fact-127213"] = {
       identity = {
@@ -5080,7 +5685,7 @@ NS.Data = {
         mountJournalID = 485
       },
       mountKey = "fact-127213",
-      primarySourceID = "enriched-source-127213",
+      primarySourceID = "manual-source-127213",
       restrictions = {
         classes = {},
         factions = {}
@@ -5091,55 +5696,79 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "faction",
+              kind = "custom",
               labels = {
-                enUS = "至尊天神（崇拜）",
-                zhCN = "至尊天神（崇拜）"
+                enUS = "永恒岛",
+                zhCN = "永恒岛"
               },
               refID = nil
             },
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
-                enUS = "锦绣谷 > 至尊天神庭院",
-                zhCN = "锦绣谷 > 至尊天神庭院"
+                enUS = "四大天神世界首领",
+                zhCN = "四大天神世界首领"
               },
               refID = nil
-            },
-            {
-              kind = "npc",
-              labels = {
-                enUS = "NPC 248108",
-                zhCN = "至尊天神的化身"
-              },
-              refID = 248108
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
               enUS = nil,
               zhCN = nil
             },
-            price = {
-              enUS = "2,500金币",
-              zhCN = "2,500金币"
-            },
             questID = nil,
-            reputation = {
-              faction = "至尊天神",
-              standing = "EXALTED"
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-127213",
+          type = "boss_drop"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "天神机缘之袋",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
             }
           },
-          sourceID = "enriched-source-127213",
-          type = "reputation_vendor"
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "container-127213",
+          type = "container"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["fact-127271"] = {
       identity = {
@@ -5154,7 +5783,7 @@ NS.Data = {
         mountJournalID = 488
       },
       mountKey = "fact-127271",
-      primarySourceID = "enriched-source-127271",
+      primarySourceID = "manual-source-127271",
       restrictions = {
         classes = {},
         factions = {}
@@ -5167,53 +5796,51 @@ NS.Data = {
             {
               kind = "faction",
               labels = {
-                enUS = "至尊天神（崇拜）",
-                zhCN = "至尊天神（崇拜）"
+                enUS = "垂钓翁（崇拜）",
+                zhCN = "垂钓翁（崇拜）"
               },
               refID = nil
             },
             {
               kind = "zone",
               labels = {
-                enUS = "锦绣谷 > 至尊天神庭院",
-                zhCN = "锦绣谷 > 至尊天神庭院"
+                enUS = "永恒岛 / 天神地下城",
+                zhCN = "永恒岛 / 天神地下城"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 248108",
-                zhCN = "至尊天神的化身"
+                enUS = "天神机缘之袋（至尊石碎片兑换）",
+                zhCN = "天神机缘之袋（至尊石碎片兑换）"
               },
-              refID = 248108
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
+              enUS = "需垂钓翁声望崇拜后，方可获得/使用该来源。",
+              zhCN = "需垂钓翁声望崇拜后，方可获得/使用该来源。"
+            },
+            price = {
               enUS = nil,
               zhCN = nil
             },
-            price = {
-              enUS = "2,500金币",
-              zhCN = "2,500金币"
-            },
             questID = nil,
-            reputation = {
-              faction = "至尊天神",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-127271",
-          type = "reputation_vendor"
+          sourceID = "manual-source-127271",
+          type = "boss_drop"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["fact-127272"] = {
       identity = {
@@ -5228,7 +5855,7 @@ NS.Data = {
         mountJournalID = 489
       },
       mountKey = "fact-127272",
-      primarySourceID = "enriched-source-127272",
+      primarySourceID = "manual-source-127272",
       restrictions = {
         classes = {},
         factions = {}
@@ -5241,53 +5868,51 @@ NS.Data = {
             {
               kind = "faction",
               labels = {
-                enUS = "至尊天神（崇拜）",
-                zhCN = "至尊天神（崇拜）"
+                enUS = "垂钓翁（崇拜）",
+                zhCN = "垂钓翁（崇拜）"
               },
               refID = nil
             },
             {
               kind = "zone",
               labels = {
-                enUS = "锦绣谷 > 至尊天神庭院",
-                zhCN = "锦绣谷 > 至尊天神庭院"
+                enUS = "永恒岛 / 天神地下城",
+                zhCN = "永恒岛 / 天神地下城"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 248108",
-                zhCN = "至尊天神的化身"
+                enUS = "天神机缘之袋（至尊石碎片兑换）",
+                zhCN = "天神机缘之袋（至尊石碎片兑换）"
               },
-              refID = 248108
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
+              enUS = "需垂钓翁声望崇拜后，方可获得/使用该来源。",
+              zhCN = "需垂钓翁声望崇拜后，方可获得/使用该来源。"
+            },
+            price = {
               enUS = nil,
               zhCN = nil
             },
-            price = {
-              enUS = "2,500金币",
-              zhCN = "2,500金币"
-            },
             questID = nil,
-            reputation = {
-              faction = "至尊天神",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-127272",
-          type = "reputation_vendor"
+          sourceID = "manual-source-127272",
+          type = "boss_drop"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["fact-127274"] = {
       identity = {
@@ -5302,7 +5927,7 @@ NS.Data = {
         mountJournalID = 490
       },
       mountKey = "fact-127274",
-      primarySourceID = "enriched-source-127274",
+      primarySourceID = "manual-source-127274",
       restrictions = {
         classes = {},
         factions = {}
@@ -5315,53 +5940,51 @@ NS.Data = {
             {
               kind = "faction",
               labels = {
-                enUS = "至尊天神（崇拜）",
-                zhCN = "至尊天神（崇拜）"
+                enUS = "垂钓翁（崇拜）",
+                zhCN = "垂钓翁（崇拜）"
               },
               refID = nil
             },
             {
               kind = "zone",
               labels = {
-                enUS = "锦绣谷 > 至尊天神庭院",
-                zhCN = "锦绣谷 > 至尊天神庭院"
+                enUS = "永恒岛 / 天神地下城",
+                zhCN = "永恒岛 / 天神地下城"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 248108",
-                zhCN = "至尊天神的化身"
+                enUS = "天神机缘之袋（至尊石碎片兑换）",
+                zhCN = "天神机缘之袋（至尊石碎片兑换）"
               },
-              refID = 248108
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
+              enUS = "需垂钓翁声望崇拜后，方可获得/使用该来源。",
+              zhCN = "需垂钓翁声望崇拜后，方可获得/使用该来源。"
+            },
+            price = {
               enUS = nil,
               zhCN = nil
             },
-            price = {
-              enUS = "2,500金币",
-              zhCN = "2,500金币"
-            },
             questID = nil,
-            reputation = {
-              faction = "至尊天神",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-127274",
-          type = "reputation_vendor"
+          sourceID = "manual-source-127274",
+          type = "boss_drop"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["fact-127278"] = {
       identity = {
@@ -5376,7 +5999,7 @@ NS.Data = {
         mountJournalID = 491
       },
       mountKey = "fact-127278",
-      primarySourceID = "enriched-source-127278",
+      primarySourceID = "manual-source-127278",
       restrictions = {
         classes = {},
         factions = {}
@@ -5389,53 +6012,51 @@ NS.Data = {
             {
               kind = "faction",
               labels = {
-                enUS = "至尊天神（崇拜）",
-                zhCN = "至尊天神（崇拜）"
+                enUS = "垂钓翁（崇拜）",
+                zhCN = "垂钓翁（崇拜）"
               },
               refID = nil
             },
             {
               kind = "zone",
               labels = {
-                enUS = "锦绣谷 > 至尊天神庭院",
-                zhCN = "锦绣谷 > 至尊天神庭院"
+                enUS = "永恒岛 / 天神地下城",
+                zhCN = "永恒岛 / 天神地下城"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 248108",
-                zhCN = "至尊天神的化身"
+                enUS = "天神机缘之袋（至尊石碎片兑换）",
+                zhCN = "天神机缘之袋（至尊石碎片兑换）"
               },
-              refID = 248108
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
+              enUS = "需垂钓翁声望崇拜后，方可获得/使用该来源。",
+              zhCN = "需垂钓翁声望崇拜后，方可获得/使用该来源。"
+            },
+            price = {
               enUS = nil,
               zhCN = nil
             },
-            price = {
-              enUS = "2,500金币",
-              zhCN = "2,500金币"
-            },
             questID = nil,
-            reputation = {
-              faction = "至尊天神",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-127278",
-          type = "reputation_vendor"
+          sourceID = "manual-source-127278",
+          type = "boss_drop"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["fact-127286"] = {
       identity = {
@@ -6147,6 +6768,202 @@ NS.Data = {
       },
       status = "candidate"
     },
+    ["fact-1284679"] = {
+      identity = {
+        iconFileID = 7669035,
+        names = {
+          enUS = "Mount 1284679",
+          zhCN = "染煞恐狼"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 2949
+      },
+      mountKey = "fact-1284679",
+      primarySourceID = "manual-source-1284679",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "猩红之潮秘宝",
+                zhCN = "猩红之潮秘宝"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "染煞宝箱",
+                zhCN = "染煞宝箱"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-1284679",
+          type = "event"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "玩家拍卖行",
+                zhCN = "玩家拍卖行"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "auction-house-1284679",
+          type = "auction_house"
+        }
+      },
+      status = "verified"
+    },
+    ["fact-1285897"] = {
+      identity = {
+        iconFileID = 7658809,
+        names = {
+          enUS = "Mount 1285897",
+          zhCN = "染煞猫头鹰"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 2951
+      },
+      mountKey = "fact-1285897",
+      primarySourceID = "manual-source-1285897",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "猩红之潮秘宝",
+                zhCN = "猩红之潮秘宝"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "染煞宝箱",
+                zhCN = "染煞宝箱"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-1285897",
+          type = "event"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "玩家拍卖行",
+                zhCN = "玩家拍卖行"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "auction-house-1285897",
+          type = "auction_house"
+        }
+      },
+      status = "verified"
+    },
     ["fact-1298510"] = {
       identity = {
         iconFileID = 236233,
@@ -6195,6 +7012,96 @@ NS.Data = {
       },
       status = "candidate"
     },
+    ["fact-136505"] = {
+      identity = {
+        iconFileID = 796703,
+        names = {
+          enUS = "Ghastly Charger",
+          zhCN = "幽灵军马"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 532
+      },
+      mountKey = "fact-136505",
+      primarySourceID = "manual-source-136505",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "黑市拍卖行",
+                zhCN = "黑市拍卖行"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-136505",
+          type = "auction_house"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "国服运营活动",
+                zhCN = "国服运营活动"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "event-136505",
+          type = "event"
+        }
+      },
+      status = "verified"
+    },
     ["fact-13819"] = {
       identity = {
         iconFileID = 136103,
@@ -6208,7 +7115,7 @@ NS.Data = {
         mountJournalID = 41
       },
       mountKey = "fact-13819",
-      primarySourceID = "confirmed-source-13819",
+      primarySourceID = "manual-source-13819",
       restrictions = {
         classes = {
           "PALADIN"
@@ -6223,7 +7130,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "class",
+              kind = "custom",
               labels = {
                 enUS = "人类/矮人圣骑士",
                 zhCN = "人类/矮人圣骑士"
@@ -6262,9 +7169,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-13819",
+          sourceID = "manual-source-13819",
           type = "class_reward"
         }
       },
@@ -6283,7 +7191,7 @@ NS.Data = {
         mountJournalID = 541
       },
       mountKey = "fact-139407",
-      primarySourceID = "pvp-arena-139407",
+      primarySourceID = "manual-source-139407",
       restrictions = {
         classes = {},
         factions = {}
@@ -6294,7 +7202,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "竞技场 3v3",
                 zhCN = "竞技场 3v3"
@@ -6302,7 +7210,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "season",
+              kind = "custom",
               labels = {
                 enUS = "第 12 赛季",
                 zhCN = "第 12 赛季"
@@ -6333,9 +7241,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-arena-139407",
+          sourceID = "manual-source-139407",
           type = "achievement"
         }
       },
@@ -6354,7 +7263,7 @@ NS.Data = {
         mountJournalID = 552
       },
       mountKey = "fact-142910",
-      primarySourceID = "fact-source-142910",
+      primarySourceID = "manual-source-142910",
       restrictions = {
         classes = {},
         factions = {}
@@ -6389,7 +7298,7 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -6404,9 +7313,10 @@ NS.Data = {
               zhCN = "钢铁战马：已绝版"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "fact-source-142910",
+          sourceID = "manual-source-142910",
           type = "vendor"
         }
       },
@@ -6425,7 +7335,7 @@ NS.Data = {
         mountJournalID = 558
       },
       mountKey = "fact-148396",
-      primarySourceID = "corrected-source-148396",
+      primarySourceID = "manual-source-148396",
       restrictions = {
         classes = {},
         factions = {}
@@ -6436,7 +7346,7 @@ NS.Data = {
           availability = "unavailable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "锦绣谷",
                 zhCN = "锦绣谷"
@@ -6444,7 +7354,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "决战奥格瑞玛",
                 zhCN = "决战奥格瑞玛"
@@ -6452,7 +7362,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "achievement",
+              kind = "custom",
               labels = {
                 enUS = "千钧一发：加尔鲁什·地狱咆哮",
                 zhCN = "千钧一发：加尔鲁什·地狱咆哮"
@@ -6462,7 +7372,7 @@ NS.Data = {
           },
           priority = 100,
           requirements = {
-            achievementID = 8398,
+            achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
@@ -6470,10 +7380,15 @@ NS.Data = {
               enUS = "10人普通或更高难度、版本阶段限定；不是首领掉落。",
               zhCN = "10人普通或更高难度、版本阶段限定；不是首领掉落。"
             },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "corrected-source-148396",
+          sourceID = "manual-source-148396",
           type = "achievement"
         }
       },
@@ -6492,7 +7407,7 @@ NS.Data = {
         mountJournalID = 560
       },
       mountKey = "fact-148428",
-      primarySourceID = "enriched-source-148428",
+      primarySourceID = "manual-source-148428",
       restrictions = {
         classes = {},
         factions = {}
@@ -6513,21 +7428,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "永恒岛 > 天神庭院",
-                zhCN = "永恒岛 > 天神庭院"
+                enUS = "永恒岛",
+                zhCN = "永恒岛"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 73307",
+                enUS = "天神庭院",
+                zhCN = "天神庭院"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "发言人古兰",
                 zhCN = "发言人古兰"
               },
-              refID = 73307
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -6542,12 +7465,10 @@ NS.Data = {
               zhCN = "2,000枚永恒铸币"
             },
             questID = nil,
-            reputation = {
-              faction = "皇帝少昊",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-148428",
+          sourceID = "manual-source-148428",
           type = "reputation_vendor"
         }
       },
@@ -6566,7 +7487,7 @@ NS.Data = {
         mountJournalID = 562
       },
       mountKey = "fact-148618",
-      primarySourceID = "pvp-arena-148618",
+      primarySourceID = "manual-source-148618",
       restrictions = {
         classes = {},
         factions = {}
@@ -6577,7 +7498,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "竞技场 3v3",
                 zhCN = "竞技场 3v3"
@@ -6585,7 +7506,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "season",
+              kind = "custom",
               labels = {
                 enUS = "第 13 赛季",
                 zhCN = "第 13 赛季"
@@ -6616,9 +7537,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-arena-148618",
+          sourceID = "manual-source-148618",
           type = "achievement"
         }
       },
@@ -6637,7 +7559,7 @@ NS.Data = {
         mountJournalID = 563
       },
       mountKey = "fact-148619",
-      primarySourceID = "pvp-arena-148619",
+      primarySourceID = "manual-source-148619",
       restrictions = {
         classes = {},
         factions = {}
@@ -6648,7 +7570,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "竞技场 3v3",
                 zhCN = "竞技场 3v3"
@@ -6656,7 +7578,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "season",
+              kind = "custom",
               labels = {
                 enUS = "第 14 赛季",
                 zhCN = "第 14 赛季"
@@ -6687,9 +7609,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-arena-148619",
+          sourceID = "manual-source-148619",
           type = "achievement"
         }
       },
@@ -6708,7 +7631,7 @@ NS.Data = {
         mountJournalID = 564
       },
       mountKey = "fact-148620",
-      primarySourceID = "pvp-arena-148620",
+      primarySourceID = "manual-source-148620",
       restrictions = {
         classes = {},
         factions = {}
@@ -6719,7 +7642,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "竞技场 3v3",
                 zhCN = "竞技场 3v3"
@@ -6727,7 +7650,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "season",
+              kind = "custom",
               labels = {
                 enUS = "第 15 赛季",
                 zhCN = "第 15 赛季"
@@ -6758,9 +7681,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-arena-148620",
+          sourceID = "manual-source-148620",
           type = "achievement"
         }
       },
@@ -6779,7 +7703,7 @@ NS.Data = {
         mountJournalID = 600
       },
       mountKey = "fact-155741",
-      primarySourceID = "confirmed-source-155741",
+      primarySourceID = "manual-source-155741",
       restrictions = {
         classes = {},
         factions = {}
@@ -6790,7 +7714,7 @@ NS.Data = {
           availability = "unavailable",
           path = {
             {
-              kind = "promotion",
+              kind = "custom",
               labels = {
                 enUS = "《德拉诺之王》数字豪华版/典藏版奖励",
                 zhCN = "《德拉诺之王》数字豪华版/典藏版奖励"
@@ -6813,9 +7737,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-155741",
+          sourceID = "manual-source-155741",
           type = "promotion"
         }
       },
@@ -6834,7 +7759,7 @@ NS.Data = {
         mountJournalID = 42
       },
       mountKey = "fact-15779",
-      primarySourceID = "enriched-source-15779",
+      primarySourceID = "manual-source-15779",
       restrictions = {
         classes = {},
         factions = {}
@@ -6855,21 +7780,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 卡拉诺斯",
-                zhCN = "丹莫罗 > 卡拉诺斯"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 7955",
+                enUS = "卡拉诺斯",
+                zhCN = "卡拉诺斯"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "米利·羽哨",
                 zhCN = "米利·羽哨"
               },
-              refID = 7955
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -6884,9 +7817,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-15779",
+          sourceID = "manual-source-15779",
           type = "vendor"
         }
       },
@@ -6905,7 +7839,7 @@ NS.Data = {
         mountJournalID = 46
       },
       mountKey = "fact-16056",
-      primarySourceID = "enriched-source-16056",
+      primarySourceID = "manual-source-16056",
       restrictions = {
         classes = {},
         factions = {}
@@ -6926,21 +7860,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "泰达希尔 > 多兰纳尔",
-                zhCN = "泰达希尔 > 多兰纳尔"
+                enUS = "泰达希尔",
+                zhCN = "泰达希尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4730",
+                enUS = "多兰纳尔",
+                zhCN = "多兰纳尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "莱兰奈",
                 zhCN = "莱兰奈"
               },
-              refID = 4730
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -6955,9 +7897,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-16056",
+          sourceID = "manual-source-16056",
           type = "vendor"
         }
       },
@@ -6976,7 +7919,7 @@ NS.Data = {
         mountJournalID = 50
       },
       mountKey = "fact-16080",
-      primarySourceID = "enriched-source-16080",
+      primarySourceID = "manual-source-16080",
       restrictions = {
         classes = {},
         factions = {}
@@ -6997,21 +7940,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 奥格瑞玛",
-                zhCN = "杜隆塔尔 > 奥格瑞玛"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 3362",
+                enUS = "奥格瑞玛",
+                zhCN = "奥格瑞玛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "奥古纳罗",
                 zhCN = "奥古纳罗"
               },
-              refID = 3362
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -7026,9 +7977,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-16080",
+          sourceID = "manual-source-16080",
           type = "vendor"
         }
       },
@@ -7047,7 +7999,7 @@ NS.Data = {
         mountJournalID = 52
       },
       mountKey = "fact-16082",
-      primarySourceID = "enriched-source-16082",
+      primarySourceID = "manual-source-16082",
       restrictions = {
         classes = {},
         factions = {}
@@ -7068,21 +8020,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "艾尔文森林 > 东谷伐木场",
-                zhCN = "艾尔文森林 > 东谷伐木场"
+                enUS = "艾尔文森林",
+                zhCN = "艾尔文森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 6749",
+                enUS = "东谷伐木场",
+                zhCN = "东谷伐木场"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "艾玛",
                 zhCN = "艾玛"
               },
-              refID = 6749
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -7097,9 +8057,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-16082",
+          sourceID = "manual-source-16082",
           type = "vendor"
         }
       },
@@ -7118,7 +8079,7 @@ NS.Data = {
         mountJournalID = 53
       },
       mountKey = "fact-16083",
-      primarySourceID = "enriched-source-16083",
+      primarySourceID = "manual-source-16083",
       restrictions = {
         classes = {},
         factions = {}
@@ -7139,21 +8100,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "艾尔文森林 > 东谷伐木场",
-                zhCN = "艾尔文森林 > 东谷伐木场"
+                enUS = "艾尔文森林",
+                zhCN = "艾尔文森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 6749",
+                enUS = "东谷伐木场",
+                zhCN = "东谷伐木场"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "艾玛",
                 zhCN = "艾玛"
               },
-              refID = 6749
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -7168,9 +8137,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-16083",
+          sourceID = "manual-source-16083",
           type = "vendor"
         }
       },
@@ -7189,7 +8159,7 @@ NS.Data = {
         mountJournalID = 54
       },
       mountKey = "fact-16084",
-      primarySourceID = "enriched-source-16084",
+      primarySourceID = "manual-source-16084",
       restrictions = {
         classes = {},
         factions = {}
@@ -7210,21 +8180,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 森金村",
-                zhCN = "杜隆塔尔 > 森金村"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 7952",
+                enUS = "森金村",
+                zhCN = "森金村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "祖尼尔",
                 zhCN = "祖尼尔"
               },
-              refID = 7952
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -7239,9 +8217,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-16084",
+          sourceID = "manual-source-16084",
           type = "vendor"
         }
       },
@@ -7260,7 +8239,7 @@ NS.Data = {
         mountJournalID = 56
       },
       mountKey = "fact-17450",
-      primarySourceID = "enriched-source-17450",
+      primarySourceID = "manual-source-17450",
       restrictions = {
         classes = {},
         factions = {}
@@ -7281,21 +8260,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 森金村",
-                zhCN = "杜隆塔尔 > 森金村"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 7952",
+                enUS = "森金村",
+                zhCN = "森金村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "祖尼尔",
                 zhCN = "祖尼尔"
               },
-              refID = 7952
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -7310,9 +8297,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-17450",
+          sourceID = "manual-source-17450",
           type = "vendor"
         }
       },
@@ -7331,7 +8319,7 @@ NS.Data = {
         mountJournalID = 58
       },
       mountKey = "fact-17454",
-      primarySourceID = "enriched-source-17454",
+      primarySourceID = "manual-source-17454",
       restrictions = {
         classes = {},
         factions = {}
@@ -7352,21 +8340,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 卡拉诺斯",
-                zhCN = "丹莫罗 > 卡拉诺斯"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 7955",
+                enUS = "卡拉诺斯",
+                zhCN = "卡拉诺斯"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "米利·羽哨",
                 zhCN = "米利·羽哨"
               },
-              refID = 7955
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -7381,9 +8377,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-17454",
+          sourceID = "manual-source-17454",
           type = "vendor"
         }
       },
@@ -7402,7 +8399,7 @@ NS.Data = {
         mountJournalID = 62
       },
       mountKey = "fact-17459",
-      primarySourceID = "enriched-source-17459",
+      primarySourceID = "manual-source-17459",
       restrictions = {
         classes = {},
         factions = {}
@@ -7423,21 +8420,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 卡拉诺斯",
-                zhCN = "丹莫罗 > 卡拉诺斯"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 7955",
+                enUS = "卡拉诺斯",
+                zhCN = "卡拉诺斯"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "米利·羽哨",
                 zhCN = "米利·羽哨"
               },
-              refID = 7955
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -7452,9 +8457,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-17459",
+          sourceID = "manual-source-17459",
           type = "vendor"
         }
       },
@@ -7473,7 +8479,7 @@ NS.Data = {
         mountJournalID = 63
       },
       mountKey = "fact-17460",
-      primarySourceID = "enriched-source-17460",
+      primarySourceID = "manual-source-17460",
       restrictions = {
         classes = {},
         factions = {}
@@ -7494,21 +8500,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 铁炉堡",
-                zhCN = "丹莫罗 > 铁炉堡"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 1261",
+                enUS = "铁炉堡",
+                zhCN = "铁炉堡"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "维隆·冻石",
                 zhCN = "维隆·冻石"
               },
-              refID = 1261
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -7523,9 +8537,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-17460",
+          sourceID = "manual-source-17460",
           type = "vendor"
         }
       },
@@ -7544,7 +8559,7 @@ NS.Data = {
         mountJournalID = 64
       },
       mountKey = "fact-17461",
-      primarySourceID = "enriched-source-17461",
+      primarySourceID = "manual-source-17461",
       restrictions = {
         classes = {},
         factions = {}
@@ -7565,21 +8580,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 铁炉堡",
-                zhCN = "丹莫罗 > 铁炉堡"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 1261",
+                enUS = "铁炉堡",
+                zhCN = "铁炉堡"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "维隆·冻石",
                 zhCN = "维隆·冻石"
               },
-              refID = 1261
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -7594,9 +8617,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-17461",
+          sourceID = "manual-source-17461",
           type = "vendor"
         }
       },
@@ -7615,7 +8639,7 @@ NS.Data = {
         mountJournalID = 73
       },
       mountKey = "fact-18991",
-      primarySourceID = "enriched-source-18991",
+      primarySourceID = "manual-source-18991",
       restrictions = {
         classes = {},
         factions = {}
@@ -7636,21 +8660,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "莫高雷 > 血蹄村",
-                zhCN = "莫高雷 > 血蹄村"
+                enUS = "莫高雷",
+                zhCN = "莫高雷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 3685",
+                enUS = "血蹄村",
+                zhCN = "血蹄村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "哈布·爪蹄",
                 zhCN = "哈布·爪蹄"
               },
-              refID = 3685
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -7665,9 +8697,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-18991",
+          sourceID = "manual-source-18991",
           type = "vendor"
         }
       },
@@ -7686,7 +8719,7 @@ NS.Data = {
         mountJournalID = 74
       },
       mountKey = "fact-18992",
-      primarySourceID = "enriched-source-18992",
+      primarySourceID = "manual-source-18992",
       restrictions = {
         classes = {},
         factions = {}
@@ -7707,21 +8740,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "莫高雷 > 血蹄村",
-                zhCN = "莫高雷 > 血蹄村"
+                enUS = "莫高雷",
+                zhCN = "莫高雷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 3685",
+                enUS = "血蹄村",
+                zhCN = "血蹄村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "哈布·爪蹄",
                 zhCN = "哈布·爪蹄"
               },
-              refID = 3685
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -7736,9 +8777,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-18992",
+          sourceID = "manual-source-18992",
           type = "vendor"
         }
       },
@@ -7757,7 +8799,7 @@ NS.Data = {
         mountJournalID = 83
       },
       mountKey = "fact-23161",
-      primarySourceID = "confirmed-source-23161",
+      primarySourceID = "manual-source-23161",
       restrictions = {
         classes = {
           "WARLOCK"
@@ -7770,7 +8812,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "class",
+              kind = "custom",
               labels = {
                 enUS = "术士",
                 zhCN = "术士"
@@ -7809,9 +8851,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-23161",
+          sourceID = "manual-source-23161",
           type = "class_reward"
         }
       },
@@ -7830,7 +8873,7 @@ NS.Data = {
         mountJournalID = 84
       },
       mountKey = "fact-23214",
-      primarySourceID = "confirmed-source-23214",
+      primarySourceID = "manual-source-23214",
       restrictions = {
         classes = {
           "PALADIN"
@@ -7845,7 +8888,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "class",
+              kind = "custom",
               labels = {
                 enUS = "人类/矮人圣骑士",
                 zhCN = "人类/矮人圣骑士"
@@ -7884,9 +8927,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-23214",
+          sourceID = "manual-source-23214",
           type = "class_reward"
         }
       },
@@ -7905,7 +8949,7 @@ NS.Data = {
         mountJournalID = 110
       },
       mountKey = "fact-24242",
-      primarySourceID = "enriched-source-24242",
+      primarySourceID = "manual-source-24242",
       restrictions = {
         classes = {},
         factions = {}
@@ -7916,7 +8960,7 @@ NS.Data = {
           availability = "unknown",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "荆棘谷",
                 zhCN = "荆棘谷"
@@ -7924,7 +8968,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "祖尔格拉布20人",
                 zhCN = "祖尔格拉布20人"
@@ -7932,7 +8976,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "rare",
+              kind = "custom",
               labels = {
                 enUS = "血领主曼多基尔",
                 zhCN = "血领主曼多基尔"
@@ -7940,18 +8984,25 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-24242",
+          sourceID = "manual-source-24242",
           type = "rare_drop"
         }
       },
@@ -7970,7 +9021,7 @@ NS.Data = {
         mountJournalID = 111
       },
       mountKey = "fact-24252",
-      primarySourceID = "enriched-source-24252",
+      primarySourceID = "manual-source-24252",
       restrictions = {
         classes = {},
         factions = {}
@@ -7981,7 +9032,7 @@ NS.Data = {
           availability = "unknown",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "荆棘谷",
                 zhCN = "荆棘谷"
@@ -7989,7 +9040,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "祖尔格拉布20人",
                 zhCN = "祖尔格拉布20人"
@@ -7997,7 +9048,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "rare",
+              kind = "custom",
               labels = {
                 enUS = "高阶祭司塞卡尔",
                 zhCN = "高阶祭司塞卡尔"
@@ -8005,18 +9056,25 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-24252",
+          sourceID = "manual-source-24252",
           type = "rare_drop"
         }
       },
@@ -8035,18 +9093,18 @@ NS.Data = {
         mountJournalID = 122
       },
       mountKey = "fact-26656",
-      primarySourceID = "retired-audit-source-26656",
+      primarySourceID = "manual-source-26656",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "希利苏斯",
                 zhCN = "希利苏斯"
@@ -8054,10 +9112,18 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "event",
+              kind = "custom",
               labels = {
-                enUS = "安其拉开门事件 > 敲响甲虫之锣",
-                zhCN = "安其拉开门事件 > 敲响甲虫之锣"
+                enUS = "安其拉开门事件",
+                zhCN = "安其拉开门事件"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "敲响甲虫之锣",
+                zhCN = "敲响甲虫之锣"
               },
               refID = nil
             }
@@ -8077,9 +9143,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-26656",
+          sourceID = "manual-source-26656",
           type = "event"
         }
       },
@@ -8106,7 +9173,7 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "limited_time",
+          availability = "rotation",
           path = {
             {
               kind = "custom",
@@ -8124,18 +9191,53 @@ NS.Data = {
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = nil,
-              zhCN = nil
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
             },
             price = {
               enUS = nil,
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
           sourceID = "manual-source-30174",
           type = "event"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "黑市拍卖行",
+                zhCN = "黑市拍卖行"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "auction-house-30174",
+          type = "auction_house"
         }
       },
       status = "verified"
@@ -8153,7 +9255,7 @@ NS.Data = {
         mountJournalID = 130
       },
       mountKey = "fact-32239",
-      primarySourceID = "enriched-source-32239",
+      primarySourceID = "manual-source-32239",
       restrictions = {
         classes = {},
         factions = {}
@@ -8174,21 +9276,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 蛮锤要塞",
-                zhCN = "影月谷 > 蛮锤要塞"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 43768",
+                enUS = "蛮锤要塞",
+                zhCN = "蛮锤要塞"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "塔尼克·石喙",
                 zhCN = "塔尼克·石喙"
               },
-              refID = 43768
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -8203,9 +9313,10 @@ NS.Data = {
               zhCN = "50金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-32239",
+          sourceID = "manual-source-32239",
           type = "vendor"
         }
       },
@@ -8224,7 +9335,7 @@ NS.Data = {
         mountJournalID = 149
       },
       mountKey = "fact-34767",
-      primarySourceID = "confirmed-source-34767",
+      primarySourceID = "manual-source-34767",
       restrictions = {
         classes = {
           "PALADIN"
@@ -8239,7 +9350,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "class",
+              kind = "custom",
               labels = {
                 enUS = "血精灵圣骑士",
                 zhCN = "血精灵圣骑士"
@@ -8278,9 +9389,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-34767",
+          sourceID = "manual-source-34767",
           type = "class_reward"
         }
       },
@@ -8362,7 +9474,7 @@ NS.Data = {
         mountJournalID = 169
       },
       mountKey = "fact-37015",
-      primarySourceID = "pvp-arena-37015",
+      primarySourceID = "manual-source-37015",
       restrictions = {
         classes = {},
         factions = {}
@@ -8373,7 +9485,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "竞技场 3v3",
                 zhCN = "竞技场 3v3"
@@ -8381,7 +9493,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "season",
+              kind = "custom",
               labels = {
                 enUS = "第 1 赛季",
                 zhCN = "第 1 赛季"
@@ -8412,9 +9524,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-arena-37015",
+          sourceID = "manual-source-37015",
           type = "achievement"
         }
       },
@@ -8664,9 +9777,100 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
           sourceID = "manual-source-387319",
+          type = "event"
+        }
+      },
+      status = "verified"
+    },
+    ["fact-387320"] = {
+      identity = {
+        iconFileID = 132265,
+        names = {
+          enUS = "Blazing Hippogryph",
+          zhCN = "炽焰角鹰兽"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 1766
+      },
+      mountKey = "fact-387320",
+      primarySourceID = "manual-source-387320",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "黑市拍卖行",
+                zhCN = "黑市拍卖行"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-387320",
+          type = "auction_house"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "国服运营活动",
+                zhCN = "国服运营活动"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "event-387320",
           type = "event"
         }
       },
@@ -8748,7 +9952,7 @@ NS.Data = {
         mountJournalID = 1768
       },
       mountKey = "fact-387323",
-      primarySourceID = "china-classic-distribution-387323",
+      primarySourceID = "manual-source-387323",
       restrictions = {
         classes = {},
         factions = {}
@@ -8759,7 +9963,7 @@ NS.Data = {
           availability = "unavailable",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
                 enUS = "2026 兰德鲁金色礼盒",
                 zhCN = "2026 兰德鲁金色礼盒"
@@ -8780,7 +9984,7 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            eventKey = "X-51虚空火箭",
+            eventKey = nil,
             notes = {
               enUS = "国服怀旧服官方复刻投放；该期活动结束后不可再获取。",
               zhCN = "国服怀旧服官方复刻投放；该期活动结束后不可再获取。"
@@ -8790,9 +9994,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "china-classic-distribution-387323",
+          sourceID = "manual-source-387323",
           type = "event"
         }
       },
@@ -8811,7 +10016,7 @@ NS.Data = {
         mountJournalID = 1770
       },
       mountKey = "fact-394209",
-      primarySourceID = "confirmed-source-394209",
+      primarySourceID = "manual-source-394209",
       restrictions = {
         classes = {},
         factions = {}
@@ -8822,7 +10027,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
                 enUS = "网易运营活动",
                 zhCN = "网易运营活动"
@@ -8845,9 +10050,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-394209",
+          sourceID = "manual-source-394209",
           type = "event"
         }
       },
@@ -8866,7 +10072,7 @@ NS.Data = {
         mountJournalID = 1832
       },
       mountKey = "fact-416158",
-      primarySourceID = "confirmed-source-416158",
+      primarySourceID = "manual-source-416158",
       restrictions = {
         classes = {},
         factions = {}
@@ -8877,7 +10083,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
                 enUS = "网易运营活动",
                 zhCN = "网易运营活动"
@@ -8900,9 +10106,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-416158",
+          sourceID = "manual-source-416158",
           type = "event"
         }
       },
@@ -8921,7 +10128,7 @@ NS.Data = {
         mountJournalID = 196
       },
       mountKey = "fact-42776",
-      primarySourceID = "china-classic-distribution-42776",
+      primarySourceID = "manual-source-42776",
       restrictions = {
         classes = {},
         factions = {}
@@ -8932,7 +10139,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
                 enUS = "国服怀旧服限时活动",
                 zhCN = "国服怀旧服限时活动"
@@ -8953,7 +10160,7 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            eventKey = "2026 兰德鲁金色礼盒",
+            eventKey = nil,
             notes = {
               enUS = "2026 兰德鲁金色礼盒可投递至熊猫人之谜怀旧服；限时活动，当前是否开放以国服公告为准。",
               zhCN = "2026 兰德鲁金色礼盒可投递至熊猫人之谜怀旧服；限时活动，当前是否开放以国服公告为准。"
@@ -8963,9 +10170,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "china-classic-distribution-42776",
+          sourceID = "manual-source-42776",
           type = "event"
         }
       },
@@ -8984,7 +10192,7 @@ NS.Data = {
         mountJournalID = 197
       },
       mountKey = "fact-42777",
-      primarySourceID = "china-classic-distribution-42777",
+      primarySourceID = "manual-source-42777",
       restrictions = {
         classes = {},
         factions = {}
@@ -8995,7 +10203,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
                 enUS = "国服怀旧服限时礼包",
                 zhCN = "国服怀旧服限时礼包"
@@ -9016,7 +10224,7 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            eventKey = "2022 虎年特别礼包",
+            eventKey = nil,
             notes = {
               enUS = "国服燃烧的远征怀旧服曾以虎年特别礼包投放迅捷幽灵虎；限时礼包已结束。",
               zhCN = "国服燃烧的远征怀旧服曾以虎年特别礼包投放迅捷幽灵虎；限时礼包已结束。"
@@ -9026,9 +10234,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "china-classic-distribution-42777",
+          sourceID = "manual-source-42777",
           type = "event"
         }
       },
@@ -9047,7 +10256,7 @@ NS.Data = {
         mountJournalID = 2070
       },
       mountKey = "fact-435115",
-      primarySourceID = "fact-source-435115",
+      primarySourceID = "manual-source-435115",
       restrictions = {
         classes = {},
         factions = {}
@@ -9082,7 +10291,7 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -9097,9 +10306,10 @@ NS.Data = {
               zhCN = "护卫魁麟：已绝版"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "fact-source-435115",
+          sourceID = "manual-source-435115",
           type = "vendor"
         }
       },
@@ -9118,7 +10328,7 @@ NS.Data = {
         mountJournalID = 199
       },
       mountKey = "fact-43688",
-      primarySourceID = "enriched-source-43688",
+      primarySourceID = "manual-source-43688",
       restrictions = {
         classes = {},
         factions = {}
@@ -9129,7 +10339,7 @@ NS.Data = {
           availability = "unknown",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "幽魂之地",
                 zhCN = "幽魂之地"
@@ -9137,7 +10347,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "祖阿曼10人",
                 zhCN = "祖阿曼10人"
@@ -9145,7 +10355,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "限时宝箱奖励",
                 zhCN = "限时宝箱奖励"
@@ -9153,18 +10363,25 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-43688",
+          sourceID = "manual-source-43688",
           type = "boss_drop"
         }
       },
@@ -9183,7 +10400,7 @@ NS.Data = {
         mountJournalID = 201
       },
       mountKey = "fact-43899",
-      primarySourceID = "enriched-source-43899",
+      primarySourceID = "manual-source-43899",
       restrictions = {
         classes = {},
         factions = {}
@@ -9210,15 +10427,15 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 24510",
+                enUS = "德利兹·塔波奎克",
                 zhCN = "德利兹·塔波奎克"
               },
-              refID = 24510
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -9233,9 +10450,10 @@ NS.Data = {
               zhCN = "200枚美酒节奖币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-43899",
+          sourceID = "manual-source-43899",
           type = "vendor"
         }
       },
@@ -9254,7 +10472,7 @@ NS.Data = {
         mountJournalID = 2147
       },
       mountKey = "fact-446902",
-      primarySourceID = "confirmed-source-446902",
+      primarySourceID = "manual-source-446902",
       restrictions = {
         classes = {},
         factions = {}
@@ -9265,7 +10483,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
                 enUS = "网易运营活动",
                 zhCN = "网易运营活动"
@@ -9288,9 +10506,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-446902",
+          sourceID = "manual-source-446902",
           type = "event"
         }
       },
@@ -9309,7 +10528,7 @@ NS.Data = {
         mountJournalID = 207
       },
       mountKey = "fact-44744",
-      primarySourceID = "pvp-arena-44744",
+      primarySourceID = "manual-source-44744",
       restrictions = {
         classes = {},
         factions = {}
@@ -9320,7 +10539,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "竞技场 3v3",
                 zhCN = "竞技场 3v3"
@@ -9328,7 +10547,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "season",
+              kind = "custom",
               labels = {
                 enUS = "第 2 赛季",
                 zhCN = "第 2 赛季"
@@ -9359,9 +10578,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-arena-44744",
+          sourceID = "manual-source-44744",
           type = "achievement"
         }
       },
@@ -9380,7 +10600,7 @@ NS.Data = {
         mountJournalID = 7
       },
       mountKey = "fact-459",
-      primarySourceID = "confirmed-source-459",
+      primarySourceID = "manual-source-459",
       restrictions = {
         classes = {},
         factions = {
@@ -9403,13 +10623,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 奥格瑞玛",
-                zhCN = "杜隆塔尔 > 奥格瑞玛"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
+              labels = {
+                enUS = "奥格瑞玛",
+                zhCN = "奥格瑞玛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
               labels = {
                 enUS = "奥古纳罗",
                 zhCN = "奥古纳罗"
@@ -9432,9 +10660,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-459",
+          sourceID = "manual-source-459",
           type = "vendor"
         }
       },
@@ -9487,7 +10716,8 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
           sourceID = "manual-source-459538",
           type = "event"
@@ -9508,7 +10738,7 @@ NS.Data = {
         mountJournalID = 211
       },
       mountKey = "fact-46197",
-      primarySourceID = "china-classic-distribution-46197",
+      primarySourceID = "manual-source-46197",
       restrictions = {
         classes = {},
         factions = {}
@@ -9519,7 +10749,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
                 enUS = "国服怀旧服限时活动",
                 zhCN = "国服怀旧服限时活动"
@@ -9540,7 +10770,7 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            eventKey = "2026 兰德鲁金色礼盒",
+            eventKey = nil,
             notes = {
               enUS = "2026 兰德鲁金色礼盒可投递至熊猫人之谜怀旧服；限时活动，当前是否开放以国服公告为准。",
               zhCN = "2026 兰德鲁金色礼盒可投递至熊猫人之谜怀旧服；限时活动，当前是否开放以国服公告为准。"
@@ -9550,9 +10780,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "china-classic-distribution-46197",
+          sourceID = "manual-source-46197",
           type = "event"
         }
       },
@@ -9571,7 +10802,7 @@ NS.Data = {
         mountJournalID = 212
       },
       mountKey = "fact-46199",
-      primarySourceID = "china-classic-distribution-46199",
+      primarySourceID = "manual-source-46199",
       restrictions = {
         classes = {},
         factions = {}
@@ -9582,7 +10813,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
                 enUS = "国服怀旧服限时活动",
                 zhCN = "国服怀旧服限时活动"
@@ -9603,7 +10834,7 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            eventKey = "2026 兰德鲁金色礼盒",
+            eventKey = nil,
             notes = {
               enUS = "2026 兰德鲁金色礼盒可投递至熊猫人之谜怀旧服；限时活动，当前是否开放以国服公告为准。",
               zhCN = "2026 兰德鲁金色礼盒可投递至熊猫人之谜怀旧服；限时活动，当前是否开放以国服公告为准。"
@@ -9613,9 +10844,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "china-classic-distribution-46199",
+          sourceID = "manual-source-46199",
           type = "event"
         }
       },
@@ -9634,7 +10866,7 @@ NS.Data = {
         mountJournalID = 8
       },
       mountKey = "fact-468",
-      primarySourceID = "confirmed-source-468",
+      primarySourceID = "manual-source-468",
       restrictions = {
         classes = {},
         factions = {
@@ -9663,7 +10895,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
                 enUS = "凯蒂·斯托克斯",
                 zhCN = "凯蒂·斯托克斯"
@@ -9686,9 +10918,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-468",
+          sourceID = "manual-source-468",
           type = "vendor"
         }
       },
@@ -9707,7 +10940,7 @@ NS.Data = {
         mountJournalID = 221
       },
       mountKey = "fact-48778",
-      primarySourceID = "confirmed-source-48778",
+      primarySourceID = "manual-source-48778",
       restrictions = {
         classes = {
           "DEATHKNIGHT"
@@ -9720,7 +10953,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "class",
+              kind = "custom",
               labels = {
                 enUS = "死亡骑士",
                 zhCN = "死亡骑士"
@@ -9728,15 +10961,23 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
-                enUS = "东瘟疫之地 > 黑锋要塞",
-                zhCN = "东瘟疫之地 > 黑锋要塞"
+                enUS = "东瘟疫之地",
+                zhCN = "东瘟疫之地"
               },
               refID = nil
             },
             {
-              kind = "quest",
+              kind = "custom",
+              labels = {
+                enUS = "黑锋要塞",
+                zhCN = "黑锋要塞"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
               labels = {
                 enUS = "初始任务：踏入暗影界",
                 zhCN = "初始任务：踏入暗影界"
@@ -9759,9 +11000,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-48778",
+          sourceID = "manual-source-48778",
           type = "class_reward"
         }
       },
@@ -9780,7 +11022,7 @@ NS.Data = {
         mountJournalID = 223
       },
       mountKey = "fact-49193",
-      primarySourceID = "pvp-arena-49193",
+      primarySourceID = "manual-source-49193",
       restrictions = {
         classes = {},
         factions = {}
@@ -9791,7 +11033,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "竞技场 3v3",
                 zhCN = "竞技场 3v3"
@@ -9799,7 +11041,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "season",
+              kind = "custom",
               labels = {
                 enUS = "第 3 赛季",
                 zhCN = "第 3 赛季"
@@ -9830,9 +11072,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-arena-49193",
+          sourceID = "manual-source-49193",
           type = "achievement"
         }
       },
@@ -9851,7 +11094,7 @@ NS.Data = {
         mountJournalID = 225
       },
       mountKey = "fact-49378",
-      primarySourceID = "clean-source-49378",
+      primarySourceID = "manual-source-49378",
       restrictions = {
         classes = {},
         factions = {}
@@ -9862,7 +11105,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "黑石山",
                 zhCN = "黑石山"
@@ -9870,7 +11113,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "黑石深渊",
                 zhCN = "黑石深渊"
@@ -9878,7 +11121,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "rare",
+              kind = "custom",
               labels = {
                 enUS = "科林·烈酒",
                 zhCN = "科林·烈酒"
@@ -9891,7 +11134,6 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = false,
             eventKey = nil,
             notes = {
               enUS = nil,
@@ -9902,9 +11144,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "clean-source-49378",
+          sourceID = "manual-source-49378",
           type = "rare_drop"
         }
       },
@@ -9923,7 +11166,7 @@ NS.Data = {
         mountJournalID = 230
       },
       mountKey = "fact-51412",
-      primarySourceID = "china-classic-distribution-51412",
+      primarySourceID = "manual-source-51412",
       restrictions = {
         classes = {},
         factions = {}
@@ -9934,7 +11177,7 @@ NS.Data = {
           availability = "unavailable",
           path = {
             {
-              kind = "event",
+              kind = "custom",
               labels = {
                 enUS = "国服怀旧服限时活动",
                 zhCN = "国服怀旧服限时活动"
@@ -9955,7 +11198,7 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            eventKey = "2024 国庆小程序签到",
+            eventKey = nil,
             notes = {
               enUS = "2024-10-01 至 2024-10-14，官方微信小程序累计签到 7 天领取；奖励适用于国服怀旧服，活动已结束。",
               zhCN = "2024-10-01 至 2024-10-14，官方微信小程序累计签到 7 天领取；奖励适用于国服怀旧服，活动已结束。"
@@ -9965,9 +11208,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "china-classic-distribution-51412",
+          sourceID = "manual-source-51412",
           type = "event"
         }
       },
@@ -9986,7 +11230,7 @@ NS.Data = {
         mountJournalID = 236
       },
       mountKey = "fact-54729",
-      primarySourceID = "enriched-source-54729",
+      primarySourceID = "manual-source-54729",
       restrictions = {
         classes = {},
         factions = {}
@@ -10007,21 +11251,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 暗影拱顶",
-                zhCN = "冰冠冰川 > 暗影拱顶"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 29587",
+                enUS = "暗影拱顶",
+                zhCN = "暗影拱顶"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "恐怖指挥官萨拉诺尔",
                 zhCN = "恐怖指挥官萨拉诺尔"
               },
-              refID = 29587
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -10036,12 +11288,10 @@ NS.Data = {
               zhCN = "2,000金币"
             },
             questID = nil,
-            reputation = {
-              faction = "黑锋骑士团",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-54729",
+          sourceID = "manual-source-54729",
           type = "reputation_vendor"
         }
       },
@@ -10060,7 +11310,7 @@ NS.Data = {
         mountJournalID = 12
       },
       mountKey = "fact-578",
-      primarySourceID = "confirmed-source-578",
+      primarySourceID = "manual-source-578",
       restrictions = {
         classes = {},
         factions = {
@@ -10083,13 +11333,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 奥格瑞玛",
-                zhCN = "杜隆塔尔 > 奥格瑞玛"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
+              labels = {
+                enUS = "奥格瑞玛",
+                zhCN = "奥格瑞玛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
               labels = {
                 enUS = "奥古纳罗",
                 zhCN = "奥古纳罗"
@@ -10112,9 +11370,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-578",
+          sourceID = "manual-source-578",
           type = "vendor"
         }
       },
@@ -10133,7 +11392,7 @@ NS.Data = {
         mountJournalID = 17
       },
       mountKey = "fact-5784",
-      primarySourceID = "confirmed-source-5784",
+      primarySourceID = "manual-source-5784",
       restrictions = {
         classes = {
           "WARLOCK"
@@ -10146,7 +11405,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "class",
+              kind = "custom",
               labels = {
                 enUS = "术士",
                 zhCN = "术士"
@@ -10185,9 +11444,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-5784",
+          sourceID = "manual-source-5784",
           type = "class_reward"
         }
       },
@@ -10206,7 +11466,7 @@ NS.Data = {
         mountJournalID = 13
       },
       mountKey = "fact-579",
-      primarySourceID = "confirmed-source-579",
+      primarySourceID = "manual-source-579",
       restrictions = {
         classes = {},
         factions = {
@@ -10229,13 +11489,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 奥格瑞玛",
-                zhCN = "杜隆塔尔 > 奥格瑞玛"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
+              labels = {
+                enUS = "奥格瑞玛",
+                zhCN = "奥格瑞玛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
               labels = {
                 enUS = "奥古纳罗",
                 zhCN = "奥古纳罗"
@@ -10258,9 +11526,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-579",
+          sourceID = "manual-source-579",
           type = "vendor"
         }
       },
@@ -10279,7 +11548,7 @@ NS.Data = {
         mountJournalID = 15
       },
       mountKey = "fact-581",
-      primarySourceID = "confirmed-source-581",
+      primarySourceID = "manual-source-581",
       restrictions = {
         classes = {},
         factions = {
@@ -10302,13 +11571,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 奥格瑞玛",
-                zhCN = "杜隆塔尔 > 奥格瑞玛"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
+              labels = {
+                enUS = "奥格瑞玛",
+                zhCN = "奥格瑞玛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
               labels = {
                 enUS = "奥古纳罗",
                 zhCN = "奥古纳罗"
@@ -10331,9 +11608,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-581",
+          sourceID = "manual-source-581",
           type = "vendor"
         }
       },
@@ -10352,7 +11630,7 @@ NS.Data = {
         mountJournalID = 241
       },
       mountKey = "fact-58615",
-      primarySourceID = "pvp-arena-58615",
+      primarySourceID = "manual-source-58615",
       restrictions = {
         classes = {},
         factions = {}
@@ -10363,7 +11641,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "竞技场 3v3",
                 zhCN = "竞技场 3v3"
@@ -10371,7 +11649,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "season",
+              kind = "custom",
               labels = {
                 enUS = "第 4 赛季",
                 zhCN = "第 4 赛季"
@@ -10402,9 +11680,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-arena-58615",
+          sourceID = "manual-source-58615",
           type = "achievement"
         }
       },
@@ -10423,7 +11702,7 @@ NS.Data = {
         mountJournalID = 251
       },
       mountKey = "fact-59572",
-      primarySourceID = "clean-source-59572",
+      primarySourceID = "manual-source-59572",
       restrictions = {
         classes = {},
         factions = {}
@@ -10434,15 +11713,23 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
-                enUS = "风暴峭壁 > 布伦希尔达村",
-                zhCN = "风暴峭壁 > 布伦希尔达村"
+                enUS = "风暴峭壁",
+                zhCN = "风暴峭壁"
               },
               refID = nil
             },
             {
-              kind = "quest",
+              kind = "custom",
+              labels = {
+                enUS = "布伦希尔达村",
+                zhCN = "布伦希尔达村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
               labels = {
                 enUS = "女人村日常任务奖励",
                 zhCN = "女人村日常任务奖励"
@@ -10465,9 +11752,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "clean-source-59572",
+          sourceID = "manual-source-59572",
           type = "quest"
         }
       },
@@ -10582,7 +11870,7 @@ NS.Data = {
         mountJournalID = 293
       },
       mountKey = "fact-62048",
-      primarySourceID = "fact-source-62048",
+      primarySourceID = "manual-source-62048",
       restrictions = {
         classes = {},
         factions = {}
@@ -10609,7 +11897,7 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -10624,9 +11912,10 @@ NS.Data = {
               zhCN = "黑色龙鹰坐骑：已绝版"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "fact-source-62048",
+          sourceID = "manual-source-62048",
           type = "vendor"
         }
       },
@@ -10645,7 +11934,7 @@ NS.Data = {
         mountJournalID = 313
       },
       mountKey = "fact-64927",
-      primarySourceID = "pvp-arena-64927",
+      primarySourceID = "manual-source-64927",
       restrictions = {
         classes = {},
         factions = {}
@@ -10656,7 +11945,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "竞技场 3v3",
                 zhCN = "竞技场 3v3"
@@ -10664,7 +11953,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "season",
+              kind = "custom",
               labels = {
                 enUS = "第 5 赛季",
                 zhCN = "第 5 赛季"
@@ -10695,9 +11984,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-arena-64927",
+          sourceID = "manual-source-64927",
           type = "achievement"
         }
       },
@@ -10716,7 +12006,7 @@ NS.Data = {
         mountJournalID = 317
       },
       mountKey = "fact-65439",
-      primarySourceID = "pvp-arena-65439",
+      primarySourceID = "manual-source-65439",
       restrictions = {
         classes = {},
         factions = {}
@@ -10727,7 +12017,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "竞技场 3v3",
                 zhCN = "竞技场 3v3"
@@ -10735,7 +12025,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "season",
+              kind = "custom",
               labels = {
                 enUS = "第 6 赛季",
                 zhCN = "第 6 赛季"
@@ -10766,9 +12056,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-arena-65439",
+          sourceID = "manual-source-65439",
           type = "achievement"
         }
       },
@@ -10787,7 +12078,7 @@ NS.Data = {
         mountJournalID = 318
       },
       mountKey = "fact-65637",
-      primarySourceID = "enriched-source-65637",
+      primarySourceID = "manual-source-65637",
       restrictions = {
         classes = {},
         factions = {}
@@ -10808,21 +12099,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33657",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "艾蕾希",
                 zhCN = "艾蕾希"
               },
-              refID = 33657
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -10837,9 +12136,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-65637",
+          sourceID = "manual-source-65637",
           type = "vendor"
         }
       },
@@ -10858,7 +12158,7 @@ NS.Data = {
         mountJournalID = 319
       },
       mountKey = "fact-65638",
-      primarySourceID = "enriched-source-65638",
+      primarySourceID = "manual-source-65638",
       restrictions = {
         classes = {},
         factions = {}
@@ -10879,21 +12179,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33653",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "鲁克·鹰爪",
                 zhCN = "鲁克·鹰爪"
               },
-              refID = 33653
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -10908,9 +12216,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-65638",
+          sourceID = "manual-source-65638",
           type = "vendor"
         }
       },
@@ -10929,7 +12238,7 @@ NS.Data = {
         mountJournalID = 320
       },
       mountKey = "fact-65639",
-      primarySourceID = "enriched-source-65639",
+      primarySourceID = "manual-source-65639",
       restrictions = {
         classes = {},
         factions = {}
@@ -10950,21 +12259,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33557",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "特雷利斯·晨日",
                 zhCN = "特雷利斯·晨日"
               },
-              refID = 33557
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -10979,9 +12296,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-65639",
+          sourceID = "manual-source-65639",
           type = "vendor"
         }
       },
@@ -11000,7 +12318,7 @@ NS.Data = {
         mountJournalID = 321
       },
       mountKey = "fact-65640",
-      primarySourceID = "enriched-source-65640",
+      primarySourceID = "manual-source-65640",
       restrictions = {
         classes = {},
         factions = {}
@@ -11021,21 +12339,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33307",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "下士亚瑟·弗卢",
                 zhCN = "下士亚瑟·弗卢"
               },
-              refID = 33307
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -11050,9 +12376,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-65640",
+          sourceID = "manual-source-65640",
           type = "vendor"
         }
       },
@@ -11071,7 +12398,7 @@ NS.Data = {
         mountJournalID = 322
       },
       mountKey = "fact-65641",
-      primarySourceID = "enriched-source-65641",
+      primarySourceID = "manual-source-65641",
       restrictions = {
         classes = {},
         factions = {}
@@ -11092,21 +12419,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33556",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "杜尔鲁·雷角",
                 zhCN = "杜尔鲁·雷角"
               },
-              refID = 33556
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -11121,9 +12456,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-65641",
+          sourceID = "manual-source-65641",
           type = "vendor"
         }
       },
@@ -11142,7 +12478,7 @@ NS.Data = {
         mountJournalID = 323
       },
       mountKey = "fact-65642",
-      primarySourceID = "enriched-source-65642",
+      primarySourceID = "manual-source-65642",
       restrictions = {
         classes = {},
         factions = {}
@@ -11163,21 +12499,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33650",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "莉蕾·转轴",
                 zhCN = "莉蕾·转轴"
               },
-              refID = 33650
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -11192,9 +12536,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-65642",
+          sourceID = "manual-source-65642",
           type = "vendor"
         }
       },
@@ -11213,7 +12558,7 @@ NS.Data = {
         mountJournalID = 324
       },
       mountKey = "fact-65643",
-      primarySourceID = "enriched-source-65643",
+      primarySourceID = "manual-source-65643",
       restrictions = {
         classes = {},
         factions = {}
@@ -11234,21 +12579,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33310",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "德里克·斑须",
                 zhCN = "德里克·斑须"
               },
-              refID = 33310
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -11263,9 +12616,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-65643",
+          sourceID = "manual-source-65643",
           type = "vendor"
         }
       },
@@ -11284,7 +12638,7 @@ NS.Data = {
         mountJournalID = 325
       },
       mountKey = "fact-65644",
-      primarySourceID = "enriched-source-65644",
+      primarySourceID = "manual-source-65644",
       restrictions = {
         classes = {},
         factions = {}
@@ -11305,21 +12659,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33554",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "萨玛巴",
                 zhCN = "萨玛巴"
               },
-              refID = 33554
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -11334,9 +12696,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-65644",
+          sourceID = "manual-source-65644",
           type = "vendor"
         }
       },
@@ -11355,7 +12718,7 @@ NS.Data = {
         mountJournalID = 326
       },
       mountKey = "fact-65645",
-      primarySourceID = "enriched-source-65645",
+      primarySourceID = "manual-source-65645",
       restrictions = {
         classes = {},
         factions = {}
@@ -11376,21 +12739,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33555",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "伊莉莎·基连",
                 zhCN = "伊莉莎·基连"
               },
-              refID = 33555
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -11405,9 +12776,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-65645",
+          sourceID = "manual-source-65645",
           type = "vendor"
         }
       },
@@ -11426,7 +12798,7 @@ NS.Data = {
         mountJournalID = 327
       },
       mountKey = "fact-65646",
-      primarySourceID = "enriched-source-65646",
+      primarySourceID = "manual-source-65646",
       restrictions = {
         classes = {},
         factions = {}
@@ -11447,21 +12819,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33553",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "弗蕾卡·血斧",
                 zhCN = "弗蕾卡·血斧"
               },
-              refID = 33553
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -11476,9 +12856,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-65646",
+          sourceID = "manual-source-65646",
           type = "vendor"
         }
       },
@@ -11560,7 +12941,7 @@ NS.Data = {
         mountJournalID = 338
       },
       mountKey = "fact-66906",
-      primarySourceID = "enriched-source-66906",
+      primarySourceID = "manual-source-66906",
       restrictions = {
         classes = {},
         factions = {}
@@ -11581,21 +12962,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 34885",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "卡普萨里斯夫人",
                 zhCN = "卡普萨里斯夫人"
               },
-              refID = 34885
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -11610,12 +12999,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = {
-              faction = "银色北伐军",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-66906",
+          sourceID = "manual-source-66906",
           type = "reputation_vendor"
         }
       },
@@ -11634,7 +13021,7 @@ NS.Data = {
         mountJournalID = 340
       },
       mountKey = "fact-67336",
-      primarySourceID = "pvp-arena-67336",
+      primarySourceID = "manual-source-67336",
       restrictions = {
         classes = {},
         factions = {}
@@ -11645,7 +13032,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "竞技场 3v3",
                 zhCN = "竞技场 3v3"
@@ -11653,7 +13040,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "season",
+              kind = "custom",
               labels = {
                 enUS = "第 7 赛季",
                 zhCN = "第 7 赛季"
@@ -11684,9 +13071,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-arena-67336",
+          sourceID = "manual-source-67336",
           type = "achievement"
         }
       },
@@ -11705,7 +13093,7 @@ NS.Data = {
         mountJournalID = 342
       },
       mountKey = "fact-68056",
-      primarySourceID = "pvp-battleground-68056",
+      primarySourceID = "manual-source-68056",
       restrictions = {
         classes = {},
         factions = {}
@@ -11716,7 +13104,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "评级战场",
                 zhCN = "评级战场"
@@ -11724,7 +13112,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "achievement",
+              kind = "custom",
               labels = {
                 enUS = "评级战场成就：对疯狂的嘉奖（10 人）",
                 zhCN = "评级战场成就：对疯狂的嘉奖（10 人）"
@@ -11747,9 +13135,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-battleground-68056",
+          sourceID = "manual-source-68056",
           type = "achievement"
         }
       },
@@ -11768,7 +13157,7 @@ NS.Data = {
         mountJournalID = 343
       },
       mountKey = "fact-68057",
-      primarySourceID = "pvp-battleground-68057",
+      primarySourceID = "manual-source-68057",
       restrictions = {
         classes = {},
         factions = {}
@@ -11779,7 +13168,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "评级战场",
                 zhCN = "评级战场"
@@ -11787,7 +13176,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "achievement",
+              kind = "custom",
               labels = {
                 enUS = "评级战场成就：对疯狂的嘉奖（10 人）",
                 zhCN = "评级战场成就：对疯狂的嘉奖（10 人）"
@@ -11810,9 +13199,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-battleground-68057",
+          sourceID = "manual-source-68057",
           type = "achievement"
         }
       },
@@ -11831,7 +13221,7 @@ NS.Data = {
         mountJournalID = 344
       },
       mountKey = "fact-68187",
-      primarySourceID = "trial-tribute-source-68187",
+      primarySourceID = "manual-source-68187",
       restrictions = {
         classes = {},
         factions = {
@@ -11840,11 +13230,11 @@ NS.Data = {
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "冰冠冰川",
                 zhCN = "冰冠冰川"
@@ -11852,7 +13242,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "大十字军的试炼25H（50箱、全程无人死亡）",
                 zhCN = "大十字军的试炼25H（50箱、全程无人死亡）"
@@ -11860,23 +13250,19 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "achievement",
+              kind = "custom",
               labels = {
                 enUS = "对不朽的嘉奖",
                 zhCN = "对不朽的嘉奖"
               },
-              refID = 4156
+              refID = nil
             }
           },
           priority = 100,
           requirements = {
-            achievementID = 4156,
+            achievementID = nil,
             costs = {},
-            difficulties = {
-              "TWENTY_FIVE",
-              "HEROIC"
-            },
-            difficultyInPath = true,
+            difficulties = {},
             eventKey = nil,
             notes = {
               enUS = "巫妖王之怒阶段限定；奖励来自银色北伐军的嘉奖宝箱。",
@@ -11887,9 +13273,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "trial-tribute-source-68187",
+          sourceID = "manual-source-68187",
           type = "achievement"
         }
       },
@@ -11908,7 +13295,7 @@ NS.Data = {
         mountJournalID = 345
       },
       mountKey = "fact-68188",
-      primarySourceID = "trial-tribute-source-68188",
+      primarySourceID = "manual-source-68188",
       restrictions = {
         classes = {},
         factions = {
@@ -11917,11 +13304,11 @@ NS.Data = {
       },
       sources = {
         {
-          active = false,
+          active = true,
           availability = "unavailable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "冰冠冰川",
                 zhCN = "冰冠冰川"
@@ -11929,7 +13316,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "大十字军的试炼25H（50箱、全程无人死亡）",
                 zhCN = "大十字军的试炼25H（50箱、全程无人死亡）"
@@ -11937,23 +13324,19 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "achievement",
+              kind = "custom",
               labels = {
                 enUS = "对不朽的嘉奖",
                 zhCN = "对不朽的嘉奖"
               },
-              refID = 4079
+              refID = nil
             }
           },
           priority = 100,
           requirements = {
-            achievementID = 4079,
+            achievementID = nil,
             costs = {},
-            difficulties = {
-              "TWENTY_FIVE",
-              "HEROIC"
-            },
-            difficultyInPath = true,
+            difficulties = {},
             eventKey = nil,
             notes = {
               enUS = "巫妖王之怒阶段限定；奖励来自银色北伐军的嘉奖宝箱。",
@@ -11964,9 +13347,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "trial-tribute-source-68188",
+          sourceID = "manual-source-68188",
           type = "achievement"
         }
       },
@@ -11985,7 +13369,7 @@ NS.Data = {
         mountJournalID = 22
       },
       mountKey = "fact-6896",
-      primarySourceID = "confirmed-source-6896",
+      primarySourceID = "manual-source-6896",
       restrictions = {
         classes = {},
         factions = {
@@ -12008,13 +13392,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 铁炉堡",
-                zhCN = "丹莫罗 > 铁炉堡"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
+              labels = {
+                enUS = "铁炉堡",
+                zhCN = "铁炉堡"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
               labels = {
                 enUS = "维隆·冻石",
                 zhCN = "维隆·冻石"
@@ -12037,9 +13429,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-6896",
+          sourceID = "manual-source-6896",
           type = "vendor"
         }
       },
@@ -12058,7 +13451,7 @@ NS.Data = {
         mountJournalID = 358
       },
       mountKey = "fact-71810",
-      primarySourceID = "pvp-arena-71810",
+      primarySourceID = "manual-source-71810",
       restrictions = {
         classes = {},
         factions = {}
@@ -12069,7 +13462,7 @@ NS.Data = {
           availability = "limited_time",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "竞技场 3v3",
                 zhCN = "竞技场 3v3"
@@ -12077,7 +13470,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "season",
+              kind = "custom",
               labels = {
                 enUS = "第 8 赛季",
                 zhCN = "第 8 赛季"
@@ -12108,9 +13501,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-arena-71810",
+          sourceID = "manual-source-71810",
           type = "achievement"
         }
       },
@@ -12129,7 +13523,7 @@ NS.Data = {
         mountJournalID = 371
       },
       mountKey = "fact-74856",
-      primarySourceID = "fact-source-74856",
+      primarySourceID = "manual-source-74856",
       restrictions = {
         classes = {},
         factions = {}
@@ -12164,7 +13558,7 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -12179,9 +13573,10 @@ NS.Data = {
               zhCN = "炽焰角鹰兽：已绝版"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "fact-source-74856",
+          sourceID = "manual-source-74856",
           type = "vendor"
         }
       },
@@ -12263,7 +13658,7 @@ NS.Data = {
         mountJournalID = 28
       },
       mountKey = "fact-8980",
-      primarySourceID = "confirmed-source-8980",
+      primarySourceID = "manual-source-8980",
       restrictions = {
         classes = {},
         factions = {
@@ -12286,13 +13681,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "提瑞斯法林地 > 布瑞尔",
-                zhCN = "提瑞斯法林地 > 布瑞尔"
+                enUS = "提瑞斯法林地",
+                zhCN = "提瑞斯法林地"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
+              labels = {
+                enUS = "布瑞尔",
+                zhCN = "布瑞尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
               labels = {
                 enUS = "撒迦利亚·普斯特",
                 zhCN = "撒迦利亚·普斯特"
@@ -12315,13 +13718,284 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "confirmed-source-8980",
+          sourceID = "manual-source-8980",
           type = "vendor"
         }
       },
       status = "candidate"
+    },
+    ["fact-93623"] = {
+      identity = {
+        iconFileID = 236232,
+        names = {
+          enUS = "Mount 93623",
+          zhCN = "斑纹幼龙"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 408
+      },
+      mountKey = "fact-93623",
+      primarySourceID = "manual-source-93623",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "黑市拍卖行",
+                zhCN = "黑市拍卖行"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-93623",
+          type = "auction_house"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "国服运营活动",
+                zhCN = "国服运营活动"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "event-93623",
+          type = "event"
+        }
+      },
+      status = "verified"
+    },
+    ["fact-96503"] = {
+      identity = {
+        iconFileID = 132188,
+        names = {
+          enUS = "Amani Dragonhawk",
+          zhCN = "阿曼尼龙鹰"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 412
+      },
+      mountKey = "fact-96503",
+      primarySourceID = "manual-source-96503",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "黑市拍卖行",
+                zhCN = "黑市拍卖行"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-96503",
+          type = "auction_house"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "国服运营活动",
+                zhCN = "国服运营活动"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "event-96503",
+          type = "event"
+        }
+      },
+      status = "verified"
+    },
+    ["fact-97581"] = {
+      identity = {
+        iconFileID = 132253,
+        names = {
+          enUS = "Savage Raptor",
+          zhCN = "野蛮迅猛龙"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 418
+      },
+      mountKey = "fact-97581",
+      primarySourceID = "manual-source-97581",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "黑市拍卖行",
+                zhCN = "黑市拍卖行"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-97581",
+          type = "auction_house"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "国服运营活动",
+                zhCN = "国服运营活动"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "event-97581",
+          type = "event"
+        }
+      },
+      status = "verified"
     },
     ["fiery-warhorse"] = {
       identity = {
@@ -12338,7 +14012,7 @@ NS.Data = {
         mountJournalID = 168
       },
       mountKey = "fiery-warhorse",
-      primarySourceID = "attumen-drop",
+      primarySourceID = "manual-source-36702",
       restrictions = {
         classes = {},
         factions = {}
@@ -12349,7 +14023,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "逆风小径",
                 zhCN = "逆风小径"
@@ -12357,7 +14031,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "卡拉赞10人",
                 zhCN = "卡拉赞10人"
@@ -12365,7 +14039,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "猎手阿图门",
                 zhCN = "猎手阿图门"
@@ -12378,13 +14052,20 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "attumen-drop",
+          sourceID = "manual-source-36702",
           type = "boss_drop"
         }
       },
@@ -12405,7 +14086,7 @@ NS.Data = {
         mountJournalID = 425
       },
       mountKey = "flametalon-of-alysrazor",
-      primarySourceID = "alysrazor-drop",
+      primarySourceID = "manual-source-101542",
       restrictions = {
         classes = {},
         factions = {}
@@ -12416,7 +14097,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "海加尔山",
                 zhCN = "海加尔山"
@@ -12424,7 +14105,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "火焰之地",
                 zhCN = "火焰之地"
@@ -12432,7 +14113,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "奥利瑟拉佐尔",
                 zhCN = "奥利瑟拉佐尔"
@@ -12445,13 +14126,20 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "alysrazor-drop",
+          sourceID = "manual-source-101542",
           type = "boss_drop"
         }
       },
@@ -12572,7 +14260,7 @@ NS.Data = {
         mountJournalID = 473
       },
       mountKey = "heavenly-onyx-cloud-serpent",
-      primarySourceID = "sha-of-anger-drop",
+      primarySourceID = "manual-source-127158",
       restrictions = {
         classes = {},
         factions = {}
@@ -12583,7 +14271,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "昆莱山",
                 zhCN = "昆莱山"
@@ -12591,15 +14279,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
-              labels = {
-                enUS = "怒之煞",
-                zhCN = "怒之煞"
-              },
-              refID = nil
-            },
-            {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "怒之煞",
                 zhCN = "怒之煞"
@@ -12612,17 +14292,92 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = false,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "sha-of-anger-drop",
+          sourceID = "manual-source-127158",
           type = "boss_drop"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "黑市拍卖行",
+                zhCN = "黑市拍卖行"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "auction-house-127158",
+          type = "auction_house"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Celestial Fortune Bag",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "celestial-fortune-bag-127158",
+          type = "container"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     invincible = {
       identity = {
@@ -12639,7 +14394,7 @@ NS.Data = {
         mountJournalID = nil
       },
       mountKey = "invincible",
-      primarySourceID = "lich-king-drop",
+      primarySourceID = "manual-source-72286",
       restrictions = {
         classes = {},
         factions = {}
@@ -12650,7 +14405,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "冰冠冰川",
                 zhCN = "冰冠冰川"
@@ -12658,7 +14413,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "冰冠堡垒25H",
                 zhCN = "冰冠堡垒25H"
@@ -12666,7 +14421,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "巫妖王",
                 zhCN = "巫妖王"
@@ -12678,17 +14433,21 @@ NS.Data = {
           requirements = {
             achievementID = nil,
             costs = {},
-            difficulties = {
-              "TWENTY_FIVE",
-              "HEROIC"
-            },
-            difficultyInPath = true,
+            difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "lich-king-drop",
+          sourceID = "manual-source-72286",
           type = "boss_drop"
         }
       },
@@ -12709,7 +14468,7 @@ NS.Data = {
         mountJournalID = 559
       },
       mountKey = "kor-kron-juggernaut",
-      primarySourceID = "garrosh-juggernaut-drop",
+      primarySourceID = "manual-source-148417",
       restrictions = {
         classes = {},
         factions = {}
@@ -12720,7 +14479,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "锦绣谷",
                 zhCN = "锦绣谷"
@@ -12728,7 +14487,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "决战奥格瑞玛25H",
                 zhCN = "决战奥格瑞玛25H"
@@ -12736,7 +14495,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "加尔鲁什·地狱咆哮",
                 zhCN = "加尔鲁什·地狱咆哮"
@@ -12748,16 +14507,21 @@ NS.Data = {
           requirements = {
             achievementID = nil,
             costs = {},
-            difficulties = {
-              "HEROIC"
-            },
-            difficultyInPath = true,
+            difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "garrosh-juggernaut-drop",
+          sourceID = "manual-source-148417",
           type = "boss_drop"
         }
       },
@@ -12778,7 +14542,7 @@ NS.Data = {
         mountJournalID = 444
       },
       mountKey = "life-binders-handmaiden",
-      primarySourceID = "madness-handmaiden-drop",
+      primarySourceID = "manual-source-107845",
       restrictions = {
         classes = {},
         factions = {}
@@ -12789,7 +14553,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "时光之穴",
                 zhCN = "时光之穴"
@@ -12797,7 +14561,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "巨龙之魂",
                 zhCN = "巨龙之魂"
@@ -12805,7 +14569,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "死亡之翼的疯狂",
                 zhCN = "死亡之翼的疯狂"
@@ -12818,13 +14582,20 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "madness-handmaiden-drop",
+          sourceID = "manual-source-107845",
           type = "boss_drop"
         }
       },
@@ -13579,7 +15350,8 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
           sourceID = "manual-source-463045",
           type = "store"
@@ -13602,7 +15374,7 @@ NS.Data = {
         mountJournalID = nil
       },
       mountKey = "mimirons-head",
-      primarySourceID = "yogg-saron-drop",
+      primarySourceID = "manual-source-63796",
       restrictions = {
         classes = {},
         factions = {}
@@ -13613,7 +15385,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "风暴峭壁",
                 zhCN = "风暴峭壁"
@@ -13621,7 +15393,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "奥杜尔25人（0守护者）",
                 zhCN = "奥杜尔25人（0守护者）"
@@ -13629,7 +15401,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "尤格-萨隆",
                 zhCN = "尤格-萨隆"
@@ -13641,16 +15413,21 @@ NS.Data = {
           requirements = {
             achievementID = nil,
             costs = {},
-            difficulties = {
-              "TWENTY_FIVE"
-            },
-            difficultyInPath = true,
+            difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "yogg-saron-drop",
+          sourceID = "manual-source-63796",
           type = "boss_drop"
         }
       },
@@ -13671,7 +15448,7 @@ NS.Data = {
         mountJournalID = nil
       },
       mountKey = "onyxian-drake",
-      primarySourceID = "onyxia-drop",
+      primarySourceID = "manual-source-69395",
       restrictions = {
         classes = {},
         factions = {}
@@ -13682,7 +15459,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "尘泥沼泽",
                 zhCN = "尘泥沼泽"
@@ -13690,7 +15467,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "奥妮克希亚的巢穴",
                 zhCN = "奥妮克希亚的巢穴"
@@ -13698,7 +15475,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "奥妮克希亚",
                 zhCN = "奥妮克希亚"
@@ -13711,13 +15488,20 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "onyxia-drop",
+          sourceID = "manual-source-69395",
           type = "boss_drop"
         }
       },
@@ -13738,7 +15522,7 @@ NS.Data = {
         mountJournalID = 393
       },
       mountKey = "phosphorescent-stone-drake",
-      primarySourceID = "aeonaxx-drop",
+      primarySourceID = "manual-source-88718",
       restrictions = {
         classes = {},
         factions = {}
@@ -13749,7 +15533,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "深岩之洲",
                 zhCN = "深岩之洲"
@@ -13757,7 +15541,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "rare",
+              kind = "custom",
               labels = {
                 enUS = "奥艾娜克斯",
                 zhCN = "奥艾娜克斯"
@@ -13770,13 +15554,20 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = false,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "aeonaxx-drop",
+          sourceID = "manual-source-88718",
           type = "rare_drop"
         }
       },
@@ -13797,7 +15588,7 @@ NS.Data = {
         mountJournalID = 422
       },
       mountKey = "provisional-100332",
-      primarySourceID = "pvp-battleground-100332",
+      primarySourceID = "manual-source-100332",
       restrictions = {
         classes = {},
         factions = {}
@@ -13808,7 +15599,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "评级战场",
                 zhCN = "评级战场"
@@ -13816,7 +15607,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "achievement",
+              kind = "custom",
               labels = {
                 enUS = "评级战场成就：联盟精兵",
                 zhCN = "评级战场成就：联盟精兵"
@@ -13839,9 +15630,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-battleground-100332",
+          sourceID = "manual-source-100332",
           type = "achievement"
         }
       },
@@ -13862,7 +15654,7 @@ NS.Data = {
         mountJournalID = 423
       },
       mountKey = "provisional-100333",
-      primarySourceID = "pvp-battleground-100333",
+      primarySourceID = "manual-source-100333",
       restrictions = {
         classes = {},
         factions = {}
@@ -13873,7 +15665,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "评级战场",
                 zhCN = "评级战场"
@@ -13881,7 +15673,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "achievement",
+              kind = "custom",
               labels = {
                 enUS = "评级战场成就：部落精兵",
                 zhCN = "评级战场成就：部落精兵"
@@ -13904,9 +15696,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-battleground-100333",
+          sourceID = "manual-source-100333",
           type = "achievement"
         }
       },
@@ -13927,7 +15720,7 @@ NS.Data = {
         mountJournalID = 429
       },
       mountKey = "provisional-102346",
-      primarySourceID = "enriched-source-102346",
+      primarySourceID = "manual-source-102346",
       restrictions = {
         classes = {},
         factions = {}
@@ -13954,15 +15747,15 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 14846",
+                enUS = "兰拉",
                 zhCN = "兰拉"
               },
-              refID = 14846
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -13977,9 +15770,10 @@ NS.Data = {
               zhCN = "180张暗月奖券"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-102346",
+          sourceID = "manual-source-102346",
           type = "vendor"
         }
       },
@@ -14000,7 +15794,7 @@ NS.Data = {
         mountJournalID = 430
       },
       mountKey = "provisional-102349",
-      primarySourceID = "enriched-source-102349",
+      primarySourceID = "manual-source-102349",
       restrictions = {
         classes = {},
         factions = {}
@@ -14027,15 +15821,15 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 32837",
+                enUS = "复活节商人",
                 zhCN = "复活节商人"
               },
-              refID = 32837
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -14050,9 +15844,10 @@ NS.Data = {
               zhCN = "500个复活节巧克力"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-102349",
+          sourceID = "manual-source-102349",
           type = "vendor"
         }
       },
@@ -14073,7 +15868,7 @@ NS.Data = {
         mountJournalID = 431
       },
       mountKey = "provisional-102350",
-      primarySourceID = "enriched-source-102350",
+      primarySourceID = "manual-source-102350",
       restrictions = {
         classes = {},
         factions = {}
@@ -14100,15 +15895,15 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 37674",
+                enUS = "可爱的商贩",
                 zhCN = "可爱的商贩"
               },
-              refID = 37674
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -14123,9 +15918,10 @@ NS.Data = {
               zhCN = "270个爱情信物"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-102350",
+          sourceID = "manual-source-102350",
           type = "vendor"
         }
       },
@@ -14146,7 +15942,7 @@ NS.Data = {
         mountJournalID = 434
       },
       mountKey = "provisional-103081",
-      primarySourceID = "enriched-source-103081",
+      primarySourceID = "manual-source-103081",
       restrictions = {
         classes = {},
         factions = {}
@@ -14173,15 +15969,15 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 14846",
+                enUS = "兰拉",
                 zhCN = "兰拉"
               },
-              refID = 14846
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -14196,9 +15992,10 @@ NS.Data = {
               zhCN = "180张暗月奖券"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-103081",
+          sourceID = "manual-source-103081",
           type = "vendor"
         }
       },
@@ -14219,7 +16016,7 @@ NS.Data = {
         mountJournalID = 435
       },
       mountKey = "provisional-103195",
-      primarySourceID = "enriched-source-103195",
+      primarySourceID = "manual-source-103195",
       restrictions = {
         classes = {},
         factions = {}
@@ -14232,21 +16029,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "吉尔尼斯 > 格雷迈恩庄园",
-                zhCN = "吉尔尼斯 > 格雷迈恩庄园"
+                enUS = "吉尔尼斯",
+                zhCN = "吉尔尼斯"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 55285",
+                enUS = "格雷迈恩庄园",
+                zhCN = "格雷迈恩庄园"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "阿斯特丽德·长袜",
                 zhCN = "阿斯特丽德·长袜"
               },
-              refID = 55285
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -14261,9 +16066,10 @@ NS.Data = {
               zhCN = "10,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-103195",
+          sourceID = "manual-source-103195",
           type = "vendor"
         }
       },
@@ -14284,7 +16090,7 @@ NS.Data = {
         mountJournalID = 436
       },
       mountKey = "provisional-103196",
-      primarySourceID = "enriched-source-103196",
+      primarySourceID = "manual-source-103196",
       restrictions = {
         classes = {},
         factions = {}
@@ -14297,21 +16103,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "吉尔尼斯 > 格雷迈恩庄园",
-                zhCN = "吉尔尼斯 > 格雷迈恩庄园"
+                enUS = "吉尔尼斯",
+                zhCN = "吉尔尼斯"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 55285",
+                enUS = "格雷迈恩庄园",
+                zhCN = "格雷迈恩庄园"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "阿斯特丽德·长袜",
                 zhCN = "阿斯特丽德·长袜"
               },
-              refID = 55285
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -14326,9 +16140,10 @@ NS.Data = {
               zhCN = "10,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-103196",
+          sourceID = "manual-source-103196",
           type = "vendor"
         }
       },
@@ -14399,7 +16214,7 @@ NS.Data = {
         mountJournalID = 440
       },
       mountKey = "provisional-107516",
-      primarySourceID = "category-hint-107516",
+      primarySourceID = "manual-source-107516",
       restrictions = {
         classes = {},
         factions = {}
@@ -14407,32 +16222,40 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "unknown",
+          availability = "unavailable",
           path = {
             {
-              kind = "research",
+              kind = "custom",
               labels = {
-                enUS = "Location pending verification",
-                zhCN = "详细地点待核实"
+                enUS = "复活卷轴活动",
+                zhCN = "复活卷轴活动"
               },
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = "联盟阵营变体；获得该组坐骑后，部落角色显示对应的幽灵驭风者。活动时间为 2012-03 至 2014-02。",
+              zhCN = "联盟阵营变体；获得该组坐骑后，部落角色显示对应的幽灵驭风者。活动时间为 2012-03 至 2014-02。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-107516",
+          sourceID = "manual-source-107516",
           type = "promotion"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["provisional-107517"] = {
       identity = {
@@ -14449,7 +16272,7 @@ NS.Data = {
         mountJournalID = 441
       },
       mountKey = "provisional-107517",
-      primarySourceID = "category-hint-107517",
+      primarySourceID = "manual-source-107517",
       restrictions = {
         classes = {},
         factions = {}
@@ -14457,32 +16280,40 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "unknown",
+          availability = "unavailable",
           path = {
             {
-              kind = "research",
+              kind = "custom",
               labels = {
-                enUS = "Location pending verification",
-                zhCN = "详细地点待核实"
+                enUS = "复活卷轴活动",
+                zhCN = "复活卷轴活动"
               },
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = "部落阵营变体；获得该组坐骑后，联盟角色显示对应的幽灵狮鹫。活动时间为 2012-03 至 2014-02。",
+              zhCN = "部落阵营变体；获得该组坐骑后，联盟角色显示对应的幽灵狮鹫。活动时间为 2012-03 至 2014-02。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-107517",
+          sourceID = "manual-source-107517",
           type = "promotion"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["provisional-107844"] = {
       identity = {
@@ -14499,7 +16330,7 @@ NS.Data = {
         mountJournalID = 443
       },
       mountKey = "provisional-107844",
-      primarySourceID = "enriched-source-107844",
+      primarySourceID = "manual-source-107844",
       restrictions = {
         classes = {},
         factions = {}
@@ -14510,7 +16341,7 @@ NS.Data = {
           availability = "unknown",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "时光之穴",
                 zhCN = "时光之穴"
@@ -14518,7 +16349,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "巨龙之魂H",
                 zhCN = "巨龙之魂H"
@@ -14526,7 +16357,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "死亡之翼的疯狂",
                 zhCN = "死亡之翼的疯狂"
@@ -14534,20 +16365,25 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
-            achievementID = 6169,
+            achievementID = nil,
             costs = {},
-            difficulties = {
-              "HEROIC"
-            },
-            difficultyInPath = true,
+            difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-107844",
+          sourceID = "manual-source-107844",
           type = "boss_drop"
         }
       },
@@ -14568,7 +16404,7 @@ NS.Data = {
         mountJournalID = 31
       },
       mountKey = "provisional-10789",
-      primarySourceID = "enriched-source-10789",
+      primarySourceID = "manual-source-10789",
       restrictions = {
         classes = {},
         factions = {}
@@ -14589,21 +16425,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "泰达希尔 > 多兰纳尔",
-                zhCN = "泰达希尔 > 多兰纳尔"
+                enUS = "泰达希尔",
+                zhCN = "泰达希尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4730",
+                enUS = "多兰纳尔",
+                zhCN = "多兰纳尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "莱兰奈",
                 zhCN = "莱兰奈"
               },
-              refID = 4730
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -14618,9 +16462,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-10789",
+          sourceID = "manual-source-10789",
           type = "vendor"
         }
       },
@@ -14641,7 +16486,7 @@ NS.Data = {
         mountJournalID = 34
       },
       mountKey = "provisional-10793",
-      primarySourceID = "enriched-source-10793",
+      primarySourceID = "manual-source-10793",
       restrictions = {
         classes = {},
         factions = {}
@@ -14662,21 +16507,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "泰达希尔 > 多兰纳尔",
-                zhCN = "泰达希尔 > 多兰纳尔"
+                enUS = "泰达希尔",
+                zhCN = "泰达希尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4730",
+                enUS = "多兰纳尔",
+                zhCN = "多兰纳尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "莱兰奈",
                 zhCN = "莱兰奈"
               },
-              refID = 4730
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -14691,9 +16544,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-10793",
+          sourceID = "manual-source-10793",
           type = "vendor"
         }
       },
@@ -14714,7 +16568,7 @@ NS.Data = {
         mountJournalID = 36
       },
       mountKey = "provisional-10796",
-      primarySourceID = "enriched-source-10796",
+      primarySourceID = "manual-source-10796",
       restrictions = {
         classes = {},
         factions = {}
@@ -14735,21 +16589,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 森金村",
-                zhCN = "杜隆塔尔 > 森金村"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 7952",
+                enUS = "森金村",
+                zhCN = "森金村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "祖尼尔",
                 zhCN = "祖尼尔"
               },
-              refID = 7952
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -14764,9 +16626,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-10796",
+          sourceID = "manual-source-10796",
           type = "vendor"
         }
       },
@@ -14787,7 +16650,7 @@ NS.Data = {
         mountJournalID = 38
       },
       mountKey = "provisional-10799",
-      primarySourceID = "enriched-source-10799",
+      primarySourceID = "manual-source-10799",
       restrictions = {
         classes = {},
         factions = {}
@@ -14808,21 +16671,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 森金村",
-                zhCN = "杜隆塔尔 > 森金村"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 7952",
+                enUS = "森金村",
+                zhCN = "森金村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "祖尼尔",
                 zhCN = "祖尼尔"
               },
-              refID = 7952
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -14837,9 +16708,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-10799",
+          sourceID = "manual-source-10799",
           type = "vendor"
         }
       },
@@ -14860,7 +16732,7 @@ NS.Data = {
         mountJournalID = 39
       },
       mountKey = "provisional-10873",
-      primarySourceID = "enriched-source-10873",
+      primarySourceID = "manual-source-10873",
       restrictions = {
         classes = {},
         factions = {}
@@ -14881,21 +16753,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 卡拉诺斯",
-                zhCN = "丹莫罗 > 卡拉诺斯"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 7955",
+                enUS = "卡拉诺斯",
+                zhCN = "卡拉诺斯"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "米利·羽哨",
                 zhCN = "米利·羽哨"
               },
-              refID = 7955
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -14910,9 +16790,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-10873",
+          sourceID = "manual-source-10873",
           type = "vendor"
         }
       },
@@ -14933,7 +16814,7 @@ NS.Data = {
         mountJournalID = 40
       },
       mountKey = "provisional-10969",
-      primarySourceID = "enriched-source-10969",
+      primarySourceID = "manual-source-10969",
       restrictions = {
         classes = {},
         factions = {}
@@ -14954,21 +16835,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 卡拉诺斯",
-                zhCN = "丹莫罗 > 卡拉诺斯"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 7955",
+                enUS = "卡拉诺斯",
+                zhCN = "卡拉诺斯"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "米利·羽哨",
                 zhCN = "米利·羽哨"
               },
-              refID = 7955
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -14983,9 +16872,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-10969",
+          sourceID = "manual-source-10969",
           type = "vendor"
         }
       },
@@ -15006,7 +16896,7 @@ NS.Data = {
         mountJournalID = 446
       },
       mountKey = "provisional-110051",
-      primarySourceID = "category-hint-110051",
+      primarySourceID = "manual-source-110051",
       restrictions = {
         classes = {},
         factions = {}
@@ -15014,32 +16904,82 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "unknown",
+          availability = "obtainable",
           path = {
             {
-              kind = "research",
+              kind = "custom",
               labels = {
-                enUS = "Location pending verification",
-                zhCN = "详细地点待核实"
+                enUS = "战网商城",
+                zhCN = "战网商城"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "守护巨龙之心",
+                zhCN = "守护巨龙之心"
               },
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-110051",
+          sourceID = "manual-source-110051",
           type = "store"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "流沙秘宝库",
+                zhCN = "流沙秘宝库"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "event-110051",
+          type = "event"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["provisional-113199"] = {
       identity = {
@@ -15106,7 +17046,7 @@ NS.Data = {
         mountJournalID = 449
       },
       mountKey = "provisional-118089",
-      primarySourceID = "enriched-source-118089",
+      primarySourceID = "manual-source-118089",
       restrictions = {
         classes = {},
         factions = {}
@@ -15127,45 +17067,50 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "卡桑琅丛林 > 垂钓翁码头",
-                zhCN = "卡桑琅丛林 > 垂钓翁码头"
+                enUS = "卡桑琅丛林",
+                zhCN = "卡桑琅丛林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "纳特·帕格尔",
-                zhCN = "纳特·帕格尔"
+                enUS = "渔人码头",
+                zhCN = "渔人码头"
               },
-              refID = 63721
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "纳特·帕格",
+                zhCN = "纳特·帕格"
+              },
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = "需垂钓翁崇拜购买。",
-              zhCN = "需垂钓翁崇拜购买。"
+              enUS = "垂钓翁崇拜后直接购买。",
+              zhCN = "垂钓翁崇拜后直接购买。"
             },
             price = {
-              enUS = "4,000金币",
-              zhCN = "4,000金币"
+              enUS = "约2,000金币（声望折扣）",
+              zhCN = "约2,000金币（声望折扣）"
             },
             questID = nil,
-            reputation = {
-              faction = "垂钓翁",
-              standing = "EXALTED"
-            }
+            reputation = nil
           },
-          sourceID = "enriched-source-118089",
+          sourceID = "manual-source-118089",
           type = "reputation_vendor"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["provisional-118737"] = {
       identity = {
@@ -15282,7 +17227,7 @@ NS.Data = {
         mountJournalID = 455
       },
       mountKey = "provisional-121820",
-      primarySourceID = "category-hint-121820",
+      primarySourceID = "manual-source-121820",
       restrictions = {
         classes = {},
         factions = {}
@@ -15290,32 +17235,40 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "unknown",
+          availability = "limited_time",
           path = {
             {
-              kind = "research",
+              kind = "custom",
               labels = {
-                enUS = "Location pending verification",
-                zhCN = "详细地点待核实"
+                enUS = "国服运营活动",
+                zhCN = "国服运营活动"
               },
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = "国服活动获取。",
+              zhCN = "国服活动获取。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-121820",
-          type = "promotion"
+          sourceID = "manual-source-121820",
+          type = "event"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["provisional-121836"] = {
       identity = {
@@ -15532,7 +17485,7 @@ NS.Data = {
         mountJournalID = 460
       },
       mountKey = "provisional-122708",
-      primarySourceID = "enriched-source-122708",
+      primarySourceID = "manual-source-122708",
       restrictions = {
         classes = {},
         factions = {}
@@ -15545,21 +17498,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "昆莱山 > 野牛人前线",
-                zhCN = "昆莱山 > 野牛人前线"
+                enUS = "昆莱山",
+                zhCN = "昆莱山"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 64518",
+                enUS = "野牛人前线",
+                zhCN = "野牛人前线"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "表叔大口袋",
                 zhCN = "表叔大口袋"
               },
-              refID = 64518
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -15574,9 +17535,10 @@ NS.Data = {
               zhCN = "120,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-122708",
+          sourceID = "manual-source-122708",
           type = "vendor"
         }
       },
@@ -15597,7 +17559,7 @@ NS.Data = {
         mountJournalID = 463
       },
       mountKey = "provisional-123886",
-      primarySourceID = "enriched-source-123886",
+      primarySourceID = "manual-source-123886",
       restrictions = {
         classes = {},
         factions = {}
@@ -15618,21 +17580,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "恐惧废土 > 卡拉克西维斯",
-                zhCN = "恐惧废土 > 卡拉克西维斯"
+                enUS = "恐惧废土",
+                zhCN = "恐惧废土"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 64599",
+                enUS = "卡拉克西维斯",
+                zhCN = "卡拉克西维斯"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "琥珀匠师齐克",
                 zhCN = "琥珀匠师齐克"
               },
-              refID = 64599
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -15647,12 +17617,10 @@ NS.Data = {
               zhCN = "2,000金币"
             },
             questID = nil,
-            reputation = {
-              faction = "卡拉克西",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-123886",
+          sourceID = "manual-source-123886",
           type = "reputation_vendor"
         }
       },
@@ -15773,7 +17741,7 @@ NS.Data = {
         mountJournalID = 466
       },
       mountKey = "provisional-124408",
-      primarySourceID = "category-hint-124408",
+      primarySourceID = "manual-source-124408",
       restrictions = {
         classes = {},
         factions = {}
@@ -15794,8 +17762,16 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "翡翠林 > 百木园",
-                zhCN = "翡翠林 > 百木园"
+                enUS = "翡翠林",
+                zhCN = "翡翠林"
+              },
+              refID = nil
+            },
+            {
+              kind = "zone",
+              labels = {
+                enUS = "百木园",
+                zhCN = "百木园"
               },
               refID = nil
             },
@@ -15808,7 +17784,7 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -15823,12 +17799,10 @@ NS.Data = {
               zhCN = "3,000金币"
             },
             questID = nil,
-            reputation = {
-              faction = "云端翔龙骑士团",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-124408",
+          sourceID = "manual-source-124408",
           type = "reputation_vendor"
         }
       },
@@ -16149,7 +18123,7 @@ NS.Data = {
         mountJournalID = 475
       },
       mountKey = "provisional-127164",
-      primarySourceID = "enriched-source-127164",
+      primarySourceID = "manual-source-127164",
       restrictions = {
         classes = {},
         factions = {}
@@ -16170,21 +18144,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "翡翠林 > 百木园",
-                zhCN = "翡翠林 > 百木园"
+                enUS = "翡翠林",
+                zhCN = "翡翠林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 73306",
+                enUS = "百木园",
+                zhCN = "百木园"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "织雾者顾严",
                 zhCN = "织雾者顾严"
               },
-              refID = 73306
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -16199,12 +18181,10 @@ NS.Data = {
               zhCN = "3,000金币"
             },
             questID = nil,
-            reputation = {
-              faction = "云端翔龙骑士团",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-127164",
+          sourceID = "manual-source-127164",
           type = "reputation_vendor"
         }
       },
@@ -16325,7 +18305,7 @@ NS.Data = {
         mountJournalID = 479
       },
       mountKey = "provisional-127174",
-      primarySourceID = "enriched-source-127174",
+      primarySourceID = "manual-source-127174",
       restrictions = {
         classes = {},
         factions = {}
@@ -16346,21 +18326,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "锦绣谷 > 双月殿 / 七星殿",
-                zhCN = "锦绣谷 > 双月殿 / 七星殿"
+                enUS = "锦绣谷",
+                zhCN = "锦绣谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 59908",
+                enUS = "双月殿 / 七星殿",
+                zhCN = "双月殿 / 七星殿"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "宽仁的贾鲁",
                 zhCN = "宽仁的贾鲁"
               },
-              refID = 59908
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -16375,12 +18363,10 @@ NS.Data = {
               zhCN = "2,500金币"
             },
             questID = nil,
-            reputation = {
-              faction = "金莲教",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-127174",
+          sourceID = "manual-source-127174",
           type = "reputation_vendor"
         }
       },
@@ -16401,7 +18387,7 @@ NS.Data = {
         mountJournalID = 480
       },
       mountKey = "provisional-127176",
-      primarySourceID = "enriched-source-127176",
+      primarySourceID = "manual-source-127176",
       restrictions = {
         classes = {},
         factions = {}
@@ -16422,21 +18408,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "锦绣谷 > 双月殿 / 七星殿",
-                zhCN = "锦绣谷 > 双月殿 / 七星殿"
+                enUS = "锦绣谷",
+                zhCN = "锦绣谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 59908",
+                enUS = "双月殿 / 七星殿",
+                zhCN = "双月殿 / 七星殿"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "宽仁的贾鲁",
                 zhCN = "宽仁的贾鲁"
               },
-              refID = 59908
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -16451,12 +18445,10 @@ NS.Data = {
               zhCN = "2,500金币"
             },
             questID = nil,
-            reputation = {
-              faction = "金莲教",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-127176",
+          sourceID = "manual-source-127176",
           type = "reputation_vendor"
         }
       },
@@ -16477,7 +18469,7 @@ NS.Data = {
         mountJournalID = 481
       },
       mountKey = "provisional-127177",
-      primarySourceID = "enriched-source-127177",
+      primarySourceID = "manual-source-127177",
       restrictions = {
         classes = {},
         factions = {}
@@ -16498,21 +18490,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "锦绣谷 > 双月殿 / 七星殿",
-                zhCN = "锦绣谷 > 双月殿 / 七星殿"
+                enUS = "锦绣谷",
+                zhCN = "锦绣谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 59908",
+                enUS = "双月殿 / 七星殿",
+                zhCN = "双月殿 / 七星殿"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "宽仁的贾鲁",
                 zhCN = "宽仁的贾鲁"
               },
-              refID = 59908
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -16527,12 +18527,10 @@ NS.Data = {
               zhCN = "2,500金币"
             },
             questID = nil,
-            reputation = {
-              faction = "金莲教",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-127177",
+          sourceID = "manual-source-127177",
           type = "reputation_vendor"
         }
       },
@@ -16553,7 +18551,7 @@ NS.Data = {
         mountJournalID = 486
       },
       mountKey = "provisional-127216",
-      primarySourceID = "enriched-source-127216",
+      primarySourceID = "manual-source-127216",
       restrictions = {
         classes = {},
         factions = {}
@@ -16566,21 +18564,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "昆莱山 > 野牛人前线",
-                zhCN = "昆莱山 > 野牛人前线"
+                enUS = "昆莱山",
+                zhCN = "昆莱山"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 64518",
+                enUS = "野牛人前线",
+                zhCN = "野牛人前线"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "表叔大口袋",
                 zhCN = "表叔大口袋"
               },
-              refID = 64518
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -16595,9 +18601,10 @@ NS.Data = {
               zhCN = "3,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-127216",
+          sourceID = "manual-source-127216",
           type = "vendor"
         }
       },
@@ -16618,7 +18625,7 @@ NS.Data = {
         mountJournalID = 487
       },
       mountKey = "provisional-127220",
-      primarySourceID = "enriched-source-127220",
+      primarySourceID = "manual-source-127220",
       restrictions = {
         classes = {},
         factions = {}
@@ -16631,21 +18638,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "昆莱山 > 野牛人前线",
-                zhCN = "昆莱山 > 野牛人前线"
+                enUS = "昆莱山",
+                zhCN = "昆莱山"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 64518",
+                enUS = "野牛人前线",
+                zhCN = "野牛人前线"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "表叔大口袋",
                 zhCN = "表叔大口袋"
               },
-              refID = 64518
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -16660,9 +18675,10 @@ NS.Data = {
               zhCN = "3,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-127220",
+          sourceID = "manual-source-127220",
           type = "vendor"
         }
       },
@@ -16683,7 +18699,7 @@ NS.Data = {
         mountJournalID = 504
       },
       mountKey = "provisional-129918",
-      primarySourceID = "category-hint-129918",
+      primarySourceID = "manual-source-129918",
       restrictions = {
         classes = {},
         factions = {}
@@ -16704,8 +18720,16 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "锦绣谷 > 双月殿 / 七星殿",
-                zhCN = "锦绣谷 > 双月殿 / 七星殿"
+                enUS = "锦绣谷",
+                zhCN = "锦绣谷"
+              },
+              refID = nil
+            },
+            {
+              kind = "zone",
+              labels = {
+                enUS = "双月殿 / 七星殿",
+                zhCN = "双月殿 / 七星殿"
               },
               refID = nil
             },
@@ -16718,7 +18742,7 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -16733,12 +18757,10 @@ NS.Data = {
               zhCN = "2,500金币"
             },
             questID = nil,
-            reputation = {
-              faction = "金莲教",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-129918",
+          sourceID = "manual-source-129918",
           type = "reputation_vendor"
         }
       },
@@ -16759,7 +18781,7 @@ NS.Data = {
         mountJournalID = 505
       },
       mountKey = "provisional-129932",
-      primarySourceID = "enriched-source-129932",
+      primarySourceID = "manual-source-129932",
       restrictions = {
         classes = {},
         factions = {}
@@ -16780,21 +18802,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "螳螂高原 > 影踪卫戍营",
-                zhCN = "螳螂高原 > 影踪卫戍营"
+                enUS = "螳螂高原",
+                zhCN = "螳螂高原"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 64595",
+                enUS = "影踪卫戍营",
+                zhCN = "影踪卫戍营"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "狡狐鲁西",
                 zhCN = "狡狐鲁西"
               },
-              refID = 64595
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -16809,12 +18839,10 @@ NS.Data = {
               zhCN = "2,500金币"
             },
             questID = nil,
-            reputation = {
-              faction = "影踪派",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-129932",
+          sourceID = "manual-source-129932",
           type = "reputation_vendor"
         }
       },
@@ -16835,7 +18863,7 @@ NS.Data = {
         mountJournalID = 506
       },
       mountKey = "provisional-129934",
-      primarySourceID = "enriched-source-129934",
+      primarySourceID = "manual-source-129934",
       restrictions = {
         classes = {},
         factions = {}
@@ -16856,21 +18884,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "螳螂高原 > 影踪卫戍营",
-                zhCN = "螳螂高原 > 影踪卫戍营"
+                enUS = "螳螂高原",
+                zhCN = "螳螂高原"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 64595",
+                enUS = "影踪卫戍营",
+                zhCN = "影踪卫戍营"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "狡狐鲁西",
                 zhCN = "狡狐鲁西"
               },
-              refID = 64595
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -16885,12 +18921,10 @@ NS.Data = {
               zhCN = "2,500金币"
             },
             questID = nil,
-            reputation = {
-              faction = "影踪派",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-129934",
+          sourceID = "manual-source-129934",
           type = "reputation_vendor"
         }
       },
@@ -16911,7 +18945,7 @@ NS.Data = {
         mountJournalID = 507
       },
       mountKey = "provisional-129935",
-      primarySourceID = "enriched-source-129935",
+      primarySourceID = "manual-source-129935",
       restrictions = {
         classes = {},
         factions = {}
@@ -16932,21 +18966,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "螳螂高原 > 影踪卫戍营",
-                zhCN = "螳螂高原 > 影踪卫戍营"
+                enUS = "螳螂高原",
+                zhCN = "螳螂高原"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 64595",
+                enUS = "影踪卫戍营",
+                zhCN = "影踪卫戍营"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "狡狐鲁西",
                 zhCN = "狡狐鲁西"
               },
-              refID = 64595
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -16961,12 +19003,10 @@ NS.Data = {
               zhCN = "2,500金币"
             },
             questID = nil,
-            reputation = {
-              faction = "影踪派",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-129935",
+          sourceID = "manual-source-129935",
           type = "reputation_vendor"
         }
       },
@@ -16987,7 +19027,7 @@ NS.Data = {
         mountJournalID = 508
       },
       mountKey = "provisional-130086",
-      primarySourceID = "enriched-source-130086",
+      primarySourceID = "manual-source-130086",
       restrictions = {
         classes = {},
         factions = {}
@@ -17008,21 +19048,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "四风谷 > 半山",
-                zhCN = "四风谷 > 半山"
+                enUS = "四风谷",
+                zhCN = "四风谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 58706",
+                enUS = "半山",
+                zhCN = "半山"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "吉娜·泥爪",
                 zhCN = "吉娜·泥爪"
               },
-              refID = 58706
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -17037,12 +19085,10 @@ NS.Data = {
               zhCN = "2,000金币"
             },
             questID = nil,
-            reputation = {
-              faction = "阡陌客",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-130086",
+          sourceID = "manual-source-130086",
           type = "reputation_vendor"
         }
       },
@@ -17063,7 +19109,7 @@ NS.Data = {
         mountJournalID = 509
       },
       mountKey = "provisional-130092",
-      primarySourceID = "enriched-source-130092",
+      primarySourceID = "manual-source-130092",
       restrictions = {
         classes = {},
         factions = {}
@@ -17084,21 +19130,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "锦绣谷 > 魔古山宫殿",
-                zhCN = "锦绣谷 > 魔古山宫殿"
+                enUS = "锦绣谷",
+                zhCN = "锦绣谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 64605",
+                enUS = "魔古山宫殿",
+                zhCN = "魔古山宫殿"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "谭欣眺",
                 zhCN = "谭欣眺"
               },
-              refID = 64605
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -17113,12 +19167,10 @@ NS.Data = {
               zhCN = "600金币"
             },
             questID = nil,
-            reputation = {
-              faction = "游学者周卓",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-130092",
+          sourceID = "manual-source-130092",
           type = "reputation_vendor"
         }
       },
@@ -17139,7 +19191,7 @@ NS.Data = {
         mountJournalID = 510
       },
       mountKey = "provisional-130137",
-      primarySourceID = "enriched-source-130137",
+      primarySourceID = "manual-source-130137",
       restrictions = {
         classes = {},
         factions = {}
@@ -17160,21 +19212,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "四风谷 > 半山",
-                zhCN = "四风谷 > 半山"
+                enUS = "四风谷",
+                zhCN = "四风谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 58706",
+                enUS = "半山",
+                zhCN = "半山"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "吉娜·泥爪",
                 zhCN = "吉娜·泥爪"
               },
-              refID = 58706
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -17189,12 +19249,10 @@ NS.Data = {
               zhCN = "2,000金币"
             },
             questID = nil,
-            reputation = {
-              faction = "阡陌客",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-130137",
+          sourceID = "manual-source-130137",
           type = "reputation_vendor"
         }
       },
@@ -17215,7 +19273,7 @@ NS.Data = {
         mountJournalID = 511
       },
       mountKey = "provisional-130138",
-      primarySourceID = "enriched-source-130138",
+      primarySourceID = "manual-source-130138",
       restrictions = {
         classes = {},
         factions = {}
@@ -17236,21 +19294,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "四风谷 > 半山",
-                zhCN = "四风谷 > 半山"
+                enUS = "四风谷",
+                zhCN = "四风谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 58706",
+                enUS = "半山",
+                zhCN = "半山"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "吉娜·泥爪",
                 zhCN = "吉娜·泥爪"
               },
-              refID = 58706
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -17265,12 +19331,10 @@ NS.Data = {
               zhCN = "2,000金币"
             },
             questID = nil,
-            reputation = {
-              faction = "阡陌客",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-130138",
+          sourceID = "manual-source-130138",
           type = "reputation_vendor"
         }
       },
@@ -17643,7 +19707,7 @@ NS.Data = {
         mountJournalID = 529
       },
       mountKey = "provisional-136164",
-      primarySourceID = "retired-audit-source-136164",
+      primarySourceID = "manual-source-136164",
       restrictions = {
         classes = {},
         factions = {
@@ -17656,7 +19720,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "faction",
+              kind = "custom",
               labels = {
                 enUS = "统御先锋军（崇拜）",
                 zhCN = "统御先锋军（崇拜）"
@@ -17664,7 +19728,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "卡桑琅丛林",
                 zhCN = "卡桑琅丛林"
@@ -17672,7 +19736,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "quest",
+              kind = "custom",
               labels = {
                 enUS = "最黑暗的阴影之息",
                 zhCN = "最黑暗的阴影之息"
@@ -17695,12 +19759,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = {
-              faction = "统御先锋军",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-136164",
+          sourceID = "manual-source-136164",
           type = "quest"
         }
       },
@@ -17721,7 +19783,7 @@ NS.Data = {
         mountJournalID = 530
       },
       mountKey = "provisional-136400",
-      primarySourceID = "enriched-source-136400",
+      primarySourceID = "manual-source-136400",
       restrictions = {
         classes = {},
         factions = {}
@@ -17732,7 +19794,7 @@ NS.Data = {
           availability = "unknown",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "雷神岛",
                 zhCN = "雷神岛"
@@ -17740,7 +19802,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "雷电王座",
                 zhCN = "雷电王座"
@@ -17748,7 +19810,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "季鹍",
                 zhCN = "季鹍"
@@ -17756,18 +19818,25 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
-            achievementID = 8124,
+            achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-136400",
+          sourceID = "manual-source-136400",
           type = "boss_drop"
         }
       },
@@ -17788,7 +19857,7 @@ NS.Data = {
         mountJournalID = 533
       },
       mountKey = "provisional-138423",
-      primarySourceID = "enriched-source-138423",
+      primarySourceID = "manual-source-138423",
       restrictions = {
         classes = {},
         factions = {}
@@ -17796,10 +19865,10 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "unknown",
+          availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "巨兽岛",
                 zhCN = "巨兽岛"
@@ -17807,36 +19876,105 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 69161",
+                enUS = "乌达斯塔",
                 zhCN = "乌达斯塔"
               },
-              refID = 69161
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
               enUS = nil,
               zhCN = nil
             },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-138423",
+          type = "boss_drop"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "黑市拍卖行",
+                zhCN = "黑市拍卖行"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
             price = {
-              enUS = "乌达斯塔掉落",
-              zhCN = "乌达斯塔掉落"
+              enUS = nil,
+              zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-138423",
-          type = "vendor"
+          sourceID = "auction-house-138423",
+          type = "auction_house"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Celestial Fortune Bag",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "celestial-fortune-bag-138423",
+          type = "container"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["provisional-138424"] = {
       identity = {
@@ -17853,7 +19991,7 @@ NS.Data = {
         mountJournalID = 534
       },
       mountKey = "provisional-138424",
-      primarySourceID = "enriched-source-138424",
+      primarySourceID = "manual-source-138424",
       restrictions = {
         classes = {},
         factions = {}
@@ -17861,26 +19999,26 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "unknown",
+          availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
-                enUS = "巨兽岛",
+                enUS = "Isle of Giants",
                 zhCN = "巨兽岛"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 258121",
-                zhCN = "永恒者森达拉"
+                enUS = "Zandalari Warbringer",
+                zhCN = "赞达拉战争使者"
               },
-              refID = 258121
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -17895,13 +20033,48 @@ NS.Data = {
               zhCN = "9,999根巨兽骨头"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-138424",
-          type = "vendor"
+          sourceID = "manual-source-138424",
+          type = "rare_drop"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Celestial Fortune Bag",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "celestial-fortune-bag-138424",
+          type = "container"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["provisional-138425"] = {
       identity = {
@@ -17918,7 +20091,7 @@ NS.Data = {
         mountJournalID = 535
       },
       mountKey = "provisional-138425",
-      primarySourceID = "enriched-source-138425",
+      primarySourceID = "manual-source-138425",
       restrictions = {
         classes = {},
         factions = {}
@@ -17926,26 +20099,26 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "unknown",
+          availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
-                enUS = "巨兽岛",
+                enUS = "Isle of Giants",
                 zhCN = "巨兽岛"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 258121",
-                zhCN = "永恒者森达拉"
+                enUS = "Zandalari Warbringer",
+                zhCN = "赞达拉战争使者"
               },
-              refID = 258121
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -17960,13 +20133,48 @@ NS.Data = {
               zhCN = "9,999根巨兽骨头"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-138425",
-          type = "vendor"
+          sourceID = "manual-source-138425",
+          type = "rare_drop"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Celestial Fortune Bag",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "celestial-fortune-bag-138425",
+          type = "container"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["provisional-138426"] = {
       identity = {
@@ -17983,7 +20191,7 @@ NS.Data = {
         mountJournalID = 536
       },
       mountKey = "provisional-138426",
-      primarySourceID = "enriched-source-138426",
+      primarySourceID = "manual-source-138426",
       restrictions = {
         classes = {},
         factions = {}
@@ -17991,26 +20199,26 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "unknown",
+          availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
-                enUS = "巨兽岛",
+                enUS = "Isle of Giants",
                 zhCN = "巨兽岛"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 258121",
-                zhCN = "永恒者森达拉"
+                enUS = "Zandalari Warbringer",
+                zhCN = "赞达拉战争使者"
               },
-              refID = 258121
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -18025,13 +20233,48 @@ NS.Data = {
               zhCN = "9,999根巨兽骨头"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-138426",
-          type = "vendor"
+          sourceID = "manual-source-138426",
+          type = "rare_drop"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Celestial Fortune Bag",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "celestial-fortune-bag-138426",
+          type = "container"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["provisional-138640"] = {
       identity = {
@@ -18098,7 +20341,7 @@ NS.Data = {
         mountJournalID = 538
       },
       mountKey = "provisional-138641",
-      primarySourceID = "category-hint-138641",
+      primarySourceID = "manual-source-138641",
       restrictions = {
         classes = {},
         factions = {}
@@ -18106,10 +20349,10 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "unknown",
+          availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "巨兽岛",
                 zhCN = "巨兽岛"
@@ -18117,7 +20360,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "赞达拉战争使者",
                 zhCN = "赞达拉战争使者"
@@ -18125,7 +20368,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "赞达拉战争使者",
                 zhCN = "赞达拉战争使者"
@@ -18133,22 +20376,71 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = false,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-138641",
+          sourceID = "manual-source-138641",
           type = "boss_drop"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Celestial Fortune Bag",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Primal Dinosaur Egg",
+                zhCN = "原始恐龙蛋"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "celestial-fortune-bag-138641",
+          type = "container"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["provisional-138642"] = {
       identity = {
@@ -18165,7 +20457,7 @@ NS.Data = {
         mountJournalID = 539
       },
       mountKey = "provisional-138642",
-      primarySourceID = "category-hint-138642",
+      primarySourceID = "manual-source-138642",
       restrictions = {
         classes = {},
         factions = {}
@@ -18173,10 +20465,10 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "unknown",
+          availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "巨兽岛",
                 zhCN = "巨兽岛"
@@ -18184,7 +20476,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "赞达拉战争使者",
                 zhCN = "赞达拉战争使者"
@@ -18192,7 +20484,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "赞达拉战争使者",
                 zhCN = "赞达拉战争使者"
@@ -18200,22 +20492,71 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = false,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-138642",
+          sourceID = "manual-source-138642",
           type = "boss_drop"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Celestial Fortune Bag",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Primal Dinosaur Egg",
+                zhCN = "原始恐龙蛋"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "celestial-fortune-bag-138642",
+          type = "container"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["provisional-138643"] = {
       identity = {
@@ -18232,7 +20573,7 @@ NS.Data = {
         mountJournalID = 540
       },
       mountKey = "provisional-138643",
-      primarySourceID = "category-hint-138643",
+      primarySourceID = "manual-source-138643",
       restrictions = {
         classes = {},
         factions = {}
@@ -18240,10 +20581,10 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "unknown",
+          availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "巨兽岛",
                 zhCN = "巨兽岛"
@@ -18251,7 +20592,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "赞达拉战争使者",
                 zhCN = "赞达拉战争使者"
@@ -18259,7 +20600,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "赞达拉战争使者",
                 zhCN = "赞达拉战争使者"
@@ -18267,22 +20608,71 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = false,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-138643",
+          sourceID = "manual-source-138643",
           type = "boss_drop"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Celestial Fortune Bag",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Primal Dinosaur Egg",
+                zhCN = "原始恐龙蛋"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "celestial-fortune-bag-138643",
+          type = "container"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["provisional-139595"] = {
       identity = {
@@ -18701,7 +21091,7 @@ NS.Data = {
         mountJournalID = 554
       },
       mountKey = "provisional-146615",
-      primarySourceID = "enriched-source-146615",
+      primarySourceID = "manual-source-146615",
       restrictions = {
         classes = {},
         factions = {}
@@ -18728,15 +21118,15 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 73190",
+                enUS = "通灵领主赛普",
                 zhCN = "通灵领主赛普"
               },
-              refID = 73190
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -18751,9 +21141,10 @@ NS.Data = {
               zhCN = "挑战模式：黄金"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-146615",
+          sourceID = "manual-source-146615",
           type = "vendor"
         }
       },
@@ -18774,7 +21165,7 @@ NS.Data = {
         mountJournalID = 555
       },
       mountKey = "provisional-146622",
-      primarySourceID = "enriched-source-146622",
+      primarySourceID = "manual-source-146622",
       restrictions = {
         classes = {},
         factions = {}
@@ -18801,15 +21192,15 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 73151",
+                enUS = "亡灵卫兵奈萨里安",
                 zhCN = "亡灵卫兵奈萨里安"
               },
-              refID = 73151
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -18824,9 +21215,10 @@ NS.Data = {
               zhCN = "挑战模式：黄金"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-146622",
+          sourceID = "manual-source-146622",
           type = "vendor"
         }
       },
@@ -18847,7 +21239,7 @@ NS.Data = {
         mountJournalID = 557
       },
       mountKey = "provisional-148392",
-      primarySourceID = "corrected-source-148392",
+      primarySourceID = "manual-source-148392",
       restrictions = {
         classes = {},
         factions = {}
@@ -18858,7 +21250,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "锦绣谷",
                 zhCN = "锦绣谷"
@@ -18866,7 +21258,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "决战奥格瑞玛",
                 zhCN = "决战奥格瑞玛"
@@ -18874,7 +21266,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "achievement",
+              kind = "custom",
               labels = {
                 enUS = "团队的荣耀：决战奥格瑞玛",
                 zhCN = "团队的荣耀：决战奥格瑞玛"
@@ -18884,7 +21276,7 @@ NS.Data = {
           },
           priority = 100,
           requirements = {
-            achievementID = 8454,
+            achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
@@ -18892,10 +21284,15 @@ NS.Data = {
               enUS = "完成团队成就，不是加尔鲁什掉落。",
               zhCN = "完成团队成就，不是加尔鲁什掉落。"
             },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "corrected-source-148392",
+          sourceID = "manual-source-148392",
           type = "achievement"
         }
       },
@@ -19166,7 +21563,7 @@ NS.Data = {
         mountJournalID = 57
       },
       mountKey = "provisional-17453",
-      primarySourceID = "enriched-source-17453",
+      primarySourceID = "manual-source-17453",
       restrictions = {
         classes = {},
         factions = {}
@@ -19187,21 +21584,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 卡拉诺斯",
-                zhCN = "丹莫罗 > 卡拉诺斯"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 7955",
+                enUS = "卡拉诺斯",
+                zhCN = "卡拉诺斯"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "米利·羽哨",
                 zhCN = "米利·羽哨"
               },
-              refID = 7955
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -19216,9 +21621,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-17453",
+          sourceID = "manual-source-17453",
           type = "vendor"
         }
       },
@@ -19239,7 +21645,7 @@ NS.Data = {
         mountJournalID = 65
       },
       mountKey = "provisional-17462",
-      primarySourceID = "enriched-source-17462",
+      primarySourceID = "manual-source-17462",
       restrictions = {
         classes = {},
         factions = {}
@@ -19260,21 +21666,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "提瑞斯法林地 > 布瑞尔",
-                zhCN = "提瑞斯法林地 > 布瑞尔"
+                enUS = "提瑞斯法林地",
+                zhCN = "提瑞斯法林地"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4731",
+                enUS = "布瑞尔",
+                zhCN = "布瑞尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "撒迦利亚·普斯特",
                 zhCN = "撒迦利亚·普斯特"
               },
-              refID = 4731
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -19289,9 +21703,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-17462",
+          sourceID = "manual-source-17462",
           type = "vendor"
         }
       },
@@ -19312,7 +21727,7 @@ NS.Data = {
         mountJournalID = 66
       },
       mountKey = "provisional-17463",
-      primarySourceID = "enriched-source-17463",
+      primarySourceID = "manual-source-17463",
       restrictions = {
         classes = {},
         factions = {}
@@ -19333,21 +21748,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "提瑞斯法林地 > 布瑞尔",
-                zhCN = "提瑞斯法林地 > 布瑞尔"
+                enUS = "提瑞斯法林地",
+                zhCN = "提瑞斯法林地"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4731",
+                enUS = "布瑞尔",
+                zhCN = "布瑞尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "撒迦利亚·普斯特",
                 zhCN = "撒迦利亚·普斯特"
               },
-              refID = 4731
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -19362,9 +21785,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-17463",
+          sourceID = "manual-source-17463",
           type = "vendor"
         }
       },
@@ -19385,7 +21809,7 @@ NS.Data = {
         mountJournalID = 67
       },
       mountKey = "provisional-17464",
-      primarySourceID = "enriched-source-17464",
+      primarySourceID = "manual-source-17464",
       restrictions = {
         classes = {},
         factions = {}
@@ -19406,21 +21830,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "提瑞斯法林地 > 布瑞尔",
-                zhCN = "提瑞斯法林地 > 布瑞尔"
+                enUS = "提瑞斯法林地",
+                zhCN = "提瑞斯法林地"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4731",
+                enUS = "布瑞尔",
+                zhCN = "布瑞尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "撒迦利亚·普斯特",
                 zhCN = "撒迦利亚·普斯特"
               },
-              refID = 4731
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -19435,9 +21867,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-17464",
+          sourceID = "manual-source-17464",
           type = "vendor"
         }
       },
@@ -19458,7 +21891,7 @@ NS.Data = {
         mountJournalID = 68
       },
       mountKey = "provisional-17465",
-      primarySourceID = "enriched-source-17465",
+      primarySourceID = "manual-source-17465",
       restrictions = {
         classes = {},
         factions = {}
@@ -19479,21 +21912,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "提瑞斯法林地 > 布瑞尔",
-                zhCN = "提瑞斯法林地 > 布瑞尔"
+                enUS = "提瑞斯法林地",
+                zhCN = "提瑞斯法林地"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4731",
+                enUS = "布瑞尔",
+                zhCN = "布瑞尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "撒迦利亚·普斯特",
                 zhCN = "撒迦利亚·普斯特"
               },
-              refID = 4731
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -19508,9 +21949,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-17465",
+          sourceID = "manual-source-17465",
           type = "vendor"
         }
       },
@@ -19531,7 +21973,7 @@ NS.Data = {
         mountJournalID = 71
       },
       mountKey = "provisional-18989",
-      primarySourceID = "enriched-source-18989",
+      primarySourceID = "manual-source-18989",
       restrictions = {
         classes = {},
         factions = {}
@@ -19552,21 +21994,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "莫高雷 > 血蹄村",
-                zhCN = "莫高雷 > 血蹄村"
+                enUS = "莫高雷",
+                zhCN = "莫高雷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 3685",
+                enUS = "血蹄村",
+                zhCN = "血蹄村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "哈布·爪蹄",
                 zhCN = "哈布·爪蹄"
               },
-              refID = 3685
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -19581,9 +22031,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-18989",
+          sourceID = "manual-source-18989",
           type = "vendor"
         }
       },
@@ -19604,7 +22055,7 @@ NS.Data = {
         mountJournalID = 72
       },
       mountKey = "provisional-18990",
-      primarySourceID = "enriched-source-18990",
+      primarySourceID = "manual-source-18990",
       restrictions = {
         classes = {},
         factions = {}
@@ -19625,21 +22076,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "莫高雷 > 血蹄村",
-                zhCN = "莫高雷 > 血蹄村"
+                enUS = "莫高雷",
+                zhCN = "莫高雷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 3685",
+                enUS = "血蹄村",
+                zhCN = "血蹄村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "哈布·爪蹄",
                 zhCN = "哈布·爪蹄"
               },
-              refID = 3685
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -19654,9 +22113,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-18990",
+          sourceID = "manual-source-18990",
           type = "vendor"
         }
       },
@@ -19677,7 +22137,7 @@ NS.Data = {
         mountJournalID = 75
       },
       mountKey = "provisional-22717",
-      primarySourceID = "enriched-source-22717",
+      primarySourceID = "manual-source-22717",
       restrictions = {
         classes = {},
         factions = {}
@@ -19698,29 +22158,37 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "暴风城 > 勇士大厅",
-                zhCN = "暴风城 > 勇士大厅"
+                enUS = "暴风城",
+                zhCN = "暴风城"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 12783",
+                enUS = "勇士大厅",
+                zhCN = "勇士大厅"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "卡特尔中尉",
                 zhCN = "卡特尔中尉"
               },
-              refID = 12783
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = " PVP 荣誉点数商人坐骑。",
-              zhCN = " PVP 荣誉点数商人坐骑。"
+              enUS = "PVP 荣誉点数商人坐骑。",
+              zhCN = "PVP 荣誉点数商人坐骑。"
             },
             price = {
               enUS = "2,000荣誉点数",
@@ -19729,7 +22197,7 @@ NS.Data = {
             questID = nil,
             reputation = nil
           },
-          sourceID = "enriched-source-22717",
+          sourceID = "manual-source-22717",
           type = "vendor"
         }
       },
@@ -19750,7 +22218,7 @@ NS.Data = {
         mountJournalID = 76
       },
       mountKey = "provisional-22718",
-      primarySourceID = "enriched-source-22718",
+      primarySourceID = "manual-source-22718",
       restrictions = {
         classes = {},
         factions = {}
@@ -19771,29 +22239,37 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "奥格瑞玛 > 传说大厅",
-                zhCN = "奥格瑞玛 > 传说大厅"
+                enUS = "奥格瑞玛",
+                zhCN = "奥格瑞玛"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 12796",
+                enUS = "传说大厅",
+                zhCN = "传说大厅"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "狼骑兵波尔克",
                 zhCN = "狼骑兵波尔克"
               },
-              refID = 12796
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = " PVP 荣誉点数商人坐骑。",
-              zhCN = " PVP 荣誉点数商人坐骑。"
+              enUS = "PVP 荣誉点数商人坐骑。",
+              zhCN = "PVP 荣誉点数商人坐骑。"
             },
             price = {
               enUS = "2,000荣誉点数",
@@ -19802,7 +22278,7 @@ NS.Data = {
             questID = nil,
             reputation = nil
           },
-          sourceID = "enriched-source-22718",
+          sourceID = "manual-source-22718",
           type = "vendor"
         }
       },
@@ -19823,7 +22299,7 @@ NS.Data = {
         mountJournalID = 77
       },
       mountKey = "provisional-22719",
-      primarySourceID = "enriched-source-22719",
+      primarySourceID = "manual-source-22719",
       restrictions = {
         classes = {},
         factions = {}
@@ -19844,29 +22320,37 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "暴风城 > 勇士大厅",
-                zhCN = "暴风城 > 勇士大厅"
+                enUS = "暴风城",
+                zhCN = "暴风城"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 12783",
+                enUS = "勇士大厅",
+                zhCN = "勇士大厅"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "卡特尔中尉",
                 zhCN = "卡特尔中尉"
               },
-              refID = 12783
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = " PVP 荣誉点数商人坐骑。",
-              zhCN = " PVP 荣誉点数商人坐骑。"
+              enUS = "PVP 荣誉点数商人坐骑。",
+              zhCN = "PVP 荣誉点数商人坐骑。"
             },
             price = {
               enUS = "2,000荣誉点数",
@@ -19875,7 +22359,7 @@ NS.Data = {
             questID = nil,
             reputation = nil
           },
-          sourceID = "enriched-source-22719",
+          sourceID = "manual-source-22719",
           type = "vendor"
         }
       },
@@ -19896,7 +22380,7 @@ NS.Data = {
         mountJournalID = 78
       },
       mountKey = "provisional-22720",
-      primarySourceID = "enriched-source-22720",
+      primarySourceID = "manual-source-22720",
       restrictions = {
         classes = {},
         factions = {}
@@ -19917,29 +22401,37 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "暴风城 > 勇士大厅",
-                zhCN = "暴风城 > 勇士大厅"
+                enUS = "暴风城",
+                zhCN = "暴风城"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 12783",
+                enUS = "勇士大厅",
+                zhCN = "勇士大厅"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "卡特尔中尉",
                 zhCN = "卡特尔中尉"
               },
-              refID = 12783
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = " PVP 荣誉点数商人坐骑。",
-              zhCN = " PVP 荣誉点数商人坐骑。"
+              enUS = "PVP 荣誉点数商人坐骑。",
+              zhCN = "PVP 荣誉点数商人坐骑。"
             },
             price = {
               enUS = "2,000荣誉点数",
@@ -19948,7 +22440,7 @@ NS.Data = {
             questID = nil,
             reputation = nil
           },
-          sourceID = "enriched-source-22720",
+          sourceID = "manual-source-22720",
           type = "vendor"
         }
       },
@@ -19969,7 +22461,7 @@ NS.Data = {
         mountJournalID = 79
       },
       mountKey = "provisional-22721",
-      primarySourceID = "enriched-source-22721",
+      primarySourceID = "manual-source-22721",
       restrictions = {
         classes = {},
         factions = {}
@@ -19990,29 +22482,37 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "奥格瑞玛 > 传说大厅",
-                zhCN = "奥格瑞玛 > 传说大厅"
+                enUS = "奥格瑞玛",
+                zhCN = "奥格瑞玛"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 12796",
+                enUS = "传说大厅",
+                zhCN = "传说大厅"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "狼骑兵波尔克",
                 zhCN = "狼骑兵波尔克"
               },
-              refID = 12796
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = " PVP 荣誉点数商人坐骑。",
-              zhCN = " PVP 荣誉点数商人坐骑。"
+              enUS = "PVP 荣誉点数商人坐骑。",
+              zhCN = "PVP 荣誉点数商人坐骑。"
             },
             price = {
               enUS = "2,000荣誉点数",
@@ -20021,7 +22521,7 @@ NS.Data = {
             questID = nil,
             reputation = nil
           },
-          sourceID = "enriched-source-22721",
+          sourceID = "manual-source-22721",
           type = "vendor"
         }
       },
@@ -20042,7 +22542,7 @@ NS.Data = {
         mountJournalID = 80
       },
       mountKey = "provisional-22722",
-      primarySourceID = "enriched-source-22722",
+      primarySourceID = "manual-source-22722",
       restrictions = {
         classes = {},
         factions = {}
@@ -20063,29 +22563,37 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "奥格瑞玛 > 传说大厅",
-                zhCN = "奥格瑞玛 > 传说大厅"
+                enUS = "奥格瑞玛",
+                zhCN = "奥格瑞玛"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 12796",
+                enUS = "传说大厅",
+                zhCN = "传说大厅"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "狼骑兵波尔克",
                 zhCN = "狼骑兵波尔克"
               },
-              refID = 12796
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = " PVP 荣誉点数商人坐骑。",
-              zhCN = " PVP 荣誉点数商人坐骑。"
+              enUS = "PVP 荣誉点数商人坐骑。",
+              zhCN = "PVP 荣誉点数商人坐骑。"
             },
             price = {
               enUS = "2,000荣誉点数",
@@ -20094,7 +22602,7 @@ NS.Data = {
             questID = nil,
             reputation = nil
           },
-          sourceID = "enriched-source-22722",
+          sourceID = "manual-source-22722",
           type = "vendor"
         }
       },
@@ -20115,7 +22623,7 @@ NS.Data = {
         mountJournalID = 81
       },
       mountKey = "provisional-22723",
-      primarySourceID = "enriched-source-22723",
+      primarySourceID = "manual-source-22723",
       restrictions = {
         classes = {},
         factions = {}
@@ -20136,29 +22644,37 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "暴风城 > 勇士大厅",
-                zhCN = "暴风城 > 勇士大厅"
+                enUS = "暴风城",
+                zhCN = "暴风城"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 12783",
+                enUS = "勇士大厅",
+                zhCN = "勇士大厅"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "卡特尔中尉",
                 zhCN = "卡特尔中尉"
               },
-              refID = 12783
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = " PVP 荣誉点数商人坐骑。",
-              zhCN = " PVP 荣誉点数商人坐骑。"
+              enUS = "PVP 荣誉点数商人坐骑。",
+              zhCN = "PVP 荣誉点数商人坐骑。"
             },
             price = {
               enUS = "2,000荣誉点数",
@@ -20167,7 +22683,7 @@ NS.Data = {
             questID = nil,
             reputation = nil
           },
-          sourceID = "enriched-source-22723",
+          sourceID = "manual-source-22723",
           type = "vendor"
         }
       },
@@ -20188,7 +22704,7 @@ NS.Data = {
         mountJournalID = 82
       },
       mountKey = "provisional-22724",
-      primarySourceID = "enriched-source-22724",
+      primarySourceID = "manual-source-22724",
       restrictions = {
         classes = {},
         factions = {}
@@ -20209,29 +22725,37 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "奥格瑞玛 > 传说大厅",
-                zhCN = "奥格瑞玛 > 传说大厅"
+                enUS = "奥格瑞玛",
+                zhCN = "奥格瑞玛"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 12796",
+                enUS = "传说大厅",
+                zhCN = "传说大厅"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "狼骑兵波尔克",
                 zhCN = "狼骑兵波尔克"
               },
-              refID = 12796
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = " PVP 荣誉点数商人坐骑。",
-              zhCN = " PVP 荣誉点数商人坐骑。"
+              enUS = "PVP 荣誉点数商人坐骑。",
+              zhCN = "PVP 荣誉点数商人坐骑。"
             },
             price = {
               enUS = "2,000荣誉点数",
@@ -20240,7 +22764,7 @@ NS.Data = {
             questID = nil,
             reputation = nil
           },
-          sourceID = "enriched-source-22724",
+          sourceID = "manual-source-22724",
           type = "vendor"
         }
       },
@@ -20261,7 +22785,7 @@ NS.Data = {
         mountJournalID = 85
       },
       mountKey = "provisional-23219",
-      primarySourceID = "enriched-source-23219",
+      primarySourceID = "manual-source-23219",
       restrictions = {
         classes = {},
         factions = {}
@@ -20282,21 +22806,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "泰达希尔 > 多兰纳尔",
-                zhCN = "泰达希尔 > 多兰纳尔"
+                enUS = "泰达希尔",
+                zhCN = "泰达希尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4730",
+                enUS = "多兰纳尔",
+                zhCN = "多兰纳尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "莱兰奈",
                 zhCN = "莱兰奈"
               },
-              refID = 4730
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -20311,9 +22843,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23219",
+          sourceID = "manual-source-23219",
           type = "vendor"
         }
       },
@@ -20334,7 +22867,7 @@ NS.Data = {
         mountJournalID = 87
       },
       mountKey = "provisional-23221",
-      primarySourceID = "enriched-source-23221",
+      primarySourceID = "manual-source-23221",
       restrictions = {
         classes = {},
         factions = {}
@@ -20355,21 +22888,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "泰达希尔 > 多兰纳尔",
-                zhCN = "泰达希尔 > 多兰纳尔"
+                enUS = "泰达希尔",
+                zhCN = "泰达希尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4730",
+                enUS = "多兰纳尔",
+                zhCN = "多兰纳尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "莱兰奈",
                 zhCN = "莱兰奈"
               },
-              refID = 4730
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -20384,9 +22925,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23221",
+          sourceID = "manual-source-23221",
           type = "vendor"
         }
       },
@@ -20407,7 +22949,7 @@ NS.Data = {
         mountJournalID = 88
       },
       mountKey = "provisional-23222",
-      primarySourceID = "enriched-source-23222",
+      primarySourceID = "manual-source-23222",
       restrictions = {
         classes = {},
         factions = {}
@@ -20428,21 +22970,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 卡拉诺斯",
-                zhCN = "丹莫罗 > 卡拉诺斯"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 7955",
+                enUS = "卡拉诺斯",
+                zhCN = "卡拉诺斯"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "米利·羽哨",
                 zhCN = "米利·羽哨"
               },
-              refID = 7955
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -20457,9 +23007,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23222",
+          sourceID = "manual-source-23222",
           type = "vendor"
         }
       },
@@ -20480,7 +23031,7 @@ NS.Data = {
         mountJournalID = 89
       },
       mountKey = "provisional-23223",
-      primarySourceID = "enriched-source-23223",
+      primarySourceID = "manual-source-23223",
       restrictions = {
         classes = {},
         factions = {}
@@ -20501,21 +23052,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 卡拉诺斯",
-                zhCN = "丹莫罗 > 卡拉诺斯"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 7955",
+                enUS = "卡拉诺斯",
+                zhCN = "卡拉诺斯"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "米利·羽哨",
                 zhCN = "米利·羽哨"
               },
-              refID = 7955
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -20530,9 +23089,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23223",
+          sourceID = "manual-source-23223",
           type = "vendor"
         }
       },
@@ -20553,7 +23113,7 @@ NS.Data = {
         mountJournalID = 90
       },
       mountKey = "provisional-23225",
-      primarySourceID = "enriched-source-23225",
+      primarySourceID = "manual-source-23225",
       restrictions = {
         classes = {},
         factions = {}
@@ -20574,21 +23134,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 卡拉诺斯",
-                zhCN = "丹莫罗 > 卡拉诺斯"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 7955",
+                enUS = "卡拉诺斯",
+                zhCN = "卡拉诺斯"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "米利·羽哨",
                 zhCN = "米利·羽哨"
               },
-              refID = 7955
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -20603,9 +23171,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23225",
+          sourceID = "manual-source-23225",
           type = "vendor"
         }
       },
@@ -20626,7 +23195,7 @@ NS.Data = {
         mountJournalID = 91
       },
       mountKey = "provisional-23227",
-      primarySourceID = "enriched-source-23227",
+      primarySourceID = "manual-source-23227",
       restrictions = {
         classes = {},
         factions = {}
@@ -20647,21 +23216,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "艾尔文森林 > 东谷伐木场",
-                zhCN = "艾尔文森林 > 东谷伐木场"
+                enUS = "艾尔文森林",
+                zhCN = "艾尔文森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4885",
+                enUS = "东谷伐木场",
+                zhCN = "东谷伐木场"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "格瑞戈·玛克温斯",
                 zhCN = "格瑞戈·玛克温斯"
               },
-              refID = 4885
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -20676,9 +23253,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23227",
+          sourceID = "manual-source-23227",
           type = "vendor"
         }
       },
@@ -20699,7 +23277,7 @@ NS.Data = {
         mountJournalID = 92
       },
       mountKey = "provisional-23228",
-      primarySourceID = "enriched-source-23228",
+      primarySourceID = "manual-source-23228",
       restrictions = {
         classes = {},
         factions = {}
@@ -20720,21 +23298,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "艾尔文森林 > 东谷伐木场",
-                zhCN = "艾尔文森林 > 东谷伐木场"
+                enUS = "艾尔文森林",
+                zhCN = "艾尔文森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4885",
+                enUS = "东谷伐木场",
+                zhCN = "东谷伐木场"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "格瑞戈·玛克温斯",
                 zhCN = "格瑞戈·玛克温斯"
               },
-              refID = 4885
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -20749,9 +23335,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23228",
+          sourceID = "manual-source-23228",
           type = "vendor"
         }
       },
@@ -20772,7 +23359,7 @@ NS.Data = {
         mountJournalID = 93
       },
       mountKey = "provisional-23229",
-      primarySourceID = "enriched-source-23229",
+      primarySourceID = "manual-source-23229",
       restrictions = {
         classes = {},
         factions = {}
@@ -20793,21 +23380,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "艾尔文森林 > 东谷伐木场",
-                zhCN = "艾尔文森林 > 东谷伐木场"
+                enUS = "艾尔文森林",
+                zhCN = "艾尔文森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4885",
+                enUS = "东谷伐木场",
+                zhCN = "东谷伐木场"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "格瑞戈·玛克温斯",
                 zhCN = "格瑞戈·玛克温斯"
               },
-              refID = 4885
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -20822,9 +23417,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23229",
+          sourceID = "manual-source-23229",
           type = "vendor"
         }
       },
@@ -20845,7 +23441,7 @@ NS.Data = {
         mountJournalID = 94
       },
       mountKey = "provisional-23238",
-      primarySourceID = "enriched-source-23238",
+      primarySourceID = "manual-source-23238",
       restrictions = {
         classes = {},
         factions = {}
@@ -20866,21 +23462,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 铁炉堡",
-                zhCN = "丹莫罗 > 铁炉堡"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 1261",
+                enUS = "铁炉堡",
+                zhCN = "铁炉堡"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "维隆·冻石",
                 zhCN = "维隆·冻石"
               },
-              refID = 1261
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -20895,9 +23499,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23238",
+          sourceID = "manual-source-23238",
           type = "vendor"
         }
       },
@@ -20918,7 +23523,7 @@ NS.Data = {
         mountJournalID = 95
       },
       mountKey = "provisional-23239",
-      primarySourceID = "enriched-source-23239",
+      primarySourceID = "manual-source-23239",
       restrictions = {
         classes = {},
         factions = {}
@@ -20939,21 +23544,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 铁炉堡",
-                zhCN = "丹莫罗 > 铁炉堡"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 1261",
+                enUS = "铁炉堡",
+                zhCN = "铁炉堡"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "维隆·冻石",
                 zhCN = "维隆·冻石"
               },
-              refID = 1261
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -20968,9 +23581,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23239",
+          sourceID = "manual-source-23239",
           type = "vendor"
         }
       },
@@ -20991,7 +23605,7 @@ NS.Data = {
         mountJournalID = 96
       },
       mountKey = "provisional-23240",
-      primarySourceID = "enriched-source-23240",
+      primarySourceID = "manual-source-23240",
       restrictions = {
         classes = {},
         factions = {}
@@ -21012,21 +23626,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 铁炉堡",
-                zhCN = "丹莫罗 > 铁炉堡"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 1261",
+                enUS = "铁炉堡",
+                zhCN = "铁炉堡"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "维隆·冻石",
                 zhCN = "维隆·冻石"
               },
-              refID = 1261
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -21041,9 +23663,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23240",
+          sourceID = "manual-source-23240",
           type = "vendor"
         }
       },
@@ -21064,7 +23687,7 @@ NS.Data = {
         mountJournalID = 97
       },
       mountKey = "provisional-23241",
-      primarySourceID = "enriched-source-23241",
+      primarySourceID = "manual-source-23241",
       restrictions = {
         classes = {},
         factions = {}
@@ -21085,21 +23708,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 森金村",
-                zhCN = "杜隆塔尔 > 森金村"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 7952",
+                enUS = "森金村",
+                zhCN = "森金村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "祖尼尔",
                 zhCN = "祖尼尔"
               },
-              refID = 7952
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -21114,9 +23745,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23241",
+          sourceID = "manual-source-23241",
           type = "vendor"
         }
       },
@@ -21137,7 +23769,7 @@ NS.Data = {
         mountJournalID = 98
       },
       mountKey = "provisional-23242",
-      primarySourceID = "enriched-source-23242",
+      primarySourceID = "manual-source-23242",
       restrictions = {
         classes = {},
         factions = {}
@@ -21158,21 +23790,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 森金村",
-                zhCN = "杜隆塔尔 > 森金村"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 7952",
+                enUS = "森金村",
+                zhCN = "森金村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "祖尼尔",
                 zhCN = "祖尼尔"
               },
-              refID = 7952
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -21187,9 +23827,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23242",
+          sourceID = "manual-source-23242",
           type = "vendor"
         }
       },
@@ -21210,7 +23851,7 @@ NS.Data = {
         mountJournalID = 99
       },
       mountKey = "provisional-23243",
-      primarySourceID = "enriched-source-23243",
+      primarySourceID = "manual-source-23243",
       restrictions = {
         classes = {},
         factions = {}
@@ -21231,21 +23872,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 森金村",
-                zhCN = "杜隆塔尔 > 森金村"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 7952",
+                enUS = "森金村",
+                zhCN = "森金村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "祖尼尔",
                 zhCN = "祖尼尔"
               },
-              refID = 7952
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -21260,9 +23909,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23243",
+          sourceID = "manual-source-23243",
           type = "vendor"
         }
       },
@@ -21283,7 +23933,7 @@ NS.Data = {
         mountJournalID = 100
       },
       mountKey = "provisional-23246",
-      primarySourceID = "enriched-source-23246",
+      primarySourceID = "manual-source-23246",
       restrictions = {
         classes = {},
         factions = {}
@@ -21304,21 +23954,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "提瑞斯法林地 > 布瑞尔",
-                zhCN = "提瑞斯法林地 > 布瑞尔"
+                enUS = "提瑞斯法林地",
+                zhCN = "提瑞斯法林地"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4731",
+                enUS = "布瑞尔",
+                zhCN = "布瑞尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "撒迦利亚·普斯特",
                 zhCN = "撒迦利亚·普斯特"
               },
-              refID = 4731
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -21333,9 +23991,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23246",
+          sourceID = "manual-source-23246",
           type = "vendor"
         }
       },
@@ -21356,7 +24015,7 @@ NS.Data = {
         mountJournalID = 101
       },
       mountKey = "provisional-23247",
-      primarySourceID = "enriched-source-23247",
+      primarySourceID = "manual-source-23247",
       restrictions = {
         classes = {},
         factions = {}
@@ -21377,21 +24036,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "莫高雷 > 血蹄村",
-                zhCN = "莫高雷 > 血蹄村"
+                enUS = "莫高雷",
+                zhCN = "莫高雷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 3685",
+                enUS = "血蹄村",
+                zhCN = "血蹄村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "哈布·爪蹄",
                 zhCN = "哈布·爪蹄"
               },
-              refID = 3685
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -21406,9 +24073,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23247",
+          sourceID = "manual-source-23247",
           type = "vendor"
         }
       },
@@ -21429,7 +24097,7 @@ NS.Data = {
         mountJournalID = 102
       },
       mountKey = "provisional-23248",
-      primarySourceID = "enriched-source-23248",
+      primarySourceID = "manual-source-23248",
       restrictions = {
         classes = {},
         factions = {}
@@ -21450,21 +24118,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "莫高雷 > 血蹄村",
-                zhCN = "莫高雷 > 血蹄村"
+                enUS = "莫高雷",
+                zhCN = "莫高雷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 3685",
+                enUS = "血蹄村",
+                zhCN = "血蹄村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "哈布·爪蹄",
                 zhCN = "哈布·爪蹄"
               },
-              refID = 3685
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -21479,9 +24155,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23248",
+          sourceID = "manual-source-23248",
           type = "vendor"
         }
       },
@@ -21502,7 +24179,7 @@ NS.Data = {
         mountJournalID = 103
       },
       mountKey = "provisional-23249",
-      primarySourceID = "enriched-source-23249",
+      primarySourceID = "manual-source-23249",
       restrictions = {
         classes = {},
         factions = {}
@@ -21523,21 +24200,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "莫高雷 > 血蹄村",
-                zhCN = "莫高雷 > 血蹄村"
+                enUS = "莫高雷",
+                zhCN = "莫高雷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 3685",
+                enUS = "血蹄村",
+                zhCN = "血蹄村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "哈布·爪蹄",
                 zhCN = "哈布·爪蹄"
               },
-              refID = 3685
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -21552,9 +24237,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23249",
+          sourceID = "manual-source-23249",
           type = "vendor"
         }
       },
@@ -21575,7 +24261,7 @@ NS.Data = {
         mountJournalID = 104
       },
       mountKey = "provisional-23250",
-      primarySourceID = "enriched-source-23250",
+      primarySourceID = "manual-source-23250",
       restrictions = {
         classes = {},
         factions = {}
@@ -21596,21 +24282,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 奥格瑞玛",
-                zhCN = "杜隆塔尔 > 奥格瑞玛"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 3362",
+                enUS = "奥格瑞玛",
+                zhCN = "奥格瑞玛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "奥古纳罗",
                 zhCN = "奥古纳罗"
               },
-              refID = 3362
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -21625,9 +24319,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23250",
+          sourceID = "manual-source-23250",
           type = "vendor"
         }
       },
@@ -21648,7 +24343,7 @@ NS.Data = {
         mountJournalID = 105
       },
       mountKey = "provisional-23251",
-      primarySourceID = "enriched-source-23251",
+      primarySourceID = "manual-source-23251",
       restrictions = {
         classes = {},
         factions = {}
@@ -21669,21 +24364,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 奥格瑞玛",
-                zhCN = "杜隆塔尔 > 奥格瑞玛"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 3362",
+                enUS = "奥格瑞玛",
+                zhCN = "奥格瑞玛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "奥古纳罗",
                 zhCN = "奥古纳罗"
               },
-              refID = 3362
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -21698,9 +24401,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23251",
+          sourceID = "manual-source-23251",
           type = "vendor"
         }
       },
@@ -21721,7 +24425,7 @@ NS.Data = {
         mountJournalID = 106
       },
       mountKey = "provisional-23252",
-      primarySourceID = "enriched-source-23252",
+      primarySourceID = "manual-source-23252",
       restrictions = {
         classes = {},
         factions = {}
@@ -21742,21 +24446,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 奥格瑞玛",
-                zhCN = "杜隆塔尔 > 奥格瑞玛"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 3362",
+                enUS = "奥格瑞玛",
+                zhCN = "奥格瑞玛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "奥古纳罗",
                 zhCN = "奥古纳罗"
               },
-              refID = 3362
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -21771,9 +24483,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23252",
+          sourceID = "manual-source-23252",
           type = "vendor"
         }
       },
@@ -21794,7 +24507,7 @@ NS.Data = {
         mountJournalID = 107
       },
       mountKey = "provisional-23338",
-      primarySourceID = "enriched-source-23338",
+      primarySourceID = "manual-source-23338",
       restrictions = {
         classes = {},
         factions = {}
@@ -21815,21 +24528,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "泰达希尔 > 多兰纳尔",
-                zhCN = "泰达希尔 > 多兰纳尔"
+                enUS = "泰达希尔",
+                zhCN = "泰达希尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4730",
+                enUS = "多兰纳尔",
+                zhCN = "多兰纳尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "莱兰奈",
                 zhCN = "莱兰奈"
               },
-              refID = 4730
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -21844,9 +24565,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-23338",
+          sourceID = "manual-source-23338",
           type = "vendor"
         }
       },
@@ -21867,7 +24589,7 @@ NS.Data = {
         mountJournalID = 108
       },
       mountKey = "provisional-23509",
-      primarySourceID = "enriched-source-23509",
+      primarySourceID = "manual-source-23509",
       restrictions = {
         classes = {},
         factions = {}
@@ -21894,35 +24616,32 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 13218",
+                enUS = "格伦达·狼心",
                 zhCN = "格伦达·狼心"
               },
-              refID = 13218
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = " 奥特兰克山谷战场声望坐骑。 奥特兰克山谷战场声望坐骑。",
-              zhCN = " 奥特兰克山谷战场声望坐骑。 奥特兰克山谷战场声望坐骑。"
+              enUS = "奥特兰克山谷战场声望坐骑。 奥特兰克山谷战场声望坐骑。",
+              zhCN = "奥特兰克山谷战场声望坐骑。 奥特兰克山谷战场声望坐骑。"
             },
             price = {
               enUS = "2,000荣誉点数",
               zhCN = "2,000荣誉点数"
             },
             questID = nil,
-            reputation = {
-              faction = "霜狼氏族",
-              standing = "EXALTED"
-            }
+            reputation = nil
           },
-          sourceID = "enriched-source-23509",
+          sourceID = "manual-source-23509",
           type = "reputation_vendor"
         }
       },
@@ -21943,7 +24662,7 @@ NS.Data = {
         mountJournalID = 109
       },
       mountKey = "provisional-23510",
-      primarySourceID = "enriched-source-23510",
+      primarySourceID = "manual-source-23510",
       restrictions = {
         classes = {},
         factions = {}
@@ -21970,35 +24689,32 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 13216",
+                enUS = "盖尔丁",
                 zhCN = "盖尔丁"
               },
-              refID = 13216
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = " 奥特兰克山谷战场声望坐骑。 奥特兰克山谷战场声望坐骑。",
-              zhCN = " 奥特兰克山谷战场声望坐骑。 奥特兰克山谷战场声望坐骑。"
+              enUS = "奥特兰克山谷战场声望坐骑。 奥特兰克山谷战场声望坐骑。",
+              zhCN = "奥特兰克山谷战场声望坐骑。 奥特兰克山谷战场声望坐骑。"
             },
             price = {
               enUS = "2,000荣誉点数",
               zhCN = "2,000荣誉点数"
             },
             questID = nil,
-            reputation = {
-              faction = "雷矛卫队",
-              standing = "EXALTED"
-            }
+            reputation = nil
           },
-          sourceID = "enriched-source-23510",
+          sourceID = "manual-source-23510",
           type = "reputation_vendor"
         }
       },
@@ -22019,7 +24735,7 @@ NS.Data = {
         mountJournalID = 117
       },
       mountKey = "provisional-25953",
-      primarySourceID = "category-hint-25953",
+      primarySourceID = "manual-source-25953",
       restrictions = {
         classes = {},
         factions = {}
@@ -22030,7 +24746,7 @@ NS.Data = {
           availability = "unknown",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "希利苏斯",
                 zhCN = "希利苏斯"
@@ -22038,7 +24754,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "安其拉废墟20人",
                 zhCN = "安其拉废墟20人"
@@ -22046,7 +24762,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "无疤者奥斯里安",
                 zhCN = "无疤者奥斯里安"
@@ -22054,18 +24770,25 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-25953",
+          sourceID = "manual-source-25953",
           type = "boss_drop"
         }
       },
@@ -22086,7 +24809,7 @@ NS.Data = {
         mountJournalID = 118
       },
       mountKey = "provisional-26054",
-      primarySourceID = "category-hint-26054",
+      primarySourceID = "manual-source-26054",
       restrictions = {
         classes = {},
         factions = {}
@@ -22097,7 +24820,7 @@ NS.Data = {
           availability = "unknown",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "希利苏斯",
                 zhCN = "希利苏斯"
@@ -22105,7 +24828,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "安其拉废墟20人",
                 zhCN = "安其拉废墟20人"
@@ -22113,7 +24836,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "无疤者奥斯里安",
                 zhCN = "无疤者奥斯里安"
@@ -22121,18 +24844,25 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-26054",
+          sourceID = "manual-source-26054",
           type = "boss_drop"
         }
       },
@@ -22153,7 +24883,7 @@ NS.Data = {
         mountJournalID = 119
       },
       mountKey = "provisional-26055",
-      primarySourceID = "category-hint-26055",
+      primarySourceID = "manual-source-26055",
       restrictions = {
         classes = {},
         factions = {}
@@ -22164,7 +24894,7 @@ NS.Data = {
           availability = "unknown",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "希利苏斯",
                 zhCN = "希利苏斯"
@@ -22172,7 +24902,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "安其拉废墟20人",
                 zhCN = "安其拉废墟20人"
@@ -22180,7 +24910,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "无疤者奥斯里安",
                 zhCN = "无疤者奥斯里安"
@@ -22188,18 +24918,25 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-26055",
+          sourceID = "manual-source-26055",
           type = "boss_drop"
         }
       },
@@ -22220,7 +24957,7 @@ NS.Data = {
         mountJournalID = 120
       },
       mountKey = "provisional-26056",
-      primarySourceID = "category-hint-26056",
+      primarySourceID = "manual-source-26056",
       restrictions = {
         classes = {},
         factions = {}
@@ -22231,7 +24968,7 @@ NS.Data = {
           availability = "unknown",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "希利苏斯",
                 zhCN = "希利苏斯"
@@ -22239,7 +24976,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "安其拉废墟20人",
                 zhCN = "安其拉废墟20人"
@@ -22247,7 +24984,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "无疤者奥斯里安",
                 zhCN = "无疤者奥斯里安"
@@ -22255,18 +24992,25 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-26056",
+          sourceID = "manual-source-26056",
           type = "boss_drop"
         }
       },
@@ -22287,7 +25031,7 @@ NS.Data = {
         mountJournalID = 129
       },
       mountKey = "provisional-32235",
-      primarySourceID = "enriched-source-32235",
+      primarySourceID = "manual-source-32235",
       restrictions = {
         classes = {},
         factions = {}
@@ -22308,21 +25052,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 蛮锤要塞",
-                zhCN = "影月谷 > 蛮锤要塞"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 43768",
+                enUS = "蛮锤要塞",
+                zhCN = "蛮锤要塞"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "塔尼克·石喙",
                 zhCN = "塔尼克·石喙"
               },
-              refID = 43768
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -22337,9 +25089,10 @@ NS.Data = {
               zhCN = "50金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-32235",
+          sourceID = "manual-source-32235",
           type = "vendor"
         }
       },
@@ -22360,7 +25113,7 @@ NS.Data = {
         mountJournalID = 131
       },
       mountKey = "provisional-32240",
-      primarySourceID = "enriched-source-32240",
+      primarySourceID = "manual-source-32240",
       restrictions = {
         classes = {},
         factions = {}
@@ -22381,21 +25134,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 蛮锤要塞",
-                zhCN = "影月谷 > 蛮锤要塞"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 43768",
+                enUS = "蛮锤要塞",
+                zhCN = "蛮锤要塞"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "塔尼克·石喙",
                 zhCN = "塔尼克·石喙"
               },
-              refID = 43768
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -22410,9 +25171,10 @@ NS.Data = {
               zhCN = "50金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-32240",
+          sourceID = "manual-source-32240",
           type = "vendor"
         }
       },
@@ -22433,7 +25195,7 @@ NS.Data = {
         mountJournalID = 132
       },
       mountKey = "provisional-32242",
-      primarySourceID = "enriched-source-32242",
+      primarySourceID = "manual-source-32242",
       restrictions = {
         classes = {},
         factions = {}
@@ -22454,21 +25216,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 蛮锤要塞",
-                zhCN = "影月谷 > 蛮锤要塞"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 43768",
+                enUS = "蛮锤要塞",
+                zhCN = "蛮锤要塞"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "塔尼克·石喙",
                 zhCN = "塔尼克·石喙"
               },
-              refID = 43768
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -22483,9 +25253,10 @@ NS.Data = {
               zhCN = "50金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-32242",
+          sourceID = "manual-source-32242",
           type = "vendor"
         }
       },
@@ -22506,7 +25277,7 @@ NS.Data = {
         mountJournalID = 133
       },
       mountKey = "provisional-32243",
-      primarySourceID = "enriched-source-32243",
+      primarySourceID = "manual-source-32243",
       restrictions = {
         classes = {},
         factions = {}
@@ -22527,21 +25298,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 影月村",
-                zhCN = "影月谷 > 影月村"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 44918",
+                enUS = "影月村",
+                zhCN = "影月村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "卓卡玛",
                 zhCN = "卓卡玛"
               },
-              refID = 44918
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -22556,9 +25335,10 @@ NS.Data = {
               zhCN = "50金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-32243",
+          sourceID = "manual-source-32243",
           type = "vendor"
         }
       },
@@ -22579,7 +25359,7 @@ NS.Data = {
         mountJournalID = 134
       },
       mountKey = "provisional-32244",
-      primarySourceID = "enriched-source-32244",
+      primarySourceID = "manual-source-32244",
       restrictions = {
         classes = {},
         factions = {}
@@ -22600,21 +25380,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 影月村",
-                zhCN = "影月谷 > 影月村"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 44918",
+                enUS = "影月村",
+                zhCN = "影月村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "卓卡玛",
                 zhCN = "卓卡玛"
               },
-              refID = 44918
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -22629,9 +25417,10 @@ NS.Data = {
               zhCN = "50金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-32244",
+          sourceID = "manual-source-32244",
           type = "vendor"
         }
       },
@@ -22652,7 +25441,7 @@ NS.Data = {
         mountJournalID = 135
       },
       mountKey = "provisional-32245",
-      primarySourceID = "enriched-source-32245",
+      primarySourceID = "manual-source-32245",
       restrictions = {
         classes = {},
         factions = {}
@@ -22673,21 +25462,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 影月村",
-                zhCN = "影月谷 > 影月村"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 44918",
+                enUS = "影月村",
+                zhCN = "影月村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "卓卡玛",
                 zhCN = "卓卡玛"
               },
-              refID = 44918
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -22702,9 +25499,10 @@ NS.Data = {
               zhCN = "50金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-32245",
+          sourceID = "manual-source-32245",
           type = "vendor"
         }
       },
@@ -22725,7 +25523,7 @@ NS.Data = {
         mountJournalID = 136
       },
       mountKey = "provisional-32246",
-      primarySourceID = "enriched-source-32246",
+      primarySourceID = "manual-source-32246",
       restrictions = {
         classes = {},
         factions = {}
@@ -22746,21 +25544,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 影月村",
-                zhCN = "影月谷 > 影月村"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 44918",
+                enUS = "影月村",
+                zhCN = "影月村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "卓卡玛",
                 zhCN = "卓卡玛"
               },
-              refID = 44918
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -22775,9 +25581,10 @@ NS.Data = {
               zhCN = "50金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-32246",
+          sourceID = "manual-source-32246",
           type = "vendor"
         }
       },
@@ -22798,7 +25605,7 @@ NS.Data = {
         mountJournalID = 137
       },
       mountKey = "provisional-32289",
-      primarySourceID = "enriched-source-32289",
+      primarySourceID = "manual-source-32289",
       restrictions = {
         classes = {},
         factions = {}
@@ -22819,21 +25626,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 蛮锤要塞",
-                zhCN = "影月谷 > 蛮锤要塞"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 43768",
+                enUS = "蛮锤要塞",
+                zhCN = "蛮锤要塞"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "塔尼克·石喙",
                 zhCN = "塔尼克·石喙"
               },
-              refID = 43768
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -22848,9 +25663,10 @@ NS.Data = {
               zhCN = "50金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-32289",
+          sourceID = "manual-source-32289",
           type = "vendor"
         }
       },
@@ -22871,7 +25687,7 @@ NS.Data = {
         mountJournalID = 138
       },
       mountKey = "provisional-32290",
-      primarySourceID = "enriched-source-32290",
+      primarySourceID = "manual-source-32290",
       restrictions = {
         classes = {},
         factions = {}
@@ -22892,21 +25708,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 蛮锤要塞",
-                zhCN = "影月谷 > 蛮锤要塞"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 43768",
+                enUS = "蛮锤要塞",
+                zhCN = "蛮锤要塞"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "塔尼克·石喙",
                 zhCN = "塔尼克·石喙"
               },
-              refID = 43768
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -22921,9 +25745,10 @@ NS.Data = {
               zhCN = "50金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-32290",
+          sourceID = "manual-source-32290",
           type = "vendor"
         }
       },
@@ -22944,7 +25769,7 @@ NS.Data = {
         mountJournalID = 139
       },
       mountKey = "provisional-32292",
-      primarySourceID = "enriched-source-32292",
+      primarySourceID = "manual-source-32292",
       restrictions = {
         classes = {},
         factions = {}
@@ -22965,21 +25790,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 蛮锤要塞",
-                zhCN = "影月谷 > 蛮锤要塞"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 43768",
+                enUS = "蛮锤要塞",
+                zhCN = "蛮锤要塞"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "塔尼克·石喙",
                 zhCN = "塔尼克·石喙"
               },
-              refID = 43768
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -22994,9 +25827,10 @@ NS.Data = {
               zhCN = "50金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-32292",
+          sourceID = "manual-source-32292",
           type = "vendor"
         }
       },
@@ -23017,7 +25851,7 @@ NS.Data = {
         mountJournalID = 140
       },
       mountKey = "provisional-32295",
-      primarySourceID = "enriched-source-32295",
+      primarySourceID = "manual-source-32295",
       restrictions = {
         classes = {},
         factions = {}
@@ -23038,21 +25872,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 影月村",
-                zhCN = "影月谷 > 影月村"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 44918",
+                enUS = "影月村",
+                zhCN = "影月村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "卓卡玛",
                 zhCN = "卓卡玛"
               },
-              refID = 44918
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -23067,9 +25909,10 @@ NS.Data = {
               zhCN = "50金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-32295",
+          sourceID = "manual-source-32295",
           type = "vendor"
         }
       },
@@ -23090,7 +25933,7 @@ NS.Data = {
         mountJournalID = 141
       },
       mountKey = "provisional-32296",
-      primarySourceID = "enriched-source-32296",
+      primarySourceID = "manual-source-32296",
       restrictions = {
         classes = {},
         factions = {}
@@ -23111,21 +25954,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 影月村",
-                zhCN = "影月谷 > 影月村"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 44918",
+                enUS = "影月村",
+                zhCN = "影月村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "卓卡玛",
                 zhCN = "卓卡玛"
               },
-              refID = 44918
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -23140,9 +25991,10 @@ NS.Data = {
               zhCN = "50金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-32296",
+          sourceID = "manual-source-32296",
           type = "vendor"
         }
       },
@@ -23163,7 +26015,7 @@ NS.Data = {
         mountJournalID = 142
       },
       mountKey = "provisional-32297",
-      primarySourceID = "enriched-source-32297",
+      primarySourceID = "manual-source-32297",
       restrictions = {
         classes = {},
         factions = {}
@@ -23184,21 +26036,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 影月村",
-                zhCN = "影月谷 > 影月村"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 44918",
+                enUS = "影月村",
+                zhCN = "影月村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "卓卡玛",
                 zhCN = "卓卡玛"
               },
-              refID = 44918
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -23213,9 +26073,10 @@ NS.Data = {
               zhCN = "50金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-32297",
+          sourceID = "manual-source-32297",
           type = "vendor"
         }
       },
@@ -23236,7 +26097,7 @@ NS.Data = {
         mountJournalID = 146
       },
       mountKey = "provisional-33660",
-      primarySourceID = "enriched-source-33660",
+      primarySourceID = "manual-source-33660",
       restrictions = {
         classes = {},
         factions = {}
@@ -23257,21 +26118,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "永歌森林 > 银月城",
-                zhCN = "永歌森林 > 银月城"
+                enUS = "永歌森林",
+                zhCN = "永歌森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 16264",
+                enUS = "银月城",
+                zhCN = "银月城"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "维奈丝特拉",
                 zhCN = "维奈丝特拉"
               },
-              refID = 16264
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -23286,9 +26155,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-33660",
+          sourceID = "manual-source-33660",
           type = "vendor"
         }
       },
@@ -23309,7 +26179,7 @@ NS.Data = {
         mountJournalID = 147
       },
       mountKey = "provisional-34406",
-      primarySourceID = "enriched-source-34406",
+      primarySourceID = "manual-source-34406",
       restrictions = {
         classes = {},
         factions = {}
@@ -23330,21 +26200,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "秘蓝岛 > 埃索达",
-                zhCN = "秘蓝岛 > 埃索达"
+                enUS = "秘蓝岛",
+                zhCN = "秘蓝岛"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 17584",
+                enUS = "埃索达",
+                zhCN = "埃索达"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "象群管理者妥拉留斯",
                 zhCN = "象群管理者妥拉留斯"
               },
-              refID = 17584
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -23359,9 +26237,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-34406",
+          sourceID = "manual-source-34406",
           type = "vendor"
         }
       },
@@ -23382,7 +26261,7 @@ NS.Data = {
         mountJournalID = 151
       },
       mountKey = "provisional-34790",
-      primarySourceID = "enriched-source-34790",
+      primarySourceID = "manual-source-34790",
       restrictions = {
         classes = {},
         factions = {}
@@ -23403,21 +26282,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "纳格兰 > 加拉达尔",
-                zhCN = "纳格兰 > 加拉达尔"
+                enUS = "纳格兰",
+                zhCN = "纳格兰"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 21485",
+                enUS = "加拉达尔",
+                zhCN = "加拉达尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "阿尔德兰",
                 zhCN = "阿尔德兰"
               },
-              refID = 21485
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -23432,12 +26319,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = {
-              faction = "玛格汉",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-34790",
+          sourceID = "manual-source-34790",
           type = "reputation_vendor"
         }
       },
@@ -23458,7 +26343,7 @@ NS.Data = {
         mountJournalID = 152
       },
       mountKey = "provisional-34795",
-      primarySourceID = "enriched-source-34795",
+      primarySourceID = "manual-source-34795",
       restrictions = {
         classes = {},
         factions = {}
@@ -23479,21 +26364,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "永歌森林 > 银月城",
-                zhCN = "永歌森林 > 银月城"
+                enUS = "永歌森林",
+                zhCN = "永歌森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 16264",
+                enUS = "银月城",
+                zhCN = "银月城"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "维奈丝特拉",
                 zhCN = "维奈丝特拉"
               },
-              refID = 16264
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -23508,9 +26401,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-34795",
+          sourceID = "manual-source-34795",
           type = "vendor"
         }
       },
@@ -23531,7 +26425,7 @@ NS.Data = {
         mountJournalID = 153
       },
       mountKey = "provisional-34896",
-      primarySourceID = "enriched-source-34896",
+      primarySourceID = "manual-source-34896",
       restrictions = {
         classes = {},
         factions = {}
@@ -23552,21 +26446,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "纳格兰 > 塔拉",
-                zhCN = "纳格兰 > 塔拉"
+                enUS = "纳格兰",
+                zhCN = "纳格兰"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 20241",
+                enUS = "塔拉",
+                zhCN = "塔拉"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "补给官纳瑟拉",
                 zhCN = "补给官纳瑟拉"
               },
-              refID = 20241
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -23581,12 +26483,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = {
-              faction = "库雷尼",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-34896",
+          sourceID = "manual-source-34896",
           type = "reputation_vendor"
         }
       },
@@ -23607,7 +26507,7 @@ NS.Data = {
         mountJournalID = 154
       },
       mountKey = "provisional-34897",
-      primarySourceID = "enriched-source-34897",
+      primarySourceID = "manual-source-34897",
       restrictions = {
         classes = {},
         factions = {}
@@ -23628,21 +26528,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "纳格兰 > 塔拉",
-                zhCN = "纳格兰 > 塔拉"
+                enUS = "纳格兰",
+                zhCN = "纳格兰"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 20241",
+                enUS = "塔拉",
+                zhCN = "塔拉"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "补给官纳瑟拉",
                 zhCN = "补给官纳瑟拉"
               },
-              refID = 20241
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -23657,12 +26565,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = {
-              faction = "库雷尼",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-34897",
+          sourceID = "manual-source-34897",
           type = "reputation_vendor"
         }
       },
@@ -23683,7 +26589,7 @@ NS.Data = {
         mountJournalID = 155
       },
       mountKey = "provisional-34898",
-      primarySourceID = "enriched-source-34898",
+      primarySourceID = "manual-source-34898",
       restrictions = {
         classes = {},
         factions = {}
@@ -23704,21 +26610,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "纳格兰 > 塔拉",
-                zhCN = "纳格兰 > 塔拉"
+                enUS = "纳格兰",
+                zhCN = "纳格兰"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 20241",
+                enUS = "塔拉",
+                zhCN = "塔拉"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "补给官纳瑟拉",
                 zhCN = "补给官纳瑟拉"
               },
-              refID = 20241
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -23733,12 +26647,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = {
-              faction = "库雷尼",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-34898",
+          sourceID = "manual-source-34898",
           type = "reputation_vendor"
         }
       },
@@ -23759,7 +26671,7 @@ NS.Data = {
         mountJournalID = 156
       },
       mountKey = "provisional-34899",
-      primarySourceID = "enriched-source-34899",
+      primarySourceID = "manual-source-34899",
       restrictions = {
         classes = {},
         factions = {}
@@ -23780,21 +26692,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "纳格兰 > 塔拉",
-                zhCN = "纳格兰 > 塔拉"
+                enUS = "纳格兰",
+                zhCN = "纳格兰"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 20241",
+                enUS = "塔拉",
+                zhCN = "塔拉"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "补给官纳瑟拉",
                 zhCN = "补给官纳瑟拉"
               },
-              refID = 20241
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -23809,12 +26729,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = {
-              faction = "库雷尼",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-34899",
+          sourceID = "manual-source-34899",
           type = "reputation_vendor"
         }
       },
@@ -23835,7 +26753,7 @@ NS.Data = {
         mountJournalID = 157
       },
       mountKey = "provisional-35018",
-      primarySourceID = "enriched-source-35018",
+      primarySourceID = "manual-source-35018",
       restrictions = {
         classes = {},
         factions = {}
@@ -23856,21 +26774,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "永歌森林 > 银月城",
-                zhCN = "永歌森林 > 银月城"
+                enUS = "永歌森林",
+                zhCN = "永歌森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 16264",
+                enUS = "银月城",
+                zhCN = "银月城"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "维奈丝特拉",
                 zhCN = "维奈丝特拉"
               },
-              refID = 16264
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -23885,9 +26811,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-35018",
+          sourceID = "manual-source-35018",
           type = "vendor"
         }
       },
@@ -23908,7 +26835,7 @@ NS.Data = {
         mountJournalID = 158
       },
       mountKey = "provisional-35020",
-      primarySourceID = "enriched-source-35020",
+      primarySourceID = "manual-source-35020",
       restrictions = {
         classes = {},
         factions = {}
@@ -23929,21 +26856,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "永歌森林 > 银月城",
-                zhCN = "永歌森林 > 银月城"
+                enUS = "永歌森林",
+                zhCN = "永歌森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 16264",
+                enUS = "银月城",
+                zhCN = "银月城"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "维奈丝特拉",
                 zhCN = "维奈丝特拉"
               },
-              refID = 16264
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -23958,9 +26893,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-35020",
+          sourceID = "manual-source-35020",
           type = "vendor"
         }
       },
@@ -23981,7 +26917,7 @@ NS.Data = {
         mountJournalID = 159
       },
       mountKey = "provisional-35022",
-      primarySourceID = "enriched-source-35022",
+      primarySourceID = "manual-source-35022",
       restrictions = {
         classes = {},
         factions = {}
@@ -24002,21 +26938,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "永歌森林 > 银月城",
-                zhCN = "永歌森林 > 银月城"
+                enUS = "永歌森林",
+                zhCN = "永歌森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 16264",
+                enUS = "银月城",
+                zhCN = "银月城"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "维奈丝特拉",
                 zhCN = "维奈丝特拉"
               },
-              refID = 16264
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -24031,9 +26975,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-35022",
+          sourceID = "manual-source-35022",
           type = "vendor"
         }
       },
@@ -24054,7 +26999,7 @@ NS.Data = {
         mountJournalID = 160
       },
       mountKey = "provisional-35025",
-      primarySourceID = "enriched-source-35025",
+      primarySourceID = "manual-source-35025",
       restrictions = {
         classes = {},
         factions = {}
@@ -24075,21 +27020,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "永歌森林 > 银月城",
-                zhCN = "永歌森林 > 银月城"
+                enUS = "永歌森林",
+                zhCN = "永歌森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 16264",
+                enUS = "银月城",
+                zhCN = "银月城"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "维奈丝特拉",
                 zhCN = "维奈丝特拉"
               },
-              refID = 16264
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -24104,9 +27057,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-35025",
+          sourceID = "manual-source-35025",
           type = "vendor"
         }
       },
@@ -24127,7 +27081,7 @@ NS.Data = {
         mountJournalID = 161
       },
       mountKey = "provisional-35027",
-      primarySourceID = "enriched-source-35027",
+      primarySourceID = "manual-source-35027",
       restrictions = {
         classes = {},
         factions = {}
@@ -24148,21 +27102,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "永歌森林 > 银月城",
-                zhCN = "永歌森林 > 银月城"
+                enUS = "永歌森林",
+                zhCN = "永歌森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 16264",
+                enUS = "银月城",
+                zhCN = "银月城"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "维奈丝特拉",
                 zhCN = "维奈丝特拉"
               },
-              refID = 16264
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -24177,9 +27139,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-35027",
+          sourceID = "manual-source-35027",
           type = "vendor"
         }
       },
@@ -24200,7 +27163,7 @@ NS.Data = {
         mountJournalID = 162
       },
       mountKey = "provisional-35028",
-      primarySourceID = "enriched-source-35028",
+      primarySourceID = "manual-source-35028",
       restrictions = {
         classes = {},
         factions = {}
@@ -24221,21 +27184,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "奥格瑞玛 > 传说大厅",
-                zhCN = "奥格瑞玛 > 传说大厅"
+                enUS = "奥格瑞玛",
+                zhCN = "奥格瑞玛"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 12796",
+                enUS = "传说大厅",
+                zhCN = "传说大厅"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "狼骑兵波尔克",
                 zhCN = "狼骑兵波尔克"
               },
-              refID = 12796
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -24250,9 +27221,10 @@ NS.Data = {
               zhCN = "2,000荣誉点数"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-35028",
+          sourceID = "manual-source-35028",
           type = "vendor"
         }
       },
@@ -24273,7 +27245,7 @@ NS.Data = {
         mountJournalID = 163
       },
       mountKey = "provisional-35710",
-      primarySourceID = "enriched-source-35710",
+      primarySourceID = "manual-source-35710",
       restrictions = {
         classes = {},
         factions = {}
@@ -24294,21 +27266,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "秘蓝岛 > 埃索达",
-                zhCN = "秘蓝岛 > 埃索达"
+                enUS = "秘蓝岛",
+                zhCN = "秘蓝岛"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 17584",
+                enUS = "埃索达",
+                zhCN = "埃索达"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "象群管理者妥拉留斯",
                 zhCN = "象群管理者妥拉留斯"
               },
-              refID = 17584
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -24323,9 +27303,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-35710",
+          sourceID = "manual-source-35710",
           type = "vendor"
         }
       },
@@ -24346,7 +27327,7 @@ NS.Data = {
         mountJournalID = 164
       },
       mountKey = "provisional-35711",
-      primarySourceID = "enriched-source-35711",
+      primarySourceID = "manual-source-35711",
       restrictions = {
         classes = {},
         factions = {}
@@ -24367,21 +27348,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "秘蓝岛 > 埃索达",
-                zhCN = "秘蓝岛 > 埃索达"
+                enUS = "秘蓝岛",
+                zhCN = "秘蓝岛"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 17584",
+                enUS = "埃索达",
+                zhCN = "埃索达"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "象群管理者妥拉留斯",
                 zhCN = "象群管理者妥拉留斯"
               },
-              refID = 17584
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -24396,9 +27385,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-35711",
+          sourceID = "manual-source-35711",
           type = "vendor"
         }
       },
@@ -24419,7 +27409,7 @@ NS.Data = {
         mountJournalID = 165
       },
       mountKey = "provisional-35712",
-      primarySourceID = "enriched-source-35712",
+      primarySourceID = "manual-source-35712",
       restrictions = {
         classes = {},
         factions = {}
@@ -24440,21 +27430,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "秘蓝岛 > 埃索达",
-                zhCN = "秘蓝岛 > 埃索达"
+                enUS = "秘蓝岛",
+                zhCN = "秘蓝岛"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 17584",
+                enUS = "埃索达",
+                zhCN = "埃索达"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "象群管理者妥拉留斯",
                 zhCN = "象群管理者妥拉留斯"
               },
-              refID = 17584
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -24469,9 +27467,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-35712",
+          sourceID = "manual-source-35712",
           type = "vendor"
         }
       },
@@ -24492,7 +27491,7 @@ NS.Data = {
         mountJournalID = 166
       },
       mountKey = "provisional-35713",
-      primarySourceID = "enriched-source-35713",
+      primarySourceID = "manual-source-35713",
       restrictions = {
         classes = {},
         factions = {}
@@ -24513,21 +27512,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "秘蓝岛 > 埃索达",
-                zhCN = "秘蓝岛 > 埃索达"
+                enUS = "秘蓝岛",
+                zhCN = "秘蓝岛"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 17584",
+                enUS = "埃索达",
+                zhCN = "埃索达"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "象群管理者妥拉留斯",
                 zhCN = "象群管理者妥拉留斯"
               },
-              refID = 17584
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -24542,9 +27549,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-35713",
+          sourceID = "manual-source-35713",
           type = "vendor"
         }
       },
@@ -24565,7 +27573,7 @@ NS.Data = {
         mountJournalID = 167
       },
       mountKey = "provisional-35714",
-      primarySourceID = "enriched-source-35714",
+      primarySourceID = "manual-source-35714",
       restrictions = {
         classes = {},
         factions = {}
@@ -24586,21 +27594,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "秘蓝岛 > 埃索达",
-                zhCN = "秘蓝岛 > 埃索达"
+                enUS = "秘蓝岛",
+                zhCN = "秘蓝岛"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 17584",
+                enUS = "埃索达",
+                zhCN = "埃索达"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "象群管理者妥拉留斯",
                 zhCN = "象群管理者妥拉留斯"
               },
-              refID = 17584
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -24615,9 +27631,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-35714",
+          sourceID = "manual-source-35714",
           type = "vendor"
         }
       },
@@ -24638,7 +27655,7 @@ NS.Data = {
         mountJournalID = 170
       },
       mountKey = "provisional-39315",
-      primarySourceID = "enriched-source-39315",
+      primarySourceID = "manual-source-39315",
       restrictions = {
         classes = {},
         factions = {}
@@ -24659,21 +27676,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "纳格兰 > 塔拉",
-                zhCN = "纳格兰 > 塔拉"
+                enUS = "纳格兰",
+                zhCN = "纳格兰"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 20241",
+                enUS = "塔拉",
+                zhCN = "塔拉"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "补给官纳瑟拉",
                 zhCN = "补给官纳瑟拉"
               },
-              refID = 20241
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -24688,12 +27713,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = {
-              faction = "库雷尼",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-39315",
+          sourceID = "manual-source-39315",
           type = "reputation_vendor"
         }
       },
@@ -24714,7 +27737,7 @@ NS.Data = {
         mountJournalID = 171
       },
       mountKey = "provisional-39316",
-      primarySourceID = "enriched-source-39316",
+      primarySourceID = "manual-source-39316",
       restrictions = {
         classes = {},
         factions = {}
@@ -24735,21 +27758,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "纳格兰 > 加拉达尔",
-                zhCN = "纳格兰 > 加拉达尔"
+                enUS = "纳格兰",
+                zhCN = "纳格兰"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 21485",
+                enUS = "加拉达尔",
+                zhCN = "加拉达尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "阿尔德兰",
                 zhCN = "阿尔德兰"
               },
-              refID = 21485
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -24764,12 +27795,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = {
-              faction = "玛格汉",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-39316",
+          sourceID = "manual-source-39316",
           type = "reputation_vendor"
         }
       },
@@ -24790,7 +27819,7 @@ NS.Data = {
         mountJournalID = 172
       },
       mountKey = "provisional-39317",
-      primarySourceID = "enriched-source-39317",
+      primarySourceID = "manual-source-39317",
       restrictions = {
         classes = {},
         factions = {}
@@ -24811,21 +27840,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "纳格兰 > 塔拉",
-                zhCN = "纳格兰 > 塔拉"
+                enUS = "纳格兰",
+                zhCN = "纳格兰"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 20241",
+                enUS = "塔拉",
+                zhCN = "塔拉"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "补给官纳瑟拉",
                 zhCN = "补给官纳瑟拉"
               },
-              refID = 20241
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -24840,12 +27877,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = {
-              faction = "库雷尼",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-39317",
+          sourceID = "manual-source-39317",
           type = "reputation_vendor"
         }
       },
@@ -24866,7 +27901,7 @@ NS.Data = {
         mountJournalID = 173
       },
       mountKey = "provisional-39318",
-      primarySourceID = "enriched-source-39318",
+      primarySourceID = "manual-source-39318",
       restrictions = {
         classes = {},
         factions = {}
@@ -24887,21 +27922,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "纳格兰 > 塔拉",
-                zhCN = "纳格兰 > 塔拉"
+                enUS = "纳格兰",
+                zhCN = "纳格兰"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 20241",
+                enUS = "塔拉",
+                zhCN = "塔拉"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "补给官纳瑟拉",
                 zhCN = "补给官纳瑟拉"
               },
-              refID = 20241
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -24916,12 +27959,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = {
-              faction = "库雷尼",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-39318",
+          sourceID = "manual-source-39318",
           type = "reputation_vendor"
         }
       },
@@ -24942,7 +27983,7 @@ NS.Data = {
         mountJournalID = 174
       },
       mountKey = "provisional-39319",
-      primarySourceID = "enriched-source-39319",
+      primarySourceID = "manual-source-39319",
       restrictions = {
         classes = {},
         factions = {}
@@ -24963,21 +28004,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "纳格兰 > 塔拉",
-                zhCN = "纳格兰 > 塔拉"
+                enUS = "纳格兰",
+                zhCN = "纳格兰"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 20241",
+                enUS = "塔拉",
+                zhCN = "塔拉"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "补给官纳瑟拉",
                 zhCN = "补给官纳瑟拉"
               },
-              refID = 20241
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -24992,12 +28041,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = {
-              faction = "库雷尼",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-39319",
+          sourceID = "manual-source-39319",
           type = "reputation_vendor"
         }
       },
@@ -25018,7 +28065,7 @@ NS.Data = {
         mountJournalID = 176
       },
       mountKey = "provisional-39798",
-      primarySourceID = "enriched-source-39798",
+      primarySourceID = "manual-source-39798",
       restrictions = {
         classes = {},
         factions = {}
@@ -25039,21 +28086,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "泰罗卡森林 > 斯克提斯",
-                zhCN = "泰罗卡森林 > 斯克提斯"
+                enUS = "泰罗卡森林",
+                zhCN = "泰罗卡森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 23367",
+                enUS = "斯克提斯",
+                zhCN = "斯克提斯"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "格蕾拉",
                 zhCN = "格蕾拉"
               },
-              refID = 23367
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -25068,12 +28123,10 @@ NS.Data = {
               zhCN = "200金币"
             },
             questID = nil,
-            reputation = {
-              faction = "沙塔尔天空卫队",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-39798",
+          sourceID = "manual-source-39798",
           type = "reputation_vendor"
         }
       },
@@ -25094,7 +28147,7 @@ NS.Data = {
         mountJournalID = 177
       },
       mountKey = "provisional-39800",
-      primarySourceID = "enriched-source-39800",
+      primarySourceID = "manual-source-39800",
       restrictions = {
         classes = {},
         factions = {}
@@ -25115,21 +28168,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "泰罗卡森林 > 斯克提斯",
-                zhCN = "泰罗卡森林 > 斯克提斯"
+                enUS = "泰罗卡森林",
+                zhCN = "泰罗卡森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 23367",
+                enUS = "斯克提斯",
+                zhCN = "斯克提斯"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "格蕾拉",
                 zhCN = "格蕾拉"
               },
-              refID = 23367
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -25144,12 +28205,10 @@ NS.Data = {
               zhCN = "200金币"
             },
             questID = nil,
-            reputation = {
-              faction = "沙塔尔天空卫队",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-39800",
+          sourceID = "manual-source-39800",
           type = "reputation_vendor"
         }
       },
@@ -25170,7 +28229,7 @@ NS.Data = {
         mountJournalID = 178
       },
       mountKey = "provisional-39801",
-      primarySourceID = "enriched-source-39801",
+      primarySourceID = "manual-source-39801",
       restrictions = {
         classes = {},
         factions = {}
@@ -25191,21 +28250,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "泰罗卡森林 > 斯克提斯",
-                zhCN = "泰罗卡森林 > 斯克提斯"
+                enUS = "泰罗卡森林",
+                zhCN = "泰罗卡森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 23367",
+                enUS = "斯克提斯",
+                zhCN = "斯克提斯"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "格蕾拉",
                 zhCN = "格蕾拉"
               },
-              refID = 23367
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -25220,12 +28287,10 @@ NS.Data = {
               zhCN = "200金币"
             },
             questID = nil,
-            reputation = {
-              faction = "沙塔尔天空卫队",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-39801",
+          sourceID = "manual-source-39801",
           type = "reputation_vendor"
         }
       },
@@ -25246,7 +28311,7 @@ NS.Data = {
         mountJournalID = 179
       },
       mountKey = "provisional-39802",
-      primarySourceID = "enriched-source-39802",
+      primarySourceID = "manual-source-39802",
       restrictions = {
         classes = {},
         factions = {}
@@ -25267,21 +28332,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "泰罗卡森林 > 斯克提斯",
-                zhCN = "泰罗卡森林 > 斯克提斯"
+                enUS = "泰罗卡森林",
+                zhCN = "泰罗卡森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 23367",
+                enUS = "斯克提斯",
+                zhCN = "斯克提斯"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "格蕾拉",
                 zhCN = "格蕾拉"
               },
-              refID = 23367
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -25296,12 +28369,10 @@ NS.Data = {
               zhCN = "200金币"
             },
             questID = nil,
-            reputation = {
-              faction = "沙塔尔天空卫队",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-39802",
+          sourceID = "manual-source-39802",
           type = "reputation_vendor"
         }
       },
@@ -25322,7 +28393,7 @@ NS.Data = {
         mountJournalID = 180
       },
       mountKey = "provisional-39803",
-      primarySourceID = "enriched-source-39803",
+      primarySourceID = "manual-source-39803",
       restrictions = {
         classes = {},
         factions = {}
@@ -25343,21 +28414,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "泰罗卡森林 > 斯克提斯",
-                zhCN = "泰罗卡森林 > 斯克提斯"
+                enUS = "泰罗卡森林",
+                zhCN = "泰罗卡森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 23367",
+                enUS = "斯克提斯",
+                zhCN = "斯克提斯"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "格蕾拉",
                 zhCN = "格蕾拉"
               },
-              refID = 23367
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -25372,12 +28451,10 @@ NS.Data = {
               zhCN = "200金币"
             },
             questID = nil,
-            reputation = {
-              faction = "沙塔尔天空卫队",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-39803",
+          sourceID = "manual-source-39803",
           type = "reputation_vendor"
         }
       },
@@ -25398,7 +28475,7 @@ NS.Data = {
         mountJournalID = 186
       },
       mountKey = "provisional-41513",
-      primarySourceID = "enriched-source-41513",
+      primarySourceID = "manual-source-41513",
       restrictions = {
         classes = {},
         factions = {}
@@ -25419,21 +28496,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 灵翼浮岛",
-                zhCN = "影月谷 > 灵翼浮岛"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 23489",
+                enUS = "灵翼浮岛",
+                zhCN = "灵翼浮岛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "霍尔伦克",
                 zhCN = "霍尔伦克"
               },
-              refID = 23489
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -25448,12 +28533,10 @@ NS.Data = {
               zhCN = "200金币"
             },
             questID = nil,
-            reputation = {
-              faction = "灵翼之龙",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-41513",
+          sourceID = "manual-source-41513",
           type = "reputation_vendor"
         }
       },
@@ -25474,7 +28557,7 @@ NS.Data = {
         mountJournalID = 187
       },
       mountKey = "provisional-41514",
-      primarySourceID = "enriched-source-41514",
+      primarySourceID = "manual-source-41514",
       restrictions = {
         classes = {},
         factions = {}
@@ -25495,21 +28578,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 灵翼浮岛",
-                zhCN = "影月谷 > 灵翼浮岛"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 23489",
+                enUS = "灵翼浮岛",
+                zhCN = "灵翼浮岛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "霍尔伦克",
                 zhCN = "霍尔伦克"
               },
-              refID = 23489
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -25524,12 +28615,10 @@ NS.Data = {
               zhCN = "200金币"
             },
             questID = nil,
-            reputation = {
-              faction = "灵翼之龙",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-41514",
+          sourceID = "manual-source-41514",
           type = "reputation_vendor"
         }
       },
@@ -25550,7 +28639,7 @@ NS.Data = {
         mountJournalID = 188
       },
       mountKey = "provisional-41515",
-      primarySourceID = "enriched-source-41515",
+      primarySourceID = "manual-source-41515",
       restrictions = {
         classes = {},
         factions = {}
@@ -25571,21 +28660,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 灵翼浮岛",
-                zhCN = "影月谷 > 灵翼浮岛"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 23489",
+                enUS = "灵翼浮岛",
+                zhCN = "灵翼浮岛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "霍尔伦克",
                 zhCN = "霍尔伦克"
               },
-              refID = 23489
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -25600,12 +28697,10 @@ NS.Data = {
               zhCN = "200金币"
             },
             questID = nil,
-            reputation = {
-              faction = "灵翼之龙",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-41515",
+          sourceID = "manual-source-41515",
           type = "reputation_vendor"
         }
       },
@@ -25626,7 +28721,7 @@ NS.Data = {
         mountJournalID = 189
       },
       mountKey = "provisional-41516",
-      primarySourceID = "enriched-source-41516",
+      primarySourceID = "manual-source-41516",
       restrictions = {
         classes = {},
         factions = {}
@@ -25647,21 +28742,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 灵翼浮岛",
-                zhCN = "影月谷 > 灵翼浮岛"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 23489",
+                enUS = "灵翼浮岛",
+                zhCN = "灵翼浮岛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "霍尔伦克",
                 zhCN = "霍尔伦克"
               },
-              refID = 23489
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -25676,12 +28779,10 @@ NS.Data = {
               zhCN = "200金币"
             },
             questID = nil,
-            reputation = {
-              faction = "灵翼之龙",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-41516",
+          sourceID = "manual-source-41516",
           type = "reputation_vendor"
         }
       },
@@ -25702,7 +28803,7 @@ NS.Data = {
         mountJournalID = 190
       },
       mountKey = "provisional-41517",
-      primarySourceID = "enriched-source-41517",
+      primarySourceID = "manual-source-41517",
       restrictions = {
         classes = {},
         factions = {}
@@ -25723,21 +28824,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "影月谷 > 灵翼浮岛",
-                zhCN = "影月谷 > 灵翼浮岛"
+                enUS = "影月谷",
+                zhCN = "影月谷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 23489",
+                enUS = "灵翼浮岛",
+                zhCN = "灵翼浮岛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "霍尔伦克",
                 zhCN = "霍尔伦克"
               },
-              refID = 23489
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -25752,12 +28861,10 @@ NS.Data = {
               zhCN = "200金币"
             },
             questID = nil,
-            reputation = {
-              faction = "灵翼之龙",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-41517",
+          sourceID = "manual-source-41517",
           type = "reputation_vendor"
         }
       },
@@ -25828,7 +28935,7 @@ NS.Data = {
         mountJournalID = 202
       },
       mountKey = "provisional-43900",
-      primarySourceID = "enriched-source-43900",
+      primarySourceID = "manual-source-43900",
       restrictions = {
         classes = {},
         factions = {}
@@ -25839,7 +28946,7 @@ NS.Data = {
           availability = "unknown",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "黑石山",
                 zhCN = "黑石山"
@@ -25847,7 +28954,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "黑石深渊",
                 zhCN = "黑石深渊"
@@ -25855,7 +28962,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "rare",
+              kind = "custom",
               labels = {
                 enUS = "科林·烈酒",
                 zhCN = "科林·烈酒"
@@ -25863,18 +28970,25 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = false,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-43900",
+          sourceID = "manual-source-43900",
           type = "rare_drop"
         }
       },
@@ -25895,7 +29009,7 @@ NS.Data = {
         mountJournalID = 203
       },
       mountKey = "provisional-43927",
-      primarySourceID = "enriched-source-43927",
+      primarySourceID = "manual-source-43927",
       restrictions = {
         classes = {},
         factions = {}
@@ -25916,21 +29030,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "赞加沼泽 > 塞纳里奥庇护所",
-                zhCN = "赞加沼泽 > 塞纳里奥庇护所"
+                enUS = "赞加沼泽",
+                zhCN = "赞加沼泽"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 17904",
+                enUS = "塞纳里奥庇护所",
+                zhCN = "塞纳里奥庇护所"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "芬德雷·迅矛",
                 zhCN = "芬德雷·迅矛"
               },
-              refID = 17904
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -25945,12 +29067,10 @@ NS.Data = {
               zhCN = "2,000金币"
             },
             questID = nil,
-            reputation = {
-              faction = "塞纳里奥远征队",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-43927",
+          sourceID = "manual-source-43927",
           type = "reputation_vendor"
         }
       },
@@ -26071,7 +29191,7 @@ NS.Data = {
         mountJournalID = 6
       },
       mountKey = "provisional-458",
-      primarySourceID = "enriched-source-458",
+      primarySourceID = "manual-source-458",
       restrictions = {
         classes = {},
         factions = {}
@@ -26092,21 +29212,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "艾尔文森林 > 东谷伐木场",
-                zhCN = "艾尔文森林 > 东谷伐木场"
+                enUS = "艾尔文森林",
+                zhCN = "艾尔文森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4885",
+                enUS = "东谷伐木场",
+                zhCN = "东谷伐木场"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "格瑞戈·玛克温斯",
                 zhCN = "格瑞戈·玛克温斯"
               },
-              refID = 4885
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -26121,9 +29249,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-458",
+          sourceID = "manual-source-458",
           type = "vendor"
         }
       },
@@ -26144,7 +29273,7 @@ NS.Data = {
         mountJournalID = 9
       },
       mountKey = "provisional-470",
-      primarySourceID = "enriched-source-470",
+      primarySourceID = "manual-source-470",
       restrictions = {
         classes = {},
         factions = {}
@@ -26171,15 +29300,15 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 43694",
+                enUS = "凯蒂·斯托克斯",
                 zhCN = "凯蒂·斯托克斯"
               },
-              refID = 43694
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -26194,9 +29323,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-470",
+          sourceID = "manual-source-470",
           type = "vendor"
         }
       },
@@ -26217,7 +29347,7 @@ NS.Data = {
         mountJournalID = 11
       },
       mountKey = "provisional-472",
-      primarySourceID = "enriched-source-472",
+      primarySourceID = "manual-source-472",
       restrictions = {
         classes = {},
         factions = {}
@@ -26238,21 +29368,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "艾尔文森林 > 东谷伐木场",
-                zhCN = "艾尔文森林 > 东谷伐木场"
+                enUS = "艾尔文森林",
+                zhCN = "艾尔文森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4885",
+                enUS = "东谷伐木场",
+                zhCN = "东谷伐木场"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "格瑞戈·玛克温斯",
                 zhCN = "格瑞戈·玛克温斯"
               },
-              refID = 4885
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -26267,9 +29405,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-472",
+          sourceID = "manual-source-472",
           type = "vendor"
         }
       },
@@ -26290,7 +29429,7 @@ NS.Data = {
         mountJournalID = 220
       },
       mountKey = "provisional-48027",
-      primarySourceID = "enriched-source-48027",
+      primarySourceID = "manual-source-48027",
       restrictions = {
         classes = {},
         factions = {}
@@ -26311,29 +29450,37 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "暴风城 > 勇士大厅",
-                zhCN = "暴风城 > 勇士大厅"
+                enUS = "暴风城",
+                zhCN = "暴风城"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 12783",
+                enUS = "勇士大厅",
+                zhCN = "勇士大厅"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "卡特尔中尉",
                 zhCN = "卡特尔中尉"
               },
-              refID = 12783
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = " PVP 荣誉点数商人坐骑。",
-              zhCN = " PVP 荣誉点数商人坐骑。"
+              enUS = "PVP 荣誉点数商人坐骑。",
+              zhCN = "PVP 荣誉点数商人坐骑。"
             },
             price = {
               enUS = "2,000荣誉点数",
@@ -26342,7 +29489,7 @@ NS.Data = {
             questID = nil,
             reputation = nil
           },
-          sourceID = "enriched-source-48027",
+          sourceID = "manual-source-48027",
           type = "vendor"
         }
       },
@@ -26363,7 +29510,7 @@ NS.Data = {
         mountJournalID = 226
       },
       mountKey = "provisional-49379",
-      primarySourceID = "enriched-source-49379",
+      primarySourceID = "manual-source-49379",
       restrictions = {
         classes = {},
         factions = {}
@@ -26374,7 +29521,7 @@ NS.Data = {
           availability = "unknown",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "黑石山",
                 zhCN = "黑石山"
@@ -26382,7 +29529,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "黑石深渊",
                 zhCN = "黑石深渊"
@@ -26390,7 +29537,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "rare",
+              kind = "custom",
               labels = {
                 enUS = "科林·烈酒",
                 zhCN = "科林·烈酒"
@@ -26398,18 +29545,25 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = false,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-49379",
+          sourceID = "manual-source-49379",
           type = "rare_drop"
         }
       },
@@ -26430,7 +29584,7 @@ NS.Data = {
         mountJournalID = 237
       },
       mountKey = "provisional-54753",
-      primarySourceID = "clean-source-54753",
+      primarySourceID = "manual-source-54753",
       restrictions = {
         classes = {},
         factions = {}
@@ -26441,15 +29595,23 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
-                enUS = "风暴峭壁 > 布伦希尔达村",
-                zhCN = "风暴峭壁 > 布伦希尔达村"
+                enUS = "风暴峭壁",
+                zhCN = "风暴峭壁"
               },
               refID = nil
             },
             {
-              kind = "quest",
+              kind = "custom",
+              labels = {
+                enUS = "布伦希尔达村",
+                zhCN = "布伦希尔达村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
               labels = {
                 enUS = "女人村日常任务奖励",
                 zhCN = "女人村日常任务奖励"
@@ -26472,9 +29634,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "clean-source-54753",
+          sourceID = "manual-source-54753",
           type = "quest"
         }
       },
@@ -26545,7 +29708,7 @@ NS.Data = {
         mountJournalID = 14
       },
       mountKey = "provisional-580",
-      primarySourceID = "enriched-source-580",
+      primarySourceID = "manual-source-580",
       restrictions = {
         classes = {},
         factions = {}
@@ -26566,21 +29729,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 奥格瑞玛",
-                zhCN = "杜隆塔尔 > 奥格瑞玛"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 3362",
+                enUS = "奥格瑞玛",
+                zhCN = "奥格瑞玛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "奥古纳罗",
                 zhCN = "奥古纳罗"
               },
-              refID = 3362
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -26595,9 +29766,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-580",
+          sourceID = "manual-source-580",
           type = "vendor"
         }
       },
@@ -26668,7 +29840,7 @@ NS.Data = {
         mountJournalID = 249
       },
       mountKey = "provisional-59570",
-      primarySourceID = "enriched-source-59570",
+      primarySourceID = "manual-source-59570",
       restrictions = {
         classes = {},
         factions = {}
@@ -26689,21 +29861,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "龙骨荒野 > 龙眠神殿",
-                zhCN = "龙骨荒野 > 龙眠神殿"
+                enUS = "龙骨荒野",
+                zhCN = "龙骨荒野"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 32533",
+                enUS = "龙眠神殿",
+                zhCN = "龙眠神殿"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "希尔丝塔萨",
                 zhCN = "希尔丝塔萨"
               },
-              refID = 32533
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -26718,12 +29898,10 @@ NS.Data = {
               zhCN = "2,000金币"
             },
             questID = nil,
-            reputation = {
-              faction = "龙眠联军",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-59570",
+          sourceID = "manual-source-59570",
           type = "reputation_vendor"
         }
       },
@@ -26744,7 +29922,7 @@ NS.Data = {
         mountJournalID = 254
       },
       mountKey = "provisional-59785",
-      primarySourceID = "enriched-source-59785",
+      primarySourceID = "manual-source-59785",
       restrictions = {
         classes = {},
         factions = {}
@@ -26765,21 +29943,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "达拉然 > 银色领地",
-                zhCN = "达拉然 > 银色领地"
+                enUS = "达拉然",
+                zhCN = "达拉然"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 32294",
+                enUS = "银色领地",
+                zhCN = "银色领地"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "骑士达米隆",
                 zhCN = "骑士达米隆"
               },
-              refID = 32294
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -26794,9 +29980,10 @@ NS.Data = {
               zhCN = "2,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-59785",
+          sourceID = "manual-source-59785",
           type = "vendor"
         }
       },
@@ -26817,7 +30004,7 @@ NS.Data = {
         mountJournalID = 255
       },
       mountKey = "provisional-59788",
-      primarySourceID = "enriched-source-59788",
+      primarySourceID = "manual-source-59788",
       restrictions = {
         classes = {},
         factions = {}
@@ -26838,21 +30025,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "达拉然 > 夺日者圣殿",
-                zhCN = "达拉然 > 夺日者圣殿"
+                enUS = "达拉然",
+                zhCN = "达拉然"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 32296",
+                enUS = "夺日者圣殿",
+                zhCN = "夺日者圣殿"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "石头守卫穆卡尔",
                 zhCN = "石头守卫穆卡尔"
               },
-              refID = 32296
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -26867,9 +30062,10 @@ NS.Data = {
               zhCN = "2,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-59788",
+          sourceID = "manual-source-59788",
           type = "vendor"
         }
       },
@@ -26890,7 +30086,7 @@ NS.Data = {
         mountJournalID = 256
       },
       mountKey = "provisional-59791",
-      primarySourceID = "enriched-source-59791",
+      primarySourceID = "manual-source-59791",
       restrictions = {
         classes = {},
         factions = {}
@@ -26903,21 +30099,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "达拉然 > 坐骑商人",
-                zhCN = "达拉然 > 坐骑商人"
+                enUS = "达拉然",
+                zhCN = "达拉然"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 32216",
+                enUS = "梅尔·弗兰希斯",
                 zhCN = "梅尔·弗兰希斯"
               },
-              refID = 32216
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -26932,9 +30128,10 @@ NS.Data = {
               zhCN = "10,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-59791",
+          sourceID = "manual-source-59791",
           type = "vendor"
         }
       },
@@ -26955,7 +30152,7 @@ NS.Data = {
         mountJournalID = 257
       },
       mountKey = "provisional-59793",
-      primarySourceID = "enriched-source-59793",
+      primarySourceID = "manual-source-59793",
       restrictions = {
         classes = {},
         factions = {}
@@ -26968,21 +30165,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "达拉然 > 坐骑商人",
-                zhCN = "达拉然 > 坐骑商人"
+                enUS = "达拉然",
+                zhCN = "达拉然"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 32216",
+                enUS = "梅尔·弗兰希斯",
                 zhCN = "梅尔·弗兰希斯"
               },
-              refID = 32216
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -26997,9 +30194,10 @@ NS.Data = {
               zhCN = "10,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-59793",
+          sourceID = "manual-source-59793",
           type = "vendor"
         }
       },
@@ -27020,7 +30218,7 @@ NS.Data = {
         mountJournalID = 258
       },
       mountKey = "provisional-59797",
-      primarySourceID = "enriched-source-59797",
+      primarySourceID = "manual-source-59797",
       restrictions = {
         classes = {},
         factions = {}
@@ -27033,21 +30231,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "达拉然 > 坐骑商人",
-                zhCN = "达拉然 > 坐骑商人"
+                enUS = "达拉然",
+                zhCN = "达拉然"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 32540",
+                enUS = "李奥霍夫",
                 zhCN = "李奥霍夫"
               },
-              refID = 32540
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -27062,9 +30260,10 @@ NS.Data = {
               zhCN = "10,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-59797",
+          sourceID = "manual-source-59797",
           type = "vendor"
         }
       },
@@ -27085,7 +30284,7 @@ NS.Data = {
         mountJournalID = 259
       },
       mountKey = "provisional-59799",
-      primarySourceID = "enriched-source-59799",
+      primarySourceID = "manual-source-59799",
       restrictions = {
         classes = {},
         factions = {}
@@ -27098,21 +30297,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "达拉然 > 坐骑商人",
-                zhCN = "达拉然 > 坐骑商人"
+                enUS = "达拉然",
+                zhCN = "达拉然"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 32540",
+                enUS = "李奥霍夫",
                 zhCN = "李奥霍夫"
               },
-              refID = 32540
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -27127,9 +30326,10 @@ NS.Data = {
               zhCN = "10,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-59799",
+          sourceID = "manual-source-59799",
           type = "vendor"
         }
       },
@@ -27300,7 +30500,7 @@ NS.Data = {
         mountJournalID = 269
       },
       mountKey = "provisional-60114",
-      primarySourceID = "enriched-source-60114",
+      primarySourceID = "manual-source-60114",
       restrictions = {
         classes = {},
         factions = {}
@@ -27313,21 +30513,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "达拉然 > 坐骑商人",
-                zhCN = "达拉然 > 坐骑商人"
+                enUS = "达拉然",
+                zhCN = "达拉然"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 32216",
+                enUS = "梅尔·弗兰希斯",
                 zhCN = "梅尔·弗兰希斯"
               },
-              refID = 32216
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -27342,9 +30542,10 @@ NS.Data = {
               zhCN = "10,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-60114",
+          sourceID = "manual-source-60114",
           type = "vendor"
         }
       },
@@ -27365,7 +30566,7 @@ NS.Data = {
         mountJournalID = 270
       },
       mountKey = "provisional-60116",
-      primarySourceID = "enriched-source-60116",
+      primarySourceID = "manual-source-60116",
       restrictions = {
         classes = {},
         factions = {}
@@ -27378,21 +30579,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "达拉然 > 坐骑商人",
-                zhCN = "达拉然 > 坐骑商人"
+                enUS = "达拉然",
+                zhCN = "达拉然"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 32216",
+                enUS = "梅尔·弗兰希斯",
                 zhCN = "梅尔·弗兰希斯"
               },
-              refID = 32216
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -27407,9 +30608,10 @@ NS.Data = {
               zhCN = "10,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-60116",
+          sourceID = "manual-source-60116",
           type = "vendor"
         }
       },
@@ -27430,7 +30632,7 @@ NS.Data = {
         mountJournalID = 271
       },
       mountKey = "provisional-60118",
-      primarySourceID = "pvp-city-leader-60118",
+      primarySourceID = "manual-source-60118",
       restrictions = {
         classes = {},
         factions = {}
@@ -27441,7 +30643,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "敌对阵营主城首领",
                 zhCN = "敌对阵营主城首领"
@@ -27449,7 +30651,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "achievement",
+              kind = "custom",
               labels = {
                 enUS = "为了联盟！",
                 zhCN = "为了联盟！"
@@ -27472,9 +30674,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-city-leader-60118",
+          sourceID = "manual-source-60118",
           type = "achievement"
         }
       },
@@ -27495,7 +30698,7 @@ NS.Data = {
         mountJournalID = 272
       },
       mountKey = "provisional-60119",
-      primarySourceID = "pvp-city-leader-60119",
+      primarySourceID = "manual-source-60119",
       restrictions = {
         classes = {},
         factions = {}
@@ -27506,7 +30709,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "pvp",
+              kind = "custom",
               labels = {
                 enUS = "敌对阵营主城首领",
                 zhCN = "敌对阵营主城首领"
@@ -27514,7 +30717,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "achievement",
+              kind = "custom",
               labels = {
                 enUS = "为了部落！",
                 zhCN = "为了部落！"
@@ -27537,9 +30740,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "pvp-city-leader-60119",
+          sourceID = "manual-source-60119",
           type = "achievement"
         }
       },
@@ -27610,7 +30814,7 @@ NS.Data = {
         mountJournalID = 276
       },
       mountKey = "provisional-61229",
-      primarySourceID = "enriched-source-61229",
+      primarySourceID = "manual-source-61229",
       restrictions = {
         classes = {},
         factions = {}
@@ -27623,21 +30827,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "达拉然 > 坐骑商人",
-                zhCN = "达拉然 > 坐骑商人"
+                enUS = "达拉然",
+                zhCN = "达拉然"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 32216",
+                enUS = "梅尔·弗兰希斯",
                 zhCN = "梅尔·弗兰希斯"
               },
-              refID = 32216
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -27652,9 +30856,10 @@ NS.Data = {
               zhCN = "10,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-61229",
+          sourceID = "manual-source-61229",
           type = "vendor"
         }
       },
@@ -27675,7 +30880,7 @@ NS.Data = {
         mountJournalID = 277
       },
       mountKey = "provisional-61230",
-      primarySourceID = "enriched-source-61230",
+      primarySourceID = "manual-source-61230",
       restrictions = {
         classes = {},
         factions = {}
@@ -27688,21 +30893,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "达拉然 > 坐骑商人",
-                zhCN = "达拉然 > 坐骑商人"
+                enUS = "达拉然",
+                zhCN = "达拉然"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 32216",
+                enUS = "梅尔·弗兰希斯",
                 zhCN = "梅尔·弗兰希斯"
               },
-              refID = 32216
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -27717,9 +30922,10 @@ NS.Data = {
               zhCN = "10,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-61230",
+          sourceID = "manual-source-61230",
           type = "vendor"
         }
       },
@@ -27740,7 +30946,7 @@ NS.Data = {
         mountJournalID = 278
       },
       mountKey = "provisional-61294",
-      primarySourceID = "enriched-source-61294",
+      primarySourceID = "manual-source-61294",
       restrictions = {
         classes = {},
         factions = {}
@@ -27761,21 +30967,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "索拉查盆地 > 雨声树屋",
-                zhCN = "索拉查盆地 > 雨声树屋"
+                enUS = "索拉查盆地",
+                zhCN = "索拉查盆地"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 31910",
+                enUS = "雨声树屋",
+                zhCN = "雨声树屋"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "吉恩",
                 zhCN = "吉恩"
               },
-              refID = 31910
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -27790,9 +31004,10 @@ NS.Data = {
               zhCN = "未成熟的毒囊"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-61294",
+          sourceID = "manual-source-61294",
           type = "vendor"
         }
       },
@@ -27863,7 +31078,7 @@ NS.Data = {
         mountJournalID = 280
       },
       mountKey = "provisional-61425",
-      primarySourceID = "enriched-source-61425",
+      primarySourceID = "manual-source-61425",
       restrictions = {
         classes = {},
         factions = {}
@@ -27876,21 +31091,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "达拉然 > 坐骑商人",
-                zhCN = "达拉然 > 坐骑商人"
+                enUS = "达拉然",
+                zhCN = "达拉然"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 32216",
+                enUS = "梅尔·弗兰希斯",
                 zhCN = "梅尔·弗兰希斯"
               },
-              refID = 32216
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -27905,9 +31120,10 @@ NS.Data = {
               zhCN = "20,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-61425",
+          sourceID = "manual-source-61425",
           type = "vendor"
         }
       },
@@ -27928,7 +31144,7 @@ NS.Data = {
         mountJournalID = 284
       },
       mountKey = "provisional-61447",
-      primarySourceID = "enriched-source-61447",
+      primarySourceID = "manual-source-61447",
       restrictions = {
         classes = {},
         factions = {}
@@ -27941,21 +31157,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "达拉然 > 坐骑商人",
-                zhCN = "达拉然 > 坐骑商人"
+                enUS = "达拉然",
+                zhCN = "达拉然"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 32216",
+                enUS = "梅尔·弗兰希斯",
                 zhCN = "梅尔·弗兰希斯"
               },
-              refID = 32216
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -27970,9 +31186,10 @@ NS.Data = {
               zhCN = "20,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-61447",
+          sourceID = "manual-source-61447",
           type = "vendor"
         }
       },
@@ -28043,7 +31260,7 @@ NS.Data = {
         mountJournalID = 286
       },
       mountKey = "provisional-61465",
-      primarySourceID = "category-hint-61465",
+      primarySourceID = "manual-source-61465",
       restrictions = {
         classes = {},
         factions = {}
@@ -28054,7 +31271,7 @@ NS.Data = {
           availability = "unknown",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "冬拥湖",
                 zhCN = "冬拥湖"
@@ -28062,7 +31279,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "阿尔卡冯的宝库",
                 zhCN = "阿尔卡冯的宝库"
@@ -28070,7 +31287,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "阿尔卡冯",
                 zhCN = "阿尔卡冯"
@@ -28078,18 +31295,25 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-61465",
+          sourceID = "manual-source-61465",
           type = "boss_drop"
         }
       },
@@ -28110,7 +31334,7 @@ NS.Data = {
         mountJournalID = 287
       },
       mountKey = "provisional-61467",
-      primarySourceID = "category-hint-61467",
+      primarySourceID = "manual-source-61467",
       restrictions = {
         classes = {},
         factions = {}
@@ -28121,7 +31345,7 @@ NS.Data = {
           availability = "unknown",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "冬拥湖",
                 zhCN = "冬拥湖"
@@ -28129,7 +31353,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "阿尔卡冯的宝库",
                 zhCN = "阿尔卡冯的宝库"
@@ -28137,7 +31361,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "阿尔卡冯",
                 zhCN = "阿尔卡冯"
@@ -28145,18 +31369,25 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-61467",
+          sourceID = "manual-source-61467",
           type = "boss_drop"
         }
       },
@@ -28177,7 +31408,7 @@ NS.Data = {
         mountJournalID = 288
       },
       mountKey = "provisional-61469",
-      primarySourceID = "enriched-source-61469",
+      primarySourceID = "manual-source-61469",
       restrictions = {
         classes = {},
         factions = {}
@@ -28190,21 +31421,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "达拉然 > 坐骑商人",
-                zhCN = "达拉然 > 坐骑商人"
+                enUS = "达拉然",
+                zhCN = "达拉然"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 32540",
+                enUS = "李奥霍夫",
                 zhCN = "李奥霍夫"
               },
-              refID = 32540
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -28219,9 +31450,10 @@ NS.Data = {
               zhCN = "10,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-61469",
+          sourceID = "manual-source-61469",
           type = "vendor"
         }
       },
@@ -28242,7 +31474,7 @@ NS.Data = {
         mountJournalID = 289
       },
       mountKey = "provisional-61470",
-      primarySourceID = "enriched-source-61470",
+      primarySourceID = "manual-source-61470",
       restrictions = {
         classes = {},
         factions = {}
@@ -28255,21 +31487,21 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "达拉然 > 坐骑商人",
-                zhCN = "达拉然 > 坐骑商人"
+                enUS = "达拉然",
+                zhCN = "达拉然"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 32540",
+                enUS = "李奥霍夫",
                 zhCN = "李奥霍夫"
               },
-              refID = 32540
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -28284,9 +31516,10 @@ NS.Data = {
               zhCN = "10,000金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-61470",
+          sourceID = "manual-source-61470",
           type = "vendor"
         }
       },
@@ -28407,7 +31640,7 @@ NS.Data = {
         mountJournalID = 294
       },
       mountKey = "provisional-63232",
-      primarySourceID = "enriched-source-63232",
+      primarySourceID = "manual-source-63232",
       restrictions = {
         classes = {},
         factions = {}
@@ -28428,21 +31661,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33307",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "下士亚瑟·弗卢",
                 zhCN = "下士亚瑟·弗卢"
               },
-              refID = 33307
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -28457,9 +31698,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-63232",
+          sourceID = "manual-source-63232",
           type = "vendor"
         }
       },
@@ -28480,7 +31722,7 @@ NS.Data = {
         mountJournalID = 295
       },
       mountKey = "provisional-63635",
-      primarySourceID = "enriched-source-63635",
+      primarySourceID = "manual-source-63635",
       restrictions = {
         classes = {},
         factions = {}
@@ -28501,21 +31743,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33554",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "萨玛巴",
                 zhCN = "萨玛巴"
               },
-              refID = 33554
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -28530,9 +31780,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-63635",
+          sourceID = "manual-source-63635",
           type = "vendor"
         }
       },
@@ -28553,7 +31804,7 @@ NS.Data = {
         mountJournalID = 296
       },
       mountKey = "provisional-63636",
-      primarySourceID = "enriched-source-63636",
+      primarySourceID = "manual-source-63636",
       restrictions = {
         classes = {},
         factions = {}
@@ -28574,21 +31825,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33310",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "德里克·斑须",
                 zhCN = "德里克·斑须"
               },
-              refID = 33310
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -28603,9 +31862,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-63636",
+          sourceID = "manual-source-63636",
           type = "vendor"
         }
       },
@@ -28626,7 +31886,7 @@ NS.Data = {
         mountJournalID = 297
       },
       mountKey = "provisional-63637",
-      primarySourceID = "enriched-source-63637",
+      primarySourceID = "manual-source-63637",
       restrictions = {
         classes = {},
         factions = {}
@@ -28647,21 +31907,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33653",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "鲁克·鹰爪",
                 zhCN = "鲁克·鹰爪"
               },
-              refID = 33653
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -28676,9 +31944,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-63637",
+          sourceID = "manual-source-63637",
           type = "vendor"
         }
       },
@@ -28699,7 +31968,7 @@ NS.Data = {
         mountJournalID = 298
       },
       mountKey = "provisional-63638",
-      primarySourceID = "enriched-source-63638",
+      primarySourceID = "manual-source-63638",
       restrictions = {
         classes = {},
         factions = {}
@@ -28720,21 +31989,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33650",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "莉蕾·转轴",
                 zhCN = "莉蕾·转轴"
               },
-              refID = 33650
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -28749,9 +32026,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-63638",
+          sourceID = "manual-source-63638",
           type = "vendor"
         }
       },
@@ -28772,7 +32050,7 @@ NS.Data = {
         mountJournalID = 299
       },
       mountKey = "provisional-63639",
-      primarySourceID = "enriched-source-63639",
+      primarySourceID = "manual-source-63639",
       restrictions = {
         classes = {},
         factions = {}
@@ -28793,21 +32071,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33657",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "艾蕾希",
                 zhCN = "艾蕾希"
               },
-              refID = 33657
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -28822,9 +32108,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-63639",
+          sourceID = "manual-source-63639",
           type = "vendor"
         }
       },
@@ -28845,7 +32132,7 @@ NS.Data = {
         mountJournalID = 300
       },
       mountKey = "provisional-63640",
-      primarySourceID = "enriched-source-63640",
+      primarySourceID = "manual-source-63640",
       restrictions = {
         classes = {},
         factions = {}
@@ -28866,21 +32153,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33553",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "弗蕾卡·血斧",
                 zhCN = "弗蕾卡·血斧"
               },
-              refID = 33553
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -28895,9 +32190,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-63640",
+          sourceID = "manual-source-63640",
           type = "vendor"
         }
       },
@@ -28918,7 +32214,7 @@ NS.Data = {
         mountJournalID = 301
       },
       mountKey = "provisional-63641",
-      primarySourceID = "enriched-source-63641",
+      primarySourceID = "manual-source-63641",
       restrictions = {
         classes = {},
         factions = {}
@@ -28939,21 +32235,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33556",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "杜尔鲁·雷角",
                 zhCN = "杜尔鲁·雷角"
               },
-              refID = 33556
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -28968,9 +32272,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-63641",
+          sourceID = "manual-source-63641",
           type = "vendor"
         }
       },
@@ -28991,7 +32296,7 @@ NS.Data = {
         mountJournalID = 302
       },
       mountKey = "provisional-63642",
-      primarySourceID = "enriched-source-63642",
+      primarySourceID = "manual-source-63642",
       restrictions = {
         classes = {},
         factions = {}
@@ -29012,21 +32317,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33557",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "特雷利斯·晨日",
                 zhCN = "特雷利斯·晨日"
               },
-              refID = 33557
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -29041,9 +32354,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-63642",
+          sourceID = "manual-source-63642",
           type = "vendor"
         }
       },
@@ -29064,7 +32378,7 @@ NS.Data = {
         mountJournalID = 303
       },
       mountKey = "provisional-63643",
-      primarySourceID = "enriched-source-63643",
+      primarySourceID = "manual-source-63643",
       restrictions = {
         classes = {},
         factions = {}
@@ -29085,21 +32399,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 33555",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "伊莉莎·基连",
                 zhCN = "伊莉莎·基连"
               },
-              refID = 33555
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -29114,9 +32436,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-63643",
+          sourceID = "manual-source-63643",
           type = "vendor"
         }
       },
@@ -29137,7 +32460,7 @@ NS.Data = {
         mountJournalID = 305
       },
       mountKey = "provisional-63844",
-      primarySourceID = "category-hint-63844",
+      primarySourceID = "manual-source-63844",
       restrictions = {
         classes = {},
         factions = {}
@@ -29158,8 +32481,16 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
+              },
+              refID = nil
+            },
+            {
+              kind = "zone",
+              labels = {
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
               },
               refID = nil
             },
@@ -29172,7 +32503,7 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -29187,12 +32518,10 @@ NS.Data = {
               zhCN = "150枚冠军的徽记"
             },
             questID = nil,
-            reputation = {
-              faction = "银色北伐军",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-63844",
+          sourceID = "manual-source-63844",
           type = "reputation_vendor"
         }
       },
@@ -29313,7 +32642,7 @@ NS.Data = {
         mountJournalID = 309
       },
       mountKey = "provisional-64657",
-      primarySourceID = "enriched-source-64657",
+      primarySourceID = "manual-source-64657",
       restrictions = {
         classes = {},
         factions = {}
@@ -29334,21 +32663,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "莫高雷 > 血蹄村",
-                zhCN = "莫高雷 > 血蹄村"
+                enUS = "莫高雷",
+                zhCN = "莫高雷"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 3685",
+                enUS = "血蹄村",
+                zhCN = "血蹄村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "哈布·爪蹄",
                 zhCN = "哈布·爪蹄"
               },
-              refID = 3685
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -29363,9 +32700,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-64657",
+          sourceID = "manual-source-64657",
           type = "vendor"
         }
       },
@@ -29386,7 +32724,7 @@ NS.Data = {
         mountJournalID = 310
       },
       mountKey = "provisional-64658",
-      primarySourceID = "enriched-source-64658",
+      primarySourceID = "manual-source-64658",
       restrictions = {
         classes = {},
         factions = {}
@@ -29407,21 +32745,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 奥格瑞玛",
-                zhCN = "杜隆塔尔 > 奥格瑞玛"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 3362",
+                enUS = "奥格瑞玛",
+                zhCN = "奥格瑞玛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "奥古纳罗",
                 zhCN = "奥古纳罗"
               },
-              refID = 3362
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -29436,9 +32782,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-64658",
+          sourceID = "manual-source-64658",
           type = "vendor"
         }
       },
@@ -29459,7 +32806,7 @@ NS.Data = {
         mountJournalID = 311
       },
       mountKey = "provisional-64659",
-      primarySourceID = "clean-source-64659",
+      primarySourceID = "manual-source-64659",
       restrictions = {
         classes = {},
         factions = {}
@@ -29470,7 +32817,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "安戈洛环形山",
                 zhCN = "安戈洛环形山"
@@ -29478,7 +32825,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "quest",
+              kind = "custom",
               labels = {
                 enUS = "毒皮暴掠龙任务线",
                 zhCN = "毒皮暴掠龙任务线"
@@ -29501,9 +32848,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "clean-source-64659",
+          sourceID = "manual-source-64659",
           type = "quest"
         }
       },
@@ -29574,7 +32922,7 @@ NS.Data = {
         mountJournalID = 314
       },
       mountKey = "provisional-64977",
-      primarySourceID = "enriched-source-64977",
+      primarySourceID = "manual-source-64977",
       restrictions = {
         classes = {},
         factions = {}
@@ -29595,21 +32943,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "提瑞斯法林地 > 布瑞尔",
-                zhCN = "提瑞斯法林地 > 布瑞尔"
+                enUS = "提瑞斯法林地",
+                zhCN = "提瑞斯法林地"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4731",
+                enUS = "布瑞尔",
+                zhCN = "布瑞尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "撒迦利亚·普斯特",
                 zhCN = "撒迦利亚·普斯特"
               },
-              refID = 4731
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -29624,9 +32980,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-64977",
+          sourceID = "manual-source-64977",
           type = "vendor"
         }
       },
@@ -29983,7 +33340,7 @@ NS.Data = {
         mountJournalID = 18
       },
       mountKey = "provisional-6648",
-      primarySourceID = "enriched-source-6648",
+      primarySourceID = "manual-source-6648",
       restrictions = {
         classes = {},
         factions = {}
@@ -30004,21 +33361,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "艾尔文森林 > 东谷伐木场",
-                zhCN = "艾尔文森林 > 东谷伐木场"
+                enUS = "艾尔文森林",
+                zhCN = "艾尔文森林"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4885",
+                enUS = "东谷伐木场",
+                zhCN = "东谷伐木场"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "格瑞戈·玛克温斯",
                 zhCN = "格瑞戈·玛克温斯"
               },
-              refID = 4885
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -30033,9 +33398,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-6648",
+          sourceID = "manual-source-6648",
           type = "vendor"
         }
       },
@@ -30056,7 +33422,7 @@ NS.Data = {
         mountJournalID = 19
       },
       mountKey = "provisional-6653",
-      primarySourceID = "enriched-source-6653",
+      primarySourceID = "manual-source-6653",
       restrictions = {
         classes = {},
         factions = {}
@@ -30077,21 +33443,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 奥格瑞玛",
-                zhCN = "杜隆塔尔 > 奥格瑞玛"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 3362",
+                enUS = "奥格瑞玛",
+                zhCN = "奥格瑞玛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "奥古纳罗",
                 zhCN = "奥古纳罗"
               },
-              refID = 3362
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -30106,9 +33480,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-6653",
+          sourceID = "manual-source-6653",
           type = "vendor"
         }
       },
@@ -30129,7 +33504,7 @@ NS.Data = {
         mountJournalID = 20
       },
       mountKey = "provisional-6654",
-      primarySourceID = "enriched-source-6654",
+      primarySourceID = "manual-source-6654",
       restrictions = {
         classes = {},
         factions = {}
@@ -30150,21 +33525,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 奥格瑞玛",
-                zhCN = "杜隆塔尔 > 奥格瑞玛"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 3362",
+                enUS = "奥格瑞玛",
+                zhCN = "奥格瑞玛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "奥古纳罗",
                 zhCN = "奥古纳罗"
               },
-              refID = 3362
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -30179,9 +33562,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-6654",
+          sourceID = "manual-source-6654",
           type = "vendor"
         }
       },
@@ -30202,7 +33586,7 @@ NS.Data = {
         mountJournalID = 336
       },
       mountKey = "provisional-66846",
-      primarySourceID = "enriched-source-66846",
+      primarySourceID = "manual-source-66846",
       restrictions = {
         classes = {},
         factions = {}
@@ -30223,21 +33607,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "提瑞斯法林地 > 布瑞尔",
-                zhCN = "提瑞斯法林地 > 布瑞尔"
+                enUS = "提瑞斯法林地",
+                zhCN = "提瑞斯法林地"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4731",
+                enUS = "布瑞尔",
+                zhCN = "布瑞尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "撒迦利亚·普斯特",
                 zhCN = "撒迦利亚·普斯特"
               },
-              refID = 4731
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -30252,9 +33644,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-66846",
+          sourceID = "manual-source-66846",
           type = "vendor"
         }
       },
@@ -30275,7 +33668,7 @@ NS.Data = {
         mountJournalID = 337
       },
       mountKey = "provisional-66847",
-      primarySourceID = "enriched-source-66847",
+      primarySourceID = "manual-source-66847",
       restrictions = {
         classes = {},
         factions = {}
@@ -30296,21 +33689,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "泰达希尔 > 多兰纳尔",
-                zhCN = "泰达希尔 > 多兰纳尔"
+                enUS = "泰达希尔",
+                zhCN = "泰达希尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4730",
+                enUS = "多兰纳尔",
+                zhCN = "多兰纳尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "莱兰奈",
                 zhCN = "莱兰奈"
               },
-              refID = 4730
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -30325,9 +33726,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-66847",
+          sourceID = "manual-source-66847",
           type = "vendor"
         }
       },
@@ -30348,7 +33750,7 @@ NS.Data = {
         mountJournalID = 341
       },
       mountKey = "provisional-67466",
-      primarySourceID = "enriched-source-67466",
+      primarySourceID = "manual-source-67466",
       restrictions = {
         classes = {},
         factions = {}
@@ -30369,21 +33771,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "冰冠冰川 > 银色锦标赛",
-                zhCN = "冰冠冰川 > 银色锦标赛"
+                enUS = "冰冠冰川",
+                zhCN = "冰冠冰川"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 34885",
+                enUS = "银色锦标赛",
+                zhCN = "银色锦标赛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "卡普萨里斯夫人",
                 zhCN = "卡普萨里斯夫人"
               },
-              refID = 34885
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -30398,12 +33808,10 @@ NS.Data = {
               zhCN = "100枚冠军的徽记"
             },
             questID = nil,
-            reputation = {
-              faction = "银色北伐军",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-67466",
+          sourceID = "manual-source-67466",
           type = "reputation_vendor"
         }
       },
@@ -30424,7 +33832,7 @@ NS.Data = {
         mountJournalID = 21
       },
       mountKey = "provisional-6777",
-      primarySourceID = "enriched-source-6777",
+      primarySourceID = "manual-source-6777",
       restrictions = {
         classes = {},
         factions = {}
@@ -30445,21 +33853,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 铁炉堡",
-                zhCN = "丹莫罗 > 铁炉堡"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 1261",
+                enUS = "铁炉堡",
+                zhCN = "铁炉堡"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "维隆·冻石",
                 zhCN = "维隆·冻石"
               },
-              refID = 1261
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -30474,9 +33890,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-6777",
+          sourceID = "manual-source-6777",
           type = "vendor"
         }
       },
@@ -30497,7 +33914,7 @@ NS.Data = {
         mountJournalID = 24
       },
       mountKey = "provisional-6898",
-      primarySourceID = "enriched-source-6898",
+      primarySourceID = "manual-source-6898",
       restrictions = {
         classes = {},
         factions = {}
@@ -30518,21 +33935,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 铁炉堡",
-                zhCN = "丹莫罗 > 铁炉堡"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 1261",
+                enUS = "铁炉堡",
+                zhCN = "铁炉堡"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "维隆·冻石",
                 zhCN = "维隆·冻石"
               },
-              refID = 1261
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -30547,9 +33972,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-6898",
+          sourceID = "manual-source-6898",
           type = "vendor"
         }
       },
@@ -30570,7 +33996,7 @@ NS.Data = {
         mountJournalID = 25
       },
       mountKey = "provisional-6899",
-      primarySourceID = "enriched-source-6899",
+      primarySourceID = "manual-source-6899",
       restrictions = {
         classes = {},
         factions = {}
@@ -30591,21 +34017,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "丹莫罗 > 铁炉堡",
-                zhCN = "丹莫罗 > 铁炉堡"
+                enUS = "丹莫罗",
+                zhCN = "丹莫罗"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 1261",
+                enUS = "铁炉堡",
+                zhCN = "铁炉堡"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "维隆·冻石",
                 zhCN = "维隆·冻石"
               },
-              refID = 1261
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -30620,9 +34054,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-6899",
+          sourceID = "manual-source-6899",
           type = "vendor"
         }
       },
@@ -30802,7 +34237,7 @@ NS.Data = {
         mountJournalID = 366
       },
       mountKey = "provisional-73313",
-      primarySourceID = "clean-source-73313",
+      primarySourceID = "manual-source-73313",
       restrictions = {
         classes = {},
         factions = {}
@@ -30813,7 +34248,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "冰冠堡垒",
                 zhCN = "冰冠堡垒"
@@ -30821,7 +34256,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "quest",
+              kind = "custom",
               labels = {
                 enUS = "影之哀伤任务线奖励",
                 zhCN = "影之哀伤任务线奖励"
@@ -30844,9 +34279,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "clean-source-73313",
+          sourceID = "manual-source-73313",
           type = "quest"
         }
       },
@@ -30867,7 +34303,7 @@ NS.Data = {
         mountJournalID = 373
       },
       mountKey = "provisional-75207",
-      primarySourceID = "clean-source-75207",
+      primarySourceID = "manual-source-75207",
       restrictions = {
         classes = {},
         factions = {}
@@ -30878,7 +34314,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "瓦丝琪尔",
                 zhCN = "瓦丝琪尔"
@@ -30886,7 +34322,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "quest",
+              kind = "custom",
               labels = {
                 enUS = "深海任务线",
                 zhCN = "深海任务线"
@@ -30909,9 +34345,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "clean-source-75207",
+          sourceID = "manual-source-75207",
           type = "quest"
         }
       },
@@ -30982,7 +34419,7 @@ NS.Data = {
         mountJournalID = 382
       },
       mountKey = "provisional-75973",
-      primarySourceID = "category-hint-75973",
+      primarySourceID = "manual-source-75973",
       restrictions = {
         classes = {},
         factions = {}
@@ -30990,32 +34427,74 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "unknown",
+          availability = "rotation",
           path = {
             {
-              kind = "research",
+              kind = "custom",
               labels = {
-                enUS = "Location pending verification",
-                zhCN = "详细地点待核实"
+                enUS = "国服运营活动",
+                zhCN = "国服运营活动"
               },
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-75973",
-          type = "promotion"
+          sourceID = "manual-source-75973",
+          type = "event"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "黑市拍卖行",
+                zhCN = "黑市拍卖行"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "auction-house-75973",
+          type = "auction_house"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["provisional-8394"] = {
       identity = {
@@ -31032,7 +34511,7 @@ NS.Data = {
         mountJournalID = 26
       },
       mountKey = "provisional-8394",
-      primarySourceID = "enriched-source-8394",
+      primarySourceID = "manual-source-8394",
       restrictions = {
         classes = {},
         factions = {}
@@ -31053,21 +34532,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "泰达希尔 > 多兰纳尔",
-                zhCN = "泰达希尔 > 多兰纳尔"
+                enUS = "泰达希尔",
+                zhCN = "泰达希尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 4730",
+                enUS = "多兰纳尔",
+                zhCN = "多兰纳尔"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "莱兰奈",
                 zhCN = "莱兰奈"
               },
-              refID = 4730
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -31082,9 +34569,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-8394",
+          sourceID = "manual-source-8394",
           type = "vendor"
         }
       },
@@ -31105,7 +34593,7 @@ NS.Data = {
         mountJournalID = 27
       },
       mountKey = "provisional-8395",
-      primarySourceID = "enriched-source-8395",
+      primarySourceID = "manual-source-8395",
       restrictions = {
         classes = {},
         factions = {}
@@ -31126,21 +34614,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "杜隆塔尔 > 森金村",
-                zhCN = "杜隆塔尔 > 森金村"
+                enUS = "杜隆塔尔",
+                zhCN = "杜隆塔尔"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 7952",
+                enUS = "森金村",
+                zhCN = "森金村"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "祖尼尔",
                 zhCN = "祖尼尔"
               },
-              refID = 7952
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -31155,9 +34651,10 @@ NS.Data = {
               zhCN = "10金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-8395",
+          sourceID = "manual-source-8395",
           type = "vendor"
         }
       },
@@ -31228,7 +34725,7 @@ NS.Data = {
         mountJournalID = 388
       },
       mountKey = "provisional-87090",
-      primarySourceID = "enriched-source-87090",
+      primarySourceID = "manual-source-87090",
       restrictions = {
         classes = {},
         factions = {}
@@ -31255,15 +34752,15 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 48510",
+                enUS = "卡尔·万金",
                 zhCN = "卡尔·万金"
               },
-              refID = 48510
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -31278,12 +34775,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = {
-              faction = "锈水财阀",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-87090",
+          sourceID = "manual-source-87090",
           type = "reputation_vendor"
         }
       },
@@ -31304,7 +34799,7 @@ NS.Data = {
         mountJournalID = 389
       },
       mountKey = "provisional-87091",
-      primarySourceID = "enriched-source-87091",
+      primarySourceID = "manual-source-87091",
       restrictions = {
         classes = {},
         factions = {}
@@ -31331,15 +34826,15 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 48510",
+                enUS = "卡尔·万金",
                 zhCN = "卡尔·万金"
               },
-              refID = 48510
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -31354,12 +34849,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = {
-              faction = "锈水财阀",
-              standing = "EXALTED"
-            }
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-87091",
+          sourceID = "manual-source-87091",
           type = "reputation_vendor"
         }
       },
@@ -31556,7 +35049,7 @@ NS.Data = {
         mountJournalID = 398
       },
       mountKey = "provisional-88748",
-      primarySourceID = "enriched-source-88748",
+      primarySourceID = "manual-source-88748",
       restrictions = {
         classes = {},
         factions = {}
@@ -31569,21 +35062,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "奥丹姆 > 拉穆卡恒",
-                zhCN = "奥丹姆 > 拉穆卡恒"
+                enUS = "奥丹姆",
+                zhCN = "奥丹姆"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 48617",
+                enUS = "拉穆卡恒",
+                zhCN = "拉穆卡恒"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "铁匠阿巴西",
                 zhCN = "铁匠阿巴西"
               },
-              refID = 48617
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -31598,9 +35099,10 @@ NS.Data = {
               zhCN = "80金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-88748",
+          sourceID = "manual-source-88748",
           type = "vendor"
         }
       },
@@ -31621,7 +35123,7 @@ NS.Data = {
         mountJournalID = 399
       },
       mountKey = "provisional-88749",
-      primarySourceID = "enriched-source-88749",
+      primarySourceID = "manual-source-88749",
       restrictions = {
         classes = {},
         factions = {}
@@ -31634,21 +35136,29 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "奥丹姆 > 拉穆卡恒",
-                zhCN = "奥丹姆 > 拉穆卡恒"
+                enUS = "奥丹姆",
+                zhCN = "奥丹姆"
               },
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "zone",
               labels = {
-                enUS = "NPC 48617",
+                enUS = "拉穆卡恒",
+                zhCN = "拉穆卡恒"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "铁匠阿巴西",
                 zhCN = "铁匠阿巴西"
               },
-              refID = 48617
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -31663,9 +35173,10 @@ NS.Data = {
               zhCN = "80金币"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-88749",
+          sourceID = "manual-source-88749",
           type = "vendor"
         }
       },
@@ -31686,7 +35197,7 @@ NS.Data = {
         mountJournalID = 400
       },
       mountKey = "provisional-88750",
-      primarySourceID = "enriched-source-88750",
+      primarySourceID = "manual-source-88750",
       restrictions = {
         classes = {},
         factions = {}
@@ -31705,15 +35216,15 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "npc",
+              kind = "custom",
               labels = {
-                enUS = "NPC 50409",
+                enUS = "神秘的骆驼雕像",
                 zhCN = "神秘的骆驼雕像"
               },
-              refID = 50409
+              refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -31728,9 +35239,10 @@ NS.Data = {
               zhCN = "骆驼雕像事件奖励"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-88750",
+          sourceID = "manual-source-88750",
           type = "vendor"
         }
       },
@@ -31759,13 +35271,29 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "limited_time",
+          availability = "obtainable",
           path = {
             {
               kind = "custom",
               labels = {
-                enUS = "流沙秘宝库",
-                zhCN = "流沙秘宝库"
+                enUS = "公会",
+                zhCN = "公会"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "暴风城 / 奥格瑞玛",
+                zhCN = "暴风城 / 奥格瑞玛"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "公会坐骑商人",
+                zhCN = "公会坐骑商人"
               },
               refID = nil
             }
@@ -31777,17 +35305,52 @@ NS.Data = {
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = nil,
-              zhCN = nil
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
             },
             price = {
               enUS = nil,
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
           sourceID = "manual-source-88990",
+          type = "reputation_vendor"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "流沙秘宝库",
+                zhCN = "流沙秘宝库"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "event-88990",
           type = "event"
         }
       },
@@ -31808,7 +35371,7 @@ NS.Data = {
         mountJournalID = 403
       },
       mountKey = "provisional-90621",
-      primarySourceID = "category-hint-90621",
+      primarySourceID = "manual-source-90621",
       restrictions = {
         classes = {},
         factions = {}
@@ -31843,7 +35406,7 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -31858,9 +35421,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-90621",
+          sourceID = "manual-source-90621",
           type = "vendor"
         }
       },
@@ -32133,7 +35697,7 @@ NS.Data = {
         mountJournalID = 409
       },
       mountKey = "provisional-93644",
-      primarySourceID = "category-hint-93644",
+      primarySourceID = "manual-source-93644",
       restrictions = {
         classes = {},
         factions = {}
@@ -32168,7 +35732,7 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 1,
+          priority = 100,
           requirements = {
             achievementID = nil,
             costs = {},
@@ -32183,9 +35747,10 @@ NS.Data = {
               zhCN = "100金币（声望折扣）"
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "category-hint-93644",
+          sourceID = "manual-source-93644",
           type = "vendor"
         }
       },
@@ -32256,7 +35821,7 @@ NS.Data = {
         mountJournalID = 416
       },
       mountKey = "provisional-97501",
-      primarySourceID = "clean-source-97501",
+      primarySourceID = "manual-source-97501",
       restrictions = {
         classes = {},
         factions = {}
@@ -32267,15 +35832,23 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
-                enUS = "海加尔山 > 火焰之地",
-                zhCN = "海加尔山 > 火焰之地"
+                enUS = "海加尔山",
+                zhCN = "海加尔山"
               },
               refID = nil
             },
             {
-              kind = "achievement",
+              kind = "custom",
+              labels = {
+                enUS = "火焰之地",
+                zhCN = "火焰之地"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
               labels = {
                 enUS = "火焰之地团队成就",
                 zhCN = "火焰之地团队成就"
@@ -32298,9 +35871,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "clean-source-97501",
+          sourceID = "manual-source-97501",
           type = "achievement"
         }
       },
@@ -32321,7 +35895,7 @@ NS.Data = {
         mountJournalID = 417
       },
       mountKey = "provisional-97560",
-      primarySourceID = "enriched-source-97560",
+      primarySourceID = "manual-source-97560",
       restrictions = {
         classes = {},
         factions = {}
@@ -32332,7 +35906,7 @@ NS.Data = {
           availability = "unknown",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "海加尔山",
                 zhCN = "海加尔山"
@@ -32340,7 +35914,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "火焰之地",
                 zhCN = "火焰之地"
@@ -32348,7 +35922,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "拉格纳罗斯",
                 zhCN = "拉格纳罗斯"
@@ -32356,18 +35930,25 @@ NS.Data = {
               refID = nil
             }
           },
-          priority = 10,
+          priority = 100,
           requirements = {
-            achievementID = 5828,
+            achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "enriched-source-97560",
+          sourceID = "manual-source-97560",
           type = "boss_drop"
         }
       },
@@ -32438,7 +36019,7 @@ NS.Data = {
         mountJournalID = 420
       },
       mountKey = "pureblood-fire-hawk",
-      primarySourceID = "ragnaros-drop",
+      primarySourceID = "manual-source-97493",
       restrictions = {
         classes = {},
         factions = {}
@@ -32449,7 +36030,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "海加尔山",
                 zhCN = "海加尔山"
@@ -32457,7 +36038,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "火焰之地H",
                 zhCN = "火焰之地H"
@@ -32465,7 +36046,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "拉格纳罗斯",
                 zhCN = "拉格纳罗斯"
@@ -32477,16 +36058,21 @@ NS.Data = {
           requirements = {
             achievementID = nil,
             costs = {},
-            difficulties = {
-              "HEROIC"
-            },
-            difficultyInPath = true,
+            difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "ragnaros-drop",
+          sourceID = "manual-source-97493",
           type = "boss_drop"
         }
       },
@@ -32507,7 +36093,7 @@ NS.Data = {
         mountJournalID = nil
       },
       mountKey = "raven-lord",
-      primarySourceID = "anzu-drop",
+      primarySourceID = "manual-source-41252",
       restrictions = {
         classes = {},
         factions = {}
@@ -32518,7 +36104,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "泰罗卡森林",
                 zhCN = "泰罗卡森林"
@@ -32526,7 +36112,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "塞泰克大厅H",
                 zhCN = "塞泰克大厅H"
@@ -32534,7 +36120,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "安苏",
                 zhCN = "安苏"
@@ -32546,16 +36132,21 @@ NS.Data = {
           requirements = {
             achievementID = nil,
             costs = {},
-            difficulties = {
-              "HEROIC"
-            },
-            difficultyInPath = true,
+            difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "anzu-drop",
+          sourceID = "manual-source-41252",
           type = "boss_drop"
         }
       },
@@ -32576,7 +36167,7 @@ NS.Data = {
         mountJournalID = 18
       },
       mountKey = "rivendares-deathcharger",
-      primarySourceID = "baron-rivendare-drop",
+      primarySourceID = "manual-source-17481",
       restrictions = {
         classes = {},
         factions = {}
@@ -32587,7 +36178,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "东瘟疫之地",
                 zhCN = "东瘟疫之地"
@@ -32595,7 +36186,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "斯坦索姆",
                 zhCN = "斯坦索姆"
@@ -32603,7 +36194,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "瑞文戴尔男爵",
                 zhCN = "瑞文戴尔男爵"
@@ -32616,13 +36207,20 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = false,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "baron-rivendare-drop",
+          sourceID = "manual-source-17481",
           type = "boss_drop"
         }
       },
@@ -32693,7 +36291,7 @@ NS.Data = {
         mountJournalID = 515
       },
       mountKey = "son-of-galleon",
-      primarySourceID = "galleon-drop",
+      primarySourceID = "manual-source-130965",
       restrictions = {
         classes = {},
         factions = {}
@@ -32704,7 +36302,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "四风谷",
                 zhCN = "四风谷"
@@ -32712,15 +36310,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
-              labels = {
-                enUS = "炮舰",
-                zhCN = "炮舰"
-              },
-              refID = nil
-            },
-            {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "炮舰",
                 zhCN = "炮舰"
@@ -32733,17 +36323,92 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = false,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "galleon-drop",
+          sourceID = "manual-source-130965",
           type = "boss_drop"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "黑市拍卖行",
+                zhCN = "黑市拍卖行"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "auction-house-130965",
+          type = "auction_house"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Celestial Fortune Bag",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "celestial-fortune-bag-130965",
+          type = "container"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["spawn-of-horridon"] = {
       identity = {
@@ -32760,7 +36425,7 @@ NS.Data = {
         mountJournalID = 531
       },
       mountKey = "spawn-of-horridon",
-      primarySourceID = "horridon-drop",
+      primarySourceID = "manual-source-136471",
       restrictions = {
         classes = {},
         factions = {}
@@ -32771,7 +36436,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "雷神岛",
                 zhCN = "雷神岛"
@@ -32779,7 +36444,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "雷电王座",
                 zhCN = "雷电王座"
@@ -32787,61 +36452,10 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "赫利东",
                 zhCN = "赫利东"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            difficultyInPath = true,
-            eventKey = nil,
-            notes = nil,
-            questID = nil,
-            reputation = nil
-          },
-          sourceID = "horridon-drop",
-          type = "boss_drop"
-        }
-      },
-      status = "candidate"
-    },
-    ["spawn-of-jikun"] = {
-      identity = {
-        iconFileID = nil,
-        names = {
-          enUS = "Spawn of Ji-Kun",
-          zhCN = "季鹍之嗣"
-        }
-      },
-      ids = {
-        itemIDs = {
-          95059
-        },
-        mountJournalID = 543
-      },
-      mountKey = "spawn-of-jikun",
-      primarySourceID = "manual-source-139448",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "limited_time",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "国服 21 周年庆",
-                zhCN = "国服 21 周年庆"
               },
               refID = nil
             }
@@ -32861,7 +36475,176 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-136471",
+          type = "boss_drop"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Celestial Fortune Bag",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "celestial-fortune-bag-136471",
+          type = "container"
+        }
+      },
+      status = "verified"
+    },
+    ["spawn-of-jikun"] = {
+      identity = {
+        iconFileID = nil,
+        names = {
+          enUS = "Spawn of Ji-Kun",
+          zhCN = "季鹍之嗣"
+        }
+      },
+      ids = {
+        itemIDs = {
+          95059
+        },
+        mountJournalID = 543
+      },
+      mountKey = "spawn-of-jikun",
+      primarySourceID = "boss-drop-139448",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Throne of Thunder",
+                zhCN = "雷电王座"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Ji-Kun",
+                zhCN = "季鹍"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "boss-drop-139448",
+          type = "boss_drop"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Celestial Fortune Bag",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "celestial-fortune-bag-139448",
+          type = "container"
+        },
+        {
+          active = true,
+          availability = "limited_time",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "国服 21 周年庆",
+                zhCN = "国服 21 周年庆"
+              },
+              refID = nil
+            }
+          },
+          priority = 80,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
           },
           sourceID = "manual-source-139448",
           type = "event"
@@ -32884,7 +36667,7 @@ NS.Data = {
         mountJournalID = 213
       },
       mountKey = "swift-white-hawkstrider",
-      primarySourceID = "kaelthas-mgt-drop",
+      primarySourceID = "manual-source-46628",
       restrictions = {
         classes = {},
         factions = {}
@@ -32895,7 +36678,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "奎尔丹纳斯岛",
                 zhCN = "奎尔丹纳斯岛"
@@ -32903,7 +36686,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "魔导师平台H",
                 zhCN = "魔导师平台H"
@@ -32911,7 +36694,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "凯尔萨斯·逐日者",
                 zhCN = "凯尔萨斯·逐日者"
@@ -32923,16 +36706,21 @@ NS.Data = {
           requirements = {
             achievementID = nil,
             costs = {},
-            difficulties = {
-              "HEROIC"
-            },
-            difficultyInPath = true,
+            difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "kaelthas-mgt-drop",
+          sourceID = "manual-source-46628",
           type = "boss_drop"
         }
       },
@@ -32953,7 +36741,7 @@ NS.Data = {
         mountJournalID = 410
       },
       mountKey = "swift-zulian-panther",
-      primarySourceID = "kilnara-drop",
+      primarySourceID = "manual-source-96499",
       restrictions = {
         classes = {},
         factions = {}
@@ -32964,7 +36752,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "荆棘谷",
                 zhCN = "荆棘谷"
@@ -32972,7 +36760,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "祖尔格拉布H",
                 zhCN = "祖尔格拉布H"
@@ -32980,7 +36768,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "高阶祭司基尔娜拉",
                 zhCN = "高阶祭司基尔娜拉"
@@ -32992,16 +36780,21 @@ NS.Data = {
           requirements = {
             achievementID = nil,
             costs = {},
-            difficulties = {
-              "HEROIC"
-            },
-            difficultyInPath = true,
+            difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "kilnara-drop",
+          sourceID = "manual-source-96499",
           type = "boss_drop"
         }
       },
@@ -33022,7 +36815,7 @@ NS.Data = {
         mountJournalID = 420
       },
       mountKey = "tamed-seahorse",
-      primarySourceID = "poseidus-drop",
+      primarySourceID = "manual-source-98718",
       restrictions = {
         classes = {},
         factions = {}
@@ -33033,7 +36826,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "瓦丝琪尔",
                 zhCN = "瓦丝琪尔"
@@ -33041,7 +36834,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "rare",
+              kind = "custom",
               labels = {
                 enUS = "波赛冬斯",
                 zhCN = "波赛冬斯"
@@ -33054,13 +36847,20 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = false,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "poseidus-drop",
+          sourceID = "manual-source-98718",
           type = "rare_drop"
         }
       },
@@ -33081,7 +36881,7 @@ NS.Data = {
         mountJournalID = 542
       },
       mountKey = "thundering-cobalt-cloud-serpent",
-      primarySourceID = "nalak-drop",
+      primarySourceID = "manual-source-139442",
       restrictions = {
         classes = {},
         factions = {}
@@ -33092,7 +36892,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "雷神岛",
                 zhCN = "雷神岛"
@@ -33100,15 +36900,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
-              labels = {
-                enUS = "纳拉克",
-                zhCN = "纳拉克"
-              },
-              refID = nil
-            },
-            {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "纳拉克",
                 zhCN = "纳拉克"
@@ -33121,17 +36913,92 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = false,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "nalak-drop",
+          sourceID = "manual-source-139442",
           type = "boss_drop"
+        },
+        {
+          active = true,
+          availability = "rotation",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "黑市拍卖行",
+                zhCN = "黑市拍卖行"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "auction-house-139442",
+          type = "auction_house"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Celestial Fortune Bag",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "celestial-fortune-bag-139442",
+          type = "container"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["thundering-onyx-cloud-serpent"] = {
       identity = {
@@ -33148,7 +37015,7 @@ NS.Data = {
         mountJournalID = 561
       },
       mountKey = "thundering-onyx-cloud-serpent",
-      primarySourceID = "corrected-source-148476",
+      primarySourceID = "manual-source-148476",
       restrictions = {
         classes = {},
         factions = {}
@@ -33159,7 +37026,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "永恒岛",
                 zhCN = "永恒岛"
@@ -33167,7 +37034,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "rare",
+              kind = "custom",
               labels = {
                 enUS = "火龙",
                 zhCN = "火龙"
@@ -33185,10 +37052,15 @@ NS.Data = {
               enUS = "世界稀有精英掉落，不是加尔鲁什掉落。",
               zhCN = "世界稀有精英掉落，不是加尔鲁什掉落。"
             },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "corrected-source-148476",
+          sourceID = "manual-source-148476",
           type = "rare_drop"
         }
       },
@@ -33209,7 +37081,7 @@ NS.Data = {
         mountJournalID = 517
       },
       mountKey = "thundering-ruby-cloud-serpent",
-      primarySourceID = "alani-drop",
+      primarySourceID = "manual-source-132036",
       restrictions = {
         classes = {},
         factions = {}
@@ -33220,7 +37092,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "锦绣谷",
                 zhCN = "锦绣谷"
@@ -33228,7 +37100,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "阿拉尼",
                 zhCN = "阿拉尼"
@@ -33236,7 +37108,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "阿拉尼",
                 zhCN = "阿拉尼"
@@ -33249,17 +37121,58 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = false,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "alani-drop",
+          sourceID = "manual-source-132036",
           type = "boss_drop"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Celestial Fortune Bag",
+                zhCN = "天神机缘之袋"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "另一个有效来源维护于多渠道表。",
+              zhCN = "另一个有效来源维护于多渠道表。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "celestial-fortune-bag-132036",
+          type = "container"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["twilight-drake"] = {
       identity = {
@@ -33276,7 +37189,7 @@ NS.Data = {
         mountJournalID = 250
       },
       mountKey = "twilight-drake",
-      primarySourceID = "sartharion-twilight-drop",
+      primarySourceID = "manual-source-59571",
       restrictions = {
         classes = {},
         factions = {}
@@ -33287,7 +37200,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "龙骨荒野",
                 zhCN = "龙骨荒野"
@@ -33295,7 +37208,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "黑曜石圣殿25人（保留3条暮光幼龙）",
                 zhCN = "黑曜石圣殿25人（保留3条暮光幼龙）"
@@ -33303,7 +37216,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "萨塔里奥",
                 zhCN = "萨塔里奥"
@@ -33316,13 +37229,20 @@ NS.Data = {
             achievementID = nil,
             costs = {},
             difficulties = {},
-            difficultyInPath = true,
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "sartharion-twilight-drop",
+          sourceID = "manual-source-59571",
           type = "boss_drop"
         }
       },
@@ -33343,7 +37263,7 @@ NS.Data = {
         mountJournalID = nil
       },
       mountKey = "violet-proto-drake",
-      primarySourceID = "retired-audit-source-60002",
+      primarySourceID = "manual-source-60002",
       restrictions = {
         classes = {},
         factions = {}
@@ -33354,7 +37274,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "achievement",
+              kind = "custom",
               labels = {
                 enUS = "千奇百怪的漫长旅行",
                 zhCN = "千奇百怪的漫长旅行"
@@ -33364,7 +37284,7 @@ NS.Data = {
           },
           priority = 100,
           requirements = {
-            achievementID = 2144,
+            achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
@@ -33377,9 +37297,10 @@ NS.Data = {
               zhCN = nil
             },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "retired-audit-source-60002",
+          sourceID = "manual-source-60002",
           type = "achievement"
         }
       },
@@ -33400,7 +37321,7 @@ NS.Data = {
         mountJournalID = 397
       },
       mountKey = "vitreous-stone-drake",
-      primarySourceID = "slabhide-drop",
+      primarySourceID = "manual-source-88746",
       restrictions = {
         classes = {},
         factions = {}
@@ -33411,7 +37332,7 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "zone",
+              kind = "custom",
               labels = {
                 enUS = "深岩之洲",
                 zhCN = "深岩之洲"
@@ -33419,7 +37340,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "instance",
+              kind = "custom",
               labels = {
                 enUS = "石岩之心H",
                 zhCN = "石岩之心H"
@@ -33427,7 +37348,7 @@ NS.Data = {
               refID = nil
             },
             {
-              kind = "boss",
+              kind = "custom",
               labels = {
                 enUS = "岩皮",
                 zhCN = "岩皮"
@@ -33439,16 +37360,21 @@ NS.Data = {
           requirements = {
             achievementID = nil,
             costs = {},
-            difficulties = {
-              "HEROIC"
-            },
-            difficultyInPath = true,
+            difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
-            reputation = nil
+            reputation = nil,
+            tooltipNote = nil
           },
-          sourceID = "slabhide-drop",
+          sourceID = "manual-source-88746",
           type = "boss_drop"
         }
       },

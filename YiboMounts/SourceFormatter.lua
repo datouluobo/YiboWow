@@ -14,7 +14,9 @@ local TYPE_KEYS = {
     event = "SOURCE_EVENT",
     promotion = "SOURCE_PROMOTION",
     store = "SOURCE_STORE",
+    auction_house = "SOURCE_AUCTION_HOUSE",
     crafted = "SOURCE_CRAFTED",
+    container = "SOURCE_CONTAINER",
     research = "SOURCE_RESEARCH",
 }
 
@@ -23,6 +25,12 @@ local DIFFICULTY_KEYS = {
     HEROIC = "DIFFICULTY_HEROIC",
     TEN = "DIFFICULTY_10",
     TWENTY_FIVE = "DIFFICULTY_25",
+}
+
+local AVAILABILITY_KEYS = {
+    limited_time = "LIMITED_TIME",
+    rotation = "ROTATION_AVAILABILITY",
+    unavailable = "NO_LONGER_OBTAINABLE",
 }
 
 local function Join(values, separator)
@@ -47,30 +55,44 @@ local function FormatMoney(amountCopper)
     return table.concat(result, " ")
 end
 
-function NS.SourceFormatter:Format(record)
-    local source = NS.Catalog:GetPrimarySource(record)
-    if not source then return nil, nil end
+function NS.SourceFormatter:FormatSource(record, source)
+    if not source or record.status == "rejected" or source.type == "research" then return nil, nil end
 
     local typeKey = TYPE_KEYS[source.type]
-    local path = { typeKey and NS:L(typeKey) or source.type }
+    local sourceLabel = typeKey and NS:L(typeKey) or source.type
+    local path = {}
     local hasInstance = false
-    for _, node in ipairs(source.path or {}) do
+    local sourcePath = source.path or {}
+    for _, node in ipairs(sourcePath) do
         if node.kind == "instance" then
             hasInstance = true
             break
         end
     end
-    for _, node in ipairs(source.path or {}) do
+    for index, node in ipairs(sourcePath) do
         -- An instance is the actionable destination. Its containing zone stays
         -- in the catalogue for auditing but is redundant in the tooltip.
-        if not (hasInstance and (source.type == "boss_drop" or source.type == "rare_drop") and node.kind == "zone") then
+        local omitInstanceZone = hasInstance
+            and (source.type == "boss_drop" or source.type == "rare_drop")
+            and node.kind == "zone"
+        -- The hand-maintained table intentionally stores readable path text,
+        -- not node roles. A three-level drop path follows region > instance >
+        -- boss; the region is context, while instance > boss is actionable.
+        local omitLeadingDropRegion = not hasInstance
+            and (source.type == "boss_drop" or source.type == "rare_drop")
+            and #sourcePath >= 3
+            and index == 1
+            and (node.kind == "zone" or node.kind == "custom")
+        local omitVendorFaction = source.type == "vendor" and node.kind == "faction"
+        if not omitInstanceZone and not omitLeadingDropRegion and not omitVendorFaction then
             local text = NS:GetLocalizedText(node.labels)
-            if text and text ~= "" then table.insert(path, text) end
+            if text and text ~= "" and path[#path] ~= text then table.insert(path, text) end
         end
     end
 
-    local primary = Join(path, " > ")
-    if primary == "" then return nil, nil end
+    local pathText = Join(path, NS:L("PATH_SEPARATOR"))
+    if pathText == "" then return nil, nil end
+    local primary = sourceLabel .. NS:L("SOURCE_LABEL_SEPARATOR") .. pathText
 
     local requirements = source.requirements or {}
     local conditions = {}
@@ -93,7 +115,7 @@ function NS.SourceFormatter:Format(record)
     local costs = {}
     local priceText = NS:GetLocalizedText(requirements.price)
     if priceText and priceText ~= "" then
-        table.insert(costs, NS:L("PRICE") .. "：" .. priceText)
+        table.insert(costs, priceText)
     end
     for _, cost in ipairs(requirements.costs or {}) do
         if cost.type == "money" then
@@ -108,17 +130,36 @@ function NS.SourceFormatter:Format(record)
     local costText = Join(costs, " / ")
     if costText ~= "" then table.insert(conditions, costText) end
 
-    -- Event names already identify the activity.  Their catalogue notes are
-    -- research detail (version, delivery rules, announcement caveats), not
-    -- useful tooltip decisions; retain only the concise availability state.
-    if source.type ~= "event" then
-        local note = NS:GetLocalizedText(requirements.notes)
-        if note and note ~= "" then table.insert(conditions, note) end
-    end
-    if source.availability == "unavailable" then
-        table.insert(conditions, NS:L("NO_LONGER_OBTAINABLE"))
+    -- `notes` is maintenance evidence and must never leak into the player UI.
+    -- Only an explicitly curated, short tooltip note may enter this line.
+    local tooltipNote = NS:GetLocalizedText(requirements.tooltipNote)
+    if tooltipNote and tooltipNote ~= "" then
+        table.insert(conditions, tooltipNote)
     end
 
-    local secondary = Join(conditions, " > ")
+    local availabilityKey = AVAILABILITY_KEYS[source.availability]
+    if availabilityKey then
+        table.insert(conditions, NS:L(availabilityKey))
+    end
+
+    local secondary = Join(conditions, NS:L("CONDITION_SEPARATOR"))
     return primary, secondary ~= "" and secondary or nil
+end
+
+function NS.SourceFormatter:Format(record)
+    return self:FormatSource(record, NS.Catalog:GetPrimarySource(record))
+end
+
+function NS.SourceFormatter:FormatAll(record)
+    local entries = {}
+    local seen = {}
+    for _, source in ipairs(NS.Catalog:GetTooltipSources(record)) do
+        local primary, secondary = self:FormatSource(record, source)
+        local signature = primary and (primary .. "\031" .. (secondary or ""))
+        if signature and not seen[signature] then
+            seen[signature] = true
+            table.insert(entries, { primary = primary, secondary = secondary, sourceID = source.sourceID })
+        end
+    end
+    return entries
 end
