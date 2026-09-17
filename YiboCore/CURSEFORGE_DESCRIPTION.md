@@ -15,7 +15,7 @@ YiboCore does not track boss kills, quests, or other addon-specific progress by 
 
 | Addon | What it does |
 | --- | --- |
-| [YiboAltoBoss - Boss Weekly](https://www.curseforge.com/wow/addons/yiboaltoboss) | Tracks MoP Classic world-boss weekly kills and Warbringer observations across characters. |
+| [YiboAltoBoss - 首领追踪](https://www.curseforge.com/wow/addons/yiboaltoboss) | Tracks MoP Classic world-boss kills, seasonal bosses, custom targets, and future instance lockouts across characters. |
 | [YiboLegendary - Legendary Journey](https://www.curseforge.com/wow/addons/yibo-legendary) | Tracks account progress, checkpoints, and next steps for the Legendary Cloak and Thunderfury. |
 | [YiboQuestBlocker - Quest Blocking](https://www.curseforge.com/wow/addons/yibo-quest-blocker) | Automatically declines unwanted quests, with account-wide and per-character blocklists. |
 | [YiboTodo - Account To-Do](https://www.curseforge.com/wow/addons/yibotodo) | Shows profession cooldowns and the next available craft across characters. |
@@ -42,7 +42,7 @@ YiboCore 本身不追踪首领击杀、任务或其它业务进度。请按需�
 
 | 插件 | 功能 |
 | --- | --- |
-| [YiboAltoBoss - Boss 周常](https://www.curseforge.com/wow/addons/yiboaltoboss) | 跨角色追踪 MoP Classic 世界首领周常击杀与战争使者观察。 |
+| [YiboAltoBoss - 首领追踪](https://www.curseforge.com/wow/addons/yiboaltoboss) | 跨角色追踪 MoP Classic 世界首领、节日首领、自定义目标与后续副本 CD。 |
 | [YiboLegendary - 传说之路](https://www.curseforge.com/wow/addons/yibo-legendary) | 跨角色查看传说披风与风剑的收集进度、检查点和下一步。 |
 | [YiboQuestBlocker - 任务阻断](https://www.curseforge.com/wow/addons/yibo-quest-blocker) | 自动拒绝不需要的任务，支持账号级与角色专属屏蔽列表。 |
 | [YiboTodo - 账号待办](https://www.curseforge.com/wow/addons/yibotodo) | 跨角色查看专业冷却状态及下一次可制作时间。 |

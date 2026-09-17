@@ -28,6 +28,10 @@ Theme.Colors = {
     -- Near-limit values use amber: visible in a dense dark matrix without
     -- competing with the red reserved for destructive or blocked states.
     warning = { 0.96, 0.70, 0.25 },
+    -- A currency at its cap cannot receive more of that currency.  Keep this
+    -- brighter than the destructive-action red so 16px matrix text remains
+    -- readable against the account view's dark alternating rows.
+    limitReached = { 1.00, 0.42, 0.36 },
     current = { 0.055, 0.23, 0.23, 0.92 },
     success = { 0.16, 0.68, 0.24, 0.98 },
     -- Completion is an informational state in dense matrices.  Keep its

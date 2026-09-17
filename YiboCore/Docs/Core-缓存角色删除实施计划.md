@@ -261,7 +261,7 @@ Core.CharacterCleanup:RetryPending()
 ```lua
 {
     hasData = true,
-    label = "Boss 周常角色记录",
+    label = "首领追踪角色记录",
     detail = "6 个 Boss 状态",
 }
 ```
@@ -378,7 +378,7 @@ SavedVariables 不提供跨插件事务，不能保证真正的原子回滚。�
 角色缓存已从账号视图移除。
 
 Core 角色档案：已删除
-Boss 周常：已删除
+首领追踪：已删除
 传说之路：已删除
 任务屏蔽：等待重试
 ```
@@ -467,7 +467,7 @@ result = {
 
 将删除：
 • Core 角色档案
-• Boss 周常角色记录
+• 首领追踪角色记录
 • 传说之路角色进度
 • 任务屏蔽个人设置
 

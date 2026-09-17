@@ -1,16 +1,27 @@
 local Core = _G.YiboCore
 local beastPathsTitle = GetLocale and GetLocale() == "zhCN" and "隐兽寻踪" or "YiboBeastPaths"
+local altoBossTitle = GetLocale and GetLocale() == "zhCN" and "首领追踪" or "Boss Tracker"
+local altoBossDescription = GetLocale and GetLocale() == "zhCN"
+    and "跨角色追踪世界首领、节日首领与自定义目标；副本 CD 监控即将加入。"
+    or "Tracks world bosses, holiday bosses, and custom targets across characters; instance lockout tracking is planned."
 
 -- Static presentation metadata only.  Versions deliberately live in the
 -- generated packaging manifest and in the player's installed TOCs.
 Core.AddonCatalog = {
     {
         name = "YiboAltoBoss",
-        title = "Boss 周常",
+        title = altoBossTitle,
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboCore\\Media\\YAB_MinimapIcon",
-        description = "跨角色首领与周常进度。",
+        description = altoBossDescription,
         projectURL = "https://www.curseforge.com/wow/addons/yibo-altoboss",
+    },
+    {
+        name = "YiboBuilds",
+        title = "角色构筑",
+        relation = "core-child",
+        icon = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon-v1",
+        description = "跨角色查看装备、天赋与雕文构筑。",
     },
     {
         name = "YiboCurrency",
@@ -58,6 +69,7 @@ Core.AddonCatalog = {
         relation = "optional-core",
         icon = "Interface\\AddOns\\YiboAutoOpen\\Media\\YiboAutoOpenIcon-v2",
         description = "安全地自动开启账号目录中的容器物品。",
+        projectURL = "https://www.curseforge.com/wow/addons/yiboautoopen",
     },
     {
         name = "YiboBeastPaths",

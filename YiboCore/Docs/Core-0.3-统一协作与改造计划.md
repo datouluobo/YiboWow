@@ -117,7 +117,7 @@ Core 0.3 将在不读取业务内部表结构的前提下，提供并校验以�
 ```lua
 YiboCore.AccountView:RegisterPage(addonName, {
     id = "yab-boss",             -- 全局唯一页面 ID
-    title = "Boss 周常",
+    title = "首领追踪",
     order = 30,
     fields = { ... },
     previewEnabled = true,
@@ -130,7 +130,7 @@ YiboCore.AccountView:RegisterPage(addonName, {
 YiboCore.Entry:RegisterBusinessEntry(addonName, {
     id = "yab",                  -- 全局唯一入口 ID
     pageID = "yab-boss",
-    text = "[Yibo] Boss 周常",
+    text = "[Yibo] 首领追踪",
     icon = "...",
 })
 ```

@@ -1178,8 +1178,17 @@ function AccountView:RefreshNavigation()
         table.sort(businessSettings, function(left, right) return left.addonName < right.addonName end)
         for _, item in ipairs(businessSettings) do pages[#pages + 1] = item end
     else
-        pages = { self._pages.overview, self._pages.characters }
-        for _, page in ipairs(self._pageOrder) do if PageEnabled(page) then pages[#pages + 1] = page end end
+        pages = { self._pages.overview }
+        -- The interval between overview (-20) and character archive (-10) is
+        -- reserved for a page explicitly promoted directly below overview.
+        -- All ordinary business pages retain their catalog's alphabetical order.
+        for _, page in ipairs(self._pageOrder) do
+            if PageEnabled(page) and (page.order or 100) < -10 then pages[#pages + 1] = page end
+        end
+        pages[#pages + 1] = self._pages.characters
+        for _, page in ipairs(self._pageOrder) do
+            if PageEnabled(page) and (page.order or 100) >= -10 then pages[#pages + 1] = page end
+        end
         pages[#pages + 1] = self._pages.about
     end
     for index, page in ipairs(pages) do
@@ -2049,6 +2058,19 @@ local function SettingsRow(parent, index, kind)
             row.label:SetPoint("LEFT", 0, 0); row.label:SetWidth(104)
             row.dropdown = Theme:CreateDropdown(row, 180, {})
             row.dropdown:SetPoint("LEFT", row.label, "RIGHT", 8, 0)
+        elseif kind == "business-entry" then
+            -- A business page has three related decisions.  They intentionally
+            -- live in one compact row instead of the adaptive settings grid:
+            -- a different viewport width must never interleave two plugins.
+            row = CreateFrame("Frame", nil, parent.content)
+            row:SetHeight(Theme.Size.standard)
+            row.title = AddText(row, "GameFontNormalSmall", nil, COLORS.text)
+            row.fields = CreateChromeButton(row, 96, nil, "字段", false)
+            row.fields.kind = "disclosure"
+            row.visible = Theme:CreateCheckbox(row, "显示在账号视图")
+            row.entryLabel = AddText(row, "GameFontNormalSmall", nil, COLORS.muted)
+            row.entryLabel:SetText("独立入口")
+            row.dropdown = Theme:CreateDropdown(row, 126, {})
         elseif kind == "short-name" then
             row = CreateFrame("Frame", nil, parent.content)
             row:SetHeight(28)
@@ -2129,10 +2151,11 @@ local function RefreshSettings(parent)
             gridColumn = 0
         end
     end
-    local function SetGridMinimum(value)
+    local function SetGridMinimum(value, maximumColumns)
         FinishGridRow()
         gridMinimum = value
         gridColumns = math.max(1, math.floor((parent.content:GetWidth() + gridGap) / (gridMinimum + gridGap)))
+        if maximumColumns then gridColumns = math.min(gridColumns, maximumColumns) end
         gridWidth = math.floor((parent.content:GetWidth() - gridGap * (gridColumns - 1)) / gridColumns)
     end
     local function Heading(text)
@@ -2186,6 +2209,51 @@ local function RefreshSettings(parent)
         end)
         row:Show()
         return row
+    end
+    local function BusinessEntryRow(page, entry, options)
+        -- This is a form row, not a grid item.  Keeping its anchors local to
+        -- the row guarantees that every plugin retains one readable scan line
+        -- at any supported settings-window width.
+        FinishGridRow()
+        index = index + 1
+        local row = SettingsRow(parent, index, "business-entry")
+        row:ClearAllPoints(); row:SetPoint("TOPLEFT", 2, -y); row:SetWidth(parent.content:GetWidth() or 600)
+        row.title:ClearAllPoints(); row.title:SetPoint("LEFT", 2, 0); row.title:SetWidth(112); row.title:SetText(page.title)
+        row.fields:ClearAllPoints(); row.fields:SetPoint("LEFT", row.title, "RIGHT", 10, 0)
+        row.fields:SetText("配置字段")
+        row.fields:SetState(parent.displayFieldsPageID == page.id and "selected" or "default")
+        row.fields:SetScript("OnClick", function()
+            parent.displayFieldsPageID = page.id
+            AccountView:RefreshPage()
+        end)
+        row.visible:ClearAllPoints(); row.visible:SetPoint("LEFT", row.fields, "RIGHT", 16, 0); row.visible:SetWidth(114)
+        row.visible.label:SetWidth(90); row.visible.label:SetText("显示在账号视图")
+        row.visible:SetChecked(PageEnabled(page))
+        row.visible:SetScript("OnClick", function(control)
+            control:SetChecked(not control:GetChecked())
+            settings.pages[page.id] = control:GetChecked()
+            AccountView:RefreshPage()
+        end)
+        row.entryLabel:ClearAllPoints(); row.entryLabel:SetPoint("LEFT", row.visible, "RIGHT", 16, 0); row.entryLabel:SetWidth(54)
+        row.dropdown:ClearAllPoints(); row.dropdown:SetPoint("LEFT", row.entryLabel, "RIGHT", 6, 0); row.dropdown:SetWidth(126)
+        if entry then
+            row.entryLabel:SetText("独立入口")
+            row.entryLabel:SetTextColor(COLORS.muted[1], COLORS.muted[2], COLORS.muted[3])
+            row.dropdown:SetOptions(options)
+            row.dropdown:SetValue(Core.Entry:GetBusinessEntryMode(entry.id))
+            row.dropdown:SetOnValueChanged(function(mode)
+                settings.entry.pageModes[entry.id] = mode
+                Core.Entry:Refresh()
+                AccountView:RefreshPage()
+            end)
+            row.dropdown:Show()
+        else
+            row.entryLabel:SetText("无独立入口")
+            row.entryLabel:SetTextColor(COLORS.muted[1], COLORS.muted[2], COLORS.muted[3])
+            row.dropdown:Hide()
+        end
+        row:Show()
+        y = y + Theme.Size.standard + 4
     end
     local function AddonPanel(details)
         if type(details.CreateSettingsPanel) ~= "function" then return end
@@ -2438,6 +2506,13 @@ local function RefreshSettings(parent)
             { value = "minimap", label = "仅小地图" },
             { value = "both", label = "两者都显示" },
         }
+        -- Keep the display workbench in semantic blocks.  In particular, the
+        -- plugin table below is deliberately three controls per plugin:
+        -- fields, page visibility, then its independent entry.  A section
+        -- that previously used a narrower grid must never leak that geometry
+        -- into this table, otherwise the three decisions look unrelated.
+        Heading("Core 入口")
+        SetGridMinimum(300, 3)
         Dropdown("Core 入口", Core.Entry and Core.Entry:GetCoreEntryMode() or "both", entryModeOptions, function(mode)
             if Core.Entry then Core.Entry:SetCoreEntryMode(mode) end
         end)
@@ -2472,7 +2547,6 @@ local function RefreshSettings(parent)
             end
         end
         Heading("插件页面与入口")
-        SetGridMinimum(260)
         local displayPages = {}
         for _, page in ipairs(AccountView._pageOrder) do
             if not page.internal then displayPages[#displayPages + 1] = page end
@@ -2482,17 +2556,7 @@ local function RefreshSettings(parent)
         for _, page in ipairs(AccountView._pageOrder) do
             if not page.internal then
                 local entry = Core.Entry and Core.Entry.GetBusinessEntryByPageID and Core.Entry:GetBusinessEntryByPageID(page.id)
-                Button("字段：" .. page.title, function()
-                    parent.displayFieldsPageID = page.id
-                    AccountView:RefreshPage()
-                end, 300, "disclosure", parent.displayFieldsPageID == page.id)
-                Check(page.title .. "显示在账号视图", PageEnabled(page), function(checked) settings.pages[page.id] = checked end)
-                if entry then
-                    Dropdown(page.title .. "入口", Core.Entry:GetBusinessEntryMode(entry.id), entryModeOptions, function(mode)
-                        settings.entry.pageModes[entry.id] = mode
-                        Core.Entry:Refresh()
-                    end)
-                end
+                BusinessEntryRow(page, entry, entryModeOptions)
             end
         end
         Heading("主表字段与悬停预览")
@@ -2539,11 +2603,17 @@ local function RefreshSettings(parent)
     parent.scroll:RefreshScrollbar()
 end
 
+local aboutAltoBossTitle = GetLocale and GetLocale() == "zhCN" and "首领追踪" or "Boss Tracker"
+local aboutAltoBossDescription = GetLocale and GetLocale() == "zhCN"
+    and "跨角色追踪世界首领、节日首领与自定义目标；副本 CD 监控即将加入。"
+    or "Tracks world bosses, holiday bosses, and custom targets across characters; instance lockout tracking is planned."
+
 local ABOUT_ADDONS = {
     {
         name = "YiboAltoBoss",
+        title = aboutAltoBossTitle,
         version = "2.1",
-        description = "汇总多角色首领进度，快速决定下一步。",
+        description = aboutAltoBossDescription,
         icon = "Interface\\AddOns\\YiboCore\\Media\\YAB_MinimapIcon",
         url = "https://www.curseforge.com/wow/addons/yiboaltoboss",
     },
@@ -2587,6 +2657,7 @@ local ABOUT_ADDONS = {
         description = "安全地自动开启账号目录中的容器物品。",
         icon = "Interface\\AddOns\\YiboAutoOpen\\Media\\YiboAutoOpenIcon-v2",
         relation = "optional-core",
+        url = "https://www.curseforge.com/wow/addons/yiboautoopen",
     },
     {
         name = "YiboBeastPaths",

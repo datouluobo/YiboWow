@@ -1,11 +1,12 @@
 local Core = _G.YiboCore
+local altoBossCleanupLabel = GetLocale and GetLocale() == "zhCN" and "首领追踪角色记录" or "Boss Tracker character records"
 
 local CharacterCleanup = {}
 Core.CharacterCleanup = CharacterCleanup
 CharacterCleanup._owners = CharacterCleanup._owners or {}
 CharacterCleanup.MAX_HISTORY = 100
 CharacterCleanup.EXPECTED_OWNERS = {
-    YiboAltoBoss = "Boss 周常角色记录",
+    YiboAltoBoss = altoBossCleanupLabel,
     YiboLegendary = "传说之路角色进度",
     YiboQuestBlocker = "任务屏蔽个人设置",
 }
