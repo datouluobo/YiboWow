@@ -101,22 +101,37 @@ local function ShowPreview(anchor, pageID)
     if not (Core.AccountView and (pageID or Core.AccountView:GetPreviewPage())) then return false end
     Entry.previewToken = (Entry.previewToken or 0) + 1
     local token = Entry.previewToken
-    GameTooltip:Hide()
     local resolvedAnchor = ResolveAnchor(anchor)
-    if Core.AccountView:ShowPreview(pageID, resolvedAnchor) then Entry:StartPreviewWatch() end
 
-    -- 某些 Broker 显示插件会在 OnTooltipShow 返回后才完成锚点布局。
-    -- 首帧没有进入预览状态时，仅补一次短延迟重试。
-    local function RetryPreview()
+    local function RenderPreview()
         if Entry.previewToken ~= token then return end
-        local frame = Core.AccountView.frame
-        if not (frame and frame.preview) then
-            GameTooltip:Hide()
-            if Core.AccountView:ShowPreview(pageID, resolvedAnchor) then Entry:StartPreviewWatch() end
+        Entry.lastPreviewRenderAt = GetTime and GetTime() or 0
+        GameTooltip:Hide()
+        if Core.AccountView:ShowPreview(pageID, resolvedAnchor) then Entry:StartPreviewWatch() end
+
+        -- 某些 Broker 显示插件会在 OnTooltipShow 返回后才完成锚点布局。
+        -- 首帧没有进入预览状态时，仅补一次短延迟重试。
+        local function RetryPreview()
+            if Entry.previewToken ~= token then return end
+            local frame = Core.AccountView.frame
+            if not (frame and frame.preview) then
+                GameTooltip:Hide()
+                if Core.AccountView:ShowPreview(pageID, resolvedAnchor) then Entry:StartPreviewWatch() end
+            end
         end
+        if C_Timer and C_Timer.After then C_Timer.After(0.05, RetryPreview) end
     end
-    if C_Timer and C_Timer.After then
-        C_Timer.After(0.05, RetryPreview)
+
+    -- The first hover remains immediate.  During rapid movement across
+    -- multiple entries, coalesce requests arriving within one short frame
+    -- window so only the final page builds its preview context and controls.
+    local now = GetTime and GetTime() or 0
+    local last = Entry.lastPreviewRenderAt
+    local delay = last and math.max(0, 0.08 - (now - last)) or 0
+    if delay > 0 and C_Timer and C_Timer.After then
+        C_Timer.After(delay, RenderPreview)
+    else
+        RenderPreview()
     end
     return true
 end
