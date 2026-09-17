@@ -610,7 +610,7 @@ end
 function AccountView:GetVisibleCharacters()
     local hidden = Settings().hiddenCharacters
     local visible = {}
-    for _, character in ipairs(Core.Characters:GetAll()) do
+    for _, character in ipairs(Core.Characters:GetAllCached()) do
         if not hidden[character.id] then visible[#visible + 1] = character end
     end
     return visible
@@ -659,7 +659,7 @@ end
 
 function AccountView:GetCustomCharacterOrder()
     local settings = Settings()
-    local characters, known, order, present = Core.Characters:GetAll(), {}, {}, {}
+    local characters, known, order, present = Core.Characters:GetAllCached(), {}, {}, {}
     for _, character in ipairs(characters) do known[character.id] = true end
     for _, characterID in ipairs(Core.CharacterSort:NormalizeOrder(settings.customCharacterOrder)) do
         if known[characterID] then order[#order + 1] = characterID; present[characterID] = true end
@@ -680,7 +680,7 @@ function AccountView:MoveCustomCharacter(characterID, delta)
 end
 
 function AccountView:RebuildCustomCharacterOrder(mode)
-    local characters = Core.Characters:GetAll()
+    local characters = Core.Characters:GetAllCached()
     if mode == "recent" then
         characters = Core.CharacterSort:Sort(characters, { mode = "recent", direction = "desc" })
         local order = {}
@@ -738,7 +738,7 @@ local function GetScopeDefinition(page, characters)
         local current = Core.Characters:GetCurrent()
         local currentRealm = (current and current.realm) or (GetRealmName and GetRealmName()) or "Unknown"
         local realms = {}
-        for _, character in ipairs(characters or Core.Characters:GetAll()) do
+        for _, character in ipairs(characters or Core.Characters:GetAllCached()) do
             local admitted = true
             if type(page.HasCharacterSnapshot) == "function" then
                 local ok, result = xpcall(function() return page.HasCharacterSnapshot(character) end, function(message) return tostring(message) end)
@@ -1245,7 +1245,7 @@ function AccountView:BuildContext(page, options)
     local overrides = options.fieldOverrides
     -- Character archive owns its own inclusion filters.  Business pages keep
     -- the account-wide hidden-character admission rule.
-    local characters = page and page.id == "characters" and Core.Characters:GetAll() or self:GetVisibleCharacters()
+    local characters = page and page.id == "characters" and Core.Characters:GetAllCached() or self:GetVisibleCharacters()
     local scopeDefinition = GetScopeDefinition(page, characters)
     local scope = scopeDefinition and self:GetPageScope(page.id) or nil
     local baseContext = {
@@ -1334,7 +1334,7 @@ function AccountView:ShowPage(pageID, options)
     if not page or (not page.internal and not PageEnabled(page)) then page = self._pages.overview end
     self:CreateFrame()
     self.frame:SetAttribute("yibo-settings-open", not self.frame.preview and page.id == "settings")
-    local context = self:BuildContext(page, options)
+    local context = options.context or self:BuildContext(page, options)
     if not options.preview then self:ApplyPageSize(page, context) end
     self:HideColumnPagers()
     for id, instance in pairs(self.frame.instances) do if id ~= page.id then instance:Hide() end end
@@ -1542,6 +1542,10 @@ function AccountView:ShowPreview(pageID, anchor)
     self.restoreNormalWindowAfterPreview = frame:IsShown() and not frame.preview
 
     local fields = type(page.GetPreviewFields) == "function" and page.GetPreviewFields() or page.previewFields
+    local anchorFrame = anchor and type(anchor.GetLeft) == "function" and anchor or nil
+    if frame:IsShown() and frame.preview and self.previewPageID == page.id and self.previewAnchor == anchorFrame then
+        return true
+    end
     local context = self:BuildContext(page, { preview = true, fieldOverrides = fields })
     local safe = SafeRect(true)
     context.surfaceAvailableWidth = safe.width
@@ -1566,7 +1570,6 @@ function AccountView:ShowPreview(pageID, anchor)
     -- readable when both are visible.
     frame:SetFrameStrata("DIALOG")
     frame:ClearAllPoints()
-    local anchorFrame = anchor and type(anchor.GetLeft) == "function" and anchor or nil
     self.previewAnchor = anchorFrame
     if anchorFrame then
         local left, right = anchorFrame:GetLeft(), anchorFrame:GetRight()
@@ -1595,7 +1598,7 @@ function AccountView:ShowPreview(pageID, anchor)
     frame.content:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 1)
     SetHeaderIdentity(frame, page, page.title)
     frame:Show()
-    self:ShowPage(page.id, { preview = true, fieldOverrides = fields })
+    self:ShowPage(page.id, { preview = true, fieldOverrides = fields, context = context })
     self:TrackPreviewControls(frame)
     return true
 end
@@ -1870,7 +1873,7 @@ local function ArchiveCharacters(context)
     local filter = archive.filters[preview and "preview" or "page"]
     local levelFilter = Core.LevelFilter:Compile(filter.levelExpr)
     local characters, hidden = {}, Settings().hiddenCharacters
-    for _, character in ipairs((context and context.characters) or Core.Characters:GetAll()) do
+    for _, character in ipairs((context and context.characters) or Core.Characters:GetAllCached()) do
         local profiled = HasCharacterProfile(character)
         local profileMatches = filter.profile == "all" or (filter.profile == "profiled" and profiled) or (filter.profile == "missing" and not profiled)
         if profileMatches and levelFilter:Matches(character.level) and (filter.includeHidden or not hidden[character.id]) then characters[#characters + 1] = character end
@@ -2338,7 +2341,7 @@ local function RefreshSettings(parent)
         Button("按最近登录顺序重建", function() AccountView:RebuildCustomCharacterOrder("recent") end, 300, "secondary")
         Button("恢复初始登记顺序", function() AccountView:RebuildCustomCharacterOrder("seen") end, 300, "secondary")
         local byID = {}
-        for _, character in ipairs(Core.Characters:GetAll()) do byID[character.id] = character end
+        for _, character in ipairs(Core.Characters:GetAllCached()) do byID[character.id] = character end
         local order = AccountView:GetCustomCharacterOrder()
         local orderGap, orderMinimum = 16, 520
         local orderColumns = math.max(1, math.floor((parent.content:GetWidth() + orderGap) / (orderMinimum + orderGap)))
@@ -2403,7 +2406,7 @@ local function RefreshSettings(parent)
     end
 
     local function ShortNameRows()
-        local characters = Core.Characters:GetAll()
+        local characters = Core.Characters:GetAllCached()
         local pageSize = 20
         local totalPages = math.max(1, math.ceil(#characters / pageSize))
         parent.shortNamePage = math.max(1, math.min(tonumber(parent.shortNamePage) or 1, totalPages))

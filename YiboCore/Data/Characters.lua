@@ -179,6 +179,7 @@ function Characters:RefreshCurrent()
         AddAlias(store, characterID, alias)
     end
 
+    self:InvalidateAllCache()
     Core.Events:Fire("CHARACTER_UPDATED", characterID, Snapshot(record))
     return Snapshot(record)
 end
@@ -209,6 +210,21 @@ function Characters:GetAll()
         return tostring(left.id) < tostring(right.id)
     end)
     return items
+end
+
+-- AccountView performs many read-only passes over the same roster while a
+-- page is measured, rendered, and previewed.  Keep that read model stable
+-- until the underlying character/domain data changes; callers must treat the
+-- returned records as read-only snapshots.
+function Characters:InvalidateAllCache()
+    self._allSnapshot = nil
+end
+
+function Characters:GetAllCached()
+    if not self._allSnapshot then
+        self._allSnapshot = self:GetAll()
+    end
+    return self._allSnapshot
 end
 
 function Characters:GetAliases(characterID)
@@ -249,6 +265,7 @@ function Characters:DeleteCached(characterID)
             end
         end
     end
+    self:InvalidateAllCache()
     return deleted
 end
 
@@ -306,8 +323,15 @@ function Characters:ImportLegacyCharacter(sourceAddon, legacyKey, data)
         AddAlias(store, characterID, alias)
     end
 
+    self:InvalidateAllCache()
     Core.Events:Fire("CHARACTER_IMPORTED", characterID, tostring(sourceAddon or "legacy"), Snapshot(record))
     return characterID, Snapshot(record)
+end
+
+if Core.Events then
+    Core.Events:Register("DATA_DOMAIN_UPDATED", Characters, function()
+        Characters:InvalidateAllCache()
+    end)
 end
 
 Core.Capabilities:Register("characters", 1)
