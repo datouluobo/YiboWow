@@ -102,7 +102,7 @@ function YBP:CreateWorldMapButton()
     end)
     button:SetScript("OnEnter", function(btn)
         GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
-        GameTooltip:AddLine("|cff4fd8ffYiboBeastPaths|r")
+        GameTooltip:AddLine("|cff20e070[Yibo]|r 隐兽寻踪")
         GameTooltip:AddLine("左键: 开关世界地图路线", 1, 1, 1)
         GameTooltip:AddLine(YBP.db and YBP.db.visible and "当前状态: 已开启" or "当前状态: 已关闭", 1, 0.82, 0)
         GameTooltip:Show()
@@ -121,8 +121,17 @@ function YBP:CreateWorldMapButton()
         YBP:RefreshMapLayer()
     end)
 
-    WorldMapFrame:HookScript("OnUpdate", function()
-        YBP:RefreshMapLayer()
+    WorldMapFrame:HookScript("OnUpdate", function(_, elapsed)
+        -- Map scrolling is handled by the overlay's parent.  Poll only for
+        -- map/frame changes that lack a dedicated event, and only rebuild when
+        -- their render signature changes.
+        YBP.mapLayerPollElapsed = (YBP.mapLayerPollElapsed or 0) + (elapsed or 0)
+        if YBP.mapLayerPollElapsed < 0.15 then return end
+        YBP.mapLayerPollElapsed = 0
+        local signature = YBP:GetMapLayerRenderSignature()
+        if signature ~= YBP.mapLayerRenderSignature then
+            YBP:RefreshMapLayer()
+        end
     end)
 end
 
@@ -156,7 +165,7 @@ SlashCmdList.YIBOBEASTPATHS = function(msg)
                 print(line)
             end
         else
-            print("|cffffcc00[YiboBeastPaths]|r 小地图调试信息不可用")
+            print("|cff20e070[Yibo]|r 隐兽寻踪：小地图调试信息不可用")
         end
         return
     end
@@ -165,7 +174,7 @@ SlashCmdList.YIBOBEASTPATHS = function(msg)
         if YBP.OpenCoreRouteMaintenance then
             YBP:OpenCoreRouteMaintenance()
         else
-            print("|cffffcc00[YiboBeastPaths]|r 路线维护功能需要 YiboCore API v6。")
+            print("|cff20e070[Yibo]|r 隐兽寻踪：路线维护功能需要 YiboCore API v6。")
         end
         return
     end
@@ -195,7 +204,7 @@ SlashCmdList.YIBOBEASTPATHS = function(msg)
         return
     end
 
-    print("|cffffcc00[YiboBeastPaths]|r 用法: /ybp, /ybp show, /ybp hide, /ybp debug, /ybp mmdebug")
+    print("|cff20e070[Yibo]|r 隐兽寻踪：用法: /ybp, /ybp show, /ybp hide, /ybp debug, /ybp mmdebug")
 end
 
 YBP:SetScript("OnEvent", function(self, event, arg1)

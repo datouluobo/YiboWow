@@ -36,7 +36,7 @@ function Addon:EnsureDB()
     return YiboReputationDB
 end
 function Addon:GetSettings() return self:EnsureDB().settings end
-function Addon:Print(message) if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo] 声望总览:|r " .. tostring(message)) end end
+function Addon:Print(message) if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 声望总览：" .. tostring(message)) end end
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED"); frame:RegisterEvent("PLAYER_LOGIN")
 frame:SetScript("OnEvent", function(_, event, name)

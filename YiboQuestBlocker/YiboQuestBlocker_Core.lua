@@ -173,9 +173,9 @@ local blocked = YiboQuestBlockerDB.globalBlocked
 local cache   = YiboQuestBlockerDB.globalCache
 local characterData = YiboQuestBlockerDB.characterData
 
-local PREFIX      = "|cff00ccff[YQB]|r"
-local PREFIX_ERR  = "|cffff0000[YQB]|r"
-local PREFIX_INFO = "|cff888888[YQB]|r"
+local PREFIX      = "|cff20e070[Yibo]|r 任务屏蔽："
+local PREFIX_ERR  = PREFIX
+local PREFIX_INFO = PREFIX
 local recentBlockNotices = {}
 local autoAbandonQueue = {}
 local autoAbandonSet = {}
@@ -918,12 +918,6 @@ local function GetQuestTypeFlags(questID, idx)
                 isRepeatable = isRepeatable or (bit.band(specialFlags, 1) ~= 0)
             end
         end
-    end
-
-    local questName = questID and YQB.GetQuestName(questID)
-    if questName and string.find(questName, "产品订单", 1, true) then
-        isDaily = true
-        isRecurring = true
     end
 
     return {

@@ -27,7 +27,6 @@ NS.Locale.zhCN = {
     DIFFICULTY_25 = "25人",
     STANDING_EXALTED = "崇拜",
     LIMITED_TIME = "限时获取",
-    ROTATION_AVAILABILITY = "轮换开放",
     NO_LONGER_OBTAINABLE = "当前已无法获取",
     ALLIANCE = "联盟",
     HORDE = "部落",

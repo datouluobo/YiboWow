@@ -3,7 +3,7 @@
 local _, NS = ...
 
 NS.Data = {
-  catalogVersion = "0.6",
+  catalogVersion = "0.10",
   mountKeyBySpellID = {
     [458] = "provisional-458",
     [459] = "fact-459",
@@ -498,10 +498,13 @@ NS.Data = {
     [1257674] = "manual-1257674",
     [1257676] = "manual-1257676",
     [1257677] = "manual-1257677",
+    [1267077] = "scarlet-lady",
+    [1272988] = "fact-1272988",
     [1280068] = "excluded-1280068",
     [1283471] = "excluded-1283471",
     [1284679] = "fact-1284679",
     [1285724] = "excluded-1285724",
+    [1285725] = "fact-1285725",
     [1285897] = "fact-1285897",
     [1298510] = "fact-1298510",
     [1298515] = "excluded-1298515",
@@ -6555,6 +6558,62 @@ NS.Data = {
       },
       status = "candidate"
     },
+    ["fact-1272988"] = {
+      identity = {
+        iconFileID = 6739959,
+        names = {
+          enUS = "Mount 1272988",
+          zhCN = "伊纳瑞斯的天使战马"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 2916
+      },
+      mountKey = "fact-1272988",
+      primarySourceID = "manual-source-1272988",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "limited_time",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Treasure Goblin Event (July 2025, Diablo crossover)",
+                zhCN = "财宝地精活动（2025-07，暗黑破坏神联动）"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "Ended; awaiting a rerun.",
+              zhCN = "活动已结束，等待返场。"
+            },
+            price = {
+              enUS = "Free (event drop)",
+              zhCN = "免费（活动掉落）"
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-1272988",
+          type = "event"
+        }
+      },
+      status = "verified"
+    },
     ["fact-127302"] = {
       identity = {
         iconFileID = 656346,
@@ -6862,6 +6921,62 @@ NS.Data = {
           },
           sourceID = "auction-house-1284679",
           type = "auction_house"
+        }
+      },
+      status = "verified"
+    },
+    ["fact-1285725"] = {
+      identity = {
+        iconFileID = 7360957,
+        names = {
+          enUS = "Mount 1285725",
+          zhCN = "苍雷踏云"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 2742
+      },
+      mountKey = "fact-1285725",
+      primarySourceID = "manual-source-1285725",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Battle.net Shop",
+                zhCN = "战网商城"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "Direct Battle.net Shop sale.",
+              zhCN = "战网商城直售。"
+            },
+            price = {
+              enUS = "¥120",
+              zhCN = "120元"
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-1285725",
+          type = "store"
         }
       },
       status = "verified"
@@ -35205,7 +35320,7 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "unknown",
+          availability = "obtainable",
           path = {
             {
               kind = "zone",
@@ -35218,8 +35333,24 @@ NS.Data = {
             {
               kind = "custom",
               labels = {
-                enUS = "神秘的骆驼雕像",
+                enUS = "Mysterious Camel Figurine (real)",
                 zhCN = "神秘的骆驼雕像"
+              },
+              refID = nil
+            },
+            {
+              kind = "zone",
+              labels = {
+                enUS = "Feralas: Steam Pools",
+                zhCN = "菲拉斯·蒸汽之地"
+              },
+              refID = nil
+            },
+            {
+              kind = "npc",
+              labels = {
+                enUS = "Dormus the Camel-Hoarder",
+                zhCN = "骆驼驭手多尔穆斯"
               },
               refID = nil
             }
@@ -35232,21 +35363,21 @@ NS.Data = {
             eventKey = nil,
             notes = {
               enUS = nil,
-              zhCN = nil
+              zhCN = "点到真的雕像后传送，击杀多尔穆斯必定掉落。"
             },
             price = {
-              enUS = "骆驼雕像事件奖励",
-              zhCN = "骆驼雕像事件奖励"
+              enUS = nil,
+              zhCN = nil
             },
             questID = nil,
             reputation = nil,
             tooltipNote = nil
           },
           sourceID = "manual-source-88750",
-          type = "vendor"
+          type = "rare_drop"
         }
       },
-      status = "candidate"
+      status = "verified"
     },
     ["provisional-88990"] = {
       identity = {
@@ -36225,6 +36356,62 @@ NS.Data = {
         }
       },
       status = "candidate"
+    },
+    ["scarlet-lady"] = {
+      identity = {
+        iconFileID = 7479079,
+        names = {
+          enUS = "Scarlet Lady",
+          zhCN = "绯红女爵"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 2837
+      },
+      mountKey = "scarlet-lady",
+      primarySourceID = "crimson-tide-treasure-1267077",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "limited_time",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Crimson Tide Treasure",
+                zhCN = "猩红之潮秘宝"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = "crimson-tide-treasure-2026",
+            notes = {
+              enUS = "China-only limited campaign, April 23–May 23, 2026; the event has ended.",
+              zhCN = "国服限时活动，2026年4月23日至5月23日；活动已结束。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "crimson-tide-treasure-1267077",
+          type = "event"
+        }
+      },
+      status = "verified"
     },
     ["sky-golem"] = {
       identity = {

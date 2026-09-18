@@ -29,7 +29,6 @@ local DIFFICULTY_KEYS = {
 
 local AVAILABILITY_KEYS = {
     limited_time = "LIMITED_TIME",
-    rotation = "ROTATION_AVAILABILITY",
     unavailable = "NO_LONGER_OBTAINABLE",
 }
 

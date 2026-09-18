@@ -4,7 +4,7 @@ NS.Probe = { enabled = false }
 
 local function Print(message)
     if DEFAULT_CHAT_FRAME then
-        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo] Mounts:|r " .. message)
+        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 坐骑图鉴：" .. message)
     end
 end
 

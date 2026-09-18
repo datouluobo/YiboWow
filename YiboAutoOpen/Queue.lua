@@ -26,6 +26,17 @@ function Queue:ScheduleDeferredScan(delay)
         if token == Addon.runtime.deferredScanGeneration and Addon.runtime.initialized then self:RequestScan() end
     end)
 end
+function Queue:ReleaseQuarantineAfter(itemID, delay)
+    if not (C_Timer and C_Timer.After) then return end
+    local token = Addon.runtime.generation
+    C_Timer.After(math.max(1, tonumber(delay) or 15), function()
+        if not Addon.runtime.initialized or token ~= Addon.runtime.generation then return end
+        Addon.runtime.quarantined[itemID] = nil
+        Addon.runtime.failures[itemID] = nil
+        Addon.runtime.warned["quarantine:" .. itemID] = nil
+        self:RequestScan()
+    end)
+end
 function Queue:CancelItem(itemID)
     if Addon.runtime.pending and Addon.runtime.pending.itemID == itemID then Addon.runtime.generation = Addon.runtime.generation + 1; Addon.runtime.pending = nil; Addon.runtime.queueState = "IDLE"; Addon.runtime.pauseReason = nil end
 end
@@ -83,7 +94,10 @@ function Queue:ResolvePending(fromBagEvent)
     if fromBagEvent then return end
     pending.retries = pending.retries + 1; Addon.runtime.failures[pending.itemID] = pending.retries
     if pending.retries >= Addon.LIMITS.maxRetries then
-        Addon.runtime.quarantined[pending.itemID] = true; Addon.runtime.pending = nil; Addon.runtime.queueState = "READY"; Addon.runtime.pauseReason = nil; Addon:NotifyIssue("quarantine:" .. pending.itemID, "物品 #" .. pending.itemID .. " 连续失败，已在本次登录跳过。"); self:RequestScan()
+        local retryDelay = Addon.LIMITS.retryBackoff or 15
+        Addon.runtime.quarantined[pending.itemID] = true; Addon.runtime.pending = nil; Addon.runtime.queueState = "WAITING_READY"; Addon.runtime.pauseReason = "RETRY_BACKOFF"
+        Addon:NotifyIssue("quarantine:" .. pending.itemID, "物品 #" .. pending.itemID .. " 连续失败，将在 " .. tostring(retryDelay) .. " 秒后重试。")
+        self:ReleaseQuarantineAfter(pending.itemID, retryDelay)
     else
         Addon.runtime.pending = nil; Addon.runtime.queueState = "READY"; Addon.runtime.pauseReason = nil; self:RequestScan()
     end

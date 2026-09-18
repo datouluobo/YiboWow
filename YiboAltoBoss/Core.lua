@@ -2883,7 +2883,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
         if YAB.CoreIntegration and YAB.CoreIntegration.Initialize then
             local ok, errorMessage = YAB.CoreIntegration:Initialize()
             if not ok and DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
-                DEFAULT_CHAT_FRAME:AddMessage("|cffff5555YiboAltoBoss Core 接入失败:|r " .. tostring(errorMessage))
+                DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 首领追踪：|cffff5555Core 接入失败：|r " .. tostring(errorMessage))
             end
         end
         -- Settings are hosted exclusively by YiboCore's workbench.  Do not

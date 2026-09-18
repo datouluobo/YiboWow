@@ -1,5 +1,10 @@
 local Core = _G.YiboCore
 local YAB = _G.YAB
+local addonTitle = GetLocale and GetLocale() == "zhCN" and "首领追踪" or "Boss Tracker"
+local addonDescription = GetLocale and GetLocale() == "zhCN"
+    and "首领击杀、位面观测、刷新样本和自定义目标由首领追踪自行保存。"
+    or "Boss kills, phase observations, respawn samples, and custom targets are stored by Boss Tracker."
+local characterRecordLabel = GetLocale and GetLocale() == "zhCN" and "首领追踪角色记录" or "Boss Tracker character records"
 
 -- AltoBoss 的账号视图、预览和可选入口均由 YiboCore 承载；此处只保留业务数据适配。
 local Integration = {}
@@ -76,7 +81,7 @@ local function RegisterCharacterCleanupOwner()
             local keys = GetCleanupLegacyKeys(character, aliases)
             return {
                 hasData = #keys > 0,
-                label = "Boss 周常角色记录",
+                label = characterRecordLabel,
                 detail = #keys > 0 and (tostring(#keys) .. " 组角色缓存") or "无角色缓存",
             }
         end,
@@ -204,7 +209,7 @@ function Integration:Initialize()
     end
     local page, errorMessage = Core.AccountView:RegisterPage("YiboAltoBoss", {
         id = PAGE_ID,
-        title = "Boss 周常",
+        title = addonTitle,
         icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YAB_MinimapIcon",
         order = 30,
         previewEnabled = true,
@@ -231,8 +236,8 @@ function Integration:Initialize()
         SetPreviewFieldVisible = function(fieldID, visible) Integration:SetPreviewFieldVisible(fieldID, visible) end,
         defaultEnabled = true,
         settings = {
-            title = "Boss 周常",
-            description = "Boss 击杀、位面观测、刷新样本和自定义目标由 AltoBoss 自行保存。",
+            title = addonTitle,
+            description = addonDescription,
             CreateSettingsPanel = function(parent, context)
                 if YAB.CreateCoreSettingsPanel then
                     return YAB.CreateCoreSettingsPanel(parent, context)
@@ -256,7 +261,7 @@ function Integration:Initialize()
         legacyIDs = { "YiboAltoBoss" },
         brokerName = "YiboAltoBoss",
         pageID = PAGE_ID,
-        text = "[Yibo] Boss 周常",
+        text = "[Yibo] " .. addonTitle,
         icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YAB_MinimapIcon",
     })
     if not entry and entryError then return nil, entryError end

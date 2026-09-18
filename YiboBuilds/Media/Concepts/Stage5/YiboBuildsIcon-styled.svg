@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <title>YiboBuilds styled icon preview</title>
+  <desc>Styled preview based on the approved multi-character cluster skeleton.</desc>
+  <defs>
+    <linearGradient id="badge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#12363D"/>
+      <stop offset="1" stop-color="#071A20"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#596A6E"/>
+      <stop offset="0.46" stop-color="#1D2B30"/>
+      <stop offset="1" stop-color="#0A1216"/>
+    </linearGradient>
+    <linearGradient id="violet" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A898FF"/>
+      <stop offset="1" stop-color="#51418F"/>
+    </linearGradient>
+    <linearGradient id="hero" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E0FFFA"/>
+      <stop offset="0.48" stop-color="#67EBD8"/>
+      <stop offset="1" stop-color="#20AFA4"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Transparent outside; the filled hexagon is the badge itself. -->
+  <path d="M16 1.6 29 9v14L16 30.4 3 23V9Z"
+        fill="url(#badge)" stroke="url(#metal)" stroke-width="2.4" stroke-linejoin="round"/>
+  <path d="M16 3.8 27 10.1v11.8L16 28.2 5 21.9V10.1Z"
+        fill="none" stroke="#20E0C0" stroke-width="1.4" stroke-linejoin="round"/>
+
+  <!-- Rear character records use the single business accent. -->
+  <circle cx="9.2" cy="11.5" r="2.5" fill="url(#violet)" stroke="#241D42" stroke-width=".7"/>
+  <circle cx="22.8" cy="11.5" r="2.5" fill="url(#violet)" stroke="#241D42" stroke-width=".7"/>
+  <path d="M6.3 21.2 7 17.5c.7-1 1.4-1.5 2.2-1.5s1.5.5 2.2 1.5l.7 3.7Z"
+        fill="url(#violet)" stroke="#241D42" stroke-width=".7" stroke-linejoin="round"/>
+  <path d="M19.9 21.2l.7-3.7c.7-1 1.4-1.5 2.2-1.5s1.5.5 2.2 1.5l.7 3.7Z"
+        fill="url(#violet)" stroke="#241D42" stroke-width=".7" stroke-linejoin="round"/>
+
+  <!-- Central profile uses the Yibo energy color and one large highlight. -->
+  <circle cx="16" cy="9.7" r="4.7" fill="url(#hero)" stroke="#082B31" stroke-width="1.1"/>
+  <path d="M13.4 7.9c1-1.2 2.7-1.7 4.6-1.1" fill="none" stroke="#F2FFFD" stroke-width="1.1" stroke-linecap="round" opacity=".9"/>
+  <path d="M9.2 24.8 10.2 18.3c1.5-2 3.5-3 5.8-3s4.3 1 5.8 3l1 6.5Z"
+        fill="url(#hero)" stroke="#082B31" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M11.8 21.7h8.4" fill="none" stroke="#B7A9FF" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

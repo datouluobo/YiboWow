@@ -384,7 +384,7 @@ function Probe:CaptureEvent(event, ...)
 end
 
 function Probe:Run(verbose, questIDs, resetQuestBaseline, farmCaptureMode)
-    local validation = Addon:ValidateCatalog()
+    local validation = Addon:ValidateCatalog(true)
     local gameHour, gameMinute
     if GetGameTime then gameHour, gameMinute = GetGameTime() end
     local interface = 0

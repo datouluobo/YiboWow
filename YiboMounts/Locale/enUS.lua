@@ -27,7 +27,6 @@ NS.Locale.enUS = {
     DIFFICULTY_25 = "25 Player",
     STANDING_EXALTED = "Exalted",
     LIMITED_TIME = "Limited time",
-    ROTATION_AVAILABILITY = "Rotating availability",
     NO_LONGER_OBTAINABLE = "No longer obtainable",
     ALLIANCE = "Alliance",
     HORDE = "Horde",

@@ -22,6 +22,21 @@ local southwindRecord = NS.Catalog:GetBySpellID(88744)
 local southwindPrimary = NS.SourceFormatter:Format(southwindRecord)
 Expect(southwindPrimary, "Drop: 风神王座 > 奥拉基尔", "instance source omits redundant zone and unrestricted group sizes")
 
+local greyCamelRecord = NS.Catalog:GetBySpellID(88750)
+local greyCamelPrimary, greyCamelSecondary = NS.SourceFormatter:Format(greyCamelRecord)
+Expect(greyCamelPrimary, "Rare Drop: Mysterious Camel Figurine (real) > Feralas: Steam Pools > Dormus the Camel-Hoarder", "grey camel uses its rare-event drop chain")
+Expect(greyCamelSecondary, nil, "grey camel event does not show a vendor price")
+
+local thunderingCloudRecord = NS.Catalog:GetBySpellID(1285725)
+local thunderingCloudPrimary, thunderingCloudSecondary = NS.SourceFormatter:Format(thunderingCloudRecord)
+Expect(thunderingCloudPrimary, "Store: Battle.net Shop", "thundering cloud mount has its Battle.net Shop source")
+Expect(thunderingCloudSecondary, "¥120", "thundering cloud mount shows its shop price")
+
+local inariusRecord = NS.Catalog:GetBySpellID(1272988)
+local inariusPrimary, inariusSecondary = NS.SourceFormatter:Format(inariusRecord)
+Expect(inariusPrimary, "Event: Treasure Goblin Event (July 2025, Diablo crossover)", "Inarius mount has its Treasure Goblin event source")
+Expect(inariusSecondary, "Free (event drop) · Limited time", "ended Treasure Goblin event shows its price and limited-time status")
+
 local invincibleRecord = NS.Catalog:GetBySpellID(72286)
 local invinciblePrimary = NS.SourceFormatter:Format(invincibleRecord)
 Expect(invinciblePrimary, "Drop: 冰冠堡垒25H > 巫妖王", "instance size and difficulty are appended")
@@ -45,8 +60,35 @@ local blackMarketRecord = NS.Catalog:GetBySpellID(127158)
 local blackMarketSources = NS.SourceFormatter:FormatAll(blackMarketRecord)
 Expect(#blackMarketSources, 3, "bag and black-market alternatives format as independent channels")
 Expect(blackMarketSources[1].primary, "Drop: 昆莱山 > 怒之煞", "world boss source remains primary")
-Expect(ContainsPrimary(blackMarketSources, "Auction House: 黑市拍卖行"), true, "auction channel uses its own concise label")
+Expect(blackMarketSources[2].primary, "Container: Celestial Fortune Bag", "direct bag channel precedes the black-market fallback")
+Expect(blackMarketSources[3].primary, "Auction House: 黑市拍卖行", "black-market auction channel is always last")
+Expect(blackMarketSources[3].secondary, nil, "rotation availability is not shown")
 Expect(ContainsPrimary(blackMarketSources, "Container: Celestial Fortune Bag"), true, "bag channel stays independent from the black-market channel")
+
+local auctionPrimaryRecord = {
+    primarySourceID = "auction-source",
+    sources = {
+        {
+            sourceID = "auction-source",
+            type = "auction_house",
+            path = {
+                { kind = "custom", labels = { enUS = "Black Market Auction House", zhCN = "黑市拍卖行" } },
+            },
+            requirements = {},
+        },
+        {
+            sourceID = "direct-source",
+            type = "event",
+            path = {
+                { kind = "event", labels = { enUS = "Treasure Event", zhCN = "秘宝活动" } },
+            },
+            requirements = {},
+        },
+    },
+}
+local auctionPrimarySources = NS.SourceFormatter:FormatAll(auctionPrimaryRecord)
+Expect(auctionPrimarySources[1].primary, "Event: Treasure Event", "direct channels precede an auction primary source")
+Expect(auctionPrimarySources[2].primary, "Auction House: Black Market Auction House", "auction channels remain last regardless of primary source")
 
 local dinosaurEggRecord = NS.Catalog:GetBySpellID(138641)
 local dinosaurEggSources = NS.SourceFormatter:FormatAll(dinosaurEggRecord)

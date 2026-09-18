@@ -173,7 +173,7 @@ local function buildCalibrate(theme, tab)
             YBP:EnsureDebugTransform(id)
             YBP:EnsureDebugRouteNode(id, "start")
             local savedReference = YBP:SaveCurrentReferenceDisplayTransform(id)
-            print(string.format("|cff4fd8ff[YBP调试]|r 已保存宠物 [%d] 的%s调试参数。",
+            print(string.format("|cff20e070[Yibo]|r 隐兽寻踪调试：已保存宠物 [%d] 的%s调试参数。",
                 id, savedReference and "参考层" or "路线与起点"))
         end)
     end, "default")
@@ -244,7 +244,7 @@ local function buildFootprints(theme, tab)
     local group = addGroup(theme, tab, "脚印采集", "记录当前位置；删除与清空只作用于当前宠物。")
     addButton(theme, group, "记录脚印", function()
         local _, message = YBP:CaptureCurrentFootprintForSelectedPet()
-        if message then print("|cff4fd8ff[YBP调试]|r " .. message) end
+        if message then print("|cff20e070[Yibo]|r 隐兽寻踪调试：" .. message) end
     end, "default")
     addButton(theme, group, "影响短", function() visual("footprintInfluenceArc", -0.1, 0.5, 2.5, 1) end)
     addButton(theme, group, "影响长", function() visual("footprintInfluenceArc", 0.1, 0.5, 2.5, 1) end)

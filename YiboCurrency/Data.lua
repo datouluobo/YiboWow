@@ -167,7 +167,10 @@ function Addon:FormatWeeklyProgress(value, entry)
     return #parts > 0 and table.concat(parts, " · ") or nil
 end
 function Addon:GetLimitState(value, entry)
-    if not entry or entry.source ~= "currency" or entry.status ~= "当前可获取" or not value then return nil end
+    -- A holding or weekly cap is meaningful even when a currency is no longer
+    -- obtainable.  For example, MoP Classic still exposes 正义点数的 4,000
+    -- holding cap although the catalog labels it as a legacy balance.
+    if not entry or entry.source ~= "currency" or not value then return nil end
     local ratio = 0
     local weeklyCap, weekly = tonumber(value.maxWeeklyQuantity), tonumber(value.weeklyQuantity)
     if weeklyCap and weeklyCap > 0 and weekly then ratio = math.max(ratio, weekly / weeklyCap) end
@@ -176,6 +179,10 @@ function Addon:GetLimitState(value, entry)
     if ratio >= 1 then return "capped" end
     if ratio >= 0.8 then return "near-cap" end
     return nil
+end
+function Addon:FormatLimitCell(value, state, entry, formatter)
+    local text, kind = formatter(self, value, state, entry)
+    return text, kind
 end
 function Addon:FormatFull(value, entry)
     local quantity = entry and entry.source == "item" and (value.total or value.carried or value.quantity) or value and value.quantity

@@ -43,3 +43,5 @@ phosphorescent-stone-drake,ids.spellIDs[0],https://www.wowhead.com/mop-classic/i
 tamed-seahorse,ids.spellIDs[0],https://www.wowhead.com/mop-classic/item=67151,spell,2026-09-09,5.5.4,,candidate,Source path queued for final verification.
 flametalon-of-alysrazor,ids.spellIDs[0],https://www.wowhead.com/mop-classic/item=71665,spell,2026-09-09,5.5.4,,candidate,Source path queued for final verification.
 fact-387323,sources[china-classic-distribution-387323],https://wow.blizzard.cn/h5/20260129/teamup/,official-event,2026-09-11,5.5.4,,verified,2026 Landro Golden Gift Box included X-51 Nether-Rocket for Mists Classic.
+scarlet-lady,ids.spellIDs[0],https://warcraft.wiki.gg/wiki/Crimson_Tide_Treasure,spell,2026-09-17,5.5.4,,verified,MoP Classic reward listing identifies Scarlet Lady as spellID 1267077.
+scarlet-lady,sources[crimson-tide-treasure-1267077],https://wow.blizzard.cn/h5/20260423/lucky/#/,official-event,2026-09-17,5.5.4,,verified,China-only Crimson Tide Treasure campaign ran from 2026-04-23 through 2026-05-23 and offered Scarlet Lady for MoP Classic.

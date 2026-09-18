@@ -591,7 +591,7 @@ function YAB.InitializeSettings()
 
     local title = CreateText(SettingsFrame, 14, "LEFT")
     title:SetPoint("TOPLEFT", SettingsFrame, "TOPLEFT", 14, -12)
-    title:SetText("YiboAltoBoss 设置")
+    title:SetText((GetLocale and GetLocale() == "zhCN") and "首领追踪设置" or "Boss Tracker Settings")
     title:SetTextColor(TITLE_COLOR[1], TITLE_COLOR[2], TITLE_COLOR[3])
 
     local headerHint = CreateText(SettingsFrame, 11, "RIGHT")

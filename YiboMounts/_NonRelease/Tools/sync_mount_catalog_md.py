@@ -105,12 +105,15 @@ def label(node):
 def ordered_active_sources(mount):
     sources = [source for source in mount.get("sources", []) if source.get("active", True)]
     primary_id = mount.get("primarySourceID")
-    primary = next((source for source in sources if source.get("sourceID") == primary_id), None)
-    alternatives = sorted(
-        (source for source in sources if source is not primary),
-        key=lambda source: (-int(source.get("priority") or 0), str(source.get("sourceID") or "")),
+    return sorted(
+        sources,
+        key=lambda source: (
+            source.get("type") == "auction_house",
+            source.get("sourceID") != primary_id,
+            -int(source.get("priority") or 0),
+            str(source.get("sourceID") or ""),
+        ),
     )
-    return ([primary] if primary else []) + alternatives
 
 
 def tooltip_preview(source):
@@ -214,14 +217,14 @@ def export(catalog_path, inventory_path, document_path):
         "",
         "Tooltip 只回答“去哪里、找谁、需要什么”。表格中的“备注”是核验资料，**永不直接显示给玩家**；如确有无法结构化的必要条件，应在 JSON 的 `requirements.tooltipNote` 中单独维护不超过 24 个字符的短说明。`待核实` 类型不进入 Tooltip。",
         "",
-        "人工抽查时统一验证：第一行使用“来源类型｜地点 › 目标”的路径层级；第二行仅使用“ · ”连接难度、声望、价格、短说明和可用性；普通商人不重复显示阵营归属或“坐骑商人”等泛称；绝版、限时和轮换状态使用统一短文案；任意维护备注、证据说明、版本沿革和公告解释均不得出现。",
+        "人工抽查时统一验证：第一行使用“来源类型｜地点 › 目标”的路径层级；第二行仅使用“ · ”连接难度、声望、价格、短说明和可用性；普通商人不重复显示阵营归属或“坐骑商人”等泛称；仅绝版和限时状态使用统一短文案；任意维护备注、证据说明、版本沿革和公告解释均不得出现。",
         "",
         "| 场景 | 预期第一行 | 预期第二行 |",
         "| --- | --- | --- |",
         "| 首领掉落 | 掉落｜副本 › 首领 | 仅在确有难度条件时显示 |",
         "| 普通商人 | 商人｜地点 › NPC | 价格；没有条件则不显示 |",
         "| 声望商人 | 声望｜阵营 › 地点 › NPC | 崇拜 · 价格 |",
-        "| 活动/推广 | 活动或推广｜活动名称 | 限时获取 / 轮换开放 / 当前已无法获取 |",
+        "| 活动/推广 | 活动或推广｜活动名称 | 限时获取 / 当前已无法获取 |",
         "| 待核实 | 不追加 YiboMounts 内容 | 不追加 YiboMounts 内容 |",
         "",
         *multi_source_lines,

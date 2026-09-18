@@ -2,7 +2,7 @@ local YAB = _G.YAB
 
 local function Print(message)
     if DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
-        DEFAULT_CHAT_FRAME:AddMessage("|cffFFD84AYiboAltoBoss:|r " .. tostring(message))
+        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 首领追踪：" .. tostring(message))
     end
 end
 

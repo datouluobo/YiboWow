@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <title>YiboBuilds cluster badge skeleton</title>
+  <desc>Pixel-aware 32px vector skeleton for a multi-character profile badge.</desc>
+
+  <!-- Transparent canvas. Shared Yibo frame: 2.4px outer edge, 1.4px inner edge. -->
+  <path d="M16 1.6 29 9v14L16 30.4 3 23V9Z"
+        fill="none" stroke="#344248" stroke-width="2.4" stroke-linejoin="round"/>
+  <path d="M16 3.8 27 10.1v11.8L16 28.2 5 21.9V10.1Z"
+        fill="none" stroke="#96A5A8" stroke-width="1.4" stroke-linejoin="round"/>
+
+  <!-- Two rear profiles remain visibly separate at 24px. -->
+  <circle cx="9.2" cy="11.5" r="2.5" fill="#96A5A8"/>
+  <circle cx="22.8" cy="11.5" r="2.5" fill="#96A5A8"/>
+  <path d="M6.3 21.2 7 17.5c.7-1 1.4-1.5 2.2-1.5s1.5.5 2.2 1.5l.7 3.7Z" fill="#96A5A8"/>
+  <path d="M19.9 21.2l.7-3.7c.7-1 1.4-1.5 2.2-1.5s1.5.5 2.2 1.5l.7 3.7Z" fill="#96A5A8"/>
+
+  <!-- Central character profile is the primary focal block. -->
+  <circle cx="16" cy="9.7" r="4.7" fill="#F2F5F4"/>
+
+  <!-- The central body and status rail gather the cluster into one badge. -->
+  <path d="M9.2 24.8 10.2 18.3c1.5-2 3.5-3 5.8-3s4.3 1 5.8 3l1 6.5Z"
+        fill="#F2F5F4" stroke="#344248" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M11.8 21.7h8.4" fill="none" stroke="#344248" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

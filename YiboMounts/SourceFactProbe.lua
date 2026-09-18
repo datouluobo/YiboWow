@@ -2,9 +2,21 @@ local _, NS = ...
 
 NS.SourceFactProbe = {}
 
-local function NPCName(id)
-    local tooltip = CreateFrame("GameTooltip", "YiboMountsNameProbe", UIParent, "GameTooltipTemplate")
+local npcTooltip
+local questTooltip
+
+local function GetProbeTooltip(kind)
+    local cache = kind == "npc" and "npcTooltip" or "questTooltip"
+    local tooltip = cache == "npcTooltip" and npcTooltip or questTooltip
+    if tooltip then return tooltip end
+    tooltip = CreateFrame("GameTooltip", nil, UIParent, "GameTooltipTemplate")
     tooltip:SetOwner(UIParent, "ANCHOR_NONE")
+    if cache == "npcTooltip" then npcTooltip = tooltip else questTooltip = tooltip end
+    return tooltip
+end
+
+local function NPCName(id)
+    local tooltip = GetProbeTooltip("npc")
     tooltip:SetHyperlink(("unit:Creature-0-0-0-0-%d-0000000000"):format(id))
     local name = _G[tooltip:GetName() .. "TextLeft1"]
     local value = name and name:GetText() or nil
@@ -29,8 +41,7 @@ local function QuestName(id)
         local title = C_QuestLog.GetTitleForQuestID(id)
         if title then return title end
     end
-    local tooltip = CreateFrame("GameTooltip", "YiboMountsQuestProbe", UIParent, "GameTooltipTemplate")
-    tooltip:SetOwner(UIParent, "ANCHOR_NONE")
+    local tooltip = GetProbeTooltip("quest")
     tooltip:SetHyperlink("quest:" .. tostring(id))
     local name = _G[tooltip:GetName() .. "TextLeft1"]
     local value = name and name:GetText() or nil

@@ -29,7 +29,7 @@ local function PrintUnavailable(reason)
     reason = reason or unavailableReason or "路线维护功能当前不可用。"
     if notifiedReasons[reason] then return end
     notifiedReasons[reason] = true
-    print("|cffffcc00[YiboBeastPaths]|r " .. reason)
+    print("|cff20e070[Yibo]|r 隐兽寻踪：" .. reason)
 end
 
 local function RefreshCorePage()

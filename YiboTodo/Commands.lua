@@ -49,7 +49,7 @@ SlashCmdList.YIBOTODO = function(input)
         for _, action in ipairs(actions) do
             Addon:Print(string.format("%s：状态=%s；法术=%s（ID=%s）；专业=%s；专业已载入=%s；左键=%s；左键宏=%s；右键宏=%s；受保护=%s。", tostring(action.label), tostring(action.state), tostring(action.spellName), tostring(action.spellID), tostring(action.professionName), tostring(action.professionLoaded), tostring(action.type1), tostring(action.macrotext1), tostring(action.macrotext2), tostring(action.protected)))
         end
-    elseif input == "validate" then local result = Addon:ValidateCatalog(); Addon:Print(string.format("目录校验：%d 错误，%d 候选提示。", #result.errors, #result.warnings))
+    elseif input == "validate" then local result = Addon:ValidateCatalog(true); Addon:Print(string.format("目录校验：%d 错误，%d 候选提示。", #result.errors, #result.warnings))
     elseif input == "status" then
         local capture = Addon.Probe and Addon.Probe.specialCapture
         Addon:Print(capture and string.format("专项探针进行中：%s，已有 %d 个快照、%d 条关键事件。", capture.label or capture.kind, #(capture.snapshots or {}), #(capture.eventTrace or {})) or "当前没有进行中的专项探针。")

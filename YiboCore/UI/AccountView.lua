@@ -791,7 +791,11 @@ function AccountView:SetPageScope(pageID, scopeID)
         -- Scope can materially change the number of matrix columns.  Reopen
         -- the same preview against its original anchor so both dimensions and
         -- edge clamping are recomputed before the page is rendered again.
-        self:ShowPreview(pageID, self.previewAnchor)
+        -- A scope selection changes the preview's data set even when its
+        -- page and entry anchor are unchanged.  Force a rebuild; otherwise
+        -- ShowPreview's same-page fast path returns before the new range is
+        -- rendered.
+        self:ShowPreview(pageID, self.previewAnchor, true)
     elseif self.activePageID == pageID then
         -- Auto-sized main pages should follow the selected realm's matrix
         -- width.  ApplyPageSize still preserves a user's manual page size.
@@ -1530,7 +1534,7 @@ function AccountView:TrackPreviewControls(root)
     Visit(root)
 end
 
-function AccountView:ShowPreview(pageID, anchor)
+function AccountView:ShowPreview(pageID, anchor, forceRefresh)
     local page = self._pages[pageID] or self:GetPreviewPage()
     local frame = self:CreateFrame()
     local allowWhileMainWindowOpen = Settings().entry.showPreviewWhileMainWindowOpen == true
@@ -1543,7 +1547,7 @@ function AccountView:ShowPreview(pageID, anchor)
 
     local fields = type(page.GetPreviewFields) == "function" and page.GetPreviewFields() or page.previewFields
     local anchorFrame = anchor and type(anchor.GetLeft) == "function" and anchor or nil
-    if frame:IsShown() and frame.preview and self.previewPageID == page.id and self.previewAnchor == anchorFrame then
+    if not forceRefresh and frame:IsShown() and frame.preview and self.previewPageID == page.id and self.previewAnchor == anchorFrame then
         return true
     end
     local context = self:BuildContext(page, { preview = true, fieldOverrides = fields })

@@ -7,6 +7,7 @@ local specs = {
     "MigrationSpec.lua",
     "NoContainerSafetySpec.lua",
     "QueueScanIsolationSpec.lua",
+    "RetryBackoffSpec.lua",
     "QueueSpec.lua",
     "StartupLifecycleSpec.lua",
 }

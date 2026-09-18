@@ -31,22 +31,29 @@ end
 function NS.Catalog:GetTooltipSources(record)
     if type(record) ~= "table" then return {} end
 
-    local primary = self:GetPrimarySource(record)
-    local alternatives = {}
+    local sources = {}
     for _, source in ipairs(record.sources or {}) do
-        if source ~= primary and source.active ~= false then
-            table.insert(alternatives, source)
+        if source.active ~= false then
+            table.insert(sources, source)
         end
     end
-    table.sort(alternatives, function(left, right)
+
+    -- Auction listings, particularly the Black Market Auction House, are
+    -- fallback acquisition channels.  Keep them after direct routes even when
+    -- a catalogue record happens to name one as its primary maintenance source.
+    table.sort(sources, function(left, right)
+        local leftIsAuction = left.type == "auction_house"
+        local rightIsAuction = right.type == "auction_house"
+        if leftIsAuction ~= rightIsAuction then return not leftIsAuction end
+
+        local leftIsPrimary = left.sourceID == record.primarySourceID
+        local rightIsPrimary = right.sourceID == record.primarySourceID
+        if leftIsPrimary ~= rightIsPrimary then return leftIsPrimary end
+
         local leftPriority = tonumber(left.priority) or 0
         local rightPriority = tonumber(right.priority) or 0
         if leftPriority ~= rightPriority then return leftPriority > rightPriority end
         return tostring(left.sourceID or "") < tostring(right.sourceID or "")
     end)
-
-    local ordered = {}
-    if primary and primary.active ~= false then table.insert(ordered, primary) end
-    for _, source in ipairs(alternatives) do table.insert(ordered, source) end
-    return ordered
+    return sources
 end

@@ -388,7 +388,7 @@ local function ConfigureScroll(frame, top, tableWidth, contentHeight, inset)
     scroll:ClearAllPoints()
     scroll:SetPoint("TOPLEFT", top, "BOTTOMLEFT", 0, -ROW_GAP)
     scroll:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -inset.right, inset.bottom)
-    -- Match the Boss weekly matrix: the scroll viewport owns the available
+    -- Match the Boss Tracker matrix: the scroll viewport owns the available
     -- page space, while the child owns only actual table content width.
     -- The shared scroll frame then decides whether a thumb is necessary.
     frame.body:SetSize(tableWidth, math.max(1, contentHeight))

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "catalogVersion": "0.6",
+  "catalogVersion": "0.10",
   "target": {
     "flavor": "MISTS_CLASSIC",
     "gameVersion": "5.5.4",
@@ -23287,7 +23287,7 @@
     },
     {
       "mountKey": "provisional-88750",
-      "status": "candidate",
+      "status": "verified",
       "ids": {
         "spellIDs": [
           88750
@@ -23312,10 +23312,10 @@
       "sources": [
         {
           "sourceID": "manual-source-88750",
-          "type": "vendor",
+          "type": "rare_drop",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "obtainable",
           "path": [
             {
               "kind": "zone",
@@ -23329,8 +23329,24 @@
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "神秘的骆驼雕像",
+                "enUS": "Mysterious Camel Figurine (real)",
                 "zhCN": "神秘的骆驼雕像"
+              }
+            },
+            {
+              "kind": "zone",
+              "refID": null,
+              "labels": {
+                "enUS": "Feralas: Steam Pools",
+                "zhCN": "菲拉斯·蒸汽之地"
+              }
+            },
+            {
+              "kind": "npc",
+              "refID": null,
+              "labels": {
+                "enUS": "Dormus the Camel-Hoarder",
+                "zhCN": "骆驼驭手多尔穆斯"
               }
             }
           ],
@@ -23339,8 +23355,8 @@
             "reputation": null,
             "costs": [],
             "price": {
-              "enUS": "骆驼雕像事件奖励",
-              "zhCN": "骆驼雕像事件奖励"
+              "enUS": null,
+              "zhCN": null
             },
             "questID": null,
             "achievementID": null,
@@ -23348,7 +23364,7 @@
             "tooltipNote": null,
             "notes": {
               "enUS": null,
-              "zhCN": null
+              "zhCN": "点到真的雕像后传送，击杀多尔穆斯必定掉落。"
             }
           }
         }
@@ -38758,8 +38774,8 @@
       ]
     },
     {
-      "mountKey": "fact-1267077",
-      "status": "candidate",
+      "mountKey": "scarlet-lady",
+      "status": "verified",
       "ids": {
         "spellIDs": [
           1267077
@@ -38770,7 +38786,7 @@
       "identity": {
         "iconFileID": 7479079,
         "names": {
-          "enUS": "Mount 1267077",
+          "enUS": "Scarlet Lady",
           "zhCN": "绯红女爵"
         }
       },
@@ -38778,21 +38794,21 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "manual-source-1267077",
+      "primarySourceID": "crimson-tide-treasure-1267077",
       "sources": [
         {
-          "sourceID": "manual-source-1267077",
-          "type": "research",
+          "sourceID": "crimson-tide-treasure-1267077",
+          "type": "event",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "limited_time",
           "path": [
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "来源待补全",
-                "zhCN": "来源待补全"
+                "enUS": "Crimson Tide Treasure",
+                "zhCN": "猩红之潮秘宝"
               }
             }
           ],
@@ -38806,11 +38822,11 @@
             },
             "questID": null,
             "achievementID": null,
-            "eventKey": null,
+            "eventKey": "crimson-tide-treasure-2026",
             "tooltipNote": null,
             "notes": {
-              "enUS": null,
-              "zhCN": null
+              "enUS": "China-only limited campaign, April 23–May 23, 2026; the event has ended.",
+              "zhCN": "国服限时活动，2026年4月23日至5月23日；活动已结束。"
             }
           }
         }
@@ -38818,7 +38834,7 @@
     },
     {
       "mountKey": "fact-1272988",
-      "status": "candidate",
+      "status": "verified",
       "ids": {
         "spellIDs": [
           1272988
@@ -38841,17 +38857,17 @@
       "sources": [
         {
           "sourceID": "manual-source-1272988",
-          "type": "research",
+          "type": "event",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "limited_time",
           "path": [
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "来源待补全",
-                "zhCN": "来源待补全"
+                "enUS": "Treasure Goblin Event (July 2025, Diablo crossover)",
+                "zhCN": "财宝地精活动（2025-07，暗黑破坏神联动）"
               }
             }
           ],
@@ -38860,16 +38876,16 @@
             "reputation": null,
             "costs": [],
             "price": {
-              "enUS": null,
-              "zhCN": null
+              "enUS": "Free (event drop)",
+              "zhCN": "免费（活动掉落）"
             },
             "questID": null,
             "achievementID": null,
             "eventKey": null,
             "tooltipNote": null,
             "notes": {
-              "enUS": null,
-              "zhCN": null
+              "enUS": "Ended; awaiting a rerun.",
+              "zhCN": "活动已结束，等待返场。"
             }
           }
         }
@@ -39222,7 +39238,7 @@
     },
     {
       "mountKey": "fact-1285725",
-      "status": "candidate",
+      "status": "verified",
       "ids": {
         "spellIDs": [
           1285725
@@ -39245,17 +39261,17 @@
       "sources": [
         {
           "sourceID": "manual-source-1285725",
-          "type": "research",
+          "type": "store",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "obtainable",
           "path": [
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "来源待补全",
-                "zhCN": "来源待补全"
+                "enUS": "Battle.net Shop",
+                "zhCN": "战网商城"
               }
             }
           ],
@@ -39264,16 +39280,16 @@
             "reputation": null,
             "costs": [],
             "price": {
-              "enUS": null,
-              "zhCN": null
+              "enUS": "¥120",
+              "zhCN": "120元"
             },
             "questID": null,
             "achievementID": null,
             "eventKey": null,
             "tooltipNote": null,
             "notes": {
-              "enUS": null,
-              "zhCN": null
+              "enUS": "Direct Battle.net Shop sale.",
+              "zhCN": "战网商城直售。"
             }
           }
         }

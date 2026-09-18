@@ -145,6 +145,20 @@ local function GetOverlayParent()
     return WorldMapFrame
 end
 
+-- This signature contains only state that can change without a route-setting
+-- action.  It lets the WorldMap OnUpdate hook cheaply notice a map switch or
+-- resize without rebuilding the vector layers every frame.
+function YBP:GetMapLayerRenderSignature()
+    local parent = GetOverlayParent()
+    return table.concat({
+        tostring(self:GetCurrentWorldMapID() or ""),
+        tostring(parent),
+        tostring(parent and parent:GetWidth() or 0),
+        tostring(parent and parent:GetHeight() or 0),
+        tostring(self.db and self.db.visible == true),
+    }, ":")
+end
+
 local function EnsureOverlayFrame(petID, parent)
     local frame = overlayFrames[petID]
     if frame and frame:GetParent() ~= parent then
@@ -1180,6 +1194,7 @@ function YBP:ApplyOverlayTransform(frame, mapBounds, transform)
 end
 
 function YBP:RefreshMapLayer()
+    self.mapLayerRenderSignature = self:GetMapLayerRenderSignature()
     HideAllOverlays()
 
     if not self.db or not self.db.visible then

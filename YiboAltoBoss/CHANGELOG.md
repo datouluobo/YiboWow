@@ -7,7 +7,7 @@
 - 新增节日 Boss 目录；美酒节开放期间自动显示科林·烈酒，后续节日目标可按同一目录扩展。
 - 节日 Boss 状态按服务器日追踪，支持每日任务、副本完成奖励和明确标注的人工标记。
 - 行动格可直接排入或取消节日副本队列，并显示客户端返回的不可排原因；“位面 / 职责”格显示当前已选职责。
-- 新增 Boss 周常业务设置“节日 Boss”，默认开启且可持久关闭。
+- 新增首领追踪业务设置“节日 Boss”，默认开启且可持久关闭。
 - Todo 不再维护节日 Boss 专属目录、矩阵列和探针，保留通用特殊活动与暗月马戏团逻辑。
 
 ### English
@@ -15,7 +15,7 @@
 - Added a seasonal-Boss catalog. Coren Direbrew appears automatically during Brewfest, and future holiday targets can use the same catalog.
 - Seasonal completion is tracked per server day from daily quests, LFG completion rewards, and explicitly labeled manual marks.
 - The Action field can join or leave the seasonal queue and reports client-provided eligibility failures; the “Phase / Role” field shows the selected LFG roles.
-- Added a persistent, default-on “Holiday Boss” option in Boss Weekly settings.
+- Added a persistent, default-on “Holiday Boss” option in Boss Tracker settings.
 - Todo no longer owns seasonal-Boss-specific catalog, matrix, or probe behavior while retaining its shared special-activity and Darkmoon Faire support.
 
 ## v2.3
@@ -36,15 +36,15 @@
 
 ### 中文
 
-- Boss 周常的 Broker 与小地图悬停预览现在由 YiboCore 统一处理自动关闭。
+- 首领追踪的 Broker 与小地图悬停预览现在由 YiboCore 统一处理自动关闭。
 - 修复复杂 Boss 矩阵的滚动单元格可能让鼠标离开预览后仍被误判为停留在窗口内的问题。
-- 右键业务入口可直接进入 Boss 周常设置页，避免偶发的空白设置内容。
+- 右键业务入口可直接进入首领追踪设置页，避免偶发的空白设置内容。
 
 ### English
 
-- Boss Weekly Broker and minimap previews now use YiboCore's unified automatic-close behavior.
+- Boss Tracker Broker and minimap previews now use YiboCore's unified automatic-close behavior.
 - Fixed interactive Boss matrix cells being able to misreport the cursor as still inside a preview after it had visibly left.
-- Right-clicking a business entry now opens Boss Weekly settings directly, avoiding occasional blank settings content.
+- Right-clicking a business entry now opens Boss Tracker settings directly, avoiding occasional blank settings content.
 
 ## v2.2
 

@@ -3,5 +3,6 @@ dofile("YiboAutoOpen/Defaults.lua")
 
 assert(YiboAutoOpen.LIMITS.maxRetries == 2)
 assert(YiboAutoOpen.LIMITS.operationTimeout > 0)
+assert(YiboAutoOpen.LIMITS.retryBackoff > 0)
 
 print("Queue limits spec passed")

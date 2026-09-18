@@ -16,7 +16,5 @@ Catalog.lua
 SourceFormatter.lua
 Probe.lua
 InventoryProbe.lua
-Data\SourceFacts.generated.lua
-SourceFactProbe.lua
 Tooltip.lua
 Bootstrap.lua

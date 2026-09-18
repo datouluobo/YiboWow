@@ -23,7 +23,7 @@ local minimapState = {
 
 local MINIMAP_ROUTE_CLIP_RADIUS = 0.995
 local MINIMAP_ROUTE_LINE_THICKNESS = 3
-local MINIMAP_ROUTE_SEGMENT_STEP_PX = 1
+local MINIMAP_ROUTE_SEGMENT_STEP_PX = 2
 local MINIMAP_ROUTE_SEGMENT_OVERLAP_PX = 2
 local MINIMAP_ROUTE_EDGE_PADDING_PX = 3
 local MINIMAP_ROUTE_SCREEN_SMOOTH_PASSES = 2
@@ -674,7 +674,7 @@ function YBP:InitializeMinimapRenderer()
     end)
     minimapState.updateFrame:SetScript("OnUpdate", function(_, elapsed)
         minimapState.updateFrame.elapsed = minimapState.updateFrame.elapsed + elapsed
-        if minimapState.updateFrame.elapsed < 0.05 then
+        if minimapState.updateFrame.elapsed < 0.15 then
             return
         end
 
@@ -696,7 +696,7 @@ end
 function YBP:GetMinimapDebugReport()
     local stats = minimapState.debugStats or {}
     local lines = {
-        "|cff4fd8ff[YiboBeastPaths Minimap]|r",
+        "|cff20e070[Yibo]|r 隐兽寻踪：小地图诊断",
         string.format("initialized=%s visible=%s cacheBuilt=%s", tostring(minimapState.initialized or false), tostring(self.db and self.db.visible or false), tostring(minimapState.cacheBuilt or false)),
         string.format("hasHBD=%s hasMinimap=%s", tostring(HBD ~= nil), tostring(Minimap ~= nil)),
         string.format("currentMapID=%s activeRouteMapID=%s instanceID=%s radius=%s", tostring(stats.currentMapID), tostring(stats.activeRouteMapID), tostring(stats.instanceID), tostring(stats.radius)),

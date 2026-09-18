@@ -84,7 +84,7 @@ local function AddDiagnostic(kind, event, detail)
     while #items > DIAGNOSTIC_LIMIT do table.remove(items, 1) end
     root.meta.diagnosticsDirty = true
     if root.meta and root.meta.traceEnabled and DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
-        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo] 采样|r " .. tostring(kind)
+        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 首领追踪采样：" .. tostring(kind)
             .. " " .. tostring(event and event.bossKey or "-")
             .. " P" .. tostring(event and event.phaseId or "?")
             .. (detail and (" · " .. tostring(detail)) or ""))

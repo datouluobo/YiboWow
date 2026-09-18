@@ -5,7 +5,14 @@ local function Add(result, level, code)
     result[level][#result[level] + 1] = code
 end
 
-function Addon:ValidateCatalog()
+function Addon:ValidateCatalog(force)
+    -- The catalog is assembled during addon loading and stays immutable while
+    -- the client is running.  Reuse its validation result on hot paths such as
+    -- profession-window events; callers performing an explicit diagnostic can
+    -- still request a fresh pass.
+    if not force and self.catalogValidation then
+        return self.catalogValidation
+    end
     local result, spells = { errors = {}, warnings = {}, activeRecipes = {} }, {}
     local rules = Catalog.rulesets[self.RULESET_ID]
     for id, group in pairs(Catalog.groups) do

@@ -1868,9 +1868,9 @@ local function GetOrCreatePanel(parent)
             YBP:EnsureDebugRouteNode(petID, "start")
             local savedReference = YBP:SaveCurrentReferenceDisplayTransform(petID)
             if savedReference then
-                print(string.format("|cff4fd8ff[YBP调试]|r 已保存宠物 [%d] 的参考层参数，并回退主路线临时变换。", petID))
+                print(string.format("|cff20e070[Yibo]|r 隐兽寻踪调试：已保存宠物 [%d] 的参考层参数，并回退主路线临时变换。", petID))
             else
-                print(string.format("|cff4fd8ff[YBP调试]|r 已保存宠物 [%d] 的路线与起点调试参数。", petID))
+                print(string.format("|cff20e070[Yibo]|r 隐兽寻踪调试：已保存宠物 [%d] 的路线与起点调试参数。", petID))
             end
         end
     end)
@@ -1897,7 +1897,7 @@ local function GetOrCreatePanel(parent)
     panelElements.btnCaptureFootprint:SetScript("OnClick", function()
         local ok, message = YBP:CaptureCurrentFootprintForSelectedPet()
         if message then
-            print(string.format("|cff4fd8ff[YBP调试]|r %s", message))
+            print(string.format("|cff20e070[Yibo]|r 隐兽寻踪调试：%s", message))
         end
         if ok then
             YBP:RefreshDebugPanel()

@@ -29,7 +29,7 @@ end
 
 function Core:Print(message)
     if DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
-        DEFAULT_CHAT_FRAME:AddMessage("|cff4fd8ff[YiboCore]|r " .. tostring(message))
+        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 核心：" .. tostring(message))
     end
 end
 

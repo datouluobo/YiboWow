@@ -26,7 +26,7 @@ function Addon:EnsureDB()
     return YiboCurrencyDB
 end
 function Addon:GetSettings() return self:EnsureDB().settings end
-function Addon:Print(message) if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo] 货币管家:|r " .. tostring(message)) end end
+function Addon:Print(message) if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 货币管家：" .. tostring(message)) end end
 
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED"); frame:RegisterEvent("PLAYER_LOGIN")

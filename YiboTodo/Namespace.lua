@@ -22,7 +22,7 @@ end
 
 function Addon:Print(message)
     if DEFAULT_CHAT_FRAME then
-        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[YiboTodo]|r " .. tostring(message))
+        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 账号待办：" .. tostring(message))
     end
 end
 
