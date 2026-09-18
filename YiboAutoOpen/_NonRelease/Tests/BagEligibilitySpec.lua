@@ -1,13 +1,14 @@
 local locked = true
 local cooldownStart, cooldownDuration = 0, 0
+local itemID = 90735
 
 GetTime = function() return 10 end
 C_Container = {
     GetContainerNumSlots = function(bag) return bag == 0 and 1 or 0 end,
-    GetContainerItemInfo = function() return { itemID = 90735, isLocked = locked, stackCount = 1 } end,
+    GetContainerItemInfo = function() return { itemID = itemID, isLocked = locked, stackCount = 1 } end,
     GetContainerItemCooldown = function() return cooldownStart, cooldownDuration, 1 end,
 }
-YiboAutoOpen = {}
+YiboAutoOpen = { Catalog = { manualOnly = { [52340] = true } } }
 
 dofile("YiboAutoOpen/BagAdapter.lua")
 
@@ -23,5 +24,10 @@ assert(not item and retryAfter > 1 and retryAfter < 1.1, "an item on cooldown sh
 cooldownStart, cooldownDuration = 0, 0
 bag, slot, item, retryAfter = YiboAutoOpen.BagAdapter:FindNextEligible(entries, quarantined)
 assert(bag == 0 and slot == 1 and item.itemID == 90735 and retryAfter == nil, "a ready catalog item should be returned")
+
+itemID = 52340
+entries[52340] = true
+bag, slot, item, retryAfter = YiboAutoOpen.BagAdapter:FindNextEligible(entries, quarantined)
+assert(not item and retryAfter == nil, "Abyssal Clam must be skipped because its use action is protected")
 
 print("Bag eligibility spec passed")

@@ -38,9 +38,13 @@ function Queue:ReleaseQuarantineAfter(itemID, delay)
     end)
 end
 function Queue:CancelItem(itemID)
-    if Addon.runtime.pending and Addon.runtime.pending.itemID == itemID then Addon.runtime.generation = Addon.runtime.generation + 1; Addon.runtime.pending = nil; Addon.runtime.queueState = "IDLE"; Addon.runtime.pauseReason = nil end
+    if Addon.runtime.pending and Addon.runtime.pending.itemID == itemID then
+        if Addon.BindConfirmAssist then Addon.BindConfirmAssist:Disarm(Addon.runtime.pending) end
+        Addon.runtime.generation = Addon.runtime.generation + 1; Addon.runtime.pending = nil; Addon.runtime.queueState = "IDLE"; Addon.runtime.pauseReason = nil
+    end
 end
 function Queue:Clear()
+    if Addon.runtime.pending and Addon.BindConfirmAssist then Addon.BindConfirmAssist:Disarm(Addon.runtime.pending) end
     Addon.runtime.generation = Addon.runtime.generation + 1
     Addon.runtime.deferredScanGeneration = (Addon.runtime.deferredScanGeneration or 0) + 1
     Addon.runtime.pending = nil; Addon.runtime.scanQueued = nil; Addon.runtime.queueState = "IDLE"; Addon.runtime.pauseReason = nil
@@ -76,9 +80,15 @@ function Queue:ProcessNext()
     end
     Addon.runtime.queueState = "USING"
     local pending = { itemID = item.itemID, bag = bag, slot = slot, before = Addon.BagAdapter:GetTotalItemCount(item.itemID), retries = Addon.runtime.failures[item.itemID] or 0, startedAt = GetTime and GetTime() or 0, token = Addon.runtime.generation }
-    Addon.runtime.pending = pending; Addon.BagAdapter:UseItem(bag, slot); Addon.runtime.queueState = "WAITING_RESULT"
+    Addon.runtime.pending = pending
+    if Addon.BindConfirmAssist then Addon.BindConfirmAssist:Arm(pending) end
+    Addon.BagAdapter:UseItem(bag, slot); Addon.runtime.queueState = "WAITING_RESULT"
     local function Timeout()
         if Addon.runtime.pending ~= pending or pending.token ~= Addon.runtime.generation then return end
+        if pending.awaitingBindConfirmation then
+            if C_Timer and C_Timer.After then C_Timer.After(Addon.LIMITS.operationTimeout, Timeout) end
+            return
+        end
         self:ResolvePending(false)
     end
     if C_Timer and C_Timer.After then C_Timer.After(Addon.LIMITS.operationTimeout, Timeout) end
@@ -86,19 +96,23 @@ end
 function Queue:ResolvePending(fromBagEvent)
     local pending = Addon.runtime.pending; if not pending then return end
     if pending.token ~= Addon.runtime.generation then
+        if Addon.BindConfirmAssist then Addon.BindConfirmAssist:Disarm(pending) end
         Addon.runtime.pending = nil; Addon.runtime.queueState = "READY"; Addon.runtime.pauseReason = nil; self:RequestScan(); return
     end
     if Addon.BagAdapter:GetTotalItemCount(pending.itemID) < pending.before then
+        if Addon.BindConfirmAssist then Addon.BindConfirmAssist:AwaitPossibleBind(pending) end
         Addon.runtime.failures[pending.itemID] = nil; Addon.runtime.pending = nil; Addon.runtime.queueState = "READY"; Addon.runtime.pauseReason = nil; self:RequestScan(); return
     end
     if fromBagEvent then return end
     pending.retries = pending.retries + 1; Addon.runtime.failures[pending.itemID] = pending.retries
     if pending.retries >= Addon.LIMITS.maxRetries then
         local retryDelay = Addon.LIMITS.retryBackoff or 15
+        if Addon.BindConfirmAssist then Addon.BindConfirmAssist:Disarm(pending) end
         Addon.runtime.quarantined[pending.itemID] = true; Addon.runtime.pending = nil; Addon.runtime.queueState = "WAITING_READY"; Addon.runtime.pauseReason = "RETRY_BACKOFF"
         Addon:NotifyIssue("quarantine:" .. pending.itemID, "物品 #" .. pending.itemID .. " 连续失败，将在 " .. tostring(retryDelay) .. " 秒后重试。")
         self:ReleaseQuarantineAfter(pending.itemID, retryDelay)
     else
+        if Addon.BindConfirmAssist then Addon.BindConfirmAssist:Disarm(pending) end
         Addon.runtime.pending = nil; Addon.runtime.queueState = "READY"; Addon.runtime.pauseReason = nil; self:RequestScan()
     end
 end
@@ -116,6 +130,8 @@ function Queue:ScheduleBagRefresh()
 end
 function Queue:OnEvent(event, ...)
     if event == "BAG_UPDATE" or event == "BAG_UPDATE_DELAYED" or event == "ITEM_PUSH" then self:ScheduleBagRefresh()
+    elseif event == "LOOT_BIND_CONFIRM" then
+        if Addon.BindConfirmAssist then Addon.BindConfirmAssist:HandleLootBindConfirm() end
     elseif event == "LOOT_OPENED" then Addon.runtime.queueState = "PAUSED"; Addon.runtime.pauseReason = "LOOT_OPEN"
     elseif event == "LOOT_CLOSED" or event == "PLAYER_REGEN_ENABLED" or event == "PLAYER_ALIVE" or event == "PLAYER_UNGHOST" then self:RequestScan()
     elseif event == "PLAYER_DEAD" then Addon.runtime.queueState = "PAUSED"; Addon.runtime.pauseReason = "PLAYER_UNAVAILABLE"
@@ -156,7 +172,7 @@ end)
 -- Event availability differs between WoW branches.  Register each event in
 -- isolation so one unsupported optional event cannot prevent PLAYER_LOGIN,
 -- PLAYER_ENTERING_WORLD and bag events from receiving an OnEvent handler.
-local events = { "ADDON_LOADED", "PLAYER_LOGIN", "PLAYER_ENTERING_WORLD", "BAG_UPDATE", "BAG_UPDATE_DELAYED", "ITEM_PUSH", "PLAYER_REGEN_ENABLED", "PLAYER_DEAD", "PLAYER_ALIVE", "PLAYER_UNGHOST", "LOOT_OPENED", "LOOT_CLOSED", "MERCHANT_SHOW", "MERCHANT_CLOSED", "BANKFRAME_OPENED", "BANKFRAME_CLOSED", "MAIL_SHOW", "MAIL_CLOSED", "TRADE_SHOW", "TRADE_CLOSED", "AUCTION_HOUSE_SHOW", "AUCTION_HOUSE_CLOSED", "GUILDBANKFRAME_OPENED", "GUILDBANKFRAME_CLOSED", "VOID_STORAGE_OPEN", "VOID_STORAGE_CLOSE", "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_STOP", "UNIT_SPELLCAST_SUCCEEDED", "UNIT_SPELLCAST_FAILED", "UNIT_SPELLCAST_INTERRUPTED" }
+local events = { "ADDON_LOADED", "PLAYER_LOGIN", "PLAYER_ENTERING_WORLD", "BAG_UPDATE", "BAG_UPDATE_DELAYED", "ITEM_PUSH", "PLAYER_REGEN_ENABLED", "PLAYER_DEAD", "PLAYER_ALIVE", "PLAYER_UNGHOST", "LOOT_OPENED", "LOOT_CLOSED", "LOOT_BIND_CONFIRM", "MERCHANT_SHOW", "MERCHANT_CLOSED", "BANKFRAME_OPENED", "BANKFRAME_CLOSED", "MAIL_SHOW", "MAIL_CLOSED", "TRADE_SHOW", "TRADE_CLOSED", "GUILDBANKFRAME_OPENED", "GUILDBANKFRAME_CLOSED", "VOID_STORAGE_OPEN", "VOID_STORAGE_CLOSE", "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_STOP", "UNIT_SPELLCAST_SUCCEEDED", "UNIT_SPELLCAST_FAILED", "UNIT_SPELLCAST_INTERRUPTED" }
 for _, event in ipairs(events) do
     pcall(frame.RegisterEvent, frame, event)
 end

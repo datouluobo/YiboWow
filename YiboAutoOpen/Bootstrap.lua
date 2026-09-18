@@ -1,6 +1,6 @@
 local Addon = _G.YiboAutoOpen or {}
 _G.YiboAutoOpen = Addon
-Addon.NAME, Addon.VERSION = "YiboAutoOpen", "1.0.0"
+Addon.NAME, Addon.VERSION = "YiboAutoOpen", "1.1.1"
 Addon.runtime = { initialized = false, loggedIn = false, startupScansStarted = false, queueState = "IDLE", pauseReason = nil, generation = 0, pending = nil, scanQueued = false, deferredScanGeneration = 0, quarantined = {}, failures = {}, warned = {}, sensitiveFrames = {} }
 
 function Addon:Print(message, level)

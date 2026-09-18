@@ -70,7 +70,10 @@ function Bags:FindNextEligible(entries, quarantined)
     for bag = 4, 0, -1 do for slot = self:GetNumSlots(bag), 1, -1 do
         local item = self:GetItemInfo(bag, slot)
         if item and item.itemID and entries[item.itemID] and not quarantined[item.itemID] then
-            if item.locked == true then
+            local manualOnly = Addon.Catalog and ((Addon.Catalog.IsManualOnly and Addon.Catalog:IsManualOnly(item.itemID)) or (Addon.Catalog.manualOnly and Addon.Catalog.manualOnly[item.itemID]))
+            if manualOnly then
+                -- This item remains in the catalog for visibility, but needs a player click.
+            elseif item.locked == true then
                 retryAfter = retryAfter and math.min(retryAfter, 0.5) or 0.5
             else
                 local start, duration = self:GetCooldown(bag, slot, item.itemID)

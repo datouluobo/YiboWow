@@ -6,7 +6,7 @@ function Database:Normalize()
     local db = self.db
     for key, value in pairs(Addon.DEFAULTS) do if db[key] == nil then db[key] = value end end
     db.schemaVersion = 1; db.catalogVersion = math.max(1, math.floor(tonumber(db.catalogVersion) or 1))
-    db.enabled = db.enabled ~= false; db.scanExistingOnLogin = db.scanExistingOnLogin ~= false
+    db.enabled = db.enabled ~= false; db.scanExistingOnLogin = db.scanExistingOnLogin ~= false; db.bindConfirmFollowCursor = db.bindConfirmFollowCursor ~= false
     db.minFreeSlots = math.max(Addon.LIMITS.minFreeSlots.min, math.min(Addon.LIMITS.minFreeSlots.max, math.floor(tonumber(db.minFreeSlots) or 5)))
     if db.notificationMode ~= "silent" and db.notificationMode ~= "issues" and db.notificationMode ~= "verbose" then db.notificationMode = "issues" end
     db.catalog = type(db.catalog) == "table" and db.catalog or {}; local clean, seen = {}, {}

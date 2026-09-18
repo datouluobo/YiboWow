@@ -1,7 +1,9 @@
 local specs = {
     "BagEligibilitySpec.lua",
+    "BindConfirmAssistSpec.lua",
     "BagSpaceReadinessSpec.lua",
     "CatalogSpec.lua",
+    "CommandsSpec.lua",
     "DeferredEligibilitySpec.lua",
     "ItemResolverSpec.lua",
     "MigrationSpec.lua",

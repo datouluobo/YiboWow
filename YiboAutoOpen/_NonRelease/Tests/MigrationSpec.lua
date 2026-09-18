@@ -11,5 +11,6 @@ YiboAutoOpen.Database:Initialize()
 
 assert(YiboAutoOpenDB.catalogVersion == 2, "the catalog migration should complete")
 assert(YiboAutoOpenDB.catalog.entries[90735], "the migrated item should be added without recursive initialization")
+assert(YiboAutoOpenDB.bindConfirmFollowCursor == true, "existing profiles should enable bind-confirm cursor placement by default")
 
 print("Migration spec passed")
