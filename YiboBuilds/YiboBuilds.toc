@@ -2,7 +2,7 @@
 ## Title: |cff20e070[Yibo]|r YiboBuilds - 角色构筑
 ## Notes: 多角色构筑、装备、天赋与雕文总览
 ## Author: YiboSoft
-## Version: 0.1.0
+## Version: 1.0.0
 ## IconTexture: Interface\AddOns\YiboBuilds\Media\YiboBuildsIcon-v1
 ## SavedVariables: YiboBuildsDB
 ## RequiredDeps: YiboCore

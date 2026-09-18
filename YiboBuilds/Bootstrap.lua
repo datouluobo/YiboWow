@@ -3,7 +3,7 @@ local Addon = _G.YiboBuilds or {}
 _G.YiboBuilds = Addon
 
 Addon.NAME = ADDON_NAME or "YiboBuilds"
-Addon.VERSION = "0.1.0"
+Addon.VERSION = "1.0.0"
 Addon.REQUIRED_CORE_API = 5
 Addon.PAGE_ID = "builds"
 Addon.ICON = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon-v1"
@@ -32,7 +32,7 @@ function Addon:EnsureDB()
         characters = {},
         settings = {
             previewColumns = {
-                slot = true, spec = true, talent1 = true, talent2 = true, talent3 = true,
+                spec = true, talent1 = true, talent2 = true, talent3 = true,
                 talent4 = true, talent5 = true, talent6 = true,
                 major1 = true, major2 = true, major3 = true,
                 minor1 = true, minor2 = true, minor3 = true,
@@ -102,9 +102,13 @@ frame:SetScript("OnEvent", function(_, event, name)
         -- changing a socket. SPELLS_CHANGED covers the spellbook update path.
         if Addon.Snapshot then Addon.Snapshot:ScheduleCapture("glyph-catalog-update", 0.35) end
     elseif event == "PLAYER_EQUIPMENT_CHANGED" then
-        -- Equipment changes are intentionally not persisted as a timeline.
-        -- The next login/spec boundary/explicit confirmation captures them.
-        if Addon.Snapshot then Addon.Snapshot:MarkEquipmentDirty() end
+        -- Keep a single latest observation rather than an equipment history.
+        -- The short debounce absorbs multi-slot swaps and preserves the final
+        -- state even when the player later logs out on another character.
+        if Addon.Snapshot then
+            Addon.Snapshot:MarkEquipmentDirty()
+            Addon.Snapshot:ScheduleCapture("equipment-change", 0.4)
+        end
     elseif event == "PLAYER_LOGOUT" then
         if Addon.Snapshot then Addon.Snapshot:Capture("logout", true) end
     end

@@ -270,6 +270,27 @@ local function ReadEquipment(reason)
     return equipment
 end
 
+local function EquipmentEntrySignature(item)
+    local parts = {
+        item and item.itemLink or "",
+        tostring(item and item.enchant and item.enchant.enchantID or 0),
+    }
+    for index = 1, 3 do
+        local gem = item and item.gems and item.gems[index]
+        parts[#parts + 1] = gem and (gem.itemLink or tostring(gem.itemID or "")) or ""
+    end
+    return table.concat(parts, "\031")
+end
+
+local function SameEquipment(first, second)
+    if not (first and second and first.slots and second.slots) then return false end
+    for _, slotID in ipairs(SLOT_IDS) do
+        local key = SlotKey(slotID)
+        if EquipmentEntrySignature(first.slots[key]) ~= EquipmentEntrySignature(second.slots[key]) then return false end
+    end
+    return true
+end
+
 local function CurrentCharacter()
     return Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
 end
@@ -362,6 +383,14 @@ function Snapshot:MarkEquipmentDirty()
     self.equipmentDirty = true
 end
 
+function Snapshot:GetEquipmentStatus(slotData)
+    if not slotData then return "missing" end
+    local observed, confirmed = slotData.observedEquipment, slotData.confirmedEquipment
+    if not confirmed then return observed and "unsaved" or "missing" end
+    if observed and not SameEquipment(observed, confirmed) then return "changed" end
+    return "saved"
+end
+
 function Snapshot:ConfirmEquipment(slot)
     local character = CurrentCharacter()
     if not character then return nil, "当前角色不可用。" end
@@ -376,6 +405,12 @@ end
 
 function Snapshot:GetProjectedSlot(record, mode)
     if not record then return nil end
+    -- The account matrix can explicitly compare the stable primary and
+    -- secondary talent groups.  Preserve current/backup for callers that
+    -- still need the activity-relative projection.
+    if mode == "primary" or mode == "secondary" then
+        return record.slots and record.slots[mode], mode
+    end
     local active = record.lastActiveSlot or "primary"
     local slot = mode == "backup" and (active == "primary" and "secondary" or "primary") or active
     return record.slots and record.slots[slot], slot

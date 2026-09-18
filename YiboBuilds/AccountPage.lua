@@ -145,7 +145,6 @@ end
 
 function Page:GetFields()
     local fields = {
-        { id = "slot", title = "槽位", defaultVisible = true },
         { id = "spec", title = "专精", defaultVisible = true },
     }
     for index = 1, 6 do fields[#fields + 1] = { id = "talent" .. index, title = "天赋" .. index .. "层", defaultVisible = true } end
@@ -172,10 +171,11 @@ local function PreviewColumns(context, characters)
     local settings = Addon:GetSettings().previewColumns
     local function Add(id, title)
         if settings[id] ~= false then
-            columns[#columns + 1] = { id = id, title = title, width = Theme:GetMatrixTargetColumnWidth(16, Theme.Font.assist, title) }
+            local isBuildChoice = string.find(id, "talent", 1, true) or string.find(id, "major", 1, true) or string.find(id, "minor", 1, true)
+            local targetCharacters = isBuildChoice and 5 or Theme.Table.matrixTargetLabelCharacters
+            columns[#columns + 1] = { id = id, title = title, width = Theme:GetIconTextColumnWidth(16, Theme.Font.assist, title, targetCharacters) }
         end
     end
-    Add("slot", "槽位")
     Add("spec", "专精")
     for i = 1, 6 do Add("talent" .. i, "天赋" .. i) end
     for i = 1, 3 do Add("major" .. i, "大雕" .. i) end
@@ -436,19 +436,19 @@ local function PlaceEquipment(parent, snapshot)
         button:SetSize(iconSize, iconSize)
         button:ClearAllPoints()
         if side == "weapon-left" or side == "weapon-right" then
-            -- Follow the original paper-doll's lower left/right weapon
-            -- anchors rather than placing both weapons as a centred cluster.
-            -- Their augment rails face outward: main-hand gems/enchant on the
-            -- left, off-hand gems/enchant on the right.
-            local weaponOffset = math.max(88, math.min(128, math.floor(boxWidth * 0.28)))
-            button:SetPoint("BOTTOM", box, "BOTTOM", side == "weapon-left" and -weaponOffset or weaponOffset, 12)
+            -- Keep the two weapon slots together in the model's lower centre.
+            -- The icon pair has one compact intentional gap; only the gem and
+            -- enchant rails extend outward from it.
+            local weaponGap = Theme.Space.sm
+            local weaponOffset = math.floor((iconSize + weaponGap) / 2)
+            button:SetPoint("BOTTOM", box, "BOTTOM", side == "weapon-left" and -weaponOffset or weaponOffset, 30)
         else
             button:SetPoint("TOPLEFT", box, "TOPLEFT", side == "left" and left or right, -12 - (visualIndex - 1) * rowHeight)
         end
         button.slotLabel:ClearAllPoints()
         if side == "left" then button.slotLabel:SetPoint("RIGHT", button, "LEFT", -4, 0); button.slotLabel:SetJustifyH("RIGHT")
         elseif side == "right" then button.slotLabel:SetPoint("LEFT", button, "RIGHT", 4, 0); button.slotLabel:SetJustifyH("LEFT")
-        else button.slotLabel:SetPoint("BOTTOM", button, "TOP", 0, 22); button.slotLabel:SetJustifyH("CENTER") end
+        else button.slotLabel:SetPoint("TOP", button, "BOTTOM", 0, -4); button.slotLabel:SetJustifyH("CENTER") end
         button.slotLabel:SetText(SLOT_LABELS[slotID] or "")
         button.icon:SetTexture(item and item.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
         button.icon:SetDesaturated(not (item and item.itemLink))
@@ -653,8 +653,11 @@ local function SetupMainButtons(parent)
         local record = Addon.Snapshot:GetCharacter(selected.id)
         local slot = parent.buildsSlot or (record and record.lastActiveSlot) or "primary"
         if not record or record.lastActiveSlot ~= slot then return end
-        local existing = record and record.slots and record.slots[slot] and record.slots[slot].confirmedEquipment
-        if existing and StaticPopup_Show then
+        local slotData = record.slots and record.slots[slot]
+        local equipmentStatus = Addon.Snapshot:GetEquipmentStatus(slotData)
+        if equipmentStatus == "missing" or equipmentStatus == "saved" then return end
+        local existing = slotData and slotData.confirmedEquipment
+        if equipmentStatus == "changed" and existing and StaticPopup_Show then
             StaticPopupDialogs.YIBO_BUILDS_CONFIRM_OVERWRITE = StaticPopupDialogs.YIBO_BUILDS_CONFIRM_OVERWRITE or {
                 text = "将覆盖该天赋槽位已确认的构筑装备。是否继续？", button1 = ACCEPT, button2 = CANCEL, timeout = 0, whileDead = true, hideOnEscape = true,
                 OnAccept = function() Addon.Snapshot:ConfirmEquipment(slot) end,
@@ -775,7 +778,11 @@ function Page.Refresh(parent, context)
     parent.buildsToolbar.appearance:SetState(IsCurrent(selected) and "default" or "disabled")
     parent.buildsToolbar.buildToggle:SetText(parent.buildsBuildCollapsed and ">>" or "<<")
     parent.buildsToolbar.buildToggle:SetState("default")
-    parent.buildsToolbar.status:SetText((record.lastActiveSlot == slot and "当前使用" or "备用构筑") .. " · " .. ((slotData and slotData.confirmedEquipment) and "装备已确认" or "装备待确认"))
+    local equipmentStatus = Addon.Snapshot:GetEquipmentStatus(slotData)
+    local equipmentStatusText = ({
+        missing = "暂无装备快照", unsaved = "装备未保存", changed = "装备有更改", saved = "装备已保存",
+    })[equipmentStatus] or "暂无装备快照"
+    parent.buildsToolbar.status:SetText((record.lastActiveSlot == slot and "当前使用" or "备用构筑") .. " · " .. equipmentStatusText)
     PlaceEquipment(parent, equipment)
     parent.buildsEquipment.empty:SetText(not equipment and "尚无装备快照" or (not IsCurrent(selected) and "外观仅可预览当前角色" or ""))
     parent.buildsEquipment.empty:SetShown(not equipment or not IsCurrent(selected))
@@ -793,30 +800,59 @@ function Page.Refresh(parent, context)
     parent.buildsBuild.minorGlyphTitle:Hide()
     parent.buildsBuild.currentGlyphs:SetState(catalogOpen and "default" or "selected")
     parent.buildsBuild.allGlyphs:SetState(catalogOpen and "selected" or "default")
-    parent.buildsConfirm:SetState(IsCurrent(selected) and record.lastActiveSlot == slot and "selected" or "disabled")
-    parent.buildsConfirm:SetText(slotData and slotData.confirmedEquipment and "更新此构筑装备  >" or "确认此构筑装备  >")
+    local canSave = IsCurrent(selected) and record.lastActiveSlot == slot and (equipmentStatus == "unsaved" or equipmentStatus == "changed")
+    parent.buildsConfirm:SetState(canSave and "selected" or "disabled")
+    parent.buildsConfirm:SetText(({
+        missing = "暂无装备快照",
+        unsaved = "保存此构筑装备  >",
+        changed = "更新此构筑装备  >",
+        saved = "此构筑装备已保存",
+    })[equipmentStatus] or "暂无装备快照")
+    parent.buildsConfirm:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        local title = ({
+            missing = "尚未采集到当前穿戴。",
+            unsaved = "当前穿戴已采集，尚未保存为此构筑装备。",
+            changed = "当前穿戴与已保存的构筑装备不同。",
+            saved = "当前穿戴与已保存的构筑装备一致。",
+        })[equipmentStatus] or ""
+        GameTooltip:AddLine(title)
+        GameTooltip:Show()
+    end)
+    parent.buildsConfirm:SetScript("OnLeave", function() GameTooltip:Hide() end)
     SetupMainButtons(parent)
 end
 
 function Page.RefreshPreview(parent, context)
     parent.buildsEmpty:Hide(); parent.buildsRoster:Hide(); parent.buildsMain:Hide()
-    local mode = parent.buildsPreviewMode or "current"
+    -- The account projection is activity-relative: “当前” means each role's
+    -- own last-used specialization, while “备用” is its other slot.
+    local mode = parent.buildsPreviewMode == "backup" and "backup" or "current"
+    parent.buildsPreviewMode = mode
     local characters = PreviewCharacters(context)
     local columns = PreviewColumns(context, characters)
     parent.buildsPreviewToggle = parent.buildsPreviewToggle or CreateFrame("Frame", nil, parent)
-    parent.buildsPreviewToggle.current = parent.buildsPreviewToggle.current or Theme:CreateButton(parent.buildsPreviewToggle, 52, "当前", "secondary")
-    parent.buildsPreviewToggle.backup = parent.buildsPreviewToggle.backup or Theme:CreateButton(parent.buildsPreviewToggle, 52, "备用", "secondary")
-    parent.buildsPreviewToggle:ClearAllPoints(); parent.buildsPreviewToggle:SetPoint("TOPLEFT", parent, "TOPLEFT", 6, -6); parent.buildsPreviewToggle:SetSize(112, Theme.Size.compact)
-    parent.buildsPreviewToggle.current:ClearAllPoints(); parent.buildsPreviewToggle.current:SetPoint("LEFT")
-    parent.buildsPreviewToggle.backup:ClearAllPoints(); parent.buildsPreviewToggle.backup:SetPoint("LEFT", parent.buildsPreviewToggle.current, "RIGHT", 4, 0)
-    parent.buildsPreviewToggle.current:SetState(mode == "current" and "selected" or "default")
-    parent.buildsPreviewToggle.backup:SetState(mode == "backup" and "selected" or "default")
-    parent.buildsPreviewToggle.current:SetScript("OnClick", function() parent.buildsPreviewMode = "current"; Page.RefreshPreview(parent, context) end)
-    parent.buildsPreviewToggle.backup:SetScript("OnClick", function() parent.buildsPreviewMode = "backup"; Page.RefreshPreview(parent, context) end)
-    parent.buildsPreviewToggle:Show()
+    -- A single segmented-text action matches the appearance switcher's
+    -- vocabulary and avoids turning title-bar state into two competing
+    -- buttons.  Reserve an invisible trailing spacer before the realm range.
+    if parent.buildsPreviewToggle.current then parent.buildsPreviewToggle.current:Hide() end
+    if parent.buildsPreviewToggle.backup then parent.buildsPreviewToggle.backup:Hide() end
+    parent.buildsPreviewToggle.toggle = parent.buildsPreviewToggle.toggle or Theme:CreateButton(parent.buildsPreviewToggle, 148, "", "secondary")
+    parent.buildsPreviewToggle:SetSize(180, Theme.Size.compact)
+    parent.buildsPreviewToggle.toggle:ClearAllPoints(); parent.buildsPreviewToggle.toggle:SetPoint("LEFT")
+    parent.buildsPreviewToggle.toggle:SetText(mode == "current" and "|cff20e070当前专精|r / 备用专精" or "当前专精 / |cff20e070备用专精|r")
+    parent.buildsPreviewToggle.toggle:SetState("default")
+    parent.buildsPreviewToggle.toggle:SetScript("OnClick", function()
+        parent.buildsPreviewMode = mode == "current" and "backup" or "current"
+        Page.RefreshPreview(parent, context)
+    end)
+    -- Slot selection is page state, so it belongs in the shared title-bar
+    -- action area beside the realm scope—not as a standalone content row.
+    if context and context.SetTitleBarControl then context:SetTitleBarControl(parent.buildsPreviewToggle, 180) else parent.buildsPreviewToggle:Hide() end
     parent.buildsPreviewHeader = parent.buildsPreviewHeader or CreateFrame("Frame", nil, parent)
     parent.buildsPreviewBody = parent.buildsPreviewBody or CreateFrame("Frame", nil, parent)
-    parent.buildsPreviewHeader:ClearAllPoints(); parent.buildsPreviewHeader:SetPoint("TOPLEFT", parent.buildsPreviewToggle, "BOTTOMLEFT", 0, -Theme.Space.xs)
+    local inset = Theme:GetMatrixInsets(true)
+    parent.buildsPreviewHeader:ClearAllPoints(); parent.buildsPreviewHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top)
     local width, x = 0, 0
     parent.buildsPreviewHeaders = parent.buildsPreviewHeaders or {}
     for index, col in ipairs(columns) do
@@ -835,7 +871,7 @@ function Page.RefreshPreview(parent, context)
             cell:ClearAllPoints(); cell:SetPoint("LEFT", x + 3, 0); cell:SetSize(col.width - 6, Theme.Table.previewRowHeight)
             local value = "—"
             if col.id == "name" then value = CharacterLabel(character, context)
-            elseif col.id == "slot" then value = slotData and (slot == "secondary" and "副天赋" or "主天赋") or (mode == "backup" and "无备用快照" or "无构筑快照")
+            elseif col.id == "slot" then value = slotData and (slot == "secondary" and "副专精" or "主专精") or (mode == "backup" and "无备用专精快照" or "无当前专精快照")
             elseif col.id == "spec" then
                 local item = slotData and slotData.specialization
                 value = item and IconText(item.icon, item.name) or "—"
@@ -900,7 +936,7 @@ function Page.GetSurfaceMetrics(context)
         local columns = PreviewColumns(context, characters)
         local width = inset.left + inset.right
         for _, column in ipairs(columns) do width = width + column.width end
-        local height = inset.top + Theme.Size.compact + Theme.Space.xs + Theme.Table.headerHeight + math.max(1, #characters) * Theme.Table.previewRowHeight + inset.bottom
+        local height = inset.top + Theme.Table.headerHeight + math.max(1, #characters) * Theme.Table.previewRowHeight + inset.bottom
         return { minContentWidth = width, naturalContentWidth = width, minContentHeight = height, naturalContentHeight = height, horizontalOverflow = "content", verticalOverflow = "none" }
     end
     -- Folding removes the build pane but preserves the expanded equipment-pane
