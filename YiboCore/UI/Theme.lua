@@ -484,6 +484,72 @@ function Theme:CreateDropdown(parent, width, options)
     return dropdown
 end
 
+-- A compact multi-select control used by dense settings rows.  It keeps the
+-- summary on the row (for example “主表 2/3”) while the checkbox menu owns the
+-- individual choices, so users never have to navigate to a second section.
+function Theme:CreateMultiSelectDropdown(parent, width, options)
+    local dropdown = self:CreateButton(parent, width or 140, "", "secondary")
+    dropdown.arrow = self:CreateText(dropdown, self.Font.assist, self.Colors.muted, "RIGHT")
+    dropdown.arrow:SetPoint("RIGHT", -8, 0); dropdown.arrow:SetText("v")
+    dropdown.label:SetPoint("LEFT", 10, 0); dropdown.label:SetPoint("RIGHT", dropdown.arrow, "LEFT", -6, 0)
+    dropdown.options, dropdown.summaryPrefix = {}, "字段"
+    local popupOwner = parent
+    while popupOwner and popupOwner:GetParent() and popupOwner:GetParent() ~= UIParent do popupOwner = popupOwner:GetParent() end
+    popupOwner = popupOwner or UIParent
+    dropdown.menu = CreateFrame("Frame", nil, popupOwner, "BackdropTemplate")
+    dropdown.menu:SetFrameStrata(popupOwner:GetFrameStrata() or "DIALOG")
+    dropdown.menu:SetFrameLevel((popupOwner:GetFrameLevel() or 0) + 30)
+    dropdown.menu:SetToplevel(true); dropdown.menu:EnableMouse(true)
+    dropdown.menu:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    dropdown.menu:SetBackdropColor(Color(self.Colors.panel)); dropdown.menu:SetBackdropBorderColor(Color(self.Colors.line))
+    dropdown.menu:Hide(); dropdown.menu.checks = {}
+    function dropdown:SetSummary(prefix) self.summaryPrefix = prefix or "字段" end
+    function dropdown:RefreshSummary()
+        local selected = 0
+        for _, option in ipairs(self.options) do if type(option.isSelected) == "function" and option.isSelected() then selected = selected + 1 end end
+        self:SetText(self.summaryPrefix .. " " .. selected .. "/" .. #self.options)
+        for index, check in ipairs(self.menu.checks) do
+            local option = self.options[index]
+            if option then check:SetChecked(type(option.isSelected) == "function" and option.isSelected()) end
+        end
+    end
+    function dropdown:SetOptions(nextOptions)
+        self.options = nextOptions or {}
+        for _, check in ipairs(self.menu.checks) do check:Hide() end
+        for index, option in ipairs(self.options) do
+            local check = self.menu.checks[index]
+            if not check then
+                check = Theme:CreateCheckbox(self.menu, "")
+                self.menu.checks[index] = check
+            end
+            check:SetFrameLevel((self.menu:GetFrameLevel() or 0) + 1)
+            check:ClearAllPoints(); check:SetPoint("TOPLEFT", 8, -5 - (index - 1) * (Theme.Size.standard + 2)); check:SetPoint("RIGHT", -8, 0)
+            check.label:SetText(option.title or "")
+            check:SetChecked(type(option.isSelected) == "function" and option.isSelected())
+            check:SetScript("OnClick", function(control)
+                local nextValue = not control:GetChecked()
+                control:SetChecked(nextValue)
+                if type(option.setSelected) == "function" then option.setSelected(nextValue) end
+                self:RefreshSummary()
+                if type(self.onSelectionChanged) == "function" then self.onSelectionChanged(option, nextValue) end
+            end)
+            check:Show()
+        end
+        self.menu:SetHeight(math.max(1, #self.options) * (Theme.Size.standard + 2) + 10)
+        self:RefreshSummary()
+    end
+    function dropdown:SetOnSelectionChanged(callback) self.onSelectionChanged = callback end
+    dropdown:SetScript("OnClick", function(control)
+        if control.menu:IsShown() then control.menu:Hide(); return end
+        control:RefreshSummary(); control.menu:ClearAllPoints(); control.menu:SetWidth(control:GetWidth())
+        local opensAbove = control:GetBottom() and (control:GetBottom() - 2 - control.menu:GetHeight()) < 0
+        if opensAbove then control.menu:SetPoint("BOTTOMLEFT", control, "TOPLEFT", 0, 2) else control.menu:SetPoint("TOPLEFT", control, "BOTTOMLEFT", 0, -2) end
+        control.menu:SetFrameLevel((popupOwner:GetFrameLevel() or 0) + 30); control.menu:Show(); control.menu:Raise()
+    end)
+    dropdown:SetOptions(options)
+    return dropdown
+end
+
 function Theme:CreateCheckbox(parent, label)
     local button = CreateFrame("Button", nil, parent, "BackdropTemplate")
     button:SetSize(190, self.Size.standard)
