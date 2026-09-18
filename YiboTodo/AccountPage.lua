@@ -113,6 +113,14 @@ local function GetIcon(parent, index)
     -- the protected item action; a post-click hook preserves that handler and
     -- still lets ordinary project icons run their Lua-side action afterward.
     button:HookScript("PostClick", function(self, mouseButton)
+        -- Direct crafting from the interactive hover preview is a protected
+        -- macro action.  It does not reliably emit UNIT_SPELLCAST_SUCCEEDED
+        -- for this addon, so explicitly request the shared, debounced
+        -- verification scan.  The scan refreshes the visible preview only
+        -- after the real cooldown state is available.
+        if mouseButton == "LeftButton" and self.professionAction and Addon.QueueProfessionCooldownRefresh then
+            Addon:QueueProfessionCooldownRefresh({ button = self, project = self.actionProject, characterID = self.actionProject.characterID, groupID = self.actionProject.groupID })
+        end
         if mouseButton == "LeftButton" and self.secureLeftAction then return end
         if mouseButton == "RightButton" and self.secureRightAction then return end
         if not self.actionProject or not self.actionIsCurrent or not Addon.Actions then return end
@@ -260,6 +268,26 @@ local function SetIcon(button, project, isCurrentCharacter)
     end)
     Theme:BindTooltip(button, project.label, ProjectTooltip(project))
     button:Show()
+end
+
+-- Keep a direct-craft completion local to its originating control.  The
+-- model snapshot is rebuilt only to obtain authoritative cooldown data; no
+-- rows, headers, scrollbars, or preview geometry are touched.
+function Page:RefreshProjectIcon(target)
+    local button = target and target.button
+    local original = target and target.project
+    if not (button and original and button:IsShown() and button.actionProject == original) then return false end
+    local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+    if not current or current.id ~= target.characterID then return false end
+    local snapshot = Addon.Snapshot and Addon.Snapshot:Build()
+    local data = snapshot and snapshot.characters and snapshot.characters[target.characterID]
+    for _, project in ipairs(data and data.professionProjects or {}) do
+        if project.groupID == target.groupID then
+            SetIcon(button, project, true)
+            return true
+        end
+    end
+    return false
 end
 
 local function RenderProjects(cell, projects, isCurrentCharacter, groupIndex)

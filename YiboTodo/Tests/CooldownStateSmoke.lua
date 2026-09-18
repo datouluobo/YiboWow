@@ -152,6 +152,12 @@ assert(observations["mop.tailoring.celestial-cloth"].recipes[143011].readyAt == 
 assert(observations["mop.alchemy.living-steel"].recipes[114780].readyAt == 4600, "provider keeps living steel collection")
 assert(observations["mop.leatherworking.magnificent-fur"].recipes[140040].readyAt == 4600, "provider collects crafted magnificent hide cooldown")
 assert(observations["mop.tailoring.celestial-cloth"].recipes[143011].craftable == false, "provider records skill-point shortfall")
+GetTradeSkillCooldown = function() return 0 end
+GetSpellCooldown = function() return 100, 3600, 1 end
+GetTime = function() return 100 end
+observations = assert(Addon.Providers.Registry:Get("profession-cooldown"):Collect())
+assert(observations["mop.tailoring.celestial-cloth"].recipes[143011].readyAt == 4600, "spell cooldown overrides a transient zero trade-skill cooldown after crafting")
+GetSpellCooldown, GetTime = nil, nil
 GetTradeSkillLine = function() return "裁缝" end
 observations = assert(Addon.Providers.Registry:Get("profession-cooldown"):Collect())
 assert(observations["mop.tailoring.imperial-silk"].recipes[125557].learned == false, "identified profession window records an absent recipe as unlearned")

@@ -32,21 +32,41 @@ local function IsTrackedProfessionSpell(spellID)
     return false
 end
 
-local function QueueProfessionScan()
+local function QueueProfessionScan(refreshTarget)
     if not Addon.initialized then return end
     local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
     local characterID = current and current.id
-    if not characterID or scanQueuedByCharacter[characterID] then return end
-    scanQueuedByCharacter[characterID] = true
+    if not characterID then return end
+    local pending = scanQueuedByCharacter[characterID]
+    if pending then
+        pending.refreshTarget = refreshTarget or pending.refreshTarget
+        return
+    end
+    pending = { refreshTarget = refreshTarget }
+    scanQueuedByCharacter[characterID] = pending
     local function Scan()
         scanQueuedByCharacter[characterID] = nil
         local active = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
         if not active or active.id ~= characterID then return end
+        -- A successful spellcast already wrote the authoritative daily
+        -- lockout.  Do not immediately overwrite it with the target client's
+        -- transient zero cooldown response.
+        if pending.confirmedDirectCraft then return end
         local provider = Addon.Providers.Registry:Get("profession-cooldown")
-        if provider then provider:ObserveWindow(characterID) end
+        if provider then provider:ObserveWindow(characterID, pending.refreshTarget) end
     end
     if C_Timer and C_Timer.After then C_Timer.After(0.25, Scan) else Scan() end
 end
+
+-- A secure macro click can complete without delivering the normal spellcast
+-- event to this addon.  The Todo icon therefore requests the same debounced
+-- verification scan after a direct craft.  We still derive the state from the
+-- profession window instead of optimistically changing the icon, so failed
+-- crafts remain actionable and repeated clicks never create extra scans.
+function Addon:QueueProfessionCooldownRefresh(refreshTarget)
+    QueueProfessionScan(refreshTarget)
+end
+
 frame:SetScript("OnEvent", function(_, event, ...)
     local name = ...
     if Addon.Probe and Addon.initialized then Addon.Probe:CaptureEvent(event, ...) end
@@ -73,7 +93,18 @@ frame:SetScript("OnEvent", function(_, event, ...)
             local changed = provider:RecordSucceededCast(...)
             if changed then Addon:NotifyChanged() end
         end
-        if IsTrackedProfessionSpell(spellID) then QueueProfessionScan() end
+        if IsTrackedProfessionSpell(spellID) then
+            local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+            local characterID = current and current.id
+            local pending = characterID and scanQueuedByCharacter[characterID]
+            local cooldowns = Addon.Providers.Registry:Get("profession-cooldown")
+            if cooldowns and characterID and cooldowns:RecordSuccessfulCraft(characterID, spellID) then
+                if pending then pending.confirmedDirectCraft = true end
+                Addon:NotifyChanged(true, pending and pending.refreshTarget)
+            else
+                Addon:QueueProfessionCooldownRefresh(pending and pending.refreshTarget)
+            end
+        end
     elseif event == "UPDATE_MOUSEOVER_UNIT" and Addon.initialized then
         local provider = Addon.Providers.Registry:Get("farm-operation-observation")
         if provider then

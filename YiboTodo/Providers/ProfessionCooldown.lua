@@ -40,13 +40,40 @@ local function RecipeIndex()
     return found
 end
 
-local function RemainingCooldown(index)
+local function TradeSkillCooldownRemaining(index)
     if type(GetTradeSkillCooldown) ~= "function" then return nil end
     local ok, remaining = pcall(GetTradeSkillCooldown, index)
     if not ok or remaining == nil then return nil end
     -- The legacy trade-skill API returns remaining seconds.  Its optional
     -- second return is an isDayCooldown flag, not a start/duration pair.
     return math.max(0, tonumber(remaining) or 0)
+end
+
+local function SpellCooldownRemaining(spellID)
+    local start, duration
+    if C_Spell and type(C_Spell.GetSpellCooldown) == "function" then
+        local ok, info = pcall(C_Spell.GetSpellCooldown, spellID)
+        if ok and type(info) == "table" then
+            start, duration = info.startTime, info.duration
+        end
+    elseif type(GetSpellCooldown) == "function" then
+        local ok, value, length = pcall(GetSpellCooldown, spellID)
+        if ok then start, duration = value, length end
+    end
+    start, duration = tonumber(start) or 0, tonumber(duration) or 0
+    if start <= 0 or duration <= 0 then return nil end
+    local now = type(GetTime) == "function" and GetTime() or 0
+    return math.max(0, start + duration - now)
+end
+
+local function RemainingCooldown(index, spellID)
+    local tradeSkill = TradeSkillCooldownRemaining(index)
+    local spell = SpellCooldownRemaining(spellID)
+    -- Some MoP-era clients report 0 from GetTradeSkillCooldown immediately
+    -- after a protected DoTradeSkill macro, while the spell cooldown has
+    -- already advanced.  Prefer the longer authoritative remaining value.
+    if spell and (not tradeSkill or spell > tradeSkill) then return spell end
+    return tradeSkill
 end
 
 local function RecipeCraftable(index)
@@ -105,7 +132,7 @@ function Provider:Collect()
             recipes = {},
             }
             if index then
-                local remaining = RemainingCooldown(index)
+                local remaining = RemainingCooldown(index, recipe.recipeSpellID)
                 group.recipes[recipe.recipeSpellID] = {
                     learned = true, cooldownKnown = remaining ~= nil,
                     remainingAtScan = remaining, readyAt = remaining and (now + remaining) or nil,
@@ -130,7 +157,53 @@ function Provider:MarkUnavailable(characterID, reason)
     record.lastAttemptAt, record.state, record.errorCode = Addon:Now(), "unavailable", reason
 end
 
-function Provider:CollectForCurrentCharacter(expectedCharacterID)
+-- UNIT_SPELLCAST_SUCCEEDED is the authoritative completion signal for a
+-- direct craft.  On the target client the trade-skill cooldown APIs may lag
+-- behind that event (or briefly report zero), so record the daily lockout
+-- from the successful cast instead of waiting for a later list refresh.
+function Provider:RecordSuccessfulCraft(characterID, spellID)
+    spellID = tonumber(spellID)
+    if not characterID or not spellID then return false end
+    local recipe
+    for _, candidate in ipairs(Addon:GetActiveRecipes()) do
+        local action = candidate.action or {}
+        if tonumber(candidate.recipeSpellID) == spellID or tonumber(action.castSpellID) == spellID then
+            recipe = candidate
+            break
+        end
+    end
+    if not recipe then return false end
+    local recipeSpellID = tonumber(recipe.recipeSpellID) or spellID
+    local group = Addon.Catalog.groups[recipe.cooldownGroupID]
+    if not group then return false end
+    local now = Addon:Now()
+    local readyAt = group.resetKind == "daily-07" and Addon.Model.Schedule:NextResetAt(now, group.resetHour) or now
+    local record = Addon.Database:GetProvider(characterID, self.id, true)
+    record.revision = (tonumber(record.revision) or 0) + 1
+    record.lastAttemptAt, record.lastSuccessAt, record.state, record.errorCode = now, now, "known", nil
+    record.observations = record.observations or {}
+    local observation = record.observations[recipe.cooldownGroupID] or { recipes = {} }
+    observation.provider, observation.providerSchemaVersion = self.id, self.schemaVersion
+    observation.catalogVersion, observation.rulesetID = Addon.CATALOG_VERSION, Addon.RULESET_ID
+    observation.observedAt, observation.sourceState, observation.source = now, "known", "spellcast-success"
+    observation.recipes = observation.recipes or {}
+    local value = observation.recipes[recipeSpellID] or {}
+    value.learned, value.craftable, value.cooldownKnown = true, true, true
+    value.remainingAtScan, value.readyAt = math.max(0, readyAt - now), readyAt
+    observation.recipes[recipeSpellID] = value
+    -- A shared group becomes unavailable as one unit.  Preserve which
+    -- recipes are learned, but advance every known member to the same reset
+    -- so the state model cannot see a contradictory ready sibling.
+    for _, known in pairs(observation.recipes) do
+        if known.learned and known.craftable ~= false then
+            known.cooldownKnown, known.remainingAtScan, known.readyAt = true, math.max(0, readyAt - now), readyAt
+        end
+    end
+    record.observations[recipe.cooldownGroupID] = observation
+    return true
+end
+
+function Provider:CollectForCurrentCharacter(expectedCharacterID, refreshTarget)
     local character = Addon.Core and Addon.Core.Characters:GetCurrent()
     if not character then return false, "character-unavailable" end
     if expectedCharacterID and character.id ~= expectedCharacterID then
@@ -139,7 +212,7 @@ function Provider:CollectForCurrentCharacter(expectedCharacterID)
         return false, "character-changed"
     end
     local observations, reason = self:Collect()
-    if not observations then self:MarkUnavailable(character.id, reason); Addon:NotifyChanged(true); return false, reason end
+    if not observations then self:MarkUnavailable(character.id, reason); Addon:NotifyChanged(true, refreshTarget); return false, reason end
     -- A formal activity snapshot is only committed for catalog entries that
     -- have already passed the shipped verification gate.
     if #Addon:GetActiveRecipes() == 0 then return true, "baseline-window-observed" end
@@ -152,14 +225,14 @@ function Provider:CollectForCurrentCharacter(expectedCharacterID)
     -- observations collected from the other primary profession.
     record.observations = record.observations or {}
     for groupID, observation in pairs(observations) do record.observations[groupID] = observation end
-    Addon:NotifyChanged(true)
+    Addon:NotifyChanged(true, refreshTarget)
     return true, reason
 end
 
-function Provider:ObserveWindow(expectedCharacterID)
+function Provider:ObserveWindow(expectedCharacterID, refreshTarget)
     local allowed, reason = self:CanCollect()
     Addon.db.diagnostics.lastWindow = { at = Addon:Now(), source = reason, own = allowed == true, recipeCount = allowed and (tonumber(GetNumTradeSkills()) or 0) or 0, characterID = expectedCharacterID }
-    return self:CollectForCurrentCharacter(expectedCharacterID)
+    return self:CollectForCurrentCharacter(expectedCharacterID, refreshTarget)
 end
 
 Registry:Register(Provider)
