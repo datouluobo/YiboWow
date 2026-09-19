@@ -1,9 +1,9 @@
 ## Interface: 50504
 ## Title: |cff20e070[Yibo]|r YiboMounts - 坐骑图鉴
-## Notes: Shows compact mount catalog details in aura and hovered-unit tooltips.
-## Notes-zhCN: 在坐骑光环与鼠标悬停单位提示中显示紧凑的图鉴信息。
+## Notes: Shows compact mount catalog details in aura, link, and mount-panel tooltips.
+## Notes-zhCN: 在坐骑光环、聊天链接与坐骑面板提示中显示紧凑的图鉴信息。
 ## Author: YiboSoft
-## Version: 0.6
+## Version: 0.7
 ## Group: Yibo
 ## SavedVariables: YiboMountsDiagnostics
 ## IconTexture: Interface\AddOns\YiboMounts\Media\YiboMountsIcon-v1

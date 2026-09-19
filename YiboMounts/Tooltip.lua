@@ -10,14 +10,14 @@ local function ClearMarker(tooltip)
     tooltip.__yiboMountsSignature = nil
 end
 
-local function AppendSource(tooltip, unit, spellID, source)
+local function AppendSource(tooltip, spellID, source, identity)
     local record = NS.Catalog:GetBySpellID(spellID)
-    if NS.Probe then NS.Probe:Report(source or "OnTooltipSetSpell", unit, spellID, record ~= nil) end
+    if NS.Probe then NS.Probe:Report(source or "OnTooltipSetSpell", identity, spellID, record ~= nil) end
 
     if type(spellID) ~= "number" then return end
     if not record then return end
 
-    local signature = unit .. ":" .. spellID
+    local signature = tostring(identity or source or "spell") .. ":" .. spellID
     local signatures = tooltip.__yiboMountsSignature
     if type(signatures) ~= "table" then
         signatures = {}
@@ -44,7 +44,34 @@ function NS.Tooltip:Apply(tooltip, unitOverride, spellIDOverride, source)
     local unit = unitOverride or tooltipUnit
     local spellID = spellIDOverride or tooltipSpellID
     if not IsSupportedUnit(unit) then return end
-    AppendSource(tooltip, unit, spellID, source)
+    AppendSource(tooltip, spellID, source, unit)
+end
+
+function NS.Tooltip:ApplySpellID(tooltip, spellID, source, identity)
+    AppendSource(tooltip, spellID, source, identity)
+end
+
+function NS.Tooltip:ExtractSpellIDFromHyperlink(link)
+    if type(link) ~= "string" then return nil end
+    local spellID = link:match("[Hh]spell:(%d+)")
+    if spellID then return tonumber(spellID) end
+
+    local mountID = tonumber(link:match("[Hh]mount:(%d+)"))
+    if not mountID then return nil end
+    if C_MountJournal and type(C_MountJournal.GetMountInfoByID) == "function" then
+        local _, journalSpellID = C_MountJournal.GetMountInfoByID(mountID)
+        if type(journalSpellID) == "number" then return journalSpellID end
+    end
+    -- Some clients expose mount links with a spell ID payload. Preserve that
+    -- useful fallback when the journal lookup is unavailable.
+    return NS.Catalog:GetBySpellID(mountID) and mountID or nil
+end
+
+function NS.Tooltip:ApplyHyperlink(tooltip, link)
+    local _, _, tooltipSpellID = tooltip:GetSpell()
+    local spellID = type(tooltipSpellID) == "number" and tooltipSpellID
+        or self:ExtractSpellIDFromHyperlink(link)
+    self:ApplySpellID(tooltip, spellID, "OnTooltipSetHyperlink", "hyperlink")
 end
 
 local function GetAuraSpellID(api, unit, index, filter)
@@ -92,7 +119,7 @@ function NS.Tooltip:ApplyHoveredUnit(tooltip)
 
     local matches = self:FindMountAuras(unit)
     for _, match in ipairs(matches) do
-        AppendSource(tooltip, unit, match.spellID, "OnTooltipSetUnit")
+        AppendSource(tooltip, match.spellID, "OnTooltipSetUnit", unit)
     end
 end
 
@@ -111,6 +138,21 @@ function NS.Tooltip:Initialize()
     GameTooltip:HookScript("OnTooltipSetSpell", function(tooltip)
         NS.Tooltip:Apply(tooltip)
     end)
+    if type(GameTooltip.HasScript) == "function" and GameTooltip:HasScript("OnTooltipSetHyperlink") then
+        GameTooltip:HookScript("OnTooltipSetHyperlink", function(tooltip, link)
+            NS.Tooltip:ApplyHyperlink(tooltip, link)
+        end)
+    end
+    if type(GameTooltip.SetHyperlink) == "function" then
+        hooksecurefunc(GameTooltip, "SetHyperlink", function(tooltip, link)
+            NS.Tooltip:ApplyHyperlink(tooltip, link)
+        end)
+    end
+    if type(GameTooltip.SetMountBySpellID) == "function" then
+        hooksecurefunc(GameTooltip, "SetMountBySpellID", function(tooltip, spellID)
+            NS.Tooltip:ApplySpellID(tooltip, spellID, "SetMountBySpellID", "mount")
+        end)
+    end
     GameTooltip:HookScript("OnTooltipSetUnit", function(tooltip)
         NS.Tooltip:ApplyHoveredUnit(tooltip)
     end)

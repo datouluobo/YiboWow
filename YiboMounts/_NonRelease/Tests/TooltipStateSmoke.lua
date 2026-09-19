@@ -60,6 +60,32 @@ NS.Tooltip:ApplyHoveredUnit(HoverTooltip)
 NS.Tooltip:ApplyHoveredUnit(HoverTooltip)
 Expect(#HoverTooltip.lines, 1, "hovered unit appends the matched mount source once")
 
+local LinkTooltip = { lines = {}, spellID = nil }
+function LinkTooltip:GetUnit() return nil, nil end
+function LinkTooltip:GetSpell() return nil, nil, self.spellID end
+function LinkTooltip:AddLine(text) table.insert(self.lines, text) end
+function LinkTooltip:Show() end
+Expect(NS.Tooltip:ExtractSpellIDFromHyperlink("|cff71d5ff|Hspell:40192|h[Ashes of Al'ar]|h|r"), 40192,
+    "spell hyperlink extracts its spell ID")
+Expect(NS.Tooltip:ExtractSpellIDFromHyperlink("|cff71d5ff|Hmount:40192|h[Ashes of Al'ar]|h|r"), 40192,
+    "mount hyperlink extracts its spell ID")
+local savedMountJournal = C_MountJournal
+C_MountJournal = { GetMountInfoByID = function() return "Ashes of Al'ar", 40192 end }
+Expect(NS.Tooltip:ExtractSpellIDFromHyperlink("|cff71d5ff|Hmount:77|h[Ashes of Al'ar]|h|r"), 40192,
+    "mount journal hyperlink resolves its journal ID to a spell ID")
+C_MountJournal = savedMountJournal
+NS.Tooltip:ApplyHyperlink(LinkTooltip, "|cff71d5ff|Hspell:40192|h[Ashes of Al'ar]|h|r")
+NS.Tooltip:ApplyHyperlink(LinkTooltip, "|cff71d5ff|Hspell:40192|h[Ashes of Al'ar]|h|r")
+Expect(#LinkTooltip.lines, 1, "hyperlink source appends once for repeated callbacks")
+
+LinkTooltip.__yiboMountsSignature = nil
+NS.Tooltip:ApplySpellID(LinkTooltip, 40192, "SetMountBySpellID", "mount")
+Expect(#LinkTooltip.lines, 2, "mount panel source can append through the spell ID path")
+
+LinkTooltip.__yiboMountsSignature = nil
+NS.Tooltip:ApplyHyperlink(LinkTooltip, "|cff71d5ff|Hspell:999999999|h[Unknown]|h|r")
+Expect(#LinkTooltip.lines, 2, "unknown hyperlinks remain silent")
+
 FakeTooltip.__yiboMountsSignature = nil
 FakeTooltip.unit = "focus"
 FakeTooltip.spellID = 40192
