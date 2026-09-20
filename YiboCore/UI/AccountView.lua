@@ -1144,7 +1144,7 @@ function AccountView:RefreshNavigation()
         pages[#pages + 1] = { id = "settings-display", title = "  显示与入口", settingsTargetID = "display" }
         local businessSettings = {}
         for _, page in ipairs(self._pageOrder) do
-            if not page.internal then businessSettings[#businessSettings + 1] = { id = "settings-" .. page.id, title = page.title, settingsTargetID = page.id, addonName = page.addonName or page.id } end
+            if not page.internal and not page.hideFromSettings then businessSettings[#businessSettings + 1] = { id = "settings-" .. page.id, title = page.title, settingsTargetID = page.id, addonName = page.addonName or page.id } end
         end
         for _, panel in ipairs(Core:GetRegisteredSettingsPanels()) do
             businessSettings[#businessSettings + 1] = { id = "addon-settings:" .. panel.id, title = panel.title, settingsTargetID = "addon-settings:" .. panel.id, addonName = panel.addonName }

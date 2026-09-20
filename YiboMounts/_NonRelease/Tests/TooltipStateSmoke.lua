@@ -82,6 +82,63 @@ LinkTooltip.__yiboMountsSignature = nil
 NS.Tooltip:ApplySpellID(LinkTooltip, 40192, "SetMountBySpellID", "mount")
 Expect(#LinkTooltip.lines, 2, "mount panel source can append through the spell ID path")
 
+local savedCoreIntegration, savedMountJournal = NS.CoreIntegration, C_MountJournal
+local savedSettings = NS:GetSettings().collectionStatus
+local savedShowCollected, savedShowUncollected = savedSettings.showCollected, savedSettings.showUncollected
+NS.CoreIntegration = { initialized = true, IsCollectionStatusAvailable = function() return true end }
+C_MountJournal = { GetMountInfoByID = function() return "Astral Cloud Serpent", 127170, nil, nil, nil, nil, nil, nil, nil, nil, true end }
+local CollectionTooltip = { lines = {}, spellID = 127170 }
+function CollectionTooltip:GetUnit() return nil, nil end
+function CollectionTooltip:GetSpell() return nil, nil, self.spellID end
+function CollectionTooltip:AddLine(text) table.insert(self.lines, text) end
+function CollectionTooltip:Show() end
+NS.Tooltip:ApplySpellID(CollectionTooltip, 127170, "OnTooltipSetHyperlink", "hyperlink")
+Expect(#CollectionTooltip.lines, 3, "non-journal tooltip appends account collection status")
+Expect(CollectionTooltip.lines[3], "Collection: Collected", "collected status uses the localized status label")
+
+local UncollectedTooltip = { lines = {}, spellID = 127170 }
+function UncollectedTooltip:GetUnit() return nil, nil end
+function UncollectedTooltip:GetSpell() return nil, nil, self.spellID end
+function UncollectedTooltip:AddLine(text) table.insert(self.lines, text) end
+function UncollectedTooltip:Show() end
+C_MountJournal.GetMountInfoByID = function() return "Astral Cloud Serpent", 127170, nil, nil, nil, nil, nil, nil, nil, nil, false end
+NS.Tooltip:ApplySpellID(UncollectedTooltip, 127170, "OnTooltipSetHyperlink", "hyperlink")
+Expect(#UncollectedTooltip.lines, 3, "uncollected status is shown when enabled")
+Expect(UncollectedTooltip.lines[3], "Collection: Not collected", "uncollected status uses the localized status label")
+
+NS:GetSettings().collectionStatus.showUncollected = false
+local HiddenUncollectedTooltip = { lines = {}, spellID = 127170 }
+function HiddenUncollectedTooltip:GetUnit() return nil, nil end
+function HiddenUncollectedTooltip:GetSpell() return nil, nil, self.spellID end
+function HiddenUncollectedTooltip:AddLine(text) table.insert(self.lines, text) end
+function HiddenUncollectedTooltip:Show() end
+NS.Tooltip:ApplySpellID(HiddenUncollectedTooltip, 127170, "OnTooltipSetHyperlink", "hyperlink")
+Expect(#HiddenUncollectedTooltip.lines, 2, "uncollected status respects its child setting")
+
+local SelfTooltip = { lines = {}, spellID = 127170 }
+function SelfTooltip:GetUnit() return "Tester", "player" end
+function SelfTooltip:GetSpell() return nil, nil, self.spellID end
+function SelfTooltip:AddLine(text) table.insert(self.lines, text) end
+function SelfTooltip:Show() end
+NS:GetSettings().collectionStatus.showUncollected = true
+NS.Tooltip:Apply(SelfTooltip, "player", 127170, "SetUnitBuff")
+Expect(#SelfTooltip.lines, 2, "player self-buffs do not append account collection status")
+
+local JournalTooltip = { lines = {}, spellID = 127170 }
+function JournalTooltip:GetUnit() return nil, nil end
+function JournalTooltip:GetSpell() return nil, nil, self.spellID end
+function JournalTooltip:AddLine(text) table.insert(self.lines, text) end
+function JournalTooltip:Show() end
+NS:GetSettings().collectionStatus.showUncollected = true
+NS.Tooltip:ApplySpellID(JournalTooltip, 127170, "SetMountBySpellID", "mount")
+Expect(#JournalTooltip.lines, 2, "mount journal keeps its native tooltip content")
+NS.Tooltip:ApplySpellID(JournalTooltip, 127170, "OnTooltipSetSpell", "spell")
+Expect(#JournalTooltip.lines, 4, "mount journal callbacks retain their native source lines")
+Expect(JournalTooltip.lines[3], "Drop: 魔古山宝库 > 伊拉贡", "mount journal callbacks never append collection status")
+
+NS.CoreIntegration, C_MountJournal = savedCoreIntegration, savedMountJournal
+savedSettings.showCollected, savedSettings.showUncollected = savedShowCollected, savedShowUncollected
+
 LinkTooltip.__yiboMountsSignature = nil
 NS.Tooltip:ApplyHyperlink(LinkTooltip, "|cff71d5ff|Hspell:999999999|h[Unknown]|h|r")
 Expect(#LinkTooltip.lines, 2, "unknown hyperlinks remain silent")

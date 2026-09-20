@@ -1,9 +1,38 @@
 local ADDON_NAME, NS = ...
 
 NS.NAME = ADDON_NAME
-NS.VERSION = "0.7"
+NS.VERSION = "0.8"
 NS.INTERFACE = 50504
 NS.Locale = NS.Locale or {}
+NS.DefaultSettings = {
+    collectionStatus = {
+        enabled = true,
+        showCollected = true,
+        showUncollected = true,
+    },
+}
+
+local function ApplyDefaults(target, defaults)
+    for key, value in pairs(defaults) do
+        if type(value) == "table" then
+            target[key] = type(target[key]) == "table" and target[key] or {}
+            ApplyDefaults(target[key], value)
+        elseif target[key] == nil then
+            target[key] = value
+        end
+    end
+end
+
+function NS:EnsureDB()
+    YiboMountsDB = YiboMountsDB or {}
+    ApplyDefaults(YiboMountsDB, { version = 1, settings = self.DefaultSettings })
+    YiboMountsDB.version = math.max(tonumber(YiboMountsDB.version) or 0, 1)
+    return YiboMountsDB
+end
+
+function NS:GetSettings()
+    return self:EnsureDB().settings
+end
 
 function NS:GetLocaleTable()
     local locale = GetLocale and GetLocale() or "enUS"

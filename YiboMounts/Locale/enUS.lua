@@ -30,4 +30,12 @@ NS.Locale.enUS = {
     NO_LONGER_OBTAINABLE = "No longer obtainable",
     ALLIANCE = "Alliance",
     HORDE = "Horde",
+    COLLECTION_STATUS = "Collection",
+    COLLECTION_STATUS_COLLECTED = "Collected",
+    COLLECTION_STATUS_UNCOLLECTED = "Not collected",
+    SETTINGS_COLLECTION_STATUS = "Collection status tooltips",
+    SETTINGS_COLLECTION_STATUS_DESCRIPTION = "Show account-wide collection status on mount tooltips outside the Mount Journal. Unknown states remain hidden.",
+    SETTINGS_COLLECTION_STATUS_ENABLED = "Show collection status",
+    SETTINGS_COLLECTION_STATUS_COLLECTED = "Show collected",
+    SETTINGS_COLLECTION_STATUS_UNCOLLECTED = "Show not collected",
 }

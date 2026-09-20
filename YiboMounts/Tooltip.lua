@@ -8,6 +8,46 @@ end
 
 local function ClearMarker(tooltip)
     tooltip.__yiboMountsSignature = nil
+    tooltip.__yiboMountsCollectionSignature = nil
+    tooltip.__yiboMountsJournalTooltip = nil
+end
+
+local function GetCollectionState(record)
+    if not (NS.CoreIntegration and NS.CoreIntegration:IsCollectionStatusAvailable()) then return nil end
+    local mountJournalID = record and record.ids and record.ids.mountJournalID
+    if type(record) ~= "table" or type(mountJournalID) ~= "number" then return nil end
+    if not (C_MountJournal and type(C_MountJournal.GetMountInfoByID) == "function") then return nil end
+    local result = { C_MountJournal.GetMountInfoByID(mountJournalID) }
+    local collected = result[11]
+    if type(collected) ~= "boolean" then return nil end
+    return collected
+end
+
+local function AppendCollectionStatus(tooltip, spellID, record, source, identity)
+    -- SetMountBySpellID is the Mount Journal path. The native panel already
+    -- renders collection state, so do not duplicate it there.
+    -- A player's own mount aura is proof that the account has the mount; the
+    -- status line adds no information there and only creates noise.
+    if source == "SetMountBySpellID" or tooltip.__yiboMountsJournalTooltip or identity == "player" then return end
+    local settings = NS:GetSettings().collectionStatus
+    if not (settings and settings.enabled) then return end
+
+    local collected = GetCollectionState(record)
+    if collected == nil then return end
+    if collected and not settings.showCollected then return end
+    if not collected and not settings.showUncollected then return end
+
+    local signatures = tooltip.__yiboMountsCollectionSignature
+    if type(signatures) ~= "table" then
+        signatures = {}
+        tooltip.__yiboMountsCollectionSignature = signatures
+    end
+    if signatures[spellID] then return end
+
+    local key = collected and "COLLECTION_STATUS_COLLECTED" or "COLLECTION_STATUS_UNCOLLECTED"
+    local colors = collected and { 0.16, 0.68, 0.24 } or { 0.70, 0.20, 0.20 }
+    tooltip:AddLine(NS:L("COLLECTION_STATUS") .. ": " .. NS:L(key), colors[1], colors[2], colors[3], true)
+    signatures[spellID] = true
 end
 
 local function AppendSource(tooltip, spellID, source, identity)
@@ -34,6 +74,7 @@ local function AppendSource(tooltip, spellID, source, identity)
         tooltip:AddLine(entry.primary, 0.12, 0.88, 0.44, true)
         if entry.secondary then tooltip:AddLine(entry.secondary, 0.82, 0.82, 0.82, true) end
     end
+    AppendCollectionStatus(tooltip, spellID, record, source, identity)
     signatures[signature] = true
     tooltip:Show()
 end
@@ -48,6 +89,7 @@ function NS.Tooltip:Apply(tooltip, unitOverride, spellIDOverride, source)
 end
 
 function NS.Tooltip:ApplySpellID(tooltip, spellID, source, identity)
+    if source == "SetMountBySpellID" then tooltip.__yiboMountsJournalTooltip = true end
     AppendSource(tooltip, spellID, source, identity)
 end
 

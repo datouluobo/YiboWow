@@ -99,6 +99,7 @@ local function RegisterPage(core)
     local page, err = core.AccountView:RegisterPage(ADDON_ID, {
         id = PAGE_ID,
         title = ADDON_TITLE,
+        hideFromSettings = true,
         compactWidth = true,
         defaultEnabled = true,
         Create = CreateDebugPage,
@@ -135,8 +136,10 @@ end
 
 local function CreateSettingsPanel(row, host)
     local core, theme = _G.YiboCore, _G.YiboCore.UITheme
+    if row.yiboBeastPathsSettings then row.yiboBeastPathsSettings:Hide() end
     local section = host.createSection(row, "业务设置", row:GetWidth() or 560, 178)
     section:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
+    row.yiboBeastPathsSettings = section
     local status = theme:CreateText(section, theme.Font.assist, theme.Colors.muted, "LEFT")
     status:SetPoint("TOPLEFT", section, "TOPLEFT", 12, -42)
     status:SetPoint("TOPRIGHT", section, "TOPRIGHT", -12, -42)
