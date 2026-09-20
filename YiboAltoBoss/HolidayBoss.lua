@@ -425,12 +425,25 @@ function Holiday:ToggleQueue(ref)
     local boss = self:GetBoss(ref)
     local queue = self:GetQueueState(boss)
     if queue.state == "queued" then
-        if type(LFG_LeaveQueue) == "function" then LFG_LeaveQueue(LE_LFG_CATEGORY_LFD); return true, "已取消排队。" end
+        if type(LFG_LeaveQueue) == "function" then
+            LFG_LeaveQueue(LE_LFG_CATEGORY_LFD)
+            if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+            if C_Timer and type(C_Timer.After) == "function" then
+                C_Timer.After(0.05, function() if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end end)
+                C_Timer.After(0.25, function() if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end end)
+            end
+            return true, "已取消排队。"
+        end
         return false, "客户端不支持取消该队列。"
     end
     if queue.state ~= "ready" then return false, queue.reason or "当前不可排队。" end
     if type(LFDQueueFrame_SetType) == "function" then LFDQueueFrame_SetType(boss.lfgDungeonID) end
     if type(LFG_JoinDungeon) ~= "function" then return false, "客户端不支持地下城查找器排队。" end
     LFG_JoinDungeon(LE_LFG_CATEGORY_LFD, boss.lfgDungeonID, _G.LFDDungeonList, _G.LFDHiddenByCollapseList)
+    if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+    if C_Timer and type(C_Timer.After) == "function" then
+        C_Timer.After(0.05, function() if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end end)
+        C_Timer.After(0.25, function() if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end end)
+    end
     return true, "已加入节日副本队列。"
 end

@@ -7,12 +7,14 @@
 1. 修复节日 Boss 击杀记录与历史状态回填。
 2. 修复职责选择、刷新和 Tooltip 显示。
 3. 优化节日 Boss 状态与可排队按钮。
+4. 修复点击加入或取消排队后按钮状态不会立即刷新的问题。
 
 ### English
 
 1. Fixed holiday Boss kill records and historical status backfill.
 2. Fixed role selection, refresh behavior, and tooltip display.
 3. Improved holiday Boss status labels and the queue-ready button.
+4. Fixed the queue button not refreshing immediately after joining or leaving.
 
 ## v2.4
 

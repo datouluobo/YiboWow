@@ -2872,6 +2872,8 @@ eventFrame:RegisterEvent("LFG_COMPLETION_REWARD")
 eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 eventFrame:RegisterEvent("CALENDAR_UPDATE_EVENT_LIST")
 eventFrame:RegisterEvent("LFG_ROLE_UPDATE")
+eventFrame:RegisterEvent("LFG_UPDATE")
+eventFrame:RegisterEvent("LFG_QUEUE_STATUS_UPDATE")
 eventFrame:SetScript("OnEvent", function(_, event, ...)
     local arg1 = ...
     if event == "ADDON_LOADED" and arg1 == ADDON_NAME then
@@ -2928,9 +2930,9 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
         local changed = YAB.Holiday and YAB.Holiday.ObserveCurrent and YAB.Holiday:ObserveCurrent()
         if changed then YAB.PersistDB() end
         if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
-    elseif event == "LFG_ROLE_UPDATE" then
+    elseif event == "LFG_ROLE_UPDATE" or event == "LFG_UPDATE" or event == "LFG_QUEUE_STATUS_UPDATE" then
         -- Blizzard's Dungeon Finder role buttons changed; refresh the holiday
-        -- action and phase cells from the system-selected roles.
+        -- action and phase cells from the system-selected roles and queue state.
         if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
     end
 end)
