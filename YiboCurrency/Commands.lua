@@ -7,7 +7,9 @@ SlashCmdList["YCU"] = function(message)
         local core = _G.YiboCore
         local character = core and core.Characters and core.Characters:GetCurrent()
         local snapshot = character and core.DataDomains and core.DataDomains:Get(character.id, "economy")
+        local itemSnapshot = character and core.DataDomains and core.DataDomains:Get(character.id, "economy-items")
         local data = snapshot and snapshot.data or {}
+        local itemData = itemSnapshot and itemSnapshot.data or {}
         local count = 0
         for _ in pairs(data.currencies or {}) do count = count + 1 end
         Addon:Print(string.format("货币 API：GetCurrencyInfo=%s，C_CurrencyInfo=%s；经济域=%s；金币=%s；已读取标准货币=%d。",
@@ -20,7 +22,9 @@ SlashCmdList["YCU"] = function(message)
                 Addon:Print(string.format("%s · %s · 本周 %s/%s · 上限 %s · %s", entry.id, name or "客户端未返回名称", tostring(weekly), tostring(weeklyMax), tostring(maximum), entry.status or "待核验"))
             elseif entry.itemID then
                 local name = GetItemInfo and GetItemInfo(entry.itemID)
-                Addon:Print(string.format("%s · %s · %s", entry.id, name or "客户端未缓存名称", entry.status or "待核验"))
+                local live = C_Item and C_Item.GetItemCount and C_Item.GetItemCount(entry.itemID, false, false, false)
+                local stored = itemData.items and itemData.items[entry.itemID]
+                Addon:Print(string.format("%s · %s · 背包=%s · 快照=%s · %s", entry.id, name or "客户端未缓存名称", tostring(live), tostring(stored and (stored.total or stored.carried) or "缺失"), entry.status or "待核验"))
             end
         end
         return

@@ -1,7 +1,7 @@
 local ADDON_NAME = ...
 local Addon = _G.YiboCurrency or {}
 _G.YiboCurrency = Addon
-Addon.NAME, Addon.VERSION = "YiboCurrency", "0.5"
+Addon.NAME, Addon.VERSION = "YiboCurrency", "0.6"
 
 local function Defaults(target, values)
     for key, value in pairs(values) do

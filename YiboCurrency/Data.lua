@@ -1,7 +1,46 @@
 local Addon, Core = _G.YiboCurrency, _G.YiboCore
 local MAX_MONITORED = 16
+local CARRIED_BAGS = { 0, 1, 2, 3, 4 }
+local BANK_BAGS = { -1, 5, 6, 7, 8, 9, 10, 11, 12 }
 
 local function Copy(entry) local result = {}; for key, value in pairs(entry) do result[key] = value end; return result end
+local function ScanContainers(itemID, includeBank)
+    local getSlots = C_Container and C_Container.GetContainerNumSlots or GetContainerNumSlots
+    local getInfo = C_Container and C_Container.GetContainerItemInfo or GetContainerItemInfo
+    if type(getSlots) ~= "function" or type(getInfo) ~= "function" then return nil end
+    local carried, total = 0, 0
+    local function Scan(bags)
+        for _, bagID in ipairs(bags) do
+            for slot = 1, (getSlots(bagID) or 0) do
+                local info = getInfo(bagID, slot)
+                local foundID, stack
+                if type(info) == "table" then
+                    foundID, stack = info.itemID, info.stackCount or info.quantity or info.count
+                else
+                    local _, oldStack, _, _, _, _, _, _, _, oldID = getInfo(bagID, slot)
+                    foundID, stack = oldID, oldStack
+                end
+                if tonumber(foundID) == itemID then
+                    stack = tonumber(stack) or 1
+                    total = total + stack
+                end
+            end
+        end
+    end
+    carried = Scan(CARRIED_BAGS)
+    if includeBank then Scan(BANK_BAGS) end
+    return includeBank and total or carried
+end
+
+local function ReadItemCount(itemID, includeBank)
+    if C_Item and type(C_Item.GetItemCount) == "function" then
+        return C_Item.GetItemCount(itemID, includeBank, false, false)
+    end
+    if type(GetItemCount) == "function" then
+        return GetItemCount(itemID, includeBank, false, false)
+    end
+    return ScanContainers(itemID, includeBank)
+end
 
 function Addon:GetCatalog()
     local list, known = {}, {}
@@ -106,7 +145,20 @@ function Addon:GetValue(character, entry)
     if entry.source == "item" then
         if entry.verified == "pending-client" and GetItemInfo and GetItemInfo(entry.itemID) then entry.verified = "client" end
         if entry.verified ~= "client" and entry.verified ~= "implemented" then return nil, "unverified" end
-        return snapshot.data and snapshot.data.items and snapshot.data.items[entry.itemID], "known"
+        local itemValue = snapshot.data and snapshot.data.items and snapshot.data.items[entry.itemID]
+        if itemValue then return itemValue, "known" end
+        -- A catalog update can happen after an older character snapshot was
+        -- saved.  Read the current character directly so a newly added token
+        -- is visible immediately instead of waiting for a future bag event.
+        local current = Core.Characters and Core.Characters:GetCurrent()
+        if current and current.id == character.id then
+            local carried = ReadItemCount(entry.itemID, false)
+            if carried ~= nil then
+                local total = ReadItemCount(entry.itemID, true) or carried
+                return { itemID = entry.itemID, carried = carried, total = total, bankKnown = false }, "known"
+            end
+        end
+        return nil, "not-yet-scanned"
     end
     if snapshot.data and snapshot.data.currencyState ~= "known" then return nil, snapshot.data.currencyState end
     local value = snapshot.data and snapshot.data.currencies and snapshot.data.currencies[entry.currencyID]
@@ -119,7 +171,7 @@ end
 function Addon:ValueState(value, state)
     if state ~= "known" then return "unknown" end
     if not value then return "na" end
-    if value.quantity == nil then return "na" end
+    if value.quantity == nil and value.total == nil and value.carried == nil then return "na" end
     return "known"
 end
 function Addon:StateDescription(value, state)
