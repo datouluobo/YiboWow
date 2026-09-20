@@ -15,6 +15,10 @@ local BOSSES = {
         group = "holiday",
         scheduleKind = "event-daily-07",
         resetHour = 7,
+        activeWindow = {
+            start = { month = 9, day = 20, hour = 10 },
+            finish = { month = 10, day = 6, hour = 10 },
+        },
         eventTitleAliases = { "美酒节", "Brewfest" },
         questID = 25483,
         lfgDungeonID = 287,
@@ -36,6 +40,31 @@ local function DayKey(boss, now)
     return date("%Y-%j", now - (tonumber(boss.resetHour) or 7) * 3600)
 end
 
+local function IsWithinActiveWindow(boss, now)
+    local window = boss and boss.activeWindow
+    if not window then return true end
+
+    now = now or Now()
+    local current = date("*t", now)
+    if not current then return false end
+
+    local function Timestamp(spec)
+        return time({
+            year = current.year,
+            month = tonumber(spec.month),
+            day = tonumber(spec.day),
+            hour = tonumber(spec.hour) or 0,
+            min = tonumber(spec.min) or 0,
+            sec = tonumber(spec.sec) or 0,
+            isdst = current.isdst,
+        })
+    end
+
+    local startsAt = Timestamp(window.start)
+    local endsAt = Timestamp(window.finish)
+    return startsAt and endsAt and now >= startsAt and now < endsAt
+end
+
 local function CurrentCharacter(create)
     local key = YAB.GetCurrentCharKey and YAB.GetCurrentCharKey()
     local characters = YiboAltoBossDB and YiboAltoBossDB.characters
@@ -45,6 +74,7 @@ local function CurrentCharacter(create)
 end
 
 local function IsCalendarOpen(boss)
+    if not IsWithinActiveWindow(boss) then return false end
     if not (C_Calendar and type(C_Calendar.GetNumDayEvents) == "function" and type(C_Calendar.GetDayEvent) == "function") then return false end
     local today = date("*t")
     if not today then return false end
@@ -54,7 +84,10 @@ local function IsCalendarOpen(boss)
         local eventOK, event = pcall(C_Calendar.GetDayEvent, 0, today.day, index)
         local title = eventOK and event and string.lower(tostring(event.title or "")) or ""
         for _, alias in ipairs(boss.eventTitleAliases or {}) do
-            if title == string.lower(tostring(alias)) then return true end
+            local normalizedAlias = string.lower(tostring(alias))
+            if normalizedAlias ~= "" and string.find(title, normalizedAlias, 1, true) then
+                return true
+            end
         end
     end
     return false
@@ -65,6 +98,12 @@ local function QuestCompleted(questID)
     if type(query) ~= "function" then return false end
     local ok, completed = pcall(query, questID)
     return ok and completed == true
+end
+
+local function LFGDailyRewardCompleted(boss)
+    if not boss or type(GetLFGDungeonRewards) ~= "function" then return false end
+    local ok, doneToday = pcall(GetLFGDungeonRewards, boss.lfgDungeonID)
+    return ok and doneToday == true
 end
 
 local function GetRecord(charKey, boss, create)
@@ -132,8 +171,12 @@ function Holiday:ObserveCurrent()
     local changed = false
     for _, boss in ipairs(self:GetActiveBosses()) do
         local record = GetRecord(YAB.GetCurrentCharKey(), boss, true)
-        if QuestCompleted(boss.questID) then
-            if not (record and record.completed) then changed = WriteRecord(boss, "quest") or changed end
+        local questCompleted = QuestCompleted(boss.questID)
+        local rewardCompleted = LFGDailyRewardCompleted(boss)
+        if questCompleted or rewardCompleted then
+            if not (record and record.completed) then
+                changed = WriteRecord(boss, questCompleted and "quest" or "lfg-reward") or changed
+            end
         elseif record and not record.completed then
             record.observedAt = Now()
             changed = true
@@ -178,14 +221,171 @@ function Holiday:ToggleManual(ref, charKey)
     return true
 end
 
+function Holiday:GetAvailableRoles()
+    if C_LFGList and type(C_LFGList.GetAvailableRoles) == "function" then
+        local ok, available = pcall(C_LFGList.GetAvailableRoles)
+        if ok and type(available) == "table" then
+            local result = {
+                tank = available.tank and true or false,
+                healer = available.healer and true or false,
+                damage = (available.dps or available.damage) and true or false,
+            }
+            if result.tank or result.healer or result.damage then return result end
+        end
+    end
+    if type(GetAvailableRoles) == "function" then
+        local ok, tank, healer, damage = pcall(GetAvailableRoles)
+        if ok and (tank ~= nil or healer ~= nil or damage ~= nil) then
+            local result = { tank = tank and true or false, healer = healer and true or false, damage = damage and true or false }
+            if result.tank or result.healer or result.damage then return result end
+        end
+    end
+    -- Some Classic clients do not expose either availability API.  Build the
+    -- same role union the system panel uses by checking every specialization;
+    -- this keeps hybrid classes selectable while DPS-only classes remain fixed.
+    if type(GetNumSpecializations) == "function" and type(GetSpecializationRole) == "function" then
+        local result = { tank = false, healer = false, damage = false }
+        local ok, count = pcall(GetNumSpecializations)
+        if ok then
+            for index = 1, tonumber(count) or 0 do
+                local roleOK, role = pcall(GetSpecializationRole, index)
+                if roleOK then
+                    if role == "TANK" then result.tank = true end
+                    if role == "HEALER" then result.healer = true end
+                    if role == "DAMAGER" then result.damage = true end
+                end
+            end
+        end
+        if result.tank or result.healer or result.damage then return result end
+    end
+    -- If the client exposes no role metadata yet, keep the selector usable;
+    -- Blizzard will still reject an invalid role when the queue is submitted.
+    return { tank = true, healer = true, damage = true }
+end
+
+function Holiday:GetRoleSelection()
+    -- Read the roles selected in Blizzard's Dungeon Finder panel.  Modern
+    -- clients may expose them as a table; the legacy API returns leader first,
+    -- followed by tank, healer, and damage.
+    local available = self:GetAvailableRoles()
+    local availableCount = (available.tank and 1 or 0) + (available.healer and 1 or 0) + (available.damage and 1 or 0)
+    local function Normalize(selected)
+        if availableCount == 1 then return available end
+        return {
+            tank = available.tank and selected.tank == true or false,
+            healer = available.healer and selected.healer == true or false,
+            damage = available.damage and selected.damage == true or false,
+        }
+    end
+    if C_LFGList and type(C_LFGList.GetRoles) == "function" then
+        local ok, selected = pcall(C_LFGList.GetRoles)
+        if ok and type(selected) == "table" then
+            return Normalize({ tank = selected.tank == true, healer = selected.healer == true, damage = (selected.dps or selected.damage) == true })
+        end
+    end
+    if type(GetLFGRoles) ~= "function" then return nil end
+    local _, tank, healer, damage = GetLFGRoles()
+    return Normalize({ tank = tank == true, healer = healer == true, damage = damage == true })
+end
+
 function Holiday:GetRoles()
-    if type(GetLFGRoles) ~= "function" then return {}, "未检测到地下城查找器职责。" end
-    local tank, healer, damage = GetLFGRoles()
+    local selected = self:GetRoleSelection()
+    if not selected then return {}, "未检测到地下城查找器职责。" end
+    return self:BuildRoleList(selected.tank, selected.healer, selected.damage)
+end
+
+function Holiday:BuildRoleList(tank, healer, damage)
     local roles = {}
-    if tank then roles[#roles + 1] = "坦克" end
-    if healer then roles[#roles + 1] = "治疗" end
-    if damage then roles[#roles + 1] = "输出" end
+    if tank then roles[#roles + 1] = "T" end
+    if damage then roles[#roles + 1] = "D" end
+    if healer then roles[#roles + 1] = "N" end
     return roles
+end
+
+function Holiday:GetRoleNames()
+    local selected = self:GetRoleSelection()
+    if not selected then return {} end
+    local roles = {}
+    if selected.tank then roles[#roles + 1] = "T坦克" end
+    if selected.damage then roles[#roles + 1] = "D输出" end
+    if selected.healer then roles[#roles + 1] = "N治疗" end
+    return roles
+end
+
+function Holiday:NotifyRoleChanged()
+    if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+    if C_Timer and type(C_Timer.After) == "function" then
+        C_Timer.After(0.05, function()
+            if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+        end)
+    end
+end
+
+function Holiday:SetRoleSelection(tank, healer, damage)
+    local available = self:GetAvailableRoles()
+    tank = tank == true and available.tank
+    healer = healer == true and available.healer
+    damage = damage == true and available.damage
+    local count = (available.tank and 1 or 0) + (available.healer and 1 or 0) + (available.damage and 1 or 0)
+    if count == 1 then
+        tank, healer, damage = available.tank, available.healer, available.damage
+    end
+    if C_LFGList and type(C_LFGList.SetRoles) == "function" then
+        local ok = pcall(C_LFGList.SetRoles, { tank = tank == true, healer = healer == true, dps = damage == true })
+        if ok then return true end
+    end
+    if type(SetLFGRoles) == "function" then
+        local leader = false
+        if type(GetLFGRoles) == "function" then leader = select(1, GetLFGRoles()) == true end
+        local ok = pcall(SetLFGRoles, leader, tank == true, healer == true, damage == true)
+        if ok then return true end
+    end
+    return false
+end
+
+function Holiday:OpenRoleSelector(anchor)
+    local selected = self:GetRoleSelection()
+    if not selected then return false end
+    local available = self:GetAvailableRoles()
+    local availableCount = (available.tank and 1 or 0) + (available.healer and 1 or 0) + (available.damage and 1 or 0)
+    if availableCount <= 1 then return false end
+
+    if type(EasyMenu) == "function" and type(CreateFrame) == "function" then
+        self.roleMenu = self.roleMenu or CreateFrame("Frame", "YiboAltoBossRoleMenu", UIParent, "UIDropDownMenuTemplate")
+        local function ToggleRole(role)
+            local nextSelection = {
+                tank = selected.tank,
+                healer = selected.healer,
+                damage = selected.damage,
+            }
+            nextSelection[role] = not nextSelection[role]
+            if not nextSelection.tank and not nextSelection.healer and not nextSelection.damage then
+                return
+            end
+            if self:SetRoleSelection(nextSelection.tank, nextSelection.healer, nextSelection.damage) then
+                self:NotifyRoleChanged()
+            end
+        end
+        local menu = {
+            { text = "坦克", checked = selected.tank, disabled = not available.tank, func = function() ToggleRole("tank") end },
+            { text = "治疗", checked = selected.healer, disabled = not available.healer, func = function() ToggleRole("healer") end },
+            { text = "输出", checked = selected.damage, disabled = not available.damage, func = function() ToggleRole("damage") end },
+        }
+        EasyMenu(menu, self.roleMenu, "cursor", 0, 0, "MENU")
+        return true
+    end
+
+    -- Protected clients may reject direct role mutation.  Let Blizzard's
+    -- Dungeon Finder own the selection in that case.
+    if type(LFDQueueFrame_ToggleFrame) == "function" then
+        LFDQueueFrame_ToggleFrame()
+        return true
+    end
+    if type(PVEFrame_ToggleFrame) == "function" then
+        PVEFrame_ToggleFrame()
+        return true
+    end
+    return false
 end
 
 local function IsExpectedDungeon(boss)

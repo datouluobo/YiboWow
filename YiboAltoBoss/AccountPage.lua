@@ -383,7 +383,7 @@ end
 local function SetStatus(cell, status, key, boss)
     if YAB.Holiday and YAB.Holiday:IsBoss(boss) then
         local completed = status == "completed"
-        local labels = { completed = "已领取", available = "今日可领", unobserved = "尚未观察" }
+        local labels = { completed = "已击杀", available = "未击杀", unobserved = "未观察" }
         local text = labels[status] or "不可用"
         cell:SetText(text); cell:SetState("default")
         local fill, border, labelColor = C.chrome, C.matrixLine, C.text
@@ -394,7 +394,7 @@ local function SetStatus(cell, status, key, boss)
         cell.label:SetTextColor(labelColor[1], labelColor[2], labelColor[3])
         local _, record = YAB.Holiday:GetStatus(key, boss)
         local sourceLabels = { quest = "每日任务", ["lfg-reward"] = "副本完成奖励", manual = "人工标记" }
-        local lines = { { text = completed and "今日节日奖励已记录。" or (status == "unobserved" and "该角色今日尚未登录观察，按可领取提醒。" or "今日节日奖励尚未记录。"), color = labelColor } }
+        local lines = { { text = completed and "已完成节日 Boss。" or (status == "unobserved" and "尚未读取到今日状态。" or "已读取状态，今日尚未完成。"), color = labelColor } }
         if record and record.source then lines[#lines + 1] = { text = "来源：" .. (sourceLabels[record.source] or tostring(record.source)), color = C.muted } end
         if not (record and record.source and record.source ~= "manual") then
             lines[#lines + 1] = { text = "点击可添加或取消人工标记。", color = C.muted }
@@ -439,11 +439,19 @@ local function SetHolidayAction(control, boss)
         text = "取消排队"; lines[1] = { text = "当前角色正在该节日副本队列中。点击立即取消。", color = C.accent }
     elseif queue.state == "ready" then
         lines[1] = { text = "使用当前已选职责加入节日副本队列。", color = C.text }
-        lines[#lines + 1] = { text = "职责：" .. table.concat(queue.roles or {}, " / "), color = C.muted }
+        lines[#lines + 1] = { text = "职责：" .. table.concat(YAB.Holiday:GetRoleNames(), " / "), color = C.muted }
     else
         text = "不可排队"; lines[1] = { text = queue.reason or "当前角色暂不可排队。", color = C.muted }
     end
     SetSemanticButton(control, text, queue.state == "ready" and C.successSurface or (queue.state == "queued" and C.timer or FIXED_CELL), boss.name .. " / 行动", lines)
+    if queue.state == "ready" then
+        -- Reuse Core's selected-state language for an actionable holiday
+        -- button: the bright teal outline and label are visible in the dense
+        -- matrix without introducing a new visual treatment.
+        control:SetState("selected")
+        control:SetBackdropColor(C.selected[1], C.selected[2], C.selected[3], C.selected[4] or 1)
+        control.label:SetTextColor(C.accent[1], C.accent[2], C.accent[3])
+    end
     if queue.state == "ready" or queue.state == "queued" then
         control:SetScript("OnClick", function() YAB.Holiday:ToggleQueue(boss) end)
     end
@@ -451,9 +459,11 @@ end
 
 local function SetHolidayPhase(control, boss)
     local roles, note = YAB.Holiday:GetRoles()
+    local roleNames = YAB.Holiday:GetRoleNames()
     local text = #roles > 0 and table.concat(roles, "/") or "未选职责"
-    local lines = { { text = #roles > 0 and ("当前已选职责：" .. table.concat(roles, " / ")) or (note or "请先在地下城查找器选择职责。"), color = #roles > 0 and C.text or C.muted } }
+    local lines = { { text = #roles > 0 and ("当前已选职责：" .. table.concat(roleNames, " / ")) or (note or "请先在地下城查找器选择职责。"), color = #roles > 0 and C.text or C.muted }, { text = "点击选择系统职责。", color = C.muted } }
     SetSemanticButton(control, text, #roles > 0 and C.current or FIXED_CELL, boss.name .. " / 职责", lines)
+    control:SetScript("OnClick", function() YAB.Holiday:OpenRoleSelector(control) end)
 end
 
 local function RefreshHeaders(instance, context, keys, showAction, showPhase, showKills, bossNameWidth)

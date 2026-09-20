@@ -2870,6 +2870,8 @@ eventFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 eventFrame:RegisterEvent("QUEST_LOG_UPDATE")
 eventFrame:RegisterEvent("LFG_COMPLETION_REWARD")
 eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+eventFrame:RegisterEvent("CALENDAR_UPDATE_EVENT_LIST")
+eventFrame:RegisterEvent("LFG_ROLE_UPDATE")
 eventFrame:SetScript("OnEvent", function(_, event, ...)
     local arg1 = ...
     if event == "ADDON_LOADED" and arg1 == ADDON_NAME then
@@ -2902,7 +2904,14 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
     elseif event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
         ObserveTrackedUnits()
     elseif event == "LFG_COMPLETION_REWARD" then
-        if YAB.Holiday and YAB.Holiday.RecordCompletionReward and YAB.Holiday:RecordCompletionReward() then
+        local changed = false
+        if YAB.Holiday and YAB.Holiday.RecordCompletionReward then
+            changed = YAB.Holiday:RecordCompletionReward() or changed
+        end
+        if YAB.Holiday and YAB.Holiday.ObserveCurrent then
+            changed = YAB.Holiday:ObserveCurrent() or changed
+        end
+        if changed then
             YAB.PersistDB()
             if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
         end
@@ -2912,5 +2921,16 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
             YAB.PersistDB()
             if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
         end
+    elseif event == "CALENDAR_UPDATE_EVENT_LIST" then
+        -- The calendar is populated asynchronously after login.  Rebuild the
+        -- account page once its event list is available so active holiday
+        -- bosses are not omitted until the next reload.
+        local changed = YAB.Holiday and YAB.Holiday.ObserveCurrent and YAB.Holiday:ObserveCurrent()
+        if changed then YAB.PersistDB() end
+        if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+    elseif event == "LFG_ROLE_UPDATE" then
+        -- Blizzard's Dungeon Finder role buttons changed; refresh the holiday
+        -- action and phase cells from the system-selected roles.
+        if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
     end
 end)
