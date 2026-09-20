@@ -4,13 +4,15 @@
 
 ### 中文
 
-- 修复节日 Boss 的击杀记录、职责选择和页面刷新问题。
-- 优化节日 Boss 的状态显示与可排队按钮提示。
+1. 修复节日 Boss 击杀记录与历史状态回填。
+2. 修复职责选择、刷新和 Tooltip 显示。
+3. 优化节日 Boss 状态与可排队按钮。
 
 ### English
 
-- Fixed holiday Boss kill records, role selection, and page refresh issues.
-- Improved holiday Boss status labels and the queue-ready button display.
+1. Fixed holiday Boss kill records and historical status backfill.
+2. Fixed role selection, refresh behavior, and tooltip display.
+3. Improved holiday Boss status labels and the queue-ready button.
 
 ## v2.4
 
