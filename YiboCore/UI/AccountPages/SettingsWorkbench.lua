@@ -475,17 +475,32 @@ local function RefreshSettings(parent)
             row.yiboHostedOwner = hostedOwner
         end
         row:Show()
+        local hostedContext
+        hostedContext = {
+            refreshPage = function() AccountView:RefreshPage() end,
+            notifyPageChanged = function() if selected then AccountView:NotifyPageChanged(selected.id) end end,
+            -- Allow a business panel to repaint its own controls without
+            -- rebuilding the whole settings workbench.
+            refreshPanel = function()
+                local ok, heightOrError = xpcall(function()
+                    return details.CreateSettingsPanel(row, hostedContext)
+                end, function(message) return tostring(message) end)
+                if ok then
+                    row:SetHeight(math.max(1, tonumber(heightOrError) or row:GetHeight() or 1))
+                    if parent.scroll and parent.scroll.RefreshScrollbar then parent.scroll:RefreshScrollbar() end
+                else
+                    Core:Print("插件 “" .. tostring((selected and selected.title) or (settingsOnly and settingsOnly.title) or "未知") .. "” 的业务设置局部刷新失败：" .. tostring(heightOrError))
+                end
+            end,
+            createSection = CreateHostedSettingsSection,
+            createText = function(owner, size, color, justify) return Theme:CreateText(owner, size, color, justify) end,
+            createButton = function(owner, width, label, kind) return Theme:CreateButton(owner, width, label, kind) end,
+            createCheckbox = function(owner, label) return Theme:CreateCheckbox(owner, label) end,
+            bindTooltip = function(control, title, lines) Theme:BindTooltip(control, title, lines) end,
+            selectSettingsTarget = function(targetID) AccountView:SelectSettingsTarget(targetID) end,
+        }
         local ok, heightOrError = xpcall(function()
-            return details.CreateSettingsPanel(row, {
-                refreshPage = function() AccountView:RefreshPage() end,
-                notifyPageChanged = function() if selected then AccountView:NotifyPageChanged(selected.id) end end,
-                createSection = CreateHostedSettingsSection,
-                createText = function(owner, size, color, justify) return Theme:CreateText(owner, size, color, justify) end,
-                createButton = function(owner, width, label, kind) return Theme:CreateButton(owner, width, label, kind) end,
-                createCheckbox = function(owner, label) return Theme:CreateCheckbox(owner, label) end,
-                bindTooltip = function(control, title, lines) Theme:BindTooltip(control, title, lines) end,
-                selectSettingsTarget = function(targetID) AccountView:SelectSettingsTarget(targetID) end,
-            })
+            return details.CreateSettingsPanel(row, hostedContext)
         end, function(message) return tostring(message) end)
         if not ok then
             Core:Print("插件 “" .. tostring((selected and selected.title) or (settingsOnly and settingsOnly.title) or "未知") .. "” 的嵌入设置创建失败：" .. tostring(heightOrError))
