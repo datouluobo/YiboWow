@@ -6,6 +6,10 @@ local POPUP_KIND = "LOOT_BIND"
 local POPUP_COUNT = 4
 local EDGE_PADDING = 16
 
+local function IsPositionAssistEnabled()
+    return not (Addon.db and Addon.db.bindConfirmFollowCursor == false)
+end
+
 local function GetVisibleBindPopup()
     for index = 1, POPUP_COUNT do
         local popup = _G["StaticPopup" .. index]
@@ -58,7 +62,9 @@ local function GetCursorCenter(popup)
 end
 
 function Assist:Arm(pending)
-    if Addon.db and Addon.db.bindConfirmFollowCursor == false then return end
+    if not IsPositionAssistEnabled() then return end
+    if Addon.Database and Addon.Database.IsConfirmSourceEnabled
+        and not Addon.Database:IsConfirmSourceEnabled("auto-open-catalog") then return end
     Addon.runtime.bindConfirmCandidate = pending
 end
 
@@ -171,7 +177,7 @@ function Assist:InstallLayoutHook(popup)
 end
 
 function Assist:PreparePopup(popup, pending)
-    if Addon.db and Addon.db.bindConfirmFollowCursor == false then return end
+    if not IsPositionAssistEnabled() then return end
     if popup.yiboAutoOpenBindPending == pending then return true end
     local point, relativeTo, relativePoint, x, y = popup:GetPoint(1)
     if point then popup.yiboAutoOpenOriginalPoint = { point, relativeTo, relativePoint, x, y } end
@@ -207,6 +213,10 @@ end
 
 function Assist:HandleLootBindConfirm()
     local pending = Addon.runtime.bindConfirmCandidate
+    if not pending and Addon.runtime.confirmLootSourceKey then
+        pending = { source = Addon.runtime.confirmLootSourceKey, lootSlot = Addon.runtime.pandariaDarkSoilLoot }
+        Addon.runtime.bindConfirmCandidate = pending
+    end
     if not pending then return end
     local function Attach()
         if Addon.runtime.bindConfirmCandidate ~= pending then return end
@@ -214,6 +224,55 @@ function Assist:HandleLootBindConfirm()
         if popup then Assist:PreparePopup(popup, pending) end
     end
     if C_Timer and C_Timer.After then C_Timer.After(0, Attach) else Attach() end
+end
+
+function Assist:CaptureLootSource()
+    Addon.runtime.pandariaDarkSoilLoot = nil
+    Addon.runtime.confirmLootSourceKey = nil
+    Addon.runtime.recentConfirmObjects = Addon.runtime.recentConfirmObjects or {}
+    Addon.runtime.recentConfirmObjectOrder = Addon.runtime.recentConfirmObjectOrder or {}
+    if not GetLootSourceInfo or not GetNumLootItems then return end
+    local count = GetNumLootItems() or 0
+    for lootSlot = 1, count do
+        local sourceGUID, sourceName = GetLootSourceInfo(lootSlot)
+        local objectID = Addon.Catalog and Addon.Catalog.GetGameObjectID
+            and Addon.Catalog:GetGameObjectID(sourceGUID)
+        local sourceKey = objectID and ("object:" .. objectID) or nil
+        if objectID then
+            local recent = Addon.runtime.recentConfirmObjects[objectID]
+            if not recent then
+                recent = { objectID = objectID, label = sourceName or ("拾取来源对象 #" .. objectID) }
+                Addon.runtime.recentConfirmObjects[objectID] = recent
+                table.insert(Addon.runtime.recentConfirmObjectOrder, 1, objectID)
+                while #Addon.runtime.recentConfirmObjectOrder > 10 do
+                    local removed = table.remove(Addon.runtime.recentConfirmObjectOrder)
+                    Addon.runtime.recentConfirmObjects[removed] = nil
+                end
+            elseif sourceName and sourceName ~= "" then
+                recent.label = sourceName
+            end
+            if IsPositionAssistEnabled() and sourceKey and Addon.Database and Addon.Database:IsConfirmSourceEnabled(sourceKey) then
+                Addon.runtime.pandariaDarkSoilLoot = lootSlot
+                Addon.runtime.confirmLootSourceKey = sourceKey
+                return
+            end
+        end
+    end
+end
+
+function Assist:GetRecentConfirmObjects()
+    local result = {}
+    local order = Addon.runtime.recentConfirmObjectOrder or {}
+    local objects = Addon.runtime.recentConfirmObjects or {}
+    for _, objectID in ipairs(order) do
+        if objects[objectID] then result[#result + 1] = objects[objectID] end
+    end
+    return result
+end
+
+function Assist:ClearLootSource()
+    Addon.runtime.pandariaDarkSoilLoot = nil
+    Addon.runtime.confirmLootSourceKey = nil
 end
 
 if hooksecurefunc then

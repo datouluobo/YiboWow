@@ -1,7 +1,7 @@
 local Addon = _G.YiboAutoOpen or {}
 _G.YiboAutoOpen = Addon
-Addon.NAME, Addon.VERSION = "YiboAutoOpen", "1.1.1"
-Addon.runtime = { initialized = false, loggedIn = false, startupScansStarted = false, queueState = "IDLE", pauseReason = nil, generation = 0, pending = nil, scanQueued = false, deferredScanGeneration = 0, quarantined = {}, failures = {}, warned = {}, sensitiveFrames = {} }
+Addon.NAME, Addon.VERSION = "YiboAutoOpen", "1.2.0"
+Addon.runtime = { initialized = false, loggedIn = false, startupScansStarted = false, queueState = "IDLE", pauseReason = nil, generation = 0, pending = nil, scanQueued = false, deferredScanGeneration = 0, quarantined = {}, failures = {}, warned = {}, sensitiveFrames = {}, pandariaDarkSoilLoot = nil, confirmLootSourceKey = nil, recentConfirmObjects = {}, recentConfirmObjectOrder = {} }
 
 function Addon:Print(message, level)
     if level == "verbose" and self.db and self.db.notificationMode ~= "verbose" then return end

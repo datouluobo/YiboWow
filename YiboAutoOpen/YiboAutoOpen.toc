@@ -2,7 +2,7 @@
 ## Title: |cff20e070[Yibo]|r YiboAutoOpen - 自动开包
 ## Notes: 安全地自动开启账号目录中的容器物品。
 ## Author: YiboSoft
-## Version: 1.1.1
+## Version: 1.2.0
 ## IconTexture: Interface\AddOns\YiboAutoOpen\Media\YiboAutoOpenIcon-v2
 ## SavedVariables: YiboAutoOpenDB
 ## OptionalDeps: YiboCore

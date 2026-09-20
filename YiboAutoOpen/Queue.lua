@@ -132,8 +132,13 @@ function Queue:OnEvent(event, ...)
     if event == "BAG_UPDATE" or event == "BAG_UPDATE_DELAYED" or event == "ITEM_PUSH" then self:ScheduleBagRefresh()
     elseif event == "LOOT_BIND_CONFIRM" then
         if Addon.BindConfirmAssist then Addon.BindConfirmAssist:HandleLootBindConfirm() end
-    elseif event == "LOOT_OPENED" then Addon.runtime.queueState = "PAUSED"; Addon.runtime.pauseReason = "LOOT_OPEN"
-    elseif event == "LOOT_CLOSED" or event == "PLAYER_REGEN_ENABLED" or event == "PLAYER_ALIVE" or event == "PLAYER_UNGHOST" then self:RequestScan()
+    elseif event == "LOOT_OPENED" then
+        if Addon.BindConfirmAssist then Addon.BindConfirmAssist:CaptureLootSource() end
+        Addon.runtime.queueState = "PAUSED"; Addon.runtime.pauseReason = "LOOT_OPEN"
+    elseif event == "LOOT_CLOSED" then
+        if Addon.BindConfirmAssist then Addon.BindConfirmAssist:ClearLootSource() end
+        self:RequestScan()
+    elseif event == "PLAYER_REGEN_ENABLED" or event == "PLAYER_ALIVE" or event == "PLAYER_UNGHOST" then self:RequestScan()
     elseif event == "PLAYER_DEAD" then Addon.runtime.queueState = "PAUSED"; Addon.runtime.pauseReason = "PLAYER_UNAVAILABLE"
     elseif event:find("_SHOW$") or event:find("_OPENED$") or event == "VOID_STORAGE_OPEN" then Addon.Safety:SetSensitive(event, true); Addon.runtime.queueState = "PAUSED"; Addon.runtime.pauseReason = "SENSITIVE_UI"
     elseif event:find("_CLOSED$") or event == "VOID_STORAGE_CLOSE" then
