@@ -33,13 +33,8 @@ function Integration:CreateSettingsPanel(parent, context)
     description:SetPoint("TOPRIGHT", -12, 0)
     description:SetHeight(34)
 
-    local enabled = context.createCheckbox(section, NS:L("SETTINGS_COLLECTION_STATUS_ENABLED"))
-    enabled:SetPoint("TOPLEFT", 12, -82)
-    enabled.label:SetFontObject("GameFontNormalSmall")
-    enabled:SetChecked(settings.enabled)
-
     local collected = context.createCheckbox(section, NS:L("SETTINGS_COLLECTION_STATUS_COLLECTED"))
-    collected:SetPoint("TOPLEFT", 12, -112)
+    collected:SetPoint("TOPLEFT", 12, -82)
     collected.label:SetFontObject("GameFontNormalSmall")
     collected:SetChecked(settings.showCollected)
 
@@ -48,30 +43,14 @@ function Integration:CreateSettingsPanel(parent, context)
     uncollected.label:SetFontObject("GameFontNormalSmall")
     uncollected:SetChecked(settings.showUncollected)
 
-    local function Refresh()
-        local enabledValue = settings.enabled == true
-        collected:SetEnabled(enabledValue)
-        uncollected:SetEnabled(enabledValue)
-        collected:SetAlpha(enabledValue and 1 or 0.45)
-        uncollected:SetAlpha(enabledValue and 1 or 0.45)
-    end
-
-    enabled:SetScript("OnClick", function(control)
-        settings.enabled = control:GetCheckState() ~= "checked"
-        control:SetChecked(settings.enabled)
-        Refresh()
-    end)
     collected:SetScript("OnClick", function(control)
         settings.showCollected = control:GetCheckState() ~= "checked"
         control:SetChecked(settings.showCollected)
-        Refresh()
     end)
     uncollected:SetScript("OnClick", function(control)
         settings.showUncollected = control:GetCheckState() ~= "checked"
         control:SetChecked(settings.showUncollected)
-        Refresh()
     end)
-    Refresh()
 
     parent.yiboMountsSettings = parent.yiboMountsSettings or {}
     parent.yiboMountsSettings.section = section

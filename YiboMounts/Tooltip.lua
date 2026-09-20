@@ -30,7 +30,7 @@ local function AppendCollectionStatus(tooltip, spellID, record, source, identity
     -- status line adds no information there and only creates noise.
     if source == "SetMountBySpellID" or tooltip.__yiboMountsJournalTooltip or identity == "player" then return end
     local settings = NS:GetSettings().collectionStatus
-    if not (settings and settings.enabled) then return end
+    if not settings then return end
 
     local collected = GetCollectionState(record)
     if collected == nil then return end

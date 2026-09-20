@@ -1,12 +1,11 @@
 local ADDON_NAME, NS = ...
 
 NS.NAME = ADDON_NAME
-NS.VERSION = "0.8"
+NS.VERSION = "0.8.1"
 NS.INTERFACE = 50504
 NS.Locale = NS.Locale or {}
 NS.DefaultSettings = {
     collectionStatus = {
-        enabled = true,
         showCollected = true,
         showUncollected = true,
     },

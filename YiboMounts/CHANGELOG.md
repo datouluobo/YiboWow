@@ -1,5 +1,17 @@
 # YiboMounts Changelog / 更新日志
 
+## 0.8.1
+
+### 中文
+
+- 设置页改为两个独立选项：显示已拥有、显示未拥有；移除总开关。
+- 修复收藏状态设置选项无法正常切换的问题。
+
+### English
+
+- Replaced the collection-status master switch with two independent options: show collected and show uncollected.
+- Fixed collection-status settings not toggling correctly.
+
 ## 0.8
 
 ### 中文
