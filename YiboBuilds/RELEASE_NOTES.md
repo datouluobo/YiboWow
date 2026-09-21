@@ -1,4 +1,13 @@
-# YiboBuilds 1.0.0
+# YiboBuilds 1.1.0
+
+## 1.1.0
+
+YiboBuilds improves the account-wide equipment matrix and build comparison experience.
+
+- Added persistent current/backup equipment and specialization mode switching.
+- Added equipment quality borders, item levels, low-contrast empty slots, and changed-equipment markers.
+- Added configurable equipment preview fields and adaptive matrix spacing.
+- Refined the four local mode buttons and equipment tooltips.
 
 YiboBuilds adds an account-wide view of character builds for MoP Classic.
 

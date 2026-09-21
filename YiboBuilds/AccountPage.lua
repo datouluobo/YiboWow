@@ -29,6 +29,27 @@ for _, slots in ipairs({ LEFT_SLOTS, RIGHT_SLOTS, BOTTOM_SLOTS }) do
     for _, slotID in ipairs(slots) do SLOT_ORDER[#SLOT_ORDER + 1] = slotID end
 end
 
+local EQUIPMENT_COLUMNS = {
+    { id = "equipment_head", slotID = INVSLOT_HEAD or 1, title = "头部" },
+    { id = "equipment_shoulder", slotID = INVSLOT_SHOULDER or 3, title = "肩部" },
+    { id = "equipment_chest", slotID = INVSLOT_CHEST or 5, title = "胸部" },
+    { id = "equipment_hands", slotID = INVSLOT_HAND or 10, title = "手套" },
+    { id = "equipment_legs", slotID = INVSLOT_LEGS or 7, title = "腿部", gapAfter = 6 },
+    { id = "equipment_wrist", slotID = INVSLOT_WRIST or 9, title = "护腕" },
+    { id = "equipment_waist", slotID = INVSLOT_WAIST or 6, title = "腰部" },
+    { id = "equipment_feet", slotID = INVSLOT_FEET or 8, title = "脚部", gapAfter = 6 },
+    { id = "equipment_neck", slotID = INVSLOT_NECK or 2, title = "颈部" },
+    { id = "equipment_back", slotID = INVSLOT_BACK or 15, title = "披风", gapAfter = 6 },
+    { id = "equipment_finger1", slotID = INVSLOT_FINGER1 or 11, title = "戒指1" },
+    { id = "equipment_finger2", slotID = INVSLOT_FINGER2 or 12, title = "戒指2" },
+    { id = "equipment_trinket1", slotID = INVSLOT_TRINKET1 or 13, title = "饰品1" },
+    { id = "equipment_trinket2", slotID = INVSLOT_TRINKET2 or 14, title = "饰品2", gapAfter = 6 },
+    { id = "equipment_mainhand", slotID = INVSLOT_MAINHAND or 16, title = "主手" },
+    { id = "equipment_offhand", slotID = INVSLOT_OFFHAND or 17, title = "副手", gapAfter = 6 },
+    { id = "equipment_shirt", slotID = INVSLOT_SHIRT or 4, title = "衬衣" },
+    { id = "equipment_tabard", slotID = INVSLOT_TABARD or 19, title = "战袍" },
+}
+
 local function Text(parent, size, color, justify)
     return Theme:CreateText(parent, size or Theme.Font.body, color or C.text, justify or "LEFT")
 end
@@ -154,10 +175,18 @@ function Page:GetFields()
     return fields
 end
 
+function Page:GetPreviewFieldDefinitions()
+    local fields = {}
+    for _, column in ipairs(EQUIPMENT_COLUMNS) do
+        fields[#fields + 1] = { id = column.id, title = "装备·" .. column.title, defaultVisible = column.id ~= "equipment_shirt" and column.id ~= "equipment_tabard" }
+    end
+    return fields
+end
+
 -- The hover projection has its own compact geometry, but it must be built
 -- from the same field preferences as the account page.  Keeping this in one
 -- helper prevents the rendered matrix and its measured window from drifting.
-local function PreviewColumns(context, characters)
+local function PreviewColumns(context, characters, matrixMode)
     local nameWidth = Theme:GetCharacterRowHeaderWidth(false, context, characters)
     if context and context.scope == "all" then
         -- Core's shared row-header measure caps the name and realm separately.
@@ -169,6 +198,35 @@ local function PreviewColumns(context, characters)
     end
     local columns = { { id = "name", title = "角色", width = nameWidth } }
     local settings = Addon:GetSettings().previewColumns
+    if matrixMode == "equipment" then
+        local visibleEquipment = {}
+        for _, equipmentColumn in ipairs(EQUIPMENT_COLUMNS) do
+            if settings[equipmentColumn.id] ~= false then
+                visibleEquipment[#visibleEquipment + 1] = equipmentColumn
+            end
+        end
+        local equipmentWidth, groupGap = 40, 6
+        local availableWidth = tonumber(context and context.surfaceAvailableWidth)
+        if availableWidth and #visibleEquipment > 0 then
+            local inset = Theme:GetMatrixInsets(true)
+            local availableColumns = math.max(0, availableWidth - inset.left - inset.right - nameWidth)
+            local gapCount = 0
+            for _, equipmentColumn in ipairs(visibleEquipment) do
+                if equipmentColumn.gapAfter then gapCount = gapCount + 1 end
+            end
+            local calculated = math.floor((availableColumns - gapCount * groupGap) / #visibleEquipment)
+            equipmentWidth = math.max(36, math.min(40, calculated))
+            if equipmentWidth == 36 then groupGap = 4 end
+            if availableColumns < (#visibleEquipment * equipmentWidth + gapCount * groupGap) then
+                nameWidth = math.max(112, availableWidth - inset.left - inset.right - #visibleEquipment * equipmentWidth - gapCount * groupGap)
+            end
+        end
+        for _, equipmentColumn in ipairs(visibleEquipment) do
+            columns[#columns + 1] = { id = equipmentColumn.id, slotID = equipmentColumn.slotID, title = equipmentColumn.title, width = equipmentWidth, gapAfter = equipmentColumn.gapAfter and groupGap or nil }
+        end
+        columns[1].width = nameWidth
+        return columns
+    end
     local function Add(id, title)
         if settings[id] ~= false then
             local isBuildChoice = string.find(id, "talent", 1, true) or string.find(id, "major", 1, true) or string.find(id, "minor", 1, true)
@@ -192,12 +250,64 @@ local function PreviewCharacters(context)
     return eligible
 end
 
+local function PreviewRowHeight(matrixMode)
+    return matrixMode == "equipment" and (Theme.Table.previewRowHeight + 16) or Theme.Table.previewRowHeight
+end
+
 local function CreatePreviewCell(parent)
     local cell = CreateFrame("Button", nil, parent)
+    cell:SetFrameLevel((parent:GetFrameLevel() or 0) + 2)
     cell:RegisterForClicks("LeftButtonUp")
     cell.text = Text(cell, Theme.Font.assist, C.text, "LEFT")
     cell.text:SetAllPoints()
+    cell.itemFrame = CreateFrame("Frame", nil, cell, "BackdropTemplate")
+    cell.itemFrame:SetSize(32, 32)
+    cell.itemFrame:SetPoint("CENTER", 0, 0)
+    cell.itemFrame:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    cell.itemFrame:SetBackdropColor(0, 0, 0, 0)
+    cell.itemFrame:SetBackdropBorderColor(0, 0, 0, 0)
+    cell.itemFrame:EnableMouse(false)
+    cell.itemIcon = cell.itemFrame:CreateTexture(nil, "ARTWORK")
+    cell.itemIcon:SetPoint("TOPLEFT", 2, -2); cell.itemIcon:SetPoint("BOTTOMRIGHT", -2, 2)
+    cell.itemIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+    cell.itemLevel = Text(cell.itemFrame, Theme.Font.body, C.text, "CENTER")
+    cell.itemLevel:SetPoint("BOTTOM", cell.itemFrame, "BOTTOM", 0, 1)
+    cell.itemLevel:SetWidth(32)
+    cell.itemLevel:SetHeight(15)
+    cell.itemLevel:SetJustifyV("BOTTOM")
+    cell.itemLevel:SetShadowOffset(1, -1)
+    cell.itemLevel:SetDrawLayer("OVERLAY", 7)
+    cell.itemChanged = Text(cell.itemFrame, Theme.Font.body, C.warning, "RIGHT")
+    cell.itemChanged:SetPoint("TOPRIGHT", cell.itemFrame, "TOPRIGHT", -2, -1)
+    cell.itemChanged:SetWidth(14)
+    cell.itemChanged:SetHeight(16)
+    cell.itemChanged:SetText("!")
+    cell.itemChanged:SetShadowOffset(1, -1)
+    cell.itemChanged:SetDrawLayer("OVERLAY", 7)
+    cell.itemChanged:Hide()
+    cell.itemLevel:Hide()
+    cell.itemFrame:Hide()
     return cell
+end
+
+local function GetPreviewItemLevel(item)
+    if not item then return nil end
+    if item.itemLevel and tonumber(item.itemLevel) then return tonumber(item.itemLevel) end
+    if item.itemLink and GetDetailedItemLevelInfo then
+        local ok, level = pcall(GetDetailedItemLevelInfo, item.itemLink)
+        if ok and tonumber(level) then
+            item.itemLevel = tonumber(level)
+            return item.itemLevel
+        end
+    end
+    if item.itemLink and GetItemInfo then
+        local ok, _, _, _, level = pcall(GetItemInfo, item.itemLink)
+        if ok and tonumber(level) then
+            item.itemLevel = tonumber(level)
+            return item.itemLevel
+        end
+    end
+    return nil
 end
 
 local function SetPreviewCellTooltip(cell, entry)
@@ -217,6 +327,19 @@ local function SetPreviewEquipmentTooltip(cell, equipment, confirmed)
         GameTooltip:Show()
     end)
     cell:SetScript("OnLeave", function() GameTooltip:Hide() end)
+end
+
+local function SetPreviewItemTooltip(cell, item)
+    cell:SetScript("OnEnter", nil)
+    cell:SetScript("OnLeave", nil)
+    if item and item.itemLink then
+        cell:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetHyperlink(item.itemLink)
+            GameTooltip:Show()
+        end)
+        cell:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    end
 end
 
 function Page.Create(parent)
@@ -827,28 +950,47 @@ function Page.RefreshPreview(parent, context)
     parent.buildsEmpty:Hide(); parent.buildsRoster:Hide(); parent.buildsMain:Hide()
     -- The account projection is activity-relative: “当前” means each role's
     -- own last-used specialization, while “备用” is its other slot.
-    local mode = parent.buildsPreviewMode == "backup" and "backup" or "current"
-    parent.buildsPreviewMode = mode
+    local settings = Addon:GetSettings()
+    local matrixMode = settings.previewMatrixMode == "spec" and "spec" or "equipment"
+    local mode = (matrixMode == "equipment" and settings.previewEquipmentMode or settings.previewSpecMode) == "backup" and "backup" or "current"
+    if matrixMode == "equipment" then settings.previewEquipmentMode = mode else settings.previewSpecMode = mode end
     local characters = PreviewCharacters(context)
-    local columns = PreviewColumns(context, characters)
+    local columns = PreviewColumns(context, characters, matrixMode)
     parent.buildsPreviewToggle = parent.buildsPreviewToggle or CreateFrame("Frame", nil, parent)
-    -- A single segmented-text action matches the appearance switcher's
-    -- vocabulary and avoids turning title-bar state into two competing
-    -- buttons.  Reserve an invisible trailing spacer before the realm range.
-    if parent.buildsPreviewToggle.current then parent.buildsPreviewToggle.current:Hide() end
-    if parent.buildsPreviewToggle.backup then parent.buildsPreviewToggle.backup:Hide() end
-    parent.buildsPreviewToggle.toggle = parent.buildsPreviewToggle.toggle or Theme:CreateButton(parent.buildsPreviewToggle, 148, "", "secondary")
-    parent.buildsPreviewToggle:SetSize(180, Theme.Size.compact)
-    parent.buildsPreviewToggle.toggle:ClearAllPoints(); parent.buildsPreviewToggle.toggle:SetPoint("LEFT")
-    parent.buildsPreviewToggle.toggle:SetText(mode == "current" and "|cff20e070当前专精|r / 备用专精" or "当前专精 / |cff20e070备用专精|r")
-    parent.buildsPreviewToggle.toggle:SetState("default")
-    parent.buildsPreviewToggle.toggle:SetScript("OnClick", function()
-        parent.buildsPreviewMode = mode == "current" and "backup" or "current"
-        Page.RefreshPreview(parent, context)
-    end)
-    -- Slot selection is page state, so it belongs in the shared title-bar
-    -- action area beside the realm scope—not as a standalone content row.
-    if context and context.SetTitleBarControl then context:SetTitleBarControl(parent.buildsPreviewToggle, 180) else parent.buildsPreviewToggle:Hide() end
+    local buttons = parent.buildsPreviewToggle.buttons or {}
+    local buttonDefinitions = {
+        { id = "currentEquipment", label = "当前装备", matrix = "equipment", mode = "current" },
+        { id = "backupEquipment", label = "备用装备", matrix = "equipment", mode = "backup" },
+        { id = "currentSpec", label = "当前专精", matrix = "spec", mode = "current" },
+        { id = "backupSpec", label = "备用专精", matrix = "spec", mode = "backup" },
+    }
+    parent.buildsPreviewToggle:SetSize(340, Theme.Size.compact)
+    local selectedID = matrixMode == "equipment"
+        and (mode == "backup" and "backupEquipment" or "currentEquipment")
+        or (mode == "backup" and "backupSpec" or "currentSpec")
+    for index, definition in ipairs(buttonDefinitions) do
+        local button = buttons[index] or Theme:CreateButton(parent.buildsPreviewToggle, 82, "", "disclosure")
+        buttons[index] = button
+        button.kind = "disclosure"
+        button:SetSize(82, Theme.Size.compact)
+        button:ClearAllPoints()
+        if index == 1 then button:SetPoint("LEFT") else button:SetPoint("LEFT", buttons[index - 1], "RIGHT", 4, 0) end
+        button:SetText(definition.label)
+        button:SetState(definition.id == selectedID and "selected" or "default")
+        local textColor = definition.id == selectedID and C.accent or C.text
+        button.label:SetTextColor(textColor[1], textColor[2], textColor[3])
+        button:SetScript("OnClick", function()
+            settings.previewMatrixMode = definition.matrix
+            settings[definition.matrix == "equipment" and "previewEquipmentMode" or "previewSpecMode"] = definition.mode
+            Addon:NotifyChanged()
+            Page.RefreshPreview(parent, context)
+        end)
+        button:Show()
+    end
+    parent.buildsPreviewToggle.buttons = buttons
+    if parent.buildsPreviewToggle.specButton then parent.buildsPreviewToggle.specButton:Hide() end
+    if parent.buildsPreviewToggle.equipmentButton then parent.buildsPreviewToggle.equipmentButton:Hide() end
+    if context and context.SetTitleBarControl then context:SetTitleBarControl(parent.buildsPreviewToggle, 340) else parent.buildsPreviewToggle:Hide() end
     parent.buildsPreviewHeader = parent.buildsPreviewHeader or CreateFrame("Frame", nil, parent)
     parent.buildsPreviewBody = parent.buildsPreviewBody or CreateFrame("Frame", nil, parent)
     local inset = Theme:GetMatrixInsets(true)
@@ -857,18 +999,26 @@ function Page.RefreshPreview(parent, context)
     parent.buildsPreviewHeaders = parent.buildsPreviewHeaders or {}
     for index, col in ipairs(columns) do
         local header = parent.buildsPreviewHeaders[index] or Theme:CreateMatrixHeader(parent.buildsPreviewHeader); parent.buildsPreviewHeaders[index] = header
-        header:ClearAllPoints(); header:SetPoint("TOPLEFT", parent.buildsPreviewHeader, "TOPLEFT", x, 0); header:SetSize(col.width, Theme.Table.headerHeight); Theme:SetMatrixHeader(header, col.title, { height = Theme.Table.headerHeight, inset = 2 }); header:Show(); x = x + col.width
+        header:ClearAllPoints(); header:SetPoint("TOPLEFT", parent.buildsPreviewHeader, "TOPLEFT", x, 0); header:SetSize(col.width, Theme.Table.headerHeight); Theme:SetMatrixHeader(header, col.title, { height = Theme.Table.headerHeight, inset = 2 }); header:Show(); x = x + col.width + (col.gapAfter or 0)
     end
+    for index = #columns + 1, #parent.buildsPreviewHeaders do parent.buildsPreviewHeaders[index]:Hide() end
     width = x; parent.buildsPreviewHeader:SetSize(width, Theme.Table.headerHeight)
     parent.buildsPreviewRows = parent.buildsPreviewRows or {}
     for ri, character in ipairs(characters) do
         local record = Addon.Snapshot:GetCharacter(character.id); local slotData = Addon.Snapshot:GetProjectedSlot(record, mode)
         local row = parent.buildsPreviewRows[ri] or CreateFrame("Button", nil, parent.buildsPreviewBody, "BackdropTemplate"); parent.buildsPreviewRows[ri] = row
-        row:ClearAllPoints(); row:SetPoint("TOPLEFT", parent.buildsPreviewBody, "TOPLEFT", 0, -((ri - 1) * Theme.Table.previewRowHeight)); row:SetSize(width, Theme.Table.previewRowHeight); row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" }); local fill = Theme:GetDataRowColor(ri); row:SetBackdropColor(fill[1], fill[2], fill[3], fill[4]); row.cells = row.cells or {}
+        local rowHeight = PreviewRowHeight(matrixMode)
+        row:ClearAllPoints(); row:SetPoint("TOPLEFT", parent.buildsPreviewBody, "TOPLEFT", 0, -((ri - 1) * rowHeight)); row:SetSize(width, rowHeight); row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" }); local fill = Theme:GetDataRowColor(ri); row:SetBackdropColor(fill[1], fill[2], fill[3], fill[4]); row.cells = row.cells or {}
         x = 0
         for ci, col in ipairs(columns) do
             local cell = row.cells[ci] or CreatePreviewCell(row); row.cells[ci] = cell
-            cell:ClearAllPoints(); cell:SetPoint("LEFT", x + 3, 0); cell:SetSize(col.width - 6, Theme.Table.previewRowHeight)
+            cell:ClearAllPoints()
+            if col.slotID then
+                cell:SetPoint("LEFT", x, 0); cell:SetSize(col.width, rowHeight)
+            else
+                cell:SetPoint("LEFT", x + 3, 0); cell:SetSize(col.width - 6, rowHeight)
+            end
+            cell.text:Show(); cell.itemFrame:Hide(); cell.itemLevel:Hide(); cell.itemChanged:Hide()
             local value = "—"
             if col.id == "name" then value = CharacterLabel(character, context)
             elseif col.id == "slot" then value = slotData and (slot == "secondary" and "副专精" or "主专精") or (mode == "backup" and "无备用专精快照" or "无当前专精快照")
@@ -885,17 +1035,53 @@ function Page.RefreshPreview(parent, context)
             elseif string.find(col.id, "minor") then
                 local n = tonumber(string.match(col.id, "%d+")); local item = slotData and slotData.glyphs and slotData.glyphs.minor[n]
                 value = item and IconText(item.icon, item.name) or "—"; SetPreviewCellTooltip(cell, item)
+            elseif matrixMode == "equipment" and col.slotID then
+                local equipment = slotData and slotData.confirmedEquipment
+                local item = equipment and equipment.slots and equipment.slots[tostring(col.slotID)]
+                if item and item.icon then
+                    cell.text:Hide(); cell.itemFrame:Show(); cell.itemLevel:Show()
+                    local equipmentChanged = Addon.Snapshot:GetEquipmentStatus(slotData) == "changed"
+                    cell.itemChanged:SetShown(equipmentChanged)
+                    cell.itemIcon:SetTexture(item.icon)
+                    cell.itemIcon:SetDesaturated(false)
+                    cell.itemIcon:SetVertexColor(1, 1, 1, 1)
+                    cell.itemFrame:SetBackdropBorderColor(ItemBorderColor(item))
+                    local itemLevel = GetPreviewItemLevel(item)
+                    cell.itemLevel:SetText(itemLevel and tostring(itemLevel) or "")
+                    cell.itemLevel:SetTextColor(C.text[1], C.text[2], C.text[3])
+                    value = ""
+                    SetPreviewItemTooltip(cell, item)
+                else
+                    cell.text:Hide(); cell.itemFrame:Show(); cell.itemLevel:Show()
+                    cell.itemChanged:Hide()
+                    cell.itemIcon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+                    cell.itemIcon:SetDesaturated(true)
+                    cell.itemIcon:SetVertexColor(0.45, 0.5, 0.5, 0.65)
+                    cell.itemFrame:SetBackdropBorderColor(C.muted[1], C.muted[2], C.muted[3], 1)
+                    cell.itemLevel:SetText("")
+                    cell.itemLevel:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
+                    value = ""
+                    SetPreviewItemTooltip(cell, nil)
+                end
             elseif col.id == "equipment" then
                 value = slotData and slotData.confirmedEquipment and "已确认" or slotData and slotData.observedEquipment and "待确认" or "—"
                 SetPreviewEquipmentTooltip(cell, slotData and (slotData.confirmedEquipment or slotData.observedEquipment), slotData and slotData.confirmedEquipment ~= nil)
             end
-            if col.id ~= "equipment" and col.id ~= "spec" and not string.find(col.id, "talent") and not string.find(col.id, "major") and not string.find(col.id, "minor") then SetPreviewCellTooltip(cell, nil) end
+            if matrixMode ~= "equipment" and col.id ~= "equipment" and col.id ~= "spec" and not string.find(col.id, "talent") and not string.find(col.id, "major") and not string.find(col.id, "minor") then SetPreviewCellTooltip(cell, nil) end
             cell.text:SetTextColor(C.text[1], C.text[2], C.text[3])
             if col.id == "name" then
                 local color = ClassColor(character)
                 cell.text:SetTextColor(color.r or color[1], color.g or color[2], color.b or color[3])
             end
-            cell.text:SetText(value); cell:Show(); x = x + col.width
+            if matrixMode == "equipment" and col.slotID then
+                local equipmentStatus = Addon.Snapshot:GetEquipmentStatus(slotData)
+                if not slotData or not slotData.confirmedEquipment then
+                    cell.text:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
+                elseif equipmentStatus == "changed" then
+                    cell.text:SetTextColor(C.warning[1], C.warning[2], C.warning[3])
+                end
+            end
+            cell.text:SetText(value); cell:Show(); x = x + col.width + (col.gapAfter or 0)
             -- Cells are mouse-enabled so native game tooltips can open.  Give
             -- them the row's navigation action explicitly; button clicks do
             -- not bubble to the parent row in WoW's frame system.
@@ -912,9 +1098,10 @@ function Page.RefreshPreview(parent, context)
             Core.AccountView:Toggle(Addon.PAGE_ID)
         end)
         row:Show()
+        for ci = #columns + 1, #row.cells do row.cells[ci]:Hide() end
     end
     for i = #characters + 1, #parent.buildsPreviewRows do parent.buildsPreviewRows[i]:Hide() end
-    parent.buildsPreviewBody:ClearAllPoints(); parent.buildsPreviewBody:SetPoint("TOPLEFT", parent.buildsPreviewHeader, "BOTTOMLEFT", 0, 0); parent.buildsPreviewBody:SetSize(width, math.max(1, #characters * Theme.Table.previewRowHeight)); parent.buildsPreviewBody:Show(); parent.buildsPreviewHeader:Show()
+    parent.buildsPreviewBody:ClearAllPoints(); parent.buildsPreviewBody:SetPoint("TOPLEFT", parent.buildsPreviewHeader, "BOTTOMLEFT", 0, 0); parent.buildsPreviewBody:SetSize(width, math.max(1, #characters * PreviewRowHeight(matrixMode))); parent.buildsPreviewBody:Show(); parent.buildsPreviewHeader:Show()
 end
 
 local EXPANDED_CONTENT_WIDTH = 1120
@@ -933,10 +1120,12 @@ function Page.GetSurfaceMetrics(context)
     local inset = Theme:GetMatrixInsets(context and context.preview)
     if context and context.preview then
         local characters = PreviewCharacters(context)
-        local columns = PreviewColumns(context, characters)
+        local settings = Addon:GetSettings()
+        local matrixMode = settings.previewMatrixMode == "spec" and "spec" or "equipment"
+        local columns = PreviewColumns(context, characters, matrixMode)
         local width = inset.left + inset.right
         for _, column in ipairs(columns) do width = width + column.width end
-        local height = inset.top + Theme.Table.headerHeight + math.max(1, #characters) * Theme.Table.previewRowHeight + inset.bottom
+        local height = inset.top + Theme.Table.headerHeight + math.max(1, #characters) * PreviewRowHeight(matrixMode) + inset.bottom
         return { minContentWidth = width, naturalContentWidth = width, minContentHeight = height, naturalContentHeight = height, horizontalOverflow = "content", verticalOverflow = "none" }
     end
     -- Folding removes the build pane but preserves the expanded equipment-pane

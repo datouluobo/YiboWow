@@ -256,7 +256,12 @@ local function ReadEquipment(reason)
     end
     for _, slotID in ipairs(SLOT_IDS) do
         local link = GetInventoryItemLink and GetInventoryItemLink("player", slotID)
-        local entry = { itemLink = link, itemID = ItemIDFromLink(link), icon = GetInventoryItemTexture and GetInventoryItemTexture("player", slotID), gems = {}, enchant = {} }
+        local itemLevel
+        if link and GetDetailedItemLevelInfo then
+            local ok, value = pcall(GetDetailedItemLevelInfo, link)
+            if ok then itemLevel = tonumber(value) end
+        end
+        local entry = { itemLink = link, itemID = ItemIDFromLink(link), itemLevel = itemLevel, icon = GetInventoryItemTexture and GetInventoryItemTexture("player", slotID), gems = {}, enchant = {} }
         if link and GetItemGem then
             for gemIndex = 1, 3 do
                 local _, gemLink = GetItemGem(link, gemIndex)

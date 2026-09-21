@@ -3,7 +3,7 @@ local Addon = _G.YiboBuilds or {}
 _G.YiboBuilds = Addon
 
 Addon.NAME = ADDON_NAME or "YiboBuilds"
-Addon.VERSION = "1.0.0"
+Addon.VERSION = "1.1.0"
 Addon.REQUIRED_CORE_API = 5
 Addon.PAGE_ID = "builds"
 Addon.ICON = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon-v1"
@@ -37,8 +37,18 @@ function Addon:EnsureDB()
                 major1 = true, major2 = true, major3 = true,
                 minor1 = true, minor2 = true, minor3 = true,
                 equipment = true,
+                equipment_head = true, equipment_neck = true, equipment_shoulder = true,
+                equipment_chest = true, equipment_waist = true, equipment_legs = true,
+                equipment_feet = true, equipment_back = true, equipment_wrist = true,
+                equipment_hands = true, equipment_finger1 = true, equipment_finger2 = true,
+                equipment_trinket1 = true, equipment_trinket2 = true,
+                equipment_mainhand = true, equipment_offhand = true,
+                equipment_shirt = false, equipment_tabard = false,
             },
             appearanceMode = "transmog",
+            previewMatrixMode = "equipment",
+            previewSpecMode = "current",
+            previewEquipmentMode = "current",
         },
     })
     self.db = db

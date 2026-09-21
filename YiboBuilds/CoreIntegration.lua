@@ -36,6 +36,7 @@ function Integration:Initialize()
         end,
         settings = { title = "角色构筑", description = "Core 管理页面、入口、角色范围和悬停字段；YiboBuilds 保存构筑快照与显示偏好。" },
         fields = Addon.AccountPage:GetFields(),
+        GetPreviewFieldDefinitions = function() return Addon.AccountPage:GetPreviewFieldDefinitions() end,
         GetPreviewFields = function() return Addon:GetSettings().previewColumns end,
         SetPreviewFieldVisible = function(id, visible) Addon:GetSettings().previewColumns[id] = not not visible; Addon:NotifyChanged() end,
         Create = Addon.AccountPage.Create,
