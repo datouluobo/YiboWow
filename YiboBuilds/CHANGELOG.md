@@ -3,6 +3,7 @@
 ## 1.1.0
 
 - Added persistent current/backup equipment and specialization mode switching.
+- Added the character equipment matrix for comparing equipment across characters and slots.
 - Added equipment quality borders, item levels, low-contrast empty slots, and changed-equipment markers.
 - Added configurable equipment preview fields and adaptive matrix spacing.
 - Refined the four local mode buttons and equipment tooltips.
@@ -10,6 +11,7 @@
 ### 中文更新日志
 
 - 增加当前/备用装备与当前/备用专精的持久化切换。
+- 增加角色装备矩阵，支持按角色和装备部位进行对比。
 - 增加装备品质边框、装等、低对比度空槽和装备变更角标。
 - 增加装备悬停字段配置与自适应矩阵间距。
 - 优化四个模式按钮和装备 Tooltip。
