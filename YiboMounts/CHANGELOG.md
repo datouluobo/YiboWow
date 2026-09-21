@@ -1,5 +1,17 @@
 # YiboMounts Changelog / 更新日志
 
+## 0.8.2
+
+### 中文
+
+- 补充“风暴乌鸦”（spellID 1298512）到运行时坐骑目录，并记录其挑战模式白金币兑换来源。
+- 补全挑战模式坐骑来源：四只熊猫人凤凰、风暴乌鸦、冰霜巨龙、幽灵驭风者、魔法公鸡与白毛犀牛，并记录白金币价格。
+
+### English
+
+- Added Storm Crow (spellID 1298512) to the runtime mount catalog with its Challenge Mode Platinum Coin source.
+- Normalized Challenge Mode sources for the four Pandaren Phoenixes, Stormcrow, Juvenile Frostwyrm, Spectral Wind Rider, Magic Rooster, and Wooly White Rhino, including Platinum Coin prices.
+
 ## 0.8.1
 
 ### 中文

@@ -26058,8 +26058,57 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "manual-source-107517",
+      "primarySourceID": "platinum-coin-vendor-107517",
       "sources": [
+        {
+          "sourceID": "platinum-coin-vendor-107517",
+          "type": "vendor",
+          "priority": 100,
+          "active": true,
+          "availability": "obtainable",
+          "path": [
+            {
+              "kind": "faction",
+              "refID": null,
+              "labels": {
+                "enUS": "挑战模式",
+                "zhCN": "挑战模式"
+              }
+            },
+            {
+              "kind": "zone",
+              "refID": null,
+              "labels": {
+                "enUS": "七星殿上层（联盟）/ 双月殿上层（部落）",
+                "zhCN": "七星殿上层（联盟）/ 双月殿上层（部落）"
+              }
+            },
+            {
+              "kind": "npc",
+              "refID": null,
+              "labels": {
+                "enUS": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                "zhCN": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              }
+            }
+          ],
+          "requirements": {
+            "difficulties": [],
+            "reputation": null,
+            "costs": [],
+            "price": {
+              "enUS": "150 白金币",
+              "zhCN": "150 白金币"
+            },
+            "questID": null,
+            "achievementID": null,
+            "eventKey": null,
+            "notes": {
+              "enUS": "旧复活卷轴坐骑在怀旧服挑战模式商店提供兑换渠道。",
+              "zhCN": "旧复活卷轴坐骑在怀旧服挑战模式商店提供兑换渠道。"
+            }
+          }
+        },
         {
           "sourceID": "manual-source-107517",
           "type": "promotion",
@@ -30304,7 +30353,7 @@
     },
     {
       "mountKey": "fact-129552",
-      "status": "candidate",
+      "status": "verified",
       "ids": {
         "spellIDs": [
           129552
@@ -30323,21 +30372,29 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "manual-source-129552",
+      "primarySourceID": "challenge-silver-129552",
       "sources": [
         {
-          "sourceID": "manual-source-129552",
-          "type": "research",
+          "sourceID": "challenge-silver-129552",
+          "type": "achievement",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "obtainable",
           "path": [
+            {
+              "kind": "achievement",
+              "refID": null,
+              "labels": {
+                "enUS": "挑战征服者：白银（全部9个挑战模式副本达到白银）",
+                "zhCN": "挑战征服者：白银（全部9个挑战模式副本达到白银）"
+              }
+            },
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "国服怀旧服投放待核实",
-                "zhCN": "国服怀旧服投放待核实"
+                "enUS": "邮件收取先祖凤凰蛋后向凯·落羽选择颜色",
+                "zhCN": "邮件收取先祖凤凰蛋后向凯·落羽选择颜色"
               }
             }
           ],
@@ -30352,10 +30409,58 @@
             "questID": null,
             "achievementID": null,
             "eventKey": null,
-            "tooltipNote": null,
             "notes": {
-              "enUS": "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。",
-              "zhCN": "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。"
+              "enUS": "四种熊猫人凤凰四选一；同一角色通过白银成就获得一枚先祖凤凰蛋。",
+              "zhCN": "四种熊猫人凤凰四选一；同一角色通过白银成就获得一枚先祖凤凰蛋。"
+            }
+          }
+        },
+        {
+          "sourceID": "platinum-coin-vendor-129552",
+          "type": "vendor",
+          "priority": 100,
+          "active": true,
+          "availability": "obtainable",
+          "path": [
+            {
+              "kind": "faction",
+              "refID": null,
+              "labels": {
+                "enUS": "挑战模式",
+                "zhCN": "挑战模式"
+              }
+            },
+            {
+              "kind": "zone",
+              "refID": null,
+              "labels": {
+                "enUS": "七星殿上层（联盟）/ 双月殿上层（部落）",
+                "zhCN": "七星殿上层（联盟）/ 双月殿上层（部落）"
+              }
+            },
+            {
+              "kind": "npc",
+              "refID": null,
+              "labels": {
+                "enUS": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                "zhCN": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              }
+            }
+          ],
+          "requirements": {
+            "difficulties": [],
+            "reputation": null,
+            "costs": [],
+            "price": {
+              "enUS": "50 白金币",
+              "zhCN": "50 白金币"
+            },
+            "questID": null,
+            "achievementID": null,
+            "eventKey": null,
+            "notes": {
+              "enUS": "已完成挑战征服者：白银后，也可由白金币商人兑换。",
+              "zhCN": "已完成挑战征服者：白银后，也可由白金币商人兑换。"
             }
           }
         }
@@ -31344,7 +31449,7 @@
     },
     {
       "mountKey": "fact-132117",
-      "status": "candidate",
+      "status": "verified",
       "ids": {
         "spellIDs": [
           132117
@@ -31363,21 +31468,29 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "manual-source-132117",
+      "primarySourceID": "challenge-silver-132117",
       "sources": [
         {
-          "sourceID": "manual-source-132117",
-          "type": "research",
+          "sourceID": "challenge-silver-132117",
+          "type": "achievement",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "obtainable",
           "path": [
+            {
+              "kind": "achievement",
+              "refID": null,
+              "labels": {
+                "enUS": "挑战征服者：白银（全部9个挑战模式副本达到白银）",
+                "zhCN": "挑战征服者：白银（全部9个挑战模式副本达到白银）"
+              }
+            },
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "国服怀旧服投放待核实",
-                "zhCN": "国服怀旧服投放待核实"
+                "enUS": "邮件收取先祖凤凰蛋后向凯·落羽选择颜色",
+                "zhCN": "邮件收取先祖凤凰蛋后向凯·落羽选择颜色"
               }
             }
           ],
@@ -31392,10 +31505,58 @@
             "questID": null,
             "achievementID": null,
             "eventKey": null,
-            "tooltipNote": null,
             "notes": {
-              "enUS": "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。",
-              "zhCN": "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。"
+              "enUS": "四种熊猫人凤凰四选一；同一角色通过白银成就获得一枚先祖凤凰蛋。",
+              "zhCN": "四种熊猫人凤凰四选一；同一角色通过白银成就获得一枚先祖凤凰蛋。"
+            }
+          }
+        },
+        {
+          "sourceID": "platinum-coin-vendor-132117",
+          "type": "vendor",
+          "priority": 100,
+          "active": true,
+          "availability": "obtainable",
+          "path": [
+            {
+              "kind": "faction",
+              "refID": null,
+              "labels": {
+                "enUS": "挑战模式",
+                "zhCN": "挑战模式"
+              }
+            },
+            {
+              "kind": "zone",
+              "refID": null,
+              "labels": {
+                "enUS": "七星殿上层（联盟）/ 双月殿上层（部落）",
+                "zhCN": "七星殿上层（联盟）/ 双月殿上层（部落）"
+              }
+            },
+            {
+              "kind": "npc",
+              "refID": null,
+              "labels": {
+                "enUS": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                "zhCN": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              }
+            }
+          ],
+          "requirements": {
+            "difficulties": [],
+            "reputation": null,
+            "costs": [],
+            "price": {
+              "enUS": "50 白金币",
+              "zhCN": "50 白金币"
+            },
+            "questID": null,
+            "achievementID": null,
+            "eventKey": null,
+            "notes": {
+              "enUS": "已完成挑战征服者：白银后，也可由白金币商人兑换。",
+              "zhCN": "已完成挑战征服者：白银后，也可由白金币商人兑换。"
             }
           }
         }
@@ -31403,7 +31564,7 @@
     },
     {
       "mountKey": "fact-132118",
-      "status": "candidate",
+      "status": "verified",
       "ids": {
         "spellIDs": [
           132118
@@ -31422,21 +31583,29 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "manual-source-132118",
+      "primarySourceID": "challenge-silver-132118",
       "sources": [
         {
-          "sourceID": "manual-source-132118",
-          "type": "research",
+          "sourceID": "challenge-silver-132118",
+          "type": "achievement",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "obtainable",
           "path": [
+            {
+              "kind": "achievement",
+              "refID": null,
+              "labels": {
+                "enUS": "挑战征服者：白银（全部9个挑战模式副本达到白银）",
+                "zhCN": "挑战征服者：白银（全部9个挑战模式副本达到白银）"
+              }
+            },
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "国服怀旧服投放待核实",
-                "zhCN": "国服怀旧服投放待核实"
+                "enUS": "邮件收取先祖凤凰蛋后向凯·落羽选择颜色",
+                "zhCN": "邮件收取先祖凤凰蛋后向凯·落羽选择颜色"
               }
             }
           ],
@@ -31451,10 +31620,58 @@
             "questID": null,
             "achievementID": null,
             "eventKey": null,
-            "tooltipNote": null,
             "notes": {
-              "enUS": "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。",
-              "zhCN": "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。"
+              "enUS": "四种熊猫人凤凰四选一；同一角色通过白银成就获得一枚先祖凤凰蛋。",
+              "zhCN": "四种熊猫人凤凰四选一；同一角色通过白银成就获得一枚先祖凤凰蛋。"
+            }
+          }
+        },
+        {
+          "sourceID": "platinum-coin-vendor-132118",
+          "type": "vendor",
+          "priority": 100,
+          "active": true,
+          "availability": "obtainable",
+          "path": [
+            {
+              "kind": "faction",
+              "refID": null,
+              "labels": {
+                "enUS": "挑战模式",
+                "zhCN": "挑战模式"
+              }
+            },
+            {
+              "kind": "zone",
+              "refID": null,
+              "labels": {
+                "enUS": "七星殿上层（联盟）/ 双月殿上层（部落）",
+                "zhCN": "七星殿上层（联盟）/ 双月殿上层（部落）"
+              }
+            },
+            {
+              "kind": "npc",
+              "refID": null,
+              "labels": {
+                "enUS": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                "zhCN": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              }
+            }
+          ],
+          "requirements": {
+            "difficulties": [],
+            "reputation": null,
+            "costs": [],
+            "price": {
+              "enUS": "50 白金币",
+              "zhCN": "50 白金币"
+            },
+            "questID": null,
+            "achievementID": null,
+            "eventKey": null,
+            "notes": {
+              "enUS": "已完成挑战征服者：白银后，也可由白金币商人兑换。",
+              "zhCN": "已完成挑战征服者：白银后，也可由白金币商人兑换。"
             }
           }
         }
@@ -31462,7 +31679,7 @@
     },
     {
       "mountKey": "fact-132119",
-      "status": "candidate",
+      "status": "verified",
       "ids": {
         "spellIDs": [
           132119
@@ -31481,21 +31698,29 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "manual-source-132119",
+      "primarySourceID": "challenge-silver-132119",
       "sources": [
         {
-          "sourceID": "manual-source-132119",
-          "type": "research",
+          "sourceID": "challenge-silver-132119",
+          "type": "achievement",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "obtainable",
           "path": [
+            {
+              "kind": "achievement",
+              "refID": null,
+              "labels": {
+                "enUS": "挑战征服者：白银（全部9个挑战模式副本达到白银）",
+                "zhCN": "挑战征服者：白银（全部9个挑战模式副本达到白银）"
+              }
+            },
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "国服怀旧服投放待核实",
-                "zhCN": "国服怀旧服投放待核实"
+                "enUS": "邮件收取先祖凤凰蛋后向凯·落羽选择颜色",
+                "zhCN": "邮件收取先祖凤凰蛋后向凯·落羽选择颜色"
               }
             }
           ],
@@ -31510,10 +31735,58 @@
             "questID": null,
             "achievementID": null,
             "eventKey": null,
-            "tooltipNote": null,
             "notes": {
-              "enUS": "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。",
-              "zhCN": "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。"
+              "enUS": "四种熊猫人凤凰四选一；同一角色通过白银成就获得一枚先祖凤凰蛋。",
+              "zhCN": "四种熊猫人凤凰四选一；同一角色通过白银成就获得一枚先祖凤凰蛋。"
+            }
+          }
+        },
+        {
+          "sourceID": "platinum-coin-vendor-132119",
+          "type": "vendor",
+          "priority": 100,
+          "active": true,
+          "availability": "obtainable",
+          "path": [
+            {
+              "kind": "faction",
+              "refID": null,
+              "labels": {
+                "enUS": "挑战模式",
+                "zhCN": "挑战模式"
+              }
+            },
+            {
+              "kind": "zone",
+              "refID": null,
+              "labels": {
+                "enUS": "七星殿上层（联盟）/ 双月殿上层（部落）",
+                "zhCN": "七星殿上层（联盟）/ 双月殿上层（部落）"
+              }
+            },
+            {
+              "kind": "npc",
+              "refID": null,
+              "labels": {
+                "enUS": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                "zhCN": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              }
+            }
+          ],
+          "requirements": {
+            "difficulties": [],
+            "reputation": null,
+            "costs": [],
+            "price": {
+              "enUS": "50 白金币",
+              "zhCN": "50 白金币"
+            },
+            "questID": null,
+            "achievementID": null,
+            "eventKey": null,
+            "notes": {
+              "enUS": "已完成挑战征服者：白银后，也可由白金币商人兑换。",
+              "zhCN": "已完成挑战征服者：白银后，也可由白金币商人兑换。"
             }
           }
         }
@@ -34041,24 +34314,24 @@
               "kind": "faction",
               "refID": null,
               "labels": {
-                "enUS": "挑战模式",
-                "zhCN": "挑战模式"
+                "enUS": "联盟 PvP 第14赛季",
+                "zhCN": "联盟 PvP 第14赛季"
               }
             },
             {
               "kind": "zone",
               "refID": null,
               "labels": {
-                "enUS": "潘达利亚挑战模式商人",
-                "zhCN": "潘达利亚挑战模式商人"
+                "enUS": "暴风城 > 通灵领主赛普",
+                "zhCN": "暴风城 > 通灵领主赛普"
               }
             },
             {
-              "kind": "custom",
+              "kind": "npc",
               "refID": null,
               "labels": {
-                "enUS": "通灵领主赛普",
-                "zhCN": "通灵领主赛普"
+                "enUS": "邪气鞍座兑换商",
+                "zhCN": "邪气鞍座兑换商"
               }
             }
           ],
@@ -34067,16 +34340,15 @@
             "reputation": null,
             "costs": [],
             "price": {
-              "enUS": "挑战模式：黄金",
-              "zhCN": "挑战模式：黄金"
+              "enUS": "1 邪气鞍座",
+              "zhCN": "1 邪气鞍座"
             },
             "questID": null,
             "achievementID": null,
             "eventKey": null,
-            "tooltipNote": null,
             "notes": {
-              "enUS": null,
-              "zhCN": null
+              "enUS": "PvP 邪气鞍座兑换，不属于挑战模式坐骑。",
+              "zhCN": "PvP 邪气鞍座兑换，不属于挑战模式坐骑。"
             }
           }
         }
@@ -34118,24 +34390,24 @@
               "kind": "faction",
               "refID": null,
               "labels": {
-                "enUS": "挑战模式",
-                "zhCN": "挑战模式"
+                "enUS": "部落 PvP 第14赛季",
+                "zhCN": "部落 PvP 第14赛季"
               }
             },
             {
               "kind": "zone",
               "refID": null,
               "labels": {
-                "enUS": "潘达利亚挑战模式商人",
-                "zhCN": "潘达利亚挑战模式商人"
+                "enUS": "奥格瑞玛 > 亡灵卫兵奈萨里安",
+                "zhCN": "奥格瑞玛 > 亡灵卫兵奈萨里安"
               }
             },
             {
-              "kind": "custom",
+              "kind": "npc",
               "refID": null,
               "labels": {
-                "enUS": "亡灵卫兵奈萨里安",
-                "zhCN": "亡灵卫兵奈萨里安"
+                "enUS": "邪气鞍座兑换商",
+                "zhCN": "邪气鞍座兑换商"
               }
             }
           ],
@@ -34144,16 +34416,15 @@
             "reputation": null,
             "costs": [],
             "price": {
-              "enUS": "挑战模式：黄金",
-              "zhCN": "挑战模式：黄金"
+              "enUS": "1 邪气鞍座",
+              "zhCN": "1 邪气鞍座"
             },
             "questID": null,
             "achievementID": null,
             "eventKey": null,
-            "tooltipNote": null,
             "notes": {
-              "enUS": null,
-              "zhCN": null
+              "enUS": "PvP 邪气鞍座兑换，不属于挑战模式坐骑。",
+              "zhCN": "PvP 邪气鞍座兑换，不属于挑战模式坐骑。"
             }
           }
         }
@@ -35189,8 +35460,57 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "manual-source-387308",
+      "primarySourceID": "platinum-coin-vendor-387308",
       "sources": [
+        {
+          "sourceID": "platinum-coin-vendor-387308",
+          "type": "vendor",
+          "priority": 100,
+          "active": true,
+          "availability": "obtainable",
+          "path": [
+            {
+              "kind": "faction",
+              "refID": null,
+              "labels": {
+                "enUS": "挑战模式",
+                "zhCN": "挑战模式"
+              }
+            },
+            {
+              "kind": "zone",
+              "refID": null,
+              "labels": {
+                "enUS": "七星殿上层（联盟）/ 双月殿上层（部落）",
+                "zhCN": "七星殿上层（联盟）/ 双月殿上层（部落）"
+              }
+            },
+            {
+              "kind": "npc",
+              "refID": null,
+              "labels": {
+                "enUS": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                "zhCN": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              }
+            }
+          ],
+          "requirements": {
+            "difficulties": [],
+            "reputation": null,
+            "costs": [],
+            "price": {
+              "enUS": "70 白金币",
+              "zhCN": "70 白金币"
+            },
+            "questID": null,
+            "achievementID": null,
+            "eventKey": null,
+            "notes": {
+              "enUS": "经典怀旧服挑战模式白金币商人新增兑换渠道。",
+              "zhCN": "经典怀旧服挑战模式白金币商人新增兑换渠道。"
+            }
+          }
+        },
         {
           "sourceID": "manual-source-387308",
           "type": "store",
@@ -35481,8 +35801,57 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "manual-source-387321",
+      "primarySourceID": "platinum-coin-vendor-387321",
       "sources": [
+        {
+          "sourceID": "platinum-coin-vendor-387321",
+          "type": "vendor",
+          "priority": 100,
+          "active": true,
+          "availability": "obtainable",
+          "path": [
+            {
+              "kind": "faction",
+              "refID": null,
+              "labels": {
+                "enUS": "挑战模式",
+                "zhCN": "挑战模式"
+              }
+            },
+            {
+              "kind": "zone",
+              "refID": null,
+              "labels": {
+                "enUS": "七星殿上层（联盟）/ 双月殿上层（部落）",
+                "zhCN": "七星殿上层（联盟）/ 双月殿上层（部落）"
+              }
+            },
+            {
+              "kind": "npc",
+              "refID": null,
+              "labels": {
+                "enUS": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                "zhCN": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              }
+            }
+          ],
+          "requirements": {
+            "difficulties": [],
+            "reputation": null,
+            "costs": [],
+            "price": {
+              "enUS": "40 白金币",
+              "zhCN": "40 白金币"
+            },
+            "questID": null,
+            "achievementID": null,
+            "eventKey": null,
+            "notes": {
+              "enUS": "经典怀旧服挑战模式白金币商人新增兑换渠道。",
+              "zhCN": "经典怀旧服挑战模式白金币商人新增兑换渠道。"
+            }
+          }
+        },
         {
           "sourceID": "manual-source-387321",
           "type": "store",
@@ -37985,7 +38354,7 @@
           "availability": "unavailable",
           "path": [
             {
-              "kind": "custom",
+              "kind": "achievement",
               "refID": null,
               "labels": {
                 "enUS": "挑战模式第2赛季排行榜（头衔「雾裔」）奖励",
@@ -38004,10 +38373,9 @@
             "questID": null,
             "achievementID": null,
             "eventKey": null,
-            "tooltipNote": null,
             "notes": {
-              "enUS": "S2已结算。",
-              "zhCN": "S2已结算。"
+              "enUS": "S2 已结算，当前无法获取。",
+              "zhCN": "S2 已结算，当前无法获取。"
             }
           }
         }
@@ -38045,10 +38413,10 @@
           "path": [
             {
               "kind": "achievement",
-              "refID": 62060,
+              "refID": null,
               "labels": {
-                "enUS": "Achievement 62060",
-                "zhCN": "迷雾传人"
+                "enUS": "挑战模式第3赛季：全部9本副本钻石评价（头衔「迷雾继承者」）奖励",
+                "zhCN": "挑战模式第3赛季：全部9本副本钻石评价（头衔「迷雾继承者」）奖励"
               }
             }
           ],
@@ -38056,10 +38424,17 @@
             "difficulties": [],
             "reputation": null,
             "costs": [],
+            "price": {
+              "enUS": null,
+              "zhCN": null
+            },
             "questID": null,
-            "achievementID": 62060,
+            "achievementID": null,
             "eventKey": null,
-            "notes": null
+            "notes": {
+              "enUS": "S3 赛季奖励，赛季结算后绝版。",
+              "zhCN": "S3 赛季奖励，赛季结算后绝版。"
+            }
           }
         }
       ]
@@ -38092,14 +38467,14 @@
           "type": "achievement",
           "priority": 10,
           "active": true,
-          "availability": "unknown",
+          "availability": "unavailable",
           "path": [
             {
               "kind": "achievement",
-              "refID": 62055,
+              "refID": null,
               "labels": {
-                "enUS": "Achievement 62055",
-                "zhCN": "迷雾行者"
+                "enUS": "挑战模式第1赛季排行榜极速线（头衔「迷雾行者」）奖励",
+                "zhCN": "挑战模式第1赛季排行榜极速线（头衔「迷雾行者」）奖励"
               }
             }
           ],
@@ -38107,10 +38482,17 @@
             "difficulties": [],
             "reputation": null,
             "costs": [],
+            "price": {
+              "enUS": null,
+              "zhCN": null
+            },
             "questID": null,
-            "achievementID": 62055,
+            "achievementID": null,
             "eventKey": null,
-            "notes": null
+            "notes": {
+              "enUS": "S1 已结算，当前无法获取。",
+              "zhCN": "S1 已结算，当前无法获取。"
+            }
           }
         }
       ]
@@ -39487,10 +39869,10 @@
           "path": [
             {
               "kind": "achievement",
-              "refID": 62059,
+              "refID": null,
               "labels": {
-                "enUS": "Achievement 62059",
-                "zhCN": "雾裔"
+                "enUS": "挑战模式第3赛季：全部9本副本钻石评价奖励",
+                "zhCN": "挑战模式第3赛季：全部9本副本钻石评价奖励"
               }
             }
           ],
@@ -39498,17 +39880,25 @@
             "difficulties": [],
             "reputation": null,
             "costs": [],
+            "price": {
+              "enUS": null,
+              "zhCN": null
+            },
             "questID": null,
-            "achievementID": 62059,
+            "achievementID": null,
             "eventKey": null,
-            "notes": null
+            "notes": {
+              "enUS": "S3 赛季奖励，赛季结算后绝版。",
+              "zhCN": "S3 赛季奖励，赛季结算后绝版。"
+            }
           }
         }
       ]
     },
     {
       "mountKey": "fact-1298512",
-      "status": "candidate",
+      "runtimeVisible": true,
+      "status": "verified",
       "ids": {
         "spellIDs": [
           1298512
@@ -39527,8 +39917,57 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "retired-audit-source-1298512",
+      "primarySourceID": "platinum-coin-vendor-1298512",
       "sources": [
+        {
+          "sourceID": "platinum-coin-vendor-1298512",
+          "type": "vendor",
+          "priority": 100,
+          "active": true,
+          "availability": "obtainable",
+          "path": [
+            {
+              "kind": "faction",
+              "refID": null,
+              "labels": {
+                "enUS": "挑战模式",
+                "zhCN": "挑战模式"
+              }
+            },
+            {
+              "kind": "zone",
+              "refID": null,
+              "labels": {
+                "enUS": "七星殿上层（联盟）/ 双月殿上层（部落）",
+                "zhCN": "七星殿上层（联盟）/ 双月殿上层（部落）"
+              }
+            },
+            {
+              "kind": "npc",
+              "refID": null,
+              "labels": {
+                "enUS": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                "zhCN": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              }
+            }
+          ],
+          "requirements": {
+            "difficulties": [],
+            "reputation": null,
+            "costs": [],
+            "price": {
+              "enUS": "300 白金币",
+              "zhCN": "300 白金币"
+            },
+            "questID": null,
+            "achievementID": null,
+            "eventKey": null,
+            "notes": {
+              "enUS": "挑战模式第3赛季新增白金币兑换坐骑。",
+              "zhCN": "挑战模式第3赛季新增白金币兑换坐骑。"
+            }
+          }
+        },
         {
           "sourceID": "retired-audit-source-1298512",
           "type": "research",
@@ -39756,7 +40195,7 @@
     },
     {
       "mountKey": "fact-1302506",
-      "status": "candidate",
+      "status": "verified",
       "ids": {
         "spellIDs": [
           1302506
@@ -39775,8 +40214,57 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "retired-audit-source-1302506",
+      "primarySourceID": "platinum-coin-vendor-1302506",
       "sources": [
+        {
+          "sourceID": "platinum-coin-vendor-1302506",
+          "type": "vendor",
+          "priority": 100,
+          "active": true,
+          "availability": "obtainable",
+          "path": [
+            {
+              "kind": "faction",
+              "refID": null,
+              "labels": {
+                "enUS": "挑战模式",
+                "zhCN": "挑战模式"
+              }
+            },
+            {
+              "kind": "zone",
+              "refID": null,
+              "labels": {
+                "enUS": "七星殿上层（联盟）/ 双月殿上层（部落）",
+                "zhCN": "七星殿上层（联盟）/ 双月殿上层（部落）"
+              }
+            },
+            {
+              "kind": "npc",
+              "refID": null,
+              "labels": {
+                "enUS": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                "zhCN": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              }
+            }
+          ],
+          "requirements": {
+            "difficulties": [],
+            "reputation": null,
+            "costs": [],
+            "price": {
+              "enUS": "300 白金币",
+              "zhCN": "300 白金币"
+            },
+            "questID": null,
+            "achievementID": null,
+            "eventKey": null,
+            "notes": {
+              "enUS": "挑战模式第3赛季新增白金币兑换坐骑。",
+              "zhCN": "挑战模式第3赛季新增白金币兑换坐骑。"
+            }
+          }
+        },
         {
           "sourceID": "retired-audit-source-1302506",
           "type": "research",

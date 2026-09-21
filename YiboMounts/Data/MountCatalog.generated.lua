@@ -396,6 +396,7 @@ NS.Data = {
     [127302] = "fact-127302",
     [127308] = "fact-127308",
     [127310] = "fact-127310",
+    [129552] = "fact-129552",
     [129918] = "provisional-129918",
     [129932] = "provisional-129932",
     [129934] = "provisional-129934",
@@ -407,6 +408,9 @@ NS.Data = {
     [130965] = "son-of-galleon",
     [130985] = "provisional-130985",
     [132036] = "thundering-ruby-cloud-serpent",
+    [132117] = "fact-132117",
+    [132118] = "fact-132118",
+    [132119] = "fact-132119",
     [133023] = "provisional-133023",
     [134359] = "sky-golem",
     [134573] = "provisional-134573",
@@ -507,8 +511,10 @@ NS.Data = {
     [1285725] = "fact-1285725",
     [1285897] = "fact-1285897",
     [1298510] = "fact-1298510",
+    [1298512] = "fact-1298512",
     [1298515] = "excluded-1298515",
     [1301737] = "manual-1301737",
+    [1302506] = "fact-1302506",
     [1309841] = "excluded-1309841"
   },
   mounts = {
@@ -5295,7 +5301,7 @@ NS.Data = {
           availability = "unavailable",
           path = {
             {
-              kind = "custom",
+              kind = "achievement",
               labels = {
                 enUS = "挑战模式第2赛季排行榜（头衔「雾裔」）奖励",
                 zhCN = "挑战模式第2赛季排行榜（头衔「雾裔」）奖励"
@@ -5310,16 +5316,15 @@ NS.Data = {
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = "S2已结算。",
-              zhCN = "S2已结算。"
+              enUS = "S2 已结算，当前无法获取。",
+              zhCN = "S2 已结算，当前无法获取。"
             },
             price = {
               enUS = nil,
               zhCN = nil
             },
             questID = nil,
-            reputation = nil,
-            tooltipNote = nil
+            reputation = nil
           },
           sourceID = "manual-source-1247596",
           type = "achievement"
@@ -5353,19 +5358,26 @@ NS.Data = {
             {
               kind = "achievement",
               labels = {
-                enUS = "Achievement 62060",
-                zhCN = "迷雾传人"
+                enUS = "挑战模式第3赛季：全部9本副本钻石评价（头衔「迷雾继承者」）奖励",
+                zhCN = "挑战模式第3赛季：全部9本副本钻石评价（头衔「迷雾继承者」）奖励"
               },
-              refID = 62060
+              refID = nil
             }
           },
           priority = 10,
           requirements = {
-            achievementID = 62060,
+            achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = "S3 赛季奖励，赛季结算后绝版。",
+              zhCN = "S3 赛季奖励，赛季结算后绝版。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
             reputation = nil
           },
@@ -5396,24 +5408,31 @@ NS.Data = {
       sources = {
         {
           active = true,
-          availability = "unknown",
+          availability = "unavailable",
           path = {
             {
               kind = "achievement",
               labels = {
-                enUS = "Achievement 62055",
-                zhCN = "迷雾行者"
+                enUS = "挑战模式第1赛季排行榜极速线（头衔「迷雾行者」）奖励",
+                zhCN = "挑战模式第1赛季排行榜极速线（头衔「迷雾行者」）奖励"
               },
-              refID = 62055
+              refID = nil
             }
           },
           priority = 10,
           requirements = {
-            achievementID = 62055,
+            achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = "S1 已结算，当前无法获取。",
+              zhCN = "S1 已结算，当前无法获取。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
             reputation = nil
           },
@@ -7079,6 +7098,118 @@ NS.Data = {
       },
       status = "verified"
     },
+    ["fact-129552"] = {
+      identity = {
+        iconFileID = 657490,
+        names = {
+          enUS = "Mount 129552",
+          zhCN = "赤红熊猫人凤凰"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 503
+      },
+      mountKey = "fact-129552",
+      primarySourceID = "challenge-silver-129552",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "achievement",
+              labels = {
+                enUS = "挑战征服者：白银（全部9个挑战模式副本达到白银）",
+                zhCN = "挑战征服者：白银（全部9个挑战模式副本达到白银）"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "邮件收取先祖凤凰蛋后向凯·落羽选择颜色",
+                zhCN = "邮件收取先祖凤凰蛋后向凯·落羽选择颜色"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "四种熊猫人凤凰四选一；同一角色通过白银成就获得一枚先祖凤凰蛋。",
+              zhCN = "四种熊猫人凤凰四选一；同一角色通过白银成就获得一枚先祖凤凰蛋。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil
+          },
+          sourceID = "challenge-silver-129552",
+          type = "achievement"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "faction",
+              labels = {
+                enUS = "挑战模式",
+                zhCN = "挑战模式"
+              },
+              refID = nil
+            },
+            {
+              kind = "zone",
+              labels = {
+                enUS = "七星殿上层（联盟）/ 双月殿上层（部落）",
+                zhCN = "七星殿上层（联盟）/ 双月殿上层（部落）"
+              },
+              refID = nil
+            },
+            {
+              kind = "npc",
+              labels = {
+                enUS = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                zhCN = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "已完成挑战征服者：白银后，也可由白金币商人兑换。",
+              zhCN = "已完成挑战征服者：白银后，也可由白金币商人兑换。"
+            },
+            price = {
+              enUS = "50 白金币",
+              zhCN = "50 白金币"
+            },
+            questID = nil,
+            reputation = nil
+          },
+          sourceID = "platinum-coin-vendor-129552",
+          type = "vendor"
+        }
+      },
+      status = "verified"
+    },
     ["fact-1298510"] = {
       identity = {
         iconFileID = 236233,
@@ -7105,19 +7236,26 @@ NS.Data = {
             {
               kind = "achievement",
               labels = {
-                enUS = "Achievement 62059",
-                zhCN = "雾裔"
+                enUS = "挑战模式第3赛季：全部9本副本钻石评价奖励",
+                zhCN = "挑战模式第3赛季：全部9本副本钻石评价奖励"
               },
-              refID = 62059
+              refID = nil
             }
           },
           priority = 10,
           requirements = {
-            achievementID = 62059,
+            achievementID = nil,
             costs = {},
             difficulties = {},
             eventKey = nil,
-            notes = nil,
+            notes = {
+              enUS = "S3 赛季奖励，赛季结算后绝版。",
+              zhCN = "S3 赛季奖励，赛季结算后绝版。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
             questID = nil,
             reputation = nil
           },
@@ -7126,6 +7264,551 @@ NS.Data = {
         }
       },
       status = "candidate"
+    },
+    ["fact-1298512"] = {
+      identity = {
+        iconFileID = 897087,
+        names = {
+          enUS = "Mount 1298512",
+          zhCN = "风暴乌鸦"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 3040
+      },
+      mountKey = "fact-1298512",
+      primarySourceID = "platinum-coin-vendor-1298512",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      runtimeVisible = true,
+      sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "faction",
+              labels = {
+                enUS = "挑战模式",
+                zhCN = "挑战模式"
+              },
+              refID = nil
+            },
+            {
+              kind = "zone",
+              labels = {
+                enUS = "七星殿上层（联盟）/ 双月殿上层（部落）",
+                zhCN = "七星殿上层（联盟）/ 双月殿上层（部落）"
+              },
+              refID = nil
+            },
+            {
+              kind = "npc",
+              labels = {
+                enUS = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                zhCN = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "挑战模式第3赛季新增白金币兑换坐骑。",
+              zhCN = "挑战模式第3赛季新增白金币兑换坐骑。"
+            },
+            price = {
+              enUS = "300 白金币",
+              zhCN = "300 白金币"
+            },
+            questID = nil,
+            reputation = nil
+          },
+          sourceID = "platinum-coin-vendor-1298512",
+          type = "vendor"
+        },
+        {
+          active = true,
+          availability = "unknown",
+          path = {
+            {
+              kind = "research",
+              labels = {
+                enUS = "国服怀旧服投放待核实",
+                zhCN = "国服怀旧服投放待核实"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。",
+              zhCN = "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil
+          },
+          sourceID = "retired-audit-source-1298512",
+          type = "research"
+        }
+      },
+      status = "verified"
+    },
+    ["fact-1302506"] = {
+      identity = {
+        iconFileID = 303868,
+        names = {
+          enUS = "Mount 1302506",
+          zhCN = "冰霜巨龙"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 3087
+      },
+      mountKey = "fact-1302506",
+      primarySourceID = "platinum-coin-vendor-1302506",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "faction",
+              labels = {
+                enUS = "挑战模式",
+                zhCN = "挑战模式"
+              },
+              refID = nil
+            },
+            {
+              kind = "zone",
+              labels = {
+                enUS = "七星殿上层（联盟）/ 双月殿上层（部落）",
+                zhCN = "七星殿上层（联盟）/ 双月殿上层（部落）"
+              },
+              refID = nil
+            },
+            {
+              kind = "npc",
+              labels = {
+                enUS = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                zhCN = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "挑战模式第3赛季新增白金币兑换坐骑。",
+              zhCN = "挑战模式第3赛季新增白金币兑换坐骑。"
+            },
+            price = {
+              enUS = "300 白金币",
+              zhCN = "300 白金币"
+            },
+            questID = nil,
+            reputation = nil
+          },
+          sourceID = "platinum-coin-vendor-1302506",
+          type = "vendor"
+        },
+        {
+          active = true,
+          availability = "unknown",
+          path = {
+            {
+              kind = "research",
+              labels = {
+                enUS = "国服怀旧服投放待核实",
+                zhCN = "国服怀旧服投放待核实"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。",
+              zhCN = "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil
+          },
+          sourceID = "retired-audit-source-1302506",
+          type = "research"
+        }
+      },
+      status = "verified"
+    },
+    ["fact-132117"] = {
+      identity = {
+        iconFileID = 657488,
+        names = {
+          enUS = "Mount 132117",
+          zhCN = "燃灰熊猫人凤凰"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 518
+      },
+      mountKey = "fact-132117",
+      primarySourceID = "challenge-silver-132117",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "achievement",
+              labels = {
+                enUS = "挑战征服者：白银（全部9个挑战模式副本达到白银）",
+                zhCN = "挑战征服者：白银（全部9个挑战模式副本达到白银）"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "邮件收取先祖凤凰蛋后向凯·落羽选择颜色",
+                zhCN = "邮件收取先祖凤凰蛋后向凯·落羽选择颜色"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "四种熊猫人凤凰四选一；同一角色通过白银成就获得一枚先祖凤凰蛋。",
+              zhCN = "四种熊猫人凤凰四选一；同一角色通过白银成就获得一枚先祖凤凰蛋。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil
+          },
+          sourceID = "challenge-silver-132117",
+          type = "achievement"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "faction",
+              labels = {
+                enUS = "挑战模式",
+                zhCN = "挑战模式"
+              },
+              refID = nil
+            },
+            {
+              kind = "zone",
+              labels = {
+                enUS = "七星殿上层（联盟）/ 双月殿上层（部落）",
+                zhCN = "七星殿上层（联盟）/ 双月殿上层（部落）"
+              },
+              refID = nil
+            },
+            {
+              kind = "npc",
+              labels = {
+                enUS = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                zhCN = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "已完成挑战征服者：白银后，也可由白金币商人兑换。",
+              zhCN = "已完成挑战征服者：白银后，也可由白金币商人兑换。"
+            },
+            price = {
+              enUS = "50 白金币",
+              zhCN = "50 白金币"
+            },
+            questID = nil,
+            reputation = nil
+          },
+          sourceID = "platinum-coin-vendor-132117",
+          type = "vendor"
+        }
+      },
+      status = "verified"
+    },
+    ["fact-132118"] = {
+      identity = {
+        iconFileID = 657491,
+        names = {
+          enUS = "Mount 132118",
+          zhCN = "翠绿熊猫人凤凰"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 519
+      },
+      mountKey = "fact-132118",
+      primarySourceID = "challenge-silver-132118",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "achievement",
+              labels = {
+                enUS = "挑战征服者：白银（全部9个挑战模式副本达到白银）",
+                zhCN = "挑战征服者：白银（全部9个挑战模式副本达到白银）"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "邮件收取先祖凤凰蛋后向凯·落羽选择颜色",
+                zhCN = "邮件收取先祖凤凰蛋后向凯·落羽选择颜色"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "四种熊猫人凤凰四选一；同一角色通过白银成就获得一枚先祖凤凰蛋。",
+              zhCN = "四种熊猫人凤凰四选一；同一角色通过白银成就获得一枚先祖凤凰蛋。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil
+          },
+          sourceID = "challenge-silver-132118",
+          type = "achievement"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "faction",
+              labels = {
+                enUS = "挑战模式",
+                zhCN = "挑战模式"
+              },
+              refID = nil
+            },
+            {
+              kind = "zone",
+              labels = {
+                enUS = "七星殿上层（联盟）/ 双月殿上层（部落）",
+                zhCN = "七星殿上层（联盟）/ 双月殿上层（部落）"
+              },
+              refID = nil
+            },
+            {
+              kind = "npc",
+              labels = {
+                enUS = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                zhCN = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "已完成挑战征服者：白银后，也可由白金币商人兑换。",
+              zhCN = "已完成挑战征服者：白银后，也可由白金币商人兑换。"
+            },
+            price = {
+              enUS = "50 白金币",
+              zhCN = "50 白金币"
+            },
+            questID = nil,
+            reputation = nil
+          },
+          sourceID = "platinum-coin-vendor-132118",
+          type = "vendor"
+        }
+      },
+      status = "verified"
+    },
+    ["fact-132119"] = {
+      identity = {
+        iconFileID = 657489,
+        names = {
+          enUS = "Mount 132119",
+          zhCN = "蓝紫熊猫人凤凰"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 520
+      },
+      mountKey = "fact-132119",
+      primarySourceID = "challenge-silver-132119",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "achievement",
+              labels = {
+                enUS = "挑战征服者：白银（全部9个挑战模式副本达到白银）",
+                zhCN = "挑战征服者：白银（全部9个挑战模式副本达到白银）"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "邮件收取先祖凤凰蛋后向凯·落羽选择颜色",
+                zhCN = "邮件收取先祖凤凰蛋后向凯·落羽选择颜色"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "四种熊猫人凤凰四选一；同一角色通过白银成就获得一枚先祖凤凰蛋。",
+              zhCN = "四种熊猫人凤凰四选一；同一角色通过白银成就获得一枚先祖凤凰蛋。"
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil
+          },
+          sourceID = "challenge-silver-132119",
+          type = "achievement"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "faction",
+              labels = {
+                enUS = "挑战模式",
+                zhCN = "挑战模式"
+              },
+              refID = nil
+            },
+            {
+              kind = "zone",
+              labels = {
+                enUS = "七星殿上层（联盟）/ 双月殿上层（部落）",
+                zhCN = "七星殿上层（联盟）/ 双月殿上层（部落）"
+              },
+              refID = nil
+            },
+            {
+              kind = "npc",
+              labels = {
+                enUS = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                zhCN = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "已完成挑战征服者：白银后，也可由白金币商人兑换。",
+              zhCN = "已完成挑战征服者：白银后，也可由白金币商人兑换。"
+            },
+            price = {
+              enUS = "50 白金币",
+              zhCN = "50 白金币"
+            },
+            questID = nil,
+            reputation = nil
+          },
+          sourceID = "platinum-coin-vendor-132119",
+          type = "vendor"
+        }
+      },
+      status = "verified"
     },
     ["fact-136505"] = {
       identity = {
@@ -9724,12 +10407,61 @@ NS.Data = {
         mountJournalID = 1763
       },
       mountKey = "fact-387308",
-      primarySourceID = "manual-source-387308",
+      primarySourceID = "platinum-coin-vendor-387308",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "faction",
+              labels = {
+                enUS = "挑战模式",
+                zhCN = "挑战模式"
+              },
+              refID = nil
+            },
+            {
+              kind = "zone",
+              labels = {
+                enUS = "七星殿上层（联盟）/ 双月殿上层（部落）",
+                zhCN = "七星殿上层（联盟）/ 双月殿上层（部落）"
+              },
+              refID = nil
+            },
+            {
+              kind = "npc",
+              labels = {
+                enUS = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                zhCN = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "经典怀旧服挑战模式白金币商人新增兑换渠道。",
+              zhCN = "经典怀旧服挑战模式白金币商人新增兑换渠道。"
+            },
+            price = {
+              enUS = "70 白金币",
+              zhCN = "70 白金币"
+            },
+            questID = nil,
+            reputation = nil
+          },
+          sourceID = "platinum-coin-vendor-387308",
+          type = "vendor"
+        },
         {
           active = true,
           availability = "obtainable",
@@ -10004,12 +10736,61 @@ NS.Data = {
         mountJournalID = 1767
       },
       mountKey = "fact-387321",
-      primarySourceID = "manual-source-387321",
+      primarySourceID = "platinum-coin-vendor-387321",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "faction",
+              labels = {
+                enUS = "挑战模式",
+                zhCN = "挑战模式"
+              },
+              refID = nil
+            },
+            {
+              kind = "zone",
+              labels = {
+                enUS = "七星殿上层（联盟）/ 双月殿上层（部落）",
+                zhCN = "七星殿上层（联盟）/ 双月殿上层（部落）"
+              },
+              refID = nil
+            },
+            {
+              kind = "npc",
+              labels = {
+                enUS = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                zhCN = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "经典怀旧服挑战模式白金币商人新增兑换渠道。",
+              zhCN = "经典怀旧服挑战模式白金币商人新增兑换渠道。"
+            },
+            price = {
+              enUS = "40 白金币",
+              zhCN = "40 白金币"
+            },
+            questID = nil,
+            reputation = nil
+          },
+          sourceID = "platinum-coin-vendor-387321",
+          type = "vendor"
+        },
         {
           active = true,
           availability = "obtainable",
@@ -16387,12 +17168,61 @@ NS.Data = {
         mountJournalID = 441
       },
       mountKey = "provisional-107517",
-      primarySourceID = "manual-source-107517",
+      primarySourceID = "platinum-coin-vendor-107517",
       restrictions = {
         classes = {},
         factions = {}
       },
       sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "faction",
+              labels = {
+                enUS = "挑战模式",
+                zhCN = "挑战模式"
+              },
+              refID = nil
+            },
+            {
+              kind = "zone",
+              labels = {
+                enUS = "七星殿上层（联盟）/ 双月殿上层（部落）",
+                zhCN = "七星殿上层（联盟）/ 双月殿上层（部落）"
+              },
+              refID = nil
+            },
+            {
+              kind = "npc",
+              labels = {
+                enUS = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
+                zhCN = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = "旧复活卷轴坐骑在怀旧服挑战模式商店提供兑换渠道。",
+              zhCN = "旧复活卷轴坐骑在怀旧服挑战模式商店提供兑换渠道。"
+            },
+            price = {
+              enUS = "150 白金币",
+              zhCN = "150 白金币"
+            },
+            questID = nil,
+            reputation = nil
+          },
+          sourceID = "platinum-coin-vendor-107517",
+          type = "vendor"
+        },
         {
           active = true,
           availability = "unavailable",
@@ -21219,24 +22049,24 @@ NS.Data = {
             {
               kind = "faction",
               labels = {
-                enUS = "挑战模式",
-                zhCN = "挑战模式"
+                enUS = "联盟 PvP 第14赛季",
+                zhCN = "联盟 PvP 第14赛季"
               },
               refID = nil
             },
             {
               kind = "zone",
               labels = {
-                enUS = "潘达利亚挑战模式商人",
-                zhCN = "潘达利亚挑战模式商人"
+                enUS = "暴风城 > 通灵领主赛普",
+                zhCN = "暴风城 > 通灵领主赛普"
               },
               refID = nil
             },
             {
-              kind = "custom",
+              kind = "npc",
               labels = {
-                enUS = "通灵领主赛普",
-                zhCN = "通灵领主赛普"
+                enUS = "邪气鞍座兑换商",
+                zhCN = "邪气鞍座兑换商"
               },
               refID = nil
             }
@@ -21248,16 +22078,15 @@ NS.Data = {
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = nil,
-              zhCN = nil
+              enUS = "PvP 邪气鞍座兑换，不属于挑战模式坐骑。",
+              zhCN = "PvP 邪气鞍座兑换，不属于挑战模式坐骑。"
             },
             price = {
-              enUS = "挑战模式：黄金",
-              zhCN = "挑战模式：黄金"
+              enUS = "1 邪气鞍座",
+              zhCN = "1 邪气鞍座"
             },
             questID = nil,
-            reputation = nil,
-            tooltipNote = nil
+            reputation = nil
           },
           sourceID = "manual-source-146615",
           type = "vendor"
@@ -21293,24 +22122,24 @@ NS.Data = {
             {
               kind = "faction",
               labels = {
-                enUS = "挑战模式",
-                zhCN = "挑战模式"
+                enUS = "部落 PvP 第14赛季",
+                zhCN = "部落 PvP 第14赛季"
               },
               refID = nil
             },
             {
               kind = "zone",
               labels = {
-                enUS = "潘达利亚挑战模式商人",
-                zhCN = "潘达利亚挑战模式商人"
+                enUS = "奥格瑞玛 > 亡灵卫兵奈萨里安",
+                zhCN = "奥格瑞玛 > 亡灵卫兵奈萨里安"
               },
               refID = nil
             },
             {
-              kind = "custom",
+              kind = "npc",
               labels = {
-                enUS = "亡灵卫兵奈萨里安",
-                zhCN = "亡灵卫兵奈萨里安"
+                enUS = "邪气鞍座兑换商",
+                zhCN = "邪气鞍座兑换商"
               },
               refID = nil
             }
@@ -21322,16 +22151,15 @@ NS.Data = {
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = nil,
-              zhCN = nil
+              enUS = "PvP 邪气鞍座兑换，不属于挑战模式坐骑。",
+              zhCN = "PvP 邪气鞍座兑换，不属于挑战模式坐骑。"
             },
             price = {
-              enUS = "挑战模式：黄金",
-              zhCN = "挑战模式：黄金"
+              enUS = "1 邪气鞍座",
+              zhCN = "1 邪气鞍座"
             },
             questID = nil,
-            reputation = nil,
-            tooltipNote = nil
+            reputation = nil
           },
           sourceID = "manual-source-146622",
           type = "vendor"

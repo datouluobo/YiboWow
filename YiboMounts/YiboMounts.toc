@@ -3,7 +3,7 @@
 ## Notes: Lightweight bilingual mount source tooltips for auras, chat links, and the Mount Journal.
 ## Notes-zhCN: 在坐骑光环、聊天链接与坐骑面板提示中显示紧凑的图鉴信息。
 ## Author: YiboSoft
-## Version: 0.8.1
+## Version: 0.8.2
 ## Group: Yibo
 ## SavedVariables: YiboMountsDB, YiboMountsDiagnostics
 ## IconTexture: Interface\AddOns\YiboMounts\Media\YiboMountsIcon-v1

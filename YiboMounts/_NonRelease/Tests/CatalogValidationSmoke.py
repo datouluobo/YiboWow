@@ -43,6 +43,16 @@ class CatalogValidationSmoke(unittest.TestCase):
             self.assertEqual(output_a.read_bytes(), output_b.read_bytes())
             self.assertIn(b"[40192] = \"ashes-of-alar\"", output_a.read_bytes())
 
+    def test_runtime_visible_research_mount_is_retained_for_lookup(self) -> None:
+        runtime = GENERATOR.build_runtime_data(self.catalog)
+        self.assertEqual(runtime["mountKeyBySpellID"][1298512], "fact-1298512")
+        self.assertEqual(runtime["mounts"]["fact-1298512"]["identity"]["names"]["zhCN"], "风暴乌鸦")
+
+    def test_stormcrow_has_platinum_coin_source(self) -> None:
+        mount = next(item for item in self.catalog["mounts"] if item["ids"]["spellIDs"] == [1298512])
+        source = next(item for item in mount["sources"] if item["sourceID"] == "platinum-coin-vendor-1298512")
+        self.assertEqual(source["requirements"]["price"]["zhCN"], "300 白金币")
+
 
 if __name__ == "__main__":
     unittest.main()

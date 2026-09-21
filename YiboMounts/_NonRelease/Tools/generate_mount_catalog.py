@@ -216,7 +216,12 @@ def build_runtime_data(root: dict[str, Any]) -> dict[str, Any]:
         source = next((item for item in mount["sources"] if item["sourceID"] == mount["primarySourceID"]), None)
         if mount["mountKey"].startswith(("provisional-", "fact-")):
             labels = [node.get("labels", {}).get("zhCN", "") for node in (source or {}).get("path", [])]
-            if not source or source.get("type") == "research" or not labels or any("#" in label for label in labels):
+            # A confirmed client-visible mount can be retained for collection
+            # lookups even while its acquisition route is still being
+            # researched.  Its research source remains silent in the tooltip
+            # until a real player-facing route is verified.
+            runtime_visible = mount.get("runtimeVisible") is True
+            if not runtime_visible and (not source or source.get("type") == "research" or not labels or any("#" in label for label in labels)):
                 continue
         record = dict(mount)
         record["ids"] = dict(record["ids"])
