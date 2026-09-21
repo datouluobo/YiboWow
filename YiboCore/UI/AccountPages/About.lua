@@ -28,6 +28,14 @@ local ABOUT_ADDONS = {
         version = "0.1",
         description = "汇总多角色货币余额，统一查看常规货币与物品代币。",
         icon = "Interface\\AddOns\\YiboCurrency\\Media\\YiboCurrencyIcon-v1",
+        url = "https://www.curseforge.com/wow/addons/yibocurrency",
+    },
+    {
+        name = "YiboBuilds",
+        version = "1.0.0",
+        description = "跨角色查看装备、天赋与雕文构筑。",
+        icon = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon-v1",
+        url = "https://www.curseforge.com/wow/addons/yibobuilds",
     },
     {
         name = "YiboLegendary",
@@ -72,6 +80,14 @@ local ABOUT_ADDONS = {
         icon = "Interface\\AddOns\\YiboCore\\Media\\YBP_AddonIcon",
         url = "https://www.curseforge.com/wow/addons/yibobeastpaths",
         relation = "optional-core",
+    },
+    {
+        name = "YiboMounts",
+        version = "0.8.1",
+        description = "在光环、聊天链接与坐骑面板提示中显示坐骑获取来源。",
+        icon = "Interface\\AddOns\\YiboMounts\\Media\\YiboMountsIcon-v1",
+        relation = "optional-core",
+        url = "https://www.curseforge.com/wow/addons/yibomounts",
     },
 }
 

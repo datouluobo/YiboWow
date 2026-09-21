@@ -353,6 +353,16 @@ local function RefreshSettings(parent)
                     }
                 end
             end
+            if page.previewEnabled and type(page.GetPreviewFieldDefinitions) == "function" and type(page.SetPreviewFieldVisible) == "function" then
+                for _, field in ipairs(page.GetPreviewFieldDefinitions() or {}) do
+                    local currentField = field
+                    previewOptions[#previewOptions + 1] = {
+                        title = currentField.title,
+                        isSelected = function() return GetPreviewFieldVisible(page, currentField) end,
+                        setSelected = function(visible) page.SetPreviewFieldVisible(currentField.id, visible) end,
+                    }
+                end
+            end
             row.mainFields:SetSummary("主表")
             row.mainFields:SetOptions(mainOptions); row.mainFields:Show()
             if #previewOptions > 0 then

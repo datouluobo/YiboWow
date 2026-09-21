@@ -4,7 +4,7 @@ local Entry = {}
 Core.Entry = Entry
 Entry.businessEntries = Entry.businessEntries or {}
 local HidePreview
-local CORE_ICON = "Interface\\AddOns\\YiboCore\\Media\\YiboCoreIcon-v13"
+local CORE_ICON = "Interface\\AddOns\\YiboCore\\Media\\YiboCoreIcon-v20"
 
 local ENTRY_MODES = { "none", "broker", "minimap", "both" }
 local ENTRY_MODE_LABELS = {

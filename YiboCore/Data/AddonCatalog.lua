@@ -22,6 +22,7 @@ Core.AddonCatalog = {
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon-v1",
         description = "跨角色查看装备、天赋与雕文构筑。",
+        projectURL = "https://www.curseforge.com/wow/addons/yibobuilds",
     },
     {
         name = "YiboCurrency",
@@ -78,6 +79,14 @@ Core.AddonCatalog = {
         icon = "Interface\\AddOns\\YiboCore\\Media\\YBP_AddonIcon",
         description = "潘达利亚隐藏猎人宠物路线图。",
         projectURL = "https://www.curseforge.com/wow/addons/yibo-beastpaths",
+    },
+    {
+        name = "YiboMounts",
+        title = "坐骑图鉴",
+        relation = "optional-core",
+        icon = "Interface\\AddOns\\YiboMounts\\Media\\YiboMountsIcon-v1",
+        description = "在光环、聊天链接与坐骑面板提示中显示坐骑获取来源。",
+        projectURL = "https://www.curseforge.com/wow/addons/yibomounts",
     },
 }
 

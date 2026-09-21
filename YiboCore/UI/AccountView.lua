@@ -897,18 +897,18 @@ end
 -- The account shell can contain secure action controls supplied by a business
 -- page.  A normal Lua Frame:Hide() is therefore blocked once combat starts.
 -- This state handler runs the visibility change in WoW's secure environment.
-function AccountView:EnsureCombatSettingsHider()
-    if self.combatSettingsHider or not self.frame or (InCombatLockdown and InCombatLockdown()) then return end
+function AccountView:EnsureCombatWindowHider()
+    if self.combatWindowHider or not self.frame or (InCombatLockdown and InCombatLockdown()) then return end
     local hider = CreateFrame("Frame", nil, UIParent, "SecureHandlerStateTemplate")
-    hider:SetFrameRef("settingsFrame", self.frame)
+    hider:SetFrameRef("accountFrame", self.frame)
     hider:SetAttribute("_onstate-combat", [[
-        local settingsFrame = self:GetFrameRef("settingsFrame")
-        if newstate == "1" and settingsFrame:GetAttribute("yibo-settings-open") then
-            settingsFrame:Hide()
+        local accountFrame = self:GetFrameRef("accountFrame")
+        if newstate == "1" then
+            accountFrame:Hide()
         end
     ]])
     RegisterStateDriver(hider, "combat", "[combat] 1; 0")
-    self.combatSettingsHider = hider
+    self.combatWindowHider = hider
 end
 
 function AccountView:CreateFrame()
@@ -1040,7 +1040,7 @@ function AccountView:CreateFrame()
         if not registered then tinsert(UISpecialFrames, "YiboCoreAccountView") end
     end
     self.frame = frame
-    self:EnsureCombatSettingsHider()
+    self:EnsureCombatWindowHider()
     return frame
 end
 
@@ -1307,7 +1307,6 @@ function AccountView:ShowPage(pageID, options)
     local page = self._pages[pageID] or self._pages.overview
     if not page or (not page.internal and not PageEnabled(page)) then page = self._pages.overview end
     self:CreateFrame()
-    self.frame:SetAttribute("yibo-settings-open", not self.frame.preview and page.id == "settings")
     local context = options.context or self:BuildContext(page, options)
     if not options.preview then self:ApplyPageSize(page, context) end
     self:HideColumnPagers()
@@ -1614,7 +1613,7 @@ function AccountView:ShowSettings(targetID)
         return false
     end
     self:CreateFrame()
-    self:EnsureCombatSettingsHider()
+    self:EnsureCombatWindowHider()
     if targetID then
         -- Entry shortcuts provide the business page explicitly.  Validate it
         -- before changing state so a stale/unregistered entry falls back to
