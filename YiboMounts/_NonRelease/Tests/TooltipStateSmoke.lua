@@ -82,11 +82,12 @@ LinkTooltip.__yiboMountsSignature = nil
 NS.Tooltip:ApplySpellID(LinkTooltip, 40192, "SetMountBySpellID", "mount")
 Expect(#LinkTooltip.lines, 2, "mount panel source can append through the spell ID path")
 
-local savedCoreIntegration, savedMountJournal = NS.CoreIntegration, C_MountJournal
+local savedCoreIntegration, savedMountJournal, savedUnitFactionGroup = NS.CoreIntegration, C_MountJournal, UnitFactionGroup
 local savedSettings = NS:GetSettings().collectionStatus
 local savedShowCollected, savedShowUncollected = savedSettings.showCollected, savedSettings.showUncollected
 NS.CoreIntegration = { initialized = true, IsCollectionStatusAvailable = function() return true end }
-C_MountJournal = { GetMountInfoByID = function() return "Astral Cloud Serpent", 127170, nil, nil, nil, nil, nil, nil, nil, nil, true end }
+UnitFactionGroup = function() return "Horde" end
+C_MountJournal = { GetMountInfoByID = function() return "Astral Cloud Serpent", 127170, nil, nil, nil, nil, nil, nil, nil, false, true end }
 local CollectionTooltip = { lines = {}, spellID = 127170 }
 function CollectionTooltip:GetUnit() return nil, nil end
 function CollectionTooltip:GetSpell() return nil, nil, self.spellID end
@@ -105,6 +106,29 @@ C_MountJournal.GetMountInfoByID = function() return "Astral Cloud Serpent", 1271
 NS.Tooltip:ApplySpellID(UncollectedTooltip, 127170, "OnTooltipSetHyperlink", "hyperlink")
 Expect(#UncollectedTooltip.lines, 3, "uncollected status is shown when enabled")
 Expect(UncollectedTooltip.lines[3], "Collection: Not collected", "uncollected status uses the localized status label")
+
+local FactionTooltip = { lines = {}, spellID = 127170 }
+function FactionTooltip:GetUnit() return nil, nil end
+function FactionTooltip:GetSpell() return nil, nil, self.spellID end
+function FactionTooltip:AddLine(text) table.insert(self.lines, text) end
+function FactionTooltip:Show() end
+C_MountJournal.GetMountInfoByID = function(id)
+    if id == 478 then return "Astral Cloud Serpent", 999999, nil, nil, nil, nil, nil, true, "Alliance", false, false end
+    return "Astral Cloud Serpent", 127170, nil, nil, nil, nil, nil, false, nil, false, true
+end
+C_MountJournal.GetMountIDs = function() return { 478, 479 } end
+NS.Tooltip:ApplySpellID(FactionTooltip, 127170, "OnTooltipSetHyperlink", "hyperlink")
+Expect(FactionTooltip.lines[3], "Collection: Collected", "collection state resolves the current faction journal entry by spell ID")
+
+local HiddenFactionTooltip = { lines = {}, spellID = 127170 }
+function HiddenFactionTooltip:GetUnit() return nil, nil end
+function HiddenFactionTooltip:GetSpell() return nil, nil, self.spellID end
+function HiddenFactionTooltip:AddLine(text) table.insert(self.lines, text) end
+function HiddenFactionTooltip:Show() end
+C_MountJournal.GetMountInfoByID = function() return "Astral Cloud Serpent", 127170, nil, nil, nil, nil, nil, true, "Alliance", true, false end
+C_MountJournal.GetMountIDs = function() return { 478 } end
+NS.Tooltip:ApplySpellID(HiddenFactionTooltip, 127170, "OnTooltipSetHyperlink", "hyperlink")
+Expect(#HiddenFactionTooltip.lines, 2, "opposing-faction hidden entries do not report a false uncollected state")
 
 NS:GetSettings().collectionStatus.showUncollected = false
 local HiddenUncollectedTooltip = { lines = {}, spellID = 127170 }
@@ -136,7 +160,7 @@ NS.Tooltip:ApplySpellID(JournalTooltip, 127170, "OnTooltipSetSpell", "spell")
 Expect(#JournalTooltip.lines, 4, "mount journal callbacks retain their native source lines")
 Expect(JournalTooltip.lines[3], "Drop: 魔古山宝库 > 伊拉贡", "mount journal callbacks never append collection status")
 
-NS.CoreIntegration, C_MountJournal = savedCoreIntegration, savedMountJournal
+NS.CoreIntegration, C_MountJournal, UnitFactionGroup = savedCoreIntegration, savedMountJournal, savedUnitFactionGroup
 savedSettings.showCollected, savedSettings.showUncollected = savedShowCollected, savedShowUncollected
 
 LinkTooltip.__yiboMountsSignature = nil

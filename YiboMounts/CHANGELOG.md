@@ -1,5 +1,17 @@
 # YiboMounts Changelog / 更新日志
 
+## 0.8.3
+
+### 中文
+
+- 修复敌对阵营或坐骑日志 ID 失配时，已拥有坐骑被误报为未拥有的问题。
+- 按 spellID 校验并重新解析当前坐骑日志；无法可靠判定时保持静默。
+
+### English
+
+- Fixed collected mounts being reported as uncollected for opposing factions or stale journal IDs.
+- Validated and re-resolved current journal entries by spellID, while keeping uncertain states silent.
+
 ## 0.8.2
 
 ### 中文

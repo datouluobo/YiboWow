@@ -12,15 +12,57 @@ local function ClearMarker(tooltip)
     tooltip.__yiboMountsJournalTooltip = nil
 end
 
-local function GetCollectionState(record)
+local function CurrentFaction()
+    if type(UnitFactionGroup) ~= "function" then return nil end
+    local faction = UnitFactionGroup("player")
+    return type(faction) == "string" and faction:lower() or nil
+end
+
+local function ReadMountState(journal, mountJournalID, expectedSpellID)
+    if type(mountJournalID) ~= "number" then return nil end
+    local result = { journal.GetMountInfoByID(mountJournalID) }
+    local spellID = result[2]
+    local isFactionSpecific, faction = result[8], result[9]
+    local shouldHideOnChar, isCollected = result[10], result[11]
+    if type(expectedSpellID) == "number" and spellID ~= expectedSpellID then
+        -- Journal IDs are client-owned and can point at a different entry on
+        -- faction-specific/older clients. Never use that entry's state for
+        -- the requested spell.
+        return nil
+    end
+    if isFactionSpecific and type(faction) == "string" then
+        local playerFaction = CurrentFaction()
+        if playerFaction and faction:lower() ~= playerFaction then return nil end
+    end
+    if shouldHideOnChar then return nil end
+    if type(isCollected) == "boolean" then return isCollected end
+    return nil
+end
+
+local function GetCollectionState(record, spellID)
     if not (NS.CoreIntegration and NS.CoreIntegration:IsCollectionStatusAvailable()) then return nil end
     local mountJournalID = record and record.ids and record.ids.mountJournalID
-    if type(record) ~= "table" or type(mountJournalID) ~= "number" then return nil end
+    if type(record) ~= "table" then return nil end
     if not (C_MountJournal and type(C_MountJournal.GetMountInfoByID) == "function") then return nil end
-    local result = { C_MountJournal.GetMountInfoByID(mountJournalID) }
-    local collected = result[11]
-    if type(collected) ~= "boolean" then return nil end
-    return collected
+    local journal = C_MountJournal
+    local collected = ReadMountState(journal, mountJournalID, spellID)
+    if collected == true then return true end
+    local foundUncollected = collected == false
+
+    -- Do not trust a stale catalog journal ID. Re-resolve by spellID against
+    -- the current character's journal, which is especially important when
+    -- testing an account-owned mount from the opposing faction.
+    if type(spellID) ~= "number" or type(journal.GetMountIDs) ~= "function" then
+        if foundUncollected then return false end
+        return nil
+    end
+    for _, candidateID in ipairs(journal.GetMountIDs()) do
+        local state = ReadMountState(journal, candidateID, spellID)
+        if state == true then return true end
+        if state == false then foundUncollected = true end
+    end
+    if foundUncollected then return false end
+    return nil
 end
 
 local function AppendCollectionStatus(tooltip, spellID, record, source, identity)
@@ -32,7 +74,7 @@ local function AppendCollectionStatus(tooltip, spellID, record, source, identity
     local settings = NS:GetSettings().collectionStatus
     if not settings then return end
 
-    local collected = GetCollectionState(record)
+    local collected = GetCollectionState(record, spellID)
     if collected == nil then return end
     if collected and not settings.showCollected then return end
     if not collected and not settings.showUncollected then return end
