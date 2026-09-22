@@ -48,10 +48,11 @@ class CatalogValidationSmoke(unittest.TestCase):
         self.assertEqual(runtime["mountKeyBySpellID"][1298512], "fact-1298512")
         self.assertEqual(runtime["mounts"]["fact-1298512"]["identity"]["names"]["zhCN"], "风暴乌鸦")
 
-    def test_stormcrow_has_platinum_coin_source(self) -> None:
+    def test_stormcrow_uses_current_official_realm_source(self) -> None:
         mount = next(item for item in self.catalog["mounts"] if item["ids"]["spellIDs"] == [1298512])
-        source = next(item for item in mount["sources"] if item["sourceID"] == "platinum-coin-vendor-1298512")
-        self.assertEqual(source["requirements"]["price"]["zhCN"], "300 白金币")
+        self.assertEqual(mount["primarySourceID"], "gold-challenge-achievement-1298512")
+        primary = next(item for item in mount["sources"] if item["sourceID"] == mount["primarySourceID"])
+        self.assertEqual(primary["availability"], "obtainable")
 
 
 if __name__ == "__main__":

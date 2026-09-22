@@ -3997,7 +3997,7 @@
     },
     {
       "mountKey": "fact-18363",
-      "status": "candidate",
+      "status": "verified",
       "ids": {
         "spellIDs": [
           18363
@@ -4008,29 +4008,29 @@
       "identity": {
         "iconFileID": 134175,
         "names": {
-          "enUS": "Mount 18363",
-          "zhCN": "科多兽坐骑"
+          "enUS": "Brown Kodo",
+          "zhCN": "棕色科多兽"
         }
       },
       "restrictions": {
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "manual-source-18363",
+      "primarySourceID": "thunder-bluff-kodo-vendor-18363",
       "sources": [
         {
-          "sourceID": "manual-source-18363",
-          "type": "research",
+          "sourceID": "thunder-bluff-kodo-vendor-18363",
+          "type": "vendor",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "obtainable",
           "path": [
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "来源待补全",
-                "zhCN": "来源待补全"
+                "enUS": "Mulgore > Bloodhoof Village > Harb Clawhoof",
+                "zhCN": "莫高雷 > 血蹄村 > 哈布·爪蹄"
               }
             }
           ],
@@ -4039,8 +4039,8 @@
             "reputation": null,
             "costs": [],
             "price": {
-              "enUS": null,
-              "zhCN": null
+              "enUS": "1 gold",
+              "zhCN": "1 金币"
             },
             "questID": null,
             "achievementID": null,
@@ -18519,6 +18519,7 @@
     },
     {
       "mountKey": "fact-64656",
+      "runtimeVisible": true,
       "status": "candidate",
       "ids": {
         "spellIDs": [
@@ -18542,17 +18543,17 @@
       "sources": [
         {
           "sourceID": "manual-source-64656",
-          "type": "research",
+          "type": "event",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "limited_time",
           "path": [
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "来源待补全",
-                "zhCN": "来源待补全"
+                "enUS": "China web event lottery redemption",
+                "zhCN": "国服网页活动抽奖兑换"
               }
             }
           ],
@@ -35964,6 +35965,7 @@
     },
     {
       "mountKey": "fact-388516",
+      "runtimeVisible": true,
       "status": "candidate",
       "ids": {
         "spellIDs": [
@@ -35987,17 +35989,17 @@
       "sources": [
         {
           "sourceID": "fact-source-388516",
-          "type": "research",
+          "type": "promotion",
           "priority": 1,
           "active": true,
-          "availability": "unknown",
+          "availability": "limited_time",
           "path": [
             {
               "kind": "research",
               "refID": null,
               "labels": {
-                "enUS": "Source pending completion",
-                "zhCN": "来源待补全"
+                "enUS": "China six-month card / limited web bundle",
+                "zhCN": "国服半年卡/网页限时礼包"
               }
             }
           ],
@@ -36912,6 +36914,7 @@
     },
     {
       "mountKey": "fact-471440",
+      "runtimeVisible": true,
       "status": "candidate",
       "ids": {
         "spellIDs": [
@@ -36935,17 +36938,17 @@
       "sources": [
         {
           "sourceID": "manual-source-471440",
-          "type": "research",
+          "type": "promotion",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "limited_time",
           "path": [
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "来源待补全",
-                "zhCN": "来源待补全"
+                "enUS": "Classic Wrath flying Spectral Tiger bundle",
+                "zhCN": "巫妖王之怒飞行幽灵虎礼包"
               }
             }
           ],
@@ -37121,7 +37124,7 @@
     },
     {
       "mountKey": "fact-473739",
-      "status": "candidate",
+      "status": "verified",
       "ids": {
         "spellIDs": [
           473739
@@ -37140,21 +37143,21 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "manual-source-473739",
+      "primarySourceID": "battle-net-store-473739",
       "sources": [
         {
-          "sourceID": "manual-source-473739",
-          "type": "research",
+          "sourceID": "battle-net-store-473739",
+          "type": "store",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "obtainable",
           "path": [
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "来源待补全",
-                "zhCN": "来源待补全"
+                "enUS": "Battle.net Shop > Majestic Mikesi Collection > Fluffy Mikesi",
+                "zhCN": "战网商城 > 威风米克西收藏 > 绒毛米克西"
               }
             }
           ],
@@ -37163,8 +37166,8 @@
             "reputation": null,
             "costs": [],
             "price": {
-              "enUS": null,
-              "zhCN": null
+              "enUS": "¥120",
+              "zhCN": "¥120"
             },
             "questID": null,
             "achievementID": null,
@@ -37180,7 +37183,7 @@
     },
     {
       "mountKey": "fact-473741",
-      "status": "candidate",
+      "status": "verified",
       "ids": {
         "spellIDs": [
           473741
@@ -37199,21 +37202,21 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "manual-source-473741",
+      "primarySourceID": "battle-net-store-473741",
       "sources": [
         {
-          "sourceID": "manual-source-473741",
-          "type": "research",
+          "sourceID": "battle-net-store-473741",
+          "type": "store",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "obtainable",
           "path": [
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "来源待补全",
-                "zhCN": "来源待补全"
+                "enUS": "Battle.net Shop > Majestic Mikesi Collection > Softpaw Mikesi",
+                "zhCN": "战网商城 > 威风米克西收藏 > 柔爪米克西"
               }
             }
           ],
@@ -37222,8 +37225,8 @@
             "reputation": null,
             "costs": [],
             "price": {
-              "enUS": null,
-              "zhCN": null
+              "enUS": "¥120",
+              "zhCN": "¥120"
             },
             "questID": null,
             "achievementID": null,
@@ -37239,7 +37242,7 @@
     },
     {
       "mountKey": "fact-473743",
-      "status": "candidate",
+      "status": "verified",
       "ids": {
         "spellIDs": [
           473743
@@ -37258,21 +37261,21 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "manual-source-473743",
+      "primarySourceID": "battle-net-store-473743",
       "sources": [
         {
-          "sourceID": "manual-source-473743",
-          "type": "research",
+          "sourceID": "battle-net-store-473743",
+          "type": "store",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "obtainable",
           "path": [
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "来源待补全",
-                "zhCN": "来源待补全"
+                "enUS": "Battle.net Shop > Majestic Mikesi Collection > Rollingpaw Mikesi",
+                "zhCN": "战网商城 > 威风米克西收藏 > 滚爪米克西"
               }
             }
           ],
@@ -37281,8 +37284,8 @@
             "reputation": null,
             "costs": [],
             "price": {
-              "enUS": null,
-              "zhCN": null
+              "enUS": "¥120",
+              "zhCN": "¥120"
             },
             "questID": null,
             "achievementID": null,
@@ -37298,7 +37301,7 @@
     },
     {
       "mountKey": "fact-473744",
-      "status": "candidate",
+      "status": "verified",
       "ids": {
         "spellIDs": [
           473744
@@ -37317,21 +37320,21 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "manual-source-473744",
+      "primarySourceID": "battle-net-store-473744",
       "sources": [
         {
-          "sourceID": "manual-source-473744",
-          "type": "research",
+          "sourceID": "battle-net-store-473744",
+          "type": "store",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "obtainable",
           "path": [
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "来源待补全",
-                "zhCN": "来源待补全"
+                "enUS": "Battle.net Shop > Majestic Mikesi Collection > Tea-fur Mikesi",
+                "zhCN": "战网商城 > 威风米克西收藏 > 茶毛米克西"
               }
             }
           ],
@@ -37340,8 +37343,8 @@
             "reputation": null,
             "costs": [],
             "price": {
-              "enUS": null,
-              "zhCN": null
+              "enUS": "¥120",
+              "zhCN": "¥120"
             },
             "questID": null,
             "achievementID": null,
@@ -37357,7 +37360,7 @@
     },
     {
       "mountKey": "fact-473745",
-      "status": "candidate",
+      "status": "verified",
       "ids": {
         "spellIDs": [
           473745
@@ -37376,21 +37379,21 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "manual-source-473745",
+      "primarySourceID": "battle-net-store-473745",
       "sources": [
         {
-          "sourceID": "manual-source-473745",
-          "type": "research",
+          "sourceID": "battle-net-store-473745",
+          "type": "store",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "obtainable",
           "path": [
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "来源待补全",
-                "zhCN": "来源待补全"
+                "enUS": "Battle.net Shop > Majestic Mikesi Collection > Brewbandit Mikesi",
+                "zhCN": "战网商城 > 威风米克西收藏 > 酿盗米克西"
               }
             }
           ],
@@ -37399,8 +37402,8 @@
             "reputation": null,
             "costs": [],
             "price": {
-              "enUS": null,
-              "zhCN": null
+              "enUS": "¥120",
+              "zhCN": "¥120"
             },
             "questID": null,
             "achievementID": null,
@@ -37853,7 +37856,7 @@
     },
     {
       "mountKey": "excluded-1229670",
-      "status": "candidate",
+      "status": "rejected",
       "ids": {
         "spellIDs": [
           1229670
@@ -37911,7 +37914,7 @@
     },
     {
       "mountKey": "excluded-1229672",
-      "status": "candidate",
+      "status": "rejected",
       "ids": {
         "spellIDs": [
           1229672
@@ -37969,7 +37972,7 @@
     },
     {
       "mountKey": "excluded-1238816",
-      "status": "candidate",
+      "status": "rejected",
       "ids": {
         "spellIDs": [
           1238816
@@ -38558,6 +38561,7 @@
     },
     {
       "mountKey": "fact-1250045",
+      "runtimeVisible": true,
       "status": "candidate",
       "ids": {
         "spellIDs": [
@@ -38581,17 +38585,17 @@
       "sources": [
         {
           "sourceID": "manual-source-1250045",
-          "type": "research",
+          "type": "event",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "limited_time",
           "path": [
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "来源待补全",
-                "zhCN": "来源待补全"
+                "enUS": "Titan Reforged Treasure > shard exchange",
+                "zhCN": "泰坦重铸宝藏 > 碎片兑换"
               }
             }
           ],
@@ -38980,6 +38984,7 @@
     },
     {
       "mountKey": "fact-1266345",
+      "runtimeVisible": true,
       "status": "candidate",
       "ids": {
         "spellIDs": [
@@ -39003,17 +39008,17 @@
       "sources": [
         {
           "sourceID": "manual-source-1266345",
-          "type": "research",
+          "type": "store",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "limited_time",
           "path": [
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "来源待补全",
-                "zhCN": "来源待补全"
+                "enUS": "TBC anniversary collector bundle",
+                "zhCN": "TBC周年典藏礼包"
               }
             }
           ],
@@ -39039,6 +39044,7 @@
     },
     {
       "mountKey": "fact-1266866",
+      "runtimeVisible": true,
       "status": "candidate",
       "ids": {
         "spellIDs": [
@@ -39062,17 +39068,17 @@
       "sources": [
         {
           "sourceID": "manual-source-1266866",
-          "type": "research",
+          "type": "store",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "limited_time",
           "path": [
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "来源待补全",
-                "zhCN": "来源待补全"
+                "enUS": "TBC anniversary collector bundle",
+                "zhCN": "TBC周年典藏礼包"
               }
             }
           ],
@@ -39098,6 +39104,7 @@
     },
     {
       "mountKey": "fact-1266982",
+      "runtimeVisible": true,
       "status": "candidate",
       "ids": {
         "spellIDs": [
@@ -39121,17 +39128,17 @@
       "sources": [
         {
           "sourceID": "manual-source-1266982",
-          "type": "research",
+          "type": "event",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "limited_time",
           "path": [
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "来源待补全",
-                "zhCN": "来源待补全"
+                "enUS": "Crimson Tide Treasure > shard exchange",
+                "zhCN": "猩红之潮秘宝 > 碎片兑换"
               }
             }
           ],
@@ -39401,6 +39408,7 @@
     },
     {
       "mountKey": "fact-1284044",
+      "runtimeVisible": true,
       "status": "candidate",
       "ids": {
         "spellIDs": [
@@ -39424,17 +39432,17 @@
       "sources": [
         {
           "sourceID": "manual-source-1284044",
-          "type": "research",
+          "type": "event",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "limited_time",
           "path": [
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "来源待补全",
-                "zhCN": "来源待补全"
+                "enUS": "China web event prize pool",
+                "zhCN": "国服网页活动奖池"
               }
             }
           ],
@@ -39780,7 +39788,7 @@
     },
     {
       "mountKey": "fact-1291315",
-      "status": "candidate",
+      "status": "verified",
       "ids": {
         "spellIDs": [
           1291315
@@ -39799,21 +39807,21 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "manual-source-1291315",
+      "primarySourceID": "fortune-bamboo-event-1291315",
       "sources": [
         {
-          "sourceID": "manual-source-1291315",
-          "type": "research",
+          "sourceID": "fortune-bamboo-event-1291315",
+          "type": "event",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "limited_time",
           "path": [
             {
               "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "来源待补全",
-                "zhCN": "来源待补全"
+                "enUS": "China limited-time Fortune Bamboo Token web event",
+                "zhCN": "国服福运竹牌网页限时活动"
               }
             }
           ],
@@ -39824,6 +39832,48 @@
             "price": {
               "enUS": null,
               "zhCN": null
+            },
+            "questID": null,
+            "achievementID": null,
+            "eventKey": "fortune-bamboo-token",
+            "tooltipNote": null,
+            "notes": {
+              "enUS": null,
+              "zhCN": null
+            }
+          }
+        },
+        {
+          "sourceID": "battle-net-store-1291315",
+          "type": "store",
+          "priority": 90,
+          "active": true,
+          "availability": "obtainable",
+          "path": [
+            {
+              "kind": "custom",
+              "refID": null,
+              "labels": {
+                "enUS": "Battle.net Shop",
+                "zhCN": "战网商城"
+              }
+            },
+            {
+              "kind": "custom",
+              "refID": null,
+              "labels": {
+                "enUS": "Xizhuzhe Sensen direct purchase",
+                "zhCN": "栖竹者森森直购"
+              }
+            }
+          ],
+          "requirements": {
+            "difficulties": [],
+            "reputation": null,
+            "costs": [],
+            "price": {
+              "enUS": "¥328",
+              "zhCN": "¥328"
             },
             "questID": null,
             "achievementID": null,
@@ -39917,70 +39967,21 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "platinum-coin-vendor-1298512",
+      "primarySourceID": "gold-challenge-achievement-1298512",
       "sources": [
         {
-          "sourceID": "platinum-coin-vendor-1298512",
-          "type": "vendor",
+          "sourceID": "gold-challenge-achievement-1298512",
+          "type": "achievement",
           "priority": 100,
           "active": true,
           "availability": "obtainable",
           "path": [
             {
-              "kind": "faction",
+              "kind": "custom",
               "refID": null,
               "labels": {
-                "enUS": "挑战模式",
-                "zhCN": "挑战模式"
-              }
-            },
-            {
-              "kind": "zone",
-              "refID": null,
-              "labels": {
-                "enUS": "七星殿上层（联盟）/ 双月殿上层（部落）",
-                "zhCN": "七星殿上层（联盟）/ 双月殿上层（部落）"
-              }
-            },
-            {
-              "kind": "npc",
-              "refID": null,
-              "labels": {
-                "enUS": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
-                "zhCN": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
-              }
-            }
-          ],
-          "requirements": {
-            "difficulties": [],
-            "reputation": null,
-            "costs": [],
-            "price": {
-              "enUS": "300 白金币",
-              "zhCN": "300 白金币"
-            },
-            "questID": null,
-            "achievementID": null,
-            "eventKey": null,
-            "notes": {
-              "enUS": "挑战模式第3赛季新增白金币兑换坐骑。",
-              "zhCN": "挑战模式第3赛季新增白金币兑换坐骑。"
-            }
-          }
-        },
-        {
-          "sourceID": "retired-audit-source-1298512",
-          "type": "research",
-          "priority": 100,
-          "active": true,
-          "availability": "unknown",
-          "path": [
-            {
-              "kind": "research",
-              "refID": null,
-              "labels": {
-                "enUS": "国服怀旧服投放待核实",
-                "zhCN": "国服怀旧服投放待核实"
+                "enUS": "Gold Challenge Mode (all five-player dungeons)",
+                "zhCN": "5人地下城黄金挑战模式（全部完成）"
               }
             }
           ],
@@ -39996,8 +39997,8 @@
             "achievementID": null,
             "eventKey": null,
             "notes": {
-              "enUS": "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。",
-              "zhCN": "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。"
+              "enUS": null,
+              "zhCN": null
             }
           }
         }
@@ -40071,6 +40072,7 @@
     },
     {
       "mountKey": "fact-1298516",
+      "runtimeVisible": true,
       "status": "candidate",
       "ids": {
         "spellIDs": [
@@ -40094,17 +40096,17 @@
       "sources": [
         {
           "sourceID": "retired-audit-source-1298516",
-          "type": "research",
+          "type": "vendor",
           "priority": 100,
           "active": true,
-          "availability": "unknown",
+          "availability": "obtainable",
           "path": [
             {
               "kind": "research",
               "refID": null,
               "labels": {
-                "enUS": "国服怀旧服投放待核实",
-                "zhCN": "国服怀旧服投放待核实"
+                "enUS": "Shrine of Two Moons > Victor Darkheart > Platinum Coins",
+                "zhCN": "双月殿 > 维克托·邪圣 > 白金硬币（150）"
               }
             }
           ],
@@ -40120,8 +40122,8 @@
             "achievementID": null,
             "eventKey": null,
             "notes": {
-              "enUS": "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。",
-              "zhCN": "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。"
+              "enUS": null,
+              "zhCN": null
             }
           }
         }
@@ -40195,7 +40197,8 @@
     },
     {
       "mountKey": "fact-1302506",
-      "status": "verified",
+      "runtimeVisible": true,
+      "status": "candidate",
       "ids": {
         "spellIDs": [
           1302506
@@ -40214,70 +40217,21 @@
         "factions": [],
         "classes": []
       },
-      "primarySourceID": "platinum-coin-vendor-1302506",
+      "primarySourceID": "timewalking-platinum-coin-1302506",
       "sources": [
         {
-          "sourceID": "platinum-coin-vendor-1302506",
+          "sourceID": "timewalking-platinum-coin-1302506",
           "type": "vendor",
           "priority": 100,
           "active": true,
           "availability": "obtainable",
           "path": [
             {
-              "kind": "faction",
-              "refID": null,
-              "labels": {
-                "enUS": "挑战模式",
-                "zhCN": "挑战模式"
-              }
-            },
-            {
-              "kind": "zone",
-              "refID": null,
-              "labels": {
-                "enUS": "七星殿上层（联盟）/ 双月殿上层（部落）",
-                "zhCN": "七星殿上层（联盟）/ 双月殿上层（部落）"
-              }
-            },
-            {
-              "kind": "npc",
-              "refID": null,
-              "labels": {
-                "enUS": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
-                "zhCN": "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
-              }
-            }
-          ],
-          "requirements": {
-            "difficulties": [],
-            "reputation": null,
-            "costs": [],
-            "price": {
-              "enUS": "300 白金币",
-              "zhCN": "300 白金币"
-            },
-            "questID": null,
-            "achievementID": null,
-            "eventKey": null,
-            "notes": {
-              "enUS": "挑战模式第3赛季新增白金币兑换坐骑。",
-              "zhCN": "挑战模式第3赛季新增白金币兑换坐骑。"
-            }
-          }
-        },
-        {
-          "sourceID": "retired-audit-source-1302506",
-          "type": "research",
-          "priority": 100,
-          "active": true,
-          "availability": "unknown",
-          "path": [
-            {
               "kind": "research",
               "refID": null,
               "labels": {
-                "enUS": "国服怀旧服投放待核实",
-                "zhCN": "国服怀旧服投放待核实"
+                "enUS": "Challenge Mode Season 3 > Platinum Coin vendor > Juvenile Frostwyrm's Reins",
+                "zhCN": "挑战模式第3赛季 > 白金硬币商人 > 幼年冰霜巨龙的缰绳"
               }
             }
           ],
@@ -40293,8 +40247,8 @@
             "achievementID": null,
             "eventKey": null,
             "notes": {
-              "enUS": "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。",
-              "zhCN": "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。"
+              "enUS": null,
+              "zhCN": null
             }
           }
         }

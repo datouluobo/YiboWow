@@ -210,6 +210,10 @@ def build_runtime_data(root: dict[str, Any]) -> dict[str, Any]:
     mounts: dict[str, Any] = {}
     spell_index: dict[int, str] = {}
     for mount in sorted(root["mounts"], key=lambda entry: entry["mountKey"]):
+        # Excluded rows remain in the research catalogue for auditability, but
+        # are not valid targets for any player-facing runtime lookup.
+        if mount["mountKey"].startswith("excluded-"):
+            continue
         # Numeric extraction is non-release evidence only.  It deliberately
         # remains in mounts.json for the resolver, but must never become a
         # player-facing tooltip until names and source roles are normalized.

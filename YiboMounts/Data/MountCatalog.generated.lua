@@ -35,7 +35,6 @@ NS.Data = {
     [10969] = "provisional-10969",
     [13819] = "fact-13819",
     [15779] = "fact-15779",
-    [15780] = "excluded-15780",
     [16056] = "fact-16056",
     [16080] = "fact-16080",
     [16082] = "fact-16082",
@@ -53,6 +52,7 @@ NS.Data = {
     [17464] = "provisional-17464",
     [17465] = "provisional-17465",
     [17481] = "rivendares-deathcharger",
+    [18363] = "fact-18363",
     [18989] = "provisional-18989",
     [18990] = "provisional-18990",
     [18991] = "fact-18991",
@@ -93,14 +93,11 @@ NS.Data = {
     [23510] = "provisional-23510",
     [24242] = "fact-24242",
     [24252] = "fact-24252",
-    [25863] = "excluded-25863",
     [25953] = "provisional-25953",
     [26054] = "provisional-26054",
     [26055] = "provisional-26055",
     [26056] = "provisional-26056",
-    [26655] = "excluded-26655",
     [26656] = "fact-26656",
-    [28828] = "excluded-28828",
     [30174] = "fact-30174",
     [32235] = "provisional-32235",
     [32239] = "fact-32239",
@@ -116,11 +113,9 @@ NS.Data = {
     [32295] = "provisional-32295",
     [32296] = "provisional-32296",
     [32297] = "provisional-32297",
-    [33630] = "excluded-33630",
     [33660] = "provisional-33660",
     [34406] = "provisional-34406",
     [34767] = "fact-34767",
-    [34769] = "excluded-34769",
     [34790] = "provisional-34790",
     [34795] = "provisional-34795",
     [34896] = "provisional-34896",
@@ -166,7 +161,6 @@ NS.Data = {
     [43927] = "provisional-43927",
     [44151] = "provisional-44151",
     [44153] = "provisional-44153",
-    [44317] = "excluded-44317",
     [44744] = "fact-44744",
     [46197] = "fact-46197",
     [46199] = "fact-46199",
@@ -180,7 +174,6 @@ NS.Data = {
     [51412] = "fact-51412",
     [54729] = "fact-54729",
     [54753] = "provisional-54753",
-    [55164] = "excluded-55164",
     [55531] = "provisional-55531",
     [58615] = "fact-58615",
     [58983] = "provisional-58983",
@@ -208,8 +201,6 @@ NS.Data = {
     [60116] = "provisional-60116",
     [60118] = "provisional-60118",
     [60119] = "provisional-60119",
-    [60136] = "excluded-60136",
-    [60140] = "excluded-60140",
     [60424] = "provisional-60424",
     [61229] = "provisional-61229",
     [61230] = "provisional-61230",
@@ -239,6 +230,7 @@ NS.Data = {
     [63844] = "provisional-63844",
     [63956] = "provisional-63956",
     [63963] = "provisional-63963",
+    [64656] = "fact-64656",
     [64657] = "provisional-64657",
     [64658] = "provisional-64658",
     [64659] = "provisional-64659",
@@ -261,9 +253,6 @@ NS.Data = {
     [66088] = "provisional-66088",
     [66090] = "provisional-66090",
     [66091] = "provisional-66091",
-    [66122] = "excluded-66122",
-    [66123] = "excluded-66123",
-    [66124] = "excluded-66124",
     [66846] = "provisional-66846",
     [66847] = "provisional-66847",
     [66906] = "fact-66906",
@@ -274,16 +263,12 @@ NS.Data = {
     [68187] = "fact-68187",
     [68188] = "fact-68188",
     [69395] = "onyxian-drake",
-    [69820] = "excluded-69820",
-    [69826] = "excluded-69826",
     [71342] = "provisional-71342",
     [71810] = "fact-71810",
     [72286] = "invincible",
     [72807] = "provisional-72807",
     [72808] = "provisional-72808",
     [73313] = "provisional-73313",
-    [73629] = "excluded-73629",
-    [73630] = "excluded-73630",
     [74856] = "fact-74856",
     [74918] = "fact-74918",
     [75207] = "provisional-75207",
@@ -464,58 +449,49 @@ NS.Data = {
     [387320] = "fact-387320",
     [387321] = "fact-387321",
     [387323] = "fact-387323",
+    [388516] = "fact-388516",
     [394209] = "fact-394209",
     [416158] = "fact-416158",
-    [423869] = "excluded-423869",
     [435115] = "fact-435115",
-    [440915] = "excluded-440915",
     [446902] = "fact-446902",
-    [457485] = "excluded-457485",
-    [459486] = "excluded-459486",
     [459538] = "fact-459538",
     [463045] = "manual-463045",
-    [466948] = "excluded-466948",
-    [466977] = "excluded-466977",
-    [466980] = "excluded-466980",
-    [466983] = "excluded-466983",
-    [473478] = "excluded-473478",
-    [473487] = "excluded-473487",
-    [1217476] = "excluded-1217476",
+    [471440] = "fact-471440",
+    [473739] = "fact-473739",
+    [473741] = "fact-473741",
+    [473743] = "fact-473743",
+    [473744] = "fact-473744",
+    [473745] = "fact-473745",
     [1224596] = "manual-1224596",
     [1224643] = "manual-1224643",
     [1224645] = "manual-1224645",
     [1224646] = "manual-1224646",
     [1224647] = "manual-1224647",
-    [1229670] = "excluded-1229670",
-    [1229672] = "excluded-1229672",
-    [1238816] = "excluded-1238816",
-    [1239204] = "excluded-1239204",
-    [1239240] = "excluded-1239240",
-    [1239372] = "excluded-1239372",
     [1247591] = "fact-1247591",
     [1247596] = "fact-1247596",
     [1247597] = "fact-1247597",
     [1247598] = "fact-1247598",
     [1249659] = "fact-1249659",
-    [1257516] = "excluded-1257516",
+    [1250045] = "fact-1250045",
     [1257673] = "manual-1257673",
     [1257674] = "manual-1257674",
     [1257676] = "manual-1257676",
     [1257677] = "manual-1257677",
+    [1266345] = "fact-1266345",
+    [1266866] = "fact-1266866",
+    [1266982] = "fact-1266982",
     [1267077] = "scarlet-lady",
     [1272988] = "fact-1272988",
-    [1280068] = "excluded-1280068",
-    [1283471] = "excluded-1283471",
+    [1284044] = "fact-1284044",
     [1284679] = "fact-1284679",
-    [1285724] = "excluded-1285724",
     [1285725] = "fact-1285725",
     [1285897] = "fact-1285897",
+    [1291315] = "fact-1291315",
     [1298510] = "fact-1298510",
     [1298512] = "fact-1298512",
-    [1298515] = "excluded-1298515",
+    [1298516] = "fact-1298516",
     [1301737] = "manual-1301737",
-    [1302506] = "fact-1302506",
-    [1309841] = "excluded-1309841"
+    [1302506] = "fact-1302506"
   },
   mounts = {
     ["amani-battle-bear"] = {
@@ -1486,2649 +1462,6 @@ NS.Data = {
           },
           sourceID = "manual-source-88744",
           type = "boss_drop"
-        }
-      },
-      status = "candidate"
-    },
-    ["excluded-1217476"] = {
-      identity = {
-        iconFileID = 134337,
-        names = {
-          enUS = "Mount 1217476",
-          zhCN = "祥云锦绣火鹰"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2485
-      },
-      mountKey = "excluded-1217476",
-      primarySourceID = "manual-source-1217476",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "2025 新春狂欢季",
-                zhCN = "2025 新春狂欢季"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "藏宝工坊",
-                zhCN = "藏宝工坊"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "中国刺绣馆联名坐骑；2025 年限时抽奖活动已结束。",
-              zhCN = "中国刺绣馆联名坐骑；2025 年限时抽奖活动已结束。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-1217476",
-          type = "event"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-1229670"] = {
-      identity = {
-        iconFileID = 6705369,
-        names = {
-          enUS = "Mount 1229670",
-          zhCN = "先知的巨鹊"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2547
-      },
-      mountKey = "excluded-1229670",
-      primarySourceID = "retired-audit-source-1229670",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = false,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "research",
-              labels = {
-                enUS = "目标版本外",
-                zhCN = "目标版本外"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "此商品不适用于经典怀旧服，因此不作为怀旧服坐骑来源。",
-              zhCN = "此商品不适用于经典怀旧服，因此不作为怀旧服坐骑来源。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil
-          },
-          sourceID = "retired-audit-source-1229670",
-          type = "research"
-        }
-      },
-      status = "candidate"
-    },
-    ["excluded-1229672"] = {
-      identity = {
-        iconFileID = 6705370,
-        names = {
-          enUS = "Mount 1229672",
-          zhCN = "大法师的巨鹊"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2548
-      },
-      mountKey = "excluded-1229672",
-      primarySourceID = "retired-audit-source-1229672",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = false,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "research",
-              labels = {
-                enUS = "目标版本外",
-                zhCN = "目标版本外"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "此商品不适用于经典怀旧服，因此不作为怀旧服坐骑来源。",
-              zhCN = "此商品不适用于经典怀旧服，因此不作为怀旧服坐骑来源。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil
-          },
-          sourceID = "retired-audit-source-1229672",
-          type = "research"
-        }
-      },
-      status = "candidate"
-    },
-    ["excluded-1238816"] = {
-      identity = {
-        iconFileID = 6694822,
-        names = {
-          enUS = "Mount 1238816",
-          zhCN = "萨巴卡的使节"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2594
-      },
-      mountKey = "excluded-1238816",
-      primarySourceID = "retired-audit-source-1238816",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = false,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "research",
-              labels = {
-                enUS = "目标版本外",
-                zhCN = "目标版本外"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "此商品不适用于经典怀旧服，因此不作为怀旧服坐骑来源。",
-              zhCN = "此商品不适用于经典怀旧服，因此不作为怀旧服坐骑来源。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil
-          },
-          sourceID = "retired-audit-source-1238816",
-          type = "research"
-        }
-      },
-      status = "candidate"
-    },
-    ["excluded-1239204"] = {
-      identity = {
-        iconFileID = 6750950,
-        names = {
-          enUS = "Mount 1239204",
-          zhCN = "暴风城巡天战机"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2596
-      },
-      mountKey = "excluded-1239204",
-      primarySourceID = "manual-source-1239204",
-      restrictions = {
-        classes = {},
-        factions = {
-          "ALLIANCE"
-        }
-      },
-      sources = {
-        {
-          active = true,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "2025 国服抖音直播活动",
-                zhCN = "2025 国服抖音直播活动"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "暴风城巡天战机返场",
-                zhCN = "暴风城巡天战机返场"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "联盟专属；2025-05-15 限时直播购买返场，活动已结束。",
-              zhCN = "联盟专属；2025-05-15 限时直播购买返场，活动已结束。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-1239204",
-          type = "event"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-1239240"] = {
-      identity = {
-        iconFileID = 6750948,
-        names = {
-          enUS = "Mount 1239240",
-          zhCN = "奥格瑞玛哨戒飞艇"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2597
-      },
-      mountKey = "excluded-1239240",
-      primarySourceID = "manual-source-1239240",
-      restrictions = {
-        classes = {},
-        factions = {
-          "HORDE"
-        }
-      },
-      sources = {
-        {
-          active = true,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "2025 国服抖音直播活动",
-                zhCN = "2025 国服抖音直播活动"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "奥格瑞玛哨戒飞艇返场",
-                zhCN = "奥格瑞玛哨戒飞艇返场"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "部落专属；2025-05-15 限时直播购买返场，活动已结束。",
-              zhCN = "部落专属；2025-05-15 限时直播购买返场，活动已结束。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-1239240",
-          type = "event"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-1239372"] = {
-      identity = {
-        iconFileID = 369225,
-        names = {
-          enUS = "Mount 1239372",
-          zhCN = "星骓"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2599
-      },
-      mountKey = "excluded-1239372",
-      primarySourceID = "manual-source-1239372",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "unknown",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "经典怀旧服商城",
-                zhCN = "经典怀旧服商城"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "星骓",
-                zhCN = "星骓"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "巫妖王之怒怀旧服商城曾投放；当前是否在售需以商城实时列表为准。",
-              zhCN = "巫妖王之怒怀旧服商城曾投放；当前是否在售需以商城实时列表为准。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-1239372",
-          type = "store"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-1257516"] = {
-      identity = {
-        iconFileID = 6839181,
-        names = {
-          enUS = "Mount 1257516",
-          zhCN = "兰娜瑟尔的喋血瀑流"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2735
-      },
-      mountKey = "excluded-1257516",
-      primarySourceID = "manual-source-1257516",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "obtainable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "经典怀旧服商城",
-                zhCN = "经典怀旧服商城"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "兰娜瑟尔的喋血瀑流",
-                zhCN = "兰娜瑟尔的喋血瀑流"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "怀旧服主线服务器角色可用；商城售价以实时列表为准。",
-              zhCN = "怀旧服主线服务器角色可用；商城售价以实时列表为准。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-1257516",
-          type = "store"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-1280068"] = {
-      identity = {
-        iconFileID = 7153694,
-        names = {
-          enUS = "Mount 1280068",
-          zhCN = "炽燃烈驹"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2924
-      },
-      mountKey = "excluded-1280068",
-      primarySourceID = "manual-source-1280068",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "obtainable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "经典怀旧服商城",
-                zhCN = "经典怀旧服商城"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "炽燃烈驹",
-                zhCN = "炽燃烈驹"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "怀旧服商城坐骑；并非绝版。",
-              zhCN = "怀旧服商城坐骑；并非绝版。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-1280068",
-          type = "store"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-1283471"] = {
-      identity = {
-        iconFileID = 7316475,
-        names = {
-          enUS = "Mount 1283471",
-          zhCN = "金色烬灭灾变者"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2936
-      },
-      mountKey = "excluded-1283471",
-      primarySourceID = "manual-source-1283471",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "2026 兰德鲁金色礼盒",
-                zhCN = "2026 兰德鲁金色礼盒"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "2026 新春限时礼盒奖励；活动结束后绝版。",
-              zhCN = "2026 新春限时礼盒奖励；活动结束后绝版。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-1283471",
-          type = "event"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-1285724"] = {
-      identity = {
-        iconFileID = 7360959,
-        names = {
-          enUS = "Mount 1285724",
-          zhCN = "金辉破霄"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2743
-      },
-      mountKey = "excluded-1285724",
-      primarySourceID = "manual-source-1285724",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "2026 兰德鲁金色礼盒",
-                zhCN = "2026 兰德鲁金色礼盒"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "2026 新春限时礼盒奖励；活动结束后绝版。",
-              zhCN = "2026 新春限时礼盒奖励；活动结束后绝版。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-1285724",
-          type = "event"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-1298515"] = {
-      identity = {
-        iconFileID = 537515,
-        names = {
-          enUS = "Mount 1298515",
-          zhCN = "幽灵狮鹫"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 3041
-      },
-      mountKey = "excluded-1298515",
-      primarySourceID = "retired-audit-source-1298515",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = false,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "promotion",
-              labels = {
-                enUS = "复活卷轴活动",
-                zhCN = "复活卷轴活动"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "唤醒长期未登录玩家",
-                zhCN = "唤醒长期未登录玩家"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "2012-03 至 2014-02 的复活卷轴奖励；活动已结束。",
-              zhCN = "2012-03 至 2014-02 的复活卷轴奖励；活动已结束。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil
-          },
-          sourceID = "retired-audit-source-1298515",
-          type = "promotion"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-1309841"] = {
-      identity = {
-        iconFileID = 7873094,
-        names = {
-          enUS = "Mount 1309841",
-          zhCN = "霜壳行者·卡鲁亚克的巨钳伙伴"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 3131
-      },
-      mountKey = "excluded-1309841",
-      primarySourceID = "manual-source-1309841",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "limited_time",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "碧蓝林海秘宝",
-                zhCN = "碧蓝林海秘宝"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "2026-08-14 至 2026-09-11 限时活动奖励；提供主城传送功能。",
-              zhCN = "2026-08-14 至 2026-09-11 限时活动奖励；提供主城传送功能。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-1309841",
-          type = "event"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-15780"] = {
-      identity = {
-        iconFileID = 132247,
-        names = {
-          enUS = "Mount 15780",
-          zhCN = "绿色机械陆行鸟"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 43
-      },
-      mountKey = "excluded-15780",
-      primarySourceID = "manual-source-15780",
-      restrictions = {
-        classes = {},
-        factions = {
-          "ALLIANCE"
-        }
-      },
-      sources = {
-        {
-          active = true,
-          availability = "obtainable",
-          path = {
-            {
-              kind = "faction",
-              labels = {
-                enUS = "诺莫瑞根",
-                zhCN = "诺莫瑞根"
-              },
-              refID = nil
-            },
-            {
-              kind = "zone",
-              labels = {
-                enUS = "丹莫罗",
-                zhCN = "丹莫罗"
-              },
-              refID = nil
-            },
-            {
-              kind = "zone",
-              labels = {
-                enUS = "卡拉诺斯",
-                zhCN = "卡拉诺斯"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "米利·羽哨",
-                zhCN = "米利·羽哨"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "10金币（声望折扣）。",
-              zhCN = "10金币（声望折扣）。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-15780",
-          type = "vendor"
-        }
-      },
-      status = "candidate"
-    },
-    ["excluded-25863"] = {
-      identity = {
-        iconFileID = 134399,
-        names = {
-          enUS = "Mount 25863",
-          zhCN = "黑色其拉作战坦克"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 116
-      },
-      mountKey = "excluded-25863",
-      primarySourceID = "manual-source-25863",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "希利苏斯",
-                zhCN = "希利苏斯"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "安其拉开门事件",
-                zhCN = "安其拉开门事件"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "敲响甲虫之锣",
-                zhCN = "敲响甲虫之锣"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "甲虫之王任务线和服务器开门窗口限定；窗口结束后不可新获得。",
-              zhCN = "甲虫之王任务线和服务器开门窗口限定；窗口结束后不可新获得。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-25863",
-          type = "event"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-26655"] = {
-      identity = {
-        iconFileID = 134399,
-        names = {
-          enUS = "Mount 26655",
-          zhCN = "黑色其拉作战坦克"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 121
-      },
-      mountKey = "excluded-26655",
-      primarySourceID = "manual-source-26655",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "希利苏斯",
-                zhCN = "希利苏斯"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "安其拉开门事件",
-                zhCN = "安其拉开门事件"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "敲响甲虫之锣",
-                zhCN = "敲响甲虫之锣"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "甲虫之王任务线和服务器开门窗口限定；窗口结束后不可新获得。",
-              zhCN = "甲虫之王任务线和服务器开门窗口限定；窗口结束后不可新获得。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-26655",
-          type = "event"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-28828"] = {
-      identity = {
-        iconFileID = 132250,
-        names = {
-          enUS = "Mount 28828",
-          zhCN = "虚空幼龙"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 123
-      },
-      mountKey = "excluded-28828",
-      primarySourceID = "manual-source-28828",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "obtainable",
-          path = {
-            {
-              kind = "faction",
-              labels = {
-                enUS = "灵翼之龙（崇拜）",
-                zhCN = "灵翼之龙（崇拜）"
-              },
-              refID = nil
-            },
-            {
-              kind = "zone",
-              labels = {
-                enUS = "影月谷",
-                zhCN = "影月谷"
-              },
-              refID = nil
-            },
-            {
-              kind = "zone",
-              labels = {
-                enUS = "灵翼浮岛",
-                zhCN = "灵翼浮岛"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "灵翼幼龙管理员",
-                zhCN = "灵翼幼龙管理员"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "灵翼之龙崇拜后选择奖励；并非绝版。",
-              zhCN = "灵翼之龙崇拜后选择奖励；并非绝版。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-28828",
-          type = "reputation_vendor"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-33630"] = {
-      identity = {
-        iconFileID = 132247,
-        names = {
-          enUS = "Mount 33630",
-          zhCN = "蓝色机械陆行鸟"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 145
-      },
-      mountKey = "excluded-33630",
-      primarySourceID = "manual-source-33630",
-      restrictions = {
-        classes = {},
-        factions = {
-          "ALLIANCE"
-        }
-      },
-      sources = {
-        {
-          active = true,
-          availability = "obtainable",
-          path = {
-            {
-              kind = "faction",
-              labels = {
-                enUS = "诺莫瑞根",
-                zhCN = "诺莫瑞根"
-              },
-              refID = nil
-            },
-            {
-              kind = "zone",
-              labels = {
-                enUS = "丹莫罗",
-                zhCN = "丹莫罗"
-              },
-              refID = nil
-            },
-            {
-              kind = "zone",
-              labels = {
-                enUS = "卡拉诺斯",
-                zhCN = "卡拉诺斯"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "米利·羽哨",
-                zhCN = "米利·羽哨"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "10金币（声望折扣）。",
-              zhCN = "10金币（声望折扣）。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-33630",
-          type = "vendor"
-        }
-      },
-      status = "candidate"
-    },
-    ["excluded-34769"] = {
-      identity = {
-        iconFileID = 136103,
-        names = {
-          enUS = "Mount 34769",
-          zhCN = "奎尔萨拉斯军马"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 150
-      },
-      mountKey = "excluded-34769",
-      primarySourceID = "manual-source-34769",
-      restrictions = {
-        classes = {
-          "PALADIN"
-        },
-        factions = {
-          "HORDE"
-        }
-      },
-      sources = {
-        {
-          active = true,
-          availability = "obtainable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "血精灵圣骑士",
-                zhCN = "血精灵圣骑士"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "60级职业训练师",
-                zhCN = "60级职业训练师"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "召唤奎尔萨拉斯军马",
-                zhCN = "召唤奎尔萨拉斯军马"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "血精灵圣骑士专属召唤法术；学习高级骑术后由职业训练师教授，非背包物品。",
-              zhCN = "血精灵圣骑士专属召唤法术；学习高级骑术后由职业训练师教授，非背包物品。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-34769",
-          type = "class_reward"
-        }
-      },
-      status = "candidate"
-    },
-    ["excluded-423869"] = {
-      identity = {
-        iconFileID = 5332198,
-        names = {
-          enUS = "Mount 423869",
-          zhCN = "烈焰化身"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 1807
-      },
-      mountKey = "excluded-423869",
-      primarySourceID = "manual-source-423869",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "大灾变怀旧服",
-                zhCN = "大灾变怀旧服"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "炽炎英雄版组合包",
-                zhCN = "炽炎英雄版组合包"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "2023 年大灾变怀旧服组合包奖励；该历史组合包已结束。",
-              zhCN = "2023 年大灾变怀旧服组合包奖励；该历史组合包已结束。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-423869",
-          type = "store"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-440915"] = {
-      identity = {
-        iconFileID = 5140791,
-        names = {
-          enUS = "Mount 440915",
-          zhCN = "福星木蛟"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 1806
-      },
-      mountKey = "excluded-440915",
-      primarySourceID = "manual-source-440915",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "2024 国服游戏时间优惠",
-                zhCN = "2024 国服游戏时间优惠"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "购买 90 天游戏时间",
-                zhCN = "购买 90 天游戏时间"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "2024 年国服《巫妖王之怒》游戏时间优惠奖励；限时投放已结束。",
-              zhCN = "2024 年国服《巫妖王之怒》游戏时间优惠奖励；限时投放已结束。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-440915",
-          type = "event"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-44317"] = {
-      identity = {
-        iconFileID = 132249,
-        names = {
-          enUS = "Mount 44317",
-          zhCN = "残酷角斗士的虚空幼龙"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 206
-      },
-      mountKey = "excluded-44317",
-      primarySourceID = "manual-source-44317",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "limited_time",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "竞技场 3v3",
-                zhCN = "竞技场 3v3"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "第 2 赛季",
-                zhCN = "第 2 赛季"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "角斗士赛季奖励",
-                zhCN = "角斗士赛季奖励"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "PVP 竞技场 第 2 赛季角斗士奖励；赛季限定，非背包物品。",
-              zhCN = "PVP 竞技场 第 2 赛季角斗士奖励；赛季限定，非背包物品。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-44317",
-          type = "achievement"
-        }
-      },
-      status = "candidate"
-    },
-    ["excluded-457485"] = {
-      identity = {
-        iconFileID = 5907364,
-        names = {
-          enUS = "Mount 457485",
-          zhCN = "灰熊丘陵巨熊"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2237
-      },
-      mountKey = "excluded-457485",
-      primarySourceID = "manual-source-457485",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "2026 猩红之潮秘宝",
-                zhCN = "2026 猩红之潮秘宝"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "2026 年怀旧服/时光服限时活动奖励；活动已结束。",
-              zhCN = "2026 年怀旧服/时光服限时活动奖励；活动已结束。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-457485",
-          type = "event"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-459486"] = {
-      identity = {
-        iconFileID = 5905217,
-        names = {
-          enUS = "Mount 459486",
-          zhCN = "金色炽焰凤凰"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2250
-      },
-      mountKey = "excluded-459486",
-      primarySourceID = "manual-source-459486",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "2025 兰德鲁的豪华礼物盒",
-                zhCN = "2025 兰德鲁的豪华礼物盒"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "2025 年国服限时礼物盒活动奖励；活动已结束。",
-              zhCN = "2025 年国服限时礼物盒活动奖励；活动已结束。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-459486",
-          type = "event"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-466948"] = {
-      identity = {
-        iconFileID = 6127582,
-        names = {
-          enUS = "Mount 466948",
-          zhCN = "混沌异生恐翼蝙蝠"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2309
-      },
-      mountKey = "excluded-466948",
-      primarySourceID = "manual-source-466948",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "魔兽系列 30 周年纪念坐骑礼包",
-                zhCN = "魔兽系列 30 周年纪念坐骑礼包"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "经典怀旧服：混沌异生恐翼蝙蝠",
-                zhCN = "经典怀旧服：混沌异生恐翼蝙蝠"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "礼包销售截止于 2025-01-07。",
-              zhCN = "礼包销售截止于 2025-01-07。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-466948",
-          type = "store"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-466977"] = {
-      identity = {
-        iconFileID = 6080694,
-        names = {
-          enUS = "Mount 466977",
-          zhCN = "混沌异生驭风者"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2310
-      },
-      mountKey = "excluded-466977",
-      primarySourceID = "manual-source-466977",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "魔兽系列 30 周年纪念坐骑礼包",
-                zhCN = "魔兽系列 30 周年纪念坐骑礼包"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "经典怀旧服：混沌异生驭风者",
-                zhCN = "经典怀旧服：混沌异生驭风者"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "礼包销售截止于 2025-01-07。",
-              zhCN = "礼包销售截止于 2025-01-07。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-466977",
-          type = "store"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-466980"] = {
-      identity = {
-        iconFileID = 6036388,
-        names = {
-          enUS = "Mount 466980",
-          zhCN = "混沌异生角鹰兽"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2311
-      },
-      mountKey = "excluded-466980",
-      primarySourceID = "manual-source-466980",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "魔兽系列 30 周年纪念坐骑礼包",
-                zhCN = "魔兽系列 30 周年纪念坐骑礼包"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "经典怀旧服：混沌异生角鹰兽",
-                zhCN = "经典怀旧服：混沌异生角鹰兽"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "礼包销售截止于 2025-01-07。",
-              zhCN = "礼包销售截止于 2025-01-07。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-466980",
-          type = "store"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-466983"] = {
-      identity = {
-        iconFileID = 6126079,
-        names = {
-          enUS = "Mount 466983",
-          zhCN = "混沌异生狮鹫"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2312
-      },
-      mountKey = "excluded-466983",
-      primarySourceID = "manual-source-466983",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "魔兽系列 30 周年纪念坐骑礼包",
-                zhCN = "魔兽系列 30 周年纪念坐骑礼包"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "经典怀旧服：混沌异生狮鹫",
-                zhCN = "经典怀旧服：混沌异生狮鹫"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "礼包销售截止于 2025-01-07。",
-              zhCN = "礼包销售截止于 2025-01-07。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-466983",
-          type = "store"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-473478"] = {
-      identity = {
-        iconFileID = 6243518,
-        names = {
-          enUS = "Mount 473478",
-          zhCN = "染煞骑乘虎"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2340
-      },
-      mountKey = "excluded-473478",
-      primarySourceID = "manual-source-473478",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "obtainable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "熊猫人之谜怀旧服升级礼包",
-                zhCN = "熊猫人之谜怀旧服升级礼包"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "宿煞英雄/史诗礼包",
-                zhCN = "宿煞英雄/史诗礼包"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "染煞骑乘虎",
-                zhCN = "染煞骑乘虎"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "可在熊猫人之谜怀旧服与泰坦重铸服务器「时光」使用；并非绝版。",
-              zhCN = "可在熊猫人之谜怀旧服与泰坦重铸服务器「时光」使用；并非绝版。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-473478",
-          type = "store"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-473487"] = {
-      identity = {
-        iconFileID = 6238482,
-        names = {
-          enUS = "Mount 473487",
-          zhCN = "染煞云端翔龙"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 2341
-      },
-      mountKey = "excluded-473487",
-      primarySourceID = "manual-source-473487",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "obtainable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "熊猫人之谜怀旧服升级礼包",
-                zhCN = "熊猫人之谜怀旧服升级礼包"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "宿煞英雄/史诗礼包",
-                zhCN = "宿煞英雄/史诗礼包"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "染煞云端翔龙",
-                zhCN = "染煞云端翔龙"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "可在熊猫人之谜怀旧服与泰坦重铸服务器「时光」使用；并非绝版。",
-              zhCN = "可在熊猫人之谜怀旧服与泰坦重铸服务器「时光」使用；并非绝版。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-473487",
-          type = "store"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-55164"] = {
-      identity = {
-        iconFileID = 132239,
-        names = {
-          enUS = "Mount 55164",
-          zhCN = "迅捷幽灵狮鹫"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 238
-      },
-      mountKey = "excluded-55164",
-      primarySourceID = "manual-source-55164",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "unavailable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "龙骨荒野",
-                zhCN = "龙骨荒野"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "冬卫要塞防御者飞行任务",
-                zhCN = "冬卫要塞防御者飞行任务"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "任务临时载具法术，不是可永久收藏的坐骑；因此不属于绝版坐骑。",
-              zhCN = "任务临时载具法术，不是可永久收藏的坐骑；因此不属于绝版坐骑。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-55164",
-          type = "quest"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-60136"] = {
-      identity = {
-        iconFileID = 236239,
-        names = {
-          enUS = "Mount 60136",
-          zhCN = "召唤重型旅行猛犸象"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 273
-      },
-      mountKey = "excluded-60136",
-      primarySourceID = "retired-audit-source-60136",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "obtainable",
-          path = {
-            {
-              kind = "zone",
-              labels = {
-                enUS = "达拉然",
-                zhCN = "达拉然"
-              },
-              refID = nil
-            },
-            {
-              kind = "npc",
-              labels = {
-                enUS = "梅·弗朗西斯",
-                zhCN = "梅·弗朗西斯"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "20,000金币；并非绝版。",
-              zhCN = "20,000金币；并非绝版。"
-            },
-            price = {
-              enUS = "20,000金币",
-              zhCN = "20,000金币"
-            },
-            questID = nil,
-            reputation = nil
-          },
-          sourceID = "retired-audit-source-60136",
-          type = "vendor"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-60140"] = {
-      identity = {
-        iconFileID = 236239,
-        names = {
-          enUS = "Mount 60140",
-          zhCN = "召唤重型旅行猛犸象"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 274
-      },
-      mountKey = "excluded-60140",
-      primarySourceID = "retired-audit-source-60140",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "obtainable",
-          path = {
-            {
-              kind = "zone",
-              labels = {
-                enUS = "达拉然",
-                zhCN = "达拉然"
-              },
-              refID = nil
-            },
-            {
-              kind = "npc",
-              labels = {
-                enUS = "梅·弗朗西斯",
-                zhCN = "梅·弗朗西斯"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "20,000金币；并非绝版。",
-              zhCN = "20,000金币；并非绝版。"
-            },
-            price = {
-              enUS = "20,000金币",
-              zhCN = "20,000金币"
-            },
-            questID = nil,
-            reputation = nil
-          },
-          sourceID = "retired-audit-source-60140",
-          type = "vendor"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-66122"] = {
-      identity = {
-        iconFileID = 135996,
-        names = {
-          enUS = "Mount 66122",
-          zhCN = "魔法公鸡"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 333
-      },
-      mountKey = "excluded-66122",
-      primarySourceID = "retired-audit-source-66122",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "limited_time",
-          path = {
-            {
-              kind = "store",
-              labels = {
-                enUS = "国服怀旧服商城",
-                zhCN = "国服怀旧服商城"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "魔法公鸡",
-                zhCN = "魔法公鸡"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "2022 年巫妖王之怒怀旧服国服商城限时上架；当前是否返场以商城公告为准。",
-              zhCN = "2022 年巫妖王之怒怀旧服国服商城限时上架；当前是否返场以商城公告为准。"
-            },
-            price = {
-              enUS = "¥298",
-              zhCN = "¥298"
-            },
-            questID = nil,
-            reputation = nil
-          },
-          sourceID = "retired-audit-source-66122",
-          type = "store"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-66123"] = {
-      identity = {
-        iconFileID = 135996,
-        names = {
-          enUS = "Mount 66123",
-          zhCN = "魔法公鸡"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 334
-      },
-      mountKey = "excluded-66123",
-      primarySourceID = "retired-audit-source-66123",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "limited_time",
-          path = {
-            {
-              kind = "store",
-              labels = {
-                enUS = "国服怀旧服商城",
-                zhCN = "国服怀旧服商城"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "魔法公鸡",
-                zhCN = "魔法公鸡"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "2022 年巫妖王之怒怀旧服国服商城限时上架；当前是否返场以商城公告为准。",
-              zhCN = "2022 年巫妖王之怒怀旧服国服商城限时上架；当前是否返场以商城公告为准。"
-            },
-            price = {
-              enUS = "¥298",
-              zhCN = "¥298"
-            },
-            questID = nil,
-            reputation = nil
-          },
-          sourceID = "retired-audit-source-66123",
-          type = "store"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-66124"] = {
-      identity = {
-        iconFileID = 135996,
-        names = {
-          enUS = "Mount 66124",
-          zhCN = "魔法公鸡"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 335
-      },
-      mountKey = "excluded-66124",
-      primarySourceID = "retired-audit-source-66124",
-      restrictions = {
-        classes = {},
-        factions = {}
-      },
-      sources = {
-        {
-          active = true,
-          availability = "limited_time",
-          path = {
-            {
-              kind = "store",
-              labels = {
-                enUS = "国服怀旧服商城",
-                zhCN = "国服怀旧服商城"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "魔法公鸡",
-                zhCN = "魔法公鸡"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "2022 年巫妖王之怒怀旧服国服商城限时上架；当前是否返场以商城公告为准。",
-              zhCN = "2022 年巫妖王之怒怀旧服国服商城限时上架；当前是否返场以商城公告为准。"
-            },
-            price = {
-              enUS = "¥298",
-              zhCN = "¥298"
-            },
-            questID = nil,
-            reputation = nil
-          },
-          sourceID = "retired-audit-source-66124",
-          type = "store"
-        }
-      },
-      status = "verified"
-    },
-    ["excluded-69820"] = {
-      identity = {
-        iconFileID = 132245,
-        names = {
-          enUS = "Mount 69820",
-          zhCN = "召唤烈日行者科多兽"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 350
-      },
-      mountKey = "excluded-69820",
-      primarySourceID = "manual-source-69820",
-      restrictions = {
-        classes = {
-          "PALADIN"
-        },
-        factions = {
-          "HORDE"
-        }
-      },
-      sources = {
-        {
-          active = true,
-          availability = "obtainable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "牛头人圣骑士（烈日行者）",
-                zhCN = "牛头人圣骑士（烈日行者）"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "20级职业训练师",
-                zhCN = "20级职业训练师"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "召唤烈日行者科多兽",
-                zhCN = "召唤烈日行者科多兽"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "仅限牛头人圣骑士的召唤法术；20级由职业训练师教授，非背包物品。",
-              zhCN = "仅限牛头人圣骑士的召唤法术；20级由职业训练师教授，非背包物品。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-69820",
-          type = "class_reward"
-        }
-      },
-      status = "candidate"
-    },
-    ["excluded-69826"] = {
-      identity = {
-        iconFileID = 329848,
-        names = {
-          enUS = "Mount 69826",
-          zhCN = "召唤巨型烈日行者科多兽"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 351
-      },
-      mountKey = "excluded-69826",
-      primarySourceID = "manual-source-69826",
-      restrictions = {
-        classes = {
-          "PALADIN"
-        },
-        factions = {
-          "HORDE"
-        }
-      },
-      sources = {
-        {
-          active = true,
-          availability = "obtainable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "牛头人圣骑士（烈日行者）",
-                zhCN = "牛头人圣骑士（烈日行者）"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "40级职业训练师",
-                zhCN = "40级职业训练师"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "召唤巨型烈日行者科多兽",
-                zhCN = "召唤巨型烈日行者科多兽"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "仅限牛头人圣骑士的召唤法术；40级由职业训练师教授，非背包物品。",
-              zhCN = "仅限牛头人圣骑士的召唤法术；40级由职业训练师教授，非背包物品。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-69826",
-          type = "class_reward"
-        }
-      },
-      status = "candidate"
-    },
-    ["excluded-73629"] = {
-      identity = {
-        iconFileID = 136103,
-        names = {
-          enUS = "Mount 73629",
-          zhCN = "召唤主教的雷象"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 367
-      },
-      mountKey = "excluded-73629",
-      primarySourceID = "manual-source-73629",
-      restrictions = {
-        classes = {
-          "PALADIN"
-        },
-        factions = {
-          "ALLIANCE"
-        }
-      },
-      sources = {
-        {
-          active = true,
-          availability = "obtainable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "德莱尼圣骑士",
-                zhCN = "德莱尼圣骑士"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "20级职业训练师",
-                zhCN = "20级职业训练师"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "召唤主教的雷象",
-                zhCN = "召唤主教的雷象"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "德莱尼圣骑士专属召唤法术；20级由职业训练师教授，非背包物品。",
-              zhCN = "德莱尼圣骑士专属召唤法术；20级由职业训练师教授，非背包物品。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-73629",
-          type = "class_reward"
-        }
-      },
-      status = "candidate"
-    },
-    ["excluded-73630"] = {
-      identity = {
-        iconFileID = 132226,
-        names = {
-          enUS = "Mount 73630",
-          zhCN = "召唤大主教的雷象"
-        }
-      },
-      ids = {
-        itemIDs = {},
-        mountJournalID = 368
-      },
-      mountKey = "excluded-73630",
-      primarySourceID = "manual-source-73630",
-      restrictions = {
-        classes = {
-          "PALADIN"
-        },
-        factions = {
-          "ALLIANCE"
-        }
-      },
-      sources = {
-        {
-          active = true,
-          availability = "obtainable",
-          path = {
-            {
-              kind = "custom",
-              labels = {
-                enUS = "德莱尼圣骑士",
-                zhCN = "德莱尼圣骑士"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "40级职业训练师",
-                zhCN = "40级职业训练师"
-              },
-              refID = nil
-            },
-            {
-              kind = "custom",
-              labels = {
-                enUS = "召唤大主教的雷象",
-                zhCN = "召唤大主教的雷象"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "德莱尼圣骑士专属召唤法术；40级由职业训练师教授，非背包物品。",
-              zhCN = "德莱尼圣骑士专属召唤法术；40级由职业训练师教授，非背包物品。"
-            },
-            price = {
-              enUS = nil,
-              zhCN = nil
-            },
-            questID = nil,
-            reputation = nil,
-            tooltipNote = nil
-          },
-          sourceID = "manual-source-73630",
-          type = "class_reward"
         }
       },
       status = "candidate"
@@ -5498,6 +2831,234 @@ NS.Data = {
       },
       status = "verified"
     },
+    ["fact-1250045"] = {
+      identity = {
+        iconFileID = 2734740,
+        names = {
+          enUS = "Mount 1250045",
+          zhCN = "烬灭灾变者"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 2647
+      },
+      mountKey = "fact-1250045",
+      primarySourceID = "manual-source-1250045",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      runtimeVisible = true,
+      sources = {
+        {
+          active = true,
+          availability = "limited_time",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Titan Reforged Treasure > shard exchange",
+                zhCN = "泰坦重铸宝藏 > 碎片兑换"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-1250045",
+          type = "event"
+        }
+      },
+      status = "candidate"
+    },
+    ["fact-1266345"] = {
+      identity = {
+        iconFileID = 7307329,
+        names = {
+          enUS = "Mount 1266345",
+          zhCN = "天蓝相位捕猎者"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 2844
+      },
+      mountKey = "fact-1266345",
+      primarySourceID = "manual-source-1266345",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      runtimeVisible = true,
+      sources = {
+        {
+          active = true,
+          availability = "limited_time",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "TBC anniversary collector bundle",
+                zhCN = "TBC周年典藏礼包"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-1266345",
+          type = "store"
+        }
+      },
+      status = "candidate"
+    },
+    ["fact-1266866"] = {
+      identity = {
+        iconFileID = 7317375,
+        names = {
+          enUS = "Mount 1266866",
+          zhCN = "星辰虚空幼龙的缰绳"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 2830
+      },
+      mountKey = "fact-1266866",
+      primarySourceID = "manual-source-1266866",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      runtimeVisible = true,
+      sources = {
+        {
+          active = true,
+          availability = "limited_time",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "TBC anniversary collector bundle",
+                zhCN = "TBC周年典藏礼包"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-1266866",
+          type = "store"
+        }
+      },
+      status = "candidate"
+    },
+    ["fact-1266982"] = {
+      identity = {
+        iconFileID = 7807336,
+        names = {
+          enUS = "Mount 1266982",
+          zhCN = "伯爵的猩红行驾"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 2832
+      },
+      mountKey = "fact-1266982",
+      primarySourceID = "manual-source-1266982",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      runtimeVisible = true,
+      sources = {
+        {
+          active = true,
+          availability = "limited_time",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Crimson Tide Treasure > shard exchange",
+                zhCN = "猩红之潮秘宝 > 碎片兑换"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-1266982",
+          type = "event"
+        }
+      },
+      status = "candidate"
+    },
     ["fact-127178"] = {
       identity = {
         iconFileID = 605484,
@@ -6846,6 +4407,63 @@ NS.Data = {
       },
       status = "candidate"
     },
+    ["fact-1284044"] = {
+      identity = {
+        iconFileID = 7693393,
+        names = {
+          enUS = "Mount 1284044",
+          zhCN = "炽焰魁麟"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 2946
+      },
+      mountKey = "fact-1284044",
+      primarySourceID = "manual-source-1284044",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      runtimeVisible = true,
+      sources = {
+        {
+          active = true,
+          availability = "limited_time",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "China web event prize pool",
+                zhCN = "国服网页活动奖池"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-1284044",
+          type = "event"
+        }
+      },
+      status = "candidate"
+    },
     ["fact-1284679"] = {
       identity = {
         iconFileID = 7669035,
@@ -7098,6 +4716,104 @@ NS.Data = {
       },
       status = "verified"
     },
+    ["fact-1291315"] = {
+      identity = {
+        iconFileID = 7833729,
+        names = {
+          enUS = "Mount 1291315",
+          zhCN = "栖竹者森森"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 2972
+      },
+      mountKey = "fact-1291315",
+      primarySourceID = "fortune-bamboo-event-1291315",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "limited_time",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "China limited-time Fortune Bamboo Token web event",
+                zhCN = "国服福运竹牌网页限时活动"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = "fortune-bamboo-token",
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "fortune-bamboo-event-1291315",
+          type = "event"
+        },
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Battle.net Shop",
+                zhCN = "战网商城"
+              },
+              refID = nil
+            },
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Xizhuzhe Sensen direct purchase",
+                zhCN = "栖竹者森森直购"
+              },
+              refID = nil
+            }
+          },
+          priority = 90,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = "¥328",
+              zhCN = "¥328"
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "battle-net-store-1291315",
+          type = "store"
+        }
+      },
+      status = "verified"
+    },
     ["fact-129552"] = {
       identity = {
         iconFileID = 657490,
@@ -7278,7 +4994,7 @@ NS.Data = {
         mountJournalID = 3040
       },
       mountKey = "fact-1298512",
-      primarySourceID = "platinum-coin-vendor-1298512",
+      primarySourceID = "gold-challenge-achievement-1298512",
       restrictions = {
         classes = {},
         factions = {}
@@ -7290,26 +5006,10 @@ NS.Data = {
           availability = "obtainable",
           path = {
             {
-              kind = "faction",
+              kind = "custom",
               labels = {
-                enUS = "挑战模式",
-                zhCN = "挑战模式"
-              },
-              refID = nil
-            },
-            {
-              kind = "zone",
-              labels = {
-                enUS = "七星殿上层（联盟）/ 双月殿上层（部落）",
-                zhCN = "七星殿上层（联盟）/ 双月殿上层（部落）"
-              },
-              refID = nil
-            },
-            {
-              kind = "npc",
-              labels = {
-                enUS = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
-                zhCN = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
+                enUS = "Gold Challenge Mode (all five-player dungeons)",
+                zhCN = "5人地下城黄金挑战模式（全部完成）"
               },
               refID = nil
             }
@@ -7321,41 +5021,8 @@ NS.Data = {
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = "挑战模式第3赛季新增白金币兑换坐骑。",
-              zhCN = "挑战模式第3赛季新增白金币兑换坐骑。"
-            },
-            price = {
-              enUS = "300 白金币",
-              zhCN = "300 白金币"
-            },
-            questID = nil,
-            reputation = nil
-          },
-          sourceID = "platinum-coin-vendor-1298512",
-          type = "vendor"
-        },
-        {
-          active = true,
-          availability = "unknown",
-          path = {
-            {
-              kind = "research",
-              labels = {
-                enUS = "国服怀旧服投放待核实",
-                zhCN = "国服怀旧服投放待核实"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。",
-              zhCN = "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。"
+              enUS = nil,
+              zhCN = nil
             },
             price = {
               enUS = nil,
@@ -7364,11 +5031,67 @@ NS.Data = {
             questID = nil,
             reputation = nil
           },
-          sourceID = "retired-audit-source-1298512",
-          type = "research"
+          sourceID = "gold-challenge-achievement-1298512",
+          type = "achievement"
         }
       },
       status = "verified"
+    },
+    ["fact-1298516"] = {
+      identity = {
+        iconFileID = 537531,
+        names = {
+          enUS = "Mount 1298516",
+          zhCN = "幽灵驭风者"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 3042
+      },
+      mountKey = "fact-1298516",
+      primarySourceID = "retired-audit-source-1298516",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      runtimeVisible = true,
+      sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "research",
+              labels = {
+                enUS = "Shrine of Two Moons > Victor Darkheart > Platinum Coins",
+                zhCN = "双月殿 > 维克托·邪圣 > 白金硬币（150）"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil
+          },
+          sourceID = "retired-audit-source-1298516",
+          type = "vendor"
+        }
+      },
+      status = "candidate"
     },
     ["fact-1302506"] = {
       identity = {
@@ -7383,70 +5106,22 @@ NS.Data = {
         mountJournalID = 3087
       },
       mountKey = "fact-1302506",
-      primarySourceID = "platinum-coin-vendor-1302506",
+      primarySourceID = "timewalking-platinum-coin-1302506",
       restrictions = {
         classes = {},
         factions = {}
       },
+      runtimeVisible = true,
       sources = {
         {
           active = true,
           availability = "obtainable",
           path = {
             {
-              kind = "faction",
-              labels = {
-                enUS = "挑战模式",
-                zhCN = "挑战模式"
-              },
-              refID = nil
-            },
-            {
-              kind = "zone",
-              labels = {
-                enUS = "七星殿上层（联盟）/ 双月殿上层（部落）",
-                zhCN = "七星殿上层（联盟）/ 双月殿上层（部落）"
-              },
-              refID = nil
-            },
-            {
-              kind = "npc",
-              labels = {
-                enUS = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）",
-                zhCN = "贾洛夫·铁心（联盟）/ 维克多·费尔霍洛（部落）"
-              },
-              refID = nil
-            }
-          },
-          priority = 100,
-          requirements = {
-            achievementID = nil,
-            costs = {},
-            difficulties = {},
-            eventKey = nil,
-            notes = {
-              enUS = "挑战模式第3赛季新增白金币兑换坐骑。",
-              zhCN = "挑战模式第3赛季新增白金币兑换坐骑。"
-            },
-            price = {
-              enUS = "300 白金币",
-              zhCN = "300 白金币"
-            },
-            questID = nil,
-            reputation = nil
-          },
-          sourceID = "platinum-coin-vendor-1302506",
-          type = "vendor"
-        },
-        {
-          active = true,
-          availability = "unknown",
-          path = {
-            {
               kind = "research",
               labels = {
-                enUS = "国服怀旧服投放待核实",
-                zhCN = "国服怀旧服投放待核实"
+                enUS = "Challenge Mode Season 3 > Platinum Coin vendor > Juvenile Frostwyrm's Reins",
+                zhCN = "挑战模式第3赛季 > 白金硬币商人 > 幼年冰霜巨龙的缰绳"
               },
               refID = nil
             }
@@ -7458,8 +5133,8 @@ NS.Data = {
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。",
-              zhCN = "现有旧兑换路径不作为怀旧服玩家可见来源；待核实实际国服怀旧服投放渠道。"
+              enUS = nil,
+              zhCN = nil
             },
             price = {
               enUS = nil,
@@ -7468,11 +5143,11 @@ NS.Data = {
             questID = nil,
             reputation = nil
           },
-          sourceID = "retired-audit-source-1302506",
-          type = "research"
+          sourceID = "timewalking-platinum-coin-1302506",
+          type = "vendor"
         }
       },
-      status = "verified"
+      status = "candidate"
     },
     ["fact-132117"] = {
       identity = {
@@ -9424,6 +7099,62 @@ NS.Data = {
       },
       status = "candidate"
     },
+    ["fact-18363"] = {
+      identity = {
+        iconFileID = 134175,
+        names = {
+          enUS = "Brown Kodo",
+          zhCN = "棕色科多兽"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 70
+      },
+      mountKey = "fact-18363",
+      primarySourceID = "thunder-bluff-kodo-vendor-18363",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Mulgore > Bloodhoof Village > Harb Clawhoof",
+                zhCN = "莫高雷 > 血蹄村 > 哈布·爪蹄"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = "1 gold",
+              zhCN = "1 金币"
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "thunder-bluff-kodo-vendor-18363",
+          type = "vendor"
+        }
+      },
+      status = "verified"
+    },
     ["fact-18991"] = {
       identity = {
         iconFileID = 132244,
@@ -10899,6 +8630,62 @@ NS.Data = {
       },
       status = "verified"
     },
+    ["fact-388516"] = {
+      identity = {
+        iconFileID = 4687496,
+        names = {
+          enUS = "Mount 388516",
+          zhCN = "皓儿，天河先知"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 1769
+      },
+      mountKey = "fact-388516",
+      primarySourceID = "fact-source-388516",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      runtimeVisible = true,
+      sources = {
+        {
+          active = true,
+          availability = "limited_time",
+          path = {
+            {
+              kind = "research",
+              labels = {
+                enUS = "China six-month card / limited web bundle",
+                zhCN = "国服半年卡/网页限时礼包"
+              },
+              refID = nil
+            }
+          },
+          priority = 1,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil
+          },
+          sourceID = "fact-source-388516",
+          type = "promotion"
+        }
+      },
+      status = "candidate"
+    },
     ["fact-394209"] = {
       identity = {
         iconFileID = 236231,
@@ -11822,6 +9609,343 @@ NS.Data = {
         }
       },
       status = "candidate"
+    },
+    ["fact-471440"] = {
+      identity = {
+        iconFileID = 298591,
+        names = {
+          enUS = "Mount 471440",
+          zhCN = "天缚幽灵虎"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 2319
+      },
+      mountKey = "fact-471440",
+      primarySourceID = "manual-source-471440",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      runtimeVisible = true,
+      sources = {
+        {
+          active = true,
+          availability = "limited_time",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Classic Wrath flying Spectral Tiger bundle",
+                zhCN = "巫妖王之怒飞行幽灵虎礼包"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-471440",
+          type = "promotion"
+        }
+      },
+      status = "candidate"
+    },
+    ["fact-473739"] = {
+      identity = {
+        iconFileID = 6310146,
+        names = {
+          enUS = "Mount 473739",
+          zhCN = "绒毛米克西"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 2342
+      },
+      mountKey = "fact-473739",
+      primarySourceID = "battle-net-store-473739",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Battle.net Shop > Majestic Mikesi Collection > Fluffy Mikesi",
+                zhCN = "战网商城 > 威风米克西收藏 > 绒毛米克西"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = "¥120",
+              zhCN = "¥120"
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "battle-net-store-473739",
+          type = "store"
+        }
+      },
+      status = "verified"
+    },
+    ["fact-473741"] = {
+      identity = {
+        iconFileID = 6310147,
+        names = {
+          enUS = "Mount 473741",
+          zhCN = "柔爪米克西"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 2343
+      },
+      mountKey = "fact-473741",
+      primarySourceID = "battle-net-store-473741",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Battle.net Shop > Majestic Mikesi Collection > Softpaw Mikesi",
+                zhCN = "战网商城 > 威风米克西收藏 > 柔爪米克西"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = "¥120",
+              zhCN = "¥120"
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "battle-net-store-473741",
+          type = "store"
+        }
+      },
+      status = "verified"
+    },
+    ["fact-473743"] = {
+      identity = {
+        iconFileID = 6310148,
+        names = {
+          enUS = "Mount 473743",
+          zhCN = "滚爪米克西"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 2344
+      },
+      mountKey = "fact-473743",
+      primarySourceID = "battle-net-store-473743",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Battle.net Shop > Majestic Mikesi Collection > Rollingpaw Mikesi",
+                zhCN = "战网商城 > 威风米克西收藏 > 滚爪米克西"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = "¥120",
+              zhCN = "¥120"
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "battle-net-store-473743",
+          type = "store"
+        }
+      },
+      status = "verified"
+    },
+    ["fact-473744"] = {
+      identity = {
+        iconFileID = 6310149,
+        names = {
+          enUS = "Mount 473744",
+          zhCN = "茶毛米克西"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 2345
+      },
+      mountKey = "fact-473744",
+      primarySourceID = "battle-net-store-473744",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Battle.net Shop > Majestic Mikesi Collection > Tea-fur Mikesi",
+                zhCN = "战网商城 > 威风米克西收藏 > 茶毛米克西"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = "¥120",
+              zhCN = "¥120"
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "battle-net-store-473744",
+          type = "store"
+        }
+      },
+      status = "verified"
+    },
+    ["fact-473745"] = {
+      identity = {
+        iconFileID = 6310150,
+        names = {
+          enUS = "Mount 473745",
+          zhCN = "酿盗米克西"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 2346
+      },
+      mountKey = "fact-473745",
+      primarySourceID = "battle-net-store-473745",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      sources = {
+        {
+          active = true,
+          availability = "obtainable",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "Battle.net Shop > Majestic Mikesi Collection > Brewbandit Mikesi",
+                zhCN = "战网商城 > 威风米克西收藏 > 酿盗米克西"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = "¥120",
+              zhCN = "¥120"
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "battle-net-store-473745",
+          type = "store"
+        }
+      },
+      status = "verified"
     },
     ["fact-48778"] = {
       identity = {
@@ -12813,6 +10937,63 @@ NS.Data = {
           },
           sourceID = "manual-source-62048",
           type = "vendor"
+        }
+      },
+      status = "candidate"
+    },
+    ["fact-64656"] = {
+      identity = {
+        iconFileID = 132264,
+        names = {
+          enUS = "Mount 64656",
+          zhCN = "蓝色骷髅战马"
+        }
+      },
+      ids = {
+        itemIDs = {},
+        mountJournalID = 308
+      },
+      mountKey = "fact-64656",
+      primarySourceID = "manual-source-64656",
+      restrictions = {
+        classes = {},
+        factions = {}
+      },
+      runtimeVisible = true,
+      sources = {
+        {
+          active = true,
+          availability = "limited_time",
+          path = {
+            {
+              kind = "custom",
+              labels = {
+                enUS = "China web event lottery redemption",
+                zhCN = "国服网页活动抽奖兑换"
+              },
+              refID = nil
+            }
+          },
+          priority = 100,
+          requirements = {
+            achievementID = nil,
+            costs = {},
+            difficulties = {},
+            eventKey = nil,
+            notes = {
+              enUS = nil,
+              zhCN = nil
+            },
+            price = {
+              enUS = nil,
+              zhCN = nil
+            },
+            questID = nil,
+            reputation = nil,
+            tooltipNote = nil
+          },
+          sourceID = "manual-source-64656",
+          type = "event"
         }
       },
       status = "candidate"
