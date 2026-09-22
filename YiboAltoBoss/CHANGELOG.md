@@ -1,5 +1,21 @@
 # YiboAltoBoss 更新日志 / Changelog
 
+## v2.5
+
+### 中文
+
+- 新增跨角色副本锁定页，支持按资料片浏览团队副本与五人副本的锁定状态。
+- 可在设置中固定悬停预览副本，并查看角色副本锁定、首领击杀及副本进入统计。
+- 增加普通五人副本每小时进入次数记录与可配置上限。
+- Boss 与副本页面共用窗口标签，记住上次查看页面，并分别按页面内容计算尺寸。
+
+### English
+
+- Added a cross-character instance lockout page with raid and dungeon views grouped by expansion.
+- Added configurable pinned instances for hover previews, with lockout, boss-kill, and run-history details.
+- Added per-hour entry tracking and a configurable limit for normal five-player dungeons.
+- Added shared Boss and instance tabs, persisted page selection, and page-specific window sizing.
+
 ## v2.4.1
 
 ### 中文

@@ -11,6 +11,7 @@ local Integration = {}
 YAB.CoreIntegration = Integration
 
 local PAGE_ID = "alto-boss"
+local LOCKOUT_PAGE_ID = "alto-lockouts"
 
 local function AddText(parent, template, color)
     local text = parent:CreateFontString(nil, "OVERLAY", template or "GameFontNormal")
@@ -195,7 +196,7 @@ function Integration:Initialize()
         return nil, "需要 YiboCore API v5。"
     end
 
-    Core:RegisterAddon("YiboAltoBoss", { version = "2.4", requiredAPI = 5 })
+    Core:RegisterAddon("YiboAltoBoss", { version = "2.5", requiredAPI = 5 })
     if Core.CharacterCleanup then
         local cleanupRegistered, cleanupError = RegisterCharacterCleanupOwner()
         if not cleanupRegistered then return nil, cleanupError end
@@ -256,11 +257,48 @@ function Integration:Initialize()
     if not page and errorMessage then
         return nil, errorMessage
     end
+    local lockoutPage, lockoutError = Core.AccountView:RegisterPage("YiboAltoBoss", {
+        id = LOCKOUT_PAGE_ID,
+        title = "副本",
+        icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YAB_MinimapIcon",
+        order = 31,
+        previewEnabled = true,
+        hideFromSettings = true,
+        internal = true,
+        compactWidth = true,
+        autoFitWidth = true,
+        autoFitHeight = true,
+        fields = { { id = "lockout", title = "锁定", defaultVisible = true } },
+        scope = { mode = "realms", allTitle = "所有服务器" },
+        characterFilter = {
+            defaultExpression = "90",
+            GetExpression = function() return YAB.GetLevelFilterExpr() end,
+            SetExpression = function(expression) return YAB.SetLevelFilterExpr(expression) end,
+        },
+        HasCharacterSnapshot = function(character)
+            return HasEligibleSnapshot(GetLegacyKeyByCharacterID(character.id))
+        end,
+        GetEligibleCharacters = GetEligibleCharacters,
+        GetPreviewFields = function() return { lockout = true } end,
+        SetPreviewFieldVisible = function() end,
+        defaultEnabled = true,
+        Create = YAB.CreateLockoutsPage,
+        Refresh = YAB.RefreshLockoutsPage,
+        GetSurfaceMetrics = YAB.GetLockoutsSurfaceMetrics,
+        GetMeasuredHeight = YAB.GetLockoutsMeasuredHeight,
+        GetHoverMetrics = YAB.GetLockoutsHoverMetrics,
+        GetSummary = YAB.GetLockoutsSummary,
+        GetActions = YAB.GetLockoutsActions,
+    })
+    if not lockoutPage and lockoutError then return nil, lockoutError end
     local entry, entryError = Core.Entry:RegisterBusinessEntry("YiboAltoBoss", {
         id = "yab",
         legacyIDs = { "YiboAltoBoss" },
         brokerName = "YiboAltoBoss",
         pageID = PAGE_ID,
+        resolvePageID = function()
+            return YAB.GetAccountBusinessPageID and YAB.GetAccountBusinessPageID() or PAGE_ID
+        end,
         text = "[Yibo] " .. addonTitle,
         icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YAB_MinimapIcon",
     })
@@ -271,7 +309,15 @@ end
 
 function YAB.NotifyCorePageChanged()
     if Core and Core.AccountView then
-        Core.AccountView:NotifyPageChanged(PAGE_ID)
+        -- Refresh only the page currently being viewed.  The lockout page is
+        -- an internal tab hosted by AltoBoss; notifying both pages in a row
+        -- can let an external Core refresh race with the tab switch and
+        -- restore the default Boss page.
+        local frame = Core.AccountView.frame
+        local visiblePageID = frame and frame.preview
+            and Core.AccountView.previewPageID
+            or Core.AccountView.activePageID
+        Core.AccountView:NotifyPageChanged(visiblePageID == LOCKOUT_PAGE_ID and LOCKOUT_PAGE_ID or PAGE_ID)
     end
 end
 

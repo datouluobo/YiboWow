@@ -1017,7 +1017,7 @@ function YAB.CreateCoreSettingsPanel(parent, context)
         panel.levelInput:SetScript("OnEscapePressed", function(self) self:SetText(tostring(YAB.GetLevelFilterExpr() or "")); self:ClearFocus() end)
 
         panel.custom = Section(panel, "自定义目标", 292, 1)
-        panel.custom:SetPoint("TOPRIGHT", panel.targets, "TOPRIGHT", 596, 0)
+        panel.custom:SetPoint("TOPLEFT", panel.targets, "TOPRIGHT", 12, 0)
         local customHint = context.createText(panel.custom, Theme.Font.assist, Theme.Colors.muted, "LEFT")
         customHint:SetPoint("TOPLEFT", 12, -40); customHint:SetText("NPC ID（击杀标记 24 小时后自动清除；点击下方目标可回填）")
         panel.npcInput = CreateFrame("EditBox", nil, panel.custom, "InputBoxTemplate")
@@ -1038,6 +1038,28 @@ function YAB.CreateCoreSettingsPanel(parent, context)
             if YAB.Holiday then YAB.Holiday:SetEnabled(self:GetChecked()) end
             if context and context.refreshPage then context.refreshPage() end
         end)
+        panel.lockout = Section(panel, "副本锁定", 292, 104)
+        panel.lockoutHint = context.createText(panel.lockout, Theme.Font.assist, Theme.Colors.muted, "LEFT")
+        panel.lockoutHint:SetPoint("TOPLEFT", 12, -40); panel.lockoutHint:SetPoint("TOPRIGHT", -12, -40)
+        panel.lockoutHint:SetText("普通 5 人本爆本上限；同一子账号与服务器共享，滚动 1 小时窗口。")
+        panel.lockoutInput = CreateFrame("EditBox", nil, panel.lockout, "InputBoxTemplate")
+        panel.lockoutInput:SetSize(56, 24); panel.lockoutInput:SetPoint("TOPLEFT", 12, -68); panel.lockoutInput:SetAutoFocus(false); panel.lockoutInput:SetNumeric(true)
+        local lockoutLabel = context.createText(panel.lockout, Theme.Font.assist, Theme.Colors.text, "LEFT")
+        lockoutLabel:SetPoint("LEFT", panel.lockoutInput, "RIGHT", 8, 0); lockoutLabel:SetText("次 / 小时")
+        panel.lockoutInput:SetScript("OnEnterPressed", function(self)
+            local value = math.max(1, math.floor(tonumber(self:GetText()) or 5))
+            YiboAltoBossDB.settings.normalInstanceLimit = value; self:SetText(tostring(value)); YAB.PersistDB(); if context and context.notifyPageChanged then context.notifyPageChanged() end; self:ClearFocus()
+        end)
+        panel.instanceCatalog = Section(panel, "悬停固定副本", 292, 1)
+        panel.instanceCatalogHint = context.createText(panel.instanceCatalog, Theme.Font.assist, Theme.Colors.muted, "LEFT")
+        panel.instanceCatalogHint:SetPoint("TOPLEFT", 12, -40); panel.instanceCatalogHint:SetPoint("TOPRIGHT", -12, -40)
+        panel.instanceCatalogHint:SetText("按资料片选择副本；悬停时显示固定副本与当前有效锁定。")
+        panel.instanceCatalogContent = CreateFrame("Frame", nil, panel.instanceCatalog)
+        panel.instanceCatalogContent:SetPoint("TOPLEFT", 12, -66); panel.instanceCatalogContent:SetPoint("TOPRIGHT", -12, 0)
+        panel.instanceCatalogAnchor = CreateFrame("Frame", nil, panel)
+        panel.instanceCatalogAnchor:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, 0)
+        panel.instanceCatalogAnchor:SetPoint("TOPRIGHT", panel, "TOPRIGHT", 0, 0)
+        panel.instanceCatalogRows, panel.instanceCatalogGroups = {}, {}
         local function UpdateCustom(ok, message)
             panel.customStatus:SetText(message or "")
             local color = ok and Theme.Colors.success or Theme.Colors.danger
@@ -1063,6 +1085,8 @@ function YAB.CreateCoreSettingsPanel(parent, context)
     panel.filter:SetWidth(halfWidth)
     panel.custom:SetWidth(halfWidth)
     panel.holiday:SetWidth(halfWidth)
+    panel.lockout:SetWidth(halfWidth)
+    panel.instanceCatalog:SetWidth(panelWidth)
     local groups = YAB.GetDisplayGroups and YAB.GetDisplayGroups() or {}
     for _, check in pairs(panel.groupChecks) do check:Hide() end
     for _, check in pairs(panel.itemChecks) do check:Hide() end
@@ -1155,8 +1179,97 @@ function YAB.CreateCoreSettingsPanel(parent, context)
     end
     local customRows = math.ceil(#customTargets / 2)
     panel.custom:SetHeight(math.max(126, 134 + customRows * 28))
+    -- BOTTOMLEFT already resolves to the custom panel's bottom edge; only
+    -- apply the intended inter-section gap here.
     panel.holiday:ClearAllPoints(); panel.holiday:SetPoint("TOPLEFT", panel.custom, "BOTTOMLEFT", 0, -12)
     panel.holidayCheck:SetChecked(not (YiboAltoBossDB.settings and YiboAltoBossDB.settings.showHolidayBosses == false))
-    panel:SetHeight(math.max(panel.targets:GetHeight(), panel.custom:GetHeight() + 100))
+    panel.lockout:ClearAllPoints(); panel.lockout:SetPoint("TOPLEFT", panel.holiday, "BOTTOMLEFT", 0, -12)
+    panel.lockoutInput:SetText(tostring((YiboAltoBossDB.settings and YiboAltoBossDB.settings.normalInstanceLimit) or 5))
+    -- Keep a real vertical safety gap below the tallest upper column. The
+    -- catalog is full width, so it must never overlap the right-side cards.
+    local rightColumnHeight = panel.custom:GetHeight() + 12 + panel.holiday:GetHeight() + 12 + panel.lockout:GetHeight() + 24
+    local upperSectionHeight = math.max(panel.targets:GetHeight(), rightColumnHeight)
+    panel.instanceCatalogAnchor:SetHeight(upperSectionHeight)
+    panel.instanceCatalog:ClearAllPoints()
+    panel.instanceCatalog:SetPoint("TOPLEFT", panel.instanceCatalogAnchor, "BOTTOMLEFT", 0, -12)
+    panel.instanceCatalog:SetPoint("TOPRIGHT", panel.instanceCatalogAnchor, "BOTTOMRIGHT", 0, -12)
+    local catalog = YAB.GetInstanceCatalog and YAB.GetInstanceCatalog() or {}
+    local grouped, expansionOrder = {}, {}
+    for _, item in pairs(catalog) do
+        local group = item.expansion or "其它"
+        if not grouped[group] then
+            grouped[group] = { raids = {}, dungeons = {}, order = item.tierOrder or 999 }
+            expansionOrder[#expansionOrder + 1] = group
+        end
+        local items = item.isRaid and grouped[group].raids or grouped[group].dungeons
+        items[#items + 1] = item
+    end
+    local preferredExpansionOrder = {
+        ["熊猫人之谜"] = 1, ["Mists of Pandaria"] = 1,
+        ["大地的裂变"] = 2, ["Cataclysm"] = 2,
+        ["巫妖王之怒"] = 3, ["Wrath of the Lich King"] = 3,
+        ["燃烧的远征"] = 4, ["The Burning Crusade"] = 4,
+        ["经典旧世"] = 5, ["Classic"] = 5,
+    }
+    table.sort(expansionOrder, function(a, b)
+        local left, right = grouped[a], grouped[b]
+        local leftOrder = preferredExpansionOrder[a] or left.order
+        local rightOrder = preferredExpansionOrder[b] or right.order
+        if leftOrder ~= rightOrder then return leftOrder < rightOrder end
+        return tostring(a) < tostring(b)
+    end)
+    for _, rows in pairs(panel.instanceCatalogGroups) do rows:Hide() end
+    for _, row in pairs(panel.instanceCatalogRows) do row:Hide() end
+    local catalogY, rowIndex, groupIndex = 0, 0, 0
+    local catalogColumns = math.max(2, math.floor((panel.instanceCatalog:GetWidth() - 24) / 220))
+    local itemWidth = math.floor((panel.instanceCatalog:GetWidth() - 24) / catalogColumns)
+    local function RenderCatalogItems(items, gapBefore)
+        if #items == 0 then return end
+        if gapBefore then catalogY = catalogY + 4 end
+        table.sort(items, function(a, b)
+            local left, right = a.indexOrder or 999, b.indexOrder or 999
+            if left ~= right then return left < right end
+            return tostring(a.name) < tostring(b.name)
+        end)
+        for itemIndex, item in ipairs(items) do
+            rowIndex = rowIndex + 1
+            local check = panel.instanceCatalogRows[rowIndex]
+            if not check then
+                check = context.createCheckbox(panel.instanceCatalogContent, item.name)
+                panel.instanceCatalogRows[rowIndex] = check
+                check:SetScript("OnClick", function(self)
+                    self:SetChecked(not self:GetChecked())
+                    local catalogItem = self.catalogItem
+                    if catalogItem and YAB.SetLockoutColumnEnabled then
+                        YAB.SetLockoutColumnEnabled(catalogItem.key, self:GetChecked())
+                    end
+                end)
+            end
+            check.catalogItem = item
+            local itemColumn = (itemIndex - 1) % catalogColumns
+            local itemRow = math.floor((itemIndex - 1) / catalogColumns)
+            check:ClearAllPoints(); check:SetPoint("TOPLEFT", itemColumn * itemWidth, -(catalogY + itemRow * 26)); check:SetWidth(itemWidth); check.label:SetWidth(itemWidth - 24)
+            local abbreviation = item.abbreviation or "INST"
+            check.label:SetText(string.format("%s（%s）", item.name, abbreviation)); check:SetChecked(YAB.IsLockoutColumnEnabled(item.key)); check:Show()
+        end
+        catalogY = catalogY + math.ceil(#items / catalogColumns) * 26 + 6
+    end
+    for _, expansion in ipairs(expansionOrder) do
+        groupIndex = groupIndex + 1
+        local heading = panel.instanceCatalogGroups[groupIndex]
+        if not heading then
+            heading = context.createText(panel.instanceCatalogContent, Theme.Font.assist, Theme.Colors.accent, "LEFT")
+            panel.instanceCatalogGroups[groupIndex] = heading
+        end
+        heading:ClearAllPoints(); heading:SetPoint("TOPLEFT", 0, -catalogY)
+        heading:SetWidth(panel.instanceCatalog:GetWidth() - 24); heading:SetText(expansion); heading:Show()
+        catalogY = catalogY + 24
+        RenderCatalogItems(grouped[expansion].raids, false)
+        RenderCatalogItems(grouped[expansion].dungeons, #grouped[expansion].raids > 0)
+        catalogY = catalogY + 6
+    end
+    panel.instanceCatalogContent:SetHeight(math.max(24, catalogY))
+    panel.instanceCatalog:SetHeight(math.max(104, catalogY + 82))
+    panel:SetHeight(upperSectionHeight + panel.instanceCatalog:GetHeight() + 24)
     return panel:GetHeight()
 end

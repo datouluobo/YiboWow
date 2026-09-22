@@ -1,6 +1,6 @@
 # YiboAltoBoss
 
-Boss Tracker (YiboAltoBoss) is a World of Warcraft addon for Mists of Pandaria Classic that helps you track world-boss progress, seasonal Boss rewards, custom targets, and Warbringer phase observations across all of your characters. Version 2.4 requires YiboCore API v5, which provides the shared account page, optional entry, and settings navigation.
+Boss Tracker (YiboAltoBoss) is a World of Warcraft addon for Mists of Pandaria Classic that helps you track world-boss progress, instance lockouts, seasonal Boss rewards, custom targets, and Warbringer phase observations across all of your characters. Version 2.5 requires YiboCore API v5, which provides the shared account page, optional entry, and settings navigation.
 
 It provides a compact account-wide overview so you can quickly see which characters have already killed each boss, which targets still need attention, and what has recently been observed in each Warbringer location.
 
@@ -15,6 +15,9 @@ It provides a compact account-wide overview so you can quickly see which charact
   - Timeless Isle Four Celestials and Ordos
 - The Four Celestials are shown as one weekly row. Its tooltip records which Celestial was actually defeated; no phase or action data is shown for this rotating encounter.
 - Warbringer observation tracking by zone
+- Cross-character raid and dungeon lockouts grouped by expansion
+- Configurable pinned instances for hover previews
+- Normal five-player dungeon entry tracking and hourly limit settings
 - Seasonal Boss tracking during confirmed holiday windows, starting with Brewfest Coren Direbrew
 - Direct seasonal Dungeon Finder queue and cancellation actions using the current selected roles
 - Unified YiboCore account entry

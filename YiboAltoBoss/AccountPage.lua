@@ -517,6 +517,7 @@ end
 
 function YAB.CreateAccountPage(parent)
     parent:SetClipsChildren(true)
+    parent.businessTabs = YAB.CreateBusinessTabs(parent, "boss")
     parent.title = Text(parent, Theme.Font.title, "LEFT", C.text); parent.title:SetPoint("TOPLEFT", Theme.Space.lg, -Theme.Space.md)
     parent.summary = Text(parent, Theme.Font.body, "RIGHT", C.muted); parent.summary:SetPoint("TOPRIGHT", -Theme.Space.lg, -Theme.Space.md)
     parent.scopeButtons = {}
@@ -554,6 +555,7 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
     -- row between the scope controls and matrix.
     instance.title:SetShown(false)
     instance.summary:SetShown(false)
+    instance.businessTabs:SetActive("boss")
 
     Release(instance.scopeButtons, 1)
 
@@ -562,7 +564,7 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
     -- Keep only the compact visual gap before the matrix; the previous 44 px
     -- offset reserved a now-removed local title/control row.
     local inset = Theme:GetMatrixInsets(preview)
-    local matrixTop = -inset.top
+    local matrixTop = -(inset.top + YAB.GetBusinessTabHeight())
     instance.header:SetPoint("TOPLEFT", inset.left, matrixTop)
     instance.header:SetPoint("TOPRIGHT", -inset.right, matrixTop)
     instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs)
@@ -683,6 +685,7 @@ local function RefreshBossColumnHeaders(instance, bosses, showBossColumns, chara
 end
 
 function YAB.RefreshAccountPage(instance, context)
+    if YAB.SetAccountBusinessPage then YAB.SetAccountBusinessPage("alto-boss") end
     if context.viewMode == "character-columns" then
         return RefreshAccountPageByCharacterColumns(instance, context)
     end
@@ -696,9 +699,10 @@ function YAB.RefreshAccountPage(instance, context)
     local characterWidth = Theme:GetCharacterRowHeaderWidth(true, context, context.characters)
 
     instance.title:Hide(); instance.summary:Hide(); Release(instance.scopeButtons, 1)
+    instance.businessTabs:SetActive("boss")
     instance.header:ClearAllPoints(); instance.scroll:ClearAllPoints()
-    instance.header:SetPoint("TOPLEFT", inset.left, -inset.top)
-    instance.header:SetPoint("TOPRIGHT", -inset.right, -inset.top)
+    instance.header:SetPoint("TOPLEFT", inset.left, -inset.top - YAB.GetBusinessTabHeight())
+    instance.header:SetPoint("TOPRIGHT", -inset.right, -inset.top - YAB.GetBusinessTabHeight())
     instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs)
     instance.scroll:SetPoint("BOTTOMRIGHT", -inset.right, inset.bottom)
     RefreshBossColumnHeaders(instance, bosses, showBossColumns, characterWidth)
@@ -758,17 +762,9 @@ function YAB.RefreshAccountPage(instance, context)
 
         local name, realm = CharacterInfo(key)
         local color = CharacterColor(key)
-        local info = (YiboAltoBossDB and YiboAltoBossDB.knownChars and YiboAltoBossDB.knownChars[key]) or {}
-        local class = info.class
-        local coords = class and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[class]
-        local iconOffset = 0
-        if coords then
-            row.professionIcon:SetTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES")
-            row.professionIcon:SetTexCoord(unpack(coords)); row.professionIcon:ClearAllPoints(); row.professionIcon:SetPoint("LEFT", Theme.Table.cellPadding, 0); row.professionIcon:Show()
-            iconOffset = 16 + Theme.Table.iconTextGap
-        else row.professionIcon:Hide() end
-        row.name:ClearAllPoints(); row.name:SetPoint("LEFT", Theme.Table.cellPadding + iconOffset, 0)
-        row.name:SetWidth(Theme:GetTableCellContentWidth(characterWidth) - iconOffset)
+        row.professionIcon:Hide()
+        row.name:ClearAllPoints(); row.name:SetPoint("LEFT", Theme.Table.cellPadding, 0)
+        row.name:SetWidth(Theme:GetTableCellContentWidth(characterWidth))
         row.name:SetText(context.scope == "all" and (name .. "-" .. realm) or name); row.name:SetTextColor(color.r or color[1], color.g or color[2], color.b or color[3]); row.name:Show()
         local x = characterWidth
         if showKills then
@@ -820,10 +816,10 @@ function YAB.GetAccountSurfaceMetrics(context)
         return {
             minContentWidth = math.max(360, fixedWidth + characterWidth + inset.left + inset.right),
             naturalContentWidth = matrixWidth + inset.left + inset.right,
-            minContentHeight = inset.top + GetHeaderHeight(context) + Theme.Space.xs + ROW_H + inset.bottom,
-            naturalContentHeight = inset.top + GetHeaderHeight(context) + Theme.Space.xs + math.max(1, #bosses) * ROW_H + inset.bottom,
+            minContentHeight = inset.top + YAB.GetBusinessTabHeight() + GetHeaderHeight(context) + Theme.Space.xs + ROW_H + inset.bottom,
+            naturalContentHeight = inset.top + YAB.GetBusinessTabHeight() + GetHeaderHeight(context) + Theme.Space.xs + math.max(1, #bosses) * ROW_H + inset.bottom,
             fixedLeftWidth = fixedWidth,
-            fixedTopHeight = GetHeaderHeight(context),
+            fixedTopHeight = YAB.GetBusinessTabHeight() + GetHeaderHeight(context),
             horizontalOverflow = "paginate", verticalOverflow = "content",
         }
     end
@@ -837,10 +833,10 @@ function YAB.GetAccountSurfaceMetrics(context)
     return {
         minContentWidth = math.max(360, fixedWidth + (showBossColumns and BOSS_WIDTH or 0) + inset.left + inset.right),
         naturalContentWidth = fixedWidth + bossWidth + inset.left + inset.right,
-        minContentHeight = inset.top + Theme.Table.headerHeight + Theme.Space.xs + ROW_H + inset.bottom,
-        naturalContentHeight = inset.top + Theme.Table.headerHeight + Theme.Space.xs + math.max(1, summaryRows + #keys) * ROW_H + inset.bottom,
+        minContentHeight = inset.top + YAB.GetBusinessTabHeight() + Theme.Table.headerHeight + Theme.Space.xs + ROW_H + inset.bottom,
+        naturalContentHeight = inset.top + YAB.GetBusinessTabHeight() + Theme.Table.headerHeight + Theme.Space.xs + math.max(1, summaryRows + #keys) * ROW_H + inset.bottom,
         fixedLeftWidth = fixedWidth,
-        fixedTopHeight = Theme.Table.headerHeight,
+        fixedTopHeight = YAB.GetBusinessTabHeight() + Theme.Table.headerHeight,
         horizontalOverflow = "content", verticalOverflow = "content",
     }
 end

@@ -595,6 +595,12 @@ local function EnsureChar(charKey)
     if not chars[charKey].lootLockouts then
         chars[charKey].lootLockouts = {}
     end
+    if not chars[charKey].instanceLockouts then
+        chars[charKey].instanceLockouts = {}
+    end
+    if not chars[charKey].statistics then
+        chars[charKey].statistics = { bosses = {}, instances = {}, recent = {} }
+    end
     return chars[charKey]
 end
 
@@ -1187,6 +1193,9 @@ local function EnsureDB()
         },
         settings = {
             showHolidayBosses = true,
+            accountPage = "boss",
+            normalInstanceLimit = 5,
+            lockoutColumns = {},
             previewColumns = {
                 kills = true,
                 action = true,
