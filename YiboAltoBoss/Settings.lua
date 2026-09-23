@@ -542,6 +542,16 @@ function YAB.RefreshSettingsUI(preserveStatus)
 end
 
 function YAB.ToggleSettingsWindow()
+    local core = _G.YiboCore
+    if core and core.AccountView then
+        if core.AccountView.frame and core.AccountView.frame:IsShown() and core.AccountView.activePageID == "settings"
+            and core.AccountView.settingsTargetPageID == "alto-boss" then
+            core.AccountView:Toggle()
+        else
+            core.AccountView:ShowSettings("alto-boss")
+        end
+        return
+    end
     if not SettingsFrame then
         return
     end
@@ -562,10 +572,20 @@ function YAB.ToggleSettingsWindow()
 end
 
 function YAB.IsSettingsWindowShown()
+    local core = _G.YiboCore
+    if core and core.AccountView then
+        local view = core.AccountView
+        return view.frame and view.frame:IsShown() and view.activePageID == "settings" and view.settingsTargetPageID == "alto-boss"
+    end
     return SettingsFrame and SettingsFrame:IsShown() or false
 end
 
 function YAB.InitializeSettings()
+    local core = _G.YiboCore
+    if core and core.AccountView then
+        if YAB.GetUIState().settingsShown then core.AccountView:ShowSettings("alto-boss") end
+        return true
+    end
     if SettingsFrame then
         return
     end

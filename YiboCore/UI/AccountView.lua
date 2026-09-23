@@ -904,7 +904,14 @@ function AccountView:EnsureCombatWindowHider()
     hider:SetAttribute("_onstate-combat", [[
         local accountFrame = self:GetFrameRef("accountFrame")
         if newstate == "1" then
+            local restoreWindow = accountFrame:IsShown()
+                and (accountFrame:GetAttribute("isHoverPreview") ~= "1"
+                    or accountFrame:GetAttribute("restoreMainAfterPreview") == "1")
+            self:SetAttribute("restoreWindow", restoreWindow and 1 or nil)
             accountFrame:Hide()
+        elseif self:GetAttribute("restoreWindow") == 1 then
+            self:SetAttribute("restoreWindow", nil)
+            accountFrame:Show()
         end
     ]])
     RegisterStateDriver(hider, "combat", "[combat] 1; 0")
@@ -956,6 +963,10 @@ function AccountView:CreateFrame()
             self.preview = false
             AccountView.previewPageID, AccountView.previewPageOptions, AccountView.previewAnchor = nil, nil, nil
             AccountView:ApplyNormalLayout()
+        end
+        if not (InCombatLockdown and InCombatLockdown()) then
+            self:SetAttribute("isHoverPreview", nil)
+            self:SetAttribute("restoreMainAfterPreview", nil)
         end
     end)
     frame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
@@ -1506,8 +1517,10 @@ function AccountView:TrackPreviewControls(root)
 end
 
 function AccountView:ShowPreview(pageID, anchor, forceRefresh)
+    if InCombatLockdown and InCombatLockdown() then return false end
     local page = self._pages[pageID] or self:GetPreviewPage()
     local frame = self:CreateFrame()
+    local rebuildingVisiblePreview = frame:IsShown() and frame.preview
     local allowWhileMainWindowOpen = Settings().entry.showPreviewWhileMainWindowOpen == true
     if not page or not page.previewEnabled or (not page.internal and not PageEnabled(page)) or (frame:IsShown() and not frame.preview and not allowWhileMainWindowOpen) then return false end
 
@@ -1515,11 +1528,19 @@ function AccountView:ShowPreview(pageID, anchor, forceRefresh)
     -- opted in.  Remember that it was a normal window so it is restored when
     -- the pointer leaves the entry instead of remaining in preview layout.
     self.restoreNormalWindowAfterPreview = frame:IsShown() and not frame.preview
+    frame:SetAttribute("isHoverPreview", "1")
+    frame:SetAttribute("restoreMainAfterPreview", self.restoreNormalWindowAfterPreview and "1" or nil)
 
     local fields = type(page.GetPreviewFields) == "function" and page.GetPreviewFields() or page.previewFields
     local anchorFrame = anchor and type(anchor.GetLeft) == "function" and anchor or nil
     if not forceRefresh and frame:IsShown() and frame.preview and self.previewPageID == page.id and self.previewAnchor == anchorFrame then
         return true
+    end
+
+    -- Repeated Broker callbacks and refreshes outside the preview must not extend its close deadline.
+    if rebuildingVisiblePreview and Core.Entry and Core.Entry.SuppressPreviewClose
+        and Core.Entry:IsMouseOverPreview() then
+        Core.Entry:SuppressPreviewClose(0.20)
     end
     local context = self:BuildContext(page, { preview = true, fieldOverrides = fields })
     local safe = SafeRect(true)
@@ -1595,6 +1616,9 @@ function AccountView:HidePreview()
 end
 
 function AccountView:Toggle(pageID)
+    if InCombatLockdown and InCombatLockdown() then
+        return false
+    end
     local frame = self:CreateFrame()
     if frame.preview then
         self:HidePreview()
@@ -1632,6 +1656,7 @@ end
 -- deferred until combat ends; visibility itself is handled by the secure
 -- state driver installed above.
 Core.Events:Register("PLAYER_REGEN_ENABLED", AccountView, function(view)
+    view:EnsureCombatWindowHider()
     if view._refreshPendingAfterCombat then
         local pageID = view._pendingPageID
         local options = view._pendingPageOptions

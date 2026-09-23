@@ -390,6 +390,7 @@ end
 
 function Entry:StopPreviewWatch()
     if self.previewWatchFrame then self.previewWatchFrame:Hide() end
+    self.previewWatchActive = nil
     self.previewWatchGraceUntil = nil
 end
 
@@ -399,6 +400,7 @@ function Entry:StartPreviewWatch()
     -- been registered for hover callbacks, where WoW may not deliver a final
     -- leave event from the replaced child.
     local frame = self.previewWatchFrame
+    local wasActive = self.previewWatchActive == true and frame and frame:IsShown()
     if not frame then
         frame = CreateFrame("Frame")
         frame.elapsed = 0
@@ -418,9 +420,11 @@ function Entry:StartPreviewWatch()
         self.previewWatchFrame = frame
     end
     frame.elapsed = 0
-    -- Preserve the direct path from entry to preview, including Broker hosts
-    -- that finish their anchor layout one frame after OnEnter.
-    self.previewWatchGraceUntil = (GetTime and GetTime() or 0) + 0.60
+    -- Repeated Broker callbacks must not keep postponing automatic dismissal.
+    if not wasActive then
+        self.previewWatchGraceUntil = (GetTime and GetTime() or 0) + 0.20
+    end
+    self.previewWatchActive = true
     frame:Show()
 end
 
@@ -439,7 +443,7 @@ function Entry:SchedulePreviewClose()
         -- close for after it expires; returning early here stranded the Boss
         -- weekly preview until another hover event happened.
         local suppressedFor = math.max(0, (self.previewCloseSuppressedUntil or 0) - now)
-        C_Timer.After(math.max(0.5, suppressedFor + 0.05), CloseIfStillPending)
+        C_Timer.After(math.max(0.20, suppressedFor + 0.05), CloseIfStillPending)
     else
         if (self.previewCloseSuppressedUntil or 0) <= now then CloseIfStillPending() end
     end
