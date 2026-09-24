@@ -8,6 +8,12 @@ local C = Theme.Colors
 local ICON_SIZE = 40
 local ROSTER_ROW_HEIGHT = 56
 local CATALOG_ROW_HEIGHT = 56
+local EXPANDED_CONTENT_WIDTH = 1120
+local EMPTY_SOCKET_COLORS = {
+    meta = { 0.75, 0.75, 0.75 }, red = { 0.92, 0.18, 0.18 }, yellow = { 0.96, 0.76, 0.12 },
+    blue = { 0.16, 0.48, 0.96 }, prismatic = { 0.72, 0.42, 0.95 }, sha = { 0.72, 0.2, 0.9 }, unknown = { 0.72, 0.72, 0.72 },
+}
+local SOCKET_LABELS = { meta = "多彩", red = "红色", yellow = "黄色", blue = "蓝色", prismatic = "棱彩", sha = "染煞", unknown = "宝石" }
 local SLOT_LABELS = {
     [INVSLOT_HEAD or 1] = "头", [INVSLOT_NECK or 2] = "颈", [INVSLOT_SHOULDER or 3] = "肩",
     [INVSLOT_SHIRT or 4] = "衬", [INVSLOT_CHEST or 5] = "胸", [INVSLOT_WAIST or 6] = "腰",
@@ -27,6 +33,13 @@ local BOTTOM_SLOTS = { INVSLOT_MAINHAND or 16, INVSLOT_OFFHAND or 17 }
 local SLOT_ORDER = {}
 for _, slots in ipairs({ LEFT_SLOTS, RIGHT_SLOTS, BOTTOM_SLOTS }) do
     for _, slotID in ipairs(slots) do SLOT_ORDER[#SLOT_ORDER + 1] = slotID end
+end
+
+local function FoldedEquipmentWidth()
+    local inset = Theme:GetMatrixInsets(false)
+    local rosterWidth = 210
+    local expandedMainWidth = EXPANDED_CONTENT_WIDTH - inset.left - inset.right - rosterWidth - Theme.Space.sm
+    return math.floor((expandedMainWidth - Theme.Space.sm * 3) * 0.55)
 end
 
 local EQUIPMENT_COLUMNS = {
@@ -104,10 +117,10 @@ local function CreateIconButton(parent)
     button.icon = button:CreateTexture(nil, "ARTWORK")
     button.icon:SetPoint("TOPLEFT", 2, -2); button.icon:SetPoint("BOTTOMRIGHT", -2, 2)
     button.gems = {}
-    for index = 1, 3 do
+    for index = 1, 4 do
         local gem = CreateFrame("Button", nil, parent, "BackdropTemplate")
         gem:SetSize(16, 16)
-        gem:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+        gem:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
         gem:SetBackdropBorderColor(C.line[1], C.line[2], C.line[3], 1)
         gem.icon = gem:CreateTexture(nil, "ARTWORK"); gem.icon:SetPoint("TOPLEFT", 1, -1); gem.icon:SetPoint("BOTTOMRIGHT", -1, 1)
         button.gems[index] = gem
@@ -118,33 +131,171 @@ local function CreateIconButton(parent)
     button.enchant:SetBackdropBorderColor(C.warning[1], C.warning[2], C.warning[3], 1)
     button.enchant.icon = button.enchant:CreateTexture(nil, "ARTWORK")
     button.enchant.icon:SetAllPoints(); button.enchant.icon:SetTexture("Interface\\Icons\\Trade_Engraving")
+    button.engineering = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    button.engineering:SetSize(16, 16)
+    button.engineering:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    button.engineering.icon = button.engineering:CreateTexture(nil, "ARTWORK")
+    button.engineering.icon:SetAllPoints(); button.engineering.icon:SetTexture("Interface\\Icons\\Trade_Engineering")
+    button.buckle = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    button.buckle:SetSize(16, 16)
+    button.buckle:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    button.buckle.icon = button.buckle:CreateTexture(nil, "ARTWORK")
+    button.buckle.icon:SetAllPoints(); button.buckle.icon:SetTexture("Interface\\Icons\\INV_Misc_EngGizmos_30")
+    button.base = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    button.base:SetSize(16, 16)
+    button.base:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    button.base.icon = button.base:CreateTexture(nil, "ARTWORK")
+    button.base.icon:SetAllPoints(); button.base.icon:SetTexture("Interface\\Icons\\Trade_BlackSmithing")
     button:RegisterForClicks("LeftButtonUp")
     return button
 end
 
-local function SetAugmentTooltip(button, item, title, link)
+local equipmentTooltipOwner
+
+local function HideTooltipIfOwned(button)
+    local owned = GameTooltip.GetOwner and GameTooltip:GetOwner() == button
+    if owned or (not GameTooltip.GetOwner and equipmentTooltipOwner == button) then
+        GameTooltip:Hide()
+        equipmentTooltipOwner = nil
+    end
+end
+
+local function FullTooltipHyperlink(link, label)
+    if type(link) ~= "string" then return link end
+    local enchantID = link:match("^enchant:(%d+)")
+    if not enchantID then return link end
+    return "|cffffd000|Henchant:" .. enchantID .. "|h[" .. (label or "附魔") .. "]|h|r"
+end
+
+local function SetAugmentTooltip(button, title, link, detail, spellID)
+    button:EnableMouse(true)
     button:SetScript("OnEnter", function(self)
+        equipmentTooltipOwner = self
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        if link then GameTooltip:SetHyperlink(link)
-        elseif item and item.itemLink then
-            GameTooltip:SetHyperlink(item.itemLink)
-            if title then GameTooltip:AddLine("当前附魔：" .. title, C.accent[1], C.accent[2], C.accent[3], true) end
-        else
+        GameTooltip:ClearLines()
+        local shown = false
+        local function HasTooltipText()
+            for lineIndex = 1, GameTooltip:NumLines() do
+                local left = _G["GameTooltipTextLeft" .. lineIndex]
+                local right = _G["GameTooltipTextRight" .. lineIndex]
+                if (left and left:GetText() and left:GetText() ~= "") or (right and right:GetText() and right:GetText() ~= "") then
+                    return true
+                end
+            end
+            return false
+        end
+        if link then
+            local fullLink = FullTooltipHyperlink(link, title)
+            pcall(GameTooltip.SetHyperlink, GameTooltip, fullLink)
+            shown = HasTooltipText()
+            -- Some client builds accept the bare payload while others require
+            -- a complete chat hyperlink for non-item records such as enchant:.
+            if not shown and fullLink ~= link then
+                GameTooltip:ClearLines()
+                local ok = pcall(GameTooltip.SetHyperlink, GameTooltip, link)
+                shown = ok and HasTooltipText()
+            end
+        end
+        if not shown and spellID and GameTooltip.SetSpellByID then
+            GameTooltip:ClearLines()
+            local ok = pcall(GameTooltip.SetSpellByID, GameTooltip, spellID)
+            shown = ok and HasTooltipText()
+        end
+        if not shown and spellID and GameTooltip.SetHyperlink then
+            GameTooltip:ClearLines()
+            local ok = pcall(GameTooltip.SetHyperlink, GameTooltip, "spell:" .. tostring(spellID))
+            shown = ok and HasTooltipText()
+        end
+        if not shown then
+            GameTooltip:ClearLines()
             GameTooltip:AddLine(title or "附魔")
+            if detail and detail ~= title then
+                GameTooltip:AddLine(detail, C.text[1], C.text[2], C.text[3], true)
+            end
         end
         GameTooltip:Show()
     end)
-    button:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    button:SetScript("OnLeave", HideTooltipIfOwned)
+end
+
+local function EnchantIDFromItem(item)
+    if not item then return nil end
+    local linkID = item.itemLink and tonumber(item.itemLink:match("item:%d+:(%d+)")) or nil
+    local savedID = item.enchant and tonumber(item.enchant.enchantID) or nil
+    local enchantID = linkID and linkID > 0 and linkID or savedID
+    if not (enchantID and enchantID > 0) then return nil end
+    -- Older links can put an engineering tinker in the permanent-enchant field.
+    if Addon.EngineeringCatalog and Addon.EngineeringCatalog[enchantID] then return nil end
+    if item.engineering and tonumber(item.engineering.enchantID) == enchantID then return nil end
+    return enchantID
+end
+
+local function SetEnchantTooltip(button, item, enchantID, isEnchanted)
+    button:EnableMouse(true)
+    button:SetScript("OnEnter", function(self)
+        equipmentTooltipOwner = self
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:ClearLines()
+        if not isEnchanted then
+            GameTooltip:AddLine("未附魔", C.warning[1], C.warning[2], C.warning[3])
+        else
+            local source = enchantID and Addon.EnchantCatalog and Addon.EnchantCatalog[enchantID]
+            if source and source.itemID and source.itemID > 0 then
+                GameTooltip:SetHyperlink("item:" .. source.itemID)
+                GameTooltip:Show()
+                return
+            end
+            if source and source.spellID and source.spellID > 0 and GameTooltip.SetSpellByID then
+                GameTooltip:SetSpellByID(source.spellID)
+                GameTooltip:Show()
+                return
+            end
+            local liveInfo = enchantID and Addon.Snapshot:GetEnchantInfoFromLink(item and item.itemLink, enchantID)
+            local savedInfo = item and item.enchant
+            local detail = (liveInfo and liveInfo.detailText) or (savedInfo and savedInfo.tooltipText)
+            local name = (liveInfo and liveInfo.name) or (savedInfo and savedInfo.name)
+            GameTooltip:AddLine("当前附魔", C.accent[1], C.accent[2], C.accent[3])
+            GameTooltip:AddLine(detail or name or (enchantID and ("附魔记录 #" .. tostring(enchantID))) or "附魔信息未记录", C.text[1], C.text[2], C.text[3], true)
+        end
+        GameTooltip:Show()
+    end)
+    button:SetScript("OnLeave", HideTooltipIfOwned)
+end
+
+local function SetEngineeringTooltip(button, title, engineering, item, isInstalled)
+    button:EnableMouse(true)
+    button:SetScript("OnEnter", function(self)
+        equipmentTooltipOwner = self
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:ClearLines()
+        local effect = isInstalled and engineering and Addon.EngineeringCatalog and Addon.EngineeringCatalog[engineering.enchantID]
+        local spellIDs = effect and effect.spellIDs
+        local spellID = spellIDs and spellIDs[#spellIDs]
+        if spellID and spellID > 0 and GameTooltip.SetSpellByID then
+            GameTooltip:SetSpellByID(spellID)
+            GameTooltip:Show()
+            return
+        end
+        GameTooltip:AddLine(title or "工程强化", C.accent[1], C.accent[2], C.accent[3])
+        local detail = engineering and engineering.tooltipText
+        if detail and detail ~= "" and detail ~= engineering.name and detail ~= title then
+            GameTooltip:AddLine(detail, C.text[1], C.text[2], C.text[3], true)
+        end
+        GameTooltip:Show()
+    end)
+    button:SetScript("OnLeave", HideTooltipIfOwned)
 end
 
 local function SetNativeItemTooltip(button, item)
+    button:EnableMouse(true)
     button:SetScript("OnEnter", function(self)
         if not item or not item.itemLink then return end
+        equipmentTooltipOwner = self
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetHyperlink(item.itemLink)
         GameTooltip:Show()
     end)
-    button:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    button:SetScript("OnLeave", HideTooltipIfOwned)
 end
 
 local function SetSpellTooltip(button, entry)
@@ -532,6 +683,9 @@ local function EquipmentButton(parent, slotID)
     button:SetFrameLevel(parent.buildsEquipment.modelControl:GetFrameLevel() + 1)
     for _, gem in ipairs(button.gems) do gem:SetFrameLevel(button:GetFrameLevel() + 1) end
     button.enchant:SetFrameLevel(button:GetFrameLevel() + 1)
+    button.engineering:SetFrameLevel(button:GetFrameLevel() + 1)
+    button.buckle:SetFrameLevel(button:GetFrameLevel() + 1)
+    button.base:SetFrameLevel(button:GetFrameLevel() + 1)
     button.slotLabel = Text(button, Theme.Font.meta, C.muted, "RIGHT")
     button.slotLabel:SetWidth(30)
     parent.buildsEquipment.items[slotID] = button
@@ -573,23 +727,98 @@ local function PlaceEquipment(parent, snapshot)
         elseif side == "right" then button.slotLabel:SetPoint("LEFT", button, "RIGHT", 4, 0); button.slotLabel:SetJustifyH("LEFT")
         else button.slotLabel:SetPoint("TOP", button, "BOTTOM", 0, -4); button.slotLabel:SetJustifyH("CENTER") end
         button.slotLabel:SetText(SLOT_LABELS[slotID] or "")
-        button.icon:SetTexture(item and item.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+        button.icon:SetTexture(item and item.icon or nil)
         button.icon:SetDesaturated(not (item and item.itemLink))
         for gemIndex, gem in ipairs(button.gems) do
             local socket = item and item.gems and item.gems[gemIndex]
             gem:ClearAllPoints()
             if side == "left" or side == "weapon-right" then gem:SetPoint("TOPLEFT", button, "TOPRIGHT", 4 + (gemIndex - 1) * 17, -2)
             else gem:SetPoint("TOPRIGHT", button, "TOPLEFT", -4 - (gemIndex - 1) * 17, -2) end
+            local isEmpty = socket and not socket.itemLink
             gem.icon:SetTexture(socket and socket.icon or nil)
-            gem:SetShown(socket and socket.itemLink and true or false)
-            SetAugmentTooltip(gem, nil, nil, socket and socket.itemLink)
+            gem.icon:SetDesaturated(false)
+            gem.icon:SetAlpha(1)
+            if isEmpty then
+                local socketColor = EMPTY_SOCKET_COLORS[socket.socketType] or EMPTY_SOCKET_COLORS.unknown
+                gem:SetBackdropColor(socketColor[1], socketColor[2], socketColor[3], 0.55)
+                gem:SetBackdropBorderColor(socketColor[1], socketColor[2], socketColor[3], 1)
+            else
+                gem:SetBackdropColor(0, 0, 0, 0)
+                gem:SetBackdropBorderColor(C.line[1], C.line[2], C.line[3], 1)
+            end
+            gem:SetShown(socket and true or false)
+            local socketTitle
+            if socket then
+                socketTitle = socket.itemLink and (socket.itemName or ("宝石 #" .. tostring(socket.itemID or "?")))
+                    or ((SOCKET_LABELS[socket.socketType] or "宝石") .. "空孔")
+            end
+            SetAugmentTooltip(gem, socketTitle, socket and socket.itemLink)
         end
         button.enchant:ClearAllPoints()
-        if side == "left" or side == "weapon-right" then button.enchant:SetPoint("BOTTOMLEFT", button, "BOTTOMRIGHT", 4, 2)
-        else button.enchant:SetPoint("BOTTOMRIGHT", button, "BOTTOMLEFT", -4, 2) end
+        local isWaist = slotID == (INVSLOT_WAIST or 6)
+        local isRanged = slotID == (INVSLOT_RANGED or 18)
+        if side == "left" or side == "weapon-right" then button.enchant:SetPoint("BOTTOMLEFT", button, "BOTTOMRIGHT", isWaist and 21 or 4, 2)
+        else button.enchant:SetPoint("BOTTOMRIGHT", button, "BOTTOMLEFT", isWaist and -21 or -4, 2) end
         local enchant = item and item.enchant
-        button.enchant:SetShown(enchant and enchant.enchantID and enchant.enchantID > 0 or false)
-        SetAugmentTooltip(button.enchant, item, enchant and (enchant.name or ("#" .. enchant.enchantID)) or "附魔")
+        local enchantState = enchant and enchant.state or "not-applicable"
+        local enchantID = EnchantIDFromItem(item)
+        local isEnchanted = enchantID ~= nil or enchantState == "installed"
+        -- Legacy snapshots predate the applicability flag.  Preserve their
+        -- confirmed enchant display, but do not invent an "unenchanted" state
+        -- until a fresh capture records that this MoP slot supports one.
+        local canEnchant = isEnchanted or enchantState == "uninstalled" or enchantState == "base-missing"
+        button.enchant.icon:SetDesaturated(not isEnchanted)
+        button.enchant:SetBackdropBorderColor((isEnchanted and C.line or C.warning)[1], (isEnchanted and C.line or C.warning)[2], (isEnchanted and C.line or C.warning)[3], 1)
+        button.enchant:SetShown(canEnchant and true or false)
+        SetEnchantTooltip(button.enchant, item, enchantID, isEnchanted)
+        button.engineering:ClearAllPoints()
+        local engineering = item and item.engineering
+        local engineeringState = engineering and engineering.state or "not-applicable"
+        local isEngineeringInstalled = engineeringState == "installed"
+        local canEngineering = isEngineeringInstalled or engineeringState == "base-missing"
+        local engineeringTitle
+        local isBack = slotID == (INVSLOT_BACK or 15)
+        local isHand = slotID == (INVSLOT_HAND or 10)
+        local isHead = slotID == (INVSLOT_HEAD or 1)
+        if isWaist then
+            engineeringTitle = isEngineeringInstalled and ("当前腰带工程强化：" .. (engineering.name or "工程强化")) or "未添加腰带工程强化"
+        elseif isBack then
+            engineeringTitle = isEngineeringInstalled and ("当前披风工程强化：" .. (engineering.name or "工程强化")) or "未添加披风工程强化"
+        elseif isHead then
+            engineeringTitle = isEngineeringInstalled and ("当前头部工程强化：" .. (engineering.name or "工程强化")) or "未添加头部工程强化"
+        elseif isHand then
+            engineeringTitle = isEngineeringInstalled and ("当前手套工程强化：" .. (engineering.name or "工程强化")) or "未添加手套工程强化"
+        else
+            engineeringTitle = isEngineeringInstalled and ("当前工程瞄准镜：" .. (engineering.name or "工程强化")) or "未安装工程瞄准镜"
+        end
+        local engineeringOffset = (isHand and item and item.blacksmithSockets and item.blacksmithSockets.state == "base-missing") and 38 or 21
+        if side == "left" or side == "weapon-right" then button.engineering:SetPoint("BOTTOMLEFT", button, "BOTTOMRIGHT", engineeringOffset, 2)
+        else button.engineering:SetPoint("BOTTOMRIGHT", button, "BOTTOMLEFT", -engineeringOffset, 2) end
+        button.engineering.icon:SetDesaturated(not isEngineeringInstalled)
+        button.engineering:SetBackdropBorderColor((isEngineeringInstalled and C.line or C.warning)[1], (isEngineeringInstalled and C.line or C.warning)[2], (isEngineeringInstalled and C.line or C.warning)[3], 1)
+        -- Old snapshots may still mark the head slot as missing an engineering
+        -- enhancement. Show it only when an actual head effect was captured.
+        button.engineering:SetShown(isHead and isEngineeringInstalled or ((isWaist or isBack or isHand or isRanged) and canEngineering) or false)
+        SetEngineeringTooltip(button.engineering, engineeringTitle, engineering, item, isEngineeringInstalled)
+        button.base:ClearAllPoints()
+        local blacksmithSockets = item and item.blacksmithSockets
+        local blacksmithMissing = blacksmithSockets and blacksmithSockets.state == "base-missing"
+        local isBlacksmithSlot = slotID == (INVSLOT_WRIST or 9) or slotID == (INVSLOT_HAND or 10)
+        local baseOffset = (isWaist or isBlacksmithSlot) and 21 or 4
+        if side == "left" or side == "weapon-right" then button.base:SetPoint("BOTTOMLEFT", button, "BOTTOMRIGHT", baseOffset, 2)
+        else button.base:SetPoint("BOTTOMRIGHT", button, "BOTTOMLEFT", -baseOffset, 2) end
+        button.base:SetBackdropBorderColor(C.warning[1], C.warning[2], C.warning[3], 1)
+        button.base:SetShown(isBlacksmithSlot and blacksmithMissing and true or false)
+        SetAugmentTooltip(button.base, "未生成锻造额外孔")
+        button.buckle:ClearAllPoints()
+        if side == "left" or side == "weapon-right" then button.buckle:SetPoint("BOTTOMLEFT", button, "BOTTOMRIGHT", 4, 2)
+        else button.buckle:SetPoint("BOTTOMRIGHT", button, "BOTTOMLEFT", -4, 2) end
+        local beltBuckle = item and item.beltBuckle
+        local buckleMissing = beltBuckle and beltBuckle.state == "base-missing"
+        button.buckle.icon:SetDesaturated(true)
+        button.buckle:SetBackdropBorderColor(C.warning[1], C.warning[2], C.warning[3], 1)
+        button.buckle:SetShown(isWaist and item and item.itemLink and buckleMissing or false)
+        SetAugmentTooltip(button.buckle, "未打腰带扣")
         local red, green, blue = ItemBorderColor(item)
         button:SetBackdropColor(C.chrome[1], C.chrome[2], C.chrome[3], 1); button:SetBackdropBorderColor(red, green, blue, 1)
         SetNativeItemTooltip(button, item)
@@ -603,11 +832,20 @@ local function RefreshModel(parent, character, equipment)
     parent.buildsEquipment.modelControl:SetShown(available and true or false)
     parent.buildsEquipment.modelHint:SetShown(available and true or false)
     if not available then model:Hide(); return end
-    model:SetUnit("player")
+    local appearanceMode = Addon:GetSettings().appearanceMode
+    if model.buildsEquipmentSnapshot ~= equipment or model.buildsAppearanceMode ~= appearanceMode then
+        -- PlayerModel caches the rendered unit. Clear it when a fresh observed
+        -- equipment snapshot arrives so the mannequin doesn't wait for an
+        -- explicit "save build" refresh to rebuild its appearance.
+        if model.ClearModel then model:ClearModel() end
+        model:SetUnit("player")
+        model.buildsEquipmentSnapshot = equipment
+        model.buildsAppearanceMode = appearanceMode
+    end
     -- SetUnit renders the current transmogged unit. For the prototype view,
     -- TryOn the immutable saved item links over that model, which asks the
     -- native dress-up renderer for each base item's own appearance.
-    if Addon:GetSettings().appearanceMode == "prototype" and model.TryOn and equipment and equipment.slots then
+    if appearanceMode == "prototype" and model.TryOn and equipment and equipment.slots then
         for _, slotID in ipairs(SLOT_ORDER) do
             local item = equipment.slots[tostring(slotID)]
             if item and item.itemLink then pcall(model.TryOn, model, item.itemLink) end
@@ -747,11 +985,11 @@ local function SetupMainButtons(parent)
         -- Keep the page's layout state available to Core before it measures the
         -- next surface.  The refresh below may resize the shared account frame.
         Addon.buildsBuildCollapsed = parent.buildsBuildCollapsed
-        Core.AccountView:RefreshPage()
+        Core.AccountView:RefreshPage(true)
     end)
     toolbar.buildToggle:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:AddLine(parent.buildsBuildCollapsed and "展开天赋与雕文" or "折叠天赋与雕文，扩展装备视图")
+        GameTooltip:AddLine(parent.buildsBuildCollapsed and "展开天赋与雕文" or "收起天赋与雕文")
         GameTooltip:Show()
     end)
     toolbar.buildToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -822,13 +1060,12 @@ local function LayoutMain(parent)
     parent.buildsToolbar.specName:SetWidth(collapsed and 72 or 96)
     parent.buildsToolbar.status:SetWidth(collapsed and 132 or 180)
     parent.buildsToolbar.buildToggle:SetSize(44, Theme.Size.compact)
-    local equipmentRatio = 0.55
-    local equipmentWidth = math.floor((mainWidth - Theme.Space.sm * 3) * equipmentRatio)
+    local equipmentWidth = collapsed and FoldedEquipmentWidth() or math.floor((mainWidth - Theme.Space.sm * 3) * 0.55)
     parent.buildsConfirm:ClearAllPoints(); parent.buildsConfirm:SetPoint("BOTTOMLEFT", parent.buildsMain, "BOTTOMLEFT", Theme.Space.sm, Theme.Space.sm); parent.buildsConfirm:SetPoint("BOTTOMRIGHT", parent.buildsMain, "BOTTOMRIGHT", -Theme.Space.sm, Theme.Space.sm); parent.buildsConfirm:SetHeight(48)
     parent.buildsEquipment:ClearAllPoints(); parent.buildsEquipment:SetPoint("TOPLEFT", parent.buildsToolbar, "BOTTOMLEFT", 0, -Theme.Space.sm); parent.buildsEquipment:SetPoint("BOTTOMLEFT", parent.buildsConfirm, "TOPLEFT", 0, Theme.Space.sm)
     if collapsed then
-        parent.buildsEquipment:SetPoint("RIGHT", parent.buildsMain, "RIGHT", -Theme.Space.sm, 0)
-        parent.buildsEquipment.layoutWidth = mainWidth - Theme.Space.sm * 2
+        parent.buildsEquipment:SetWidth(equipmentWidth)
+        parent.buildsEquipment.layoutWidth = equipmentWidth
         parent.buildsBuild:Hide()
     else
         parent.buildsEquipment:SetWidth(equipmentWidth)
@@ -840,8 +1077,8 @@ local function LayoutMain(parent)
     parent.buildsEquipment.layoutHeight = parent.buildsEquipment:GetHeight()
     parent.buildsToolbar.appearance:ClearAllPoints(); parent.buildsToolbar.appearance:SetPoint("TOP", parent.buildsEquipment, "TOP", 0, -10)
     parent.buildsToolbar.buildToggle:ClearAllPoints()
-    -- The equipment pane keeps the same width in both modes, so it provides a
-    -- stable anchor for the fold control as the build pane comes and goes.
+    -- Anchor the control to the equipment pane so it remains usable after the
+    -- account window contracts to the folded layout width.
     parent.buildsToolbar.buildToggle:SetPoint("BOTTOMRIGHT", parent.buildsEquipment, "BOTTOMRIGHT", -8, 8)
 end
 
@@ -883,7 +1120,10 @@ function Page.Refresh(parent, context)
     if slot == "secondary" and not (record.slots and record.slots.secondary) then slot = "primary" end
     parent.buildsSlot = slot
     local slotData = record.slots and record.slots[slot]
-    local equipment = slotData and (slotData.confirmedEquipment or slotData.observedEquipment)
+    -- The active character's observation is the live source of truth for
+    -- sockets and profession bases.  A confirmed build remains the comparison
+    -- target, but must not conceal freshly scanned empty sockets.
+    local equipment = slotData and (IsCurrent(selected) and (slotData.observedEquipment or slotData.confirmedEquipment) or (slotData.confirmedEquipment or slotData.observedEquipment))
     parent.buildsToolbar.primary:SetState(slot == "primary" and "selected" or "default")
     parent.buildsToolbar.secondary:SetState(slot == "secondary" and "selected" or (record.slots and record.slots.secondary and "default" or "disabled"))
     local spec = slotData and slotData.specialization
@@ -1104,15 +1344,11 @@ function Page.RefreshPreview(parent, context)
     parent.buildsPreviewBody:ClearAllPoints(); parent.buildsPreviewBody:SetPoint("TOPLEFT", parent.buildsPreviewHeader, "BOTTOMLEFT", 0, 0); parent.buildsPreviewBody:SetSize(width, math.max(1, #characters * PreviewRowHeight(matrixMode))); parent.buildsPreviewBody:Show(); parent.buildsPreviewHeader:Show()
 end
 
-local EXPANDED_CONTENT_WIDTH = 1120
-
 local function FoldedContentWidth()
     local inset = Theme:GetMatrixInsets(false)
     local rosterWidth = 210
-    local expandedMainWidth = EXPANDED_CONTENT_WIDTH - inset.left - inset.right - rosterWidth - Theme.Space.sm
-    local equipmentWidth = math.floor((expandedMainWidth - Theme.Space.sm * 3) * 0.55)
-    -- The folded main panel is exactly the equipment pane plus its two outer
-    -- gutters.  This makes folding remove only the build column.
+    local equipmentWidth = FoldedEquipmentWidth()
+    -- The folded main panel fits the fixed-width equipment pane and gutters.
     return inset.left + rosterWidth + Theme.Space.sm + equipmentWidth + Theme.Space.sm * 2 + inset.right
 end
 

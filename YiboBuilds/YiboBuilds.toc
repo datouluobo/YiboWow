@@ -10,6 +10,10 @@
 ## LoadOnDemand: 0
 
 Bootstrap.lua
+Data\EnchantCatalog.lua
+Data\EngineeringCatalog.lua
+Data\ProfessionCatalog.lua
+Data\SocketEffectCatalog.lua
 Snapshot.lua
 AccountPage.lua
 CoreIntegration.lua

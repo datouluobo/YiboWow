@@ -82,7 +82,9 @@ frame:RegisterEvent("GLYPH_ADDED")
 frame:RegisterEvent("GLYPH_REMOVED")
 frame:RegisterEvent("USE_GLYPH")
 frame:RegisterEvent("SPELLS_CHANGED")
+frame:RegisterEvent("SKILL_LINES_CHANGED")
 frame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+frame:RegisterEvent("UNIT_INVENTORY_CHANGED")
 frame:RegisterEvent("PLAYER_LOGOUT")
 frame:SetScript("OnEvent", function(_, event, name)
     if event == "ADDON_LOADED" then
@@ -107,17 +109,15 @@ frame:SetScript("OnEvent", function(_, event, name)
         end
     elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then
         if Addon.Snapshot then Addon.Snapshot:HandleSpecChanged() end
-    elseif event == "PLAYER_TALENT_UPDATE" or event == "GLYPH_UPDATED" or event == "GLYPH_ADDED" or event == "GLYPH_REMOVED" or event == "USE_GLYPH" or event == "SPELLS_CHANGED" then
+    elseif event == "PLAYER_TALENT_UPDATE" or event == "GLYPH_UPDATED" or event == "GLYPH_ADDED" or event == "GLYPH_REMOVED" or event == "USE_GLYPH" or event == "SPELLS_CHANGED" or event == "SKILL_LINES_CHANGED" then
         -- USE_GLYPH refreshes the catalog when a glyph is learned without
         -- changing a socket. SPELLS_CHANGED covers the spellbook update path.
         if Addon.Snapshot then Addon.Snapshot:ScheduleCapture("glyph-catalog-update", 0.35) end
-    elseif event == "PLAYER_EQUIPMENT_CHANGED" then
-        -- Keep a single latest observation rather than an equipment history.
-        -- The short debounce absorbs multi-slot swaps and preserves the final
-        -- state even when the player later logs out on another character.
+    elseif event == "PLAYER_EQUIPMENT_CHANGED" or (event == "UNIT_INVENTORY_CHANGED" and name == "player") then
+        -- Capture immediately after the inventory event, then once more after
+        -- the client has settled item links, socket data and model updates.
         if Addon.Snapshot then
-            Addon.Snapshot:MarkEquipmentDirty()
-            Addon.Snapshot:ScheduleCapture("equipment-change", 0.4)
+            Addon.Snapshot:ScheduleEquipmentCapture()
         end
     elseif event == "PLAYER_LOGOUT" then
         if Addon.Snapshot then Addon.Snapshot:Capture("logout", true) end
