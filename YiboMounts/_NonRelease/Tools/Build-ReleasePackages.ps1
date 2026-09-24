@@ -53,7 +53,7 @@ try {
     $iconTarget = Join-Path $curseForgeStage "Media\\YiboMountsIcon-v1.tga"
     New-Item -ItemType Directory -Path (Split-Path $iconTarget -Parent) -Force | Out-Null
     Copy-Item -LiteralPath $iconSource -Destination $iconTarget
-    & robocopy $projectRoot $githubStage /E /R:1 /W:1 /NFL /NDL /NJH /NJS /NP /XD .git dist Builds tmp _NonRelease /XF AGENTS.md | Out-Null
+    & robocopy $projectRoot $githubStage /E /R:1 /W:1 /NFL /NDL /NJH /NJS /NP /XD .git dist Builds tmp _NonRelease /XF AGENTS.md _audit_worklist.tsv | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE" }
     Compress-Archive -LiteralPath $curseForgeStage -DestinationPath $curseForgeTemp -CompressionLevel Optimal
     Compress-Archive -LiteralPath $githubStage -DestinationPath $githubTemp -CompressionLevel Optimal

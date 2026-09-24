@@ -23,19 +23,26 @@ local function ReadMountState(journal, mountJournalID, expectedSpellID)
     local result = { journal.GetMountInfoByID(mountJournalID) }
     local spellID = result[2]
     local isFactionSpecific, faction = result[8], result[9]
-    local shouldHideOnChar, isCollected = result[10], result[11]
+    local isCollected = result[11]
     if type(expectedSpellID) == "number" and spellID ~= expectedSpellID then
         -- Journal IDs are client-owned and can point at a different entry on
         -- faction-specific/older clients. Never use that entry's state for
         -- the requested spell.
         return nil
     end
+    -- Collection state is independent of whether the journal hides this mount
+    -- for the current character. Only a confirmed opposite-faction restriction
+    -- makes a negative result unsafe to label as uncollected.
+    if isCollected == true then return true end
     if isFactionSpecific and type(faction) == "string" then
         local playerFaction = CurrentFaction()
         if playerFaction and faction:lower() ~= playerFaction then return nil end
+    elseif isFactionSpecific and type(faction) == "number" then
+        local playerFaction = CurrentFaction()
+        local mountFaction = faction == 0 and "horde" or (faction == 1 and "alliance" or nil)
+        if playerFaction and mountFaction and mountFaction ~= playerFaction then return nil end
     end
-    if shouldHideOnChar then return nil end
-    if type(isCollected) == "boolean" then return isCollected end
+    if isCollected == false then return false end
     return nil
 end
 

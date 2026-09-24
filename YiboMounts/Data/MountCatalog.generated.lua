@@ -1296,8 +1296,8 @@ NS.Data = {
             {
               kind = "store",
               labels = {
-                enUS = "Blizzard Store",
-                zhCN = "暴雪商城"
+                enUS = "Wrath of the Lich King Level 80 Boost Bundle (388 tier)",
+                zhCN = "WLK 80 级直升礼包（388 档）"
               },
               refID = nil
             }

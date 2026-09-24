@@ -4,11 +4,23 @@ local data = NS.Data or {}
 local mounts = data.mounts or {}
 local mountKeyBySpellID = data.mountKeyBySpellID or {}
 
+-- MoP Classic can report the modern journal spell ID for Celestial Steed
+-- while its supported tooltip record is keyed by the original spell ID.
+-- Keep this client alias in runtime lookup without admitting the excluded
+-- journal record into the player-facing catalogue.
+local spellIDAliases = {
+    [1239372] = 75614,
+}
+
 NS.Catalog = {}
 
 function NS.Catalog:GetBySpellID(spellID)
     if type(spellID) ~= "number" then return nil end
     local mountKey = mountKeyBySpellID[spellID]
+    if not mountKey then
+        local canonicalSpellID = spellIDAliases[spellID]
+        mountKey = canonicalSpellID and mountKeyBySpellID[canonicalSpellID]
+    end
     return mountKey and mounts[mountKey] or nil
 end
 

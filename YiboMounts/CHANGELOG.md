@@ -1,5 +1,19 @@
 # YiboMounts Changelog / 更新日志
 
+## 0.8.5
+
+### 中文
+
+- 修正坐骑日志隐藏标志对收藏状态的影响：未拥有坐骑正常显示；对立阵营限定仍避免误报。
+- 支持坐骑日志以数字阵营 ID 返回阵营限定信息。
+- 补充星骓对应 WLK 80 级直升礼包（388 档）的来源标注，并兼容当前客户端的坐骑法术 ID。
+
+### English
+
+- Corrected collection status handling for mounts hidden in the journal while retaining protection against opposing-faction false negatives.
+- Added support for numeric faction IDs returned by the Mount Journal.
+- Updated the Celestial Steed source label and added a runtime alias for its current client spell ID.
+
 ## 0.8.4
 
 ### 中文
