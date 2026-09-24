@@ -5,15 +5,65 @@ Addon.AccountPage = Page
 local Core = _G.YiboCore
 local Theme = Core.UITheme
 local C = Theme.Colors
-local ICON_SIZE = 40
+local ICON_SIZE = 42
+local AUGMENT_ICON_SIZE = 20
+local AUGMENT_ICON_GAP = 2
+local AUGMENT_EDGE_SIZE = 1
+-- Item icon art has a built-in bevel that varies slightly between assets.
+-- Crop the same thin rim from every gem so the socket border is the only
+-- visible frame and left/right rails have consistent visual weight.
+local GEM_ICON_TEXCOORD = { 0.08, 0.92, 0.08, 0.92 }
 local ROSTER_ROW_HEIGHT = 56
 local CATALOG_ROW_HEIGHT = 56
 local EXPANDED_CONTENT_WIDTH = 1120
-local EMPTY_SOCKET_COLORS = {
-    meta = { 0.75, 0.75, 0.75 }, red = { 0.92, 0.18, 0.18 }, yellow = { 0.96, 0.76, 0.12 },
-    blue = { 0.16, 0.48, 0.96 }, prismatic = { 0.72, 0.42, 0.95 }, sha = { 0.72, 0.2, 0.9 }, unknown = { 0.72, 0.72, 0.72 },
+local SOCKET_BORDER_COLORS = {
+    red = { 0.92, 0.18, 0.18 }, yellow = { 0.96, 0.76, 0.12 }, blue = { 0.16, 0.48, 0.96 },
+    prismatic = { 0.91, 0.96, 1.00 }, meta = { 0.78, 0.48, 1.00 }, sha = { 0.88, 0.20, 0.72 },
+    unknown = { 0.72, 0.72, 0.72 },
 }
 local SOCKET_LABELS = { meta = "多彩", red = "红色", yellow = "黄色", blue = "蓝色", prismatic = "棱彩", sha = "染煞", unknown = "宝石" }
+local function PixelRound(value, frame)
+    local scale = frame and frame.GetEffectiveScale and frame:GetEffectiveScale()
+        or (UIParent and UIParent.GetEffectiveScale and UIParent:GetEffectiveScale()) or 1
+    return math.floor(value * scale + 0.5) / scale
+end
+local function CreatePixelBorder(frame)
+    local border = {}
+    for _, edge in ipairs({ "top", "right", "bottom", "left" }) do
+        local texture = frame:CreateTexture(nil, "OVERLAY")
+        texture:SetDrawLayer("OVERLAY", 2)
+        texture:SetTexture("Interface\\Buttons\\WHITE8x8")
+        if edge == "top" then
+            texture:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+            texture:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
+            texture:SetHeight(PixelRound(AUGMENT_EDGE_SIZE, frame))
+        elseif edge == "right" then
+            texture:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
+            texture:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+            texture:SetWidth(PixelRound(AUGMENT_EDGE_SIZE, frame))
+        elseif edge == "bottom" then
+            texture:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
+            texture:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+            texture:SetHeight(PixelRound(AUGMENT_EDGE_SIZE, frame))
+        else
+            texture:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+            texture:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
+            texture:SetWidth(PixelRound(AUGMENT_EDGE_SIZE, frame))
+        end
+        border[edge] = texture
+    end
+    return border
+end
+local function SetPixelBorderColor(border, color)
+    for _, texture in pairs(border) do texture:SetVertexColor(color[1], color[2], color[3], 1) end
+end
+local function RefreshPixelBorder(border, frame)
+    local edgeSize = PixelRound(AUGMENT_EDGE_SIZE, frame)
+    for edge, texture in pairs(border) do
+        if edge == "top" or edge == "bottom" then texture:SetHeight(edgeSize)
+        else texture:SetWidth(edgeSize) end
+    end
+end
 local SLOT_LABELS = {
     [INVSLOT_HEAD or 1] = "头", [INVSLOT_NECK or 2] = "颈", [INVSLOT_SHOULDER or 3] = "肩",
     [INVSLOT_SHIRT or 4] = "衬", [INVSLOT_CHEST or 5] = "胸", [INVSLOT_WAIST or 6] = "腰",
@@ -111,29 +161,29 @@ local function ItemBorderColor(item)
 end
 
 local function CreateIconButton(parent)
-    local button = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    local button = CreateFrame("Button", nil, parent)
     button:SetSize(ICON_SIZE, ICON_SIZE)
-    button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    button.border = CreatePixelBorder(button)
     button.icon = button:CreateTexture(nil, "ARTWORK")
-    button.icon:SetPoint("TOPLEFT", 2, -2); button.icon:SetPoint("BOTTOMRIGHT", -2, 2)
+    button.icon:SetAllPoints(button)
+    button.socketRail = CreateFrame("Frame", nil, parent)
+    button.socketRail:SetFrameLevel(button:GetFrameLevel())
+    button.socketRail:Hide()
     button.gems = {}
     for index = 1, 4 do
-        local gem = CreateFrame("Button", nil, parent, "BackdropTemplate")
-        gem:SetSize(16, 16)
-        gem:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        gem:SetBackdropBorderColor(C.line[1], C.line[2], C.line[3], 1)
-        gem.icon = gem:CreateTexture(nil, "ARTWORK"); gem.icon:SetPoint("TOPLEFT", 1, -1); gem.icon:SetPoint("BOTTOMRIGHT", -1, 1)
+        local gem = CreateFrame("Button", nil, button.socketRail)
+        gem:SetSize(PixelRound(AUGMENT_ICON_SIZE, gem), PixelRound(AUGMENT_ICON_SIZE, gem))
+        gem.border = CreatePixelBorder(gem)
+        gem.icon = gem:CreateTexture(nil, "ARTWORK")
+        gem.icon:SetAllPoints(gem)
         button.gems[index] = gem
     end
-    button.enchant = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    button.enchant:SetSize(16, 16)
-    button.enchant:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    button.enchant:SetBackdropBorderColor(C.warning[1], C.warning[2], C.warning[3], 1)
+    button.enchant = CreateFrame("Button", nil, parent)
+    button.enchant:SetSize(PixelRound(AUGMENT_ICON_SIZE, button.enchant), PixelRound(AUGMENT_ICON_SIZE, button.enchant))
     button.enchant.icon = button.enchant:CreateTexture(nil, "ARTWORK")
     button.enchant.icon:SetAllPoints(); button.enchant.icon:SetTexture("Interface\\Icons\\Trade_Engraving")
-    button.engineering = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    button.engineering:SetSize(16, 16)
-    button.engineering:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    button.engineering = CreateFrame("Button", nil, parent)
+    button.engineering:SetSize(PixelRound(AUGMENT_ICON_SIZE, button.engineering), PixelRound(AUGMENT_ICON_SIZE, button.engineering))
     button.engineering.icon = button.engineering:CreateTexture(nil, "ARTWORK")
     button.engineering.icon:SetAllPoints(); button.engineering.icon:SetTexture("Interface\\Icons\\Trade_Engineering")
     button.buckle = CreateFrame("Button", nil, parent, "BackdropTemplate")
@@ -696,7 +746,13 @@ local function PlaceEquipment(parent, snapshot)
     local box = parent.buildsEquipment
     local boxHeight = box.layoutHeight or box:GetHeight() or 500
     local rowHeight = math.max(39, math.min(80, math.floor((boxHeight - 125) / 8)))
-    local iconSize = math.min(ICON_SIZE, rowHeight - 5)
+    local maxIconSize = math.min(ICON_SIZE, rowHeight - 5)
+    local augmentSize = math.min(AUGMENT_ICON_SIZE, math.floor((maxIconSize - 2) / 2))
+    local iconSize = augmentSize * 2 + 2
+    local currentRowEnd = 12 + 7 * rowHeight + iconSize
+    local weaponStart = boxHeight - 30 - iconSize
+    local availableRowExtra = math.max(0, math.floor((weaponStart - currentRowEnd - 2) / 7))
+    local rowStep = rowHeight + math.min(4, availableRowExtra)
     local boxWidth = box.layoutWidth or box:GetWidth() or 360
     local left, right = 42, boxWidth - iconSize - 42
     for _, slotID in ipairs(SLOT_ORDER) do
@@ -717,10 +773,12 @@ local function PlaceEquipment(parent, snapshot)
             -- The icon pair has one compact intentional gap; only the gem and
             -- enchant rails extend outward from it.
             local weaponGap = Theme.Space.sm
-            local weaponOffset = math.floor((iconSize + weaponGap) / 2)
-            button:SetPoint("BOTTOM", box, "BOTTOM", side == "weapon-left" and -weaponOffset or weaponOffset, 30)
+            local previousWeaponSize = math.min(ICON_SIZE - 2, rowHeight - 5)
+            local weaponOffset = math.floor((previousWeaponSize + weaponGap) / 2)
+            local weaponBottomOffset = PixelRound(30 + (previousWeaponSize - iconSize) / 2, button)
+            button:SetPoint("BOTTOM", box, "BOTTOM", side == "weapon-left" and -weaponOffset or weaponOffset, weaponBottomOffset)
         else
-            button:SetPoint("TOPLEFT", box, "TOPLEFT", side == "left" and left or right, -12 - (visualIndex - 1) * rowHeight)
+            button:SetPoint("TOPLEFT", box, "TOPLEFT", side == "left" and left or right, -12 - (visualIndex - 1) * rowStep)
         end
         button.slotLabel:ClearAllPoints()
         if side == "left" then button.slotLabel:SetPoint("RIGHT", button, "LEFT", -4, 0); button.slotLabel:SetJustifyH("RIGHT")
@@ -729,23 +787,45 @@ local function PlaceEquipment(parent, snapshot)
         button.slotLabel:SetText(SLOT_LABELS[slotID] or "")
         button.icon:SetTexture(item and item.icon or nil)
         button.icon:SetDesaturated(not (item and item.itemLink))
+        RefreshPixelBorder(button.border, button)
+        local itemBorderRed, itemBorderGreen, itemBorderBlue = ItemBorderColor(item)
+        SetPixelBorderColor(button.border, { itemBorderRed, itemBorderGreen, itemBorderBlue })
+        local socketCount = item and item.gems and #item.gems or 0
+        local augmentSize = math.min(PixelRound(AUGMENT_ICON_SIZE, button), PixelRound(iconSize, button))
+        local gemSize = augmentSize
+        local gemGap = PixelRound(AUGMENT_ICON_GAP, button.socketRail)
+        local gemStep = gemSize + gemGap
+        local railWidth = socketCount > 0 and (socketCount * gemSize + (socketCount - 1) * gemGap) or gemSize
+        local rowOutset = PixelRound(math.max(0, 2 * augmentSize - iconSize + PixelRound(2, button)), button)
+        local socketOutset = PixelRound(rowOutset / 2, button)
+        local effectOutset = rowOutset - socketOutset
+        button.socketRail:ClearAllPoints()
+        button.socketRail:SetSize(railWidth, gemSize)
+        button.socketRail:SetFrameLevel(button:GetFrameLevel())
+        if side == "left" or side == "weapon-right" then
+            button.socketRail:SetPoint("TOPLEFT", button, "TOPRIGHT", PixelRound(4, button), socketOutset)
+        else
+            button.socketRail:SetPoint("TOPRIGHT", button, "TOPLEFT", -PixelRound(4, button), socketOutset)
+        end
+        button.socketRail:SetShown(socketCount > 0)
         for gemIndex, gem in ipairs(button.gems) do
             local socket = item and item.gems and item.gems[gemIndex]
             gem:ClearAllPoints()
-            if side == "left" or side == "weapon-right" then gem:SetPoint("TOPLEFT", button, "TOPRIGHT", 4 + (gemIndex - 1) * 17, -2)
-            else gem:SetPoint("TOPRIGHT", button, "TOPLEFT", -4 - (gemIndex - 1) * 17, -2) end
+            gem:SetSize(gemSize, gemSize)
+            if side == "left" or side == "weapon-right" then gem:SetPoint("TOPLEFT", button.socketRail, "TOPLEFT", (gemIndex - 1) * gemStep, 0)
+            else gem:SetPoint("TOPRIGHT", button.socketRail, "TOPRIGHT", -(gemIndex - 1) * gemStep, 0) end
+            RefreshPixelBorder(gem.border, gem)
+            gem.icon:ClearAllPoints()
+            gem.icon:SetAllPoints(gem)
+            gem.icon:SetTexCoord(unpack(GEM_ICON_TEXCOORD))
             local isEmpty = socket and not socket.itemLink
-            gem.icon:SetTexture(socket and socket.icon or nil)
+            -- Empty sockets are represented by the requirement-colored frame
+            -- alone; the game's native empty-socket glyph is not a gem icon.
+            gem.icon:SetTexture(socket and not isEmpty and socket.icon or nil)
             gem.icon:SetDesaturated(false)
             gem.icon:SetAlpha(1)
-            if isEmpty then
-                local socketColor = EMPTY_SOCKET_COLORS[socket.socketType] or EMPTY_SOCKET_COLORS.unknown
-                gem:SetBackdropColor(socketColor[1], socketColor[2], socketColor[3], 0.55)
-                gem:SetBackdropBorderColor(socketColor[1], socketColor[2], socketColor[3], 1)
-            else
-                gem:SetBackdropColor(0, 0, 0, 0)
-                gem:SetBackdropBorderColor(C.line[1], C.line[2], C.line[3], 1)
-            end
+            local socketColor = socket and SOCKET_BORDER_COLORS[socket.socketType] or SOCKET_BORDER_COLORS.unknown
+            SetPixelBorderColor(gem.border, socketColor)
             gem:SetShown(socket and true or false)
             local socketTitle
             if socket then
@@ -755,10 +835,12 @@ local function PlaceEquipment(parent, snapshot)
             SetAugmentTooltip(gem, socketTitle, socket and socket.itemLink)
         end
         button.enchant:ClearAllPoints()
+        button.enchant:SetSize(augmentSize, augmentSize)
         local isWaist = slotID == (INVSLOT_WAIST or 6)
         local isRanged = slotID == (INVSLOT_RANGED or 18)
-        if side == "left" or side == "weapon-right" then button.enchant:SetPoint("BOTTOMLEFT", button, "BOTTOMRIGHT", isWaist and 21 or 4, 2)
-        else button.enchant:SetPoint("BOTTOMRIGHT", button, "BOTTOMLEFT", isWaist and -21 or -4, 2) end
+        local enchantOffset = isWaist and (augmentSize + PixelRound(1, button)) or PixelRound(4, button)
+        if side == "left" or side == "weapon-right" then button.enchant:SetPoint("BOTTOMLEFT", button, "BOTTOMRIGHT", enchantOffset, -effectOutset)
+        else button.enchant:SetPoint("BOTTOMRIGHT", button, "BOTTOMLEFT", -enchantOffset, -effectOutset) end
         local enchant = item and item.enchant
         local enchantState = enchant and enchant.state or "not-applicable"
         local enchantID = EnchantIDFromItem(item)
@@ -768,7 +850,6 @@ local function PlaceEquipment(parent, snapshot)
         -- until a fresh capture records that this MoP slot supports one.
         local canEnchant = isEnchanted or enchantState == "uninstalled" or enchantState == "base-missing"
         button.enchant.icon:SetDesaturated(not isEnchanted)
-        button.enchant:SetBackdropBorderColor((isEnchanted and C.line or C.warning)[1], (isEnchanted and C.line or C.warning)[2], (isEnchanted and C.line or C.warning)[3], 1)
         button.enchant:SetShown(canEnchant and true or false)
         SetEnchantTooltip(button.enchant, item, enchantID, isEnchanted)
         button.engineering:ClearAllPoints()
@@ -791,11 +872,24 @@ local function PlaceEquipment(parent, snapshot)
         else
             engineeringTitle = isEngineeringInstalled and ("当前工程瞄准镜：" .. (engineering.name or "工程强化")) or "未安装工程瞄准镜"
         end
-        local engineeringOffset = (isHand and item and item.blacksmithSockets and item.blacksmithSockets.state == "base-missing") and 38 or 21
-        if side == "left" or side == "weapon-right" then button.engineering:SetPoint("BOTTOMLEFT", button, "BOTTOMRIGHT", engineeringOffset, 2)
-        else button.engineering:SetPoint("BOTTOMRIGHT", button, "BOTTOMLEFT", -engineeringOffset, 2) end
+        local beltBuckle = item and item.beltBuckle
+        local buckleMissing = beltBuckle and beltBuckle.state == "base-missing"
+        local engineeringOffset
+        if isWaist and not canEnchant and not buckleMissing then
+            -- A belt has no ordinary enchant slot. When engineering is its
+            -- only lower-row effect, place it beside the belt instead of
+            -- reserving the absent enchant position.
+            engineeringOffset = PixelRound(4, button)
+        else
+            engineeringOffset = PixelRound((isHand and item and item.blacksmithSockets and item.blacksmithSockets.state == "base-missing") and 38 or (augmentSize + 1), button)
+        end
+        if canEnchant then
+            engineeringOffset = math.max(engineeringOffset, enchantOffset + augmentSize + PixelRound(AUGMENT_ICON_GAP, button))
+        end
+        button.engineering:SetSize(augmentSize, augmentSize)
+        if side == "left" or side == "weapon-right" then button.engineering:SetPoint("BOTTOMLEFT", button, "BOTTOMRIGHT", engineeringOffset, -effectOutset)
+        else button.engineering:SetPoint("BOTTOMRIGHT", button, "BOTTOMLEFT", -engineeringOffset, -effectOutset) end
         button.engineering.icon:SetDesaturated(not isEngineeringInstalled)
-        button.engineering:SetBackdropBorderColor((isEngineeringInstalled and C.line or C.warning)[1], (isEngineeringInstalled and C.line or C.warning)[2], (isEngineeringInstalled and C.line or C.warning)[3], 1)
         -- Old snapshots may still mark the head slot as missing an engineering
         -- enhancement. Show it only when an actual head effect was captured.
         button.engineering:SetShown(isHead and isEngineeringInstalled or ((isWaist or isBack or isHand or isRanged) and canEngineering) or false)
@@ -813,14 +907,10 @@ local function PlaceEquipment(parent, snapshot)
         button.buckle:ClearAllPoints()
         if side == "left" or side == "weapon-right" then button.buckle:SetPoint("BOTTOMLEFT", button, "BOTTOMRIGHT", 4, 2)
         else button.buckle:SetPoint("BOTTOMRIGHT", button, "BOTTOMLEFT", -4, 2) end
-        local beltBuckle = item and item.beltBuckle
-        local buckleMissing = beltBuckle and beltBuckle.state == "base-missing"
         button.buckle.icon:SetDesaturated(true)
         button.buckle:SetBackdropBorderColor(C.warning[1], C.warning[2], C.warning[3], 1)
         button.buckle:SetShown(isWaist and item and item.itemLink and buckleMissing or false)
         SetAugmentTooltip(button.buckle, "未打腰带扣")
-        local red, green, blue = ItemBorderColor(item)
-        button:SetBackdropColor(C.chrome[1], C.chrome[2], C.chrome[3], 1); button:SetBackdropBorderColor(red, green, blue, 1)
         SetNativeItemTooltip(button, item)
         button:Show(); button.slotLabel:Show()
     end

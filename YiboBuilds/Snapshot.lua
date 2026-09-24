@@ -280,7 +280,12 @@ local function ReadSocketTypes(slotID, itemLink)
                         socketType = known[normalized]
                     end
                     if socketType then apiSockets[#apiSockets + 1] = socketType
-                    elseif line.gemIcon then apiSockets[#apiSockets + 1] = "unknown" end
+                    else
+                        -- A GemSocket line is evidence of a real socket even
+                        -- when this client returns a numeric/unrecognized
+                        -- socketType. Empty sockets have no gemIcon either.
+                        apiSockets[#apiSockets + 1] = "unknown"
+                    end
                 else
                     Add(apiSockets, line.leftText)
                     if line.rightText ~= line.leftText then Add(apiSockets, line.rightText) end
@@ -308,10 +313,23 @@ local function ReadSocketTypes(slotID, itemLink)
         if #frameSockets > #sockets then sockets = frameSockets end
     end
 
-    -- In MoP, item tooltip socket lines can omit profession-added sockets on
-    -- individual slots. GetItemStats exposes the complete socket counts even
-    -- when the gem itself is absent; merge only the missing counts so glove
-    -- and wrist blacksmith sockets follow the same path as native sockets.
+    local isWeaponSlot = slotID == (INVSLOT_MAINHAND or 16) or slotID == (INVSLOT_OFFHAND or 17)
+    if isWeaponSlot then
+        local uniqueSha, shaSeen = {}, false
+        for _, socketType in ipairs(sockets) do
+            -- Sha-touched weapons have one dedicated socket. Some MoP client
+            -- tooltip paths report that same empty socket twice.
+            if socketType ~= "sha" or not shaSeen then
+                uniqueSha[#uniqueSha + 1] = socketType
+                if socketType == "sha" then shaSeen = true end
+            end
+        end
+        sockets = uniqueSha
+    end
+
+    -- GetItemStats supplies base-item socket counts. Use it to fill native
+    -- socket rows omitted by a client tooltip, while preserving every row the
+    -- tooltip reported because profession-added sockets can exceed that base.
     if itemLink and type(GetItemStats) == "function" then
         local ok, stats = pcall(GetItemStats, itemLink)
         if ok and type(stats) == "table" then
@@ -319,26 +337,43 @@ local function ReadSocketTypes(slotID, itemLink)
             local expectedTotal = 0
             for _, definition in ipairs(SOCKET_STAT_KEYS) do
                 local count = SocketStatCount(stats, definition)
+                if isWeaponSlot and definition.socketType == "sha" then count = math.min(count, 1) end
                 expected[definition.socketType] = count
                 expectedTotal = expectedTotal + count
             end
             if expectedTotal > 0 then
-                local complete, observed, shaTouchedSeen = {}, {}, false
+                local complete, observed = {}, {}
+                local unknownCount, extraPrismaticIndex = 0, nil
                 for _, socketType in ipairs(sockets) do
-                    observed[socketType] = (observed[socketType] or 0) + 1
-                    if socketType == "sha" then
-                        if not shaTouchedSeen and observed[socketType] <= (expected[socketType] or 0) then
-                            complete[#complete + 1] = socketType
-                            shaTouchedSeen = true
-                        end
-                    elseif socketType ~= "unknown" and observed[socketType] <= (expected[socketType] or 0) then
-                        complete[#complete + 1] = socketType
+                    complete[#complete + 1] = socketType
+                    if socketType == "unknown" then
+                        unknownCount = unknownCount + 1
+                    else
+                        observed[socketType] = (observed[socketType] or 0) + 1
                     end
                 end
+                -- Blacksmith adds its prismatic socket after the base item
+                -- sockets. If this client reports that row but omits a native
+                -- empty socket row, restore the native row before the added
+                -- socket so item-link gem indexes still line up.
+                local isExtraSocketSlot = slotID == (INVSLOT_WAIST or 6)
+                    or slotID == (INVSLOT_WRIST or 9) or slotID == (INVSLOT_HAND or 10)
+                if isExtraSocketSlot and (expected.prismatic or 0) == 0 then
+                    for index, socketType in ipairs(complete) do
+                        if socketType == "prismatic" then extraPrismaticIndex = index; break end
+                    end
+                end
+                local missingRows = {}
+                local unknownCanStandForNative = unknownCount
                 for _, definition in ipairs(SOCKET_STAT_KEYS) do
-                    local missing = (expected[definition.socketType] or 0) - (observed[definition.socketType] or 0)
-                    if definition.socketType == "sha" and shaTouchedSeen then missing = 0 end
-                    for _ = 1, math.max(0, missing) do complete[#complete + 1] = definition.socketType end
+                    local missing = math.max(0, (expected[definition.socketType] or 0) - (observed[definition.socketType] or 0))
+                    local representedByUnknown = math.min(unknownCanStandForNative, missing)
+                    unknownCanStandForNative = unknownCanStandForNative - representedByUnknown
+                    for _ = 1, missing - representedByUnknown do missingRows[#missingRows + 1] = definition.socketType end
+                end
+                if #missingRows > 0 then
+                    local insertAt = extraPrismaticIndex or (#complete + 1)
+                    for index = #missingRows, 1, -1 do table.insert(complete, insertAt, missingRows[index]) end
                 end
                 sockets = complete
             end
@@ -709,11 +744,31 @@ local function ReadEquipment(reason)
         }
         if link then
             local socketTypes = ReadSocketTypes(slotID, link)
+            local linkGems = ItemGemLinksFromLink(link)
+            local observedGemLinks = {}
+            -- On some MoP clients GetItemGem can read an installed gem even
+            -- when both TooltipInfo and the hyperlink omit its socket row.
+            -- Seed the socket sequence before iterating it, otherwise this
+            -- API is never queried when the tooltip returned no rows.
+            if GetItemGem then
+                for gemIndex = 1, 4 do
+                    local _, observedLink = GetItemGem(link, gemIndex)
+                    if observedLink then
+                        observedGemLinks[gemIndex] = observedLink
+                        linkGems[gemIndex] = observedLink
+                        socketTypes[gemIndex] = socketTypes[gemIndex] or "unknown"
+                    end
+                end
+            end
+            local highestGemIndex = 0
+            for gemIndex = 1, 4 do
+                if linkGems[gemIndex] or observedGemLinks[gemIndex] then highestGemIndex = gemIndex end
+            end
+            for gemIndex = 1, highestGemIndex do socketTypes[gemIndex] = socketTypes[gemIndex] or "unknown" end
             local hasBeltBuckle = false
             local hasBlacksmithSocket = false
-            local linkGems = ItemGemLinksFromLink(link)
             local nativeSocketCount = 0
-            if slotID == (INVSLOT_WAIST or 6) and type(GetItemStats) == "function" then
+            if type(GetItemStats) == "function" then
                 local ok, stats = pcall(GetItemStats, link)
                 if ok and type(stats) == "table" then
                     for _, definition in ipairs(SOCKET_STAT_KEYS) do
@@ -721,28 +776,26 @@ local function ReadEquipment(reason)
                     end
                 end
             end
-            -- An installed buckle is represented by an extra socket position in
-            -- the item link. Some MoP clients expose its GemSocket line without
-            -- socketType, so compare it with the item's native socket count.
+            -- Item links preserve installed gems even when tooltip data omits
+            -- the corresponding socket row. Keep those positions so sockets
+            -- beyond the item's base socket count remain visible.
             for gemIndex = 1, 4 do
-                if linkGems[gemIndex] and not socketTypes[gemIndex] then
-                    socketTypes[gemIndex] = gemIndex > nativeSocketCount and slotID == (INVSLOT_WAIST or 6) and "prismatic" or "unknown"
-                elseif slotID == (INVSLOT_WAIST or 6) and socketTypes[gemIndex] == "unknown" and gemIndex > nativeSocketCount then
-                    socketTypes[gemIndex] = "prismatic"
+                if linkGems[gemIndex] and not socketTypes[gemIndex] then socketTypes[gemIndex] = "unknown" end
+                if gemIndex > nativeSocketCount and socketTypes[gemIndex] then
+                    if slotID == (INVSLOT_WAIST or 6)
+                        or slotID == (INVSLOT_WRIST or 9) or slotID == (INVSLOT_HAND or 10) then
+                        socketTypes[gemIndex] = "prismatic"
+                    end
                 end
             end
             for gemIndex, socketType in ipairs(socketTypes) do
-                local gemLink
-                if GetItemGem then
-                    local _, observedLink = GetItemGem(link, gemIndex)
-                    gemLink = observedLink
-                end
-                gemLink = gemLink or linkGems[gemIndex]
+                local gemLink = observedGemLinks[gemIndex] or linkGems[gemIndex]
                 local isBeltBuckle = slotID == (INVSLOT_WAIST or 6) and socketType == "prismatic"
                 local blacksmithSlot = slotID == (INVSLOT_WRIST or 9) and 3717
                     or slotID == (INVSLOT_HAND or 10) and 3723
                 local isBlacksmithSocket = blacksmithSlot and SOCKET_EFFECT_CATALOG[blacksmithSlot]
-                    and (hasBlacksmithSockets or socketType == "prismatic") and socketType == "prismatic" or false
+                    and ((gemIndex > nativeSocketCount and (hasBlacksmithSockets or socketType == "prismatic"))
+                        or ((hasBlacksmithSockets or socketType == "prismatic") and socketType == "prismatic")) or false
                 hasBeltBuckle = hasBeltBuckle or isBeltBuckle
                 hasBlacksmithSocket = hasBlacksmithSocket or isBlacksmithSocket
                 entry.gems[gemIndex] = {

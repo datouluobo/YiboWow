@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.2.0
+
+- Added equipment enhancement detection for gems, belt buckles, blacksmith sockets, enchants, and engineering effects.
+- Added versioned MoP enchant and engineering catalogs with equipment tooltips.
+- Fixed missing and duplicated socket rows, including blacksmith-added sockets and Sha-touched weapon sockets.
+- Refined equipment and socket icon sizing, alignment, and socket requirement borders.
+
+### 中文更新日志
+
+- 增加宝石、腰带扣、锻造孔、附魔和工程强化的装备识别与状态显示。
+- 增加 MoP 附魔和工程强化目录及装备 Tooltip。
+- 修复孔位遗漏与重复显示，包括锻造额外孔和染煞武器孔。
+- 调整装备与孔位图标的尺寸、对齐和孔位要求边框。
+
 ## 1.1.0
 
 - Added persistent current/backup equipment and specialization mode switching.

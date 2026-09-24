@@ -1,4 +1,26 @@
-# YiboBuilds 1.1.0
+# YiboBuilds 1.2.0
+
+## 1.2.0
+
+YiboBuilds now detects and displays equipment enhancements throughout the character equipment view.
+
+- Shows socketed gems and empty sockets with borders that communicate each socket's requirement.
+- Detects belt buckles, blacksmith-added sockets, enchants, and engineering effects.
+- Includes versioned MoP enchant and engineering catalogs with equipment tooltips.
+- Fixes missing or duplicate socket rows, including Sha-touched weapon sockets.
+- Refines equipment and socket icon sizing and alignment.
+
+## 中文更新说明
+
+YiboBuilds 现在会在角色装备区识别并显示装备强化状态。
+
+- 显示已镶嵌宝石和空孔，并以边框表达孔位要求。
+- 识别腰带扣、锻造额外孔、附魔和工程强化。
+- 加入 MoP 附魔与工程强化目录及装备 Tooltip。
+- 修复孔位遗漏或重复显示，包括染煞武器孔。
+- 优化装备与孔位图标的尺寸和对齐。
+
+---
 
 ## 1.1.0
 
