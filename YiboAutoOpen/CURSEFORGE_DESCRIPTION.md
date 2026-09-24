@@ -8,6 +8,8 @@ YiboAutoOpen safely opens container items that **you explicitly add to its catal
 - Scans existing bags after login by default.
 - Lets you add items by link, item ID, name, or drag-and-drop in the settings panel.
 - Provides a paged catalog with item-name refresh and per-session retry reset.
+- Moves a failed item to the end of the queue so other catalog items still get a chance to open.
+- Rechecks sensitive UI state after instance/world transitions and manual refresh, avoiding stale pauses when a close event was missed.
 - Supports optional YiboCore integration for the unified settings workbench.
 - Works without YiboCore through slash commands.
 
@@ -15,7 +17,7 @@ YiboAutoOpen safely opens container items that **you explicitly add to its catal
 
 YiboAutoOpen pauses instead of taking risky actions while you are in combat, dead, in a vehicle, casting, viewing loot, using sensitive interfaces such as merchants or banks, or below the configured generic-bag free-space threshold.
 
-It does not change Auto Loot, click confirmation dialogs, choose rewards, or discover and open unknown containers. If one catalogued item fails twice in a row, it is skipped only for the current login session.
+It does not change Auto Loot, click confirmation dialogs, choose rewards, or discover and open unknown containers. Failed items are retried independently and isolated without blocking other catalog items. Combat, loading, active sensitive interfaces, and low free space remain safety pauses.
 
 ## Commands
 
@@ -40,6 +42,7 @@ Yibo 自动开包只会开启**你主动加入目录**的容器物品。它使�
 - 默认在登录后扫描背包中已有的目录物品。
 - 支持通过物品链接、ID、名称，或设置页拖放背包物品加入目录。
 - 目录提供分页、物品名称刷新，以及手动清除本次登录隔离。
+- 失败物品移至队尾，其它目录物品继续处理；副本/世界切换和手动刷新会重新核验敏感界面状态。
 - 可选接入 YiboCore 的统一设置工作台。
 - 未安装 YiboCore 时仍可通过 Slash 命令完整使用。
 
@@ -47,7 +50,7 @@ Yibo 自动开包只会开启**你主动加入目录**的容器物品。它使�
 
 战斗、死亡、载具、施法、拾取窗口、商店/银行等敏感界面，或通用背包空位低于设定阈值时，插件会暂停，不会冒险操作。
 
-插件不会修改自动拾取设置、点击确认框、选择奖励，也不会猜测或开启未加入目录的未知容器。单个目录物品连续失败两次后，只会在本次登录期间跳过。
+插件不会修改自动拾取设置、点击确认框、选择奖励，也不会猜测或开启未加入目录的未知容器。失败按物品独立重试和隔离，不会阻塞其它目录物品；战斗、读条、实际打开的敏感界面和空位不足仍会触发安全暂停。
 
 ## 命令
 

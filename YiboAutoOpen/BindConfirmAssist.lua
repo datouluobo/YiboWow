@@ -86,7 +86,13 @@ function Assist:Cancel(pending)
     self:Disarm(pending)
     pending.awaitingBindConfirmation, pending.awaitingBindEvent = nil, nil
     if Addon.runtime.pending == pending then
-        Addon.runtime.quarantined[pending.itemID] = true
+        if Addon.Queue and Addon.Queue.QuarantineItem then
+            Addon.Queue:QuarantineItem(pending.itemID, "bind-cancelled")
+        else
+            Addon.runtime.quarantined[pending.itemID] = true
+            Addon.runtime.quarantineReasons = Addon.runtime.quarantineReasons or {}
+            Addon.runtime.quarantineReasons[pending.itemID] = "bind-cancelled"
+        end
         Addon.runtime.pending = nil
         Addon.runtime.queueState = "READY"
         Addon.runtime.pauseReason = nil

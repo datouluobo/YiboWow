@@ -48,4 +48,11 @@ RunTimer(15)
 assert(not YiboAutoOpen.runtime.quarantined[90735], "backoff completion must release the item during the same login")
 assert(YiboAutoOpen.runtime.failures[90735] == nil, "backoff completion must reset the failure count")
 
+YiboAutoOpen.Queue:QuarantineItem(90735, "bind-cancelled")
+YiboAutoOpen.Queue:ReleaseTransientWorldQuarantine()
+assert(YiboAutoOpen.runtime.quarantined[90735], "world recovery must preserve a player-cancelled quarantine")
+assert(not YiboAutoOpen.Queue:ClearQuarantineForTrigger(90735, "item-push"), "a new item event must not clear a player-cancelled quarantine")
+assert(YiboAutoOpen.Queue:ClearQuarantineForTrigger(90735, "manual"), "manual retry must clear a player-cancelled quarantine")
+assert(not YiboAutoOpen.runtime.quarantined[90735], "manual retry must release the quarantine")
+
 print("Retry backoff spec passed")

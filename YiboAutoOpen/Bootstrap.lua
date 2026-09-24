@@ -1,7 +1,7 @@
 local Addon = _G.YiboAutoOpen or {}
 _G.YiboAutoOpen = Addon
-Addon.NAME, Addon.VERSION = "YiboAutoOpen", "1.2.0"
-Addon.runtime = { initialized = false, loggedIn = false, startupScansStarted = false, queueState = "IDLE", pauseReason = nil, generation = 0, pending = nil, scanQueued = false, deferredScanGeneration = 0, quarantined = {}, failures = {}, warned = {}, sensitiveFrames = {}, pandariaDarkSoilLoot = nil, confirmLootSourceKey = nil, recentConfirmObjects = {}, recentConfirmObjectOrder = {} }
+Addon.NAME, Addon.VERSION = "YiboAutoOpen", "1.2.1"
+Addon.runtime = { initialized = false, loggedIn = false, startupScansStarted = false, worldLoading = false, recoveryUntil = nil, queueState = "IDLE", pauseReason = nil, generation = 0, pending = nil, scanQueued = false, candidateQueue = {}, candidateSet = {}, deferredScanGeneration = 0, worldScanGeneration = 0, quarantined = {}, quarantineReasons = {}, quarantineTokens = {}, failures = {}, warned = {}, sensitiveFrames = {}, pandariaDarkSoilLoot = nil, confirmLootSourceKey = nil, recentConfirmObjects = {}, recentConfirmObjectOrder = {} }
 
 function Addon:Print(message, level)
     if level == "verbose" and self.db and self.db.notificationMode ~= "verbose" then return end
@@ -16,12 +16,19 @@ function Addon:ResetItemRuntimeState(itemID)
     itemID = tonumber(itemID)
     if not itemID then return end
     self.runtime.failures[itemID] = nil
+    if self.runtime.candidateSet then self.runtime.candidateSet[itemID] = nil end
     self.runtime.quarantined[itemID] = nil
+    self.runtime.quarantineReasons[itemID] = nil
+    self.runtime.quarantineTokens[itemID] = (self.runtime.quarantineTokens[itemID] or 0) + 1
     self.runtime.warned["quarantine:" .. itemID] = nil
 end
 function Addon:ResetAllItemRuntimeState()
     self.runtime.failures = {}
+    self.runtime.candidateQueue = {}
+    self.runtime.candidateSet = {}
     self.runtime.quarantined = {}
+    self.runtime.quarantineReasons = {}
+    self.runtime.quarantineTokens = {}
     for key in pairs(self.runtime.warned) do
         if type(key) == "string" and key:match("^quarantine:") then self.runtime.warned[key] = nil end
     end

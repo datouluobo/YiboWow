@@ -135,7 +135,13 @@ function Settings:CreatePanel(parent, host)
     local state, reason = Addon.Queue:GetStatus(); local quarantined = 0; for _ in pairs(Addon.runtime.quarantined) do quarantined = quarantined + 1 end
     local catalogued = Addon.BagAdapter:CountCatalogued(Addon.db.catalog.entries)
     panel.status:SetText("当前状态：" .. state .. (reason and (" · " .. reason) or "") .. " · 背包目录物品 " .. catalogued .. " 项 · 本次登录隔离 " .. quarantined .. " 项")
-    panel.retry:SetShown(quarantined > 0); panel.retry:SetScript("OnClick", function() Addon:ResetAllItemRuntimeState(); Addon:Refresh(); Refresh() end)
+    local function RetryScan()
+        Addon:ResetAllItemRuntimeState()
+        if Addon.Safety and Addon.Safety.ReconcileSensitiveFrames then Addon.Safety:ReconcileSensitiveFrames() end
+        if Addon.Queue then Addon.Queue:RequestRecoveryScan(5) else Addon:Refresh() end
+        Refresh()
+    end
+    panel.retry:SetShown(quarantined > 0); panel.retry:SetScript("OnClick", RetryScan)
     local items = Addon.Database:GetOrderedItems()
     -- Core resolves the hosted row width before invoking this panel.  Using
     -- that stable width avoids locking the catalog to a stale two-column
@@ -150,14 +156,12 @@ function Settings:CreatePanel(parent, host)
     local rowStep = rowHeight + 4
     panel.catalog:SetText("目录物品：" .. #items .. " 项 · " .. columnCount .. " 列（按列排列）")
     panel.refresh:SetScript("OnClick", function()
-        Addon:ResetAllItemRuntimeState()
+        RetryScan()
         for _, id in ipairs(items) do
             if C_Item and C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(id) end
             if GetItemInfo then GetItemInfo(id) end
         end
-        panel.message:SetText("已刷新目录名称、清除本次登录隔离并重新扫描背包。")
-        Addon:Refresh()
-        Refresh()
+        panel.message:SetText("已刷新目录名称与运行状态，并重新扫描背包。若敏感界面仍处于打开状态，自动开包会继续暂停。")
     end)
     for i = 1, #items do
         local column = math.floor((i - 1) / rowsPerColumn)

@@ -10,11 +10,11 @@ function Bags:GetItemInfo(bag, slot)
         if not itemID and C_Container.GetContainerItemID then itemID = C_Container.GetContainerItemID(bag, slot) end
         if not link and C_Container.GetContainerItemLink then link = C_Container.GetContainerItemLink(bag, slot) end
         itemID = itemID or (link and tonumber(link:match("item:(%d+)")))
-        return { itemID = itemID, link = link, locked = info.isLocked }
+        return { itemID = itemID, link = link, locked = info.isLocked, count = info.stackCount }
     end
     if GetContainerItemInfo then
-        local texture, _, locked, _, _, _, link, _, _, itemID = GetContainerItemInfo(bag, slot)
-        return texture and { itemID = itemID or (link and tonumber(link:match("item:(%d+)"))), link = link, locked = locked } or nil
+        local texture, count, locked, _, _, _, link, _, _, itemID = GetContainerItemInfo(bag, slot)
+        return texture and { itemID = itemID or (link and tonumber(link:match("item:(%d+)"))), link = link, locked = locked, count = count } or nil
     end
     -- Some Classic clients expose the C_Container slot ID/link helpers but
     -- not the full item-info table.  They are sufficient for an allowlisted
@@ -22,7 +22,17 @@ function Bags:GetItemInfo(bag, slot)
     local itemID = C_Container and C_Container.GetContainerItemID and C_Container.GetContainerItemID(bag, slot)
     local link = C_Container and C_Container.GetContainerItemLink and C_Container.GetContainerItemLink(bag, slot)
     itemID = itemID or (link and tonumber(link:match("item:(%d+)")))
-    return itemID and { itemID = itemID, link = link, locked = false } or nil
+    return itemID and { itemID = itemID, link = link, locked = false, count = nil } or nil
+end
+function Bags:DidUseItem(pending)
+    local current = self:GetItemInfo(pending.bag, pending.slot)
+    local total = self:GetTotalItemCount(pending.itemID)
+    if total < pending.beforeTotal then return true end
+    if not current or not current.itemID then return nil end
+    if current.itemID ~= pending.slotItemID then return nil end
+    if pending.slotCount and current.count and current.count < pending.slotCount then return true end
+    if current.locked == true then return nil end
+    return false
 end
 function Bags:CountCatalogued(entries)
     local count = 0
@@ -61,11 +71,12 @@ function Bags:GetCooldown(bag, slot, itemID)
     if GetItemCooldown then return GetItemCooldown(itemID) end
     return 0, 0, 1
 end
-function Bags:FindNextEligible(entries, quarantined)
+function Bags:FindEligibleItems(entries, quarantined)
     -- The catalog is the explicit opt-in allowlist.  Some valid MoP containers
     -- (including Nomi's treats) do not expose hasLoot/isReadable, so those
     -- optional flags are intentionally ignored for catalogued items.
-    local retryAfter
+    local retryAfter, found = nil, {}
+    local seen = {}
     local now = GetTime and GetTime() or 0
     for bag = 4, 0, -1 do for slot = self:GetNumSlots(bag), 1, -1 do
         local item = self:GetItemInfo(bag, slot)
@@ -78,11 +89,26 @@ function Bags:FindNextEligible(entries, quarantined)
             else
                 local start, duration = self:GetCooldown(bag, slot, item.itemID)
                 local readyAt = (start or 0) + (duration or 0)
-                if not start or start == 0 or readyAt <= now then return bag, slot, item end
-                local remaining = math.max(0.1, readyAt - now + 0.05)
-                retryAfter = retryAfter and math.min(retryAfter, remaining) or remaining
+                if not start or start == 0 or readyAt <= now then
+                    if not seen[item.itemID] then found[#found + 1] = { bag = bag, slot = slot, item = item }; seen[item.itemID] = true end
+                else
+                    local remaining = math.max(0.1, readyAt - now + 0.05)
+                    retryAfter = retryAfter and math.min(retryAfter, remaining) or remaining
+                end
             end
         end
     end end
+    return found, retryAfter
+end
+function Bags:FindNextEligible(entries, quarantined)
+    local found, retryAfter = self:FindEligibleItems(entries, quarantined)
+    local first = found[1]
+    if first then return first.bag, first.slot, first.item end
     return nil, nil, nil, retryAfter
+end
+function Bags:FindItemByID(itemID, entries, quarantined)
+    local found = self:FindEligibleItems(entries, quarantined)
+    for _, candidate in ipairs(found) do
+        if candidate.item.itemID == itemID then return candidate.bag, candidate.slot, candidate.item end
+    end
 end

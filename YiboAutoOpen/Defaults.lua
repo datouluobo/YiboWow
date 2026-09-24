@@ -7,4 +7,4 @@ Addon.DEFAULTS = {
         ["auto-open-catalog"] = { kind = "catalog", label = "YAO 打开的目录箱子" },
     },
 }
-Addon.LIMITS = { minFreeSlots = { min = 1, max = 20 }, listPageSize = 20, maxRetries = 2, operationTimeout = 2.0, retryBackoff = 15 }
+Addon.LIMITS = { minFreeSlots = { min = 1, max = 20 }, listPageSize = 20, maxRetries = 2, operationTimeout = 2.0, retryBackoff = 15, worldRetryWindow = 20, worldReadyRetryDelays = { 0.5, 2.0, 5.0, 10.0 } }
