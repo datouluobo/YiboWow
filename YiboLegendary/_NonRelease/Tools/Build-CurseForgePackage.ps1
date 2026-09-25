@@ -31,7 +31,7 @@ New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
 $tempRoot = Join-Path ([IO.Path]::GetTempPath()) ("YiboLegendary-build-" + [guid]::NewGuid().ToString("N"))
 $curseForgeStage = Join-Path $tempRoot "curseforge\YiboLegendary"
 $githubStage = Join-Path $tempRoot "github\YiboLegendary"
-$curseForgeZip = Join-Path $outputRoot ("YiboLegendary-v{0}.zip" -f $version)
+$curseForgeZip = Join-Path $outputRoot ("YiboLegendary-v{0}-curseforge.zip" -f $version)
 $githubZip = Join-Path $outputRoot ("YiboLegendary-v{0}-github.zip" -f $version)
 $curseForgeTempZip = Join-Path $tempRoot (Split-Path $curseForgeZip -Leaf)
 $githubTempZip = Join-Path $tempRoot (Split-Path $githubZip -Leaf)

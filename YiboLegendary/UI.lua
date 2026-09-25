@@ -44,7 +44,10 @@ local function CellProjection(snapshot, target)
     local state = DisplayState(snapshot, target)
     local meta = StateMeta(state)
     local value
-    if state and state.acquired then value = EvidenceLabel(state)
+    if state and state.acquired then
+        -- The matrix is a decision surface: show the player's outcome, not
+        -- the collection mechanism. Evidence remains available in the tooltip.
+        value = state.evidence and state.evidence.kind == "quest" and "已完成" or "已拥有"
     elseif state and state.placeholder then value = state.status == "unavailable" and "绝版" or "待接入"
     elseif not state then value = "待同步"
     elseif state.status == "ineligible" then value = "不适用"

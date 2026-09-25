@@ -42,6 +42,38 @@ local function Observe(store, itemID)
     return count, observed or store.observedItems[itemID] == true
 end
 
+local function ObservedNode(store, node)
+    if not node or not node.itemId then return nil end
+    local count, seen = Observe(store, node.itemId)
+    if (count or 0) <= 0 and not seen then return nil end
+    return { node=node, count=count or 0 }
+end
+
+local function LatestIntermediate(store, target)
+    local latest
+    for _, node in ipairs(target.nodes or {}) do
+        if node.kind ~= "finalItem" then
+            local observed = ObservedNode(store, node)
+            if observed then latest = observed end
+        end
+    end
+    return latest
+end
+
+local function IntermediateSnapshot(store, target, observed)
+    if not observed then return nil end
+    local node, count = observed.node, observed.count
+    local progress
+    if node.target then
+        progress = string.format("%s %d/%d", node.title, math.min(count, node.target), node.target)
+    elseif count > 0 then
+        progress = string.format("%s ×%d", node.title, count)
+    else
+        progress = node.title .. " · 已检测到"
+    end
+    return Snapshot(target.id, "in_progress", false, node.title, progress, target.routeDescription or "继续完成获取路线。", { node.id }, Evidence("real", Addon:GetTimestamp(), { kind="item", itemId=node.itemId, count=count }))
+end
+
 local function Objective(entry, faction)
     local definition = entry and entry.definition
     if not definition then return "等待前置条件" end
@@ -95,12 +127,69 @@ local function SoridalSnapshot(character, store, target)
     return Snapshot(target.id, "obtainable", false, "基尔加丹掉落", "未获得 · 可刷取", "前往太阳之井高地击败基尔加丹。", { "SORIDAL_DROP" }, Evidence("real", Addon:GetTimestamp(), { kind="bossDrop", boss="基尔加丹" }))
 end
 
+local function CollectionSnapshot(character, store, target)
+    if not CharacterCanUse(character, target) then
+        return Snapshot(target.id, "ineligible", false, "不适用", "该职业无法获取" .. (target.shortTitle or target.title), "—", nil, Evidence("real", Addon:GetTimestamp()))
+    end
+    local projected = Addon.runtime and Addon.runtime.testProjectionByCharacter[character.id] and Addon.runtime.testProjectionByCharacter[character.id][target.id]
+    if projected then projected.evidence = Evidence("projection", Addon:GetTimestamp()); return projected end
+
+    local found = {}
+    for _, itemID in ipairs(target.finalItemIds or {}) do
+        local count, seen = Observe(store, itemID)
+        if (count or 0) > 0 or seen then found[itemID] = true end
+    end
+    if target.id == "WARGLAIVES" then
+        local hasMain, hasOff = found[32837] == true, found[32838] == true
+        if hasMain and hasOff then
+            return Snapshot(target.id, "completed", true, "已获得双刃", "主手／副手均已获得", "—", { "WARGLAIVE_MAIN", "WARGLAIVE_OFF" }, Evidence("real", Addon:GetTimestamp(), { kind="items", itemIds={32837, 32838} }))
+        end
+        local nodeID = hasMain and "WARGLAIVE_OFF" or "WARGLAIVE_MAIN"
+        return Snapshot(target.id, "obtainable", false, "收集埃辛诺斯战刃", string.format("已获得 %d/2 把战刃", (hasMain and 1 or 0) + (hasOff and 1 or 0)), "前往黑暗神殿击败伊利丹·怒风。", { nodeID }, Evidence("real", Addon:GetTimestamp(), { kind="items", itemIds={32837, 32838} }))
+    end
+    if target.finalItemsRequired and target.finalItemsRequired > 1 then
+        local foundCount = 0
+        for _ in pairs(found) do foundCount = foundCount + 1 end
+        if foundCount >= target.finalItemsRequired then
+            return Snapshot(target.id, "completed", true, "已获得", target.title, "—", nil, Evidence("real", Addon:GetTimestamp(), { kind="items", itemIds=target.finalItemIds }))
+        end
+        local firstNode = target.nodes and target.nodes[1]
+        return Snapshot(target.id, "in_progress", false, "收集最终物品", string.format("已获得 %d/%d 件", foundCount, target.finalItemsRequired), target.routeDescription or "继续完成获取路线。", firstNode and { firstNode.id } or nil, Evidence("real", Addon:GetTimestamp(), { kind="items", itemIds=target.finalItemIds }))
+    end
+    for itemID in pairs(found) do
+        return Snapshot(target.id, "completed", true, "已获得", target.title, "—", nil, Evidence("real", Addon:GetTimestamp(), { kind="item", itemId=itemID }))
+    end
+    local intermediate = IntermediateSnapshot(store, target, LatestIntermediate(store, target))
+    if intermediate then return intermediate end
+    local firstNode = target.nodes and target.nodes[1]
+    return Snapshot(target.id, "obtainable", false, target.routeLabel or "可获取", "未获得 · 可继续收集", target.routeDescription or "按路线继续收集。", firstNode and { firstNode.id } or nil, Evidence("real", Addon:GetTimestamp(), { kind="route", targetId=target.id }))
+end
+
+local function HistoricalItemSnapshot(character, store, target)
+    if not CharacterCanUse(character, target) then return nil end
+    local foundItemID
+    for _, itemID in ipairs(target.finalItemIds or {}) do
+        local count, seen = Observe(store, itemID)
+        if (count or 0) > 0 or seen then foundItemID = itemID; break end
+    end
+    if not foundItemID then
+        local intermediate = IntermediateSnapshot(store, target, LatestIntermediate(store, target))
+        if not intermediate then return nil end
+        intermediate.stageLabel = "已检测到历史中间物品"
+        intermediate.evidence.historical = true
+        return intermediate
+    end
+    return Snapshot(target.id, "completed", true, "已获得 · 历史收藏", "检测到实际物品", "—", nil, Evidence("real", Addon:GetTimestamp(), { kind="item", itemId=foundItemID, historical=true }))
+end
+
 function Model:BuildSnapshot(character, store, phaseAvailability, valorProgress)
     local legacy = Addon.Data:BuildSnapshot(character, phaseAvailability, valorProgress)
     local targets = { CLOAK=CloakSnapshot(character, legacy) }
     for _, target in ipairs(Addon.Catalog:GetTargets()) do
         if target.id == "THUNDERFURY" then targets[target.id] = ThunderfurySnapshot(character, store, target)
-        elseif target.id == "SORIDAL" then targets[target.id] = SoridalSnapshot(character, store, target) end
+        elseif target.id == "SORIDAL" then targets[target.id] = SoridalSnapshot(character, store, target)
+        elseif target.finalItemIds and target.catalogOnly then targets[target.id] = HistoricalItemSnapshot(character, store, target)
+        elseif target.finalItemIds then targets[target.id] = CollectionSnapshot(character, store, target) end
     end
     return { characterID=character.id, readable=legacy.readable, legacy=legacy, targets=targets, updatedAt=Addon:GetTimestamp() }
 end
