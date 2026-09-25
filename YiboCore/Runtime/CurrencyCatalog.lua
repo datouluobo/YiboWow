@@ -27,6 +27,15 @@ function Catalog:RegisterItem(owner, definition)
     return Register(self._items, owner, definition, "物品代币")
 end
 
+function Catalog:UnregisterItem(owner, itemID)
+    local id = "item:" .. tostring(tonumber(itemID) or "")
+    local entry = self._items[id]
+    if not entry then return false, "物品代币不在 Core 目录中。" end
+    if entry.owner ~= owner then return false, "只有注册插件可以移除该物品代币。" end
+    self._items[id] = nil
+    return true
+end
+
 local function Values(bucket)
     local result = {}
     for _, entry in pairs(bucket) do result[#result + 1] = Core.Defaults:Copy(entry.metadata) end

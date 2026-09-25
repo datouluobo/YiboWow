@@ -164,6 +164,7 @@ local function Layout(parent, context, columns, rows, preview)
     for index = #columns + 1, #parent.currencyHeaders do parent.currencyHeaders[index]:Hide() end
     local y = 0
     for index, entry in ipairs(rows) do
+        local rowEntry = entry
         local row = parent.currencyRows[index] or CreateFrame("Button", nil, parent.currencyBody, "BackdropTemplate"); parent.currencyRows[index] = row
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", parent.currencyBody, "TOPLEFT", 0, -y); row:SetSize(x, ROW_HEIGHT); row:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8" }); local color = Theme:GetDataRowColor(index); row:SetBackdropColor(color[1], color[2], color[3], color[4] or 1); row.cells = row.cells or {}; row.entry = entry; row.tooltipCharacters = entry.tooltipCharacters or {}
         if row.currentOutline then Theme:SetCurrentCharacterOutline(row.currentOutline, false) end
@@ -183,10 +184,14 @@ local function Layout(parent, context, columns, rows, preview)
         row:RegisterForClicks("RightButtonUp")
         row:SetScript("OnClick", function(_, button)
             if button ~= "RightButton" then return end
-            local enabling = not Addon:IsMonitored(entry)
-            local ok, err = Addon:SetMonitored(entry, enabling)
+            if rowEntry.isCustom then
+                Addon:ConfirmRemoveCustomItem(rowEntry.itemID)
+                return
+            end
+            local enabling = not Addon:IsMonitored(rowEntry)
+            local ok, err = Addon:SetMonitored(rowEntry, enabling)
             if not ok then Addon:Print(err); return end
-            Addon:Print((enabling and "已加入悬停监控：" or "已取消悬停监控：") .. entry.title)
+            Addon:Print((enabling and "已加入悬停监控：" or "已取消悬停监控：") .. rowEntry.title)
             Addon:NotifyChanged()
         end)
         row:Show(); y = y + ROW_HEIGHT

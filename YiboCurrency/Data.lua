@@ -1,5 +1,4 @@
 local Addon, Core = _G.YiboCurrency, _G.YiboCore
-local MAX_MONITORED = 16
 local CARRIED_BAGS = { 0, 1, 2, 3, 4 }
 local BANK_BAGS = { -1, 5, 6, 7, 8, 9, 10, 11, 12 }
 
@@ -47,10 +46,45 @@ function Addon:GetCatalog()
     for _, entry in ipairs(self.Catalog) do list[#list + 1] = entry; known[entry.id] = true end
     for _, entry in ipairs(self:GetSettings().customItems or {}) do
         local copy = Copy(entry); copy.id = "item:" .. tostring(copy.itemID); copy.source = "item"; copy.sourceType = "物品代币"
-        copy.shortTitle = copy.shortTitle or copy.title; copy.expansion = copy.expansion or "自定义货币"; copy.status = copy.status or "当前可获取"; copy.totalAllowed = true
+        copy.shortTitle = copy.shortTitle or copy.title; copy.expansion = copy.expansion or "自定义货币"; copy.status = copy.status or "当前可获取"; copy.totalAllowed = true; copy.isCustom = true
         if not known[copy.id] then list[#list + 1] = copy; known[copy.id] = true end
     end
     return list
+end
+
+function Addon:GetCustomItem(itemID)
+    itemID = tonumber(itemID)
+    if not itemID then return nil end
+    for _, entry in ipairs(self:GetSettings().customItems or {}) do
+        if tonumber(entry.itemID) == itemID then return entry end
+    end
+end
+
+function Addon:RemoveCustomItem(itemID)
+    itemID = tonumber(itemID)
+    if not itemID or itemID <= 0 or itemID % 1 ~= 0 then return nil, "请输入有效的 itemID。" end
+    local settings = self:GetSettings()
+    local found
+    for index = #settings.customItems, 1, -1 do
+        if tonumber(settings.customItems[index].itemID) == itemID then
+            found = table.remove(settings.customItems, index)
+            break
+        end
+    end
+    if not found then return nil, "该 itemID 不在自定义货币目录中。" end
+
+    local id = "item:" .. itemID
+    settings.visible[id], settings.monitored[id] = nil, nil
+    if settings.hoverOrderOverride then
+        for index = #settings.hoverOrderOverride, 1, -1 do
+            if settings.hoverOrderOverride[index] == id then table.remove(settings.hoverOrderOverride, index) end
+        end
+    end
+    if Core.CurrencyCatalog and Core.CurrencyCatalog.UnregisterItem then
+        Core.CurrencyCatalog:UnregisterItem(self.NAME, itemID)
+    end
+    if Core.DataDomains then Core.DataDomains:Dispatch("YIBO_CURRENCY_CATALOG_REGISTERED") end
+    return found
 end
 
 function Addon:RegisterCatalogWithCore()
@@ -83,7 +117,6 @@ function Addon:GetMonitoredCount() local count = 0; for _, entry in ipairs(self:
 
 function Addon:SetMonitored(entry, value)
     local settings = self:GetSettings()
-    if value and not self:IsMonitored(entry) and self:GetMonitoredCount() >= MAX_MONITORED then return false, "悬停监控最多 16 项。" end
     settings.monitored[entry.id] = not not value
     -- Selection alone must not silently convert the default global order into
     -- a custom order.  An override is created only by the explicit ↑/↓ tools.
