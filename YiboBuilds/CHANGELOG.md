@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.3.0
+
+- Added a per-item equipment upgrade panel in place of the talent and glyph area.
+- Added live bag gem, enchant, engineering, and profession candidates with target checks.
+- Added direct gem application and equipment-targeted enhancement actions from the panel.
+- Added actionable candidate cards with icons, hover feedback, and pending-gem state.
+- Restored installed gem icons and refined empty socket presentation.
+
+### 中文更新日志
+
+- 增加单件装备提升面板，打开时替换天赋与雕文内容区。
+- 按实际装备目标列出背包宝石、附魔、工程和专业候选。
+- 在面板内应用宝石，并将附魔与装备增强直接指定到当前装备格。
+- 为可直接使用的候选增加图标卡片、悬停反馈及宝石待应用状态。
+- 恢复已镶宝石图标，调整空孔显示。
+
 ## 1.2.0
 
 - Added equipment enhancement detection for gems, belt buckles, blacksmith sockets, enchants, and engineering effects.

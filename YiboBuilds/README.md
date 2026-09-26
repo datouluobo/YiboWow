@@ -7,6 +7,8 @@ YiboBuilds is a character-build viewer for MoP Classic. It stores and shows tale
 - Current / backup specialization overview for account characters
 - Hover preview with up to 20 eligible characters
 - Character workbench with equipment model, talents, and glyphs
+- Equipment upgrade panel with live gem, enchant, engineering, and profession candidates
+- Direct gem socketing and equipment-targeted enhancement actions
 - Separate equipment snapshots for each talent slot
 
 ## Requirements
@@ -23,6 +25,8 @@ YiboBuilds 是用于 MoP Classic 的账号角色构筑查看器，记录并展�
 - 按角色显示当前或备用专精构筑
 - 悬停预览最多显示 20 名符合条件的角色
 - 单角色工作台展示装备人偶、天赋和雕文
+- 装备提升面板显示实时宝石、附魔、工程及专业候选
+- 在面板内镶嵌宝石，并直接对当前装备施加增强
 - 每个天赋槽位独立保存装备快照
 
 ### 依赖

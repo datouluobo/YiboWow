@@ -1,4 +1,28 @@
-# YiboBuilds 1.2.0
+# YiboBuilds 1.3.0
+
+## 1.3.0
+
+YiboBuilds now lets the current character improve equipped items from the equipment view.
+
+- Click an equipped item to open its upgrade panel in the talent and glyph area.
+- See compatible gems and enhancements from the bag and verified profession sources.
+- Select a gem, review its pending state, and apply it from the panel.
+- Apply a compatible enchant or enhancement directly to the selected equipment slot.
+- Recognize immediately usable candidates through icon cards, action labels, and hover feedback.
+- Installed gems display their item icons; empty sockets retain their requirement-colored frames.
+
+### 中文更新说明
+
+YiboBuilds 现在可从装备区直接处理当前角色穿戴装备的提升。
+
+- 点击装备打开提升面板，面板显示在原天赋与雕文区域。
+- 查看来自背包和已确认专业来源的适用宝石与装备增强。
+- 选中宝石后查看待应用状态，并在面板内完成镶嵌。
+- 将适用附魔或增强直接施加到当前装备格。
+- 可直接使用的候选显示图标卡片、操作标识和悬停反馈。
+- 已镶宝石恢复物品图标，空孔保留按孔位要求着色的边框。
+
+---
 
 ## 1.2.0
 

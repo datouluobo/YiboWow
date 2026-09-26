@@ -3,7 +3,7 @@ local Addon = _G.YiboBuilds or {}
 _G.YiboBuilds = Addon
 
 Addon.NAME = ADDON_NAME or "YiboBuilds"
-Addon.VERSION = "1.2.0"
+Addon.VERSION = "1.3.0"
 Addon.REQUIRED_CORE_API = 5
 Addon.PAGE_ID = "builds"
 Addon.ICON = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon-v1"
@@ -83,8 +83,13 @@ frame:RegisterEvent("GLYPH_REMOVED")
 frame:RegisterEvent("USE_GLYPH")
 frame:RegisterEvent("SPELLS_CHANGED")
 frame:RegisterEvent("SKILL_LINES_CHANGED")
+frame:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
 frame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 frame:RegisterEvent("UNIT_INVENTORY_CHANGED")
+frame:RegisterEvent("BAG_UPDATE_DELAYED")
+frame:RegisterEvent("SOCKET_INFO_SUCCESS")
+frame:RegisterEvent("SOCKET_INFO_FAILURE")
+frame:RegisterEvent("SOCKET_INFO_CLOSE")
 frame:RegisterEvent("PLAYER_LOGOUT")
 frame:SetScript("OnEvent", function(_, event, name)
     if event == "ADDON_LOADED" then
@@ -109,15 +114,31 @@ frame:SetScript("OnEvent", function(_, event, name)
         end
     elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then
         if Addon.Snapshot then Addon.Snapshot:HandleSpecChanged() end
-    elseif event == "PLAYER_TALENT_UPDATE" or event == "GLYPH_UPDATED" or event == "GLYPH_ADDED" or event == "GLYPH_REMOVED" or event == "USE_GLYPH" or event == "SPELLS_CHANGED" or event == "SKILL_LINES_CHANGED" then
+    elseif event == "PLAYER_TALENT_UPDATE" or event == "GLYPH_UPDATED" or event == "GLYPH_ADDED" or event == "GLYPH_REMOVED" or event == "USE_GLYPH" or event == "SPELLS_CHANGED" or event == "SKILL_LINES_CHANGED" or event == "TRADE_SKILL_LIST_UPDATE" then
         -- USE_GLYPH refreshes the catalog when a glyph is learned without
         -- changing a socket. SPELLS_CHANGED covers the spellbook update path.
         if Addon.Snapshot then Addon.Snapshot:ScheduleCapture("glyph-catalog-update", 0.35) end
-    elseif event == "PLAYER_EQUIPMENT_CHANGED" or (event == "UNIT_INVENTORY_CHANGED" and name == "player") then
+        if (event == "SPELLS_CHANGED" or event == "SKILL_LINES_CHANGED" or event == "TRADE_SKILL_LIST_UPDATE")
+            and Addon.AccountPage then
+            Addon.AccountPage:InvalidateRecipeCache()
+            Addon.AccountPage:RefreshOpenDetail()
+        end
+    elseif event == "SOCKET_INFO_FAILURE" or event == "SOCKET_INFO_CLOSE" then
+        if Addon.AccountPage then Addon.AccountPage:OnSocketEvent(event) end
+    elseif event == "PLAYER_EQUIPMENT_CHANGED" or event == "SOCKET_INFO_SUCCESS"
+        or (event == "UNIT_INVENTORY_CHANGED" and name == "player") then
+        if event == "SOCKET_INFO_SUCCESS" and Addon.AccountPage then
+            Addon.AccountPage:OnSocketEvent(event)
+        end
         -- Capture immediately after the inventory event, then once more after
         -- the client has settled item links, socket data and model updates.
         if Addon.Snapshot then
             Addon.Snapshot:ScheduleEquipmentCapture()
+        end
+    elseif event == "BAG_UPDATE_DELAYED" then
+        -- Bag candidates are live state, not part of a saved equipment snapshot.
+        if Addon.AccountPage and Addon.AccountPage.RefreshOpenDetail then
+            Addon.AccountPage:RefreshOpenDetail()
         end
     elseif event == "PLAYER_LOGOUT" then
         if Addon.Snapshot then Addon.Snapshot:Capture("logout", true) end

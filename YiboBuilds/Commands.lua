@@ -5,6 +5,19 @@ SlashCmdList.YIBOBUILDS = function(message)
     if command == "scan" then
         Addon.Snapshot:Capture("diagnostic")
         Addon:Print("已刷新当前角色构筑快照。")
+    elseif command == "api" then
+        local version, build = GetBuildInfo and GetBuildInfo()
+        local socket = C_ItemSocketInfo or _G
+        local container = C_Container or _G
+        Addon:Print("客户端=" .. tostring(version or "?") .. " build=" .. tostring(build or "?"))
+        Addon:Print("镶嵌=" .. tostring(type(socket.SocketInventoryItem) == "function")
+            .. " / 放入宝石=" .. tostring(type(socket.ClickSocketButton) == "function")
+            .. " / 孔数=" .. tostring(type(socket.GetNumSockets) == "function")
+            .. " / 背包使用=" .. tostring(type(container.UseContainerItem) == "function"))
+        Addon:Print("配方=" .. tostring(type(IsSpellKnown) == "function")
+            .. " / 施放=" .. tostring(type(CastSpellByID) == "function")
+            .. " / 材料=" .. tostring(type(GetTradeSkillReagentInfo) == "function")
+            .. " / 配方链接=" .. tostring(type(GetTradeSkillRecipeLink) == "function"))
     elseif command == "sockets" then
         Addon.Snapshot:Capture("socket-diagnostic")
         local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
@@ -70,6 +83,6 @@ SlashCmdList.YIBOBUILDS = function(message)
         local record = current and Addon.Snapshot:GetCharacter(current.id)
         Addon:Print(record and ("当前槽位：" .. tostring(record.lastActiveSlot)) or "当前角色尚无构筑快照。")
     else
-        Addon:Print("/ybb scan 刷新当前构筑；/ybb sockets 检查装备孔；/ybb dump 查看当前槽位。")
+        Addon:Print("/ybb scan 刷新构筑；/ybb sockets 检查装备孔；/ybb api 检查客户端接口；/ybb dump 查看槽位。")
     end
 end
