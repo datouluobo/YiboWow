@@ -718,11 +718,22 @@ end
 
 local function ReadEquipment(reason)
     local equipment = { capturedAt = Addon:Now(), reason = reason, slots = {} }
-    if GetAverageItemLevel then
-        local baseLevel, equippedLevel = GetAverageItemLevel()
-        local level = tonumber(equippedLevel) or tonumber(baseLevel)
-        if level and level > 0 then equipment.itemLevel = math.floor(level + 0.5) end
+    local level
+    if C_PaperDollInfo and C_PaperDollInfo.GetAverageItemLevel then
+        local ok, baseLevel, equippedLevel = pcall(C_PaperDollInfo.GetAverageItemLevel)
+        if ok then
+            level = tonumber(equippedLevel)
+            if not level or level <= 0 then level = tonumber(baseLevel) end
+        end
     end
+    if (not level or level <= 0) and GetAverageItemLevel then
+        local ok, baseLevel, equippedLevel = pcall(GetAverageItemLevel)
+        if ok then
+            level = tonumber(equippedLevel)
+            if not level or level <= 0 then level = tonumber(baseLevel) end
+        end
+    end
+    if level and level > 0 then equipment.itemLevel = math.floor(level + 0.5) end
     -- MoP ring enchants start at 550 Enchanting.  Belt tinkers such as Nitro
     -- Boosts start at 400 Engineering and coexist with a belt buckle.
     local hasRingEnchanting = HasProfessionAtLeast(333, 550)
@@ -909,6 +920,60 @@ end
 
 function Snapshot:GetCharacter(characterID)
     return Addon:EnsureDB().characters[characterID]
+end
+
+function Snapshot:GetItemLevel(item)
+    if not item then return nil end
+    local level = tonumber(item.itemLevel)
+    if level and level > 0 then return level end
+    if item.itemLink and GetDetailedItemLevelInfo then
+        local ok, value = pcall(GetDetailedItemLevelInfo, item.itemLink)
+        if ok then level = tonumber(value) end
+    end
+    if (not level or level <= 0) and item.itemLink and GetItemInfo then
+        local ok, _, _, _, value = pcall(GetItemInfo, item.itemLink)
+        if ok then level = tonumber(value) end
+    end
+    if level and level > 0 then item.itemLevel = level; return level end
+    return nil
+end
+
+function Snapshot:GetEquipmentAverageItemLevel(equipment)
+    if not equipment then return nil end
+    local level = tonumber(equipment.itemLevel)
+    if level and level > 0 then return level end
+    local slots = equipment.slots
+    if type(slots) ~= "table" then return nil end
+    local sum = 0
+    local countedSlots = {
+        INVSLOT_HEAD or 1, INVSLOT_NECK or 2, INVSLOT_SHOULDER or 3,
+        INVSLOT_CHEST or 5, INVSLOT_WAIST or 6, INVSLOT_LEGS or 7,
+        INVSLOT_FEET or 8, INVSLOT_WRIST or 9, INVSLOT_HAND or 10,
+        INVSLOT_FINGER1 or 11, INVSLOT_FINGER2 or 12,
+        INVSLOT_TRINKET1 or 13, INVSLOT_TRINKET2 or 14, INVSLOT_BACK or 15,
+        INVSLOT_MAINHAND or 16, INVSLOT_OFFHAND or 17,
+    }
+    for _, slotID in ipairs(countedSlots) do
+        local item = slots[SlotKey(slotID)]
+        if item and item.itemLink then
+            local itemLevel = self:GetItemLevel(item)
+            if not itemLevel then return nil end
+            sum = sum + itemLevel
+        elseif slotID == (INVSLOT_OFFHAND or 17) then
+            local mainhand = slots[SlotKey(INVSLOT_MAINHAND or 16)]
+            if mainhand and mainhand.itemLink then
+                local itemID = mainhand.itemID or ItemIDFromLink(mainhand.itemLink)
+                local api = C_Item and C_Item.GetItemInfoInstant or GetItemInfoInstant
+                if not itemID or not api then return nil end
+                local ok, _, _, _, equipLoc = pcall(api, itemID)
+                if not ok or not equipLoc then return nil end
+                if equipLoc == "INVTYPE_2HWEAPON" or equipLoc == "INVTYPE_RANGED" or equipLoc == "INVTYPE_RANGEDRIGHT" then
+                    sum = sum + (self:GetItemLevel(mainhand) or 0)
+                end
+            end
+        end
+    end
+    return sum > 0 and sum / 16 or nil
 end
 
 function Snapshot:EnsureCharacter(character)

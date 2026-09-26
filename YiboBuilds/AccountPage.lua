@@ -159,6 +159,20 @@ local function CharacterLabel(character, context)
     return name
 end
 
+local function PreviewCharacterLabel(character, context, slotData)
+    local label = CharacterLabel(character, context)
+    local confirmed = slotData and slotData.confirmedEquipment
+    local observed = slotData and slotData.observedEquipment
+    local itemLevel = confirmed and tonumber(confirmed.itemLevel)
+    if not itemLevel or itemLevel <= 0 then itemLevel = observed and tonumber(observed.itemLevel) end
+    if not itemLevel or itemLevel <= 0 then itemLevel = Addon.Snapshot:GetEquipmentAverageItemLevel(confirmed) end
+    if not itemLevel or itemLevel <= 0 then itemLevel = Addon.Snapshot:GetEquipmentAverageItemLevel(observed) end
+    if itemLevel and itemLevel > 0 then
+        return label .. " [" .. tostring(math.floor(itemLevel + 0.5)) .. "]"
+    end
+    return label
+end
+
 local function ItemBorderColor(item)
     local link = item and item.itemLink
     if type(link) == "string" then
@@ -402,15 +416,14 @@ end
 -- The hover projection has its own compact geometry, but it must be built
 -- from the same field preferences as the account page.  Keeping this in one
 -- helper prevents the rendered matrix and its measured window from drifting.
-local function PreviewColumns(context, characters, matrixMode)
+local function PreviewColumns(context, characters, matrixMode, mode)
     local nameWidth = Theme:GetCharacterRowHeaderWidth(false, context, characters)
-    if context and context.scope == "all" then
-        -- Core's shared row-header measure caps the name and realm separately.
-        -- This projection renders them as one identity, so reserve their
-        -- combined width and never truncate the distinguishing server suffix.
-        for _, character in ipairs(characters or {}) do
-            nameWidth = math.max(nameWidth, Theme:MeasureText(Theme.Font.assist, CharacterLabel(character, context)) + Theme.Table.cellPadding)
-        end
+    -- Core's shared row-header measure does not include the item level, and
+    -- caps names and realms separately. Measure the complete preview label.
+    for _, character in ipairs(characters or {}) do
+        local record = Addon.Snapshot:GetCharacter(character.id)
+        local slotData = Addon.Snapshot:GetProjectedSlot(record, mode)
+        nameWidth = math.max(nameWidth, Theme:MeasureText(Theme.Font.assist, PreviewCharacterLabel(character, context, slotData)) + Theme.Table.cellPadding)
     end
     local columns = { { id = "name", title = "角色", width = nameWidth } }
     local settings = Addon:GetSettings().previewColumns
@@ -507,23 +520,7 @@ local function CreatePreviewCell(parent)
 end
 
 local function GetPreviewItemLevel(item)
-    if not item then return nil end
-    if item.itemLevel and tonumber(item.itemLevel) then return tonumber(item.itemLevel) end
-    if item.itemLink and GetDetailedItemLevelInfo then
-        local ok, level = pcall(GetDetailedItemLevelInfo, item.itemLink)
-        if ok and tonumber(level) then
-            item.itemLevel = tonumber(level)
-            return item.itemLevel
-        end
-    end
-    if item.itemLink and GetItemInfo then
-        local ok, _, _, _, level = pcall(GetItemInfo, item.itemLink)
-        if ok and tonumber(level) then
-            item.itemLevel = tonumber(level)
-            return item.itemLevel
-        end
-    end
-    return nil
+    return Addon.Snapshot:GetItemLevel(item)
 end
 
 local function SetPreviewCellTooltip(cell, entry)
@@ -2089,7 +2086,7 @@ function Page.RefreshPreview(parent, context)
     local mode = (matrixMode == "equipment" and settings.previewEquipmentMode or settings.previewSpecMode) == "backup" and "backup" or "current"
     if matrixMode == "equipment" then settings.previewEquipmentMode = mode else settings.previewSpecMode = mode end
     local characters = PreviewCharacters(context)
-    local columns = PreviewColumns(context, characters, matrixMode)
+    local columns = PreviewColumns(context, characters, matrixMode, mode)
     parent.buildsPreviewToggle = parent.buildsPreviewToggle or CreateFrame("Frame", nil, parent)
     local buttons = parent.buildsPreviewToggle.buttons or {}
     local buttonDefinitions = {
@@ -2154,7 +2151,7 @@ function Page.RefreshPreview(parent, context)
             end
             cell.text:Show(); cell.itemFrame:Hide(); cell.itemLevel:Hide(); cell.itemChanged:Hide()
             local value = "—"
-            if col.id == "name" then value = CharacterLabel(character, context)
+            if col.id == "name" then value = PreviewCharacterLabel(character, context, slotData)
             elseif col.id == "slot" then value = slotData and (slot == "secondary" and "副专精" or "主专精") or (mode == "backup" and "无备用专精快照" or "无当前专精快照")
             elseif col.id == "spec" then
                 local item = slotData and slotData.specialization
@@ -2252,7 +2249,8 @@ function Page.GetSurfaceMetrics(context)
         local characters = PreviewCharacters(context)
         local settings = Addon:GetSettings()
         local matrixMode = settings.previewMatrixMode == "spec" and "spec" or "equipment"
-        local columns = PreviewColumns(context, characters, matrixMode)
+        local mode = (matrixMode == "equipment" and settings.previewEquipmentMode or settings.previewSpecMode) == "backup" and "backup" or "current"
+        local columns = PreviewColumns(context, characters, matrixMode, mode)
         local width = inset.left + inset.right
         for _, column in ipairs(columns) do width = width + column.width end
         local height = inset.top + Theme.Table.headerHeight + math.max(1, #characters) * PreviewRowHeight(matrixMode) + inset.bottom

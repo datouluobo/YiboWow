@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.3.1
+
+- Show each character's item level beside their name in the hover equipment matrix.
+- Recover the average item level from saved equipment slots when older snapshots lack an aggregate value.
+- Read the equipped average item level through the available MoP Classic client API.
+
+### 中文更新日志
+
+- 在悬停装备矩阵的角色名后显示装等。
+- 旧装备快照缺少总装等时，依据已保存的装备槽位计算。
+- 兼容客户端可用的平均装等接口。
+
 ## 1.3.0
 
 - Added a per-item equipment upgrade panel in place of the talent and glyph area.

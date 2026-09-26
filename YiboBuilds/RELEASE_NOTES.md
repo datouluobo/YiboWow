@@ -1,4 +1,14 @@
-# YiboBuilds 1.3.0
+# YiboBuilds 1.3.1
+
+## 1.3.1
+
+The hover equipment matrix now shows each character's item level beside their name. Older equipment snapshots without a saved average can recover it from their item slots. Item level capture also supports the available MoP Classic client API.
+
+### 中文更新说明
+
+悬停装备矩阵现在会在角色名后显示装等。旧快照缺少总装等时，可依据已保存的装备槽位计算；装备采集也兼容客户端可用的平均装等接口。
+
+---
 
 ## 1.3.0
 
