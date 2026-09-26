@@ -1,6 +1,6 @@
 # YiboAltoBoss
 
-Boss Tracker (YiboAltoBoss) is a World of Warcraft addon for Mists of Pandaria Classic that helps you track world-boss progress, instance lockouts, seasonal Boss rewards, custom targets, and Warbringer phase observations across all of your characters. Version 2.5 requires YiboCore API v5, which provides the shared account page, optional entry, and settings navigation.
+Boss Tracker (YiboAltoBoss) is a World of Warcraft addon for Mists of Pandaria Classic that helps you track world-boss progress, instance lockouts, seasonal Boss rewards, custom targets, and Warbringer phase observations across all of your characters. Version 2.5.1 requires YiboCore API v5, which provides the shared account page, optional entry, and settings navigation.
 
 It provides a compact account-wide overview so you can quickly see which characters have already killed each boss, which targets still need attention, and what has recently been observed in each Warbringer location.
 

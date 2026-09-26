@@ -406,6 +406,14 @@ function Holiday:GetQueueState(ref)
         local queued = GetLFGQueuedList(category)
         if type(queued) == "table" and queued[boss.lfgDungeonID] then return { state = "queued" } end
     end
+    -- The selected-dungeon list can lag behind the live LFD queue state.
+    -- Query this boss's dungeon ID so another LFD queue cannot be cancelled here.
+    if type(GetLFGMode) == "function" then
+        local mode = GetLFGMode(category, boss.lfgDungeonID)
+        if mode == "queued" or mode == "rolecheck" or mode == "suspended" then
+            return { state = "queued" }
+        end
+    end
     local available, joinable = false, false
     if type(IsLFGDungeonJoinable) == "function" then available, joinable = IsLFGDungeonJoinable(boss.lfgDungeonID) end
     if not joinable then
@@ -425,8 +433,8 @@ function Holiday:ToggleQueue(ref)
     local boss = self:GetBoss(ref)
     local queue = self:GetQueueState(boss)
     if queue.state == "queued" then
-        if type(LFG_LeaveQueue) == "function" then
-            LFG_LeaveQueue(LE_LFG_CATEGORY_LFD)
+        if type(LeaveLFG) == "function" then
+            LeaveLFG(LE_LFG_CATEGORY_LFD)
             if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
             if C_Timer and type(C_Timer.After) == "function" then
                 C_Timer.After(0.05, function() if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end end)

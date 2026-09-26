@@ -1,5 +1,15 @@
 # YiboAltoBoss 更新日志 / Changelog
 
+## v2.5.1
+
+### 中文
+
+- 修复节日 Boss 排队后再次点击行动按钮无法实际取消排队的问题。
+
+### English
+
+- Fixed the holiday Boss action button failing to leave the Dungeon Finder queue when clicked again.
+
 ## v2.5
 
 ### 中文
