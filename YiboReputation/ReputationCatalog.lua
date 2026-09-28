@@ -42,6 +42,15 @@ Addon.NativeGroupExpansions = {
  ["大地的裂变"]="cata",
  ["熊猫人之谜"]="mop", ["阡陌客"]="mop", ["垂钓翁"]="mop",
 }
+
+-- A character can query a faction name only when the client exposes that
+-- faction to its current faction list. Keep localized catalog labels for
+-- known cross-faction entries so monitoring/settings remain readable even
+-- when the logged-in character cannot resolve the faction through the API.
+Addon.FactionNameFallbacks = {
+ [1134] = { zhCN="蛮锤氏族", zhTW="蠻錘氏族", enUS="Wildhammer Clan" },
+ [1353] = { zhCN="火金派熊猫人", zhTW="火金派熊貓人", enUS="Huojin Pandaren" },
+}
 -- Register before PLAYER_LOGIN collection so collapsed Blizzard faction
 -- headers cannot turn catalog entries into false “unscanned” states.
 do
@@ -85,8 +94,16 @@ function Addon:GetFactionName(factionID, fallback)
   if type(info) == "table" and type(info.name) == "string" and info.name ~= "" then return info.name end
  end
  if GetFactionInfoByID then
-  local name = GetFactionInfoByID(factionID)
+  -- Some client builds expose the legacy-named lookup as a structured
+  -- result, while older builds return the name as the first tuple value.
+  local result = GetFactionInfoByID(factionID)
+  local name = type(result) == "table" and result.name or result
   if type(name) == "string" and name ~= "" then return name end
+ end
+ local names = self.FactionNameFallbacks[tonumber(factionID)]
+ if names then
+  local locale = GetLocale and GetLocale() or "enUS"
+  return names[locale] or names.enUS
  end
  return "未知声望 " .. tostring(factionID)
 end
