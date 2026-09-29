@@ -10,12 +10,33 @@ local function NextReset(definition, now)
 end
 
 local function EventKey(now)
-    return date and date("%Y-%W", now) or tostring(math.floor(now / 604800))
+    if date then
+        local current = date("*t", now)
+        if current and current.year and current.month and current.day then
+            local monthStart = time({ year = current.year, month = current.month, day = 1, hour = 12 })
+            local first = date("*t", monthStart)
+            if first then
+                -- The Faire's weekly quest reset is Thursday, while %W changes
+                -- on Monday. Key both halves of the event by its month and
+                -- the Thursday reset so completed tasks become actionable
+                -- again at the actual in-game recovery point.
+                local firstSunday = 1 + ((8 - tonumber(first.wday or 1)) % 7)
+                local cycle = current.day >= firstSunday + 4 and 2 or 1
+                return string.format("%04d-%02d-%d", current.year, current.month, cycle)
+            end
+        end
+        return date("%Y-%W", now)
+    end
+    return tostring(math.floor(now / 604800))
 end
 
 local function QuestInLog(questID)
     if type(GetNumQuestLogEntries) ~= "function" or type(GetQuestLogTitle) ~= "function" then return nil end
-    local count = tonumber(GetNumQuestLogEntries()) or 0
+    -- GetNumQuestLogEntries may return a second value (for example, the
+    -- number of quests). Capture only the entry count before converting it;
+    -- otherwise Lua passes the second return value to tonumber as its base.
+    local entryCount = GetNumQuestLogEntries()
+    local count = tonumber(entryCount) or 0
     for index = 1, count do
         local _, _, _, header, _, complete, _, currentID = GetQuestLogTitle(index)
         if not header and tonumber(currentID) == tonumber(questID) then return complete == true or complete == 1 end
