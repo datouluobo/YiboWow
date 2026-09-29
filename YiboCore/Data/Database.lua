@@ -29,6 +29,8 @@ local DEFAULTS = {
                 pinCurrent = false,
             },
             pageCharacterSorts = {},
+            pageSizes = {},
+            pageSizeSchema = 2,
             customCharacterOrder = {},
             entry = {
                 -- Core's own Broker/minimap visibility is a four-state choice.

@@ -18,6 +18,16 @@ local function Toggle(pageID)
     if Core.AccountView then Core.AccountView:Toggle(pageID) end
 end
 
+local function ResolveBusinessPageID(entry)
+    if not entry then return nil end
+    if type(entry.resolvePageID) == "function" then
+        local ok, pageID = pcall(entry.resolvePageID)
+        local page = ok and type(pageID) == "string" and Core.AccountView and Core.AccountView._pages[pageID]
+        if page and page.addonName == entry.addonName then return pageID end
+    end
+    return entry.pageID
+end
+
 local function EntrySettings()
     local view = Core.AccountView:GetSettings()
     return view.entry
@@ -172,16 +182,16 @@ function Entry:CreateBusinessBroker(entry)
             -- previous page's size while an entry hover is being dismissed.
             Core.AccountView:ShowSettings(entry.pageID)
         else
-            Toggle(entry.pageID)
+            Toggle(ResolveBusinessPageID(entry))
         end
     end
     broker.OnEnter = function(first, second)
-        if not entry.disabled then ShowPreview(second or first, entry.pageID) end
+        if not entry.disabled then ShowPreview(second or first, ResolveBusinessPageID(entry)) end
     end
     broker.OnLeave = function() Entry:SchedulePreviewClose() end
     broker.OnTooltipShow = function(tooltip)
         local owner = tooltip and tooltip.GetOwner and tooltip:GetOwner()
-        if not entry.disabled and ShowPreview(owner, entry.pageID) then HideBrokerTooltip(tooltip) end
+        if not entry.disabled and ShowPreview(owner, ResolveBusinessPageID(entry)) then HideBrokerTooltip(tooltip) end
     end
 end
 
@@ -238,7 +248,7 @@ function Entry:CreateBusinessMinimap(entry)
     button.border = button:CreateTexture(nil, "OVERLAY"); button.border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder"); button.border:SetSize(53, 53); button.border:SetPoint("TOPLEFT")
     button:SetScript("OnClick", function(_, mouseButton)
         if entry.disabled then return end
-        if mouseButton == "RightButton" then Core.AccountView:ShowSettings(entry.pageID) else Toggle(entry.pageID) end
+        if mouseButton == "RightButton" then Core.AccountView:ShowSettings(entry.pageID) else Toggle(ResolveBusinessPageID(entry)) end
     end)
     button:SetScript("OnDragStart", button.StartMoving)
     button:SetScript("OnDragStop", function(self)
@@ -250,7 +260,7 @@ function Entry:CreateBusinessMinimap(entry)
         end
         Entry:Refresh()
     end)
-    button:SetScript("OnEnter", function(self) if not entry.disabled then ShowPreview(self, entry.pageID) end end)
+    button:SetScript("OnEnter", function(self) if not entry.disabled then ShowPreview(self, ResolveBusinessPageID(entry)) end end)
     button:SetScript("OnLeave", function() Entry:SchedulePreviewClose() end)
     entry.button = button
 end
@@ -262,6 +272,9 @@ function Entry:RegisterBusinessEntry(addonName, definition)
     if not (Core.Registry and Core.Registry:Get(addonName)) then return nil, "入口所属插件尚未注册: " .. addonName end
     if definition.brokerName ~= nil and (type(definition.brokerName) ~= "string" or definition.brokerName == "") then
         return nil, "业务入口 brokerName 必须是非空 string。"
+    end
+    if definition.resolvePageID ~= nil and type(definition.resolvePageID) ~= "function" then
+        return nil, "业务入口 resolvePageID 必须是 function。"
     end
     if definition.defaultMode ~= nil and not ENTRY_MODE_LABELS[definition.defaultMode] then
         return nil, "业务入口 defaultMode 无效。"
@@ -288,6 +301,7 @@ function Entry:RegisterBusinessEntry(addonName, definition)
     entry.id = definition.id
     entry.addonName = addonName
     entry.pageID = definition.pageID
+    entry.resolvePageID = definition.resolvePageID
     entry.text = definition.text or ("[Yibo] " .. definition.pageID)
     entry.icon = definition.icon or "Interface\\Icons\\INV_Misc_GroupLooking"
     entry.brokerName = brokerName
@@ -357,7 +371,12 @@ end
 
 function Entry:SuppressPreviewClose(seconds)
     local now = GetTime and GetTime() or 0
-    self.previewCloseSuppressedUntil = now + math.max(0, tonumber(seconds) or 0)
+    local suppressedUntil = now + math.max(0, tonumber(seconds) or 0)
+    self.previewCloseSuppressedUntil = suppressedUntil
+    -- The polling watcher is independent from the delayed OnLeave callback.
+    -- Extend its grace window as well, otherwise it can hide a preview on the
+    -- next 0.1 s tick while an in-preview tab click is rebuilding controls.
+    self.previewWatchGraceUntil = math.max(self.previewWatchGraceUntil or 0, suppressedUntil)
     self:CancelPreviewClose()
 end
 
@@ -420,7 +439,10 @@ function Entry:StartPreviewWatch()
         self.previewWatchFrame = frame
     end
     frame.elapsed = 0
-    -- Repeated Broker callbacks must not keep postponing automatic dismissal.
+    -- Preserve the direct path from entry to preview only when the watcher is
+    -- first activated. Broker hosts may call OnTooltipShow repeatedly while
+    -- the same preview is visible; resetting this deadline on every callback
+    -- can keep an interactive preview alive forever after the pointer leaves.
     if not wasActive then
         self.previewWatchGraceUntil = (GetTime and GetTime() or 0) + 0.20
     end

@@ -31,6 +31,12 @@ Settings = function()
     settings.hiddenCharacters = settings.hiddenCharacters or {}
     settings.characterSort = Core.CharacterSort:NormalizeSettings(settings.characterSort)
     settings.pageCharacterSorts = type(settings.pageCharacterSorts) == "table" and settings.pageCharacterSorts or {}
+    if settings.pageSizeSchema ~= 2 then
+        settings.pageSizes = {}
+        settings.pageSizeSchema = 2
+    else
+        settings.pageSizes = type(settings.pageSizes) == "table" and settings.pageSizes or {}
+    end
     settings.columnPages = type(settings.columnPages) == "table" and settings.columnPages or {}
     settings.columnPageStructures = type(settings.columnPageStructures) == "table" and settings.columnPageStructures or {}
     settings.customCharacterOrder = Core.CharacterSort:NormalizeOrder(settings.customCharacterOrder)
@@ -55,6 +61,28 @@ Settings = function()
     settings.entry.pageModes = settings.entry.pageModes or {}
     settings.entry.pagePositions = settings.entry.pagePositions or {}
     return settings
+end
+
+local function PageSizeKey(page, context)
+    local pageID = page and page.id or "overview"
+    local mode = context and context.viewMode or "default"
+    return tostring(pageID) .. ":" .. tostring(mode)
+end
+
+local function GetPageSize(page, context)
+    local settings = Settings()
+    local key = PageSizeKey(page, context)
+    local saved = settings.pageSizes[key]
+    return saved, key
+end
+
+local function SavePageSize(page, context, width, height)
+    local settings = Settings()
+    local saved, key = GetPageSize(page, context)
+    settings.pageSizes[key] = saved or {}
+    settings.pageSizes[key].width = math.floor((tonumber(width) or 0) + 0.5)
+    settings.pageSizes[key].height = math.floor((tonumber(height) or 0) + 0.5)
+    return settings.pageSizes[key]
 end
 
 function AccountView:GetSettings()
@@ -196,6 +224,7 @@ function AccountView:ResetWindowLayout()
     settings.width, settings.height = 1120, 650
     settings.layoutMode = "auto"
     settings.pageLayouts = {}
+    settings.pageSizes = {}
     if self.frame then
         self:ApplyNormalLayout()
         if self.frame:IsShown() and self.activePageID then self:ShowPage(self.activePageID, { autoFit = true }) end
@@ -754,10 +783,6 @@ function AccountView:SetPageScope(pageID, scopeID)
     if not scopeDefinition or not IsKnownScope(scopeDefinition, scopeID) then return false end
     if scopeDefinition.mode == "realms" then Settings().selectedRealmScope = scopeID else Settings().pageScopes[pageID] = scopeID end
     if self.frame and self.frame.preview and self.previewPageID == pageID then
-        -- Rebuilding a preview can shrink it away from the current pointer.
-        -- Treat the server click as an interaction inside the preview rather
-        -- than an accidental leave caused by that geometry change.
-        if Core.Entry and Core.Entry.SuppressPreviewClose then Core.Entry:SuppressPreviewClose(0.75) end
         -- Scope can materially change the number of matrix columns.  Reopen
         -- the same preview against its original anchor so both dimensions and
         -- edge clamping are recomputed before the page is rendered again.
@@ -949,6 +974,9 @@ function AccountView:CreateFrame()
     frame:SetScript("OnSizeChanged", function(self, width, height)
         if not self.preview and width >= 760 and height >= 150 then
             settings.width, settings.height = math.floor(width + 0.5), math.floor(height + 0.5)
+            if self._pageSizePage and self._pageSizeContext then
+                SavePageSize(self._pageSizePage, self._pageSizeContext, width, height)
+            end
         end
     end)
     frame:SetScript("OnShow", function(self)
@@ -1069,7 +1097,7 @@ local function NavigationRequiredHeight(page)
     return Theme.Geometry.titleBar + Theme.Geometry.shellBorder * 2 + navigationHeight
 end
 
-function AccountView:ApplyPageSize(page, context)
+function AccountView:ApplyPageSize(page, context, forceAutoFitWidth)
     local frame = self:CreateFrame()
     if frame.preview then return end
     local maxWidth, maxHeight = ScreenBounds()
@@ -1102,16 +1130,27 @@ function AccountView:ApplyPageSize(page, context)
         minWidth, minHeight = math.max(minWidth, 820), math.max(minHeight, 560)
         preferredWidth, preferredHeight = math.max(preferredWidth, 960), math.max(preferredHeight, 720)
     end
+    local savedSize = GetPageSize(page, context)
     local width, height = preferredWidth, preferredHeight
+    if savedSize and savedSize.width and savedSize.height and not page.autoFitWidth and not forceAutoFitWidth then
+        width, height = savedSize.width, savedSize.height
+    elseif savedSize and savedSize.width and not page.autoFitWidth and not forceAutoFitWidth then
+        width = savedSize.width
+    end
+    if savedSize and savedSize.height and not page.autoFitHeight then
+        height = savedSize.height
+    end
     width = math.max(math.min(widthFloor, maxWidth), math.min(math.max(minWidth, width), maxWidth))
     height = math.max(math.min(minHeight, maxHeight), math.min(math.max(minHeight, height), maxHeight))
     if math.abs((frame:GetWidth() or 0) - width) < 1 and math.abs((frame:GetHeight() or 0) - height) < 1 then return end
     self._applyingPageSize = true
+    frame._pageSizePage, frame._pageSizeContext = page, context
     frame:SetResizable(true)
     if frame.SetResizeBounds then frame:SetResizeBounds(1, 1, maxWidth, maxHeight) end
     frame:SetSize(width, height)
     self._applyingPageSize = nil
     settings.width, settings.height = width, height
+    SavePageSize(page, context, width, height)
 end
 
 function AccountView:ApplyMeasuredPageHeight(page, instance, context)
@@ -1131,6 +1170,7 @@ function AccountView:ApplyMeasuredPageHeight(page, instance, context)
     frame:SetHeight(targetHeight)
     self._applyingPageSize = nil
     Settings().height = targetHeight
+    SavePageSize(page, context, frame:GetWidth(), targetHeight)
 end
 
 function AccountView:SetPreviewHoverCallbacks(onEnter, onLeave)
@@ -1303,7 +1343,7 @@ function AccountView:BuildContext(page, options)
     }
 end
 
-function AccountView:ShowPage(pageID, options)
+function AccountView:ShowPage(pageID, options, forceAutoFitWidth)
     options = options or {}
     -- Some hosted pages (for example YiboTodo) contain secure action buttons.
     -- Switching pages hides every inactive page instance, which WoW forbids
@@ -1315,11 +1355,25 @@ function AccountView:ShowPage(pageID, options)
         self._refreshPendingAfterCombat = true
         return false
     end
+    -- Internal tabs can be clicked inside an interactive hover projection.
+    -- Keep that navigation inside preview mode so its page identity, metrics,
+    -- anchor and subsequent pager refresh all describe the same page.
+    if self.frame and self.frame.preview and not options.preview then
+        return self:ShowPreview(pageID, self.previewAnchor, true)
+    end
     local page = self._pages[pageID] or self._pages.overview
     if not page or (not page.internal and not PageEnabled(page)) then page = self._pages.overview end
     self:CreateFrame()
     local context = options.context or self:BuildContext(page, options)
-    if not options.preview then self:ApplyPageSize(page, context) end
+    if not options.preview then
+        self.frame = self.frame or self:CreateFrame()
+        if not (InCombatLockdown and InCombatLockdown()) then
+            self.frame:SetAttribute("isHoverPreview", nil)
+            self.frame:SetAttribute("restoreMainAfterPreview", nil)
+        end
+        self.frame._pageSizePage, self.frame._pageSizeContext = page, context
+    end
+    if not options.preview then self:ApplyPageSize(page, context, forceAutoFitWidth) end
     self:HideColumnPagers()
     for id, instance in pairs(self.frame.instances) do if id ~= page.id then instance:Hide() end end
     local instance = self.frame.instances[page.id]
@@ -1365,7 +1419,7 @@ function AccountView:ShowPage(pageID, options)
     self:UpdateSortButton()
 end
 
-function AccountView:RefreshPage()
+function AccountView:RefreshPage(forceAutoFitWidth)
     if not (self.frame and self.frame:IsShown()) then return end
     if InCombatLockdown and InCombatLockdown() then
         self._refreshPendingAfterCombat = true
@@ -1379,7 +1433,7 @@ function AccountView:RefreshPage()
         -- a data notification must render the new page state.
         self:ShowPreview(self.previewPageID, self.previewAnchor, true)
     elseif self.activePageID then
-        self:ShowPage(self.activePageID, self.activePageOptions)
+        self:ShowPage(self.activePageID, self.activePageOptions, forceAutoFitWidth)
     end
 end
 
@@ -1521,6 +1575,11 @@ function AccountView:ShowPreview(pageID, anchor, forceRefresh)
     local page = self._pages[pageID] or self:GetPreviewPage()
     local frame = self:CreateFrame()
     local rebuildingVisiblePreview = frame:IsShown() and frame.preview
+    local anchorFrame = anchor and type(anchor.GetLeft) == "function" and anchor or nil
+    local previousAnchor = self.previewAnchor
+    local preservePosition = rebuildingVisiblePreview and previousAnchor == anchorFrame
+    local previousLeft = preservePosition and frame:GetLeft() or nil
+    local previousTop = preservePosition and frame:GetTop() or nil
     local allowWhileMainWindowOpen = Settings().entry.showPreviewWhileMainWindowOpen == true
     if not page or not page.previewEnabled or (not page.internal and not PageEnabled(page)) or (frame:IsShown() and not frame.preview and not allowWhileMainWindowOpen) then return false end
 
@@ -1532,12 +1591,15 @@ function AccountView:ShowPreview(pageID, anchor, forceRefresh)
     frame:SetAttribute("restoreMainAfterPreview", self.restoreNormalWindowAfterPreview and "1" or nil)
 
     local fields = type(page.GetPreviewFields) == "function" and page.GetPreviewFields() or page.previewFields
-    local anchorFrame = anchor and type(anchor.GetLeft) == "function" and anchor or nil
     if not forceRefresh and frame:IsShown() and frame.preview and self.previewPageID == page.id and self.previewAnchor == anchorFrame then
         return true
     end
 
-    -- Repeated Broker callbacks and refreshes outside the preview must not extend its close deadline.
+    -- Replacing an interactive preview hides the old tab/button hierarchy.
+    -- WoW emits OnLeave for those controls even though the pointer remains
+    -- inside the same visible window. Suppress only a real rebuild under the
+    -- pointer; repeated Broker tooltip callbacks and refreshes after the
+    -- pointer has left must not keep extending the close deadline.
     if rebuildingVisiblePreview and Core.Entry and Core.Entry.SuppressPreviewClose
         and Core.Entry:IsMouseOverPreview() then
         Core.Entry:SuppressPreviewClose(0.20)
@@ -1567,7 +1629,15 @@ function AccountView:ShowPreview(pageID, anchor, forceRefresh)
     frame:SetFrameStrata("DIALOG")
     frame:ClearAllPoints()
     self.previewAnchor = anchorFrame
-    if anchorFrame then
+    if preservePosition and previousLeft and previousTop then
+        -- Switching tabs or pages rebuilds the preview at a different natural
+        -- size. Keep its top-left corner stable so the control being clicked
+        -- does not jump out from under the cursor and trigger hover dismissal.
+        height = math.max(math.min(metrics.minHeight, safe.height), math.min(height, safe.height))
+        local clampedLeft = math.max(safe.left, math.min(previousLeft, safe.right - width))
+        local clampedTop = math.max(safe.bottom + height, math.min(previousTop, safe.top))
+        frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", clampedLeft, clampedTop)
+    elseif anchorFrame then
         local left, right = anchorFrame:GetLeft(), anchorFrame:GetRight()
         local top, bottom = anchorFrame:GetTop(), anchorFrame:GetBottom()
         local centerX = ((left or 0) + (right or 0)) / 2
@@ -1596,6 +1666,7 @@ function AccountView:ShowPreview(pageID, anchor, forceRefresh)
     frame:Show()
     self:ShowPage(page.id, { preview = true, fieldOverrides = fields, context = context })
     self:TrackPreviewControls(frame)
+    if rebuildingVisiblePreview and self.previewOnEnter then self.previewOnEnter() end
     return true
 end
 
@@ -1604,6 +1675,10 @@ function AccountView:HidePreview()
     if not frame or not frame.preview then return end
     local restoreNormalWindow = self.restoreNormalWindowAfterPreview == true
     frame:Hide()
+    if not (InCombatLockdown and InCombatLockdown()) then
+        frame:SetAttribute("isHoverPreview", nil)
+        frame:SetAttribute("restoreMainAfterPreview", nil)
+    end
     self:ApplyNormalLayout()
     self.previewPageID = nil
     self.previewPageOptions = nil

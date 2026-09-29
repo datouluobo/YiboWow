@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [string]$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\\..")).Path,
-    [string]$OutputRoot = (Join-Path (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path "Builds")
+    [string]$OutputRoot = (Join-Path (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path "Builds"),
+    [switch]$KeepStaging
 )
 
 $ErrorActionPreference = "Stop"
@@ -139,8 +140,8 @@ try {
     $archived = Move-PreviousPackagesToArchive -OutputRoot $outputRoot -AddonName "YiboCore"
     Move-Item -LiteralPath $cfTempZip -Destination $cfZip
     Move-Item -LiteralPath $githubTempZip -Destination $githubZip
-    [pscustomobject]@{ Version = $version; CurseForge = $cfZip; GitHub = $githubZip; Archived = $archived } | Format-List
+    [pscustomobject]@{ Version = $version; CurseForge = $cfZip; GitHub = $githubZip; Archived = $archived; Staging = $(if ($KeepStaging) { $tempRoot } else { $null }) } | Format-List
 }
 finally {
-    if (Test-Path -LiteralPath $tempRoot) { Remove-Item -LiteralPath $tempRoot -Recurse -Force }
+    if (-not $KeepStaging -and (Test-Path -LiteralPath $tempRoot)) { Remove-Item -LiteralPath $tempRoot -Recurse -Force }
 }

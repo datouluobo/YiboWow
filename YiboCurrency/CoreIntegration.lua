@@ -46,6 +46,12 @@ function Integration:Initialize()
     local entry, entryError = Core.Entry:RegisterBusinessEntry(Addon.NAME, { id = "ycu", brokerName = "YiboCurrency", pageID = PAGE_ID, text = "[Yibo] 货币总览", icon = ICON, defaultMode = "none" })
     if not entry then return nil, entryError end
     Core.Events:Register("DATA_DOMAIN_UPDATED", Addon, function(_, payload) if payload.domainID == "economy" or payload.domainID == "economy-items" then Addon:NotifyChanged() end end)
+    local vault = _G.YiboVault and _G.YiboVault.Items
+    if vault and vault.Events and type(vault.Events.Register) == "function" then
+        vault.Events:Register(Addon, function(eventName)
+            if eventName == "VAULT_ITEMS_CHANGED" or eventName == "VAULT_PERSONAL_COUNTS_READY" then Addon:NotifyChanged() end
+        end)
+    end
     self.initialized = true; return true
 end
 function Addon:NotifyChanged() if Core.AccountView then Core.AccountView:NotifyPageChanged(PAGE_ID) end end

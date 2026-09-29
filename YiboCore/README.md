@@ -19,7 +19,7 @@ Yibo WoW 插件的共享运行时、角色档案与账号视图框架。
 
 Core 不保存任务、Boss、收藏等业务状态，也不接管业务插件的 SavedVariables；插件只向账号视图注册自己的页面、字段、摘要和交互。
 
-当前能力、数据归属、接入规范与多插件协作约定见：[Core 0.3 统一协作与改造计划](Docs/Core-0.3-统一协作与改造计划.md)。统一角色排序见：[统一角色排序实施计划](Docs/Core-统一角色排序实施计划.md)；缓存角色删除见：[缓存角色删除实施计划](Docs/Core-缓存角色删除实施计划.md)。历史更新记录见：[CHANGELOG.md](CHANGELOG.md)。
+当前能力、数据归属、接入规范与多插件协作约定见：[Core 0.3 统一协作与改造计划](Docs/Core-0.3-统一协作与改造计划.md)。[跨插件账号行动项与角色匹配方案（待实现）](Docs/Core-跨插件账号行动项与角色匹配方案.md)是后续规划，当前 Core 尚未提供此能力。统一角色排序见：[统一角色排序实施计划](Docs/Core-统一角色排序实施计划.md)；缓存角色删除见：[缓存角色删除实施计划](Docs/Core-缓存角色删除实施计划.md)。历史更新记录见：[CHANGELOG.md](CHANGELOG.md)。
 
 ## Public API
 
@@ -34,7 +34,7 @@ YiboCore:RegisterSettingsPanel("YiboNewAddon", {
 })
 ```
 
-API v6 保持 API v5 向后兼容。`RegisterSettingsPanel` 只向统一设置工作台注册面板，并按插件技术名排序；它不会创建账号页、显示与入口配置、Broker 或小地图入口。`Profile:Get()` 与 `CHARACTER_PROFILE_UPDATED` 仅为 0.6.x 的旧插件兼容层；新功能应读取 `DataDomains`，并在确有 Core 中性数据依赖时订阅 `DATA_DOMAIN_UPDATED`。
+API v6 保持 API v5 向后兼容。`RegisterSettingsPanel` 只向统一设置工作台注册面板，并按插件技术名排序；它不会创建账号页、显示与入口配置、Broker 或小地图入口。v6 的增量接入、同一范围构造及公共业务 API 边界见：[API v6 业务插件增量接入指南](Docs/API-v6-业务插件增量接入指南.md)。`Profile:Get()` 与 `CHARACTER_PROFILE_UPDATED` 仅为 0.6.x 的旧插件兼容层；新功能应读取 `DataDomains`，并在确有 Core 中性数据依赖时订阅 `DATA_DOMAIN_UPDATED`。
 
 依赖 Core 的业务插件必须在 `.toc` 中声明 `## RequiredDeps: YiboCore`，并保留自身的业务 SavedVariables。Core 不接管业务数据；插件只注册页面、摘要和交互。
 

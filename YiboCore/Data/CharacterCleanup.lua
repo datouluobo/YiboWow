@@ -9,6 +9,7 @@ CharacterCleanup.EXPECTED_OWNERS = {
     YiboAltoBoss = altoBossCleanupLabel,
     YiboLegendary = "传说之路角色进度",
     YiboQuestBlocker = "任务屏蔽个人设置",
+    YiboVault = "账号物品库存快照",
 }
 
 local function Copy(value)

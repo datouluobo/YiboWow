@@ -33,6 +33,13 @@ Core.AddonCatalog = {
         projectURL = "https://www.curseforge.com/wow/addons/yibocurrency",
     },
     {
+        name = "YiboCrafting",
+        title = "专业制造",
+        relation = "core-child",
+        icon = "Interface\\AddOns\\YiboCrafting\\Media\\YiboCraftingIcon-v2",
+        description = "跨角色查看已确认学习的专业配方。",
+    },
+    {
         name = "YiboLegendary",
         title = "传说之路",
         relation = "core-child",
@@ -55,6 +62,12 @@ Core.AddonCatalog = {
         icon = "Interface\\AddOns\\YiboTodo\\Media\\YiboTodoIcon-v6",
         description = "账号待办事项。",
         projectURL = "https://www.curseforge.com/wow/addons/yibotodo",
+    },
+    {
+        name = "YiboVault",
+        title = "YiboVault - 物品仓库",
+        relation = "core-child",
+        description = "跨角色查询背包、装备与后续已验证的库存来源。",
     },
     {
         name = "YiboReputation",

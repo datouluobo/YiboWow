@@ -1,0 +1,25 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r YiboVault - 物品仓库
+## Notes: Account-wide item cache and read-only item query API.
+## Notes-zhCN: Yibo 系列账号物品缓存与只读查询服务。
+## Author: YiboSoft
+## Version: 1.0.0-api1
+## RequiredDeps: YiboCore
+## Group: YiboCore
+## SavedVariables: YiboVaultDB
+## IconTexture: Interface\AddOns\YiboVault\Media\YiboVaultIcon-v2
+## LoadOnDemand: 0
+
+Namespace.lua
+Store.lua
+Items.lua
+PersonalCounts.lua
+Collector.lua
+GuildBank.lua
+AuctionHouse.lua
+MailItems.lua
+StoragePage.lua
+AccountPage.lua
+Tooltip.lua
+Bootstrap.lua
+Commands.lua

@@ -167,18 +167,42 @@ function Addon:GetIcon(entry)
     return "Interface\\Icons\\INV_Misc_QuestionMark"
 end
 
-function Addon:GetValue(character, entry)
+function Addon:GetValue(character, entry, projection)
     local domainID = entry.source == "item" and "economy-items" or "economy"
-    local snapshot = Core.DataDomains:Get(character.id, domainID)
-    if not snapshot or snapshot.state ~= "known" then return nil, snapshot and snapshot.state or "not-yet-scanned" end
-    if entry.source == "money" then return { quantity = snapshot.data and snapshot.data.money }, "known" end
+    local cached = projection and projection.snapshots[character.id]
+    local snapshot = cached and cached[domainID] or (not projection and Core.DataDomains:Get(character.id, domainID))
     -- GetItemCount returns 0 even for arbitrary, unverified item IDs.  A zero
     -- must only become a balance after the item's client identity has been
     -- confirmed; otherwise the matrix would turn a missing probe into `0~`.
     if entry.source == "item" then
         if entry.verified == "pending-client" and GetItemInfo and GetItemInfo(entry.itemID) then entry.verified = "client" end
         if entry.verified ~= "client" and entry.verified ~= "implemented" then return nil, "unverified" end
-        local itemValue = snapshot.data and snapshot.data.items and snapshot.data.items[entry.itemID]
+        local itemValue = snapshot and snapshot.state == "known" and snapshot.data
+            and snapshot.data.items and snapshot.data.items[entry.itemID]
+        local vault
+        if projection then
+            local row = projection.vault and projection.vault.characters[character.id]
+            local item = row and row.items[tonumber(entry.itemID)]
+            if item then
+                vault = { carried = item.bags, bank = item.bank, equipped = item.equipment,
+                    bagsKnown = row.coverage.bags.hasSnapshot, bankKnown = row.coverage.bank.hasSnapshot,
+                    equipmentKnown = row.coverage.equipment and row.coverage.equipment.hasSnapshot or false }
+            end
+        else
+            vault = self.GetVaultItemBalance and self:GetVaultItemBalance(character, entry.itemID)
+        end
+        if vault then
+            local carried = vault.bagsKnown and vault.carried or itemValue and itemValue.carried
+            local bank = vault.bankKnown and vault.bank or itemValue and tonumber(itemValue.bank)
+            local equipped = vault.equipmentKnown and vault.equipped or nil
+            if carried ~= nil or bank ~= nil or equipped ~= nil then
+                local complete = carried ~= nil and bank ~= nil and equipped ~= nil
+                return { itemID = entry.itemID, carried = carried, bank = bank, equipped = equipped,
+                    total = (carried or 0) + (bank or 0) + (equipped or 0), bankKnown = bank ~= nil,
+                    equipmentKnown = equipped ~= nil },
+                    complete and "known" or "bank"
+            end
+        end
         if itemValue then return itemValue, "known" end
         -- A catalog update can happen after an older character snapshot was
         -- saved.  Read the current character directly so a newly added token
@@ -191,8 +215,10 @@ function Addon:GetValue(character, entry)
                 return { itemID = entry.itemID, carried = carried, total = total, bankKnown = false }, "known"
             end
         end
-        return nil, "not-yet-scanned"
+        return nil, snapshot and snapshot.state or "not-yet-scanned"
     end
+    if not snapshot or snapshot.state ~= "known" then return nil, snapshot and snapshot.state or "not-yet-scanned" end
+    if entry.source == "money" then return { quantity = snapshot.data and snapshot.data.money }, "known" end
     if snapshot.data and snapshot.data.currencyState ~= "known" then return nil, snapshot.data.currencyState end
     local value = snapshot.data and snapshot.data.currencies and snapshot.data.currencies[entry.currencyID]
     -- A stable standard ID absent from an otherwise working currency API is
@@ -202,10 +228,10 @@ function Addon:GetValue(character, entry)
 end
 
 function Addon:ValueState(value, state)
-    if state ~= "known" then return "unknown" end
+    if state ~= "known" and state ~= "bank" then return "unknown" end
     if not value then return "na" end
     if value.quantity == nil and value.total == nil and value.carried == nil then return "na" end
-    return "known"
+    return state == "bank" and "bank" or "known"
 end
 function Addon:StateDescription(value, state)
     if state == "unverified" then return "目录尚未在目标客户端核验" end
@@ -214,6 +240,7 @@ function Addon:StateDescription(value, state)
     if state == "unavailable" then return "货币 API 当前不可用" end
     if state == "stale" then return "角色数据已过期" end
     if state == "error" then return "读取货币时发生错误" end
+    if state == "bank" then return "个人库存来源尚未完整扫描" end
     return nil
 end
 function Addon:FormatCompact(value, entry)
@@ -287,7 +314,7 @@ function Addon:TotalFor(characters, entry)
     for _, character in ipairs(characters or {}) do
         local value, state = self:GetValue(character, entry); local kind = self:ValueState(value, state)
         if kind == "known" or kind == "bank" then
-            local quantity = entry.source == "item" and (value.total or value.carried) or value.quantity
+            local quantity = entry.source == "item" and (value.total or value.carried or value.quantity) or value.quantity
             if quantity ~= nil then total = total + quantity; confirmed = confirmed + 1 end
             if kind == "bank" then bankPending = true end
         else missing = missing + 1 end
