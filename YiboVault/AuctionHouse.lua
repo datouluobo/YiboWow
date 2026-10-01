@@ -105,7 +105,6 @@ function AuctionHouse:Finish(reason, errorMessage)
     })
     self.lastStatus = "complete"
     self.lastResult = string.format("成功 %d 条上架记录；%s", #state.records, changed and "缓存已更新" or "内容未变化")
-    Addon:Print("拍卖行扫描完成：" .. self.lastResult .. "。")
     return coverage
 end
 

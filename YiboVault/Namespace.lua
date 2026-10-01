@@ -2,7 +2,7 @@ local Addon = _G.YiboVault or {}
 _G.YiboVault = Addon
 
 Addon.NAME = "YiboVault"
-Addon.RELEASE_VERSION = "1.0.0"
+Addon.RELEASE_VERSION = "1.1.0"
 Addon.REQUIRED_CORE_API = 6
 Addon.SCHEMA_VERSION = 1
 Addon.API_VERSION = 1
@@ -33,7 +33,7 @@ end
 
 function Addon:Print(message)
     if DEFAULT_CHAT_FRAME and type(DEFAULT_CHAT_FRAME.AddMessage) == "function" then
-        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 物品仓库：" .. tostring(message))
+        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 物品总览：" .. tostring(message))
     end
 end
 

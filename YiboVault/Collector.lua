@@ -121,7 +121,9 @@ function Addon:ScanBank()
         if ok then success = success + 1 else failed = failed + 1 end
     end
     wipe(self._dirtyBank)
-    self:Print(string.format("个人银行扫描完成：成功 %d/%d 个容器，失败 %d。", success, #BankContainerIDs(), failed))
+    if failed > 0 then
+        self:Print(string.format("个人银行扫描失败：%d/%d 个容器未能读取。", failed, #BankContainerIDs()))
+    end
     return success, failed
 end
 
@@ -166,8 +168,10 @@ function Addon:ScanEquipment()
 end
 
 function Addon:ScanInitial()
-    self:ScanBags()
-    self:ScanEquipment()
+    local _, failed = self:ScanBags()
+    local equipmentOK, equipmentError = self:ScanEquipment()
+    if failed > 0 then self:Print("背包扫描失败：" .. failed .. " 个容器未能读取。") end
+    if not equipmentOK then self:Print("装备扫描失败：" .. tostring(equipmentError) .. "。") end
 end
 
 function Addon:OnEvent(event, arg1, arg2)
@@ -227,6 +231,9 @@ function Addon:InitializeDatabase()
     end
     db.byCharacter = type(db.byCharacter) == "table" and db.byCharacter or {}
     db.byGuild = type(db.byGuild) == "table" and db.byGuild or {}
+    db.settings = type(db.settings) == "table" and db.settings or {}
+    if db.settings.tooltipRealmScope ~= "all" then db.settings.tooltipRealmScope = "current" end
+    if type(db.settings.tooltipEnabled) ~= "boolean" then db.settings.tooltipEnabled = true end
     db.revision = tonumber(db.revision) or 0
     for _, character in pairs(db.byCharacter) do
         for _, source in ipairs({ "bags", "equipment", "bank", "auction", "mail" }) do
@@ -278,21 +285,6 @@ function Addon:RegisterWithCore()
             Delete = function(character) return Addon:DeleteCharacter(character) end,
         })
         if not cleanup then self:Print(cleanupError or "角色缓存清理注册失败。"); return false end
-    end
-    if type(core.RegisterSettingsPanel) == "function" then
-        local settings, settingsError = core:RegisterSettingsPanel(self.NAME, {
-            id = self.NAME,
-            title = "物品仓库",
-            description = "物品缓存状态；通用入口、页面字段和角色排序由 Core 管理。",
-            CreateSettingsPanel = function(parent)
-                local text = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                text:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
-                text:SetJustifyH("LEFT")
-                text:SetText("Vault 按角色和已访问位置缓存物品。个人银行、公会银行与 AH 上架数据在对应窗口打开后扫描。")
-                return text
-            end,
-        })
-        if not settings then self:Print(settingsError or "设置面板注册失败。"); return false end
     end
     local page, pageError = self.AccountPage:Register()
     if not page then self:Print(pageError or "账号页面注册失败。"); return false end

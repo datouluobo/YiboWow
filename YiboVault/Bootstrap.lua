@@ -27,7 +27,6 @@ function Addon:Initialize()
     self.Frame:RegisterEvent("MAIL_INBOX_UPDATE")
     self.GuildBank:InstallFrameHooks()
     self.MailItems:InstallFrameHooks()
-    self:Print("背包、装备、个人银行、公会银行、AH 上架与邮箱附件缓存/API v1 已就绪。银行、AH 与邮箱数据会在对应窗口打开后采集。")
 end
 
 Addon.Frame:RegisterEvent("ADDON_LOADED")

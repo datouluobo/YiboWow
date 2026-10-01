@@ -78,7 +78,11 @@ local function SourceCoverage(locations)
     return state
 end
 
-local function ResolveGuildKeys(characters)
+local function ResolveGuildKeys(characters, options)
+    if options and options.guildKey then
+        return Addon.db.byGuild and Addon.db.byGuild[options.guildKey]
+            and { options.guildKey } or {}
+    end
     local keys, seen, missingGuildByID = {}, {}, {}
     local function Add(key)
         if key and not seen[key] then seen[key] = true; keys[#keys + 1] = key end
@@ -105,7 +109,25 @@ local function ResolveGuildKeys(characters)
         end
     end
     table.sort(keys)
-    return keys
+    local visible = {}
+    for _, key in ipairs(keys) do
+        if options and options.includeHiddenGuilds or not Addon:IsGuildHidden(key) then
+            visible[#visible + 1] = key
+        end
+    end
+    return visible
+end
+
+local function ValidateGuildOptions(options)
+    if options == nil then return true end
+    if type(options) ~= "table" then return nil, "invalid-options" end
+    if options.includeHiddenGuilds ~= nil and type(options.includeHiddenGuilds) ~= "boolean" then
+        return nil, "invalid-include-hidden-guilds"
+    end
+    if options.guildKey ~= nil and (type(options.guildKey) ~= "string" or options.guildKey == "") then
+        return nil, "invalid-guild-key"
+    end
+    return true
 end
 
 local function StorageArea(locations, legacyTabs)
@@ -143,8 +165,10 @@ local function StorageArea(locations, legacyTabs)
     return area
 end
 
-function Items:GetStorageSummary(scope)
+function Items:GetStorageSummary(scope, options)
     local valid, errorCode = ValidateScope(scope)
+    if not valid then return nil, errorCode end
+    valid, errorCode = ValidateGuildOptions(options)
     if not valid then return nil, errorCode end
     local result = { apiVersion = self.API_VERSION, revision = self:GetRevision(), characters = {}, guilds = {} }
     local characters = ResolveCharacters(scope)
@@ -160,7 +184,7 @@ function Items:GetStorageSummary(scope)
             }
         end
     end
-    for _, guildKey in ipairs(ResolveGuildKeys(characters)) do
+    for _, guildKey in ipairs(ResolveGuildKeys(characters, options)) do
         local guild = Addon.db.byGuild and Addon.db.byGuild[guildKey]
         local tabs = StorageArea(guild and guild.coverage, guild and guild.tabs)
         if tabs then
@@ -172,13 +196,15 @@ function Items:GetStorageSummary(scope)
     return result
 end
 
-function Items:GetSourceState(source, scope)
+function Items:GetSourceState(source, scope, options)
     if not Addon.SourceClasses[source] then return nil, "invalid-source" end
     local valid, errorCode = ValidateScope(scope)
     if not valid then return nil, errorCode end
+    valid, errorCode = ValidateGuildOptions(options)
+    if not valid then return nil, errorCode end
     local result = {}
     if source == "guild-bank" then
-        for _, guildKey in ipairs(ResolveGuildKeys(ResolveCharacters(scope))) do
+        for _, guildKey in ipairs(ResolveGuildKeys(ResolveCharacters(scope), options)) do
             local locations = Addon:GetGuildCoverage(guildKey)
             result[guildKey] = SourceCoverage(locations)
         end
@@ -195,6 +221,8 @@ function Items:Query(options)
     if options ~= nil and type(options) ~= "table" then return nil, "invalid-options" end
     options = options or {}
     local valid, errorCode = ValidateScope(options.scope)
+    if not valid then return nil, errorCode end
+    valid, errorCode = ValidateGuildOptions(options)
     if not valid then return nil, errorCode end
     if options.itemID ~= nil and (type(options.itemID) ~= "number" or options.itemID <= 0
         or options.itemID % 1 ~= 0) then return nil, "invalid-item-id" end
@@ -268,7 +296,7 @@ function Items:Query(options)
         end
     end
     if selectedSources["guild-bank"] then
-        for _, guildKey in ipairs(ResolveGuildKeys(characters)) do
+        for _, guildKey in ipairs(ResolveGuildKeys(characters, options)) do
                 local states = Addon:GetGuildCoverage(guildKey)
                 coverage["guild-bank"] = coverage["guild-bank"] or {}
                 coverage["guild-bank"][guildKey] = SourceCoverage(states)

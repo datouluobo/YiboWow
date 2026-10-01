@@ -1,12 +1,12 @@
 # YiboVault
 
-当前正式版本：`1.0.0-api1`。`1.0.0` 为插件版本，`api1` 为对外 `Items` API 版本。安装需要 YiboCore API v6；YiboCurrency 是可选调用方。
+当前正式版本：`1.1.0-api1`。`1.1.0` 为插件版本，`api1` 为对外 `Items` API 版本。安装需要 YiboCore API v6；YiboCurrency 是可选调用方。
 
 正式版变化见 [更新日志](CHANGELOG.md)。
 
 > 当前状态：背包/装备、Core 账号查询页、个人银行及公会银行已完成首轮客户端检查；AH 正式采集和当前角色明细已通过客户端检查。角色仓储页与容量展示已获用户确认；物品 Tooltip 的 Vault 区块已通过截图核对。Vault 邮箱附件补扫的基础游戏内扫描已由截图确认；大量邮件仅部分可见的边界仍待验证。YiboMail 尚未上线；YiboCurrency 已作为首个可选公共 API 调用方。
 
-> 仓储视图实施进度：容量快照、只读汇总接口、Core 页面角色浏览与物品 Tooltip 已按 [概念图](Media/YiboVault-Storage-Tooltip-Concept.png) 实现并通过本地 Lua 校验；仓储页与容量展示已获用户确认，Tooltip 的基本显示与数量汇总已获客户端截图验证。
+> 仓储视图实施进度：容量快照、只读汇总接口、Core 页面角色浏览与物品 Tooltip 已按 [概念图](Media/YiboVault-Storage-Tooltip-Concept.png) 实现并通过本地 Lua 校验；仓储页与容量展示已获用户确认，Tooltip 的基本显示与数量汇总已获客户端截图验证。新版 Tooltip 行布局与服务器范围设置已通过本地检查，尚待客户端复核。
 
 `0.2.0-test.13-api1` 将 Public API 版本加入插件显示版本与发布包文件名；功能版本和 `Addon.API_VERSION` 仍分别维护。`0.2.0-test.12` 新增 `items.personal-counts` v1 能力与 `GetPersonalCounts` 批量计数接口。个人背包、个人银行按来源独立返回数量与扫描状态；运行时索引跨帧建立，物品代币悬停无需遍历完整物品记录。接口形状及待就绪事件见 [Public API v1 契约](../Docs/YiboVault-Mail-API-v1-契约.md)。
 
@@ -34,11 +34,11 @@ YiboVault 是 Yibo 系列的账号物品缓存与查询服务。首轮实现顺�
 - 登录/进入世界时初始化全量采集；背包在 `BAG_UPDATE_DELAYED` 后按脏 bag 更新；装备在装备变化事件后完整重扫 `1..19` 槽。
 - `YiboVault.Items` 提供 API v1 能力检查、范围查询、来源状态、revision 和变更事件；个人银行与 AH 能力仅在对应窗口打开并成功扫描后产生已知快照。
 - 查询调用规则已冻结：省略范围只查当前角色；账号和服务器范围排除 Core 隐藏角色；显式角色 ID 可查隐藏角色。覆盖状态统一放在持有者的 `locations` 中；非法参数返回 `nil, errorCode`，不伪装成空库存。详细结构见 API 契约。
-- `/yva scan` 重扫当前角色背包与装备，`/yva status` 显示当前缓存摘要。Broker 与插件列表统一使用 `Media/YiboVaultIcon-v2.tga`，由游戏界面按实际控件尺寸缩放显示；完整 PNG 尺寸组与可编辑 SVG 母版也保存在 `Media/`。
+- `/yva scan` 重扫当前角色背包与装备，`/yva status` 仅在当前缓存有扫描错误时显示错误。正常扫描不在聊天窗口发送通告。Broker 与插件列表统一使用 `Media/YiboVaultIcon-v2.tga`，由游戏界面按实际控件尺寸缩放显示；完整 PNG 尺寸组与可编辑 SVG 母版也保存在 `Media/`。
 - Core 负责设置工作台壳、账号页面和角色缓存清理；Vault 使用单一仓储页，顶部按物品名称或 ID 搜索，左侧持有者列表与右侧物品格同步筛选。左栏每个公会只显示一行；角色固定显示五个来源标签，公会固定显示八个页签，未扫描标签置灰且不可点击。
 - 角色按背包、邮件、个人银行、拍卖、装备浏览；公会共享库存按公会页签单独列出。Vault 保存并提供已扫描容量、空位及可识别的包名称/大小组成摘要，Core 继续负责统一页面壳与角色范围。
-- 原生物品 Tooltip 追加 Vault 的账号总数、实体与 AH 小计、角色/公会来源分布；使用与账号页相同的只读物品查询和 Core 角色范围。
-- `/yva open` 打开统一账号视图中的物品仓库页；Core 管理的 Broker/小地图入口也指向同一页面。
+- 原生物品 Tooltip 追加 Vault 的可显示合计、角色来源图标与公会页签分布；当前角色未扫描来源以`~`标示，公会只显示成功扫描且有数量的页签。悬停复用只读物品查询，服务器范围可在 Vault 业务设置中选为当前或所有服务器，角色准入与排序沿用 Core。
+- `/yva open` 打开统一账号视图中的物品总览页；Core 管理的 Broker/小地图入口也指向同一页面。
 
 ## 仓储容量接口
 

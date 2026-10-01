@@ -217,6 +217,43 @@ function Addon:GetGuildCoverage(guildKey)
     return Copy(guild and guild.coverage or {})
 end
 
+function Addon:IsGuildHidden(guildKey)
+    local guild = self.db.byGuild and self.db.byGuild[guildKey]
+    return type(guild) == "table" and guild.hidden == true
+end
+
+function Addon:SetGuildHidden(guildKey, hidden)
+    local guild = self.db.byGuild and self.db.byGuild[guildKey]
+    if type(guild) ~= "table" then return nil, "公会缓存不存在。" end
+    hidden = hidden == true
+    if (guild.hidden == true) == hidden then return true, false end
+    guild.hidden = hidden or nil
+    local affected = {}
+    for _, records in pairs(guild.tabs or {}) do
+        for _, record in ipairs(records) do affected[record.itemID] = true end
+    end
+    local changedItemIDs = {}
+    for itemID in pairs(affected) do changedItemIDs[#changedItemIDs + 1] = itemID end
+    table.sort(changedItemIDs)
+    FireChanged("guild-bank", nil, changedItemIDs, select(1, self:Now()), true, "visibility", { guildKey = guildKey })
+    return true, true
+end
+
+function Addon:DeleteGuild(guildKey)
+    local guild = self.db.byGuild and self.db.byGuild[guildKey]
+    if type(guild) ~= "table" then return nil, "公会缓存不存在。" end
+    local affected = {}
+    for _, records in pairs(guild.tabs or {}) do
+        for _, record in ipairs(records) do affected[record.itemID] = true end
+    end
+    local changedItemIDs = {}
+    for itemID in pairs(affected) do changedItemIDs[#changedItemIDs + 1] = itemID end
+    table.sort(changedItemIDs)
+    self.db.byGuild[guildKey] = nil
+    FireChanged("guild-bank", nil, changedItemIDs, select(1, self:Now()), true, "cleanup", { guildKey = guildKey })
+    return true
+end
+
 function Addon:GetCharacterStore(characterID)
     return EnsureCharacter(characterID)
 end

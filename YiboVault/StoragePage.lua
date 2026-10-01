@@ -133,6 +133,7 @@ local function CreateOwnerRow(page, index)
     row.meta:SetHeight(15)
     row:SetScript("OnClick", function(control)
         page.selectedOwner = control.ownerKey
+        if page.explicitGuildKey ~= control.ownerKey then page.explicitGuildKey = nil end
         page.area = nil
         page.grid:SetVerticalScroll(0)
         StoragePage:Refresh(page, page.context)
@@ -168,6 +169,7 @@ local function CreateItemCell(page, index)
         if not control.item or not GameTooltip then return end
         control:SetBackdropBorderColor(unpack(Colors.accent))
         GameTooltip:SetOwner(control, "ANCHOR_RIGHT")
+        GameTooltip._yiboVaultGuildKey = control.hiddenGuildKey
         if control.item.itemLink then GameTooltip:SetHyperlink(control.item.itemLink)
         elseif GameTooltip.SetItemByID then GameTooltip:SetItemByID(control.item.itemID) end
         GameTooltip:Show()
@@ -175,7 +177,7 @@ local function CreateItemCell(page, index)
     end)
     cell:SetScript("OnLeave", function(control)
         control:SetBackdropBorderColor(unpack(control.borderColor or Colors.lineSoft))
-        if GameTooltip then GameTooltip:Hide() end
+        if GameTooltip then GameTooltip._yiboVaultGuildKey = nil; GameTooltip:Hide() end
     end)
     page.itemCells[index] = cell
     return cell
@@ -185,6 +187,7 @@ function StoragePage:Create(parent)
     local page = CreateFrame("Frame", nil, parent)
     page:SetAllPoints(parent)
     parent.yiboVaultStoragePage = page
+    self.page = page
     page.area = "bags"
     page.ownerRows, page.itemCells, page.areaButtons = {}, {}, {}
     page.pendingItemInfo = {}
@@ -248,8 +251,17 @@ function StoragePage:Create(parent)
         page.searchClear:SetShown((control:GetText() or "") ~= "")
         StoragePage:Refresh(page, page.context)
     end)
+    page.showHidden = Theme:CreateCheckbox(page, "显示隐藏公会")
+    page.showHidden:SetPoint("TOPLEFT", page, "TOPLEFT", 12, -8)
+    page.showHidden:SetWidth(OWNER_WIDTH)
+    page.showHidden:SetScript("OnClick", function(control)
+        page.showHiddenGuilds = not control:GetChecked()
+        control:SetChecked(page.showHiddenGuilds)
+        if not page.showHiddenGuilds then page.explicitGuildKey = nil end
+        StoragePage:Refresh(page, page.context)
+    end)
     page.owners = Theme:CreateScrollFrame(page)
-    page.owners:SetPoint("TOPLEFT", page, "TOPLEFT", 12, -10)
+    page.owners:SetPoint("TOPLEFT", page, "TOPLEFT", 12, -44)
     page.owners:SetPoint("BOTTOMLEFT", page, "BOTTOMLEFT", 12, 12)
     page.owners:SetWidth(OWNER_WIDTH)
     page.ownersContent = CreateFrame("Frame", nil, page.owners)
@@ -372,6 +384,7 @@ function StoragePage:UpdateItemCell(page, cell, record, index)
     local item = record and record.itemID and record or nil
     local emptySlots = record and record.emptySlots
     cell.item = item
+    cell.hiddenGuildKey = item and item.source == "guild-bank" and page.selectedHiddenGuildKey or nil
     cell.icon:SetShown(item ~= nil)
     cell.icon:SetTexture(item and ItemIcon(item.itemID) or nil)
     local itemLevel
@@ -454,13 +467,24 @@ function StoragePage:Refresh(host, context)
     local page = host and (host.yiboVaultStoragePage or host)
     if not page then return end
     if not page.ready then error(page.createError or "YiboVault 仓储页尚未完成创建。") end
+    if self.pendingGuildKey then
+        page.explicitGuildKey = self.pendingGuildKey
+        page.showHiddenGuilds = true
+        page.selectedOwner = self.pendingGuildKey
+        page.area = nil
+        self.pendingGuildKey = nil
+    end
     page.context = context or page.context
     if not page.context then return end
 
     local characters = ScopedCharacters(page.context)
     local scope = Scope(characters)
-    local summary = Addon.Items:GetStorageSummary(scope)
-    local query = Addon.Items:Query({ scope = scope })
+    local guildOptions = { includeHiddenGuilds = page.showHiddenGuilds == true,
+        guildKey = page.explicitGuildKey }
+    local summary = Addon.Items:GetStorageSummary(scope, guildOptions)
+    local query = Addon.Items:Query({ scope = scope, includeHiddenGuilds = guildOptions.includeHiddenGuilds,
+        guildKey = guildOptions.guildKey })
+    page.showHidden:SetChecked(page.showHiddenGuilds == true)
     local needle = string.lower((page.search:GetText() or ""):match("^%s*(.-)%s*$"))
     local searching = needle ~= ""
     local summaryByID = {}
@@ -486,8 +510,10 @@ function StoragePage:Refresh(host, context)
     end
     local guildOwnerCount = 0
     for _, guild in ipairs(summary.guilds) do
-        local owner = { key = guild.guildKey, label = guild.guildName or "公会",
-            realm = guild.realm, guildKey = guild.guildKey, tabAreas = {}, tabs = {},
+        local guildName = guild.guildName or "公会"
+        local hidden = Addon:IsGuildHidden(guild.guildKey)
+        local owner = { key = guild.guildKey, label = guild.realm and (guildName .. " · " .. tostring(guild.realm)) or guildName,
+            realm = guild.realm, guildKey = guild.guildKey, hidden = hidden, tabAreas = {}, tabs = {},
             records = {}, counts = {}, matchQuantity = 0 }
         for _, tab in ipairs(guild.tabs.locations or {}) do
             local tabID = tonumber(tab.location and tab.location.tabID)
@@ -545,6 +571,7 @@ function StoragePage:Refresh(host, context)
         page.grid:SetVerticalScroll(0)
     end
     page.renderedOwner, page.renderedArea = page.selectedOwner, page.area
+    page.selectedHiddenGuildKey = selected and selected.hidden and selected.guildKey or nil
     self:LayoutChrome(page)
 
     local current = Core.Characters:GetCurrent()
@@ -564,7 +591,8 @@ function StoragePage:Refresh(host, context)
         local classColor = owner.character and RAID_CLASS_COLORS and RAID_CLASS_COLORS[owner.character.class or ""]
         row.name:SetTextColor(classColor and classColor.r or Colors.text[1],
             classColor and classColor.g or Colors.text[2], classColor and classColor.b or Colors.text[3])
-        row.meta:SetText(tostring(owner.realm or "") .. (searching and ("  ·  命中 ×" .. tostring(owner.matchQuantity)) or ""))
+        row.meta:SetText((owner.hidden and "已隐藏 · 不计入合计" or tostring(owner.realm or ""))
+            .. (searching and ("  ·  命中 ×" .. tostring(owner.matchQuantity)) or ""))
         local coords = owner.character and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[owner.character.class]
         if coords then
             row.icon:SetTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES")
@@ -587,8 +615,9 @@ function StoragePage:Refresh(host, context)
     local mailCoverage = selected and page.area == "mail" and selected.character
         and Addon:GetCharacterCoverage(selected.key, "mail").inbox
     local partialMail = mailCoverage and (mailCoverage.unscannedCount or 0) > 0
-    page.heading:SetText(selected and (selected.label .. (partialMail and (showStale and " · 邮箱上次仅部分可见" or " · 邮箱仅部分可见")
-        or showStale and " · 待刷新快照" or "")) or "物品仓库")
+    page.heading:SetText(selected and (selected.label .. (selected.hidden and " · 已隐藏，不计入合计" or "")
+        .. (partialMail and (showStale and " · 邮箱上次仅部分可见" or " · 邮箱仅部分可见")
+        or showStale and " · 待刷新快照" or "")) or "物品总览")
     page.identityMeta:SetText(selected and (selected.character and
         ("等级 " .. tostring(selected.character.level or "?") .. " · " .. tostring(selected.realm or "") .. " · " .. tostring(selected.character.class or ""))
         or tostring(selected.realm or "")) or "")
@@ -617,4 +646,26 @@ function StoragePage:Refresh(host, context)
     page.empty:SetText(searching and (#page.slots == 0 and "没有匹配的已缓存物品。" or "")
         or #page.slots == 0 and emptyMessage or "")
     self:LayoutCells(page)
+end
+
+function StoragePage:OpenGuild(guildKey)
+    if not (Addon.db.byGuild and Addon.db.byGuild[guildKey]) then return end
+    self.pendingGuildKey = guildKey
+    local page = self.page
+    if page then
+        page.explicitGuildKey = guildKey
+        page.showHiddenGuilds = true
+        page.selectedOwner = guildKey
+        page.area = nil
+        page.search:SetText("")
+    end
+    Core.AccountView:ShowPage(Addon.AccountPage.ID)
+    page = self.page
+    if page then
+        self.pendingGuildKey = nil
+        page.explicitGuildKey = guildKey
+        page.showHiddenGuilds = true
+        page.selectedOwner = guildKey
+        self:Refresh(page, page.context)
+    end
 end

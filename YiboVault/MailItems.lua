@@ -41,7 +41,10 @@ function MailItems:ScheduleScan(reason, delay, retries)
             local success = self:Scan(reason)
             if success or self.lastStatus ~= "error" then return end
         end
-        if remaining <= 0 then return end
+        if remaining <= 0 then
+            if self.lastStatus == "error" then Addon:Print("邮箱附件扫描失败：" .. tostring(self.lastResult) .. "。") end
+            return
+        end
         if C_Timer and type(C_Timer.After) == "function" then
             C_Timer.After(0.5, function() Attempt(remaining - 1) end)
         end
@@ -142,7 +145,6 @@ function MailItems:Scan(reason)
     self.lastStatus = status
     self.lastResult = string.format("可见 %d/%d 封、附件 %d 件；%s", currentCount, totalCount, #records,
         changed and "缓存已更新" or "内容未变化")
-    if changed then Addon:Print("邮箱附件扫描完成：" .. self.lastResult .. "。") end
     return true, changed, coverage
 end
 

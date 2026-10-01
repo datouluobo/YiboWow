@@ -27,10 +27,29 @@ YiboCore.AccountView = {
     BuildContext = function() return { scope = "realm:Realm", characters = {
         { id = "A-Realm", realm = "Realm" }, { id = "B-Other", realm = "Other" },
     } } end,
+    GetVisibleCharacters = function() return {
+        { id = "A-Realm", realm = "Realm" }, { id = "B-Other", realm = "Other" },
+    } end,
+    GetEffectiveCharacterSort = function() return {} end,
+    GetCustomCharacterOrder = function() return {} end,
 }
+YiboCore.Characters = {
+    GetCurrent = function() return { id = "A-Realm", realm = "Realm" } end,
+    GetCurrentID = function() return "A-Realm" end,
+}
+YiboCore.CharacterSort = { Sort = function(_, characters) return characters end }
+YiboVault.db = { settings = { tooltipRealmScope = "current" } }
 local scope, characters = Page:GetScope()
 assert(#scope.characterIDs == 1 and scope.characterIDs[1] == "A-Realm"
     and #characters == 1 and characters[1].id == "A-Realm",
-    "tooltip scope must enforce the selected realm even if context characters are broader")
+    "storage page scope must enforce the selected realm")
+
+scope, characters = Page:GetTooltipScope()
+assert(#scope.characterIDs == 1 and scope.characterIDs[1] == "A-Realm" and #characters == 1,
+    "current-realm tooltip scope should include only current-realm characters")
+YiboVault.db.settings.tooltipRealmScope = "all"
+scope, characters = Page:GetTooltipScope()
+assert(#scope.characterIDs == 2 and #characters == 2 and characters[2].id == "B-Other",
+    "all-realm tooltip scope must ignore the storage page's selected realm")
 
 print("AccountPageFreshnessSpec: OK")

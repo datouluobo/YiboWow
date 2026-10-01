@@ -74,4 +74,36 @@ assert(#legacyQuery.records == 1 and legacyQuery.records[1].state == "stale"
 characters[3].profile = { guild = "New Guild" }
 assert(#addon.Items:GetStorageSummary(legacyScope).guilds == 0,
     "a current guild identity must supersede historical visitor associations")
+local sharedScope = { mode = "characters", characterIDs = { "A-Realm" } }
+addon:ReplaceGuildTab(guildKey, "Shared", "Realm", 1, "A-Realm", {
+    { sourceID = "guild:1:1", source = "guild-bank", itemID = 42, quantity = 7,
+        guildKey = guildKey, location = { container = 1, tabID = 1, slot = 1 } },
+}, "First", { totalSlots = 98, freeSlots = 97 })
+assert(addon.Items:Query({ scope = sharedScope, itemID = 42 }).totals.totalQuantity == 7,
+    "visible guild stock must be included by default")
+assert(addon:SetGuildHidden(guildKey, true))
+assert(addon.Items:Query({ scope = sharedScope, itemID = 42 }).totals.totalQuantity == 0,
+    "hidden guild stock must leave default totals")
+assert(#addon.Items:GetStorageSummary(sharedScope).guilds == 0
+    and addon.Items:GetSourceState("guild-bank", sharedScope)[guildKey] == nil,
+    "hidden guilds must leave default capacity and source state")
+assert(addon.Items:Query({ scope = sharedScope, itemID = 42,
+    includeHiddenGuilds = true }).totals.totalQuantity == 7,
+    "an opted-in scope must still query hidden guild stock")
+addon:ReplaceGuildTab(guildKey, "Shared", "Realm", 1, "A-Realm", {
+    { sourceID = "guild:1:1", source = "guild-bank", itemID = 42, quantity = 8,
+        guildKey = guildKey, location = { container = 1, tabID = 1, slot = 1 } },
+}, "First", { totalSlots = 98, freeSlots = 97 })
+assert(addon:IsGuildHidden(guildKey)
+    and addon.Items:Query({ scope = sharedScope, itemID = 42 }).totals.totalQuantity == 0,
+    "scanning a hidden guild must update its cache without restoring it to default totals")
+assert(addon.Items:Query({ scope = { mode = "characters", characterIDs = {} },
+    itemID = 42, guildKey = guildKey }).totals.totalQuantity == 8,
+    "an explicit guild key must work without a linked character")
+assert(#addon.Items:GetStorageSummary({ mode = "characters", characterIDs = {} },
+    { guildKey = legacyKey }).guilds == 1,
+    "an orphaned historical guild must be inspectable explicitly")
+assert(select(2, addon.Items:Query({ includeHiddenGuilds = "yes" })) == "invalid-include-hidden-guilds")
+assert(addon:DeleteGuild(guildKey) and addon.db.byGuild[guildKey] == nil,
+    "deleting a guild must remove its snapshot and hidden state")
 print("YiboVault storage summary spec passed")

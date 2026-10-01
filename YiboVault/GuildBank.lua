@@ -98,12 +98,11 @@ function GuildBank:OnFrameShown()
     self.open = true
     self.lastOpenSource = "GuildBankFrame.OnShow"
     self.lastStatus, self.lastResult = "starting", "已检测到 GuildBankFrame 显示，正在准备扫描"
-    Addon:Print("已检测到公会银行窗口显示，正在准备扫描。")
     local ok, result = pcall(self.Start, self)
     if not ok then
         self.lastStatus, self.lastResult = "error", "窗口显示启动异常：" .. tostring(result)
         self.scan = nil
-        Addon:Print("公会银行扫描启动异常；请执行 /yva status 查看诊断状态。")
+        Addon:Print("公会银行扫描启动失败：" .. tostring(result))
     end
 end
 
@@ -147,7 +146,7 @@ function GuildBank:Finish(reason)
     end
     self.lastResult = string.format("成功 %d/%d 个页签，失败 %d。", state.completed, #state.queue, state.failed)
     self.lastStatus = state.failed > 0 and "error" or "complete"
-    Addon:Print("公会银行扫描完成：" .. self.lastResult)
+    if state.failed > 0 then Addon:Print("公会银行扫描失败：" .. self.lastResult) end
 end
 
 function GuildBank:RequestNext()
@@ -229,7 +228,27 @@ function GuildBank:Start()
 end
 
 function GuildBank:HandleTabUpdate()
+    if not IsOpen() then return end
+    local tabID = type(GetCurrentGuildBankTab) == "function" and GetCurrentGuildBankTab() or nil
     local state = self.scan
+    if type(tabID) == "number" and tabID > 0 and (not state or state.waitingTab ~= tabID) then
+        local guild = CurrentGuildIdentity()
+        if guild then
+            self.refreshToken = (self.refreshToken or 0) + 1
+            local token = self.refreshToken
+            local refresh = function()
+                if not IsOpen() or GuildBank.refreshToken ~= token then return end
+                local records, err, tabName = ReadTab(guild, tabID)
+                if records then
+                    Addon:ReplaceGuildTab(guild.key, guild.name, guild.realm, tabID,
+                        guild.visitorCharacterID, records, tabName)
+                else
+                    Addon:MarkGuildTabError(guild.key, guild.name, guild.realm, tabID, err)
+                end
+            end
+            if C_Timer and C_Timer.After then C_Timer.After(0.2, refresh) else refresh() end
+        end
+    end
     if state and state.waitingTab then
         if state.responseScheduled then return end
         state.responseScheduled = true
@@ -244,22 +263,6 @@ function GuildBank:HandleTabUpdate()
         if C_Timer and C_Timer.After then C_Timer.After(0.2, capture) else capture() end
         return
     end
-    if not IsOpen() then return end
-    local tabID = type(GetCurrentGuildBankTab) == "function" and GetCurrentGuildBankTab() or nil
-    local guild = CurrentGuildIdentity()
-    if not (guild and type(tabID) == "number" and tabID > 0) then return end
-    self.refreshToken = (self.refreshToken or 0) + 1
-    local token = self.refreshToken
-    local refresh = function()
-        if not IsOpen() or GuildBank.refreshToken ~= token then return end
-        local records, err, tabName = ReadTab(guild, tabID)
-        if records then
-            Addon:ReplaceGuildTab(guild.key, guild.name, guild.realm, tabID, guild.visitorCharacterID, records, tabName)
-        else
-            Addon:MarkGuildTabError(guild.key, guild.name, guild.realm, tabID, err)
-        end
-    end
-    if C_Timer and C_Timer.After then C_Timer.After(0.2, refresh) else refresh() end
 end
 
 function GuildBank:OnEvent(event)
@@ -268,12 +271,11 @@ function GuildBank:OnEvent(event)
         self.open = true
         self.lastOpenSource = "GUILDBANKFRAME_OPENED"
         self.lastStatus, self.lastResult = "starting", "已收到公会银行打开事件，正在准备扫描"
-        Addon:Print("已检测到公会银行打开事件，正在准备扫描。")
         local ok, result = pcall(self.Start, self)
         if not ok then
             self.lastStatus, self.lastResult = "error", "打开事件启动异常：" .. tostring(result)
             self.scan = nil
-            Addon:Print("公会银行扫描启动异常；请执行 /yva status 查看诊断状态。")
+            Addon:Print("公会银行扫描启动失败：" .. tostring(result))
         end
     elseif event == "GUILDBANKFRAME_CLOSED" then
         self.open = false

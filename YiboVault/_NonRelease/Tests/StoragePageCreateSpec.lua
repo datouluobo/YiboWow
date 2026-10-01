@@ -55,6 +55,12 @@ function theme:CreateButton()
     button.SetState = function(self, state) self.state = state end
     return button
 end
+function theme:CreateCheckbox()
+    local checkbox = Widget()
+    checkbox.SetChecked = function(self, value) self.checked = value end
+    checkbox.GetChecked = function(self) return self.checked end
+    return checkbox
+end
 function theme:CreateScrollFrame() return Widget() end
 function theme:GetDataRowColor() return { 0.2, 0.3, 0.4, 1 } end
 _G.YiboCore = { UITheme = theme, Characters = { GetCurrent = function() return nil end } }
@@ -62,7 +68,7 @@ _G.YiboVault = { Items = {
     GetStorageSummary = function() return { characters = {}, guilds = {} } end,
     Query = function() return { records = {} } end,
     GetSourceState = function() return {} end,
-} }
+}, IsGuildHidden = function() return false end }
 dofile("YiboVault/StoragePage.lua")
 local host = Widget()
 YiboVault.StoragePage:Create(host)
@@ -193,7 +199,7 @@ YiboVault.StoragePage:Refresh(host, { characters = {
     { id = "one", name = "One", realm = "Realm", class = "MAGE" },
     { id = "two", name = "Two", realm = "Realm" },
 } })
-assert(page.ownerRows[1].name.text == "Guild" and page.ownerRows[2].currentMarker.shown
+assert(page.ownerRows[1].name.text == "Guild · Realm" and page.ownerRows[2].currentMarker.shown
     and not page.ownerRows[3].currentMarker.shown,
     "current character must retain its visual marker when another character is selected")
 assert(page.ownerRows[2].name.textColor[1] == 0.3
@@ -201,7 +207,7 @@ assert(page.ownerRows[2].name.textColor[1] == 0.3
     and page.ownerRows[2].name.textColor[3] == 1,
     "character names must use their class colors")
 assert(page.selectedOwner == "two", "current-character marker must not change selection")
-assert(#page.ownerRows == 3 and page.ownerRows[1].name.text == "Guild",
+assert(#page.ownerRows == 3 and page.ownerRows[1].name.text == "Guild · Realm",
     "guild bank must occupy one owner row without per-tab duplicates")
 assert(#page.tabs == 5 and page.areaButtons[1].label.text == "背包"
     and page.areaButtons[2].label.text == "邮件"
