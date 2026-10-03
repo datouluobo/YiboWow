@@ -199,7 +199,8 @@ foreach ($recordID in ($engineeringSlots.Keys | Sort-Object)) {
     }
     $spellList = "{ " + (($spellIDs | ForEach-Object { [string]$_ }) -join ", ") + " }"
     $name = ConvertTo-LuaString $row.Name_lang
-    $engineeringLines.Add(("catalog[{0}] = {{ slotID = {1}, name = {2}, spellIDs = {3} }}" -f [int]$row.ID, $engineeringSlots[[int]$recordID], $name, $spellList))
+    $sourceItem = if ($scrollByRecordID.ContainsKey([int]$recordID)) { ", itemID = $($scrollByRecordID[[int]$recordID])" } else { "" }
+    $engineeringLines.Add(("catalog[{0}] = {{ slotID = {1}, name = {2}{4}, spellIDs = {3} }}" -f [int]$row.ID, $engineeringSlots[[int]$recordID], $name, $spellList, $sourceItem))
     $engineeringRecordCount++
 }
 $engineeringLines.Add("_G.YiboBuilds = _G.YiboBuilds or {}")

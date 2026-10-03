@@ -1,4 +1,22 @@
-# YiboBuilds 1.3.1
+# YiboBuilds 1.4.0
+
+## 1.4.0
+
+- Active specialization equipment is automatically saved on logout, reload, and normal exit. Switching specializations saves the outgoing slot's last observed equipment; each slot retains its own snapshot.
+- Equipment icons show item levels in the same bottom-right outlined purple style as the Vault, excluding shirts and tabards.
+- Bag engineering scopes can be applied directly to MoP ranged weapons through secure candidate buttons. Compatible replacement enchants remain available on already enchanted gear, using the game's native replacement confirmation.
+- Ordinary enchants appear nearest equipment when engineering effects also exist. Ranged weapon scopes appear nearest their weapon.
+- Clicking the same equipment icon again closes its upgrade panel.
+
+### 中文更新说明
+
+- 小退、重载和正常退出时自动保存当前专精装备；切换专精时保存上一槽位最近观测的装备，各专精快照独立保留。
+- 装备图标右下角按物品仓库样式显示淡紫色描边装等，衬衣和战袍除外。
+- 背包工程瞄准镜可通过候选行安全按钮直接施加到 MoP 远程武器；已有附魔的装备仍显示兼容覆盖候选，并使用游戏原生覆盖确认。
+- 同时存在普通附魔和工程时，普通附魔靠近装备、工程靠外；远程武器瞄准镜靠近武器。
+- 再次点击同一装备图标可关闭提升面板。
+
+---
 
 ## 1.3.1
 

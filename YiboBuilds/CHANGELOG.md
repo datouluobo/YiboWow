@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.4.0
+
+- Automatically save active specialization equipment on logout, reload, and normal exit; preserve the outgoing specialization's last observed equipment when switching.
+- Show item levels on equipment icons using the Vault font, outline, color, and bottom-right placement; exclude shirts and tabards.
+- Support bag engineering scopes on MoP ranged weapons and apply bag enhancements through secure candidate buttons.
+- Restore compatible replacement enchant candidates on already enchanted equipment and retain the native replacement confirmation.
+- Place ordinary enchants nearest equipment and engineering effects farther out when both exist; place ranged weapon scopes nearest equipment.
+- Fix clicking the same equipped item again to close its upgrade panel.
+
+### 中文更新日志
+
+- 小退、重载和正常退出时自动保存当前专精装备；切换专精时保存上一专精最近观测的装备。
+- 装备图标装等统一采用物品仓库的字体、描边、淡紫色和右下角位置，衬衣与战袍除外。
+- 支持 MoP 远程武器的背包工程瞄准镜，并通过候选行安全按钮直接施加背包装备增强。
+- 恢复已有附魔装备的兼容覆盖候选，覆盖施加保留游戏原生确认。
+- 普通附魔与工程同时存在时，普通附魔靠近装备、工程靠外；远程武器瞄准镜靠近装备。
+- 修复再次点击同一装备无法关闭提升面板的问题。
+
 ## 1.3.1
 
 - Show each character's item level beside their name in the hover equipment matrix.

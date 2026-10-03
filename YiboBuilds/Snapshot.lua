@@ -582,11 +582,22 @@ local function ReadEngineeringTooltipInfo(slotID, enchantID)
     }
 end
 
-local function ReadEngineeringEnchantID(slotID, itemFields)
+local function IsRangedWeaponInMainHand(slotID, itemLink)
+    if slotID ~= (INVSLOT_MAINHAND or 16) or not itemLink or not GetItemInfo then return false end
+    local classID, subclassID = select(12, GetItemInfo(itemLink))
+    return classID == 2 and (subclassID == 2 or subclassID == 3 or subclassID == 18)
+end
+
+local function EngineeringSlotMatches(enchantSlotID, slotID, itemLink)
+    return enchantSlotID == slotID or enchantSlotID == (INVSLOT_RANGED or 18)
+        and IsRangedWeaponInMainHand(slotID, itemLink)
+end
+
+local function ReadEngineeringEnchantID(slotID, itemFields, itemLink)
     for _, field in ipairs(itemFields) do
         local candidateID = tonumber(field)
         local candidate = candidateID and ENGINEERING_ENCHANTS[candidateID]
-        if candidate and candidate.slotID == slotID then return candidateID end
+        if candidate and EngineeringSlotMatches(candidate.slotID, slotID, itemLink) then return candidateID end
     end
 
     -- Some MoP item links omit the tinker enchant record while the equipped
@@ -594,6 +605,7 @@ local function ReadEngineeringEnchantID(slotID, itemFields)
     -- tinker slots, not only cloaks.
     local supportedSlot = slotID == (INVSLOT_WAIST or 6) or slotID == (INVSLOT_BACK or 15)
         or slotID == (INVSLOT_HAND or 10) or slotID == (INVSLOT_RANGED or 18)
+        or IsRangedWeaponInMainHand(slotID, itemLink)
         or slotID == (INVSLOT_HEAD or 1)
     if not supportedSlot then return nil end
     local texts, spellIDs = {}, {}
@@ -604,7 +616,7 @@ local function ReadEngineeringEnchantID(slotID, itemFields)
                 local enchantRecordID = TooltipLinkID(line, "enchant")
                 local spellID = TooltipLinkID(line, "spell")
                 local mapped = enchantRecordID and ENGINEERING_ENCHANTS[enchantRecordID]
-                if mapped and mapped.slotID == slotID then return enchantRecordID end
+                if mapped and EngineeringSlotMatches(mapped.slotID, slotID, itemLink) then return enchantRecordID end
                 if line.leftText then texts[#texts + 1] = line.leftText end
                 if line.rightText then texts[#texts + 1] = line.rightText end
                 if spellID then spellIDs[#spellIDs + 1] = spellID end
@@ -644,10 +656,10 @@ local function ReadEngineeringEnchantID(slotID, itemFields)
     for _, spellID in ipairs(spellIDs) do
         local candidateID = ENGINEERING_TOOLTIP_SPELL_IDS[spellID]
         local candidate = candidateID and ENGINEERING_ENCHANTS[candidateID]
-        if candidate and candidate.slotID == slotID then return candidateID end
+        if candidate and EngineeringSlotMatches(candidate.slotID, slotID, itemLink) then return candidateID end
     end
     for candidateID, candidate in pairs(ENGINEERING_ENCHANTS) do
-        if candidate.slotID == slotID then
+        if EngineeringSlotMatches(candidate.slotID, slotID, itemLink) then
             for _, hint in ipairs(ENGINEERING_TEXT_HINTS[candidateID] or {}) do
                 if tooltipText:find(string.lower(hint), 1, true) then return candidateID end
             end
@@ -829,16 +841,18 @@ local function ReadEquipment(reason)
         local itemFields = ItemLinkFields(link)
         local itemEnchantID = tonumber(itemFields[2]) or 0
         local enchantID = itemEnchantID
+        local rangedWeapon = IsRangedWeaponInMainHand(slotID, link)
         local engineeringSlot = slotID == (INVSLOT_HEAD or 1) or slotID == (INVSLOT_WAIST or 6)
             or slotID == (INVSLOT_BACK or 15) or slotID == (INVSLOT_HAND or 10)
-            or slotID == (INVSLOT_RANGED or 18)
+            or slotID == (INVSLOT_RANGED or 18) or rangedWeapon
         -- MoP clients do not all expose tinkers in the same item-link field;
         -- scan known link IDs first, then fall back to the native item tooltip.
-        local engineeringEnchantID = engineeringSlot and ReadEngineeringEnchantID(slotID, itemFields) or nil
+        local engineeringEnchantID = engineeringSlot and ReadEngineeringEnchantID(slotID, itemFields, link) or nil
         -- Older item-link formats place a tinker in the standard enchant field;
         -- it must not be duplicated as a normal enchant on belt or cloak.
         if engineeringEnchantID == enchantID then enchantID = 0 end
         local augmentKind = AugmentKindForSlot(slotID, hasRingEnchanting)
+        if rangedWeapon then enchantID, augmentKind = 0, nil end
         local enchantInfo = augmentKind and ReadEnchantInfo(slotID, enchantID, false, link) or nil
         local enchantInstalled = enchantID > 0 or enchantInfo ~= nil
         local professionInfo = PROFESSION_ENCHANT_CATALOG[enchantID]
@@ -857,7 +871,7 @@ local function ReadEquipment(reason)
         local engineeringEligible = slotID == (INVSLOT_WAIST or 6) and hasBeltEngineering
             or slotID == (INVSLOT_BACK or 15) and hasCloakEngineering
             or slotID == (INVSLOT_HAND or 10) and hasGloveEngineering
-            or slotID == (INVSLOT_RANGED or 18) and hasGloveEngineering
+            or rangedWeapon and HasProfessionAtLeast(202, 0)
         if engineeringSlot then
             local effect = engineeringEnchantID and ENGINEERING_ENCHANTS[engineeringEnchantID]
             entry.engineering = {
@@ -926,8 +940,9 @@ function Snapshot:GetItemLevel(item)
     if not item then return nil end
     local level = tonumber(item.itemLevel)
     if level and level > 0 then return level end
-    if item.itemLink and GetDetailedItemLevelInfo then
-        local ok, value = pcall(GetDetailedItemLevelInfo, item.itemLink)
+    local detailed = C_Item and C_Item.GetDetailedItemLevelInfo or GetDetailedItemLevelInfo
+    if item.itemLink and detailed then
+        local ok, value = pcall(detailed, item.itemLink)
         if ok then level = tonumber(value) end
     end
     if (not level or level <= 0) and item.itemLink and GetItemInfo then
@@ -1024,7 +1039,9 @@ function Snapshot:Capture(reason, logout)
     local record = self:EnsureCharacter(character)
     local active = ActiveGroup()
     record.lastActiveSlot = active
-    self:CaptureSlot(record, active, reason, true)
+    local activeData = self:CaptureSlot(record, active, reason, true)
+    -- PLAYER_LOGOUT includes /reload and returning to character select.
+    if logout then activeData.confirmedEquipment = activeData.observedEquipment end
     local groups = active == "secondary" and 2 or 1
     if type(GetNumSpecGroups) == "function" then
         local ok, count = pcall(GetNumSpecGroups, false)
@@ -1053,6 +1070,15 @@ function Snapshot:ScheduleCapture(reason, delay)
 end
 
 function Snapshot:HandleSpecChanged()
+    local character = CurrentCharacter()
+    local record = character and self:EnsureCharacter(character)
+    local previous = record and record.lastActiveSlot
+    if previous and previous ~= ActiveGroup() then
+        local data = record.slots[previous]
+        -- The physical gear now belongs to the new group. Save only the
+        -- outgoing group's last observation, without reading its gear again.
+        if data and data.observedEquipment then data.confirmedEquipment = data.observedEquipment end
+    end
     self:ScheduleCapture("post-spec-change", 0.25)
 end
 

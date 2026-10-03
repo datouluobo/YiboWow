@@ -21,8 +21,8 @@ catalog[4222] = { slotID = 1, name = "Mind Amplification Dish", spellIDs = { 677
 catalog[4223] = { slotID = 6, name = "Nitro Boosts", spellIDs = { 55004, 55016 } }
 catalog[4697] = { slotID = 10, name = "Phase Fingers", spellIDs = { 108788, 108789 } }
 catalog[4698] = { slotID = 10, name = "Incindiary Fireworks Launcher", spellIDs = { 109076, 109077 } }
-catalog[4699] = { slotID = 18, name = "Lord Blastington's Scope of Doom", spellIDs = { 109086 } }
-catalog[4700] = { slotID = 18, name = "Mirror Scope", spellIDs = { 109093 } }
+catalog[4699] = { slotID = 18, name = "Lord Blastington's Scope of Doom", itemID = 77529, spellIDs = { 109086 } }
+catalog[4700] = { slotID = 18, name = "Mirror Scope", itemID = 77530, spellIDs = { 109093 } }
 catalog[4750] = { slotID = 6, name = "Spinal Healing Injector", spellIDs = { 82184, 82200 } }
 catalog[4897] = { slotID = 15, name = "Goblin Glider", spellIDs = { 126389, 126392 } }
 catalog[4898] = { slotID = 10, name = "Synapse Springs", spellIDs = { 126734, 126731 } }

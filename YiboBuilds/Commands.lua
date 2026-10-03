@@ -18,6 +18,10 @@ SlashCmdList.YIBOBUILDS = function(message)
             .. " / 施放=" .. tostring(type(CastSpellByID) == "function")
             .. " / 材料=" .. tostring(type(GetTradeSkillReagentInfo) == "function")
             .. " / 配方链接=" .. tostring(type(GetTradeSkillRecipeLink) == "function"))
+    elseif command == "augment" then
+        local trace = Addon.augmentActionTrace or {}
+        if #trace == 0 then Addon:Print("尚无施加记录，请先点击一次候选附魔。") end
+        for _, line in ipairs(trace) do Addon:Print(line) end
     elseif command == "sockets" then
         Addon.Snapshot:Capture("socket-diagnostic")
         local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
@@ -83,6 +87,6 @@ SlashCmdList.YIBOBUILDS = function(message)
         local record = current and Addon.Snapshot:GetCharacter(current.id)
         Addon:Print(record and ("当前槽位：" .. tostring(record.lastActiveSlot)) or "当前角色尚无构筑快照。")
     else
-        Addon:Print("/ybb scan 刷新构筑；/ybb sockets 检查装备孔；/ybb api 检查客户端接口；/ybb dump 查看槽位。")
+        Addon:Print("/ybb scan 刷新构筑；/ybb sockets 检查装备孔；/ybb api 检查客户端接口；/ybb augment 查看施加记录；/ybb dump 查看槽位。")
     end
 end

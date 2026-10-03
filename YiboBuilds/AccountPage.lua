@@ -793,6 +793,13 @@ local function EquipmentButton(parent, slotID)
     button.base:SetFrameLevel(button:GetFrameLevel() + 1)
     button.slotLabel = Text(button, Theme.Font.meta, C.muted, "RIGHT")
     button.slotLabel:SetWidth(30)
+    button.itemLevel = Text(button, Theme.Font.section, { 0.78, 0.62, 1 }, "RIGHT")
+    button.itemLevel:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -3, 2)
+    button.itemLevel:SetWidth(ICON_SIZE - 6)
+    button.itemLevel:SetHeight(18)
+    button.itemLevel:SetFont(STANDARD_TEXT_FONT, Theme.Font.section, "OUTLINE")
+    button.itemLevel:SetDrawLayer("OVERLAY", 7)
+    button.itemLevel:Hide()
     parent.buildsEquipment.items[slotID] = button
     return button
 end
@@ -914,15 +921,10 @@ local function TargetMatches(item, source, target)
     local _, _, _, _, _, _, _, _, inventoryType, _, _, classID, subclassID = GetItemInfo(item.itemLink)
     if classID ~= target.classID or type(subclassID) ~= "number" then return false end
     local inventoryID = INVENTORY_TYPE_IDS[inventoryType]
-    if not (inventoryID and MaskHas(target.inventoryMask, inventoryID)
+    if not ((target.inventoryMask == 0 or inventoryID and MaskHas(target.inventoryMask, inventoryID))
         and MaskHas(target.subclassMask, subclassID)) then return false end
-    local itemLevel = tonumber(item.itemLevel)
-    if not itemLevel and GetDetailedItemLevelInfo then
-        local ok, value = pcall(GetDetailedItemLevelInfo, item.itemLink)
-        if ok then itemLevel = tonumber(value) end
-    end
-    if source.minLevel and source.minLevel > 0 and (not itemLevel or itemLevel < source.minLevel) then return false end
-    if source.maxLevel and source.maxLevel > 0 and (not itemLevel or itemLevel > source.maxLevel) then return false end
+    -- SpellItemEnchantment level metadata is not an equipment item-level
+    -- target mask. The client validates final item-use requirements.
     return true
 end
 
@@ -952,9 +954,13 @@ local function AugmentCandidates(slotID, item)
     local candidates = {}
     if not CANDIDATE_SLOTS[slotID] then return candidates end
     local bagItems = BagApplyingItems()
+    local itemClassID, itemSubclassID
+    if item and item.itemLink and GetItemInfo then itemClassID, itemSubclassID = select(12, GetItemInfo(item.itemLink)) end
+    local isMoPRangedWeapon = slotID == (INVSLOT_MAINHAND or 16) and itemClassID == 2
+        and (itemSubclassID == 2 or itemSubclassID == 3 or itemSubclassID == 18)
     for enchantID, source in pairs(Addon.EnchantCatalog or {}) do
         local target = source.spellID and Addon.ApplyTargets and Addon.ApplyTargets[source.spellID]
-        if TargetMatches(item, source, target) then
+        if not isMoPRangedWeapon and TargetMatches(item, source, target) then
             local profession = Addon.ProfessionCatalog and Addon.ProfessionCatalog[enchantID]
             local skill = profession and CurrentProfessionSkill(profession.professionID)
             local learned = source.spellID and RecipeLearned(source.spellID)
@@ -994,22 +1000,25 @@ local function AugmentCandidates(slotID, item)
         end
     end
     local engineeringSkill = CurrentProfessionSkill(202)
-    if engineeringSkill then
+    do
         for enchantID, effect in pairs(Addon.EngineeringCatalog or {}) do
             local effectSlot = effect.slotID == 18 and 16 or effect.slotID
             local profession = Addon.ProfessionCatalog and Addon.ProfessionCatalog[enchantID]
-            if effectSlot == slotID and effect.slotID ~= 1
-                and engineeringSkill >= (profession and profession.requiredSkill or 0) then
+            if effectSlot == slotID and effect.slotID ~= 1 then
+                local bag = effect.itemID and bagItems[effect.itemID]
                 for _, application in ipairs((Addon.EngineeringApply or {})[enchantID] or {}) do
                     local source = {
                         spellID = application.spellID, professionID = 202,
                         requiredSkill = profession and profession.requiredSkill or 0,
-                        target = application,
+                        target = application, itemID = effect.itemID,
                     }
-                    if RecipeLearned(source.spellID) and TargetMatches(item, source, application) then
+                    local learned = not effect.itemID and engineeringSkill
+                        and engineeringSkill >= (profession and profession.requiredSkill or 0)
+                        and RecipeLearned(source.spellID)
+                    if (bag or learned) and TargetMatches(item, source, application) then
                         candidates[#candidates + 1] = {
                             enchantID = enchantID, name = effect.name or ("工程强化 #" .. enchantID),
-                            spellID = source.spellID, learned = true, source = source,
+                            spellID = source.spellID, learned = learned, bag = bag, source = source,
                             engineering = true,
                         }
                     end
@@ -1116,9 +1125,172 @@ local function ApplyPendingGem(parent)
 end
 
 local MissingCraftReagents
+local function RecordAugmentAction(stage, source, slotID)
+    local trace = Addon.augmentActionTrace or {}
+    Addon.augmentActionTrace = trace
+    local itemSpell = C_Item and C_Item.GetItemSpell or GetItemSpell
+    local spellName, spellID
+    if source.itemID and itemSpell then spellName, spellID = itemSpell(source.itemID) end
+    trace[#trace + 1] = string.format("%s item=%s useSpell=%s/%s slot=%s targeting=%s itemTarget=%s/%s", stage,
+        tostring(source.itemID), tostring(spellName), tostring(spellID), tostring(slotID),
+        tostring(SpellIsTargeting and SpellIsTargeting()), tostring(SpellCanTargetItem and SpellCanTargetItem()),
+        tostring(SpellCanTargetItemID and SpellCanTargetItemID()))
+    if #trace > 12 then table.remove(trace, 1) end
+    Addon.augmentActionTime = GetTime()
+    if not Addon.augmentActionEvents then
+        local events = CreateFrame("Frame")
+        Addon.augmentActionEvents = events
+        for _, event in ipairs({ "UI_ERROR_MESSAGE", "ADDON_ACTION_FORBIDDEN", "ADDON_ACTION_BLOCKED",
+            "UNIT_SPELLCAST_SENT", "UNIT_SPELLCAST_SUCCEEDED", "UNIT_SPELLCAST_FAILED" }) do
+            events:RegisterEvent(event)
+        end
+        events:SetScript("OnEvent", function(_, event, a, b, c, d)
+            if GetTime() - (Addon.augmentActionTime or 0) > 8 then return end
+            if event:match("^UNIT_") and a ~= "player" then return end
+            local log = Addon.augmentActionTrace
+            log[#log + 1] = table.concat({ event, tostring(a), tostring(b), tostring(c), tostring(d) }, " ")
+            if #log > 12 then table.remove(log, 1) end
+        end)
+    end
+end
+
+local function PrepareItemAugmentAction(anchor, slotID, item, candidate, viewport, completed)
+    anchor.buildsAugmentAction = { slotID, item, candidate, viewport, completed }
+    if InCombatLockdown and InCombatLockdown() then return end
+    local button = anchor.buildsSecureAugmentButton
+    if button then
+        if UnregisterStateDriver then UnregisterStateDriver(button, "visibility") end
+        button:Hide()
+    end
+    -- Rows are populated before the scroll child's height and ancestor
+    -- visibility are finalized. Prepare the action even while hidden;
+    -- the visibility callback below controls whether it accepts clicks.
+    if not candidate or not candidate.bag then return end
+    local bag = candidate.source.itemID and BagApplyingItems()[candidate.source.itemID]
+    if not (bag and GetInventoryItemLink("player", slotID) == item.itemLink) then return end
+    if not button then
+        -- The action belongs to the row's scroll-child hierarchy. A separate
+        -- UIParent sibling is not part of the ScrollFrame's mouse hit tree.
+        button = CreateFrame("Button", nil, anchor, "SecureActionButtonTemplate")
+        anchor.buildsSecureAugmentButton = button
+        button:RegisterForClicks("AnyDown", "AnyUp")
+        button:SetAttribute("useOnKeyDown", false)
+        button:SetScript("PreClick", function(self, mouseButton, down)
+            if down then return end
+            local liveBag = BagApplyingItems()[self.source.itemID]
+            local valid = liveBag and liveBag.bag == self.sourceBag and liveBag.bagSlot == self.sourceBagSlot
+                and GetInventoryItemLink("player", self.targetSlot) == self.targetLink
+                and not (CursorHasItem and CursorHasItem())
+            if not (InCombatLockdown and InCombatLockdown()) then
+                self:SetAttribute("type1", valid and "item" or nil)
+            end
+            RecordAugmentAction(valid and "secure-before" or "source-changed", self.source, self.targetSlot)
+            if not valid then Addon:Print("装备、背包或鼠标状态已变化，请重新选择。") end
+        end)
+        button:SetScript("PostClick", function(self, mouseButton, down)
+            if down then return end
+            RecordAugmentAction("secure-after", self.source, self.targetSlot)
+            if self.completed then self.completed() end
+        end)
+        button:SetScript("OnEnter", function()
+            local enter = anchor:GetScript("OnEnter")
+            if enter then enter(anchor) end
+        end)
+        button:SetScript("OnLeave", function()
+            local leave = anchor:GetScript("OnLeave")
+            if leave then leave(anchor) end
+        end)
+        anchor:HookScript("OnHide", function()
+            if not (InCombatLockdown and InCombatLockdown()) then button:Hide() end
+        end)
+        anchor:HookScript("OnShow", function()
+            local action = anchor.buildsAugmentAction
+            if action then PrepareItemAugmentAction(anchor, unpack(action)) end
+        end)
+        button:RegisterEvent("PLAYER_REGEN_ENABLED")
+        button:SetScript("OnEvent", function()
+            local action = anchor.buildsAugmentAction
+            if action then PrepareItemAugmentAction(anchor, unpack(action)) end
+        end)
+    end
+    button.source, button.targetSlot = candidate.source, slotID
+    button.sourceBag, button.sourceBagSlot, button.targetLink = bag.bag, bag.bagSlot, item.itemLink
+    button.viewport, button.completed = viewport, completed
+    button:ClearAllPoints()
+    button:SetAllPoints(anchor)
+    button:SetFrameStrata(anchor:GetFrameStrata())
+    button:SetFrameLevel(anchor:GetFrameLevel() + 5)
+    button:SetAttribute("type1", "item")
+    button:SetAttribute("item1", tostring(bag.bag) .. " " .. tostring(bag.bagSlot))
+    button:SetAttribute("target-slot1", slotID)
+    RecordAugmentAction("prepared bag=" .. bag.bag .. ":" .. bag.bagSlot, candidate.source, slotID)
+    if RegisterStateDriver then RegisterStateDriver(button, "visibility", "[combat] hide; show") end
+    button:EnableMouse(true)
+    button:Show()
+end
+
+local function PrepareItemAugmentConfirmation(popup, slotID, item, candidate)
+    if not popup then return end
+    if InCombatLockdown and InCombatLockdown() then
+        Addon:Print("请脱离战斗后重新确认施加。")
+        return
+    end
+    local button = popup.buildsSecureAugmentButton
+    if button then
+        if UnregisterStateDriver then UnregisterStateDriver(button, "visibility") end
+        button:Hide()
+    end
+    if not candidate.bag then return end
+    local bag = candidate.source.itemID and BagApplyingItems()[candidate.source.itemID]
+    local accept = popup.button1 or (popup.GetButton1 and popup:GetButton1())
+        or (popup.GetName and _G[popup:GetName() .. "Button1"])
+    if not (bag and accept and GetInventoryItemLink("player", slotID) == item.itemLink) then
+        popup:Hide()
+        Addon:Print("装备或背包来源已变化，请重新选择。")
+        return
+    end
+    if not button then
+        -- Keep the secure action outside the shared popup hierarchy so other
+        -- Blizzard dialogs do not acquire a protected child.
+        button = CreateFrame("Button", nil, UIParent, "SecureActionButtonTemplate")
+        popup.buildsSecureAugmentButton = button
+        button:RegisterForClicks("AnyDown", "AnyUp")
+        button:SetAttribute("useOnKeyDown", false)
+        button:SetScript("PostClick", function(self, mouseButton, down)
+            if not down then StaticPopup_OnClick(popup, 1) end
+        end)
+        button:SetScript("OnEnter", function() accept:LockHighlight() end)
+        button:SetScript("OnLeave", function() accept:UnlockHighlight() end)
+        local function HideAction()
+            if not (InCombatLockdown and InCombatLockdown()) then
+                if UnregisterStateDriver then UnregisterStateDriver(button, "visibility") end
+                button:Hide()
+            end
+        end
+        popup:HookScript("OnHide", HideAction)
+        button:RegisterEvent("PLAYER_REGEN_ENABLED")
+        button:SetScript("OnEvent", function()
+            if not popup:IsShown() then HideAction() end
+        end)
+    end
+    button:ClearAllPoints()
+    button:SetAllPoints(accept)
+    button:SetFrameStrata(popup:GetFrameStrata())
+    button:SetFrameLevel(accept:GetFrameLevel() + 1)
+    button:SetAttribute("type", "item")
+    button:SetAttribute("item", tostring(bag.bag) .. " " .. tostring(bag.bagSlot))
+    button:SetAttribute("target-slot", slotID)
+    -- The physical confirmation click performs both secure actions. OnAccept
+    -- only closes the dialog and must not issue a second insecure item use.
+    popup.info.OnAccept = function() end
+    if RegisterStateDriver then RegisterStateDriver(button, "visibility", "[combat] hide; show") end
+    button:Show()
+end
+
 local function BeginNativeAugment(parent, slotID, item, candidate)
     local selected = parent.buildsSelectedCharacter
     local source = candidate.source
+    RecordAugmentAction("native-handler", source, slotID)
     local target = source and (source.target or (Addon.ApplyTargets and Addon.ApplyTargets[source.spellID]))
     if not (IsCurrent(selected) and parent.buildsSlot == parent.buildsActiveSlot
         and GetInventoryItemLink and GetInventoryItemLink("player", slotID) == item.itemLink
@@ -1153,7 +1325,6 @@ local function BeginNativeAugment(parent, slotID, item, candidate)
         Addon:Print("客户端没有进入目标选择状态；未施加到装备。")
         return
     end
-    Addon:Print("已将当前装备作为「" .. candidate.name .. "」的施加目标；如游戏提示替换，请核对后确认。")
 end
 
 MissingCraftReagents = function(recipeID, itemID)
@@ -1352,6 +1523,8 @@ local function RenderEquipmentDetail(parent, snapshot)
         end
         row:Show()
         y = y - rowHeight - (actionable and 5 or 2)
+        PrepareItemAugmentAction(row, slotID, item, nil)
+        return row
     end
     if not isLive then AddRow("仅查看快照；操作需切回当前穿戴装备。") end
     local gems = item.gems or {}
@@ -1425,26 +1598,30 @@ local function RenderEquipmentDetail(parent, snapshot)
                 local candidateIcon = candidate.bag and candidate.source.itemID and GetItemIcon
                     and GetItemIcon(candidate.source.itemID)
                     or (GetSpellTexture and GetSpellTexture(candidate.spellID))
-                AddRow(candidate.name,
+                local row
+                row = AddRow(candidate.name,
                     tooltipLink, function()
-                local function Apply() BeginNativeAugment(parent, slotID, item, selectedCandidate) end
-                if StaticPopup_Show then
-                    StaticPopupDialogs.YIBO_BUILDS_REPLACE_AUGMENT = StaticPopupDialogs.YIBO_BUILDS_REPLACE_AUGMENT or {
-                        text = "%s",
-                        button1 = ACCEPT, button2 = CANCEL, timeout = 0, whileDead = true, hideOnEscape = true,
-                    }
-                    StaticPopupDialogs.YIBO_BUILDS_REPLACE_AUGMENT.OnAccept = Apply
-                    local sourceText = candidate.bag and "背包物品" or "已学配方"
-                    local current
-                    if candidate.engineering then current = item.engineering
-                    elseif not candidate.socketApplication then current = item.enchant end
-                    local oldName = current and current.state == "installed" and current.name
-                    local change = oldName and ("将替换「" .. oldName .. "」") or "将新增此增强"
-                    StaticPopup_Show("YIBO_BUILDS_REPLACE_AUGMENT", "使用" .. sourceText .. "「"
-                        .. candidate.name .. "」？" .. change .. "。目标为当前装备格。")
-                else Apply() end
+                    -- Bag sources are dispatched by the physical secure click.
+                    -- Only learned profession spells use the native spell path.
+                    if selectedCandidate.bag then
+                        local secure = row and row.buildsSecureAugmentButton
+                        RecordAugmentAction("row-fallback combat=" .. tostring(InCombatLockdown and InCombatLockdown())
+                            .. " secure=" .. tostring(secure ~= nil)
+                            .. " shown=" .. tostring(secure and secure:IsShown())
+                            .. " mouse=" .. tostring(secure and secure:IsMouseEnabled())
+                            .. " level=" .. tostring(secure and secure:GetFrameLevel()) .. "/" .. tostring(row:GetFrameLevel()),
+                            selectedCandidate.source, slotID)
+                        if InCombatLockdown and InCombatLockdown() then
+                            Addon:Print("战斗中无法施加背包附魔。")
+                        else
+                            Addon:Print("施加点击未进入安全按钮，请用 /ybb augment 查看记录。")
+                        end
+                        return
+                    end
+                    BeginNativeAugment(parent, slotID, item, selectedCandidate)
                 end, nil, { icon = candidateIcon, actionable = true,
                     subtitle = sourceText .. " · 可直接施加", badge = "施加 ›" })
+                PrepareItemAugmentAction(row, slotID, item, selectedCandidate, detail.scroll)
             end
         end
         for _, candidate in ipairs(augments) do
@@ -1508,6 +1685,11 @@ local function PlaceEquipment(parent, snapshot)
         button.slotLabel:SetText(SLOT_LABELS[slotID] or "")
         button.icon:SetTexture(item and item.icon or nil)
         button.icon:SetDesaturated(not (item and item.itemLink))
+        local itemLevel = slotID ~= (INVSLOT_BODY or 4) and slotID ~= (INVSLOT_TABARD or 19)
+            and item and item.itemLink and Addon.Snapshot:GetItemLevel(item)
+        button.itemLevel:SetWidth(math.max(1, button:GetWidth() - 6))
+        button.itemLevel:SetText(itemLevel and tostring(math.floor(itemLevel)) or "")
+        button.itemLevel:SetShown(itemLevel and true or false)
         RefreshPixelBorder(button.border, button)
         local itemBorderRed, itemBorderGreen, itemBorderBlue = ItemBorderColor(item)
         SetPixelBorderColor(button.border, { itemBorderRed, itemBorderGreen, itemBorderBlue })
@@ -1567,7 +1749,13 @@ local function PlaceEquipment(parent, snapshot)
         end
         local isRanged = slotID == (INVSLOT_MAINHAND or 16) and itemClassID == 2
             and (itemSubclassID == 2 or itemSubclassID == 3 or itemSubclassID == 18)
-        local enchantOffset = isWaist and (augmentSize + PixelRound(1, button)) or PixelRound(4, button)
+        local engineering = item and item.engineering
+        local engineeringState = engineering and engineering.state or "not-applicable"
+        local isEngineeringInstalled = engineeringState == "installed"
+        local canEngineering = isEngineeringInstalled or engineeringState == "base-missing"
+        local nearOffset = PixelRound(4, button)
+        local enchantOffset = isWaist and (augmentSize + PixelRound(1, button)) or nearOffset
+        if isRanged then enchantOffset = nearOffset + augmentSize + PixelRound(AUGMENT_ICON_GAP, button) end
         if side == "left" or side == "weapon-right" then button.enchant:SetPoint("BOTTOMLEFT", button, "BOTTOMRIGHT", enchantOffset, -effectOutset)
         else button.enchant:SetPoint("BOTTOMRIGHT", button, "BOTTOMLEFT", -enchantOffset, -effectOutset) end
         local enchant = item and item.enchant
@@ -1579,13 +1767,9 @@ local function PlaceEquipment(parent, snapshot)
         -- until a fresh capture records that this MoP slot supports one.
         local canEnchant = isEnchanted or enchantState == "uninstalled" or enchantState == "base-missing"
         button.enchant.icon:SetDesaturated(not isEnchanted)
-        button.enchant:SetShown(canEnchant and true or false)
+        button.enchant:SetShown(canEnchant and not isRanged or false)
         SetEnchantTooltip(button.enchant, item, enchantID, isEnchanted)
         button.engineering:ClearAllPoints()
-        local engineering = item and item.engineering
-        local engineeringState = engineering and engineering.state or "not-applicable"
-        local isEngineeringInstalled = engineeringState == "installed"
-        local canEngineering = isEngineeringInstalled or engineeringState == "base-missing"
         local engineeringTitle
         local isBack = slotID == (INVSLOT_BACK or 15)
         local isHand = slotID == (INVSLOT_HAND or 10)
@@ -1604,7 +1788,9 @@ local function PlaceEquipment(parent, snapshot)
         local beltBuckle = item and item.beltBuckle
         local buckleMissing = beltBuckle and beltBuckle.state == "base-missing"
         local engineeringOffset
-        if isWaist and not canEnchant and not buckleMissing then
+        if isRanged and canEngineering then
+            engineeringOffset = nearOffset
+        elseif isWaist and not canEnchant and not buckleMissing then
             -- A belt has no ordinary enchant slot. When engineering is its
             -- only lower-row effect, place it beside the belt instead of
             -- reserving the absent enchant position.
@@ -1643,7 +1829,11 @@ local function PlaceEquipment(parent, snapshot)
         SetNativeItemTooltip(button, item)
         button:SetScript("OnClick", function()
             if not (item and item.itemLink) then return end
-            parent.buildsSelectedEquipmentSlot = parent.buildsSelectedEquipmentSlot == slotID and nil or slotID
+            if parent.buildsSelectedEquipmentSlot == slotID then
+                parent.buildsSelectedEquipmentSlot = nil
+            else
+                parent.buildsSelectedEquipmentSlot = slotID
+            end
             if parent.buildsSelectedEquipmentSlot and parent.buildsBuildCollapsed then
                 parent.buildsBuildCollapsed = false
                 Addon.buildsBuildCollapsed = false
@@ -1658,8 +1848,8 @@ local function PlaceEquipment(parent, snapshot)
             if kind ~= "item" then return end
             for _, candidate in ipairs(AugmentCandidates(slotID, item)) do
                 if candidate.bag and candidate.source.itemID == cursorItemID then
+                    if ClearCursor then ClearCursor() end
                     local function Apply()
-                        if ClearCursor then ClearCursor() end
                         BeginNativeAugment(parent, slotID, item, candidate)
                     end
                     if StaticPopup_Show then
@@ -1668,9 +1858,10 @@ local function PlaceEquipment(parent, snapshot)
                             timeout = 0, whileDead = true, hideOnEscape = true,
                         }
                         StaticPopupDialogs.YIBO_BUILDS_DROP_AUGMENT.OnAccept = Apply
-                        StaticPopup_Show("YIBO_BUILDS_DROP_AUGMENT", "对「"
+                        local popup = StaticPopup_Show("YIBO_BUILDS_DROP_AUGMENT", "对「"
                             .. (GetItemInfo(item.itemLink) or SLOT_LABELS[slotID] or "装备")
                             .. "」使用「" .. candidate.name .. "」？请在游戏原生流程中核对最终效果。")
+                        PrepareItemAugmentConfirmation(popup, slotID, item, candidate)
                     else Apply() end
                     return
                 end
@@ -2013,7 +2204,7 @@ function Page.Refresh(parent, context)
     parent.buildsToolbar.buildToggle:SetState("default")
     local equipmentStatus = Addon.Snapshot:GetEquipmentStatus(slotData)
     local equipmentStatusText = ({
-        missing = "暂无装备快照", unsaved = "装备未保存", changed = "装备有更改", saved = "装备已保存",
+        missing = "暂无装备快照", unsaved = "装备待自动保存", changed = "装备有更改 · 待自动保存", saved = "装备已保存",
     })[equipmentStatus] or "暂无装备快照"
     parent.buildsToolbar.status:SetText((record.lastActiveSlot == slot and "当前使用" or "备用构筑") .. " · " .. equipmentStatusText)
     PlaceEquipment(parent, equipment)
@@ -2042,16 +2233,16 @@ function Page.Refresh(parent, context)
     parent.buildsConfirm:SetState(canSave and "selected" or "disabled")
     parent.buildsConfirm:SetText(({
         missing = "暂无装备快照",
-        unsaved = "保存此构筑装备  >",
-        changed = "更新此构筑装备  >",
+        unsaved = "立即保存此构筑装备  >",
+        changed = "立即更新此构筑装备  >",
         saved = "此构筑装备已保存",
     })[equipmentStatus] or "暂无装备快照")
     parent.buildsConfirm:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         local title = ({
             missing = "尚未采集到当前穿戴。",
-            unsaved = "当前穿戴已采集，尚未保存为此构筑装备。",
-            changed = "当前穿戴与已保存的构筑装备不同。",
+            unsaved = "小退、重载或退出时自动保存当前专精装备；也可点击立即保存。",
+            changed = "小退、重载或退出时自动更新当前专精装备；也可点击立即更新。",
             saved = "当前穿戴与已保存的构筑装备一致。",
         })[equipmentStatus] or ""
         GameTooltip:AddLine(title)

@@ -10,6 +10,9 @@ YiboBuilds is a character-build viewer for MoP Classic. It stores and shows tale
 - Equipment upgrade panel with live gem, enchant, engineering, and profession candidates
 - Direct gem socketing and equipment-targeted enhancement actions
 - Separate equipment snapshots for each talent slot
+- Automatically save active equipment on logout, reload, or exit; preserve the outgoing specialization's last observation when switching
+- Click equipment to open its upgrade panel; click the same item again to close it
+- Equipment icons show item levels, excluding shirts and tabards
 
 ## Requirements
 
@@ -28,6 +31,9 @@ YiboBuilds 是用于 MoP Classic 的账号角色构筑查看器，记录并展�
 - 装备提升面板显示实时宝石、附魔、工程及专业候选
 - 在面板内镶嵌宝石，并直接对当前装备施加增强
 - 每个天赋槽位独立保存装备快照
+- 小退、重载或退出时自动保存当前专精装备；切换专精时保存上一专精最近一次观测的装备
+- 点击装备打开提升面板，再次点击同一装备关闭；点击其它装备切换提升目标
+- 装备图标按物品仓库样式在右下角显示淡紫色描边装等，衬衣和战袍除外；空栏位或装等未知时不显示数值
 
 ### 依赖
 
