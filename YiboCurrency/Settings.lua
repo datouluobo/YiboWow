@@ -1,36 +1,58 @@
 local Addon, Core = _G.YiboCurrency, _G.YiboCore
 local Theme = Core.UITheme
 
-StaticPopupDialogs["YIBO_CURRENCY_CONFIRM_ITEM"] = {
-    text = "将 %s（itemID: %s）加入自定义货币目录？", button1 = ACCEPT, button2 = CANCEL, timeout = 0, whileDead = true, hideOnEscape = true,
-    OnAccept = function(_, data)
-        local entry, err = Addon:AddCustomItem(data.itemID)
-        if entry then
-            Addon:Print("已加入自定义货币：" .. entry.title)
-            Addon:NotifyChanged()
-            if data.refreshPage then data.refreshPage() end
-        else
-            Addon:Print(err)
-        end
+local function FindCatalogItem(itemID)
+    for _, entry in ipairs(Addon:GetCatalog()) do
+        if tonumber(entry.itemID) == itemID then return entry end
+    end
+end
+
+local RemoveOperation = {
+    label = "删除自定义物品",
+    Validate = function(info)
+        if Addon:GetCustomItem(info.itemID) then return true end
+        return false, FindCatalogItem(info.itemID) and "内置目录项目不能删除。" or "该物品不在自定义目录中。"
     end,
-}
-local DELETE_CUSTOM_ITEM_POPUP = "YIBO_CURRENCY_DELETE_CUSTOM_ITEM"
-StaticPopupDialogs[DELETE_CUSTOM_ITEM_POPUP] = {
-    text = "确定从自定义货币目录删除“%s”（itemID: %s）吗？\n这不会删除背包中的物品。",
-    button1 = "删除", button2 = CANCEL, timeout = 0, whileDead = true, hideOnEscape = true,
-    OnAccept = function(_, data)
-        local entry, err = Addon:RemoveCustomItem(data.itemID)
-        if not entry then Addon:Print(err); return end
-        Addon:Print("已从自定义货币目录删除：" .. entry.title)
+    Confirm = function(info)
+        local entry = Addon:GetCustomItem(info.itemID)
+        return string.format("确定从自定义货币目录删除“%s”（itemID: %s）吗？\n该项目的显示、监控和排序设置也会清除；背包物品保留。", entry.title, info.itemID)
+    end,
+    Execute = function(info)
+        local entry, err = Addon:RemoveCustomItem(info.itemID)
+        if not entry then return false, err end
         Addon:NotifyChanged()
-        if data.refreshPage then data.refreshPage() end
+        return true, "已从自定义目录删除：" .. entry.title
     end,
 }
-function Addon:ConfirmRemoveCustomItem(itemID, refreshPage)
-    itemID = tonumber(itemID)
-    local entry = self:GetCustomItem(itemID)
-    if not entry then self:Print("该 itemID 不在自定义货币目录中。"); return end
-    StaticPopup_Show(DELETE_CUSTOM_ITEM_POPUP, entry.title, itemID, { itemID = itemID, refreshPage = refreshPage })
+
+function Addon:ConfirmRemoveCustomItem(itemID, refreshPage, owner)
+    if not (self.CoreIntegration and self.CoreIntegration.initialized) then
+        self:Print("需要 YiboCore 1.6.1 或更新版本（API v7）。"); return
+    end
+    local info = { itemID = tonumber(itemID) }
+    local ok, message = RemoveOperation.Validate(info)
+    if not ok then self:Print(message); return end
+    local request
+    request = Core.ItemConfirmation:Show({ text = RemoveOperation.Confirm(info),
+        IsCurrent = function() return (not owner or owner:IsVisible()) and Addon:GetCustomItem(info.itemID) ~= nil end,
+        OnAccept = function()
+            local valid, reason = RemoveOperation.Validate(info)
+            if not valid then Addon:Print(reason); return end
+            local saved, result = RemoveOperation.Execute(info)
+            Addon:Print(result)
+            if saved and refreshPage then refreshPage() end
+        end })
+    if owner then
+        if owner.currencyItemConfirmation then owner.currencyItemConfirmation:Cancel() end
+        owner.currencyItemConfirmation = request
+        if not owner.currencyItemConfirmationHooked then
+            owner.currencyItemConfirmationHooked = true
+            owner:HookScript("OnHide", function(control)
+                if control.currencyItemConfirmation then control.currencyItemConfirmation:Cancel(); control.currencyItemConfirmation = nil end
+            end)
+        end
+    end
+    return request
 end
 local function Label(parent, key, text, y, color)
     parent.ycuLabels = parent.ycuLabels or {}
@@ -50,7 +72,7 @@ function Addon:CreateSettingsPanel(parent, context)
     local monitored = self:GetMonitoredCount(); local note = panel.note or Theme:CreateText(panel, Theme.Font.assist, Theme.Colors.muted, "LEFT"); panel.note = note; note:ClearAllPoints(); note:SetPoint("TOPLEFT", 0, -y); note:SetWidth(math.max(260, panel:GetWidth() - 8)); note:SetText(string.format("主窗口按固定目录展示；悬停使用独立的有序监控矩阵（当前 %d 项）。", monitored)); note:Show(); y = y + 36
     local restore = panel.restore or Theme:CreateButton(panel, 132, "恢复全部显示", "secondary"); panel.restore=restore; restore:ClearAllPoints(); restore:SetPoint("TOPLEFT",0,-y); restore:SetScript("OnClick",function() settings.visible={}; context.notifyPageChanged(); context.refreshPage() end); restore:Show()
     local reset = panel.reset or Theme:CreateButton(panel, 154, "恢复跟随全局顺序", "secondary"); panel.reset=reset; reset:ClearAllPoints(); reset:SetPoint("LEFT",restore,"RIGHT",8,0); reset:SetScript("OnClick",function() self:ResetHoverOrder(); context.notifyPageChanged(); context.refreshPage() end); reset:Show(); y=y+38
-    Label(panel, "catalog", "货币目录（右键自定义项目可删除）", y); y=y+24
+    Label(panel, "catalog", "货币目录", y); y=y+24
     local availableWidth = math.max(1, panel:GetWidth() or 1)
     -- Each complete currency name and its switches form one semantic group.
     -- Measure the longest actual label instead of reserving a generic 500px
@@ -70,7 +92,7 @@ function Addon:CreateSettingsPanel(parent, context)
         local localIndex = index - 1; local column = math.floor(localIndex / rowsPerColumn); local line = localIndex % rowsPerColumn
         local x = column * (columnWidth + columnGap); local rowY = catalogTop + line * rowHeight
         local row=panel.rows[index] or CreateFrame("Button",nil,panel); panel.rows[index]=row; row:SetSize(columnWidth,rowHeight); row:ClearAllPoints(); row:SetPoint("TOPLEFT",panel,"TOPLEFT",x,-rowY); row:RegisterForClicks("RightButtonUp")
-        row:SetScript("OnClick",function(_,button) if button == "RightButton" and rowEntry.isCustom then self:ConfirmRemoveCustomItem(rowEntry.itemID,context.refreshPage) end end)
+        row:SetScript("OnClick", nil)
         row.label=row.label or Theme:CreateText(row,Theme.Font.assist,Theme.Colors.text,"LEFT"); row.label:ClearAllPoints(); row.label:SetPoint("LEFT",row,"LEFT",0,0); row.label:SetWidth(labelWidth); row.label:SetWordWrap(false); row.label:SetText(CatalogLabel(entry)); row.label:Show()
         row.visible=row.visible or Theme:CreateCheckbox(row,"主窗口显示"); row.visible:ClearAllPoints(); row.visible:SetSize(104,rowHeight); row.visible:SetPoint("LEFT",row.label,"RIGHT",8,0); row.visible.label:SetText("主窗口显示"); row.visible:SetChecked(self:IsVisible(entry)); row.visible:SetScript("OnClick",function(control) local wanted=not self:IsVisible(entry); self:SetVisible(entry,wanted); control:SetChecked(wanted); context.notifyPageChanged(); context.refreshPage() end); row.visible:Show()
         row.monitor=row.monitor or Theme:CreateCheckbox(row,"悬停监控"); row.monitor:ClearAllPoints(); row.monitor:SetSize(108,rowHeight); row.monitor:SetPoint("LEFT",row.visible,"RIGHT",8,0); row.monitor.label:SetText("悬停监控"); local active=self:IsMonitored(entry); row.monitor:SetChecked(active); row.monitor:SetEnabled(true); row.monitor:SetAlpha(1); row.monitor:SetScript("OnClick",function(control) local wanted=not self:IsMonitored(entry); local ok,err=self:SetMonitored(entry,wanted); if not ok then Addon:Print(err); control:SetChecked(false); return end; control:SetChecked(wanted); context.notifyPageChanged(); context.refreshPage() end); row.monitor:Show()
@@ -102,30 +124,34 @@ function Addon:CreateSettingsPanel(parent, context)
         y = y + orderRowsPerColumn * rowHeight
     end
     for index=#ordered+1,#panel.orderRows do panel.orderRows[index]:Hide() end
-    y=y+8; Label(panel,"custom","自定义物品代币",y); y=y+24
-    local input=panel.customInput or CreateFrame("EditBox",nil,panel,"BackdropTemplate"); panel.customInput=input; input:SetSize(164,Theme.Size.standard); input:SetAutoFocus(false); input:SetFont(STANDARD_TEXT_FONT,Theme.Font.body,""); input:SetTextInsets(8,8,0,0); input:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8x8",edgeFile="Interface\\Buttons\\WHITE8x8",edgeSize=1}); input:SetBackdropColor(Theme.Colors.bg[1],Theme.Colors.bg[2],Theme.Colors.bg[3],1); input:SetBackdropBorderColor(Theme.Colors.lineSoft[1],Theme.Colors.lineSoft[2],Theme.Colors.lineSoft[3],1); input:ClearAllPoints(); input:SetPoint("TOPLEFT",0,-y)
-    local function ConfirmCustomItem(itemID, itemLink)
-        itemID = tonumber(itemID)
-        if not itemID or itemID <= 0 or itemID % 1 ~= 0 then Addon:Print("请输入有效的 itemID。"); return end
-        for _, entry in ipairs(Addon:GetCatalog()) do
-            if entry.id == "item:" .. itemID then Addon:Print("该 itemID 已在货币目录中。"); return end
-        end
-        local name = GetItemInfo(itemLink or itemID)
-        if not name then Addon:Print("客户端尚未缓存该物品；请先在游戏内查看该物品后重试。"); return end
-        StaticPopup_Show("YIBO_CURRENCY_CONFIRM_ITEM", name, itemID, { itemID = itemID, refreshPage = context.refreshPage })
+    y=y+8; Label(panel,"custom","数据与缓存 · 自定义物品代币",y); y=y+24
+    local picker = panel.itemPicker
+    if not picker then
+        picker = Core:CreateItemPicker(panel, {
+            resolve = { allowID = true, allowLink = true, allowName = true, match = "exact", includeBags = true,
+                candidates = function() return Addon:GetCatalog() end },
+            enterAction = "add", dropMode = "toggle",
+            Exists = function(info) return FindCatalogItem(info.itemID) ~= nil end,
+            add = {
+                Validate = function(info)
+                    if FindCatalogItem(info.itemID) then return false, "该物品已在货币目录中。" end
+                    return true
+                end,
+                Confirm = function(info) return string.format("将 %s（itemID: %s）加入自定义货币目录？", info.name, info.itemID) end,
+                Execute = function(info)
+                    local entry, err = Addon:AddCustomItem(info.itemID)
+                    if not entry then return false, err end
+                    Addon:NotifyChanged()
+                    return true, "已加入自定义目录：" .. entry.title
+                end,
+            },
+            remove = RemoveOperation,
+        })
+        panel.itemPicker = picker
     end
-    local add=panel.customAdd or Theme:CreateButton(panel,112,"添加 itemID","secondary"); panel.customAdd=add; add:ClearAllPoints(); add:SetPoint("LEFT",input,"RIGHT",8,0); add:SetScript("OnClick",function() ConfirmCustomItem(input:GetText()) end); add:Show()
-    local deleteByID=panel.customDeleteByID or Theme:CreateButton(panel,92,"按 ID 删除","danger"); panel.customDeleteByID=deleteByID; deleteByID:ClearAllPoints(); deleteByID:SetPoint("LEFT",add,"RIGHT",8,0); deleteByID:SetScript("OnClick",function() local itemID=tonumber(input:GetText() or ""); if not itemID then Addon:Print("请输入要删除的 itemID。"); return end; self:ConfirmRemoveCustomItem(itemID,context.refreshPage) end); deleteByID:Show()
-    local drop=panel.customDrop or Theme:CreateButton(panel,196,"拖放物品到这里","secondary"); panel.customDrop=drop; drop:ClearAllPoints(); drop:SetPoint("LEFT",deleteByID,"RIGHT",8,0); drop:RegisterForDrag("LeftButton")
-    Theme:BindTooltip(drop,"拖放物品到这里",{"新物品会进入添加确认；自定义目录中已有的物品会进入删除确认。"})
-    local function AddCursorItem()
-        local cursorType, itemID, itemLink
-        if GetCursorInfo then cursorType, itemID, itemLink = GetCursorInfo() end
-        if cursorType ~= "item" then Addon:Print("请从背包拖动物品到这里。"); return end
-        if ClearCursor then ClearCursor() end
-        if self:GetCustomItem(itemID) then self:ConfirmRemoveCustomItem(itemID,context.refreshPage)
-        else ConfirmCustomItem(itemID, itemLink) end
-    end
-    drop:SetScript("OnReceiveDrag", AddCursorItem); drop:SetScript("OnClick", AddCursorItem); drop:Show(); y=y+38
+    picker.config.OnSuccess = function() context.notifyPageChanged(); context.refreshPage() end
+    picker.config.OnLayoutChanged = context.refreshPanel or context.refreshPage
+    picker:ClearAllPoints(); picker:SetPoint("TOPLEFT", 0, -y); picker:Show()
+    y = y + picker:Layout(panel:GetWidth())
     panel:SetHeight(y); return y
 end

@@ -5,9 +5,11 @@ local ICON = "Interface\\AddOns\\YiboCurrency\\Media\\YiboCurrencyIcon-v1"
 
 function Integration:Initialize()
     if self.initialized then return true end
-    if not (Core and Core.CheckAPIVersion and Core.AccountView and Core.Entry and Core.CurrencyCatalog) then return nil, "YiboCore 货币 API 不可用。" end
-    if not Core:CheckAPIVersion(5) then return nil, "需要 YiboCore API v5。" end
-    local addon, err = Core:RegisterAddon(Addon.NAME, { version = Addon.VERSION, requiredAPI = 5 })
+    if not (Core and Core.CheckAPIVersion and Core:CheckAPIVersion(7) and Core.AccountView and Core.Entry and Core.CurrencyCatalog
+        and Core.ItemResolver and Core.CreateItemPicker and Core.ItemConfirmation and Core.UITheme and Core.UITheme.CreateInput) then
+        return nil, "请升级到 YiboCore 1.6.1 或更新版本（API v7）；货币管家未初始化。"
+    end
+    local addon, err = Core:RegisterAddon(Addon.NAME, { version = Addon.VERSION, requiredAPI = 7 })
     if not addon then return nil, err end
     Addon:EnsureDB(); Addon:RegisterCatalogWithCore()
     local page, pageError = Core.AccountView:RegisterPage(Addon.NAME, {
@@ -54,5 +56,8 @@ function Integration:Initialize()
     end
     self.initialized = true; return true
 end
-function Addon:NotifyChanged() if Core.AccountView then Core.AccountView:NotifyPageChanged(PAGE_ID) end end
-function Addon:OpenAccountPage() if Core.AccountView then Core.AccountView:Toggle(PAGE_ID) end end
+function Addon:NotifyChanged() if Core and Core.AccountView then Core.AccountView:NotifyPageChanged(PAGE_ID) end end
+function Addon:OpenAccountPage()
+    if not Integration.initialized then Addon:Print("请升级到 YiboCore 1.6.1 或更新版本（API v7），并重新加载界面。"); return end
+    Core.AccountView:Toggle(PAGE_ID)
+end

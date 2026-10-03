@@ -235,7 +235,7 @@ local function Layout(parent, context, columns, rows, preview, projection)
         row:SetScript("OnClick", function(_, button)
             if button ~= "RightButton" then return end
             if rowEntry.isCustom then
-                Addon:ConfirmRemoveCustomItem(rowEntry.itemID)
+                Addon:ConfirmRemoveCustomItem(rowEntry.itemID, nil, parent)
                 return
             end
             local enabling = not Addon:IsMonitored(rowEntry)
