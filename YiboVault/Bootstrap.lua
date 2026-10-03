@@ -7,6 +7,7 @@ function Addon:Initialize()
     if self.Items.WarmPersonalCountsIndex then self.Items:WarmPersonalCountsIndex() end
     if self.Tooltip then self.Tooltip:Install() end
     self.initialized = true
+    self.MailProvider:Install()
     self.Frame:RegisterEvent("PLAYER_LOGIN")
     self.Frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     self.Frame:RegisterEvent("BAG_UPDATE")
@@ -34,6 +35,7 @@ Addon.Frame:SetScript("OnEvent", function(_, event, ...)
     if event == "ADDON_LOADED" then
         local loadedAddon = ...
         if loadedAddon == Addon.NAME then Addon:Initialize() end
+        if Addon.initialized and loadedAddon == "YiboMail" then Addon.MailProvider:Install() end
         if Addon.initialized and Addon.GuildBank then Addon.GuildBank:OnAddonLoaded(loadedAddon) end
         if Addon.initialized and loadedAddon == "Blizzard_MailUI" then Addon.MailItems:InstallFrameHooks() end
         return

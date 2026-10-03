@@ -1,6 +1,6 @@
 # YiboVault / YiboMail Public API v1 契约
 
-> 状态：YiboVault `1.0.0-api1` 的 Items API v1 已实施；YiboMail 双插件适配仍待 Mail 公共接口上线。按 Vault 独立邮箱采集决策修订；2026-09-29。
+> 状态：YiboVault `1.0.0-api1` 的 Items API v1 已实施；YiboMail `0.4.0-api1` 已实施公开附件接口、原生邮箱增强、Core 业务面板及三标签设置，游戏内验收及 Vault 双插件适配待完成。2026-10-01。
 >
 > 适用范围：YiboVault 物品查询 API、YiboMail 邮件附件来源 API，以及二者的状态、范围和变更通知语义。
 >
@@ -10,7 +10,7 @@
 
 - `YiboVault.Items.API_VERSION = 1`；`YiboMail.Items.API_VERSION = 1`。业务 API 版本独立于 `YiboCore.API_VERSION`。
 - `YiboVaultDB` 保存 Vault 采集的实体容器、本人拍卖行和精简邮箱附件快照；`YiboMailDB` 保存 Mail 自己的邮件快照、归档和规则。两个插件均可独立安装、独立采集。
-- 双插件共存时，Vault 对每个角色优先选择兼容的 `YiboMail.Items` 公开附件来源；Mail 数据不可用时使用 Vault 自有快照。一个角色一次查询只能选择一份邮箱来源，不能叠加。Vault 不读取 `YiboMailDB` 私有表。Mail 的适配器将在 Mail 接口可用后实现。
+- 双插件共存时，Vault 对每个角色优先选择兼容的 `YiboMail.Items` 公开附件来源；Mail 数据不可用时使用 Vault 自有快照。一个角色一次查询只能选择一份邮箱来源，不能叠加。Vault 不读取 `YiboMailDB` 私有表。Vault 的 `MailProvider` 已接入 v1，并复用同一来源供查询、仓储页和 tooltip；Mail 的变更只在 Vault 邮件投影实际改变时转发一次事件。
 - 所有公共查询返回新建的 Lua table 投影。调用方可以修改返回值，但修改不会写回提供者。
 - 时间戳均为 Unix 秒；优先使用 `GetServerTime()`，不可用时使用 `time()`，并在记录的 `clockSource` 中注明 `server` 或 `client`。
 
@@ -90,7 +90,8 @@ scope = { mode = "account" }
 - Core 页面和悬停必须从同一次 `context.characters` 构造 `characters` 范围，因此页面、预览与 API 使用完全相同的角色切片和顺序。
 - `realm` 使用 Core 角色记录中的原始 `realm` 字符串精确匹配。Vault/Mail 不另造服务器合并或别名规则。
 - Vault 的 `scope` 必须是上述形状。非法模式、缺少 `realm`、非字符串角色 ID、稀疏角色数组等返回 `nil, "invalid-scope"`；有效但当前目录中找不到的 ID 返回正常的空结果，不视为参数错误。
-- 公会银行记录按 `guildKey` 过滤和计数，不因访问角色同时落入多个角色范围而重复计数。只有查询显式允许 `guild-bank` 且范围中至少有一个对应公会角色时才纳入。
+- 公会银行记录按 `guildKey` 过滤和计数，不因访问角色同时落入多个角色范围而重复计数。默认只有查询允许 `guild-bank` 且范围中至少有一个对应公会角色时才纳入；显式指定 `guildKey` 时可读取该公会的已存快照。
+- 被用户隐藏的公会银行快照仍会采集和保存，但默认 `Query`、`GetSourceState`、`GetStorageSummary` 均排除它。`Query({ includeHiddenGuilds = true })` 将范围内关联的隐藏公会纳入结果；`Query({ guildKey = key })` 只读取指定的已缓存公会银行，即使它被隐藏或当前角色目录已无法关联。显式 `guildKey` 不改变角色个人库存的范围。`GetSourceState(source, scope, options)` 与 `GetStorageSummary(scope, options)` 的可选 `options` 支持同样两个字段。参数类型错误分别返回 `invalid-include-hidden-guilds`、`invalid-guild-key`。
 - `guildKey` 由 Core 角色档案中精确的 `realm` 与 `guild` 共同生成稳定的不透明键；不得包含访问角色 ID。相同服务器、相同公会名的角色必须命中同一键，公会名缺失时不得创建新的公会银行快照。旧版快照若保存了访问角色 ID，且该角色当前无公会名、服务器一致，可作为历史关联读取；其记录保持 `stale`，当前已有公会名时不得用历史关联覆盖。
 
 ## 5. 通用来源记录
@@ -178,6 +179,7 @@ YiboMail.Items:GetRevision()
 `GetByCharacter(characterID, options)` 等价于把 `scope = { mode = "characters", characterIDs = { characterID } }` 合入 `options` 后调用 `Query`，返回相同结构。
 
 `currentCount` 是本次客户端可见且已扫描的邮件数；`totalCount` 是客户端返回的总数。仅当 `currentCount < totalCount` 时写入 `partial` 与 `unscannedCount`。不能把未扫描数量转换为虚构附件。
+`unscannedCount` 精确表示**本轮未暴露**的数量，不声明这些邮件是否曾在以前的批次被本地缓存。Mail 可为先前已见、当前被 100 封上限遮住的邮件保留历史／待核实记录；当前附件来源查询仍仅返回最近一次有效可见扫描中的附件。后续批次一旦显现，Mail 应读取其明细并纳入持久缓存。
 
 ### 6.3 事件
 
@@ -272,7 +274,7 @@ YiboVault.Items:GetRevision()
 
 `Query` 可省略 `options`，等同 `{}`。`itemID` 如提供必须是正整数；`identityMode` 只能是 `item-id` 或 `strict`；`variantKey` 只允许与 `strict` 一起使用且必须为非空字符串；`includeStale` 必须为布尔值；`sources` 必须是已声明来源 ID 构成的连续数组，空数组表示不查询任何来源，重复 ID 只查询一次。`strict` 未给 `variantKey` 时返回各变体的原始记录，不自动按变体合并。`totals` 只对返回的记录求和。
 
-无效参数返回 `nil, errorCode`，不返回伪装成零库存的空结果。错误码固定为 `invalid-options`、`invalid-scope`、`invalid-item-id`、`invalid-identity-mode`、`invalid-variant-key`、`invalid-include-stale`、`invalid-sources`；`GetSourceState` 对未知来源返回 `nil, "invalid-source"`。`GetStorageSummary(scope)` 使用同一范围校验。查询为只读操作，不触发采集。
+无效参数返回 `nil, errorCode`，不返回伪装成零库存的空结果。错误码固定为 `invalid-options`、`invalid-scope`、`invalid-item-id`、`invalid-identity-mode`、`invalid-variant-key`、`invalid-include-stale`、`invalid-sources`、`invalid-include-hidden-guilds`、`invalid-guild-key`；`GetSourceState` 对未知来源返回 `nil, "invalid-source"`。`GetStorageSummary(scope, options)` 使用同一范围校验。查询为只读操作，不触发采集。
 
 返回：
 

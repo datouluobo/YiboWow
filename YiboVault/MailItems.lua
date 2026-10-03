@@ -81,6 +81,12 @@ function MailItems:Fail(message)
 end
 
 function MailItems:Scan(reason)
+    local current = Addon.Core and Addon.Core.Characters:GetCurrent()
+    local provided = current and Addon.MailProvider and Addon.MailProvider:GetSnapshot(current.id)
+    if provided then
+        self.lastStatus, self.lastResult = provided.coverage.inbox.status, "YiboMail API"
+        return true, false, Addon.Copy(provided.coverage.inbox)
+    end
     if not self:IsOpen() then
         self.lastStatus, self.lastResult = "closed", "邮箱未打开，保留已有快照"
         return false

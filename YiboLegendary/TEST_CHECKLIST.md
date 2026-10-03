@@ -3,7 +3,7 @@
 ## 安装与兼容性
 
 1. 同时启用 `YiboCore` 与 `YiboLegendary`，登录 MoP Classic 5.5.4。
-2. 输入 `/yco addons`，确认 `YiboLegendary` 的版本为 `2.0.0` 且需要 Core API v5。
+2. 输入 `/yco addons`，确认 `YiboLegendary` 的版本为 `2.1.0` 且需要 Core API v5。
 3. 输入 `/yle probe`，确认任务完成、任务日志索引、任务目标、声望和物品数量 API 均按客户端实际情况报告；不可用项不得被渲染为零进度。
 4. 输入 `/yle`，确认进入 Core 的“传说之路”页，而非独立窗口。
 

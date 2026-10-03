@@ -1,0 +1,13 @@
+## Interface: 50504, 120007
+## Title: |cff20e070[Yibo]|r YiboVault Icon Broker Probe
+## Notes: Side-by-side non-release Broker preview for the 24px and 32px YiboVault icon assets.
+## Notes-zhCN: YiboVault 24px 与 32px 图标的并排 Broker 实机预览探针（非发布）。
+## Author: YiboSoft
+## Version: 0.1.0
+## OptionalDeps: HidingBar
+## LoadOnDemand: 0
+
+YiboVaultIconBrokerProbe.lua
+
+
+

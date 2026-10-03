@@ -65,9 +65,16 @@ Core.AddonCatalog = {
     },
     {
         name = "YiboVault",
-        title = "YiboVault - 物品仓库",
+        title = "物品总览",
         relation = "core-child",
         description = "跨角色查询背包、装备与后续已验证的库存来源。",
+    },
+    {
+        name = "YiboMail",
+        title = "邮件助手",
+        relation = "core-child",
+        icon = "Interface\\AddOns\\YiboMail\\Media\\YiboMailIcon-v1",
+        description = "跨角色邮件快照、积压缓存与附件来源。",
     },
     {
         name = "YiboReputation",

@@ -40,7 +40,8 @@ YiboMail 是独立的后续工作流，目前尚未启动。Vault 邮箱附件�
 - [Mail 客户端验证记录](../YiboMail/_NonRelease/Docs/Stage0-客户端验证记录.md)
 - [Core API v6 增量接入指南](../YiboCore/Docs/API-v6-业务插件增量接入指南.md)
 - [阶段 0 契约烟雾测试](../YiboVault/_NonRelease/Tests/Stage0ContractSpec.lua)
-- [阶段 0 非发布客户端探针](../_NonRelease/YiboStage0Probe/README.md)
+- [Vault 阶段 0 非发布客户端探针](../_NonRelease/YiboStage0Probe/README.md)
+- [Mail 阶段 0 非发布客户端探针](../_NonRelease/YiboMailStage0Probe/README.md)
 
 正式 Slash 命令已完成全工作区 `SLASH_*` 占用检查并冻结为 Vault `/yva`、Mail `/yma`。Vault 的精简邮箱附件采集已实现，仍须完成客户端验收；Mail 自身阶段一及双插件集成等待 Mail 阶段 0 剩余场景评审。
 

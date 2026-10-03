@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="360" viewBox="0 0 760 360">
+  <title>YiboCore Stage 3 A solid cube skeleton</title>
+  <desc>Monochrome 32px vector skeleton using the selected A silhouette and solid cube center node.</desc>
+  <rect width="760" height="360" fill="#fff"/>
+  <style>
+    .title{font:600 17px sans-serif;fill:#111}.note{font:12px sans-serif;fill:#444}.grid{stroke:#d7d7d7;stroke-width:.5}.outer{fill:#111}.inner{fill:#fff}.spoke{fill:#111}.cube{fill:#111}.cut{fill:#fff}.dim{font:11px sans-serif;fill:#555}
+  </style>
+  <defs>
+    <g id="core">
+      <!-- regular hexagon, centered on the 32px grid -->
+      <path class="outer" d="M16 1 29 8.5v15L16 31 3 23.5v-15z"/>
+      <path class="inner" d="M16 4 26 10v12L16 28 6 22V10z"/>
+      <!-- three thick connectors end at the nearest inner-hex intersections -->
+      <path class="spoke" d="M14 16 6 11.4V8l10 5.7zM18 16l8-4.6V8l-10 5.7zM14.2 19h3.6v9h-3.6z"/>
+      <!-- selected solid cube node -->
+      <path class="cube" d="m16 12 4.5 2.6v5.2L16 22.4l-4.5-2.6v-5.2z"/>
+      <path class="cut" d="m16 14 2.2 1.3-2.2 1.3-2.2-1.3z"/>
+    </g>
+    <pattern id="grid32" width="1" height="1" patternUnits="userSpaceOnUse"><path d="M1 0H0V1" class="grid" fill="none"/></pattern>
+  </defs>
+  <text x="24" y="28" class="title">YiboCore · Stage 3 · A + 实心立方中心节点</text>
+  <text x="24" y="49" class="note">单色骨架：正六边形、三条粗连接线、实心中心立方；删除所有非必要细节。</text>
+  <g transform="translate(40 82)">
+    <rect width="256" height="256" fill="url(#grid32)" stroke="#777"/>
+    <use href="#core" transform="scale(8)"/>
+    <text x="0" y="278" class="dim">32×32 网格放大 8 倍</text>
+  </g>
+  <g transform="translate(360 120)">
+    <text x="0" y="-20" class="dim">实尺寸预览</text>
+    <g><use href="#core"/><text x="2" y="52" class="dim">32px</text></g>
+    <g transform="translate(82 4) scale(.75)"><use href="#core"/><text x="2" y="52" class="dim" transform="scale(1.333)">24px</text></g>
+  </g>
+  <g transform="translate(360 245)">
+    <text x="0" y="0" class="note">检查重点：</text>
+    <text x="0" y="21" class="note">• 单色下仍可读出三向体结构</text>
+    <text x="0" y="42" class="note">• 连接线到达最近两侧交点</text>
+    <text x="0" y="63" class="note">• 中心立方在 24px 不消失</text>
+  </g>
+  <text x="24" y="348" class="note">待确认：确认骨架后进入阶段 4 的 24/32/64px WoW UI 模拟。</text>
+</svg>

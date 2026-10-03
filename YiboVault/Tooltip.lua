@@ -13,7 +13,6 @@ local SOURCE_ICONS = {
 local GREEN = "|cff20e070"
 local MUTED = "|cff87b3ba"
 local RESET = "|r"
-
 local function ItemID(link)
     if type(link) ~= "string" then return nil end
     return tonumber(link:match("|Hitem:(%d+)") or link:match("^item:(%d+)"))
@@ -144,6 +143,8 @@ function Tooltip:Append(tooltip, knownItemID)
         itemID = ItemID(link)
     end
     if not itemID then return end
+    local hiddenItems = Addon.db and Addon.db.settings and Addon.db.settings.hiddenTooltipItems
+    if hiddenItems and hiddenItems[itemID] then return end
     local hiddenGuildKey = tooltip._yiboVaultGuildKey
     if not Addon:IsGuildHidden(hiddenGuildKey) then hiddenGuildKey = nil end
     if tooltip._yiboVaultAppliedItemID == itemID
@@ -157,15 +158,6 @@ function Tooltip:Append(tooltip, knownItemID)
         sources = { "guild-bank" }, itemID = itemID,
     })
     if #result.records == 0 and not (hiddenResult and #hiddenResult.records > 0) then return end
-
-    local partialMail = false
-    for _, state in pairs(result.coverage and result.coverage.mail or {}) do
-        local inbox = state and state.locations and state.locations.inbox
-        if inbox and (inbox.unscannedCount or 0) > 0 then
-            partialMail = true
-            break
-        end
-    end
 
     local byCharacter, guilds = {}, {}
     local current = Addon.Core and Addon.Core.Characters:GetCurrent()
@@ -305,13 +297,20 @@ function Tooltip:Append(tooltip, knownItemID)
         if allRealms and hiddenGuild.realm then name = name .. "-" .. hiddenGuild.realm end
         AddOwnerRow(tooltip, name, hiddenTotal > 0 and tostring(hiddenTotal) or "~", parts)
     end
-    if partialMail then tooltip:AddLine("邮箱仅统计已扫描的可见邮件", 0.53, 0.70, 0.73) end
     tooltip:Show()
 end
 
 function Tooltip:Invalidate()
     self.cacheRevision, self.cacheScope = nil, nil
     self.cacheResults, self.cacheOrder = nil, nil
+    local tooltip = GameTooltip
+    if tooltip then
+        tooltip._yiboVaultAppliedItemID = nil
+        tooltip._yiboVaultAppliedGuildKey = nil
+        if tooltip.IsShown and tooltip:IsShown() and tooltip.RefreshData then
+            pcall(tooltip.RefreshData, tooltip)
+        end
+    end
 end
 
 function Tooltip:Install()

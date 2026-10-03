@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+<rect width="1400" height="900" fill="#e6e6e6"/><style>text{font-family:Arial,sans-serif;fill:#171717}.title{font-size:25px;font-weight:bold}.label{font-size:19px;font-weight:bold}.sub{font-size:14px}.tiny{font-size:12px}.card{fill:#f7f7f7;stroke:#b9b9b9;stroke-width:1}.dark{fill:#171717}.white{fill:#fff}.ui{fill:#272a2d;stroke:#555b61;stroke-width:1}.slot{fill:#c9c3b6;stroke:#8c8578;stroke-width:2}</style>
+<defs>
+<g id="frame"><path class="dark" d="M16 1 29 8.5v15L16 31 3 23.5v-15z"/><path class="white" d="M16 4 26 10v12L16 28 6 22V10z"/></g>
+<g id="c1"><use href="#frame"/><path class="dark" d="m5 13 11-7 11 7v3H5zM7 16h18v11l-9 3-9-3z"/><path class="white" d="M11 26V20a5 5 0 0 1 10 0v6z"/></g>
+<g id="c2"><use href="#frame"/><path class="dark" d="M8 13 16 8l8 5v2H8zM9 14h2.5v9H9zM14.75 14h2.5v9h-2.5zM20.5 14H23v9h-2.5zM10.5 22h11v1.5L16 26l-5.5-2.5z"/></g>
+<g id="c3"><use href="#frame"/><path class="dark" d="M6 12 16 6 26 12v4H6zM7 15h4v10H7zM14 15h4v10h-4zM21 15h4v10h-4zM6 24h20v3l-10 4-10-4z"/></g>
+</defs>
+<text x="28" y="42" class="title">YiboVault — Stage 4 / Native-size and WoW UI readability</text><text x="28" y="68" class="sub">Silhouette-only review. Each icon is shown at its actual 24px, 32px and 64px drawing size; lower panels simulate dark UI and a button slot.</text>
+<!-- C1 -->
+<g transform="translate(24 94)"><rect class="card" width="432" height="774" rx="10"/><text x="20" y="34" class="label">C1 · Arch doorway</text><text x="20" y="58" class="sub">Single broad central opening</text>
+<text x="30" y="100" class="tiny">24px</text><text x="114" y="100" class="tiny">32px</text><text x="226" y="100" class="tiny">64px</text>
+<g transform="translate(30 112) scale(.75)"><use href="#c1"/></g><g transform="translate(114 112)"><use href="#c1"/></g><g transform="translate(226 112) scale(2)"><use href="#c1"/></g>
+<text x="20" y="270" class="sub">Dark UI · direct alpha</text><rect x="20" y="284" width="392" height="76" rx="6" class="ui"/><g transform="translate(40 306)"><use href="#c1"/></g><text x="94" y="329" fill="#eee">Storage  •  Inventory  •  Bank</text>
+<text x="20" y="400" class="sub">Dark UI · icon button slot</text><rect x="20" y="414" width="392" height="82" rx="6" class="ui"/><rect x="40" y="430" width="50" height="50" rx="7" class="slot"/><g transform="translate(49 439) scale(1)"><use href="#c1"/></g><text x="106" y="462" fill="#eee">Broker / minimap button</text>
+<text x="20" y="548" class="sub">Readability check</text><text x="20" y="575" class="tiny">• 24px: main arch should remain one clear opening.</text><text x="20" y="599" class="tiny">• 32/64px: silhouette and frame proportions stay consistent.</text><text x="20" y="623" class="tiny">• Dark direct placement tests how black frame edges hold up.</text></g>
+<!-- C2 -->
+<g transform="translate(484 94)"><rect class="card" width="432" height="774" rx="10"/><text x="20" y="34" class="label">C2 · Contained columns</text><text x="20" y="58" class="sub">Roof, columns and base inside the hex</text>
+<text x="30" y="100" class="tiny">24px</text><text x="114" y="100" class="tiny">32px</text><text x="226" y="100" class="tiny">64px</text>
+<g transform="translate(30 112) scale(.75)"><use href="#c2"/></g><g transform="translate(114 112)"><use href="#c2"/></g><g transform="translate(226 112) scale(2)"><use href="#c2"/></g>
+<text x="20" y="270" class="sub">Dark UI · direct alpha</text><rect x="20" y="284" width="392" height="76" rx="6" class="ui"/><g transform="translate(40 306)"><use href="#c2"/></g><text x="94" y="329" fill="#eee">Storage  •  Inventory  •  Bank</text>
+<text x="20" y="400" class="sub">Dark UI · icon button slot</text><rect x="20" y="414" width="392" height="82" rx="6" class="ui"/><rect x="40" y="430" width="50" height="50" rx="7" class="slot"/><g transform="translate(49 439)"><use href="#c2"/></g><text x="106" y="462" fill="#eee">Broker / minimap button</text>
+<text x="20" y="548" class="sub">Readability check</text><text x="20" y="575" class="tiny">• 24px: roof, connected posts and base should read separately.</text><text x="20" y="599" class="tiny">• 32/64px: verify every column still touches the roof.</text><text x="20" y="623" class="tiny">• Dark direct placement tests how black frame edges hold up.</text></g>
+<!-- C3 -->
+<g transform="translate(944 94)"><rect class="card" width="432" height="774" rx="10"/><text x="20" y="34" class="label">C3 · Larger facade</text><text x="20" y="58" class="sub">Broad bank mark fills the badge</text>
+<text x="30" y="100" class="tiny">24px</text><text x="114" y="100" class="tiny">32px</text><text x="226" y="100" class="tiny">64px</text>
+<g transform="translate(30 112) scale(.75)"><use href="#c3"/></g><g transform="translate(114 112)"><use href="#c3"/></g><g transform="translate(226 112) scale(2)"><use href="#c3"/></g>
+<text x="20" y="270" class="sub">Dark UI · direct alpha</text><rect x="20" y="284" width="392" height="76" rx="6" class="ui"/><g transform="translate(40 306)"><use href="#c3"/></g><text x="94" y="329" fill="#eee">Storage  •  Inventory  •  Bank</text>
+<text x="20" y="400" class="sub">Dark UI · icon button slot</text><rect x="20" y="414" width="392" height="82" rx="6" class="ui"/><rect x="40" y="430" width="50" height="50" rx="7" class="slot"/><g transform="translate(49 439)"><use href="#c3"/></g><text x="106" y="462" fill="#eee">Broker / minimap button</text>
+<text x="20" y="548" class="sub">Readability check</text><text x="20" y="575" class="tiny">• 24px: pillars should remain distinct from the hex frame.</text><text x="20" y="599" class="tiny">• 32/64px: assess the larger central mass and negative space.</text><text x="20" y="623" class="tiny">• Dark direct placement tests how black frame edges hold up.</text></g>
+</svg>

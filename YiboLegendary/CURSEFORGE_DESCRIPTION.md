@@ -30,7 +30,7 @@ YiboLegendary 是面向 **MoP Classic 5.5.4** 的账号级传说物品获取进�
 
 YiboLegendary is an account-wide legendary acquisition tracker for **Mists of Pandaria Classic 5.5.4**.
 
-Version 2.1 tracks the Legendary Cloak, Thunderfury, Thori'dal, and additional legendary items from Classic through Cataclysm. The hover preview compares each character against each tracked target, while the YiboCore account page shows routes, progress, and next actions.
+Version 2.1.0 tracks the Legendary Cloak, Thunderfury, Thori'dal, and additional legendary items from Classic through Cataclysm. The hover preview compares each character against each tracked target, while the YiboCore account page shows routes, progress, and next actions.
 
 ### Features
 

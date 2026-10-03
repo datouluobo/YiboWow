@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="330" viewBox="0 0 1160 330">
+  <title>YiboCore Stage 2 silhouette directions</title>
+  <desc>Eight restrained silhouette directions preserving the existing hexagon, central node, and three-way connection motif.</desc>
+  <rect width="1160" height="330" fill="#171b1c"/>
+  <style>
+    .title{font:600 17px sans-serif;fill:#dce9e9}.label{font:600 13px sans-serif;fill:#dce9e9}.note{font:12px sans-serif;fill:#8ea4a4}.cell{fill:#22292a;stroke:#405052}.outer{fill:#061012;stroke:#8edbd2;stroke-width:1.5}.inner{fill:#174b52;stroke:#061012;stroke-width:1.5}.line{fill:none;stroke:#d9ffff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}.line2{fill:none;stroke:#7dcfc5;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.node{fill:#d9ffff;stroke:#061012;stroke-width:1.4}.side{fill:#54b9b1;stroke:#061012;stroke-width:1.4}.tiny{font:10px sans-serif;fill:#8ea4a4}
+  </style>
+  <defs>
+    <g id="hex"><path class="outer" d="M16 1 30 9v14l-14 8L2 23V9z"/><path class="inner" d="M16 4 27 10v11l-11 6-11-6V10z"/></g>
+    <g id="node"><path class="node" d="m16 12 4 2.3v4.6L16 21l-4-2.1v-4.6z"/><path class="side" d="m16 12 4 2.3-4 2.4-4-2.4z"/></g>
+    <g id="a"><use href="#hex"/><path class="line" d="M16 15V7M13.5 16.5 7 12M18.5 16.5 25 12M16 20v6"/><use href="#node"/></g>
+    <g id="b"><use href="#hex"/><path class="line" d="M14.5 15 8 8M17.5 15 24 8M16 19v8"/><use href="#node"/></g>
+    <g id="c"><use href="#hex"/><path class="line" d="M14 15 8 15M18 15h6M16 19v8"/><use href="#node"/></g>
+    <g id="d"><use href="#hex"/><path class="line" d="M13.5 15.5 7 9M18.5 15.5 25 9M16 19v7"/><use href="#node"/></g>
+    <g id="e"><use href="#hex"/><path class="line" d="M14 14.5 10 7M18 14.5 22 7M16 20v6"/><use href="#node"/></g>
+    <g id="f"><use href="#hex"/><path class="line" d="M13 15 6 12M19 15l7-3M16 20v7"/><use href="#node"/></g>
+    <g id="g"><use href="#hex"/><path class="line" d="M14 15 8 10M18 15l6-5M16 20v5"/><use href="#node"/></g>
+    <g id="h"><use href="#hex"/><path class="line2" d="M13 15 7 11M19 15l6-4M16 20v6"/><use href="#node"/></g>
+    <g id="sample32"><use href="#a"/></g>
+    <g id="sample24" transform="scale(.75)"><use href="#a"/></g>
+  </defs>
+  <text x="24" y="28" class="title">YiboCore · 阶段 2 · 保留原意象的轮廓方向（草案）</text>
+  <text x="24" y="49" class="note">固定不变：六边形外框、中心立方节点、三向连接；只比较连接角度、留白和 24px 下的块面关系。</text>
+  <g transform="translate(20 70)">
+    <g transform="translate(0)"><rect class="cell" width="135" height="220" rx="8"/><text x="12" y="24" class="label">A · 原构图简化</text><g transform="translate(45 38)"><use href="#a"/></g><g transform="translate(51 100)"><use href="#a" transform="scale(.75)"/></g><text x="38" y="132" class="tiny">32px / 24px</text></g>
+    <g transform="translate(140)"><rect class="cell" width="135" height="220" rx="8"/><text x="12" y="24" class="label">B · 上收连接</text><g transform="translate(45 38)"><use href="#b"/></g><g transform="translate(51 100)"><use href="#b" transform="scale(.75)"/></g><text x="38" y="132" class="tiny">32px / 24px</text></g>
+    <g transform="translate(280)"><rect class="cell" width="135" height="220" rx="8"/><text x="12" y="24" class="label">C · 水平展开</text><g transform="translate(45 38)"><use href="#c"/></g><g transform="translate(51 100)"><use href="#c" transform="scale(.75)"/></g><text x="38" y="132" class="tiny">32px / 24px</text></g>
+    <g transform="translate(420)"><rect class="cell" width="135" height="220" rx="8"/><text x="12" y="24" class="label">D · 斜向三叉</text><g transform="translate(45 38)"><use href="#d"/></g><g transform="translate(51 100)"><use href="#d" transform="scale(.75)"/></g><text x="38" y="132" class="tiny">32px / 24px</text></g>
+    <g transform="translate(560)"><rect class="cell" width="135" height="220" rx="8"/><text x="12" y="24" class="label">E · 短线粗块</text><g transform="translate(45 38)"><use href="#e"/></g><g transform="translate(51 100)"><use href="#e" transform="scale(.75)"/></g><text x="38" y="132" class="tiny">32px / 24px</text></g>
+    <g transform="translate(700)"><rect class="cell" width="135" height="220" rx="8"/><text x="12" y="24" class="label">F · 外扩分支</text><g transform="translate(45 38)"><use href="#f"/></g><g transform="translate(51 100)"><use href="#f" transform="scale(.75)"/></g><text x="38" y="132" class="tiny">32px / 24px</text></g>
+    <g transform="translate(840)"><rect class="cell" width="135" height="220" rx="8"/><text x="12" y="24" class="label">G · 近中心聚合</text><g transform="translate(45 38)"><use href="#g"/></g><g transform="translate(51 100)"><use href="#g" transform="scale(.75)"/></g><text x="38" y="132" class="tiny">32px / 24px</text></g>
+    <g transform="translate(980)"><rect class="cell" width="135" height="220" rx="8"/><text x="12" y="24" class="label">H · 低对比保守版</text><g transform="translate(45 38)"><use href="#h"/></g><g transform="translate(51 100)"><use href="#h" transform="scale(.75)"/></g><text x="38" y="132" class="tiny">32px / 24px</text></g>
+  </g>
+  <text x="24" y="315" class="note">待确认：选择一个方向，或指出“保留 A 的外框 + G 的分支”等合并方式。确认后进入阶段 3：32px 矢量骨架。</text>
+</svg>

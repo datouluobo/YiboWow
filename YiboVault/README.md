@@ -4,7 +4,11 @@
 
 正式版变化见 [更新日志](CHANGELOG.md)。
 
-> 当前状态：背包/装备、Core 账号查询页、个人银行及公会银行已完成首轮客户端检查；AH 正式采集和当前角色明细已通过客户端检查。角色仓储页与容量展示已获用户确认；物品 Tooltip 的 Vault 区块已通过截图核对。Vault 邮箱附件补扫的基础游戏内扫描已由截图确认；大量邮件仅部分可见的边界仍待验证。YiboMail 尚未上线；YiboCurrency 已作为首个可选公共 API 调用方。
+安装 YiboMail 时，Vault 按角色优先使用兼容的 `YiboMail.Items` v1 邮箱快照；Mail 未扫描、接口不可用或扫描失败时，回退到 Vault 自有快照。有效的历史／部分快照继续保留状态，明确的空邮箱覆盖旧数量。两份来源不会相加；主窗口、仓储页、查询 API 与 tooltip 共用同一投影，tooltip 仅显示物品统计。YiboMail 是可选依赖，未安装时 Vault 原有邮箱采集照常工作。TOC 变化后需完整退出并重新进入游戏。
+
+联动回归：`lua YiboVault/_NonRelease/Tests/MailProviderSpec.lua`。测试使用实际 Mail API、Vault 查询与来源适配器，覆盖按角色回退、空邮箱、状态变化、事件顺序和订阅生命周期。
+
+> 当前状态：背包/装备、Core 账号查询页、个人银行及公会银行已完成首轮客户端检查；AH 正式采集和当前角色明细已通过客户端检查。角色仓储页与容量展示已获用户确认；物品 Tooltip 的 Vault 区块已通过截图核对。Vault 已接入可选 YiboMail.Items v1 邮件来源，联动回归测试通过，客户端联动仍待验收。YiboCurrency 已作为可选公共 API 调用方。
 
 > 仓储视图实施进度：容量快照、只读汇总接口、Core 页面角色浏览与物品 Tooltip 已按 [概念图](Media/YiboVault-Storage-Tooltip-Concept.png) 实现并通过本地 Lua 校验；仓储页与容量展示已获用户确认，Tooltip 的基本显示与数量汇总已获客户端截图验证。新版 Tooltip 行布局与服务器范围设置已通过本地检查，尚待客户端复核。
 

@@ -1,0 +1,27 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YiboMail E · 正六边形与 WoW UI 实尺寸模拟 · 待确认</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:30px;background:#10171b;color:#e8e8dc;font:15px "Microsoft YaHei",sans-serif}main{max-width:980px;margin:auto}h1{font-size:25px;margin:0 0 8px}p{color:#a8b7b8;line-height:1.65;margin:0 0 20px}.status{color:#6dd5b8}.compare,.contexts{display:grid;gap:16px;grid-template-columns:1fr 1fr}.panel{background:#1c2025;border:1px solid #46504e;border-radius:8px;padding:18px}h2{margin:0 0 14px;font-size:16px;color:#e8dfc1}.sizes{height:102px;display:flex;gap:42px;align-items:center;justify-content:center}.sample{display:flex;flex-direction:column;align-items:center;gap:10px;font-size:12px;color:#b3c1bf}.note{font-size:13px;margin:12px 0 0;color:#a9b9b6}.contexts{margin-top:20px;grid-template-columns:1fr 1fr 1fr}.contexts .panel{padding:16px}.wow{background:#15191d;border:1px solid #76654a;box-shadow:inset 0 0 0 2px #292925;border-radius:3px}.broker{height:44px;display:flex;align-items:center;gap:10px;padding:8px}.gold{color:#e9c67b}.list .row{display:flex;height:44px;align-items:center;gap:9px;padding:9px 10px;border-bottom:1px solid #333830}.list .row:last-child{border:0}.list span{font-size:12px}.muted{color:#929f9d}.list .end{margin-left:auto;color:#d0d0c2}.map{position:relative;width:174px;height:174px;margin:auto;border-radius:50%;background:radial-gradient(circle at 40% 35%,#34403b,#20282a 70%);border:5px solid #786b49;box-shadow:inset 0 0 0 3px #181b19}.map::before{content:"";position:absolute;inset:23px;border:1px solid #60706366;border-radius:50%}.map .north{position:absolute;top:-3px;left:72px;color:#e4d5a1;font:15px Georgia}.map button{position:absolute;right:-12px;top:106px;width:42px;height:42px;display:flex;justify-content:center;align-items:center;border:2px solid #776747;background:#171c20;border-radius:50%;padding:0}.facts{display:flex;gap:24px;margin-top:20px;padding:15px 18px;background:#1c292a;border:1px solid #3c5d58;font-size:13px;color:#bed1ca;line-height:1.8}.foot{font-size:13px;margin:18px 0 0}@media(max-width:760px){.compare,.contexts{grid-template-columns:1fr}.facts{flex-direction:column;gap:4px}}
+</style><main>
+<h1>YiboMail · 正六边形与 WoW UI 实尺寸模拟</h1>
+<p><span class="status">阶段 4 · 待确认</span><br>24 / 32 / 64px 均由已确认的正六边形骨架直接渲染；右侧为青绿外框版本。</p>
+<div class="compare">
+<section class="panel"><h2>基准骨架 · 深色 UI</h2><div class="sizes">
+<div class="sample"><img width="24" height="24" src="stage4-E-base-24-preview.png"><span>24 × 24</span></div>
+<div class="sample"><img width="32" height="32" src="stage4-E-base-32-preview.png"><span>32 × 32</span></div>
+<div class="sample"><img width="64" height="64" src="stage4-E-base-64-preview.png"><span>64 × 64</span></div>
+</div><p class="note">信封与封蜡可识别，深色外框在 UI 底色上较弱。</p></section>
+<section class="panel"><h2>青绿正六边形 · 实尺寸预览</h2><div class="sizes">
+<div class="sample"><img width="24" height="24" src="stage4-E-outline-24-preview.png"><span>24 × 24</span></div>
+<div class="sample"><img width="32" height="32" src="stage4-E-outline-32-preview.png"><span>32 × 32</span></div>
+<div class="sample"><img width="64" height="64" src="stage4-E-outline-64-preview.png"><span>64 × 64</span></div>
+</div><p class="note">形状、线宽与比例相同，仅外框使用单色青绿。</p></section>
+</div>
+<div class="contexts">
+<section class="panel"><h2>Broker 行 · 24px</h2><div class="wow broker"><img width="24" height="24" src="stage4-E-outline-24-preview.png"><span class="gold">YiboMail</span><span class="muted">邮件</span></div><p class="note">图形可在紧凑入口中独立识别。</p></section>
+<section class="panel"><h2>小地图按钮 · 32px</h2><div class="map"><span class="north">N</span><button aria-label="YiboMail 模拟入口"><img width="32" height="32" src="stage4-E-outline-32-preview.png"></button></div><p class="note">透明外围使圆形按钮底座正常透出。</p></section>
+<section class="panel"><h2>紧凑插件列表 · 24px</h2><div class="wow list"><div class="row"><img width="24" height="24" src="stage4-E-outline-24-preview.png"><span class="gold">[Yibo] YiboMail</span><span class="end">启用</span></div><div class="row"><span class="muted">原生收件箱与附件汇总</span></div></div><p class="note">深 V 封口与中央圆封蜡仍保持分离。</p></section>
+</div>
+<div class="facts"><span>✓ 24 / 32 / 64px 外缘 Alpha = 0<br>✓ 六边等长 · 内角均为 120°</span><span>推荐：保留青绿外框的分离效果<br>本页为 UI 模拟，尚未进入游戏验收</span></div>
+<p class="foot">请确认青绿外框版本的实尺寸可读性。获批后，在相同骨架上加入纸张、封蜡与金属材质。</p>
+</main></html>

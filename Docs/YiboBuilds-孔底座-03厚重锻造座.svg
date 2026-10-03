@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="410" viewBox="0 0 760 410">
+  <defs>
+    <radialGradient id="blueGem" cx="32%" cy="24%"><stop stop-color="#a7faff"/><stop offset=".4" stop-color="#22baf2"/><stop offset="1" stop-color="#0752b0"/></radialGradient>
+    <g id="prongs" stroke="#10171d" stroke-width="1.5" stroke-linejoin="round">
+      <path class="p1" d="M19 2 29 2 27 15 24 19 21 15Z"/>
+      <path class="p2" d="M46 19 46 29 33 27 29 24 33 21Z"/>
+      <path class="p3" d="M29 46 19 46 21 33 24 29 27 33Z"/>
+      <path class="p4" d="M2 29 2 19 15 21 19 24 15 27Z"/>
+      <path d="M19 2h10l-5 8Z" fill="#fff" opacity=".25" stroke="none"/>
+      <path d="M46 19v10l-8-5Z" fill="#fff" opacity=".25" stroke="none"/>
+      <path d="M29 46H19l5-8Z" fill="#000" opacity=".18" stroke="none"/>
+      <path d="M2 29V19l8 5Z" fill="#000" opacity=".18" stroke="none"/>
+    </g>
+    <g id="native" stroke="#121820" stroke-width="2">
+      <circle cx="24" cy="24" r="17.5" fill="#bd2635"/>
+      <circle cx="24" cy="24" r="12.4" fill="#09131d" stroke="#e0444b" stroke-width="2"/>
+      <use href="#prongs"/>
+    </g>
+    <g id="meta" stroke="#121820" stroke-width="2" stroke-linejoin="round">
+      <path d="m24 3 6.4 11.2L44 17l-9.4 7 1.1 13.2L24 30.4l-11.7 6.8L13.4 24 4 17l13.6-2.8Z" fill="#d9a629"/>
+      <path d="M24 13 31 20l-1 9-6 4-7-5-1-8Z" fill="#09131d" stroke="#f2c449" stroke-width="1.7"/>
+      <use href="#prongs"/>
+    </g>
+    <g id="forged" stroke="#121820" stroke-width="2" stroke-linejoin="round">
+      <path d="M8 5h32l3 3v32l-3 3H8l-3-3V8Z" fill="#87929c"/>
+      <path d="M13 10h22l3 3v22l-3 3H13l-3-3V13Z" fill="#09131d" stroke="#b4bec7" stroke-width="1.8"/>
+      <use href="#prongs"/>
+    </g>
+    <g id="sha" stroke="#121820" stroke-width="2" stroke-linejoin="round">
+      <path d="M22 4 40 8l-4 12 5 11-15 12-15-7 5-11-9-9L17 9Z" fill="#7828c6"/>
+      <path d="m23 13 10 3-3 8 3 7-9 5-8-5 3-7-5-6Z" fill="#09131d" stroke="#a64bef" stroke-width="1.8"/>
+      <use href="#prongs"/>
+    </g>
+    <g id="gemRound">
+      <path d="m24 10 10 6 3 11-8 10H19l-8-10 3-11Z" fill="url(#blueGem)" stroke="#9eeaff" stroke-width="1.5"/>
+      <path d="m24 10 3 14-13-8Zm0 0 10 6-7 8Zm13 17-10-3 2 13Zm-18 10 8-13-13 1Z" fill="#d7fbff" opacity=".38"/>
+    </g>
+    <g id="gemStar">
+      <path d="m24 11 6 7 7 2-5 5 1 10-9-5-9 5 1-10-5-5 7-2Z" fill="url(#blueGem)" stroke="#9eeaff" stroke-width="1.5"/>
+      <path d="m24 11 0 19-9 5 1-10-5-5 7-2Zm0 0 6 7 7 2-5 5Z" fill="#d7fbff" opacity=".38"/>
+    </g>
+    <g id="gemSquare">
+      <path d="M15 14h18l4 4v12l-4 4H15l-4-4V18Z" fill="url(#blueGem)" stroke="#9eeaff" stroke-width="1.5"/>
+      <path d="M15 14h9v14l-13 2V18Zm9 14 13-10v12l-4 4H15Z" fill="#d7fbff" opacity=".38"/>
+    </g>
+    <g id="gemSha">
+      <path d="m24 12 10 5-2 10-8 9-9-6 2-10Z" fill="url(#blueGem)" stroke="#9eeaff" stroke-width="1.5"/>
+      <path d="m24 12 0 16-9 2 2-10Zm0 16 10-11-2 10-8 9Z" fill="#d7fbff" opacity=".38"/>
+    </g>
+    <style>
+      #native .p1,#native .p2,#native .p3,#native .p4{fill:#bd2635}
+      #meta .p1,#meta .p2,#meta .p3,#meta .p4{fill:#d9a629}
+      #forged .p1,#forged .p2,#forged .p3,#forged .p4{fill:#aeb8c1}
+      #sha .p1,#sha .p2,#sha .p3,#sha .p4{fill:#8d32df}
+    </style>
+  </defs>
+  <rect width="760" height="410" rx="18" fill="#07151b"/>
+  <rect x="8" y="8" width="744" height="394" rx="14" fill="#10242b" stroke="#31515a" stroke-width="2"/>
+  <text x="28" y="43" fill="#dcebed" font-family="Segoe UI, sans-serif" font-size="27" font-weight="700">03</text>
+  <g font-family="Segoe UI, sans-serif" font-size="16" fill="#a9c2c8" text-anchor="middle">
+    <text x="160" y="76">原生孔</text><text x="310" y="76">多彩孔</text><text x="460" y="76">锻造孔</text><text x="610" y="76">染煞孔</text>
+  </g>
+  <g transform="translate(136 91)"><use href="#native"/></g>
+  <g transform="translate(286 91)"><use href="#meta"/></g>
+  <g transform="translate(436 91)"><use href="#forged"/></g>
+  <g transform="translate(586 91)"><use href="#sha"/></g>
+  <g transform="translate(136 236)"><use href="#native"/><use href="#gemRound"/></g>
+  <g transform="translate(286 236)"><use href="#meta"/><use href="#gemStar"/></g>
+  <g transform="translate(436 236)"><use href="#forged"/><use href="#gemSquare"/></g>
+  <g transform="translate(586 236)"><use href="#sha"/><use href="#gemSha"/></g>
+  <g fill="#78959d" font-family="Segoe UI, sans-serif" font-size="14">
+    <text x="35" y="120">空孔</text><text x="35" y="266">已镶</text>
+  </g>
+</svg>

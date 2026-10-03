@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1150 610" role="img" aria-labelledby="title desc">
+  <title id="title">YiboBuilds 装备孔底座候选</title>
+  <desc id="desc">十种装备珠宝孔底座，每种并列展示空孔与镶蓝色宝石状态。面板按 24×24 图标放大展示，游戏侧边图标当前为 16×16 UI 单位。</desc>
+  <defs>
+    <linearGradient id="panel" x2="0" y2="1"><stop stop-color="#10232a"/><stop offset="1" stop-color="#07151a"/></linearGradient>
+    <linearGradient id="steel" x2="0.8" y2="1"><stop stop-color="#46616a"/><stop offset=".5" stop-color="#1c353c"/><stop offset="1" stop-color="#09171c"/></linearGradient>
+    <linearGradient id="rubyRim" x2="0" y2="1"><stop stop-color="#ff9b89"/><stop offset=".45" stop-color="#dc544d"/><stop offset="1" stop-color="#7e252d"/></linearGradient>
+    <linearGradient id="blueGem" x2=".8" y2="1"><stop stop-color="#d8ffff"/><stop offset=".35" stop-color="#55dcff"/><stop offset="1" stop-color="#1874ce"/></linearGradient>
+    <style>
+      text { font-family: "Microsoft YaHei", sans-serif; }
+      .title { fill:#e5f4f2; font-size:20px; font-weight:700; }
+      .note { fill:#9bb8ba; font-size:13px; }
+      .card { fill:#0b1b20; stroke:#24434a; stroke-width:1; }
+      .name { fill:#d1e6e4; font-size:13px; font-weight:600; }
+      .state { fill:#89a9ad; font-size:11px; }
+      .outer { fill:url(#steel); stroke:#071014; stroke-width:1.7; stroke-linejoin:round; }
+      .rim { fill:url(#rubyRim); stroke:#ffd1b1; stroke-width:.75; stroke-linejoin:round; }
+      .cavity { fill:#071116; stroke:#182b30; stroke-width:.8; stroke-linejoin:round; }
+      .edge { fill:none; stroke:#3c7578; stroke-width:.65; stroke-linejoin:round; }
+      .gem { fill:url(#blueGem); stroke:#071014; stroke-width:1.15; stroke-linejoin:round; }
+      .facet { fill:#e2ffff; opacity:.88; }
+      .facet2 { fill:#2c9ce0; opacity:.9; }
+      .pin { fill:#7a9ca0; stroke:#071014; stroke-width:.55; }
+    </style>
+    <g id="gem">
+      <path class="gem" d="M12 4.2 18.6 10 12 20 5.4 10Z"/>
+      <path class="facet" d="M12 5.5 15.3 9.3 12 9.3Z"/>
+      <path class="facet2" d="M6.8 10.4 11.4 10.4 11.4 18Z"/>
+      <path fill="#82efff" d="M12.6 10.4 17.1 10.4 12.6 17.5Z"/>
+    </g>
+    <g id="socket01">
+      <path class="outer" d="M7 1.8h10l5.2 5.2v10L17 22.2H7l-5.2-5.2V7Z"/>
+      <path class="rim" d="M8 4.3h8l3.7 3.7v8L16 19.7H8l-3.7-3.7V8Z"/>
+      <path class="cavity" d="M9 7h6l2 2v6l-2 2H9l-2-2V9Z"/>
+      <path class="edge" d="M7 3.2h10M3.2 7v10M7 20.8h10M20.8 7v10"/>
+    </g>
+    <g id="socket02">
+      <path class="outer" d="m12 1.5 9.5 5.3v10.4L12 22.5l-9.5-5.3V6.8Z"/>
+      <path class="rim" d="m12 4.2 7 3.8v7.9l-7 3.9-7-3.9V8Z"/>
+      <path class="cavity" d="m12 7.2 4.4 2.4v4.8L12 16.8l-4.4-2.4V9.6Z"/>
+      <path class="edge" d="m4 6.7 8 4.5 8-4.5M4 17.3l8-4.5 8 4.5"/>
+    </g>
+    <g id="socket03">
+      <path class="outer" d="M4 2h16l2 2v16l-2 2H4l-2-2V4Z"/>
+      <path class="rim" d="M6 4.5h12l1.5 1.5v12L18 19.5H6L4.5 18V6Z"/>
+      <path class="cavity" d="M8 7h8l1 1v8l-1 1H8l-1-1V8Z"/>
+      <path class="edge" d="M5 3.4h14M3.4 5v14M5 20.6h14M20.6 5v14"/>
+    </g>
+    <g id="socket04">
+      <path class="outer" d="M12 1 23 12 12 23 1 12Z"/>
+      <path class="rim" d="m12 3.8 8.2 8.2-8.2 8.2L3.8 12Z"/>
+      <path class="cavity" d="m12 7 5 5-5 5-5-5Z"/>
+      <path class="edge" d="m3 12 9 3.5 9-3.5"/>
+    </g>
+    <g id="socket05">
+      <path class="outer" d="M6 2h12l4 4v12l-4 4H6l-4-4V6Z"/>
+      <path class="rim" d="M8 4.5h8l3.5 3.5v8L16 19.5H8L4.5 16V8Z"/>
+      <path class="cavity" d="M9 7h6l2 2v6l-2 2H9l-2-2V9Z"/>
+      <path class="outer" d="m5 7 3 2-1.4 1.4L4 9.5ZM19 7l-3 2 1.4 1.4L20 9.5ZM5 17l3-2 1.2 1.6L7 19Z"/>
+    </g>
+    <g id="socket06">
+      <path class="outer" d="m8 1.8 8 0 6.2 6.2v8L16 22.2H8l-6.2-6.2V8Z"/>
+      <path class="rim" d="m9 4.5 6 0 4.5 4.5v6L15 19.5H9L4.5 15V9Z"/>
+      <path class="cavity" d="m10 7.5 4 0 3 3v4l-3 2h-4l-2-2v-5Z"/>
+      <path class="edge" d="M8 2.7v3M16 2.7v3M21.3 8h-3M21.3 16h-3M8 21.3v-3M16 21.3v-3"/>
+    </g>
+    <g id="socket07">
+      <path class="outer" d="M5 2h14l3 3v14l-3 3H5l-3-3V5Z"/>
+      <path class="rim" d="M7 4.5h10l2.5 2.5v10L17 19.5H7L4.5 17V7Z"/>
+      <path class="cavity" d="M9 7h6l2 2v6l-2 2H9l-2-2V9Z"/>
+      <path class="outer" d="M2 8h3v2H2zm17 0h3v2h-3zM2 14h3v2H2zm17 0h3v2h-3z"/>
+    </g>
+    <g id="socket08">
+      <path class="outer" d="M12 1.5c5.8 0 10 4.5 10 10.5s-4.2 10.5-10 10.5S2 18 2 12 6.2 1.5 12 1.5Z"/>
+      <path class="rim" d="M12 4.2c4.3 0 7.2 3.3 7.2 7.8s-2.9 7.8-7.2 7.8S4.8 16.5 4.8 12 7.7 4.2 12 4.2Z"/>
+      <path class="cavity" d="M12 7c2.8 0 4.4 2 4.4 5s-1.6 5-4.4 5-4.4-2-4.4-5 1.6-5 4.4-5Z"/>
+      <path class="edge" d="M6 5.5c1.5-1.4 3.5-2.2 6-2.2m6 15.2c-1.5 1.4-3.5 2.2-6 2.2"/>
+    </g>
+    <g id="socket09">
+      <path class="outer" d="M4 2h16l2 2v16l-2 2H4l-2-2V4Z"/>
+      <path class="rim" d="M6 4.5h12l1.5 1.5v12L18 19.5H6L4.5 18V6Z"/>
+      <path class="cavity" d="M8 7h8l1 1v8l-1 1H8l-1-1V8Z"/>
+      <path class="outer" d="M4 4h3v2H4zm13 0h3v2h-3zM4 18h3v2H4zm13 0h3v2h-3z"/>
+      <circle class="pin" cx="5.5" cy="5" r="1"/><circle class="pin" cx="18.5" cy="5" r="1"/>
+      <circle class="pin" cx="5.5" cy="19" r="1"/><circle class="pin" cx="18.5" cy="19" r="1"/>
+    </g>
+    <g id="socket10">
+      <path class="outer" d="M3 2h18v4l2 2v8l-2 2v4H3v-4l-2-2V8l2-2Z"/>
+      <path class="rim" d="M5 4.5h14v3l1.5 1.5v6L19 16.5v3H5v-3L3.5 15V9L5 7.5Z"/>
+      <path class="cavity" d="M8 7h8v2l1 1v4l-1 1v2H8v-2l-1-1v-4l1-1Z"/>
+      <path class="edge" d="M3 4h3M18 20h3M2 9h3M19 15h3"/>
+    </g>
+  </defs>
+
+  <rect width="1150" height="610" rx="14" fill="url(#panel)" stroke="#2c5157"/>
+  <text class="title" x="24" y="32">装备珠宝孔底座 · 10 组候选</text>
+  <text class="note" x="24" y="54">24×24 结构放大预览 ｜ 当前装备侧边图标：16×16 UI 单位（受 WoW 界面缩放影响） ｜ 红边为空孔类型示例，蓝宝石示范已镶状态</text>
+
+  <g id="candidates">
+    <g transform="translate(16 70)"><rect class="card" width="216" height="254" rx="7"/><text class="name" x="12" y="22">01 · 圆角切面</text><g transform="translate(28 42) scale(3)"><use href="#socket01"/></g><g transform="translate(120 42) scale(3)"><use href="#socket01"/><use href="#gem"/></g><text class="state" x="48" y="128">空孔</text><text class="state" x="137" y="128">镶嵌</text><text class="note" x="12" y="153">斜切开口，轮廓柔和</text></g>
+    <g transform="translate(244 70)"><rect class="card" width="216" height="254" rx="7"/><text class="name" x="12" y="22">02 · 六边形嵌座</text><g transform="translate(28 42) scale(3)"><use href="#socket02"/></g><g transform="translate(120 42) scale(3)"><use href="#socket02"/><use href="#gem"/></g><text class="state" x="48" y="128">空孔</text><text class="state" x="137" y="128">镶嵌</text><text class="note" x="12" y="153">棱角明确，游戏感强</text></g>
+    <g transform="translate(472 70)"><rect class="card" width="216" height="254" rx="7"/><text class="name" x="12" y="22">03 · 方形斜边</text><g transform="translate(28 42) scale(3)"><use href="#socket03"/></g><g transform="translate(120 42) scale(3)"><use href="#socket03"/><use href="#gem"/></g><text class="state" x="48" y="128">空孔</text><text class="state" x="137" y="128">镶嵌</text><text class="note" x="12" y="153">方形稳重，结构简洁</text></g>
+    <g transform="translate(700 70)"><rect class="card" width="216" height="254" rx="7"/><text class="name" x="12" y="22">04 · 菱形卡槽</text><g transform="translate(28 42) scale(3)"><use href="#socket04"/></g><g transform="translate(120 42) scale(3)"><use href="#socket04"/><use href="#gem"/></g><text class="state" x="48" y="128">空孔</text><text class="state" x="137" y="128">镶嵌</text><text class="note" x="12" y="153">斜向突出，缩小时醒目</text></g>
+    <g transform="translate(928 70)"><rect class="card" width="206" height="254" rx="7"/><text class="name" x="12" y="22">05 · 三爪托座</text><g transform="translate(23 42) scale(3)"><use href="#socket05"/></g><g transform="translate(115 42) scale(3)"><use href="#socket05"/><use href="#gem"/></g><text class="state" x="43" y="128">空孔</text><text class="state" x="132" y="128">镶嵌</text><text class="note" x="12" y="153">爪形强调宝石被固定</text></g>
+
+    <g transform="translate(16 338)"><rect class="card" width="216" height="254" rx="7"/><text class="name" x="12" y="22">06 · 双层八角</text><g transform="translate(28 42) scale(3)"><use href="#socket06"/></g><g transform="translate(120 42) scale(3)"><use href="#socket06"/><use href="#gem"/></g><text class="state" x="48" y="128">空孔</text><text class="state" x="137" y="128">镶嵌</text><text class="note" x="12" y="153">双层边缘，层次分明</text></g>
+    <g transform="translate(244 338)"><rect class="card" width="216" height="254" rx="7"/><text class="name" x="12" y="22">07 · 侧缺口环</text><g transform="translate(28 42) scale(3)"><use href="#socket07"/></g><g transform="translate(120 42) scale(3)"><use href="#socket07"/><use href="#gem"/></g><text class="state" x="48" y="128">空孔</text><text class="state" x="137" y="128">镶嵌</text><text class="note" x="12" y="153">侧边缺口，辨识度高</text></g>
+    <g transform="translate(472 338)"><rect class="card" width="216" height="254" rx="7"/><text class="name" x="12" y="22">08 · 圆形内凹</text><g transform="translate(28 42) scale(3)"><use href="#socket08"/></g><g transform="translate(120 42) scale(3)"><use href="#socket08"/><use href="#gem"/></g><text class="state" x="48" y="128">空孔</text><text class="state" x="137" y="128">镶嵌</text><text class="note" x="12" y="153">圆孔自然，边缘较轻</text></g>
+    <g transform="translate(700 338)"><rect class="card" width="216" height="254" rx="7"/><text class="name" x="12" y="22">09 · 铆钉护圈</text><g transform="translate(28 42) scale(3)"><use href="#socket09"/></g><g transform="translate(120 42) scale(3)"><use href="#socket09"/><use href="#gem"/></g><text class="state" x="48" y="128">空孔</text><text class="state" x="137" y="128">镶嵌</text><text class="note" x="12" y="153">金属感更强，识别稳定</text></g>
+    <g transform="translate(928 338)"><rect class="card" width="206" height="254" rx="7"/><text class="name" x="12" y="22">10 · 分轨托边</text><g transform="translate(23 42) scale(3)"><use href="#socket10"/></g><g transform="translate(115 42) scale(3)"><use href="#socket10"/><use href="#gem"/></g><text class="state" x="43" y="128">空孔</text><text class="state" x="132" y="128">镶嵌</text><text class="note" x="12" y="153">断续边轨，中心更突出</text></g>
+  </g>
+</svg>

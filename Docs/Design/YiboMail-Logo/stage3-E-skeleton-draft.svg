@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <title>YiboMail E：正向信封矢量骨架，阶段 3 待确认</title>
+  <desc>32px 网格；六边形环框、信封主体、深 V 封口与中央圆封蜡。外部及环框内空隙透明。</desc>
+  <g id="frame" stroke="#142328" stroke-width="2" stroke-linejoin="round">
+    <path d="M16 2.5L29 9.5V22.5L16 29.5L3 22.5V9.5Z"/>
+  </g>
+  <g id="envelope-body">
+    <rect x="6.5" y="9.5" width="19" height="13.5" rx="1.5" fill="#F5F5EF" stroke="#142328" stroke-width="2"/>
+  </g>
+  <g id="flap" stroke="#142328" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7.5 11.5L16 17.5L24.5 11.5"/>
+  </g>
+  <g id="wax-seal">
+    <circle cx="16" cy="17.5" r="2.5" fill="#142328"/>
+  </g>
+</svg>

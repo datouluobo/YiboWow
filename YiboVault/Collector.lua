@@ -234,6 +234,7 @@ function Addon:InitializeDatabase()
     db.settings = type(db.settings) == "table" and db.settings or {}
     if db.settings.tooltipRealmScope ~= "all" then db.settings.tooltipRealmScope = "current" end
     if type(db.settings.tooltipEnabled) ~= "boolean" then db.settings.tooltipEnabled = true end
+    db.settings.hiddenTooltipItems = type(db.settings.hiddenTooltipItems) == "table" and db.settings.hiddenTooltipItems or {}
     db.revision = tonumber(db.revision) or 0
     for _, character in pairs(db.byCharacter) do
         for _, source in ipairs({ "bags", "equipment", "bank", "auction", "mail" }) do

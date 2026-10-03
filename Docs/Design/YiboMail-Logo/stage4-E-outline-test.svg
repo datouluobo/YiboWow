@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <title>YiboMail E：正六边形外框骨架，待确认</title>
+  <desc>外框中心为16,16，外接圆半径13.5，顶点每隔60度排列。信封、封口与封蜡沿用已确认路径。</desc>
+  <g id="frame" stroke="#49BCA5" stroke-width="2" stroke-linejoin="round">
+    <path d="M16 2.5L27.691343 9.25V22.75L16 29.5L4.308657 22.75V9.25Z"/>
+  </g>
+  <g id="envelope-body">
+    <rect x="6.5" y="9.5" width="19" height="13.5" rx="1.5" fill="#F5F5EF" stroke="#142328" stroke-width="2"/>
+  </g>
+  <g id="flap" stroke="#142328" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7.5 11.5L16 17.5L24.5 11.5"/>
+  </g>
+  <g id="wax-seal">
+    <circle cx="16" cy="17.5" r="2.5" fill="#142328"/>
+  </g>
+</svg>

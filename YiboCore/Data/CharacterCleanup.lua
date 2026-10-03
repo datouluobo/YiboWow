@@ -10,6 +10,7 @@ CharacterCleanup.EXPECTED_OWNERS = {
     YiboLegendary = "传说之路角色进度",
     YiboQuestBlocker = "任务屏蔽个人设置",
     YiboVault = "账号物品库存快照",
+    YiboMail = "邮件快照与积压缓存",
 }
 
 local function Copy(value)

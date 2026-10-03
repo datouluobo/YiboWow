@@ -24,9 +24,10 @@ local function Snapshot(character)
     return snapshot
 end
 local function Faction(snapshot, id) return Addon:GetFactionData(snapshot, id) end
-local function NodeFaction(snapshot, node)
+local function NodeFaction(snapshot, node, character)
     local data = Faction(snapshot, node.factionID)
     if node.guildName and (not data or data.name ~= node.guildName) then return nil end
+    if node.guildRealm and tostring(node.guildRealm) ~= tostring(character and character.realm or "") then return nil end
     return data
 end
 
@@ -59,7 +60,7 @@ local function UpdateMatrixTooltip(row)
     if not columnIndex then HideMatrixTooltip(); return end
     local character = row.tooltipContext.characters[columnIndex - 1]
     local snapshot = Snapshot(character)
-    local data = NodeFaction(snapshot, row.tooltipNode)
+    local data = NodeFaction(snapshot, row.tooltipNode, character)
     -- Tooltips are disclosure, not a second copy of the grid.  A compact
     -- numeric cell gains its standing and full progress here; labels such as
     -- 崇拜、挚友 and every unavailable value already say all they can say.
@@ -76,8 +77,12 @@ local function UpdateMatrixTooltip(row)
     GameTooltip.YiboReputationMatrixRow = row
 end
 
-local function FactionData(id, characters, guildName)
-    for _, character in ipairs(characters) do local data = Faction(Snapshot(character), id); if data and (not guildName or data.name == guildName) then return data end end
+local function FactionData(id, characters, guildName, guildRealm)
+    for _, character in ipairs(characters) do
+        local data = Faction(Snapshot(character), id)
+        if data and (not guildName or data.name == guildName)
+            and (not guildRealm or tostring(character.realm or "") == tostring(guildRealm)) then return data end
+    end
 end
 
 function Addon:IsMonitored(factionID)
@@ -120,8 +125,8 @@ end
 
 function Addon:GetMatrixNodes(characters)
     local nodes, seen = {}, {}
-    local function MakeFaction(id, key, guildName)
-        local data = FactionData(id, characters, guildName)
+    local function MakeFaction(id, key, guildName, guildRealm)
+        local data = FactionData(id, characters, guildName, guildRealm)
         -- Do not manufacture rows for catalog IDs absent from every retained
         -- snapshot.  Those only produce “未知声望 ####” and add no comparison
         -- value; a future scan will naturally add the row when data exists.
@@ -129,10 +134,13 @@ function Addon:GetMatrixNodes(characters)
         local available = false
         for _, character in ipairs(characters) do
             local snapshot = Snapshot(character)
-            if self:GetFactionState(snapshot, id) ~= "unavailable" and (not guildName or (Faction(snapshot, id) and Faction(snapshot, id).name == guildName)) then available = true; break end
+            if self:GetFactionState(snapshot, id) ~= "unavailable" and (not guildName or (Faction(snapshot, id) and Faction(snapshot, id).name == guildName))
+                and (not guildRealm or tostring(character.realm or "") == tostring(guildRealm)) then available = true; break end
         end
         if not available then return nil end
-        return { key = key or ("matrix:faction:" .. id), kind = "faction", factionID = id, guildName = guildName, title = guildName or self:GetFactionName(id, data and data.name), icon = self:GetFactionIcon(id), children = {} }
+        return { key = key or ("matrix:faction:" .. id), kind = "faction", factionID = id, guildName = guildName, guildRealm = guildRealm,
+            title = guildName and (guildName .. " · " .. tostring(guildRealm or "未知服务器")) or self:GetFactionName(id, data and data.name),
+            icon = self:GetFactionIcon(id), children = {} }
     end
     for expansionIndex = #self.Catalog, 1, -1 do
         local expansion = self.Catalog[expansionIndex]
@@ -148,8 +156,20 @@ function Addon:GetMatrixNodes(characters)
             elseif category.guild then
                 seen[1168] = true
                 local guilds = {}
-                for _, character in ipairs(characters) do local data=Faction(Snapshot(character),1168);if data and data.name and data.name~="" then guilds[data.name]=true end end
-                for guildName in pairs(guilds) do local guild=MakeFaction(1168,"matrix:guild:"..guildName,guildName);if guild then node.children[#node.children+1]=guild end end
+                for _, character in ipairs(characters) do
+                    local data = Faction(Snapshot(character), 1168)
+                    if data and data.name and data.name ~= "" then
+                        local realm = tostring(character.realm or "未知服务器")
+                        local key = realm .. "\31" .. data.name
+                        guilds[key] = { name = data.name, realm = realm }
+                    end
+                end
+                local guildKeys = {}; for key in pairs(guilds) do guildKeys[#guildKeys + 1] = key end; table.sort(guildKeys)
+                for _, identity in ipairs(guildKeys) do
+                    local guildIdentity = guilds[identity]
+                    local guild = MakeFaction(1168, "matrix:guild:" .. identity, guildIdentity.name, guildIdentity.realm)
+                    if guild then node.children[#node.children + 1] = guild end
+                end
             else
                 local container = { key = node.key .. ":" .. category.id, kind = "category", title = category.title, children = {} }
                 for _, id in ipairs(category.factions) do if not seen[id] then seen[id] = true; local faction=MakeFaction(id);if faction then container.children[#container.children + 1] = faction end end end
@@ -309,12 +329,17 @@ function Addon:RefreshMatrixView(parent, context)
         row.star:ClearAllPoints(); row.star:SetPoint("LEFT", row, "LEFT", 0, 0); row.star:SetShown(node.kind == "faction"); if node.kind == "faction" then local monitored=self:IsMonitored(node.factionID); row.star:SetText(monitored and "★" or "☆"); row.star:SetState(monitored and "selected" or "default"); row.star.factionID=node.factionID; row.star:SetScript("OnClick", function(control) self:ToggleMonitored(control.factionID); Addon:RefreshMatrixView(parent, context) end) end
         local prefix = string.rep("　", entry.depth); local label = prefix .. ((grouped and (IsOpen(expanded,node) and "− " or "+ ")) or "") .. (node.icon and "   " or "") .. node.title; local values = { label }
         if node.kind == "faction" then
-            for _, character in ipairs(characters) do local snapshot = Snapshot(character); values[#values + 1] = self:FormatSnapshotValue(snapshot, NodeFaction(snapshot,node), "compact", self:GetFactionState(snapshot,node.factionID)) end
+            for _, character in ipairs(characters) do
+                local snapshot = Snapshot(character)
+                local state = node.guildRealm and tostring(node.guildRealm) ~= tostring(character.realm or "")
+                    and "unavailable" or self:GetFactionState(snapshot, node.factionID)
+                values[#values + 1] = self:FormatSnapshotValue(snapshot, NodeFaction(snapshot, node, character), "compact", state)
+            end
             row.icon:ClearAllPoints(); row.icon:SetPoint("LEFT",row,"LEFT",entry.depth*8+(grouped and 20 or 0),0); if node.icon then row.icon:SetTexture(node.icon);row.icon:Show() else row.icon:Hide() end
             row:SetScript("OnClick", function(control) local current=control.matrixNode;if #(current.children or {})>0 then expanded[current.key]=not IsOpen(expanded,current); Addon:RefreshMatrixView(parent, context) else settings.matrixFocusFactionID=current.factionID end end)
         else row.icon:Hide(); row:SetScript("OnClick", function(control) local current=control.matrixNode;expanded[current.key]=not IsOpen(expanded,current);Addon:RefreshMatrixView(parent, context) end) end
         row.tooltipNode, row.tooltipContext, row.tooltipColumns, row.tooltipColumn = node, { characters = characters }, {}, nil
-        row.columnDividers = row.columnDividers or {}; local left=0; for ci,column in ipairs(columns) do row.tooltipColumns[ci]={left=left,width=column.width};local cell=row.cells[ci] or Text(row,Theme.Font.body,Theme.Colors.text,ci==1 and "LEFT" or "CENTER");row.cells[ci]=cell;cell:ClearAllPoints();cell:SetPoint("LEFT",row,"LEFT",left+Theme.Space.xxs+(ci==1 and starWidth or 0),0);cell:SetWidth(column.width-Theme.Space.xs-(ci==1 and starWidth or 0));cell:SetJustifyH(ci==1 and "LEFT" or "CENTER");cell:SetText(values[ci] or "");if node.kind=="faction" and ci>1 then local data=NodeFaction(Snapshot(characters[ci-1]),node);local color=data and self:GetReputationColor(data) or Theme.Colors.muted;cell:SetTextColor(color[1],color[2],color[3]) else cell:SetTextColor(Theme.Colors.text[1],Theme.Colors.text[2],Theme.Colors.text[3]) end;cell:Show();left=left+column.width end
+        row.columnDividers = row.columnDividers or {}; local left=0; for ci,column in ipairs(columns) do row.tooltipColumns[ci]={left=left,width=column.width};local cell=row.cells[ci] or Text(row,Theme.Font.body,Theme.Colors.text,ci==1 and "LEFT" or "CENTER");row.cells[ci]=cell;cell:ClearAllPoints();cell:SetPoint("LEFT",row,"LEFT",left+Theme.Space.xxs+(ci==1 and starWidth or 0),0);cell:SetWidth(column.width-Theme.Space.xs-(ci==1 and starWidth or 0));cell:SetJustifyH(ci==1 and "LEFT" or "CENTER");cell:SetText(values[ci] or "");if node.kind=="faction" and ci>1 then local character=characters[ci-1];local data=NodeFaction(Snapshot(character),node,character);local color=data and self:GetReputationColor(data) or Theme.Colors.muted;cell:SetTextColor(color[1],color[2],color[3]) else cell:SetTextColor(Theme.Colors.text[1],Theme.Colors.text[2],Theme.Colors.text[3]) end;cell:Show();left=left+column.width end
         for _, divider in ipairs(row.columnDividers) do divider:Hide() end
         row:SetScript("OnEnter",function(control)
             control.tooltipTracking=true

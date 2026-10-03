@@ -112,8 +112,8 @@ for _, icon in ipairs(orderedIcons) do
 end
 assert(not content:find("待刷新", 1, true)
     and content:find("INV_Box_01:13:13:0:0|t|cff87b3ba~|r", 1, true)
-    and content:find("邮箱仅统计已扫描的可见邮件", 1, true),
-    "unscanned sources should use icon-tilde while scanned mail retains its partial note")
+    and not content:find("邮箱仅统计已扫描的可见邮件", 1, true),
+    "unscanned sources should use icon-tilde without an extra mail explanation")
 assert(content:find("Guild-Realm / |cff20e0709|r[P2·材料库 |cff20e0704|r/P7·消耗品 |cff20e0705|r]", 1, true),
     "guild row should contain real scanned tab names, one total and only occupied tabs")
 vaultTooltip:Append(tooltip)

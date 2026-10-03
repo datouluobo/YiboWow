@@ -1,0 +1,50 @@
+[
+  {
+    "id": "A",
+    "width": 1254,
+    "height": 1254,
+    "edgeAlphaMax": 1
+  },
+  {
+    "id": "B",
+    "width": 1254,
+    "height": 1254,
+    "edgeAlphaMax": 0
+  },
+  {
+    "id": "C",
+    "width": 1254,
+    "height": 1254,
+    "edgeAlphaMax": 0
+  },
+  {
+    "id": "D",
+    "width": 1254,
+    "height": 1254,
+    "edgeAlphaMax": 1
+  },
+  {
+    "id": "E",
+    "width": 1254,
+    "height": 1254,
+    "edgeAlphaMax": 1
+  },
+  {
+    "id": "F",
+    "width": 1254,
+    "height": 1254,
+    "edgeAlphaMax": 0
+  },
+  {
+    "id": "G",
+    "width": 1254,
+    "height": 1254,
+    "edgeAlphaMax": 0
+  },
+  {
+    "id": "H",
+    "width": 1254,
+    "height": 1254,
+    "edgeAlphaMax": 0
+  }
+]

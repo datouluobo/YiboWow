@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720">
+  <title>YiboCore monochrome silhouette directions v3</title>
+  <desc>Eight high-contrast black and white silhouette directions. Every option preserves a regular hexagon, a central cube node, and three thick connections.</desc>
+  <rect width="960" height="720" fill="#ffffff"/>
+  <style>
+    .title{font:600 20px sans-serif;fill:#111}.note{font:13px sans-serif;fill:#444}.card{fill:#f7f7f7;stroke:#c8c8c8}.label{font:600 14px sans-serif;fill:#111}.sub{font:11px sans-serif;fill:#555}.outer{fill:#111}.inner{fill:#fff}.spoke{fill:#111}.cube{fill:#111}.cut{fill:#fff}
+  </style>
+  <defs>
+    <g id="a"><path class="outer" d="M40 3 73 22v36L40 77 7 58V22z"/><path class="inner" d="M40 10 66 25v30L40 70 14 55V25z"/><path class="spoke" d="M35 38 18 28v-7l25 14zM45 38l17-10v-7L37 35zM35 48h10v22H35z"/><path class="cube" d="m40 28 9 5v11l-9 5-9-5V33z"/><path class="cut" d="m40 31 5 3-5 3-5-3z"/></g>
+    <g id="b"><path class="outer" d="M40 3 73 22v36L40 77 7 58V22z"/><path class="inner" d="M40 10 66 25v30L40 70 14 55V25z"/><path class="spoke" d="M35 38 16 20h10l15 14zM45 38l19-18h-10L39 34zM35 48h10v22H35z"/><path class="cube" d="m40 28 9 5v11l-9 5-9-5V33z"/></g>
+    <g id="c"><path class="outer" d="M40 3 73 22v36L40 77 7 58V22z"/><path class="inner" d="M40 10 66 25v30L40 70 14 55V25z"/><path class="spoke" d="M35 38 14 38v-8h21zM45 38h21v-8H45zM35 48h10v22H35z"/><path class="cube" d="m40 28 9 5v11l-9 5-9-5V33z"/></g>
+    <g id="d"><path class="outer" d="M40 3 73 22v36L40 77 7 58V22z"/><path class="inner" d="M40 10 66 25v30L40 70 14 55V25z"/><path class="spoke" d="M35 38 19 27v-7l24 14zM45 38l16-11v-7L37 34zM35 48h10v18H35z"/><path class="cube" d="m40 29 8 4v10l-8 5-8-5V33z"/></g>
+    <g id="e"><path class="outer" d="M40 3 73 22v36L40 77 7 58V22z"/><path class="inner" d="M40 10 66 25v30L40 70 14 55V25z"/><path class="spoke" d="M35 38 20 29v-9l23 14zM45 38l15-9v-9L37 34zM35 48h10v22H35z"/><path class="cube" d="m40 27 10 6v12l-10 6-10-6V33z"/></g>
+    <g id="f"><path class="outer" d="M40 3 73 22v36L40 77 7 58V22z"/><path class="inner" d="M40 10 66 25v30L40 70 14 55V25z"/><path class="spoke" d="M35 38 17 26h11l14 9zM45 38l18-12H52L38 35zM35 48h10v22H35z"/><path class="cube" d="m40 28 9 5v11l-9 5-9-5V33z"/></g>
+    <g id="g"><path class="outer" d="M40 3 73 22v36L40 77 7 58V22z"/><path class="inner" d="M40 10 66 25v30L40 70 14 55V25z"/><path class="spoke" d="M35 38 18 25h9l14 10zM45 38l17-13h-9L39 35zM35 48h10v20H35z"/><path class="cube" d="m40 29 8 4v10l-8 5-8-5V33z"/></g>
+    <g id="h"><path class="outer" d="M40 3 73 22v36L40 77 7 58V22z"/><path class="inner" d="M40 10 66 25v30L40 70 14 55V25z"/><path class="spoke" d="M35 38 18 28v-6l24 13zM45 38l17-10v-6L38 35zM35 48h10v21H35z"/><path class="cube" d="m40 29 8 4v10l-8 5-8-5V33z"/><path class="cut" d="m40 32 4 2-4 2-4-2z"/></g>
+  </defs>
+  <text x="32" y="34" class="title">YiboCore · 阶段 2 · 单色 silhouette 方向 v3</text>
+  <text x="32" y="58" class="note">纯黑白检验：不依赖颜色、材质或发光；每项都保留正六边形、中心立方节点和三向连接。</text>
+  <g transform="translate(32 82)">
+    <g transform="translate(0 0)"><rect class="card" width="215" height="285" rx="10"/><text x="16" y="27" class="label">A · 原图形最接近</text><g transform="translate(68 42)"><use href="#a"/></g><g transform="translate(95 163) scale(.32)"><use href="#a"/></g><text x="68" y="205" class="sub">32px　　 24px</text><text x="16" y="248" class="sub">保留原分支形状</text></g>
+    <g transform="translate(223 0)"><rect class="card" width="215" height="285" rx="10"/><text x="16" y="27" class="label">B · 上扬分支</text><g transform="translate(68 42)"><use href="#b"/></g><g transform="translate(95 163) scale(.32)"><use href="#b"/></g><text x="68" y="205" class="sub">32px　　 24px</text><text x="16" y="248" class="sub">分支更有动势</text></g>
+    <g transform="translate(446 0)"><rect class="card" width="215" height="285" rx="10"/><text x="16" y="27" class="label">C · 水平分支</text><g transform="translate(68 42)"><use href="#c"/></g><g transform="translate(95 163) scale(.32)"><use href="#c"/></g><text x="68" y="205" class="sub">32px　　 24px</text><text x="16" y="248" class="sub">连接最清楚</text></g>
+    <g transform="translate(669 0)"><rect class="card" width="215" height="285" rx="10"/><text x="16" y="27" class="label">D · 短分支</text><g transform="translate(68 42)"><use href="#d"/></g><g transform="translate(95 163) scale(.32)"><use href="#d"/></g><text x="68" y="205" class="sub">32px　　 24px</text><text x="16" y="248" class="sub">中心更集中</text></g>
+    <g transform="translate(0 300)"><rect class="card" width="215" height="285" rx="10"/><text x="16" y="27" class="label">E · 大中心节点</text><g transform="translate(68 42)"><use href="#e"/></g><g transform="translate(95 163) scale(.32)"><use href="#e"/></g><text x="68" y="205" class="sub">32px　　 24px</text><text x="16" y="248" class="sub">节点识别优先</text></g>
+    <g transform="translate(223 300)"><rect class="card" width="215" height="285" rx="10"/><text x="16" y="27" class="label">F · 粗块分支</text><g transform="translate(68 42)"><use href="#f"/></g><g transform="translate(95 163) scale(.32)"><use href="#f"/></g><text x="68" y="205" class="sub">32px　　 24px</text><text x="16" y="248" class="sub">黑白块面最强</text></g>
+    <g transform="translate(446 300)"><rect class="card" width="215" height="285" rx="10"/><text x="16" y="27" class="label">G · 极简中心</text><g transform="translate(68 42)"><use href="#g"/></g><g transform="translate(95 163) scale(.32)"><use href="#g"/></g><text x="68" y="205" class="sub">32px　　 24px</text><text x="16" y="248" class="sub">删减最多</text></g>
+    <g transform="translate(669 300)"><rect class="card" width="215" height="285" rx="10"/><text x="16" y="27" class="label">H · 原图粗化</text><g transform="translate(68 42)"><use href="#h"/></g><g transform="translate(95 163) scale(.32)"><use href="#h"/></g><text x="68" y="205" class="sub">32px　　 24px</text><text x="16" y="248" class="sub">最接近原图但更粗</text></g>
+  </g>
+</svg>

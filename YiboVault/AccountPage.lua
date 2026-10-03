@@ -101,9 +101,10 @@ function Page:CreateSettingsPanel(parent, context)
     panel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     panel:SetWidth(width); panel:Show()
 
-    local business = panel.business or context.createSection(panel, "业务设置", width, 166)
+    local business = panel.business or context.createSection(panel, "业务设置", width, 236)
     panel.business = business
     business:ClearAllPoints(); business:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, 0)
+    business:SetHeight(236)
     business:SetWidth(width); business:Show()
     local enabled = panel.enabled or context.createCheckbox(business, "显示 Vault 物品 Tooltip 摘要")
     panel.enabled = enabled
@@ -137,9 +138,51 @@ function Page:CreateSettingsPanel(parent, context)
     scopeNote:SetText("只影响物品悬停；仓储页面使用 Core 的范围切换。")
     scopeNote:Show()
 
+    local filterLabel = panel.filterLabel or context.createText(business, theme.Font.assist, theme.Colors.text, "LEFT")
+    panel.filterLabel = filterLabel
+    filterLabel:ClearAllPoints(); filterLabel:SetPoint("TOPLEFT", business, "TOPLEFT", 14, -148)
+    filterLabel:SetText("按物品过滤 Tooltip 摘要（输入物品 ID）"); filterLabel:Show()
+    local itemInput = panel.itemInput or CreateFrame("EditBox", nil, business, "InputBoxTemplate")
+    panel.itemInput = itemInput
+    itemInput:ClearAllPoints(); itemInput:SetPoint("TOPLEFT", business, "TOPLEFT", 14, -176)
+    itemInput:SetSize(150, 24); itemInput:SetAutoFocus(false); itemInput:SetNumeric(true); itemInput:SetMaxLetters(10)
+    local addButton = panel.addItemButton or CreateFrame("Button", nil, business, "UIPanelButtonTemplate")
+    panel.addItemButton = addButton
+    addButton:ClearAllPoints(); addButton:SetPoint("LEFT", itemInput, "RIGHT", 8, 0); addButton:SetSize(72, 24); addButton:SetText("过滤")
+    local removeButton = panel.removeItemButton or CreateFrame("Button", nil, business, "UIPanelButtonTemplate")
+    panel.removeItemButton = removeButton
+    removeButton:ClearAllPoints(); removeButton:SetPoint("LEFT", addButton, "RIGHT", 6, 0); removeButton:SetSize(72, 24); removeButton:SetText("取消过滤")
+    local filterItems = panel.filterItems or context.createText(business, theme.Font.assist, theme.Colors.muted, "LEFT")
+    panel.filterItems = filterItems
+    filterItems:ClearAllPoints(); filterItems:SetPoint("TOPLEFT", business, "TOPLEFT", 14, -207)
+    filterItems:SetPoint("RIGHT", business, "RIGHT", -14, 0); filterItems:SetWordWrap(true); filterItems:SetHeight(24)
+    local function RefreshFilteredItems()
+        local ids = {}
+        for id, hidden in pairs(Addon.db.settings.hiddenTooltipItems or {}) do
+            if hidden then ids[#ids + 1] = tonumber(id) end
+        end
+        table.sort(ids)
+        local labels = {}
+        for _, id in ipairs(ids) do labels[#labels + 1] = tostring(id) end
+        filterItems:SetText(#labels > 0 and ("已过滤物品 ID：" .. table.concat(labels, "、")) or "当前没有过滤物品。")
+    end
+    local function UpdateItemFilter(add)
+        local id = tonumber(itemInput:GetText())
+        if not id or id <= 0 then return end
+        Addon.db.settings.hiddenTooltipItems = Addon.db.settings.hiddenTooltipItems or {}
+        Addon.db.settings.hiddenTooltipItems[id] = add and true or nil
+        itemInput:SetText("")
+        RefreshFilteredItems()
+        if Addon.Tooltip then Addon.Tooltip:Invalidate() end
+    end
+    addButton:SetScript("OnClick", function() UpdateItemFilter(true) end)
+    removeButton:SetScript("OnClick", function() UpdateItemFilter(false) end)
+    itemInput:SetScript("OnEnterPressed", function(self) UpdateItemFilter(true); self:ClearFocus() end)
+    itemInput:Show(); addButton:Show(); removeButton:Show(); RefreshFilteredItems(); filterItems:Show()
+
     local data = panel.data or context.createSection(panel, "数据与缓存", width, 130)
     panel.data = data
-    data:ClearAllPoints(); data:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, -176)
+    data:ClearAllPoints(); data:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, -246)
     data:SetWidth(width); data:Show()
     local note = panel.dataNote or context.createText(data, theme.Font.assist, theme.Colors.muted, "LEFT")
     panel.dataNote = note
@@ -157,7 +200,7 @@ function Page:CreateSettingsPanel(parent, context)
     local footerTop = rowTop + visibleCount * rowPitch + 2
     local dataHeight = math.max(stacked and 142 or 130, footerTop + 34)
     data:SetHeight(dataHeight)
-    panel:SetHeight(176 + dataHeight)
+    panel:SetHeight(246 + dataHeight)
     panel.guildRows = panel.guildRows or {}
     for index = 1, GUILDS_PER_PAGE do
         local row = panel.guildRows[index]

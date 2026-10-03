@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1312" height="690" viewBox="0 0 1312 690">
+<rect width="1312" height="690" fill="#061319"/>
+<text x="32" y="52" font-family="Microsoft YaHei" font-size="24" font-weight="700" fill="#e6f5f7">YiboMail · 规则条件与控件尺寸</text>
+<text x="32" y="84" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#a1bdc3">规则必填：物品、收件人。输入方式影响选取过程，最终保存稳定的物品 ID 与完整收件地址。</text>
+<rect x="32" y="114" width="610" height="250" fill="#0a2027" stroke="#28545a"/>
+<text x="48" y="144" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#20e070">物品：四种添加方式</text>
+<path d="M48 154 L626 154" fill="none" stroke="#28545a"/>
+<text x="48" y="190" font-family="Microsoft YaHei" font-size="16" font-weight="400" fill="#e6f5f7">ID：输入数字，读取名称与图标后选定。</text>
+<text x="48" y="232" font-family="Microsoft YaHei" font-size="16" font-weight="400" fill="#e6f5f7">名字：搜索已知物品，选择明确的候选。</text>
+<text x="48" y="274" font-family="Microsoft YaHei" font-size="16" font-weight="400" fill="#e6f5f7">背包：从可寄送物品下拉中选择。</text>
+<text x="48" y="316" font-family="Microsoft YaHei" font-size="16" font-weight="400" fill="#e6f5f7">拖放：把物品拖到图标区，读取完整物品身份。</text>
+<rect x="658" y="114" width="622" height="250" fill="#0a2027" stroke="#28545a"/>
+<text x="674" y="144" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#20e070">收件人：选择或手工填写</text>
+<path d="M674 154 L1264 154" fill="none" stroke="#28545a"/>
+<text x="674" y="188" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">下拉来源：其它账号角色、已有规则收件人、收藏联系人。</text>
+<text x="674" y="230" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">名单按完整地址去重，标记来源，支持搜索和分页。</text>
+<text x="674" y="272" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">手工地址未包含服务器：保存时补当前角色所在服务器。</text>
+<text x="674" y="314" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">手工输入与名单选择共用同一地址，始终显示解析结果。</text>
+<rect x="32" y="380" width="1248" height="268" fill="#0a2027" stroke="#28545a"/>
+<text x="48" y="410" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#20e070">控件预算与长期使用</text>
+<path d="M48 420 L1264 420" fill="none" stroke="#28545a"/>
+<text x="48" y="452" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">列表列宽：物品 260 + 收件人 204 + 状态 108 + 编辑 88 = 660；规则行高 42。</text>
+<text x="48" y="492" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">编辑区内部 364：方式按钮 88 + 12 + 72 + 12 + 72 + 12 + 96；查询 264 + 12 + 88。</text>
+<text x="48" y="532" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">输入、下拉、按钮高 34；拖放与已选物品图标 40 × 40；列表物品图标 28 × 28。</text>
+<text x="48" y="572" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">缓存常驻区 396 × 92：摘要 + 管理；展开为 Core 托管的分页／分区内容，删除操作放末尾。</text>
+<text x="48" y="612" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">列表按可用高度分页，搜索覆盖全部规则；窄屏先显示列表，点击编辑进入同一内容区的表单。</text>
+</svg>

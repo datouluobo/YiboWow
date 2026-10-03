@@ -1,0 +1,41 @@
+{
+  "status": "阶段5待确认",
+  "checks": [
+    {
+      "size": 24,
+      "width": 24,
+      "height": 24,
+      "edgeAlphaMax": 4,
+      "visibleBounds": {
+        "minX": 3,
+        "minY": 2,
+        "maxX": 20,
+        "maxY": 21
+      }
+    },
+    {
+      "size": 32,
+      "width": 32,
+      "height": 32,
+      "edgeAlphaMax": 3,
+      "visibleBounds": {
+        "minX": 4,
+        "minY": 2,
+        "maxX": 27,
+        "maxY": 29
+      }
+    },
+    {
+      "size": 64,
+      "width": 64,
+      "height": 64,
+      "edgeAlphaMax": 0,
+      "visibleBounds": {
+        "minX": 7,
+        "minY": 4,
+        "maxX": 56,
+        "maxY": 59
+      }
+    }
+  ]
+}

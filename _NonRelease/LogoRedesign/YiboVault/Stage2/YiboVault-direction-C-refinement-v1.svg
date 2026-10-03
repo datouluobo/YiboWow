@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="440" viewBox="0 0 900 440">
+<rect width="900" height="440" fill="#e8e8e8"/><style>text{font-family:Arial,sans-serif;fill:#171717}.title{font-size:24px;font-weight:bold}.label{font-size:17px;font-weight:bold}.small{font-size:13px}.panel{fill:#f8f8f8;stroke:#c5c5c5}.d{fill:#171717}.w{fill:#fff}</style>
+<defs>
+<g id="old"><path class="d" d="M16 1 29 8.5v15L16 31 3 23.5v-15z"/><path class="w" d="M16 4 26 10v12L16 28 6 22V10z"/><path class="d" d="m6 13 10-6 10 6v2H6zM8 16h16v10l-8 3-8-3z"/><path class="w" d="M11 17h3v7h-3zM18 17h3v7h-3z"/></g>
+<g id="new"><path class="d" d="M16 1 29 8.5v15L16 31 3 23.5v-15z"/><path class="w" d="M16 4 26 10v12L16 28 6 22V10z"/><path class="d" d="m5 13 11-7 11 7v3H5zM7 16h18v11l-9 3-9-3z"/><path class="w" d="M11 26V20a5 5 0 0 1 10 0v6z"/></g>
+</defs>
+<text x="28" y="38" class="title">YiboVault — Direction C refinement</text><text x="28" y="63" class="small">Removed narrow pillars and small slots; one broad vault opening carries the symbol.</text>
+<rect x="24" y="86" width="410" height="330" rx="10" class="panel"/><text x="44" y="116" class="label">C — previous</text><text x="44" y="139" class="small">thin columns and narrow openings</text>
+<g transform="translate(90 194) scale(6)"><use href="#old"/></g><g transform="translate(260 202) scale(4)"><use href="#old"/></g><text x="112" y="408" class="small">32px</text><text x="278" y="408" class="small">24px</text>
+<rect x="466" y="86" width="410" height="330" rx="10" class="panel"/><text x="486" y="116" class="label">C1 — simplified</text><text x="486" y="139" class="small">solid facade + one large vault doorway</text>
+<g transform="translate(532 194) scale(6)"><use href="#new"/></g><g transform="translate(702 202) scale(4)"><use href="#new"/></g><text x="554" y="408" class="small">32px</text><text x="720" y="408" class="small">24px</text>
+</svg>

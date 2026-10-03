@@ -1,0 +1,131 @@
+{
+  "version": "v1",
+  "status": "已完成",
+  "source": "E:\\Development\\YiboWow\\Docs\\Design\\YiboMail-Logo\\stage5-E-style-source-draft.png",
+  "gameTexture": "YiboMailIcon-v1.tga",
+  "gameTextureSize": 128,
+  "alphaCleanupThreshold": 8,
+  "files": [
+    {
+      "file": "YiboMailIcon-v1-24.png",
+      "size": 24,
+      "mode": "RGBA",
+      "edgeAlphaMax": 0,
+      "format": "PNG"
+    },
+    {
+      "file": "YiboMailIcon-v1-24.tga",
+      "size": 24,
+      "mode": "RGBA",
+      "edgeAlphaMax": 0,
+      "format": "TGA"
+    },
+    {
+      "file": "YiboMailIcon-v1-32.png",
+      "size": 32,
+      "mode": "RGBA",
+      "edgeAlphaMax": 0,
+      "format": "PNG"
+    },
+    {
+      "file": "YiboMailIcon-v1-32.tga",
+      "size": 32,
+      "mode": "RGBA",
+      "edgeAlphaMax": 0,
+      "format": "TGA"
+    },
+    {
+      "file": "YiboMailIcon-v1-64.png",
+      "size": 64,
+      "mode": "RGBA",
+      "edgeAlphaMax": 0,
+      "format": "PNG"
+    },
+    {
+      "file": "YiboMailIcon-v1-64.tga",
+      "size": 64,
+      "mode": "RGBA",
+      "edgeAlphaMax": 0,
+      "format": "TGA"
+    },
+    {
+      "file": "YiboMailIcon-v1-128.png",
+      "size": 128,
+      "mode": "RGBA",
+      "edgeAlphaMax": 0,
+      "format": "PNG"
+    },
+    {
+      "file": "YiboMailIcon-v1-128.tga",
+      "size": 128,
+      "mode": "RGBA",
+      "edgeAlphaMax": 0,
+      "format": "TGA"
+    },
+    {
+      "file": "YiboMailIcon-v1-512.png",
+      "size": 512,
+      "mode": "RGBA",
+      "edgeAlphaMax": 0,
+      "format": "PNG"
+    },
+    {
+      "file": "YiboMailIcon-v1-512.tga",
+      "size": 512,
+      "mode": "RGBA",
+      "edgeAlphaMax": 0,
+      "format": "TGA"
+    },
+    {
+      "file": "YiboMailIcon-v1-1024.png",
+      "size": 1024,
+      "mode": "RGBA",
+      "edgeAlphaMax": 0,
+      "format": "PNG"
+    },
+    {
+      "file": "YiboMailIcon-v1-1024.tga",
+      "size": 1024,
+      "mode": "RGBA",
+      "edgeAlphaMax": 0,
+      "format": "TGA"
+    },
+    {
+      "file": "YiboMailIcon-v1.png",
+      "size": 512,
+      "mode": "RGBA",
+      "edgeAlphaMax": 0,
+      "format": "PNG"
+    },
+    {
+      "file": "YiboMailIcon-v1.tga",
+      "size": 128,
+      "mode": "RGBA",
+      "edgeAlphaMax": 0,
+      "format": "TGA"
+    },
+    {
+      "file": "YiboMailLogo-v1.png",
+      "size": 1024,
+      "mode": "RGBA",
+      "edgeAlphaMax": 0,
+      "format": "PNG"
+    },
+    {
+      "file": "YiboMailMinimapIcon-v1.png",
+      "size": 32,
+      "mode": "RGBA",
+      "edgeAlphaMax": 0,
+      "format": "PNG"
+    },
+    {
+      "file": "YiboMailMinimapIcon-v1.tga",
+      "size": 32,
+      "mode": "RGBA",
+      "edgeAlphaMax": 0,
+      "format": "TGA"
+    }
+  ],
+  "svg": "YiboMailIcon-v1-master.svg",
+  "pngTgaPixelEquivalence": true
+}

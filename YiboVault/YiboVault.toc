@@ -5,6 +5,7 @@
 ## Author: YiboSoft
 ## Version: 1.1.0-api1
 ## RequiredDeps: YiboCore
+## OptionalDeps: YiboMail
 ## Group: YiboCore
 ## SavedVariables: YiboVaultDB
 ## IconTexture: Interface\AddOns\YiboVault\Media\YiboVaultIcon-v2
@@ -18,6 +19,7 @@ Collector.lua
 GuildBank.lua
 AuctionHouse.lua
 MailItems.lua
+MailProvider.lua
 StoragePage.lua
 AccountPage.lua
 Tooltip.lua

@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1312" height="840" viewBox="0 0 1312 840">
+<rect width="1312" height="840" fill="#061319"/>
+<rect x="0" y="0" width="1312" height="48" fill="#0b242c" stroke="#0b242c"/>
+<text x="20" y="34" font-family="Microsoft YaHei" font-size="18" font-weight="700" fill="#e6f5f7">YiboCore · 设置</text>
+<rect x="1180" y="7" width="82" height="34" fill="#0a2027" stroke="#28545a"/>
+<text x="1205.0" y="32" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#e6f5f7">设置</text>
+<text x="1280" y="34" font-family="Microsoft YaHei" font-size="18" font-weight="400" fill="#ef8d96">×</text>
+<rect x="0" y="48" width="176" height="792" fill="#081b22" stroke="#081b22"/>
+<text x="16" y="84" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#a1bdc3">‹ 返回邮件</text>
+<text x="16" y="124" font-family="Microsoft YaHei" font-size="14" font-weight="700" fill="#20e070">Core 常规设置</text>
+<text x="24" y="166" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">窗口</text>
+<text x="24" y="206" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">角色与排序</text>
+<text x="24" y="246" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">显示与入口</text>
+<text x="24" y="306" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">角色构筑</text>
+<text x="24" y="346" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">专业制造</text>
+<text x="24" y="386" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">货币总览</text>
+<text x="24" y="426" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">传说之路</text>
+<rect x="8" y="448" width="160" height="36" fill="#123b3e" stroke="#123b3e"/>
+<text x="24" y="472" font-family="Microsoft YaHei" font-size="14" font-weight="700" fill="#e6f5f7">邮件</text>
+<text x="24" y="518" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">任务屏蔽</text>
+<text x="24" y="558" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">声望总览</text>
+<text x="24" y="598" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">账号待办</text>
+<text x="24" y="638" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">物品总览</text>
+<text x="192" y="86" font-family="Microsoft YaHei" font-size="18" font-weight="700" fill="#e6f5f7">邮件业务设置</text>
+<text x="192" y="110" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#a1bdc3">设置原生收件箱的默认视图和收取偏好；批量收取先预览，再由玩家确认。</text>
+<rect x="192" y="122" width="112" height="34" fill="#0a2027" stroke="#28545a"/>
+<text x="232.0" y="147" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#e6f5f7">发件</text>
+<rect x="316" y="122" width="112" height="34" fill="#104032" stroke="#20e070"/>
+<text x="356.0" y="147" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#e6f5f7">收件</text>
+<rect x="440" y="122" width="144" height="34" fill="#0a2027" stroke="#28545a"/>
+<text x="480.0" y="147" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#e6f5f7">缓存管理</text>
+<rect x="192" y="176" width="692" height="276" fill="#0a2027" stroke="#28545a"/>
+<text x="208" y="206" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#20e070">默认视图</text>
+<path d="M208 216 L868 216" fill="none" stroke="#28545a"/>
+<text x="208" y="248" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#a1bdc3">初始展示</text>
+<rect x="208" y="260" width="112" height="34" fill="#104032" stroke="#20e070"/>
+<text x="248.0" y="285" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#e6f5f7">邮件</text>
+<rect x="332" y="260" width="112" height="34" fill="#0a2027" stroke="#28545a"/>
+<text x="372.0" y="285" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#e6f5f7">附件</text>
+<text x="208" y="330" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#a1bdc3">默认排序</text>
+<text x="548" y="330" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#a1bdc3">默认邮件类别</text>
+<rect x="208" y="344" width="328" height="34" fill="#0a2027" stroke="#28545a"/>
+<text x="220" y="368" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">临期优先</text>
+<path d="M513 359 L518 364" fill="none" stroke="#a1bdc3"/>
+<path d="M518 364 L523 359" fill="none" stroke="#a1bdc3"/>
+<rect x="548" y="344" width="320" height="34" fill="#0a2027" stroke="#28545a"/>
+<text x="560" y="368" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">全部邮件</text>
+<path d="M845 359 L850 364" fill="none" stroke="#a1bdc3"/>
+<path d="M850 364 L855 359" fill="none" stroke="#a1bdc3"/>
+<rect x="208" y="408" width="20" height="20" fill="#061319" stroke="#28545a"/>
+<text x="236" y="425" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">再次打开邮箱时保留搜索与筛选</text>
+<rect x="192" y="468" width="692" height="288" fill="#0a2027" stroke="#28545a"/>
+<text x="208" y="498" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#20e070">批量收取偏好</text>
+<path d="M208 508 L868 508" fill="none" stroke="#28545a"/>
+<text x="208" y="540" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#a1bdc3">“全选可收项目”的默认范围</text>
+<rect x="208" y="560" width="20" height="20" fill="#20e070" stroke="#20e070"/>
+<path d="M212 570 L216 574" fill="none" stroke="#042315"/>
+<path d="M216 574 L224 565" fill="none" stroke="#042315"/>
+<text x="236" y="577" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">物品附件</text>
+<rect x="420" y="560" width="20" height="20" fill="#20e070" stroke="#20e070"/>
+<path d="M424 570 L428 574" fill="none" stroke="#042315"/>
+<path d="M428 574 L436 565" fill="none" stroke="#042315"/>
+<text x="448" y="577" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">邮件金币</text>
+<text x="208" y="622" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#a1bdc3">选择结果仍可在原生邮箱中逐项调整。</text>
+<rect x="208" y="642" width="20" height="20" fill="#20e070" stroke="#20e070"/>
+<path d="M212 652 L216 656" fill="none" stroke="#042315"/>
+<path d="M216 656 L224 647" fill="none" stroke="#042315"/>
+<text x="236" y="659" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">收取完成后显示本批结果摘要</text>
+<rect x="208" y="706" width="144" height="34" fill="#104032" stroke="#20e070"/>
+<text x="232.0" y="731" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#e6f5f7">保存收件设置</text>
+<rect x="364" y="706" width="128" height="34" fill="#0a2027" stroke="#28545a"/>
+<text x="396.0" y="731" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#e6f5f7">恢复默认</text>
+<rect x="900" y="176" width="396" height="380" fill="#0a2027" stroke="#28545a"/>
+<text x="916" y="206" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#20e070">收取处理方式</text>
+<path d="M916 216 L1280 216" fill="none" stroke="#28545a"/>
+<text x="916" y="248" font-family="Microsoft YaHei" font-size="14" font-weight="700" fill="#e6f5f7">操作角色</text>
+<text x="916" y="270" font-family="Microsoft YaHei" font-size="12" font-weight="400" fill="#a1bdc3">只操作当前角色的可见邮件。</text>
+<text x="916" y="306" font-family="Microsoft YaHei" font-size="14" font-weight="700" fill="#e6f5f7">付款取信（COD）</text>
+<text x="916" y="328" font-family="Microsoft YaHei" font-size="12" font-weight="400" fill="#a1bdc3">通过原生信件确认付款。</text>
+<text x="916" y="364" font-family="Microsoft YaHei" font-size="14" font-weight="700" fill="#e6f5f7">身份不明确的重复邮件</text>
+<text x="916" y="386" font-family="Microsoft YaHei" font-size="12" font-weight="400" fill="#a1bdc3">等待核实，暂不加入收取批次。</text>
+<text x="916" y="422" font-family="Microsoft YaHei" font-size="14" font-weight="700" fill="#e6f5f7">邮箱关闭或内容发生变化</text>
+<text x="916" y="444" font-family="Microsoft YaHei" font-size="12" font-weight="400" fill="#a1bdc3">暂停队列，保留未执行项目。</text>
+<text x="916" y="480" font-family="Microsoft YaHei" font-size="14" font-weight="700" fill="#e6f5f7">背包不足或操作失败</text>
+<text x="916" y="502" font-family="Microsoft YaHei" font-size="12" font-weight="400" fill="#a1bdc3">显示原因，核实后重新预览。</text>
+<rect x="900" y="572" width="396" height="184" fill="#0a2027" stroke="#28545a"/>
+<text x="916" y="602" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#20e070">使用流程</text>
+<path d="M916 612 L1280 612" fill="none" stroke="#28545a"/>
+<text x="916" y="640" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">选择项目 → 预览批次 → 确认收取</text>
+<text x="916" y="676" font-family="Microsoft YaHei" font-size="12" font-weight="400" fill="#a1bdc3">暂停后：核实结果 → 重新预览剩余项目</text>
+<text x="916" y="718" font-family="Microsoft YaHei" font-size="12" font-weight="400" fill="#a1bdc3">邮件历史及缓存期限在“缓存管理”页。</text>
+<text x="192" y="792" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#a1bdc3">收件设置作用于原生邮箱增强；账号页面、入口、角色与字段配置仍由 Core 管理。</text>
+<text x="192" y="824" font-family="Microsoft YaHei" font-size="12" font-weight="400" fill="#a1bdc3">设计状态：待确认 · 收件偏好设计稿。</text>
+</svg>

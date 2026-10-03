@@ -258,7 +258,7 @@ function Addon:GetCharacterStore(characterID)
     return EnsureCharacter(characterID)
 end
 
-function Addon:GetCharacterRecords(characterID, source, itemID)
+function Addon:GetCachedCharacterRecords(characterID, source, itemID)
     local character = self.db.byCharacter[characterID]
     if not character then return {} end
     local records = {}
@@ -271,9 +271,23 @@ function Addon:GetCharacterRecords(characterID, source, itemID)
     return records
 end
 
-function Addon:GetCharacterCoverage(characterID, source)
+function Addon:GetCachedCharacterCoverage(characterID, source)
     local character = self.db.byCharacter[characterID]
     return Copy(character and character.coverage and character.coverage[source] or {})
+end
+function Addon:GetCharacterRecords(characterID, source, itemID)
+    local snapshot = source == "mail" and self.MailProvider and self.MailProvider:GetSnapshot(characterID)
+    if not snapshot then return self:GetCachedCharacterRecords(characterID, source, itemID) end
+    local records = {}
+    for _, record in ipairs(snapshot.records) do if not itemID or record.itemID == itemID then records[#records + 1] = Copy(record) end end
+    return records
+end
+function Addon:GetCharacterCoverage(characterID, source)
+    local snapshot = source == "mail" and self.MailProvider and self.MailProvider:GetSnapshot(characterID)
+    return snapshot and Copy(snapshot.coverage) or self:GetCachedCharacterCoverage(characterID, source)
+end
+function Addon:NotifyMailProviderChanged(characterID, itemIDs)
+    FireChanged("mail", characterID, itemIDs, select(1, self:Now()), true, "scan")
 end
 
 function Addon:DeleteCharacter(character)

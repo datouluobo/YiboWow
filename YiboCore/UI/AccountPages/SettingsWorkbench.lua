@@ -487,6 +487,7 @@ local function RefreshSettings(parent)
         row:Show()
         local hostedContext
         hostedContext = {
+            availableHeight = math.max(1, (parent.scroll:GetHeight() or 1) - y - 8),
             refreshPage = function() AccountView:RefreshPage() end,
             notifyPageChanged = function() if selected then AccountView:NotifyPageChanged(selected.id) end end,
             -- Allow a business panel to repaint its own controls without

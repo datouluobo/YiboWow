@@ -1,0 +1,86 @@
+{
+  "status": "阶段4待确认",
+  "geometry": "approved regular hexagon and unchanged E envelope paths; frame stroke color comparison",
+  "checks": [
+    {
+      "variant": "base",
+      "size": 24,
+      "width": 24,
+      "height": 24,
+      "edgeAlphaMax": 0
+    },
+    {
+      "variant": "base",
+      "size": 32,
+      "width": 32,
+      "height": 32,
+      "edgeAlphaMax": 0
+    },
+    {
+      "variant": "base",
+      "size": 64,
+      "width": 64,
+      "height": 64,
+      "edgeAlphaMax": 0
+    },
+    {
+      "variant": "outline",
+      "size": 24,
+      "width": 24,
+      "height": 24,
+      "edgeAlphaMax": 0
+    },
+    {
+      "variant": "outline",
+      "size": 32,
+      "width": 32,
+      "height": 32,
+      "edgeAlphaMax": 0
+    },
+    {
+      "variant": "outline",
+      "size": 64,
+      "width": 64,
+      "height": 64,
+      "edgeAlphaMax": 0
+    }
+  ],
+  "actualSizes": [
+    {
+      "width": 24,
+      "height": 24
+    },
+    {
+      "width": 32,
+      "height": 32
+    },
+    {
+      "width": 64,
+      "height": 64
+    },
+    {
+      "width": 24,
+      "height": 24
+    },
+    {
+      "width": 32,
+      "height": 32
+    },
+    {
+      "width": 64,
+      "height": 64
+    },
+    {
+      "width": 24,
+      "height": 24
+    },
+    {
+      "width": 32,
+      "height": 32
+    },
+    {
+      "width": 24,
+      "height": 24
+    }
+  ]
+}

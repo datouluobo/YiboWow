@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1312" height="880" viewBox="0 0 1312 880">
+<rect width="1312" height="880" fill="#061319"/>
+<text x="32" y="52" font-family="Microsoft YaHei" font-size="24" font-weight="700" fill="#e6f5f7">YiboMail 设置 · 控件尺寸与排版</text>
+<text x="32" y="84" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#a1bdc3">逻辑 UI 单位，按 UI Scale = 1 绘制；字号复用 Core，文本宽度以微软雅黑作为预估。</text>
+<rect x="32" y="114" width="610" height="316" fill="#0a2027" stroke="#28545a"/>
+<text x="48" y="144" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#20e070">控件规格</text>
+<path d="M48 154 L626 154" fill="none" stroke="#28545a"/>
+<text x="48" y="188" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#a1bdc3">按钮</text>
+<rect x="172" y="162" width="128" height="34" fill="#104032" stroke="#20e070"/>
+<text x="204.0" y="187" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#e6f5f7">保存规则</text>
+<text x="324" y="187" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">128 × 34 · 字号 16 · 左右留白 ≥12</text>
+<text x="48" y="239" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#a1bdc3">下拉</text>
+<rect x="172" y="214" width="260" height="34" fill="#0a2027" stroke="#28545a"/>
+<text x="184" y="238" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">天堂风暴 · 账号角色</text>
+<path d="M409 229 L414 234" fill="none" stroke="#a1bdc3"/>
+<path d="M414 234 L419 229" fill="none" stroke="#a1bdc3"/>
+<text x="452" y="239" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">高 34</text>
+<text x="172" y="270" font-family="Microsoft YaHei" font-size="12" font-weight="400" fill="#a1bdc3">文字区 = 宽度 − 44；箭头与间距单独预留。</text>
+<text x="48" y="319" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#a1bdc3">输入</text>
+<rect x="172" y="294" width="260" height="34" fill="#05161c" stroke="#28545a"/>
+<text x="184" y="318" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">角色名-服务器</text>
+<text x="452" y="319" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">高 34</text>
+<text x="172" y="350" font-family="Microsoft YaHei" font-size="12" font-weight="400" fill="#a1bdc3">字号 14；内边距 12；标签高 20，与输入间隔 8。</text>
+<text x="48" y="395" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#a1bdc3">勾选</text>
+<rect x="172" y="374" width="20" height="20" fill="#20e070" stroke="#20e070"/>
+<path d="M176 384 L180 388" fill="none" stroke="#042315"/>
+<path d="M180 388 L188 379" fill="none" stroke="#042315"/>
+<text x="200" y="391" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">启用规则</text>
+<text x="324" y="396" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">方框 20 × 20 · 文字间隔 8</text>
+<rect x="658" y="114" width="622" height="316" fill="#0a2027" stroke="#28545a"/>
+<text x="674" y="144" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#20e070">布局预算</text>
+<path d="M674 154 L1264 154" fill="none" stroke="#28545a"/>
+<text x="674" y="188" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">完整窗口：1312 × 840</text>
+<text x="674" y="232" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">业务区：1104 宽 = 692 规则 + 16 间隔 + 396 侧栏</text>
+<text x="674" y="276" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">分区内边距：16；表单行距：18–24</text>
+<text x="674" y="320" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">物品图标：40 × 40；列表图标：28 × 28</text>
+<text x="674" y="364" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">规则行：660 × 42；分页按钮：72 × 34</text>
+<text x="674" y="408" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">页底状态：1104 × 24；不承载表单校验长文</text>
+<rect x="32" y="450" width="1248" height="216" fill="#0a2027" stroke="#28545a"/>
+<text x="48" y="480" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#20e070">规则行 · 列宽与文字预算</text>
+<path d="M48 490 L1264 490" fill="none" stroke="#28545a"/>
+<text x="48" y="520" font-family="Microsoft YaHei" font-size="16" font-weight="400" fill="#e6f5f7">列宽：物品 200｜收件人 164｜数量 100｜状态 108｜操作 88 ＝ 660</text>
+<rect x="48" y="542" width="200" height="42" fill="#102d34" stroke="#28545a"/>
+<text x="58" y="570" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">物品 / ID</text>
+<text x="137.5" y="611" font-family="Microsoft YaHei" font-size="12" font-weight="400" fill="#20e070">200</text>
+<rect x="248" y="542" width="164" height="42" fill="#102d34" stroke="#28545a"/>
+<text x="258" y="570" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">收件人</text>
+<text x="319.5" y="611" font-family="Microsoft YaHei" font-size="12" font-weight="400" fill="#20e070">164</text>
+<rect x="412" y="542" width="100" height="42" fill="#102d34" stroke="#28545a"/>
+<text x="422" y="570" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">每封上限</text>
+<text x="451.5" y="611" font-family="Microsoft YaHei" font-size="12" font-weight="400" fill="#20e070">100</text>
+<rect x="512" y="542" width="108" height="42" fill="#102d34" stroke="#28545a"/>
+<text x="522" y="570" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">状态</text>
+<text x="555.5" y="611" font-family="Microsoft YaHei" font-size="12" font-weight="400" fill="#20e070">108</text>
+<rect x="620" y="542" width="88" height="42" fill="#102d34" stroke="#28545a"/>
+<text x="630" y="570" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">编辑</text>
+<text x="657.0" y="611" font-family="Microsoft YaHei" font-size="12" font-weight="400" fill="#20e070">88</text>
+<text x="746" y="557" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">列表名称最多显示约 10 个汉字，超出省略；</text>
+<text x="746" y="588" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">悬停显示完整物品名、服务器与物品 ID。</text>
+<text x="746" y="619" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">长地址只在摘要省略，编辑输入框可横向定位光标。</text>
+<rect x="32" y="686" width="1248" height="160" fill="#0a2027" stroke="#28545a"/>
+<text x="48" y="716" font-family="Microsoft YaHei" font-size="16" font-weight="700" fill="#20e070">交互与窄屏规则</text>
+<path d="M48 726 L1264 726" fill="none" stroke="#28545a"/>
+<text x="48" y="755" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">新增：选物品 → 选收件人 → 数量与启用 → 保存；保存后保持编辑态，并在原位置给出结果。</text>
+<text x="48" y="789" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">编辑：点击行内编辑载入草稿；填写 ID 按钮展开同高输入框；校验提示占独立行并推动后续内容。</text>
+<text x="48" y="823" font-family="Microsoft YaHei" font-size="14" font-weight="400" fill="#e6f5f7">业务区不足 1000：规则 → 联系人 → 缓存依次纵向排列；由 Core 管理纵向滚动，控件保持 34 高。</text>
+</svg>
