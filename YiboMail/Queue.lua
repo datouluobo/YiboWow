@@ -3,11 +3,6 @@ local Queue = { state = "idle", actions = {}, completed = 0 }; Addon.Queue = Que
 local function Fingerprint(mails)
     local parts = {}; for _, mail in ipairs(mails) do parts[#parts + 1] = mail.signature end; table.sort(parts); return Addon.Encode(parts)
 end
-local function Find(mails, signature)
-    local found
-    for _, mail in ipairs(mails) do if mail.signature == signature then if found then return nil, "邮件身份存在歧义。" end; found = mail end end
-    return found, found and nil or "邮件内容已变化，请重新选择。"
-end
 function Queue:Notify()
     if Addon.Core and Addon.FEATURES.account then Addon.Core.AccountView:NotifyPageChanged("mail-inbox") end
     if Addon.NativeUI then Addon.NativeUI:Refresh() end
@@ -19,6 +14,11 @@ end
 function Queue:Pause(reason)
     self.state, self.message = "paused", reason or "已暂停。"
     self:Notify()
+end
+local function CurrentInboxIndex(queue, originalIndex)
+    local removedBefore = 0
+    for index in pairs(queue.removedIndexes or {}) do if index < originalIndex then removedBefore = removedBefore + 1 end end
+    return originalIndex - removedBefore
 end
 function Queue:Prepare(selection, context)
     if self.pending then return nil, "上一步结果仍待核实，请等待邮箱更新或关闭后重新检查。" end
@@ -39,6 +39,17 @@ function Queue:Prepare(selection, context)
     local selected = 0; for _ in pairs(selection) do selected = selected + 1 end
     if #actions ~= selected then return nil, "部分选择已失去可见性或超出当前范围，请清空后重新选择。" end
     if #actions == 0 then return nil, "请选择当前角色邮箱中的附件或金币。" end
+    -- Process the earliest estimated expiry first; use inbox position for ties.
+    table.sort(actions, function(a, b)
+        local aExpiry, bExpiry = tonumber(a.original.expiresAtEstimate) or math.huge, tonumber(b.original.expiresAtEstimate) or math.huge
+        if aExpiry ~= bExpiry then return aExpiry < bExpiry end
+        local aIndex, bIndex = tonumber(a.original.inboxIndex) or math.huge, tonumber(b.original.inboxIndex) or math.huge
+        if aIndex ~= bIndex then return aIndex < bIndex end
+        if a.characterID ~= b.characterID then return tostring(a.characterID) < tostring(b.characterID) end
+        local aSlot = a.slot == "money" and 0 or tonumber(a.slot) or math.huge
+        local bSlot = b.slot == "money" and 0 or tonumber(b.slot) or math.huge
+        return aSlot < bSlot
+    end)
     return actions
 end
 function Queue:RemainingSelection(context)
@@ -46,12 +57,10 @@ function Queue:RemainingSelection(context)
     local entries, selection = Addon.ViewModel:GetMails(context, {}), {}
     for _, action in ipairs(self.actions) do
         if action.state == "pending" then
+            local index = CurrentInboxIndex(self, tonumber(action.original and action.original.inboxIndex) or 0)
             local found
             for _, entry in ipairs(entries) do
-                if entry.character.id == action.characterID and entry.mail.signature == action.signature then
-                    if found then return nil, "剩余项存在同签名歧义，请重新选择。" end
-                    found = entry
-                end
+                if entry.character.id == action.characterID and entry.mail.inboxIndex == index and entry.mail.signature == action.signature then found = entry; break end
             end
             if not found or not found.actionable then return nil, "剩余项已变化，请清空后重新选择。" end
             selection[Addon.ViewModel:ActionID(found.character.id, found.key, action.slot)] = true
@@ -69,7 +78,9 @@ function Queue:Start(actions)
         if not current or current.id ~= action.characterID then return nil, "当前角色已变化，请重新选择。" end
         if selected[action.id] then return nil, "收取项目重复，请重新选择。" end
         selected[action.id] = true
-        local mail, why = Find(mails, action.signature); if not mail then return nil, why end
+        local index = tonumber(action.original and action.original.inboxIndex)
+        local mail = index and mails[index]
+        if not mail or mail.signature ~= action.signature then return nil, "所选邮件位置或内容已变化，请重新选择。" end
         if mail.cod > 0 then return nil, "付款取信请使用原生邮箱。" end
         if action.slot == "money" then
             if mail.money <= 0 or mail.money ~= action.original.money then return nil, "金币数量已变化，请重新选择。" end
@@ -82,6 +93,7 @@ function Queue:Start(actions)
         end
     end
     self.actions, self.completed, self.index, self.state, self.message = Addon.Copy(actions), 0, 1, "running", "正在逐项收取"
+    self.verifiedMails, self.removedIndexes = mails, {}
     self:Next(); return true
 end
 function Queue:Next()
@@ -95,8 +107,17 @@ function Queue:Next()
     local current = Addon.Core.Characters:GetCurrent()
     if not current or current.id ~= action.characterID then self:Pause("当前角色已变化。"); return end
     if InCombatLockdown and InCombatLockdown() then self:Pause("战斗中已暂停，请结束战斗后重新选择。"); return end
-    local mails, err = Addon.Scanner:ReadVisible(); if not mails then self:Pause(err); return end
-    local mail, reason = Find(mails, action.signature); if not mail then self:Pause(reason); return end
+    local mails = self.verifiedMails
+    self.verifiedMails = nil
+    if not mails then
+        local err
+        mails, err = Addon.Scanner:ReadVisible()
+        if not mails then self:Pause(err); return end
+    end
+    local originalIndex = tonumber(action.original and action.original.inboxIndex)
+    local index = originalIndex and CurrentInboxIndex(self, originalIndex)
+    local mail = index and mails[index]
+    if not mail or mail.signature ~= action.signature then self:Pause("所选邮件位置或内容已变化，请重新选择。"); return end
     if mail.cod > 0 then self:Pause("付款取信请使用原生邮箱。"); return end
     local expected = Addon.Copy(mail)
     if action.slot == "money" then
@@ -117,8 +138,10 @@ function Queue:Next()
     expected.signature = Addon.Scanner:Signature(expected)
     local after = {}; for _, entry in ipairs(mails) do after[#after + 1] = entry.inboxIndex == mail.inboxIndex and expected or entry end
     local removed = {}; for _, entry in ipairs(mails) do if entry.inboxIndex ~= mail.inboxIndex then removed[#removed + 1] = entry end end
-    self.pending = { action = action, expected = expected, expectedFingerprint = Fingerprint(after),
+    self.pending = { action = action, expected = expected, mailCollected = #expected.attachments == 0 and expected.money == 0,
+        expectedFingerprint = Fingerprint(after),
         removedFingerprint = #expected.attachments == 0 and expected.money == 0 and Fingerprint(removed) or nil,
+        originalIndex = originalIndex, targetIndex = index,
         startedAt = GetTime(), success = false, updated = false }
     self.invoking = true
     local fn = action.slot == "money" and TakeInboxMoney or TakeInboxItem
@@ -134,8 +157,37 @@ function Queue:OnScan(mails)
     local pending = self.pending
     if not pending or pending.interference or not pending.success or not pending.updated then return end
     local fingerprint = Fingerprint(mails)
-    if fingerprint ~= pending.expectedFingerprint and fingerprint ~= pending.removedFingerprint then self:Pause("操作后邮箱内容不符，请等待更新并检查结果。"); return end
+    if fingerprint ~= pending.expectedFingerprint and fingerprint ~= pending.removedFingerprint then
+        pending.mismatchScans = (pending.mismatchScans or 0) + 1
+        if pending.mismatchScans == 1 and C_Timer and C_Timer.After then
+            -- The client can emit MAIL_INBOX_UPDATE before the mailbox APIs
+            -- expose the final post-loot contents, especially for large inboxes.
+            C_Timer.After(0.3, function()
+                if Queue.pending == pending and Queue.state == "running" then Addon.Scanner:Schedule() end
+            end)
+            return
+        end
+        self:Pause("操作后邮箱内容不符，请等待更新并检查结果。"); return
+    end
+    self.verifiedMails = mails
+    local targetRemoved = pending.removedFingerprint ~= nil and fingerprint == pending.removedFingerprint
+    if targetRemoved and pending.originalIndex then self.removedIndexes[pending.originalIndex] = true end
     local action = pending.action; action.state = "success"; self.completed = self.completed + 1
+    action.mailCollected = pending.mailCollected
+    action.resultMail, action.resultMailKey, action.resultInboxIndex = nil, nil, pending.targetIndex
+    if not targetRemoved then
+        local snapshot = Addon.db.byCharacter[action.characterID]
+        for _, key in ipairs(snapshot and snapshot.visibleKeys or {}) do
+            local mail = snapshot.records[key]
+            if mail and mail.inboxIndex == pending.targetIndex then action.resultMail, action.resultMailKey = mail, key; break end
+        end
+    end
+    if action.mailCollected and not targetRemoved then
+        local markers = Addon.db.collectedMailMarkers[action.characterID] or {}
+        Addon.db.collectedMailMarkers[action.characterID] = markers
+        markers[#markers + 1] = { signature = pending.expected.signature,
+            expiresAtEstimate = tonumber(pending.expected.expiresAtEstimate) or Addon:Now() }
+    end
     if action.original.openedByUser and Addon.MarkMailOpened then
         local snapshot = Addon.db.byCharacter[action.characterID]
         local found
@@ -151,13 +203,17 @@ function Queue:OnScan(mails)
     Addon:AddHistory(action.characterID, { state = "collected-archived", mail = action.original,
         item = action.item, money = action.slot == "money" and action.original.money or 0, observedAt = Addon:Now() })
     for index = self.index + 1, #self.actions do
-        if self.actions[index].mailKey == action.mailKey then self.actions[index].signature = pending.expected.signature end
+        local nextAction = self.actions[index]
+        if nextAction.characterID == action.characterID
+            and nextAction.original and nextAction.original.inboxIndex == action.original.inboxIndex then
+            nextAction.signature = pending.expected.signature
+        end
     end
     self.pending, self.index = nil, self.index + 1
     if self.onSuccess then self.onSuccess(action.id) end
-    if Addon.NativeUI then Addon.NativeUI:OnCollected(action.id) end
+    if Addon.NativeUI then Addon.NativeUI:OnCollected(action.id, action) end
     self:Notify()
-    if self.state == "running" then C_Timer.After(0.4, function() Queue:Next() end) end
+    if self.state == "running" then C_Timer.After(0.1, function() Queue:Next() end) end
 end
 function Queue:OnEvent(event, ...)
     if event == "MAIL_CLOSED" then
@@ -173,6 +229,8 @@ function Queue:OnEvent(event, ...)
         elseif event == "MAIL_INBOX_UPDATE" then self.pending.updated = true
         elseif event == "MAIL_FAILED" or event == "UI_ERROR_MESSAGE" or event == "ADDON_ACTION_BLOCKED" then self:Pause("收取未完成，请检查游戏提示后重新选择。") end
         if self.pending.success and self.pending.updated then Addon.Scanner:Schedule() end
+    elseif event == "MAIL_INBOX_UPDATE" then
+        self.verifiedMails = nil
     end
 end
 function Queue:Install()

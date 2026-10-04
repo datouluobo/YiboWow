@@ -6,6 +6,7 @@ function Addon:InitializeDatabase()
     self.db.revision = tonumber(self.db.revision) or 0
     self.db.nextMailKey = tonumber(self.db.nextMailKey) or 0
     self.db.byCharacter = self.db.byCharacter or {}
+    self.db.collectedMailMarkers = self.db.collectedMailMarkers or {}
     self.db.settings = self.db.settings or {}
     self.db.contacts = self.db.contacts or {}
     self.db.rules = self.db.rules or {}
@@ -106,6 +107,13 @@ function Addon:CommitScan(character, mails, coverage)
     coverage.revision = old.coverage.revision or self.db.revision
     old.visibleKeys, old.coverage, old.character = keys, coverage, { id = character.id, name = character.name, realm = character.realm }
     self.db.byCharacter[character.id] = old
+    local markers = self.db.collectedMailMarkers[character.id]
+    if markers then
+        for index = #markers, 1, -1 do
+            if (tonumber(markers[index].expiresAtEstimate) or 0) + 86400 < now then table.remove(markers, index) end
+        end
+        if #markers == 0 then self.db.collectedMailMarkers[character.id] = nil end
+    end
     if #changed > 0 or stateChanged then self:Publish(character.id, changed, itemIDs, "scan") end
     if self.FEATURES.account and self.Core.AccountView then self.Core.AccountView:NotifyPageChanged("mail-inbox") end
 end

@@ -238,7 +238,7 @@ function Settings:Render(parent, host)
         p.inboxReset = Button(p.collect, 128, "恢复默认", function() p.incoming = Addon.Copy(Addon.INBOX_DEFAULTS); Refresh("已恢复默认草稿，点击保存后生效。") end)
         p.processing, p.flow = Section("收取处理方式"), Section("使用流程")
         p.processingLines = {}; for _, entry in ipairs({ { "操作角色", "只操作当前角色的可见邮件。" }, { "付款取信（COD）", "通过原生信件确认付款。" },
-            { "身份不明确的重复邮件", "等待核实，暂不加入收取批次。" }, { "邮箱关闭或内容发生变化", "暂停队列，保留未执行项目。" }, { "背包不足或操作失败", "显示原因，核实后重新预览。" } }) do
+            { "同内容邮件", "按当前邮箱序号逐封核对；每次收取后重扫并校正序号。" }, { "邮箱关闭或内容发生变化", "暂停队列，保留未执行项目。" }, { "背包不足或操作失败", "显示原因，核实后重新预览。" } }) do
             p.processingLines[#p.processingLines + 1] = { Text(p.processing, entry[1]), Text(p.processing, entry[2], 12, Theme.Colors.muted) }
         end
         p.flowLines = { Text(p.flow, "选择项目 → 预览批次 → 确认收取"), Text(p.flow, "暂停后：核实结果 → 重新预览剩余项目", 12, Theme.Colors.muted), Text(p.flow, "邮件历史及缓存期限在「缓存管理」页。", 12, Theme.Colors.muted) }

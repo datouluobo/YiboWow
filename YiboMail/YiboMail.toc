@@ -1,8 +1,8 @@
 ## Interface: 50504
 ## Title: |cff20e070[Yibo]|r YiboMail - 邮件助手
-## Notes-zhCN: 原生收件箱增强、附件汇总与勾选收取。
+## Notes-zhCN: 原生收件箱增强、基础发件记录与附件收取。
 ## Author: YiboSoft
-## Version: 0.5.1-api1
+## Version: 0.6-api1
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
 ## SavedVariables: YiboMailDB
@@ -10,10 +10,13 @@
 
 Namespace.lua
 Store.lua
+Recipients.lua
+RecipientUI.lua
 Items.lua
 Scanner.lua
 ViewModel.lua
 Inbox.lua
 Queue.lua
+Compose.lua
 NativeUI.lua
 Bootstrap.lua

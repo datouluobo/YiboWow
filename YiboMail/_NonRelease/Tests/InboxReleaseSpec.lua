@@ -30,14 +30,14 @@ end
 local addon = YiboMail
 addon.Frame.scripts.OnEvent(addon.Frame, "ADDON_LOADED", "YiboMail")
 assert(addon.initialized and owner)
-assert(not addon.FEATURES.send and not addon.FEATURES.account and not addon.FEATURES.settings)
-for _, module in ipairs({ "Compose", "Rules", "MailUI", "CacheModel", "CacheUI", "AccountPage", "Settings" }) do
+assert(addon.FEATURES.send and not addon.FEATURES.sendAssist and not addon.FEATURES.account and not addon.FEATURES.settings)
+for _, module in ipairs({ "Rules", "MailUI", "CacheModel", "CacheUI", "AccountPage", "Settings" }) do
     assert(addon[module] == nil, module .. " unexpectedly loaded")
 end
 assert(type(addon.GetInboxActions) == "function" and addon:GetInboxPreferences().sort == "inbox")
 assert(addon.db.contacts.marker == "contact" and addon.db.rules.marker == "rule")
 assert(addon.Frame.events.MAIL_INBOX_UPDATE and addon.Frame.events.MAIL_SUCCESS)
-assert(not addon.Frame.events.MAIL_SEND_SUCCESS and not addon.Frame.events.MAIL_SEND_INFO_UPDATE)
+assert(addon.Frame.events.MAIL_SEND_SUCCESS and addon.Frame.events.MAIL_SEND_INFO_UPDATE)
 SlashCmdList.YIBOMAIL("")
 SlashCmdList.YIBOMAIL("status")
 assert(#messages == 2 and messages[1]:find("/yma status", 1, true))
@@ -60,4 +60,18 @@ wasRead = true; assert(addon.Scanner:Scan())
 assert(snapshot.visibleKeys[1] == key and snapshot.records[key].signature == signature)
 assert(snapshot.records[key].wasRead == true and addon.db.revision > revision)
 print("PASS: client read state scanned and published without changing mail identity or registering disabled account pages")
-print("PASS: release TOC boot; inbox dependencies; disabled pages/settings/send/events; saved rules and contacts preserved; diagnostic slash and mailbox lifecycle")
+-- Recents use the captured send recipient, even after native input reset.
+addon.Core.Characters.GetAllCached = function() return { addon.Core.Characters:GetCurrent() } end
+SendMailNameEditBox = { GetText = function() return "" end }
+addon.Compose.pendingSend = { characterID = "test", recipient = "Success-Realm", subject = "subject", attachments = {}, observedAt = 1000 }
+addon.Compose:OnEvent("MAIL_SEND_SUCCESS")
+assert(addon.db.recentRecipients[1].address == "Success-Realm")
+addon.Compose.pendingSend = { characterID = "test", recipient = "Failed-Realm", subject = "subject", attachments = {}, observedAt = 1000 }
+addon.Compose:OnEvent("MAIL_FAILED")
+assert(#addon.db.recentRecipients == 1)
+addon.Compose:OnEvent("MAIL_SEND_SUCCESS"); assert(#addon.db.recentRecipients == 1)
+addon.db.friendsByCharacter.friendOnly = { addresses = {}, updatedAt = 1000 }
+assert(owner.Inspect({ id = "friendOnly" }, {}).hasData)
+owner.Delete({ id = "friendOnly" }, {}); assert(not addon.db.friendsByCharacter.friendOnly)
+print("PASS: release send success captured recipient; failed/unassociated sends excluded; friend-only cleanup owner")
+print("PASS: release TOC boot; native send tracking without send-assist UI; disabled pages/settings; saved rules and contacts preserved; diagnostic slash and mailbox lifecycle")

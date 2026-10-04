@@ -83,6 +83,7 @@ Addon.ViewModel = {
     Escape = function(_, value) return value end,
     Money = function(_, value) return tostring(value) end,
     Expiry = function() return "20 days" end,
+    ExpiryColor = function() return 0.25, 0.9, 0.35 end,
 }
 Addon.Items = { GetState = function() return { currentCount = 1, totalCount = 1 } end }
 Addon.Scanner = { updated = true, ReadVisible = function() return { mail } end, Signature = function() return "after" end }
@@ -210,6 +211,7 @@ assert(not panel.rows[1].delete:IsShown() and panel.rows[1].check:IsShown())
 print("PASS: empty-mail X; native deletion permission; repeat-click guard; recheck contents; pooled row restores checkbox")
 Addon.Items.Events = { Register = function() end }
 SendMailFrame = Frame(MailFrame)
+Addon.FEATURES.send = false -- This spec stubs only the inbox-side native widgets.
 local originalHeight = MailFrame:GetHeight()
 native:Install(); assert(native.installed and not native.send and not native.fillPreview)
 assert(MailFrame:GetHeight() == originalHeight and not Addon.Compose and not Addon.Rules and not Addon.MailUI)

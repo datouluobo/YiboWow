@@ -137,12 +137,13 @@ end
 function Compose:OnEvent(event)
     if event == "MAIL_SEND_SUCCESS" and self.pendingSend then
         self.pendingSend.state = "in-transit"
+        if Addon.Recipients then Addon.Recipients:RecordRecent(self.pendingSend.recipient) end
         Addon:AddHistory(self.pendingSend.characterID, self.pendingSend)
         self.pendingSend, self.fill = nil, nil; self.draft = { recipient = "", subject = "", body = "", copper = 0, cod = false }
     elseif (event == "MAIL_FAILED" or event == "MAIL_CLOSED") and self.pendingSend then
         Addon:AddHistory(self.pendingSend.characterID, self.pendingSend); self.pendingSend = nil
     elseif event == "MAIL_CLOSED" then self.fill = nil end
-    if event == "MAIL_SEND_INFO_UPDATE" or event == "MAIL_SEND_SUCCESS" or event == "MAIL_FAILED" or event == "BAG_UPDATE_DELAYED" then
+    if Addon.FEATURES.account and (event == "MAIL_SEND_INFO_UPDATE" or event == "MAIL_SEND_SUCCESS" or event == "MAIL_FAILED" or event == "BAG_UPDATE_DELAYED") then
         Addon.Core.AccountView:NotifyPageChanged("mail-inbox")
     end
 end

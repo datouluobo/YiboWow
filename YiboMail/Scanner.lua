@@ -26,7 +26,10 @@ function Scanner:InstallHooks()
 end
 local function ReadMail(index, now, clock)
     local _, _, sender, subject, money, cod, days, expectedAttachments, wasRead, wasReturned = GetInboxHeaderInfo(index)
-    if type(sender) ~= "string" or type(subject) ~= "string" or type(days) ~= "number" then error("header-unavailable") end
+    if type(sender) ~= "string" or type(subject) ~= "string" or type(days) ~= "number" then
+        error(string.format("header-unavailable:index=%d:sender=%s:subject=%s:days=%s",
+            index, type(sender), type(subject), type(days)))
+    end
     local mail = { inboxIndex = index, sender = sender, subject = subject, money = tonumber(money) or 0,
         cod = tonumber(cod) or 0, daysLeftAtScan = days, observedAt = now, clockSource = clock,
         expiresAtEstimate = now + days * 86400, wasRead = not not wasRead, wasReturned = not not wasReturned, attachments = {} }
@@ -71,6 +74,44 @@ function Scanner:ReadVisible()
     if not ok then return nil, tostring(result) end
     return result
 end
+function Scanner:ReadEntry(entry)
+    if not self:IsOpen() or not self.updated then return nil, "请先打开邮箱并等待列表更新。" end
+    local index = entry and entry.mail and tonumber(entry.mail.inboxIndex)
+    if not index or index < 1 or index % 1 ~= 0 then return nil, "邮件位置无效，请等待邮箱更新。" end
+    local now, clock = Addon:Now()
+    local ok, current, count = pcall(function()
+        local visible, total = GetInboxNumItems()
+        if type(visible) ~= "number" or type(total) ~= "number" or visible < index or total < visible then error("邮件位置已变化，请等待更新。") end
+        local mail = ReadMail(index, now, clock)
+        local afterVisible, afterTotal = GetInboxNumItems()
+        if afterVisible ~= visible or afterTotal ~= total then error("邮箱正在变化，请稍后重试。") end
+        return mail, visible
+    end)
+    if not ok then return nil, tostring(current) end
+    if current.signature ~= entry.mail.signature then return nil, "邮件已变化，请等待更新。" end
+    return current
+end
+local function CommitScan(character, mails, visible, total, now, clock)
+    local signatures = {}; for _, mail in ipairs(mails) do signatures[#signatures + 1] = mail.signature end; table.sort(signatures)
+    local fingerprint = Addon.Encode(signatures)
+    Scanner.lastError, Scanner.validAt = nil, now
+    Addon:CommitScan(character, mails, { status = visible < total and "partial" or (total == 0 and "known-empty" or "known"),
+        currentCount = visible, totalCount = total, unscannedCount = total - visible, observedAt = now, clockSource = clock })
+    if visible == total and total <= 100 then
+        local stable = Scanner.stable
+        if stable and stable.characterID == character.id and stable.fingerprint == fingerprint and stable.count == total then
+            if now - stable.at >= 60 then Addon:CleanupBacklog(character.id) end
+        else Scanner.stable = { characterID = character.id, fingerprint = fingerprint, count = total, at = now } end
+    else Scanner.stable = nil end
+    if Addon.Queue then Addon.Queue:OnScan(mails) end
+    if Addon.NativeUI then Addon.NativeUI.deleting = nil; Addon.NativeUI:Refresh() end
+end
+local function ScanError(character, err)
+    Scanner.stable, Scanner.validAt, Scanner.lastError = nil, nil, tostring(err)
+    Scanner:PublishStatus(character.id)
+    if Addon.NativeUI then Addon.NativeUI:Refresh() end
+    if Addon.FEATURES.account then Addon.Core.AccountView:NotifyPageChanged("mail-inbox") end
+end
 function Scanner:Scan()
     if not self:IsOpen() or not self.updated then self.stable = nil; return nil, "mailbox-unavailable" end
     local character = Addon.Core.Characters:GetCurrent(); if not character then return nil, "character-unavailable" end
@@ -84,27 +125,35 @@ function Scanner:Scan()
         return result, count, all
     end)
     if not ok then
-        self.stable, self.validAt, self.lastError = nil, nil, tostring(mails)
-        self:PublishStatus(character.id)
-        if Addon.NativeUI then Addon.NativeUI:Refresh() end
-        if Addon.FEATURES.account then Addon.Core.AccountView:NotifyPageChanged("mail-inbox") end
+        ScanError(character, mails)
         return nil, self.lastError
     end
-    local signatures = {}; for _, mail in ipairs(mails) do signatures[#signatures + 1] = mail.signature end; table.sort(signatures)
-    local fingerprint = Addon.Encode(signatures)
-    self.lastError, self.validAt = nil, now
-    Addon:CommitScan(character, mails, { status = visible < total and "partial" or (total == 0 and "known-empty" or "known"),
-        currentCount = visible, totalCount = total, unscannedCount = total - visible, observedAt = now, clockSource = clock })
-    if visible == total and total <= 100 then
-        local stable = self.stable
-        if stable and stable.characterID == character.id and stable.fingerprint == fingerprint and stable.count == total then
-            if now - stable.at >= 60 then Addon:CleanupBacklog(character.id) end
-        else
-            self.stable = { characterID = character.id, fingerprint = fingerprint, count = total, at = now }
-        end
-    else self.stable = nil end
-    if Addon.Queue then Addon.Queue:OnScan(mails) end
-    if Addon.NativeUI then Addon.NativeUI.deleting = nil; Addon.NativeUI:Refresh() end
+    CommitScan(character, mails, visible, total, now, clock)
+    return true
+end
+function Scanner:ScanAsync(generation)
+    if not self:IsOpen() or not self.updated then self.stable = nil; return nil, "mailbox-unavailable" end
+    local character = Addon.Core.Characters:GetCurrent(); if not character then return nil, "character-unavailable" end
+    local now, clock = Addon:Now()
+    local ok, count, total = pcall(GetInboxNumItems)
+    if not ok or type(count) ~= "number" or type(total) ~= "number" or count < 0 or total < count then
+        ScanError(character, ok and "counts-unavailable" or count); return nil, self.lastError
+    end
+    local mails, index = {}, 1
+    local function ReadChunk()
+        if generation ~= self.generation or not self:IsOpen() then return end
+        local last = math.min(count, index + 4)
+        local readOK, err = pcall(function()
+            for current = index, last do mails[current] = ReadMail(current, now, clock) end
+        end)
+        if not readOK then ScanError(character, err); return end
+        index = last + 1
+        if index <= count then C_Timer.After(0, ReadChunk); return end
+        local stableOK, afterCount, afterTotal = pcall(GetInboxNumItems)
+        if not stableOK or afterCount ~= count or afterTotal ~= total then ScanError(character, "inbox-changed"); return end
+        CommitScan(character, mails, count, total, now, clock)
+    end
+    ReadChunk()
     return true
 end
 function Scanner:Schedule()
@@ -117,8 +166,8 @@ function Scanner:Schedule()
             if Scanner.open and not Scanner:IsOpen() and attempt < 10 then
                 C_Timer.After(0.1, function() RunScan(attempt + 1) end); return
             end
-            Scanner:Scan()
-            C_Timer.After(60.1, function() if Scanner.generation == generation then Scanner:Scan() end end)
+            Scanner:ScanAsync(generation)
+            C_Timer.After(60.1, function() if Scanner.generation == generation then Scanner:ScanAsync(generation) end end)
         end
         C_Timer.After(0.2, function() RunScan(0) end)
     else self:Scan() end
