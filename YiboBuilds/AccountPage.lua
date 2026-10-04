@@ -2071,7 +2071,10 @@ local function SetupMainButtons(parent)
         if equipmentStatus == "changed" and existing and StaticPopup_Show then
             StaticPopupDialogs.YIBO_BUILDS_CONFIRM_OVERWRITE = StaticPopupDialogs.YIBO_BUILDS_CONFIRM_OVERWRITE or {
                 text = "将覆盖该天赋槽位已确认的构筑装备。是否继续？", button1 = ACCEPT, button2 = CANCEL, timeout = 0, whileDead = true, hideOnEscape = true,
-                OnAccept = function() Addon.Snapshot:ConfirmEquipment(slot) end,
+                OnAccept = function()
+                    local ok, err = Addon.Snapshot:ConfirmEquipment(slot)
+                    if not ok then Addon:Print(err) end
+                end,
             }
             StaticPopup_Show("YIBO_BUILDS_CONFIRM_OVERWRITE")
         else
@@ -2358,7 +2361,11 @@ function Page.RefreshPreview(parent, context)
                 local n = tonumber(string.match(col.id, "%d+")); local item = slotData and slotData.glyphs and slotData.glyphs.minor[n]
                 value = item and IconText(item.icon, item.name) or "—"; SetPreviewCellTooltip(cell, item)
             elseif matrixMode == "equipment" and col.slotID then
-                local equipment = slotData and slotData.confirmedEquipment
+                -- Login and equipment events refresh the observation first;
+                -- confirmation is a separate user action or logout boundary.
+                -- Show the latest known equipment while a build is still
+                -- pending confirmation instead of rendering every slot empty.
+                local equipment = slotData and (slotData.observedEquipment or slotData.confirmedEquipment)
                 local item = equipment and equipment.slots and equipment.slots[tostring(col.slotID)]
                 if item and item.icon then
                     cell.text:Hide(); cell.itemFrame:Show(); cell.itemLevel:Show()

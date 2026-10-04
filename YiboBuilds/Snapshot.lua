@@ -928,6 +928,29 @@ local function SameEquipment(first, second)
     return true
 end
 
+local function EquippedItemCount(equipment)
+    local count = 0
+    for _, slotID in ipairs(SLOT_IDS) do
+        -- Shirts and tabards are optional appearance slots, and the ranged
+        -- slot is not used by this MoP client.  They must not affect the
+        -- completeness check for a character's actual equipment.
+        if slotID ~= (INVSLOT_SHIRT or 4) and slotID ~= (INVSLOT_TABARD or 19)
+            and slotID ~= (INVSLOT_RANGED or 18) then
+            local item = equipment and equipment.slots and equipment.slots[SlotKey(slotID)]
+            if item and item.itemLink then count = count + 1 end
+        end
+    end
+    return count
+end
+
+local function IsSuspiciousEquipmentDrop(previousObserved, previousConfirmed, current)
+    local previousCount = math.max(EquippedItemCount(previousObserved), EquippedItemCount(previousConfirmed))
+    if previousCount < 4 then return false end
+    -- A transient client/API read can return nil for every inventory link.
+    -- Keep the last good snapshot instead of treating that as a real empty set.
+    return EquippedItemCount(current) < math.max(2, math.floor(previousCount / 2))
+end
+
 local function CurrentCharacter()
     return Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
 end
@@ -1017,7 +1040,12 @@ function Snapshot:CaptureSlot(record, slot, reason, includeEquipment)
     if slot == (record.lastActiveSlot or slot) then record.glyphCatalog = ReadGlyphCatalog(data.glyphs) end
     data.updatedAt = Addon:Now()
     if includeEquipment then
-        data.observedEquipment = ReadEquipment(reason)
+        local observedEquipment = ReadEquipment(reason)
+        if IsSuspiciousEquipmentDrop(data.observedEquipment, data.confirmedEquipment, observedEquipment) then
+            record.slots[slot] = data
+            return data, false
+        end
+        data.observedEquipment = observedEquipment
         -- Enrich older confirmations when the item and its enchant still match.
         for key, confirmed in pairs((data.confirmedEquipment and data.confirmedEquipment.slots) or {}) do
             local observed = data.observedEquipment.slots[key]
@@ -1030,7 +1058,7 @@ function Snapshot:CaptureSlot(record, slot, reason, includeEquipment)
         end
     end
     record.slots[slot] = data
-    return data
+    return data, true
 end
 
 function Snapshot:Capture(reason, logout)
@@ -1111,7 +1139,10 @@ function Snapshot:ConfirmEquipment(slot)
     local record = self:EnsureCharacter(character)
     local active = ActiveGroup()
     if slot ~= active then return nil, "只能确认当前激活天赋槽位的当前穿戴。" end
-    local data = self:CaptureSlot(record, slot, "confirm", true)
+    local data, equipmentAccepted = self:CaptureSlot(record, slot, "confirm", true)
+    if not equipmentAccepted then
+        return nil, "客户端当前返回的装备数据明显不完整，已保留原快照；请稍等片刻再更新。"
+    end
     data.confirmedEquipment = data.observedEquipment
     Addon:NotifyChanged()
     return true

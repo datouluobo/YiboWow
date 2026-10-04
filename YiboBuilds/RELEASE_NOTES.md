@@ -1,4 +1,16 @@
-# YiboBuilds 1.4.0
+# YiboBuilds 1.4.1
+
+## 1.4.1
+
+- The account matrix now shows the latest observed equipment while a build is awaiting confirmation.
+- Incomplete equipment captures are rejected to protect the last valid snapshot.
+
+### 中文更新说明
+
+- 构筑尚待确认时，账号矩阵会显示最新观测到的装备。
+- 拒绝不完整的装备采集，保护最后一份有效快照。
+
+---
 
 ## 1.4.0
 

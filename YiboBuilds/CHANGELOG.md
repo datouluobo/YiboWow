@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.1
+
+- Show the latest observed equipment in the account matrix when a build has not yet been confirmed.
+- Reject obviously incomplete equipment captures so they cannot replace a valid saved snapshot.
+- 在账号矩阵中显示尚未确认的最新装备观测，避免角色看起来全身空栏。
+- 拒绝明显不完整的装备采集，防止覆盖有效快照。
+
 ## 1.4.0
 
 - Automatically save active specialization equipment on logout, reload, and normal exit; preserve the outgoing specialization's last observed equipment when switching.
