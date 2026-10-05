@@ -35,7 +35,7 @@ function Addon:Initialize()
         elseif Addon.FEATURES.account then core.AccountView:Toggle("mail-inbox")
         else Addon:Print("收件箱版：打开游戏邮箱即可使用。诊断命令：/yma status、/yma scan。") end
     end
-    for _, event in ipairs({ "MAIL_SHOW", "MAIL_CLOSED", "MAIL_INBOX_UPDATE", "MAIL_SUCCESS", "MAIL_FAILED", "BAG_UPDATE_DELAYED", "GET_ITEM_INFO_RECEIVED", "UI_ERROR_MESSAGE", "ADDON_ACTION_BLOCKED", "PLAYER_REGEN_ENABLED", "PLAYER_ENTERING_WORLD", "FRIENDLIST_UPDATE", "GUILD_ROSTER_UPDATE" }) do self.Frame:RegisterEvent(event) end
+    for _, event in ipairs({ "PLAYER_LOGIN", "MAIL_SHOW", "MAIL_CLOSED", "MAIL_INBOX_UPDATE", "MAIL_SUCCESS", "MAIL_FAILED", "BAG_UPDATE_DELAYED", "GET_ITEM_INFO_RECEIVED", "UI_ERROR_MESSAGE", "ADDON_ACTION_BLOCKED", "PLAYER_REGEN_ENABLED", "PLAYER_ENTERING_WORLD", "FRIENDLIST_UPDATE", "GUILD_ROSTER_UPDATE" }) do self.Frame:RegisterEvent(event) end
     if self.FEATURES.send then for _, event in ipairs({ "MAIL_SEND_SUCCESS", "MAIL_SEND_INFO_UPDATE" }) do self.Frame:RegisterEvent(event) end end
     self.Recipients:RequestFriends(true)
     self.Scanner:InstallHooks()
@@ -51,5 +51,6 @@ Addon.Frame:SetScript("OnEvent", function(_, event, name, ...)
         Addon.Queue:OnEvent(event, name, ...)
         if Addon.FEATURES.send then Addon.Compose:OnEvent(event, name, ...) end
         Addon.NativeUI:OnEvent(event, name, ...)
+        if event == "PLAYER_LOGIN" and Addon.FEATURES.account then Addon.AccountPage:OnLogin() end
     end
 end)

@@ -18,8 +18,20 @@ YiboCore = {
     RegisterAddon = function(_, name) assert(name == "YiboMail"); return true end,
     CharacterCleanup = { RegisterOwner = function(_, name, callbacks) owner = callbacks; assert(name == "YiboMail"); return true end },
     Characters = { GetCurrent = function() return { id = "test", name = "Test", realm = "Realm" } end },
-    AccountView = { RegisterPage = Forbidden, Toggle = Forbidden, NotifyPageChanged = Forbidden, ShowSettings = Forbidden },
-    Entry = { RegisterBusinessEntry = Forbidden },
+    AccountView = {
+        RegisterPage = function(_, addonName, definition)
+            assert(addonName == "YiboMail" and definition.id == "mail-inbox")
+            assert(#definition.fields == 6 and definition.previewEnabled)
+            return definition
+        end,
+        Toggle = function() end,
+        NotifyPageChanged = function() end,
+        ShowSettings = function() end,
+    },
+    Entry = { RegisterBusinessEntry = function(_, addonName, definition)
+        assert(addonName == "YiboMail" and definition.id == "yma" and definition.pageID == "mail-inbox")
+        return definition
+    end },
     UITheme = {},
 }
 YiboMailDB = { contacts = { marker = "contact" }, rules = { marker = "rule" }, settings = { inbox = { sort = "inbox" } } }
@@ -30,17 +42,17 @@ end
 local addon = YiboMail
 addon.Frame.scripts.OnEvent(addon.Frame, "ADDON_LOADED", "YiboMail")
 assert(addon.initialized and owner)
-assert(addon.FEATURES.send and not addon.FEATURES.sendAssist and not addon.FEATURES.account and not addon.FEATURES.settings)
-for _, module in ipairs({ "Rules", "MailUI", "CacheModel", "CacheUI", "AccountPage", "Settings" }) do
-    assert(addon[module] == nil, module .. " unexpectedly loaded")
-end
+assert(addon.FEATURES.send and not addon.FEATURES.sendAssist and addon.FEATURES.account and not addon.FEATURES.settings)
+for _, module in ipairs({ "MailUI", "CacheModel", "CacheUI", "AccountPage" }) do assert(addon[module] ~= nil, module .. " failed to load") end
+assert(addon.Rules == nil and addon.Settings == nil)
 assert(type(addon.GetInboxActions) == "function" and addon:GetInboxPreferences().sort == "inbox")
 assert(addon.db.contacts.marker == "contact" and addon.db.rules.marker == "rule")
 assert(addon.Frame.events.MAIL_INBOX_UPDATE and addon.Frame.events.MAIL_SUCCESS)
 assert(addon.Frame.events.MAIL_SEND_SUCCESS and addon.Frame.events.MAIL_SEND_INFO_UPDATE)
 SlashCmdList.YIBOMAIL("")
 SlashCmdList.YIBOMAIL("status")
-assert(#messages == 2 and messages[1]:find("/yma status", 1, true))
+assert(#messages == 1 and messages[1]:find("not-yet-scanned", 1, true))
+assert(addon.Core.AccountView)
 addon.Frame.scripts.OnEvent(addon.Frame, "MAIL_CLOSED")
 addon.Frame.scripts.OnEvent(addon.Frame, "PLAYER_REGEN_ENABLED")
 addon.Frame.hooks.OnUpdate()
@@ -59,7 +71,7 @@ assert(snapshot.records[key].wasRead == false)
 wasRead = true; assert(addon.Scanner:Scan())
 assert(snapshot.visibleKeys[1] == key and snapshot.records[key].signature == signature)
 assert(snapshot.records[key].wasRead == true and addon.db.revision > revision)
-print("PASS: client read state scanned and published without changing mail identity or registering disabled account pages")
+print("PASS: client read state scanned and published without changing mail identity; Core account page and business entry are registered")
 -- Recents use the captured send recipient, even after native input reset.
 addon.Core.Characters.GetAllCached = function() return { addon.Core.Characters:GetCurrent() } end
 SendMailNameEditBox = { GetText = function() return "" end }
@@ -74,4 +86,4 @@ addon.db.friendsByCharacter.friendOnly = { addresses = {}, updatedAt = 1000 }
 assert(owner.Inspect({ id = "friendOnly" }, {}).hasData)
 owner.Delete({ id = "friendOnly" }, {}); assert(not addon.db.friendsByCharacter.friendOnly)
 print("PASS: release send success captured recipient; failed/unassociated sends excluded; friend-only cleanup owner")
-print("PASS: release TOC boot; native send tracking without send-assist UI; disabled pages/settings; saved rules and contacts preserved; diagnostic slash and mailbox lifecycle")
+print("PASS: release TOC boot; native send tracking without send-assist UI; Core page and entry registration; saved rules and contacts preserved; diagnostic slash and mailbox lifecycle")

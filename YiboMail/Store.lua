@@ -12,7 +12,20 @@ function Addon:InitializeDatabase()
     self.db.rules = self.db.rules or {}
     self.db.settings.historyDays = tonumber(self.db.settings.historyDays) or 90
     self.db.settings.unverifiedDays = tonumber(self.db.settings.unverifiedDays) or 30
-    self.db.settings.previewColumns = self.db.settings.previewColumns or { character = true, count = true, attachments = true, expires = true, status = true }
+    self.db.settings.previewColumns = self.db.settings.previewColumns or {}
+    local previewDefaults = {
+        character = true, count = true, attachments = true,
+        money = true, expires = true, status = true,
+    }
+    self.db.settings.previewColumns.alert = nil
+    for fieldID, visible in pairs(previewDefaults) do
+        if self.db.settings.previewColumns[fieldID] == nil then
+            self.db.settings.previewColumns[fieldID] = visible
+        end
+    end
+    if self.db.settings.loginReminderEnabled == nil then
+        self.db.settings.loginReminderEnabled = true
+    end
 end
 function Addon:AddHistory(characterID, record)
     local snapshot = self.db.byCharacter[characterID]

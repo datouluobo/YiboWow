@@ -96,6 +96,11 @@ local R, U, N = A.Recipients, A.RecipientUI, A.NativeUI
 R:Initialize(); N:CreateBasicSend(); N:RefreshBasicSend()
 local function Click(control, mouse) assert(control:IsEnabled()); control:GetScript('OnClick')(control, mouse or 'LeftButton') end
 local panel = N.send
+N:LayoutBasicSend()
+assert(SendMailNameEditBox:GetParent() == panel.recipientField, 'Recipient EditBox must belong to its visible field')
+assert(SendMailNameEditBox:GetFrameLevel() > panel.recipientField:GetFrameLevel(), 'Recipient EditBox must render and receive clicks above its opaque field background')
+assert(SendMailSubjectEditBox:GetParent() == panel.subjectField, 'Subject EditBox must belong to its visible field')
+assert(SendMailSubjectEditBox:GetFrameLevel() > panel.subjectField:GetFrameLevel(), 'Subject EditBox must render and receive clicks above its opaque field background')
 SendMailNameEditBox:SetText('Draft-Realm'); SendMailSubjectEditBox:SetText('Subject'); SendMailBodyEditBox:SetText('Body')
 Click(panel.favoriteButtons[3]); assert(SendMailNameEditBox:GetText() == 'Draft-Realm' and sends == 0 and not N.favoriteEditor)
 Click(panel.favoriteButtons[3], 'RightButton'); assert(U.slot == 3 and U.popup:IsShown())
@@ -104,6 +109,10 @@ U:Select({ source = 'contacts' }); assert(U.slot == 3 and U.source == 'contacts'
 U:Select(U:Entries()[1]); assert(A.db.quickRecipients[3].address == 'First-Realm')
 assert(SendMailNameEditBox:GetText() == 'Draft-Realm' and SendMailSubjectEditBox:GetText() == 'Subject' and sends == 0)
 Click(panel.favoriteButtons[3]); assert(SendMailNameEditBox:GetText() == 'First-Realm' and sends == 0)
+local recipientLevel, subjectLevel = SendMailNameEditBox:GetFrameLevel(), SendMailSubjectEditBox:GetFrameLevel()
+N:LayoutBasicSend()
+assert(SendMailNameEditBox:GetText() == 'First-Realm' and SendMailSubjectEditBox:GetText() == 'Subject', 'Send layout refresh must preserve the native draft fields')
+assert(SendMailNameEditBox:GetFrameLevel() == recipientLevel and SendMailSubjectEditBox:GetFrameLevel() == subjectLevel, 'Repeated layout must keep stable input frame levels')
 attachments = { { itemID = 1 } }; Click(panel.favoriteButtons[3]); assert(sends == 1)
 attachments = {}; Click(panel.favoriteButtons[3], 'RightButton'); Click(U.popup.action)
 assert(A.db.quickRecipients[3] and U.confirm); Click(U.popup.action)

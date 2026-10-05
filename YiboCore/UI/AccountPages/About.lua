@@ -31,6 +31,13 @@ local ABOUT_ADDONS = {
         url = "https://www.curseforge.com/wow/addons/yibocurrency",
     },
     {
+        name = "YiboCrafting",
+        title = "专业制造",
+        description = "跨角色查看已确认学习的专业配方。",
+        icon = "Interface\\AddOns\\YiboCrafting\\Media\\YiboCraftingIcon-v2",
+        url = "https://www.curseforge.com/wow/addons/yibocrafting",
+    },
+    {
         name = "YiboBuilds",
         version = "1.0.0",
         description = "跨角色查看装备、天赋与雕文构筑。",
@@ -45,6 +52,13 @@ local ABOUT_ADDONS = {
         url = "https://www.curseforge.com/wow/addons/yibolegendary",
     },
     {
+        name = "YiboMail",
+        title = "邮件助手",
+        description = "跨角色邮件快照、积压缓存与附件来源。",
+        icon = "Interface\\AddOns\\YiboMail\\Media\\YiboMailIcon-v1",
+        url = "https://www.curseforge.com/wow/addons/yibomail",
+    },
+    {
         name = "YiboQuestBlocker",
         version = "2.1",
         description = "识别任务限制与风险，避免误接关键任务。",
@@ -57,6 +71,13 @@ local ABOUT_ADDONS = {
         description = "汇总多角色待办与专业冷却，明确下一项可做事务。",
         icon = "Interface\\AddOns\\YiboTodo\\Media\\YiboTodoIcon-v6",
         url = "https://www.curseforge.com/wow/addons/yibotodo",
+    },
+    {
+        name = "YiboVault",
+        title = "物品总览",
+        description = "跨角色查询背包、装备、银行、邮件与公会银行物品。",
+        icon = "Interface\\AddOns\\YiboVault\\Media\\YiboVaultIcon-v2",
+        url = "https://www.curseforge.com/wow/addons/yibovault",
     },
     {
         name = "YiboReputation",

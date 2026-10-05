@@ -61,7 +61,7 @@ function U:Create()
         GameTooltip:SetOwner(control, "ANCHOR_RIGHT")
         local saved = U.slot and Addon.db.quickRecipients[U.slot]
         local address = saved and saved.address or SendMailNameEditBox and SendMailNameEditBox:GetText() or ""
-        GameTooltip:SetText(R:Escape(address)); GameTooltip:Show()
+        GameTooltip:SetText((R:Escape(address))); GameTooltip:Show()
     end)
     p.action:SetScript("OnLeave", function() GameTooltip:Hide() end)
     p.manage = Button("管理", function() end); p.manage:SetEnabled(false); p.manage:SetState("disabled")
@@ -187,8 +187,15 @@ function U:Select(entry)
         local entries = self:Entries(); local available = false
         for _, current in ipairs(entries) do if current.address and R:Key(current.address) == R:Key(entry.address) then available = true; break end end
         if not available then self:Refresh(); return end
-        if self.slot then R:SetShortcut(self.slot, entry.address, entry.label)
-        elseif SendMailNameEditBox then SendMailNameEditBox:SetText(entry.address) end
+        if self.slot then
+            local ok = R:SetShortcut(self.slot, entry.address, entry.label)
+            if not ok then return end
+        else
+            -- Close the picker only after the native recipient field accepts
+            -- the selected address.
+            if not SendMailNameEditBox or not Addon.NativeUI
+                or not Addon.NativeUI:SetMailRecipient(entry.address) then return end
+        end
         self:Hide()
     end
 end
@@ -285,7 +292,7 @@ function U:Refresh()
                     GameTooltip:AddLine("保留了 " .. R.invalidContacts .. " 条无法解析的旧记录，未加入候选。", 0.8, 0.85, 0.83, true); GameTooltip:Show(); return
                 end
                 if not entry.address then return end
-                GameTooltip:SetOwner(control, "ANCHOR_RIGHT"); GameTooltip:SetText(R:Escape(entry.address))
+                GameTooltip:SetOwner(control, "ANCHOR_RIGHT"); GameTooltip:SetText((R:Escape(entry.address)))
                 if entry.sources then GameTooltip:AddLine(table.concat(entry.sources, "、"), 0.8, 0.85, 0.83, true) end
                 if U.source == "accountFriends" then
                     for _, owner in ipairs(R:FriendOwners(entry.address)) do GameTooltip:AddLine(R:Escape(owner), 0.8, 0.85, 0.83, true) end

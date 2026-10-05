@@ -27,6 +27,13 @@ local function Tooltip(control, title, detail, link)
     end)
     control:SetScript("OnLeave", function() GameTooltip:Hide() end)
 end
+function Native:SetMailRecipient(address)
+    if not SendMailNameEditBox or type(address) ~= "string" or address == "" then return false end
+    SendMailNameEditBox:SetText(address)
+    if type(_G.SendMailFrame_Update) == "function" then _G.SendMailFrame_Update() end
+    SendMailNameEditBox:ClearFocus()
+    return SendMailNameEditBox:GetText() == address
+end
 local function ContactAddressKey(value)
     return string.lower((tostring(value or "")):gsub("%s", ""))
 end
@@ -855,7 +862,7 @@ function Native:CreateSend()
         if value == "__next" or value == "__prev" then panel.contactPage = (panel.contactPage or 1) + (value == "__next" and 1 or -1)
         elseif value == "__settings" then Addon.Core.AccountView:ShowSettings("mail-inbox")
         elseif value == "__save" then local ok, err = View:SaveContact(SendMailNameEditBox:GetText(), SendMailNameEditBox:GetText()); panel.notice = ok and "联系人已收藏。" or err
-        else SendMailNameEditBox:SetText(value) end
+        else Native:SetMailRecipient(value) end
         Native:RefreshSend()
     end)
     panel.bar = Surface(panel); panel.bar:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMLEFT", 16, 36); panel.bar:SetPoint("BOTTOMRIGHT", MailFrame, "BOTTOMRIGHT", -28, 36); panel.bar:SetHeight(56)
@@ -936,7 +943,7 @@ function Native:CreateBasicSend()
             local contact = control.contact
             if not contact then return end
             if not SendMailNameEditBox then return end
-            SendMailNameEditBox:SetText(contact.address)
+            Native:SetMailRecipient(contact.address)
             local hasText = (SendMailSubjectEditBox and SendMailSubjectEditBox:GetText() or ""):match("%S")
                 or (SendMailBodyEditBox and SendMailBodyEditBox:GetText() or ""):match("%S")
             local hasAttachments = Addon.Compose and #Addon.Compose:GetAttachments() > 0
@@ -959,15 +966,12 @@ function Native:CreateBasicSend()
         button:SetScript("OnEnter", function(control)
             control:SetBackdropBorderColor(unpack(theme.Colors.accent))
             local contact = control.contact
+            if not contact then return end
             GameTooltip:SetOwner(control, "ANCHOR_RIGHT")
-            if not contact then
-                GameTooltip:SetText("配置快捷收件人")
-                GameTooltip:AddLine("右键添加快捷收件人。", 0.8, 0.85, 0.83, true)
-                GameTooltip:Show(); return
-            end
-            GameTooltip:SetText(Addon.Recipients:Label(contact))
-            GameTooltip:AddLine(Addon.Recipients:Escape(contact.address), 0.8, 0.85, 0.83, true)
-            GameTooltip:AddLine("有邮件文本和附件时点击发送；否则填入收件人。", 0.55, 0.78, 0.78, true)
+            -- Escape uses string.gsub internally, which also returns the
+            -- replacement count. Parenthesize it so the tooltip receives only
+            -- the escaped string as its first argument.
+            GameTooltip:SetText((Addon.Recipients:Escape(contact.address)))
             GameTooltip:Show()
         end)
         button:SetScript("OnLeave", function(control)
@@ -1117,6 +1121,10 @@ function Native:LayoutBasicSend()
     panel.subjectField:ClearAllPoints(); panel.subjectField:SetPoint("TOPLEFT", panel.recipientField, "BOTTOMLEFT", 0, -4); panel.subjectField:SetSize(fieldWidth, theme.Size.standard)
     local function StyleInput(editBox, field)
         if not editBox then return end
+        -- The field's opaque backdrop is above the original native EditBox.
+        -- Keep the native input above it for both text rendering and mouse input.
+        if editBox:GetParent() ~= field then editBox:SetParent(field) end
+        editBox:SetFrameLevel(field:GetFrameLevel() + 1)
         editBox:ClearAllPoints(); editBox:SetPoint("LEFT", field, "LEFT", 74, 0); editBox:SetWidth(math.max(80, fieldWidth - 80))
         editBox:SetFont(STANDARD_TEXT_FONT, theme.Font.body, "OUTLINE"); editBox:SetTextColor(unpack(theme.Colors.text))
         for _, region in ipairs({ editBox:GetRegions() }) do
@@ -1267,6 +1275,18 @@ function Native:Install()
     if Addon.FEATURES.send and (not SendMailFrame or not SendMailNameEditBox or not SendMailCancelButton) then return end
     if InCombatLockdown and InCombatLockdown() then return end
     self.installed = true
+    if Addon.FEATURES.send and hooksecurefunc and type(ContainerFrameItemButton_OnModifiedClick) == "function" then
+        hooksecurefunc("ContainerFrameItemButton_OnModifiedClick", function(button)
+            if not button or not IsControlKeyDown or not IsControlKeyDown()
+                or not SendMailFrame or not SendMailFrame:IsShown() or (CursorHasItem and CursorHasItem()) then return end
+            local parent = button:GetParent()
+            local bag = button.bagID or (parent and (parent:GetID() or parent.bagID))
+            local slot = button:GetID()
+            if bag == nil or not slot then return end
+            local ok, message = Addon.Compose:AddMatchingBagItems(bag, slot)
+            if self.send then self.send.notice = message; self:RefreshSend() end
+        end)
+    end
     if Addon.FEATURES.send and not Addon.FEATURES.sendAssist then
         StyleNativeActionButton(_G.SendMailMailButton or _G.SendMailSendButton, false)
         StyleNativeActionButton(SendMailCancelButton, false)

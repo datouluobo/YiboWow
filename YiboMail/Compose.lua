@@ -61,6 +61,43 @@ function Compose:BagItems()
     end
     return result
 end
+function Compose:AddMatchingBagItems(bag, slot)
+    if not Addon.Scanner:IsOpen() or not SendMailFrame or not SendMailFrame:IsShown() then return nil, "请先打开原生发件箱。" end
+    if InCombatLockdown and InCombatLockdown() then return nil, "战斗中无法装填邮件。" end
+    if CursorHasItem and CursorHasItem() then return nil, "请先放下鼠标上的物品。" end
+    local selected
+    for _, item in ipairs(self:BagItems()) do
+        if item.bag == bag and item.slot == slot then selected = item; break end
+    end
+    if not selected then return nil, "该物品当前不可寄送。" end
+    local attached, matching = self:GetAttachments(), {}
+    local occupied = {}
+    for _, item in ipairs(attached) do
+        occupied[item.slot] = true
+        if item.itemID == selected.itemID then matching[#matching + 1] = item end
+    end
+    local capacity = ATTACHMENTS_MAX_SEND or 12
+    if #matching > 0 then return nil, "同种物品已经在附件中。" end
+    local candidates = {}
+    for _, item in ipairs(self:BagItems()) do
+        if item.itemID == selected.itemID then candidates[#candidates + 1] = item end
+    end
+    local pickup = C_Container and C_Container.PickupContainerItem or PickupContainerItem
+    if not pickup or not ClickSendMailItemButton then return nil, "装填接口不可用。" end
+    local added = 0
+    for _, item in ipairs(candidates) do
+        if added + #attached >= capacity then break end
+        if not CursorHasItem or not CursorHasItem() then
+            local target
+            for index = 1, capacity do if not occupied[index] then target = index; break end end
+            if not target then break end
+            local ok = pcall(function() pickup(item.bag, item.slot); ClickSendMailItemButton(target) end)
+            if not ok or (CursorHasItem and CursorHasItem()) then break end
+            occupied[target] = true; added = added + 1
+        else break end
+    end
+    return added > 0, added > 0 and ("已加入 " .. added .. " 组同种物品。") or "没有可加入的同种物品或附件位已满。"
+end
 function Compose:GetSuggestions()
     local results = {}
     local bags = self:BagItems()

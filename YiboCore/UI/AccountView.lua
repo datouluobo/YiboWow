@@ -1214,6 +1214,7 @@ function AccountView:RefreshNavigation()
         for _, page in ipairs(self._pageOrder) do
             if not page.internal and PageEnabled(page) and (page.order or 100) >= -10 then pages[#pages + 1] = page end
         end
+        pages[#pages + 1] = self._pages.help
         pages[#pages + 1] = self._pages.about
     end
     for index, page in ipairs(pages) do

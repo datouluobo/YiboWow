@@ -32,6 +32,20 @@ function View:ExpiryColor(mail)
     if seconds <= 3 * 86400 then return 1, 0.82, 0.2 end
     return 0.25, 0.9, 0.35
 end
+function View:IsCollectedEmptyMail(characterID, mail, usedMarkers)
+    if not mail or #((mail.attachments) or {}) > 0 or (tonumber(mail.money) or 0) > 0 or (tonumber(mail.cod) or 0) > 0 then return false end
+    local markers = Addon.db.collectedMailMarkers[characterID]
+    if not markers then return false end
+    usedMarkers = usedMarkers or {}
+    for markerIndex, marker in ipairs(markers) do
+        if not usedMarkers[markerIndex] and marker.signature == mail.signature
+            and math.abs((tonumber(marker.expiresAtEstimate) or 0) - (tonumber(mail.expiresAtEstimate) or 0)) <= 86400 then
+            usedMarkers[markerIndex] = true
+            return true
+        end
+    end
+    return false
+end
 function View:ActionID(characterID, mailKey, slot) return Addon.Encode({ characterID, mailKey, slot }) end
 function View:GetMails(context, options)
     options = options or {}; local result = {}
@@ -41,21 +55,12 @@ function View:GetMails(context, options)
     for _, character in ipairs(context.characters or {}) do
         local snapshot = Addon.db.byCharacter[character.id]
         if snapshot then
-            local collectedMarkers = not options.history and Addon.db.collectedMailMarkers[character.id] or nil
-            local usedCollectedMarkers = {}
+            local usedCollectedMarkers = not options.history and {} or nil
             local keys = options.history and {} or snapshot.visibleKeys
             if options.history then for key, mail in pairs(snapshot.records) do if mail.state ~= "observed" then keys[#keys + 1] = key end end end
             for _, key in ipairs(keys) do
                 local mail = snapshot.records[key]
-                local hiddenAsCollected = false
-                if mail and collectedMarkers and #mail.attachments == 0 and (tonumber(mail.money) or 0) == 0 and (tonumber(mail.cod) or 0) == 0 then
-                    for markerIndex, marker in ipairs(collectedMarkers) do
-                        if not usedCollectedMarkers[markerIndex] and marker.signature == mail.signature
-                            and math.abs((tonumber(marker.expiresAtEstimate) or 0) - (tonumber(mail.expiresAtEstimate) or 0)) <= 86400 then
-                            usedCollectedMarkers[markerIndex] = true; hiddenAsCollected = true; break
-                        end
-                    end
-                end
+                local hiddenAsCollected = not options.history and self:IsCollectedEmptyMail(character.id, mail, usedCollectedMarkers)
                 if mail and not hiddenAsCollected then
                 local parts = { mail.sender, mail.subject, character.name, tostring(mail.money), mail.mailType }
                 for _, item in ipairs(mail.attachments) do parts[#parts + 1] = item.name or ""; parts[#parts + 1] = tostring(item.itemID) end

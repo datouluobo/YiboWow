@@ -14,7 +14,7 @@ Core.AddonCatalog = {
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboCore\\Media\\YAB_MinimapIcon",
         description = altoBossDescription,
-        projectURL = "https://www.curseforge.com/wow/addons/yibo-altoboss",
+        projectURL = "https://www.curseforge.com/wow/addons/yiboaltoboss",
     },
     {
         name = "YiboBuilds",
@@ -38,6 +38,7 @@ Core.AddonCatalog = {
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboCrafting\\Media\\YiboCraftingIcon-v2",
         description = "跨角色查看已确认学习的专业配方。",
+        projectURL = "https://www.curseforge.com/wow/addons/yibocrafting",
     },
     {
         name = "YiboLegendary",
@@ -45,7 +46,7 @@ Core.AddonCatalog = {
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon-v1",
         description = "传说物品收集进度。",
-        projectURL = "https://www.curseforge.com/wow/addons/yibo-legendary",
+        projectURL = "https://www.curseforge.com/wow/addons/yibolegendary",
     },
     {
         name = "YiboQuestBlocker",
@@ -53,7 +54,7 @@ Core.AddonCatalog = {
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboCore\\Media\\YQB_MinimapIcon",
         description = "任务前置条件与阻断原因。",
-        projectURL = "https://www.curseforge.com/wow/addons/yibo-quest-blocker",
+        projectURL = "https://www.curseforge.com/wow/addons/yiboquestblocker",
     },
     {
         name = "YiboTodo",
@@ -68,6 +69,8 @@ Core.AddonCatalog = {
         title = "物品总览",
         relation = "core-child",
         description = "跨角色查询背包、装备与后续已验证的库存来源。",
+        icon = "Interface\\AddOns\\YiboVault\\Media\\YiboVaultIcon-v2",
+        projectURL = "https://www.curseforge.com/wow/addons/yibovault",
     },
     {
         name = "YiboMail",
@@ -75,6 +78,7 @@ Core.AddonCatalog = {
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboMail\\Media\\YiboMailIcon-v1",
         description = "跨角色邮件快照、积压缓存与附件来源。",
+        projectURL = "https://www.curseforge.com/wow/addons/yibomail",
     },
     {
         name = "YiboReputation",
@@ -82,7 +86,7 @@ Core.AddonCatalog = {
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboReputation\\Media\\YiboReputationIcon-v1",
         description = "跨角色声望进度。",
-        projectURL = "https://www.curseforge.com/wow/addons/yibo-reputation",
+        projectURL = "https://www.curseforge.com/wow/addons/yiboreputation",
     },
     {
         name = "YiboAutoOpen",
@@ -98,7 +102,7 @@ Core.AddonCatalog = {
         relation = "optional-core",
         icon = "Interface\\AddOns\\YiboCore\\Media\\YBP_AddonIcon",
         description = "潘达利亚隐藏猎人宠物路线图。",
-        projectURL = "https://www.curseforge.com/wow/addons/yibo-beastpaths",
+        projectURL = "https://www.curseforge.com/wow/addons/yibobeastpaths",
     },
     {
         name = "YiboMounts",
