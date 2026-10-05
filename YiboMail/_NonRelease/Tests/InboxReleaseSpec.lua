@@ -21,7 +21,12 @@ YiboCore = {
     AccountView = {
         RegisterPage = function(_, addonName, definition)
             assert(addonName == "YiboMail" and definition.id == "mail-inbox")
-            assert(#definition.fields == 6 and definition.previewEnabled)
+            assert(#definition.fields == 23 and definition.previewEnabled)
+            local seen = {}; for _, field in ipairs(definition.fields) do
+                assert(not seen[field.id]); seen[field.id] = true
+                if field.group ~= "账号总览" then assert(field.preview == false) end
+            end
+            assert(seen["inbox.subject"] and seen["history.result"] and seen.backlog)
             return definition
         end,
         Toggle = function() end,

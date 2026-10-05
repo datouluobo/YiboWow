@@ -40,7 +40,7 @@ local function Mail(subject, items, money, cod) return { sender = "Sender", subj
 for _, file in ipairs({ "Namespace", "Store", "Items", "Scanner", "ViewModel", "Inbox", "Queue" }) do dofile("YiboMail/" .. file .. ".lua") end
 local addon, scanner, api, queue = YiboMail, YiboMail.Scanner, YiboMail.Items, YiboMail.Queue
 addon.Core = { Characters = { GetCurrent = function() return a end, GetAllCached = function() return { a, b, c } end },
-    AccountView = { GetVisibleCharacters = function() return { a, b } end } }
+    AccountView = { GetVisibleCharacters = function() return { a, b } end, NotifyPageChanged = function() end } }
 addon:InitializeDatabase()
 local refreshes = 0
 addon.NativeUI = { Refresh = function() refreshes = refreshes + 1 end, OnCollected = function() end }
@@ -116,7 +116,8 @@ Scan({ duplicate, addon.Copy(duplicate) })
 assert(api:Query().quantity == 10 and errors == 1 and received == 1)
 local firstKey = addon.db.byCharacter.A.visibleKeys[1]
 assert(#addon.db.byCharacter.A.visibleKeys == 2 and firstKey ~= addon.db.byCharacter.A.visibleKeys[2])
-assert(not addon.ViewModel:GetMails({ characters = { a } }, {})[1].actionable)
+local duplicates = addon.ViewModel:GetMails({ characters = { a } }, {})
+assert(duplicates[1].actionable and duplicates[2].actionable and duplicates[1].key ~= duplicates[2].key)
 Scan({ duplicate })
 assert(api:Query().quantity == 5 and addon.db.byCharacter.A.records[firstKey].state == "unverified")
 now = now + 61; assert(scanner:Scan())
@@ -142,6 +143,8 @@ function TakeInboxItem(index, slot)
     if #inbox[index].items == 0 and inbox[index].money == 0 then table.remove(inbox, index); total = #inbox end
     Fire("MAIL_SUCCESS"); Fire("MAIL_INBOX_UPDATE")
 end
+local discoveries = 0
+for _, event in ipairs(addon.db.byCharacter.A.history) do if event.state == "discovered" then discoveries = discoveries + 1 end end
 Scan({ Mail("Batch", { Item(100, 1, 2), Item(200, 4, 3) }, 123), Mail("Next", { Item(400, 2, 1) }) })
 local selection = {}
 for _, entry in ipairs(addon.ViewModel:GetMails({ characters = { a } }, {})) do
@@ -151,7 +154,12 @@ local actions = assert(queue:Prepare(selection, { characters = { a } }))
 assert(queue:Start(actions)); Flush()
 assert(queue.state == "complete" and queue.completed == 4 and taken == 4 and api:Query().quantity == 0)
 assert(order[1] == "money" and order[2] == 1 and order[3] == 4 and order[4] == 2)
-assert(#addon.db.byCharacter.A.history == 4)
+local collected, afterDiscoveries = 0, 0
+for _, event in ipairs(addon.db.byCharacter.A.history) do
+    if event.state == "collected-archived" then collected = collected + 1; assert(event.eventID and event.sourceMailKey)
+    elseif event.state == "discovered" then afterDiscoveries = afterDiscoveries + 1 end
+end
+assert(collected == 4 and afterDiscoveries == discoveries + 2, "Partial collection must not invent new discovery events")
 assert(queue:Discard())
 Scan({ Mail("COD", { Item(100, 1, 1) }, 0, 500) })
 local cod = addon.ViewModel:GetMails({ characters = { a } }, {})[1]

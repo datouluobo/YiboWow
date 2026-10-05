@@ -536,17 +536,6 @@ function Native:CollectItem(group, single)
     end
     self:RefreshInbox()
 end
-local function ItemBorder(item)
-    local name, link, quality
-    if type(GetItemInfo) == "function" then name, link, quality = GetItemInfo(item.itemLink or item.itemID) end
-    local color = quality and ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[quality]
-    if color then return { color.r, color.g, color.b, 1 }, not name end
-    if type(item.itemLink) == "string" then
-        local red, green, blue = item.itemLink:match("^|c[fF][fF](%x%x)(%x%x)(%x%x)|H")
-        if red then return { tonumber(red, 16) / 255, tonumber(green, 16) / 255, tonumber(blue, 16) / 255, 1 }, not name end
-    end
-    return { 0.55, 0.6, 0.58, 1 }, not name
-end
 function Native:ItemTile(group, index, columns)
     local panel = self.inbox
     panel.tiles = panel.tiles or {}
@@ -570,11 +559,7 @@ function Native:ItemTile(group, index, columns)
         end
     end
     tile:SetBackdropColor(0, 0, 0, 0)
-    local borderColor, needsItemInfo = ItemBorder(group.item)
-    local soonest = group.expiresAtEstimate and (group.expiresAtEstimate - Addon:Now()) or math.huge
-    if soonest <= 3 * 86400 then
-        borderColor = soonest <= 86400 and { 1, 0.22, 0.16, 1 } or { 1, 0.68, 0.12, 1 }
-    end
+    local borderColor, needsItemInfo = View:AttachmentBorder(group)
     tile:SetBackdropBorderColor(unpack(borderColor))
     if needsItemInfo and group.item.itemID and C_Item and type(C_Item.RequestLoadItemDataByID) == "function" then
         self.pendingItemInfo = self.pendingItemInfo or {}
@@ -669,6 +654,15 @@ function Native:RefreshInboxProgress()
     panel.collect:SetState("disabled")
     panel.mail:SetEnabled(false)
     panel.items:SetEnabled(false)
+    for _, row in ipairs(panel.rows or {}) do if row:IsShown() then row.check:SetEnabled(false) end end
+    -- A mounted list skips the normal refresh, so refresh its menu availability
+    -- here too: pause must become available as soon as a batch starts.
+    for index, option in ipairs(panel.menu.options or {}) do
+        local enabled = option.value ~= "select" and option.value ~= "clear"
+        if option.value == "pause" then enabled = queue.state == "running" end
+        local button = panel.menu.menu.buttons[index]
+        button:SetEnabled(enabled); button:SetState(enabled and "default" or "disabled")
+    end
 end
 function Native:RefreshCollectedMailRow(action)
     local panel = self.inbox

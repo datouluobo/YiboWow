@@ -93,6 +93,10 @@ TakeInboxMoney = function() calls = calls + 1 end
 local takenSlot
 TakeInboxItem = function(index, slot) assert(index == 1); calls = calls + 1; takenSlot = slot end
 GetContainerNumFreeSlots = function() return 10, 0 end
+local stubView = Addon.ViewModel
+dofile("YiboMail/ViewModel.lua")
+stubView.ItemBorder, stubView.AttachmentBorder = Addon.ViewModel.ItemBorder, Addon.ViewModel.AttachmentBorder
+Addon.ViewModel = stubView
 dofile("YiboMail/Inbox.lua"); dofile("YiboMail/Queue.lua"); dofile("YiboMail/NativeUI.lua")
 local native, queue = Addon.NativeUI, Addon.Queue
 native:CreateInbox(); native:RefreshInbox()
@@ -146,8 +150,10 @@ Click(panel.rows[1].check); assert(not next(panel.selection) and not panel.colle
 native:Collect(); assert(panel.notice and calls == 0)
 Menu("clear"); assert(queue.state == "idle")
 Menu("sort"); assert(panel.options.sort == "inbox" and panel.notice)
-for _, option in ipairs(panel.menu.options) do assert(option.value ~= "account") end
-native:InboxMenuAction("account"); assert(opened == nil)
+local hasAccount
+for _, option in ipairs(panel.menu.options) do if option.value == "account" then hasAccount = true end end
+assert(hasAccount)
+native:InboxMenuAction("account"); assert(opened == "mail-inbox")
 panel.options.search = "missing"; Menu("select"); assert(not next(panel.selection) and panel.notice)
 panel.options.search = ""; Menu("select")
 local changed = Addon.Copy(mail); changed.attachments[1].attachmentIndex, changed.attachments[2].attachmentIndex = 2, 1

@@ -11,7 +11,25 @@ local fields = {
     { id = "money", title = "可收金币" },
     { id = "expires", title = "最早到期" },
     { id = "status", title = "更新状态" },
+    { id = "alert", title = "到期提醒" },
+    { id = "cod", title = "COD邮件" },
+    { id = "backlog", title = "待核实缓存", defaultVisible = false },
 }
+for _, field in ipairs(fields) do field.group = "账号总览" end
+local pageFields = {}
+for _, field in ipairs(fields) do pageFields[#pageFields + 1] = field end
+for _, group in ipairs({
+    { "收件箱", "inbox", { { "character", "角色", 130 }, { "sender", "发件人", 110 }, { "subject", "主题", 160 },
+        { "items", "附件", 160 }, { "amount", "金币/COD", 100 }, { "expiry", "期限", 100 }, { "coverage", "更新状态", 180 } } },
+    { "历史记录", "history", { { "time", "时间", 110 }, { "character", "角色", 130 }, { "event", "事件", 85 },
+        { "counterpart", "对方", 110 }, { "subject", "主题", 140 }, { "content", "附件/金币", 170 }, { "result", "结果", 110 } } },
+}) do
+    for _, definition in ipairs(group[3]) do
+        pageFields[#pageFields + 1] = { id = group[2] .. "." .. definition[1], key = definition[1], title = definition[2],
+            width = definition[3], group = group[1], preview = false }
+    end
+end
+Page.Fields, Page.SummaryFields = pageFields, fields
 
 local VALID_SCAN = { known = true, ["known-empty"] = true, partial = true }
 
@@ -30,11 +48,12 @@ local function Summary(character)
     local snapshot = Addon.db.byCharacter[character.id]
     local coverage = snapshot.coverage
     local now = Addon:Now()
-    local counts = { expired = 0, urgent = 0, soon = 0, within3Days = 0, within7Days = 0 }
-    local nextExpiry, visibleCount, attachmentQuantity, availableMoney = nil, 0, 0, 0
+    local counts = { expired = 0, urgent = 0, soon = 0, unknown = 0, within3Days = 0, within7Days = 0 }
+    local nextExpiry, visibleCount, attachmentQuantity, availableMoney, codCount, backlog = nil, 0, 0, 0, 0, 0
     local expiryColorSeverity = 0
 
     local usedMarkers = {}
+    for _, mail in pairs(snapshot.records or {}) do if mail.state == "unverified" then backlog = backlog + 1 end end
     for _, key in ipairs(snapshot.visibleKeys or {}) do
         local mail = snapshot.records[key]
         if mail and not Addon.ViewModel:IsCollectedEmptyMail(character.id, mail, usedMarkers) then
@@ -44,7 +63,7 @@ local function Summary(character)
             end
             if (tonumber(mail.cod) or 0) <= 0 then
                 availableMoney = availableMoney + (tonumber(mail.money) or 0)
-            end
+            else codCount = codCount + 1 end
             local expires = tonumber(mail.expiresAtEstimate)
             if expires and expires > 0 then
                 local remaining = expires - now
@@ -63,7 +82,7 @@ local function Summary(character)
                     if remaining <= 86400 then counts.urgent = counts.urgent + 1
                     elseif remaining <= 3 * 86400 then counts.soon = counts.soon + 1 end
                 end
-            end
+            else counts.unknown = counts.unknown + 1 end
         end
     end
 
@@ -80,10 +99,18 @@ local function Summary(character)
     elseif nextExpiry then
         if nextExpiry < 86400 then expires = string.format("约%.1f小时", nextExpiry / 3600)
         else expires = string.format("约%.1f天", nextExpiry / 86400) end
+    elseif counts.unknown > 0 then expires = "期限未知"
     end
     counts.nearest = counts.expired > 0 and "已有邮件到估算期限" or (expires ~= "—" and ("最早 " .. expires) or nil)
 
     local status = coverage.observedAt and date("%m-%d %H:%M", coverage.observedAt) or "—"
+    local live = Addon.Items:GetState(character.id)
+    if live.status == "error" then status = "读取失败 · " .. status
+    elseif coverage.status == "partial" then status = "部分 · " .. status end
+    local alerts = {}
+    if counts.expired > 0 then alerts[#alerts + 1] = "到期待核实 " .. counts.expired end
+    if counts.urgent > 0 then alerts[#alerts + 1] = "紧急 " .. counts.urgent end
+    if counts.soon > 0 then alerts[#alerts + 1] = "临期 " .. counts.soon end
 
     local severity = counts.expired > 0 and 3 or (counts.urgent > 0 and 2 or (counts.soon > 0 and 1 or 0))
     return {
@@ -95,6 +122,8 @@ local function Summary(character)
         money = availableMoney > 0 and string.format("%.1f 金", availableMoney / 10000) or "—",
         expires = expires,
         status = status,
+        alert = #alerts > 0 and table.concat(alerts, " · ") or "—",
+        cod = tostring(codCount), backlog = tostring(backlog),
         _counts = counts,
         _severity = severity,
         _expiryColorSeverity = expiryColorSeverity,
@@ -155,6 +184,27 @@ function Page:GetSummary(character)
     if not self:HasSnapshot(character) then return nil end
     return Summary(character)
 end
+function Page:SetRetention(key, value, onChanged)
+    value = tonumber(value)
+    if (key ~= "historyDays" and key ~= "unverifiedDays") or not value or value < 1 or value > 3650 or value ~= math.floor(value) then return false end
+    local previous = Addon.db.settings[key]
+    local function Apply()
+        if Addon.db.settings[key] ~= previous then return end
+        Addon.db.settings[key] = value
+        if value < previous then Addon:PruneHistory() end
+        Core.AccountView:NotifyPageChanged(Page.ID)
+        if onChanged then onChanged(value) end
+    end
+    if value >= previous then Apply(); return true end
+    if not StaticPopupDialogs or not StaticPopup_Show then return false end
+    StaticPopupDialogs.YIBOMAIL_RETENTION = StaticPopupDialogs.YIBOMAIL_RETENTION or {
+        text = "%s", button1 = ACCEPT or "确认", button2 = CANCEL or "取消", timeout = 0, whileDead = true,
+        hideOnEscape = true, preferredIndex = 3,
+        OnAccept = function(_, data) if data then data.Apply() end end,
+    }
+    StaticPopup_Show("YIBOMAIL_RETENTION", "保留期限从 " .. previous .. " 天缩短为 " .. value .. " 天。确认后按新期限清理超期历史与待核实记录，无法恢复。", nil, { Apply = Apply })
+    return false -- Keep the old selection until the player accepts.
+end
 
 function Page:CreateSummary(parent)
     parent.mailRows = {}
@@ -206,8 +256,26 @@ function Page:RefreshSummary(parent, context)
     end
     parent.mailScroll:SetPoint("BOTTOMRIGHT", -8, 8)
     local columns, columnWidths, tableWidth = GetPreviewColumns(context)
+    parent.mailColumnsHidden = #columns == 0
+    if not context.preview then
+        -- The host has already expanded to its safe screen edge. Fit the final
+        -- main table to that viewport; full values remain available on hover.
+        if tableWidth > width then
+            for _, field in ipairs(columns) do columnWidths[field.id] = columnWidths[field.id] * width / tableWidth end
+            tableWidth = width
+        end
+        local capacity = math.max(1, math.floor((parent:GetHeight() - (alert and 36 or 10) - 38) / 25))
+        local state = parent.pageState or Addon.WorkspaceState:Get().overview
+        local pages = math.max(1, math.ceil(#context.characters / capacity))
+        state.page = math.max(1, math.min(state.page, pages))
+        parent.pageCount, parent.total, parent.capacity = pages, #context.characters, capacity
+    end
+    if #columns == 0 then
+        for _, row in ipairs(parent.mailRows) do row:Hide() end
+        content:SetSize(1, 1); parent.mailScroll:SetContentHeight(1); return
+    end
 
-    local function Row(values, header)
+    local function Row(values, header, character)
         used = used + 1
         local row = parent.mailRows[used]
         if not row then
@@ -234,6 +302,7 @@ function Page:RefreshSummary(parent, context)
             cell:SetPoint("LEFT", left + 4, 0)
             cell:SetWidth(math.max(1, cellWidth - 8))
             cell:SetHeight(20)
+            cell:SetWordWrap(false)
             cell:SetText(field.id == "character" and (values.character or "") or (values[field.id] or ""))
             local cellColor = Theme.Colors.text
             if field.id == "character" then
@@ -248,10 +317,13 @@ function Page:RefreshSummary(parent, context)
                 realmLabel:ClearAllPoints()
                 local realmText = values.realm and values.realm ~= "" and ("· " .. values.realm) or ""
                 local nameWidth = Theme:MeasureText(Theme.Font.body, values.character)
+                if not context.preview and values.realm and values.realm ~= "" then nameWidth = math.min(nameWidth, cellWidth * 0.6 - 8) end
+                cell:SetWidth(math.max(1, nameWidth))
                 local realmStart = nameWidth + 4
                 realmLabel:SetPoint("LEFT", left + 4 + realmStart, 0)
                 realmLabel:SetWidth(math.max(1, cellWidth - realmStart - 4))
                 realmLabel:SetHeight(20)
+                realmLabel:SetWordWrap(false)
                 realmLabel:SetText(realmText)
                 local realmColor = Theme.Colors.text
                 realmLabel:SetTextColor(realmColor[1], realmColor[2], realmColor[3])
@@ -270,6 +342,37 @@ function Page:RefreshSummary(parent, context)
         end
         for index = #rendered + 1, #row.cells do row.cells[index]:Hide() end
         for _, label in ipairs(row.realmLabels) do if label ~= visibleRealmLabel then label:Hide() end end
+        row:SetScript("OnClick", character and not context.preview and function()
+            if parent.onCharacter then parent.onCharacter(character.id) end
+        end or nil)
+        row:SetScript("OnEnter", character and function()
+            if GameTooltip then
+                GameTooltip:SetOwner(row, "ANCHOR_RIGHT"); GameTooltip:SetText(values.character)
+                GameTooltip:AddLine(Addon.CacheModel:Coverage(character), 1, 1, 1, true)
+                GameTooltip:AddLine(values.alert, 1, 1, 1, true)
+                for _, field in ipairs(columns) do
+                    GameTooltip:AddLine(field.title .. "：" .. tostring(values[field.id] or "—"), 1, 1, 1, true)
+                end
+                GameTooltip:Show()
+            end
+        end or nil)
+        row:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+        row.links = row.links or {}
+        for _, link in ipairs(row.links) do link:Hide() end
+        if character and not context.preview then
+            local offset, linkCount = 0, 0
+            for _, field in ipairs(columns) do
+                if field.id == "alert" or field.id == "expires" then
+                    local risk = field.id == "alert" and "attention" or (values._counts.expired > 0 and "expired" or (values._nextExpiry and values._nextExpiry <= 604800 and "sevenDays" or "all"))
+                    linkCount = linkCount + 1
+                    local link = row.links[linkCount] or CreateFrame("Button", nil, row); row.links[linkCount] = link
+                    link:ClearAllPoints(); link:SetPoint("TOPLEFT", offset, 0); link:SetSize(columnWidths[field.id], 24)
+                    link:SetScript("OnClick", function() if parent.onCharacter then parent.onCharacter(character.id, risk) end end)
+                    link:SetScript("OnEnter", row:GetScript("OnEnter")); link:SetScript("OnLeave", row:GetScript("OnLeave")); link:Show()
+                end
+                offset = offset + columnWidths[field.id]
+            end
+        end
         row:Show()
         top = top + row:GetHeight() + 1
     end
@@ -277,9 +380,15 @@ function Page:RefreshSummary(parent, context)
     local titles = {}
     for _, field in ipairs(fields) do titles[field.id] = field.title end
     Row(titles, true)
-    for _, character in ipairs(context.characters or {}) do
+    local first, last = 1, #context.characters
+    if not context.preview then
+        first = ((parent.pageState or Addon.WorkspaceState:Get().overview).page - 1) * parent.capacity + 1
+        last = math.min(last, first + parent.capacity - 1)
+    end
+    for index = first, last do
+        local character = context.characters[index]
         local values = Summary(character)
-        Row(values, false)
+        Row(values, false, character)
     end
     if #(context.characters or {}) == 0 then
         -- No synthetic row: the preview only lists roles with eligible snapshots.
@@ -322,8 +431,8 @@ end
 local function ReminderRows(context)
     local rows = {}
     for order, character in ipairs(context.characters or {}) do
-        local summary = Summary(character)
-        if summary._severity > 0 then
+        local summary = Page:GetSummary(character)
+        if summary and summary._severity > 0 then
             rows[#rows + 1] = {
                 id = character.id,
                 order = order,
@@ -388,7 +497,7 @@ function Page:Register()
     local registered, err = Core.AccountView:RegisterPage(Addon.NAME, {
         id = self.ID,
         title = "邮件助手",
-        fields = fields,
+        fields = pageFields,
         defaultEnabled = true,
         previewEnabled = true,
         settings = {
@@ -396,9 +505,11 @@ function Page:Register()
             description = "到期提醒使用最后一次成功扫描的邮件估算。",
             CreateSettingsPanel = function(parent, host)
                 local width = math.max(280, parent:GetWidth() or 600)
-                local section = host.createSection(parent, "业务设置", width, 96)
+                local section = parent.mailBusinessSettings or host.createSection(parent, "业务设置", width, 96)
+                parent.mailBusinessSettings = section; section:SetSize(width, 96); section:Show()
                 section:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
-                local checkbox = host.createCheckbox(section, "登录时提醒临期或到期邮件")
+                local checkbox = section.reminder or host.createCheckbox(section, "登录时提醒临期或到期邮件")
+                section.reminder = checkbox
                 checkbox:SetPoint("TOPLEFT", 12, -38)
                 checkbox:SetWidth(width - 24)
                 checkbox:SetChecked(Addon.db.settings.loginReminderEnabled ~= false)
@@ -406,19 +517,54 @@ function Page:Register()
                     control:SetChecked(not control:GetChecked())
                     Addon.db.settings.loginReminderEnabled = control:GetChecked()
                 end)
-                return 104
+                local cache = parent.mailCacheSettings or host.createSection(parent, "数据与缓存", width, 156)
+                parent.mailCacheSettings = cache; cache:SetSize(width, 156); cache:Show()
+                if not cache.cleanupHook then
+                    cache.cleanupHook = true; cache:HookScript("OnHide", function()
+                        if cache.historyDays then cache.historyDays.menu:Hide() end
+                        if cache.unverifiedDays then cache.unverifiedDays.menu:Hide() end
+                    end)
+                end
+                cache:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -104)
+                local columnWidth = (width - 36) / 2
+                local function Retention(x, label, key, choices)
+                    local title = cache[key .. "Title"] or Theme:CreateText(cache, Theme.Font.assist, Theme.Colors.text, "LEFT")
+                    cache[key .. "Title"] = title; title:ClearAllPoints()
+                    title:SetPoint("TOPLEFT", x, -36); title:SetWidth(columnWidth); title:SetText(label)
+                    local found = false; for _, choice in ipairs(choices) do if choice.value == Addon.db.settings[key] then found = true end end
+                    if not found then choices[#choices + 1] = { value = Addon.db.settings[key], label = Addon.db.settings[key] .. "天" } end
+                    local dropdown = cache[key] or Theme:CreateDropdown(cache, columnWidth, choices)
+                    dropdown:ClearAllPoints(); dropdown:SetWidth(columnWidth); dropdown:SetOptions(choices)
+                    dropdown:SetPoint("TOPLEFT", x, -58); dropdown:SetValue(Addon.db.settings[key])
+                    dropdown:SetOnValueChanged(function(value)
+                        local applied = Page:SetRetention(key, value, function(accepted) dropdown:SetValue(accepted) end)
+                        if not applied then dropdown:SetValue(Addon.db.settings[key]) end
+                    end)
+                    cache[key] = dropdown
+                end
+                Retention(12, "已确认历史保留", "historyDays", { { value = 7, label = "7天" }, { value = 30, label = "30天" }, { value = 90, label = "90天" }, { value = 180, label = "180天" } })
+                Retention(24 + columnWidth, "待核实记录保留", "unverifiedDays", { { value = 7, label = "7天" }, { value = 30, label = "30天" }, { value = 90, label = "90天" } })
+                local note = cache.note or Theme:CreateText(cache, Theme.Font.assist, Theme.Colors.muted, "LEFT")
+                cache.note = note; note:ClearAllPoints()
+                note:SetPoint("TOPLEFT", 12, -98); note:SetPoint("TOPRIGHT", -12, -98); note:SetHeight(48); note:SetWordWrap(true)
+                note:SetText("展示时间范围不改变保留期限。登录时清理超期数据；缩短期限需确认，确认后立即清理超期历史和待核实记录。")
+                return 268
             end,
         },
         scope = { mode = "realms", allTitle = "所有服务器" },
-        HasCharacterSnapshot = function(character) return Page:HasSnapshot(character) end,
-        GetEligibleCharacters = function(characters)
+        HasCharacterSnapshot = function(character) return Page:HasSnapshot(character) or Addon.HistoryModel:HasHistory(character) end,
+        GetEligibleCharacters = function(characters, baseContext)
             local eligible = {}
             for _, character in ipairs(characters or {}) do
-                if Page:HasSnapshot(character) then eligible[#eligible + 1] = character end
+                if Page:HasSnapshot(character) or (not (baseContext and baseContext.preview) and Addon.HistoryModel:HasHistory(character)) then eligible[#eligible + 1] = character end
             end
             return eligible
         end,
-        GetPreviewFields = function() return Addon.db.settings.previewColumns end,
+        GetPreviewFields = function()
+            local projection = {}
+            for _, field in ipairs(pageFields) do projection[field.id] = field.preview ~= false and Addon.db.settings.previewColumns[field.id] == true end
+            return projection
+        end,
         SetPreviewFieldVisible = function(id, visible)
             Addon.db.settings.previewColumns[id] = not not visible
         end,
@@ -437,6 +583,24 @@ function Page:Register()
                 horizontalOverflow = "content",
                 verticalOverflow = "none",
             }
+        end,
+        GetSurfaceMetrics = function(context)
+            local eligible = Addon.CacheModel:Characters(context)
+            local measuredContext = { characters = eligible, GetFieldVisible = context.GetFieldVisible }
+            local _, _, width = GetPreviewColumns(measuredContext)
+            local sidebarWidth = 230
+            for _, character in ipairs(eligible) do
+                sidebarWidth = math.max(sidebarWidth, Theme:MeasureText(Theme.Font.body, Core.Characters:GetDisplayName(character, "short")) + 132)
+            end
+            local inboxWidth, historyWidth = math.min(284, sidebarWidth + 24) + 8, 32
+            for _, field in ipairs(pageFields) do
+                if field.width and context:GetFieldVisible(field.id) then
+                    if field.group == "收件箱" then inboxWidth = inboxWidth + field.width
+                    elseif field.group == "历史记录" then historyWidth = historyWidth + field.width end
+                end
+            end
+            return { minContentWidth = 1000, naturalContentWidth = math.max(1154, width + 34, inboxWidth, historyWidth),
+                minContentHeight = 480, naturalContentHeight = 620, horizontalOverflow = "none", verticalOverflow = "none" }
         end,
         Create = function(parent) Page:Create(parent) end,
         Refresh = function(parent, context) Page:Refresh(parent, context) end,

@@ -1,6 +1,6 @@
 local Addon = {}
 _G.YiboMail = Addon
-Addon.NAME, Addon.VERSION, Addon.API_VERSION = "YiboMail", "0.7-api1", 1
+Addon.NAME, Addon.VERSION, Addon.API_VERSION = "YiboMail", "0.9.0-api1", 1
 Addon.FEATURES = { send = true, sendAssist = false, account = true, settings = false }
 Addon.CAPABILITIES = { ["mail-items.query"] = 1, ["mail-items.state"] = 1, ["mail-items.events"] = 1 }
 Addon.Frame = CreateFrame("Frame")

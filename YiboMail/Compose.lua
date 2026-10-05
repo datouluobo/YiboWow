@@ -174,6 +174,7 @@ end
 function Compose:OnEvent(event)
     if event == "MAIL_SEND_SUCCESS" and self.pendingSend then
         self.pendingSend.state = "in-transit"
+        self.pendingSend.attemptedAt, self.pendingSend.observedAt = self.pendingSend.observedAt, Addon:Now()
         if Addon.Recipients then Addon.Recipients:RecordRecent(self.pendingSend.recipient) end
         Addon:AddHistory(self.pendingSend.characterID, self.pendingSend)
         self.pendingSend, self.fill = nil, nil; self.draft = { recipient = "", subject = "", body = "", copper = 0, cod = false }

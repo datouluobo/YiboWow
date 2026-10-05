@@ -1,5 +1,24 @@
 local Addon = _G.YiboMail
 local View = {}; Addon.ViewModel = View
+function View:ItemBorder(item)
+    local name, link, quality
+    if type(GetItemInfo) == "function" then name, link, quality = GetItemInfo(item.itemLink or item.itemID) end
+    local color = quality and ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[quality]
+    if color then return { color.r, color.g, color.b, 1 }, not name end
+    if type(item.itemLink) == "string" then
+        local red, green, blue = item.itemLink:match("^|c[fF][fF](%x%x)(%x%x)(%x%x)|H")
+        if red then return { tonumber(red, 16) / 255, tonumber(green, 16) / 255, tonumber(blue, 16) / 255, 1 }, not name end
+    end
+    return { 0.55, 0.6, 0.58, 1 }, not name
+end
+function View:AttachmentBorder(group)
+    local color, needsItemInfo = self:ItemBorder(group.item)
+    local remaining = group.expiresAtEstimate and group.expiresAtEstimate - Addon:Now() or math.huge
+    if remaining <= 3 * 86400 then
+        color = remaining <= 86400 and { 1, 0.22, 0.16, 1 } or { 1, 0.68, 0.12, 1 }
+    end
+    return color, needsItemInfo
+end
 local MAX_FAVORITE_CONTACTS = 16
 local function Trim(value) return tostring(value or ""):match("^%s*(.-)%s*$") end
 local function NormalizeContactAddress(value)
@@ -23,8 +42,10 @@ end
 function View:Escape(value) return tostring(value or ""):gsub("|", "||") end
 function View:Money(value) return string.format("%.2f 金", (tonumber(value) or 0) / 10000) end
 function View:Expiry(mail)
-    local seconds = (mail.expiresAtEstimate or 0) - Addon:Now()
-    return seconds <= 0 and "已到估算期限" or (seconds < 86400 and string.format("%.1f 小时", seconds / 3600) or string.format("%.1f 天", seconds / 86400))
+    local expiry = tonumber(mail and mail.expiresAtEstimate)
+    if not expiry or expiry <= 0 then return "期限未知" end
+    local seconds = expiry - Addon:Now()
+    return seconds <= 0 and "到期待核实" or (seconds < 86400 and string.format("约 %.1f 小时", seconds / 3600) or string.format("约 %.1f 天", seconds / 86400))
 end
 function View:ExpiryColor(mail)
     local seconds = (tonumber(mail and mail.expiresAtEstimate) or 0) - Addon:Now()

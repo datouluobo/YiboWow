@@ -173,7 +173,13 @@ function Scanner:Schedule()
     else self:Scan() end
 end
 function Scanner:OnEvent(event)
-    if event == "MAIL_SHOW" then self:Close(); self.open = true; self:InstallHooks()
+    if event == "MAIL_SHOW" then
+        self:Close(); self.open = true; self:InstallHooks()
+        -- MAIL_INBOX_UPDATE can arrive before this event (or be omitted when
+        -- the cached inbox is already populated). Start a delayed first scan
+        -- so cached rows do not stay stale and uncollectable after opening.
+        self.updated = true
+        self:Schedule()
     elseif event == "MAIL_CLOSED" then self:Close()
     elseif event == "MAIL_INBOX_UPDATE" then
         if self.open then self.updated = true; self:Schedule() end

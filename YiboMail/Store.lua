@@ -5,19 +5,20 @@ function Addon:InitializeDatabase()
     self.db.schemaVersion = 1
     self.db.revision = tonumber(self.db.revision) or 0
     self.db.nextMailKey = tonumber(self.db.nextMailKey) or 0
+    self.db.nextHistoryID = tonumber(self.db.nextHistoryID) or 0
     self.db.byCharacter = self.db.byCharacter or {}
     self.db.collectedMailMarkers = self.db.collectedMailMarkers or {}
     self.db.settings = self.db.settings or {}
     self.db.contacts = self.db.contacts or {}
     self.db.rules = self.db.rules or {}
-    self.db.settings.historyDays = tonumber(self.db.settings.historyDays) or 90
-    self.db.settings.unverifiedDays = tonumber(self.db.settings.unverifiedDays) or 30
+    self.db.settings.historyDays = math.max(1, math.min(3650, math.floor(tonumber(self.db.settings.historyDays) or 90)))
+    self.db.settings.unverifiedDays = math.max(1, math.min(3650, math.floor(tonumber(self.db.settings.unverifiedDays) or 30)))
     self.db.settings.previewColumns = self.db.settings.previewColumns or {}
     local previewDefaults = {
         character = true, count = true, attachments = true,
         money = true, expires = true, status = true,
+        alert = false, cod = false, backlog = false,
     }
-    self.db.settings.previewColumns.alert = nil
     for fieldID, visible in pairs(previewDefaults) do
         if self.db.settings.previewColumns[fieldID] == nil then
             self.db.settings.previewColumns[fieldID] = visible
@@ -26,6 +27,29 @@ function Addon:InitializeDatabase()
     if self.db.settings.loginReminderEnabled == nil then
         self.db.settings.loginReminderEnabled = true
     end
+    -- Give legacy events a permanent identity before pruning changes array indexes.
+    for _, snapshot in pairs(self.db.byCharacter) do
+        for _, record in ipairs(snapshot.history or {}) do
+            self.db.nextHistoryID = math.max(self.db.nextHistoryID, tonumber((record.eventID or ""):match("^h(%d+)$")) or 0)
+        end
+    end
+    for _, snapshot in pairs(self.db.byCharacter) do
+        for _, record in ipairs(snapshot.history or {}) do
+            if not record.eventID then
+                self.db.nextHistoryID = self.db.nextHistoryID + 1; record.eventID = "h" .. self.db.nextHistoryID
+                record.sourceMailKey = record.sourceMailKey or (record.mail and record.mail.mailKey)
+            end
+        end
+    end
+end
+function Addon:AppendHistory(snapshot, record)
+    self.db.nextHistoryID = self.db.nextHistoryID + 1
+    local stored = self.Copy(record)
+    stored.eventID = "h" .. self.db.nextHistoryID
+    stored.sourceMailKey = stored.sourceMailKey or (stored.mail and stored.mail.mailKey)
+    stored.timeBasis = stored.timeBasis or (stored.recipient and "send-result" or "operation-result")
+    snapshot.history = snapshot.history or {}
+    snapshot.history[#snapshot.history + 1] = stored
 end
 function Addon:AddHistory(characterID, record)
     local snapshot = self.db.byCharacter[characterID]
@@ -34,7 +58,7 @@ function Addon:AddHistory(characterID, record)
         snapshot = { records = {}, visibleKeys = {}, coverage = { status = "not-yet-scanned" }, character = self.Copy(character or {}) }
         self.db.byCharacter[characterID] = snapshot
     end
-    snapshot.history = snapshot.history or {}; snapshot.history[#snapshot.history + 1] = self.Copy(record)
+    self:AppendHistory(snapshot, record)
     local keys, ids = {}, {}
     if record.mail and record.mail.mailKey then keys[1] = record.mail.mailKey end
     if record.item then ids[1] = record.item.itemID end
@@ -78,6 +102,8 @@ function Addon:CommitScan(character, mails, coverage)
     local old = self.db.byCharacter[character.id] or { records = {}, visibleKeys = {}, coverage = {} }
     local previous = {}; for _, key in ipairs(old.visibleKeys) do if old.records[key] then previous[#previous + 1] = old.records[key] end end
     local before, after = Groups(previous), Groups(mails)
+    local knownSignatures = {}
+    for _, mail in pairs(old.records) do knownSignatures[mail.signature] = true end
     local keys, changed, itemIDs, itemSet, keySet = {}, {}, {}, {}, {}
     local function Mark(mail)
         if not keySet[mail.mailKey] then changed[#changed + 1] = mail.mailKey; keySet[mail.mailKey] = true end
@@ -93,6 +119,7 @@ function Addon:CommitScan(character, mails, coverage)
             if candidate then
                 mail.mailKey = candidate.mailKey
                 mail.openedByUser = candidate.openedByUser == true
+                mail.firstSeenAt, mail.discoveryUncertain = candidate.firstSeenAt, candidate.discoveryUncertain
                 local moved = candidate.inboxIndex ~= mail.inboxIndex or candidate.wasRead ~= mail.wasRead
                 for slot, item in ipairs(mail.attachments) do
                     local prior = candidate.attachments[slot]
@@ -102,6 +129,17 @@ function Addon:CommitScan(character, mails, coverage)
             else
                 self.db.nextMailKey = self.db.nextMailKey + 1
                 mail.mailKey = "m" .. self.db.nextMailKey; Mark(mail)
+                local pending = self.Queue and self.Queue.pending
+                local collecting = pending and pending.action.characterID == character.id and pending.targetIndex == mail.inboxIndex
+                    and pending.expected and pending.expected.signature == mail.signature
+                if collecting then
+                    mail.firstSeenAt = pending.action.original.firstSeenAt
+                    mail.discoveryUncertain = pending.action.original.discoveryUncertain
+                elseif not knownSignatures[signature] then
+                    mail.firstSeenAt = now
+                    self:AppendHistory(old, { state = "discovered", mail = mail, attachments = mail.attachments,
+                        money = mail.money, codAmount = mail.cod, observedAt = now, timeBasis = "first-seen" })
+                else mail.discoveryUncertain = true end
             end
             mail.state, mail.stateEnteredAt = "observed", candidate and candidate.stateEnteredAt or now
             old.records[mail.mailKey] = mail; keys[#keys + 1] = mail.mailKey
