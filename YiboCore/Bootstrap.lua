@@ -4,7 +4,7 @@ local Core = _G.YiboCore or {}
 _G.YiboCore = Core
 
 Core.NAME = "YiboCore"
-Core.VERSION = "1.6.2"
+Core.VERSION = "1.6.3"
 Core.API_VERSION = 7
 Core._private = Core._private or {}
 Core._private.addonName = ADDON_NAME or Core.NAME

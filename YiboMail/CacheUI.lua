@@ -60,7 +60,7 @@ function UI:Create(parent)
     root.heading = Text(root, Theme.Font.section)
     root.note = Text(root, Theme.Font.assist, Theme.Colors.muted)
     root.search = Theme:CreateInput(root, {
-        width = 260, placeholder = "全局搜索角色、对方、主题、物品 / ID", maxLetters = 120,
+        width = 260, placeholder = "全局搜索角色、对方、主题、物品 / ID", maxLetters = 120, clearable = true,
         OnChanged = function(value)
             if root.syncing then return end
             root.searchQuery = value

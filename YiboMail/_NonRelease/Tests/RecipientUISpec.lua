@@ -1,5 +1,9 @@
 -- Run from the repository root: lua YiboMail/_NonRelease/Tests/NativeInboxSpec.lua
 local methods = {}
+function methods:RegisterForDrag(...) self.dragButtons = { ... } end
+function methods:IsMouseOver() return self.mouseOver == true end
+function methods:GetEffectiveScale() return 1 end
+function GetCursorPosition() return 400, 300 end
 methods.SetJustifyV = function() end
 methods.SetWordWrap = function() end
 methods.SetVertexColor = function() end
@@ -77,7 +81,18 @@ SendMailFrame = Frame(MailFrame); GameTooltip = Frame(); UISpecialFrames = {}
 SendMailNameEditBox = Frame(SendMailFrame); SendMailSubjectEditBox = Frame(SendMailFrame); SendMailBodyEditBox = Frame(SendMailFrame)
 SendMailMailButton = Frame(SendMailFrame); SendMailCancelButton = Frame(SendMailFrame)
 STANDARD_TEXT_FONT = 'font'; date = os.date
-YiboCore = {}; dofile('YiboCore/UI/Theme.lua'); dofile('YiboMail/Namespace.lua')
+YiboCore = { Capabilities = { Register = function() end } }; dofile('YiboCore/UI/Theme.lua'); dofile('YiboCore/UI/Input.lua'); dofile('YiboMail/Namespace.lua')
+function GetLooseMacroIcons(result) result[#result + 1] = "1001" end
+function GetLooseMacroItemIcons(result) result[#result + 1] = "INV_Letter_15" end
+function GetMacroIcons(result)
+    for index = 1, 130 do result[#result + 1] = 1000 + index end
+    result[#result + 1] = 1001
+end
+function GetMacroItemIcons(result)
+    result[#result + 1] = 'INV_Letter_15'; result[#result + 1] = 'Interface\\AddOns\\Foreign\\Icon'
+end
+dofile('YiboCore/UI/IconPicker.lua')
+function methods:SetTexture(value) self.texture = value end
 local A = YiboMail; A.Core = YiboCore
 local current = { id = 'a', name = 'A', realm = 'Realm' }
 local other = { id = 'b', name = 'B', realm = 'Other' }
@@ -122,7 +137,7 @@ assert(N.favoriteEditor.slot == 16 and not U.popup:IsShown())
 N.favoriteEditor.address:SetText('Custom'); N:SaveFavoriteFromEditor()
 assert(A.db.quickRecipients[16].address == 'Custom-Realm' and #A.db.contacts == 2 and sends == 1)
 SendMailNameEditBox:SetText('Draft-Realm'); Click(panel.contacts)
-assert(not U.slot and U.popup:IsShown() and not U.popup.manage:IsEnabled())
+assert(not U.slot and U.popup:IsShown() and U.popup.manage:IsEnabled())
 assert(U.popup:GetWidth() == 200, 'Source menu should keep its compact width')
 Click(U.popup.action); assert(R:FindContact('Draft') and #A.db.contacts == 3)
 Click(U.popup.action); assert(U.confirm)
@@ -187,4 +202,80 @@ U.realm = nil; U.popup.search:SetText('B-Other'); assert(#U:Entries() == 1 and U
 U.popup.search:SetText(''); assert(U.source == 'guild' and #U:Entries() == 2)
 U:Hide()
 Click(panel.contacts); panel:GetScript('OnHide')(); assert(not U.popup:IsShown() and not N.favoriteEditor:IsShown())
+-- Hidden sources are excluded from menus and global search without deleting their data.
+A.db.settings = { recipientGroups = { contacts = false } }
+Click(panel.contacts)
+for _, entry in ipairs(U:SourceEntries()) do assert(entry.source ~= 'contacts') end
+U.popup.search:SetText('Long100'); assert(#U:Entries() == 0)
+assert(R:FindContact('Long100'))
+A.db.settings.recipientGroups.contacts = true; U:Refresh(); assert(#U:Entries() == 1)
+U:Hide()
+A.db.settings.shortcutRows, A.db.settings.shortcutColumns = 2, 1
+N:LayoutBasicSend(); N:RefreshFavoriteButtons()
+assert(panel.favoriteButtons[2]:IsShown() and not panel.favoriteButtons[3]:IsShown())
+assert(A.db.quickRecipients[16].address == 'Custom-Realm')
+A.db.settings.shortcutRows, A.db.settings.shortcutColumns = 8, 4
+N:LayoutBasicSend(); N:RefreshFavoriteButtons(); assert(panel.favoriteButtons[32]:IsShown())
+A.db.settings.shortcutRows, A.db.settings.shortcutColumns = 12, 6
+N:LayoutBasicSend(); N:RefreshFavoriteButtons(); assert(panel.favoriteButtons[72]:IsShown())
+assert(panel.favoritesPanel:GetHeight() <= MailFrame:GetHeight())
+assert(R:SetShortcut(72, 'Last'))
+A.db.settings.shortcutRows, A.db.settings.shortcutColumns = 1, 1
+N:LayoutBasicSend(); N:RefreshFavoriteButtons()
+assert(not panel.favoriteButtons[72]:IsShown() and A.db.quickRecipients[72])
+-- Dragging preserves drafts and never calls the native send handler on release.
+A.db.settings.shortcutRows, A.db.settings.shortcutColumns = 12, 6
+N:LayoutBasicSend(); N:RefreshFavoriteButtons()
+R:SetShortcut(1, 'DragOne', 'One'); R:SetShortcut(2, 'DragTwo', 'Two'); R:ClearShortcut(3)
+local beforeSends = sends
+attachments = { { itemID = 1 } }
+SendMailNameEditBox:SetText('Draft-Realm'); SendMailSubjectEditBox:SetText('Subject')
+local function Drag(source, target, insideBar)
+    panel.favoritesPanel.mouseOver = insideBar == true or target ~= nil
+    for _, button in ipairs(panel.favoriteButtons) do button.mouseOver = button.slot == target end
+    panel.favoriteButtons[source]:GetScript('OnDragStart')(panel.favoriteButtons[source])
+    assert(N.shortcutGhost:IsShown() and N.shortcutDrag)
+    panel.favoriteButtons[source]:GetScript('OnDragStop')(panel.favoriteButtons[source])
+    Click(panel.favoriteButtons[source])
+    if target and target ~= source then Click(panel.favoriteButtons[target]) end
+    assert(not N.shortcutGhost:IsShown() and not N.shortcutDrag)
+    assert(sends == beforeSends and SendMailNameEditBox:GetText() == 'Draft-Realm')
+end
+Drag(1, 3); assert(not A.db.quickRecipients[1] and A.db.quickRecipients[3].label == 'One')
+Drag(3, 2); assert(A.db.quickRecipients[2].label == 'One' and A.db.quickRecipients[3].label == 'Two')
+Drag(2, 2); assert(A.db.quickRecipients[2].label == 'One')
+Drag(2, nil, true); assert(A.db.quickRecipients[2].label == 'One')
+Drag(2, nil); assert(not A.db.quickRecipients[2] and R:FindContact('First'))
+R:SetShortcut(2, 'DragOne', 'One')
+panel.favoriteButtons[2]:GetScript('OnDragStart')(panel.favoriteButtons[2])
+R:SetShortcut(2, 'Replacement')
+panel.favoriteButtons[1].mouseOver = true
+N:FinishShortcutDrag(); assert(not A.db.quickRecipients[1] and A.db.quickRecipients[2].address == 'Replacement-Realm')
+Click(panel.favoriteButtons[1]); Click(panel.favoriteButtons[2])
+N:StartShortcutDrag(panel.favoriteButtons[2]); N:CancelShortcutDrag()
+assert(not N.shortcutDrag and not N.shortcutGhost:IsShown() and panel.favoriteButtons[2]:GetAlpha() == 1)
+Click(panel.favoriteButtons[2]); Click(panel.favoriteButtons[2]); assert(sends == beforeSends + 1)
+attachments = {}
+-- Game-only picker: deduplicated pages, draft selection, cancellation and auto restore.
+local draftAddress = SendMailNameEditBox:GetText()
+N:EditShortcutIcon(2); local picker = A.Core.iconPicker
+assert(picker:IsShown() and picker.pageLabel:GetText():find('131', 1, true))
+assert(not A.Core:IsBuiltinIcon('Interface\\AddOns\\Foreign\\Icon'))
+Click(picker.buttons[1]); assert(not A.db.quickRecipients[2].icon)
+Click(picker.cancel); assert(not A.db.quickRecipients[2].icon)
+N:EditShortcutIcon(2); Click(picker.next); Click(picker.buttons[1])
+local selected = picker.selected; Click(picker.confirm)
+assert(A.db.quickRecipients[2].icon == selected and panel.favoriteButtons[2].icon.texture == selected)
+assert(SendMailNameEditBox:GetText() == draftAddress)
+N:EditShortcutIcon(2); assert(picker.selected == selected and picker.page > 1)
+Click(picker.auto); Click(picker.confirm); assert(not A.db.quickRecipients[2].icon)
+N:EditShortcutIcon(2); Click(picker.buttons[1]); R:SetShortcut(2, 'NewRecipient'); Click(picker.confirm)
+assert(not A.db.quickRecipients[2].icon)
+assert(R:SetShortcutIcon(2, 1001)); R:MoveShortcut(2, 3)
+assert(A.db.quickRecipients[3].icon == 1001)
+N:StartShortcutDrag(panel.favoriteButtons[3]); assert(N.shortcutGhost.icon.texture == 1001); N:CancelShortcutDrag()
+N:EditShortcutIcon(3); N:HideShortcutIconPicker(); assert(not picker:IsShown())
+local settingsTarget
+A.Core.AccountView.ShowSettings = function(_, id) settingsTarget = id end
+Click(panel.contacts); Click(U.popup.manage); assert(settingsTarget == 'mail-inbox' and not U.popup:IsShown())
 print('PASS: shared picker independent callbacks; right-click custom/sources/clear; left-click native send contract; dynamic contact actions; confirmations; all-source search; filter/paging/pooling; bounds/Esc/dismiss/lifecycle; stale result guard')

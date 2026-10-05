@@ -35,6 +35,7 @@ function UI:Create(parent)
     root.itemMode:SetPoint("LEFT", 64, 0)
     root.search = self:Input(root.toolbar, 190, "搜索物品、发件人、主题或角色", 100); root.search:SetPoint("LEFT", 138, 0)
     root.search:SetScript("OnTextChanged", function(control) root.options.search = control:GetText(); if root.context then UI:Refresh(parent, root.context) end end)
+    Theme:AttachClearButton(root.search)
     root.filter = Theme:CreateDropdown(root.toolbar, 116, {
         { value = "all", label = "全部邮件" }, { value = "items", label = "含附件" }, { value = "money", label = "含金币" },
         { value = "cod", label = "付款取信" }, { value = "returned", label = "退回邮件" }, { value = "urgent", label = "三天内到期" },

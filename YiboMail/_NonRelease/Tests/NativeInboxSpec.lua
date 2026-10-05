@@ -60,7 +60,7 @@ function OpenMail_Update()
 end
 function ShowUIPanel(control) control:Show() end
 function HideUIPanel(control) control:Hide() end
-YiboCore = {}; dofile("YiboCore/UI/Theme.lua")
+YiboCore = { Capabilities = { Register = function() end } }; dofile("YiboCore/UI/Theme.lua"); dofile("YiboCore/UI/Input.lua")
 -- Keep the real dropdown/buttons; scroll geometry is outside this regression.
 function YiboCore.UITheme:CreateScrollFrame(parent) return Frame(parent) end
 dofile("YiboMail/Namespace.lua")

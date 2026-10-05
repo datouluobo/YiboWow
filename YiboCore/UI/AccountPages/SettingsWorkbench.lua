@@ -342,10 +342,11 @@ local function RefreshSettings(parent)
                 local currentField = field
                 mainOptions[#mainOptions + 1] = {
                     title = currentField.title,
+                    group = currentField.group,
                     isSelected = function() return AccountView:GetFieldVisible(page.id, currentField) end,
                     setSelected = function(visible) AccountView:SetFieldVisible(page.id, currentField.id, visible) end,
                 }
-                if page.previewEnabled and type(page.SetPreviewFieldVisible) == "function" then
+                if currentField.preview ~= false and page.previewEnabled and type(page.SetPreviewFieldVisible) == "function" then
                     previewOptions[#previewOptions + 1] = {
                         title = currentField.title,
                         isSelected = function() return GetPreviewFieldVisible(page, currentField) end,
@@ -497,8 +498,11 @@ local function RefreshSettings(parent)
                     return details.CreateSettingsPanel(row, hostedContext)
                 end, function(message) return tostring(message) end)
                 if ok then
-                    row:SetHeight(math.max(1, tonumber(heightOrError) or row:GetHeight() or 1))
-                    if parent.scroll and parent.scroll.RefreshScrollbar then parent.scroll:RefreshScrollbar() end
+                    local previousHeight = row:GetHeight() or 1
+                    row:SetHeight(math.max(1, tonumber(heightOrError) or previousHeight))
+                    parent.settingsContentHeight = math.max(0, (parent.settingsContentHeight or 0) + row:GetHeight() - previousHeight)
+                    parent.content:SetHeight(math.max(parent.settingsContentHeight, parent.scroll:GetHeight() or 1))
+                    parent.scroll:SetContentHeight(parent.settingsContentHeight)
                 else
                     Core:Print("插件 “" .. tostring((selected and selected.title) or (settingsOnly and settingsOnly.title) or "未知") .. "” 的业务设置局部刷新失败：" .. tostring(heightOrError))
                 end
@@ -528,7 +532,7 @@ local function RefreshSettings(parent)
         end
         if row.errorLabel then row.errorLabel:Hide() end
         row:SetHeight(math.max(1, tonumber(heightOrError) or row:GetHeight() or 1))
-        y = y + row:GetHeight() + 10
+        y = y + row:GetHeight()
     end
     local function SortControls(pageID)
         local page = pageID and AccountView._pages[pageID]
@@ -767,8 +771,11 @@ local function RefreshSettings(parent)
         end
         row:Hide()
     end
-    parent.content:SetHeight(math.max(y + 8, parent.scroll:GetHeight() or 1))
-    parent.scroll:RefreshScrollbar()
+    parent.settingsContentHeight = y + 8
+    parent.content:SetHeight(math.max(parent.settingsContentHeight, parent.scroll:GetHeight() or 1))
+    -- WoW's native range can include pooled, hidden controls from another page.
+    -- Use this page's measured content so fitted pages release the scrollbar.
+    parent.scroll:SetContentHeight(parent.settingsContentHeight)
 end
 
 AccountView._pages.settings = {

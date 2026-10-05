@@ -560,7 +560,11 @@ function AccountView:GetFieldVisible(pageID, field, overrides)
     if overrides and overrides[fieldID] ~= nil then
         return overrides[fieldID] == true
     end
-    local default = type(field) == "table" and field.defaultVisible ~= false or true
+    if type(field) ~= "table" then
+        local page = self._pages[pageID]
+        for _, definition in ipairs(page and page.fields or {}) do if definition.id == fieldID then field = definition; break end end
+    end
+    local default = type(field) ~= "table" or field.defaultVisible ~= false
     local saved = Settings().fields[pageID] and Settings().fields[pageID][fieldID]
     return saved == nil and default or saved == true
 end

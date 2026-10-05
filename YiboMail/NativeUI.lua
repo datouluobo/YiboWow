@@ -215,6 +215,7 @@ function Native:CreateInbox()
     panel.search:SetScript("OnTextChanged", function(control)
         panel.options.search = control:GetText(); control.hint:SetShown(control:GetText() == ""); Native:RememberInboxFilters(); Native:RefreshInbox()
     end)
+    theme:AttachClearButton(panel.search)
     panel.filter = self:Dropdown(panel, 96, "全部邮件"); panel.filter:SetHeight(height); panel.filter:SetPoint("RIGHT", panel.close, "LEFT", -6, 0)
     panel.search:SetPoint("RIGHT", panel.filter, "LEFT", -6, 0)
     panel.filter:SetOptions({ { value = "all", label = "全部邮件" }, { value = "items", label = "含附件" }, { value = "money", label = "含金币" },
@@ -921,7 +922,7 @@ function Native:CreateBasicSend()
     panel.favoritesPanel:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
     panel.favoritesPanel:EnableMouse(true)
     panel.favoriteButtons = {}
-    for index = 1, 16 do
+    for index = 1, 72 do
         local button = CreateFrame("Button", nil, panel.favoritesPanel, "BackdropTemplate")
         button:SetBackdrop(BACKDROP)
         button:SetBackdropColor(unpack(theme.Colors.panel))
@@ -931,8 +932,14 @@ function Native:CreateBasicSend()
         button.emptyMark = theme:CreateText(button, theme.Font.title, theme.Colors.muted, "CENTER")
         button.emptyMark:SetAllPoints(); button.emptyMark:SetText("+")
         button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+        button:RegisterForDrag("LeftButton")
         button.slot = index
+        button:SetScript("OnDragStart", function(control) Native:StartShortcutDrag(control) end)
+        button:SetScript("OnDragStop", function() Native:FinishShortcutDrag() end)
         button:SetScript("OnClick", function(control, mouseButton)
+            if control.suppressShortcutClick or Native.shortcutDrag then
+                control.suppressShortcutClick = nil; return
+            end
             if mouseButton == "RightButton" then Addon.RecipientUI:Open(control, control.slot); return end
             local contact = control.contact
             if not contact then return end
@@ -966,6 +973,7 @@ function Native:CreateBasicSend()
             -- replacement count. Parenthesize it so the tooltip receives only
             -- the escaped string as its first argument.
             GameTooltip:SetText((Addon.Recipients:Escape(contact.address)))
+            GameTooltip:AddLine("左键拖动：移到空格，或与已有收件人对调。", 0.55, 0.78, 0.78, true)
             GameTooltip:Show()
         end)
         button:SetScript("OnLeave", function(control)
@@ -997,26 +1005,117 @@ function Native:CreateBasicSend()
     panel.moneyEvents:RegisterEvent("PLAYER_MONEY")
     panel.moneyEvents:SetScript("OnEvent", function() Native:RefreshSendBalance() end)
     panel:SetScript("OnShow", function() Native:LayoutBasicSend(); Native:RefreshSend() end)
-    panel:SetScript("OnHide", function() panel.contacts.menu:Hide(); Addon.RecipientUI:Hide(); if Native.favoriteEditor then Native.favoriteEditor:Hide() end; panel.shell:Hide(); panel.favoritesPanel:Hide() end)
+    panel:SetScript("OnHide", function() panel.contacts.menu:Hide(); Addon.RecipientUI:Hide(); if Native.favoriteEditor then Native.favoriteEditor:Hide() end; Native:HideShortcutIconPicker(); panel.shell:Hide(); panel.favoritesPanel:Hide() end)
     panel.favoritesPanel:SetScript("OnSizeChanged", function() Native:LayoutFavoriteButtons() end)
+    panel.favoritesPanel:HookScript("OnHide", function() Native:CancelShortcutDrag() end)
     MailFrame:HookScript("OnSizeChanged", function() Addon.RecipientUI:Refresh() end)
     MailFrame:HookScript("OnDragStop", function() Addon.RecipientUI:Refresh() end)
     self.readySend = true
 end
+function Native:CancelShortcutDrag()
+    local drag = self.shortcutDrag
+    self.shortcutDrag = nil
+    if drag then
+        drag.button:SetAlpha(1)
+        if C_Timer and C_Timer.After then
+            C_Timer.After(0, function() drag.button.suppressShortcutClick = nil end)
+        end
+    end
+    if self.shortcutGhost then self.shortcutGhost:Hide(); self.shortcutGhost:SetScript("OnUpdate", nil) end
+end
+function Native:StartShortcutDrag(button)
+    self:CancelShortcutDrag()
+    local saved = Addon.db.quickRecipients[button.slot]
+    if not saved or not button.contact or not button:IsShown() then return end
+    self:HideShortcutIconPicker()
+    Addon.RecipientUI:Hide(); GameTooltip:Hide()
+    self.shortcutDrag = { button = button, saved = saved }
+    button.suppressShortcutClick = true; button:SetAlpha(0.45)
+    local ghost = self.shortcutGhost
+    if not ghost then
+        ghost = CreateFrame("Frame", nil, UIParent); self.shortcutGhost = ghost
+        ghost:SetFrameStrata("TOOLTIP"); ghost:EnableMouse(false)
+        ghost.icon = ghost:CreateTexture(nil, "ARTWORK"); ghost.icon:SetAllPoints()
+    end
+    ghost:SetSize(button:GetWidth(), button:GetHeight())
+    local coords = not button.contact.icon and button.contact.class and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[button.contact.class]
+    ghost.icon:SetTexture(button.contact.icon or (coords and "Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES" or "Interface\\Icons\\INV_Misc_GroupLooking"))
+    if coords then ghost.icon:SetTexCoord(unpack(coords)) else ghost.icon:SetTexCoord(0.06, 0.94, 0.06, 0.94) end
+    local function FollowCursor()
+        local x, y = GetCursorPosition()
+        local scale = UIParent:GetEffectiveScale()
+        ghost:ClearAllPoints(); ghost:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x / scale, y / scale)
+    end
+    ghost:SetScript("OnUpdate", FollowCursor); FollowCursor(); ghost:Show()
+end
+function Native:FinishShortcutDrag()
+    local drag = self.shortcutDrag
+    if not drag then return end
+    local target
+    for _, button in ipairs(self.send.favoriteButtons) do
+        if button:IsShown() and button:IsMouseOver() then target = button; break end
+    end
+    local insideBar = self.send.favoritesPanel:IsMouseOver()
+    self:CancelShortcutDrag()
+    -- A drag release must never fall through to the normal click-to-send path.
+    drag.button.suppressShortcutClick = true
+    if target then
+        target.suppressShortcutClick = true
+        local ok, err = Addon.Recipients:MoveShortcut(drag.button.slot, target.slot, drag.saved)
+        if not ok then Addon:Print(err) end
+    elseif not insideBar then
+        local ok, err = Addon.Recipients:ClearShortcut(drag.button.slot, drag.saved)
+        if not ok then Addon:Print(err) end
+    end
+    if C_Timer and C_Timer.After then
+        C_Timer.After(0, function()
+            drag.button.suppressShortcutClick = nil
+            if target then target.suppressShortcutClick = nil end
+        end)
+    end
+end
+function Native:HideShortcutIconPicker()
+    if self.shortcutIconConfig and Addon.Core.iconPicker and Addon.Core.iconPicker.config == self.shortcutIconConfig then
+        Addon.Core:HideIconPicker()
+    end
+    self.shortcutIconConfig = nil
+end
+function Native:EditShortcutIcon(slot)
+    local saved = Addon.db.quickRecipients[slot]
+    if not saved then return end
+    if type(Addon.Core.ShowIconPicker) ~= "function" then Addon:Print("请同步更新 YiboCore 后选择图标。"); return end
+    self:CancelShortcutDrag()
+    local contact = self.send.favoriteEntries[slot]
+    local coords = contact and contact.class and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[contact.class]
+    local config = {
+        icon = saved.icon,
+        autoTexture = coords and "Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES" or "Interface\\Icons\\INV_Misc_GroupLooking",
+        autoCoords = coords,
+        onConfirm = function(icon)
+            local ok, err = Addon.Recipients:SetShortcutIcon(slot, icon, saved)
+            if not ok then Addon:Print(err) end
+        end,
+    }
+    self.shortcutIconConfig = config
+    Addon.Core:ShowIconPicker(config)
+end
 function Native:LayoutFavoriteButtons()
+    self:CancelShortcutDrag()
     local panel = self.send
     local favorites = panel and panel.favoritesPanel
     if not favorites then return end
     local width, height = favorites:GetWidth(), favorites:GetHeight()
     if width <= 0 or height <= 0 then return end
     local gapX, gapY, paddingX, paddingY = 6, 4, 6, 6
-    local size = math.max(1, math.min(math.floor((width - paddingX * 2 - gapX) / 2), math.floor((height - paddingY * 2 - gapY * 7) / 8)))
-    local totalWidth, totalHeight = size * 2 + gapX, size * 8 + gapY * 7
+    local rows, columns = Addon:GetShortcutLayout()
+    local size = math.max(1, math.min(math.floor((width - paddingX * 2 - gapX * (columns - 1)) / columns), math.floor((height - paddingY * 2 - gapY * (rows - 1)) / rows)))
+    local totalWidth, totalHeight = size * columns + gapX * (columns - 1), size * rows + gapY * (rows - 1)
     local left, top = math.floor((width - totalWidth) / 2), math.floor((height - totalHeight) / 2)
     for index, button in ipairs(panel.favoriteButtons) do
-        local row, column = math.floor((index - 1) / 2), (index - 1) % 2
+        local row, column = math.floor((index - 1) / columns), (index - 1) % columns
         button:ClearAllPoints(); button:SetSize(size, size)
         button:SetPoint("TOPLEFT", favorites, "TOPLEFT", left + column * (size + gapX), -(top + row * (size + gapY)))
+        button:SetShown(panel.favoritesExpanded and index <= rows * columns)
     end
 end
 function Native:PromptAddFavorite(prefill, slot)
@@ -1077,22 +1176,25 @@ function Native:RefreshFavoriteButtons()
         byAddress[ContactAddressKey(address)] = character
     end
     panel.favoriteEntries = {}
-    for index = 1, 16 do
+    for index = 1, 72 do
         local saved = Addon.db.quickRecipients and Addon.db.quickRecipients[index]
         local address = saved and Addon.Recipients:Normalize(saved.address)
         if address then
             local character = byAddress[ContactAddressKey(address)]
-            panel.favoriteEntries[index] = { address = address, label = saved.label, class = character and character.class }
+            panel.favoriteEntries[index] = { address = address, label = saved.label, icon = saved.icon, class = character and character.class }
         end
     end
     for index, button in ipairs(panel.favoriteButtons) do
         local contact = panel.favoriteEntries[index]
         button.contact = contact
-        button:SetShown(panel.favoritesExpanded)
+        local rows, columns = Addon:GetShortcutLayout()
+        button:SetShown(panel.favoritesExpanded and index <= rows * columns)
         button.emptyMark:SetShown(contact == nil)
         if contact then
             local coords = contact.class and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[contact.class]
-            if coords then
+            if contact.icon then
+                button.icon:SetTexture(contact.icon); button.icon:SetTexCoord(0, 1, 0, 1)
+            elseif coords then
                 button.icon:SetTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES")
                 button.icon:SetTexCoord(unpack(coords))
             else
@@ -1149,10 +1251,13 @@ function Native:LayoutBasicSend()
     panel.favoriteToggle:ClearAllPoints(); panel.favoriteToggle:SetSize(theme.Size.standard, theme.Size.standard)
     panel.favoriteToggle:SetPoint("LEFT", panel.contacts, "RIGHT", 6, 0)
     panel.favoritesPanel:ClearAllPoints(); panel.favoritesPanel:SetPoint("TOPLEFT", MailFrame, "TOPRIGHT", 0, 0)
-    panel.favoritesPanel:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMRIGHT", 0, 0)
     local gridGapX, gridGapY, gridPaddingX, gridPaddingY = 6, 4, 6, 6
-    local tileSize = math.max(1, math.floor((MailFrame:GetHeight() - gridPaddingY * 2 - gridGapY * 7) / 8))
-    panel.favoritesPanel:SetWidth(tileSize * 2 + gridGapX + gridPaddingX * 2)
+    local rows, columns = Addon:GetShortcutLayout()
+    -- Keep the existing tile size when fewer rows are displayed.
+    local sizingRows = math.max(8, rows)
+    local tileSize = math.max(1, math.floor((MailFrame:GetHeight() - gridPaddingY * 2 - gridGapY * (sizingRows - 1)) / sizingRows))
+    panel.favoritesPanel:SetWidth(tileSize * columns + gridGapX * (columns - 1) + gridPaddingX * 2)
+    panel.favoritesPanel:SetHeight(tileSize * rows + gridGapY * (rows - 1) + gridPaddingY * 2)
     panel.favoritesPanel:SetShown(panel.favoritesExpanded)
     panel.favoriteToggle:SetText(panel.favoritesExpanded and "<" or ">")
     self:LayoutFavoriteButtons()

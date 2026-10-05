@@ -41,6 +41,7 @@ function U:Create()
     p.search.hint:SetPoint("LEFT", 8, 0); p.search.hint:SetText("全局搜索")
     p.search:SetBackdrop(BACKDROP); p.search:SetBackdropColor(unpack(theme.Colors.panel))
     p.search:SetScript("OnTextChanged", function() U.page = 1; U.confirm = nil; U.realmMode = nil; U:Refresh() end)
+    theme:AttachClearButton(p.search)
     p.search:SetScript("OnEscapePressed", function(edit)
         if IME(edit) then return end
         if edit:GetText() ~= "" then edit:SetText("") else U:Hide() end
@@ -64,11 +65,14 @@ function U:Create()
         GameTooltip:SetText((R:Escape(address))); GameTooltip:Show()
     end)
     p.action:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    p.manage = Button("管理", function() end); p.manage:SetEnabled(false); p.manage:SetState("disabled")
+    p.manage = Button("设置", function()
+        U:Hide()
+        Addon.Core.AccountView:ShowSettings("mail-inbox")
+    end)
     p.manage:SetPoint("BOTTOMRIGHT", -GAP, GAP); p.manage:SetWidth(76)
     p.action:SetPoint("RIGHT", p.manage, "LEFT", -GAP, 0)
     p.manage:SetScript("OnEnter", function(control)
-        GameTooltip:SetOwner(control, "ANCHOR_RIGHT"); GameTooltip:SetText("后续在 Core 邮件设置页提供"); GameTooltip:Show()
+        GameTooltip:SetOwner(control, "ANCHOR_RIGHT"); GameTooltip:SetText("通讯录分组与快捷寄件栏设置"); GameTooltip:Show()
     end)
     p.manage:SetScript("OnLeave", function() GameTooltip:Hide() end)
     self:Hide()
@@ -76,10 +80,13 @@ end
 function U:SourceEntries()
     local entries = {}
     if self.slot then entries[#entries + 1] = { label = "自定义…", custom = true } end
+    if self.slot and Addon.db.quickRecipients[self.slot] then entries[#entries + 1] = { label = "修改图标…", editIcon = true } end
     for _, source in ipairs(R.sources) do
-        local count = #R:Candidates(source.id)
-        local status = source.id == "friends" and R.friendStatus or source.id == "guild" and R.guildStatus
-        entries[#entries + 1] = { label = source.label .. " · " .. count .. " 人" .. (status and " · " .. status or ""), source = source.id, disabled = count == 0 }
+        if Addon:IsRecipientSourceVisible(source.id) then
+            local count = #R:Candidates(source.id)
+            local status = source.id == "friends" and R.friendStatus or source.id == "guild" and R.guildStatus
+            entries[#entries + 1] = { label = source.label .. " · " .. count .. " 人" .. (status and " · " .. status or ""), source = source.id, disabled = count == 0 }
+        end
     end
     return entries
 end
@@ -145,7 +152,7 @@ function U:Entries()
     if self.realmMode then
         local entries = { { label = "全部服务器", chooseRealm = true } }; local seen = {}
         for _, source in ipairs(R.sources) do
-            if searching or source.id == self.source then
+            if Addon:IsRecipientSourceVisible(source.id) and (searching or source.id == self.source) then
                 for _, candidate in ipairs(R:Query(source.id, searching and query or "")) do
                     local _, _, _, realm = R:Normalize(candidate.address)
                     if realm and not seen[R:Key(realm)] then seen[R:Key(realm)] = true; entries[#entries + 1] = { label = realm, realm = realm, chooseRealm = true } end
@@ -158,6 +165,7 @@ function U:Entries()
     if searching then
         local entries, seen = {}, {}
         for _, source in ipairs(R.sources) do
+            if Addon:IsRecipientSourceVisible(source.id) then
             for _, candidate in ipairs(R:Query(source.id, query, self.realm)) do
                 local key = R:Key(candidate.address)
                 if not seen[key] then
@@ -166,17 +174,20 @@ function U:Entries()
                 end
                 seen[key].sources[#seen[key].sources + 1] = source.label
             end
+            end
         end
         table.sort(entries, function(a, b) return a.key < b.key end)
         return entries
     end
-    if self.source then return R:Query(self.source, "", self.realm) end
+    if self.source and Addon:IsRecipientSourceVisible(self.source) then return R:Query(self.source, "", self.realm) end
     return self:SourceEntries()
 end
 function U:Select(entry)
     if entry.disabled then return end
     self.confirm = nil
-    if entry.custom then
+    if entry.editIcon then
+        local slot = self.slot; self:Hide(); Addon.NativeUI:EditShortcutIcon(slot)
+    elseif entry.custom then
         local slot = self.slot; self:Hide()
         local saved = Addon.db.quickRecipients[slot]
         Addon.NativeUI:PromptAddFavorite(saved and saved.address or "", slot)
@@ -216,6 +227,9 @@ function U:Action()
 end
 function U:Refresh()
     local p = self.popup; if not p or not p:IsShown() or self.refreshing then return end
+    if self.source and not Addon:IsRecipientSourceVisible(self.source) then
+        self.source, self.realm, self.realmMode, self.page = nil, nil, nil, 1
+    end
     self.refreshing = true
     self.confirm = nil
     p.search.hint:SetShown(p.search:GetText() == "")

@@ -442,8 +442,14 @@ function Theme:CreateDropdown(parent, width, options)
     dropdown.menu.buttons = {}
     function dropdown:SetOptions(nextOptions)
         self.options = nextOptions or {}
+        local pageSize = self.menuPageSize or math.max(1, #self.options)
+        local pages = math.max(1, math.ceil(#self.options / pageSize))
+        self.menuPage = math.max(1, math.min(self.menuPage or 1, pages))
+        local first, used = (self.menuPage - 1) * pageSize + 1, 0
         for _, button in ipairs(self.menu.buttons) do button:Hide() end
-        for index, option in ipairs(self.options) do
+        for optionIndex = first, math.min(#self.options, first + pageSize - 1) do
+            used = used + 1
+            local index, option = used, self.options[optionIndex]
             local button = self.menu.buttons[index]
             if not button then
                 button = Theme:CreateButton(self.menu, 1, "", "secondary")
@@ -452,6 +458,7 @@ function Theme:CreateDropdown(parent, width, options)
             button:SetFrameLevel((dropdown.menu:GetFrameLevel() or 0) + 1)
             button:ClearAllPoints(); button:SetPoint("TOPLEFT", 4, -4 - (index - 1) * (Theme.Size.standard + 2)); button:SetPoint("RIGHT", -4, 0)
             button:SetText(option.label or tostring(option.value or "")); button:SetState(option.value == self.value and "selected" or "default")
+            button.option = option
             button:SetScript("OnClick", function()
                 self:SetValue(option.value)
                 self.menu:Hide()
@@ -459,7 +466,29 @@ function Theme:CreateDropdown(parent, width, options)
             end)
             button:Show()
         end
-        self.menu:SetHeight(math.max(1, #self.options) * (Theme.Size.standard + 2) + 6)
+        local footerTop = math.max(1, used) * (Theme.Size.standard + 2) + 6
+        if pages > 1 and not self.menu.previous then
+            self.menu.previous = Theme:CreateButton(self.menu, 50, "<", "secondary")
+            self.menu.next = Theme:CreateButton(self.menu, 50, ">", "secondary")
+            self.menu.pageText = Theme:CreateText(self.menu, Theme.Font.assist, Theme.Colors.muted, "CENTER")
+            self.menu.previous:SetScript("OnClick", function() self.menuPage = self.menuPage - 1; self:SetOptions(self.options) end)
+            self.menu.next:SetScript("OnClick", function() self.menuPage = self.menuPage + 1; self:SetOptions(self.options) end)
+        end
+        if self.menu.previous then
+            self.menu.previous:SetFrameLevel(self.menu:GetFrameLevel() + 1); self.menu.next:SetFrameLevel(self.menu:GetFrameLevel() + 1)
+            self.menu.previous:ClearAllPoints(); self.menu.previous:SetPoint("TOPLEFT", 4, -footerTop)
+            self.menu.next:ClearAllPoints(); self.menu.next:SetPoint("TOPRIGHT", -4, -footerTop)
+            self.menu.pageText:ClearAllPoints(); self.menu.pageText:SetPoint("TOPLEFT", 58, -footerTop); self.menu.pageText:SetPoint("TOPRIGHT", -58, -footerTop); self.menu.pageText:SetHeight(30)
+            self.menu.pageText:SetText(self.menuPage .. "/" .. pages)
+            self.menu.previous:SetEnabled(self.menuPage > 1); self.menu.next:SetEnabled(self.menuPage < pages)
+            self.menu.previous:SetState(self.menuPage > 1 and "default" or "disabled"); self.menu.next:SetState(self.menuPage < pages and "default" or "disabled")
+            self.menu.previous:SetShown(pages > 1); self.menu.next:SetShown(pages > 1); self.menu.pageText:SetShown(pages > 1)
+        end
+        self.menu:SetHeight(footerTop + (pages > 1 and 34 or 0))
+    end
+    function dropdown:SetMenuPageSize(size)
+        self.menuPageSize = size and math.max(1, math.floor(size)) or nil
+        self.menuPage = 1; self:SetOptions(self.options)
     end
     function dropdown:SetValue(value)
         self.value = value
@@ -469,17 +498,25 @@ function Theme:CreateDropdown(parent, width, options)
         end
         self:SetText(label)
         for _, button in ipairs(self.menu.buttons) do
-            local option = self.options[_]
+            local option = button.option
             if option then button:SetState(option.value == value and "selected" or "default") end
         end
     end
     function dropdown:SetOnValueChanged(callback) self.onValueChanged = callback end
     dropdown:SetScript("OnClick", function(self)
         if self.menu:IsShown() then self.menu:Hide(); return end
-        self.menu:ClearAllPoints(); self.menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2); self.menu:SetWidth(self:GetWidth())
-        self.menu:SetFrameLevel((popupOwner:GetFrameLevel() or 0) + 30)
+        if self.menuPageSize then
+            for index, option in ipairs(self.options) do if option.value == self.value then self.menuPage = math.floor((index - 1) / self.menuPageSize) + 1; break end end
+            self:SetOptions(self.options)
+        end
+        self.menu:ClearAllPoints(); self.menu:SetWidth(self:GetWidth())
+        local opensAbove = self.GetBottom and self:GetBottom() and (self:GetBottom() - 2 - self.menu:GetHeight()) < 16
+        if opensAbove then self.menu:SetPoint("BOTTOMLEFT", self, "TOPLEFT", 0, 2) else self.menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2) end
+        self.menu:SetFrameLevel(math.max((popupOwner:GetFrameLevel() or 0) + 30, (self:GetFrameLevel() or 0) + 10))
+        self:SetOptions(self.options)
         self.menu:Show(); self.menu:Raise()
     end)
+    dropdown:HookScript("OnHide", function(control) control.menu:Hide() end)
     dropdown:SetOptions(options)
     return dropdown
 end
@@ -509,21 +546,25 @@ function Theme:CreateMultiSelectDropdown(parent, width, options)
         for _, option in ipairs(self.options) do if type(option.isSelected) == "function" and option.isSelected() then selected = selected + 1 end end
         self:SetText(self.summaryPrefix .. " " .. selected .. "/" .. #self.options)
         for index, check in ipairs(self.menu.checks) do
-            local option = self.options[index]
+            local option = (self.displayedOptions or self.options)[index]
             if option then check:SetChecked(type(option.isSelected) == "function" and option.isSelected()) end
         end
     end
-    function dropdown:SetOptions(nextOptions)
-        self.options = nextOptions or {}
+    function dropdown:RenderOptions()
+        self.displayedOptions = {}
+        for _, option in ipairs(self.options) do
+            if #self.groups <= 1 or (option.group or "常规") == self.activeGroup then self.displayedOptions[#self.displayedOptions + 1] = option end
+        end
+        local top = #self.groups > 1 and 40 or 5
         for _, check in ipairs(self.menu.checks) do check:Hide() end
-        for index, option in ipairs(self.options) do
+        for index, option in ipairs(self.displayedOptions) do
             local check = self.menu.checks[index]
             if not check then
                 check = Theme:CreateCheckbox(self.menu, "")
                 self.menu.checks[index] = check
             end
             check:SetFrameLevel((self.menu:GetFrameLevel() or 0) + 1)
-            check:ClearAllPoints(); check:SetPoint("TOPLEFT", 8, -5 - (index - 1) * (Theme.Size.standard + 2)); check:SetPoint("RIGHT", -8, 0)
+            check:ClearAllPoints(); check:SetPoint("TOPLEFT", 8, -top - (index - 1) * (Theme.Size.standard + 2)); check:SetPoint("RIGHT", -8, 0)
             check.label:SetText(option.title or "")
             check:SetChecked(type(option.isSelected) == "function" and option.isSelected())
             check:SetScript("OnClick", function(control)
@@ -535,8 +576,29 @@ function Theme:CreateMultiSelectDropdown(parent, width, options)
             end)
             check:Show()
         end
-        self.menu:SetHeight(math.max(1, #self.options) * (Theme.Size.standard + 2) + 10)
+        self.menu:SetHeight(math.max(1, #self.displayedOptions) * (Theme.Size.standard + 2) + top + 5)
         self:RefreshSummary()
+    end
+    function dropdown:SetOptions(nextOptions)
+        self.options, self.groups = nextOptions or {}, {}
+        local seen = {}
+        for _, option in ipairs(self.options) do
+            local group = option.group or "常规"
+            if not seen[group] then seen[group] = true; self.groups[#self.groups + 1] = group end
+        end
+        if not seen[self.activeGroup] then self.activeGroup = self.groups[1] end
+        if #self.groups > 1 then
+            if not self.groupSelector then
+                self.groupSelector = Theme:CreateDropdown(self.menu, 150, {})
+                self.groupSelector:SetPoint("TOPLEFT", 8, -5); self.groupSelector:SetPoint("TOPRIGHT", -8, -5)
+                self.groupSelector:SetOnValueChanged(function(value) self.activeGroup = value; self:RenderOptions() end)
+                self.menu:HookScript("OnHide", function() self.groupSelector.menu:Hide() end)
+            end
+            local choices = {}
+            for _, group in ipairs(self.groups) do choices[#choices + 1] = { value = group, label = group } end
+            self.groupSelector:SetOptions(choices); self.groupSelector:SetValue(self.activeGroup); self.groupSelector:Show()
+        elseif self.groupSelector then self.groupSelector:Hide(); self.groupSelector.menu:Hide() end
+        self:RenderOptions()
     end
     function dropdown:SetOnSelectionChanged(callback) self.onSelectionChanged = callback end
     dropdown:SetScript("OnClick", function(control)
@@ -546,8 +608,57 @@ function Theme:CreateMultiSelectDropdown(parent, width, options)
         if opensAbove then control.menu:SetPoint("BOTTOMLEFT", control, "TOPLEFT", 0, 2) else control.menu:SetPoint("TOPLEFT", control, "BOTTOMLEFT", 0, -2) end
         control.menu:SetFrameLevel((popupOwner:GetFrameLevel() or 0) + 30); control.menu:Show(); control.menu:Raise()
     end)
+    dropdown:HookScript("OnHide", function(control) control.menu:Hide() end)
     dropdown:SetOptions(options)
     return dropdown
+end
+
+-- Neutral business tabs: callers own page state and supply activation callbacks.
+function Theme:CreateBusinessTabs(parent, definitions, onSelect)
+    local tabs = CreateFrame("Frame", nil, parent)
+    tabs:SetHeight(34); tabs:SetPoint("TOPLEFT", 0, 0); tabs:SetPoint("TOPRIGHT", 0, 0)
+    tabs.buttons = {}
+    local left = 8
+    for _, definition in ipairs(definitions) do
+        local id = definition.id
+        local button = CreateFrame("Button", nil, tabs, "BackdropTemplate")
+        button:SetSize(definition.width or 112, 34); button:SetPoint("TOPLEFT", left, 0)
+        button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+        button.label = self:CreateText(button, self.Font.body, self.Colors.text, "CENTER")
+        button.label:SetPoint("CENTER"); button.label:SetText(definition.title)
+        button:SetScript("OnClick", function() if onSelect then onSelect(id) end end)
+        button:SetScript("OnEnter", function(control) if not control.active then control:SetBackdropColor(unpack(Theme.Colors.toolbar)) end end)
+        button:SetScript("OnLeave", function(control) control:SetBackdropColor(unpack(control.active and Theme.Colors.chrome or Theme.Colors.bg)) end)
+        tabs.buttons[id] = button; left = left + (definition.width or 112) + 2
+    end
+    local overlay = CreateFrame("Frame", nil, tabs)
+    overlay:SetAllPoints(); overlay:SetFrameLevel(tabs:GetFrameLevel() + 20)
+    tabs.activeGap = overlay:CreateTexture(nil, "OVERLAY")
+    tabs.activeGap:SetHeight(2); tabs.activeGap:SetColorTexture(unpack(self.Colors.chrome))
+    tabs.ruleLeft = overlay:CreateTexture(nil, "OVERLAY"); tabs.ruleRight = overlay:CreateTexture(nil, "OVERLAY")
+    for _, line in ipairs({ tabs.ruleLeft, tabs.ruleRight }) do line:SetHeight(1); line:SetColorTexture(unpack(self.Colors.accent)) end
+    function tabs:SetActive(id)
+        local active
+        for key, button in pairs(self.buttons) do
+            button.active = key == id
+            if button.active then active = button end
+            button:SetBackdropColor(unpack(button.active and Theme.Colors.chrome or Theme.Colors.bg))
+            button:SetBackdropBorderColor(unpack(button.active and Theme.Colors.accent or Theme.Colors.matrixLine))
+            button.label:SetTextColor(unpack(button.active and Theme.Colors.text or Theme.Colors.muted))
+        end
+        if active then
+            self.activeGap:ClearAllPoints()
+            self.activeGap:SetPoint("BOTTOMLEFT", active, "BOTTOMLEFT", 1, 0)
+            self.activeGap:SetPoint("BOTTOMRIGHT", active, "BOTTOMRIGHT", -1, 0)
+            self.activeGap:Show()
+            self.ruleLeft:ClearAllPoints(); self.ruleRight:ClearAllPoints()
+            self.ruleLeft:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 0, 0); self.ruleLeft:SetPoint("BOTTOMRIGHT", active, "BOTTOMLEFT", 1, 0)
+            self.ruleRight:SetPoint("BOTTOMLEFT", active, "BOTTOMRIGHT", -1, 0); self.ruleRight:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", 0, 0)
+        else
+            self.activeGap:Hide()
+        end
+    end
+    return tabs
 end
 
 function Theme:CreateCheckbox(parent, label)
@@ -715,9 +826,6 @@ function Theme:CreateScrollFrame(parent)
         -- a previous layout. Never let that callback resurrect the track
         -- while this surface is not visible (for example during hover).
         if not self:IsShown() then
-            self.scrollRange = 0
-            bar:SetMinMaxValues(0, 0)
-            bar:SetValue(0)
             bar:Hide()
             SetGutterVisible(false)
             return 0
@@ -766,6 +874,10 @@ function Theme:CreateScrollFrame(parent)
         control:SetVerticalScroll(math.max(0, math.min(range, control:GetVerticalScroll() - delta * step)))
     end)
     scroll:SetScript("OnSizeChanged", function(control) control:RefreshScrollbar() end)
+    -- The track is a sibling, so it must follow the viewport's visibility.
+    -- Keep the offset while hidden so tab changes preserve reading position.
+    scroll:HookScript("OnHide", function() bar:Hide(); SetGutterVisible(false) end)
+    scroll:HookScript("OnShow", function(control) control:RefreshScrollbar() end)
     local nativeSetScrollChild = scroll.SetScrollChild
     scroll.SetScrollChild = function(control, child)
         nativeSetScrollChild(control, child)

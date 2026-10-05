@@ -493,6 +493,18 @@ function Page:OnLogin()
     end)
 end
 
+function Page:RefreshShortcutPreview(section)
+    local rows, columns = Addon:GetShortcutLayout()
+    local step = math.min(26, math.floor(104 / columns), math.floor(208 / rows))
+    for index, slot in ipairs(section.previewSlots or {}) do
+        slot:ClearAllPoints(); slot:SetSize(step - 4, step - 4)
+        slot:SetPoint("TOPLEFT", section.previewX + ((index - 1) % columns) * step,
+            -(section.previewY + math.floor((index - 1) / columns) * step))
+        slot:SetShown(index <= rows * columns)
+    end
+    section.gridCount:SetText("当前显示：" .. rows * columns .. " 格")
+end
+
 function Page:Register()
     local registered, err = Core.AccountView:RegisterPage(Addon.NAME, {
         id = self.ID,
@@ -505,18 +517,85 @@ function Page:Register()
             description = "到期提醒使用最后一次成功扫描的邮件估算。",
             CreateSettingsPanel = function(parent, host)
                 local width = math.max(280, parent:GetWidth() or 600)
-                local section = parent.mailBusinessSettings or host.createSection(parent, "业务设置", width, 96)
-                parent.mailBusinessSettings = section; section:SetSize(width, 96); section:Show()
+                local narrow = width < 600
+                local columnWidth = narrow and width - 24 or (width - 48) / 2
+                local businessHeight = narrow and 712 or 376
+                local section = parent.mailBusinessSettings or host.createSection(parent, "业务设置", width, businessHeight)
+                parent.mailBusinessSettings = section
+                section:SetSize(width, businessHeight); section:Show(); section:ClearAllPoints()
                 section:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
+                if not section.cleanupHook then
+                    section.cleanupHook = true
+                    section:HookScript("OnHide", function()
+                        if section.shortcutRows then section.shortcutRows.menu:Hide() end
+                        if section.shortcutColumns then section.shortcutColumns.menu:Hide() end
+                    end)
+                end
+                local function Text(key, value, x, y, textWidth, height, muted)
+                    local label = section[key] or Theme:CreateText(section, Theme.Font.assist, muted and Theme.Colors.muted or Theme.Colors.text, "LEFT")
+                    section[key] = label; label:ClearAllPoints(); label:SetPoint("TOPLEFT", x, -y)
+                    label:SetWidth(textWidth); label:SetHeight(height or 24); label:SetWordWrap(true); label:SetText(value)
+                    return label
+                end
+                Text("groupsTitle", "通讯录分组", 12, 40, columnWidth)
+                Text("groupsHelp", "选择通讯录中显示的分组", 12, 68, columnWidth, 24, true)
+                section.groups = section.groups or {}
+                for index, source in ipairs(Addon.RECIPIENT_SOURCES) do
+                    local sourceID = source.id
+                    local checkbox = section.groups[sourceID] or host.createCheckbox(section, source.label)
+                    section.groups[sourceID] = checkbox; checkbox:ClearAllPoints()
+                    checkbox:SetPoint("TOPLEFT", 12 + ((index - 1) % 2) * (columnWidth / 2), -(100 + math.floor((index - 1) / 2) * 34))
+                    checkbox:SetWidth(columnWidth / 2 - 6); checkbox:SetChecked(Addon:IsRecipientSourceVisible(sourceID))
+                    checkbox:SetScript("OnClick", function(control)
+                        local visible = not control:GetChecked(); control:SetChecked(visible)
+                        Addon.db.settings.recipientGroups = Addon.db.settings.recipientGroups or {}
+                        Addon.db.settings.recipientGroups[sourceID] = visible
+                        if Addon.Recipients then Addon.Recipients:Changed() end
+                    end)
+                end
+                Text("groupsNote", "隐藏分组保留已有数据与快捷收件人。", 12, 204, columnWidth, 40, true)
+                Text("reminderTitle", "到期提醒", 12, 258, columnWidth)
                 local checkbox = section.reminder or host.createCheckbox(section, "登录时提醒临期或到期邮件")
-                section.reminder = checkbox
-                checkbox:SetPoint("TOPLEFT", 12, -38)
-                checkbox:SetWidth(width - 24)
-                checkbox:SetChecked(Addon.db.settings.loginReminderEnabled ~= false)
+                section.reminder = checkbox; checkbox:ClearAllPoints(); checkbox:SetPoint("TOPLEFT", 12, -290)
+                checkbox:SetWidth(columnWidth); checkbox:SetChecked(Addon.db.settings.loginReminderEnabled ~= false)
+                checkbox.label:SetWordWrap(true)
+                checkbox.label:SetHeight(32)
                 checkbox:SetScript("OnClick", function(control)
-                    control:SetChecked(not control:GetChecked())
-                    Addon.db.settings.loginReminderEnabled = control:GetChecked()
+                    control:SetChecked(not control:GetChecked()); Addon.db.settings.loginReminderEnabled = control:GetChecked()
                 end)
+                Text("reminderNote", "按最近一次邮箱扫描估算，同日重复风险不重复提醒。", 12, 322, columnWidth, 42, true)
+                local gridX, gridY = narrow and 12 or 36 + columnWidth, narrow and 384 or 40
+                Text("gridTitle", "快捷寄件栏", gridX, gridY, columnWidth)
+                local rows, columns = Addon:GetShortcutLayout()
+                local function GridOption(key, title, x, maximum, current)
+                    local fieldWidth = (columnWidth - 12) / 2
+                    Text(key .. "Title", title, x, gridY + 32, fieldWidth)
+                    local options = {}; for value = 1, maximum do options[#options + 1] = { value = value, label = value .. (key == "shortcutRows" and " 行" or " 列") } end
+                    local dropdown = section[key] or Theme:CreateDropdown(section, fieldWidth, options)
+                    section[key] = dropdown; dropdown:ClearAllPoints(); dropdown:SetWidth(fieldWidth); dropdown:SetOptions(options)
+                    dropdown:SetPoint("TOPLEFT", x, -(gridY + 58)); dropdown:SetValue(current)
+                    dropdown:SetOnValueChanged(function(value)
+                        Addon.db.settings[key] = value
+                        if Addon.RecipientUI then Addon.RecipientUI:Hide() end
+                        if Addon.NativeUI and Addon.NativeUI.readySend then
+                            Addon.NativeUI:LayoutBasicSend(); Addon.NativeUI:RefreshFavoriteButtons()
+                        end
+                        Page:RefreshShortcutPreview(section)
+                    end)
+                end
+                GridOption("shortcutRows", "显示行数", gridX, 12, rows)
+                GridOption("shortcutColumns", "显示列数", gridX + (columnWidth + 12) / 2, 6, columns)
+                section.previewSlots = section.previewSlots or {}
+                for index = 1, 72 do
+                    local slot = section.previewSlots[index] or CreateFrame("Frame", nil, section, "BackdropTemplate")
+                    section.previewSlots[index] = slot
+                    slot:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+                    slot:SetBackdropBorderColor(unpack(Theme.Colors.lineSoft))
+                end
+                section.previewX, section.previewY = gridX, gridY + 104
+                Text("gridCount", "", gridX + 114, gridY + 104, columnWidth - 114, 26, true)
+                Text("gridNote", "减少行列时保留隐藏槽位配置。", gridX + 114, gridY + 138, columnWidth - 114, 66, true)
+                Page:RefreshShortcutPreview(section)
                 local cache = parent.mailCacheSettings or host.createSection(parent, "数据与缓存", width, 156)
                 parent.mailCacheSettings = cache; cache:SetSize(width, 156); cache:Show()
                 if not cache.cleanupHook then
@@ -525,7 +604,7 @@ function Page:Register()
                         if cache.unverifiedDays then cache.unverifiedDays.menu:Hide() end
                     end)
                 end
-                cache:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -104)
+                cache:ClearAllPoints(); cache:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -(businessHeight + 8))
                 local columnWidth = (width - 36) / 2
                 local function Retention(x, label, key, choices)
                     local title = cache[key .. "Title"] or Theme:CreateText(cache, Theme.Font.assist, Theme.Colors.text, "LEFT")
@@ -547,8 +626,8 @@ function Page:Register()
                 local note = cache.note or Theme:CreateText(cache, Theme.Font.assist, Theme.Colors.muted, "LEFT")
                 cache.note = note; note:ClearAllPoints()
                 note:SetPoint("TOPLEFT", 12, -98); note:SetPoint("TOPRIGHT", -12, -98); note:SetHeight(48); note:SetWordWrap(true)
-                note:SetText("展示时间范围不改变保留期限。登录时清理超期数据；缩短期限需确认，确认后立即清理超期历史和待核实记录。")
-                return 268
+                note:SetText("缩短保留期限时，确认后清理超期记录。")
+                return businessHeight + 8 + 156
             end,
         },
         scope = { mode = "realms", allTitle = "所有服务器" },

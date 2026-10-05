@@ -26,7 +26,14 @@ assert(R:Label({ address = "Bob-Other Realm" }) == "Bob-Other Realm")
 assert(R:Label({ address = "Bob-Other Realm", label = "|cff00ff00 label" }):find("||", 1, true))
 R:ClearShortcut(1); R:Initialize(); assert(A.db.quickRecipients[1] == nil and A.db.quickRecipients[2])
 assert(R:SetShortcut(16, "Zulu")); assert(R:SetShortcut(3, "Zulu"))
-assert(not R:SetShortcut(17, "Zulu")); assert(not R:SetShortcut(3, "Bad|Name"))
+assert(not R:SetShortcut(73, "Zulu")); assert(not R:SetShortcut(3, "Bad|Name"))
+assert(R:SetShortcut(72, "Last"))
+A.db.settings = { shortcutRows = 1, shortcutColumns = 1, recipientGroups = { contacts = false } }
+local rows, columns = A:GetShortcutLayout(); assert(rows == 1 and columns == 1)
+assert(A.db.quickRecipients[72] and not A:IsRecipientSourceVisible("contacts"))
+assert(#R:Candidates("contacts") > 0)
+A.db.settings.shortcutRows = 8; A.db.settings.shortcutColumns = 4
+assert(A.db.quickRecipients[72].address == "Last-Realm-With-Hyphen")
 assert(R:SaveContact("Zulu")); R:RemoveContact("Zulu")
 assert(A.db.quickRecipients[16].address == "Zulu-Realm-With-Hyphen")
 for i = 1, 40 do assert(R:SaveContact("User" .. i)) end
@@ -111,3 +118,14 @@ for _, size in ipairs({ 3000, 10000 }) do
     assert(R:AccountFriends() == result)
     print(string.format("SAMPLE: %d memberships, %d union entries, snapshots %.1f KiB, union %.3f ms, search %.3f ms (standalone Lua 5.1)", size, #result, snapshotsKB, duration, queryMS))
 end
+
+-- Moving/swapping only changes slot ownership; cancelled/stale operations leave data intact.
+local original = A.db.quickRecipients[72]
+R:ClearShortcut(71); assert(R:MoveShortcut(72, 71, original))
+assert(not A.db.quickRecipients[72] and A.db.quickRecipients[71] == original)
+assert(R:SetShortcut(72, "Swap", "Remark")); local otherSlot = A.db.quickRecipients[72]
+assert(R:MoveShortcut(71, 72, original))
+assert(A.db.quickRecipients[71] == otherSlot and A.db.quickRecipients[72] == original)
+assert(not R:MoveShortcut(71, 72, original))
+assert(not R:MoveShortcut(0, 72) and not R:MoveShortcut(72, 73))
+assert(R:MoveShortcut(72, 72, original) and A.db.quickRecipients[72] == original)

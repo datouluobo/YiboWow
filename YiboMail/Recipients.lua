@@ -1,11 +1,7 @@
 local Addon = _G.YiboMail
 local R = { revision = 0, friendRevision = 0 }
 Addon.Recipients = R
-R.sources = {
-    { id = "contacts", label = "常用收件人" }, { id = "characters", label = "账号角色" },
-    { id = "recent", label = "最近邮寄" }, { id = "friends", label = "角色好友" },
-    { id = "accountFriends", label = "账号好友" }, { id = "guild", label = "公会" },
-}
+R.sources = Addon.RECIPIENT_SOURCES
 local function Trim(value) return type(value) == "string" and value:match("^%s*(.-)%s*$") or "" end
 function R:Current() return Addon.Core.Characters:GetCurrent() end
 function R:Key(address) return Trim(address):gsub("%s+", ""):lower() end
@@ -85,13 +81,30 @@ function R:RemoveContact(address)
     table.remove(Addon.db.contacts, index); self:Changed(); return true
 end
 function R:SetShortcut(slot, value, label)
-    if type(slot) ~= "number" or slot < 1 or slot > 16 or slot ~= math.floor(slot) then return nil, "快捷格不可用。" end
+    if type(slot) ~= "number" or slot < 1 or slot > 72 or slot ~= math.floor(slot) then return nil, "快捷格不可用。" end
     local address, err = self:Normalize(value); if not address then return nil, err end
-    Addon.db.quickRecipients[slot] = { address = address, label = Trim(label) }; self:Changed(); return true
+    local previous = Addon.db.quickRecipients[slot]
+    Addon.db.quickRecipients[slot] = { address = address, label = Trim(label), icon = previous and previous.icon }; self:Changed(); return true
 end
-function R:ClearShortcut(slot)
-    if type(slot) ~= "number" or slot < 1 or slot > 16 or slot ~= math.floor(slot) then return nil end
+function R:SetShortcutIcon(slot, icon, expected)
+    local saved = Addon.db.quickRecipients[slot]
+    if not saved or (expected and saved ~= expected) then return nil, "快捷收件人已改变，请重新选择。" end
+    if icon ~= nil and not Addon.Core:IsBuiltinIcon(icon) then return nil, "请选择游戏图标。" end
+    saved.icon = icon; self:Changed(); return true
+end
+function R:ClearShortcut(slot, expected)
+    if type(slot) ~= "number" or slot < 1 or slot > 72 or slot ~= math.floor(slot) then return nil end
+    if expected and Addon.db.quickRecipients[slot] ~= expected then return nil, "快捷收件人已改变，请重新拖动。" end
     Addon.db.quickRecipients[slot] = nil; self:Changed(); return true
+end
+function R:MoveShortcut(source, target, expected)
+    local function Valid(slot) return type(slot) == "number" and slot >= 1 and slot <= 72 and slot == math.floor(slot) end
+    if not Valid(source) or not Valid(target) then return nil, "快捷格不可用。" end
+    local slots = Addon.db.quickRecipients
+    if not slots[source] or (expected and slots[source] ~= expected) then return nil, "快捷收件人已改变，请重新拖动。" end
+    if source == target then return true end
+    slots[source], slots[target] = slots[target], slots[source]
+    self:Changed(); return true
 end
 function R:RecordRecent(value)
     local address = self:Normalize(value); if not address then return end

@@ -72,3 +72,21 @@ Core 已在构造 context 时依次应用：账号隐藏规则、业务角色准
 - `Events` 可用于 Core 中性事实变化，但不承载 Vault/Mail 的业务变更事件。
 
 因此本轮不增加 Core Capability。若后续出现可由三个以上业务域复用、且无法由现有通用注册接口表达的缺口，再单独提出向后兼容增量。
+
+## 5. 多布局页面的字段与通用控件
+
+2026-10-05 的向后兼容 UI 增量用于同一业务页面的多个标签或查看方式：
+
+- 字段可提供 `group = "收件箱"`，Core“显示与入口”的主表字段菜单按组显示；未提供分组的页面继续使用原布局。
+- 字段设置 `preview = false` 可排除悬停字段选项；预览回调仍须为全部字段提供明确布尔投影，避免其它布局的字段通过主表默认值进入预览。
+- `defaultVisible = false` 同时适用于字段对象和 `context:GetFieldVisible("field-id")` 字符串查询；已有显隐配置优先。
+- `Core.UITheme:CreateBusinessTabs(parent, definitions, onSelect)` 接收 `{id, title, width}` 定义列表，返回 `SetActive(id)` 与按 ID 索引的 `buttons`；业务插件拥有标签状态，Core 提供视觉与控件。
+- `Core.UITheme:CreateDropdown(...)` 增加可选 `SetMenuPageSize(size)`，只对显式启用的菜单分页；`nil` 恢复完整菜单。关闭控件会关闭其弹出菜单，屏幕下缘空间不足时向上展开。
+
+这些控件不保存业务浏览状态，不增加业务依赖，也不改变现有 API 版本。
+
+## 6. 游戏图标选择器
+
+2026-10-06 向后兼容增量：`Core:ShowIconPicker(config)` 打开由 Core 管理的单例选择窗口，返回 picker。config 可提供 `icon`（当前游戏纹理）、`autoTexture`、`autoCoords`（自动预览）与 `onConfirm(icon)`；icon=nil 表示自动图标。确认前仅修改窗口草稿，取消或 `Core:HideIconPicker()` 不触发回调。调用方拥有业务保存和过期编辑校验，Core 不保存角色或业务状态。`Core:IsBuiltinIcon(icon)` 检查本客户端枚举集合。
+
+仅枚举游戏宏/物品图标，图标列表按需生成。没有可用枚举数据时提示，并允许确认自动图标。消费方按方法是否存在判断支持；缺失时提示同步更新 Core。新增 TOC 文件需要客户端完整重启。

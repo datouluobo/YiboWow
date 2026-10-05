@@ -12,6 +12,7 @@ for _, name in ipairs({ "SetJustifyV", "SetWordWrap", "SetVertexColor", "SetText
 function methods:SetAllPoints(target) self.allPoints = target or self.parent end
 function methods:SetFont(_, size) self.fontSize = size end
 function methods:GetStringWidth() return #(self.text or ""):gsub("[\128-\191]", "") * (self.fontSize or 16) * 0.75 end
+function methods:GetChildren() return unpack(self.children) end
 function methods:GetParent() return self.parent end
 function methods:GetFrameLevel() return self.level end
 function methods:SetFrameLevel(v) self.level = v end
@@ -319,6 +320,20 @@ local helpers = { createSection = function(parent) return Frame(parent) end,
 definition.settings.CreateSettingsPanel(settingsHost, helpers)
 local children = #settingsHost.children
 definition.settings.CreateSettingsPanel(settingsHost, helpers); assert(#settingsHost.children == children)
+local business = settingsHost.mailBusinessSettings
+business.groups.contacts:GetScript("OnClick")(business.groups.contacts)
+assert(Addon.db.settings.recipientGroups.contacts == false)
+business.shortcutRows.onValueChanged(2); business.shortcutColumns.onValueChanged(4)
+assert(business.gridCount:GetText() == "当前显示：8 格")
+assert(business.previewSlots[8]:IsShown() and not business.previewSlots[9]:IsShown())
+settingsHost:SetWidth(400); definition.settings.CreateSettingsPanel(settingsHost, helpers)
+assert(business:GetHeight() >= business.previewY + 2 * 26)
+settingsHost:SetWidth(1000); definition.settings.CreateSettingsPanel(settingsHost, helpers)
+assert(business.previewX > 12 and business:GetHeight() == 376)
+business.shortcutRows.onValueChanged(12); business.shortcutColumns.onValueChanged(6)
+assert(business.gridCount:GetText() == "当前显示：72 格" and business.previewSlots[72]:IsShown())
+local previewBottom = business.previewY + 11 * 17 + business.previewSlots[72]:GetHeight()
+assert(previewBottom < business:GetHeight())
 StaticPopupDialogs = {}; local popupData
 StaticPopup_Show = function(id, _, _, data) assert(id == "YIBOMAIL_RETENTION"); popupData = data; return {} end
 local retention = settingsHost.mailCacheSettings.historyDays
@@ -375,4 +390,17 @@ callbacks = {}; scroll:Show()
 for _, callback in ipairs(callbacks) do callback() end
 assert(scroll.ScrollBar:IsShown() and scroll:GetVerticalScroll() == 80)
 C_Timer = nil
+-- The real settings workbench must ignore stale native ranges from pooled controls.
+dofile("YiboCore/UI/AccountPages/SettingsWorkbench.lua")
+local workbench = Frame(UIParent)
+local settingsPage = YiboCore.AccountView._pages.settings
+settingsPage.Create(workbench); workbench.scroll:SetSize(1000, 600)
+YiboCore.AccountView.settingsTargetPageID = definition.id
+workbench.scroll.GetVerticalScrollRange = function() return 999 end
+settingsPage.Refresh(workbench)
+assert(workbench.scroll.contentHeight < 600 and not workbench.scroll.ScrollBar:IsShown())
+workbench.scroll:SetHeight(300); settingsPage.Refresh(workbench)
+assert(workbench.scroll.ScrollBar:IsShown() and workbench.scroll.scrollRange > 0)
+workbench.scroll:SetHeight(600); settingsPage.Refresh(workbench)
+assert(not workbench.scroll.ScrollBar:IsShown() and workbench.scroll:GetVerticalScroll() == 0)
 print("PASS: workspace tabs, global scoped search, role navigation, runtime-only state, shared overview/hover, continuous scrolling, COD icon variants, factual history and Core grouped fields")
