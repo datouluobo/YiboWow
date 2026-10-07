@@ -120,7 +120,7 @@ function U:Refresh()
     for _, rule in ipairs(Addon.SendRules:List()) do
         local staged = false
         for _, item in ipairs(c.owned and c.packet or {}) do if item.ruleID == rule.id then staged = true; break end end
-        if match.byRule[rule.id] or staged or c.skipped[rule.id] then
+        if Addon.Recipients:CanRuleSend(rule.recipient) ~= false and (match.byRule[rule.id] or staged or c.skipped[rule.id]) then
             local key = Addon.Recipients:Key(rule.recipient)
             local group = groups[key]
             if not group then
@@ -257,7 +257,8 @@ function U:Drop(contact)
         if not item or not item.ready then Addon:Print("物品尚未加载，请稍后重试。"); return end
         local existing
         for _, rule in ipairs(Addon.SendRules:List()) do
-            if rule.kind == "item" and Addon.SendRules:HasItem(rule, item.itemID) and not next(rule.characters or {}) then
+            if rule.kind == "item" and Addon.SendRules:HasItem(rule, item.itemID)
+                and Addon.SendRules:RecipientsOverlap(rule.recipient, address) and not next(rule.characters or {}) then
                 existing = rule
                 if Addon.Recipients:Key(rule.recipient) == Addon.Recipients:Key(address) then break end
             end

@@ -32,6 +32,10 @@ function R:SetFaction(address, faction)
 end
 function R:CanRuleSend(address)
     local current = self:Current()
+    local normalized, _, _, realm = self:Normalize(address)
+    if not normalized then return false, "收件人无效" end
+    if not current or not current.realm then return nil, "当前角色服务器待采集" end
+    if self:Key(realm) ~= self:Key(current.realm) then return false, "不同服务器，当前角色不适用" end
     local faction = current and current.faction
     local target = self:GetFaction(address)
     if faction ~= "Alliance" and faction ~= "Horde" then return nil, "当前角色阵营待采集" end

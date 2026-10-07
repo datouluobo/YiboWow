@@ -62,6 +62,28 @@ assert(A.Recipients:SetFaction('Multi-Realm', 'Alliance'))
 local multiMatch = R:Match({ { itemID = 20, quantity = 1, bag = 0, slot = 1 }, { itemID = 21, quantity = 2, bag = 0, slot = 2 } })
 assert(#multiMatch.items == 2 and multiMatch.byRule[multi].quantity == 3)
 print('PASS: multi-item rules deduplicate, match every item, reject overlap and save atomically; legacy single-item rules still work')
+local _, foreign = R:Save({ kind = 'item', itemIDs = { 20, 21 }, recipient = 'Foreign-Other Realm' })
+assert(foreign and A.Recipients:SetFaction('Foreign-OtherRealm', 'Alliance'))
+assert(not R:Save({ kind = 'item', itemID = 20, recipient = 'Conflict-OtherRealm' }))
+local _, foreignCategory = R:Save({ kind = 'category', classID = 7, recipient = 'Category-OtherRealm' })
+local _, localCategory = R:Save({ kind = 'category', classID = 7, recipient = 'Category-Realm' })
+assert(foreignCategory and localCategory and A.Recipients:SetFaction('Category-Realm', 'Alliance'))
+local crossBags = { { itemID = 20, quantity = 1, bag = 0, slot = 1 } }
+local scoped = R:Match(crossBags)
+assert(#scoped.items == 1 and scoped.items[1].recipient == 'Multi-Realm' and #scoped.conflicts == 0 and #scoped.factionIssues == 0)
+current.realm = 'OtherRealm'
+scoped = R:Match(crossBags)
+assert(#scoped.items == 1 and A.Recipients:Key(scoped.items[1].recipient) == A.Recipients:Key('Foreign-OtherRealm') and #scoped.conflicts == 0)
+current.faction = 'Horde'
+scoped = R:Match(crossBags)
+assert(#scoped.items == 0, 'Foreign realm and opposing factions cannot match')
+current.realm, current.faction = 'Realm', 'Alliance'
+assert(A.Recipients:CanRuleSend('Foreign-OtherRealm') == false)
+assert(A.db.sendRules[foreign] and #R:List() == 5, 'All realm configurations remain stored')
+assert(R:Save({ kind = 'item', itemID = 22, recipient = 'Unknown-OtherRealm' }))
+scoped = R:Match({ { itemID = 22, quantity = 1, bag = 0, slot = 1 } })
+assert(#scoped.items == 1 and scoped.items[1].ruleID == localCategory and #scoped.factionIssues == 0)
+print('PASS: item/category ownership isolated by realm; normalized realm spacing; role switching; foreign unknown faction never reserves local ownership; configurations retained')
 A.db.sendRules = {}
 local ok, category = R:Save({ kind = 'category', classID = 7, recipient = 'Warehouse-Realm', excluded = { [2] = true }, characters = { legacy = true } }); assert(ok)
 assert(not A.db.sendRules[category].characters)
@@ -237,3 +259,17 @@ MailEditBox, SendMailBodyEditBox = nil, Box()
 A.Compose.draft.body = 'Legacy body'
 assert(A.Compose:ApplyDraft() and SendMailBodyEditBox:GetText() == 'Legacy body')
 print('PASS: Classic body adapter stages/sends/undoes without legacy global; body fingerprints and draft guards; missing fields do not enter filling; legacy draft compatibility')
+
+C:OnEvent('MAIL_CLOSED'); attached, cursor = {}, nil
+SendMailNameEditBox:SetText(''); SendMailSubjectEditBox:SetText(''); SendMailBodyEditBox:SetText('')
+current.realm, current.faction = 'Realm', 'Alliance'
+A.db.sendRules = {}; bags = { { id = 30, quantity = 2 } }
+assert(R:Save({ kind = 'item', itemID = 30, recipient = 'Local-Realm' }))
+assert(A.Recipients:SetFaction('Local-Realm', 'Alliance'))
+assert(C:Contact('Local-Realm') and C.state == 'ready')
+local beforeRealmChange = sends
+current.realm = 'Other'
+assert(not C:Send() and sends == beforeRealmChange, 'Server must be rechecked immediately before native send')
+assert(not C:Fill(), 'Foreign staged ownership cannot be filled again')
+current.realm = 'Realm'
+print('PASS: staged packets cannot send or refill after sender realm changes')

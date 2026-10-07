@@ -122,6 +122,14 @@ function Rules:List()
     table.sort(result, function(a, b) return a.id < b.id end)
     return result
 end
+function Rules:RecipientsOverlap(first, second)
+    local a, _, _, firstRealm = Addon.Recipients:Normalize(first)
+    local b, _, _, secondRealm = Addon.Recipients:Normalize(second)
+    if a and b and Addon.Recipients:Key(firstRealm) ~= Addon.Recipients:Key(secondRealm) then return false end
+    local firstFaction, secondFaction = Addon.Recipients:GetFaction(first), Addon.Recipients:GetFaction(second)
+    -- Unknown factions reserve ownership until confirmed; never guess separation.
+    return not (firstFaction and secondFaction and firstFaction ~= secondFaction)
+end
 function Rules:Save(draft, id)
     if self.incompatible then return nil, "规则数据版本不兼容，请同步插件版本。" end
     local rule = Addon.Copy(draft)
@@ -147,7 +155,7 @@ function Rules:Save(draft, id)
             if not valid then return nil, "请选择有效子分类。" end
         end
     else return nil, "请选择规则类型。" end
-    -- Matching objects are account-wide and must be unambiguous.
+    -- Matching objects must be unambiguous within one realm and faction.
     for _, other in ipairs(self:List()) do
         local overlap = false
         if rule.kind == "item" and other.kind == "item" then
@@ -155,9 +163,7 @@ function Rules:Save(draft, id)
         end
         local same = rule.kind == other.kind and (overlap
             or rule.kind == "category" and rule.classID == other.classID and rule.subclassID == other.subclassID)
-        local faction, otherFaction = Addon.Recipients:GetFaction(address), Addon.Recipients:GetFaction(other.recipient)
-        local separate = faction and otherFaction and faction ~= otherFaction
-        if other.id ~= id and same and not separate then
+        if other.id ~= id and same and self:RecipientsOverlap(address, other.recipient) then
             if Addon.Recipients:Key(other.recipient) == Addon.Recipients:Key(address) then
                 return nil, "该规则已存在，无需重复添加；请编辑已有规则以调整物品。", other.id
             end

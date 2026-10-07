@@ -144,7 +144,7 @@ function S:Create(parent)
     local function Button(owner, text, callback)
         local b = t:CreateButton(owner, 180, text); b:SetScript("OnClick", callback); return b
     end
-    p.search = t:CreateInput(p.list, { placeholder = "搜索物品、分类或收件人", clearable = true,
+    p.search = t:CreateInput(p.list, { placeholder = "搜索物品、分类、收件人或服务器", clearable = true,
         OnChanged = function(value)
             if value ~= "" and not S.searching then S.beforeSearchPage = S.page end
             S.searching = value ~= ""
@@ -378,7 +378,7 @@ function S:RenderList(width, host)
         Place(header.fold, 0, 3, 24, 24); Place(header.header, 32, 3, width - 116, 24)
         header.fold:SetText(expanded and "-" or "+")
         local allowed, factionReason = Addon.Recipients:CanRuleSend(group.recipient)
-        header.header:SetText(Addon.Recipients:Label({ address = group.recipient }) .. " · " .. #group.rules .. " 条" .. (allowed == false and " · 对立阵营" or allowed == nil and " · 阵营待确认" or ""))
+        header.header:SetText(Addon.Recipients:Label({ address = group.recipient }) .. " · " .. #group.rules .. " 条" .. (allowed == false and " · 当前角色不适用" or allowed == nil and " · 资料待确认" or ""))
         header.fold:SetScript("OnClick", function()
             if search ~= "" then return end
             S.collapsed[group.key] = expanded; S:Refresh()

@@ -238,7 +238,7 @@ assert(A.SendRules:Save({ kind = 'item', itemID = 100, recipient = 'Second-Other
 host.availableHeight = 350; host.refreshPanel(); assert(#S.groupPages == 2 and p.next:IsShown())
 local rendered = 0; for _, row in ipairs(p.rows) do if row:IsShown() and row.kind == 'rule' then rendered = rendered + 1 end end
 assert(rendered == 11)
-Click(p.next); assert(FindRow('group').header:GetText() == 'Second-Other · 1 条', 'Other-realm recipients retain the realm')
+Click(p.next); assert(FindRow('group').header:GetText() == 'Second-Other · 1 条 · 当前角色不适用', 'Other-realm recipients retain the realm')
 Click(FindRow('group').fold); assert(not FindRow('rule') and p.editor:IsShown())
 p.search:SetValue('Second', true); assert(FindRow('rule'))
 p.search:SetValue('', true); assert(not FindRow('rule') and S.page == 2)
@@ -465,6 +465,14 @@ U:Drop({ address = 'Batch-Realm' })
 assert(not shownConfirmation and A.db.sendRuleRevision == revision and C.notice:find('该规则已存在', 1, true))
 U:Drop({ address = 'Changed-Realm' })
 assert(shownConfirmation and shownConfirmation.text:find('更新整条规则', 1, true) and A.db.sendRuleRevision == revision)
+shownConfirmation = nil
+U:Drop({ address = 'Foreign-Other' })
+assert(shownConfirmation and not shownConfirmation.text:find('更新整条规则', 1, true))
+shownConfirmation.OnAccept()
+assert(A.db.sendRules[batchRule.id].recipient == 'Batch-Realm', 'Cross-realm shortcut drop must not rewrite local ownership')
+assert(A.Recipients:SetFaction('Foreign-Other', 'Alliance'))
+U:Refresh()
+for _, row in ipairs(U.root.rows) do assert(not row:IsShown() or row.entry.recipient ~= 'Foreign-Other') end
 A.Core.ItemConfirmation.Show = showConfirmation
 local ok, message = A.SendRules:Save({ kind = 'item', itemIDs = { 502 }, recipient = 'Batch-Realm' })
 assert(not ok and message:find('该规则已存在', 1, true))
@@ -485,8 +493,8 @@ N:SelectMailboxTab('send'); assert(not U.recipient:IsShown() and SendMailAttachm
 print('PASS: shared top recipient field with compose geometry, class/same-realm labels and full-address tooltip; full-width status; manage button in spare attachment row; empty draft and compose-tab lifecycle')
 
 local _, extraRule = A.SendRules:Save({ kind = 'item', itemID = 505, recipient = 'Batch-Realm' })
-assert(extraRule and A.Recipients:SetFaction('GroupOther-Other', 'Alliance'))
-local _, otherRule = A.SendRules:Save({ kind = 'item', itemID = 506, recipient = 'GroupOther-Other' }); assert(otherRule)
+assert(extraRule and A.Recipients:SetFaction('GroupOther-Realm', 'Alliance'))
+local _, otherRule = A.SendRules:Save({ kind = 'item', itemID = 506, recipient = 'GroupOther-Realm' }); assert(otherRule)
 local groupBags = {
     { itemID = 501, quantity = 2, bag = 0, slot = 1 }, { itemID = 505, quantity = 3, bag = 0, slot = 2 },
     { itemID = 506, quantity = 4, bag = 0, slot = 3 },
@@ -498,8 +506,13 @@ N:SelectMailboxTab('rules'); U.root.scroll:SetWidth(360); C:Scan(); U:Refresh()
 local function GroupRow(address)
     for _, row in ipairs(U.root.rows) do if row:IsShown() and row.entry.recipient == address then return row end end
 end
-local group = GroupRow('Batch-Realm'); local other = GroupRow('GroupOther-Other')
+local group = GroupRow('Batch-Realm'); local other = GroupRow('GroupOther-Realm')
 assert(group and other and #group.entry.ruleIDs == 2 and group.entry.quantity == 5 and group.entry.stacks == 2)
+local foreignRule
+for _, rule in ipairs(A.SendRules:List()) do if rule.recipient == 'Foreign-Other' then foreignRule = rule.id end end
+C.skipped[foreignRule] = true; U:Refresh()
+assert(not GroupRow('Foreign-Other'), 'Foreign skipped cards remain hidden')
+C.skipped[foreignRule] = nil
 assert(not group.main.label:GetText():find('\n') and group:GetHeight() == 58 and #group.items.itemButtons == 4)
 assert(group.items.itemButtons[1]:IsShown() and group.items.itemButtons[2]:IsShown() and not group.items.itemButtons[3]:IsShown())
 assert(group.main:GetWidth() == group:GetWidth() and group.skip:GetParent() == group.main and group.skip.points[1][1] == 'TOPRIGHT')

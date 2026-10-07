@@ -2,7 +2,7 @@
 ## Title: |cff20e070[Yibo]|r YiboMail - 邮件助手
 ## Notes-zhCN: 原生收件箱增强、账号邮件视图、到期提醒与附件收取。
 ## Author: YiboSoft
-## Version: 1.1.0-api1
+## Version: 1.1.1-api1
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
 ## SavedVariables: YiboMailDB
