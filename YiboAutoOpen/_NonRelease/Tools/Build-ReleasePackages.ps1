@@ -1,4 +1,4 @@
-param([string]$Version = "1.2.1")
+param([string]$Version = "1.2.2")
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $addon = Join-Path $root 'YiboAutoOpen'; $builds = Join-Path $root 'Builds'

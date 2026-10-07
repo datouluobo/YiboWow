@@ -10,6 +10,24 @@ local function IsPositionAssistEnabled()
     return not (Addon.db and Addon.db.bindConfirmFollowCursor == false)
 end
 
+local function GetBindCandidate()
+    if not IsPositionAssistEnabled() then return end
+    local pending = Addon.runtime.bindConfirmCandidate
+    if not pending and not Addon.runtime.confirmLootSourceKey then
+        -- Fast-loot handlers can show LOOT_BIND during LOOT_OPENED before
+        -- our event handler runs. Resolve the live source at the show boundary.
+        Assist:CaptureLootSource()
+    end
+    if not pending and Addon.runtime.confirmLootSourceKey then
+        -- LootFrame may show the dialog before our LOOT_BIND_CONFIRM handler.
+        -- The source was already captured on LOOT_OPENED, so do not wait for
+        -- the confirmation event (or its next-frame callback) to prepare it.
+        pending = { source = Addon.runtime.confirmLootSourceKey, lootSlot = Addon.runtime.pandariaDarkSoilLoot }
+        Addon.runtime.bindConfirmCandidate = pending
+    end
+    return pending
+end
+
 local function GetVisibleBindPopup()
     for index = 1, POPUP_COUNT do
         local popup = _G["StaticPopup" .. index]
@@ -18,14 +36,19 @@ local function GetVisibleBindPopup()
 end
 
 local function GetPopupButton(popup, index)
+    if popup.GetButton then return popup:GetButton(index) end
     local field = popup["button" .. index]
     if field then return field end
     local name = popup.GetName and popup:GetName()
     return name and _G[name .. "Button" .. index]
 end
 
-local function GetCursorCenter(popup)
-    local rawX, rawY = GetCursorPosition()
+local function GetCursorCenter(popup, pending)
+    if not pending.bindCursor then
+        local rawX, rawY = GetCursorPosition()
+        pending.bindCursor = { x = rawX, y = rawY }
+    end
+    local rawX, rawY = pending.bindCursor.x, pending.bindCursor.y
     local width = UIParent and UIParent.GetWidth and UIParent:GetWidth() or 0
     local height = UIParent and UIParent.GetHeight and UIParent:GetHeight() or 0
     local screenWidth = GetScreenWidth and GetScreenWidth() or 0
@@ -139,8 +162,12 @@ end
 
 function Assist:PlacePopup(popup, pending)
     if popup.yiboAutoOpenBindPending ~= pending then return end
-    local currentX, currentY = popup:GetCenter()
-    if currentX and currentY and math.abs(currentX - popup.yiboAutoOpenCursorX) < 0.5 and math.abs(currentY - popup.yiboAutoOpenCursorY) < 0.5 then return end
+    -- GetCenter can still describe the previous layout after SetPoint. Compare
+    -- the requested anchor itself so a native reset is never mistaken for our
+    -- cursor anchor merely because the last rendered center is unchanged.
+    local point, relativeTo, relativePoint, x, y = popup:GetPoint(1)
+    if point == "CENTER" and relativeTo == UIParent and relativePoint == "BOTTOMLEFT"
+        and x == popup.yiboAutoOpenCursorX and y == popup.yiboAutoOpenCursorY then return end
     popup.yiboAutoOpenPlacing = true
     popup:ClearAllPoints()
     popup:SetPoint("CENTER", UIParent, "BOTTOMLEFT", popup.yiboAutoOpenCursorX, popup.yiboAutoOpenCursorY)
@@ -151,22 +178,10 @@ function Assist:PlacePopup(popup, pending)
 end
 
 function Assist:RefreshPopupTarget(popup, pending)
-    local cursorX, cursorY, cursor = GetCursorCenter(popup)
+    local cursorX, cursorY, cursor = GetCursorCenter(popup, pending)
     popup.yiboAutoOpenCursorX, popup.yiboAutoOpenCursorY = cursorX, cursorY
     cursor.targetPopupX, cursor.targetPopupY = cursorX, cursorY
     Addon.runtime.lastBindPlacement = cursor
-end
-
-function Assist:ScheduleLayoutConfirmation(popup, pending)
-    if not (C_Timer and C_Timer.After) then return end
-    -- A final next-frame check catches layouts deferred by the popup itself.
-    -- Further changes are handled by the StaticPopup_Show post-hook instead.
-    C_Timer.After(0, function()
-        if popup.IsShown and popup:IsShown() then
-            Assist:RefreshPopupTarget(popup, pending)
-            Assist:PlacePopup(popup, pending)
-        end
-    end)
 end
 
 function Assist:InstallLayoutHook(popup)
@@ -174,33 +189,46 @@ function Assist:InstallLayoutHook(popup)
     popup.yiboAutoOpenLayoutHooked = true
     hooksecurefunc(popup, "SetPoint", function(frame)
         local pending = frame.yiboAutoOpenBindPending
-        if pending and not frame.yiboAutoOpenPlacing then
-            -- This is event-driven: repair only an actual later SetPoint from
-            -- another layout owner, rather than repeatedly polling the frame.
-            Assist:ScheduleLayoutConfirmation(frame, pending)
+        if pending and frame.which == POPUP_KIND and not frame.yiboAutoOpenPlacing then
+            -- Repair the anchor in the same call, before a default-position
+            -- frame can be drawn. A timer here leaves a visible one-frame jump.
+            Assist:RefreshPopupTarget(frame, pending)
+            Assist:PlacePopup(frame, pending)
         end
     end)
+    if popup.Resize then
+        hooksecurefunc(popup, "Resize", function(frame)
+            local pending = frame.yiboAutoOpenBindPending
+            if pending and frame.which == POPUP_KIND then
+                Assist:RefreshPopupTarget(frame, pending)
+                Assist:PlacePopup(frame, pending)
+            end
+        end)
+    end
 end
 
 function Assist:PreparePopup(popup, pending)
     if not IsPositionAssistEnabled() then return end
-    if popup.yiboAutoOpenBindPending == pending then return true end
+    if popup.yiboAutoOpenBindPending == pending then
+        self:RefreshPopupTarget(popup, pending)
+        self:PlacePopup(popup, pending)
+        return true
+    end
     local point, relativeTo, relativePoint, x, y = popup:GetPoint(1)
     if point then popup.yiboAutoOpenOriginalPoint = { point, relativeTo, relativePoint, x, y } end
+    -- Modern game dialogs normally resize after Show. Complete that native
+    -- layout while hidden so button offsets and screen clamping are final
+    -- before the first visible frame; retain the native confirmation itself.
+    if popup.Resize and popup.dialogInfo then popup:Resize() end
     self:RefreshPopupTarget(popup, pending)
     popup.yiboAutoOpenBindPending = pending
     pending.awaitingBindConfirmation, pending.awaitingBindEvent = true, nil
     self:Disarm(pending)
     self:PlacePopup(popup, pending)
     self:InstallLayoutHook(popup)
-    self:ScheduleLayoutConfirmation(popup, pending)
 
     if not popup.yiboAutoOpenBindHooks then
         popup.yiboAutoOpenBindHooks = true
-        popup:HookScript("OnShow", function(frame)
-            local active = frame.yiboAutoOpenBindPending
-            if active then Assist:ScheduleLayoutConfirmation(frame, active) end
-        end)
         popup:HookScript("OnHide", function(frame) Assist:HandlePopupHidden(frame) end)
         local button1, button2 = GetPopupButton(popup, 1), GetPopupButton(popup, 2)
         if button1 then button1:HookScript("OnClick", function() Assist:OnChoice(popup, true) end) end
@@ -209,21 +237,43 @@ function Assist:PreparePopup(popup, pending)
     return true
 end
 
+function Assist:HandlePopupPosition(popup)
+    if not popup or popup.which ~= POPUP_KIND then return end
+    local pending = popup.yiboAutoOpenBindPending or GetBindCandidate()
+    if pending then self:PreparePopup(popup, pending) end
+end
+
+function Assist:InstallShowHooks()
+    for index = 1, POPUP_COUNT do
+        local popup = _G["StaticPopup" .. index]
+        if popup and not popup.yiboAutoOpenShowHooked and popup.HookScript then
+            popup.yiboAutoOpenShowHooked = true
+            -- Install before the first bind dialog appears. Moving from an
+            -- OnShow hook keeps the native default anchor from reaching a
+            -- rendered frame before StaticPopup_Show's post-hook can run.
+            popup:HookScript("OnShow", function(frame)
+                if frame.which ~= POPUP_KIND then return end
+                local pending = frame.yiboAutoOpenBindPending or GetBindCandidate()
+                if pending then Assist:PreparePopup(frame, pending) end
+            end)
+        end
+    end
+end
+
 function Assist:HandleStaticPopupShow(which)
     if which ~= POPUP_KIND then return end
-    local pending = Addon.runtime.bindConfirmCandidate
-    if not pending then return end
     local popup = GetVisibleBindPopup()
+    local pending = popup and popup.yiboAutoOpenBindPending or GetBindCandidate()
+    if not pending then return end
     if popup then self:PreparePopup(popup, pending) end
 end
 
 function Assist:HandleLootBindConfirm()
-    local pending = Addon.runtime.bindConfirmCandidate
-    if not pending and Addon.runtime.confirmLootSourceKey then
-        pending = { source = Addon.runtime.confirmLootSourceKey, lootSlot = Addon.runtime.pandariaDarkSoilLoot }
-        Addon.runtime.bindConfirmCandidate = pending
-    end
+    local popup = GetVisibleBindPopup()
+    if popup and popup.yiboAutoOpenBindPending then return end
+    local pending = GetBindCandidate()
     if not pending then return end
+    if popup then self:PreparePopup(popup, pending); return end
     local function Attach()
         if Addon.runtime.bindConfirmCandidate ~= pending then return end
         local popup = GetVisibleBindPopup()
@@ -282,7 +332,12 @@ function Assist:ClearLootSource()
 end
 
 if hooksecurefunc then
-    -- This runs after Blizzard (and earlier-loaded UI addons) finish showing
-    -- and anchoring the LOOT_BIND popup, rather than racing their event work.
+    -- Blizzard calls this after Init and before Show. The hook receives the
+    -- dialog directly and also works when the frames were created after us.
+    if StaticPopup_SetUpPosition then
+        hooksecurefunc("StaticPopup_SetUpPosition", function(popup) Assist:HandlePopupPosition(popup) end)
+    end
     hooksecurefunc("StaticPopup_Show", function(which) Assist:HandleStaticPopupShow(which) end)
 end
+
+Assist:InstallShowHooks()

@@ -1,6 +1,6 @@
 local Addon = _G.YiboAutoOpen or {}
 _G.YiboAutoOpen = Addon
-Addon.NAME, Addon.VERSION = "YiboAutoOpen", "1.2.1"
+Addon.NAME, Addon.VERSION = "YiboAutoOpen", "1.2.2"
 Addon.runtime = { initialized = false, loggedIn = false, startupScansStarted = false, worldLoading = false, recoveryUntil = nil, queueState = "IDLE", pauseReason = nil, generation = 0, pending = nil, scanQueued = false, candidateQueue = {}, candidateSet = {}, deferredScanGeneration = 0, worldScanGeneration = 0, quarantined = {}, quarantineReasons = {}, quarantineTokens = {}, failures = {}, warned = {}, sensitiveFrames = {}, pandariaDarkSoilLoot = nil, confirmLootSourceKey = nil, recentConfirmObjects = {}, recentConfirmObjectOrder = {} }
 
 function Addon:Print(message, level)
