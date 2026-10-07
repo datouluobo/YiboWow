@@ -125,7 +125,7 @@ function Theme:GetCharacterMatrixColumnWidth(context, characters)
     local maximum = self:MeasureText(self.Font.assist, "字字字字字字")
     local identity = minimum
     for _, character in ipairs(characters or (context and context.characters) or {}) do
-        local name = tostring(character and character.name or "未知角色")
+        local name = Core.Characters:FormatName({ name = tostring(character and character.name or "未知角色") })
         identity = math.max(identity, math.min(maximum, self:MeasureText(self.Font.assist, name)))
         -- In the cross-realm projection the realm is rendered on the second
         -- line. Reserve enough of the same 4–6 glyph budget for that smaller
@@ -146,11 +146,12 @@ function Theme:GetCharacterRowHeaderWidth(withProfessionIcon, context, character
     local maximum = self:MeasureText(self.Font.body, "字字字字字字")
     local identity = minimum
     for _, character in ipairs(characters or (context and context.characters) or {}) do
-        local name = tostring(character and character.name or "未知角色")
+        local name = Core.Characters:FormatName({ name = tostring(character and character.name or "未知角色") })
         identity = math.max(identity, math.min(maximum, self:MeasureText(self.Font.body, name)))
         if context and context.scope == "all" then
             local realm = tostring(character and character.realm or "未知服务器")
-            identity = math.max(self:MeasureText(self.Font.body, identity), self:MeasureText(self.Font.body, name .. "-" .. realm))
+            local fullName = Core.Characters:FormatName({ name = name, realm = realm }, { realmMode = "full" })
+            identity = math.max(identity, self:MeasureText(self.Font.body, fullName))
         end
     end
     local width = identity + self.Table.cellPadding * 2
@@ -309,7 +310,10 @@ end
 
 function Theme:SetCharacterHeader(header, character, context, options)
     options = options or {}
-    local name = options.name or (Core.Characters and Core.Characters:GetDisplayName(character, options.nameMode or "short")) or (character and character.name) or "未知角色"
+    local identity = { id = character and character.id, name = character and character.name or "未知角色", realm = options.realm or (character and character.realm) or "未知服务器" }
+    -- Legacy header mode "full" means the original name, without a realm.
+    -- Explicit name overrides keep taking precedence for existing consumers.
+    local name = options.name or Core.Characters:FormatName(identity, { nameMode = (options.nameMode == nil or options.nameMode == "short") and "short" or "original" })
     local realm = options.realm or (character and character.realm) or "未知服务器"
     local class = options.class or (character and character.class)
     local color = options.color or (class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class]) or self.Colors.text
@@ -320,7 +324,7 @@ function Theme:SetCharacterHeader(header, character, context, options)
     -- a leading hyphen wastes one glyph of the narrow account-matrix column.
     options.secondary = showRealm and tostring(realm) or nil
     self:SetMatrixHeader(header, tostring(name), options)
-    local fullName = tostring((character and character.name) or name) .. "-" .. tostring(realm)
+    local fullName = Core.Characters:FormatName({ name = tostring((character and character.name) or name), realm = tostring(realm) }, { realmMode = "full" })
     local lines = {}
     if tostring(name) ~= tostring(character and character.name or name) then
         lines[#lines + 1] = { kind = "pair", label = "短名", value = tostring(name) }

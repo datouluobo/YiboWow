@@ -111,7 +111,7 @@ local function ShowCharacterDeleteConfirmation(characterID)
     if not impact then Core:Print(impactError); return end
     local character = impact.character
     local lines = {
-        "确定删除“" .. tostring(character.name or "未知角色") .. "-" .. tostring(character.realm or "未知服务器") .. "”的插件缓存吗？",
+        "确定删除“" .. Core.Characters:FormatName({ name = tostring(character.name or "未知角色"), realm = tostring(character.realm or "未知服务器") }, { realmMode = "full" }) .. "”的插件缓存吗？",
         "",
         "将删除：",
         "• Core 角色档案",

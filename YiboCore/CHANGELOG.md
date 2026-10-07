@@ -1,5 +1,11 @@
 # YiboCore 更新日志
 
+## 1.7.0
+
+- 公共 API 升至 v8，新增 `character-name-format:1` 与 `Characters:FormatName(identity, options)`，支持原名／自定义短名、同服省略服务器及完整名称，也可格式化目录外联系人。
+- Core 的共享表头、完整身份提示、名称测量、角色档案与设置标签统一接入；旧 GetDisplayName、业务名称覆盖与服务器副标题行为保持兼容。
+- 公共能力迁移台账记录 Core 已提供与业务待接入范围，业务插件后续修改对应显示时逐步接入。
+
 ## 1.6.2
 
 - 新增统一帮助页面，并补充 Yibo 插件目录中的 Mail、Vault 与 Crafting 信息。

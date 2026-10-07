@@ -2,12 +2,13 @@
 
 Yibo WoW 插件的共享运行时、角色档案与账号视图框架。
 
-当前版本 `1.5` 提供：
+当前源码版本 `1.7.0` 提供：
 
 - API 版本与插件注册
 - 能力查询与 Core 内部事件
 - `YiboCoreDB` 的 Schema 版本和迁移
 - 统一角色身份、旧角色键别名与导入接口
+- 公共角色／联系人名称格式化：原名／短名、同服省略服务器与完整名称
 - 通用角色档案：阵营、种族、公会、金钱、已知货币、地点、装等、专精、专业与数据可用性
 - 统一账号视图、角色目录、页面/字段可见性设置
 - 统一角色排序：最近登录、名称、等级、自定义顺序、当前角色置顶与页面级覆盖
@@ -22,6 +23,8 @@ Core 不保存任务、Boss、收藏等业务状态，也不接管业务插件�
 当前能力、数据归属、接入规范与多插件协作约定见：[Core 0.3 统一协作与改造计划](Docs/Core-0.3-统一协作与改造计划.md)。[跨插件账号行动项与角色匹配方案（待实现）](Docs/Core-跨插件账号行动项与角色匹配方案.md)是后续规划，当前 Core 尚未提供此能力。统一角色排序见：[统一角色排序实施计划](Docs/Core-统一角色排序实施计划.md)；缓存角色删除见：[缓存角色删除实施计划](Docs/Core-缓存角色删除实施计划.md)。历史更新记录见：[CHANGELOG.md](CHANGELOG.md)。
 
 ## Public API
+
+公共能力的 Core 实现状态、业务插件接入进度与待迁移范围见：[公共能力迁移台账](Docs/Core-公共能力迁移台账.md)。
 
 ```lua
 local compatible = YiboCore:CheckAPIVersion(6)
@@ -47,3 +50,5 @@ API v6 保持 API v5 向后兼容。`RegisterSettingsPanel` 只向统一设置�
 运行 `_NonRelease/Tools/Build-ReleasePackages.ps1` 会在仓库根目录 `Builds/` 生成两份带顶级 `YiboCore/` 目录的 zip：`*-curseforge.zip` 只包含 TOC、其加载的运行时代码与 `.tga` 纹理；`*-github.zip` 保留文档、截图和其它公开资源，但排除构建输出。`Builds/` 是 YiboWow 全仓库统一的安装包目录。
 
 公共 API v7 新增基础输入、物品解析与选择器，保持 v5/v6 兼容。见 [API v7 物品选择与基础输入](Docs/API-v7-物品选择与基础输入.md)。配套版本为 Core 1.6.1＋Currency 0.9.1。
+
+公共 API v8 新增 `Characters:FormatName(identity, options)` 和 `character-name-format:1`，保持旧 API 与业务表头调用兼容。接入与验证见 [API v8 公共名称格式化](Docs/API-v8-公共名称格式化.md)；当前源码尚未发布，业务插件按迁移台账逐步接入。

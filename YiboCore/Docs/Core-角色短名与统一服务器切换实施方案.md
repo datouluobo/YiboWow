@@ -48,6 +48,8 @@ characterDisplay = {
 
 ### 3.2 公共读取接口
 
+Core 1.7.0 / API v8 已增量提供 [公共名称格式化接口](API-v8-公共名称格式化.md)，统一组合名称与服务器，并支持目录外联系人。下述旧 `GetDisplayName` 接口继续保持原语义；业务插件后续涉及对应显示时按 [迁移台账](Core-公共能力迁移台账.md) 逐步接入新契约。
+
 ```lua
 Core.Characters:GetDisplayName(character, "full")
 Core.Characters:GetDisplayName(character, "short")

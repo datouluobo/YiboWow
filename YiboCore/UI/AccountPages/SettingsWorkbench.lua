@@ -610,7 +610,7 @@ local function RefreshSettings(parent)
                 local orderColumn = math.floor(slot / rowsPerColumn)
                 local orderRow = slot % rowsPerColumn
                 row:ClearAllPoints(); row:SetPoint("TOPLEFT", 2 + orderColumn * (orderWidth + orderGap), -(y + orderRow * 28)); row:SetWidth(orderWidth)
-                row.label:SetText(tostring(orderIndex) .. ". " .. (character.name or "未知角色") .. "-" .. (character.realm or "未知服务器") .. " · " .. tostring(character.level or "?") .. "级")
+                row.label:SetText(tostring(orderIndex) .. ". " .. Core.Characters:FormatName({ name = character.name or "未知角色", realm = character.realm or "未知服务器" }, { realmMode = "full" }) .. " · " .. tostring(character.level or "?") .. "级")
                 local classColor = RAID_CLASS_COLORS and RAID_CLASS_COLORS[character.class or ""]
                 row.label:SetTextColor(classColor and classColor.r or COLORS.text[1], classColor and classColor.g or COLORS.text[2], classColor and classColor.b or COLORS.text[3])
                 row.up:SetState(orderIndex == 1 and "disabled" or "default")
@@ -651,9 +651,9 @@ local function RefreshSettings(parent)
             index = index + 1
             local row = SettingsRow(parent, index, "short-name")
             PlaceSettingsRow(row, y); row:SetWidth(parent.content:GetWidth() or 600)
-            local displayName = Core.Characters:GetDisplayName(character, "short")
+            local displayName = Core.Characters:FormatName(character, { nameMode = "short" })
             local warning = duplicates[displayName] and " · 短名重复" or ""
-            row.label:SetText((character.name or "未知角色") .. "-" .. (character.realm or "未知服务器") .. warning)
+            row.label:SetText(Core.Characters:FormatName({ name = character.name or "未知角色", realm = character.realm or "未知服务器" }, { realmMode = "full" }) .. warning)
             row.input:SetText(displayName == character.name and "" or displayName)
             local characterID = character.id
             local function Save(control)
@@ -663,7 +663,11 @@ local function RefreshSettings(parent)
             end
             row.input:SetScript("OnEnterPressed", function(control) Save(control); control:ClearFocus() end)
             row.input:SetScript("OnEditFocusLost", Save)
-            row.input:SetScript("OnEscapePressed", function(control) control:SetText(Core.Characters:GetDisplayName(character, "short") == character.name and "" or Core.Characters:GetDisplayName(character, "short")); control:ClearFocus() end)
+            row.input:SetScript("OnEscapePressed", function(control)
+                local currentName = Core.Characters:FormatName(character, { nameMode = "short" })
+                control:SetText(currentName == character.name and "" or currentName)
+                control:ClearFocus()
+            end)
             row.clear:SetScript("OnClick", function() Core.Characters:SetShortName(characterID, ""); AccountView:RefreshPage() end)
             row:Show(); y = y + 30
         end

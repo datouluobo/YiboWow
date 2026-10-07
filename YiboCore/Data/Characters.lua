@@ -79,6 +79,44 @@ function Characters:GetDisplayName(character, mode)
     return type(shortName) == "string" and shortName ~= "" and shortName or name
 end
 
+-- Display policy only: never resolve an address, import a contact, or mutate
+-- the supplied identity / display preferences. The reference realm is explicit.
+function Characters:FormatName(identity, options)
+    if type(identity) ~= "table" then return nil, "invalid-identity" end
+    if options ~= nil and type(options) ~= "table" then return nil, "invalid-options" end
+    options = options or {}
+    local nameMode, realmMode = options.nameMode, options.realmMode
+    if nameMode == nil then nameMode = "original" end
+    if realmMode == nil then realmMode = "omit" end
+    if nameMode ~= "original" and nameMode ~= "short" then return nil, "invalid-name-mode" end
+    if realmMode ~= "omit" and realmMode ~= "sameRealm" and realmMode ~= "full" then return nil, "invalid-realm-mode" end
+    if type(identity.name) ~= "string" or identity.name == "" then return nil, "missing-name" end
+    if identity.realm ~= nil and type(identity.realm) ~= "string" then return nil, "invalid-realm" end
+    local name, realm = identity.name, identity.realm
+    if realm == "" then realm = nil end
+    if realmMode == "full" and not realm then return nil, "missing-realm" end
+    local referenceRealm = options.referenceRealm
+    if realmMode == "sameRealm" and (type(referenceRealm) ~= "string" or not referenceRealm:find("%S")) then
+        return nil, "missing-reference-realm"
+    end
+    if nameMode == "short" and type(identity.id) == "string" then
+        -- The caller supplies the Core character ID. Never infer it from a
+        -- contact's name/realm; preferences keep the legacy ID lookup semantics.
+        local db = Core.Database:GetDB()
+        local preferences = db and db.characterDisplay
+        local preference = type(preferences) == "table" and preferences[identity.id]
+        local shortName = type(preference) == "table" and preference.shortName
+        if type(shortName) == "string" and shortName ~= "" then name = shortName end
+    end
+    local showRealm = realmMode == "full"
+    if realmMode == "sameRealm" and realm then
+        -- API realm tokens may omit spaces. Compare tokens without rewriting
+        -- the realm spelling used in the resulting display text.
+        showRealm = realm:gsub("%s+", ""):lower() ~= referenceRealm:gsub("%s+", ""):lower()
+    end
+    return showRealm and (name .. "-" .. realm) or name
+end
+
 function Characters:SetShortName(characterID, value)
     local store = GetStore()
     if type(characterID) ~= "string" or not (store and store.byID[characterID]) then return nil, "角色缓存不存在。" end
@@ -335,3 +373,4 @@ if Core.Events then
 end
 
 Core.Capabilities:Register("characters", 1)
+Core.Capabilities:Register("character-name-format", 1)

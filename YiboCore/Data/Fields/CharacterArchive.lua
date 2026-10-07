@@ -19,7 +19,7 @@ local function ProfessionIcon(value) return value and value.icon end
 local function Register(definition) Core.Fields:Register("YiboCore", definition) end
 
 Register({ id = "character.identity", consumer = "character-archive", domain = "identity", title = "角色", order = 10, width = 210, maxWidth = 260, defaultVisible = true, defaultPreviewVisible = true,
-    Read = function(character) return character end, Format = function(value) return value and tostring(value.name or "未知角色") .. "-" .. tostring(value.realm or "未知服务器") or "—" end,
+    Read = function(character) return character end, Format = function(value) return value and Core.Characters:FormatName({ name = tostring(value.name or "未知角色"), realm = tostring(value.realm or "未知服务器") }, { realmMode = "full" }) or "—" end,
     GetColor = function(_, character) local color = RAID_CLASS_COLORS and RAID_CLASS_COLORS[character.class or ""]; return color and { color.r, color.g, color.b } end })
 Register({ id = "character.level", consumer = "character-archive", domain = "identity", title = "等级", order = 20, width = 42, gapAfter = 12, defaultVisible = true, defaultPreviewVisible = true,
     Read = function(character) return character and character.level end })
