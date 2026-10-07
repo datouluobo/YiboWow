@@ -21,7 +21,7 @@ YiboCore = {
     AccountView = {
         RegisterPage = function(_, addonName, definition)
             assert(addonName == "YiboMail" and definition.id == "mail-inbox")
-            assert(#definition.fields == 23 and definition.previewEnabled)
+            assert(#definition.fields == 22 and definition.previewEnabled)
             local seen = {}; for _, field in ipairs(definition.fields) do
                 assert(not seen[field.id]); seen[field.id] = true
                 if field.group ~= "账号总览" then assert(field.preview == false) end
@@ -47,7 +47,8 @@ end
 local addon = YiboMail
 addon.Frame.scripts.OnEvent(addon.Frame, "ADDON_LOADED", "YiboMail")
 assert(addon.initialized and owner)
-assert(addon.FEATURES.send and not addon.FEATURES.sendAssist and addon.FEATURES.account and not addon.FEATURES.settings)
+assert(addon.FEATURES.send and not addon.FEATURES.sendAssist and addon.FEATURES.account and addon.FEATURES.settings)
+assert(addon.SendRules and addon.RuleSendController and addon.RuleSendUI and addon.SendRulesSettings)
 for _, module in ipairs({ "MailUI", "CacheModel", "CacheUI", "AccountPage" }) do assert(addon[module] ~= nil, module .. " failed to load") end
 assert(addon.Rules == nil and addon.Settings == nil)
 assert(type(addon.GetInboxActions) == "function" and addon:GetInboxPreferences().sort == "inbox")

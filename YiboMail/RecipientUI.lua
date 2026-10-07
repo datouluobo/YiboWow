@@ -8,17 +8,17 @@ function U:Hide()
     self.hoveredSource = nil
     if self.popup then self.popup:Hide(); self.dismiss:Hide() end
     if self.home then self.home:Hide() end
-    self.confirm = nil
+    self.confirm, self.onSelect = nil, nil
 end
 function U:Create()
     if self.popup then return end
     local theme = Addon.Core.UITheme
     self.dismiss = CreateFrame("Button", nil, UIParent)
-    self.dismiss:SetAllPoints(UIParent); self.dismiss:SetFrameStrata("DIALOG"); self.dismiss:SetFrameLevel(990)
+    self.dismiss:SetAllPoints(UIParent); self.dismiss:SetFrameStrata("FULLSCREEN_DIALOG"); self.dismiss:SetFrameLevel(10)
     self.dismiss:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     self.dismiss:SetScript("OnClick", function() U:Hide() end)
     local p = CreateFrame("Frame", "YiboMailRecipientPopup", UIParent, "BackdropTemplate"); self.popup = p
-    p:SetFrameStrata("DIALOG"); p:SetFrameLevel(995); p:SetClampedToScreen(true); p:EnableMouse(true)
+    p:SetFrameStrata("FULLSCREEN_DIALOG"); p:SetFrameLevel(20); p:SetClampedToScreen(true); p:EnableMouse(true)
     p:SetBackdrop(BACKDROP); p:SetBackdropColor(unpack(theme.Colors.bg)); p:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
     if _G.UISpecialFrames then table.insert(UISpecialFrames, "YiboMailRecipientPopup") end
     p:SetScript("OnHide", function() U.dismiss:Hide(); if U.home then U.home:Hide() end; U.confirm = nil; p.search:ClearFocus() end)
@@ -95,7 +95,7 @@ function U:ShowSources(x, y, width)
     if not home then
         local theme = Addon.Core.UITheme
         home = CreateFrame("Frame", nil, UIParent, "BackdropTemplate"); self.home = home
-        home:SetFrameStrata("DIALOG"); home:SetFrameLevel(995); home:SetClampedToScreen(true); home:EnableMouse(true)
+        home:SetFrameStrata("FULLSCREEN_DIALOG"); home:SetFrameLevel(20); home:SetClampedToScreen(true); home:EnableMouse(true)
         home:SetBackdrop(BACKDROP); home:SetBackdropColor(unpack(theme.Colors.bg)); home:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
         home.title = theme:CreateButton(home, 180, "‹ 通讯录"); home.title:SetHeight(ROW)
         home.title:SetPoint("TOPLEFT", GAP, -GAP)
@@ -141,8 +141,9 @@ function U:HoverSource(control)
     end
     if _G.C_Timer and C_Timer.After then C_Timer.After(0.15, Open) else Open() end
 end
-function U:Open(anchor, slot)
+function U:Open(anchor, slot, onSelect)
     self:Create(); self:Hide()
+    self.onSelect = onSelect
     self.anchor, self.slot, self.source, self.realm, self.realmMode, self.page = anchor, slot, nil, nil, nil, 1
     self.popup.search:SetText(""); self.dismiss:Show(); self.popup:Show(); self:Refresh()
 end
@@ -198,7 +199,9 @@ function U:Select(entry)
         local entries = self:Entries(); local available = false
         for _, current in ipairs(entries) do if current.address and R:Key(current.address) == R:Key(entry.address) then available = true; break end end
         if not available then self:Refresh(); return end
-        if self.slot then
+        if self.onSelect then
+            local callback = self.onSelect; self:Hide(); callback(entry.address); return
+        elseif self.slot then
             local ok = R:SetShortcut(self.slot, entry.address, entry.label)
             if not ok then return end
         else

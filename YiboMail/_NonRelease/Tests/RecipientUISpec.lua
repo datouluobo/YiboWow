@@ -102,6 +102,7 @@ A.ViewModel = { Escape = function(_, s) return s end }
 A.db = { contacts = { { address = 'First-Realm' }, { address = 'Second-Other' } } }
 local attachments, sends = {}, 0
 A.Compose = { GetAttachments = function() return attachments end }
+A.Compose.GetBodyEditBox = function() return MailEditBox and MailEditBox:GetEditBox() or SendMailBodyEditBox end
 SendMailMailButton:SetScript('OnClick', function(_, button) assert(button == 'LeftButton'); sends = sends + 1 end)
 A.Print = function() end
 function SendMailFrame_Update() end
@@ -266,6 +267,8 @@ Click(picker.cancel); assert(not A.db.quickRecipients[2].icon)
 N:EditShortcutIcon(2); Click(picker.next); Click(picker.buttons[1])
 local selected = picker.selected; Click(picker.confirm)
 assert(A.db.quickRecipients[2].icon == selected and panel.favoriteButtons[2].icon.texture == selected)
+assert(panel.favoriteButtons[2].icon.texCoord[1] == 0.08 and panel.favoriteButtons[2].icon.texCoord[2] == 0.92)
+assert(panel.favoriteButtons[2].icon.points[1][2] == 1 and panel.favoriteButtons[2].icon.points[2][2] == -1)
 assert(SendMailNameEditBox:GetText() == draftAddress)
 N:EditShortcutIcon(2); assert(picker.selected == selected and picker.page > 1)
 Click(picker.auto); Click(picker.confirm); assert(not A.db.quickRecipients[2].icon)

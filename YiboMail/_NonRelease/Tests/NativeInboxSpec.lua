@@ -95,6 +95,7 @@ TakeInboxItem = function(index, slot) assert(index == 1); calls = calls + 1; tak
 GetContainerNumFreeSlots = function() return 10, 0 end
 local stubView = Addon.ViewModel
 dofile("YiboMail/ViewModel.lua")
+local realExpiry = Addon.ViewModel.Expiry
 stubView.ItemBorder, stubView.AttachmentBorder = Addon.ViewModel.ItemBorder, Addon.ViewModel.AttachmentBorder
 Addon.ViewModel = stubView
 dofile("YiboMail/Inbox.lua"); dofile("YiboMail/Queue.lua"); dofile("YiboMail/NativeUI.lua")
@@ -138,7 +139,7 @@ local function Menu(value)
     error("Missing menu action: " .. value)
 end
 Menu("select"); assert(panel.selection["key:money"] and panel.selection["key:1"] and panel.selection["key:2"])
-assert(panel.collect.label:GetText() == "收取（2）", "Attachment count excludes coins and stack quantity")
+assert(panel.collect.label:GetText() == "收取 2", "Attachment count excludes coins and stack quantity")
 assert(panel.rows[1].check:GetCheckState() == "checked")
 Click(panel.rows[1].check); assert(not next(panel.selection) and panel.rows[1].check:GetCheckState() == "unchecked")
 Click(panel.rows[1]); Click(panel.rows[2].check)
@@ -161,7 +162,7 @@ Addon.Scanner.ReadVisible = function() return { changed } end
 Click(panel.collect); assert(panel.notice and calls == 0 and queue.state == "idle")
 Addon.Scanner.ReadVisible = function() return { mail } end
 Menu("clear"); Click(panel.rows[2].check)
-assert(panel.collect.label:GetText() == "收取（1）")
+assert(panel.collect.label:GetText() == "收取 1")
 Click(panel.collect); assert(queue.pending and calls == 1 and takenSlot == 1 and #queue.actions == 1)
 assert(panel.rows[1].summary:IsShown() and panel.expanded.key and not panel.rows[2].check:IsEnabled())
 native:Collect(); assert(calls == 1 and panel.notice)
@@ -245,3 +246,34 @@ group.item = {}; GetItemInfo = function() return nil end
 native:ItemTile(group, 1, 6); assert(tile.borderColor[1] == 0.55 and tile.borderColor[4] == 1)
 print("PASS: checkbox toggle/partial/pooling/hit area/layers/disabled guards; one-click selected-only collection; no automatic all-selection; atomic batch validation; original letter and dropdown operations")
 print("PASS: attachment quality border; link fallback; item data arrival; pooled tile color reset; cropped icon")
+-- A complete seven-column row consumes the usable width, at multiple panel sizes.
+local gridGroups = {}
+panel = native.inbox
+-- WoW frame geometry is separate from Lua metadata such as panel.width.
+panel.GetWidth = function(control) return control.viewportWidth end
+for index = 1, 8 do gridGroups[index] = { item = { name = 'Grid ' .. index }, quantity = 1, sources = {} } end
+Addon.ViewModel.GetGroups = function() return gridGroups end
+Addon.Queue.state, Addon.Queue.pending = 'idle', nil
+MailFrame:Show(); InboxFrame:Show(); panel:Show()
+panel.mode, panel.options.search, panel.notice = 'items', 'grid', nil
+for _, width in ipairs({ 340, 420 }) do
+    panel.viewportWidth = width; panel.scroll:SetWidth(width - 16)
+    native:RefreshInbox()
+    local usable = width - 16 - Addon.Core.UITheme.Geometry.scrollbarGutter
+    local lastTile = panel.tiles[7]
+    assert(math.abs(lastTile.points[1][2] + lastTile:GetWidth() - usable) < 0.001, tostring(lastTile.points[1][2]) .. ' + ' .. lastTile:GetWidth() .. ' vs ' .. usable)
+    assert(panel.tiles[1]:GetWidth() == lastTile:GetWidth())
+    assert(panel.tiles[8].points[1][2] == 0 and panel.tiles[8].points[1][3] < 0)
+    assert(panel.status.points[1][4] == 8 and panel.status.points[2][2] == panel.menu)
+end
+panel.mode = 'mail'; native:RefreshInbox()
+assert(panel.status.points[1][4] == 32 and panel.status.points[2][2] == panel.collect)
+assert(panel.collect:GetHeight() == Addon.Core.UITheme.Size.compact)
+print('PASS: attachment grid fills seven-column width with scrollbar gutter; responsive tile sizing; single-row inbox/attachment footers')
+local expiryNow = 1000
+Addon.Now = function() return expiryNow end
+assert(realExpiry(Addon.ViewModel, { expiresAtEstimate = expiryNow + 29.6 * 86400 }) == '29.6 天')
+assert(realExpiry(Addon.ViewModel, { expiresAtEstimate = expiryNow + 2 * 3600 }) == '2.0 小时')
+assert(realExpiry(Addon.ViewModel, {}) == '期限未知')
+assert(realExpiry(Addon.ViewModel, { expiresAtEstimate = expiryNow - 1 }) == '到期待核实')
+print('PASS: expiry numbers without approximation prefix; hourly, unknown and expired states retained')

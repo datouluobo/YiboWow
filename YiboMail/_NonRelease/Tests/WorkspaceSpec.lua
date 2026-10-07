@@ -236,8 +236,8 @@ Click(root.detailRows[2]); assert(inbox.detail.type == "mail" and inbox.detailRe
 Click(root.back); assert(inbox.detail.type == "item")
 Click(root.back); assert(inbox.detail == nil)
 Click(root.tabs.buttons.overview); assert(root.total == 2)
-assert(root.overview.mailRows[2].cells[3]:GetText() == "5", "Overview uses the shared attachment quantity")
-Click(root.overview.mailRows[3].links[1]); assert(state.tab == "inbox" and inbox.character == "B" and inbox.risk == "expired" and root.total == 1)
+assert(root.overview.mailRows[1].cells[3]:GetText() == "2", "Overview counts attachment slots independently of stack quantity")
+Click(root.overview.mailRows[2].links[1]); assert(state.tab == "inbox" and inbox.character == "B" and inbox.risk == "expired" and root.total == 1)
 Click(root.back); assert(state.tab == "overview")
 inbox = state.inbox -- Return restores an independent snapshot of the prior inbox state.
 local previewContext = { characters = { a, b }, preview = true, GetFieldVisible = function(_, id) return Addon.db.settings.previewColumns[id] == true end }
@@ -276,7 +276,7 @@ Click(root.historyCharacter); Click(root.historyCharacter.menu.next)
 assert(root.historyCharacter.menu.buttons[1].option.value == "Many6")
 Click(root.historyCharacter.menu.buttons[1]); assert(state.history.character == "Many6" and root.total == 1)
 Click(root.tabs.buttons.overview); assert(root.total == 25 and root.pageCount > 1)
-Click(root.next); assert(state.overview.page == 2 and root.overview.mailRows[2].cells[1]:GetText() == "角色17")
+Click(root.next); assert(state.overview.page == 2 and root.overview.mailRows[1].cells[1]:GetText() == "角色" .. (root.overview.capacity - 1))
 -- Real Core scrollbars must follow hidden viewports and retain their offsets.
 Click(root.tabs.buttons.inbox); root.search:InputText("Many"); Click(root.mail)
 assert(root.list.ScrollBar:IsShown() and root.owners.ScrollBar:IsShown())
@@ -293,6 +293,14 @@ Click(root.tabs.buttons.history)
 assert(not root.owners.ScrollBar:IsShown(), "Hidden role sidebar must hide its sibling scrollbar")
 root.owners:UpdateScrollbar(); assert(not root.owners.ScrollBar:IsShown(), "Delayed updates must not resurrect the track")
 Click(root.clear); assert(root.list.ScrollBar:IsShown())
+local historyWidth = host:GetWidth()
+host:SetWidth(360); root.refresh()
+assert(root.panLeft == nil and root.panRight == nil and #root.listLayout.fields == 6)
+assert(root.listContent:GetWidth() == root.list:GetWidth())
+local fittedWidth = 0
+for _, field in ipairs(root.listLayout.fields) do fittedWidth = fittedWidth + field.fittedWidth end
+assert(math.abs(fittedWidth - root.list:GetWidth()) < 0.01)
+host:SetWidth(historyWidth); root.refresh()
 root.list:SetVerticalScroll(76); local historyAnchor = state.history.anchor
 Click(root.tabs.buttons.overview)
 assert(not root.list.ScrollBar:IsShown() and not root.owners.ScrollBar:IsShown())
@@ -350,6 +358,50 @@ local multi = YiboCore.UITheme:CreateMultiSelectDropdown(host, 180, {
 multi.groupSelector.onValueChanged("History"); multi.menu:Show(); Click(multi.menu.checks[1])
 assert(selections.y and selections.x and multi.label:GetText() == "字段 2/2")
 -- Reloading state module models /reload: no persisted search or active tab.
+local historyFields = {}
+for _, field in ipairs(Addon.AccountPage.Fields) do
+    if field.group == '历史记录' then
+        assert(field.key ~= 'event')
+        historyFields[#historyFields + 1] = field
+        if field.key == 'result' then assert(field.title == '事件/结果') end
+    end
+end
+assert(#historyFields == 6)
+local shortHistory = { character = a, time = now, counterpart = 'Target', subject = 'Short', event = '首次发现', result = '首次发现', state = 'discovered', record = {}, items = { Item(100, 2) }, money = 0 }
+local longHistory = Addon.Copy(shortHistory)
+longHistory.subject = string.rep('较长的多行主题', 12)
+longHistory.items = { Item(100, 2), Item(101, 3), Item(102, 4), Item(103, 5) }
+local historyRoot = Frame(host)
+local offsets, heights, total, fittedWidth = Addon.CacheUI:HistoryLayout(historyRoot, historyFields, 1000, { shortHistory, longHistory })
+assert(heights[2] == 38 and heights[1] == 38 and offsets[2] == 38 and total == 76 and fittedWidth == 1000)
+for _, width in ipairs({ 320, 1000, 1200, 1800 }) do
+    local columns = Addon.Copy(historyFields)
+    Addon.CacheUI:HistoryLayout(historyRoot, columns, width, { shortHistory, longHistory })
+    local totalWidth = 0
+    for _, field in ipairs(columns) do
+        totalWidth = totalWidth + field.fittedWidth
+        if field.key == 'subject' then assert(field.fittedWidth <= 240) end
+        if field.key == 'content' then assert(field.fittedWidth <= 280) end
+    end
+    assert(#columns == 6 and math.abs(totalWidth - width) < 0.01)
+end
+local cappedOnly = { Addon.Copy(historyFields[4]), Addon.Copy(historyFields[5]) }
+Addon.CacheUI:HistoryLayout(historyRoot, cappedOnly, 1800, { longHistory })
+assert(cappedOnly[1].fittedWidth <= 240 and cappedOnly[2].fittedWidth <= 280)
+local recordIndex, recordTop = Addon.CacheUI:ListIndex({ offsets = offsets, heights = heights }, offsets[2] + 10)
+assert(recordIndex == 2 and recordTop == offsets[2])
+local historyValues = Addon.CacheUI:HistoryValues(shortHistory)
+assert(not historyValues.character:find(a.realm, 1, true) and historyValues.result == '首次发现')
+shortHistory.character = b
+assert(Addon.CacheUI:HistoryValues(shortHistory).character:find(b.realm, 1, true))
+local historyRow = Frame(historyRoot)
+Addon.CacheUI:TableRow(historyRoot, historyRow, historyFields, historyValues, 1000, heights[1] - 2)
+historyRow.iconHover:Fire('OnEnter'); assert(GameTooltip.link == 'item:100')
+shortHistory.items, shortHistory.money = {}, 120000
+historyValues = Addon.CacheUI:HistoryValues(shortHistory)
+assert(historyValues.icon == nil and historyValues.content:find('金币', 1, true) and not historyValues.content:find('\n', 1, true))
+Addon.CacheUI:TableRow(historyRoot, historyRow, historyFields, historyValues, 1000, heights[1] - 2)
+print('PASS: fixed single-line history; capped subject/content widths and all columns fit narrow/wide viewports; same-realm short names; item tooltips and text-only gold')
 assert(Addon.db.settings.inbox == nil and Addon.db.workspace == nil)
 dofile("YiboMail/WorkspaceState.lua"); assert(Addon.WorkspaceState:Get().tab == "inbox" and Addon.WorkspaceState:Get().history.search == "")
 local legacy = { state = "in-transit", recipient = "Legacy", observedAt = now }
@@ -376,7 +428,7 @@ YiboCore.AccountView._pages[definition.id] = definition
 assert(YiboCore.AccountView:GetFieldVisible(definition.id, "backlog") == false)
 assert(YiboCore.AccountView:GetFieldVisible(definition.id, "alert") == true)
 assert(YiboCore.AccountView:GetFieldVisible(definition.id, "backlog", { backlog = true }) == true)
-assert(#YiboCore.AccountView:GetVisibleFields(definition.id) == 22)
+assert(#YiboCore.AccountView:GetVisibleFields(definition.id) == 21)
 assert(#YiboCore.AccountView:GetVisibleFields(definition.id, definition.GetPreviewFields()) == 6)
 -- Queued geometry refreshes must respect visibility without clearing offsets.
 local callbacks = {}
@@ -404,3 +456,37 @@ assert(workbench.scroll.ScrollBar:IsShown() and workbench.scroll.scrollRange > 0
 workbench.scroll:SetHeight(600); settingsPage.Refresh(workbench)
 assert(not workbench.scroll.ScrollBar:IsShown() and workbench.scroll:GetVerticalScroll() == 0)
 print("PASS: workspace tabs, global scoped search, role navigation, runtime-only state, shared overview/hover, continuous scrolling, COD icon variants, factual history and Core grouped fields")
+
+-- Exercise the actual Core shell's clamping, not a copy of its calculation.
+for _, name in ipairs({ "SetMovable", "SetResizable", "SetResizeBounds", "SetClampedToScreen", "RegisterForDrag", "StopMovingOrSizing", "SetAttribute", "SetFrameRef" }) do
+    methods[name] = function() end
+end
+function methods:SetClampRectInsets(...) self.clampInsets = { ... } end
+function methods:StartMoving() self.moving = true end
+function methods:GetEffectiveScale() return 2 end
+function methods:GetLeft() return 100 end
+function methods:GetTop() return 800 end
+local cursorX, cursorY = 400, 1400
+function GetCursorPosition() return cursorX, cursorY end
+local combat = false
+function InCombatLockdown() return combat end
+function RegisterStateDriver() end
+local shell = YiboCore.AccountView:CreateFrame()
+shell:Fire('OnSizeChanged', 960, 880)
+assert(shell.clampInsets[4] == 880 - YiboCore.UITheme.Geometry.titleBar)
+UIParent:SetSize(1600, 1000); shell:SetSize(960, 880); shell:Show()
+shell:Fire('OnDragStart'); assert(shell.windowDrag and not shell.moving)
+cursorX, cursorY = 480, 1280; shell:Fire('OnUpdate', 0.016)
+assert(shell.points[1][4] == 140 and shell.points[1][5] == 740, 'Track both cursor axes using effective UI scale')
+shell:Fire('OnDragStop'); assert(not shell.windowDrag and not shell:GetScript('OnUpdate'))
+assert(YiboCore.AccountView:GetSettings().x == 140 and YiboCore.AccountView:GetSettings().y == 740)
+shell.preview = true; shell:Fire('OnSizeChanged', 960, 880)
+assert(shell.clampInsets[4] == 0, 'Hover previews retain full-frame clamping')
+combat = true; shell.preview = false; shell:Fire('OnSizeChanged', 960, 880)
+assert(shell.clampInsets[4] == 0, 'Do not mutate protected clamp geometry in combat')
+combat = false; shell:Fire('OnSizeChanged', 960, 720)
+assert(shell.clampInsets[4] == 720 - YiboCore.UITheme.Geometry.titleBar)
+print('PASS: tall Core shell can move vertically with reachable title; full preview clamp and combat guard')
+shell:Fire('OnDragStart'); shell:Hide()
+assert(not shell.windowDrag and not shell:GetScript('OnUpdate'), 'Hide releases cursor tracking')
+print('PASS: scaled mouse tracking, saved final anchor, and drag cleanup')

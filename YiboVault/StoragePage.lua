@@ -5,6 +5,7 @@ local Colors = Theme.Colors
 local StoragePage = {}
 Addon.StoragePage = StoragePage
 local CELL_SIZE, CELL_GAP, CELL_MIN_COLUMN_GAP = 42, 5, 3
+local ITEM_ROW_HEIGHT, ITEM_ROW_OVERSCAN = CELL_SIZE + CELL_GAP, 2
 local OWNER_HEIGHT = 42
 local OWNER_WIDTH, CONTENT_LEFT = 190, 217
 
@@ -14,6 +15,7 @@ local CHARACTER_AREAS = {
     { id = "equipment", label = "装备" },
 }
 local GUILD_TAB_COUNT = 8
+local itemNameCache = {}
 local EQUIPMENT_SLOTS = {
     INVTYPE_HEAD = true, INVTYPE_NECK = true, INVTYPE_SHOULDER = true,
     INVTYPE_CHEST = true, INVTYPE_ROBE = true, INVTYPE_WAIST = true,
@@ -196,61 +198,36 @@ function StoragePage:Create(parent)
         if event ~= "GET_ITEM_INFO_RECEIVED" or not itemID then return end
         page.pendingItemInfo[itemID] = nil
         if succeeded == false then return end
-        for index = 1, #(page.slots or {}) do
+        for index = 1, #page.itemCells do
             local cell = page.itemCells[index]
             if cell and cell.item and cell.item.itemID == itemID then
-                StoragePage:UpdateItemCell(page, cell, cell.item, index)
+                StoragePage:UpdateItemCell(page, cell, cell.item, cell.slotIndex or index)
             end
         end
     end)
 
-    page.searchBox = CreateFrame("Frame", nil, page, "BackdropTemplate")
-    page.searchBox:SetSize(340, 30)
-    page.searchBox:SetPoint("TOPLEFT", page, "TOPLEFT", CONTENT_LEFT, -10)
-    page.searchBox:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    page.searchBox:SetBackdropColor(unpack(Colors.panel))
-    page.searchBox:SetBackdropBorderColor(unpack(Colors.lineSoft))
-    page.search = CreateFrame("EditBox", nil, page.searchBox)
-    page.search:SetAutoFocus(false)
-    page.search:SetHeight(26)
-    page.search:SetPoint("LEFT", page.searchBox, "LEFT", 9, 0)
-    page.search:SetPoint("RIGHT", page.searchBox, "RIGHT", -30, 0)
-    page.search:SetFont(STANDARD_TEXT_FONT, Theme.Font.assist, "")
-    page.search:SetTextColor(unpack(Colors.text))
-    page.searchHint = Text(page.search, Theme.Font.assist, Colors.muted)
-    page.searchHint:SetPoint("LEFT", page.search, "LEFT", 0, 0)
-    page.searchHint:SetText("搜索账号物品名称 / ID")
-    page.searchClear = Theme:CreateButton(page.searchBox, 22, "X", "secondary")
-    page.searchClear:SetSize(22, 22)
-    page.searchClear.label:SetFont(STANDARD_TEXT_FONT, Theme.Font.assist)
-    page.searchClear:SetPoint("RIGHT", page.searchBox, "RIGHT", -4, 0)
-    page.searchClear:Hide()
-    page.searchClear:SetScript("OnClick", function()
-        page.search:SetText("")
-        page.search:SetFocus()
-    end)
-    page.search:SetScript("OnEditFocusGained", function()
-        page.searchBox:SetBackdropBorderColor(unpack(Colors.accent))
-    end)
-    page.search:SetScript("OnEditFocusLost", function()
-        page.searchBox:SetBackdropBorderColor(unpack(Colors.lineSoft))
-    end)
-    page.search:SetScript("OnEscapePressed", function(control) control:ClearFocus() end)
-    page.search:SetScript("OnEnterPressed", function(control) control:ClearFocus() end)
-    page.search:SetScript("OnTextChanged", function(control)
-        local active = (control:GetText() or ""):match("%S") ~= nil
-        if active and not page.searchActive then
-            page.browseOwner, page.browseArea = page.selectedOwner, page.area
-        elseif not active and page.searchActive then
-            page.selectedOwner, page.area = page.browseOwner, page.browseArea
-        end
-        page.searchActive = active
-        if page.grid then page.grid:SetVerticalScroll(0) end
-        page.searchHint:SetShown((control:GetText() or "") == "")
-        page.searchClear:SetShown((control:GetText() or "") ~= "")
-        StoragePage:Refresh(page, page.context)
-    end)
+    page.search = Theme:CreateInput(page, {
+        width = 340, height = 30, placeholder = "搜索账号物品名称 / ID", clearable = true,
+        OnChanged = function(_, _, control)
+            local active = (control:GetText() or ""):match("%S") ~= nil
+            if active and not page.searchActive then
+                page.browseOwner, page.browseArea = page.selectedOwner, page.area
+            elseif not active and page.searchActive then
+                page.selectedOwner, page.area = page.browseOwner, page.browseArea
+            end
+            page.searchActive = active
+            if page.grid then page.grid:SetVerticalScroll(0) end
+            page.searchRefreshSerial = (page.searchRefreshSerial or 0) + 1
+            local serial = page.searchRefreshSerial
+            C_Timer.After(0.15, function()
+                if page.ready and page.searchRefreshSerial == serial then
+                    StoragePage:Refresh(page, page.context)
+                end
+            end)
+        end,
+    })
+    page.search:SetPoint("TOPLEFT", page, "TOPLEFT", CONTENT_LEFT, -10)
+    page.searchBox, page.searchHint, page.searchClear = page.search, page.search.placeholder, page.search.clearButton
     page.showHidden = Theme:CreateCheckbox(page, "显示隐藏公会")
     page.showHidden:SetPoint("TOPLEFT", page, "TOPLEFT", 12, -8)
     page.showHidden:SetWidth(OWNER_WIDTH)
@@ -315,6 +292,7 @@ function StoragePage:Create(parent)
     page.itemsContent:SetSize(1, 1)
     page.grid:SetScrollChild(page.itemsContent)
     page.grid:HookScript("OnSizeChanged", function() StoragePage:LayoutCells(page) end)
+    page.grid:HookScript("OnVerticalScroll", function() StoragePage:LayoutCells(page) end)
     page.empty = Text(page.grid, Theme.Font.assist, Colors.muted)
     page.empty:SetPoint("TOPLEFT", 8, -8)
     page.empty:SetPoint("RIGHT", -8, 0)
@@ -418,17 +396,33 @@ function StoragePage:LayoutCells(page)
     local width = math.max(1, page.grid:GetWidth() or 1)
     local columns = self:GetGridColumns(width)
     page.itemsContent:SetWidth(width)
-    for index = 1, #slots do
-        local cell = page.itemCells[index] or CreateItemCell(page, index)
-        local record = slots[index]
-        self:UpdateItemCell(page, cell, record, index)
-        cell:ClearAllPoints()
-        cell:SetPoint("TOPLEFT", page.itemsContent, "TOPLEFT",
-            self:GetGridColumnOffset(width, columns, ((index - 1) % columns) + 1),
-            -2 - math.floor((index - 1) / columns) * (CELL_SIZE + CELL_GAP))
-        cell:Show()
+    local rowCount = math.ceil(#slots / columns)
+    local rowHeight = ITEM_ROW_HEIGHT
+    local viewportHeight = math.max(rowHeight * 6, page.grid:GetHeight() or 0)
+    local scrollTop = math.max(0, page.grid:GetVerticalScroll() or 0)
+    local firstRow = math.max(1, math.floor(scrollTop / rowHeight) + 1 - ITEM_ROW_OVERSCAN)
+    local lastRow = math.min(rowCount,
+        math.ceil((scrollTop + viewportHeight) / rowHeight) + ITEM_ROW_OVERSCAN)
+    local poolIndex = 0
+    for row = firstRow, lastRow do
+        for column = 1, columns do
+            local slotIndex = (row - 1) * columns + column
+            if slotIndex > #slots then break end
+            poolIndex = poolIndex + 1
+            local cell = page.itemCells[poolIndex] or CreateItemCell(page, poolIndex)
+            cell.slotIndex = slotIndex
+            self:UpdateItemCell(page, cell, slots[slotIndex], slotIndex)
+            cell:ClearAllPoints()
+            cell:SetPoint("TOPLEFT", page.itemsContent, "TOPLEFT",
+                self:GetGridColumnOffset(width, columns, column),
+                -2 - (row - 1) * rowHeight)
+            cell:Show()
+        end
     end
-    for index = #slots + 1, #page.itemCells do page.itemCells[index]:Hide() end
+    for index = poolIndex + 1, #page.itemCells do
+        page.itemCells[index].slotIndex = nil
+        page.itemCells[index]:Hide()
+    end
     local contentHeight = self:GetGridContentHeight(#slots, columns)
     page.itemsContent:SetHeight(contentHeight)
     page.grid:SetContentHeight(contentHeight)
@@ -438,8 +432,16 @@ local function MatchRecord(record, needle)
     if needle == "" then return true end
     local id = tostring(record.itemID or "")
     if string.find(id, needle, 1, true) then return true end
-    local name = type(GetItemInfo) == "function" and GetItemInfo(record.itemLink or record.itemID)
-    return name and string.find(string.lower(name), needle, 1, true) ~= nil
+    local itemID = tonumber(record.itemID)
+    local name = itemID and itemNameCache[itemID]
+    if not name and type(GetItemInfo) == "function" then
+        name = GetItemInfo(record.itemLink or record.itemID)
+        if name and itemID then
+            name = string.lower(name)
+            itemNameCache[itemID] = name
+        end
+    end
+    return name and string.find(name, needle, 1, true) ~= nil
 end
 
 local function OwnerKey(record)
@@ -481,15 +483,26 @@ function StoragePage:Refresh(host, context)
     local scope = Scope(characters)
     local guildOptions = { includeHiddenGuilds = page.showHiddenGuilds == true,
         guildKey = page.explicitGuildKey }
-    local summary = Addon.Items:GetStorageSummary(scope, guildOptions)
-    local query = Addon.Items:Query({ scope = scope, includeHiddenGuilds = guildOptions.includeHiddenGuilds,
-        guildKey = guildOptions.guildKey })
+    local revision = Addon.Items:GetRevision()
+    local cacheKey = table.concat({ tostring(revision), table.concat(scope.characterIDs, "\030"),
+        guildOptions.includeHiddenGuilds and "1" or "0", guildOptions.guildKey or "" }, "\031")
+    local snapshot = page.searchSnapshot
+    if not snapshot or snapshot.key ~= cacheKey then
+        snapshot = {
+            key = cacheKey,
+            summary = Addon.Items:GetStorageSummary(scope, guildOptions),
+            query = Addon.Items:Query({ scope = scope, includeHiddenGuilds = guildOptions.includeHiddenGuilds,
+                guildKey = guildOptions.guildKey }),
+            auctionStates = Addon.Items:GetSourceState("auction", scope),
+        }
+        page.searchSnapshot = snapshot
+    end
+    local summary, query, auctionStates = snapshot.summary, snapshot.query, snapshot.auctionStates
     page.showHidden:SetChecked(page.showHiddenGuilds == true)
     local needle = string.lower((page.search:GetText() or ""):match("^%s*(.-)%s*$"))
     local searching = needle ~= ""
     local summaryByID = {}
     for _, entry in ipairs(summary.characters) do summaryByID[entry.characterID] = entry end
-    local auctionStates = Addon.Items:GetSourceState("auction", scope)
     local owners, ownerByKey = {}, {}
 
     for _, character in ipairs(characters) do
@@ -657,7 +670,10 @@ function StoragePage:OpenGuild(guildKey)
         page.showHiddenGuilds = true
         page.selectedOwner = guildKey
         page.area = nil
-        page.search:SetText("")
+        page.search:SetValue("", true)
+        -- The explicit refresh after opening the page supersedes the delayed
+        -- search refresh scheduled by the shared input's change callback.
+        page.searchRefreshSerial = (page.searchRefreshSerial or 0) + 1
     end
     Core.AccountView:ShowPage(Addon.AccountPage.ID)
     page = self.page

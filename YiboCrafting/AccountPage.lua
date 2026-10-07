@@ -360,6 +360,11 @@ function Page:Create(parent)
             Page:RenderResults(parent)
         end
     end)
+    Theme:AttachClearButton(ui.search, { OnClear = function()
+        ui.state.search = ""
+        ui.searchGeneration = (ui.searchGeneration or 0) + 1
+        if ui.search:IsShown() then Page:RenderResults(parent) end
+    end })
     ui.searchHint = Label(ui.toolbar, Theme.Font.assist, C.muted)
     ui.searchHint:SetText("搜索配方、产物或 ID")
     ui.searchHint:SetPoint("LEFT", ui.search, "LEFT", 6, 0)

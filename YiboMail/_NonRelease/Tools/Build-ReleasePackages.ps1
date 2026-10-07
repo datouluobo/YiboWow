@@ -18,6 +18,11 @@ if ($namespace -notmatch 'Addon\.NAME, Addon\.VERSION, Addon\.API_VERSION\s*=\s*
     throw "Unable to read YiboMail Namespace version"
 }
 if ($Matches[1] -ne $version) { throw "YiboMail TOC and Namespace versions differ" }
+if ($namespace -notmatch 'Addon\.NAME, Addon\.VERSION, Addon\.API_VERSION\s*=\s*"YiboMail",\s*"[^"]+",\s*(\d+)') {
+    throw "Unable to read YiboMail API version"
+}
+$apiVersion = [int]$Matches[1]
+if ($version -notmatch "^\d+\.\d+\.\d+-api$apiVersion`$") { throw "YiboMail release version must include the matching API suffix" }
 
 function Add-PackageEntry {
     param([string]$Source, [string]$Relative)
@@ -98,4 +103,4 @@ catch {
     throw
 }
 
-[pscustomobject]@{ Version = $version; CurseForge = $releasePath; GitHub = $githubPath } | Format-List
+[pscustomobject]@{ Version = $version; APIVersion = $apiVersion; CurseForge = $releasePath; GitHub = $githubPath } | Format-List

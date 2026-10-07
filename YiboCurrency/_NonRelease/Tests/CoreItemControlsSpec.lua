@@ -7,10 +7,13 @@ function methods:HookScript(event, callback)
     self.scripts[event] = function(...) if previous then previous(...) end; callback(...) end
 end
 function methods:SetText(text)
+    self.textWrites = (self.textWrites or 0) + 1
+    self.cursor, self.composing = #tostring(text or ""), false
     self.text = text
     if self.scripts.OnTextChanged then self.scripts.OnTextChanged(self, false) end
 end
 function methods:GetText() return self.text or "" end
+function methods:IsInIMECompositionMode() return self.composing == true end
 function methods:SetValue(value) self.value = value end
 function methods:SetSize(width, height) self.width, self.height = width, height end
 function methods:SetWidth(width) self.width = width end
@@ -106,6 +109,35 @@ input:SetValue("2", true); assert(changed == 1)
 input.scripts.OnEditFocusGained(input); input:SetValue("3"); input.scripts.OnEscapePressed(input)
 assert(input:GetText() == "2" and changed == 2)
 input.focused = true; input:Hide(); assert(not input.focused)
+-- The shared control must leave native preedit text/caret intact and only
+-- dispatch committed changes, including clients whose IME flag clears late.
+local committed, submitted = {}, 0
+local imeInput = Core.UITheme:CreateInput(UIParent, {
+    restoreOnEscape = true,
+    OnChanged = function(text, userInput) committed[#committed + 1] = { text, userInput } end,
+    OnSubmit = function() submitted = submitted + 1 end,
+})
+imeInput.focused, imeInput.composing, imeInput.text, imeInput.cursor = true, true, "dyt", 1
+imeInput.scripts.OnTextChanged(imeInput, true)
+local writes = imeInput.textWrites or 0
+imeInput:SetValue("dyt")
+assert(imeInput.composing and imeInput.cursor == 1 and (imeInput.textWrites or 0) == writes and #committed == 0)
+imeInput.scripts.OnEnterPressed(imeInput); imeInput.scripts.OnEscapePressed(imeInput)
+assert(submitted == 0 and imeInput.focused and imeInput:GetText() == "dyt")
+imeInput.text = "矿"; imeInput.scripts.OnTextChanged(imeInput, true)
+assert(#committed == 0)
+imeInput.composing = false; imeInput.scripts.OnUpdate(imeInput, 0)
+assert(#committed == 1 and committed[1][1] == "矿" and committed[1][2] == true)
+imeInput.scripts.OnUpdate(imeInput, 0); assert(#committed == 1)
+imeInput.composing, imeInput.text = true, "dy"
+imeInput.scripts.OnTextChanged(imeInput, false) -- Some native IME events lack the user flag.
+imeInput.composing, imeInput.text = false, "矿石"
+imeInput.scripts.OnTextChanged(imeInput, false)
+assert(#committed == 2 and committed[2][1] == "矿石" and committed[2][2] == true)
+imeInput.composing, imeInput.text = true, "d"
+imeInput.scripts.OnTextChanged(imeInput, true); imeInput:Hide()
+imeInput.composing = false; imeInput.scripts.OnUpdate(imeInput, 0)
+assert(#committed == 2, "Hiding an input discards pending composition notifications")
 
 -- Exercise real Currency business callbacks and storage through the real picker.
 YiboCurrency = { NAME = "YiboCurrency", Catalog = { { itemID = 4, id = "item:4", title = "内置" } },

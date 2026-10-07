@@ -104,7 +104,7 @@ function Core:CreateItemPicker(parent, config)
         end, { retry = retry })
     end
     picker.input = Theme:CreateInput(picker, {
-        placeholder = picker.config.placeholder or "物品 ID、链接或名称", maxLetters = 255,
+        placeholder = picker.config.placeholder or "物品 ID、链接或名称", maxLetters = 255, clearable = true,
         OnChanged = function()
             picker:Invalidate(); picker.selected = nil; picker.candidates = {}; picker.page = 1
             picker:UpdateCandidates(); picker:Feedback("")

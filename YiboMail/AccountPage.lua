@@ -21,12 +21,12 @@ for _, field in ipairs(fields) do pageFields[#pageFields + 1] = field end
 for _, group in ipairs({
     { "收件箱", "inbox", { { "character", "角色", 130 }, { "sender", "发件人", 110 }, { "subject", "主题", 160 },
         { "items", "附件", 160 }, { "amount", "金币/COD", 100 }, { "expiry", "期限", 100 }, { "coverage", "更新状态", 180 } } },
-    { "历史记录", "history", { { "time", "时间", 110 }, { "character", "角色", 130 }, { "event", "事件", 85 },
-        { "counterpart", "对方", 110 }, { "subject", "主题", 140 }, { "content", "附件/金币", 170 }, { "result", "结果", 110 } } },
+    { "历史记录", "history", { { "time", "时间", 120 }, { "character", "角色", 180 },
+        { "counterpart", "对方", 180 }, { "subject", "主题", 240, 240 }, { "content", "附件/金币", 280, 280 }, { "result", "事件/结果", 160 } } },
 }) do
     for _, definition in ipairs(group[3]) do
         pageFields[#pageFields + 1] = { id = group[2] .. "." .. definition[1], key = definition[1], title = definition[2],
-            width = definition[3], group = group[1], preview = false }
+            width = definition[3], maxWidth = definition[4], group = group[1], preview = false }
     end
 end
 Page.Fields, Page.SummaryFields = pageFields, fields
@@ -49,7 +49,7 @@ local function Summary(character)
     local coverage = snapshot.coverage
     local now = Addon:Now()
     local counts = { expired = 0, urgent = 0, soon = 0, unknown = 0, within3Days = 0, within7Days = 0 }
-    local nextExpiry, visibleCount, attachmentQuantity, availableMoney, codCount, backlog = nil, 0, 0, 0, 0, 0
+    local nextExpiry, visibleCount, attachmentSlots, availableMoney, codCount, backlog = nil, 0, 0, 0, 0, 0
     local expiryColorSeverity = 0
 
     local usedMarkers = {}
@@ -58,9 +58,7 @@ local function Summary(character)
         local mail = snapshot.records[key]
         if mail and not Addon.ViewModel:IsCollectedEmptyMail(character.id, mail, usedMarkers) then
             visibleCount = visibleCount + 1
-            for _, item in ipairs(mail.attachments or {}) do
-                attachmentQuantity = attachmentQuantity + (tonumber(item.quantity) or 0)
-            end
+            attachmentSlots = attachmentSlots + #(mail.attachments or {})
             if (tonumber(mail.cod) or 0) <= 0 then
                 availableMoney = availableMoney + (tonumber(mail.money) or 0)
             else codCount = codCount + 1 end
@@ -118,7 +116,7 @@ local function Summary(character)
         realm = character.realm or "",
         class = character.class,
         count = mailCount,
-        attachments = tostring(attachmentQuantity),
+        attachments = tostring(attachmentSlots),
         money = availableMoney > 0 and string.format("%.1f 金", availableMoney / 10000) or "—",
         expires = expires,
         status = status,
@@ -228,8 +226,10 @@ function Page:CreateSummary(parent)
     parent.mailAlert:Hide()
 
     parent.mailScroll = Theme:CreateScrollFrame(parent)
-    parent.mailScroll:SetPoint("TOPLEFT", 8, -32)
     parent.mailScroll:SetPoint("BOTTOMRIGHT", -8, 8)
+    parent.mailHeader = CreateFrame("Frame", nil, parent)
+    parent.mailHeader:SetHeight(24)
+    parent.mailHeaderRow = nil
     parent.mailContent = CreateFrame("Frame", nil, parent.mailScroll)
     parent.mailContent:SetSize(1, 1)
     parent.mailScroll:SetScrollChild(parent.mailContent)
@@ -249,11 +249,14 @@ function Page:RefreshSummary(parent, context)
         parent.mailAlert.title:SetTextColor(color[1], color[2], color[3])
         parent.mailAlert.text:SetText(alert.text)
         parent.mailScroll:ClearAllPoints()
-        parent.mailScroll:SetPoint("TOPLEFT", 8, -36)
+        parent.mailHeader:ClearAllPoints()
+        parent.mailHeader:SetPoint("TOPLEFT", 8, -36)
     else
         parent.mailScroll:ClearAllPoints()
-        parent.mailScroll:SetPoint("TOPLEFT", 8, -10)
+        parent.mailHeader:ClearAllPoints()
+        parent.mailHeader:SetPoint("TOPLEFT", 8, -10)
     end
+    parent.mailScroll:SetPoint("TOPLEFT", parent.mailHeader, "BOTTOMLEFT", 0, -1)
     parent.mailScroll:SetPoint("BOTTOMRIGHT", -8, 8)
     local columns, columnWidths, tableWidth = GetPreviewColumns(context)
     parent.mailColumnsHidden = #columns == 0
@@ -272,19 +275,25 @@ function Page:RefreshSummary(parent, context)
     end
     if #columns == 0 then
         for _, row in ipairs(parent.mailRows) do row:Hide() end
+        if parent.mailHeaderRow then parent.mailHeaderRow:Hide() end
         content:SetSize(1, 1); parent.mailScroll:SetContentHeight(1); return
     end
 
     local function Row(values, header, character)
-        used = used + 1
-        local row = parent.mailRows[used]
+        local row
+        if header then
+            row = parent.mailHeaderRow
+        else
+            used = used + 1
+            row = parent.mailRows[used]
+        end
         if not row then
-            row = CreateFrame("Button", nil, content)
+            row = CreateFrame("Button", nil, header and parent.mailHeader or content)
             row.cells = {}
             row.realmLabels = {}
             row.background = row:CreateTexture(nil, "BACKGROUND")
             row.background:SetAllPoints()
-            parent.mailRows[used] = row
+            if header then parent.mailHeaderRow = row else parent.mailRows[used] = row end
         end
         row:ClearAllPoints()
         row:SetPoint("TOPLEFT", 0, -top)
@@ -374,7 +383,8 @@ function Page:RefreshSummary(parent, context)
             end
         end
         row:Show()
-        top = top + row:GetHeight() + 1
+        if header then parent.mailHeader:SetWidth(tableWidth)
+        else top = top + row:GetHeight() + 1 end
     end
 
     local titles = {}
@@ -627,6 +637,7 @@ function Page:Register()
                 cache.note = note; note:ClearAllPoints()
                 note:SetPoint("TOPLEFT", 12, -98); note:SetPoint("TOPRIGHT", -12, -98); note:SetHeight(48); note:SetWordWrap(true)
                 note:SetText("缩短保留期限时，确认后清理超期记录。")
+                if Addon.SendRulesSettings then return Addon.SendRulesSettings:Host(parent, host, section, cache, width, businessHeight) end
                 return businessHeight + 8 + 156
             end,
         },

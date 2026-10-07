@@ -22,7 +22,7 @@ end
 local MAX_FAVORITE_CONTACTS = 16
 local function Trim(value) return tostring(value or ""):match("^%s*(.-)%s*$") end
 local function NormalizeContactAddress(value)
-    if Addon.Rules then return Addon.Rules:NormalizeAddress(value) end
+    if Addon.Recipients then return Addon.Recipients:Normalize(value) end
     local address = Trim(value)
     if address == "" or address:find("[|\n\r]") then return nil, "请填写有效收件人。" end
     local name, realm = address:match("^([^-]+)%-(.+)$")
@@ -36,7 +36,7 @@ local function NormalizeContactAddress(value)
     return name .. "-" .. realm
 end
 local function ContactAddressKey(value)
-    if Addon.Rules then return Addon.Rules:AddressKey(value) end
+    if Addon.Recipients then return Addon.Recipients:Key(value) end
     return string.lower((tostring(value or "")):gsub("%s", ""))
 end
 function View:Escape(value) return tostring(value or ""):gsub("|", "||") end
@@ -45,7 +45,7 @@ function View:Expiry(mail)
     local expiry = tonumber(mail and mail.expiresAtEstimate)
     if not expiry or expiry <= 0 then return "期限未知" end
     local seconds = expiry - Addon:Now()
-    return seconds <= 0 and "到期待核实" or (seconds < 86400 and string.format("约 %.1f 小时", seconds / 3600) or string.format("约 %.1f 天", seconds / 86400))
+    return seconds <= 0 and "到期待核实" or (seconds < 86400 and string.format("%.1f 小时", seconds / 3600) or string.format("%.1f 天", seconds / 86400))
 end
 function View:ExpiryColor(mail)
     local seconds = (tonumber(mail and mail.expiresAtEstimate) or 0) - Addon:Now()
@@ -142,7 +142,7 @@ function View:GetGroups(context, options)
     return result
 end
 function View:GetContacts()
-    return Addon.Rules:GetRecipients()
+    return Addon.Recipients and Addon.Recipients:Candidates("contacts") or {}
 end
 function View:SaveContact(address, label, oldAddress)
     if Addon.Recipients then return Addon.Recipients:SaveContact(address, label, oldAddress) end

@@ -264,6 +264,45 @@ local function ClampWindowSize(width, height)
     return width, height, minWidth, minHeight, maxWidth, maxHeight
 end
 
+local function UpdateWindowClamp(frame, height)
+    if frame.SetClampRectInsets and not (InCombatLockdown and InCombatLockdown()) then
+        -- Keep the title and close button reachable even for a tall settings
+        -- window. Clamping the entire body can prevent all vertical dragging.
+        frame:SetClampRectInsets(0, 0, 0, frame.preview and 0 or math.max(0, height - Theme.Geometry.titleBar))
+    end
+end
+
+local function FinishWindowDrag(frame)
+    if not frame.windowDrag then return end
+    local previousUpdate = frame.windowDrag.previousUpdate
+    frame.windowDrag = nil; frame:SetScript("OnUpdate", previousUpdate)
+    local point, _, relativePoint, x, y = frame:GetPoint(1)
+    local settings = Settings()
+    settings.point, settings.relativePoint, settings.x, settings.y = point, relativePoint, x, y
+end
+
+local function BeginWindowDrag(frame)
+    if frame.preview or frame.windowDrag or (InCombatLockdown and InCombatLockdown()) then return end
+    local scale = frame:GetEffectiveScale()
+    local cursorX, cursorY = GetCursorPosition()
+    local left, top = frame:GetLeft(), frame:GetTop()
+    if not left or not top then return end
+    frame.windowDrag = { offsetX = cursorX / scale - left, offsetY = cursorY / scale - top,
+        previousUpdate = frame:GetScript("OnUpdate") }
+    frame:SetScript("OnUpdate", function(self, elapsed)
+        local drag = self.windowDrag
+        if not drag then return end
+        if InCombatLockdown and InCombatLockdown() then FinishWindowDrag(self); return end
+        local x, y = GetCursorPosition()
+        local effectiveScale = self:GetEffectiveScale()
+        x, y = x / effectiveScale - drag.offsetX, y / effectiveScale - drag.offsetY
+        x = math.max(0, math.min(x, math.max(0, UIParent:GetWidth() - self:GetWidth())))
+        y = math.max(Theme.Geometry.titleBar, math.min(y, UIParent:GetHeight()))
+        self:ClearAllPoints(); self:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x, y)
+        if drag.previousUpdate then drag.previousUpdate(self, elapsed) end
+    end)
+end
+
 local function SurfaceMetrics(page, context)
     local metrics = { minContentWidth = 582, naturalContentWidth = 942, minContentHeight = 150, naturalContentHeight = 603, fixedLeftWidth = 0, fixedTopHeight = 0, horizontalOverflow = "content", verticalOverflow = "content" }
     local callback = page.GetSurfaceMetrics or page.GetLayoutMetrics
@@ -966,16 +1005,14 @@ function AccountView:CreateFrame()
         if frame.SetMaxResize then frame:SetMaxResize(screenWidth, screenHeight) end
     end
     frame:SetClampedToScreen(true)
+    UpdateWindowClamp(frame, settings.height)
     frame:SetToplevel(true)
     frame:EnableMouse(true)
     frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", frame.StartMoving)
-    frame:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        local point, _, relativePoint, x, y = self:GetPoint(1)
-        settings.point, settings.relativePoint, settings.x, settings.y = point, relativePoint, x, y
-    end)
+    frame:SetScript("OnDragStart", BeginWindowDrag)
+    frame:SetScript("OnDragStop", FinishWindowDrag)
     frame:SetScript("OnSizeChanged", function(self, width, height)
+        UpdateWindowClamp(self, height)
         if not self.preview and width >= 760 and height >= 150 then
             settings.width, settings.height = math.floor(width + 0.5), math.floor(height + 0.5)
             if self._pageSizePage and self._pageSizeContext then
@@ -987,6 +1024,7 @@ function AccountView:CreateFrame()
         if not self.preview then self:Raise() end
     end)
     frame:SetScript("OnHide", function(self)
+        FinishWindowDrag(self)
         if self.scopeBar and self.scopeBar.menu then self.scopeBar.menu:Hide() end
         -- UISpecialFrames closes the frame directly.  A hover preview must
         -- therefore restore its normal shell here as well, otherwise the next
@@ -1013,6 +1051,9 @@ function AccountView:CreateFrame()
     frame.titleBar:SetPoint("TOPRIGHT", -1, -1)
     frame.titleBar:SetHeight(46)
     frame.titleBar:SetFrameLevel(frame:GetFrameLevel() + 10)
+    frame.titleBar:EnableMouse(true); frame.titleBar:RegisterForDrag("LeftButton")
+    frame.titleBar:SetScript("OnDragStart", function() BeginWindowDrag(frame) end)
+    frame.titleBar:SetScript("OnDragStop", function() FinishWindowDrag(frame) end)
     frame.top = frame.titleBar:CreateTexture(nil, "BACKGROUND")
     frame.top:SetAllPoints()
     frame.top:SetColorTexture(COLORS.chrome[1], COLORS.chrome[2], COLORS.chrome[3], COLORS.chrome[4])
@@ -1026,12 +1067,8 @@ function AccountView:CreateFrame()
     frame.identityHit:SetPoint("TOPLEFT", frame.titleBar, "TOPLEFT", 0, 0)
     frame.identityHit:SetPoint("BOTTOMLEFT", frame.titleBar, "BOTTOMLEFT", 0, 0)
     frame.identityHit:SetWidth(1); frame.identityHit:EnableMouse(true); frame.identityHit:RegisterForDrag("LeftButton")
-    frame.identityHit:SetScript("OnDragStart", function() frame:StartMoving() end)
-    frame.identityHit:SetScript("OnDragStop", function()
-        frame:StopMovingOrSizing()
-        local point, _, relativePoint, x, y = frame:GetPoint(1)
-        settings.point, settings.relativePoint, settings.x, settings.y = point, relativePoint, x, y
-    end)
+    frame.identityHit:SetScript("OnDragStart", function() BeginWindowDrag(frame) end)
+    frame.identityHit:SetScript("OnDragStop", function() FinishWindowDrag(frame) end)
     frame.version = AddText(frame.titleBar, "GameFontNormalSmall", Theme.Font.meta, COLORS.muted)
     frame.version:SetPoint("BOTTOMLEFT", frame.title, "BOTTOMRIGHT", 7, 1); frame.version:SetText("v?")
     frame.subtitle = AddText(frame.titleBar, "GameFontNormalSmall", nil, COLORS.muted)
@@ -1460,6 +1497,7 @@ function AccountView:ApplyNormalLayout()
     local frame = self:CreateFrame()
     local settings = Settings()
     frame.preview = false
+    UpdateWindowClamp(frame, frame:GetHeight())
     frame:SetMovable(true)
     frame:EnableMouse(true)
     frame:SetScript("OnEnter", nil)
@@ -1617,6 +1655,7 @@ function AccountView:ShowPreview(pageID, anchor, forceRefresh)
     width = math.max(math.min(metrics.minWidth, safe.width), math.min(width, safe.width))
 
     frame.preview = true
+    UpdateWindowClamp(frame, frame:GetHeight())
     -- The normal window installs a large minimum resize bound.  A hover is
     -- intentionally allowed to shrink to its measured content height.
     if frame.SetResizeBounds then frame:SetResizeBounds(metrics.minWidth, metrics.minHeight, math.max(metrics.minWidth, safe.width), math.max(metrics.minHeight, safe.height))

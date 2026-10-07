@@ -5,6 +5,49 @@ R.sources = Addon.RECIPIENT_SOURCES
 local function Trim(value) return type(value) == "string" and value:match("^%s*(.-)%s*$") or "" end
 function R:Current() return Addon.Core.Characters:GetCurrent() end
 function R:Key(address) return Trim(address):gsub("%s+", ""):lower() end
+function R:GetFaction(address)
+    local normalized = self:Normalize(address)
+    if not normalized then return end
+    local key = self:Key(normalized)
+    for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do
+        if self:Key(character.name .. "-" .. character.realm) == key then
+            if character.faction == "Alliance" or character.faction == "Horde" then return character.faction, "core" end
+            return nil, "core"
+        end
+    end
+    local fact = (Addon.db.recipientFactions or {})[key]
+    if fact and (fact.faction == "Alliance" or fact.faction == "Horde") then return fact.faction, fact.source end
+end
+function R:SetFaction(address, faction)
+    local normalized, err = self:Normalize(address)
+    if not normalized then return nil, err end
+    if faction ~= "Alliance" and faction ~= "Horde" then return nil, "请选择联盟或部落。" end
+    local _, source = self:GetFaction(normalized)
+    if source == "core" then return nil, "账号角色阵营由 Core 登录采集。" end
+    Addon.db.recipientFactions = Addon.db.recipientFactions or {}
+    Addon.db.recipientFactions[self:Key(normalized)] = { faction = faction, source = "confirmed", updatedAt = Addon:Now() }
+    self:Changed()
+    if Addon.SendRules then Addon.SendRules:Changed(true) end
+    return true
+end
+function R:CanRuleSend(address)
+    local current = self:Current()
+    local faction = current and current.faction
+    local target = self:GetFaction(address)
+    if faction ~= "Alliance" and faction ~= "Horde" then return nil, "当前角色阵营待采集" end
+    if not target then return nil, "收件人阵营待确认" end
+    if faction ~= target then return false, "对立阵营，当前角色不适用" end
+    return true
+end
+function R:ObserveSuccessfulMail(address, senderFaction, ordinary)
+    if not ordinary or (senderFaction ~= "Alliance" and senderFaction ~= "Horde") then return end
+    local normalized = self:Normalize(address)
+    if not normalized or self:GetFaction(normalized) then return end
+    Addon.db.recipientFactions = Addon.db.recipientFactions or {}
+    Addon.db.recipientFactions[self:Key(normalized)] = { faction = senderFaction, source = "mail-success", updatedAt = Addon:Now() }
+    self:Changed()
+    if Addon.SendRules then Addon.SendRules:Changed(true) end
+end
 function R:Normalize(value, realm)
     value = Trim(value)
     if value == "" or value:find("[|%c]") then return nil, "请填写有效的角色名或角色名-服务器。" end
@@ -37,6 +80,7 @@ function R:Changed(friends)
 end
 function R:Initialize()
     local db = Addon.db
+    db.recipientFactions = type(db.recipientFactions) == "table" and db.recipientFactions or {}
     db.contacts = db.contacts or {}; db.recentRecipients = db.recentRecipients or {}; db.friendsByCharacter = db.friendsByCharacter or {}
     if db.quickRecipients == nil then
         db.quickRecipients = {}; local seen = {}; self.migrationSkipped = 0
@@ -50,6 +94,16 @@ function R:Initialize()
     end
     db.recipientSchemaVersion = 1
     if Addon.Core.Events then
+        Addon.Core.Events:Register("DATA_DOMAIN_UPDATED", self, function(owner, payload)
+            if not payload or payload.domainID ~= "identity" or owner.factionRefreshPending then return end
+            owner.factionRefreshPending = true
+            local function Refresh()
+                owner.factionRefreshPending = nil
+                if Addon.SendRules then Addon.SendRules:Changed(true) end
+                if Addon.SendRulesSettings then Addon.SendRulesSettings:Refresh() end
+            end
+            if C_Timer and C_Timer.After then C_Timer.After(0, Refresh) else Refresh() end
+        end)
         Addon.Core.Events:Register("CHARACTER_ID_CHANGED", self, function(owner, oldID, newID)
             local snapshots = Addon.db.friendsByCharacter
             local old, new = snapshots[oldID], snapshots[newID]

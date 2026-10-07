@@ -73,3 +73,7 @@ function History:Content(entry)
     if entry.state == "unverified" then parts[#parts + 1] = entry.record.cacheProjection and "曾扫描内容，当前去向待核实" or "内容为操作记录，结果待核实" end
     return #parts > 0 and table.concat(parts, "，") or "无物品或金币"
 end
+function History:Outcome(entry)
+    if entry.state == "in-transit" then return "成功发送 · 在途" end
+    return entry.event == entry.result and entry.event or (entry.event .. " · " .. entry.result)
+end

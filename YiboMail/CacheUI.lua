@@ -17,6 +17,10 @@ local function ColoredName(character)
     return name
 end
 local function Identity(character) return ColoredName(character) .. " · " .. Escape(character.realm) end
+local function HistoryIdentity(character)
+    local current = Core.Characters:GetCurrent()
+    return ColoredName(character) .. (current and current.realm == character.realm and "" or (" · " .. Escape(character.realm)))
+end
 local function Stamp(time) return time and date("%m-%d %H:%M", time) or "时间未知" end
 local function Enable(button, enabled)
     button:SetEnabled(enabled); button:SetState(enabled and "default" or "disabled")
@@ -122,8 +126,8 @@ function UI:Create(parent)
         if root.syncing then return end
         local state = Addon.WorkspaceState:Get()[root.renderedTab]
         local layout = root.listLayout
-        local index = math.floor(offset / layout.pitch) * layout.columns + 1
-        state.scroll, state.anchorOffset = offset, offset % layout.pitch
+        local index, start = UI:ListIndex(layout, offset)
+        state.scroll, state.anchorOffset = offset, offset - start
         state.anchor = root.data[index] and root.data[index].id
     end)
     root.detail = Theme:CreateScrollFrame(root); root.detailContent = CreateFrame("Frame", nil, root.detail); root.detail:SetScrollChild(root.detailContent)
@@ -174,7 +178,7 @@ function UI:Columns(root, prefix, global)
     local columns = {}
     for _, field in ipairs(Addon.AccountPage.Fields) do
         if field.group == ({ inbox = "收件箱", history = "历史记录", attachment = "附件汇总" })[prefix] and root.context:GetFieldVisible(field.id)
-            and not (prefix == "inbox" and field.key == "character" and not global) then columns[#columns + 1] = field end
+            and not (prefix == "inbox" and field.key == "character" and not global) then columns[#columns + 1] = Addon.Copy(field) end
     end
     return columns
 end
@@ -194,8 +198,10 @@ function UI:TableRow(root, row, fields, values, width, height, header)
     local left = 0
     for index, field in ipairs(fields) do
         local cell = row.cells[index] or Text(row, Theme.Font.body); row.cells[index] = cell
-        local cellWidth = width * field.width / math.max(1, total)
+        local cellWidth = field.fittedWidth or width * field.width / math.max(1, total)
         Place(cell, left + 6, 4, cellWidth - 12, height - 8)
+        cell:SetWordWrap(false)
+        cell:SetJustifyV("MIDDLE")
         cell:SetText(header and field.title or values[field.key] or "—")
         cell:SetTextColor(unpack(Theme.Colors.text)); cell:Show()
         if not header and (field.key == "items" or field.key == "content") and values.icon then
@@ -203,6 +209,11 @@ function UI:TableRow(root, row, fields, values, width, height, header)
             Place(row.icon, left + 5, (height - 22) / 2, 22, 22)
             row.icon:SetTexture(values.icon.texture or "Interface\\Icons\\INV_Misc_QuestionMark"); row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92); row.icon:Show()
             Place(cell, left + 31, 4, cellWidth - 37, height - 8)
+            row.iconHover = row.iconHover or CreateFrame("Button", nil, row)
+            Place(row.iconHover, left + 5, (height - 22) / 2, 22, 22)
+            Tooltip(row.iconHover, { values.content or values.items or "", "点击查看邮件内容" }, (values.icon.itemID or values.icon.itemLink) and values.icon or nil)
+            row.iconHover:SetScript("OnClick", function() local click = row:GetScript("OnClick"); if click then click(row) end end)
+            row.iconHover:Show()
         end
         if not header and field.key == "expiry" then
             local color = values.expirySeverity == 2 and Theme.Colors.limitReached or (values.expirySeverity == 1 and Theme.Colors.warning or Theme.Colors.text)
@@ -211,6 +222,61 @@ function UI:TableRow(root, row, fields, values, width, height, header)
         left = left + cellWidth
     end
     for index = #fields + 1, #row.cells do row.cells[index]:Hide() end
+end
+function UI:HistoryValues(value)
+    return { history = true, time = Stamp(value.time), character = HistoryIdentity(value.character), counterpart = Escape(value.counterpart),
+        subject = Escape(value.subject):gsub("[\r\n]+", " "), content = Addon.HistoryModel:Content(value):gsub("[\r\n]+", " "), result = Addon.HistoryModel:Outcome(value),
+        icon = value.items[1] }
+end
+function UI:HistoryLayout(root, fields, width, data)
+    local offsets, heights, total, weight = {}, {}, 0, 0
+    for _, field in ipairs(fields) do
+        field.width = math.max(field.width, Theme:MeasureText(Theme.Font.body, field.title) + 12)
+    end
+    for index, entry in ipairs(data) do
+        local values = self:HistoryValues(entry)
+        for _, field in ipairs(fields) do
+            field.width = math.min(field.maxWidth or math.huge, math.max(field.width, Theme:MeasureText(Theme.Font.body, values[field.key] or "—") + (field.key == "content" and values.icon and 37 or 12) + 2))
+        end
+        offsets[index], heights[index] = total, 38
+        total = total + 38
+    end
+    for _, field in ipairs(fields) do weight = weight + field.width end
+    -- Keep every column visible. Flexible text columns yield space first;
+    -- the capped subject and attachment columns never expand with the window.
+    if weight > width then
+        for _, key in ipairs({ "content", "subject" }) do
+            for _, field in ipairs(fields) do
+                if field.key == key then
+                    local reduction = math.min(weight - width, math.max(0, field.width - 100))
+                    field.width, weight = field.width - reduction, weight - reduction
+                end
+            end
+        end
+    end
+    if weight > width then
+        for _, field in ipairs(fields) do field.width = field.width * width / weight end
+    elseif weight < width then
+        local flexible = 0
+        for _, field in ipairs(fields) do if not field.maxWidth then flexible = flexible + 1 end end
+        if flexible > 0 then
+            for _, field in ipairs(fields) do if not field.maxWidth then field.width = field.width + (width - weight) / flexible end end
+        end
+    end
+    for _, field in ipairs(fields) do field.fittedWidth = field.width end
+    return offsets, heights, total, width
+end
+function UI:ListIndex(layout, offset)
+    if not layout.offsets then
+        local index = math.floor(offset / layout.pitch) * layout.columns + 1
+        return index, math.floor(offset / layout.pitch) * layout.pitch
+    end
+    local low, high = 1, #layout.offsets
+    while low <= high do
+        local middle = math.floor((low + high) / 2)
+        if layout.offsets[middle] + layout.heights[middle] <= offset then low = middle + 1 else high = middle - 1 end
+    end
+    return low, layout.offsets[low] or 0
 end
 function UI:Owners(root, characters, entries, state, x, top, width, height)
     Place(root.owners, x, top, width, height); root.owners:Show()
@@ -322,6 +388,9 @@ function UI:Detail(root, state, data, x, top, width, height)
             Add("对方：" .. Escape(entry.counterpart)); Add("时间：" .. Stamp(entry.time) .. (entry.state == "discovered" and "（首次扫描发现）" or ""))
             if entry.record.cacheProjection then Add("时间为扫描转入待核实的时间；最后可见 " .. Stamp(entry.mail.observedAt)) end
             Add("结果：" .. entry.result); Add("来源记录：" .. tostring(entry.sourceKey or "未知"))
+            local sourceNames = { ["rule-send"] = "规则寄", ["shortcut-drop"] = "快捷拖放", ["native-send"] = "发件箱" }
+            if sourceNames[entry.record.source] then Add("发送方式：" .. sourceNames[entry.record.source]) end
+            if entry.record.ruleIDs and #entry.record.ruleIDs > 0 then Add("来源规则：" .. table.concat(entry.record.ruleIDs, "、")) end
             for _, item in ipairs(entry.items) do Add(ItemsText({ item }), item) end
             Add(Addon.HistoryModel:Content(entry))
             if entry.record.attemptedAt then Add("发送操作 " .. Stamp(entry.record.attemptedAt)) end
@@ -352,8 +421,12 @@ function UI:RenderList(root, offset)
     if not layout then return end
     local workspace = Addon.WorkspaceState:Get()
     local state = workspace[workspace.tab]
-    local first = math.floor((offset or 0) / layout.pitch) * layout.columns + 1
+    local first = self:ListIndex(layout, offset or 0)
     local capacity = (math.ceil(root.list:GetHeight() / layout.pitch) + 1) * layout.columns
+    if layout.offsets then
+        local last = self:ListIndex(layout, (offset or 0) + root.list:GetHeight())
+        capacity = last - first + 2
+    end
     local used = 0
     for index = first, math.min(#root.data, first + capacity - 1) do
         used = used + 1
@@ -383,18 +456,19 @@ function UI:RenderList(root, offset)
                 row.background = row:CreateTexture(nil, "BACKGROUND"); row.background:SetAllPoints(); root.rows[used] = row
             end
             if row.icon then row.icon:Hide() end
+            if row.iconHover then row.iconHover:Hide() end
             local values, lines
             if workspace.tab == "history" then
-                values = { time = Stamp(value.time), character = Identity(value.character), event = value.event,
-                    counterpart = Escape(value.counterpart), subject = Escape(value.subject), content = Addon.HistoryModel:Content(value), result = value.result, icon = value.items[1] }
+                values = self:HistoryValues(value)
                 lines = { value.event .. " · " .. Identity(value.character), Escape(value.subject), Escape(value.counterpart), values.content, Stamp(value.time) .. " · " .. value.result }
             else
                 values = self:MailValues(value, true)
                 lines = { "邮箱：" .. Identity(value.character) .. " · 发件人：" .. values.sender, values.subject, values.items, values.amount .. " · " .. values.expiry, values.coverage }
             end
-            Place(row, 0, (index - 1) * layout.pitch, layout.width, layout.pitch - 2)
+            local rowTop, rowHeight = layout.offsets and layout.offsets[index] or (index - 1) * layout.pitch, (layout.heights and layout.heights[index] or layout.pitch) - 2
+            Place(row, 0, rowTop, layout.width, rowHeight)
             row.background:SetColorTexture(unpack(value.id == state.focusedID and Theme.Colors.selected or Theme:GetDataRowColor(index)))
-            self:TableRow(root, row, layout.fields, values, layout.width, layout.pitch - 2, false)
+            self:TableRow(root, row, layout.fields, values, layout.width, rowHeight, false)
             row.recordID = value.id
             row:SetScript("OnClick", function()
                 state.focusedID = value.id
@@ -491,7 +565,7 @@ function UI:Refresh(parent, context)
             { value = "discovered", label = "首次发现" }, { value = "collected", label = "实际收取" } }); root.kind:SetValue(state.kind)
         top = Flow({ { root.search, math.max(200, contentWidth - 108) }, { root.clear, 100 } }, left, top, contentWidth)
         top = Flow({ { root.days, 160 }, { root.historyCharacter, 190 }, { root.kind, 134 }, { root.result, 154 } }, left, top, contentWidth)
-        data = Addon.HistoryModel:Query(context, state); fields = self:FitColumns(self:Columns(root, "history", true), contentWidth, "history"); rowHeight = 38
+        data = Addon.HistoryModel:Query(context, state); fields = self:Columns(root, "history", true); rowHeight = 38
         root.summary:SetText("筛选结果 " .. #data .. " 条 · 按事件时间倒序")
     end
     if workspace.tab ~= "overview" then
@@ -508,26 +582,30 @@ function UI:Refresh(parent, context)
             local viewportTop = top + (items and 0 or 30)
             local viewportHeight = math.max(1, height - viewportTop - (workspace.returnTo and 48 or 12))
             local contentHeight = items and math.ceil(#data / math.max(1, math.floor((contentWidth - 24) / 46))) * pitch + 8 or #data * pitch
+            local offsets, heights, tableWidth
             local listWidth = contentWidth - (contentHeight > viewportHeight and Theme.Geometry.scrollbarGutter or 0)
+            if workspace.tab == "history" then
+                offsets, heights, contentHeight, tableWidth = self:HistoryLayout(root, fields, listWidth, data)
+            end
             if items then columns = math.max(1, math.floor((listWidth - 8) / pitch)); contentHeight = math.ceil(#data / columns) * pitch + 8 end
             Place(root.list, left, viewportTop, listWidth, viewportHeight); root.list:Show()
-            root.listLayout = { fields = fields, width = listWidth, pitch = pitch, columns = columns, items = items }
-            root.listContent:SetSize(listWidth, math.max(1, contentHeight)); root.list:SetContentHeight(contentHeight)
+            root.listLayout = { fields = fields, width = tableWidth or listWidth, pitch = pitch, columns = columns, items = items, offsets = offsets, heights = heights }
+            root.listContent:SetSize(tableWidth or listWidth, math.max(1, contentHeight)); root.list:SetContentHeight(contentHeight)
             if not items then
                 Place(root.tableHeader, left, top, listWidth, 28); root.tableHeader:Show()
-                self:TableRow(root, root.tableHeader, fields, {}, listWidth, 28, true)
+                self:TableRow(root, root.tableHeader, fields, {}, tableWidth or listWidth, 28, true)
             end
             local offset = state.scroll or 0
             if state.anchor then
                 for index, value in ipairs(data) do
-                    if value.id == state.anchor then offset = math.floor((index - 1) / columns) * pitch + (state.anchorOffset or 0); break end
+                    if value.id == state.anchor then offset = (offsets and offsets[index] or math.floor((index - 1) / columns) * pitch) + (state.anchorOffset or 0); break end
                 end
             end
             offset = math.max(0, math.min(offset, math.max(0, contentHeight - viewportHeight)))
             root.list:SetVerticalScroll(offset); state.scroll = offset
             self:RenderList(root, offset)
-            local first = math.floor(offset / pitch) * columns + 1
-            state.anchor, state.anchorOffset = data[first] and data[first].id, offset % pitch
+            local first, start = self:ListIndex(root.listLayout, offset)
+            state.anchor, state.anchorOffset = data[first] and data[first].id, offset - start
             Place(root.empty, left + 12, top + 54, contentWidth - 24, 64); root.empty:SetShown(#data == 0)
             root.empty:SetText(workspace.tab == "history" and "当前时间与筛选范围没有历史记录，可调整条件。"
                 or ((state.search or ""):find("%S") and "全局搜索没有匹配结果，请清除搜索或调整筛选。"

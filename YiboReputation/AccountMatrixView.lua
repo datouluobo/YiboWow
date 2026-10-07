@@ -256,6 +256,10 @@ function Addon:RefreshMatrixView(parent, context)
     if not toolbar.search then
         toolbar.search = CreateFrame("EditBox", nil, toolbar, "BackdropTemplate"); toolbar.search:SetSize(144, Theme.Size.compact); toolbar.search:SetAutoFocus(false); toolbar.search:SetFont(STANDARD_TEXT_FONT, Theme.Font.body, ""); toolbar.search:SetTextInsets(6, 6, 0, 0); toolbar.search:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 }); toolbar.search:SetBackdropColor(Theme.Colors.bg[1],Theme.Colors.bg[2],Theme.Colors.bg[3],1); toolbar.search:SetBackdropBorderColor(Theme.Colors.lineSoft[1],Theme.Colors.lineSoft[2],Theme.Colors.lineSoft[3],1)
         toolbar.search:SetScript("OnTextChanged", function(box, user) if user then settings.matrixSearch = string.lower(box:GetText() or ""); Addon:NotifyChanged() end end)
+        Theme:AttachClearButton(toolbar.search, { OnClear = function()
+            settings.matrixSearch = ""
+            Addon:NotifyChanged()
+        end })
     end
     toolbar.search:ClearAllPoints(); toolbar.search:SetPoint("LEFT", toolbar, "LEFT"); if toolbar.search:GetText() ~= (settings.matrixSearch or "") then toolbar.search:SetText(settings.matrixSearch or "") end
     local x = 152

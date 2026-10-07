@@ -2,7 +2,7 @@
 ## Title: |cff20e070[Yibo]|r 性能诊断探针
 ## Notes: Non-release, opt-in callback timing and long-frame recorder.
 ## Author: YiboSoft
-## Version: 0.3.0
+## Version: 0.3.1
 ## SavedVariables: YiboPerformanceProbeDB
 ## OptionalDeps: YiboCore, YiboAltoBoss, YiboAutoOpen, YiboBeastPaths, YiboBuilds, YiboCrafting, YiboCurrency, YiboLegendary, YiboMail, YiboQuestBlocker, YiboReputation, YiboTodo, YiboVault, NDui, NDui_Plus
 

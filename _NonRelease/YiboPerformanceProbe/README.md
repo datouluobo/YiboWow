@@ -41,6 +41,8 @@ cpuWindows 同样最多保留 60 条；完整长帧时间、CPU 前五名与方�
 
 ## v0.3 拾取专项采样（2026-10-03）
 
+2026-10-04 补充 Core/Vault 计时：Characters.GetAll、Defaults.Copy、DomainStore.Commit、Events.Fire、ItemResolver.Finish、Vault.Tooltip.Append、Vault.AccountPage.GetTooltipScope。用于区分全插件 CPU 已显示 Core 耗时、但既有方法没有覆盖的复制、事件分发及物品悬停路径。计时包含下游调用，不相加；仍不能覆盖客户端本机执行或全部局部回调。更新后 RL 加载。
+
 最新同角色反馈：天堂阴影启用或停用 NDui Plus 都会卡顿，奔跑时也会发生。下述拾取功能对照属于早期排查记录；当前优先在该角色保持 Plus 停用，单独对照 NDui 本体，而不是继续逐项关闭 Plus 功能。角色间同一插件也可能因职业/条件加载而运行不同内容，尚无新采样定责。
 
 保持 CPU 计时关闭时，也会记录拾取/背包事件时间和次数，并计时 NDui 背包 UpdateBag、GetItemInfo、GetItemLevel、任务物品 tooltip 检查，以及 YiboVault:ScanBag。

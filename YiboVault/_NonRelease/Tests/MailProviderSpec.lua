@@ -3,7 +3,7 @@ function GetServerTime() return 1000 end
 local character = { id = "A", name = "Alpha", realm = "Realm" }
 local other = { id = "B", name = "Beta", realm = "Realm" }
 local core = { Characters = { GetCurrent = function() return character end, GetAllCached = function() return { character, other } end },
-    AccountView = { GetVisibleCharacters = function() return { character, other } end } }
+    AccountView = { GetVisibleCharacters = function() return { character, other } end, NotifyPageChanged = function() end } }
 MailFrame = { IsShown = function() return true end }
 for _, file in ipairs({ "Namespace", "Store", "Items", "Scanner" }) do dofile("YiboMail/" .. file .. ".lua") end
 YiboMail.Core = core; YiboMail:InitializeDatabase()

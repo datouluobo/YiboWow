@@ -7,6 +7,7 @@ function Addon:Initialize()
     local ok, err = core:RegisterAddon(self.NAME, { version = self.VERSION, requiredAPI = 6 })
     if not ok then self:Print(err); return end
     self.Recipients:Initialize()
+    self.SendRules:Initialize()
     ok, err = core.CharacterCleanup:RegisterOwner(self.NAME, {
         Inspect = function(character, aliases)
             local hasData = Addon.db.byCharacter[character.id] ~= nil or Addon.Recipients:HasCharacter(character, aliases)
@@ -50,6 +51,7 @@ Addon.Frame:SetScript("OnEvent", function(_, event, name, ...)
         Addon.Scanner:OnEvent(event)
         Addon.Queue:OnEvent(event, name, ...)
         if Addon.FEATURES.send then Addon.Compose:OnEvent(event, name, ...) end
+        Addon.RuleSendController:OnEvent(event, name, ...)
         Addon.NativeUI:OnEvent(event, name, ...)
         if event == "PLAYER_LOGIN" and Addon.FEATURES.account then Addon.AccountPage:OnLogin() end
     end

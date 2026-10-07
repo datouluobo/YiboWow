@@ -2,6 +2,23 @@ local Addon = _G.YiboMail
 local Native = {}; Addon.NativeUI = Native
 local View = Addon.ViewModel
 local BACKDROP = { bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 }
+local function StripNativeArt(control, hideText)
+    if not control then return end
+    if control.GetRegions then
+        for _, region in ipairs({ control:GetRegions() }) do
+            local kind = region.GetObjectType and region:GetObjectType()
+            if kind == "Texture" or hideText and kind == "FontString" then region:SetAlpha(0) end
+        end
+    end
+    for _, method in ipairs({ "GetNormalTexture", "GetPushedTexture", "GetHighlightTexture", "GetDisabledTexture", "GetCheckedTexture" }) do
+        local texture = control[method] and control[method](control)
+        if texture then texture:SetAlpha(0) end
+    end
+    for _, key in ipairs({ "NineSlice", "backdrop", "Backdrop", "BorderFrame", "Background", "Bg", "shadow", "Shadow" }) do
+        local decoration = control[key]
+        if decoration then decoration:SetAlpha(0) end
+    end
+end
 local function Text(parent, font, justify)
     local text = parent:CreateFontString(nil, "OVERLAY", font or "GameFontHighlightSmall")
     text:SetJustifyH(justify or "LEFT"); return text
@@ -26,6 +43,80 @@ local function Tooltip(control, title, detail, link)
         GameTooltip:Show()
     end)
     control:SetScript("OnLeave", function() GameTooltip:Hide() end)
+end
+function Native:InstallMailboxTabs()
+    if self.mailboxTabs or not MailFrameTab1 or not MailFrameTab2 then return end
+    self.mailboxTabs = {}
+    -- Own the navigation controls; leave Blizzard's two-page registry untouched.
+    for _, entry in ipairs({ { "mail", "收件箱" }, { "items", "附件箱" }, { "send", "发件箱" }, { "rules", "规则寄" } }) do
+        local key = entry[1]
+        local tab = Addon.Core.UITheme:CreateButton(MailFrame, 1, entry[2], "secondary")
+        local theme = Addon.Core.UITheme
+        tab.indicator = tab:CreateTexture(nil, "OVERLAY")
+        tab.indicator:SetColorTexture(unpack(theme.Colors.accent)); tab.indicator:SetHeight(2)
+        tab.indicator:SetPoint("TOPLEFT"); tab.indicator:SetPoint("TOPRIGHT")
+        tab.SetState = function(control, state)
+            control.state = state or "default"
+            control:SetBackdropColor(unpack(theme.Colors.nav))
+            control:SetBackdropBorderColor(0, 0, 0, 0)
+            control.label:SetTextColor(unpack(control.state == "selected" and theme.Colors.accent or theme.Colors.muted))
+            control.indicator:SetShown(control.state == "selected")
+        end
+        tab:SetScript("OnEnter", function(control) control.label:SetTextColor(unpack(theme.Colors.text)) end)
+        tab:SetScript("OnLeave", function(control) control:SetState(control.state) end)
+        tab:SetFrameLevel(MailFrame:GetFrameLevel() + 20)
+        tab:SetScript("OnClick", function() Native:SelectMailboxTab(key) end)
+        self.mailboxTabs[key] = tab
+    end
+    MailFrameTab1:Hide(); MailFrameTab2:Hide()
+    MailFrame:HookScript("OnSizeChanged", function() Native:LayoutMailboxTabs() end)
+    self:RefreshMailboxTabs()
+end
+function Native:LayoutMailboxTabs()
+    if not self.mailboxTabs then return end
+    local gap = 2
+    local width = math.max(1, (MailFrame:GetWidth() - gap * 3) / 4)
+    local height = Addon.Core.UITheme.Size.compact
+    for index, key in ipairs({ "mail", "items", "send", "rules" }) do
+        local tab = self.mailboxTabs[key]
+        tab:ClearAllPoints()
+        tab:SetSize(width, height)
+        tab:SetPoint("TOPLEFT", MailFrame, "BOTTOMLEFT", (index - 1) * (width + gap), 0)
+    end
+end
+function Native:RefreshMailboxTabs()
+    if not self.mailboxTabs then return end
+    self:LayoutMailboxTabs()
+    local key = Addon.RuleSendUI and Addon.RuleSendUI.active and "rules"
+        or (self.activePage == 2 and "send" or (self.inbox and self.inbox.mode == "items" and "items" or "mail"))
+    for name, tab in pairs(self.mailboxTabs) do tab:SetState(name == key and "selected" or "default") end
+end
+function Native:SelectMailboxTab(key)
+    if key ~= "mail" and key ~= "items" and key ~= "send" and key ~= "rules" then return end
+    if key == "rules" and (not Addon.RuleSendUI or not Addon.RuleSendUI.root) then return end
+    -- Rules and compose share native page 2. Always leave rule mode explicitly,
+    -- even when Blizzard skips its page handler because page 2 is selected.
+    if Addon.RuleSendUI then Addon.RuleSendUI:SetActive(false) end
+    if self.inbox and (key == "mail" or key == "items") then
+        local changed = self.inbox.mode ~= key
+        self.inbox.mode, self.inbox.notice = key, nil
+        if changed then
+            self.inbox.keepTilesDuringQueue = nil
+            self.inbox.scroll:SetVerticalScroll(0)
+        end
+        self.inbox.filter.menu:Hide(); self.inbox.menu.menu:Hide()
+    end
+    local page = (key == "send" or key == "rules") and 2 or 1
+    if type(MailFrameTab_OnClick) == "function" then
+        if securecallfunction then securecallfunction(MailFrameTab_OnClick, nil, page)
+        else MailFrameTab_OnClick(nil, page) end
+    end
+    self:RememberBrowsePage(page)
+    if key == "rules" then
+        Addon.RuleSendUI:SetActive(true)
+        Addon.RuleSendController:Scan(); Addon.RuleSendUI:Refresh()
+    elseif page == 1 then self:RefreshInbox() end
+    self:RefreshMailboxTabs()
 end
 function Native:SetMailRecipient(address)
     if not SendMailNameEditBox or type(address) ~= "string" or address == "" then return false end
@@ -61,7 +152,7 @@ function Native:RestoreBrowsePage()
     local page = settings.page == 2 and 2 or 1
     self.activePage = page
     self.restoringPage = true
-    if type(MailFrameTab_OnClick) == "function" then MailFrameTab_OnClick(nil, page) end
+    self:SelectMailboxTab(page == 2 and "send" or (self.inbox and self.inbox.mode == "items" and "items" or "mail"))
     self.restoringPage = nil
     self.restorePagePending = nil
     self:RememberBrowsePage(page)
@@ -221,13 +312,13 @@ function Native:CreateInbox()
     panel.filter:SetOptions({ { value = "all", label = "全部邮件" }, { value = "items", label = "含附件" }, { value = "money", label = "含金币" },
         { value = "cod", label = "付款取信" }, { value = "returned", label = "退回邮件" }, { value = "urgent", label = "三天内到期" } })
     panel.filter:SetValue("all"); panel.filter:SetOnValueChanged(function(value) panel.options.kind = value; Native:RememberInboxFilters(); Native:RefreshInbox() end)
-    panel.scroll = Addon.Core.UITheme:CreateScrollFrame(panel); panel.scroll:SetPoint("TOPLEFT", 8, -height - 14); panel.scroll:SetPoint("BOTTOMRIGHT", -8, 66)
+    panel.scroll = Addon.Core.UITheme:CreateScrollFrame(panel); panel.scroll:SetPoint("TOPLEFT", 8, -height - 14); panel.scroll:SetPoint("BOTTOMRIGHT", -8, theme.Size.compact + 20)
     panel.scroll:SetFrameLevel(panel:GetFrameLevel() + 2)
     panel.content = CreateFrame("Frame", nil, panel.scroll); panel.content:SetSize(1, 1); panel.scroll:SetScrollChild(panel.content)
     panel.scroll:HookScript("OnSizeChanged", function() Native:RefreshInbox() end)
     panel.selectAll = Addon.Core.UITheme:CreateCheckbox(panel, "")
     panel.selectAll:SetSize(22, 24); panel.selectAll.box:SetSize(18, 18); panel.selectAll.mark:SetSize(18, 18)
-    panel.selectAll:SetPoint("BOTTOMLEFT", 8, 40)
+    panel.selectAll:SetPoint("BOTTOMLEFT", 8, 9)
     panel.selectAll:SetScript("OnClick", function(control)
         if Addon.Queue.state == "running" or Addon.Queue.pending then return end
         if control:GetCheckState() == "checked" then
@@ -238,12 +329,12 @@ function Native:CreateInbox()
         end
     end)
     Tooltip(panel.selectAll, "全选当前可收项目", "勾选后选择当前筛选下默认允许收取的项目；再次点击清空选择。")
-    panel.status = Text(panel); panel.status:SetPoint("BOTTOMLEFT", 34, 40); panel.status:SetPoint("BOTTOMRIGHT", -8, 40); panel.status:SetHeight(18)
+    panel.status = Text(panel); panel.status:SetHeight(theme.Size.compact); panel.status:SetWordWrap(false)
     panel.statusHover = CreateFrame("Frame", nil, panel); panel.statusHover:SetAllPoints(panel.status); panel.statusHover:EnableMouse(true)
-    panel.mail = InboxButton(panel, 52, "邮件", function() panel.mode, panel.notice = "mail", nil; Native:RememberBrowsePage(); panel.scroll:SetVerticalScroll(0); Native:RefreshInbox() end); panel.mail:SetPoint("BOTTOMLEFT", 6, 6)
-    panel.items = InboxButton(panel, 52, "附件", function() panel.mode, panel.notice = "items", nil; Native:RememberBrowsePage(); panel.scroll:SetVerticalScroll(0); Native:RefreshInbox() end); panel.items:SetPoint("LEFT", panel.mail, "RIGHT", 2, 0)
-    panel.collect = InboxButton(panel, 100, "收取", function() Native:Collect() end); panel.collect:SetPoint("BOTTOMRIGHT", -70, 6)
-    panel.menu = self:Dropdown(panel, 58, "更多"); panel.menu:SetPoint("BOTTOMRIGHT", -6, 6)
+    panel.collect = InboxButton(panel, 72, "收取", function() Native:Collect() end)
+    panel.collect.kind = "primary"
+    panel.collect:SetHeight(theme.Size.compact); panel.collect:SetPoint("BOTTOMRIGHT", -76, 8)
+    panel.menu = self:Dropdown(panel, 64, "更多"); panel.menu:SetHeight(theme.Size.compact); panel.menu:SetPoint("BOTTOMRIGHT", -8, 8)
     -- Action menus need their own width and open upward from the footer.
     panel.menu:SetScript("OnClick", function(control)
         if control.menu:IsShown() then control.menu:Hide(); return end
@@ -537,7 +628,7 @@ function Native:CollectItem(group, single)
     end
     self:RefreshInbox()
 end
-function Native:ItemTile(group, index, columns)
+function Native:ItemTile(group, index, columns, size)
     local panel = self.inbox
     panel.tiles = panel.tiles or {}
     local tile = panel.tiles[index]
@@ -548,7 +639,9 @@ function Native:ItemTile(group, index, columns)
         tile.count = Text(tile, "NumberFontNormal", "RIGHT"); tile.count:SetPoint("BOTTOMRIGHT", -3, 3)
         panel.tiles[index] = tile
     end
-    tile:ClearAllPoints(); tile:SetPoint("TOPLEFT", ((index - 1) % columns) * 46 + 4, -math.floor((index - 1) / columns) * 46 - 4)
+    size = size or 42
+    tile:SetSize(size, size)
+    tile:ClearAllPoints(); tile:SetPoint("TOPLEFT", ((index - 1) % columns) * (size + 4), -math.floor((index - 1) / columns) * (size + 4))
     tile.icon:SetTexture(group.item.texture or "Interface\\Icons\\INV_Misc_QuestionMark"); tile.count:SetText(tostring(group.quantity))
     local eligible, codSource = 0, nil
     for _, source in ipairs(group.sources) do
@@ -653,8 +746,7 @@ function Native:RefreshInboxProgress()
     Tooltip(panel.statusHover, "收件状态", progress)
     panel.collect:SetEnabled(false)
     panel.collect:SetState("disabled")
-    panel.mail:SetEnabled(false)
-    panel.items:SetEnabled(false)
+    self:LayoutInboxFooter()
     for _, row in ipairs(panel.rows or {}) do if row:IsShown() then row.check:SetEnabled(false) end end
     -- A mounted list skips the normal refresh, so refresh its menu availability
     -- here too: pause must become available as soon as a batch starts.
@@ -664,6 +756,13 @@ function Native:RefreshInboxProgress()
         local button = panel.menu.menu.buttons[index]
         button:SetEnabled(enabled); button:SetState(enabled and "default" or "disabled")
     end
+end
+function Native:LayoutInboxFooter()
+    local panel = self.inbox
+    if not panel or not panel.status then return end
+    panel.status:ClearAllPoints()
+    panel.status:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", panel.mode == "mail" and 32 or 8, 8)
+    panel.status:SetPoint("RIGHT", panel.mode == "mail" and panel.collect or panel.menu, "LEFT", -6, 0)
 end
 function Native:RefreshCollectedMailRow(action)
     local panel = self.inbox
@@ -788,9 +887,11 @@ function Native:RefreshInbox()
         end
         -- Reserve the possible gutter before wrapping so overflow cannot clip
         -- the last tile when Core resolves the scrollbar on the next frame.
-        local columns = math.max(1, math.floor((panel:GetWidth() - 16 - Addon.Core.UITheme.Geometry.scrollbarGutter - 8) / 46))
-        for index, group in ipairs(groups) do self:ItemTile(group, index, columns) end
-        panel.top = #groups > 0 and math.ceil(#groups / columns) * 46 + 8 or 0
+        local gridWidth = math.max(1, math.min(panel.width, panel:GetWidth() - 16 - Addon.Core.UITheme.Geometry.scrollbarGutter))
+        local columns = math.max(1, math.min(7, math.floor((gridWidth + 4) / 42)))
+        local size = math.max(1, (gridWidth - (columns - 1) * 4) / columns)
+        for index, group in ipairs(groups) do self:ItemTile(group, index, columns, size) end
+        panel.top = #groups > 0 and math.ceil(#groups / columns) * (size + 4) - 4 or 0
     end
     if panel.top == 0 then self:Row({ title = panel.mode == "items" and "暂无匹配附件" or "暂无匹配邮件", detail = Addon.Scanner.updated and "可清除搜索和筛选。" or "等待原生邮箱列表更新。" }) end
     for index = panel.used + 1, #panel.rows do panel.rows[index]:Hide() end
@@ -822,16 +923,14 @@ function Native:RefreshInbox()
     panel.selectAll:SetEnabled(not progress and not Addon.Queue.pending and selectable > 0)
     local coverageText = "可见 " .. tostring(coverage and coverage.currentCount or 0) .. "/" .. tostring(coverage and coverage.totalCount or 0) .. " 封"
     panel.status:SetText(panel.notice or (progress and (Addon.Queue.message .. " " .. Addon.Queue.completed .. "/" .. #Addon.Queue.actions))
-        or (panel.mode == "items" and coverageText or ("已选 " .. selected .. " 项 · " .. coverageText)))
-    Tooltip(panel.statusHover, "收件状态", panel.status:GetText())
-    panel.collect:SetText(selected > 0 and ("收取（" .. selectedAttachments .. "）") or "收取")
+        or (panel.mode == "items" and ("邮件 " .. tostring(coverage and coverage.currentCount or 0) .. "/" .. tostring(coverage and coverage.totalCount or 0)) or ("已选 " .. selected)))
+    Tooltip(panel.statusHover, "收件状态", panel.status:GetText() .. "\n" .. coverageText)
+    self:LayoutInboxFooter()
+    panel.collect:SetText(selected > 0 and ("收取 " .. selectedAttachments) or "收取")
     panel.collect:SetEnabled(selected > 0 and Addon.Queue.state ~= "running" and not Addon.Queue.pending)
     panel.collect:SetShown(panel.mode == "mail")
-    panel.mail:SetEnabled(true); panel.items:SetEnabled(true)
     panel.collect:SetState(panel.collect:IsEnabled() and "default" or "disabled")
-    panel.mail:SetText("邮件"); panel.items:SetText("附件")
-    panel.mail:SetState(panel.mode == "mail" and "selected" or "default")
-    panel.items:SetState(panel.mode == "items" and "selected" or "default")
+    self:RefreshMailboxTabs()
     local options = {}
     if panel.mode == "mail" then options[#options + 1] = { value = "select", label = "全选当前可收项目" } end
     options[#options + 1] = { value = "clear", label = panel.mode == "mail" and "清空选择" or "清空队列" }
@@ -848,49 +947,6 @@ function Native:RefreshInbox()
         button:SetEnabled(enabled); button:SetState(enabled and "default" or "disabled")
     end
     self.refreshingInbox = nil
-end
-function Native:CreateSend()
-    local panel = CreateFrame("Frame", nil, SendMailFrame); self.send = panel
-    panel:SetAllPoints(SendMailFrame); panel:SetFrameLevel(SendMailFrame:GetFrameLevel() + 8)
-    panel.contacts = self:Dropdown(panel, 116, "常用联系人"); panel.contacts:SetPoint("LEFT", SendMailNameEditBox, "RIGHT", 8, 0)
-    panel.contacts:SetOnValueChanged(function(value)
-        if value == "__next" or value == "__prev" then panel.contactPage = (panel.contactPage or 1) + (value == "__next" and 1 or -1)
-        elseif value == "__settings" then Addon.Core.AccountView:ShowSettings("mail-inbox")
-        elseif value == "__save" then local ok, err = View:SaveContact(SendMailNameEditBox:GetText(), SendMailNameEditBox:GetText()); panel.notice = ok and "联系人已收藏。" or err
-        else Native:SetMailRecipient(value) end
-        Native:RefreshSend()
-    end)
-    panel.bar = Surface(panel); panel.bar:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMLEFT", 16, 36); panel.bar:SetPoint("BOTTOMRIGHT", MailFrame, "BOTTOMRIGHT", -28, 36); panel.bar:SetHeight(56)
-    panel.suggestions = self:Dropdown(panel.bar, 290, "规则匹配"); panel.suggestions:SetPoint("TOPLEFT", 3, -2); panel.suggestions:SetPoint("TOPRIGHT", -3, -2)
-    panel.suggestions:SetOnValueChanged(function(value)
-        if value == "__next" or value == "__prev" then panel.rulePage = (panel.rulePage or 1) + (value == "__next" and 1 or -1); panel.selected = nil
-        elseif value == "__reset" then panel.skipped, panel.selected = {}, nil
-        else panel.selected = value end
-        Native:RefreshSend()
-    end)
-    panel.preview = Button(panel.bar, 90, "预览装填", function() Native:PreviewFill() end); panel.preview:SetPoint("BOTTOMLEFT", 3, 2)
-    panel.next = Button(panel.bar, 80, "装填下一格", function() local ok, err = Addon.Compose:FillNext(); panel.notice = ok and "已装填，请继续核对原生发件箱。" or err; Native:RefreshSend() end); panel.next:SetPoint("LEFT", panel.preview, "RIGHT", 2, 0)
-    panel.undo = Button(panel.bar, 54, "撤销", function() local ok, err = Addon.Compose:UndoFill(); panel.notice = ok and "本次装填已撤销。" or err; Native:RefreshSend() end); panel.undo:SetPoint("LEFT", panel.next, "RIGHT", 2, 0)
-    panel.skip = Button(panel.bar, 44, "跳过", function()
-        local suggestion = panel.matches and panel.matches[panel.selected]; panel.skipped = panel.skipped or {}; if suggestion then panel.skipped[suggestion.itemID] = true end
-        panel.selected = nil; Native:RefreshSend()
-    end); panel.skip:SetPoint("LEFT", panel.undo, "RIGHT", 2, 0)
-    panel.noticeText = Text(panel); panel.noticeText:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMLEFT", 16, 14); panel.noticeText:SetPoint("BOTTOMRIGHT", MailFrame, "BOTTOMRIGHT", -200, 14); panel.noticeText:SetHeight(18)
-    Tooltip(panel.preview, "预览本封规则装填", "核对收件人、物品和数量后逐格装填，最后手动点击原生发送。")
-    self.fillPreview = Surface(SendMailFrame); local preview = self.fillPreview
-    preview:SetFrameLevel(panel:GetFrameLevel() + 20); preview:SetPoint("TOPLEFT", MailFrame, "TOPLEFT", 16, -82); preview:SetPoint("BOTTOMRIGHT", MailFrame, "BOTTOMRIGHT", -28, 104)
-    preview.title = Text(preview, "GameFontNormal"); preview.title:SetPoint("TOPLEFT", 8, -8); preview.title:SetPoint("TOPRIGHT", -8, -8); preview.title:SetHeight(34)
-    preview.scroll = Addon.Core.UITheme:CreateScrollFrame(preview); preview.scroll:SetPoint("TOPLEFT", 8, -48); preview.scroll:SetPoint("BOTTOMRIGHT", -8, 44)
-    preview.content = CreateFrame("Frame", nil, preview.scroll); preview.content:SetSize(1, 1); preview.scroll:SetScrollChild(preview.content)
-    preview.items = Text(preview.content); preview.items:SetPoint("TOPLEFT", 0, 0); preview.items:SetPoint("TOPRIGHT", 0, 0)
-    preview.accept = Button(preview, 160, "确认并装填第 1 格", function()
-        preview:Hide(); local ok, err = Addon.Compose:FillNext(); panel.notice = ok and "首格已装填，继续点击装填下一格。" or err; Native:RefreshSend()
-    end); preview.accept:SetPoint("BOTTOMRIGHT", -8, 8)
-    preview.cancel = Button(preview, 70, "取消", function() preview:Hide(); Addon.Compose.fill = nil; Native:RefreshSend() end); preview.cancel:SetPoint("BOTTOMLEFT", 8, 8)
-    preview:Hide()
-    panel:SetScript("OnShow", function() Native:RefreshSend() end)
-    panel:SetScript("OnHide", function() panel.contacts.menu:Hide(); panel.suggestions.menu:Hide(); preview:Hide() end)
-    self.readySend = true
 end
 function Native:CreateBasicSend()
     local panel = CreateFrame("Frame", nil, SendMailFrame); self.send = panel
@@ -928,7 +984,7 @@ function Native:CreateBasicSend()
         button:SetBackdropColor(unpack(theme.Colors.panel))
         button:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
         button.icon = button:CreateTexture(nil, "ARTWORK")
-        button.icon:SetPoint("TOPLEFT", 3, -3); button.icon:SetPoint("BOTTOMRIGHT", -3, 3)
+        button.icon:SetPoint("TOPLEFT", 1, -1); button.icon:SetPoint("BOTTOMRIGHT", -1, 1)
         button.emptyMark = theme:CreateText(button, theme.Font.title, theme.Colors.muted, "CENTER")
         button.emptyMark:SetAllPoints(); button.emptyMark:SetText("+")
         button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
@@ -943,10 +999,15 @@ function Native:CreateBasicSend()
             if mouseButton == "RightButton" then Addon.RecipientUI:Open(control, control.slot); return end
             local contact = control.contact
             if not contact then return end
+            if Addon.RuleSendUI and Addon.RuleSendUI.active then
+                local ok, err = Addon.RuleSendController:Contact(contact.address)
+                if not ok then Addon.RuleSendController.notice = err end
+                Addon.RuleSendUI:Refresh(); return
+            end
             if not SendMailNameEditBox then return end
             Native:SetMailRecipient(contact.address)
             local hasText = (SendMailSubjectEditBox and SendMailSubjectEditBox:GetText() or ""):match("%S")
-                or (SendMailBodyEditBox and SendMailBodyEditBox:GetText() or ""):match("%S")
+                or (Addon.Compose:GetBodyEditBox() and Addon.Compose:GetBodyEditBox():GetText() or ""):match("%S")
             local hasAttachments = Addon.Compose and #Addon.Compose:GetAttachments() > 0
             if hasText and hasAttachments then
                 local sendButton = _G.SendMailMailButton or _G.SendMailSendButton
@@ -964,6 +1025,9 @@ function Native:CreateBasicSend()
                 end
             end
         end)
+        button:SetScript("OnReceiveDrag", function(control)
+            if Addon.RuleSendUI then Addon.RuleSendUI:Drop(control.contact) end
+        end)
         button:SetScript("OnEnter", function(control)
             control:SetBackdropBorderColor(unpack(theme.Colors.accent))
             local contact = control.contact
@@ -973,11 +1037,19 @@ function Native:CreateBasicSend()
             -- replacement count. Parenthesize it so the tooltip receives only
             -- the escaped string as its first argument.
             GameTooltip:SetText((Addon.Recipients:Escape(contact.address)))
+            if Addon.RuleSendUI and Addon.RuleSendUI.active then
+                local c = Addon.RuleSendController
+                local ready = c.state == "ready" and c.packet and Addon.Recipients:Key(c.packet[1].recipient) == Addon.Recipients:Key(contact.address)
+                GameTooltip:AddLine(ready and "再次点击：发送当前邮件" or "点击：填入此人规则物品", 0.55, 0.78, 0.78, true)
+                GameTooltip:AddLine("拖入物品：建立指定物品规则", 0.55, 0.78, 0.78, true)
+            else GameTooltip:AddLine("拖入物品：快速填入此组附件与收件人", 0.55, 0.78, 0.78, true) end
             GameTooltip:AddLine("左键拖动：移到空格，或与已有收件人对调。", 0.55, 0.78, 0.78, true)
             GameTooltip:Show()
         end)
         button:SetScript("OnLeave", function(control)
-            control:SetBackdropBorderColor(unpack(theme.Colors.lineSoft)); GameTooltip:Hide()
+            local contact, c = control.contact, Addon.RuleSendController
+            local hit = Addon.RuleSendUI and Addon.RuleSendUI.active and contact and c and c.match and c.match.groups[Addon.Recipients:Key(contact.address)]
+            control:SetBackdropBorderColor(unpack(hit and theme.Colors.accent or theme.Colors.lineSoft)); GameTooltip:Hide()
         end)
         panel.favoriteButtons[index] = button
     end
@@ -1008,7 +1080,7 @@ function Native:CreateBasicSend()
     panel:SetScript("OnHide", function() panel.contacts.menu:Hide(); Addon.RecipientUI:Hide(); if Native.favoriteEditor then Native.favoriteEditor:Hide() end; Native:HideShortcutIconPicker(); panel.shell:Hide(); panel.favoritesPanel:Hide() end)
     panel.favoritesPanel:SetScript("OnSizeChanged", function() Native:LayoutFavoriteButtons() end)
     panel.favoritesPanel:HookScript("OnHide", function() Native:CancelShortcutDrag() end)
-    MailFrame:HookScript("OnSizeChanged", function() Addon.RecipientUI:Refresh() end)
+    MailFrame:HookScript("OnSizeChanged", function() Native:LayoutBasicSend(); Addon.RecipientUI:Refresh() end)
     MailFrame:HookScript("OnDragStop", function() Addon.RecipientUI:Refresh() end)
     self.readySend = true
 end
@@ -1187,19 +1259,30 @@ function Native:RefreshFavoriteButtons()
     for index, button in ipairs(panel.favoriteButtons) do
         local contact = panel.favoriteEntries[index]
         button.contact = contact
+        local match = Addon.RuleSendController and Addon.RuleSendController.match
+        local hit = Addon.RuleSendUI and Addon.RuleSendUI.active and contact and match and match.groups[Addon.Recipients:Key(contact.address)]
+        local c = Addon.RuleSendController
+        local selected = Addon.RuleSendUI and Addon.RuleSendUI.active and contact and c and c.packet and c.owned
+            and Addon.Recipients:Key(c.packet[1].recipient) == Addon.Recipients:Key(contact.address)
+        button:SetBackdropBorderColor(unpack(selected and Addon.Core.UITheme.Colors.text or hit and Addon.Core.UITheme.Colors.accent or Addon.Core.UITheme.Colors.lineSoft))
+        if button.hitLabel == nil then
+            button.hitLabel = Addon.Core.UITheme:CreateText(button, Addon.Core.UITheme.Font.assist, Addon.Core.UITheme.Colors.text, "RIGHT")
+            button.hitLabel:SetPoint("BOTTOMRIGHT", -2, 2)
+        end
+        button.hitLabel:SetText(selected and "发送" or hit and tostring(hit.quantity) or "")
         local rows, columns = Addon:GetShortcutLayout()
         button:SetShown(panel.favoritesExpanded and index <= rows * columns)
         button.emptyMark:SetShown(contact == nil)
         if contact then
             local coords = contact.class and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[contact.class]
             if contact.icon then
-                button.icon:SetTexture(contact.icon); button.icon:SetTexCoord(0, 1, 0, 1)
+                button.icon:SetTexture(contact.icon); button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
             elseif coords then
                 button.icon:SetTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES")
                 button.icon:SetTexCoord(unpack(coords))
             else
                 button.icon:SetTexture("Interface\\Icons\\INV_Misc_GroupLooking")
-                button.icon:SetTexCoord(0, 1, 0, 1)
+                button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
             end
         else
             button.icon:SetTexture(nil)
@@ -1213,10 +1296,11 @@ function Native:LayoutBasicSend()
     local theme = Addon.Core.UITheme
     local frameWidth = MailFrame:GetWidth()
     local fieldWidth = math.max(170, frameWidth - 124)
-    panel.recipientField:ClearAllPoints(); panel.recipientField:SetPoint("TOPLEFT", MailFrame, "TOPLEFT", 16, -6); panel.recipientField:SetSize(fieldWidth, theme.Size.standard)
+    panel.recipientField:ClearAllPoints(); panel.recipientField:SetPoint("TOPLEFT", MailFrame, "TOPLEFT", 8, -6); panel.recipientField:SetSize(fieldWidth, theme.Size.standard)
     panel.subjectField:ClearAllPoints(); panel.subjectField:SetPoint("TOPLEFT", panel.recipientField, "BOTTOMLEFT", 0, -4); panel.subjectField:SetSize(fieldWidth, theme.Size.standard)
     local function StyleInput(editBox, field)
         if not editBox then return end
+        StripNativeArt(editBox)
         -- The field's opaque backdrop is above the original native EditBox.
         -- Keep the native input above it for both text rendering and mouse input.
         if editBox:GetParent() ~= field then editBox:SetParent(field) end
@@ -1241,10 +1325,11 @@ function Native:LayoutBasicSend()
     end
     StyleInput(SendMailNameEditBox, panel.recipientField)
     StyleInput(SendMailSubjectEditBox, panel.subjectField)
-    if SendMailBodyEditBox and SendMailScrollChildFrame then
-        SendMailBodyEditBox:ClearAllPoints()
-        SendMailBodyEditBox:SetPoint("TOPLEFT", SendMailScrollChildFrame, "TOPLEFT", 6, -10)
-        SendMailBodyEditBox:SetWidth(math.max(140, SendMailScrollChildFrame:GetWidth() - 16))
+    local body = Addon.Compose:GetBodyEditBox()
+    if body and SendMailScrollChildFrame then
+        body:ClearAllPoints()
+        body:SetPoint("TOPLEFT", SendMailScrollChildFrame, "TOPLEFT", 6, -10)
+        body:SetWidth(math.max(140, SendMailScrollChildFrame:GetWidth() - 16))
     end
     panel.contacts:ClearAllPoints(); panel.contacts:SetSize(theme.Size.standard, theme.Size.standard)
     panel.contacts:SetPoint("TOPRIGHT", panel.close, "TOPLEFT", -theme.Size.standard - 6, 0)
@@ -1257,7 +1342,7 @@ function Native:LayoutBasicSend()
     local sizingRows = math.max(8, rows)
     local tileSize = math.max(1, math.floor((MailFrame:GetHeight() - gridPaddingY * 2 - gridGapY * (sizingRows - 1)) / sizingRows))
     panel.favoritesPanel:SetWidth(tileSize * columns + gridGapX * (columns - 1) + gridPaddingX * 2)
-    panel.favoritesPanel:SetHeight(tileSize * rows + gridGapY * (rows - 1) + gridPaddingY * 2)
+    panel.favoritesPanel:SetHeight(MailFrame:GetHeight())
     panel.favoritesPanel:SetShown(panel.favoritesExpanded)
     panel.favoriteToggle:SetText(panel.favoritesExpanded and "<" or ">")
     self:LayoutFavoriteButtons()
@@ -1267,13 +1352,225 @@ function Native:LayoutBasicSend()
     local sendButton = _G.SendMailMailButton or _G.SendMailSendButton
     local cancelButton = SendMailCancelButton
     if sendButton and cancelButton then
-        local width, height = 96, theme.Size.standard
+        local width, height = 80, theme.Size.compact
         cancelButton:ClearAllPoints(); cancelButton:SetSize(width, height)
-        cancelButton:SetPoint("BOTTOMRIGHT", MailFrame, "BOTTOMRIGHT", -12, 5)
+        cancelButton:SetPoint("BOTTOMRIGHT", MailFrame, "BOTTOMRIGHT", -8, 8)
         sendButton:ClearAllPoints(); sendButton:SetSize(width, height)
         sendButton:SetPoint("RIGHT", cancelButton, "LEFT", -6, 0)
     end
+    panel.balance:ClearAllPoints(); panel.balance:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMLEFT", 8, 8)
+    panel.balance:SetSize(math.max(60, frameWidth - (Addon.RuleSendUI and Addon.RuleSendUI.active and 276 or 194)), theme.Size.compact)
+    panel.balance:SetFont(STANDARD_TEXT_FONT, theme.Font.assist, "")
+    self:LayoutSendMoney()
+    self:LayoutSendAttachments()
+    self:StyleComposeAppearance()
+    self:InstallBodyScrollHooks()
+    self:RefreshBodyScrollBar()
+    if Addon.RuleSendUI and Addon.RuleSendUI.root then Addon.RuleSendUI:Layout() end
     self:RefreshSendBalance()
+end
+function Native:StyleComposeAppearance()
+    local panel, theme = self.send, Addon.Core.UITheme
+    if not panel then return end
+    StripNativeArt(SendMailFrame)
+    for _, name in ipairs({ "SendStationeryBackgroundLeft", "SendStationeryBackgroundRight", "SendMailMoneyInset", "SendMailMoneyBg", "SendMailMoneyFrame" }) do
+        local decoration = _G[name]
+        if decoration then
+            decoration:Hide()
+            if decoration.HookScript and not decoration.yiboMailHidden then
+                decoration.yiboMailHidden = true
+                decoration:HookScript("OnShow", function(control) control:Hide() end)
+            end
+        end
+    end
+    local wrapper = _G.MailEditBox or _G.SendMailScrollFrame
+    local body = Addon.Compose:GetBodyEditBox()
+    StripNativeArt(wrapper); StripNativeArt(_G.SendMailScrollChildFrame)
+    if wrapper then StripNativeArt(wrapper.ScrollBox) end
+    if wrapper then
+        wrapper:SetFrameLevel(panel:GetFrameLevel() + 2)
+        if not wrapper.yiboMailBodySurface then
+            local surface = CreateFrame("Frame", nil, wrapper, "BackdropTemplate")
+            surface:SetAllPoints(wrapper); surface:SetFrameLevel(wrapper:GetFrameLevel()); surface:EnableMouse(false)
+            surface:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+            surface:SetBackdropColor(unpack(theme.Colors.bg)); wrapper.yiboMailBodySurface = surface
+        end
+    end
+    if body then body:SetFont(STANDARD_TEXT_FONT, theme.Font.body, ""); body:SetTextColor(unpack(theme.Colors.text)) end
+    if _G.SendMailCostMoneyFrame then
+        for _, region in ipairs({ SendMailCostMoneyFrame:GetRegions() }) do
+            if region.GetObjectType and region:GetObjectType() == "FontString" then
+                region:SetFont(STANDARD_TEXT_FONT, theme.Font.assist, ""); region:SetTextColor(unpack(theme.Colors.muted))
+            end
+        end
+    end
+    local bar = _G.MailEditBoxScrollBar or _G.SendMailScrollFrameScrollBar
+    if bar then
+        if wrapper then
+            bar:ClearAllPoints(); bar:SetPoint("TOPLEFT", wrapper, "TOPRIGHT", 4, -2); bar:SetPoint("BOTTOMLEFT", wrapper, "BOTTOMRIGHT", 4, 2)
+            bar:SetWidth(14); bar:SetFrameLevel(wrapper:GetFrameLevel() + 2)
+        end
+        StripNativeArt(bar)
+        StripNativeArt(bar.Track)
+        local thumb = bar.ThumbTexture or (bar.GetThumbTexture and bar:GetThumbTexture())
+        if thumb then thumb:SetColorTexture(unpack(theme.Colors.accent)); thumb:SetAlpha(1) end
+        if bar.Thumb then
+            StripNativeArt(bar.Thumb)
+            if not bar.Thumb.yiboMailFill then
+                bar.Thumb.yiboMailFill = bar.Thumb:CreateTexture(nil, "ARTWORK")
+                bar.Thumb.yiboMailFill:SetAllPoints(); bar.Thumb.yiboMailFill:SetColorTexture(unpack(theme.Colors.accent))
+            end
+            bar.Thumb.yiboMailFill:SetAlpha(1)
+        end
+        for _, key in ipairs({ "ScrollUpButton", "ScrollDownButton", "Back", "Forward" }) do
+            local button = bar[key]
+            if button then
+                StripNativeArt(button)
+                if not button.yiboMailArrow then
+                    button.yiboMailArrow = theme:CreateText(button, theme.Font.body, theme.Colors.muted, "CENTER")
+                    button.yiboMailArrow:SetAllPoints(); button.yiboMailArrow:SetText((key == "ScrollUpButton" or key == "Back") and "↑" or "↓")
+                end
+            end
+        end
+    end
+    if _G.SendMailFrameLockSendMail then SendMailFrameLockSendMail:SetFrameLevel(panel:GetFrameLevel() + 10) end
+end
+function Native:RefreshBodyScrollBar()
+    local scroll = _G.MailEditBox and MailEditBox.ScrollBox or _G.SendMailScrollFrame
+    local bar = _G.MailEditBoxScrollBar or _G.SendMailScrollFrameScrollBar or (scroll and scroll.ScrollBar)
+    if not bar then return end
+    local range = scroll and (scroll.GetDerivedScrollRange and scroll:GetDerivedScrollRange()
+        or scroll.GetVerticalScrollRange and scroll:GetVerticalScrollRange()) or 0
+    bar:SetShown(range > 0 and SendMailFrame:IsShown() and not (Addon.RuleSendUI and Addon.RuleSendUI.active))
+end
+function Native:InstallBodyScrollHooks()
+    if not self.send or self.send.bodyScrollHooks then return end
+    local scroll = _G.MailEditBox and MailEditBox.ScrollBox or _G.SendMailScrollFrame
+    local bar = _G.MailEditBoxScrollBar or _G.SendMailScrollFrameScrollBar or (scroll and scroll.ScrollBar)
+    local body = Addon.Compose:GetBodyEditBox()
+    if not scroll or not bar or not body then return end
+    self.send.bodyScrollHooks = true
+    local function Refresh()
+        Native:RefreshBodyScrollBar()
+        if C_Timer and C_Timer.After then C_Timer.After(0, function() Native:RefreshBodyScrollBar() end) end
+    end
+    bar:HookScript("OnShow", function() Native:RefreshBodyScrollBar() end)
+    scroll:HookScript("OnSizeChanged", Refresh)
+    body:HookScript("OnTextChanged", Refresh)
+    if _G.MailEditBox then
+        if MailEditBox.SetBackdropBorderColor then MailEditBox:SetBackdropBorderColor(0, 0, 0, 0) end
+        for _, key in ipairs({ "backdrop", "Backdrop", "BorderFrame" }) do
+            local decoration = MailEditBox[key]
+            if decoration and decoration.SetBackdropBorderColor then decoration:SetBackdropBorderColor(0, 0, 0, 0) end
+        end
+    end
+end
+function Native:LayoutSendAttachments()
+    local columns, gap = 8, 4
+    local count = ATTACHMENTS_MAX_SEND or 12
+    local rows = math.ceil(count / columns)
+    local size = math.min(36, (MailFrame:GetWidth() - 16 - gap * (columns - 1)) / columns)
+    for index = 1, count do
+        local button = _G["SendMailAttachment" .. index] or (SendMailFrame.SendMailAttachments and SendMailFrame.SendMailAttachments[index])
+        if button then
+            local row, column = math.floor((index - 1) / columns), (index - 1) % columns
+            button:ClearAllPoints(); button:SetSize(size, size)
+            button:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMLEFT", 8 + column * (size + gap), 80 + (rows - row - 1) * (size + gap))
+            self:StyleSendAttachment(button, index)
+            button:Show()
+        end
+    end
+    for index = count + 1, math.max(count, ATTACHMENTS_MAX or 16, #(SendMailFrame.SendMailAttachments or {})) do
+        local button = _G["SendMailAttachment" .. index] or (SendMailFrame.SendMailAttachments and SendMailFrame.SendMailAttachments[index])
+        if button then button:Hide() end
+    end
+    if SendMailScrollFrame and SendMailAttachment1 then
+        SendMailScrollFrame:ClearAllPoints(); SendMailScrollFrame:SetPoint("TOPLEFT", MailFrame, "TOPLEFT", 8, -82)
+        SendMailScrollFrame:SetPoint("BOTTOMRIGHT", SendMailAttachment1, "TOPLEFT", MailFrame:GetWidth() - 32, 10)
+    end
+    if _G.MailEditBox and SendMailAttachment1 then
+        MailEditBox:ClearAllPoints(); MailEditBox:SetPoint("TOPLEFT", MailFrame, "TOPLEFT", 8, -82)
+        MailEditBox:SetPoint("BOTTOMRIGHT", SendMailAttachment1, "TOPLEFT", MailFrame:GetWidth() - 32, 10)
+    end
+end
+function Native:StyleSendAttachment(button, index)
+    local theme = Addon.Core.UITheme
+    button:SetFrameLevel(self.send:GetFrameLevel() + 2)
+    StripNativeArt(button, true)
+    local skin = button.yiboMailAttachment
+    if not skin then
+        skin = CreateFrame("Frame", nil, button, "BackdropTemplate")
+        skin:SetAllPoints(button); skin:SetFrameLevel(button:GetFrameLevel() + 1); skin:EnableMouse(false)
+        skin:SetBackdrop(BACKDROP); skin:SetBackdropColor(unpack(theme.Colors.panel))
+        skin.icon = skin:CreateTexture(nil, "ARTWORK")
+        skin.icon:SetPoint("TOPLEFT", 1, -1); skin.icon:SetPoint("BOTTOMRIGHT", -1, 1); skin.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        skin.count = theme:CreateText(skin, theme.Font.assist, theme.Colors.text, "RIGHT")
+        skin.count:SetPoint("BOTTOMRIGHT", -2, 2)
+        button.yiboMailAttachment = skin
+        button:HookScript("OnEnter", function() skin:SetBackdropBorderColor(unpack(theme.Colors.accent)) end)
+        button:HookScript("OnLeave", function() skin:SetBackdropBorderColor(unpack(theme.Colors.lineSoft)) end)
+    end
+    local name, id, texture, quantity
+    if GetSendMailItem then name, id, texture, quantity = GetSendMailItem(index) end
+    skin.icon:SetTexture(name and texture or nil); skin.icon:SetShown(name ~= nil)
+    skin.count:SetText(name and (quantity or 0) > 1 and tostring(quantity) or "")
+    skin:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
+end
+function Native:LayoutSendMoney()
+    local theme = Addon.Core.UITheme
+    local money = _G.SendMailMoney
+    if money then
+        if money:GetParent() ~= self.send then money:SetParent(self.send) end
+        money:SetFrameLevel(self.send:GetFrameLevel() + 2)
+        money:ClearAllPoints(); money:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMLEFT", 8, 44)
+        for _, unit in ipairs({ "Gold", "Silver", "Copper" }) do
+            local input = _G["SendMailMoney" .. unit] or money[unit:lower()] or money[unit]
+            if input then
+                StripNativeArt(input)
+                local offset = unit == "Gold" and 0 or unit == "Silver" and 78 or 122
+                input:ClearAllPoints(); input:SetPoint("LEFT", money, "LEFT", offset, 0)
+                input:SetSize(unit == "Gold" and 58 or 24, theme.Size.compact)
+                input:SetFont(STANDARD_TEXT_FONT, theme.Font.assist, ""); input:SetTextColor(unpack(theme.Colors.text)); input:SetTextInsets(4, 4, 0, 0)
+                if input.texture then
+                    input.texture:SetAlpha(1); input.texture:ClearAllPoints(); input.texture:SetPoint("LEFT", input, "RIGHT", 2, 0); input.texture:SetSize(13, 13)
+                end
+                if input.label then input.label:ClearAllPoints(); input.label:SetPoint("LEFT", input, "RIGHT", 2, 0) end
+                if not input.yiboMailInput then
+                    local surface = CreateFrame("Frame", nil, input:GetParent(), "BackdropTemplate")
+                    surface:SetAllPoints(input); surface:SetFrameLevel(math.max(0, input:GetFrameLevel() - 1)); surface:EnableMouse(false)
+                    surface:SetBackdrop(BACKDROP); surface:SetBackdropColor(unpack(theme.Colors.panel)); surface:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
+                    input.yiboMailInput = surface
+                end
+            end
+        end
+    end
+    if _G.SendMailMoneyText then _G.SendMailMoneyText:Hide() end
+    local controls = { { "SendMailSendMoneyButton", "寄币", -132 }, { "SendMailCODButton", "到付", -66 } }
+    for _, entry in ipairs(controls) do
+        local control = _G[entry[1]]
+        if control then
+            if control:GetParent() ~= self.send then control:SetParent(self.send) end
+            control:SetFrameLevel(self.send:GetFrameLevel() + 2)
+            StripNativeArt(control)
+            if not control.yiboMailRadio then
+                local skin = CreateFrame("Frame", nil, control, "BackdropTemplate")
+                skin:SetAllPoints(control); skin:EnableMouse(false); skin:SetBackdrop(BACKDROP)
+                skin:SetBackdropColor(unpack(theme.Colors.panel)); skin:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
+                skin.mark = skin:CreateTexture(nil, "ARTWORK"); skin.mark:SetPoint("TOPLEFT", 4, -4); skin.mark:SetPoint("BOTTOMRIGHT", -4, 4)
+                skin.mark:SetColorTexture(unpack(theme.Colors.accent)); control.yiboMailRadio = skin
+                control:HookScript("OnClick", function() Native:LayoutSendMoney() end)
+            end
+            control.yiboMailRadio.mark:SetShown(control.GetChecked and control:GetChecked() or false)
+            control:ClearAllPoints(); control:SetSize(18, 18)
+            control:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMRIGHT", entry[3], 48)
+            local label = _G[entry[1] .. "Text"] or control.Text
+            if label then
+                if label:GetParent() ~= control then label:SetParent(control) end
+                label:SetText(entry[2]); label:SetFont(STANDARD_TEXT_FONT, theme.Font.assist, "")
+                label:ClearAllPoints(); label:SetPoint("LEFT", control, "RIGHT", 4, 0)
+            end
+        end
+    end
 end
 function Native:RefreshSendBalance()
     local balance = self.send and self.send.balance
@@ -1287,56 +1584,15 @@ function Native:RefreshBasicSend()
     local panel = self.send
     if not panel or not panel:IsShown() or self.refreshingSend then return end
     self.refreshingSend = true
+    self:LayoutBasicSend()
     panel.contacts:SetText("")
     self:RefreshFavoriteButtons()
     Addon.RecipientUI:Refresh()
     self.refreshingSend = nil
 end
-function Native:PreviewFill()
-    local panel = self.send; local suggestion = panel.matches and panel.matches[panel.selected]
-    if not suggestion then panel.notice = "暂无匹配的可寄送物品。"; self:RefreshSend(); return end
-    local ok, err = Addon.Compose:PrepareFill(suggestion); if not ok then panel.notice = err; self:RefreshSend(); return end
-    local preview, lines = self.fillPreview, {}
-    preview.title:SetText("收件人：" .. View:Escape(suggestion.recipient) .. "\n共 " .. suggestion.quantity .. " 件 · " .. #suggestion.items .. " 格")
-    for index, item in ipairs(suggestion.items) do lines[#lines + 1] = index .. ". " .. item.itemLink .. " ×" .. item.quantity end
-    preview.items:SetText(table.concat(lines, "\n\n")); preview.items:SetHeight(#lines * 38)
-    preview.content:SetSize(math.max(1, preview.scroll:GetWidth() - 16), math.max(1, #lines * 38)); preview.scroll:SetContentHeight(#lines * 38); preview:Show(); self:RefreshSend()
-end
 function Native:RefreshSend()
-    if not Addon.FEATURES.sendAssist then return self:RefreshBasicSend() end
-    local panel = self.send; if not self.readySend or not panel:IsShown() or self.refreshingSend then return end
-    self.refreshingSend = true
-    local contacts, roster = {}, View:GetContacts()
-    panel.contactPage = math.max(1, math.min(panel.contactPage or 1, math.max(1, math.ceil(#roster / 6))))
-    for index = (panel.contactPage - 1) * 6 + 1, math.min(#roster, panel.contactPage * 6) do local contact = roster[index]; contacts[#contacts + 1] = { value = contact.address, label = View:Escape(contact.label) } end
-    if panel.contactPage > 1 then contacts[#contacts + 1] = { value = "__prev", label = "上一页联系人" } end
-    if panel.contactPage * 6 < #roster then contacts[#contacts + 1] = { value = "__next", label = "下一页联系人" } end
-    contacts[#contacts + 1] = { value = "__save", label = "收藏当前收件人" }; contacts[#contacts + 1] = { value = "__settings", label = "管理联系人与规则" }
-    panel.contacts:SetOptions(contacts); panel.contacts:SetText("常用联系人")
-    panel.matches = {}; for _, suggestion in ipairs(Addon.Compose:GetSuggestions()) do if not (panel.skipped and panel.skipped[suggestion.itemID]) then panel.matches[#panel.matches + 1] = suggestion end end
-    local options = {}; panel.rulePage = math.max(1, math.min(panel.rulePage or 1, math.max(1, math.ceil(#panel.matches / 5))))
-    for index = (panel.rulePage - 1) * 5 + 1, math.min(#panel.matches, panel.rulePage * 5) do
-        local suggestion = panel.matches[index]; local name = GetItemInfo(suggestion.itemID) or ("物品 " .. suggestion.itemID)
-        options[#options + 1] = { value = index, label = View:Escape(name) .. " → " .. View:Escape(suggestion.recipient) .. " ×" .. suggestion.quantity }
-    end
-    if panel.rulePage > 1 then options[#options + 1] = { value = "__prev", label = "上一页规则建议" } end
-    if panel.rulePage * 5 < #panel.matches then options[#options + 1] = { value = "__next", label = "下一页规则建议" } end
-    if panel.skipped and next(panel.skipped) then options[#options + 1] = { value = "__reset", label = "显示跳过的建议" } end
-    panel.suggestions:SetOptions(options)
-    if panel.selected == nil or not panel.matches[panel.selected] then panel.selected = #panel.matches > 0 and ((panel.rulePage - 1) * 5 + 1) or nil end
-    if panel.selected then panel.suggestions:SetValue(panel.selected) else panel.suggestions:SetText("规则匹配：暂无可寄送物品") end
-    local fill = Addon.Compose.fill
-    panel.preview:SetEnabled(panel.selected ~= nil and not Addon.Queue.pending and Addon.Queue.state ~= "running" and not self.fillPreview:IsShown())
-    local canFill = not Addon.Queue.pending and Addon.Queue.state ~= "running" and not self.fillPreview:IsShown()
-    panel.next:SetEnabled(canFill and fill ~= nil and fill.index <= #fill.items); panel.undo:SetEnabled(canFill and fill ~= nil and #fill.staged > 0); panel.skip:SetEnabled(panel.selected ~= nil)
-    panel.noticeText:SetText(panel.notice or (fill and ("已装填 " .. #fill.staged .. "/" .. #fill.items .. " 格") or ""))
-    self.refreshingSend = nil
-end
-local function MoveDown(frame, offset)
-    if not frame then return end
-    local points = {}; for index = 1, frame:GetNumPoints() do points[index] = { frame:GetPoint(index) } end
-    frame:ClearAllPoints()
-    for _, point in ipairs(points) do frame:SetPoint(point[1], point[2], point[3], point[4], (point[5] or 0) - offset) end
+    self:RefreshBasicSend()
+    if Addon.RuleSendUI then Addon.RuleSendUI:Refresh() end
 end
 local function StyleNativeActionButton(button, primary)
     if not button then return end
@@ -1373,6 +1629,15 @@ function Native:Install()
     if self.installed or not MailFrame or not InboxFrame then return end
     if Addon.FEATURES.send and (not SendMailFrame or not SendMailNameEditBox or not SendMailCancelButton) then return end
     if InCombatLockdown and InCombatLockdown() then return end
+    -- Do not initialize or restyle Blizzard panels during login. In particular,
+    -- leave hidden mailbox state untouched before GameMenu's logout callback.
+    if not MailFrame:IsShown() then
+        if not self.waitingForMailbox then
+            self.waitingForMailbox = true
+            MailFrame:HookScript("OnShow", function() Native:Install() end)
+        end
+        return
+    end
     self.installed = true
     if Addon.FEATURES.send and hooksecurefunc and type(ContainerFrameItemButton_OnModifiedClick) == "function" then
         hooksecurefunc("ContainerFrameItemButton_OnModifiedClick", function(button)
@@ -1387,19 +1652,15 @@ function Native:Install()
         end)
     end
     if Addon.FEATURES.send and not Addon.FEATURES.sendAssist then
-        StyleNativeActionButton(_G.SendMailMailButton or _G.SendMailSendButton, false)
+        StyleNativeActionButton(_G.SendMailMailButton or _G.SendMailSendButton, true)
         StyleNativeActionButton(SendMailCancelButton, false)
     end
-    if Addon.FEATURES.sendAssist then
-        -- Reserve two compact rows inside the native shell for rule assistance.
-        MailFrame:SetHeight(MailFrame:GetHeight() + 70)
-        MoveDown(SendMailCancelButton, 70)
-        MoveDown(_G.SendMailMoneyFrame, 70); MoveDown(_G.SendMailMoneyInset, 70); MoveDown(_G.SendMailMoneyBg, 70)
-        local recipientWidth = math.max(100, math.min(SendMailNameEditBox:GetWidth(), MailFrame:GetWidth() - 248))
-        SendMailNameEditBox:SetWidth(recipientWidth)
-    end
     self:CreateInbox()
-    if Addon.FEATURES.sendAssist then self:CreateSend() elseif Addon.FEATURES.send then self:CreateBasicSend() end
+    if Addon.FEATURES.send then self:CreateBasicSend(); if Addon.RuleSendUI then Addon.RuleSendUI:Install() end end
+    if Addon.FEATURES.send and hooksecurefunc and type(SendMailFrame_Update) == "function" then
+        hooksecurefunc("SendMailFrame_Update", function() Native:LayoutBasicSend() end)
+    end
+    self:InstallMailboxTabs()
     if OpenMailFrame then OpenMailFrame:HookScript("OnHide", function() Native.openMailKey = nil end) end
     InboxFrame:HookScript("OnShow", function()
         Native:RememberBrowsePage(1)
@@ -1428,7 +1689,7 @@ function Native:Install()
     end) end
     if hooksecurefunc and type(MailFrameTab_OnClick) == "function" then
         hooksecurefunc("MailFrameTab_OnClick", function(_, page)
-            if page == 1 or page == 2 then Native:RememberBrowsePage(page) end
+            if page == 1 or page == 2 then Native:RememberBrowsePage(page); Native:RefreshMailboxTabs() end
         end)
     end
     MailFrame:HookScript("OnShow", function()
@@ -1444,6 +1705,7 @@ function Native:Install()
     end)
     MailFrame:HookScript("OnHide", function()
         Native:SetInboxShell(false)
+        if Addon.RuleSendUI then Addon.RuleSendUI:SetActive(false) end
         Native.deleting = nil
         Native.restorePagePending = nil
         Native:RememberBrowsePage()
@@ -1452,12 +1714,11 @@ function Native:Install()
         Native.inbox.search:ClearFocus(); Native.inbox.filter.menu:Hide(); Native.inbox.menu.menu:Hide()
         if Native.send then
             Native.send.notice = nil; Native.send.contacts.menu:Hide()
-            if Native.send.suggestions then Native.send.suggestions.menu:Hide() end
         end
-        if Native.fillPreview then Native.fillPreview:Hide() end
     end)
     Addon.Items.Events:Register(self, function() Native.deleting = nil; Native:Refresh() end)
     Addon.Frame:HookScript("OnUpdate", function()
+        if Addon.RuleSendController then Addon.RuleSendController:Tick() end
         if Native.deleting and GetTime() - Native.deleteStartedAt > 12 then
             Native.deleting = nil; Native.inbox.notice = "删除未确认，请检查邮箱后重试。"; Native:RefreshInbox()
         end
@@ -1518,7 +1779,6 @@ function Native:OnEvent(event, itemID, success)
     end
     if event == "ADDON_LOADED" or event == "MAIL_SHOW" or event == "PLAYER_REGEN_ENABLED" then self:Install() end
     if event == "MAIL_SEND_SUCCESS" then
-        if self.fillPreview then self.fillPreview:Hide() end
         if self.send then
             self.send.notice = "发送成功。"
             if self.send.status then self.send.status:SetText("发送成功 · 已记录为在途，尚未确认送达") end
