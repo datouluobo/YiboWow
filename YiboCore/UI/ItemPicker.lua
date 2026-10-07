@@ -1,5 +1,5 @@
 local Core, Theme = _G.YiboCore, _G.YiboCore.UITheme
-Core.Capabilities:Register("item-picker", 1)
+Core.Capabilities:Register("item-picker", 2)
 
 function Core:CreateItemPicker(parent, config)
     local picker = CreateFrame("Frame", nil, parent)
@@ -42,7 +42,9 @@ function Core:CreateItemPicker(parent, config)
     function picker:Finish(ok, message, generation)
         if not self:IsCurrent(generation) then return end
         self.busy = false
-        if ok then self:SetValue(""); self:Feedback(message or "操作成功。")
+        if ok then
+            if not self.config.retainInput then self:SetValue("") end
+            self:Feedback(message or "操作成功。")
         else self:Feedback(message or "操作失败。") end
         if ok and self.config.OnSuccess then self.config.OnSuccess() end
     end
@@ -87,6 +89,56 @@ function Core:CreateItemPicker(parent, config)
         if self.busy or self.unbound then return end
         self:Invalidate()
         local generation = self.generation
+        if self.config.multiple then
+            local input = self.input:GetText()
+            local tokens, links = {}, {}
+            input = input:gsub("|c%x%x%x%x%x%x%x%x(|Hitem:.-|h.-|h)|r", "%1")
+            input = input:gsub("|Hitem:.-|h.-|h", function(link) links[#links + 1] = link; return "\001" .. #links .. "\002" end)
+            input = input:gsub("；", ";"):gsub("，", ",")
+            for token in (input .. ";"):gmatch("(.-)[;,]") do
+                token = token:match("^%s*(.-)%s*$")
+                if token == "" then self:Feedback("请填写每一个物品；分隔符之间不能留空。"); return end
+                token = token:gsub("\001(%d+)\002", function(index) return links[tonumber(index)] end)
+                tokens[#tokens + 1] = token
+            end
+            local items, seen = {}, {}
+            for index, token in ipairs(tokens) do
+                local candidates, message = Core.ItemResolver:Parse(token, self.config.resolve)
+                if not candidates then self:Feedback("第 " .. index .. " 项：" .. message); return end
+                if #candidates ~= 1 then self:Feedback("第 " .. index .. " 项有多个候选，请使用物品 ID 或链接。"); return end
+                local id = candidates[1].itemID
+                if not seen[id] then seen[id] = true; items[#items + 1] = candidates[1] end
+            end
+            self.busy, self.lastAction = true, action
+            self:Feedback("正在加载 " .. #items .. " 个物品…")
+            local requests = {}
+            local cancellation = { Cancel = function() for _, request in ipairs(requests) do request:Cancel() end end }
+            self.request = cancellation
+            local function Load(index)
+                if not self:IsCurrent(generation) then return end
+                while index <= #items do
+                    local synchronous, completed, failed = true, false, false
+                    local request = Core.ItemResolver:Request(items[index].itemID, function(info, err)
+                        if not self:IsCurrent(generation) then return end
+                        if err then
+                            failed = true; self.canRetry = info and info.state == "failed"
+                            self:Finish(false, err, generation); return
+                        end
+                        items[index], completed = info, true
+                        if not synchronous then Load(index + 1) end
+                    end, { retry = retry })
+                    synchronous = false; requests[#requests + 1] = request
+                    if failed or not completed or not self:IsCurrent(generation) then return end
+                    index = index + 1
+                end
+                if index > #items then
+                    local ids = {}; for _, info in ipairs(items) do ids[#ids + 1] = tostring(info.itemID) end
+                    self.input:SetValue(table.concat(ids, ";"))
+                    self:Run(action, items, generation); return
+                end
+            end
+            Load(1); return
+        end
         local candidates, message = Core.ItemResolver:Parse(self.input:GetText(), self.config.resolve)
         if not candidates then self:Feedback(message); return end
         self.candidates = candidates; self:UpdateCandidates()
@@ -104,7 +156,7 @@ function Core:CreateItemPicker(parent, config)
         end, { retry = retry })
     end
     picker.input = Theme:CreateInput(picker, {
-        placeholder = picker.config.placeholder or "物品 ID、链接或名称", maxLetters = 255, clearable = true,
+        placeholder = picker.config.placeholder or "物品 ID、链接或名称", maxLetters = picker.config.multiple and 1024 or 255, clearable = true,
         OnChanged = function()
             picker:Invalidate(); picker.selected = nil; picker.candidates = {}; picker.page = 1
             picker:UpdateCandidates(); picker:Feedback("")
@@ -165,7 +217,8 @@ function Core:CreateItemPicker(parent, config)
         if kind ~= "item" then self:Feedback("请从背包拖动物品到这里。"); return end
         local parsed = Core.ItemResolver:Parse(itemID, { allowName = false })
         if not parsed then self:Feedback("无效物品拖放。"); return end
-        self:SetValue(itemID)
+        local previous = self.input:GetText():match("^%s*(.-)%s*$")
+        self:SetValue(self.config.multiple and previous ~= "" and (previous .. ";" .. itemID) or itemID)
         -- Cursor is cleared only after a valid item identity is captured. No item action is performed.
         if ClearCursor then ClearCursor() end
         self:Resolve(self.config.dropMode)

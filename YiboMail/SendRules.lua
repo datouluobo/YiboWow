@@ -13,8 +13,10 @@ function Rules:Initialize()
     db.sendBlacklist = type(db.sendBlacklist) == "table" and db.sendBlacklist or {}
     db.sendBlacklist.items = type(db.sendBlacklist.items) == "table" and db.sendBlacklist.items or {}
     db.sendBlacklist.senders = type(db.sendBlacklist.senders) == "table" and db.sendBlacklist.senders or {}
-    if db.sendRuleVersion and db.sendRuleVersion ~= 1 then self.incompatible = true; return end
-    db.sendRuleVersion, db.sendRuleRevision = 1, tonumber(db.sendRuleRevision) or 0
+    if db.sendRuleVersion and db.sendRuleVersion ~= 1 and db.sendRuleVersion ~= 2 then self.incompatible = true; return end
+    -- Version 2 adds itemIDs; legacy single-item records retain their identity.
+    -- Earlier Mail builds reject this version instead of sending only itemID.
+    db.sendRuleVersion, db.sendRuleRevision = 2, tonumber(db.sendRuleRevision) or 0
     db.nextSendRuleID = tonumber(db.nextSendRuleID) or 0
     for id in pairs(db.sendRules) do db.nextSendRuleID = math.max(db.nextSendRuleID, tonumber(tostring(id):match("^r(%d+)$")) or 0) end
     -- Preserve the original table for recovery; migrate recognizable item rules once.
@@ -89,7 +91,11 @@ function Rules:Categories(classID)
     return result
 end
 function Rules:Label(rule)
-    if rule.kind == "item" then return (self:GetItem(rule.itemID) or {}).name or "无效物品" end
+    if rule.kind == "item" then
+        local names = {}
+        for _, id in ipairs(self:ItemIDs(rule)) do names[#names + 1] = (self:GetItem(id) or {}).name or ("物品 " .. id) end
+        return #names > 0 and table.concat(names, "、") or "无效物品"
+    end
     local label = "分类 " .. tostring(rule.classID)
     for _, entry in ipairs(self:Categories()) do if entry.value == rule.classID then label = entry.label end end
     if rule.subclassID ~= nil then
@@ -98,6 +104,14 @@ function Rules:Label(rule)
         end
     end
     return label
+end
+function Rules:ItemIDs(rule)
+    if type(rule.itemIDs) == "table" then return rule.itemIDs end
+    return rule.itemID and { rule.itemID } or {}
+end
+function Rules:HasItem(rule, itemID)
+    for _, id in ipairs(self:ItemIDs(rule)) do if id == itemID then return true end end
+    return false
 end
 function Rules:List()
     local result = {}
@@ -115,9 +129,14 @@ function Rules:Save(draft, id)
     if not address then return nil, err end
     rule.recipient, rule.excluded, rule.characters = address, rule.excluded or {}, nil
     if rule.kind == "item" then
-        local item = self:GetItem(rule.itemID)
-        if not item or not item.ready then return nil, "请选择已加载的具体物品。" end
-        rule.itemID = item.itemID
+        local ids, seen = {}, {}
+        for _, id in ipairs(self:ItemIDs(rule)) do
+            local item = self:GetItem(id)
+            if not item or not item.ready then return nil, "请确认所有物品，等待信息加载完成。" end
+            if not seen[item.itemID] then seen[item.itemID] = true; ids[#ids + 1] = item.itemID end
+        end
+        if #ids == 0 then return nil, "请先确认物品。" end
+        rule.itemIDs, rule.itemID = ids, ids[1]
     elseif rule.kind == "category" then
         local valid
         for _, entry in ipairs(self:Categories()) do if entry.value == rule.classID then valid = true end end
@@ -130,11 +149,20 @@ function Rules:Save(draft, id)
     else return nil, "请选择规则类型。" end
     -- Matching objects are account-wide and must be unambiguous.
     for _, other in ipairs(self:List()) do
-        local same = rule.kind == other.kind and (rule.kind == "item" and rule.itemID == other.itemID
+        local overlap = false
+        if rule.kind == "item" and other.kind == "item" then
+            for _, itemID in ipairs(self:ItemIDs(rule)) do if self:HasItem(other, itemID) then overlap = true; break end end
+        end
+        local same = rule.kind == other.kind and (overlap
             or rule.kind == "category" and rule.classID == other.classID and rule.subclassID == other.subclassID)
         local faction, otherFaction = Addon.Recipients:GetFaction(address), Addon.Recipients:GetFaction(other.recipient)
         local separate = faction and otherFaction and faction ~= otherFaction
-        if other.id ~= id and same and not separate then return nil, "该匹配对象已有同阵营或阵营未确认的规则，请编辑已有规则。", other.id end
+        if other.id ~= id and same and not separate then
+            if Addon.Recipients:Key(other.recipient) == Addon.Recipients:Key(address) then
+                return nil, "该规则已存在，无需重复添加；请编辑已有规则以调整物品。", other.id
+            end
+            return nil, "该匹配对象已有发往其它收件人的规则，请编辑已有规则以变更收件人。", other.id
+        end
     end
     if id and not Addon.db.sendRules[id] then return nil, "原规则已不存在，请重新选择。" end
     if not id then Addon.db.nextSendRuleID = Addon.db.nextSendRuleID + 1; id = "r" .. Addon.db.nextSendRuleID end
@@ -196,7 +224,7 @@ function Rules:Match(bags, skipped)
         local best, candidates, excluded = -1, {}, false
         for _, entry in ipairs(active) do
             local rule, rank = entry.rule
-            if rule.kind == "item" and rule.itemID == item.itemID then rank = 3
+            if rule.kind == "item" and self:HasItem(rule, item.itemID) then rank = 3
             elseif rule.kind == "category" and class ~= nil and rule.classID == class
                 and (rule.subclassID == nil or rule.subclassID == subclass) then rank = rule.subclassID ~= nil and 2 or 1 end
             if rank then

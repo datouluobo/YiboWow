@@ -111,9 +111,13 @@ local function Summary(character)
     if counts.soon > 0 then alerts[#alerts + 1] = "临期 " .. counts.soon end
 
     local severity = counts.expired > 0 and 3 or (counts.urgent > 0 and 2 or (counts.soon > 0 and 1 or 0))
+    local current = Core.Characters:GetCurrent()
+    local name = Core.Characters:FormatName(character, { nameMode = "short" }) or "未知角色"
+    local identity = Core.Characters:FormatName(character, { nameMode = "short",
+        realmMode = current and current.realm and "sameRealm" or "full", referenceRealm = current and current.realm })
     return {
-        character = Core.Characters:GetDisplayName(character, "short"),
-        realm = character.realm or "",
+        character = name,
+        realm = identity and identity ~= name and character.realm or "",
         class = character.class,
         count = mailCount,
         attachments = tostring(attachmentSlots),

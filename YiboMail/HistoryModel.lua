@@ -61,9 +61,11 @@ function History:Query(context, options)
     end)
     return result
 end
-function History:Content(entry)
+function History:Content(entry, omitItems)
     local parts = {}
-    for _, item in ipairs(entry.items) do parts[#parts + 1] = Addon.ViewModel:Escape(item.name or ("物品 " .. tostring(item.itemID))) .. " ×" .. tostring(item.quantity or 0) end
+    if not omitItems then
+        for _, item in ipairs(entry.items) do parts[#parts + 1] = Addon.ViewModel:Escape(item.name or ("物品 " .. tostring(item.itemID))) .. " ×" .. tostring(item.quantity or 0) end
+    end
     if entry.money > 0 then
         local cod = entry.record.cod == true or (tonumber(entry.record.cod) or tonumber(entry.record.codAmount) or 0) > 0
         parts[#parts + 1] = (cod and "整封COD " or "金币 ") .. Addon.ViewModel:Money(entry.money)
@@ -71,7 +73,7 @@ function History:Content(entry)
         parts[#parts + 1] = "整封COD " .. Addon.ViewModel:Money(entry.record.codAmount)
     end
     if entry.state == "unverified" then parts[#parts + 1] = entry.record.cacheProjection and "曾扫描内容，当前去向待核实" or "内容为操作记录，结果待核实" end
-    return #parts > 0 and table.concat(parts, "，") or "无物品或金币"
+    return #parts > 0 and table.concat(parts, "，") or (omitItems and "" or "无物品或金币")
 end
 function History:Outcome(entry)
     if entry.state == "in-transit" then return "成功发送 · 在途" end

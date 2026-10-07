@@ -1,5 +1,10 @@
 # YiboCore 更新日志
 
+## 1.7.1
+
+- `item-picker:2` 提供批量物品确认与保留输入配置；支持分隔输入、连续拖放、去重、整批加载及失效回调取消。
+- YiboMail 1.1.0 接入批量确认；单物品控件的默认行为与 API v7 调用保持兼容。公共 API 保持 v8。
+
 ## 1.7.0
 
 - 公共 API 升至 v8，新增 `character-name-format:1` 与 `Characters:FormatName(identity, options)`，支持原名／自定义短名、同服省略服务器及完整名称，也可格式化目录外联系人。

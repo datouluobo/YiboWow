@@ -66,8 +66,11 @@ function YiboCore.UITheme:CreateScrollFrame(parent) return Frame(parent) end
 dofile("YiboMail/Namespace.lua")
 local Addon = YiboMail; Addon.Core = YiboCore
 Addon.db = { settings = {} }
-local current = { id = "char" }
-Addon.Core.Characters = { GetCurrent = function() return current end }
+local current = { id = "char", name = "Current", realm = "Realm" }
+Addon.Core.Database = { GetDB = function() return nil end }
+dofile("YiboCore/Data/Characters.lua")
+local formatName = Addon.Core.Characters.FormatName
+Addon.Core.Characters = { GetCurrent = function() return current end, GetAllCached = function() return { current } end, FormatName = formatName }
 local opened
 Addon.Core.AccountView = { NotifyPageChanged = function() end, Toggle = function(_, page) opened = page end }
 Addon.GetInboxPreferences = function() return { rememberFilters = false, selectItems = true, selectMoney = true } end
@@ -95,8 +98,11 @@ TakeInboxItem = function(index, slot) assert(index == 1); calls = calls + 1; tak
 GetContainerNumFreeSlots = function() return 10, 0 end
 local stubView = Addon.ViewModel
 dofile("YiboMail/ViewModel.lua")
+dofile("YiboMail/CacheUI.lua")
+function methods:GetStringWidth() return #(self.text or "") * 7 end
 local realExpiry = Addon.ViewModel.Expiry
 stubView.ItemBorder, stubView.AttachmentBorder = Addon.ViewModel.ItemBorder, Addon.ViewModel.AttachmentBorder
+stubView.CharacterLabel, stubView.CounterpartLabel = Addon.ViewModel.CharacterLabel, Addon.ViewModel.CounterpartLabel
 Addon.ViewModel = stubView
 dofile("YiboMail/Inbox.lua"); dofile("YiboMail/Queue.lua"); dofile("YiboMail/NativeUI.lua")
 local native, queue = Addon.NativeUI, Addon.Queue
@@ -145,7 +151,7 @@ Click(panel.rows[1].check); assert(not next(panel.selection) and panel.rows[1].c
 Click(panel.rows[1]); Click(panel.rows[2].check)
 assert(panel.selection["key:1"] and not panel.selection["key:2"] and not panel.selection["key:money"])
 assert(panel.rows[1].check:GetCheckState() == "partial" and panel.expanded.key)
-assert(panel.rows[2].check:GetHeight() == 46 and panel.rows[2].check:GetFrameLevel() > panel.rows[2]:GetFrameLevel())
+assert(panel.rows[2].check:GetHeight() == 32 and panel.rows[2].check:GetFrameLevel() > panel.rows[2]:GetFrameLevel())
 Click(panel.rows[1].check); assert(panel.rows[1].check:GetCheckState() == "checked")
 Click(panel.rows[1].check); assert(not next(panel.selection) and not panel.collect:IsEnabled())
 native:Collect(); assert(panel.notice and calls == 0)
@@ -164,7 +170,7 @@ Addon.Scanner.ReadVisible = function() return { mail } end
 Menu("clear"); Click(panel.rows[2].check)
 assert(panel.collect.label:GetText() == "收取 1")
 Click(panel.collect); assert(queue.pending and calls == 1 and takenSlot == 1 and #queue.actions == 1)
-assert(panel.rows[1].summary:IsShown() and panel.expanded.key and not panel.rows[2].check:IsEnabled())
+assert(panel.rows[1].summary:GetText() ~= "" and panel.expanded.key and not panel.rows[2].check:IsEnabled())
 native:Collect(); assert(calls == 1 and panel.notice)
 Menu("pause"); assert(queue.state == "paused" and queue.pending)
 local pausedActions = queue.actions

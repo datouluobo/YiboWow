@@ -18,7 +18,7 @@
 
 审查仓库根目录的 `YiboCore` 与 13 个业务插件：以 `.toc` 加载清单、初始化检查、运行时代码和相关 API 文档为依据，排除第三方 Libs、探针、构建输出与测试辅助实现。分支为 `main`，工作树包含尚未提交的其他改动，以下结论是本次读取的本地源码快照，不代表远端或已发布安装包状态。
 
-首次审查时 Core 源码版本为 **1.6.3 / API v7**。本次 CAP-001 实施后，当前源码为 **1.7.0 / API v8**，依据 [Bootstrap.lua](../Bootstrap.lua) 与 [YiboCore.toc](../YiboCore.toc)，尚未上传发布渠道。首次审查仅静态核对；后续名称契约与旧调用回归的自动化验证见 CAP-001，游戏内仍未验收。
+首次审查时 Core 源码版本为 **1.6.3 / API v7**。本次 CAP-001 实施后，当前源码为 **1.7.1 / API v8**，依据 [Bootstrap.lua](../Bootstrap.lua) 与 [YiboCore.toc](../YiboCore.toc)，尚未上传发布渠道。首次审查仅静态核对；后续名称契约与旧调用回归的自动化验证见 CAP-001，游戏内仍未验收。
 
 首次审查完整登记名称显示、基础输入和物品选择相关范围，并建立账号页面、入口、设置接入基线。其余已注册能力登记为现有接口索引，未进行逐调用验收；后续发现真实迁移需求时新增独立条目。
 
@@ -26,9 +26,9 @@
 
 | 编号 | 能力 | Core 状态 | 最低要求 / 发布依据 | 首次审查结果 | 下一触发点 |
 | --- | --- | --- | --- | --- | --- |
-| CAP-001 | 公共角色／联系人名称格式化 | 已提供 | Core 1.7.0 / API v8，`character-name-format:1`；尚未上传发布渠道 | Core 自身显示已接入，自动化验证通过；10 个业务插件待迁移，3 个当前不适用 | 游戏内核对 Core 与旧业务表头；业务插件后续修改相关显示时接入 |
-| CAP-002 | 基础输入控件 | 已提供 | API v7，`basic-input:1`；文档首批 Core 1.6.1 | Currency 有明确接入与验证记录；Mail、Vault 部分接入；6 个插件保留本地输入 | 对应搜索／输入控件修改时迁移，并核对最低版本 |
-| CAP-003 | 物品解析、选择与操作确认 | 已提供 | API v7，`item-resolver:1`、`item-picker:1`；文档首批 Core 1.6.1 | Currency 已接入所列范围；Mail 部分接入；AutoOpen、Vault 待评估 | 修改物品录入／选择功能时评估并接入；业务校验与执行由业务插件负责 |
+| CAP-001 | 公共角色／联系人名称格式化 | 已提供 | Core 1.7.0 / API v8，`character-name-format:1`；尚未上传发布渠道 | Core 自身显示已接入；Mail 部分接入，其他业务范围随功能修改迁移 | 游戏内核对及业务剩余显示调用 |
+| CAP-002 | 基础输入控件 | 已提供 | API v7，`basic-input:1`；文档首批 Core 1.6.1 | Currency 有明确接入与验证记录；Mail 版本要求已修正、旧输入部分待迁移；Vault 部分接入 | 对应搜索／输入控件修改时迁移，并核对最低版本 |
+| CAP-003 | 物品解析、选择与操作确认 | 已提供 | API v7，`item-resolver:1`；Core 1.7.1 / API v8 提供 `item-picker:2` 批量扩展 | Currency 保持单物品兼容；Mail 已接入所列范围；AutoOpen、Vault 待评估 | 有真实批量录入需求时使用公开配置；业务校验与执行由业务插件负责 |
 | CAP-004 | 账号页面、入口与设置工作台 | 已提供 | 账号页面／入口 API v5、`account-view:1`／`account-entry:1`；独立设置注册 API v6 | 已有广泛注册；存在旧设置壳、版本声明和验证待核对项 | 修改对应入口或设置功能时处理所列缺口 |
 
 ## CAP-001：公共名称格式化
@@ -44,7 +44,7 @@
 
 ### 业务插件接入表
 
-以下 13 项最近审查日期均为 2026-10-07；业务显式接入新契约的版本均为“尚无”，本轮未修改业务插件。共享表头在 Core 内部已接入，但仍须逐业务核对遗漏调用、最低要求与实际行为，因此插件状态继续保留待迁移／不适用。
+以下 13 项最近审查日期均为 2026-10-07；接入版本与证据逐行记录。共享表头在 Core 内部已接入，业务仍须分别核对调用、最低要求与实际行为。
 
 | 插件 | 状态 | 已有路径与证据 | 剩余范围 / 后续触发 |
 | --- | --- | --- | --- |
@@ -55,7 +55,7 @@
 | YiboCrafting | 待迁移 | [AccountPage.lua](../../YiboCrafting/AccountPage.lua) 的 CharacterName 本地拼服务器，矩阵直接调用 Core 短名读取 | 矩阵、角色列表、角色下拉与 tooltip；核对不同布局是否应使用原名或短名 |
 | YiboCurrency | 待迁移 | [AccountPage.lua](../../YiboCurrency/AccountPage.lua) 的 DisplayName / DisplayIdentity 本地格式化；调用共享表头时显式传入原名 | 表头、角色行、物品与货币 tooltip 标签及宽度测量；保留总计／空状态特殊行 |
 | YiboLegendary | 待迁移 | [UI.lua](../../YiboLegendary/UI.lua) 的 CharacterLabel 用于列表、tooltip、确认及行动项 | 上述调用统一声明显示策略；人工确认应提供可精确识别的真实完整身份 |
-| YiboMail | 待迁移 | [AccountPage.lua](../../YiboMail/AccountPage.lua) 使用 Core 短名和独立服务器标签；[CacheUI.lua](../../YiboMail/CacheUI.lua) 组合短名、服务器；[Recipients.lua](../../YiboMail/Recipients.lua) 的 Label 对目录外联系人执行同服省略 | 收件箱账号页、缓存身份显示、通讯录与快捷收件人标签；保留联系人备注优先和文本转义；快照来源身份说明也需核对 |
+| YiboMail | 部分接入 | 工作树 1.1.0-api1：AccountPage 总览／预览、ViewModel 业务标签及 CacheUI／NativeUI／规则命中显示复用 FormatName；初始化检查 API v8、名称能力与方法。WorkspaceSpec、NativeInboxSpec、RuleSendUISpec 和 InboxReleaseSpec 通过 | 通讯录／快捷标签的 Recipients:Label 仍待对应功能修改时迁移；保留联系人备注与邮寄地址解析。游戏内显示待验收 |
 | YiboMounts | 不适用 | [加载清单](../../YiboMounts/YiboMounts.toc) 与图鉴提示／Core 设置适配未发现角色或联系人身份显示 | 新增相应显示需求时重审；坐骑名称与来源格式继续归业务 |
 | YiboQuestBlocker | 待迁移 | [AccountPage.lua](../../YiboQuestBlocker/AccountPage.lua) 的 ShortName 实际返回原名；CharacterIdentity 解析回退键，并显式覆盖共享表头名称 | 当前角色分组标题、表头和身份 tooltip；旧键解析用于身份迁移，不能用格式化结果替代 |
 | YiboReputation | 待迁移 | [AccountMatrixView.lua](../../YiboReputation/AccountMatrixView.lua) 与 [MonitoredPreview.lua](../../YiboReputation/MonitoredPreview.lua) 已调用共享角色表头 | Core 1.7.0 表头内部已接入；后续核对业务侧遗漏标签、最低要求与游戏表现，再记录业务显式接入。公会名称与公会键不属于角色显示 |
@@ -84,7 +84,7 @@
 | YiboCrafting | 待迁移 | [AccountPage.lua](../../YiboCrafting/AccountPage.lua) 的搜索框本地创建 | 搜索框输入／焦点／清空行为；未登记接入版本 |
 | YiboCurrency | 已接入 | [Settings.lua](../../YiboCurrency/Settings.lua) 的自定义物品选择器间接使用公共输入；[CoreIntegration.lua](../../YiboCurrency/CoreIntegration.lua) 要求 API v7 和所需方法 | 所列范围首批 Currency 0.9.1；API 文档有控件验证记录，当前未重跑 |
 | YiboLegendary | 不适用 | 当前业务页与业务设置未发现本地 EditBox | 新增输入时使用公共控件；无接入版本 |
-| YiboMail | 部分接入 | [CacheUI.lua](../../YiboMail/CacheUI.lua)、[SendRulesSettings.lua](../../YiboMail/SendRulesSettings.lua) 已调用公共输入 | [MailUI.lua](../../YiboMail/MailUI.lua)、[NativeUI.lua](../../YiboMail/NativeUI.lua)、[RecipientUI.lua](../../YiboMail/RecipientUI.lua) 仍有本地输入；初始化仍仅要求 API v6。工作树，未登记首次发布版本／运行验证 |
+| YiboMail | 部分接入 | 工作树 1.1.0-api1：CacheUI、SendRulesSettings 使用公共输入；最低 API 提高到 v8；WorkspaceSpec、RuleSendUISpec 和 InboxReleaseSpec 通过 | MailUI、NativeUI、RecipientUI 尚未涉及的本地输入随对应修改迁移；已覆盖输入在游戏内仍待核对 |
 | YiboMounts | 不适用 | 图鉴及 Core 设置适配未发现本地 EditBox | 新增输入时使用公共控件；无接入版本 |
 | YiboQuestBlocker | 待迁移 | [AccountPage.lua](../../YiboQuestBlocker/AccountPage.lua) 的等级表达式与手动任务录入本地创建 | 对应输入控件；任务 ID 校验仍归业务。未登记接入版本 |
 | YiboReputation | 待迁移 | [AccountMatrixView.lua](../../YiboReputation/AccountMatrixView.lua) 的搜索框本地创建 | 搜索框及其状态；未登记接入版本 |
@@ -106,7 +106,7 @@
 | YiboCrafting | 不适用 | 当前制造页搜索已有业务目录，未发现通用物品身份录入控件 | 配方选择与制造逻辑仍归业务 |
 | YiboCurrency | 已接入 | Settings 的 CreateItemPicker、删除操作确认复用 Core；初始化检查 API v7 与所需方法 | 所列范围首批 Currency 0.9.1，API 文档记录验证；本轮未重跑 |
 | YiboLegendary | 不适用 | 人工目标确认不是物品身份选择 | 不为统一形式改造成物品确认器 |
-| YiboMail | 部分接入 | [SendRulesSettings.lua](../../YiboMail/SendRulesSettings.lua) 的 RulePicker 已调用 CreateItemPicker | 最低 API 仍为 6；retain 分支覆写 picker.Finish，需核对公开扩展契约并评估所需钩子。工作树，未登记发布／验证记录 |
+| YiboMail | 已接入 | 工作树 1.1.0-api1：指定规则使用 item-picker:2 的 multiple／retainInput；分类排除与全局黑名单复用单物品模式；初始化检查 API v8 和能力 v2；使用公开配置 | 接口见 API-v8-批量物品确认；CoreItemControlsSpec、RuleSendUISpec、RuleSendSpec 和 InboxReleaseSpec 通过。游戏内待验收；新批量需求按契约扩展 |
 | YiboMounts | 不适用 | 当前图鉴读取坐骑／物品来源，未提供通用物品录入 | 展示与来源查询不自动替换成选择器 |
 | YiboQuestBlocker | 不适用 | 手动输入任务 ID | 校验与操作归任务业务 |
 | YiboReputation | 不适用 | 搜索声望目录，未发现通用物品身份录入 | 声望搜索不属于物品解析 |
@@ -151,11 +151,11 @@ Core 1.7.0 新增 `character-name-format:1`，接入进度见 CAP-001。接口�
 | 编号 | 事项 | 关联能力 | 处理触发 / 验证要求 |
 | --- | --- | --- | --- |
 | AUD-001 | 公共名称格式化：Core 阶段已完成，业务阶段待迁移 | CAP-001 | Core 接口、契约与兼容自动化验证已完成；游戏内核对及各业务插件接入继续随对应功能推进 |
-| AUD-002 | Mail 已调用 v7 输入／选择器，最低 API 仍为 6 | CAP-002／003 | 下一次对应控件或初始化修改时提高要求；覆盖旧 Core 提示升级及停止行为 |
+| AUD-002 | Mail 输入／选择器最低要求已修正 | CAP-002／003 | 工作树 1.1.0-api1 检查 API v8、名称能力与 item-picker:2；InboxReleaseSpec 覆盖升级提示和停止行为，已关闭 |
 | AUD-003 | Vault 搜索框调用 v7 输入，最低 API 仍为 6 | CAP-002 | 下一次搜索控件或初始化修改时提高要求；核对旧 Core 路径 |
 | AUD-004 | Mounts 使用 v6 设置注册接口却仅检查 API v5 | CAP-004 | 下一次 Core 设置接入修改时修正，并明确独立运行／加载顺序 |
 | AUD-005 | AltoBoss 仍保留独立设置壳回退 | CAP-004 | 后续涉及设置壳时收拢；如需旧版兼容例外，记录必要性、边界与移除条件 |
-| AUD-006 | Mail 通过覆写 picker.Finish 扩展选择器完成行为 | CAP-003 | 后续修改规则物品选择时核对公开扩展点；必要时先扩展 Core，验证取消、输入变化与完成回调 |
+| AUD-006 | Mail 已通过公开配置保留确认输入 | CAP-003 | Core 1.7.1 提供 retainInput 与 multiple；CoreItemControlsSpec 与 RuleSendUISpec 验证生命周期，已关闭 |
 
 ## 更新记录
 
@@ -163,3 +163,4 @@ Core 1.7.0 新增 `character-name-format:1`，接入进度见 CAP-001。接口�
 | --- | --- | --- |
 | 2026-10-07 | 建立台账；首次静态审查 Core 与全部 13 个业务插件 | 登记 CAP-001～004、现有能力索引及 AUD-001～006；源码路径见各表；本轮仅文档更新，未修改运行代码或运行测试 |
 | 2026-10-07 | CAP-001 Core 实施 | Core 1.7.0 / API v8 提供 FormatName 与 character-name-format:1，完成 Core 内部显示迁移；75 项名称／兼容检查、44 文件语法检查及 Currency 控件回归通过。业务状态保留，游戏内尚未验收 |
+| 2026-10-07 | Mail 1.1.0 工作树接入；Core 1.7.1 批量控件扩展 | CAP-001 记录已覆盖与剩余名称调用；CAP-002 最低版本缺口关闭、旧输入保留待迁移；CAP-003 完成所列范围接入；AUD-002／006 关闭。相关自动化及 Core／Mail 66 文件语法检查通过；尚未发布，游戏内待验收 |

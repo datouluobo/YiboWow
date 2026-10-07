@@ -181,7 +181,7 @@ function C:Contact(address)
 end
 function C:Skip(id, restore)
     local ok, err = self:Undo(); if not ok then return nil, err end
-    self.skipped[id] = not restore or nil
+    for _, ruleID in ipairs(type(id) == "table" and id or { id }) do self.skipped[ruleID] = not restore or nil end
     self.scope, self.state = nil, "idle"; self:Scan(); self:Changed(); return true
 end
 function C:OnEvent(event)

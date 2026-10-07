@@ -103,6 +103,10 @@ YiboCore.Characters = {
     GetDisplayName = function(_, character) return character.name end,
     GetAllCached = function() return chars end,
 }
+YiboCore.Database = { GetDB = function() return nil end }
+local characterAPI = YiboCore.Characters
+dofile("YiboCore/Data/Characters.lua")
+characterAPI.FormatName = YiboCore.Characters.FormatName; YiboCore.Characters = characterAPI
 local definition
 YiboCore.AccountView = { NotifyPageChanged = function() end, RegisterPage = function(_, _, page) definition = page; return true end }
 YiboCore.Entry = { RegisterBusinessEntry = function() return true end }
@@ -373,7 +377,7 @@ longHistory.subject = string.rep('较长的多行主题', 12)
 longHistory.items = { Item(100, 2), Item(101, 3), Item(102, 4), Item(103, 5) }
 local historyRoot = Frame(host)
 local offsets, heights, total, fittedWidth = Addon.CacheUI:HistoryLayout(historyRoot, historyFields, 1000, { shortHistory, longHistory })
-assert(heights[2] == 38 and heights[1] == 38 and offsets[2] == 38 and total == 76 and fittedWidth == 1000)
+assert(heights[2] > heights[1] and heights[1] == 38 and offsets[2] == heights[1] and total == heights[1] + heights[2] and fittedWidth == 1000)
 for _, width in ipairs({ 320, 1000, 1200, 1800 }) do
     local columns = Addon.Copy(historyFields)
     Addon.CacheUI:HistoryLayout(historyRoot, columns, width, { shortHistory, longHistory })
@@ -396,12 +400,12 @@ shortHistory.character = b
 assert(Addon.CacheUI:HistoryValues(shortHistory).character:find(b.realm, 1, true))
 local historyRow = Frame(historyRoot)
 Addon.CacheUI:TableRow(historyRoot, historyRow, historyFields, historyValues, 1000, heights[1] - 2)
-historyRow.iconHover:Fire('OnEnter'); assert(GameTooltip.link == 'item:100')
+historyRow.itemButtons[1]:Fire('OnEnter'); assert(GameTooltip.link == 'item:100')
 shortHistory.items, shortHistory.money = {}, 120000
 historyValues = Addon.CacheUI:HistoryValues(shortHistory)
 assert(historyValues.icon == nil and historyValues.content:find('金币', 1, true) and not historyValues.content:find('\n', 1, true))
 Addon.CacheUI:TableRow(historyRoot, historyRow, historyFields, historyValues, 1000, heights[1] - 2)
-print('PASS: fixed single-line history; capped subject/content widths and all columns fit narrow/wide viewports; same-realm short names; item tooltips and text-only gold')
+print('PASS: history content wraps with adaptive heights; capped columns fit narrow/wide viewports; same-realm names; item tooltips and text-only gold')
 assert(Addon.db.settings.inbox == nil and Addon.db.workspace == nil)
 dofile("YiboMail/WorkspaceState.lua"); assert(Addon.WorkspaceState:Get().tab == "inbox" and Addon.WorkspaceState:Get().history.search == "")
 local legacy = { state = "in-transit", recipient = "Legacy", observedAt = now }

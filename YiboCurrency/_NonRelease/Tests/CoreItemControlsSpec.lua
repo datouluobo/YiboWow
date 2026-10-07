@@ -235,3 +235,28 @@ dofile("YiboCurrency/CoreIntegration.lua")
 local ok, err = YiboCurrency.CoreIntegration:Initialize()
 assert(not ok and err:find("1.6.1") and err:find("v7"))
 print("CoreItemControlsSpec: passed resolver, input, picker, Currency operations, lifecycle, layout and old-Core checks")
+
+-- The same Core control also supports atomic multi-item confirmation.
+local confirmed, commits = nil, 0
+local batch = Core:CreateItemPicker(UIParent, { multiple = true, retainInput = true, dropMode = "add",
+    add = { Execute = function(items) confirmed = items; commits = commits + 1; return true end } })
+batch:SetValue("1;2,1"); batch:Resolve("add")
+assert(#confirmed == 2 and commits == 1 and batch.input:GetText() == "1;2" and not batch.busy)
+cursor = { "item", 3 }; batch:ReadCursor(); assert(#confirmed == 3 and batch.input:GetText() == "1;2;3")
+cursor = { "item", 3 }; batch:ReadCursor(); assert(#confirmed == 3)
+batch:SetValue("1;;2"); batch:Resolve("add"); assert(commits == 3 and batch.input:GetText() == "1;;2")
+cached[5] = "名称,含分隔符"
+batch:SetValue("|cff00ff00|Hitem:5:0|h[名称,含分隔符]|h|r;1"); batch:Resolve("add")
+assert(#confirmed == 2 and confirmed[1].itemID == 5)
+local before = commits
+batch:SetValue("1;901;902"); batch:Resolve("add"); assert(batch.busy and commits == before)
+cached[901] = "Loaded901"; Core.ItemResolver:Finish(901, true)
+assert(batch.busy and commits == before)
+cached[902] = "Loaded902"; Core.ItemResolver:Finish(902, true)
+assert(not batch.busy and commits == before + 1 and #confirmed == 3)
+batch:SetValue("1;903"); batch:Resolve("add"); Core.ItemResolver:Finish(903, false)
+assert(not batch.busy and commits == before + 1 and batch.input:GetText() == "1;903")
+batch:SetValue("1;904"); batch:Resolve("add"); batch:SetValue("2")
+cached[904] = "Old callback"; Core.ItemResolver:Finish(904, true)
+assert(commits == before + 1 and batch.input:GetText() == "2")
+print("PASS: batch separators/deduplication/links; consecutive drops retain selection; atomic async loading/failure; stale callback cancellation; single-item picker regression")

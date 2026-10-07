@@ -90,24 +90,18 @@ function S:ReturnToList() self:Edit() end
 -- Keep Core's complete input/add/drop operation group and shared sizing.
 local function RulePicker(parent, label, callback, validate, retain)
     local picker = Addon.Core:CreateItemPicker(parent, { enterAction = "add", dropMode = "add", rightInset = 0,
-        placeholder = "物品 ID、链接或名称", OnLayoutChanged = function() S:Refresh() end,
+        multiple = retain == true, retainInput = retain == true,
+        resolve = { allowName = true, includeBags = true },
+        placeholder = retain and "多个物品用 ; 或 , 分隔" or "物品 ID、链接或名称", OnLayoutChanged = function() S:Refresh() end,
         OnSelected = function(info) callback(info) end,
         add = { label = label, Validate = validate, Execute = function(info)
             if not S.editing then return nil, "请先选择要编辑的规则。" end
-            callback(info); return true, "已选择：" .. info.name
+            callback(info)
+            local names = {}
+            for _, item in ipairs(retain and info or { info }) do names[#names + 1] = (item.icon and ("|T" .. item.icon .. ":20:20|t ") or "") .. item.name end
+            return true, "已选择：" .. table.concat(names, "、")
         end }, OnSuccess = function() S:Refresh() end })
     picker.drop:SetText("拖放到此")
-    if retain then
-        local finish = picker.Finish
-        function picker:Finish(ok, message, generation)
-            if not ok then return finish(self, ok, message, generation) end
-            if not self:IsCurrent(generation) then return end
-            self.busy = false
-            self:SetValue(S.draft.itemID or "")
-            self:Feedback(message)
-            if self.config.OnSuccess then self.config.OnSuccess() end
-        end
-    end
     function picker:Layout(width)
         local h, gap, actionWidth, dropWidth = Theme().Size.standard, 6, retain and 72 or 96, 80
         self.layoutWidth = width; self:SetWidth(width)
@@ -174,15 +168,16 @@ function S:Create(parent)
         Place(button, (index - 1) * 58, 0, 58, t.Size.standard)
         button:SetScript("OnClick", function() p.kind.onValueChanged(value) end)
     end
-    p.item = RulePicker(p.editor, "确认物品", function(info)
-        S.draft.itemID = info.itemID; p.item.input:SetValue(info.itemID); S.dirty = true; S:Refresh()
+    p.item = RulePicker(p.editor, "确认", function(items)
+        local ids = {}; for _, item in ipairs(items) do ids[#ids + 1] = item.itemID end
+        S.draft.itemIDs, S.draft.itemID = ids, ids[1]; S.dirty = true
     end, nil, true)
     local itemChanged = p.item.input:GetScript("OnTextChanged")
     p.item.input:SetScript("OnTextChanged", function(control, userInput)
         itemChanged(control, userInput)
         if S.editing and not control.silent and (userInput or control.notifyProgrammatic) then
             -- Editing the query must not silently save the previously selected item.
-            S.draft.itemID, S.dirty = nil, true
+            S.draft.itemID, S.draft.itemIDs, S.dirty = nil, nil, true
         end
     end)
     p.class = t:CreateDropdown(p.editor, 240, {})
@@ -209,6 +204,9 @@ function S:Create(parent)
         function() return S.draft.kind == "category", "仅分类规则支持黑名单。" end)
     p.cancel = Button(p.editor, "清空", function() S:ReturnToList() end)
     p.save = Button(p.editor, "保存规则", function()
+        if S.draft.kind == "item" and (p.item.busy or p.item.input:GetText() ~= table.concat(Addon.SendRules:ItemIDs(S.draft), ";")) then
+            S.notice = "请先点击确认，等待全部物品加载完成后再保存规则。"; S:Refresh(); return
+        end
         local ok, id = Addon.SendRules:Save(S.draft, S.editID)
         S.notice = ok and "规则已保存。" or id
         if ok then
@@ -396,6 +394,11 @@ function S:RenderList(width, host)
                 local label = Addon.SendRules:Label(rule)
                 if rule.kind == "category" and Count(rule.excluded) > 0 then label = label .. " · 黑名单 " .. Count(rule.excluded) .. " 种" end
                 row.label:SetText(label)
+                row.label:SetWordWrap(true); row.label:SetHeight(0)
+                local labelHeight = math.max(24, row.label:GetStringHeight())
+                row.label:SetHeight(labelHeight)
+                local rowHeight = math.max(step, labelHeight + 6)
+                row:SetHeight(rowHeight); y = y + rowHeight - step
                 row.label:SetTextColor(unpack(Addon.SendRules:IsRecipientEnabled(group.recipient) and t.Colors.text or t.Colors.muted))
                 if self.editID == rule.id then row:SetBackdropColor(unpack(t.Colors.selected)) end
                 row:SetScript("OnMouseUp", function(_, button) if button == "LeftButton" then S:Edit(rule.id) end end)
@@ -456,10 +459,9 @@ function S:RenderEditor(width)
     local category = draft.kind == "category"
     p.item:SetShown(not category); p.class:SetShown(category); p.subclass:SetShown(category)
     if not category then
-        Place(p.item, 116, y); if sync then p.item:SetValue(draft.itemID or "") end
+        Place(p.item, 116, y); if sync then p.item:SetValue(table.concat(Addon.SendRules:ItemIDs(draft), ";")) end
         if sync and draft.itemID then
-            local item = Addon.SendRules:GetItem(draft.itemID) or {}
-            p.item:Feedback((item.icon and ("|T" .. item.icon .. ":20:20|t ") or "") .. (item.name or tostring(draft.itemID)))
+            p.item:Feedback("已选择：" .. Addon.SendRules:Label(draft))
         end
         y = y + p.item:Layout(editorWidth - 116) + 8
     else

@@ -14,10 +14,11 @@ DEFAULT_CHAT_FRAME = { AddMessage = function(_, message) messages[#messages + 1]
 local function Forbidden() error("Disabled feature was registered or opened") end
 local owner
 YiboCore = {
-    CheckAPIVersion = function(_, version) return version == 6 end,
-    RegisterAddon = function(_, name) assert(name == "YiboMail"); return true end,
+    CheckAPIVersion = function(_, version) return version == 8 end,
+    HasCapability = function(_, name, version) return name == "character-name-format" and version == 1 or name == "item-picker" and version == 2 end,
+    RegisterAddon = function(_, name, options) assert(name == "YiboMail" and options.requiredAPI == 8); return true end,
     CharacterCleanup = { RegisterOwner = function(_, name, callbacks) owner = callbacks; assert(name == "YiboMail"); return true end },
-    Characters = { GetCurrent = function() return { id = "test", name = "Test", realm = "Realm" } end },
+    Characters = { GetCurrent = function() return { id = "test", name = "Test", realm = "Realm" } end, FormatName = function(_, character) return character.name end },
     AccountView = {
         RegisterPage = function(_, addonName, definition)
             assert(addonName == "YiboMail" and definition.id == "mail-inbox")
@@ -93,3 +94,18 @@ assert(owner.Inspect({ id = "friendOnly" }, {}).hasData)
 owner.Delete({ id = "friendOnly" }, {}); assert(not addon.db.friendsByCharacter.friendOnly)
 print("PASS: release send success captured recipient; failed/unassociated sends excluded; friend-only cleanup owner")
 print("PASS: release TOC boot; native send tracking without send-assist UI; Core page and entry registration; saved rules and contacts preserved; diagnostic slash and mailbox lifecycle")
+local originalCheck, originalCapability, originalFormat = YiboCore.CheckAPIVersion, YiboCore.HasCapability, YiboCore.Characters.FormatName
+local originalDB = addon.InitializeDatabase
+addon.InitializeDatabase = function() error('Unsupported Core must stop before database initialization') end
+for _, scenario in ipairs({ 'api', 'names', 'batch', 'method' }) do
+    addon.initialized = nil
+    YiboCore.CheckAPIVersion = scenario == 'api' and function() return false end or originalCheck
+    YiboCore.HasCapability = function(_, name, version)
+        if scenario == 'names' and name == 'character-name-format' or scenario == 'batch' and name == 'item-picker' then return false end
+        return originalCapability(nil, name, version)
+    end
+    YiboCore.Characters.FormatName = scenario ~= 'method' and originalFormat or nil
+    addon:Initialize(); assert(not addon.initialized and messages[#messages]:find('升级', 1, true))
+end
+addon.InitializeDatabase = originalDB
+print('PASS: old API, missing name/batch capabilities and missing method all prompt upgrade and stop initialization')

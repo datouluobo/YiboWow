@@ -1,6 +1,13 @@
 -- Reuse the native-frame test harness and then exercise the new real UI modules.
 dofile('YiboMail/_NonRelease/Tests/RecipientUISpec.lua')
 local A, methods = YiboMail, getmetatable(MailFrame).__index
+local characterAPI = A.Core.Characters
+A.Core.Database = { GetDB = function() return nil end }
+dofile('YiboCore/Data/Characters.lua'); characterAPI.FormatName = A.Core.Characters.FormatName; A.Core.Characters = characterAPI
+local viewAPI = A.ViewModel
+dofile('YiboMail/ViewModel.lua')
+viewAPI.CharacterLabel, viewAPI.CounterpartLabel = A.ViewModel.CharacterLabel, A.ViewModel.CounterpartLabel
+A.ViewModel = viewAPI
 local modernBody = SendMailBodyEditBox
 MailEditBox = CreateFrame('Frame', nil, SendMailFrame)
 MailEditBox.GetEditBox = function() return modernBody end
@@ -110,13 +117,14 @@ for _, from in ipairs(tabs) do
         local page = (to == 'send' or to == 'rules') and 2 or 1
         assert(N.activePage == page and MailFrame.selectedTab == page)
         assert(U.active == (to == 'rules') and U.root:IsShown() == (to == 'rules'))
-        assert(N.send.recipientField.shown == (to ~= 'rules') and N.send.subjectField.shown == (to ~= 'rules'))
+        assert(N.send.recipientField.shown and N.send.subjectField.shown == (to ~= 'rules'))
         assert(SendMailNameEditBox.shown == (to ~= 'rules') and SendMailSubjectEditBox.shown == (to ~= 'rules'))
         assert(MailEditBox.shown == (to ~= 'rules') and not MailEditBoxScrollBar.shown)
         assert(modernBody.shown == (to ~= 'rules'))
         assert(SendMailNameEditBox:GetText() == 'Draft-Realm' and SendMailSubjectEditBox:GetText() == 'Draft subject')
         assert(N.send.favoritesPanel:GetHeight() == MailFrame:GetHeight())
         assert(U.status:GetHeight() == 20 and U.action:GetHeight() == A.Core.UITheme.Size.compact)
+        assert(U.recipient.shown == (to == 'rules'))
         assert(N.mailboxTabs[to].indicator.shown)
         assert(SendMailMailButton:IsShown() == (to == 'send'))
         assert(InboxFrame:IsShown() == (page == 1) and SendMailFrame:IsShown() == (page == 2))
@@ -400,12 +408,192 @@ for _, tab in ipairs({ 'send', 'rules', 'send' }) do
             assert(slot.yiboMailAttachment)
             local point = slot.points[1]
             assert(point[4] == 8 + ((index - 1) % 8) * (slot:GetWidth() + 4))
-            assert(point[5] == 80 + (1 - math.floor((index - 1) / 8)) * (slot:GetHeight() + 4))
+            local bottom = 42
+            assert(point[5] == bottom + (1 - math.floor((index - 1) / 8)) * (slot:GetHeight() + 4))
         end
     end
     for index = 8, 12 do _G['SendMailAttachment' .. index]:Hide() end
     N:RefreshSend()
     for index = 8, 12 do assert(_G['SendMailAttachment' .. index]:IsShown()) end
+    local geometry = N:SendRegionLayout()
+    assert(SendMailMoney.points[1][5] == geometry.controlsBottom and geometry.controlsBottom > 42 + 2 * SendMailAttachment1:GetHeight() + 4)
+    assert(SendMailCODButton.points[1][5] == geometry.controlsBottom + 4)
+    assert(MailEditBox.points[2][2] == MailFrame and MailEditBox.points[2][5] > geometry.controlsBottom + A.Core.UITheme.Size.compact)
+    if tab == 'rules' then
+        assert(U.recipient:GetParent() == N.send.recipientField and U.recipient:GetWidth() == SendMailNameEditBox:GetWidth())
+        assert(U.recipient:GetHeight() == N.send.recipientField:GetHeight() and U.recipient.points[1][2] == N.send.recipientField)
+        assert(U.root.manage.points[1][5] == geometry.attachmentBottom + (geometry.size - A.Core.UITheme.Size.compact) / 2)
+        assert(U.root.manage:GetParent() == N.send and U.root.manage:IsShown())
+        assert(MailFrame:GetWidth() - 8 - U.root.manage:GetWidth() >= SendMailAttachment12.points[1][4] + SendMailAttachment12:GetWidth())
+    else assert(not U.root.manage:IsShown()) end
 end
 ATTACHMENTS_MAX_SEND = savedAttachmentLimit
 print('PASS: full 12-slot eight-plus-four send/rule grid; native seven-slot visibility refreshed; unsupported extra slots hidden')
+
+S:OpenTab('rules'); S:Edit(); p = S.panel
+p.target:SetValue('Batch-Realm', true)
+p.item:SetValue('501;502,501'); Click(OperationButton(p.item))
+assert(OperationButton(p.item).label:GetText() == '确认' and #S.draft.itemIDs == 2 and p.item.input:GetText() == '501;502')
+GetCursorInfo = function() return 'item', 503 end
+p.item.drop:GetScript('OnReceiveDrag')(p.item.drop)
+GetCursorInfo = function() return 'item', 504 end
+p.item.drop:GetScript('OnReceiveDrag')(p.item.drop)
+assert(#S.draft.itemIDs == 4 and p.item.input:GetText() == '501;502;503;504')
+Click(p.save); local batchRule = A.db.sendRules[S.editID]
+assert(#batchRule.itemIDs == 4 and batchRule.recipient == 'Batch-Realm')
+p.item.input:SetValue('501;;502', true); Click(OperationButton(p.item)); Click(p.save)
+assert(#A.db.sendRules[batchRule.id].itemIDs == 4 and S.notice:find('确认', 1, true))
+S.dirty = nil; S:Edit(batchRule.id); assert(p.item.input:GetText() == '501;502;503;504')
+dofile('YiboMail/CacheUI.lua')
+local bags = {}; for _, id in ipairs(batchRule.itemIDs) do bags[#bags + 1] = { itemID = id, quantity = 2, bag = 0, slot = #bags + 1 } end
+assert(A.Recipients:SetFaction('Batch-Realm', 'Alliance'))
+A.Core.Characters:GetCurrent().faction = 'Alliance'
+A.db.sendBlacklist.senders = {}; A.db.sendRecipientDisabled = {}
+C.match, C.packet, C.owned, C.skipped, C.state = A.SendRules:Match(bags), nil, nil, {}, 'idle'
+MailFrame:Show(); SendMailFrame:Show(); U.root:Show(); U.active = true; U:Refresh()
+local matchedRow
+for _, row in ipairs(U.root.rows) do if row.items and row.items:IsShown() then matchedRow = row; break end end
+assert(matchedRow and #matchedRow.items.itemButtons == 4 and matchedRow:GetHeight() > 48,
+    'match items=' .. #C.match.items .. ', issues=' .. #(C.match.factionIssues or {}) .. ', root=' .. tostring(U.root:IsShown()) .. ', row=' .. tostring(matchedRow) .. ', count=' .. tostring(matchedRow and #matchedRow.items.itemButtons))
+for _, button in ipairs(matchedRow.items.itemButtons) do assert(button:IsShown() and button:GetScript('OnEnter')) end
+print('PASS: actual 确认 button, multi-item input/save/reopen and consecutive drop accumulation; invalid query cannot overwrite saved batch; matched items wrap and expand rule rows with item tooltips')
+local showConfirmation, shownConfirmation = A.Core.ItemConfirmation.Show, nil
+A.Core.ItemConfirmation.Show = function(_, options) shownConfirmation = options; return {} end
+local revision = A.db.sendRuleRevision
+GetCursorInfo = function() return 'item', 502 end
+U:Drop({ address = 'Batch-Realm' })
+assert(not shownConfirmation and A.db.sendRuleRevision == revision and C.notice:find('该规则已存在', 1, true))
+U:Drop({ address = 'Changed-Realm' })
+assert(shownConfirmation and shownConfirmation.text:find('更新整条规则', 1, true) and A.db.sendRuleRevision == revision)
+A.Core.ItemConfirmation.Show = showConfirmation
+local ok, message = A.SendRules:Save({ kind = 'item', itemIDs = { 502 }, recipient = 'Batch-Realm' })
+assert(not ok and message:find('该规则已存在', 1, true))
+print('PASS: duplicate rule clearly reports already present without mutation; changed recipient still requires a concrete confirmation')
+
+N:SelectMailboxTab('rules')
+SendMailNameEditBox:SetText('Batch-Realm'); C.notice = '请核对收件人和附件，再点击发送。'; U:Refresh()
+assert(U.recipient:IsShown() and U.recipient.value:GetText():find('Batch', 1, true) and U.status:GetText() == C.notice)
+assert(not U.recipient.value:GetText():find('Realm', 1, true), 'Same-realm recipient stays compact')
+C.notice = '邮件已被手动修改，请先整理实际附件。'; U:Refresh()
+assert(U.recipient.value:GetText():find('Batch', 1, true) and U.status:GetText() == C.notice and U.recipient:GetScript('OnEnter'))
+SendMailNameEditBox:SetText(string.rep('LongTarget', 10) .. '-Other'); U:Refresh()
+assert(U.recipient.value:GetText():find('-Other', 1, true) and U.recipient:GetHeight() == A.Core.UITheme.Size.standard)
+assert(U.status.points[1][2] == MailFrame and U.status:GetWidth() == MailFrame:GetWidth() - 16 and SendMailAttachment9.points[1][5] == 42)
+assert(U.root.points[1][2] == N.send.recipientField and U.root.points[1][3] == 'BOTTOMLEFT', 'Rule list begins below the shared recipient field')
+SendMailNameEditBox:SetText(''); U:Refresh(); assert(U.recipient.value:GetText() == '待装填')
+N:SelectMailboxTab('send'); assert(not U.recipient:IsShown() and SendMailAttachment9.points[1][5] == 42)
+print('PASS: shared top recipient field with compose geometry, class/same-realm labels and full-address tooltip; full-width status; manage button in spare attachment row; empty draft and compose-tab lifecycle')
+
+local _, extraRule = A.SendRules:Save({ kind = 'item', itemID = 505, recipient = 'Batch-Realm' })
+assert(extraRule and A.Recipients:SetFaction('GroupOther-Other', 'Alliance'))
+local _, otherRule = A.SendRules:Save({ kind = 'item', itemID = 506, recipient = 'GroupOther-Other' }); assert(otherRule)
+local groupBags = {
+    { itemID = 501, quantity = 2, bag = 0, slot = 1 }, { itemID = 505, quantity = 3, bag = 0, slot = 2 },
+    { itemID = 506, quantity = 4, bag = 0, slot = 3 },
+}
+local bagItems = A.Compose.BagItems; A.Compose.BagItems = function() return A.Copy(groupBags) end
+SendMailFrameLockSendMail:Hide()
+C.packet, C.owned, C.skipped, C.state, C.scope = nil, nil, {}, 'idle', nil
+N:SelectMailboxTab('rules'); U.root.scroll:SetWidth(360); C:Scan(); U:Refresh()
+local function GroupRow(address)
+    for _, row in ipairs(U.root.rows) do if row:IsShown() and row.entry.recipient == address then return row end end
+end
+local group = GroupRow('Batch-Realm'); local other = GroupRow('GroupOther-Other')
+assert(group and other and #group.entry.ruleIDs == 2 and group.entry.quantity == 5 and group.entry.stacks == 2)
+assert(not group.main.label:GetText():find('\n') and group:GetHeight() == 58 and #group.items.itemButtons == 4)
+assert(group.items.itemButtons[1]:IsShown() and group.items.itemButtons[2]:IsShown() and not group.items.itemButtons[3]:IsShown())
+assert(group.main:GetWidth() == group:GetWidth() and group.skip:GetParent() == group.main and group.skip.points[1][1] == 'TOPRIGHT')
+assert(group.skip:GetFrameLevel() > group.items:GetFrameLevel())
+for _, width in ipairs({ 360, 190 }) do
+    U.root.scroll:SetWidth(width); U:Refresh(); group = GroupRow('Batch-Realm')
+    for _, button in ipairs(group.items.itemButtons) do
+        if button:IsShown() then
+            assert(button.points[1][2] + button:GetWidth() <= group:GetWidth() - 6)
+            assert(24 - button.points[1][3] >= 3 + group.skip:GetHeight(), 'Items remain below the header action')
+        end
+    end
+end
+U.root.scroll:SetWidth(360); U:Refresh(); group = GroupRow('Batch-Realm')
+local select, selected = C.Select, nil
+C.Select = function(_, scope) selected = scope; return true end
+Click(group.items.itemButtons[1]); assert(selected.kind == 'recipient' and selected.value == A.Recipients:Key('Batch-Realm'))
+C.Select = select
+local groupedRevision = A.db.sendRuleRevision
+Click(group.skip); group = GroupRow('Batch-Realm')
+assert(C.skipped[batchRule.id] and C.skipped[extraRule] and not C.skipped[otherRule] and group.skip.label:GetText() == '恢复')
+assert(#C.match.items == 1 and A.db.sendRuleRevision == groupedRevision)
+Click(group.skip); assert(not next(C.skipped) and #C.match.items == 3)
+C.packet, C.owned = { { itemID = 501, quantity = 2, recipient = 'Batch-Realm', ruleID = batchRule.id } }, {}
+table.remove(groupBags, 1); C:Scan(); U:Refresh(); group = GroupRow('Batch-Realm')
+assert(group.entry.quantity == 5 and group.entry.stacks == 2 and group.entry.staged and #group.entry.items == 2)
+C.packet, C.owned, A.Compose.BagItems = nil, nil, bagItems
+local scrollWidth = U.root.scroll.GetWidth
+U.root.scroll.GetWidth = function(control) return control.width - (control.ScrollBar:IsShown() and A.Core.UITheme.Geometry.scrollbarGutter or 0) end
+U.root.scroll:SetWidth(360); U.root.scroll:SetHeight(60); U:Refresh()
+assert(U.root.scroll.ScrollBar:IsShown() and GroupRow('Batch-Realm'):GetWidth() == 360 - A.Core.UITheme.Geometry.scrollbarGutter)
+U.root.scroll:SetHeight(400); U:Refresh()
+assert(not U.root.scroll.ScrollBar:IsShown() and GroupRow('Batch-Realm'):GetWidth() == 360 and U.root.content:GetWidth() == 360)
+U.root.scroll.GetWidth = scrollWidth
+print('PASS: recipient-group cards merge rules and staged/remaining items without double counting; compact one-line header with top-right skip; full-width item wrapping; recipient selection and group skip/restore preserve other targets and saved rules')
+print('PASS: Core scrollbar gutter appears only for overflow; cards regain full viewport width when the scrollbar disappears')
+
+local savedInbox, savedRefreshInbox = N.inbox, N.RefreshInbox
+N.inbox = { mode = 'mail', scroll = CreateFrame('Frame'), filter = { menu = CreateFrame('Frame') }, menu = { menu = CreateFrame('Frame') } }
+N.RefreshInbox = function() end
+for _, tab in ipairs({ 'rules', 'send', 'items', 'mail' }) do
+    N:SelectMailboxTab(tab)
+    assert(A.db.settings.inbox.tab == tab)
+    local savedSettings = A.Copy(A.db.settings.inbox)
+    MailFrame:Hide(); U:SetActive(false); N:RememberBrowsePage()
+    C:OnEvent('MAIL_CLOSED'); assert(not next(C.skipped) and C.state == 'idle')
+    assert(A.db.settings.inbox.tab == tab, 'Closing the shared native send page retains the logical tab')
+    -- Reopen can show a native page before the deferred preference restore.
+    MailFrame:Show(); N.restorePagePending = true; N:RememberBrowsePage(1)
+    assert(A.db.settings.inbox.tab == tab)
+    N:RestoreBrowsePage()
+    assert(N.mailboxTabs[tab].state == 'selected' and U.active == (tab == 'rules'))
+    assert(U.recipient:IsShown() == (tab == 'rules') and SendMailMailButton:IsShown() == (tab == 'send'))
+    -- Reload discards runtime rule mode but keeps the SavedVariables snapshot.
+    A.db.settings.inbox = savedSettings; U:SetActive(false); N.activePage = 1
+    N:RestoreBrowsePage(); assert(N.mailboxTabs[tab].state == 'selected' and U.active == (tab == 'rules'))
+end
+A.db.settings.inbox = { page = 2 }; N:RestoreBrowsePage(); assert(N.mailboxTabs.send.state == 'selected')
+A.db.settings.inbox = { page = 1, mode = 'items' }; N.inbox.mode = 'items'; N:RestoreBrowsePage(); assert(N.mailboxTabs.items.state == 'selected')
+A.db.settings.inbox = { page = 2, tab = 'unknown' }; N:RestoreBrowsePage(); assert(N.mailboxTabs.send.state == 'selected')
+local ruleRoot = U.root; U.root = nil
+A.db.settings.inbox = { page = 2, tab = 'rules' }; N:RestoreBrowsePage(); assert(N.mailboxTabs.send.state == 'selected')
+U.root = ruleRoot
+local savedTimer, deferredRestore = C_Timer, nil
+C_Timer = { After = function(_, callback) deferredRestore = callback end }
+A.db.settings.inbox = { page = 2, tab = 'rules' }; U:SetActive(false); N.activePage = 1
+N:RestoreBrowsePageWhenShown(); assert(N.restorePagePending and deferredRestore and A.db.settings.inbox.tab == 'rules')
+N:RememberBrowsePage(1); MailFrame:Hide(); deferredRestore()
+assert(not N.restorePagePending and A.db.settings.inbox.tab == 'rules' and not U.active)
+MailFrame:Show(); N:RestoreBrowsePageWhenShown(); deferredRestore()
+assert(U.active and N.mailboxTabs.rules.state == 'selected' and not N.restorePagePending)
+C_Timer = savedTimer
+N.inbox, N.RefreshInbox = savedInbox, savedRefreshInbox
+print('PASS: all four logical tabs persist across close/reopen and runtime reset; deferred initial/show restore ignores transient native pages and skips closed mailbox; old/invalid records and unavailable rule page restore safely')
+
+local mailboxWidth, attachmentLimit = MailFrame:GetWidth(), ATTACHMENTS_MAX_SEND
+for _, width in ipairs({ 340, 412 }) do
+    MailFrame:SetWidth(width); ATTACHMENTS_MAX_SEND = 12
+    N:SelectMailboxTab('send')
+    local fieldWidth, fieldHeight = N.send.recipientField:GetWidth(), N.send.recipientField:GetHeight()
+    local address = SendMailNameEditBox:GetText()
+    N:SelectMailboxTab('rules'); U:Refresh()
+    assert(N.send.recipientField:GetWidth() == fieldWidth and N.send.recipientField:GetHeight() == fieldHeight)
+    assert(N.send.recipientField.points[1][4] == 8 and N.send.recipientField.points[1][5] == -6)
+    assert(width - 8 - U.root.manage:GetWidth() >= SendMailAttachment12.points[1][4] + SendMailAttachment12:GetWidth())
+    assert(U.root.manage.points[1][5] >= SendMailAttachment12.points[1][5])
+    assert(U.root.manage.points[1][5] + U.root.manage:GetHeight() <= SendMailAttachment12.points[1][5] + SendMailAttachment12:GetHeight())
+    local openSettings, target = A.Core.AccountView.ShowSettings, nil
+    A.Core.AccountView.ShowSettings = function(_, page) target = page end
+    Click(U.root.manage); assert(target == 'mail-inbox' and S.requestedTab == 'rules' and S.requestedRule == nil)
+    A.Core.AccountView.ShowSettings = openSettings
+    assert(SendMailNameEditBox:GetText() == address)
+end
+ATTACHMENTS_MAX_SEND = 16; N:LayoutBasicSend()
+assert(U.root.manage.points[1][5] == N:SendRegionLayout().controlsBottom and U.status:GetWidth() == MailFrame:GetWidth() - 110)
+ATTACHMENTS_MAX_SEND = attachmentLimit; MailFrame:SetWidth(mailboxWidth); N:LayoutBasicSend()
+print('PASS: narrow/wide rule page retains exact compose recipient field; management control fits the spare row, opens Core rules and preserves draft; full attachment rows keep the control in available status space')

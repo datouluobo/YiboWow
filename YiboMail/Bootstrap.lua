@@ -2,9 +2,14 @@ local Addon = _G.YiboMail
 function Addon:Initialize()
     if self.initialized then return end
     local core = _G.YiboCore
-    if not core or not core:CheckAPIVersion(6) then self:Print("需要 YiboCore API v6。"); return end
+    if not (core and core.CheckAPIVersion and core:CheckAPIVersion(8)
+        and core.HasCapability and core:HasCapability("character-name-format", 1)
+        and core:HasCapability("item-picker", 2)
+        and core.Characters and type(core.Characters.FormatName) == "function") then
+        self:Print("请升级 YiboCore 至 1.7.1 或更新版本：需要 API v8、公共名称格式化和批量物品确认能力。"); return
+    end
     self.Core = core; self:InitializeDatabase()
-    local ok, err = core:RegisterAddon(self.NAME, { version = self.VERSION, requiredAPI = 6 })
+    local ok, err = core:RegisterAddon(self.NAME, { version = self.VERSION, requiredAPI = 8 })
     if not ok then self:Print(err); return end
     self.Recipients:Initialize()
     self.SendRules:Initialize()

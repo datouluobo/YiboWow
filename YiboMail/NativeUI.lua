@@ -21,7 +21,7 @@ local function StripNativeArt(control, hideText)
 end
 local function Text(parent, font, justify)
     local text = parent:CreateFontString(nil, "OVERLAY", font or "GameFontHighlightSmall")
-    text:SetJustifyH(justify or "LEFT"); return text
+    text:SetJustifyH(justify or "LEFT"); text:SetWordWrap(false); return text
 end
 local function Button(parent, width, label, callback)
     local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
@@ -111,7 +111,7 @@ function Native:SelectMailboxTab(key)
         if securecallfunction then securecallfunction(MailFrameTab_OnClick, nil, page)
         else MailFrameTab_OnClick(nil, page) end
     end
-    self:RememberBrowsePage(page)
+    self:RememberBrowsePage(page, key)
     if key == "rules" then
         Addon.RuleSendUI:SetActive(true)
         Addon.RuleSendController:Scan(); Addon.RuleSendUI:Refresh()
@@ -138,24 +138,41 @@ function Native:RememberInboxSort()
     Addon.db.settings.inbox = settings
     settings.sort = self.inbox.options.sort == "inbox" and "inbox" or "expiry"
 end
-function Native:RememberBrowsePage(page)
+function Native:RememberBrowsePage(page, tab)
     if not Addon.db or not Addon.db.settings then return end
     if page == 1 or page == 2 then self.activePage = page end
     if self.restorePagePending or self.restoringPage then return end
     local settings = Addon.db.settings.inbox or {}
     Addon.db.settings.inbox = settings
     settings.page = self.activePage or 1
+    if tab == "mail" or tab == "items" or tab == "send" or tab == "rules" then settings.tab = tab end
     if self.inbox and (self.inbox.mode == "mail" or self.inbox.mode == "items") then settings.mode = self.inbox.mode end
 end
 function Native:RestoreBrowsePage()
     local settings = Addon.db.settings.inbox or {}
-    local page = settings.page == 2 and 2 or 1
+    local tab = settings.tab
+    if tab ~= "mail" and tab ~= "items" and tab ~= "send" and tab ~= "rules" then
+        tab = settings.page == 2 and "send" or (self.inbox and self.inbox.mode == "items" and "items" or "mail")
+    end
+    if tab == "rules" and (not Addon.RuleSendUI or not Addon.RuleSendUI.root) then tab = "send" end
+    local page = (tab == "send" or tab == "rules") and 2 or 1
     self.activePage = page
     self.restoringPage = true
-    self:SelectMailboxTab(page == 2 and "send" or (self.inbox and self.inbox.mode == "items" and "items" or "mail"))
+    self:SelectMailboxTab(tab)
     self.restoringPage = nil
     self.restorePagePending = nil
-    self:RememberBrowsePage(page)
+    self:RememberBrowsePage(page, tab)
+end
+function Native:RestoreBrowsePageWhenShown()
+    self.restorePagePending = true
+    self:ApplyInboxPreferences()
+    self:Refresh()
+    if C_Timer and C_Timer.After then
+        C_Timer.After(0, function()
+            if MailFrame:IsShown() then Native:RestoreBrowsePage()
+            else Native.restorePagePending = nil end
+        end)
+    else self:RestoreBrowsePage() end
 end
 function Native:ApplyInboxPreferences(deferWhileOpen)
     if not self.readyInbox then return end
@@ -368,7 +385,7 @@ function Native:Row(data)
         row.expiry = Text(row, "GameFontGreenSmall", "RIGHT"); row.expiry:SetPoint("TOPRIGHT", -6, -5); row.expiry:SetWidth(68)
         panel.rows[panel.used] = row
     end
-    local height = 46
+    local height = 32
     row.mailOriginalIndex = data.mailOriginalIndex
     row.mailEntryKey = data.mailEntryKey
     row.mailAttachmentSlot = data.mailAttachmentSlot
@@ -376,10 +393,18 @@ function Native:Row(data)
     row.mailIndented = data.indent == true
     row:ClearAllPoints(); row:SetPoint("TOPLEFT", data.indent and 16 or 0, -panel.top); row:SetSize(panel.width - (data.indent and 16 or 0), height)
     row:SetBackdropColor(0, 0, 0, 0); row:SetBackdropBorderColor(0, 0, 0, 0)
-    row.title:SetText(data.title or ""); row.detail:SetText(data.detail or ""); row.expiry:SetText(data.expiry or "")
+    row.title:SetText(tostring(data.title or ""):gsub("[\r\n]+", " ")); row.detail:SetText(tostring(data.detail or ""):gsub("[\r\n]+", " ")); row.expiry:SetText(data.expiry or "")
     if data.expiryMail then row.expiry:SetTextColor(View:ExpiryColor(data.expiryMail)) else row.expiry:SetTextColor(0.25, 0.9, 0.35) end
-    row.title:SetPoint("TOPRIGHT", data.expiry and -80 or -6, -5)
-    row.summary:SetText(data.summary or ""); row.summary:SetShown(data.summary ~= nil)
+    local bodyWidth = math.max(1, row:GetWidth() - 58 - (data.expiry and 76 or 6))
+    local titleWidth = data.mailAttachmentSlot and bodyWidth or math.min(100, bodyWidth * 0.38)
+    row.title:ClearAllPoints(); row.title:SetPoint("TOPLEFT", 58, -7); row.title:SetSize(titleWidth, 18)
+    row.detail:ClearAllPoints(); row.detail:SetPoint("TOPLEFT", 58 + titleWidth + 6, -7); row.detail:SetSize(math.max(1, bodyWidth - titleWidth - 6), 18)
+    row.detail:SetShown(not data.mailAttachmentSlot)
+    row.icon:ClearAllPoints(); row.icon:SetPoint("TOPLEFT", 28, -4); row.icon:SetSize(24, 24)
+    row.expiry:ClearAllPoints(); row.expiry:SetPoint("TOPRIGHT", -6, -7); row.expiry:SetHeight(18)
+    row.check:SetHeight(32); row.check:ClearAllPoints(); row.check:SetPoint("TOPLEFT", 0, 0)
+    row.delete:SetHeight(32); row.delete:ClearAllPoints(); row.delete:SetPoint("TOPLEFT", 0, 0)
+    row.summary:SetText(data.summary or ""); row.summary:Hide()
     if data.wasRead then
         row.title:SetTextColor(0.60, 0.68, 0.68)
         row.detail:SetTextColor(0.65, 0.72, 0.72)
@@ -389,7 +414,6 @@ function Native:Row(data)
         row.detail:SetTextColor(1, 1, 1)
         row.summary:SetTextColor(0.72, 0.82, 0.79)
     end
-    row.detail:SetPoint("TOPRIGHT", data.summary and -86 or -6, -24)
     row.icon:SetTexture(data.texture or "Interface\\Icons\\INV_Letter_15"); row.count:SetText(data.quantity and tostring(data.quantity) or "")
     local actions, eligible, selected = data.actions or {}, 0, 0
     for _, action in ipairs(actions) do if action.actionable then eligible = eligible + 1; panel.available[#panel.available + 1] = action; if panel.selection[action.id] then selected = selected + 1 end end end
@@ -415,7 +439,40 @@ function Native:Row(data)
     end)
     row:SetScript("OnClick", data.onClick)
     Tooltip(row, data.title, data.tooltip or data.detail, data.itemLink)
+    row.iconHover = row.iconHover or CreateFrame("Button", nil, row)
+    row.iconHover:ClearAllPoints(); row.iconHover:SetPoint("TOPLEFT", 28, -4); row.iconHover:SetSize(24, 24)
+    row.iconHover:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonUp")
+    row.iconHover:SetScript("OnClick", data.onClick)
+    local item = data.item or (data.itemList or {})[1]
+    Tooltip(row.iconHover, data.title, data.tooltip or data.detail, item and (item.itemLink or item.itemID and ("item:" .. item.itemID)) or data.itemLink)
+    row.iconHover:SetShown(item ~= nil or data.itemLink ~= nil)
+    self:RowItems(row, data.itemList)
+    height = row:GetHeight()
     row:Show(); panel.top = panel.top + height + 2
+end
+function Native:RowItems(row, items)
+    if row.attachments then
+        row.attachments:Hide()
+        for _, button in ipairs(row.attachments.itemButtons or {}) do button:Hide() end
+    end
+    row:SetHeight(32)
+    if #(items or {}) <= 1 then return end
+    local ui, width = Addon.CacheUI, math.max(1, row:GetWidth() - 62)
+    local values = { itemList = items, items = "点击展开附件或打开信件" }
+    local _, height = ui:ItemLayout(values, width)
+    if not row.attachments then
+        row.attachments = CreateFrame("Button", nil, row)
+        row.attachments.cell = Addon.Core.UITheme:CreateText(row.attachments, Addon.Core.UITheme.Font.body, Addon.Core.UITheme.Colors.text, "LEFT")
+    end
+    row.attachments:ClearAllPoints(); row.attachments:SetPoint("TOPLEFT", 56, -30); row.attachments:SetSize(width, height + 8)
+    -- Item buttons preserve the parent row's normal mail interactions.
+    row.attachments:SetScript("OnMouseUp", function(_, mouse) local click = row:GetScript("OnClick"); if click then click(row, mouse) end end)
+    ui:ItemCell(row.attachments, row.attachments.cell, values, 0, width, height + 8)
+    for _, button in ipairs(row.attachments.itemButtons) do
+        button:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonUp")
+        button:SetScript("OnClick", function(_, mouse) local click = row:GetScript("OnClick"); if click then click(row, mouse) end end)
+    end
+    row.attachments:Show(); row:SetHeight(38 + height)
 end
 function Native:DeleteEmptyMail(entry)
     if self.deleting or Addon.Queue.state == "running" or Addon.Queue.pending then return end
@@ -525,7 +582,8 @@ function Native:EntryRows(entry)
         panel.expanded[entry.key] = not panel.expanded[entry.key]; Native:RefreshInbox()
     end
     local middleClickHelp = entry.actionable and #mail.attachments > 0 and "\n中键直接收取本封邮件的附件。" or ""
-    self:Row({ title = View:Escape(mail.sender), detail = subject, summary = attachmentSummary, wasRead = mail.openedByUser,
+    self:Row({ title = View:CounterpartLabel(mail.sender, entry.character), detail = subject, summary = attachmentSummary, wasRead = mail.openedByUser,
+        itemList = mail.attachments,
         onDelete = #mail.attachments == 0 and mail.money == 0 and mail.cod == 0 and function() Native:DeleteEmptyMail(entry) end or nil,
         texture = mail.attachments[1] and mail.attachments[1].texture, quantity = #mail.attachments == 1 and mail.attachments[1].quantity or nil,
         mailOriginalIndex = mail.inboxIndex, mailEntryKey = entry.key,
@@ -541,7 +599,7 @@ function Native:EntryRows(entry)
         for _, item in ipairs(mail.attachments) do
             self:Row({ title = item.itemLink or View:Escape(item.name), detail = "附件槽 " .. item.attachmentIndex .. " · " .. (mail.cod > 0 and ("付款 " .. View:Money(mail.cod)) or (entry.actionable and "可收取" or entry.restriction)),
                 mailOriginalIndex = mail.inboxIndex, mailEntryKey = entry.key, mailAttachmentSlot = item.attachmentIndex,
-                texture = item.texture, quantity = item.quantity, expiry = View:Expiry(mail), expiryMail = mail, indent = true, itemLink = item.itemLink, actions = Addon:GetInboxActions(entry, item),
+                texture = item.texture, quantity = item.quantity, expiry = View:Expiry(mail), expiryMail = mail, indent = true, item = item, itemLink = item.itemLink, actions = Addon:GetInboxActions(entry, item),
                 onClick = function(_, mouse)
                     if mouse == "RightButton" then Native:OpenMail(entry)
                     elseif mail.cod > 0 then Native:CollectCOD(entry, item) end
@@ -780,17 +838,17 @@ function Native:RefreshCollectedMailRow(action)
         end
     end
     if action.mailCollected then
-        local firstTop, removedRows
-        removedRows = 0
+        local firstTop, removedHeight
+        removedHeight = 0
         for _, row in ipairs(panel.rows) do
             if row:IsShown() and row.mailOriginalIndex == originalIndex then
                 firstTop = firstTop and math.min(firstTop, row.mailListTop or 0) or (row.mailListTop or 0)
-                removedRows = removedRows + 1
+                removedHeight = removedHeight + row:GetHeight() + 2
                 row:Hide()
             end
         end
-        if removedRows > 0 then
-            local shift = removedRows * 48
+        if removedHeight > 0 then
+            local shift = removedHeight
             for _, row in ipairs(panel.rows) do
                 if row:IsShown() and (row.mailListTop or 0) > firstTop then
                     row.mailListTop = row.mailListTop - shift
@@ -816,7 +874,23 @@ function Native:RefreshCollectedMailRow(action)
         mainRow.detail:SetText(View:Escape(mail.subject) .. (#extra > 0 and (" · " .. table.concat(extra, " · ")) or ""))
         mainRow.summary:SetText("附件 " .. #mail.attachments .. " 个")
         mainRow.icon:SetTexture(mail.attachments[1] and mail.attachments[1].texture or "Interface\\Icons\\INV_Letter_15")
+        local previousHeight = mainRow:GetHeight()
+        self:RowItems(mainRow, mail.attachments)
+        local shift = mainRow:GetHeight() - previousHeight
+        if shift ~= 0 then
+            for _, row in ipairs(panel.rows) do
+                if row:IsShown() and (row.mailListTop or 0) > mainRow.mailListTop then
+                    row.mailListTop = row.mailListTop + shift
+                    row:ClearAllPoints(); row:SetPoint("TOPLEFT", row.mailIndented and 16 or 0, -row.mailListTop)
+                end
+            end
+            panel.top = panel.top + shift
+            panel.content:SetHeight(panel.top); panel.scroll:SetContentHeight(panel.top)
+        end
         mainRow.count:SetText(#mail.attachments == 1 and tostring(mail.attachments[1].quantity) or "")
+        local item = mail.attachments[1]
+        Tooltip(mainRow.iconHover, View:Escape(mail.sender), View:Escape(mail.subject), item and (item.itemLink or item.itemID and ("item:" .. item.itemID)))
+        mainRow.iconHover:SetShown(item ~= nil)
         mainRow.expiry:SetText(View:Expiry(mail)); mainRow.expiry:SetTextColor(View:ExpiryColor(mail))
         local attachments = {}; for _, item in ipairs(mail.attachments) do attachments[#attachments + 1] = View:Escape(item.name or item.itemLink or "附件") end
         Tooltip(mainRow, View:Escape(mail.sender), View:Escape(mail.subject) .. "\n"
@@ -1465,17 +1539,24 @@ function Native:InstallBodyScrollHooks()
         end
     end
 end
-function Native:LayoutSendAttachments()
+function Native:SendRegionLayout()
     local columns, gap = 8, 4
     local count = ATTACHMENTS_MAX_SEND or 12
     local rows = math.ceil(count / columns)
     local size = math.min(36, (MailFrame:GetWidth() - 16 - gap * (columns - 1)) / columns)
+    local bottom = 42
+    return { columns = columns, gap = gap, count = count, rows = rows, size = size,
+        attachmentBottom = bottom, controlsBottom = bottom + rows * size + (rows - 1) * gap + 8 }
+end
+function Native:LayoutSendAttachments()
+    local layout = self:SendRegionLayout()
+    local columns, gap, count, rows, size, bottom = layout.columns, layout.gap, layout.count, layout.rows, layout.size, layout.attachmentBottom
     for index = 1, count do
         local button = _G["SendMailAttachment" .. index] or (SendMailFrame.SendMailAttachments and SendMailFrame.SendMailAttachments[index])
         if button then
             local row, column = math.floor((index - 1) / columns), (index - 1) % columns
             button:ClearAllPoints(); button:SetSize(size, size)
-            button:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMLEFT", 8 + column * (size + gap), 80 + (rows - row - 1) * (size + gap))
+            button:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMLEFT", 8 + column * (size + gap), bottom + (rows - row - 1) * (size + gap))
             self:StyleSendAttachment(button, index)
             button:Show()
         end
@@ -1486,11 +1567,11 @@ function Native:LayoutSendAttachments()
     end
     if SendMailScrollFrame and SendMailAttachment1 then
         SendMailScrollFrame:ClearAllPoints(); SendMailScrollFrame:SetPoint("TOPLEFT", MailFrame, "TOPLEFT", 8, -82)
-        SendMailScrollFrame:SetPoint("BOTTOMRIGHT", SendMailAttachment1, "TOPLEFT", MailFrame:GetWidth() - 32, 10)
+        SendMailScrollFrame:SetPoint("BOTTOMRIGHT", MailFrame, "BOTTOMRIGHT", -8, layout.controlsBottom + Addon.Core.UITheme.Size.compact + 10)
     end
     if _G.MailEditBox and SendMailAttachment1 then
         MailEditBox:ClearAllPoints(); MailEditBox:SetPoint("TOPLEFT", MailFrame, "TOPLEFT", 8, -82)
-        MailEditBox:SetPoint("BOTTOMRIGHT", SendMailAttachment1, "TOPLEFT", MailFrame:GetWidth() - 32, 10)
+        MailEditBox:SetPoint("BOTTOMRIGHT", MailFrame, "BOTTOMRIGHT", -8, layout.controlsBottom + Addon.Core.UITheme.Size.compact + 10)
     end
 end
 function Native:StyleSendAttachment(button, index)
@@ -1518,11 +1599,12 @@ function Native:StyleSendAttachment(button, index)
 end
 function Native:LayoutSendMoney()
     local theme = Addon.Core.UITheme
+    local bottom = self:SendRegionLayout().controlsBottom
     local money = _G.SendMailMoney
     if money then
         if money:GetParent() ~= self.send then money:SetParent(self.send) end
         money:SetFrameLevel(self.send:GetFrameLevel() + 2)
-        money:ClearAllPoints(); money:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMLEFT", 8, 44)
+        money:ClearAllPoints(); money:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMLEFT", 8, bottom); money:SetHeight(theme.Size.compact)
         for _, unit in ipairs({ "Gold", "Silver", "Copper" }) do
             local input = _G["SendMailMoney" .. unit] or money[unit:lower()] or money[unit]
             if input then
@@ -1562,7 +1644,7 @@ function Native:LayoutSendMoney()
             end
             control.yiboMailRadio.mark:SetShown(control.GetChecked and control:GetChecked() or false)
             control:ClearAllPoints(); control:SetSize(18, 18)
-            control:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMRIGHT", entry[3], 48)
+            control:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMRIGHT", entry[3], bottom + 4)
             local label = _G[entry[1] .. "Text"] or control.Text
             if label then
                 if label:GetParent() ~= control then label:SetParent(control) end
@@ -1693,15 +1775,7 @@ function Native:Install()
         end)
     end
     MailFrame:HookScript("OnShow", function()
-        Native.restorePagePending = true
-        Native:ApplyInboxPreferences()
-        Native:Refresh()
-        if C_Timer and C_Timer.After then
-            C_Timer.After(0, function()
-                if MailFrame:IsShown() then Native:RestoreBrowsePage()
-                else Native.restorePagePending = nil end
-            end)
-        else Native:RestoreBrowsePage() end
+        Native:RestoreBrowsePageWhenShown()
     end)
     MailFrame:HookScript("OnHide", function()
         Native:SetInboxShell(false)
@@ -1723,8 +1797,7 @@ function Native:Install()
             Native.deleting = nil; Native.inbox.notice = "删除未确认，请检查邮箱后重试。"; Native:RefreshInbox()
         end
     end)
-    self:ApplyInboxPreferences()
-    self:Refresh()
+    self:RestoreBrowsePageWhenShown()
 end
 function Native:Refresh()
     self:RefreshInbox(); if Addon.FEATURES.send then self:RefreshSend() end

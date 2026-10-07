@@ -9,18 +9,9 @@ local function Place(control, x, y, width, height)
     control:ClearAllPoints(); control:SetPoint("TOPLEFT", x, -y); control:SetSize(math.max(1, width), math.max(1, height))
 end
 local function Escape(value) return View:Escape(value or "") end
-local function Name(character) return Core.Characters:GetDisplayName(character, "short") end
-local function ColoredName(character)
-    local color = character.class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[character.class]
-    local name = Escape(Name(character))
-    if color then return string.format("|cff%02x%02x%02x%s|r", math.floor(color.r * 255 + 0.5), math.floor(color.g * 255 + 0.5), math.floor(color.b * 255 + 0.5), name) end
-    return name
-end
-local function Identity(character) return ColoredName(character) .. " · " .. Escape(character.realm) end
-local function HistoryIdentity(character)
-    local current = Core.Characters:GetCurrent()
-    return ColoredName(character) .. (current and current.realm == character.realm and "" or (" · " .. Escape(character.realm)))
-end
+local function Name(character) return Core.Characters:FormatName(character, { nameMode = "short" }) or "未知角色" end
+local function Identity(character, full) return View:CharacterLabel(character, full) end
+local function Counterpart(address, owner) return View:CounterpartLabel(address, owner) end
 local function Stamp(time) return time and date("%m-%d %H:%M", time) or "时间未知" end
 local function Enable(button, enabled)
     button:SetEnabled(enabled); button:SetState(enabled and "default" or "disabled")
@@ -43,7 +34,7 @@ function UI:AttachmentTooltip(group)
         "普通附件 " .. group.normalQuantity .. " · COD附件 " .. group.codQuantity }
     for _, source in ipairs(group.sources) do
         local entry = source.entry
-        lines[#lines + 1] = "邮箱：" .. Identity(entry.character) .. " · 发件人：" .. Escape(entry.mail.sender)
+        lines[#lines + 1] = "邮箱：" .. Identity(entry.character, true) .. " · 发件人：" .. Escape(entry.mail.sender)
             .. " · ×" .. source.item.quantity .. " · " .. View:Expiry(entry.mail)
     end
     return lines
@@ -184,7 +175,7 @@ function UI:Columns(root, prefix, global)
 end
 function UI:FitColumns(fields, width, prefix)
     local result = {}; for _, field in ipairs(fields) do result[#result + 1] = field end
-    local priorities = prefix == "inbox" and { "coverage", "items", "sender" } or { "content", "counterpart", "result" }
+    local priorities = prefix == "inbox" and { "coverage", "sender" } or { "counterpart", "result" }
     local function Total() local total = 0; for _, field in ipairs(result) do total = total + field.width end; return total end
     for _, key in ipairs(priorities) do
         if Total() <= width then break end
@@ -194,6 +185,7 @@ function UI:FitColumns(fields, width, prefix)
 end
 function UI:TableRow(root, row, fields, values, width, height, header)
     row.cells = row.cells or {}
+    for _, item in ipairs(row.itemButtons or {}) do item:Hide() end
     local total = 0; for _, field in ipairs(fields) do total = total + field.width end
     local left = 0
     for index, field in ipairs(fields) do
@@ -202,18 +194,10 @@ function UI:TableRow(root, row, fields, values, width, height, header)
         Place(cell, left + 6, 4, cellWidth - 12, height - 8)
         cell:SetWordWrap(false)
         cell:SetJustifyV("MIDDLE")
-        cell:SetText(header and field.title or values[field.key] or "—")
+        cell:SetText(tostring(header and field.title or values[field.key] or "—"):gsub("[\r\n]+", " "))
         cell:SetTextColor(unpack(Theme.Colors.text)); cell:Show()
-        if not header and (field.key == "items" or field.key == "content") and values.icon then
-            row.icon = row.icon or row:CreateTexture(nil, "ARTWORK")
-            Place(row.icon, left + 5, (height - 22) / 2, 22, 22)
-            row.icon:SetTexture(values.icon.texture or "Interface\\Icons\\INV_Misc_QuestionMark"); row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92); row.icon:Show()
-            Place(cell, left + 31, 4, cellWidth - 37, height - 8)
-            row.iconHover = row.iconHover or CreateFrame("Button", nil, row)
-            Place(row.iconHover, left + 5, (height - 22) / 2, 22, 22)
-            Tooltip(row.iconHover, { values.content or values.items or "", "点击查看邮件内容" }, (values.icon.itemID or values.icon.itemLink) and values.icon or nil)
-            row.iconHover:SetScript("OnClick", function() local click = row:GetScript("OnClick"); if click then click(row) end end)
-            row.iconHover:Show()
+        if not header and (field.key == "items" or field.key == "content") and #(values.itemList or {}) > 0 then
+            self:ItemCell(row, cell, values, left, cellWidth, height)
         end
         if not header and field.key == "expiry" then
             local color = values.expirySeverity == 2 and Theme.Colors.limitReached or (values.expirySeverity == 1 and Theme.Colors.warning or Theme.Colors.text)
@@ -223,10 +207,56 @@ function UI:TableRow(root, row, fields, values, width, height, header)
     end
     for index = #fields + 1, #row.cells do row.cells[index]:Hide() end
 end
+function UI:ItemLayout(values, width)
+    local items, extra = values.itemList, values.extraContent or ""
+    local available, x, y, positions = math.max(1, width - 12), 0, 0, {}
+    for index, item in ipairs(items or {}) do
+        local needed = math.min(available, math.max(60, Theme:MeasureText(Theme.Font.body, item.name or ("物品 " .. tostring(item.itemID))) + 32))
+        if x > 0 and x + needed > available then x, y = 0, y + 28 end
+        positions[index] = { x = x, y = y, width = needed }
+        x = x + needed + 6
+    end
+    local extraY = extra ~= "" and (#positions > 0 and y + 28 or 0) or nil
+    local extraHeight = extraY and math.max(22, math.ceil(Theme:MeasureText(Theme.Font.body, extra) / available) * (Theme.Font.body + 4)) or 0
+    return positions, math.max(28, extraY and extraY + extraHeight or y + 28), extraY, extraHeight
+end
+function UI:ItemCell(row, cell, values, left, width, height)
+    local items, extra = values.itemList, values.extraContent or ""
+    local positions, _, extraY, extraHeight = self:ItemLayout(values, width)
+    row.itemButtons = row.itemButtons or {}
+    local function Click() local click = row:GetScript("OnClick"); if click then click(row) end end
+    for index = 1, #items do
+        local item = items[index]
+        local button = row.itemButtons[index]
+        if not button then
+            button = CreateFrame("Button", nil, row)
+            button.icon = button:CreateTexture(nil, "ARTWORK"); button.icon:SetSize(22, 22); button.icon:SetPoint("LEFT")
+            button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+            button.name = Text(button)
+            button.count = button:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
+            button.count:SetPoint("BOTTOMRIGHT", button.icon, "BOTTOMRIGHT", 1, -1)
+            row.itemButtons[index] = button
+        end
+        local position = positions[index]
+        Place(button, left + 6 + position.x, 4 + position.y, position.width, 24)
+        button.icon:SetSize(math.min(22, position.width), 22)
+        button.icon:SetTexture(item.texture or "Interface\\Icons\\INV_Misc_QuestionMark")
+        button.count:SetText((tonumber(item.quantity) or 0) > 1 and tostring(item.quantity) or "")
+        Place(button.name, 26, 1, math.max(1, position.width - 26), 22)
+        button.name:SetText(Escape(item.name or ("物品 " .. tostring(item.itemID))):gsub("[\r\n]+", " "))
+        button.name:SetShown(position.width >= 60)
+        Tooltip(button, { "数量：" .. tostring(item.quantity or 0), values.content or values.items or "", "点击查看邮件内容" }, item)
+        button:SetScript("OnClick", Click)
+        button:SetScript("OnHide", function(control) if GameTooltip and GameTooltip.IsOwned and GameTooltip:IsOwned(control) then GameTooltip:Hide() end end)
+        button:Show()
+    end
+    if extraY then Place(cell, left + 6, 4 + extraY, width - 12, extraHeight) end
+    cell:SetWordWrap(true); cell:SetText(extra:gsub("[\r\n]+", " ")); cell:SetShown(extra ~= "")
+end
 function UI:HistoryValues(value)
-    return { history = true, time = Stamp(value.time), character = HistoryIdentity(value.character), counterpart = Escape(value.counterpart),
+    return { history = true, time = Stamp(value.time), character = Identity(value.character), counterpart = Counterpart(value.counterpart, value.character),
         subject = Escape(value.subject):gsub("[\r\n]+", " "), content = Addon.HistoryModel:Content(value):gsub("[\r\n]+", " "), result = Addon.HistoryModel:Outcome(value),
-        icon = value.items[1] }
+        icon = value.items[1], itemList = value.items, extraContent = Addon.HistoryModel:Content(value, true) }
 end
 function UI:HistoryLayout(root, fields, width, data)
     local offsets, heights, total, weight = {}, {}, 0, 0
@@ -264,7 +294,23 @@ function UI:HistoryLayout(root, fields, width, data)
         end
     end
     for _, field in ipairs(fields) do field.fittedWidth = field.width end
+    offsets, heights, total = self:RecordHeights(fields, data, true)
     return offsets, heights, total, width
+end
+function UI:RecordHeights(fields, data, history)
+    local offsets, heights, total = {}, {}, 0
+    for index, entry in ipairs(data) do
+        local values = history and self:HistoryValues(entry) or self:MailValues(entry, true)
+        local height = 38
+        for _, field in ipairs(fields) do
+            if (field.key == "content" or field.key == "items") and #(values.itemList or {}) > 0 then
+                local _, itemHeight = self:ItemLayout(values, field.fittedWidth or field.width)
+                height = math.max(height, itemHeight + 10)
+            end
+        end
+        offsets[index], heights[index], total = total, height, total + height
+    end
+    return offsets, heights, total
 end
 function UI:ListIndex(layout, offset)
     if not layout.offsets then
@@ -307,7 +353,7 @@ function UI:Owners(root, characters, entries, state, x, top, width, height)
         if coords then row.icon:SetTexCoord(unpack(coords)) else row.icon:SetTexCoord(0, 1, 0, 1) end
         Place(row.name, 36, 4, rowWidth - 133, 24); Place(row.meta, rowWidth - 91, 4, 48, 24); Place(row.risk, rowWidth - 44, 4, 28, 24)
         local summary = character.id and Addon.AccountPage:GetSummary(character)
-        row.name:SetText(character.id and Escape(Name(character)) or "全部角色")
+        row.name:SetText(character.id and Identity(character) or "全部角色")
         local color = character.class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[character.class]
         if color then row.name:SetTextColor(color.r, color.g, color.b) else row.name:SetTextColor(unpack(Theme.Colors.text)) end
         row.current:SetShown(character.id and current and current.id == character.id or false)
@@ -320,7 +366,7 @@ function UI:Owners(root, characters, entries, state, x, top, width, height)
             Addon.WorkspaceState:SelectCharacter(character.id, characters, root.data, root.capacity)
             root.refresh()
         end)
-        local lines = { character.id and Identity(character) or "全部角色", summary and summary.alert or "在当前 Core 范围内查看所有角色" }
+        local lines = { character.id and Identity(character, true) or "全部角色", summary and summary.alert or "在当前 Core 范围内查看所有角色" }
         if character.id then lines[#lines + 1] = Model:Coverage(character) end
         Tooltip(row, lines); row:Show()
     end
@@ -335,8 +381,8 @@ end
 function UI:MailValues(entry, global)
     local expiry = tonumber(entry.mail.expiresAtEstimate)
     local remaining = expiry and expiry > 0 and expiry - Addon:Now()
-    return { character = Identity(entry.character), sender = Escape(entry.mail.sender), subject = ((entry.mail.wasReturned or entry.mail.returned) and "[退回] " or "") .. Escape(entry.mail.subject),
-        items = ItemsText(entry.mail.attachments), icon = (entry.mail.attachments or {})[1],
+    return { character = Identity(entry.character), sender = Counterpart(entry.mail.sender, entry.character), subject = ((entry.mail.wasReturned or entry.mail.returned) and "[退回] " or "") .. Escape(entry.mail.subject),
+        items = ItemsText(entry.mail.attachments), icon = (entry.mail.attachments or {})[1], itemList = entry.mail.attachments,
         amount = (entry.mail.cod or 0) > 0 and ("COD " .. View:Money(entry.mail.cod)) or View:Money(entry.mail.money),
         expiry = View:Expiry(entry.mail), coverage = Model:Coverage(entry.character),
         expirySeverity = remaining and (remaining <= 259200 and 2 or (remaining <= 604800 and 1 or 0)) or 0 }
@@ -460,10 +506,10 @@ function UI:RenderList(root, offset)
             local values, lines
             if workspace.tab == "history" then
                 values = self:HistoryValues(value)
-                lines = { value.event .. " · " .. Identity(value.character), Escape(value.subject), Escape(value.counterpart), values.content, Stamp(value.time) .. " · " .. value.result }
+                lines = { value.event .. " · " .. Identity(value.character, true), Escape(value.subject), Escape(value.counterpart), values.content, Stamp(value.time) .. " · " .. value.result }
             else
                 values = self:MailValues(value, true)
-                lines = { "邮箱：" .. Identity(value.character) .. " · 发件人：" .. values.sender, values.subject, values.items, values.amount .. " · " .. values.expiry, values.coverage }
+                lines = { "邮箱：" .. Identity(value.character, true) .. " · 发件人：" .. Escape(value.mail.sender), values.subject, values.items, values.amount .. " · " .. values.expiry, values.coverage }
             end
             local rowTop, rowHeight = layout.offsets and layout.offsets[index] or (index - 1) * layout.pitch, (layout.heights and layout.heights[index] or layout.pitch) - 2
             Place(row, 0, rowTop, layout.width, rowHeight)
@@ -586,6 +632,10 @@ function UI:Refresh(parent, context)
             local listWidth = contentWidth - (contentHeight > viewportHeight and Theme.Geometry.scrollbarGutter or 0)
             if workspace.tab == "history" then
                 offsets, heights, contentHeight, tableWidth = self:HistoryLayout(root, fields, listWidth, data)
+            elseif not items then
+                local weight = 0; for _, field in ipairs(fields) do weight = weight + field.width end
+                for _, field in ipairs(fields) do field.fittedWidth = listWidth * field.width / math.max(1, weight) end
+                offsets, heights, contentHeight = self:RecordHeights(fields, data, false)
             end
             if items then columns = math.max(1, math.floor((listWidth - 8) / pitch)); contentHeight = math.ceil(#data / columns) * pitch + 8 end
             Place(root.list, left, viewportTop, listWidth, viewportHeight); root.list:Show()

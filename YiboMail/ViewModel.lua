@@ -40,6 +40,31 @@ local function ContactAddressKey(value)
     return string.lower((tostring(value or "")):gsub("%s", ""))
 end
 function View:Escape(value) return tostring(value or ""):gsub("|", "||") end
+function View:CharacterLabel(character, full)
+    local characters = Addon.Core.Characters
+    local current = characters:GetCurrent()
+    local reference = current and current.realm
+    local mode = full and "full" or (reference and reference:find("%S") and "sameRealm" or "full")
+    if not character.realm or character.realm == "" then mode = "omit" end
+    local options = { nameMode = full and "original" or "short", realmMode = mode, referenceRealm = reference }
+    local label = characters:FormatName(character, options) or "未知角色"
+    local name = characters:FormatName(character, { nameMode = options.nameMode }) or "未知角色"
+    local color = character.class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[character.class]
+    local displayName = self:Escape(name)
+    if color then displayName = string.format("|cff%02x%02x%02x%s|r", math.floor(color.r * 255 + 0.5), math.floor(color.g * 255 + 0.5), math.floor(color.b * 255 + 0.5), displayName) end
+    return displayName .. self:Escape(label:sub(#name + 1))
+end
+function View:CounterpartLabel(address, owner)
+    -- Unqualified senders belong to the mailbox owner's realm, including
+    -- offline mailboxes. Formatting never changes a saved business address.
+    local name, realm = tostring(address or ""):match("^([^-]+)%-(.+)$")
+    name, realm = name or tostring(address or "未知"), realm or (owner and owner.realm)
+    local function Key(value) return tostring(value or ""):gsub("%s+", ""):lower() end
+    for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do
+        if Key(character.name) == Key(name) and Key(character.realm) == Key(realm) then return self:CharacterLabel(character) end
+    end
+    return self:CharacterLabel({ name = name, realm = realm })
+end
 function View:Money(value) return string.format("%.2f 金", (tonumber(value) or 0) / 10000) end
 function View:Expiry(mail)
     local expiry = tonumber(mail and mail.expiresAtEstimate)
