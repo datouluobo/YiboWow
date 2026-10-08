@@ -32,8 +32,12 @@ function methods:GetVerticalScrollRange() return 0 end
 function methods:GetVerticalScroll() return self.offset or 0 end
 function methods:GetNumPoints() return #self.points end
 function methods:GetPoint(index) return unpack(self.points[index]) end
-function GetItemClassInfo(id) if id == 7 then return '交易材料' end end
-function GetItemSubClassInfo(class, id) if class == 7 and id == 7 then return '金属和矿石' end end
+function GetItemClassInfo(id) if id == 5 then return '材料' elseif id == 7 then return '商品' end end
+function GetItemSubClassInfo(class, id)
+    if class == 5 and id == 0 then return '材料'
+    elseif class == 7 and id == 7 then return '金属和矿石'
+    elseif class == 7 and id == 9 then return '草药' end
+end
 function GetItemInfo(value) local id = tonumber(value) or tonumber(tostring(value):match('item:(%d+)')); if id then return '物品' .. id, '|Hitem:' .. id .. '|h[物品]|h', 1, 1, 1, '交易材料', '金属和矿石', 20, '', 1, 1, 7, 7 end end
 A.db.rules = {}; A.Queue = { state = 'idle' }; A.Scanner = { IsOpen = function() return true end }
 A.Compose.BagItems = function() return {} end
@@ -62,6 +66,22 @@ A.Core.ItemResolver = {
 A.Core.ItemConfirmation = { Show = function(_, options) A.confirmation = options; return options end }
 dofile('YiboCore/UI/ItemPicker.lua')
 dofile('YiboMail/SendRules.lua'); A.SendRules:Initialize()
+-- English class names are localized without changing IDs; obsolete permanent
+-- items are not offered for new category rules.
+local localizedClassAPI = GetItemClassInfo
+GetItemClassInfo = function(id)
+    return ({ [5] = '材料', [6] = '弹药', [7] = 'Trade Goods', [8] = 'Generic(OBSOLETE)',
+        [10] = 'Money(OBSOLETE)', [11] = '箭袋', [14] = '永久（作废）', [15] = 'Miscellaneous', [18] = 'WoW Token' })[id]
+end
+local localizedClasses = {}
+for _, entry in ipairs(A.SendRules:Categories()) do localizedClasses[entry.value] = entry.label end
+for _, id in ipairs({ 6, 8, 10, 11, 14, 18 }) do assert(not localizedClasses[id], 'Unused or obsolete categories must not be offered') end
+assert(localizedClasses[7] == '交易材料' and localizedClasses[15] == '其它' and not localizedClasses[14])
+assert(not localizedClasses[18], 'WoW Token is not offered as a category rule')
+assert(A.SendRules:Label({ kind = 'category', classID = 14 }) == '永久（作废）')
+GetItemClassInfo = function(id) if id == 8 then return 'Item Enhancement' end end
+assert(A.SendRules:Categories()[1].label == '物品强化', 'A current non-obsolete class with the same ID remains available')
+GetItemClassInfo = localizedClassAPI
 for _, character in ipairs(A.Core.Characters:GetAllCached()) do character.faction = 'Alliance' end
 A.Core.Characters.GetCurrent = function() return A.Core.Characters:GetAllCached()[1] end
 for _, address in ipairs({ 'First-Realm', 'Second-Other' }) do assert(A.Recipients:SetFaction(address, 'Alliance')) end
@@ -201,13 +221,66 @@ assert(p.target.points[1][3] == p.contacts.points[1][3] and p.contacts:GetWidth(
 assert(p.kind.points[1][3] == p.item.points[1][3] and not p.kind.menu)
 assert(p.item.input:GetHeight() == p.save:GetHeight())
 Click(p.cancel); assert(not S.editID and p.save.label:GetText() == '添加规则')
-p.target:SetValue('First-Realm', true); p.kind.onValueChanged('category'); p.class.onValueChanged(7); p.subclass.onValueChanged(7)
+p.target:SetValue('First-Realm', true); p.kind.onValueChanged('category')
+assert(p.classLabel:IsShown() and p.subclassLabel:IsShown() and not p.subclass:IsEnabled())
+assert(p.subclass.label:GetText() == '请先选择大类')
+-- Exercise the real popup buttons rather than calling selection callbacks.
+Click(p.class); assert(p.class.menu:IsShown())
+Click(p.class.menu.buttons[1])
+assert(S.draft.classID == 5 and p.class.label:GetText() == '施法材料')
+assert(#p.subclass.options == 2 and p.subclass.options[2].value == 0 and p.categoryStatus:IsShown())
+assert(S.draft.subclassID == 0 and p.subclass.value == 0 and p.subclass.label:GetText() == '材料')
+assert(not p.subclass:IsEnabled() and p.subclass.state == 'disabled' and not p.subclass.menu:IsShown())
+Click(p.save); local singleCategoryID = S.editID
+assert(singleCategoryID and A.db.sendRules[singleCategoryID].subclassID == 0)
+S:Edit(singleCategoryID)
+assert(p.subclass.value == 0 and not p.subclass:IsEnabled() and p.subclass.state == 'disabled')
+Click(p.cancel); A.SendRules:Delete(singleCategoryID)
+p.target:SetValue('First-Realm', true); p.kind.onValueChanged('category')
+Click(p.class); Click(p.class.menu.buttons[2])
+assert(S.draft.classID == 7 and p.subclass:IsEnabled() and not p.class.menu:IsShown())
+assert(p.subclass.state == 'default')
+assert(p.class.label:GetText() == '交易材料' and not p.categoryStatus:IsShown())
+assert(p.class.points[1][3] == p.subclass.points[1][3] and p.subclass:GetWidth() == p.class:GetWidth())
+assert(p.class:GetWidth() <= 180 and p.subclass.points[1][2] + p.subclass:GetWidth() <= p.editor:GetWidth())
+Click(p.subclass); assert(p.subclass.menu:IsShown() and #p.subclass.options == 3)
+Click(p.subclass.menu.buttons[2]); assert(S.draft.subclassID == 7 and not p.subclass.menu:IsShown())
+-- A broken legacy entry point must not hide valid modern subclasses.
+local legacySub, modernItems = GetItemSubClassInfo, C_Item
+C_Item = { GetItemSubClassInfo = legacySub }
+GetItemSubClassInfo = function() error('legacy API unavailable') end
+S:Refresh(); assert(p.subclass:IsEnabled() and #p.subclass.options == 3)
+C_Item.GetItemSubClassInfo = function() error('modern API unavailable') end
+GetItemSubClassInfo = legacySub
+S:Refresh(); assert(p.subclass:IsEnabled() and #p.subclass.options == 3)
+GetItemSubClassInfo = nil; C_Item.GetItemSubClassInfo = nil
+S:Refresh(); assert(not p.subclass:IsEnabled() and p.categoryStatus:IsShown())
+assert(p.subclass.state == 'disabled' and p.subclass.label:GetText() == '无子分类' and S.draft.subclassID == nil)
+GetItemSubClassInfo, C_Item = legacySub, modernItems
+S:Refresh(); assert(p.subclass:IsEnabled() and not p.categoryStatus:IsShown())
+Click(p.subclass); Click(p.subclass.menu.buttons[2])
 assert(p.excludeTitle:IsShown() and p.exclude.input:IsEnabled() and not p.item:IsShown())
 p.exclude:SetValue('99'); Click(OperationButton(p.exclude)); assert(S.draft.excluded[99])
 Click(p.excludes[1].remove); assert(not S.draft.excluded[99])
 p.exclude:SetValue('99'); p.exclude:Resolve('add')
 Click(p.save); local categoryID = S.editID
 assert(categoryID and A.db.sendRules[categoryID].excluded[99] and not A.db.sendRules[categoryID].characters)
+local sortedGroups = S:Groups('')
+for _, group in ipairs(sortedGroups) do
+    local sawItem = false
+    for _, rule in ipairs(group.rules) do
+        if rule.kind == 'item' then sawItem = true else assert(not sawItem, 'Category rules precede item rules within each recipient') end
+    end
+end
+assert(FindRow('rule').rule.id == categoryID, 'Rendered list puts a later-created category before the earlier item rule')
+assert(A.db.sendRules[categoryID].subclassID == 7)
+S:Edit(categoryID); assert(p.subclass.value == 7)
+Click(p.class); Click(p.class.menu.buttons[2]); assert(S.draft.subclassID == nil and p.subclass.value == -1)
+Click(p.subclass); Click(p.subclass.menu.buttons[2]); Click(p.save)
+parent:SetWidth(400); host.refreshPanel()
+assert(p.class.points[1][3] == p.subclass.points[1][3])
+assert(p.subclass.points[1][2] + p.subclass:GetWidth() <= p.editor:GetWidth())
+parent:SetWidth(1104); host.refreshPanel()
 assert(p.editor:IsShown() and p.list:IsShown())
 assert(FindRow('rule', function(row) return row.rule.id == categoryID end).icon.texture:find('INV_Ingot_02'))
 -- The recipient gate preserves each rule's own enable flag and survives initialization.
@@ -235,16 +308,44 @@ assert(A.db.sendRules[dropID].recipient == 'First-Realm')
 A.SendRules:Delete(dropID); S.dirty=nil; Click(p.cancel)
 for itemID = 10, 18 do assert(A.SendRules:Save({ kind = 'item', itemID = itemID, recipient = 'First-Realm' })) end
 assert(A.SendRules:Save({ kind = 'item', itemID = 100, recipient = 'Second-Other' }))
-host.availableHeight = 350; host.refreshPanel(); assert(#S.groupPages == 2 and p.next:IsShown())
+host.availableHeight = 350; host.refreshPanel(); p.listScroll:UpdateScrollbar()
+assert(not p.next and not p.previous and p.listScroll.ScrollBar:IsShown())
 local rendered = 0; for _, row in ipairs(p.rows) do if row:IsShown() and row.kind == 'rule' then rendered = rendered + 1 end end
-assert(rendered == 11)
-Click(p.next); assert(FindRow('group').header:GetText() == 'Second-Other · 1 条 · 当前角色不适用', 'Other-realm recipients retain the realm')
-Click(FindRow('group').fold); assert(not FindRow('rule') and p.editor:IsShown())
-p.search:SetValue('Second', true); assert(FindRow('rule'))
-p.search:SetValue('', true); assert(not FindRow('rule') and S.page == 2)
-Click(FindRow('group').fold)
-SelectRow(FindRow('rule')); assert(S.editID and p.editor:IsShown())
-Click(p.cancel); assert(not S.editID and S.page == 2)
+assert(rendered == 12, 'All recipients and rules share one scroll content')
+local fixedHeight = p.list:GetHeight()
+assert(p.range.points[1][2] == p.list and p.range.points[1][1] == 'BOTTOMLEFT')
+assert(p.range:GetText() == '共 2 位收件人 · 12 条规则')
+local secondKey = A.Recipients:Key('Second-Other')
+local function SecondGroup() return FindRow('group', function(row) return row.group.key == secondKey end) end
+assert(SecondGroup().header:GetText() == 'Second-Other · 1 条 · 当前角色不适用')
+Click(SecondGroup().fold)
+assert(not FindRow('rule', function(row) return row.rule.recipient == 'Second-Other' end))
+p.search:SetValue('Second', true); p.listScroll:UpdateScrollbar()
+assert(FindRow('rule') and not p.listScroll.ScrollBar:IsShown())
+assert(p.list:GetHeight() == fixedHeight and p.range:GetText() == '共 1 位收件人 · 1 条规则')
+p.search:SetValue('', true)
+assert(not FindRow('rule', function(row) return row.rule.recipient == 'Second-Other' end))
+Click(SecondGroup().fold)
+SelectRow(FindRow('rule', function(row) return row.rule.recipient == 'Second-Other' end)); assert(S.editID and p.editor:IsShown())
+Click(p.cancel); assert(not S.editID)
+-- Collapsing all recipients removes overflow and restores the content width.
+for _, group in ipairs(S:Groups('')) do S.collapsed[group.key] = true end
+host.refreshPanel(); p.listScroll:UpdateScrollbar()
+assert(not p.listScroll.ScrollBar:IsShown() and p.listContent:GetWidth() == p.list:GetWidth())
+assert(p.list:GetHeight() == fixedHeight and p.listScroll:GetVerticalScroll() == 0)
+for _, group in ipairs(S:Groups('')) do S.collapsed[group.key] = nil end
+host.refreshPanel(); p.listScroll:UpdateScrollbar()
+assert(p.listScroll.ScrollBar:IsShown() and p.listContent:GetWidth() == p.list:GetWidth() - A.Core.UITheme.Geometry.scrollbarGutter)
+p.listScroll:SetVerticalScroll(50)
+assert(p.range.points[1][1] == 'BOTTOMLEFT' and p.range.points[1][2] == p.list)
+host.availableHeight = 600; host.refreshPanel(); p.listScroll:UpdateScrollbar()
+assert(not p.listScroll.ScrollBar:IsShown())
+local originalMeasure = p.ruleMeasure.GetStringHeight
+p.ruleMeasure.GetStringHeight = function() return 90 end
+host.refreshPanel(); p.listScroll:UpdateScrollbar()
+assert(p.listScroll.ScrollBar:IsShown(), 'Wrapped labels contribute to scroll content height')
+p.ruleMeasure.GetStringHeight = originalMeasure
+host.availableHeight = 350; host.refreshPanel()
 -- Changing editor context invalidates late item loads.
 local request, pending = A.Core.ItemResolver.Request
 A.Core.ItemResolver.Request = function(_, _, callback) pending=callback; return {Cancel=function() end} end

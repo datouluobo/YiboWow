@@ -1,6 +1,12 @@
 local Addon = _G.YiboMail
 local S = {}; Addon.SendRulesSettings = S
 local function Theme() return Addon.Core.UITheme end
+local function RuleLabel(rule)
+    local label = Addon.SendRules:Label(rule)
+    local excluded = 0; for _ in pairs(rule.excluded or {}) do excluded = excluded + 1 end
+    if rule.kind == "category" and excluded > 0 then label = label .. " · 黑名单 " .. excluded .. " 种" end
+    return label
+end
 local function Place(control, x, y, width, height)
     control:ClearAllPoints(); control:SetPoint("TOPLEFT", x, -y)
     if width then control:SetWidth(width) end
@@ -135,7 +141,7 @@ local function RulePicker(parent, label, callback, validate, retain)
 end
 function S:Create(parent)
     local t, p = Theme(), CreateFrame("Frame", nil, parent); self.panel = p
-    self.page, self.filterState, self.filterKind = 1, "all", "all"
+    self.filterState, self.filterKind = "all", "all"
     Addon.db.settings = Addon.db.settings or {}
     Addon.db.settings.sendRuleCollapsed = Addon.db.settings.sendRuleCollapsed or {}
     self.collapsed = Addon.db.settings.sendRuleCollapsed
@@ -146,15 +152,16 @@ function S:Create(parent)
     end
     p.search = t:CreateInput(p.list, { placeholder = "搜索物品、分类、收件人或服务器", clearable = true,
         OnChanged = function(value)
-            if value ~= "" and not S.searching then S.beforeSearchPage = S.page end
-            S.searching = value ~= ""
-            S.page = S.searching and 1 or (S.beforeSearchPage or 1); S:Refresh()
+            p.listScroll:SetVerticalScroll(0); S:Refresh()
         end })
-    p.previous = Button(p.list, "上一页", function() S.page = S.page - 1; S:Refresh() end)
-    p.next = Button(p.list, "下一页", function() S.page = S.page + 1; S:Refresh() end)
+    p.listScroll = t:CreateScrollFrame(p.list)
+    p.listScroll:SetPoint("TOPLEFT", 0, -42); p.listScroll:SetPoint("BOTTOMRIGHT", 0, 28)
+    p.listContent = CreateFrame("Frame", nil, p.listScroll); p.listContent:SetSize(1, 1)
+    p.listScroll:SetScrollChild(p.listContent)
+    p.listScroll:HookScript("OnSizeChanged", function() S:Refresh() end)
     p.range = t:CreateText(p.list, t.Font.assist, t.Colors.muted, "LEFT")
-    p.empty = t:CreateText(p.list, t.Font.body, t.Colors.muted, "LEFT")
-    p.listNotice = t:CreateText(p.list, t.Font.assist, t.Colors.muted, "LEFT"); p.listNotice:SetWordWrap(true)
+    p.empty = t:CreateText(p.listContent, t.Font.body, t.Colors.muted, "LEFT")
+    p.listNotice = t:CreateText(p.listContent, t.Font.assist, t.Colors.muted, "LEFT"); p.listNotice:SetWordWrap(true)
     p.heading = t:CreateText(p.editor, t.Font.section, t.Colors.text, "LEFT")
     p.kind = CreateFrame("Frame", nil, p.editor)
     p.kind.buttons = {}
@@ -184,6 +191,10 @@ function S:Create(parent)
     p.class:SetOnValueChanged(function(v) S.draft.classID, S.draft.subclassID = v, nil; S.dirty = true; S:Refresh() end)
     p.subclass = t:CreateDropdown(p.editor, 240, {})
     p.subclass:SetOnValueChanged(function(v) S.draft.subclassID = v ~= -1 and v or nil; S.dirty = true; S:Refresh() end)
+    p.class:SetMenuPageSize(8); p.subclass:SetMenuPageSize(8)
+    p.classLabel = t:CreateText(p.editor, t.Font.body, t.Colors.text, "LEFT"); p.classLabel:SetText("大类")
+    p.subclassLabel = t:CreateText(p.editor, t.Font.body, t.Colors.text, "LEFT"); p.subclassLabel:SetText("子分类")
+    p.categoryStatus = t:CreateText(p.editor, t.Font.assist, t.Colors.muted, "LEFT"); p.categoryStatus:SetWordWrap(true)
     p.target = t:CreateInput(p.editor, { placeholder = "收件人：角色名-服务器", OnChanged = function(v) S.draft.recipient = v; S.dirty = true; S:Refresh() end })
     p.contacts = Button(p.editor, "选择收件人", function(_, button)
         if button == "RightButton" then S.factionEdit = true; S:Refresh(); return end
@@ -321,6 +332,12 @@ function S:Groups(search)
             group.rules[#group.rules + 1] = rule; count = count + 1
         end
     end
+    for _, group in ipairs(groups) do
+        table.sort(group.rules, function(a, b)
+            if a.kind ~= b.kind then return a.kind == "category" end
+            return a.id < b.id
+        end)
+    end
     table.sort(groups, function(a, b) return a.key < b.key end)
     return groups, count
 end
@@ -328,7 +345,7 @@ function S:Row(index)
     local p, t = self.panel, Theme()
     local row = p.rows[index]
     if not row then
-        row = CreateFrame("Frame", nil, p.list, "BackdropTemplate"); p.rows[index] = row
+        row = CreateFrame("Frame", nil, p.listContent, "BackdropTemplate"); p.rows[index] = row
         row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
         row.fold = t:CreateButton(row, 24, "-"); row.fold:SetHeight(24)
         row.header = t:CreateText(row, t.Font.body, t.Colors.text, "LEFT"); row.header:SetWordWrap(false)
@@ -342,24 +359,40 @@ end
 function S:RenderList(width, host)
     local p, t = self.panel, Theme()
     Place(p.search, 0, 0, width, t.Size.standard)
-    local y, step = 42, 30
+    local listHeight = math.max(190, (host.availableHeight or 540) - 44)
+    local viewportHeight = listHeight - 70
+    p.list:SetHeight(listHeight); p.listScroll:SetHeight(viewportHeight)
+    local y, step = 0, 30
     local search = string.lower(p.search:GetText())
     local groups, count = self:Groups(search)
-    local budget = math.max(120, (host.availableHeight or 540) - 120)
-    local pages, page, used = {}, {}, 0
-    for _, group in ipairs(groups) do
-        local cost = step + 12 + math.min(5, #group.rules) * step
-        if #page > 0 and used + cost > budget then pages[#pages + 1] = page; page, used = {}, 0 end
-        page[#page + 1] = group; used = used + cost
+    if not p.ruleMeasure then
+        p.ruleMeasure = t:CreateText(p.list, t.Font.body, t.Colors.text, "LEFT")
+        p.ruleMeasure:SetWordWrap(true); p.ruleMeasure:Hide()
     end
-    if #page > 0 or #pages == 0 then pages[#pages + 1] = page end
-    if self.focusRecipient then
-        for pageIndex, entries in ipairs(pages) do
-            for _, group in ipairs(entries) do if group.key == self.focusRecipient then self.page = pageIndex end end
+    local labels, heights = {}, {}
+    local conflicts = Addon.SendRules:Match(Addon.Compose:BagItems()).conflicts
+    local function Measure(contentWidth)
+        p.ruleMeasure:SetWidth(math.max(1, contentWidth - 144))
+        local total = count == 0 and 34 or 0
+        for _, group in ipairs(groups) do
+            total = total + step + 12
+            if search ~= "" or not self.collapsed[group.key] then
+                for _, rule in ipairs(group.rules) do
+                    local label = RuleLabel(rule)
+                    p.ruleMeasure:SetText(label); p.ruleMeasure:SetHeight(0)
+                    local height = math.max(step, math.max(24, p.ruleMeasure:GetStringHeight()) + 6)
+                    labels[rule.id], heights[rule.id] = label, height
+                    total = total + height
+                end
+            end
         end
-        self.focusRecipient = nil
+        return total + (#conflicts > 0 and 40 or 0)
     end
-    self.page = math.max(1, math.min(self.page, #pages)); self.groupPages = pages
+    if Measure(width) > viewportHeight + 1 then
+        width = width - t.Geometry.scrollbarGutter; Measure(width)
+    end
+    p.listContent:SetWidth(width)
+    local focusTop
     local index = 0
     local function Row(kind)
         index = index + 1; local row = S:Row(index)
@@ -372,7 +405,8 @@ function S:RenderList(width, host)
         row:SetBackdropColor(0, 0, 0, 0)
         return row
     end
-    for _, group in ipairs(pages[self.page]) do
+    for _, group in ipairs(groups) do
+        if group.key == self.focusRecipient then focusTop = y end
         local expanded = search ~= "" or not self.collapsed[group.key]
         local header = Row("group"); header.group = group
         Place(header.fold, 0, 3, 24, 24); Place(header.header, 32, 3, width - 116, 24)
@@ -381,7 +415,7 @@ function S:RenderList(width, host)
         header.header:SetText(Addon.Recipients:Label({ address = group.recipient }) .. " · " .. #group.rules .. " 条" .. (allowed == false and " · 当前角色不适用" or allowed == nil and " · 资料待确认" or ""))
         header.fold:SetScript("OnClick", function()
             if search ~= "" then return end
-            S.collapsed[group.key] = expanded; S:Refresh()
+            S.collapsed[group.key] = expanded; S.focusRecipient = group.key; S:Refresh()
         end)
         header.toggle:SetChecked(Addon.SendRules:IsRecipientEnabled(group.recipient))
         header.toggle:SetScript("OnClick", function() Addon.SendRules:SetRecipientEnabled(group.recipient, not Addon.SendRules:IsRecipientEnabled(group.recipient)); S:Refresh() end)
@@ -391,13 +425,9 @@ function S:RenderList(width, host)
                 local row = Row("rule"); row.rule = rule
                 Place(row.icon, 32, 5, 20, 20); row.icon:SetTexture(Addon.SendRules:Icon(rule))
                 Place(row.label, 60, 3, width - 144, 24)
-                local label = Addon.SendRules:Label(rule)
-                if rule.kind == "category" and Count(rule.excluded) > 0 then label = label .. " · 黑名单 " .. Count(rule.excluded) .. " 种" end
-                row.label:SetText(label)
-                row.label:SetWordWrap(true); row.label:SetHeight(0)
-                local labelHeight = math.max(24, row.label:GetStringHeight())
-                row.label:SetHeight(labelHeight)
-                local rowHeight = math.max(step, labelHeight + 6)
+                row.label:SetText(labels[rule.id])
+                local rowHeight = heights[rule.id]
+                row.label:SetWordWrap(true); row.label:SetHeight(rowHeight - 6)
                 row:SetHeight(rowHeight); y = y + rowHeight - step
                 row.label:SetTextColor(unpack(Addon.SendRules:IsRecipientEnabled(group.recipient) and t.Colors.text or t.Colors.muted))
                 if self.editID == rule.id then row:SetBackdropColor(unpack(t.Colors.selected)) end
@@ -419,16 +449,17 @@ function S:RenderList(width, host)
     for rest = index + 1, #p.rows do p.rows[rest]:Hide() end
     p.empty:SetShown(count == 0)
     if count == 0 then Place(p.empty, 0, y, width, 30); p.empty:SetText(search ~= "" and "没有匹配规则。" or "暂无规则，请在左侧添加。"); y = y + 34 end
-    p.previous:SetShown(#pages > 1); p.next:SetShown(#pages > 1)
-    if #pages > 1 then
-        Place(p.previous, 0, y, 180); Place(p.next, width - 180, y, 180)
-        p.previous:SetEnabled(self.page > 1); p.next:SetEnabled(self.page < #pages); y = y + 38
-    end
-    Place(p.range, 0, y, width, 24); p.range:SetText("共 " .. #groups .. " 位收件人 · " .. count .. " 条规则" .. (#pages > 1 and (" · " .. self.page .. "/" .. #pages .. " 页") or "")); y = y + 28
-    local conflicts = Addon.SendRules:Match(Addon.Compose:BagItems()).conflicts
+    p.range:ClearAllPoints(); p.range:SetPoint("BOTTOMLEFT", p.list, "BOTTOMLEFT", 0, 0)
+    p.range:SetPoint("BOTTOMRIGHT", p.list, "BOTTOMRIGHT", 0, 0); p.range:SetHeight(24)
+    p.range:SetText("共 " .. #groups .. " 位收件人 · " .. count .. " 条规则")
     p.listNotice:SetShown(#conflicts > 0)
     if #conflicts > 0 then Place(p.listNotice, 0, y, width, 32); p.listNotice:SetText("当前背包存在 " .. #conflicts .. " 项冲突。"); y = y + 40 end
-    return y
+    p.listContent:SetHeight(math.max(1, y)); p.listScroll:SetContentHeight(y)
+    local maximum = math.max(0, y - viewportHeight)
+    local offset = math.min(p.listScroll:GetVerticalScroll() or 0, maximum)
+    if focusTop and (focusTop < offset or focusTop + step > offset + viewportHeight) then offset = math.min(focusTop, maximum) end
+    self.focusRecipient = nil; p.listScroll:SetVerticalScroll(offset)
+    return listHeight
 end
 function S:RenderEditor(width)
     local p, t = self.panel, Theme()
@@ -458,6 +489,7 @@ function S:RenderEditor(width)
     Place(p.kind, 0, y, 110, h); p.kind:SetValue(draft.kind)
     local category = draft.kind == "category"
     p.item:SetShown(not category); p.class:SetShown(category); p.subclass:SetShown(category)
+    p.classLabel:SetShown(category); p.subclassLabel:SetShown(category); p.categoryStatus:Hide()
     if not category then
         Place(p.item, 116, y); if sync then p.item:SetValue(table.concat(Addon.SendRules:ItemIDs(draft), ";")) end
         if sync and draft.itemID then
@@ -466,9 +498,37 @@ function S:RenderEditor(width)
         y = y + p.item:Layout(editorWidth - 116) + 8
     else
         p.item:Invalidate()
-        Place(p.class, 116, y, (editorWidth - 124) / 2, h); p.class:SetOptions(Addon.SendRules:Categories()); p.class:SetValue(draft.classID)
-        Place(p.subclass, 116 + (editorWidth - 108) / 2, y, (editorWidth - 124) / 2, h)
-        p.subclass:SetOptions(draft.classID and Addon.SendRules:Categories(draft.classID) or {}); p.subclass:SetValue(draft.subclassID or -1); y = y + step
+        y = y + step
+        local categoryLabelWidth, gap = 48, 12
+        local dropdownWidth = math.min(180, (editorWidth - categoryLabelWidth * 2 - gap) / 2)
+        local subclassX = categoryLabelWidth + dropdownWidth + gap
+        Place(p.classLabel, 0, y + 4, categoryLabelWidth, 24)
+        Place(p.class, categoryLabelWidth, y, dropdownWidth, h)
+        p.class:SetOptions(Addon.SendRules:Categories()); p.class:SetValue(draft.classID)
+        if draft.classID == nil then p.class:SetText("请选择大类") end
+        local subclasses = draft.classID ~= nil and Addon.SendRules:Categories(draft.classID) or {}
+        -- The first entry is the synthetic “all” choice, not a subclass.
+        local subclassCount = math.max(0, #subclasses - 1)
+        if subclassCount <= 1 then
+            local automatic = subclassCount == 1 and subclasses[2].value or nil
+            if draft.subclassID ~= automatic then draft.subclassID = automatic; self.dirty = true end
+        end
+        Place(p.subclassLabel, subclassX, y + 4, categoryLabelWidth, 24)
+        Place(p.subclass, subclassX + categoryLabelWidth, y, dropdownWidth, h)
+        p.subclass:SetOptions(subclasses); p.subclass:SetValue(draft.subclassID or -1)
+        p.subclass:SetEnabled(subclassCount > 1)
+        p.subclass:SetState(subclassCount > 1 and "default" or "disabled")
+        if subclassCount <= 1 then p.subclass.menu:Hide() end
+        if subclassCount == 0 then
+            p.subclass:SetText(draft.classID == nil and "请先选择大类" or "无子分类")
+        end
+        y = y + step
+        if draft.classID == 5 or draft.classID ~= nil and subclassCount == 0 then
+            p.categoryStatus:SetText(draft.classID == 5 and "草药、矿石、布料等请选“交易材料”。" or "客户端未返回可选子分类，当前规则匹配整个大类。")
+            Place(p.categoryStatus, labelWidth, y, editorWidth - labelWidth, 0)
+            local statusHeight = math.max(24, p.categoryStatus:GetStringHeight())
+            p.categoryStatus:SetHeight(statusHeight); p.categoryStatus:Show(); y = y + statusHeight + 8
+        end
     end
     p.excludeTitle:SetShown(category); p.excludeHelp:SetShown(category); p.exclude:SetShown(category)
     p.excludeHelp:SetText(category and "只排除当前分类规则中的物品，随规则保存。" or "仅分类规则适用。")

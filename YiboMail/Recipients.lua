@@ -30,8 +30,8 @@ function R:SetFaction(address, faction)
     if Addon.SendRules then Addon.SendRules:Changed(true) end
     return true
 end
-function R:CanRuleSend(address)
-    local current = self:Current()
+function R:CanRuleSend(address, current)
+    current = current or self:Current()
     local normalized, _, _, realm = self:Normalize(address)
     if not normalized then return false, "收件人无效" end
     if not current or not current.realm then return nil, "当前角色服务器待采集" end

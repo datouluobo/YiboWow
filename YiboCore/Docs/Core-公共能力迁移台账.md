@@ -82,7 +82,7 @@
 | YiboCrafting | 待迁移 | [AccountPage.lua](../../YiboCrafting/AccountPage.lua) 的 CharacterName 本地拼服务器，矩阵直接调用 Core 短名读取 | 矩阵、角色列表、角色下拉与 tooltip；核对不同布局是否应使用原名或短名 |
 | YiboCurrency | 待迁移 | [AccountPage.lua](../../YiboCurrency/AccountPage.lua) 的 DisplayName / DisplayIdentity 本地格式化；调用共享表头时显式传入原名 | 表头、角色行、物品与货币 tooltip 标签及宽度测量；保留总计／空状态特殊行 |
 | YiboLegendary | 待迁移 | [UI.lua](../../YiboLegendary/UI.lua) 的 CharacterLabel 用于列表、tooltip、确认及行动项 | 上述调用统一声明显示策略；人工确认应提供可精确识别的真实完整身份 |
-| YiboMail | 部分接入 | 当前工作树 TOC 1.1.1-api1：AccountPage 总览／预览、ViewModel、CacheUI 等复用 FormatName；初始化检查 API v9、名称能力与方法；InboxReleaseSpec 本轮通过，其他已登记测试为历史证据 | Recipients:Label 仍自行按当前服务器组合联系人名称；保留备注优先、转义及邮寄地址解析。游戏内显示待验收 |
+| YiboMail | 部分接入 | 当前工作树 TOC 1.2.0-api1：AccountPage 总览／预览、ViewModel、CacheUI 等复用 FormatName；初始化检查 API v9、名称能力与方法；InboxReleaseSpec 本轮通过，其他已登记测试为历史证据 | Recipients:Label 仍自行按当前服务器组合联系人名称；保留备注优先、转义及邮寄地址解析。游戏内显示待验收 |
 | YiboMounts | 不适用 | [加载清单](../../YiboMounts/YiboMounts.toc) 与图鉴提示／Core 设置适配未发现角色或联系人身份显示 | 新增相应显示需求时重审；坐骑名称与来源格式继续归业务 |
 | YiboQuestBlocker | 待迁移 | [AccountPage.lua](../../YiboQuestBlocker/AccountPage.lua) 的 ShortName 实际返回原名；CharacterIdentity 解析回退键，并显式覆盖共享表头名称 | 当前角色分组标题、表头和身份 tooltip；旧键解析用于身份迁移，不能用格式化结果替代 |
 | YiboReputation | 待迁移 | [AccountMatrixView.lua](../../YiboReputation/AccountMatrixView.lua) 与 [MonitoredPreview.lua](../../YiboReputation/MonitoredPreview.lua) 已调用共享角色表头 | Core 1.7.0 表头内部已接入；后续核对业务侧遗漏标签、最低要求与游戏表现，再记录业务显式接入。公会名称与公会键不属于角色显示 |
@@ -112,7 +112,7 @@
 | YiboCrafting | 待迁移 | [AccountPage.lua](../../YiboCrafting/AccountPage.lua) 的搜索框本地创建 | 搜索框输入／焦点／清空行为；未登记接入版本 |
 | YiboCurrency | 已接入 | [Settings.lua](../../YiboCurrency/Settings.lua) 的自定义物品选择器间接使用公共输入；[CoreIntegration.lua](../../YiboCurrency/CoreIntegration.lua) 当前工作树要求 API v9、business-services:1 和所需控件方法 | 所列范围首批 Currency 0.9.1 / API v7；当前控件专项未重跑，v9 服务迁移见 CAP-005 |
 | YiboLegendary | 不适用 | 当前业务页与业务设置未发现本地 EditBox | 新增输入时使用公共控件；无接入版本 |
-| YiboMail | 部分接入 | 当前工作树 TOC 1.1.1-api1：CacheUI、SendRulesSettings 使用公共输入；最低 API v9；InboxReleaseSpec 本轮通过，WorkspaceSpec／RuleSendUISpec 为历史证据 | MailUI、NativeUI、RecipientUI 本地输入仍保留，随对应修改或经确认的集中迁移处理；游戏内待核对 |
+| YiboMail | 部分接入 | 当前工作树 TOC 1.2.0-api1：CacheUI、SendRulesSettings 使用公共输入；最低 API v9；InboxReleaseSpec 本轮通过，WorkspaceSpec／RuleSendUISpec 为历史证据 | MailUI、NativeUI、RecipientUI 本地输入仍保留，随对应修改或经确认的集中迁移处理；游戏内待核对 |
 | YiboMounts | 不适用 | 图鉴及 Core 设置适配未发现本地 EditBox | 新增输入时使用公共控件；无接入版本 |
 | YiboQuestBlocker | 待迁移 | [AccountPage.lua](../../YiboQuestBlocker/AccountPage.lua) 的等级表达式与手动任务录入本地创建 | 对应输入控件；任务 ID 校验仍归业务。未登记接入版本 |
 | YiboReputation | 待迁移 | [AccountMatrixView.lua](../../YiboReputation/AccountMatrixView.lua) 的搜索框本地创建 | 搜索框及其状态；未登记接入版本 |
@@ -135,7 +135,7 @@
 | YiboCrafting | 部分接入 | AccountPage 产出名称通过 Core.ItemResolver 共享加载；初始化检查 API v7 / item-resolver:1；Smoke 通过 | 仅展示加载接入，搜索输入未迁移；配方规则归业务，游戏内待验收 |
 | YiboCurrency | 已接入 | Settings 的 CreateItemPicker、删除操作确认复用 Core；本轮最低 API 提高至 v9；CoreItemControlsSpec 通过 | 所列范围首批 Currency 0.9.1；游戏内待验收 |
 | YiboLegendary | 不适用 | 人工目标确认不是物品身份选择 | 不为统一形式改造成物品确认器 |
-| YiboMail | 已接入 | 工作树 1.1.1-api1：NativeUI 附件加载复用 ItemResolver；指定规则使用 item-picker:2 的 multiple／retainInput；分类排除与全局黑名单复用单物品模式；初始化本轮检查 API v9、business-services:1 和 item-picker:2；使用公开配置 | 接口见 API-v8-批量物品确认；CoreItemControlsSpec、RuleSendUISpec、RuleSendSpec 和 InboxReleaseSpec 通过。游戏内待验收；新批量需求按契约扩展 |
+| YiboMail | 已接入 | 工作树 1.2.0-api1：NativeUI 附件加载复用 ItemResolver；指定规则使用 item-picker:2 的 multiple／retainInput；分类排除与全局黑名单复用单物品模式；初始化本轮检查 API v9、business-services:1 和 item-picker:2；使用公开配置 | 接口见 API-v8-批量物品确认；CoreItemControlsSpec、RuleSendUISpec、RuleSendSpec 和 InboxReleaseSpec 通过。游戏内待验收；新批量需求按契约扩展 |
 | YiboMounts | 不适用 | 当前图鉴读取坐骑／物品来源，未提供通用物品录入 | 展示与来源查询不自动替换成选择器 |
 | YiboQuestBlocker | 不适用 | 手动输入任务 ID | 校验与操作归任务业务 |
 | YiboReputation | 不适用 | 搜索声望目录，未发现通用物品身份录入 | 声望搜索不属于物品解析 |

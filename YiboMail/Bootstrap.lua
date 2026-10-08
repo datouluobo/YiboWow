@@ -2,14 +2,15 @@ local Addon = _G.YiboMail
 function Addon:Initialize()
     if self.initialized then return end
     local core = _G.YiboCore
-    if not (core and core.CheckAPIVersion and core:CheckAPIVersion(8)
+    if not (core and core.CheckAPIVersion and core:CheckAPIVersion(9)
+        and core.Contracts and core.HasCapability and core:HasCapability("business-services", 1)
         and core.HasCapability and core:HasCapability("character-name-format", 1)
         and core:HasCapability("item-picker", 2)
         and core.Characters and type(core.Characters.FormatName) == "function") then
-        self:Print("请升级 YiboCore 至 1.7.1 或更新版本：需要 API v8、公共名称格式化和批量物品确认能力。"); return
+        self:Print("请升级 YiboCore 至 1.8.0 或更新版本：需要 API v9、业务服务连接、公共名称格式化和批量物品确认能力。"); return
     end
     self.Core = core; self:InitializeDatabase()
-    local ok, err = core:RegisterAddon(self.NAME, { version = self.VERSION, requiredAPI = 8 })
+    local ok, err = core:RegisterAddon(self.NAME, { version = self.VERSION, requiredAPI = 9 })
     if not ok then self:Print(err); return end
     self.Recipients:Initialize()
     self.SendRules:Initialize()
@@ -31,6 +32,8 @@ function Addon:Initialize()
         self.Items.Events:Register(self.AccountPage, function() core.AccountView:NotifyPageChanged("mail-inbox") end)
     end
     self.initialized = true
+    ok, err = self.Items:RegisterService()
+    if not ok then self.initialized = false; self:Print(err); return end
     SLASH_YIBOMAIL1 = "/yma"
     SlashCmdList.YIBOMAIL = function(message)
         local command = (message or ""):match("^%s*(%S*)")

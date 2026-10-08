@@ -184,7 +184,19 @@ function C:Skip(id, restore)
     for _, ruleID in ipairs(type(id) == "table" and id or { id }) do self.skipped[ruleID] = not restore or nil end
     self.scope, self.state = nil, "idle"; self:Scan(); self:Changed(); return true
 end
-function C:OnEvent(event)
+function C:QueueScan()
+    if self.scanQueued then return end
+    self.scanQueued = true
+    local function Run()
+        self.scanQueued = nil
+        if Addon.Scanner:IsOpen() and self.state ~= "sending" and self.state ~= "filling" then
+            self:Scan(); self:Changed()
+        end
+    end
+    if C_Timer and C_Timer.After then C_Timer.After(0.1, Run) else Run() end
+end
+
+function C:OnEvent(event, itemID)
     if event == "MAIL_CLOSED" then
         self.state, self.skipped, self.scope, self.owned, self.packet, self.fingerprint = "idle", {}, nil, nil, nil, nil
         self.match, self.notice, self.dirty = nil, nil, nil
@@ -194,7 +206,13 @@ function C:OnEvent(event)
     elseif (event == "MAIL_FAILED" or event == "ADDON_ACTION_BLOCKED") and self.state == "sending" then
         self.state, self.notice = "invalid", "发送未确认，请检查当前邮件；不会自动重试。"
     elseif event == "BAG_UPDATE_DELAYED" or event == "GET_ITEM_INFO_RECEIVED" then
-        if self.state ~= "sending" and self.state ~= "filling" then self:Scan() end
+        -- Rule matching is a mailbox operation. Ordinary looting must not scan
+        -- every bag and repeatedly copy Core character snapshots in the background.
+        if Addon.Scanner:IsOpen() and self.state ~= "sending" and self.state ~= "filling"
+            and (event == "BAG_UPDATE_DELAYED" or self.match and self.match.pendingItemIDs and self.match.pendingItemIDs[tonumber(itemID)]) then
+            self:QueueScan()
+        end
+        return
     elseif event == "MAIL_SEND_INFO_UPDATE" and self.state == "ready" and self:Fingerprint() ~= self.fingerprint then self:Invalidate() end
     self:Changed()
 end

@@ -19,7 +19,7 @@
 | **YiboQuestBlocker** | 阻止或筛选任务接受流程，提供任务/规则配置及诊断 | Core 页面、入口、设置、角色缓存清理；另含兼容入口组件 | 阻止任务接受是副作用型能力，不能当作通用任务数据 API；未声明稳定消费者 API |
 | **YiboReputation（声望之路）** | 角色声望事实的账号矩阵、声望目录/过滤、最多 10 项快速监控和预览 | Core 收集并保存 `reputation` 领域；插件注册页面/入口并消费 `DATA_DOMAIN_UPDATED` | 声望事实来自 Core；监控列表和显示偏好归插件设置；目前没有物品库存监控 API |
 | **YiboTodo** | 账号待办与活动状态、日常/周常/专业冷却/特殊活动观察、业务动作 | Core 页面、入口、设置、角色清理；读取 Core 角色/领域并按业务事件更新自身快照 | 内部 Provider Registry 只服务 YiboTodo 内部；不是跨插件公共 API |
-| **YiboMail（阶段 0）** | 邮件快照、到期/收件状态、邮件物品来源和收发辅助 | 使用现有 Core 页面/入口/设置；直接提供只读邮件物品来源 API 供 Vault 等消费者使用 | Public API v1 契约已形成冻结候选；尚无可调用运行时 |
+| **YiboMail** | 邮件快照、到期/收件状态、邮件物品来源、规则寄送和联系人辅助 | 当前 TOC 1.2.0-api1；工作树最低 Core API v9，注册 `mail.items` v1.0 | 已有 Public API v1；跨业务调用经 Core.Contracts，旧 Items 接口保留不等于允许新消费者绕过 Core |
 | **YiboVault 1.0.0** | 背包/装备/银行/公会银行/AH/邮箱附件缓存、搜索与物品 Tooltip | 依赖 Core API v6；独立采集可见邮箱附件 | `Items` API v1 提供查询、容量摘要和个人库存批量计数；YiboCurrency 可选调用 |
 
 > 插件功能以仓库当前主线 `.toc` 和运行时代码为准；`dist/`、`Builds/` 等历史/打包副本不作为当前 API 来源。

@@ -115,12 +115,13 @@ function U:Refresh()
     local c, root = Addon.RuleSendController, self.root
     if not root or not self.active or self.refreshing then return end
     self.refreshing = true
+    local current = Addon.Core.Characters:GetCurrent()
     local match = c.match or { byRule = {}, conflicts = {}, items = {} }
     local entries, groups = {}, {}
     for _, rule in ipairs(Addon.SendRules:List()) do
         local staged = false
         for _, item in ipairs(c.owned and c.packet or {}) do if item.ruleID == rule.id then staged = true; break end end
-        if Addon.Recipients:CanRuleSend(rule.recipient) ~= false and (match.byRule[rule.id] or staged or c.skipped[rule.id]) then
+        if Addon.Recipients:CanRuleSend(rule.recipient, current) ~= false and (match.byRule[rule.id] or staged or c.skipped[rule.id]) then
             local key = Addon.Recipients:Key(rule.recipient)
             local group = groups[key]
             if not group then
@@ -170,7 +171,7 @@ function U:Refresh()
         row.main:SetWidth(width); row.main:SetHeight(32)
         local conflict = entry.conflict
         if entry.recipient then
-            local label = "→ " .. Addon.ViewModel:CounterpartLabel(entry.recipient, Addon.Core.Characters:GetCurrent())
+            local label = "→ " .. Addon.ViewModel:CounterpartLabel(entry.recipient, current)
             label = label .. " · " .. (entry.skipped and "本次已跳过" or (entry.quantity .. "个 / " .. entry.stacks .. "组" .. (entry.staged and " · 已装填" or "")))
             row.main:SetText(label); row.main:SetEnabled(not entry.skipped and c.state ~= "sending" and c.state ~= "filling")
             row.main:SetScript("OnClick", function() Run(c.Select, { kind = "recipient", value = entry.key }) end)
@@ -232,7 +233,7 @@ function U:Refresh()
     self.undo:SetEnabled(c.owned ~= nil and c.state ~= "sending" and c.state ~= "filling")
     self.undo:SetState(self.undo:IsEnabled() and "default" or "disabled")
     local recipient = SendMailNameEditBox and SendMailNameEditBox:GetText() or ""
-    self.recipient.value:SetText(recipient ~= "" and Addon.ViewModel:CounterpartLabel(recipient, Addon.Core.Characters:GetCurrent()) or "待装填")
+    self.recipient.value:SetText(recipient ~= "" and Addon.ViewModel:CounterpartLabel(recipient, current) or "待装填")
     self:Layout()
     local remaining, packets, last, stacks = #match.items, 0, nil, 0
     for _, item in ipairs(c:ScopeItems()) do

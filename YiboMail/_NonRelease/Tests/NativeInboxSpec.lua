@@ -38,6 +38,7 @@ function methods:SetText(v) self.text = v end
 function methods:GetText() return self.text or "" end
 function methods:SetScript(k, v) self.scripts[k] = v end
 function methods:GetScript(k) return self.scripts[k] end
+function methods:RegisterEvent() end
 function methods:HookScript(k, v) self.hooks = self.hooks or {}; self.hooks[k] = v end
 function methods:CreateFontString() return Frame() end
 function methods:CreateTexture() return Frame() end
@@ -61,6 +62,7 @@ end
 function ShowUIPanel(control) control:Show() end
 function HideUIPanel(control) control:Hide() end
 YiboCore = { Capabilities = { Register = function() end } }; dofile("YiboCore/UI/Theme.lua"); dofile("YiboCore/UI/Input.lua")
+dofile('YiboCore/Runtime/ItemResolver.lua')
 -- Keep the real dropdown/buttons; scroll geometry is outside this regression.
 function YiboCore.UITheme:CreateScrollFrame(parent) return Frame(parent) end
 dofile("YiboMail/Namespace.lua")
@@ -244,6 +246,9 @@ local refreshInbox = native.RefreshInbox
 native.RefreshInbox = function() refreshed = refreshed + 1 end
 native:OnEvent("GET_ITEM_INFO_RECEIVED", 999, true); assert(refreshed == 0)
 native:OnEvent("GET_ITEM_INFO_RECEIVED", 123, true); assert(refreshed == 1 and not native.pendingItemInfo[123])
+GetItemInfo = function() return 'Name without quality' end
+native:ItemTile(group, 1, 6)
+assert(refreshed == 1 and requested == 1, 'cached name without quality must not recursively refresh the inbox')
 native.RefreshInbox = refreshInbox
 ITEM_QUALITY_COLORS = { [4] = { r = 0.64, g = 0.21, b = 0.93 } }
 GetItemInfo = function() return "Epic", nil, 4 end

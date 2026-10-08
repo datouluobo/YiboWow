@@ -713,11 +713,15 @@ function Native:ItemTile(group, index, columns, size)
     tile:SetBackdropColor(0, 0, 0, 0)
     local borderColor, needsItemInfo = View:AttachmentBorder(group)
     tile:SetBackdropBorderColor(unpack(borderColor))
-    if needsItemInfo and group.item.itemID and C_Item and type(C_Item.RequestLoadItemDataByID) == "function" then
+    if needsItemInfo and group.item.itemID then
         self.pendingItemInfo = self.pendingItemInfo or {}
-        if not self.pendingItemInfo[group.item.itemID] then
+        if not self.pendingItemInfo[group.item.itemID]
+            and Addon.Core.ItemResolver:GetInfo(group.item.itemID).state ~= "ready" then
             self.pendingItemInfo[group.item.itemID] = true
-            C_Item.RequestLoadItemDataByID(group.item.itemID)
+            local id = group.item.itemID
+            Addon.Core.ItemResolver:Request(id, function(info)
+                Native:OnEvent("GET_ITEM_INFO_RECEIVED", id, info and info.state == "ready")
+            end)
         end
     end
     tile.icon:SetDesaturated(eligible == 0 and not codSource)

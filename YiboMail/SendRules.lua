@@ -1,5 +1,26 @@
 local Addon = _G.YiboMail
 local Rules = {}; Addon.SendRules = Rules
+local classLabels = {
+    [0] = "消耗品", [1] = "容器", [2] = "武器", [3] = "宝石", [4] = "护甲",
+    [5] = "施法材料", [6] = "弹药", [7] = "交易材料", [8] = "物品强化",
+    [9] = "配方", [10] = "货币（作废）", [11] = "箭袋", [12] = "任务",
+    [13] = "钥匙", [14] = "永久（作废）", [15] = "其它", [16] = "雕文",
+    [17] = "战斗宠物", [18] = "魔兽世界时光徽章", [19] = "专业", [20] = "住宅",
+}
+local function ClassLabel(id, name)
+    if id == 5 or id == 7 then return classLabels[id] end
+    if name and name:find("[A-Za-z]") then
+        local upper = name:upper()
+        if id == 8 and upper:find("GENERIC", 1, true) then return "通用（作废）" end
+        if id == 10 and upper:find("MONEY", 1, true) then return "金钱（作废）" end
+        return classLabels[id] or name
+    end
+    return name or classLabels[id] or ("分类 " .. tostring(id))
+end
+local hiddenClasses = { [6] = true, [10] = true, [11] = true, [14] = true, [18] = true }
+local function IsObsolete(name)
+    return name and (name:lower():find("obsolete", 1, true) or name:find("作废", 1, true) or name:find("废弃", 1, true))
+end
 local function ItemInfo(value)
     local get = GetItemInfo or (C_Item and C_Item.GetItemInfo)
     if not get then return nil end
@@ -73,20 +94,35 @@ function Rules:GetItem(id)
         classID = class, subclassID = subclass, ready = name ~= nil }
 end
 function Rules:Categories(classID)
-    local getClass = GetItemClassInfo or (C_Item and C_Item.GetItemClassInfo)
-    local getSub = GetItemSubClassInfo or (C_Item and C_Item.GetItemSubClassInfo)
+    -- Prefer the current API, but retry the legacy entry point when a client
+    -- exposes both and one returns no usable name (or throws).
+    local function Name(modern, legacy, ...)
+        for index = 1, 2 do
+            local get
+            if index == 1 then get = modern else get = legacy end
+            if type(get) == "function" then
+                local ok, name = pcall(get, ...)
+                if ok and type(name) == "string" and name ~= "" then return name end
+            end
+        end
+    end
     local result = {}
     if classID == nil then
-        if getClass then for id = 0, 20 do
-            local ok, name = pcall(getClass, id)
-            if ok and name and name ~= "" then result[#result + 1] = { value = id, label = name } end
-        end end
+        for id = 0, 20 do
+            local name = Name(C_Item and C_Item.GetItemClassInfo, GetItemClassInfo, id)
+            if name and not hiddenClasses[id] and not IsObsolete(name) then
+                -- The localized Reagent label can read simply “材料”, which
+                -- is easily mistaken for Tradegoods. Keep their IDs distinct.
+                local label = ClassLabel(id, name)
+                result[#result + 1] = { value = id, label = label }
+            end
+        end
     else
         result[1] = { value = -1, label = "全部子分类" }
-        if getSub then for id = 0, 30 do
-            local ok, name = pcall(getSub, classID, id)
-            if ok and name and name ~= "" then result[#result + 1] = { value = id, label = name } end
-        end end
+        for id = 0, 30 do
+            local name = Name(C_Item and C_Item.GetItemSubClassInfo, GetItemSubClassInfo, classID, id)
+            if name and not IsObsolete(name) then result[#result + 1] = { value = id, label = name } end
+        end
     end
     return result
 end
@@ -96,7 +132,7 @@ function Rules:Label(rule)
         for _, id in ipairs(self:ItemIDs(rule)) do names[#names + 1] = (self:GetItem(id) or {}).name or ("物品 " .. id) end
         return #names > 0 and table.concat(names, "、") or "无效物品"
     end
-    local label = "分类 " .. tostring(rule.classID)
+    local label = ClassLabel(rule.classID)
     for _, entry in ipairs(self:Categories()) do if entry.value == rule.classID then label = entry.label end end
     if rule.subclassID ~= nil then
         for _, entry in ipairs(self:Categories(rule.classID)) do
@@ -217,7 +253,7 @@ function Rules:Match(bags, skipped)
         local address = Addon.Recipients:Normalize(rule.recipient)
         if rule.enabled ~= false and self:IsRecipientEnabled(rule.recipient) and current then
             if address and Addon.Recipients:Key(address) ~= Addon.Recipients:Key(currentAddress or "") then
-                local allowed, reason = Addon.Recipients:CanRuleSend(address)
+                local allowed, reason = Addon.Recipients:CanRuleSend(address, current)
                 if allowed then active[#active + 1] = { rule = rule, address = address }
                 elseif allowed == nil then active[#active + 1] = { rule = rule, address = address, factionReason = reason } end
             elseif not address then result.conflicts[#result.conflicts + 1] = { ruleIDs = { rule.id }, label = self:Label(rule) .. "：收件人无效" } end
@@ -245,6 +281,10 @@ function Rules:Match(bags, skipped)
             local needsCategory = false
             for _, entry in ipairs(active) do if entry.rule.kind == "category" then needsCategory = true end end
             if needsCategory and best < 3 then result.pending = result.pending + 1 end
+            if needsCategory then
+                result.pendingItemIDs = result.pendingItemIDs or {}
+                result.pendingItemIDs[item.itemID] = true
+            end
         end
         if #candidates > 0 and not excluded then
             local unresolved = false

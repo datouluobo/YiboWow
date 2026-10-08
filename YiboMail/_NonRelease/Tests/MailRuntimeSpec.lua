@@ -209,3 +209,16 @@ Flush()
 local remaining = addon.ViewModel:GetMails({ characters = { a } }, {})[1]
 assert(queue.state == "complete" and remaining.mail.openedByUser and #remaining.mail.attachments == 1)
 print("PASS: user-opened state survives a partial collection and new mail key")
+local stateReads, originalCurrent = 0, addon.Core.Characters.GetCurrent
+addon.Core.Characters.GetCurrent = function(...) stateReads = stateReads + 1; return originalCurrent(...) end
+scanner.open, scanner.lastError = false, nil
+assert(api:GetState('A').status == 'stale')
+assert(api:GetState('unobserved').status == 'not-yet-scanned')
+assert(stateReads == 0, 'Closed mailbox status queries do not copy Core character data')
+scanner.open = true
+api:GetState('A')
+assert(stateReads == 1, 'Live status reads current identity once')
+scanner.open, scanner.lastError = false, 'test-error'
+assert(api:GetState('A').status == 'error')
+assert(api:GetState('other').status == 'not-yet-scanned')
+print('PASS: mailbox status avoids redundant Core copies and preserves live, stale and per-character error states')

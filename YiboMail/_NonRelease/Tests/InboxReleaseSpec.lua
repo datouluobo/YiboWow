@@ -14,9 +14,10 @@ DEFAULT_CHAT_FRAME = { AddMessage = function(_, message) messages[#messages + 1]
 local function Forbidden() error("Disabled feature was registered or opened") end
 local owner
 YiboCore = {
-    CheckAPIVersion = function(_, version) return version == 8 end,
-    HasCapability = function(_, name, version) return name == "character-name-format" and version == 1 or name == "item-picker" and version == 2 end,
-    RegisterAddon = function(_, name, options) assert(name == "YiboMail" and options.requiredAPI == 8); return true end,
+    CheckAPIVersion = function(_, version) return version <= 9 end,
+    HasCapability = function(_, name, version) return name == "business-services" and version == 1 or name == "character-name-format" and version == 1 or name == "item-picker" and version == 2 end,
+    RegisterAddon = function(_, name, options) assert(name == "YiboMail" and options.requiredAPI == 9); return true end,
+    Contracts = { Register = function() return 'mail-service' end, NotifyChanged = function() end },
     CharacterCleanup = { RegisterOwner = function(_, name, callbacks) owner = callbacks; assert(name == "YiboMail"); return true end },
     Characters = { GetCurrent = function() return { id = "test", name = "Test", realm = "Realm" } end, FormatName = function(_, character) return character.name end },
     AccountView = {

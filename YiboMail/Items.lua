@@ -6,6 +6,21 @@ function Items:HasCapability(name, minimumVersion)
     local version = Addon.CAPABILITIES[name]; return version ~= nil and version >= (tonumber(minimumVersion) or 1), version
 end
 function Items:GetRevision() return Addon.db and Addon.db.revision or 0 end
+function Items:RegisterService()
+    local contracts = Addon.Core.Contracts
+    self.serviceDefinition = self.serviceDefinition or {
+        name = "mail.items", kind = "service", providerID = Addon.NAME .. ":inbox", version = { major = 1, minor = 0 },
+        methods = {
+            GetState = function(request) return Items:GetState(request and request.characterID) end,
+            GetByCharacter = function(request) return Items:GetByCharacter(request and request.characterID, request and request.options) end,
+            GetRevision = function() return Items:GetRevision() end,
+        },
+    }
+    local ref, err = contracts:Register(Addon.NAME, self.serviceDefinition)
+    if not ref then return nil, err end
+    self.serviceRef = ref
+    return true
+end
 function Items.Events:Register(owner, callback)
     if owner == nil or type(callback) ~= "function" then return nil, "invalid-listener" end
     for _, listener in ipairs(self.listeners) do if listener.owner == owner and listener.callback == callback then return true end end
@@ -18,6 +33,7 @@ function Items.Events:Unregister(owner, callback)
     end
 end
 function Items.Events:Emit(payload)
+    if Items.serviceRef then Addon.Core.Contracts:NotifyChanged(Addon.NAME, Items.serviceRef, payload) end
     local listeners = {}; for index, listener in ipairs(self.listeners) do listeners[index] = listener end
     for _, listener in ipairs(listeners) do
         local ok, err = pcall(listener.callback, "MAIL_ITEMS_CHANGED", Addon.Copy(payload))
@@ -28,16 +44,18 @@ function Items:GetState(characterID)
     if type(characterID) ~= "string" or characterID == "" then return nil, "invalid-character-id" end
     local snapshot = Addon.db and Addon.db.byCharacter[characterID]
     local result = snapshot and Addon.Copy(snapshot.coverage) or { status = "not-yet-scanned", revision = self:GetRevision() }
+    -- Closed mailbox state is stale without consulting a full Core snapshot.
+    -- When live/error identity is needed, read it once for this query.
+    local mailboxOpen = Addon.Scanner:IsOpen()
+    local current = (mailboxOpen or Addon.Scanner.lastError) and Addon.Core and Addon.Core.Characters:GetCurrent()
     if snapshot then
-        local current = Addon.Core.Characters:GetCurrent()
-        local live = current and current.id == characterID and Addon.Scanner:IsOpen() and Addon.Scanner.updated
+        local live = current and current.id == characterID and mailboxOpen and Addon.Scanner.updated
             and Addon.Scanner.validAt == snapshot.coverage.observedAt and not Addon.Scanner.lastError
         if not live then
             result.lastScanStatus = result.status
             result.status = current and current.id == characterID and Addon.Scanner.lastError and "error" or "stale"
         end
     end
-    local current = Addon.Core and Addon.Core.Characters:GetCurrent()
     if current and current.id == characterID and Addon.Scanner.lastError then
         result.lastScanStatus, result.status = snapshot and snapshot.coverage.status or "not-yet-scanned", "error"
     end

@@ -273,3 +273,26 @@ assert(not C:Send() and sends == beforeRealmChange, 'Server must be rechecked im
 assert(not C:Fill(), 'Foreign staged ownership cannot be filled again')
 current.realm = 'Realm'
 print('PASS: staged packets cannot send or refill after sender realm changes')
+
+-- Ordinary gameplay events must not enter the real bag matcher outside a mailbox.
+C:OnEvent('MAIL_CLOSED')
+local originalScan, originalCurrent = C.Scan, A.Core.Characters.GetCurrent
+local scanCalls, currentCalls, mailboxOpen = 0, 0, false
+A.Scanner.IsOpen = function() return mailboxOpen end
+A.Core.Characters.GetCurrent = function(...) currentCalls = currentCalls + 1; return originalCurrent(...) end
+C.Scan = function(self, ...) scanCalls = scanCalls + 1; return originalScan(self, ...) end
+for i = 1, 10 do C:OnEvent('BAG_UPDATE_DELAYED'); C:OnEvent('GET_ITEM_INFO_RECEIVED') end
+assert(scanCalls == 0 and currentCalls == 0, 'Closed mailbox events must not scan or copy Core character records')
+mailboxOpen = true
+local scanTimers = {}
+C_Timer = { After = function(_, callback) scanTimers[#scanTimers + 1] = callback end }
+C:OnEvent('BAG_UPDATE_DELAYED'); C:OnEvent('BAG_UPDATE_DELAYED'); C:OnEvent('GET_ITEM_INFO_RECEIVED', 999999)
+assert(#scanTimers == 1 and scanCalls == 0, 'Open event bursts schedule one scan; unrelated item info is ignored')
+scanTimers[1]()
+assert(scanCalls == 1 and currentCalls > 0, 'Open mailbox retains real rule matching')
+C.state = 'sending'; C:OnEvent('BAG_UPDATE_DELAYED')
+C.state = 'filling'; C:OnEvent('GET_ITEM_INFO_RECEIVED')
+assert(scanCalls == 1, 'In-progress send and fill must not rematch')
+C_Timer = nil
+C.Scan, A.Core.Characters.GetCurrent = originalScan, originalCurrent
+print('PASS: closed mailbox loot/item events do not scan bags or invoke Core; open matching and send guards preserved')
