@@ -1,4 +1,20 @@
-# YiboBuilds 1.4.1
+# YiboBuilds 1.4.2
+
+## 1.4.2
+
+- Reopening the page or opening current equipment details refreshes worn equipment, preventing stale snapshots from hiding bag belt buckle candidates and installed engineering effects.
+- Fix UTF-8 engineering tooltip matching and support colored or spaced Synapse Springs and Goblin Glider descriptions.
+- Limit event captures to affected equipment, talents or glyphs, merge overlapping requests, and suppress unchanged notifications.
+- Replace the permanent model gesture label with a first-open tip. Requires YiboCore 1.9.0 or later (API v10, account-view v2).
+
+### 中文更新说明
+
+- 重开页面或打开当前装备详情时刷新穿戴信息，避免旧快照隐藏背包腰带扣候选及已安装工程强化。
+- 修复工程提示中文匹配，兼容带颜色和空格的神经弹簧、地精滑翔器使用描述。
+- 按事件仅采集受影响的装备、天赋或雕文，合并重叠请求，避免数据未变化时重复通知。
+- 模型旋转与缩放说明改为首次打开提示。需要 YiboCore 1.9.0 或更新版本（API v10、account-view v2）。
+
+---
 
 ## 1.4.1
 

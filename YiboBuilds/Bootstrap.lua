@@ -3,8 +3,8 @@ local Addon = _G.YiboBuilds or {}
 _G.YiboBuilds = Addon
 
 Addon.NAME = ADDON_NAME or "YiboBuilds"
-Addon.VERSION = "1.4.1"
-Addon.REQUIRED_CORE_API = 5
+Addon.VERSION = "1.4.2"
+Addon.REQUIRED_CORE_API = 10
 Addon.PAGE_ID = "builds"
 Addon.ICON = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon-v1"
 
@@ -117,7 +117,9 @@ frame:SetScript("OnEvent", function(_, event, name)
     elseif event == "PLAYER_TALENT_UPDATE" or event == "GLYPH_UPDATED" or event == "GLYPH_ADDED" or event == "GLYPH_REMOVED" or event == "USE_GLYPH" or event == "SPELLS_CHANGED" or event == "SKILL_LINES_CHANGED" or event == "TRADE_SKILL_LIST_UPDATE" then
         -- USE_GLYPH refreshes the catalog when a glyph is learned without
         -- changing a socket. SPELLS_CHANGED covers the spellbook update path.
-        if Addon.Snapshot then Addon.Snapshot:ScheduleCapture("glyph-catalog-update", 0.35) end
+        if Addon.Snapshot then
+            Addon.Snapshot:ScheduleCapture("glyph-catalog-update", 0.35, { glyphs = true, talents = event == "PLAYER_TALENT_UPDATE" })
+        end
         if (event == "SPELLS_CHANGED" or event == "SKILL_LINES_CHANGED" or event == "TRADE_SKILL_LIST_UPDATE")
             and Addon.AccountPage then
             Addon.AccountPage:InvalidateRecipeCache()

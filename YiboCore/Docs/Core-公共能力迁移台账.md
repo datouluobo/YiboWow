@@ -214,7 +214,7 @@
 | YiboAltoBoss | 不适用（当前范围） | 页面无 firstUseTip | 新增首次引导需求时评估 |
 | YiboAutoOpen | 不适用（当前范围） | 可选设置注册无 firstUseTip | 独立功能不因此提高 Core 门槛 |
 | YiboBeastPaths | 不适用（当前范围） | 可选维护注册无 firstUseTip | 独立功能不因此提高 Core 门槛 |
-| YiboBuilds | 部分接入 | CoreIntegration 的模型旋转／缩放提示；Bootstrap 与 CoreIntegration 要求 API v10 / account-view:2 | 工作树；低版本提示与停止、一次性显示、预览及计时待验证 |
+| YiboBuilds | 部分接入 | 1.4.2：CoreIntegration 的模型旋转／缩放提示；Bootstrap 与 CoreIntegration 要求 API v10 / account-view:2；EquipmentAugmentSpec 验证低版本和缺失能力停止、正常注册提示 | 2026-10-08；一次性显示、预览及计时游戏内待验证 |
 | YiboCrafting | 不适用（当前范围） | 页面无 firstUseTip | 新增首次引导需求时评估 |
 | YiboCurrency | 不适用（当前范围） | 页面无 firstUseTip | 新增首次引导需求时评估 |
 | YiboLegendary | 不适用（当前范围） | 页面无 firstUseTip | 新增首次引导需求时评估 |

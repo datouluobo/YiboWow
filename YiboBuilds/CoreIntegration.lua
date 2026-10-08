@@ -5,8 +5,8 @@ Addon.CoreIntegration = Integration
 function Integration:Initialize()
     if self.initialized then return true end
     local Core = _G.YiboCore
-    if not (Core and Core.CheckAPIVersion and Core:CheckAPIVersion(5) and Core.AccountView and Core.Entry and Core.Characters) then
-        return nil, "需要 YiboCore API v5。"
+    if not (Core and Core.CheckAPIVersion and Core:CheckAPIVersion(Addon.REQUIRED_CORE_API) and Core.HasCapability and Core:HasCapability("account-view", 2) and Core.AccountView and Core.Entry and Core.Characters) then
+        return nil, "需要 YiboCore API v" .. tostring(Addon.REQUIRED_CORE_API) .. "。"
     end
     Addon.Core = Core
     local registered, err = Core:RegisterAddon(Addon.NAME, { version = Addon.VERSION, requiredAPI = Addon.REQUIRED_CORE_API })
@@ -27,6 +27,7 @@ function Integration:Initialize()
     local page, pageError = Core.AccountView:RegisterPage(Addon.NAME, {
         id = Addon.PAGE_ID, title = "角色构筑", icon = Addon.ICON, order = -15,
         defaultEnabled = true, previewEnabled = true, compactWidth = true,
+        firstUseTip = { title = "装备模型", lines = { "拖动模型可旋转，滚动鼠标滚轮可缩放。" } },
         scope = { mode = "realms", allTitle = "所有服务器" },
         HasCharacterSnapshot = function(character) return Addon.Snapshot:GetCharacter(character.id) ~= nil end,
         GetEligibleCharacters = function(characters)

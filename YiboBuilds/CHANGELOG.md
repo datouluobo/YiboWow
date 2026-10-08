@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.2 — 2026-10-08
+
+- Refresh worn equipment when reopening the page or opening an active equipment detail, so stale observations do not hide bag belt buckle candidates or installed tinkers.
+- Preserve UTF-8 text when normalizing engineering tooltips; recognize colored and spaced Synapse Springs / Goblin Glider use descriptions, with explicit spell IDs taking priority.
+- 重新打开页面或打开当前装备详情时重采穿戴装备，避免旧观测导致背包腰带扣候选缺失或已安装工程强化显示过时。
+- 修复工程提示文本规整破坏中文字节的问题，兼容带颜色与空格的神经弹簧、地精滑翔器使用描述，并优先使用明确法术 ID。
+- Collect only the equipment, talents or glyphs affected by an event; combine burst scopes and suppress unchanged snapshot notifications.
+- Preserve the delayed equipment confirmation when glyph or talent events overlap.
+- Replace the permanent model gesture label with a one-time first-open tip; require YiboCore API v10.
+
+
 ## 1.4.1
 
 - Show the latest observed equipment in the account matrix when a build has not yet been confirmed.

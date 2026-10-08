@@ -556,6 +556,7 @@ local function SetPreviewItemTooltip(cell, item)
 end
 
 function Page.Create(parent)
+    parent:HookScript("OnHide", function() parent.buildsGlyphProbeID = nil end)
     parent.buildsRoster = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     parent.buildsRoster:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     parent.buildsRoster:SetBackdropColor(C.nav[1], C.nav[2], C.nav[3], 0.95); parent.buildsRoster:SetBackdropBorderColor(C.lineSoft[1], C.lineSoft[2], C.lineSoft[3], C.lineSoft[4])
@@ -626,7 +627,7 @@ function Page.Create(parent)
     end)
     parent.buildsEquipment.modelHint = Text(parent.buildsEquipment.modelControl, Theme.Font.meta, C.muted, "CENTER")
     parent.buildsEquipment.modelHint:SetPoint("BOTTOM", parent.buildsEquipment, "BOTTOM", 0, 90)
-    parent.buildsEquipment.modelHint:SetText("拖动旋转 · 滚轮缩放")
+    parent.buildsEquipment.modelHint:Hide()
     parent.buildsEquipment.empty = Text(parent.buildsEquipment, Theme.Font.assist, C.muted, "CENTER")
     parent.buildsEquipment.empty:SetAllPoints(); parent.buildsEquipment.empty:SetText("选择角色查看装备快照")
     parent.buildsEquipment.items = {}
@@ -1833,6 +1834,11 @@ local function PlaceEquipment(parent, snapshot)
                 parent.buildsSelectedEquipmentSlot = nil
             else
                 parent.buildsSelectedEquipmentSlot = slotID
+                -- Re-read the worn equipment before offering live bag actions.
+                -- A cached observation may predate an enchant or item upgrade.
+                if IsCurrent(parent.buildsSelectedCharacter) and parent.buildsSlot == parent.buildsActiveSlot then
+                    Addon.Snapshot:ScheduleEquipmentCapture()
+                end
             end
             if parent.buildsSelectedEquipmentSlot and parent.buildsBuildCollapsed then
                 parent.buildsBuildCollapsed = false

@@ -2,6 +2,19 @@ local Addon = _G.YiboBuilds
 local Snapshot = {}
 Addon.Snapshot = Snapshot
 
+local function SameSnapshot(left, right)
+    if left == right then return true end
+    if type(left) ~= type(right) then return false end
+    if type(left) ~= "table" then return false end
+    for key, value in pairs(left) do
+        if key ~= "updatedAt" and key ~= "capturedAt" and key ~= "reason" and not SameSnapshot(value, right[key]) then return false end
+    end
+    for key in pairs(right) do
+        if key ~= "updatedAt" and key ~= "capturedAt" and key ~= "reason" and left[key] == nil then return false end
+    end
+    return true
+end
+
 local SLOT_IDS = {
     INVSLOT_HEAD or 1, INVSLOT_NECK or 2, INVSLOT_SHOULDER or 3, INVSLOT_SHIRT or 4,
     INVSLOT_CHEST or 5, INVSLOT_WAIST or 6, INVSLOT_LEGS or 7, INVSLOT_FEET or 8,
@@ -637,8 +650,15 @@ local function ReadEngineeringEnchantID(slotID, itemFields, itemLink)
         end
         enchantScanTooltip:Hide()
     end
-    local tooltipText = string.lower(table.concat(texts, " "))
-    local compactTooltipText = tooltipText:gsub("[%s,，]", "")
+    local tooltipText = string.lower(CleanEnchantText(table.concat(texts, " ")) or "")
+    -- Lua 5.1 patterns operate on bytes. Putting the Chinese comma inside a
+    -- character class also removes matching bytes from unrelated UTF-8 words.
+    local compactTooltipText = tooltipText:gsub("[%s,]", ""):gsub("，", "")
+    for _, spellID in ipairs(spellIDs) do
+        local candidateID = ENGINEERING_TOOLTIP_SPELL_IDS[spellID]
+        local candidate = candidateID and ENGINEERING_ENCHANTS[candidateID]
+        if candidate and EngineeringSlotMatches(candidate.slotID, slotID, itemLink) then return candidateID end
+    end
     -- Some MoP clients expose the tinker use effect but omit both its name and
     -- enchant/spell ID from item links and structured tooltip lines. These
     -- effect signatures are unambiguous for the belt Nitro Boosts and the
@@ -650,13 +670,11 @@ local function ReadEngineeringEnchantID(slotID, itemFields, itemLink)
     end
     if slotID == (INVSLOT_HAND or 10)
         and compactTooltipText:find("1920", 1, true)
-        and (tooltipText:find("持续10秒", 1, true) or tooltipText:find("for 10 sec", 1, true)) then
+        and (compactTooltipText:find("持续10秒", 1, true) or compactTooltipText:find("for10sec", 1, true))
+        and (compactTooltipText:find("智力", 1, true) or compactTooltipText:find("敏捷", 1, true)
+            or compactTooltipText:find("力量", 1, true) or compactTooltipText:find("agility", 1, true)
+            or compactTooltipText:find("intellect", 1, true) or compactTooltipText:find("strength", 1, true)) then
         return 4898
-    end
-    for _, spellID in ipairs(spellIDs) do
-        local candidateID = ENGINEERING_TOOLTIP_SPELL_IDS[spellID]
-        local candidate = candidateID and ENGINEERING_ENCHANTS[candidateID]
-        if candidate and EngineeringSlotMatches(candidate.slotID, slotID, itemLink) then return candidateID end
     end
     for candidateID, candidate in pairs(ENGINEERING_ENCHANTS) do
         if EngineeringSlotMatches(candidate.slotID, slotID, itemLink) then
@@ -665,9 +683,9 @@ local function ReadEngineeringEnchantID(slotID, itemFields, itemLink)
             end
         end
     end
-    if tooltipText:find("地精滑翔器", 1, true) or tooltipText:find("goblin glider", 1, true)
-        or (tooltipText:find("坠落速度", 1, true) and tooltipText:find("2分钟", 1, true))
-        or (tooltipText:find("fall", 1, true) and tooltipText:find("2 min", 1, true) and tooltipText:find("3 min", 1, true)) then
+    if slotID == (INVSLOT_BACK or 15) and (tooltipText:find("地精滑翔器", 1, true) or tooltipText:find("goblin glider", 1, true)
+        or (compactTooltipText:find("坠落速度", 1, true) and compactTooltipText:find("2分钟", 1, true))
+        or (tooltipText:find("fall", 1, true) and compactTooltipText:find("2min", 1, true) and compactTooltipText:find("3min", 1, true))) then
         return 4897
     end
     if tooltipText:find("flexweave underlay", 1, true) then return 3605 end
@@ -1026,18 +1044,20 @@ function Snapshot:EnsureCharacter(character)
     return record
 end
 
-function Snapshot:CaptureSlot(record, slot, reason, includeEquipment)
+function Snapshot:CaptureSlot(record, slot, reason, includeEquipment, parts)
     local group = GroupForSlot(slot)
     local data = record.slots[slot] or {}
-    local specialization = ReadSpecialization(group)
-    if specialization.id or not data.specialization then data.specialization = specialization end
-    local talents = ReadTalents(group)
-    if talents.ready or not data.talents then data.talents = talents end
-    local glyphs = ReadGlyphs(group)
-    if glyphs.ready or not data.glyphs or glyphs.selectedCount > SelectedGlyphCount(data.glyphs) then
-        data.glyphs = glyphs
+    if not parts or parts.all or parts.talents or not data.specialization then
+        local specialization = ReadSpecialization(group)
+        if specialization.id or not data.specialization then data.specialization = specialization end
+        local talents = ReadTalents(group)
+        if talents.ready or not data.talents then data.talents = talents end
     end
-    if slot == (record.lastActiveSlot or slot) then record.glyphCatalog = ReadGlyphCatalog(data.glyphs) end
+    if not parts or parts.all or parts.glyphs or not data.glyphs then
+        local glyphs = ReadGlyphs(group)
+        if glyphs.ready or not data.glyphs or glyphs.selectedCount > SelectedGlyphCount(data.glyphs) then data.glyphs = glyphs end
+        if slot == (record.lastActiveSlot or slot) then record.glyphCatalog = ReadGlyphCatalog(data.glyphs) end
+    end
     data.updatedAt = Addon:Now()
     if includeEquipment then
         local observedEquipment = ReadEquipment(reason)
@@ -1061,13 +1081,15 @@ function Snapshot:CaptureSlot(record, slot, reason, includeEquipment)
     return data, true
 end
 
-function Snapshot:Capture(reason, logout)
+function Snapshot:Capture(reason, logout, parts)
     local character = CurrentCharacter()
     if not character then return nil end
     local record = self:EnsureCharacter(character)
+    local before = Addon.Core.Defaults:Copy(record)
+    local includeEquipment = not parts or parts.all or parts.equipment or self.equipmentDirty
     local active = ActiveGroup()
     record.lastActiveSlot = active
-    local activeData = self:CaptureSlot(record, active, reason, true)
+    local activeData = self:CaptureSlot(record, active, reason, includeEquipment, parts)
     -- PLAYER_LOGOUT includes /reload and returning to character select.
     if logout then activeData.confirmedEquipment = activeData.observedEquipment end
     local groups = active == "secondary" and 2 or 1
@@ -1080,19 +1102,25 @@ function Snapshot:Capture(reason, logout)
         -- Both groups expose their specialization, talents, and glyphs.
         -- Physical equipment belongs only to the group currently in use.
         local inactive = active == "primary" and "secondary" or "primary"
-        self:CaptureSlot(record, inactive, reason, false)
+        self:CaptureSlot(record, inactive, reason, false, parts)
     end
     self.lastActiveSlot = active
-    self.equipmentDirty = false
-    if not logout then Addon:NotifyChanged() end
+    if includeEquipment then self.equipmentDirty = false end
+    if not logout and not SameSnapshot(before, record) then Addon:NotifyChanged() end
     return record
 end
 
-function Snapshot:ScheduleCapture(reason, delay)
+function Snapshot:ScheduleCapture(reason, delay, parts)
+    self.pendingParts = self.pendingParts or {}
+    for key, enabled in pairs(parts or { all = true }) do if enabled then self.pendingParts[key] = true end end
     self.captureToken = (self.captureToken or 0) + 1
     local token = self.captureToken
     local Run = function()
-        if token == self.captureToken then self:Capture(reason) end
+        if token == self.captureToken then
+            local requested = self.pendingParts
+            self.pendingParts = nil
+            self:Capture(reason, nil, requested)
+        end
     end
     if C_Timer and C_Timer.After then C_Timer.After(delay or 0, Run) else Run() end
 end
@@ -1116,11 +1144,12 @@ end
 
 function Snapshot:ScheduleEquipmentCapture()
     self:MarkEquipmentDirty()
-    self:ScheduleCapture("equipment-change", 0.05)
-    local token = self.captureToken
+    self:ScheduleCapture("equipment-change", 0.05, { equipment = true })
+    self.equipmentSettleToken = (self.equipmentSettleToken or 0) + 1
+    local token = self.equipmentSettleToken
     if C_Timer and C_Timer.After then
         C_Timer.After(0.3, function()
-            if token == self.captureToken then self:ScheduleCapture("equipment-change-settled", 0) end
+            if token == self.equipmentSettleToken then self:ScheduleCapture("equipment-change-settled", 0, { equipment = true }) end
         end)
     end
 end

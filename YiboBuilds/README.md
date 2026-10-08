@@ -17,7 +17,7 @@ YiboBuilds is a character-build viewer for MoP Classic. It stores and shows tale
 ## Requirements
 
 - MoP Classic
-- YiboCore
+- YiboCore 1.9.0 or later (API v10, account-view v2)
 
 ## Chinese
 
@@ -38,4 +38,4 @@ YiboBuilds 是用于 MoP Classic 的账号角色构筑查看器，记录并展�
 ### 依赖
 
 - MoP Classic
-- YiboCore
+- YiboCore 1.9.0 或更新版本（API v10、account-view v2）
