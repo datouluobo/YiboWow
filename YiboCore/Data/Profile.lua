@@ -15,13 +15,16 @@ local function GetMutableRecord(characterID)
 end
 
 local function QueueLegacyUpdate(characterID, reason)
+    if not Core.Events:HasListeners("CHARACTER_PROFILE_UPDATED") then return end
     local pending = Profile._pendingLegacyUpdates[characterID]
     if pending then pending.reason = reason or pending.reason; return end
     Profile._pendingLegacyUpdates[characterID] = { reason = reason }
     local function Flush()
         local item, record = Profile._pendingLegacyUpdates[characterID], GetMutableRecord(characterID)
         Profile._pendingLegacyUpdates[characterID] = nil
-        if record then Core.Events:Fire("CHARACTER_PROFILE_UPDATED", characterID, Copy(record), item and item.reason) end
+        if record and Core.Events:HasListeners("CHARACTER_PROFILE_UPDATED") then
+            Core.Events:Fire("CHARACTER_PROFILE_UPDATED", characterID, Copy(record), item and item.reason)
+        end
     end
     if C_Timer and C_Timer.After then C_Timer.After(0, Flush) else Flush() end
 end
@@ -34,6 +37,7 @@ function Profile:RegisterCollector(name, callback, events)
 end
 
 local function RunLegacyCollectors(reason)
+    if not next(Profile._collectors) then return end
     local character = Core.Characters:GetCurrent()
     local record = character and GetMutableRecord(character.id)
     if not record then return end

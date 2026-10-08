@@ -892,47 +892,75 @@ function Theme:CreateScrollFrame(parent)
     return scroll
 end
 
+function Theme:ShowTooltip(owner, title, lines, anchor)
+    if not owner or not GameTooltip then return false end
+    GameTooltip:SetOwner(owner, anchor or "ANCHOR_RIGHT")
+    GameTooltip:SetFrameStrata("TOOLTIP")
+    GameTooltip:SetFrameLevel((owner:GetFrameLevel() or 0) + 20)
+    -- Blizzard's tooltip background is intentionally translucent, but that
+    -- makes dense account matrices show through the labels. Add a scoped
+    -- near-opaque underlay for Yibo tooltips only; it stays behind the native
+    -- border and all tooltip text.
+    if not GameTooltip.YiboOpaqueBackground then
+        local background = GameTooltip:CreateTexture(nil, "BACKGROUND", nil, -7)
+        background:SetPoint("TOPLEFT", GameTooltip, "TOPLEFT", 2, -2)
+        background:SetPoint("BOTTOMRIGHT", GameTooltip, "BOTTOMRIGHT", -2, 2)
+        GameTooltip.YiboOpaqueBackground = background
+    end
+    GameTooltip.YiboOpaqueBackground:SetColorTexture(Theme.Colors.bg[1], Theme.Colors.bg[2], Theme.Colors.bg[3], 0.98)
+    GameTooltip.YiboOpaqueBackground:Show()
+    GameTooltip:ClearLines()
+    local red, green, blue = Color(Theme.Colors.text)
+    if title then GameTooltip:AddLine(title, red, green, blue) end
+    for _, line in ipairs(lines or {}) do
+        if type(line) ~= "table" then
+            GameTooltip:AddLine(line, red, green, blue, true)
+        elseif line.kind == "spacer" then
+            GameTooltip:AddLine(" ")
+        elseif line.kind == "pair" then
+            local labelColor = line.labelColor or Theme.Colors.muted
+            local valueColor = line.valueColor or Theme.Colors.text
+            local lr, lg, lb = Color(labelColor)
+            local vr, vg, vb = Color(valueColor)
+            GameTooltip:AddDoubleLine(tostring(line.label or ""), tostring(line.value or ""), lr, lg, lb, vr, vg, vb)
+        elseif line.kind == "section" then
+            local sr, sg, sb = Color(line.color or Theme.Colors.accent)
+            GameTooltip:AddLine(tostring(line.text or ""), sr, sg, sb)
+        else
+            local tr, tg, tb = Color(line.color or Theme.Colors.text)
+            GameTooltip:AddLine(tostring(line.text or ""), tr, tg, tb, line.wrap ~= false)
+        end
+    end
+    GameTooltip:Show()
+    return true
+end
+
+function Theme:ShowFirstUseTooltip(key, owner, title, lines)
+    if type(key) ~= "string" or key == "" or not Core.Database or not Core.Database:GetDB() then return false end
+    local db = Core.Database:GetDB()
+    db.settings = db.settings or {}
+    db.settings.accountView = db.settings.accountView or {}
+    local accountView = db.settings.accountView
+    accountView.firstUseHints = type(accountView.firstUseHints) == "table" and accountView.firstUseHints or {}
+    if accountView.firstUseHints[key] then return false end
+    if not self:ShowTooltip(owner, title, lines, "ANCHOR_BOTTOM") then return false end
+    accountView.firstUseHints[key] = true
+    local shownOwner = owner
+    if C_Timer and C_Timer.After then
+        C_Timer.After(6, function()
+            if GameTooltip and GameTooltip:GetOwner() == shownOwner then
+                GameTooltip:Hide()
+                if GameTooltip.YiboOpaqueBackground then GameTooltip.YiboOpaqueBackground:Hide() end
+            end
+        end)
+    end
+    return true
+end
+
 function Theme:BindTooltip(control, title, lines)
     control.tooltipTitle, control.tooltipLines = title, lines
     control:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetFrameStrata("TOOLTIP")
-        GameTooltip:SetFrameLevel((self:GetFrameLevel() or 0) + 20)
-        -- Blizzard's tooltip background is intentionally translucent, but that
-        -- makes dense account matrices show through the labels.  Add a scoped
-        -- near-opaque underlay for Yibo tooltips only; it stays behind the
-        -- native border and all tooltip text.
-        if not GameTooltip.YiboOpaqueBackground then
-            local background = GameTooltip:CreateTexture(nil, "BACKGROUND", nil, -7)
-            background:SetPoint("TOPLEFT", GameTooltip, "TOPLEFT", 2, -2)
-            background:SetPoint("BOTTOMRIGHT", GameTooltip, "BOTTOMRIGHT", -2, 2)
-            GameTooltip.YiboOpaqueBackground = background
-        end
-        GameTooltip.YiboOpaqueBackground:SetColorTexture(Theme.Colors.bg[1], Theme.Colors.bg[2], Theme.Colors.bg[3], 0.98)
-        GameTooltip.YiboOpaqueBackground:Show()
-        GameTooltip:ClearLines()
-        local red, green, blue = Color(Theme.Colors.text)
-        if self.tooltipTitle then GameTooltip:AddLine(self.tooltipTitle, red, green, blue) end
-        for _, line in ipairs(self.tooltipLines or {}) do
-            if type(line) ~= "table" then
-                GameTooltip:AddLine(line, red, green, blue, true)
-            elseif line.kind == "spacer" then
-                GameTooltip:AddLine(" ")
-            elseif line.kind == "pair" then
-                local labelColor = line.labelColor or Theme.Colors.muted
-                local valueColor = line.valueColor or Theme.Colors.text
-                local lr, lg, lb = Color(labelColor)
-                local vr, vg, vb = Color(valueColor)
-                GameTooltip:AddDoubleLine(tostring(line.label or ""), tostring(line.value or ""), lr, lg, lb, vr, vg, vb)
-            elseif line.kind == "section" then
-                local sr, sg, sb = Color(line.color or Theme.Colors.accent)
-                GameTooltip:AddLine(tostring(line.text or ""), sr, sg, sb)
-            else
-                local tr, tg, tb = Color(line.color or Theme.Colors.text)
-                GameTooltip:AddLine(tostring(line.text or ""), tr, tg, tb, line.wrap ~= false)
-            end
-        end
-        GameTooltip:Show()
+        Theme:ShowTooltip(self, self.tooltipTitle, self.tooltipLines)
     end)
     control:SetScript("OnLeave", function()
         GameTooltip:Hide()

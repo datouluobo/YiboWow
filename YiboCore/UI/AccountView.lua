@@ -24,6 +24,7 @@ Settings = function()
     local settings = db.settings.accountView
     settings.pages = settings.pages or {}
     settings.fields = settings.fields or {}
+    settings.firstUseHints = type(settings.firstUseHints) == "table" and settings.firstUseHints or {}
     settings.pageCharacterFilters = type(settings.pageCharacterFilters) == "table" and settings.pageCharacterFilters or {}
     settings.pageViewModes = type(settings.pageViewModes) == "table" and settings.pageViewModes or {}
     settings.pageScopes = settings.pageScopes or {}
@@ -1459,6 +1460,10 @@ function AccountView:ShowPage(pageID, options, forceAutoFitWidth)
     self:ApplyMeasuredPageHeight(page, instance, context)
     self:RefreshNavigation()
     self:UpdateSortButton()
+    if not options.preview and type(page.firstUseTip) == "table" then
+        Theme:ShowFirstUseTooltip(tostring(page.id), self.frame.titleBar,
+            page.firstUseTip.title or (page.title .. "操作提示"), page.firstUseTip.lines or {})
+    end
 end
 
 function AccountView:RefreshPage(forceAutoFitWidth)
@@ -1480,11 +1485,21 @@ function AccountView:RefreshPage(forceAutoFitWidth)
 end
 
 function AccountView:NotifyPageChanged(pageID)
-    if self.frame and self.frame.preview then
-        if self.previewPageID == pageID then self:RefreshPage() end
-    elseif self.activePageID == pageID then
-        self:RefreshPage()
+    if not (self.frame and self.frame:IsShown()) then return end
+    local visibleID = self.frame.preview and self.previewPageID or self.activePageID
+    if visibleID ~= pageID then return end
+    self._changedPages = self._changedPages or {}
+    self._changedPages[pageID] = true
+    if self._pageChangeQueued then return end
+    self._pageChangeQueued = true
+    local function Flush()
+        local changed = self._changedPages
+        self._changedPages, self._pageChangeQueued = nil, nil
+        if not (self.frame and self.frame:IsShown()) then return end
+        local currentID = self.frame.preview and self.previewPageID or self.activePageID
+        if changed and changed[currentID] then self:RefreshPage() end
     end
+    if C_Timer and C_Timer.After then C_Timer.After(0, Flush) else Flush() end
 end
 
 function AccountView:GetRegisteredPages()
@@ -1846,4 +1861,4 @@ end)
 Core.Events:Register("CHARACTER_CACHE_DELETED", AccountView, function(self)
     self:RefreshPage()
 end)
-Core.Capabilities:Register("account-view", 1)
+Core.Capabilities:Register("account-view", 2)

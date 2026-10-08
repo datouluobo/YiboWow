@@ -16,6 +16,9 @@ function Events:Register(eventName, owner, callback)
 
     local listeners = self._listeners[eventName] or {}
     self._listeners[eventName] = listeners
+    for _, listener in ipairs(listeners) do
+        if listener.owner == owner and listener.callback == callback then return end
+    end
     listeners[#listeners + 1] = {
         owner = owner,
         callback = callback,
@@ -33,6 +36,20 @@ function Events:Unregister(eventName, owner, callback)
         if listener.owner == owner and (callback == nil or listener.callback == callback) then
             table.remove(listeners, index)
         end
+    end
+end
+
+function Events:HasListeners(eventName)
+    return self._listeners[eventName] ~= nil and #self._listeners[eventName] > 0
+end
+
+function Events:FireIsolated(eventName, ...)
+    local listeners, args = {}, { n = select("#", ...), ... }
+    for index, listener in ipairs(self._listeners[eventName] or {}) do listeners[index] = listener end
+    for _, listener in ipairs(listeners) do
+        local values = Core.Defaults:Copy(args)
+        local ok, err = pcall(listener.callback, listener.owner, unpack(values, 1, values.n))
+        if not ok then Core:Print("事件回调失败：" .. tostring(err)) end
     end
 end
 

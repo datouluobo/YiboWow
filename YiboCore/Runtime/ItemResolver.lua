@@ -1,5 +1,7 @@
 local Core = _G.YiboCore
 local Resolver = { pending = {}, failed = {} }
+local frame = CreateFrame("Frame")
+local Poll, pollElapsed = nil, 0
 Core.ItemResolver = Resolver
 Core.Capabilities:Register("item-resolver", 1)
 
@@ -60,12 +62,16 @@ function Resolver:Finish(itemID, success)
     if not request then return end
     local info = self:GetInfo(itemID)
     self.pending[itemID] = nil
+    if not next(self.pending) then frame:SetScript("OnUpdate", nil) end
     success = success and info.name ~= nil
     self.failed[itemID] = not success or nil
     info.state = success and "ready" or "failed"
     local message = not success and "物品信息加载失败；请检查 ID 后点击重试。" or nil
     for _, waiter in ipairs(request.waiters) do
-        if not waiter.cancelled then waiter.callback(info, message) end
+        if not waiter.cancelled then
+            local ok, err = pcall(waiter.callback, info, message)
+            if not ok then Core:Print("物品信息回调失败：" .. tostring(err)) end
+        end
     end
 end
 
@@ -86,17 +92,21 @@ function Resolver:Request(itemID, callback, options)
         table.insert(self.pending[itemID].waiters, waiter); return waiter
     end
     self.failed[itemID] = nil
+    if not next(self.pending) then pollElapsed = 0 end
     self.pending[itemID] = { waiters = { waiter }, remaining = tonumber(options.timeout) or 8 }
+    frame:SetScript("OnUpdate", Poll)
     local request = C_Item and C_Item.RequestLoadItemDataByID
     if request then request(itemID)
     elseif GetItemInfo then GetItemInfo(itemID) end
     return waiter
 end
 
-local frame = CreateFrame("Frame")
 frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
 frame:SetScript("OnEvent", function(_, _, itemID, success) Resolver:Finish(tonumber(itemID), success) end)
-frame:SetScript("OnUpdate", function(_, elapsed)
+Poll = function(_, elapsed)
+    pollElapsed = pollElapsed + elapsed
+    if pollElapsed < 0.1 then return end
+    elapsed, pollElapsed = pollElapsed, 0
     local finished = {}
     for itemID, request in pairs(Resolver.pending) do
         request.remaining = request.remaining - elapsed
@@ -104,4 +114,4 @@ frame:SetScript("OnUpdate", function(_, elapsed)
         elseif request.remaining <= 0 then finished[#finished + 1] = { itemID, false } end
     end
     for _, result in ipairs(finished) do Resolver:Finish(result[1], result[2]) end
-end)
+end

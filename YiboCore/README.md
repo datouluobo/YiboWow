@@ -2,10 +2,11 @@
 
 Yibo WoW 插件的共享运行时、角色档案与账号视图框架。
 
-当前源码版本 `1.7.0` 提供：
+当前发布版本 `1.9.0`（API v10）提供：
 
 - API 版本与插件注册
 - 能力查询与 Core 内部事件
+- 最小业务 Service 注册、发现、版本化调用和隔离通知（business-services:1）
 - `YiboCoreDB` 的 Schema 版本和迁移
 - 统一角色身份、旧角色键别名与导入接口
 - 公共角色／联系人名称格式化：原名／短名、同服省略服务器与完整名称
@@ -51,4 +52,6 @@ API v6 保持 API v5 向后兼容。`RegisterSettingsPanel` 只向统一设置�
 
 公共 API v7 新增基础输入、物品解析与选择器，保持 v5/v6 兼容。见 [API v7 物品选择与基础输入](Docs/API-v7-物品选择与基础输入.md)。配套版本为 Core 1.6.1＋Currency 0.9.1。
 
-公共 API v8 新增 `Characters:FormatName(identity, options)` 和 `character-name-format:1`，保持旧 API 与业务表头调用兼容。接入与验证见 [API v8 公共名称格式化](Docs/API-v8-公共名称格式化.md)；当前源码尚未发布，业务插件按迁移台账逐步接入。
+公共 API v8 新增 `Characters:FormatName(identity, options)` 和 `character-name-format:1`，保持旧 API 与业务表头调用兼容。接入与验证见 [API v8 公共名称格式化](Docs/API-v8-公共名称格式化.md)。
+
+公共 API v9 新增最小 `business-services:1`，并改进页面刷新合并与物品解析器请求调度。契约见 [API v9 业务服务与刷新](Docs/API-v9-业务服务与刷新.md)。API v10 新增页面首次打开泡泡提示，见 [API v10 首次打开界面提示](Docs/API-v10-首次打开界面提示.md)。

@@ -22,6 +22,7 @@ local DEFAULTS = {
             height = 650,
             pages = {},
             fields = {},
+            firstUseHints = {},
             hiddenCharacters = {},
             characterSort = {
                 mode = "recent",

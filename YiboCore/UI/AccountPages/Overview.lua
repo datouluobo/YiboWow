@@ -15,9 +15,8 @@ local function CreateOverview(parent)
     parent.content = CreateFrame("Frame", nil, parent.scroll); parent.scroll:SetScrollChild(parent.content)
     local content = parent.content
     parent.heading = AddText(content, "GameFontNormalLarge", nil, COLORS.text); parent.heading:SetPoint("TOPLEFT", 20, -18); parent.heading:SetText("账号概览")
-    parent.hint = AddText(content, "GameFontNormalSmall", nil, COLORS.muted); parent.hint:SetPoint("TOPLEFT", 20, -47); parent.hint:SetText("从左侧选择业务页，比较角色的下一步行动。")
     parent.characterSummary = AddText(content, "GameFontNormalSmall", nil, COLORS.muted); parent.characterSummary:Hide()
-    parent.actionHeading = AddText(content, "GameFontNormalSmall", nil, COLORS.muted); parent.actionHeading:SetPoint("TOPLEFT", 20, -78); parent.actionHeading:SetText("下一步行动")
+    parent.actionHeading = AddText(content, "GameFontNormalSmall", nil, COLORS.muted); parent.actionHeading:SetPoint("TOPLEFT", 20, -47); parent.actionHeading:SetText("下一步行动")
     parent.lines = {}
     parent.actions = {}
 end
@@ -74,7 +73,7 @@ local function RefreshOverview(parent, context)
         button.title:SetText(line.title); button.text:SetText(line.text); button.pageID = line.pageID; button:Show()
     end
     for index = #lines + 1, #parent.lines do parent.lines[index]:Hide() end
-    local actionBase = -112 - (#lines * 42)
+    local actionBase = -80 - (#lines * 42)
     parent.actionHeading:ClearAllPoints(); parent.actionHeading:SetPoint("TOPLEFT", 20, actionBase)
     local actionLimit = 8
     if context and context.preview then
@@ -113,6 +112,7 @@ end
 
 AccountView._pages.overview = {
     id = "overview", title = "概览", order = -20, internal = true, previewEnabled = true,
+    firstUseTip = { title = "账号概览", lines = { "从左侧选择业务页，比较角色的下一步行动。" } },
     Create = CreateOverview, Refresh = RefreshOverview,
     GetSurfaceMetrics = Helpers.GetOverviewSurfaceMetrics,
 }

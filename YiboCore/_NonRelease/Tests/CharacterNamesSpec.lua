@@ -23,7 +23,7 @@ local contact = { name = "外部联系人", realm = "SilverMoon" }
 Equal(Core:CheckAPIVersion(5), true, "old API remains compatible")
 Equal(Core:CheckAPIVersion(7), true, "API v7 remains compatible")
 Equal(Core:CheckAPIVersion(8), true, "new API available")
-Equal(Core:CheckAPIVersion(9), false, "future API rejected")
+Equal(Core:CheckAPIVersion(10), false, "future API rejected")
 Equal(Core:HasCapability("character-name-format", 1), true, "format capability")
 Equal(Core:HasCapability("character-name-format", 2), false, "future contract rejected")
 Equal(Names:FormatName(character, { nameMode = "short" }), character.name, "before DB initialization")
