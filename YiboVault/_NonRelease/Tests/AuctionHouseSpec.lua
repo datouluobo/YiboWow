@@ -46,7 +46,9 @@ C_AuctionHouse = {
         assert(type(sortOptions) == "table" and sortOptions[1].sortOrder == 1, "query uses the validated sort shape")
         queryCount = queryCount + 1
     end,
-    GetOwnedAuctions = function() return auctions end,
+    GetOwnedAuctions = function() return {} end,
+    GetNumOwnedAuctions = function() return #auctions end,
+    GetOwnedAuctionInfo = function(index) return auctions[index] end,
 }
 
 local function RunDueTimers()
@@ -89,5 +91,40 @@ auctionHouse:Start("close-during-query")
 frameShown = false
 auctionHouse:OnEvent("AUCTION_HOUSE_CLOSED")
 assert(replaceCount == 2 and #stored == 2, "closing before response preserves the last successful snapshot")
+
+frameShown = true
+auctionHouse.open = true
+auctions[1].quantity = 4
+auctionHouse:OnEvent("OWNED_AUCTIONS_UPDATED")
+now = 0.82
+RunDueTimers()
+assert(replaceCount == 3 and stored[1].quantity == 4,
+    "unsolicited owned updates refresh the snapshot after the initial scan finished")
+
+local readEntry = C_AuctionHouse.GetOwnedAuctionInfo
+C_AuctionHouse.GetOwnedAuctionInfo = function(index)
+    if index == 2 then return nil end
+    return readEntry(index)
+end
+auctionHouse:OnEvent("OWNED_AUCTIONS_UPDATED")
+now = 1.03
+RunDueTimers()
+assert(replaceCount == 3 and #stored == 2 and errorCount == 1,
+    "incomplete indexed results preserve the previous complete snapshot")
+C_AuctionHouse.GetOwnedAuctionInfo = readEntry
+
+auctions = {}
+auctionHouse:OnEvent("OWNED_AUCTIONS_UPDATED")
+now = 1.24
+RunDueTimers()
+assert(replaceCount == 4 and #stored == 0 and coverage.auction.status == "known-empty",
+    "a valid empty owned update clears previous listings")
+
+frameShown = false
+auctionHouse:OnEvent("AUCTION_HOUSE_CLOSED")
+auctionHouse:OnEvent("OWNED_AUCTIONS_UPDATED")
+now = 1.45
+RunDueTimers()
+assert(replaceCount == 4, "owned updates received after closing cannot overwrite the snapshot")
 
 print("AuctionHouseSpec: OK")

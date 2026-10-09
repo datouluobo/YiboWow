@@ -204,7 +204,7 @@ function Addon:OnEvent(event, arg1, arg2)
         wipe(self._dirtyBank)
     elseif event == "PLAYERBANKSLOTS_CHANGED" then
         if self._bankOpen then self._dirtyBank[tonumber(BANK_CONTAINER) or -1] = true end
-    elseif event == "UNIT_INVENTORY_CHANGED" then
+    elseif event == "UNIT_INVENTORY_CHANGED" and arg1 == "player" then
         -- Client builds or UI replacements may wrap the unit token; the validated
         -- payload is not a dependable slot identifier, so rescan the whole set.
         self._equipmentDirty = true
@@ -213,12 +213,13 @@ function Addon:OnEvent(event, arg1, arg2)
     elseif event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_LOGIN" then
         self:ScanInitial()
     end
-    if self._equipmentDirty and event ~= "UNIT_INVENTORY_CHANGED" then
-        self._equipmentDirty = false
-        self:ScanEquipment()
-    elseif self._equipmentDirty and event == "UNIT_INVENTORY_CHANGED" then
-        self._equipmentDirty = false
-        self:ScanEquipment()
+    if self._equipmentDirty and not self._equipmentScanQueued then
+        self._equipmentScanQueued = true
+        local function Scan()
+            self._equipmentScanQueued, self._equipmentDirty = nil, false
+            self:ScanEquipment()
+        end
+        if C_Timer and C_Timer.After then C_Timer.After(0.1, Scan) else Scan() end
     end
 end
 
@@ -273,7 +274,8 @@ end
 
 function Addon:RegisterWithCore()
     local core = _G.YiboCore
-    if not core or not core:CheckAPIVersion(self.REQUIRED_CORE_API) then
+    if not core or not core:CheckAPIVersion(self.REQUIRED_CORE_API) or not core.Contracts
+        or not core.HasCapability or not core:HasCapability("business-services", 1) then
         self:Print("需要 YiboCore API v" .. self.REQUIRED_CORE_API .. "。")
         return false
     end
@@ -289,5 +291,7 @@ function Addon:RegisterWithCore()
     end
     local page, pageError = self.AccountPage:Register()
     if not page then self:Print(pageError or "账号页面注册失败。"); return false end
+    local service, serviceError = self.Items:RegisterService()
+    if not service then self:Print(serviceError); return false end
     return true
 end

@@ -112,12 +112,13 @@ function AuctionHouse:Capture(reason)
     local state = self.scan
     if not state or not IsOpen() then return end
     local api = C_AuctionHouse
-    if type(api) ~= "table" or type(api.GetOwnedAuctions) ~= "function" then
+    if type(api) ~= "table" or type(api.GetNumOwnedAuctions) ~= "function"
+        or type(api.GetOwnedAuctionInfo) ~= "function" then
         self:Finish(reason, "客户端本人上架读取 API 不可用")
         return
     end
-    local ok, auctions = pcall(api.GetOwnedAuctions)
-    if not ok or type(auctions) ~= "table" then
+    local ok, count = pcall(api.GetNumOwnedAuctions)
+    if not ok or type(count) ~= "number" or count < 0 or count % 1 ~= 0 then
         self:Finish(reason, "读取本人上架列表失败")
         return
     end
@@ -127,13 +128,23 @@ function AuctionHouse:Capture(reason)
         return
     end
     local records = {}
-    for index, auction in ipairs(auctions) do
+    for index = 1, count do
+        local readOK, auction = pcall(api.GetOwnedAuctionInfo, index)
+        if not readOK or type(auction) ~= "table" then
+            self:Finish(reason, "本人上架记录尚未就绪：" .. index .. "/" .. count)
+            return
+        end
         local record, errorMessage = MakeRecord(character, auction, index)
         if not record then
             self:Finish(reason, errorMessage)
             return
         end
         records[#records + 1] = record
+    end
+    local countOK, finalCount = pcall(api.GetNumOwnedAuctions)
+    if not countOK or finalCount ~= count then
+        self:Finish(reason, "本人上架列表在读取期间发生变化")
+        return
     end
     table.sort(records, function(left, right) return left.sourceID < right.sourceID end)
     state.records = records
@@ -190,6 +201,14 @@ function AuctionHouse:OnEvent(event)
         if self.scan then self:Finish("closed") end
         if self.lastStatus ~= "error" then self.lastStatus = "closed" end
     elseif event == "OWNED_AUCTIONS_UPDATED" then
+        if not IsOpen() then return end
+        if not self.scan then
+            local character = Addon.Core and Addon.Core.Characters:GetCurrent()
+            if not character then return end
+            self.token = (self.token or 0) + 1
+            self.scan = { token = self.token, characterID = character.id,
+                reason = "owned-update", records = {} }
+        end
         local state = self.scan
         if not state or state.captureScheduled then return end
         state.captureScheduled = true

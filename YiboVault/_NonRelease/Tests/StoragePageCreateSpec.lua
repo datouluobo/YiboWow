@@ -62,13 +62,23 @@ function theme:CreateCheckbox()
     return checkbox
 end
 function theme:CreateScrollFrame() return Widget() end
+function theme:CreateInput()
+    local input = Widget('EditBox')
+    input.placeholder, input.clearButton = Widget(), Widget()
+    return input
+end
 function theme:GetDataRowColor() return { 0.2, 0.3, 0.4, 1 } end
-_G.YiboCore = { UITheme = theme, Characters = { GetCurrent = function() return nil end } }
+_G.YiboCore = { UITheme = theme, Characters = { GetCurrent = function() return nil end },
+    Capabilities = { Register = function() end } }
+dofile('YiboCore/Runtime/ItemResolver.lua')
+local dataRevision = 1
 _G.YiboVault = { Items = {
+    GetRevision = function() return dataRevision end,
     GetStorageSummary = function() return { characters = {}, guilds = {} } end,
     Query = function() return { records = {} } end,
     GetSourceState = function() return {} end,
 }, IsGuildHidden = function() return false end }
+YiboVault.Core = YiboCore
 dofile("YiboVault/StoragePage.lua")
 local host = Widget()
 YiboVault.StoragePage:Create(host)
@@ -220,6 +230,7 @@ YiboVault.Items.Query = function()
     return { records = { { source = "guild-bank", guildKey = "guild-1",
         location = { tabID = 2 }, sourceID = "guild-1:2:1", itemID = 200, quantity = 5 } } }
 end
+dataRevision = dataRevision + 1
 YiboVault.StoragePage:Refresh(host)
 assert(#page.tabs == 8 and page.area == "tab:2" and page.areaButtons[2].label.text == "Materials",
     "guild owner displays eight tabs and selects the scanned tab")

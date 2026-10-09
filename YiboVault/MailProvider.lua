@@ -1,18 +1,6 @@
 local Addon = _G.YiboVault
 local Provider = { cache = {}, views = {} }; Addon.MailProvider = Provider
 
-local function Compatible(api)
-    if type(api) ~= "table" or type(api.GetAPIVersion) ~= "function" or type(api.GetByCharacter) ~= "function"
-        or type(api.GetState) ~= "function" or type(api.GetRevision) ~= "function" or type(api.HasCapability) ~= "function"
-        or type(api.Events) ~= "table" or type(api.Events.Register) ~= "function" or type(api.Events.Unregister) ~= "function" then return false end
-    local ok, version = pcall(api.GetAPIVersion, api)
-    if not ok or version ~= 1 then return false end
-    for _, name in ipairs({ "mail-items.query", "mail-items.state", "mail-items.events" }) do
-        local success, available = pcall(api.HasCapability, api, name, 1)
-        if not success or not available then return false end
-    end
-    return true
-end
 local function Fingerprint(snapshot)
     local parts = {}
     local state = snapshot.coverage.inbox or {}
@@ -31,18 +19,19 @@ function Provider:LocalSnapshot(characterID)
     return { records = Addon:GetCachedCharacterRecords(characterID, "mail"), coverage = Addon:GetCachedCharacterCoverage(characterID, "mail") }
 end
 function Provider:Connect()
-    local api = _G.YiboMail and _G.YiboMail.Items
-    if self.api == api and Compatible(api) then return true end
-    if self.api then pcall(self.api.Events.Unregister, self.api.Events, self) end
+    local core = Addon.Core
+    local descriptor = core and core.Contracts and core.Contracts:Resolve("mail.items", { major = 1, minMinor = 0 })
+    if descriptor and self.descriptor and descriptor.registrationRef == self.descriptor.registrationRef then return true end
     self.api, self.cache = nil, {}
-    if not Compatible(api) then return false end
-    local ok, registered = pcall(api.Events.Register, api.Events, self, function(event, payload)
-        if event == "MAIL_ITEMS_CHANGED" and type(payload) == "table" and type(payload.characterID) == "string" then
-            Provider:Refresh(payload.characterID)
-        end
-    end)
-    if not ok or not registered then return false end
-    self.api = api
+    self.descriptor = descriptor
+    if not descriptor then return false end
+    self.api = {
+        GetState = function(_, characterID) return core.Contracts:Call(Addon.NAME, descriptor, "GetState", { characterID = characterID }) end,
+        GetRevision = function() return core.Contracts:Call(Addon.NAME, descriptor, "GetRevision") end,
+        GetByCharacter = function(_, characterID, options)
+            return core.Contracts:Call(Addon.NAME, descriptor, "GetByCharacter", { characterID = characterID, options = options })
+        end,
+    }
     return true
 end
 function Provider:GetSnapshot(characterID, force)
@@ -55,7 +44,7 @@ function Provider:GetSnapshot(characterID, force)
             and cached.snapshot and cached.revision == revision and cached.status == state.status and cached.observedAt == state.observedAt then
             snapshot = cached.snapshot
         elseif ok and revisionOK and type(state) == "table" and state.observedAt
-            and (state.status == "known" or state.status == "known-empty" or state.status == "partial" or state.status == "stale") then
+            and (state.status == "known" or state.status == "known-empty" or state.status == "partial" or state.status == "stale" or state.status == "error") then
             local queryOK, result = pcall(self.api.GetByCharacter, self.api, characterID, { includeStale = true })
             local coverage = queryOK and type(result) == "table" and result.coverage and result.coverage[characterID]
             if type(coverage) == "table" and type(result.records) == "table" and coverage.status == state.status then
@@ -98,6 +87,24 @@ function Provider:Refresh(characterID)
     Addon:NotifyMailProviderChanged(characterID, ids)
 end
 function Provider:Install()
+    if not self.listenersInstalled and Addon.Core.Events then
+        local function Lifecycle(_, descriptor, change)
+            if descriptor.name ~= "mail.items" then return end
+            Provider:Connect()
+            if Addon.MailItems then Addon.MailItems.scanToken = (Addon.MailItems.scanToken or 0) + 1 end
+            if change and change.characterID then Provider:Refresh(change.characterID)
+            else
+                for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do Provider:Refresh(character.id) end
+                if not Provider.api and Addon.MailItems and Addon.MailItems:IsOpen() then
+                    Addon.MailItems.open = true; Addon.MailItems:ScheduleScan("provider-unregistered", 0.2, 3)
+                end
+            end
+        end
+        for _, event in ipairs({ "BUSINESS_CONTRACT_REGISTERED", "BUSINESS_CONTRACT_UNREGISTERED", "BUSINESS_CONTRACT_CHANGED" }) do
+            Addon.Core.Events:Register(event, self, Lifecycle)
+        end
+        self.listenersInstalled = true
+    end
     self:Connect()
     for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do self:Refresh(character.id) end
 end

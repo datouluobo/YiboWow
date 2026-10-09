@@ -193,7 +193,7 @@
 | YiboReputation | 待评估 | 无该新连接接入证据 | 真实待办／目标接入时评估 |
 | YiboTaskHub | 待评估 | [项目基础](../../YiboTaskHub/README.md) 已建立，尚无连接或需求能力注册 | 计划 demands 与业务聚合；原计划 v9 不构成扩展版本承诺，无接入版本或运行验证 |
 | YiboTodo | 待评估 | 无该新连接接入证据 | 内部 Provider 不等于跨业务契约；真实待办接入时评估 |
-| YiboVault | 部分接入 | Items 注册 vault.items v1.0；MailProvider 经 Core 消费 mail.items，完成缺失/晚注册/注销/不兼容/错误快照验证，TooltipSpec 验证关闭邮箱显示 | 最低 Core 1.8.0 / API v9、business-services:1；行动中心 inventory／evidence 仍计划，游戏内待验收、未发布 |
+| YiboVault | 部分接入 | v1.1.1-api1 发布 Items 的 vault.items v1.0 与 MailProvider 的 mail.items 消费；16 项 Vault 测试通过，覆盖来源生命周期、失败后历史缓存与实际 Mail API 的 Tooltip 投影；2026-10-09 审查 | 最低接口 API v9 / business-services:1，正式 Core 包需 1.9.0；inventory／evidence 仍是计划，双插件游戏内联动待验收；追赶须另核对 api10 |
 
 行动中心技术名已确定为 YiboTaskHub；2026-10-08 已建立项目目录、TOC 和命名空间并联接到 MoP Classic 客户端。各活动能力先登记为待评估；当前项目基础不代表 Core 连接、任务能力或 UI 已接入。
 

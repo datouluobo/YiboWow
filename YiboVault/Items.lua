@@ -330,6 +330,21 @@ function Items:Query(options)
     }
 end
 
+function Items:RegisterService()
+    self.serviceDefinition = self.serviceDefinition or {
+        name = "vault.items", kind = "service", providerID = Addon.NAME .. ":inventory", version = { major = 1, minor = 0 },
+        methods = {
+            Query = function(request) return Items:Query(request) end,
+            GetPersonalCounts = function(request) return Items:GetPersonalCounts(request) end,
+            HasCapability = function(request) return Items:HasCapability(request.name, request.minimumVersion) end,
+        },
+    }
+    local ref, err = Addon.Core.Contracts:Register(Addon.NAME, self.serviceDefinition)
+    if not ref then return nil, err end
+    self.serviceRef = ref
+    return true
+end
+
 function Items.Events:Register(owner, callback)
     if owner == nil or type(callback) ~= "function" then return nil, "事件订阅参数无效。" end
     self._listeners[#self._listeners + 1] = { owner = owner, callback = callback }
@@ -344,6 +359,11 @@ function Items.Events:Unregister(owner, callback)
 end
 
 function Items.Events:Fire(eventName, payload)
+    if Items.serviceRef then
+        local change = Addon.Copy(payload)
+        change.eventName = eventName
+        Addon.Core.Contracts:NotifyChanged(Addon.NAME, Items.serviceRef, change)
+    end
     for _, listener in ipairs(self._listeners) do
         local ok, errorMessage = pcall(listener.callback, eventName, Addon.Copy(payload))
         if not ok then Addon:Print("事件订阅回调失败：" .. tostring(errorMessage)) end

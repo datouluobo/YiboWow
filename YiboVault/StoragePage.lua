@@ -195,7 +195,7 @@ function StoragePage:Create(parent)
     page.pendingItemInfo = {}
     page:RegisterEvent("GET_ITEM_INFO_RECEIVED")
     page:SetScript("OnEvent", function(_, event, itemID, succeeded)
-        if event ~= "GET_ITEM_INFO_RECEIVED" or not itemID then return end
+        if event ~= "GET_ITEM_INFO_RECEIVED" or not itemID or not page.pendingItemInfo[itemID] then return end
         page.pendingItemInfo[itemID] = nil
         if succeeded == false then return end
         for index = 1, #page.itemCells do
@@ -384,9 +384,13 @@ function StoragePage:UpdateItemCell(page, cell, record, index)
         cell:SetBackdropBorderColor(unpack(borderColor))
     end
     if needsItemInfo and item and not page.pendingItemInfo[item.itemID]
-        and C_Item and type(C_Item.RequestLoadItemDataByID) == "function" then
+        and Addon.Core.ItemResolver:GetInfo(item.itemID).state ~= "ready" then
         page.pendingItemInfo[item.itemID] = true
-        C_Item.RequestLoadItemDataByID(item.itemID)
+        local id = item.itemID
+        Addon.Core.ItemResolver:Request(id, function(info)
+            local callback = page:GetScript("OnEvent")
+            if callback then callback(page, "GET_ITEM_INFO_RECEIVED", id, info and info.state == "ready") end
+        end)
     end
 end
 
@@ -630,7 +634,7 @@ function StoragePage:Refresh(host, context)
     local partialMail = mailCoverage and (mailCoverage.unscannedCount or 0) > 0
     page.heading:SetText(selected and (selected.label .. (selected.hidden and " · 已隐藏，不计入合计" or "")
         .. (partialMail and (showStale and " · 邮箱上次仅部分可见" or " · 邮箱仅部分可见")
-        or showStale and " · 待刷新快照" or "")) or "物品总览")
+        or showStale and " · 上次缓存" or "")) or "物品总览")
     page.identityMeta:SetText(selected and (selected.character and
         ("等级 " .. tostring(selected.character.level or "?") .. " · " .. tostring(selected.realm or "") .. " · " .. tostring(selected.character.class or ""))
         or tostring(selected.realm or "")) or "")

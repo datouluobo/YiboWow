@@ -1,5 +1,7 @@
 local queryCount, revision, itemChanged = 0, 1, nil
 local hiddenGuild = false
+local mailState = { status = "partial", unscannedCount = 2 }
+local equipmentState, auctionState, otherAuctionState = { status = "known" }, { status = "known" }, { status = "known" }
 local bagLocations, bankLocations, guildLocations = {}, {}, {}
 for bagID = 0, 4 do bagLocations[tostring(bagID)] = { status = "known" } end
 bankLocations["-1"] = { status = "known" }
@@ -78,10 +80,11 @@ _G.YiboVault = {
             totals = { totalQuantity = 24, physicalQuantity = 15, listedQuantity = 3, externalQuantity = 6 },
             coverage = {
                 bags = { ["A-Realm"] = { locations = bagLocations } },
-                mail = { ["A-Realm"] = { locations = { inbox = { status = "partial", unscannedCount = 2 } } } },
+                mail = { ["A-Realm"] = { locations = { inbox = mailState } } },
                 bank = { ["A-Realm"] = { locations = bankLocations } },
-                equipment = { ["A-Realm"] = { locations = { equipment = { status = "known" } } } },
-                auction = { ["A-Realm"] = { locations = { auction = { status = "known" } } } },
+                equipment = { ["A-Realm"] = { locations = { equipment = equipmentState } } },
+                auction = { ["A-Realm"] = { locations = { auction = auctionState } },
+                    ["B-Other"] = { locations = { auction = otherAuctionState } } },
                 ["guild-bank"] = { shared = { locations = guildLocations } },
             },
         }
@@ -187,6 +190,7 @@ assert(narrowText:find("Alpha / |cff20e07012+|r", 1, true)
     "source groups should wrap beneath the holder when the tooltip is narrow")
 _G.UIParent = nil
 bankLocations["5"].status = "known"
+mailState.status, mailState.unscannedCount = "known", 0
 guildLocations["2"].status = "stale"
 revision = revision + 1
 local guildPending = { lines = {} }
@@ -251,4 +255,51 @@ disabled.AddLine, disabled.AddDoubleLine, disabled.Show =
     tooltip.AddLine, tooltip.AddDoubleLine, tooltip.Show
 vaultTooltip:Append(disabled, 100)
 assert(#disabled.lines == 0, "the Vault tooltip switch must suppress its whole summary")
+YiboVault.db.settings.tooltipEnabled = true
+mailState.status, mailState.completedScan, mailState.lastScanStatus = 'stale', true, 'known'
+revision = revision + 1
+local cachedMail = { lines = {} }
+cachedMail.AddLine, cachedMail.AddDoubleLine, cachedMail.Show = tooltip.AddLine, tooltip.AddDoubleLine, tooltip.Show
+vaultTooltip:Append(cachedMail, 100)
+local cachedText = table.concat(cachedMail.lines, '\n')
+assert(cachedText:find('账号库存 / |cff20e07024|r', 1, true), 'closing mailbox preserves proven mail quantity in tooltip')
+mailState.status = 'error'; revision = revision + 1
+local failedMail = { lines = {} }
+failedMail.AddLine, failedMail.AddDoubleLine, failedMail.Show = tooltip.AddLine, tooltip.AddDoubleLine, tooltip.Show
+vaultTooltip:Append(failedMail, 100)
+assert(table.concat(failedMail.lines, '\n'):find('账号库存 / |cff20e07024|r', 1, true),
+    'a failed mail refresh must retain the last successful snapshot quantity')
+
+local function RenderCached()
+    revision = revision + 1
+    local target = { lines = {} }
+    target.AddLine, target.AddDoubleLine, target.Show = tooltip.AddLine, tooltip.AddDoubleLine, tooltip.Show
+    vaultTooltip:Append(target, 100)
+    return table.concat(target.lines, '\n')
+end
+for _, status in ipairs({ 'stale', 'error' }) do
+    for _, locations in ipairs({ bagLocations, bankLocations, guildLocations }) do
+        for _, state in pairs(locations) do state.status, state.completedScan = status, true end
+    end
+    for _, state in ipairs({ mailState, equipmentState, auctionState, otherAuctionState }) do
+        state.status, state.completedScan = status, true
+    end
+    local historical = RenderCached()
+    assert(historical:find('账号库存 / |cff20e07024|r', 1, true)
+        and historical:find('Alpha / |cff20e07014|r[', 1, true)
+        and historical:find('Beta-Other / |cff20e0701|r[', 1, true)
+        and historical:find('Guild-Realm / |cff20e0709|r[', 1, true)
+        and not historical:find('|cff87b3ba~|r', 1, true),
+        'all personal and guild sources retain successful snapshots after reload or refresh failure')
+end
+mailState.unscannedCount = 2
+local partialCached = RenderCached()
+assert(partialCached:find('账号库存 / |cff20e07024+|r', 1, true)
+    and partialCached:find('Alpha / |cff20e07014+|r[', 1, true),
+    'a historical partial inbox retains numeric quantities while identifying the lower bound')
+mailState.unscannedCount, mailState.completedScan, mailState.status = 0, false, 'error'
+local noSnapshot = RenderCached()
+assert(noSnapshot:find('账号库存 / |cff20e07018+|r', 1, true)
+    and noSnapshot:find('INV_Letter_15:13:13:0:0|t|cff87b3ba~|r', 1, true),
+    'a genuinely unproven source remains unknown rather than being presented as known stock')
 print("YiboVault tooltip spec passed")

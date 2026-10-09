@@ -33,6 +33,7 @@ function MailItems:IsOpen()
 end
 
 function MailItems:ScheduleScan(reason, delay, retries)
+    if Addon.MailProvider and Addon.MailProvider:Connect() then return end
     self.scanToken = (self.scanToken or 0) + 1
     local token = self.scanToken
     local function Attempt(remaining)
@@ -86,6 +87,10 @@ function MailItems:Scan(reason)
     if provided then
         self.lastStatus, self.lastResult = provided.coverage.inbox.status, "YiboMail API"
         return true, false, Addon.Copy(provided.coverage.inbox)
+    end
+    if Addon.MailProvider and Addon.MailProvider:Connect() then
+        self.lastStatus, self.lastResult = "not-yet-scanned", "等待邮件提供方快照"
+        return false
     end
     if not self:IsOpen() then
         self.lastStatus, self.lastResult = "closed", "邮箱未打开，保留已有快照"

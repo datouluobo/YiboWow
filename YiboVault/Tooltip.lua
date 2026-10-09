@@ -35,29 +35,32 @@ local function SourceParts(counts, unknown)
     return parts
 end
 
-local function Observed(state, source)
+local function SnapshotAvailable(state, source)
     local status = state and state.status
+    -- Visibility and refresh failures do not discard a successful snapshot.
+    -- Freshness remains available through Query coverage and the storage page.
+    if state and state.completedScan then return true end
     return status == "known" or status == "known-empty" or source == "mail" and status == "partial"
 end
 
-local function SourceObserved(result, characterID, source)
+local function SourceSnapshotAvailable(result, characterID, source)
     local coverage = result.coverage and result.coverage[source] and result.coverage[source][characterID]
     local locations = coverage and coverage.locations or {}
     if source == "bags" then
         for bagID = 0, (tonumber(NUM_BAG_SLOTS) or 4) do
-            if not Observed(locations[tostring(bagID)], source) then return false end
+            if not SnapshotAvailable(locations[tostring(bagID)], source) then return false end
         end
         return true
     elseif source == "bank" then
         local first = (tonumber(NUM_BAG_SLOTS) or 4) + 1
-        if not Observed(locations[tostring(tonumber(BANK_CONTAINER) or -1)], source) then return false end
+        if not SnapshotAvailable(locations[tostring(tonumber(BANK_CONTAINER) or -1)], source) then return false end
         for bagID = first, first + (tonumber(NUM_BANKBAGSLOTS) or 7) - 1 do
-            if not Observed(locations[tostring(bagID)], source) then return false end
+            if not SnapshotAvailable(locations[tostring(bagID)], source) then return false end
         end
         return true
     end
     local key = source == "equipment" and "equipment" or source == "auction" and "auction" or "inbox"
-    return Observed(locations[key], source)
+    return SnapshotAvailable(locations[key], source)
 end
 
 local function TotalLabel(total, unknown)
@@ -190,14 +193,20 @@ function Tooltip:Append(tooltip, knownItemID)
             hasCharacterRows = true
             counts.unknown, counts.shownTotal = {}, 0
             for _, source in ipairs(SOURCE_ORDER) do
-                if current and current.id == character.id and (counts[source] or 0) > 0
-                    and not SourceObserved(result, character.id, source) then
+                if (counts[source] or 0) > 0
+                    and not SourceSnapshotAvailable(result, character.id, source) then
                     counts.unknown[source] = true
                     anyUnknown = true
                 else
                     counts.shownTotal = counts.shownTotal + (counts[source] or 0)
                 end
             end
+            local mailCoverage = result.coverage and result.coverage.mail
+                and result.coverage.mail[character.id]
+            local inbox = mailCoverage and mailCoverage.locations and mailCoverage.locations.inbox
+            counts.partial = (counts.mail or 0) > 0 and inbox
+                and (tonumber(inbox.unscannedCount) or 0) > 0 or false
+            if counts.partial then anyUnknown = true end
             knownTotal = knownTotal + counts.shownTotal
         end
     end
@@ -208,7 +217,7 @@ function Tooltip:Append(tooltip, knownItemID)
         local locations = coverage and coverage.locations or {}
         for tabID, quantity in pairs(guild.tabs) do
             if tabID >= 1 and tabID <= 8 and quantity > 0
-                and Observed(locations[tostring(tabID)], "guild-bank") then
+                and SnapshotAvailable(locations[tostring(tabID)], "guild-bank") then
                 guild.tabIDs[#guild.tabIDs + 1] = tabID
                 guild.shownTotal = guild.shownTotal + quantity
                 local location = locations[tostring(tabID)].location
@@ -233,7 +242,7 @@ function Tooltip:Append(tooltip, knownItemID)
                 name = name .. "-" .. tostring(character.realm)
             end
             local parts = SourceParts(counts, counts.unknown)
-            local label = TotalLabel(counts.shownTotal, next(counts.unknown) ~= nil)
+            local label = TotalLabel(counts.shownTotal, counts.partial or next(counts.unknown) ~= nil)
             local right, extra = RowLines(tooltip, name, label, parts)
             if shown >= 20 or used + 1 + #extra > budget then
                 remaining = remaining + 1
@@ -280,7 +289,7 @@ function Tooltip:Append(tooltip, knownItemID)
         for _, record in ipairs(hiddenResult.records) do
             local tabID = tonumber(record.location and record.location.tabID)
             local state = tabID and locations[tostring(tabID)]
-            if tabID and Observed(state, "guild-bank") then
+            if tabID and SnapshotAvailable(state, "guild-bank") then
                 if not tabCounts[tabID] then tabIDs[#tabIDs + 1] = tabID end
                 tabCounts[tabID] = (tabCounts[tabID] or 0) + record.quantity
                 tabNames[tabID] = record.location.tabName or "未命名"
