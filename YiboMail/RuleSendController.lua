@@ -46,6 +46,15 @@ function C:Invalidate(message)
     if self.state == "sending" or self.state == "filling" then self.dirty = true; return end
     self.state, self.notice = "invalid", message or "计划已变化，请重新匹配。"
 end
+function C:ReconcileDraft()
+    if self.state == "sending" or self.state == "filling" then return end
+    if self.owned and self:DraftEmpty() then
+        self.owned, self.packet, self.fingerprint, self.draftFields = nil, nil, nil, nil
+        self.state, self.notice = "idle", nil
+    elseif self.state == "ready" and self:Fingerprint() ~= self.fingerprint then
+        self:Invalidate("邮件已变化，请撤下当前附件后重新装填。")
+    end
+end
 function C:ScopeItems()
     local items = {}
     for _, item in ipairs((self.match or {}).items or {}) do
@@ -56,17 +65,25 @@ function C:ScopeItems()
 end
 function C:Undo()
     local ok, err = self:Guard(); if not ok then return nil, err end
-    if not self.owned then return true end
+    local attachments = Addon.Compose:GetAttachments()
+    if not self.owned and #attachments == 0 then return true end
     local body = Addon.Compose:GetBodyEditBox()
     if not SendMailSubjectEditBox or not body then return nil, "当前客户端发件界面未就绪。" end
-    if self:Fingerprint() ~= self.fingerprint then self.state = "invalid"; return nil, "邮件已被手动修改，请先整理实际附件。" end
-    for index = #self.owned, 1, -1 do
-        local success = pcall(ClickSendMailItemButton, self.owned[index].slot, true)
+    if #attachments > 0 and not ClickSendMailItemButton then return nil, "客户端撤下接口不可用。" end
+    -- Undo is an explicit request to return the actual attachments, including
+    -- manual additions. A stale plan must never prevent recovering the draft.
+    for index = #attachments, 1, -1 do
+        local success = pcall(ClickSendMailItemButton, attachments[index].slot, true)
         if not success then return nil, "撤下失败，请检查附件。" end
     end
     if #Addon.Compose:GetAttachments() > 0 then return nil, "附件尚未归还，请检查邮箱。" end
-    SendMailSubjectEditBox:SetText(""); body:SetText("")
+    -- Remove only generated text that the player has left unchanged.
+    local fields = self.draftFields
+    if fields and Text(SendMailSubjectEditBox) == fields.subject then SendMailSubjectEditBox:SetText("") end
+    if fields and Text(body) == fields.body then body:SetText("") end
+    self.draftFields = nil
     self.owned, self.fingerprint, self.packet, self.state = nil, nil, nil, "idle"
+    self.notice = not self:DraftEmpty() and "附件已归还，手动草稿内容已保留；请在发件箱整理后重新装填。" or nil
     self:Scan(); self:Changed(); return true
 end
 function C:Select(scope)
@@ -86,6 +103,7 @@ function C:Select(scope)
         body:SetText("")
     end
     self.owned, self.packet, self.fingerprint = nil, nil, nil
+    self.draftFields = nil
     self.scope, self.state = scope, "idle"; self:Scan()
     if #self:ScopeItems() == 0 then self.notice = "此目标当前没有可寄物品。"; self:Changed(); return nil, self.notice end
     return self:Fill()
@@ -128,6 +146,7 @@ function C:Fill(advance)
     local kinds = 0; for _ in pairs(distinct) do kinds = kinds + 1 end
     SendMailSubjectEditBox:SetText((packet[1].name or "物品寄送") .. (kinds > 1 and ("等 " .. kinds .. " 种物品") or ""))
     body:SetText("")
+    self.draftFields = { subject = Text(SendMailSubjectEditBox), body = Text(body) }
     self.fingerprint = self:Fingerprint()
     for index, candidate in ipairs(packet) do
         local success = pcall(function() pickup(candidate.bag, candidate.slot); ClickSendMailItemButton(index) end)
@@ -166,6 +185,7 @@ function C:Send()
     return true
 end
 function C:Primary()
+    self:ReconcileDraft()
     if self.state == "ready" then return self:Send() end
     if self.state == "invalid" then
         local ok, err = self:Guard(); if not ok then return nil, err end
@@ -200,8 +220,10 @@ function C:OnEvent(event, itemID)
     if event == "MAIL_CLOSED" then
         self.state, self.skipped, self.scope, self.owned, self.packet, self.fingerprint = "idle", {}, nil, nil, nil, nil
         self.match, self.notice, self.dirty = nil, nil, nil
-    elseif event == "MAIL_SEND_SUCCESS" and self.state == "sending" then
+        self.draftFields = nil
+    elseif event == "MAIL_SEND_SUCCESS" and (self.state == "sending" or self.owned) then
         self.state, self.owned, self.fingerprint, self.packet = "idle", nil, nil, nil
+        self.draftFields = nil
         self.notice = "发送成功，点击填入下一封。"; self:Scan()
     elseif (event == "MAIL_FAILED" or event == "ADDON_ACTION_BLOCKED") and self.state == "sending" then
         self.state, self.notice = "invalid", "发送未确认，请检查当前邮件；不会自动重试。"
@@ -213,7 +235,7 @@ function C:OnEvent(event, itemID)
             self:QueueScan()
         end
         return
-    elseif event == "MAIL_SEND_INFO_UPDATE" and self.state == "ready" and self:Fingerprint() ~= self.fingerprint then self:Invalidate() end
+    elseif event == "MAIL_SEND_INFO_UPDATE" then self:ReconcileDraft() end
     self:Changed()
 end
 function C:Tick()

@@ -137,7 +137,8 @@ assert(C:Primary() and C.state == 'ready' and #A.Compose:GetAttachments() == 1 a
 assert(C:Contact('Smith-Realm')); assert(sends == 1 and SendMailNameEditBox:GetText() == 'Smith-Realm')
 local originalSubject = SendMailSubjectEditBox:GetText()
 SendMailSubjectEditBox:SetText('edited'); assert(not C:Send() and sends == 1)
-assert(not C:Undo()); SendMailSubjectEditBox:SetText(originalSubject); assert(C:Undo())
+assert(C:Undo() and SendMailSubjectEditBox:GetText() == 'edited' and #A.Compose:GetAttachments() == 0)
+SendMailSubjectEditBox:SetText('')
 assert(C:Skip(item)); match = C:Scan(); assert(not match.byRule[item])
 assert(C:Skip(item, true)); assert(C.match.byRule[item])
 local warehouseKey = A.Recipients:Key('Warehouse-Realm')
@@ -296,3 +297,41 @@ assert(scanCalls == 1, 'In-progress send and fill must not rematch')
 C_Timer = nil
 C.Scan, A.Core.Characters.GetCurrent = originalScan, originalCurrent
 print('PASS: closed mailbox loot/item events do not scan bags or invoke Core; open matching and send guards preserved')
+
+-- Recover the actual draft after manual edits, native sends and missing events.
+C:OnEvent('MAIL_CLOSED'); attached, cursor = {}, nil
+SendMailSubjectEditBox:SetText(''); SendMailBodyEditBox:SetText('')
+bags = { { id = 30, quantity = 2 }, { id = 31, quantity = 4 } }
+local recoverySends = sends
+assert(C:Contact('Local-Realm') and C.state == 'ready')
+PickupContainerItem(0, 2); ClickSendMailItemButton(2)
+C:OnEvent('MAIL_SEND_INFO_UPDATE')
+assert(C.state == 'invalid' and not C:Send() and sends == recoverySends)
+assert(C:Undo() and #A.Compose:GetAttachments() == 0 and not C.owned and C.state == 'idle')
+assert(C:Contact('Local-Realm') and C.state == 'ready')
+-- Returning to the rule page must detect edits even without an attachment event.
+SendMailNameEditBox:SetText('Other-Realm'); C:ReconcileDraft()
+assert(C.state == 'invalid' and sends == recoverySends)
+assert(C:Undo())
+SendMailSubjectEditBox:SetText('my subject'); SendMailBodyEditBox:SetText('my body')
+PickupContainerItem(0, 1); ClickSendMailItemButton(1)
+assert(not C.owned and C:Undo() and #A.Compose:GetAttachments() == 0)
+assert(SendMailSubjectEditBox:GetText() == 'my subject' and SendMailBodyEditBox:GetText() == 'my body')
+SendMailSubjectEditBox:SetText(''); SendMailBodyEditBox:SetText('')
+assert(C:Contact('Local-Realm'))
+ClickSendMailItemButton(1, true); SendMailSubjectEditBox:SetText('')
+C:OnEvent('MAIL_SEND_INFO_UPDATE')
+assert(C.state == 'idle' and not C.owned and not C.packet and not C.fingerprint)
+assert(C:Primary() and C.state == 'ready', 'A completely cleared native draft can be filled again')
+local blockedDetach = ClickSendMailItemButton
+ClickSendMailItemButton = function() end
+assert(not C:Undo() and #A.Compose:GetAttachments() == 1 and C.owned)
+ClickSendMailItemButton = blockedDetach
+assert(C:Undo() and #A.Compose:GetAttachments() == 0)
+assert(C:Contact('Local-Realm'))
+-- A player can send a staged packet from compose instead of the rule button.
+attached = {}; SendMailSubjectEditBox:SetText('')
+C:OnEvent('MAIL_SEND_SUCCESS')
+assert(C.state == 'idle' and not C.owned and not C.packet and not C.draftFields)
+assert(sends == recoverySends, 'Recovery never sends or retries a mail')
+print('PASS: edited attachments recover through undo; page-entry reconciliation; manual drafts preserve text; empty draft releases stale plan; full bags retain recovery; native-send success clears rule ownership; no automatic sends')

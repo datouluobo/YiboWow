@@ -1081,6 +1081,13 @@ function Native:CreateBasicSend()
                 control.suppressShortcutClick = nil; return
             end
             if mouseButton == "RightButton" then Addon.RecipientUI:Open(control, control.slot); return end
+            -- A picked-up item uses the same route as a drag release. Always
+            -- stop here, including failed drops, so this click cannot also send
+            -- an existing draft or execute a rule contact action.
+            if mouseButton == "LeftButton" and GetCursorInfo and GetCursorInfo() == "item" then
+                if Addon.RuleSendUI then Addon.RuleSendUI:Drop(control.contact) end
+                return
+            end
             local contact = control.contact
             if not contact then return end
             if Addon.RuleSendUI and Addon.RuleSendUI.active then
@@ -1125,8 +1132,8 @@ function Native:CreateBasicSend()
                 local c = Addon.RuleSendController
                 local ready = c.state == "ready" and c.packet and Addon.Recipients:Key(c.packet[1].recipient) == Addon.Recipients:Key(contact.address)
                 GameTooltip:AddLine(ready and "再次点击：发送当前邮件" or "点击：填入此人规则物品", 0.55, 0.78, 0.78, true)
-                GameTooltip:AddLine("拖入物品：建立指定物品规则", 0.55, 0.78, 0.78, true)
-            else GameTooltip:AddLine("拖入物品：快速填入此组附件与收件人", 0.55, 0.78, 0.78, true) end
+                GameTooltip:AddLine("拖入物品或拿起后左键点击：建立指定物品规则", 0.55, 0.78, 0.78, true)
+            else GameTooltip:AddLine("拖入物品或拿起后左键点击：快速填入此组附件与收件人", 0.55, 0.78, 0.78, true) end
             GameTooltip:AddLine("左键拖动：移到空格，或与已有收件人对调。", 0.55, 0.78, 0.78, true)
             GameTooltip:Show()
         end)

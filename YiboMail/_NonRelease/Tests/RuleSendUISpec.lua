@@ -183,7 +183,7 @@ p.contacts:GetScript('OnClick')(p.contacts)
 local UPicker = A.RecipientUI; UPicker.popup.search:SetText('First'); UPicker:Select(UPicker:Entries()[1])
 assert(S.draft.recipient == 'First-Realm' and SendMailNameEditBox:GetText() == 'Native-Realm')
 -- A persistent editor on the left; plain grouped rules and search on the right.
-local function Click(control) control:GetScript('OnClick')(control) end
+local function Click(control, mouse) control:GetScript('OnClick')(control, mouse or 'LeftButton') end
 Click(p.cancel); assert(S.dirty and A.confirmation)
 A.confirmation.OnAccept(); assert(not S.editID and S.editing and p.editor:IsShown())
 parent:SetWidth(1104); host.refreshPanel()
@@ -365,12 +365,14 @@ S:OpenTab('business'); assert(business:IsShown() and host.refreshPanel()==420)
 S:OpenTab('cache'); assert(cache:IsShown() and host.refreshPanel()==242)
 S:OpenTab('rules')
 print('PASS: persistent two-column editor/list; plain rows and icons; ASCII folding independent of drafts; recipient gate preserves individual flags; same-realm labels; category blacklist; single add/save action; async cancellation; paging/narrow bounds; other tabs unchanged')
--- Drag routes are deliberately distinct. Rule drag stores identity only.
-function GetCursorInfo() return 'item', 2 end
+-- Click placement shares the real drop route. Rule placement stores identity only.
 local held = true
+function GetCursorInfo() if held then return 'item', 2 end end
 function ClearCursor() held = false end
 function CursorHasItem() return held end
-U.active = true; U:Drop({ address = 'Second-Other' }); assert(not held and A.confirmation)
+A.Recipients:SetShortcut(1, 'Second-Other'); A.NativeUI:RefreshFavoriteButtons()
+local shortcut = A.NativeUI.send.favoriteButtons[1]
+U.active = true; Click(shortcut); assert(not held and A.confirmation)
 A.confirmation.OnAccept()
 local found
 for _, rule in ipairs(A.SendRules:List()) do if rule.itemID == 2 then found = rule end end
@@ -382,14 +384,21 @@ local dropped, attempts = {}, 0
 A.Compose.GetAttachments = function() return dropped end
 function ClickSendMailItemButton() dropped = { { itemID = 2, quantity = 3, slot = 1 } }; held = false end
 SendMailMailButton:SetScript('OnClick', function() attempts = attempts + 1; A.Compose.pendingSend = { recipient = SendMailNameEditBox:GetText() } end)
-U:Drop({ address = 'Second-Other' })
+Click(shortcut)
 assert(attempts == 1 and dropped[1].quantity == 3 and A.Compose.pendingSend.recipient == 'Second-Other')
-held = true; U:Drop({ address = 'First-Realm' }); assert(attempts == 1 and SendMailNameEditBox:GetText() == 'Second-Other')
+held = true; Click(shortcut)
+assert(held and attempts == 1 and SendMailNameEditBox:GetText() == 'Second-Other', 'Rejected click placement must not fall through to ordinary shortcut sending')
+A.Recipients:ClearShortcut(3); A.NativeUI:RefreshFavoriteButtons()
+Click(A.NativeUI.send.favoriteButtons[3])
+assert(held and attempts == 1 and SendMailNameEditBox:GetText() == 'Second-Other', 'Empty shortcut must leave the cursor item and draft untouched')
+Click(shortcut, 'RightButton')
+assert(held and A.RecipientUI.popup:IsShown(), 'Right click with an item must still configure the shortcut')
+A.RecipientUI:Hide()
 A.Compose.pendingSend = nil; dropped = {}; held = true; SendMailSubjectEditBox:SetText('')
 SendMailMailButton:SetEnabled(false); U:Drop({ address = 'First-Realm' })
 assert(attempts == 1 and #dropped == 1 and SendMailNameEditBox:GetText() == 'First-Realm')
 print('PASS: mailbox rule tab and native send visibility; settings tabs, actual item picker and save; dirty-navigation confirmation, deep link, narrow list/editor; shared contact picker independent draft')
-print('PASS: drag-to-rule confirmation; exact cursor stack native drop, one send attempt, pending guard and staged fallback')
+print('PASS: click-to-rule confirmation; exact cursor stack click placement, one send attempt, pending guard, empty slot and right click; drag staged fallback')
 print('PASS: hidden mailbox login defers initialization; addon tab avoids Blizzard name/template/registry writes; secure native-tab dispatch')
 
 -- Core may replace a pooled settings row when changing navigation sections.
@@ -601,6 +610,7 @@ local groupBags = {
     { itemID = 506, quantity = 4, bag = 0, slot = 3 },
 }
 local bagItems = A.Compose.BagItems; A.Compose.BagItems = function() return A.Copy(groupBags) end
+dropped = {}; held = false
 SendMailFrameLockSendMail:Hide()
 C.packet, C.owned, C.skipped, C.state, C.scope = nil, nil, {}, 'idle', nil
 N:SelectMailboxTab('rules'); U.root.scroll:SetWidth(360); C:Scan(); U:Refresh()
@@ -711,3 +721,31 @@ ATTACHMENTS_MAX_SEND = 16; N:LayoutBasicSend()
 assert(U.root.manage.points[1][5] == N:SendRegionLayout().controlsBottom and U.status:GetWidth() == MailFrame:GetWidth() - 110)
 ATTACHMENTS_MAX_SEND = attachmentLimit; MailFrame:SetWidth(mailboxWidth); N:LayoutBasicSend()
 print('PASS: narrow/wide rule page retains exact compose recipient field; management control fits the spare row, opens Core rules and preserves draft; full attachment rows keep the control in available status space')
+
+-- Real tab transitions reconcile a draft even if Blizzard emitted no update.
+dropped, held, A.Compose.pendingSend = {}, false, nil
+SendMailCODButton.checked = false
+C:OnEvent('MAIL_CLOSED')
+SendMailSubjectEditBox:SetText(''); modernBody:SetText('')
+N:SelectMailboxTab('rules')
+assert(not U.undo:IsEnabled())
+N:SelectMailboxTab('send')
+dropped = { { itemID = 2, quantity = 3, slot = 1 } }
+N:SelectMailboxTab('rules')
+assert(U.undo:IsEnabled(), 'Manual attachments without rule ownership must allow undo')
+local undoSlot = ClickSendMailItemButton
+ClickSendMailItemButton = function(_, clear) assert(clear); dropped = {} end
+Click(U.undo); assert(#dropped == 0 and not U.undo:IsEnabled())
+dropped = { { itemID = 2, quantity = 3, slot = 1 } }
+C.state, C.owned, C.packet = 'ready', A.Copy(dropped), { { recipient = 'Batch-Realm', ruleID = batchRule.id, itemID = 2, quantity = 3 } }
+C.fingerprint = C:Fingerprint()
+N:SelectMailboxTab('send')
+dropped[1].quantity = 1
+N:SelectMailboxTab('rules')
+assert(C.state == 'invalid' and U.undo:IsEnabled() and U.action:IsEnabled())
+Click(U.undo); assert(C.state == 'idle' and not C.owned and #dropped == 0)
+C.state, C.owned, C.packet = 'invalid', {}, { { recipient = 'Batch-Realm', ruleID = batchRule.id, itemID = 2, quantity = 3 } }
+N:SelectMailboxTab('send'); N:SelectMailboxTab('rules')
+assert(C.state == 'idle' and not C.owned and not C.packet, 'Reentering with a cleared draft releases stale ownership: ' .. tostring(C.state) .. '/' .. tostring(C.owned) .. '/' .. tostring(C.packet))
+ClickSendMailItemButton = undoSlot
+print('PASS: real compose/rule transitions expose manual-attachment undo, detect changed stacks without events, and release stale cleared plans')

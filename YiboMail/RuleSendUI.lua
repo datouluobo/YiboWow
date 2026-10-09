@@ -85,6 +85,7 @@ end
 function U:SetActive(active)
     self.active = active
     if not self.root then return end
+    if active then Addon.RuleSendController:ReconcileDraft() end
     Addon.NativeUI:RefreshMailboxTabs()
     self.root:SetShown(active); self.root.manage:SetShown(active); self.action:SetShown(active); self.undo:SetShown(active); self.status:SetShown(active); self.recipient:SetShown(active)
     local send = _G.SendMailMailButton or _G.SendMailSendButton
@@ -230,7 +231,7 @@ function U:Refresh()
     local label, enabled = c:ButtonState()
     self.action:SetText(label == "填入附件" and "装填" or label == "填入下一封" and "下一封" or label); self.action:SetEnabled(enabled)
     self.action:SetState(enabled and "default" or "disabled")
-    self.undo:SetEnabled(c.owned ~= nil and c.state ~= "sending" and c.state ~= "filling")
+    self.undo:SetEnabled((c.owned ~= nil or #Addon.Compose:GetAttachments() > 0) and c.state ~= "sending" and c.state ~= "filling")
     self.undo:SetState(self.undo:IsEnabled() and "default" or "disabled")
     local recipient = SendMailNameEditBox and SendMailNameEditBox:GetText() or ""
     self.recipient.value:SetText(recipient ~= "" and Addon.ViewModel:CounterpartLabel(recipient, current) or "待装填")
