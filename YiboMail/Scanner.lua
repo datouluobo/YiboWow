@@ -103,8 +103,11 @@ local function CommitScan(character, mails, visible, total, now, clock)
             if now - stable.at >= 60 then Addon:CleanupBacklog(character.id) end
         else Scanner.stable = { characterID = character.id, fingerprint = fingerprint, count = total, at = now } end
     else Scanner.stable = nil end
-    if Addon.Queue then Addon.Queue:OnScan(mails) end
-    if Addon.NativeUI then Addon.NativeUI.deleting = nil; Addon.NativeUI:Refresh() end
+    local queueRefreshed = Addon.Queue and Addon.Queue:OnScan(mails)
+    if Addon.NativeUI then
+        Addon.NativeUI.deleting = nil
+        if not queueRefreshed then Addon.NativeUI:Refresh() end
+    end
 end
 local function ScanError(character, err)
     Scanner.stable, Scanner.validAt, Scanner.lastError = nil, nil, tostring(err)

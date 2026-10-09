@@ -147,9 +147,20 @@ function View:GetMails(context, options)
     end)
     return result
 end
-function View:GetGroups(context, options)
+function View:GetGroupsFromEntries(entries, options)
     local groups, result = {}, {}
-    for _, entry in ipairs(self:GetMails(context, options)) do
+    for _, entry in ipairs(entries or {}) do
+        if (tonumber(entry.mail.money) or 0) > 0 and (tonumber(entry.mail.cod) or 0) == 0 then
+            local group = groups.money
+            if not group then
+                group = { id = "money", money = true, item = { name = "金币", texture = "Interface\\Icons\\INV_Misc_Coin_01" },
+                    quantity = 0, sources = {}, expiresAtEstimate = entry.mail.expiresAtEstimate }
+                groups.money = group; result[#result + 1] = group
+            end
+            group.quantity = group.quantity + entry.mail.money
+            group.expiresAtEstimate = math.min(group.expiresAtEstimate or math.huge, entry.mail.expiresAtEstimate or math.huge)
+            group.sources[#group.sources + 1] = { entry = entry, money = entry.mail.money }
+        end
         for _, item in ipairs(entry.mail.attachments) do
             local identity = item.variantKey
             if not groups[identity] then
@@ -162,9 +173,15 @@ function View:GetGroups(context, options)
         end
     end
     if not options or options.sort ~= "inbox" then
-        table.sort(result, function(a, b) if a.expiresAtEstimate ~= b.expiresAtEstimate then return a.expiresAtEstimate < b.expiresAtEstimate end; return a.id < b.id end)
+        table.sort(result, function(a, b)
+            if a.expiresAtEstimate ~= b.expiresAtEstimate then return a.expiresAtEstimate < b.expiresAtEstimate end
+            return tostring(a.id) < tostring(b.id)
+        end)
     end
     return result
+end
+function View:GetGroups(context, options)
+    return self:GetGroupsFromEntries(self:GetMails(context, options), options)
 end
 function View:GetContacts()
     return Addon.Recipients and Addon.Recipients:Candidates("contacts") or {}

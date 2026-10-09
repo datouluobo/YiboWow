@@ -663,18 +663,19 @@ function Native:CollectItem(group, single)
         local aIndex = tonumber(a.entry.mail.inboxIndex) or math.huge
         local bIndex = tonumber(b.entry.mail.inboxIndex) or math.huge
         if aIndex ~= bIndex then return aIndex < bIndex end
+        if group.money then return tostring(a.entry.key or "") < tostring(b.entry.key or "") end
         return (tonumber(a.item.attachmentIndex) or math.huge) < (tonumber(b.item.attachmentIndex) or math.huge)
     end)
     for _, source in ipairs(sources) do
         for _, action in ipairs(Addon:GetInboxActions(source.entry, source.item)) do
-            if action.actionable then
+            if action.actionable and ((group.money and action.slot == "money") or (not group.money and action.slot ~= "money")) then
                 selection[action.id] = true
                 if single then break end
             end
         end
         if single and next(selection) then break end
     end
-    if single and not next(selection) then panel.notice = "该物品组中没有可单独收取的附件。"; self:RefreshInbox(); return end
+    if single and not next(selection) then panel.notice = group.money and "没有可单独收取的金币邮件。" or "该物品组中没有可单独收取的附件。"; self:RefreshInbox(); return end
     local actions, err = queue:Prepare(selection, self:Context())
     panel.notice = err
     if actions then
@@ -700,20 +701,23 @@ function Native:ItemTile(group, index, columns, size)
     size = size or 42
     tile:SetSize(size, size)
     tile:ClearAllPoints(); tile:SetPoint("TOPLEFT", ((index - 1) % columns) * (size + 4), -math.floor((index - 1) / columns) * (size + 4))
-    tile.icon:SetTexture(group.item.texture or "Interface\\Icons\\INV_Misc_QuestionMark"); tile.count:SetText(tostring(group.quantity))
+    tile.icon:SetTexture(group.item.texture or "Interface\\Icons\\INV_Misc_QuestionMark")
+    tile.count:SetText(group.money and tostring(math.floor(group.quantity / 10000)) or tostring(group.quantity))
     local eligible, codSource = 0, nil
     for _, source in ipairs(group.sources) do
         if not codSource and source.entry.mail.cod > 0 then codSource = source end
         for _, action in ipairs(Addon:GetInboxActions(source.entry, source.item)) do
-            if action.actionable then
+            if action.actionable and ((group.money and action.slot == "money") or (not group.money and action.slot ~= "money")) then
                 eligible = eligible + 1
             end
         end
     end
     tile:SetBackdropColor(0, 0, 0, 0)
-    local borderColor, needsItemInfo = View:AttachmentBorder(group)
+    local borderColor, needsItemInfo
+    if group.money then borderColor = { 1, 0.75, 0.15, 1 }
+    else borderColor, needsItemInfo = View:AttachmentBorder(group) end
     tile:SetBackdropBorderColor(unpack(borderColor))
-    if needsItemInfo and group.item.itemID then
+    if not group.money and needsItemInfo and group.item.itemID then
         self.pendingItemInfo = self.pendingItemInfo or {}
         if not self.pendingItemInfo[group.item.itemID]
             and Addon.Core.ItemResolver:GetInfo(group.item.itemID).state ~= "ready" then
@@ -738,6 +742,23 @@ function Native:ItemTile(group, index, columns, size)
         if not GameTooltip then return end
         GameTooltip:SetOwner(control, "ANCHOR_RIGHT")
         GameTooltip:ClearLines()
+        if group.money then
+            GameTooltip:SetText("待收金币 " .. View:Money(group.quantity))
+            local orderedSources = {}
+            for _, source in ipairs(group.sources) do orderedSources[#orderedSources + 1] = source end
+            table.sort(orderedSources, function(a, b)
+                return (tonumber(a.entry.mail.expiresAtEstimate) or math.huge) < (tonumber(b.entry.mail.expiresAtEstimate) or math.huge)
+            end)
+            for _, source in ipairs(orderedSources) do
+                local mail = source.entry.mail
+                local red, green, blue = View:ExpiryColor(mail)
+                local subject = mail.subject and mail.subject ~= "" and (" · " .. mail.subject) or ""
+                GameTooltip:AddLine(View:Escape((mail.sender or "") .. subject .. " · " .. View:Money(source.money) .. " · " .. View:Expiry(mail)), red, green, blue, false)
+            end
+            if (control.eligibleCount or eligible) > 0 then GameTooltip:AddLine("Alt+左键：只收最早到期邮件中的金币", 0.25, 0.9, 0.75, true) end
+            GameTooltip:Show()
+            return
+        end
         local itemLink = group.item.itemLink
         if itemLink and itemLink ~= "" then
             GameTooltip:SetHyperlink(itemLink)
@@ -936,33 +957,18 @@ function Native:RefreshInbox()
     panel.used, panel.top, panel.available, panel.width = 0, 0, {}, math.max(1, panel.scroll:GetWidth())
     for _, tile in ipairs(panel.tiles or {}) do tile:Hide() end
     local context = self:Context()
-    local allMails = View:GetMails(context, { sort = panel.options.sort })
+    local allMails = panel.mode == "mail" and View:GetMails(context, { sort = panel.options.sort }) or nil
+    local visibleMails
+    if panel.mode == "mail" and panel.options.search == "" and (panel.options.kind == nil or panel.options.kind == "all") then
+        visibleMails = allMails
+    else
+        visibleMails = View:GetMails(context, panel.options)
+    end
     if panel.mode == "mail" then
-        local visibleMails = panel.options.search == "" and (panel.options.kind == nil or panel.options.kind == "all")
-            and panel.options.sort == "expiry" and allMails or View:GetMails(context, panel.options)
         for _, entry in ipairs(visibleMails) do self:EntryRows(entry) end
     else
-        local groups = {}
-        if panel.options.search == "" and (panel.options.kind == nil or panel.options.kind == "all") then
-            local byIdentity = {}
-            for _, entry in ipairs(allMails) do
-                for _, item in ipairs(entry.mail.attachments) do
-                    local group = byIdentity[item.variantKey]
-                    if not group then
-                        group = { id = item.variantKey, item = item, quantity = 0, sources = {}, expiresAtEstimate = entry.mail.expiresAtEstimate }
-                        byIdentity[item.variantKey] = group; groups[#groups + 1] = group
-                    end
-                    group.quantity = group.quantity + item.quantity
-                    group.expiresAtEstimate = math.min(group.expiresAtEstimate, entry.mail.expiresAtEstimate)
-                    group.sources[#group.sources + 1] = { entry = entry, item = item }
-                end
-            end
-            if panel.options.sort ~= "inbox" then
-                table.sort(groups, function(a, b) if a.expiresAtEstimate ~= b.expiresAtEstimate then return a.expiresAtEstimate < b.expiresAtEstimate end; return a.id < b.id end)
-            end
-        else
-            groups = View:GetGroups(context, panel.options)
-        end
+        local groups = View.GetGroupsFromEntries and View:GetGroupsFromEntries(visibleMails, panel.options)
+            or View:GetGroups(context, panel.options)
         -- Reserve the possible gutter before wrapping so overflow cannot clip
         -- the last tile when Core resolves the scrollbar on the next frame.
         local gridWidth = math.max(1, math.min(panel.width, panel:GetWidth() - 16 - Addon.Core.UITheme.Geometry.scrollbarGutter))
@@ -976,7 +982,7 @@ function Native:RefreshInbox()
     panel.content:SetSize(panel.width, math.max(1, panel.top)); panel.scroll:SetContentHeight(panel.top)
     local selected = 0; for _ in pairs(panel.selection) do selected = selected + 1 end
     local selectedAttachments, counted = 0, {}
-    for _, entry in ipairs(allMails) do
+    for _, entry in ipairs(allMails or {}) do
         for _, item in ipairs(entry.mail.attachments) do
             local id = View:ActionID(entry.character.id, entry.key, item.attachmentIndex)
             if panel.selection[id] and not counted[id] then counted[id] = true; selectedAttachments = selectedAttachments + 1 end
@@ -986,7 +992,7 @@ function Native:RefreshInbox()
     local progress = Addon.Queue.state == "running" or Addon.Queue.state == "paused"
     local selectable, selectedSelectable = 0, 0
     if panel.mode == "mail" then
-        for _, entry in ipairs(View:GetMails(context, panel.options)) do
+        for _, entry in ipairs(visibleMails) do
             for _, action in ipairs(Addon:GetInboxActions(entry)) do
                 if action.actionable and Addon:SelectByDefault(action) then
                     selectable = selectable + 1
@@ -1811,7 +1817,7 @@ function Native:OnCollected(id, action)
     if not panel then return end
     panel.selection[id] = nil
     if panel.keepTilesDuringQueue and panel.mode == "mail" then self:RefreshCollectedMailRow(action); return end
-    if not panel.keepTilesDuringQueue or not action or action.slot == "money" or not action.item then return end
+    if not panel.keepTilesDuringQueue or not action then return end
     for _, tile in ipairs(panel.tiles or {}) do
         local group, collected
         group = tile.mailGroup
@@ -1820,9 +1826,12 @@ function Native:OnCollected(id, action)
                 local source = group.sources[index]
                 local sameMail = source.entry.character.id == action.characterID
                     and (source.entry.key == action.mailKey or source.entry.mail.signature == action.signature)
-                if sameMail and source.item.attachmentIndex == action.slot
+                local sameItem = action.slot ~= "money" and source.item and action.item
+                    and source.item.attachmentIndex == action.slot
                     and source.item.variantKey == action.item.variantKey
-                    and source.item.quantity == action.item.quantity then
+                    and source.item.quantity == action.item.quantity
+                local sameMoney = action.slot == "money" and source.money == action.original.money
+                if sameMail and (sameItem or sameMoney) then
                     collected = source
                     table.remove(group.sources, index)
                     break
@@ -1830,9 +1839,9 @@ function Native:OnCollected(id, action)
             end
         end
         if collected then
-            group.quantity = math.max(0, group.quantity - (tonumber(collected.item.quantity) or 0))
+            group.quantity = math.max(0, group.quantity - (tonumber(collected.money or collected.item and collected.item.quantity) or 0))
             tile.eligibleCount = math.max(0, (tile.eligibleCount or 1) - 1)
-            tile.count:SetText(tostring(group.quantity))
+            tile.count:SetText(group.money and tostring(math.floor(group.quantity / 10000)) or tostring(group.quantity))
             -- Re-run the existing tooltip builder against the updated aggregate
             -- while keeping the same owner and tile mounted under the cursor.
             if GameTooltip and GameTooltip.GetOwner and GameTooltip:GetOwner() == tile then

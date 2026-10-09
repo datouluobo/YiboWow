@@ -155,7 +155,7 @@ function Queue:Next()
 end
 function Queue:OnScan(mails)
     local pending = self.pending
-    if not pending or pending.interference or not pending.success or not pending.updated then return end
+    if not pending or pending.interference or not pending.success or not pending.updated then return false end
     local fingerprint = Fingerprint(mails)
     if fingerprint ~= pending.expectedFingerprint and fingerprint ~= pending.removedFingerprint then
         pending.mismatchScans = (pending.mismatchScans or 0) + 1
@@ -165,9 +165,9 @@ function Queue:OnScan(mails)
             C_Timer.After(0.3, function()
                 if Queue.pending == pending and Queue.state == "running" then Addon.Scanner:Schedule() end
             end)
-            return
+            return false
         end
-        self:Pause("操作后邮箱内容不符，请等待更新并检查结果。"); return
+        self:Pause("操作后邮箱内容不符，请等待更新并检查结果。"); return true
     end
     self.verifiedMails = mails
     local targetRemoved = pending.removedFingerprint ~= nil and fingerprint == pending.removedFingerprint
@@ -213,7 +213,8 @@ function Queue:OnScan(mails)
     if self.onSuccess then self.onSuccess(action.id) end
     if Addon.NativeUI then Addon.NativeUI:OnCollected(action.id, action) end
     self:Notify()
-    if self.state == "running" then C_Timer.After(0.1, function() Queue:Next() end) end
+    if self.state == "running" then C_Timer.After(0, function() Queue:Next() end) end
+    return true
 end
 function Queue:OnEvent(event, ...)
     if event == "MAIL_CLOSED" then
