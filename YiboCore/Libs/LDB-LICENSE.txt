@@ -1,0 +1,9 @@
+LibDataBroker-1.1, upstream tekkub, minor 4.
+Source: https://github.com/tekkub/libdatabroker-1-1
+Embedding permission: https://www.wowace.com/projects/libdatabroker-1-1
+The upstream project instructs addon authors: "you should hard-embed LDB in your addon".
+The project page identifies tekkub as owner and lists All Rights Reserved.
+The pinned source repository has no separate LICENSE file. This notice records
+the published addon-embedding permission; it does not relicense upstream code.
+Distributed unmodified as an embedded component of YiboCore, not standalone.
+Source revision is recorded in UPSTREAM.md.

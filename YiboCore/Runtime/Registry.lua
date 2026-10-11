@@ -22,14 +22,14 @@ end
 
 function Registry:Register(name, metadata)
     if type(name) ~= "string" or name == "" then
-        return nil, "插件名称不能为空。"
+        return nil, Core:Text("CORE.ADDON_NAME_CANNOT_BE_EMPTY")
     end
 
     metadata = CopyMetadata(metadata)
     local requiredAPI = tonumber(metadata.requiredAPI) or 1
     local compatible, availableAPI = Core:CheckAPIVersion(requiredAPI)
     if not compatible then
-        return nil, "需要 API " .. requiredAPI .. "，当前版本为 " .. availableAPI .. "。"
+        return nil, Core:Text("CORE.REQUIRES_API") .. requiredAPI .. Core:Text("CORE.AVAILABLE_VERSION_IS") .. availableAPI .. Core:Text("FORMAT.PERIOD")
     end
 
     local entry = self._addons[name] or {}
@@ -59,19 +59,19 @@ end
 
 function Registry:ClaimResource(kind, id, owner, metadata)
     if type(kind) ~= "string" or kind == "" or type(id) ~= "string" or id == "" then
-        return nil, "资源类型和标识符不能为空。"
+        return nil, Core:Text("CORE.RESOURCE_TYPE_AND_IDENTIFIER_CANNOT_BE_EMPTY")
     end
     if RESERVED_RESOURCE_IDS[id] then
-        return nil, "标识符为 Core 保留名称: " .. id
+        return nil, Core:Text("CORE.IDENTIFIER_IS_RESERVED_BY_CORE") .. id
     end
     if type(owner) ~= "string" or owner == "" then
-        return nil, "资源必须声明所属插件。"
+        return nil, Core:Text("CORE.RESOURCES_MUST_DECLARE_THEIR_ADDON_OWNER")
     end
     self._resources[kind] = self._resources[kind] or {}
     local current = self._resources[kind][id]
     if current then
         if current.owner == owner then return current end
-        return nil, string.format("%s ID 已被插件 %s 占用: %s", kind, current.owner, id)
+        return nil, string.format(Core:Text("CORE.S_ID_IS_ALREADY_OWNED_BY_ADDON"), kind, current.owner, id)
     end
     local resource = { kind = kind, id = id, owner = owner, metadata = CopyMetadata(metadata) }
     self._resources[kind][id] = resource
@@ -82,7 +82,7 @@ function Registry:ReleaseResource(kind, id, owner)
     local resources = self._resources[kind]
     local current = resources and resources[id]
     if not current then return false end
-    if owner and current.owner ~= owner then return false, "资源不属于此插件。" end
+    if owner and current.owner ~= owner then return false, Core:Text("CORE.RESOURCE_DOES_NOT_BELONG_TO_THIS_ADDON") end
     resources[id] = nil
     return true
 end

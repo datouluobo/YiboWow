@@ -14,17 +14,19 @@ local SORT_LABELS = Helpers.SORT_LABELS
 local ArchiveSettings = Helpers.ArchiveSettings
 local ArchiveFieldVisible = Helpers.ArchiveFieldVisible
 local GetPreviewFieldVisible = Helpers.GetPreviewFieldVisible
-local PROFILE_FILTER_LABELS = { all = "全部角色", profiled = "仅有档案", missing = "仅缺少档案" }
+local PROFILE_FILTER_LABELS = Core.Locale:Bind(function() return { all = Core:Text("CORE.ALL_CHARACTERS"), profiled = Core:Text("CORE.WITH_PROFILES"), missing = Core:Text("CORE.WITHOUT_PROFILES") } end)
 local function CreateSettings(parent)
     parent.heading = AddText(parent, "GameFontNormalLarge", nil, COLORS.text); parent.heading:SetPoint("TOPLEFT", 20, -18)
     parent.hint = AddText(parent, "GameFontNormalSmall", nil, COLORS.muted); parent.hint:SetPoint("TOPLEFT", 20, -47)
-    parent.resetLayout = CreateChromeButton(parent, 116, 22, "重置窗口布局")
+    parent.resetLayout = CreateChromeButton(parent, 116, 22, Core:Text("CORE.RESET_LAYOUT"))
     parent.resetLayout:SetPoint("TOPRIGHT", -20, -18)
     parent.resetLayout:SetScript("OnClick", function() AccountView:ResetWindowLayout() end)
     parent.scroll = Theme:CreateScrollFrame(parent)
     parent.scroll:SetPoint("TOPLEFT", 20, -76); parent.scroll:SetPoint("BOTTOMRIGHT", -Theme.Space.xs, 14)
     parent.content = CreateFrame("Frame", nil, parent.scroll); parent.content:SetWidth(620); parent.scroll:SetScrollChild(parent.content)
     parent.rows = {}
+    parent.displayTabs = {}
+
 end
 
 local function SettingsRow(parent, index, kind)
@@ -42,14 +44,22 @@ local function SettingsRow(parent, index, kind)
             row:SetSize(600, 24)
             row.label = AddText(row, "GameFontNormalSmall", nil, COLORS.text)
             row.label:SetPoint("LEFT", 2, 0); row.label:SetPoint("RIGHT", -258, 0)
-            row.up = CreateChromeButton(row, 44, 22, "上移")
+            row.up = CreateChromeButton(row, 44, 22, Core:Text("CORE.UP"))
             row.up:SetPoint("RIGHT", -206, 0)
-            row.down = CreateChromeButton(row, 44, 22, "下移")
+            row.down = CreateChromeButton(row, 44, 22, Core:Text("CORE.DOWN"))
             row.down:SetPoint("RIGHT", -158, 0)
-            row.hidden = CreateChromeButton(row, 58, 22, "隐藏", false)
+            row.hidden = CreateChromeButton(row, 58, 22, Core:Text("CORE.HIDE"), false)
             row.hidden:SetPoint("RIGHT", -96, 0)
-            row.delete = CreateChromeButton(row, 88, 22, "删除缓存", true)
+            row.delete = CreateChromeButton(row, 88, 22, Core:Text("CORE.DELETE_CACHE"), true)
             row.delete:SetPoint("RIGHT", -2, 0)
+            row.delete:SetWidth(math.max(row.delete:GetWidth(), Theme:MeasureText(Theme.Font.body, Core:Text("CORE.CURRENT_CHARACTER")) + 18))
+            row.hidden:SetWidth(math.max(row.hidden:GetWidth(), Theme:MeasureText(Theme.Font.body, Core:Text("CORE.VISIBLE")) + 18))
+            local offset = 2
+            for _, button in ipairs({ row.delete, row.hidden, row.down, row.up }) do
+                button:ClearAllPoints(); button:SetPoint("RIGHT", -offset, 0)
+                offset = offset + button:GetWidth() + 4
+            end
+            row.label:ClearAllPoints(); row.label:SetPoint("LEFT", 2, 0); row.label:SetPoint("RIGHT", -offset, 0)
         elseif kind == "addon-panel" then
             row = CreateFrame("Frame", nil, parent.content)
             row:SetWidth(600)
@@ -58,8 +68,8 @@ local function SettingsRow(parent, index, kind)
             row:SetHeight(Theme.Size.standard)
             row.label = AddText(row, "GameFontNormalSmall", nil, COLORS.muted)
             row.label:SetPoint("LEFT", 0, 0)
-            row.input = CreateFrame("EditBox", nil, row, "InputBoxTemplate")
-            row.input:SetHeight(20); row.input:SetAutoFocus(false); row.input:SetMaxLetters(64)
+            row.input = Theme:CreateInput(row,{width=120,maxLetters=64})
+            row.input:SetHeight(Theme.Size.standard)
             row.input:SetTextInsets(7, 7, 0, 0)
         elseif kind == "dropdown" then
             row = CreateFrame("Frame", nil, parent.content)
@@ -68,15 +78,17 @@ local function SettingsRow(parent, index, kind)
             row.label:SetPoint("LEFT", 0, 0); row.label:SetWidth(104)
             row.dropdown = Theme:CreateDropdown(row, 180, {})
             row.dropdown:SetPoint("LEFT", row.label, "RIGHT", 8, 0)
+        elseif kind == "order-actions" then
+            row=CreateFrame("Frame",nil,parent.content);row:SetHeight(Theme.Size.standard)
         elseif kind == "business-entry" then
             -- All page, entry, and column decisions stay adjacent to their
             -- plugin instead of sending users to a separate field section.
             row = CreateFrame("Frame", nil, parent.content)
             row:SetHeight(Theme.Size.standard)
             row.title = AddText(row, "GameFontNormalSmall", nil, COLORS.text)
-            row.visible = Theme:CreateCheckbox(row, "账号页显示")
+            row.visible = Theme:CreateCheckbox(row, Core:Text("CORE.SHOW_PAGE"))
             row.entryLabel = AddText(row, "GameFontNormalSmall", nil, COLORS.muted)
-            row.entryLabel:SetText("独立入口")
+            row.entryLabel:SetText(Core:Text("CORE.SEPARATE_ENTRY"))
             row.dropdown = Theme:CreateDropdown(row, 126, {})
             row.mainFields = Theme:CreateMultiSelectDropdown(row, 118, {})
             row.previewFields = Theme:CreateMultiSelectDropdown(row, 118, {})
@@ -85,9 +97,9 @@ local function SettingsRow(parent, index, kind)
             row = CreateFrame("Frame", nil, parent.content)
             row:SetHeight(Theme.Size.standard)
             row.title = AddText(row, "GameFontNormalSmall", nil, COLORS.text)
-            row.visible = Theme:CreateCheckbox(row, "窗口悬停")
+            row.visible = Theme:CreateCheckbox(row, Core:Text("CORE.WINDOW_HOVER"))
             row.entryLabel = AddText(row, "GameFontNormalSmall", nil, COLORS.muted)
-            row.entryLabel:SetText("Core 入口")
+            row.entryLabel:SetText(Core:Text("CORE.CORE_ENTRY"))
             row.dropdown = Theme:CreateDropdown(row, 110, {})
             row.previewLabel = AddText(row, "GameFontNormalSmall", nil, COLORS.muted)
             row.preview = Theme:CreateDropdown(row, 120, {})
@@ -100,22 +112,14 @@ local function SettingsRow(parent, index, kind)
             row.title = AddText(row, "GameFontNormalSmall", nil, COLORS.text)
             row.mainFields = Theme:CreateMultiSelectDropdown(row, 118, {})
             row.previewFields = Theme:CreateMultiSelectDropdown(row, 118, {})
-        elseif kind == "business-header" then
-            row = CreateFrame("Frame", nil, parent.content)
-            row:SetHeight(20)
-            row.labels = {}
-            for labelIndex = 1, 7 do
-                row.labels[labelIndex] = AddText(row, "GameFontNormalSmall", nil, COLORS.muted)
-                row.labels[labelIndex]:SetJustifyH(labelIndex >= 6 and "CENTER" or "LEFT")
-            end
         elseif kind == "short-name" then
             row = CreateFrame("Frame", nil, parent.content)
             row:SetHeight(28)
             row.label = AddText(row, "GameFontNormalSmall", nil, COLORS.text)
             row.label:SetPoint("LEFT", 2, 0); row.label:SetPoint("RIGHT", -198, 0)
-            row.input = CreateFrame("EditBox", nil, row, "InputBoxTemplate")
-            row.input:SetSize(112, 20); row.input:SetPoint("RIGHT", -80, 0); row.input:SetAutoFocus(false); row.input:SetMaxLetters(32); row.input:SetTextInsets(6, 6, 0, 0)
-            row.clear = CreateChromeButton(row, 70, 20, "清除", false); row.clear:SetPoint("RIGHT", -2, 0)
+            row.input = Theme:CreateInput(row,{width=112,height=26,maxLetters=32})
+            row.input:SetSize(112, 26); row.input:SetPoint("RIGHT", -80, 0); row.input:SetAutoFocus(false); row.input:SetMaxLetters(32); row.input:SetTextInsets(6, 6, 0, 0)
+            row.clear = CreateChromeButton(row, 70, 20, Core:Text("CORE.CLEAR"), false); row.clear:SetPoint("RIGHT", -2, 0)
         else
             row = CreateChromeButton(parent.content, 250, 22, "")
         end
@@ -158,24 +162,30 @@ local function RefreshSettings(parent)
     -- instead of leaving a narrow legacy panel stranded on the left.
     local settingsViewportWidth = parent.scroll:GetWidth() or 0
     if settingsViewportWidth <= 100 then settingsViewportWidth = (parent:GetWidth() or 658) - 38 end
-    parent.content:SetWidth(math.max(600, settingsViewportWidth - 18))
+    parent.content:SetWidth(math.max(300, settingsViewportWidth - 18))
     local targetID = AccountView.settingsTargetPageID or "display"
     local settingsOnlyID = type(targetID) == "string" and targetID:match("^addon%-settings:(.+)$")
     local selected = AccountView._pages[targetID]
     local settingsOnly = settingsOnlyID and Core.SettingsRegistry and Core.SettingsRegistry._panels[settingsOnlyID]
     local displayMode, sortingMode, coreMode = targetID == "display", targetID == "sorting", targetID == "core"
-    if not (displayMode or sortingMode or coreMode or settingsOnly or (selected and not selected.internal)) then
+    local generalMode, barMode = targetID == "general", targetID == "bar"
+    if not (displayMode or generalMode or barMode or sortingMode or coreMode or settingsOnly or (selected and not selected.internal)) then
         targetID, displayMode = "display", true
         AccountView.settingsTargetPageID = targetID
     end
-    local titles = { display = "显示与入口", sorting = "角色与排序", core = "窗口" }
-    parent.heading:SetText(titles[targetID] or ((selected and selected.title) or (settingsOnly and settingsOnly.title) or "插件") .. "业务设置")
-    parent.hint:SetText(displayMode and "集中管理 Core 与插件页面、独立入口及显示字段。" or (sortingMode and "统一设置角色、排序、缓存和业务页面的角色过滤。" or (coreMode and "管理窗口布局、添加目标的操作方式与已加入标记。" or "这里只保留该插件自身的业务规则与数据管理。")))
+    local titles = { bar = Core:Text("ENTRY.TAB_BAR"), general = Core:Text("CORE.CORE_SETTINGS"), display = Core:Text("CORE.DISPLAY_ENTRIES_385"), sorting = Core:Text("CORE.CHARACTERS_SORTING_386"), core = Core:Text("CORE.WINDOW_387") }
+    parent.heading:SetText(titles[targetID] or ((selected and selected.title) or (settingsOnly and settingsOnly.title) or Core:Text("CORE.ADDON_388")) .. Core:Text("CORE.SETTINGS_389"))
+    parent.hint:SetText(barMode and Core:Text("ENTRY.BAR_PAGE_HINT") or generalMode and Core:Text("ENTRY.GENERAL_HINT") or displayMode and Core:Text("CORE.MANAGE_CORE_AND_ADDON_PAGES_SEPARATE_ENTRIES") or (sortingMode and Core:Text("CORE.MANAGE_CHARACTERS_SORTING_CACHES_AND_BUSINESS_PAGE") or (coreMode and Core:Text("CORE.MANAGE_WINDOW_LAYOUT_TARGET_ADD_GESTURES_AND") or Core:Text("CORE.ONLY_THIS_ADDON_S_BUSINESS_RULES_AND"))))
     parent.resetLayout:SetShown(coreMode)
+    local showHint=not (generalMode or coreMode or sortingMode or displayMode or barMode)
+    parent.hint:SetShown(showHint)
+    parent.hint:SetPoint("TOPRIGHT", -20, -47);parent.hint:SetWordWrap(true)
+    parent.scroll:SetPoint("TOPLEFT",20,showHint and -math.max(76,57+parent.hint:GetStringHeight()) or -56)
 
     local index, y, gridColumn = 0, 0, 0
     local gridGap, gridMinimum = 16, 230
     local gridColumns = math.max(1, math.floor((parent.content:GetWidth() + gridGap) / (gridMinimum + gridGap)))
+    local compactForm = displayMode or generalMode or barMode or sortingMode
     local gridWidth = math.floor((parent.content:GetWidth() - gridGap * (gridColumns - 1)) / gridColumns)
     local function PlaceGridControl(row)
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", 2 + gridColumn * (gridWidth + gridGap), -y); row:SetWidth(gridWidth)
@@ -194,34 +204,65 @@ local function RefreshSettings(parent)
         gridColumns = math.max(1, math.floor((parent.content:GetWidth() + gridGap) / (gridMinimum + gridGap)))
         if maximumColumns then gridColumns = math.min(gridColumns, maximumColumns) end
         gridWidth = math.floor((parent.content:GetWidth() - gridGap * (gridColumns - 1)) / gridColumns)
+        if compactForm then gridWidth=math.min(gridWidth,380) end
+    end
+    local function PlaceFormControl(row, minimumWidth)
+        if minimumWidth > gridWidth and gridColumns > 1 then
+            FinishGridRow()
+            local width = parent.content:GetWidth() - 4
+            row:ClearAllPoints(); row:SetPoint("TOPLEFT", 2, -y); row:SetWidth(width)
+            y = y + Theme.Size.standard + 4
+            return width
+        end
+        PlaceGridControl(row)
+        return gridWidth
     end
     local function Heading(text)
         FinishGridRow()
-        index = index + 1; local row = SettingsRow(parent, index, "heading"); PlaceSettingsRow(row, y); row:SetText(text); row:SetTextColor(COLORS.accent[1], COLORS.accent[2], COLORS.accent[3]); row:Show(); y = y + 28
+        index = index + 1; local row = SettingsRow(parent, index, "heading"); PlaceSettingsRow(row, y)
+        row:SetWidth(math.max(1, parent.content:GetWidth() - 4)); row:SetWordWrap(true)
+        row:SetText(text); row:SetTextColor(COLORS.accent[1], COLORS.accent[2], COLORS.accent[3]); row:Show()
+        y = y + math.max(28, row:GetStringHeight() + 10)
+    end
+    local function Note(text)
+        FinishGridRow()
+        index=index+1
+        local row=SettingsRow(parent,index,"heading");PlaceSettingsRow(row,y)
+        row:SetWidth(parent.content:GetWidth()-4);row:SetWordWrap(true)
+        row:SetText(text);row:SetTextColor(COLORS.muted[1],COLORS.muted[2],COLORS.muted[3]);row:Show()
+        y=y+math.max(24,row:GetStringHeight()+8)
     end
     local function Check(label, checked, callback)
         index = index + 1; local row = SettingsRow(parent, index, "check")
-        PlaceGridControl(row); row.label:SetWidth(math.max(40, gridWidth - 24))
+        row:SetEnabled(true);row:SetAlpha(1)
+        local width = PlaceFormControl(row, sortingMode and 260 or Theme:MeasureText(Theme.Font.body,label)+28)
+        row.label:SetWidth(math.max(40, width - 24)); row.label:SetWordWrap(true)
         row.label:SetText(label); row:SetChecked(checked); row:SetScript("OnClick", function(self) self:SetChecked(not self:GetChecked()); callback(self:GetChecked()); AccountView:RefreshPage() end); row:Show()
+        local height = math.max(Theme.Size.standard, row.label:GetStringHeight() + 8)
+        row:SetHeight(height); y = y + height - Theme.Size.standard
+        return row
     end
     local function Button(label, callback, width, kind, selected)
         index = index + 1; local row = SettingsRow(parent, index, "button")
-        PlaceGridControl(row)
+        row:SetEnabled(true);row:SetAlpha(1)
+        local available=PlaceFormControl(row, Theme:MeasureText(Theme.Font.body, label) + 24)
+        if compactForm then row:SetWidth(math.min(available,math.max(100,Theme:MeasureText(Theme.Font.body,label)+24)));row:SetHeight(Theme.Size.standard) end
         row.kind = kind or "default"; row:SetText(label); row:SetState(selected and "selected" or "default"); row:SetScript("OnClick", callback); row:Show()
         return row
     end
     local function Input(label, value, callback, inputWidth)
         index = index + 1; local row = SettingsRow(parent, index, "input")
-        PlaceGridControl(row)
-        row.label:SetText(label); row.label:SetWidth(math.min(84, math.floor(gridWidth * 0.36)))
+        local labelWidth = Theme:MeasureText(Theme.Font.assist, label)
+        local width = PlaceFormControl(row, labelWidth + (inputWidth or 120) + 8)
+        row.label:SetText(label); row.label:SetWidth(math.min(labelWidth, math.floor(width * 0.5)))
         row.input:ClearAllPoints(); row.input:SetPoint("LEFT", row.label, "RIGHT", 6, 0)
-        if inputWidth then row.input:SetWidth(inputWidth) else row.input:SetPoint("RIGHT", 0, 0) end
+        if inputWidth or compactForm then row.input:SetWidth(inputWidth or 120) else row.input:SetPoint("RIGHT", 0, 0) end
         row.input:SetText(value or "")
         local function Save(control)
             local valid, normalized, badToken = Core.LevelFilter:Validate(control:GetText())
             if not valid then
                 control:SetText(value or "")
-                Core:Print("等级过滤格式无效：" .. tostring(badToken))
+                Core:Print(Core:Text("CORE.INVALID_LEVEL_FILTER") .. tostring(badToken))
                 return
             end
             callback(normalized)
@@ -229,49 +270,52 @@ local function RefreshSettings(parent)
             AccountView:RefreshPage()
         end
         row.input:SetScript("OnEnterPressed", function(control) Save(control); control:ClearFocus() end)
-        row.input:SetScript("OnEditFocusLost", Save)
+        row.input:SetScript("OnEditFocusLost",function(control) control:SetBackdropBorderColor(unpack(COLORS.lineSoft));Save(control) end)
         row.input:SetScript("OnEscapePressed", function(control) control:SetText(value or ""); control:ClearFocus() end)
         row:Show()
         return row
     end
     local function CharacterFilterInput(page, filter)
-        -- Role filters are a compact, repeated form.  Give the page name a
-        -- fixed no-wrap lane and align every editor farther right, rather than
-        -- letting a narrow grid split “等级” onto a second line.
-        FinishGridRow()
-        index = index + 1
-        local row = SettingsRow(parent, index, "input")
-        row:ClearAllPoints(); row:SetPoint("TOPLEFT", 2, -y); row:SetWidth(parent.content:GetWidth() or 600)
-        row.label:ClearAllPoints(); row.label:SetPoint("LEFT", 0, 0); row.label:SetWidth(184); row.label:SetWordWrap(false)
-        row.label:SetText(page.title .. " · 等级")
-        row.input:ClearAllPoints(); row.input:SetPoint("LEFT", row.label, "RIGHT", 18, 0); row.input:SetWidth(150)
+        index=index+1
+        local row=SettingsRow(parent,index,"input")
+        local available=PlaceFormControl(row,260)
+        row.label:ClearAllPoints();row.label:SetPoint("LEFT",0,0);row.label:SetWidth(math.max(100,available-138));row.label:SetWordWrap(false)
+        row.label:SetText(page.title)
+        row.input:ClearAllPoints();row.input:SetPoint("RIGHT",0,0);row.input:SetWidth(120)
         row.input:SetText(filter.GetExpression() or "")
         local function Save(control)
             local valid, normalized, badToken = Core.LevelFilter:Validate(control:GetText())
             if not valid then
                 control:SetText(filter.GetExpression() or "")
-                Core:Print(page.title .. "等级过滤格式无效：" .. tostring(badToken))
+                Core:Print(page.title .. Core:Text("CORE.INVALID_LEVEL_FILTER") .. tostring(badToken))
                 return
             end
             local ok, errorMessage = filter.SetExpression(normalized)
             if ok == false then
                 control:SetText(filter.GetExpression() or "")
-                Core:Print(page.title .. "等级过滤保存失败：" .. tostring(errorMessage))
+                Core:Print(page.title .. Core:Text("CORE.COULD_NOT_SAVE_LEVEL_FILTER") .. tostring(errorMessage))
                 return
             end
             control:SetText(normalized)
             AccountView:RefreshPage()
         end
         row.input:SetScript("OnEnterPressed", function(control) Save(control); control:ClearFocus() end)
-        row.input:SetScript("OnEditFocusLost", Save)
+        row.input:SetScript("OnEditFocusLost",function(control) control:SetBackdropBorderColor(unpack(COLORS.lineSoft));Save(control) end)
         row.input:SetScript("OnEscapePressed", function(control) control:SetText(filter.GetExpression() or ""); control:ClearFocus() end)
-        row:Show(); y = y + Theme.Size.standard + 4
+        row:Show()
     end
     local function Dropdown(label, value, options, callback)
         index = index + 1; local row = SettingsRow(parent, index, "dropdown")
-        PlaceGridControl(row)
-        row.label:SetText(label); row.label:SetWidth(math.min(120, math.floor(gridWidth * 0.38)))
-        row.dropdown:ClearAllPoints(); row.dropdown:SetPoint("LEFT", row.label, "RIGHT", 8, 0); row.dropdown:SetPoint("RIGHT", 0, 0)
+        row:SetAlpha(1);row.dropdown:SetEnabled(true)
+        local labelWidth, optionWidth = Theme:MeasureText(Theme.Font.assist, label), 0
+        for _, option in ipairs(options) do optionWidth = math.max(optionWidth, Theme:MeasureText(Theme.Font.body, option.label or "")) end
+        local width = PlaceFormControl(row, compactForm and label~=Core:Text("ENTRY.ORDER_BUTTON") and 260 or labelWidth + optionWidth + 40)
+        row.label:SetText(label)
+        row.label:SetWidth(compactForm and math.max(104,math.min(140,width-160)) or math.min(labelWidth,math.floor(width*0.5)))
+        row.dropdown:ClearAllPoints();row.dropdown:SetPoint("LEFT",row.label,"RIGHT",8,0)
+        if compactForm then
+            row.dropdown:SetWidth(math.min(width-row.label:GetWidth()-8,math.max(140,optionWidth+32)));row.dropdown:SetHeight(Theme.Size.standard)
+        else row.dropdown:SetPoint("RIGHT",0,0) end
         row.dropdown:SetOptions(options); row.dropdown:SetValue(value)
         row.dropdown:SetOnValueChanged(function(nextValue)
             callback(nextValue)
@@ -284,18 +328,44 @@ local function RefreshSettings(parent)
     -- aligned even when a particular page has no entry, layout mode, or
     -- hover fields. Widths deliberately favor the selected-value text over
     -- empty whitespace between controls.
-    local DISPLAY_COLUMNS = {
-        page = { x = 2, width = 90 },
-        visible = { x = 100, width = 100 },
-        entryLabel = { x = 208, width = 70 },
-        entryMode = { x = 282, width = 116 },
-        option = { x = 406, width = 108 },
-        mainFields = { x = 522, width = 126 },
-        previewFields = { x = 656, width = 126 },
-    }
+    local width = parent.content:GetWidth() or 600
+    local available=width-48
+    local widths={math.floor(available*0.16),math.floor(available*0.06),math.floor(available*0.08),math.floor(available*0.10),math.floor(available*0.08),math.floor(available*0.17),math.floor(available*0.17)}
+    local x=2
+    local columns={}
+    for i,w in ipairs(widths) do columns[i]={x=x,width=w,y=0};x=x+w+6 end
+    columns[8]={x=x,width=math.max(60,width-x-4),y=0}
+    local DISPLAY_COLUMNS={page=columns[1],visible=columns[2],entryLabel=columns[3],entryMode=columns[4],mainFields=columns[6],previewFields=columns[7],option=columns[8]}
+    local channelStart=columns[3].x
+    local displayRowHeight=30
+    local function EntryChannels(row, id)
+        if row.entryLabel then row.entryLabel:Hide() end
+        if row.dropdown then row.dropdown:Hide() end
+        row.channels = row.channels or {}
+        local saved = Core.Entry:GetEntryChannels(id)
+        local enabled = Core.Entry:GetBuiltinBarSettings().enabled
+        local keys = {"minimap","broker","builtinBar"}
+        local labels = {minimap="ENTRY.CHANNEL_MINIMAP",broker="ENTRY.CHANNEL_BROKER",builtinBar="ENTRY.CHANNEL_BUILTINBAR"}
+        for i,key in ipairs(keys) do
+            local control = row.channels[i]
+            if not control then control = Theme:CreateCheckbox(row,""); row.channels[i]=control end
+            local column=columns[i+2]
+            control:ClearAllPoints();control:SetPoint("TOPLEFT",column.x,0);control:SetWidth(column.width)
+            control.label:SetText("");control.label:Hide()
+            control:SetHeight(Theme.Size.standard)
+            control:SetChecked(saved[key]);control:SetEnabled(key ~= "builtinBar" or enabled)
+            control:SetAlpha((key ~= "builtinBar" or enabled) and 1 or 0.65)
+            control:SetScript("OnClick",function()
+                if key == "builtinBar" and not Core.Entry:GetBuiltinBarSettings().enabled then return end
+                Core.Entry:SetEntryChannel(id,key,not Core.Entry:GetEntryChannels(id)[key])
+                AccountView:RefreshPage()
+            end)
+            control:Show()
+        end
+    end
     local function PlaceDisplayColumn(control, columnID)
         local column = DISPLAY_COLUMNS[columnID]
-        control:ClearAllPoints(); control:SetPoint("LEFT", column.x, 0); control:SetWidth(column.width)
+        control:ClearAllPoints(); control:SetPoint("TOPLEFT", column.x, -(column.y or 0)); control:SetWidth(column.width)
     end
     local function BusinessEntryRow(page, entry, options)
         -- This is a form row, not a grid item.  Keeping its anchors local to
@@ -305,32 +375,22 @@ local function RefreshSettings(parent)
         index = index + 1
         local row = SettingsRow(parent, index, "business-entry")
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", 2, -y); row:SetWidth(parent.content:GetWidth() or 600); row:SetHeight(Theme.Size.standard)
-        PlaceDisplayColumn(row.title, "page"); row.title:SetText(page.title)
+        PlaceDisplayColumn(row.title, "page"); row.title:SetText(page.title);row.title:SetHeight(Theme.Size.standard)
         PlaceDisplayColumn(row.visible, "visible")
-        row.visible.label:SetWidth(76); row.visible.label:SetText("账号页显示")
-        row.visible:SetChecked(PageEnabled(page))
+        row.visible.label:SetText("");row.visible.label:Hide()
+        row.visible:Show();row.visible:SetHeight(Theme.Size.standard)
+        row.visible:SetChecked(not page.settingsOnly and PageEnabled(page))
         row.visible:SetScript("OnClick", function(control)
             control:SetChecked(not control:GetChecked())
             settings.pages[page.id] = control:GetChecked()
+            Core.Entry:Refresh()
             AccountView:RefreshPage()
         end)
-        PlaceDisplayColumn(row.entryLabel, "entryLabel"); row.entryLabel:SetWordWrap(false)
-        PlaceDisplayColumn(row.dropdown, "entryMode")
-        if entry then
-            row.entryLabel:SetText("独立入口")
-            row.entryLabel:SetTextColor(COLORS.muted[1], COLORS.muted[2], COLORS.muted[3])
-            row.dropdown:SetOptions(options)
-            row.dropdown:SetValue(Core.Entry:GetBusinessEntryMode(entry.id))
-            row.dropdown:SetOnValueChanged(function(mode)
-                settings.entry.pageModes[entry.id] = mode
-                Core.Entry:Refresh()
-                AccountView:RefreshPage()
-            end)
-            row.dropdown:Show()
+        if page.settingsOnly then row.visible:Hide() end
+        if entry then EntryChannels(row, entry.id)
         else
-            row.entryLabel:SetText("无独立入口")
-            row.entryLabel:SetTextColor(COLORS.muted[1], COLORS.muted[2], COLORS.muted[3])
-            row.dropdown:Hide()
+            row.dropdown:Hide();row.entryLabel:ClearAllPoints();row.entryLabel:SetPoint("TOPLEFT",page.settingsOnly and DISPLAY_COLUMNS.visible.x or channelStart,0);row.entryLabel:SetWidth(page.settingsOnly and width-DISPLAY_COLUMNS.visible.x-4 or columns[6].x-channelStart-6);row.entryLabel:SetHeight(30);row.entryLabel:SetText(Core:Text(page.settingsOnly and "ENTRY.SETTINGS_ONLY" or "ENTRY.NO_SEPARATE_ENTRY"));row.entryLabel:Show()
+            for _,control in ipairs(row.channels or {}) do control:Hide() end
         end
         local hasMainFields = #page.fields > 0
         PlaceDisplayColumn(row.viewMode, "option")
@@ -364,10 +424,10 @@ local function RefreshSettings(parent)
                     }
                 end
             end
-            row.mainFields:SetSummary("主表")
+            row.mainFields:SetSummary("")
             row.mainFields:SetOptions(mainOptions); row.mainFields:Show()
             if #previewOptions > 0 then
-                row.previewFields:SetSummary("悬停")
+                row.previewFields:SetSummary("")
                 row.previewFields:SetOptions(previewOptions); row.previewFields:Show()
             else
                 row.previewFields:Hide()
@@ -387,26 +447,10 @@ local function RefreshSettings(parent)
             row.viewMode:Hide()
         end
         row:Show()
-        y = y + Theme.Size.standard + 4
-    end
-    local function DisplayTableHeader()
-        FinishGridRow()
-        index = index + 1
-        local row = SettingsRow(parent, index, "business-header")
-        row:ClearAllPoints(); row:SetPoint("TOPLEFT", 2, -y); row:SetWidth(parent.content:GetWidth() or 600)
-        local labels = {
-            { "page", "页面" }, { "visible", "显示" }, { "entryLabel", "入口" },
-            { "entryMode", "入口位置" }, { "option", "页面选项" },
-            { "mainFields", "主表字段" }, { "previewFields", "悬停字段" },
-        }
-        for labelIndex, item in ipairs(labels) do
-            local text = row.labels[labelIndex]
-            local column = DISPLAY_COLUMNS[item[1]]
-            text:ClearAllPoints(); text:SetPoint("LEFT", column.x, 0); text:SetWidth(column.width)
-            text:SetText(item[2])
-        end
-        row:Show()
-        y = y + 22
+        local rowHeight=displayRowHeight
+
+        row:SetHeight(rowHeight)
+        y = y + rowHeight + 8
     end
     local function ArchiveEntryRow()
         FinishGridRow()
@@ -414,9 +458,13 @@ local function RefreshSettings(parent)
         local row = SettingsRow(parent, index, "archive-entry")
         local archiveSettings = ArchiveSettings()
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", 2, -y); row:SetWidth(parent.content:GetWidth() or 600)
-        PlaceDisplayColumn(row.title, "page"); row.title:SetText("角色档案")
+        PlaceDisplayColumn(row.title, "page"); row.title:SetText(Core:Text("CORE.CHARACTER_ARCHIVE"));row.title:SetHeight(Theme.Size.standard)
+        row.entryLabel = row.entryLabel or AddText(row,"GameFontNormalSmall",nil,COLORS.muted)
+        row.entryLabel:SetText("—");PlaceDisplayColumn(row.entryLabel,"entryLabel")
         PlaceDisplayColumn(row.mainFields, "mainFields")
         PlaceDisplayColumn(row.previewFields, "previewFields")
+
+
         local mainOptions, previewOptions = {}, {}
         for _, field in ipairs(Core.Fields:GetByConsumer("character-archive")) do
             local currentField = field
@@ -431,34 +479,22 @@ local function RefreshSettings(parent)
                 setSelected = function(visible) archiveSettings.previewFields[currentField.id] = visible end,
             }
         end
-        row.mainFields:SetSummary("主表"); row.mainFields:SetOptions(mainOptions); row.mainFields:Show()
-        row.previewFields:SetSummary("悬停"); row.previewFields:SetOptions(previewOptions); row.previewFields:Show()
+        row.mainFields:SetSummary(""); row.mainFields:SetOptions(mainOptions); row.mainFields:Show()
+        row.previewFields:SetSummary(""); row.previewFields:SetOptions(previewOptions); row.previewFields:Show()
         row:Show()
-        y = y + Theme.Size.standard + 4
+        row:SetHeight(30)
+        y = y + 38
     end
     local function CoreEntryRow(options)
         FinishGridRow()
         index = index + 1
         local row = SettingsRow(parent, index, "core-entry")
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", 2, -y); row:SetWidth(parent.content:GetWidth() or 600)
-        PlaceDisplayColumn(row.title, "page"); row.title:SetText("Core")
-        PlaceDisplayColumn(row.visible, "visible")
-        row.visible.label:SetWidth(76); row.visible.label:SetText("窗口悬停")
-        row.visible:SetChecked(settings.entry.showPreviewWhileMainWindowOpen == true)
-        row.visible:SetScript("OnClick", function(control)
-            control:SetChecked(not control:GetChecked())
-            settings.entry.showPreviewWhileMainWindowOpen = control:GetChecked() == true
-            AccountView:RefreshPage()
-        end)
-        PlaceDisplayColumn(row.entryLabel, "entryLabel"); row.entryLabel:SetWordWrap(false); row.entryLabel:SetText("Core 入口")
-        PlaceDisplayColumn(row.dropdown, "entryMode")
-        row.dropdown:SetOptions(options); row.dropdown:SetValue(Core.Entry and Core.Entry:GetCoreEntryMode() or "both")
-        row.dropdown:SetOnValueChanged(function(mode)
-            if Core.Entry then Core.Entry:SetCoreEntryMode(mode) end
-            AccountView:RefreshPage()
-        end)
+        PlaceDisplayColumn(row.title, "page"); row.title:SetText("Core");row.title:SetHeight(Theme.Size.standard)
+        row.visible:Hide()
+        EntryChannels(row, "YiboCore")
         local previewOptions = {}
-        for _, page in ipairs(AccountView:GetPreviewPageOptions()) do previewOptions[#previewOptions + 1] = { value = page.id, label = "悬停·" .. page.title } end
+        for _, page in ipairs(AccountView:GetPreviewPageOptions()) do previewOptions[#previewOptions + 1] = { value = page.id, label = Core:Text("CORE.HOVER_407") .. page.title } end
         -- Core uses the same contextual-options column as page layout modes;
         -- unlike business pages its option is the page used for the preview.
         row.previewLabel:Hide()
@@ -468,7 +504,8 @@ local function RefreshSettings(parent)
             settings.entry.previewPageID = pageID
             AccountView:RefreshPage()
         end)
-        row:Show(); y = y + Theme.Size.standard + 4
+        row:SetHeight(30)
+        row:Show(); y = y + 38
     end
     local function AddonPanel(details)
         if type(details.CreateSettingsPanel) ~= "function" then return end
@@ -504,7 +541,7 @@ local function RefreshSettings(parent)
                     parent.content:SetHeight(math.max(parent.settingsContentHeight, parent.scroll:GetHeight() or 1))
                     parent.scroll:SetContentHeight(parent.settingsContentHeight)
                 else
-                    Core:Print("插件 “" .. tostring((selected and selected.title) or (settingsOnly and settingsOnly.title) or "未知") .. "” 的业务设置局部刷新失败：" .. tostring(heightOrError))
+                    Core:Print(Core:Text("CORE.ADDON_408") .. tostring((selected and selected.title) or (settingsOnly and settingsOnly.title) or Core:Text("CORE.UNKNOWN")) .. Core:Text("CORE.BUSINESS_SETTINGS_REFRESH_FAILED") .. tostring(heightOrError))
                 end
             end,
             createSection = CreateHostedSettingsSection,
@@ -518,13 +555,13 @@ local function RefreshSettings(parent)
             return details.CreateSettingsPanel(row, hostedContext)
         end, function(message) return tostring(message) end)
         if not ok then
-            Core:Print("插件 “" .. tostring((selected and selected.title) or (settingsOnly and settingsOnly.title) or "未知") .. "” 的嵌入设置创建失败：" .. tostring(heightOrError))
+            Core:Print(Core:Text("CORE.ADDON_408") .. tostring((selected and selected.title) or (settingsOnly and settingsOnly.title) or Core:Text("CORE.UNKNOWN")) .. Core:Text("CORE.EMBEDDED_SETTINGS_CREATION_FAILED") .. tostring(heightOrError))
             if not row.errorLabel then
                 row.errorLabel = AddText(row, "GameFontNormalSmall", nil, COLORS.danger)
                 row.errorLabel:SetPoint("TOPLEFT", 2, 0); row.errorLabel:SetPoint("RIGHT", -2, 0)
                 row.errorLabel:SetWordWrap(true)
             end
-            row.errorLabel:SetText("业务设置加载失败：" .. tostring(heightOrError))
+            row.errorLabel:SetText(Core:Text("CORE.BUSINESS_SETTINGS_COULD_NOT_LOAD") .. tostring(heightOrError))
             row.errorLabel:Show()
             row:SetHeight(40)
             y = y + 50
@@ -538,8 +575,25 @@ local function RefreshSettings(parent)
         local page = pageID and AccountView._pages[pageID]
         local saved = page and AccountView:GetPageCharacterSort(pageID) or AccountView:GetDefaultCharacterSort()
         local effective = page and AccountView:GetEffectiveCharacterSort(pageID) or saved
+        if sortingMode and not page then
+            local options={}
+            for _,mode in ipairs(SORT_MODES) do options[#options+1]={value=mode,label=SORT_LABELS[mode]} end
+            Dropdown(Core:Text("CORE.DEFAULT_CHARACTER_SORTING"),effective.mode,options,function(mode)
+                local nextSettings=Copy(effective);nextSettings.mode=mode;nextSettings.direction=DefaultDirection(mode)
+                AccountView:SetDefaultCharacterSort(nextSettings)
+            end)
+            if effective.mode~="custom" then
+                Button(Core:Text("CORE.SORT_DIRECTION")..(effective.direction=="asc" and Core:Text("CORE.ASCENDING") or Core:Text("CORE.DESCENDING")),function()
+                    local nextSettings=Copy(effective);nextSettings.direction=effective.direction=="asc" and "desc" or "asc";AccountView:SetDefaultCharacterSort(nextSettings)
+                end)
+            end
+            Check(Core:Text("CORE.PIN_CURRENT_CHARACTER"),effective.pinCurrent==true,function(value)
+                local nextSettings=Copy(effective);nextSettings.pinCurrent=value;AccountView:SetDefaultCharacterSort(nextSettings)
+            end)
+            return
+        end
         if page then
-            Button("跟随通用设置", function()
+            Button(Core:Text("CORE.USE_SHARED_SETTINGS"), function()
                 AccountView:ResetPageCharacterSort(pageID)
             end, 300, "default", saved.mode == "inherit")
         end
@@ -554,14 +608,14 @@ local function RefreshSettings(parent)
             end, 300, "default", saved.mode == selectedMode)
         end
         if effective.mode ~= "custom" then
-            Button("排序方向：" .. (effective.direction == "asc" and "升序 ↑" or "降序 ↓"), function()
+            Button(Core:Text("CORE.SORT_DIRECTION") .. (effective.direction == "asc" and Core:Text("CORE.ASCENDING") or Core:Text("CORE.DESCENDING")), function()
                 local nextSettings = Copy(effective)
                 nextSettings.inherited = nil
                 nextSettings.direction = nextSettings.direction == "asc" and "desc" or "asc"
                 if page then AccountView:SetPageCharacterSort(pageID, nextSettings) else AccountView:SetDefaultCharacterSort(nextSettings) end
             end, 300, "secondary")
         end
-        Check("当前角色置顶", effective.pinCurrent == true, function(checked)
+        Check(Core:Text("CORE.PIN_CURRENT_CHARACTER"), effective.pinCurrent == true, function(checked)
             local nextSettings = Copy(effective)
             nextSettings.inherited = nil
             nextSettings.pinCurrent = checked
@@ -569,8 +623,8 @@ local function RefreshSettings(parent)
         end)
     end
     local function CharacterOrderRows()
-        Button("按最近登录顺序重建", function() AccountView:RebuildCustomCharacterOrder("recent") end, 300, "secondary")
-        Button("恢复初始登记顺序", function() AccountView:RebuildCustomCharacterOrder("seen") end, 300, "secondary")
+        Button(Core:Text("CORE.REBUILD_BY_RECENT_LOGIN"), function() AccountView:RebuildCustomCharacterOrder("recent") end, 300, "secondary")
+        Button(Core:Text("CORE.RESTORE_REGISTRATION_ORDER"), function() AccountView:RebuildCustomCharacterOrder("seen") end, 300, "secondary")
         local byID = {}
         for _, character in ipairs(Core.Characters:GetAllCached()) do byID[character.id] = character end
         local order = AccountView:GetCustomCharacterOrder()
@@ -587,10 +641,10 @@ local function RefreshSettings(parent)
         local pageSize = rowsPerColumn * orderColumns
         local totalPages = math.max(1, math.ceil(#order / pageSize))
         parent.characterOrderPage = math.max(1, math.min(tonumber(parent.characterOrderPage) or 1, totalPages))
-        Button("上一页（" .. parent.characterOrderPage .. " / " .. totalPages .. "）", function()
+        Button(Core:Text("CORE.PREVIOUS_419") .. parent.characterOrderPage .. " / " .. totalPages .. Core:Text("FORMAT.CLOSE_PAREN"), function()
             parent.characterOrderPage = math.max(1, parent.characterOrderPage - 1); AccountView:RefreshPage()
         end, 300, "secondary")
-        Button("下一页（" .. parent.characterOrderPage .. " / " .. totalPages .. "）", function()
+        Button(Core:Text("CORE.NEXT_420") .. parent.characterOrderPage .. " / " .. totalPages .. Core:Text("FORMAT.CLOSE_PAREN"), function()
             parent.characterOrderPage = math.min(totalPages, parent.characterOrderPage + 1); AccountView:RefreshPage()
         end, 300, "secondary")
         FinishGridRow()
@@ -610,7 +664,7 @@ local function RefreshSettings(parent)
                 local orderColumn = math.floor(slot / rowsPerColumn)
                 local orderRow = slot % rowsPerColumn
                 row:ClearAllPoints(); row:SetPoint("TOPLEFT", 2 + orderColumn * (orderWidth + orderGap), -(y + orderRow * 28)); row:SetWidth(orderWidth)
-                row.label:SetText(tostring(orderIndex) .. ". " .. Core.Characters:FormatName({ name = character.name or "未知角色", realm = character.realm or "未知服务器" }, { realmMode = "full" }) .. " · " .. tostring(character.level or "?") .. "级")
+                row.label:SetText(tostring(orderIndex) .. ". " .. Core.Characters:FormatName({ name = character.name or Core:Text("CORE.UNKNOWN_CHARACTER"), realm = character.realm or Core:Text("CORE.UNKNOWN_REALM") }, { realmMode = "full" }) .. " · " .. tostring(character.level or "?") .. Core:Text("CORE.LEVELS"))
                 local classColor = RAID_CLASS_COLORS and RAID_CLASS_COLORS[character.class or ""]
                 row.label:SetTextColor(classColor and classColor.r or COLORS.text[1], classColor and classColor.g or COLORS.text[2], classColor and classColor.b or COLORS.text[3])
                 row.up:SetState(orderIndex == 1 and "disabled" or "default")
@@ -620,13 +674,13 @@ local function RefreshSettings(parent)
                 row.up:SetScript("OnClick", function() AccountView:MoveCustomCharacter(rowCharacterID, -1) end)
                 row.down:SetScript("OnClick", function() AccountView:MoveCustomCharacter(rowCharacterID, 1) end)
                 local hidden = Settings().hiddenCharacters[rowCharacterID] == true
-                row.hidden:SetText(hidden and "显示" or "隐藏")
+                row.hidden:SetText(hidden and Core:Text("CORE.VISIBLE") or Core:Text("CORE.HIDE"))
                 row.hidden.kind = "secondary"; row.hidden:SetState(hidden and "selected" or "default")
                 row.hidden:SetScript("OnClick", function()
                     AccountView:SetCharacterHidden(rowCharacterID, not hidden)
                 end)
                 local current = Core.Characters:GetCurrentID() == characterID
-                row.delete:SetText(current and "当前角色" or "删除缓存")
+                row.delete:SetText(current and Core:Text("CORE.CURRENT_CHARACTER") or Core:Text("CORE.DELETE_CACHE"))
                 row.delete:SetState(current and "disabled" or "default")
                 row.delete:EnableMouse(not current)
                 row.delete:SetScript("OnClick", function() ShowCharacterDeleteConfirmation(rowCharacterID) end)
@@ -641,8 +695,8 @@ local function RefreshSettings(parent)
         local pageSize = 20
         local totalPages = math.max(1, math.ceil(#characters / pageSize))
         parent.shortNamePage = math.max(1, math.min(tonumber(parent.shortNamePage) or 1, totalPages))
-        Button("上一页（" .. parent.shortNamePage .. " / " .. totalPages .. "）", function() parent.shortNamePage = math.max(1, parent.shortNamePage - 1); AccountView:RefreshPage() end, 300, "secondary")
-        Button("下一页（" .. parent.shortNamePage .. " / " .. totalPages .. "）", function() parent.shortNamePage = math.min(totalPages, parent.shortNamePage + 1); AccountView:RefreshPage() end, 300, "secondary")
+        Button(Core:Text("CORE.PREVIOUS_419") .. parent.shortNamePage .. " / " .. totalPages .. Core:Text("FORMAT.CLOSE_PAREN"), function() parent.shortNamePage = math.max(1, parent.shortNamePage - 1); AccountView:RefreshPage() end, 300, "secondary")
+        Button(Core:Text("CORE.NEXT_420") .. parent.shortNamePage .. " / " .. totalPages .. Core:Text("FORMAT.CLOSE_PAREN"), function() parent.shortNamePage = math.min(totalPages, parent.shortNamePage + 1); AccountView:RefreshPage() end, 300, "secondary")
         FinishGridRow()
         local duplicates = Core.Characters:GetShortNameDuplicates()
         local first, last = (parent.shortNamePage - 1) * pageSize + 1, math.min(#characters, parent.shortNamePage * pageSize)
@@ -652,17 +706,17 @@ local function RefreshSettings(parent)
             local row = SettingsRow(parent, index, "short-name")
             PlaceSettingsRow(row, y); row:SetWidth(parent.content:GetWidth() or 600)
             local displayName = Core.Characters:FormatName(character, { nameMode = "short" })
-            local warning = duplicates[displayName] and " · 短名重复" or ""
-            row.label:SetText(Core.Characters:FormatName({ name = character.name or "未知角色", realm = character.realm or "未知服务器" }, { realmMode = "full" }) .. warning)
+            local warning = duplicates[displayName] and Core:Text("CORE.DUPLICATE_SHORT_NAME") or ""
+            row.label:SetText(Core.Characters:FormatName({ name = character.name or Core:Text("CORE.UNKNOWN_CHARACTER"), realm = character.realm or Core:Text("CORE.UNKNOWN_REALM") }, { realmMode = "full" }) .. warning)
             row.input:SetText(displayName == character.name and "" or displayName)
             local characterID = character.id
             local function Save(control)
                 local result, errorMessage = Core.Characters:SetShortName(characterID, control:GetText())
-                if result == nil then Core:Print("短名保存失败：" .. tostring(errorMessage)); return end
+                if result == nil then Core:Print(Core:Text("CORE.COULD_NOT_SAVE_SHORT_NAME") .. tostring(errorMessage)); return end
                 AccountView:RefreshPage()
             end
             row.input:SetScript("OnEnterPressed", function(control) Save(control); control:ClearFocus() end)
-            row.input:SetScript("OnEditFocusLost", Save)
+            row.input:SetScript("OnEditFocusLost",function(control) control:SetBackdropBorderColor(unpack(COLORS.lineSoft));Save(control) end)
             row.input:SetScript("OnEscapePressed", function(control)
                 local currentName = Core.Characters:FormatName(character, { nameMode = "short" })
                 control:SetText(currentName == character.name and "" or currentName)
@@ -674,16 +728,15 @@ local function RefreshSettings(parent)
     end
 
     if sortingMode then
-        Heading("默认角色排序")
+        SetGridMinimum(260,3)
         SortControls(nil)
-        Heading("角色名称")
-        local shortNameToggle = Button(parent.showShortNames and "▾ 收起短名管理" or "▸ 管理自定义短名", function() parent.showShortNames = not parent.showShortNames; AccountView:RefreshPage() end, 300, "disclosure")
+        Heading(Core:Text("CORE.CHARACTER_ORDER_CACHE"))
+        local shortNameToggle = Button(parent.showShortNames and Core:Text("CORE.COLLAPSE_SHORT_NAMES") or Core:Text("CORE.MANAGE_SHORT_NAMES"), function() parent.showShortNames = not parent.showShortNames; AccountView:RefreshPage() end, 300, "disclosure")
         if parent.showShortNames then
             FinishGridRow()
             ShortNameRows()
         end
-        Heading("角色顺序与缓存")
-        Button(parent.showCharacterOrder and "▾ 收起顺序与缓存" or "▸ 打开顺序与缓存", function()
+        Button(parent.showCharacterOrder and Core:Text("CORE.COLLAPSE_ORDER_AND_CACHE") or Core:Text("CORE.OPEN_ORDER_AND_CACHE"), function()
             parent.showCharacterOrder = not parent.showCharacterOrder
             AccountView:RefreshPage()
         end, 300, "disclosure")
@@ -694,13 +747,13 @@ local function RefreshSettings(parent)
         -- Character filters share the same roster context as sorting and cache
         -- management, so they are a section here rather than a fourth Core
         -- navigation page.
-        SetGridMinimum(math.max(300, parent.content:GetWidth() or 620))
-        Heading("业务页面角色过滤")
+        SetGridMinimum(260,3)
+        Heading(Core:Text("CORE.BUSINESS_PAGE_CHARACTER_FILTERS"))
         FinishGridRow()
         index = index + 1
         local ruleHint = SettingsRow(parent, index, "heading")
         PlaceSettingsRow(ruleHint, y)
-        ruleHint:SetText("填写规则：90 = 仅 90 级；1-20 = 等级范围；<=3 / >=85 = 比较；留空或 0 = 不过滤。")
+        ruleHint:SetText(Core:Text("CORE.RULES_90_LEVEL_90_ONLY_1_20"))
         ruleHint:SetTextColor(COLORS.muted[1], COLORS.muted[2], COLORS.muted[3])
         ruleHint:Show(); y = y + 24
         local count = 0
@@ -711,7 +764,7 @@ local function RefreshSettings(parent)
                 CharacterFilterInput(page, filter)
             end
         end
-        if count == 0 then Heading("暂无支持角色过滤的业务页面") end
+        if count == 0 then Heading(Core:Text("CORE.NO_BUSINESS_PAGES_SUPPORT_CHARACTER_FILTERS")) end
         local archive = ArchiveSettings()
         local function CycleArchiveProfile(mode)
             local values = { "all", "profiled", "missing" }
@@ -721,54 +774,128 @@ local function RefreshSettings(parent)
             end
             AccountView:RefreshPage()
         end
-        Heading("角色档案角色过滤")
-        Button("主表筛选：" .. (PROFILE_FILTER_LABELS[archive.filters.page.profile] or PROFILE_FILTER_LABELS.all), function() CycleArchiveProfile("page") end, 300)
-        Check("主表筛选时包含已隐藏角色", archive.filters.page.includeHidden == true, function(checked) archive.filters.page.includeHidden = checked end)
-        Input("主表等级过滤", archive.filters.page.levelExpr, function(value) archive.filters.page.levelExpr = value end)
-        Heading("角色档案悬停角色过滤")
-        Button("悬停筛选：" .. (PROFILE_FILTER_LABELS[archive.filters.preview.profile] or PROFILE_FILTER_LABELS.all), function() CycleArchiveProfile("preview") end, 300)
-        Check("悬停筛选时包含已隐藏角色", archive.filters.preview.includeHidden == true, function(checked) archive.filters.preview.includeHidden = checked end)
-        Input("悬停等级过滤", archive.filters.preview.levelExpr, function(value) archive.filters.preview.levelExpr = value end)
+        SetGridMinimum(260,3)
+        Heading(Core:Text("CORE.CHARACTER_ARCHIVE_FILTERS"))
+        Button(Core:Text("CORE.TABLE_FILTER") .. (PROFILE_FILTER_LABELS[archive.filters.page.profile] or PROFILE_FILTER_LABELS.all), function() CycleArchiveProfile("page") end, 300)
+        Check(Core:Text("CORE.INCLUDE_HIDDEN_CHARACTERS_IN_TABLE_FILTER"), archive.filters.page.includeHidden == true, function(checked) archive.filters.page.includeHidden = checked end)
+        Input(Core:Text("CORE.TABLE_LEVEL_FILTER"), archive.filters.page.levelExpr, function(value) archive.filters.page.levelExpr = value end)
+        Heading(Core:Text("CORE.CHARACTER_ARCHIVE_HOVER_FILTERS"))
+        Button(Core:Text("CORE.HOVER_FILTER") .. (PROFILE_FILTER_LABELS[archive.filters.preview.profile] or PROFILE_FILTER_LABELS.all), function() CycleArchiveProfile("preview") end, 300)
+        Check(Core:Text("CORE.INCLUDE_HIDDEN_CHARACTERS_IN_HOVER_FILTER"), archive.filters.preview.includeHidden == true, function(checked) archive.filters.preview.includeHidden = checked end)
+        Input(Core:Text("CORE.HOVER_LEVEL_FILTER"), archive.filters.preview.levelExpr, function(value) archive.filters.preview.levelExpr = value end)
     elseif coreMode then
-        Heading("添加到行动中心")
+        Heading(Core:Text("CORE.ADD_TO_ACTION_CENTER"))
         local actions = Core.BusinessItemActions
         local options = actions:GetOptions()
-        local modes = { { value = "menu", label = "右上角按钮（＋／勾选）" },
-            { value = "middle", label = "鼠标中键" }, { value = "ctrlLeft", label = "Ctrl＋左键" } }
-        if options.mode == "custom" then modes[#modes + 1] = { value = "custom", label = "原自定义手势：" .. actions:GestureLabel() } end
-        Dropdown("添加方式（三选一）", options.mode, modes, function(value)
+        local modes = { { value = "menu", label = Core:Text("CORE.TOP_RIGHT_BUTTON_CHECK") },
+            { value = "middle", label = Core:Text("CORE.MIDDLE_CLICK_443") }, { value = "ctrlLeft", label = Core:Text("CORE.CTRL_CLICK_444") } }
+        if options.mode == "custom" then modes[#modes + 1] = { value = "custom", label = Core:Text("CORE.PREVIOUS_CUSTOM_GESTURE") .. actions:GestureLabel() } end
+        Dropdown(Core:Text("CORE.ADD_METHOD_CHOOSE_ONE"), options.mode, modes, function(value)
             local ok, err = actions:SetOptions({ mode = value }); if not ok then Core:Print(err) end; AccountView:RefreshPage()
         end)
-        Dropdown("已加入目标标记", options.markerStyle, {
-            { value = "corner", label = "左下角金色直角" }, { value = "dot", label = "左下角青绿圆点" },
+        Dropdown(Core:Text("CORE.ADDED_TARGET_MARK"), options.markerStyle, {
+            { value = "corner", label = Core:Text("CORE.GOLD_CORNER_AT_BOTTOM_LEFT") }, { value = "dot", label = Core:Text("CORE.TEAL_DOT_AT_BOTTOM_LEFT") },
         }, function(value) local ok, err = actions:SetOptions({ markerStyle = value }); if not ok then Core:Print(err) end; AccountView:RefreshPage() end)
-        Heading("中键／Ctrl＋左键再次点击可取消；缺参数时临时显示＋补参入口。")
-        Heading("窗口布局")
-        Button("重置窗口位置", function() AccountView:ResetWindowLayout() end)
-        Heading("窗口尺寸会随当前页面内容自动适配。")
-    elseif displayMode then
-        local entryModeOptions = {
-            { value = "none", label = "不显示" },
-            { value = "broker", label = "仅 Broker" },
-            { value = "minimap", label = "仅小地图" },
-            { value = "both", label = "两者都显示" },
-        }
-        Heading("Core 与插件页面")
-        DisplayTableHeader()
-        CoreEntryRow(entryModeOptions)
-        ArchiveEntryRow()
-        local displayPages = {}
-        for _, page in ipairs(AccountView._pageOrder) do
-            if not page.internal then displayPages[#displayPages + 1] = page end
-        end
-        for _, page in ipairs(AccountView._pageOrder) do
-            if not page.internal then
-                local entry = Core.Entry and Core.Entry.GetBusinessEntryByPageID and Core.Entry:GetBusinessEntryByPageID(page.id)
-                BusinessEntryRow(page, entry, entryModeOptions)
+        Heading(Core:Text("CORE.MIDDLE_CLICK_OR_CTRL_CLICK_AGAIN_TO"))
+        Heading(Core:Text("CORE.WINDOW_LAYOUT"))
+        Button(Core:Text("CORE.RESET_WINDOW_POSITION"), function() AccountView:ResetWindowLayout() end)
+    elseif displayMode or generalMode or barMode then
+        SetGridMinimum(260,2)
+        local section=barMode and "bar" or "entries"
+        if generalMode then
+            Dropdown(Core:Text("LANGUAGE.TITLE"),Core.Locale:GetPreference(),{
+                {value="auto",label=Core:Text("LANGUAGE.AUTO")},
+                {value="zh",label=Core:Text("LANGUAGE.CHINESE")},
+                {value="en",label=Core:Text("LANGUAGE.ENGLISH")},
+            },function(value) Core.Locale:SetPreference(value) end)
+            if Core.Locale:IsReloadPending() then
+                Button(Core:Text("LANGUAGE.RELOAD"),function() ReloadUI() end)
+                Note(Core:Text("LANGUAGE.PENDING"))
+            elseif Core.Locale:GetPreference()=="auto" then Note(Core:Text("LANGUAGE.ACTIVE",Core:Text(Core.Locale:GetLanguage()=="zh" and "LANGUAGE.CHINESE" or "LANGUAGE.ENGLISH"))) end
+            Note(Core:Text("LANGUAGE.DESCRIPTION"))
+            Heading(Core:Text("ENTRY.HOVER_OPTIONS"))
+            Check(Core:Text("ENTRY.HOVER_MAIN"),settings.entry.showPreviewWhileMainWindowOpen,function(value) settings.entry.showPreviewWhileMainWindowOpen=value end)
+        elseif section == "bar" then
+            local bar=Core.Entry:GetBuiltinBarSettings()
+            local function Enabled(control)
+                control:SetEnabled(bar.enabled);control:SetAlpha(bar.enabled and 1 or 0.65);return control
             end
-        end
-        if #displayPages == 0 then
-            Heading("暂无已注册的业务插件")
+            Check(Core:Text("ENTRY.BAR_ENABLED"),bar.enabled,function(value) Core.Entry:SetBuiltinBarEnabled(value) end)
+            Heading(Core:Text("ENTRY.BAR_APPEARANCE"))
+            Enabled(Check(Core:Text("ENTRY.BAR_LOCKED"),bar.locked,function(value) Core.Entry:SetBuiltinBarOption("locked",value) end))
+            Enabled(Check(Core:Text("ENTRY.BAR_NAMES"),bar.showNames,function(value) Core.Entry:SetBuiltinBarOption("showNames",value) end))
+            Enabled(Check(Core:Text("ENTRY.BAR_BORDER"),bar.showBorder,function(value) Core.Entry:SetBuiltinBarOption("showBorder",value) end))
+            Enabled(Button(Core:Text("ENTRY.BAR_RESET"),function() Core.Entry:SetBuiltinBarPosition("TOP","TOP",0,-16);AccountView:RefreshPage() end))
+            local sizes,spaces,alphas={},{},{}
+            for _,n in ipairs({16,20,24,28,32,40,48}) do sizes[#sizes+1]={value=n,label=tostring(n)} end
+            for _,n in ipairs({0,2,4,6,8,12,16,20}) do spaces[#spaces+1]={value=n,label=tostring(n)} end
+            for _,n in ipairs({0,0.25,0.5,0.75,0.95,1}) do alphas[#alphas+1]={value=n,label=tostring(math.floor(n*100+0.5)).."%"} end
+            local function BarDropdown(label,key,options)
+                local row=Dropdown(label,bar[key],options,function(value) Core.Entry:SetBuiltinBarOption(key,value) end)
+                Enabled(row.dropdown);row:SetAlpha(bar.enabled and 1 or 0.65)
+            end
+            BarDropdown(Core:Text("ENTRY.BAR_SIZE"),"iconSize",sizes)
+            BarDropdown(Core:Text("ENTRY.BAR_SPACING"),"spacing",spaces)
+            local backgrounds={}
+            for _,item in ipairs({{"theme","ENTRY.COLOR_THEME"},{"black","ENTRY.COLOR_BLACK"},{"charcoal","ENTRY.COLOR_CHARCOAL"},{"navy","ENTRY.COLOR_NAVY"},{"forest","ENTRY.COLOR_FOREST"}}) do
+                backgrounds[#backgrounds+1]={value=item[1],label=Core:Text(item[2])}
+            end
+            BarDropdown(Core:Text("ENTRY.BAR_BACKGROUND"),"background",backgrounds)
+            BarDropdown(Core:Text("ENTRY.BAR_OPACITY"),"backgroundAlpha",alphas)
+            Heading(Core:Text("ENTRY.BAR_ORDER"))
+            local entries=Core.Entry:GetBuiltinBarEntries()
+            local options,current={},nil
+            for i,entry in ipairs(entries) do
+                options[#options+1]={value=entry.id,label=tostring(i)..". "..entry.text}
+                if entry.id==parent.orderEntryID then current=i end
+            end
+            if not current and entries[1] then current=1;parent.orderEntryID=entries[1].id end
+            if #entries>0 then
+                local selectedRow=Dropdown(Core:Text("ENTRY.ORDER_BUTTON"),parent.orderEntryID,options,function(id) parent.orderEntryID=id end)
+                Enabled(selectedRow.dropdown)
+                local actions=SettingsRow(parent,index+1,"order-actions");index=index+1
+                local actionWidth=PlaceFormControl(actions,230)
+                actions.buttons=actions.buttons or {}
+                local definitions={{key="ENTRY.ORDER_PREVIOUS",direction=-1},{key="ENTRY.ORDER_NEXT",direction=1}}
+                for i,definition in ipairs(definitions) do
+                    local button=actions.buttons[i] or CreateChromeButton(actions,100,24,"");actions.buttons[i]=button
+                    button:SetText(Core:Text(definition.key));button:ClearAllPoints();button:SetPoint("TOPLEFT",(i-1)*120,0);button:SetWidth(112);button:SetHeight(Theme.Size.standard)
+                    button:SetEnabled(bar.enabled and (definition.direction==-1 and current>1 or definition.direction==1 and current<#entries))
+                    button:SetAlpha(button:IsEnabled() and 1 or 0.65)
+                    button:SetScript("OnClick",function() Core.Entry:MoveBuiltinBarEntry(parent.orderEntryID,definition.direction);AccountView:RefreshPage() end)
+                end
+                actions:Show()
+                Enabled(Button(Core:Text("ENTRY.ORDER_RESET"),function() Core.Entry:ResetBuiltinBarOrder();AccountView:RefreshPage() end))
+            else Note(Core:Text("ENTRY.BAR_EMPTY")) end
+            Note(Core:Text("ENTRY.BAR_ORDER_HINT"))
+        else
+            FinishGridRow();index=index+1
+            local header=SettingsRow(parent,index,"order-actions")
+            header:ClearAllPoints();header:SetPoint("TOPLEFT",2,-y);header:SetWidth(width);header:SetHeight(36)
+            header.labels=header.labels or {}
+            for i,key in ipairs({"ENTRY.HEADER_PAGE","ENTRY.HEADER_SHOW","ENTRY.CHANNEL_MINIMAP","ENTRY.HEADER_BROKER","ENTRY.HEADER_BAR","CORE.TABLE","CORE.HOVER","ENTRY.HEADER_LAYOUT"}) do
+                local label=header.labels[i] or AddText(header,"GameFontNormalSmall",nil,COLORS.muted);header.labels[i]=label
+                label:ClearAllPoints();label:SetPoint("TOPLEFT",columns[i].x,0);label:SetWidth(columns[i].width);label:SetHeight(34);label:SetWordWrap(true);label:SetText(Core:Text(key))
+            end
+            header:Show();y=y+38
+            CoreEntryRow({})
+            ArchiveEntryRow()
+            local pages={}
+            local included={}
+            for _,page in ipairs(AccountView._pageOrder) do
+                if not page.internal then pages[#pages+1]=page;included[page.addonName or page.id]=true end
+            end
+            for _,panel in ipairs(Core:GetRegisteredSettingsPanels()) do
+                if not included[panel.addonName] then
+                    pages[#pages+1]={id="addon-settings:"..panel.id,addonName=panel.addonName,title=panel.title,fields={},settingsOnly=true}
+                    included[panel.addonName]=true
+                end
+            end
+            table.sort(pages,function(a,b) if a.addonName~=b.addonName then return tostring(a.addonName)<tostring(b.addonName) end return a.id<b.id end)
+            for _,page in ipairs(pages) do
+                BusinessEntryRow(page,Core.Entry:GetBusinessEntryByPageID(page.id),{})
+            end
+            if #pages==0 then Note(Core:Text("CORE.NO_BUSINESS_ADDONS_REGISTERED")) end
         end
     else
         local details = settingsOnly or (selected and selected.settings) or {}
@@ -778,7 +905,7 @@ local function RefreshSettings(parent)
             if type(details.CreateSettingsPanel) == "function" then
                 AddonPanel(details)
             else
-                Heading("暂无插件专属设置")
+                Heading(Core:Text("CORE.NO_ADDON_SPECIFIC_SETTINGS"))
             end
     end
     for stale = index + 1, #parent.rows do
@@ -795,7 +922,7 @@ local function RefreshSettings(parent)
     parent.scroll:SetContentHeight(parent.settingsContentHeight)
 end
 
-AccountView._pages.settings = {
-    id = "settings", title = "设置", order = 999, internal = true,
+AccountView._pages.settings = Core.Locale:Bind(function() return {
+    id = "settings", title = Core:Text("CORE.SETTINGS"), order = 999, internal = true,
     Create = CreateSettings, Refresh = RefreshSettings,
-}
+} end)

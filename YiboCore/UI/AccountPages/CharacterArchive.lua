@@ -65,11 +65,11 @@ local function CreateCharacters(parent)
     parent.listHeader = CreateFrame("Frame", nil, parent)
     parent.listHeader:SetPoint("TOPLEFT", 20, -82); parent.listHeader:SetWidth(850); parent.listHeader:SetHeight(Theme.Table.headerHeight)
     parent.listHeader.bg = parent.listHeader:CreateTexture(nil, "BACKGROUND"); parent.listHeader.bg:SetAllPoints(); parent.listHeader.bg:SetColorTexture(COLORS.chrome[1], COLORS.chrome[2], COLORS.chrome[3], 0.95)
-    parent.listHeader.name = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); parent.listHeader.name:SetPoint("LEFT", 9, 0); parent.listHeader.name:SetWidth(246); parent.listHeader.name:SetText("角色")
-    parent.listHeader.level = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); parent.listHeader.level:SetPoint("LEFT", parent.listHeader.name, "RIGHT", 6, 0); parent.listHeader.level:SetWidth(32); parent.listHeader.level:SetText("等级")
-    parent.listHeader.zone = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); parent.listHeader.zone:SetPoint("LEFT", parent.listHeader.level, "RIGHT", 6, 0); parent.listHeader.zone:SetWidth(78); parent.listHeader.zone:SetText("地点")
-    parent.listHeader.itemLevel = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); parent.listHeader.itemLevel:SetPoint("LEFT", parent.listHeader.zone, "RIGHT", 6, 0); parent.listHeader.itemLevel:SetWidth(42); parent.listHeader.itemLevel:SetText("装等")
-    parent.listHeader.professions = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); parent.listHeader.professions:SetPoint("LEFT", parent.listHeader.itemLevel, "RIGHT", 6, 0); parent.listHeader.professions:SetText("专业")
+    parent.listHeader.name = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); parent.listHeader.name:SetPoint("LEFT", 9, 0); parent.listHeader.name:SetWidth(246); parent.listHeader.name:SetText(Core:Text("CORE.CHARACTER"))
+    parent.listHeader.level = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); parent.listHeader.level:SetPoint("LEFT", parent.listHeader.name, "RIGHT", 6, 0); parent.listHeader.level:SetWidth(32); parent.listHeader.level:SetText(Core:Text("CORE.LEVEL"))
+    parent.listHeader.zone = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); parent.listHeader.zone:SetPoint("LEFT", parent.listHeader.level, "RIGHT", 6, 0); parent.listHeader.zone:SetWidth(78); parent.listHeader.zone:SetText(Core:Text("CORE.LOCATION"))
+    parent.listHeader.itemLevel = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); parent.listHeader.itemLevel:SetPoint("LEFT", parent.listHeader.zone, "RIGHT", 6, 0); parent.listHeader.itemLevel:SetWidth(42); parent.listHeader.itemLevel:SetText(Core:Text("CORE.ITEM_LEVEL"))
+    parent.listHeader.professions = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); parent.listHeader.professions:SetPoint("LEFT", parent.listHeader.itemLevel, "RIGHT", 6, 0); parent.listHeader.professions:SetText(Core:Text("CORE.PROFESSIONS"))
     parent.scroll = Theme:CreateScrollFrame(parent)
     parent.scroll:SetPoint("TOPLEFT", 20, -106); parent.scroll:SetPoint("BOTTOMRIGHT", -Theme.Space.xs, 12)
     parent.listContent = CreateFrame("Frame", nil, parent.scroll)
@@ -79,10 +79,10 @@ local function CreateCharacters(parent)
 end
 
 local DELETE_POPUP = "YIBOCORE_DELETE_CHARACTER_CACHE"
-StaticPopupDialogs[DELETE_POPUP] = {
+StaticPopupDialogs[DELETE_POPUP] = Core.Locale:Bind(function() return {
     text = "%s",
-    button1 = "删除缓存",
-    button2 = "取消",
+    button1 = Core:Text("CORE.DELETE_CACHE"),
+    button2 = Core:Text("CORE.CANCEL"),
     timeout = 0,
     whileDead = true,
     hideOnEscape = true,
@@ -90,19 +90,19 @@ StaticPopupDialogs[DELETE_POPUP] = {
     OnAccept = function(_, data)
         local result, errorMessage = Core.CharacterCleanup:Delete(data)
         if not result then
-            Core:Print("角色缓存删除失败：" .. tostring(errorMessage))
+            Core:Print(Core:Text("CORE.CHARACTER_CACHE_DELETION_FAILED") .. tostring(errorMessage))
             return
         end
         local pending = 0
         for _, ownerResult in pairs(result.owners or {}) do if ownerResult.status ~= "deleted" then pending = pending + 1 end end
         if pending > 0 then
-            Core:Print("角色缓存已从账号视图移除；" .. pending .. " 个插件缓存等待下次加载重试。")
+            Core:Print(Core:Text("CORE.CHARACTER_CACHE_REMOVED_FROM_THE_ACCOUNT_VIEW") .. pending .. Core:Text("CORE.ADDON_CACHES_WILL_RETRY_CLEANUP_WHEN_NEXT"))
         else
-            Core:Print("角色缓存已删除。")
+            Core:Print(Core:Text("CORE.CHARACTER_CACHE_DELETED"))
         end
         AccountView:RefreshPage()
     end,
-}
+} end)
 
 local function ShowCharacterDeleteConfirmation(characterID)
     local allowed, errorMessage = Core.CharacterCleanup:CanDelete(characterID)
@@ -111,17 +111,17 @@ local function ShowCharacterDeleteConfirmation(characterID)
     if not impact then Core:Print(impactError); return end
     local character = impact.character
     local lines = {
-        "确定删除“" .. Core.Characters:FormatName({ name = tostring(character.name or "未知角色"), realm = tostring(character.realm or "未知服务器") }, { realmMode = "full" }) .. "”的插件缓存吗？",
+        Core:Text("FORMAT.CACHE_CONFIRM", Core.Characters:FormatName({ name = tostring(character.name or Core:Text("CORE.UNKNOWN_CHARACTER")), realm = tostring(character.realm or Core:Text("CORE.UNKNOWN_REALM")) }, { realmMode = "full" })),
         "",
-        "将删除：",
-        "• Core 角色档案",
+        Core:Text("CORE.WILL_DELETE"),
+        Core:Text("CORE.CORE_CHARACTER_PROFILE"),
     }
     local ownerOrder = { "YiboAltoBoss", "YiboLegendary", "YiboQuestBlocker" }
     local added = {}
     for _, addonName in ipairs(ownerOrder) do
         local ownerImpact = impact.owners[addonName]
         if ownerImpact then
-            lines[#lines + 1] = "• " .. tostring(ownerImpact.label or addonName) .. "：" .. tostring(ownerImpact.detail or (ownerImpact.hasData and "有缓存" or "无缓存"))
+            lines[#lines + 1] = "• " .. tostring(ownerImpact.label or addonName) .. Core:Text("FORMAT.COLON") .. tostring(ownerImpact.detail or (ownerImpact.hasData and Core:Text("CORE.CACHED") or Core:Text("CORE.NO_CACHE")))
             added[addonName] = true
         end
     end
@@ -129,8 +129,8 @@ local function ShowCharacterDeleteConfirmation(characterID)
         if not added[addonName] then lines[#lines + 1] = "• " .. tostring(ownerImpact.label or addonName) end
     end
     lines[#lines + 1] = ""
-    lines[#lines + 1] = "不会删除账号共享设置，也不会删除游戏角色。"
-    lines[#lines + 1] = "删除后不可撤销。"
+    lines[#lines + 1] = Core:Text("CORE.ACCOUNT_WIDE_SETTINGS_AND_THE_GAME_CHARACTER")
+    lines[#lines + 1] = Core:Text("CORE.DELETION_CANNOT_BE_UNDONE")
     StaticPopup_Show(DELETE_POPUP, table.concat(lines, "\n"), nil, characterID)
 end
 
@@ -155,7 +155,7 @@ end
 local function GetArchiveColumnWidths(fields)
     local widths = {}
     for index, field in ipairs(fields) do
-        widths[index] = math.min(field.width, field.maxWidth or field.width)
+        widths[index] = math.max(math.min(field.width, field.maxWidth or field.width), Theme:MeasureText(Theme.Font.body, field.title) + 12)
     end
     return widths
 end
@@ -217,15 +217,15 @@ local function RefreshCharacters(parent, context)
             row.itemLevel = AddText(row, "GameFontNormalSmall", nil, COLORS.muted); row.itemLevel:SetPoint("LEFT", row.zone, "RIGHT", 6, 0); row.itemLevel:SetWidth(42)
             row.professions = AddText(row, "GameFontNormalSmall", nil, COLORS.muted); row.professions:SetPoint("LEFT", row.itemLevel, "RIGHT", 6, 0); row.professions:SetPoint("RIGHT", -86, 0)
             row.name:SetWordWrap(false); row.zone:SetWordWrap(false); row.professions:SetWordWrap(false)
-            row.delete = CreateChromeButton(row, 28, 20, "删")
+            row.delete = CreateChromeButton(row, 28, 20, Core:Text("CORE.DEL"))
             row.delete:SetPoint("RIGHT", -8, 0)
             row.delete.label:SetTextColor(COLORS.danger[1], COLORS.danger[2], COLORS.danger[3])
             row.delete:SetScript("OnClick", function(self) ShowCharacterDeleteConfirmation(self.characterID) end)
             row.delete:HookScript("OnEnter", function(self)
                 if self.state == "disabled" or not self.characterID then return end
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:AddLine("删除角色缓存", COLORS.danger[1], COLORS.danger[2], COLORS.danger[3])
-                GameTooltip:AddLine("删除此角色在 Core 与业务插件中的缓存；不会删除游戏角色。", COLORS.muted[1], COLORS.muted[2], COLORS.muted[3], true)
+                GameTooltip:AddLine(Core:Text("CORE.DELETE_CHARACTER_CACHE"), COLORS.danger[1], COLORS.danger[2], COLORS.danger[3])
+                GameTooltip:AddLine(Core:Text("CORE.DELETE_THIS_CHARACTER_S_CORE_AND_BUSINESS"), COLORS.muted[1], COLORS.muted[2], COLORS.muted[3], true)
                 GameTooltip:Show()
             end)
             row.delete:HookScript("OnLeave", function() GameTooltip:Hide() end)
@@ -302,12 +302,12 @@ local function GetCharacterHoverMetrics(context)
     }
 end
 
-AccountView._pages.characters = {
-    id = "characters", title = "角色档案", order = -10, internal = true, previewEnabled = true,
+AccountView._pages.characters = Core.Locale:Bind(function() return {
+    id = "characters", title = Core:Text("CORE.CHARACTER_ARCHIVE"), order = -10, internal = true, previewEnabled = true,
     Create = CreateCharacters, Refresh = RefreshCharacters,
     GetSurfaceMetrics = GetCharacterSurfaceMetrics,
     GetHoverMetrics = GetCharacterHoverMetrics,
-}
+} end)
 
 Helpers.ArchiveSettings = ArchiveSettings
 Helpers.ArchiveFieldVisible = ArchiveFieldVisible

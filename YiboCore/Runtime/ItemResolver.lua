@@ -23,7 +23,7 @@ end
 function Resolver:Parse(input, options)
     options = options or {}
     local text = tostring(input or ""):match("^%s*(.-)%s*$")
-    if text == "" then return nil, "请输入物品 ID、链接或名称。" end
+    if text == "" then return nil, Core:Text("CORE.ENTER_AN_ITEM_ID_LINK_OR_NAME") end
     local id
     if text:match("^%d+$") and options.allowID ~= false then id = ItemID(text)
     elseif options.allowLink ~= false then
@@ -31,7 +31,7 @@ function Resolver:Parse(input, options)
     end
     if id then return { self:GetInfo(id) } end
     if not options.allowName or text:match("^[%d%s%+%-%.]+$") or text:find("|H", 1, true) or text:match("^item:") then
-        return nil, "请输入正整数物品 ID 或有效物品链接。"
+        return nil, Core:Text("CORE.ENTER_A_POSITIVE_ITEM_ID_OR_A")
     end
     local candidates, seen = {}, {}
     local function Add(value)
@@ -53,7 +53,7 @@ function Resolver:Parse(input, options)
         end
     end
     table.sort(candidates, function(a, b) return a.itemID < b.itemID end)
-    if #candidates == 0 then return nil, "背包和已知目录中没有匹配物品；请使用物品 ID 或链接。" end
+    if #candidates == 0 then return nil, Core:Text("CORE.NO_MATCHING_ITEM_IN_BAGS_OR_KNOWN") end
     return candidates
 end
 
@@ -66,11 +66,11 @@ function Resolver:Finish(itemID, success)
     success = success and info.name ~= nil
     self.failed[itemID] = not success or nil
     info.state = success and "ready" or "failed"
-    local message = not success and "物品信息加载失败；请检查 ID 后点击重试。" or nil
+    local message = not success and Core:Text("CORE.ITEM_INFORMATION_COULD_NOT_LOAD_CHECK_THE") or nil
     for _, waiter in ipairs(request.waiters) do
         if not waiter.cancelled then
             local ok, err = pcall(waiter.callback, info, message)
-            if not ok then Core:Print("物品信息回调失败：" .. tostring(err)) end
+            if not ok then Core:Print(Core:Text("CORE.ITEM_INFORMATION_CALLBACK_FAILED") .. tostring(err)) end
         end
     end
 end
@@ -82,11 +82,11 @@ function Resolver:Request(itemID, callback, options)
     local waiter = { callback = callback }
     function waiter:Cancel() self.cancelled = true end
     local info = self:GetInfo(itemID)
-    if not info then callback(nil, "无效物品 ID。"); return waiter end
+    if not info then callback(nil, Core:Text("CORE.INVALID_ITEM_ID")); return waiter end
     itemID = info.itemID
     if info.state == "ready" then callback(info); return waiter end
     if self.failed[itemID] and not options.retry then
-        callback(info, "物品信息加载失败；请检查 ID 后点击重试。"); return waiter
+        callback(info, Core:Text("CORE.ITEM_INFORMATION_COULD_NOT_LOAD_CHECK_THE")); return waiter
     end
     if self.pending[itemID] then
         table.insert(self.pending[itemID].waiters, waiter); return waiter

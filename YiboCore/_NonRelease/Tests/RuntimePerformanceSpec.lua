@@ -16,6 +16,11 @@ GetTime = function() return 100 end
 dofile('YiboCore/Bootstrap.lua')
 dofile('YiboCore/Util/Defaults.lua')
 dofile('YiboCore/Runtime/Capabilities.lua')
+GetLocale = GetLocale or function() return "zhCN" end
+
+dofile("YiboCore/Runtime/Locale.lua")
+dofile("YiboCore/Locales/zhCN.lua")
+dofile("YiboCore/Locales/enUS.lua")
 dofile('YiboCore/Runtime/Events.lua')
 dofile('YiboCore/Runtime/Registry.lua')
 dofile('YiboCore/Runtime/Contracts.lua')

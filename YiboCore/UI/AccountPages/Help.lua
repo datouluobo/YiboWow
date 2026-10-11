@@ -5,29 +5,29 @@ local Theme = Core.UITheme
 local COLORS = Theme.Colors
 local AddText = AccountView._internal.AddText
 
-local OPERATIONS = {
-    { "YiboCore · 账号总览", "Broker／小地图入口：左键打开或收起账号视图，右键打开对应设置；悬停查看多角色预览。拖动小地图入口可调整位置。拖动窗口标题栏可移动窗口。点击“排序”切换角色顺序，按住 Shift 点击可切换排序方向。Core 物品选择器出现拖放区时，可将背包物品拖入选取。" },
-    { "YiboAltoBoss · Boss 与副本进度", "账号页中点击角色与目标交叉处的状态格，可切换该角色的击杀记录；节日首领的状态格也可点击切换手动记录。等级筛选框按 Enter 应用，按 Escape 恢复已保存条件。" },
-    { "YiboLegendary · 传说之路", "点击目标列或角色进度格可打开对应路线。允许手动确认的进度行：左键标记已获得；对已有手动记录右键可撤销确认。" },
-    { "YiboQuestBlocker · 任务屏蔽", "点击任务行的展开图标可展开或折叠任务组。点击全局或角色状态格，可切换该任务的屏蔽状态。修改等级条件后按 Enter 应用。" },
-    { "YiboTodo · 每日行动", "点击当前角色可执行的行动图标会触发图标对应操作（例如使用物品、打开专业或制造）。有第二操作的图标可右键执行；具体动作以悬停提示和图标状态为准。" },
-    { "YiboMail · 邮件", "发规则寄页：把背包物品拖到快捷联系人图标，确认后建立或更新该物品的寄送规则。发件箱页：把背包物品拖到快捷联系人图标，会填入联系人与主题并尝试直接寄出；若客户端未确认发送，会保留已填邮件供你检查并手动发送。按住 Ctrl 点击背包物品，可把背包中同种物品一并加入附件。快捷联系人图标：右键编辑；左键拖到其它格可移动／交换，拖出联系人栏可移除。收件箱信件：左键展开／收起附件，右键打开／关闭原生信件，中键直接收取本封邮件附件；附件分组 Alt+左键只收最早到期邮件中的一个附件。" },
-    { "YiboCurrency · 货币总览", "右键点击货币行，可将该货币加入或移出悬停监控；自定义货币右键会先要求确认删除。悬停货币行可查看明细。" },
-    { "YiboVault · 账号仓库", "点击左侧角色或公会可切换物品来源，点击上方区域标签切换背包、银行等区域。悬停物品可查看物品提示与来源信息。" },
-    { "YiboCrafting · 专业配方", "点击配方行、配方名称或物品图标可选中配方并查看详情；使用筛选和搜索缩小配方列表。搜索框按 Enter 提交当前搜索，按 Escape 仅结束输入。" },
-    { "YiboReputation · 声望总览", "点击声望名称可展开／折叠分类；点击星标可加入或移出监控。点击具体声望条目可将其设为当前关注项。" },
-    { "YiboBuilds · 配装与外观", "装备模型预览：拖动模型可旋转，滚动鼠标滚轮可缩放。将背包中的可用附魔或宝石拖到角色装备栏对应部位，可在确认后进入游戏原生施加流程。其他装备、构筑与外观操作请使用页面上的按钮；覆盖装备前会显示确认框。" },
-    { "YiboAutoOpen · 自动开包", "在设置页把背包物品拖到“拖放背包物品到这里”，可将该物品加入自动开包目录。" },
-    { "YiboBeastPaths · 隐兽寻踪", "点击世界地图上的插件按钮，可开关地图路线显示。" },
-    { "YiboMounts · 坐骑图鉴", "在设置中点击“已收集”或“未收集”复选框，可切换对应坐骑是否显示。" },
-}
+local OPERATIONS = Core.Locale:Bind(function() return {
+    { Core:Text("CORE.YIBOCORE_ACCOUNT_OVERVIEW"), Core:Text("CORE.BROKER_MINIMAP_LEFT_CLICK_TO_TOGGLE_THE") },
+    { Core:Text("CORE.YIBOALTOBOSS_BOSSES_LOCKOUTS"), Core:Text("CORE.CLICK_A_CHARACTER_TARGET_STATUS_CELL_TO") },
+    { Core:Text("CORE.YIBOLEGENDARY_LEGENDARY_PATHS"), Core:Text("CORE.CLICK_A_TARGET_COLUMN_OR_CHARACTER_PROGRESS") },
+    { Core:Text("CORE.YIBOQUESTBLOCKER_QUEST_BLOCKER"), Core:Text("CORE.CLICK_A_QUEST_ROW_S_EXPAND_ICON") },
+    { Core:Text("CORE.YIBOTODO_DAILY_ACTIONS"), Core:Text("CORE.CLICK_AN_AVAILABLE_ACTION_ICON_FOR_THE") },
+    { Core:Text("CORE.YIBOMAIL_MAIL"), Core:Text("CORE.RULE_BASED_MAIL_DROP_A_BAG_ITEM") },
+    { Core:Text("CORE.YIBOCURRENCY_CURRENCY_OVERVIEW"), Core:Text("CORE.RIGHT_CLICK_A_CURRENCY_ROW_TO_TOGGLE") },
+    { Core:Text("CORE.YIBOVAULT_ACCOUNT_STORAGE"), Core:Text("CORE.SELECT_A_CHARACTER_OR_GUILD_ON_THE") },
+    { Core:Text("CORE.YIBOCRAFTING_PROFESSION_RECIPES"), Core:Text("CORE.CLICK_A_RECIPE_ROW_NAME_OR_ITEM") },
+    { Core:Text("CORE.YIBOREPUTATION_REPUTATION_OVERVIEW"), Core:Text("CORE.CLICK_A_REPUTATION_NAME_TO_EXPAND_OR") },
+    { Core:Text("CORE.YIBOBUILDS_EQUIPMENT_APPEARANCE"), Core:Text("CORE.MODEL_PREVIEW_DRAG_TO_ROTATE_AND_USE") },
+    { Core:Text("CORE.YIBOAUTOOPEN_AUTO_OPEN"), Core:Text("CORE.IN_SETTINGS_DROP_A_BAG_ITEM_INTO") },
+    { Core:Text("CORE.YIBOBEASTPATHS_BEAST_PATHS"), Core:Text("CORE.CLICK_THE_ADDON_BUTTON_ON_THE_WORLD") },
+    { Core:Text("CORE.YIBOMOUNTS_MOUNT_JOURNAL"), Core:Text("CORE.USE_THE_COLLECTED_AND_NOT_COLLECTED_CHECKBOXES") },
+} end)
 
-local USAGE_NOTES = {
-    { "账号概览", "从左侧选择业务页，比较角色的下一步行动。" },
-    { "角色构筑", "拖动旋转 · 滚轮缩放。" },
-    { "账号待办设置", "每个开关控制账号矩阵的一列；包含多个项目的列可单独选择项目。" },
-    { "声望监控设置", "星标可在主矩阵中快速添加；此处按当前顺序显示并可移除。" },
-}
+local USAGE_NOTES = Core.Locale:Bind(function() return {
+    { Core:Text("CORE.ACCOUNT_OVERVIEW_355"), Core:Text("CORE.CHOOSE_A_BUSINESS_PAGE_ON_THE_LEFT") },
+    { Core:Text("CORE.CHARACTER_BUILDS"), Core:Text("CORE.DRAG_TO_ROTATE_MOUSE_WHEEL_TO_ZOOM") },
+    { Core:Text("CORE.ACCOUNT_TO_DO_SETTINGS"), Core:Text("CORE.EACH_SWITCH_CONTROLS_A_COLUMN_IN_THE") },
+    { Core:Text("CORE.REPUTATION_MONITORING_SETTINGS"), Core:Text("CORE.ADD_STARS_QUICKLY_IN_THE_MAIN_MATRIX") },
+} end)
 
 local function CreateHelp(parent)
     parent.scroll = Theme:CreateScrollFrame(parent)
@@ -38,11 +38,12 @@ local function CreateHelp(parent)
     parent.scroll:SetScrollChild(parent.content)
     parent.title = AddText(parent.content, "GameFontNormalLarge", Theme.Font.title, COLORS.text)
     parent.title:SetPoint("TOPLEFT", 20, -18)
-    parent.title:SetText("快捷操作")
+    parent.title:SetText(Core:Text("CORE.QUICK_CONTROLS"))
 
     parent.intro = AddText(parent.content, "GameFontNormalSmall", Theme.Font.assist, COLORS.muted)
     parent.intro:SetPoint("TOPLEFT", parent.title, "BOTTOMLEFT", 0, -9)
-    parent.intro:SetText("按插件查看鼠标与键盘操作。仅列出有特殊行为的手势；未特别说明的按钮使用常规左键操作。")
+    parent.intro:SetPoint("RIGHT", -20, 0); parent.intro:SetWordWrap(true)
+    parent.intro:SetText("");parent.intro:Hide()
     parent.cards = {}
 
     for index, operation in ipairs(OPERATIONS) do
@@ -62,23 +63,23 @@ local function CreateHelp(parent)
         parent.cards[index] = card
     end
     local notesHeading = AddText(parent.content, "GameFontNormal", Theme.Font.section, COLORS.accent)
-    notesHeading:SetText("界面说明")
+    notesHeading:SetText(Core:Text("CORE.INTERFACE_GUIDE"))
     parent.notesHeading = notesHeading
     parent.notes = {}
     for index, note in ipairs(USAGE_NOTES) do
         local line = AddText(parent.content, "GameFontNormalSmall", Theme.Font.assist, COLORS.muted)
         line:SetWordWrap(true)
-        line:SetText(note[1] .. "：" .. note[2])
+        line:SetText(note[1] .. Core:Text("FORMAT.COLON") .. note[2])
         parent.notes[index] = line
     end
 
     local function Layout(scroll)
         local width = math.max(1, scroll:GetWidth() or 1)
         parent.content:SetWidth(width)
-        local previous, contentHeight = parent.intro, 82
+        local previous, contentHeight = parent.title, 40
         for _, card in ipairs(parent.cards) do
             card:ClearAllPoints()
-            card:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, previous == parent.intro and -20 or -8)
+            card:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, previous == parent.title and -12 or -8)
             card:SetWidth(math.max(1, width - 40))
             card.description:SetWidth(math.max(1, card:GetWidth() - 28))
             local height = math.max(68, card.description:GetStringHeight() + 42)
@@ -109,10 +110,8 @@ local function RefreshHelp(parent)
     if parent.scroll then parent.scroll:RefreshScrollbar() end
 end
 
-AccountView._pages.help = {
-    id = "help", title = "帮助", order = 990, internal = true,
+AccountView._pages.help = Core.Locale:Bind(function() return {
+    id = "help", title = Core:Text("CORE.HELP"), order = 990, internal = true,
     Create = CreateHelp, Refresh = RefreshHelp,
-    GetSurfaceMetrics = function()
-        return { minContentWidth = 582, naturalContentWidth = 764, minContentHeight = 150, naturalContentHeight = 180, verticalOverflow = "content" }
-    end,
-}
+    GetSurfaceMetrics = AccountView._internal.GetAboutSurfaceMetrics,
+} end)

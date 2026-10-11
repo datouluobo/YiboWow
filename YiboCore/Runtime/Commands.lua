@@ -10,6 +10,6 @@ SlashCmdList.YIBOCORE = function(message)
     elseif message == "settings" and Core.AccountView then
         Core.AccountView:ShowSettings()
     else
-        Core:Print("命令: /yco [settings]")
+        Core:Print(Core:Text("CORE.COMMAND_YCO_SETTINGS"))
     end
 end

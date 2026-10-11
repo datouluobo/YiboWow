@@ -7,16 +7,16 @@ Fields._definitions = Fields._definitions or {}
 local function Copy(value) return Core.Defaults:Copy(value) end
 
 function Fields:Register(owner, definition)
-    if type(owner) ~= "string" or owner == "" then return nil, "字段必须声明 owner。" end
-    if type(definition) ~= "table" then return nil, "字段定义不能为空。" end
-    if type(definition.id) ~= "string" or definition.id == "" then return nil, "字段必须提供 id。" end
-    if type(definition.consumer) ~= "string" or definition.consumer == "" then return nil, "字段必须提供 consumer。" end
-    if type(definition.domain) ~= "string" or not Core.DataDomains._definitions[definition.domain] then return nil, "字段必须引用已注册领域。" end
-    if definition.resource ~= nil and (type(definition.resource) ~= "string" or not Core.Resources:Get(definition.resource)) then return nil, "字段必须引用已注册资源。" end
-    if type(definition.Read) ~= "function" then return nil, "字段必须提供 Read 回调。" end
-    if self._definitions[definition.id] then return nil, "字段 ID 已被 " .. self._definitions[definition.id].owner .. " 占用: " .. definition.id end
+    if type(owner) ~= "string" or owner == "" then return nil, Core:Text("CORE.FIELDS_MUST_DECLARE_OWNER") end
+    if type(definition) ~= "table" then return nil, Core:Text("CORE.FIELD_DEFINITION_CANNOT_BE_EMPTY") end
+    if type(definition.id) ~= "string" or definition.id == "" then return nil, Core:Text("CORE.FIELDS_REQUIRE_ID") end
+    if type(definition.consumer) ~= "string" or definition.consumer == "" then return nil, Core:Text("CORE.FIELDS_REQUIRE_CONSUMER") end
+    if type(definition.domain) ~= "string" or not Core.DataDomains._definitions[definition.domain] then return nil, Core:Text("CORE.FIELDS_MUST_REFERENCE_A_REGISTERED_DOMAIN") end
+    if definition.resource ~= nil and (type(definition.resource) ~= "string" or not Core.Resources:Get(definition.resource)) then return nil, Core:Text("CORE.FIELDS_MUST_REFERENCE_A_REGISTERED_RESOURCE") end
+    if type(definition.Read) ~= "function" then return nil, Core:Text("CORE.FIELDS_REQUIRE_A_READ_CALLBACK") end
+    if self._definitions[definition.id] then return nil, Core:Text("CORE.FIELD_ID_IS_ALREADY_OWNED_BY") .. self._definitions[definition.id].owner .. Core:Text("CORE.PUNCTUATION_79") .. definition.id end
     local order = tonumber(definition.order)
-    if not order then return nil, "字段必须提供数值 order。" end
+    if not order then return nil, Core:Text("CORE.FIELDS_REQUIRE_A_NUMERIC_ORDER") end
     local claimed, errorMessage = Core.Registry:ClaimResource("field", definition.id, owner, { consumer = definition.consumer, domain = definition.domain })
     if not claimed then return nil, errorMessage end
     local entry = {

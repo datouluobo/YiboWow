@@ -39,10 +39,10 @@ end
 
 function DomainStore:Commit(characterID, domainID, data, state, context)
     local record = GetRecord(characterID)
-    if not record then return nil, "角色不存在: " .. tostring(characterID) end
-    if not (Core.DataDomains and Core.DataDomains:IsStateValid(state)) then return nil, "非法领域状态: " .. tostring(state) end
+    if not record then return nil, Core:Text("CORE.CHARACTER_NOT_FOUND") .. tostring(characterID) end
+    if not (Core.DataDomains and Core.DataDomains:IsStateValid(state)) then return nil, Core:Text("CORE.INVALID_DOMAIN_STATE") .. tostring(state) end
     local definition = Core.DataDomains._definitions[domainID]
-    if not definition then return nil, "未注册领域: " .. tostring(domainID) end
+    if not definition then return nil, Core:Text("CORE.UNREGISTERED_DOMAIN") .. tostring(domainID) end
     record.domains = record.domains or {}
     local previous = record.domains[domainID]
     local previousData = previous and previous.data or nil

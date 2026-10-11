@@ -18,10 +18,10 @@ end
 
 local function ValidateEvents(events)
     if events == nil then return true end
-    if type(events) ~= "table" then return nil, "领域 events 必须是事件名集合。" end
+    if type(events) ~= "table" then return nil, Core:Text("CORE.DOMAIN_EVENTS_MUST_BE_A_SET_OF") end
     for eventName, enabled in pairs(events) do
         if type(eventName) ~= "string" or eventName == "" or enabled ~= true then
-            return nil, "领域 events 只能包含启用的事件名。"
+            return nil, Core:Text("CORE.DOMAIN_EVENTS_MAY_ONLY_CONTAIN_ENABLED_EVENT")
         end
     end
     return true
@@ -32,17 +32,17 @@ function DataDomains:IsStateValid(state)
 end
 
 function DataDomains:Register(owner, definition)
-    if type(owner) ~= "string" or owner == "" then return nil, "领域必须声明 owner。" end
-    if type(definition) ~= "table" then return nil, "领域定义不能为空。" end
+    if type(owner) ~= "string" or owner == "" then return nil, Core:Text("CORE.DOMAINS_MUST_DECLARE_OWNER") end
+    if type(definition) ~= "table" then return nil, Core:Text("CORE.DOMAIN_DEFINITION_CANNOT_BE_EMPTY") end
     local id, version = definition.id, tonumber(definition.version)
-    if type(id) ~= "string" or id == "" then return nil, "领域必须提供 id。" end
-    if not version or version < 1 or version % 1 ~= 0 then return nil, "领域 version 必须为正整数。" end
-    if type(definition.Collect) ~= "function" then return nil, "领域必须提供 Collect 回调。" end
+    if type(id) ~= "string" or id == "" then return nil, Core:Text("CORE.DOMAINS_REQUIRE_ID") end
+    if not version or version < 1 or version % 1 ~= 0 then return nil, Core:Text("CORE.DOMAIN_VERSION_MUST_BE_A_POSITIVE_INTEGER") end
+    if type(definition.Collect) ~= "function" then return nil, Core:Text("CORE.DOMAINS_REQUIRE_A_COLLECT_CALLBACK") end
     local validEvents, eventError = ValidateEvents(definition.events)
     if not validEvents then return nil, eventError end
     local current = self._definitions[id]
     if current then
-        return nil, "领域 ID 已被 " .. current.owner .. " 占用: " .. id
+        return nil, Core:Text("CORE.DOMAIN_ID_IS_ALREADY_OWNED_BY") .. current.owner .. Core:Text("CORE.PUNCTUATION_79") .. id
     end
     local claimed, claimError = Core.Registry:ClaimResource("data-domain", id, owner, { version = version })
     if not claimed then return nil, claimError end
@@ -91,11 +91,11 @@ function DataDomains:Dispatch(eventName)
                 context.changedKeys = changedKeys
                 Core.DomainStore:Commit(character.id, definition.id, data or {}, state, context)
             else
-                Core:Print("领域 “" .. definition.id .. "” 返回了非法状态: " .. tostring(state))
+                Core:Print(Core:Text("CORE.DOMAIN") .. definition.id .. Core:Text("CORE.RETURNED_AN_INVALID_STATE") .. tostring(state))
                 Core.DomainStore:Commit(character.id, definition.id, nil, "error", context)
             end
         else
-            Core:Print("领域 “" .. definition.id .. "” 采集失败: " .. tostring(data))
+            Core:Print(Core:Text("CORE.DOMAIN") .. definition.id .. Core:Text("CORE.COLLECTION_FAILED") .. tostring(data))
             Core.DomainStore:Commit(character.id, definition.id, nil, "error", context)
         end
         count = count + 1

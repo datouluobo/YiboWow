@@ -27,14 +27,14 @@ function Core:CreateItemPicker(parent, config)
         local options, capacity = {}, 8
         local pages = math.max(1, math.ceil(#self.candidates / capacity))
         self.page = math.max(1, math.min(self.page, pages))
-        if self.page > 1 then options[#options + 1] = { value = "previous", label = "上一页" } end
+        if self.page > 1 then options[#options + 1] = { value = "previous", label = Core:Text("CORE.PREVIOUS") } end
         for index = (self.page - 1) * capacity + 1, math.min(self.page * capacity, #self.candidates) do
             local info = self.candidates[index]
-            options[#options + 1] = { value = info.itemID, label = (info.name or "物品") .. " · " .. info.itemID }
+            options[#options + 1] = { value = info.itemID, label = (info.name or Core:Text("CORE.ITEM")) .. " · " .. info.itemID }
         end
-        if self.page < pages then options[#options + 1] = { value = "next", label = "下一页" } end
+        if self.page < pages then options[#options + 1] = { value = "next", label = Core:Text("CORE.NEXT") } end
         self.dropdown:SetOptions(options)
-        self.dropdown:SetText(#self.candidates > 0 and ("选择候选 · " .. self.page .. "/" .. pages) or "暂无候选")
+        self.dropdown:SetText(#self.candidates > 0 and (Core:Text("CORE.CHOOSE_MATCH") .. self.page .. "/" .. pages) or Core:Text("CORE.NO_MATCHES"))
         self.dropdown:SetEnabled(#self.candidates > 0)
         if #self.candidates <= 1 then self.dropdown.menu:Hide() end
         if self.layoutWidth then self:Layout(self.layoutWidth) end
@@ -44,8 +44,8 @@ function Core:CreateItemPicker(parent, config)
         self.busy = false
         if ok then
             if not self.config.retainInput then self:SetValue("") end
-            self:Feedback(message or "操作成功。")
-        else self:Feedback(message or "操作失败。") end
+            self:Feedback(message or Core:Text("CORE.OPERATION_SUCCEEDED"))
+        else self:Feedback(message or Core:Text("CORE.OPERATION_FAILED")) end
         if ok and self.config.OnSuccess then self.config.OnSuccess() end
     end
     function picker:Run(action, info, generation)
@@ -59,7 +59,7 @@ function Core:CreateItemPicker(parent, config)
             action = self.config.Exists and self.config.Exists(info) and "remove" or "add"
         end
         local operation = self.config[action]
-        if not operation then self.busy = false; self:Feedback("该操作未启用。"); return end
+        if not operation then self.busy = false; self:Feedback(Core:Text("CORE.THIS_OPERATION_IS_DISABLED")); return end
         if operation.Validate then
             local ok, message = operation.Validate(info)
             if not ok then self:Finish(false, message, generation); return end
@@ -80,9 +80,9 @@ function Core:CreateItemPicker(parent, config)
                 IsCurrent = function() return self:IsCurrent(generation) end,
                 OnAccept = Execute,
                 OnCancel = function()
-                    if self:IsCurrent(generation) then self.busy = false; self:Feedback("已取消；输入已保留。") end
+                    if self:IsCurrent(generation) then self.busy = false; self:Feedback(Core:Text("CORE.CANCELLED_INPUT_PRESERVED")) end
                 end })
-            if not self.confirmation then self:Finish(false, "无法打开确认框，请重试。", generation) end
+            if not self.confirmation then self:Finish(false, Core:Text("CORE.CANNOT_OPEN_CONFIRMATION_PLEASE_RETRY"), generation) end
         else Execute() end
     end
     function picker:Resolve(action, retry)
@@ -97,20 +97,20 @@ function Core:CreateItemPicker(parent, config)
             input = input:gsub("；", ";"):gsub("，", ",")
             for token in (input .. ";"):gmatch("(.-)[;,]") do
                 token = token:match("^%s*(.-)%s*$")
-                if token == "" then self:Feedback("请填写每一个物品；分隔符之间不能留空。"); return end
+                if token == "" then self:Feedback(Core:Text("CORE.FILL_IN_EVERY_ITEM_DO_NOT_LEAVE")); return end
                 token = token:gsub("\001(%d+)\002", function(index) return links[tonumber(index)] end)
                 tokens[#tokens + 1] = token
             end
             local items, seen = {}, {}
             for index, token in ipairs(tokens) do
                 local candidates, message = Core.ItemResolver:Parse(token, self.config.resolve)
-                if not candidates then self:Feedback("第 " .. index .. " 项：" .. message); return end
-                if #candidates ~= 1 then self:Feedback("第 " .. index .. " 项有多个候选，请使用物品 ID 或链接。"); return end
+                if not candidates then self:Feedback(Core:Text("CORE.ITEM_245") .. index .. Core:Text("CORE.PUNCTUATION_246") .. message); return end
+                if #candidates ~= 1 then self:Feedback(Core:Text("CORE.ITEM_245") .. index .. Core:Text("CORE.HAS_MULTIPLE_MATCHES_USE_AN_ITEM_ID")); return end
                 local id = candidates[1].itemID
                 if not seen[id] then seen[id] = true; items[#items + 1] = candidates[1] end
             end
             self.busy, self.lastAction = true, action
-            self:Feedback("正在加载 " .. #items .. " 个物品…")
+            self:Feedback(Core:Text("CORE.LOADING") .. #items .. Core:Text("CORE.ITEMS"))
             local requests = {}
             local cancellation = { Cancel = function() for _, request in ipairs(requests) do request:Cancel() end end }
             self.request = cancellation
@@ -145,9 +145,9 @@ function Core:CreateItemPicker(parent, config)
         local selected
         if self.selected then for _, info in ipairs(candidates) do if info.itemID == self.selected then selected = info end end end
         if not selected and #candidates == 1 then selected = candidates[1] end
-        if not selected then self:Feedback("找到多个物品，请明确选择候选后再操作。"); return end
+        if not selected then self:Feedback(Core:Text("CORE.MULTIPLE_ITEMS_FOUND_SELECT_A_MATCH_BEFORE")); return end
         self.busy, self.lastAction = true, action
-        self:Feedback("正在加载物品信息…")
+        self:Feedback(Core:Text("CORE.LOADING_ITEM_INFORMATION"))
         self.request = Core.ItemResolver:Request(selected.itemID, function(info, err)
             if not self:IsCurrent(generation) then return end
             if err then self.canRetry = info and info.state == "failed"; self:Finish(false, err, generation); return end
@@ -156,7 +156,7 @@ function Core:CreateItemPicker(parent, config)
         end, { retry = retry })
     end
     picker.input = Theme:CreateInput(picker, {
-        placeholder = picker.config.placeholder or "物品 ID、链接或名称", maxLetters = picker.config.multiple and 1024 or 255, clearable = true,
+        placeholder = picker.config.placeholder or Core:Text("CORE.ITEM_ID_LINK_OR_NAME"), maxLetters = picker.config.multiple and 1024 or 255, clearable = true,
         OnChanged = function()
             picker:Invalidate(); picker.selected = nil; picker.candidates = {}; picker.page = 1
             picker:UpdateCandidates(); picker:Feedback("")
@@ -175,7 +175,7 @@ function Core:CreateItemPicker(parent, config)
         end
         picker:Invalidate(); picker.selected = value
         local info = Core.ItemResolver:GetInfo(value)
-        picker:Feedback((info.name or "物品") .. " · " .. value .. "；再次点击操作按钮提交。")
+        picker:Feedback((info.name or Core:Text("CORE.ITEM")) .. " · " .. value .. Core:Text("CORE.CLICK_THE_ACTION_BUTTON_AGAIN_TO_SUBMIT"))
     end)
     picker.controls = { { control = picker.input, width = 200, flexible = true } }
     if picker.config.candidateDropdown ~= false then
@@ -188,18 +188,18 @@ function Core:CreateItemPicker(parent, config)
         picker.controls[#picker.controls + 1] = { control = button, width = width }
         return button
     end
-    if picker.config.add then Button(picker.config.add.label or "添加物品", function() picker:Resolve("add") end, nil, 112) end
+    if picker.config.add then Button(picker.config.add.label or Core:Text("CORE.ADD_ITEM"), function() picker:Resolve("add") end, nil, 112) end
     if picker.config.dropMode then
-        picker.drop = Button("拖放物品到这里", function() picker:ReadCursor() end, nil, 180)
+        picker.drop = Button(Core:Text("CORE.DROP_ITEM_HERE"), function() picker:ReadCursor() end, nil, 180)
         picker.drop:RegisterForDrag("LeftButton")
         picker.drop:SetScript("OnReceiveDrag", function() picker:ReadCursor() end)
     end
-    picker.retry = Button("重试加载", function() picker:Resolve(picker.lastAction or picker.config.enterAction or "select", true) end, nil, 100)
+    picker.retry = Button(Core:Text("CORE.RETRY_LOAD"), function() picker:Resolve(picker.lastAction or picker.config.enterAction or "select", true) end, nil, 100)
     for _, definition in ipairs(picker.config.actions or {}) do
         local action = definition
         local button = Button(action.label, function()
             if picker.busy then return end
-            if action.IsEnabled and not action.IsEnabled() then picker:Feedback("当前无法执行该操作。"); return end
+            if action.IsEnabled and not action.IsEnabled() then picker:Feedback(Core:Text("CORE.THIS_OPERATION_IS_CURRENTLY_UNAVAILABLE")); return end
             picker:Invalidate()
             local ok, message = action.Execute()
             picker:Finish(ok, message, picker.generation)
@@ -209,14 +209,14 @@ function Core:CreateItemPicker(parent, config)
     end
     -- Keep the destructive action last in the data-and-cache operation group.
     if picker.config.remove then
-        picker.remove = Button(picker.config.remove.label or "删除自定义物品", function() picker:Resolve("remove") end, "danger", 160)
+        picker.remove = Button(picker.config.remove.label or Core:Text("CORE.DELETE_CUSTOM_ITEM"), function() picker:Resolve("remove") end, "danger", 160)
     end
     function picker:ReadCursor()
         if self.busy or self.unbound then return end
         local kind, itemID = GetCursorInfo()
-        if kind ~= "item" then self:Feedback("请从背包拖动物品到这里。"); return end
+        if kind ~= "item" then self:Feedback(Core:Text("CORE.DRAG_AN_ITEM_HERE_FROM_YOUR_BAGS")); return end
         local parsed = Core.ItemResolver:Parse(itemID, { allowName = false })
-        if not parsed then self:Feedback("无效物品拖放。"); return end
+        if not parsed then self:Feedback(Core:Text("CORE.INVALID_ITEM_DROP")); return end
         local previous = self.input:GetText():match("^%s*(.-)%s*$")
         self:SetValue(self.config.multiple and previous ~= "" and (previous .. ";" .. itemID) or itemID)
         -- Cursor is cleared only after a valid item identity is captured. No item action is performed.

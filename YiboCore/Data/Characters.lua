@@ -69,10 +69,10 @@ end
 
 local function NormalizeShortName(value)
     if value == nil then return "" end
-    if type(value) ~= "string" then return nil, "短名必须是文本。" end
+    if type(value) ~= "string" then return nil, Core:Text("CORE.SHORT_NAME_MUST_BE_TEXT") end
     value = value:match("^%s*(.-)%s*$")
     if value == "" then return "" end
-    if value:find("[%z\1-\31\127]") then return nil, "短名不能包含控制字符。" end
+    if value:find("[%z\1-\31\127]") then return nil, Core:Text("CORE.SHORT_NAME_CANNOT_CONTAIN_CONTROL_CHARACTERS") end
     return value
 end
 
@@ -124,7 +124,7 @@ end
 
 function Characters:SetShortName(characterID, value)
     local store = GetStore()
-    if type(characterID) ~= "string" or not (store and store.byID[characterID]) then return nil, "角色缓存不存在。" end
+    if type(characterID) ~= "string" or not (store and store.byID[characterID]) then return nil, Core:Text("CORE.CHARACTER_CACHE_DOES_NOT_EXIST") end
     local normalized, errorMessage = NormalizeShortName(value)
     if normalized == nil then return nil, errorMessage end
     local display = GetDisplayStore()
@@ -281,9 +281,9 @@ end
 
 function Characters:CanDelete(characterID)
     local store = GetStore()
-    if type(characterID) ~= "string" or characterID == "" then return false, "未选择角色。" end
-    if characterID == self:GetCurrentID() then return false, "当前登录角色不能删除，请切换到其它角色后再删除。" end
-    if not (store and store.byID and store.byID[characterID]) then return false, "角色缓存不存在。" end
+    if type(characterID) ~= "string" or characterID == "" then return false, Core:Text("CORE.NO_CHARACTER_SELECTED") end
+    if characterID == self:GetCurrentID() then return false, Core:Text("CORE.CANNOT_DELETE_THE_LOGGED_IN_CHARACTER_SWITCH") end
+    if not (store and store.byID and store.byID[characterID]) then return false, Core:Text("CORE.CHARACTER_CACHE_DOES_NOT_EXIST") end
     return true
 end
 
@@ -320,13 +320,13 @@ end
 function Characters:ImportLegacyCharacter(sourceAddon, legacyKey, data)
     local store = GetStore()
     if not store or type(data) ~= "table" then
-        return nil, "无有效的角色数据。"
+        return nil, Core:Text("CORE.NO_VALID_CHARACTER_DATA")
     end
 
     local proposedID = data.id or self:ResolveLegacyKey(legacyKey)
     if Core.CharacterCleanup then
         local blocked = Core.CharacterCleanup:IsLegacyImportBlocked(sourceAddon, legacyKey, proposedID, data)
-        if blocked then return nil, "该角色缓存已由用户删除，拒绝重新导入。" end
+        if blocked then return nil, Core:Text("CORE.THIS_CHARACTER_CACHE_WAS_DELETED_BY_THE") end
     end
 
     local characterID = self:ResolveLegacyKey(legacyKey)

@@ -13,6 +13,7 @@ local DEFAULTS = {
     characterDisplay = {},
     settings = {
         debug = false,
+        language = "auto",
         accountView = {
             point = "CENTER",
             relativePoint = "CENTER",
@@ -34,9 +35,9 @@ local DEFAULTS = {
             pageSizeSchema = 2,
             customCharacterOrder = {},
             entry = {
-                -- Core's own Broker/minimap visibility is a four-state choice.
-                -- The nested flags remain for compatibility with older releases.
-                coreMode = "both",
+                -- New channel defaults are applied by EntryConfig after legacy migration.
+                -- Keep legacy flags/angles as migration inputs; never prefill channels here.
+
                 minimap = { show = true, angle = 225 },
                 broker = { show = true },
                 showPreviewWhileMainWindowOpen = false,
@@ -67,7 +68,7 @@ function Database:Initialize()
 
     local migrated, errorMessage = Core.Migrations:Run(self.db)
     if not migrated then
-        Core:Print("数据库未加载: " .. errorMessage)
+        Core:Print(Core:Text("CORE.DATABASE_NOT_LOADED") .. errorMessage)
         return false, errorMessage
     end
 
@@ -82,6 +83,7 @@ function Core:Initialize()
         return false, errorMessage
     end
 
+    self.Locale:Initialize()
     self._private.initialized = true
     self:RegisterAddon(self.NAME, {
         version = self.VERSION,

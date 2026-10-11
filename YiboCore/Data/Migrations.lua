@@ -3,7 +3,7 @@ local Core = _G.YiboCore
 local Migrations = {}
 Core.Migrations = Migrations
 
-Migrations.CURRENT_SCHEMA = 10
+Migrations.CURRENT_SCHEMA = 11
 Migrations._steps = Migrations._steps or {}
 
 function Migrations:Register(version, callback)
@@ -17,13 +17,13 @@ end
 function Migrations:Run(db)
     local current = tonumber(db.schemaVersion) or 0
     if current > self.CURRENT_SCHEMA then
-        return false, "YiboCore 数据版本高于当前插件版本。"
+        return false, Core:Text("CORE.YIBOCORE_DATA_IS_NEWER_THAN_THIS_ADDON")
     end
 
     for version = current + 1, self.CURRENT_SCHEMA do
         local step = self._steps[version]
         if not step then
-            return false, "缺少数据库迁移步骤 v" .. version .. "。"
+            return false, Core:Text("CORE.MISSING_DATABASE_MIGRATION_STEP_V") .. version .. Core:Text("FORMAT.PERIOD")
         end
         step(db)
         db.schemaVersion = version
@@ -172,3 +172,8 @@ Migrations:Register(10, function(db)
 end)
 
 Core.Capabilities:Register("migrations", 1)
+
+Migrations:Register(11, function(db)
+    local view = db.settings.accountView
+    view.entry = Core.EntryConfig:Normalize(view.entry)
+end)

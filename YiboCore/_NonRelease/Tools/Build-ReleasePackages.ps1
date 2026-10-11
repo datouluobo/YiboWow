@@ -77,6 +77,9 @@ function Copy-ReleaseFiles {
         New-Item -ItemType Directory -Path (Split-Path $target -Parent) -Force | Out-Null
         Copy-Item -LiteralPath $source -Destination $target
     }
+    foreach ($notice in @("Libs\UPSTREAM.md", "Libs\Ace3-LICENSE.txt", "Libs\LDB-LICENSE.txt")) {
+        Copy-Item -LiteralPath (Join-Path $SourceRoot $notice) -Destination (Join-Path $destination $notice)
+    }
     # Runtime textures can be referenced dynamically by registered pages.
     $mediaDestination = Join-Path $destination "Media"
     New-Item -ItemType Directory -Path $mediaDestination -Force | Out-Null
@@ -118,11 +121,15 @@ $tocPath = Join-Path $projectRoot "YiboCore.toc"
 $version = Get-AddonVersion -TocPath $tocPath
 $outputRoot = [System.IO.Path]::GetFullPath($OutputRoot)
 New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
+$localizationChecker = Join-Path $workspaceRoot "Tools\Check-Localization.py"
+& python $localizationChecker --addon YiboCore --output (Join-Path $outputRoot "YiboCore-LocalizationReport.md")
+if ($LASTEXITCODE -ne 0) { throw "Localization report generation failed." }
+Write-Host "Review localization candidates and client acceptance before distribution: $outputRoot\YiboCore-LocalizationReport.md"
 $apiVersion = Select-String -Path (Join-Path $projectRoot "Bootstrap.lua") -Pattern '^Core\.API_VERSION\s*=\s*(\d+)' | Select-Object -First 1
 if (-not $apiVersion) { throw "Unable to find Core API version in Bootstrap.lua" }
 $apiTag = "api{0}" -f $apiVersion.Matches[0].Groups[1].Value
-$cfZip = Join-Path $outputRoot ("YiboCore-v{0}-{1}.zip" -f $version, $apiTag)
-$githubZip = Join-Path $outputRoot ("YiboCore-v{0}-{1}-github.zip" -f $version, $apiTag)
+$cfZip = Join-Path $outputRoot ("YiboCore-v{0}-curseforge.zip" -f $version)
+$githubZip = Join-Path $outputRoot ("YiboCore-v{0}-github.zip" -f $version)
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("YiboCore-build-" + [guid]::NewGuid().ToString("N"))
 $cfTempZip = Join-Path $tempRoot (Split-Path $cfZip -Leaf)
 $githubTempZip = Join-Path $tempRoot (Split-Path $githubZip -Leaf)

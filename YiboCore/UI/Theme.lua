@@ -46,15 +46,15 @@ Theme.Colors = {
     blocked = { 0.17, 0.075, 0.09, 0.98 },
 }
 
-Theme.StatusText = {
+Theme.StatusText = Core.Locale:Bind(function() return {
     empty = "—",
-    unknown = "未知",
-    unsynced = "未同步",
-    ["not-yet-scanned"] = "未同步",
-    unavailable = "不可用",
-    stale = "已过期",
-    error = "错误",
-}
+    unknown = Core:Text("CORE.UNKNOWN"),
+    unsynced = Core:Text("CORE.NOT_SYNCED"),
+    ["not-yet-scanned"] = Core:Text("CORE.NOT_SYNCED"),
+    unavailable = Core:Text("CORE.UNAVAILABLE"),
+    stale = Core:Text("CORE.EXPIRED"),
+    error = Core:Text("CORE.ERROR"),
+} end)
 
 Theme.Space = { xxs = 4, xs = 8, sm = 12, md = 16, lg = 20, xl = 24 }
 -- WoW's UI scale makes the former 11–12px data text too small on modern
@@ -127,13 +127,13 @@ function Theme:GetCharacterMatrixColumnWidth(context, characters)
     local maximum = self:MeasureText(self.Font.assist, "字字字字字字")
     local identity = minimum
     for _, character in ipairs(characters or (context and context.characters) or {}) do
-        local name = Core.Characters:FormatName({ name = tostring(character and character.name or "未知角色") })
+        local name = Core.Characters:FormatName({ name = tostring(character and character.name or Core:Text("CORE.UNKNOWN_CHARACTER")) })
         identity = math.max(identity, math.min(maximum, self:MeasureText(self.Font.assist, name)))
         -- In the cross-realm projection the realm is rendered on the second
         -- line. Reserve enough of the same 4–6 glyph budget for that smaller
         -- label, so it cannot paint into the adjacent character column.
         if context and context.scope == "all" then
-            local realm = tostring(character and character.realm or "未知服务器")
+            local realm = tostring(character and character.realm or Core:Text("CORE.UNKNOWN_REALM"))
             identity = math.max(identity, math.min(maximum, self:MeasureText(self.Font.meta, realm)))
         end
     end
@@ -148,10 +148,10 @@ function Theme:GetCharacterRowHeaderWidth(withProfessionIcon, context, character
     local maximum = self:MeasureText(self.Font.body, "字字字字字字")
     local identity = minimum
     for _, character in ipairs(characters or (context and context.characters) or {}) do
-        local name = Core.Characters:FormatName({ name = tostring(character and character.name or "未知角色") })
+        local name = Core.Characters:FormatName({ name = tostring(character and character.name or Core:Text("CORE.UNKNOWN_CHARACTER")) })
         identity = math.max(identity, math.min(maximum, self:MeasureText(self.Font.body, name)))
         if context and context.scope == "all" then
-            local realm = tostring(character and character.realm or "未知服务器")
+            local realm = tostring(character and character.realm or Core:Text("CORE.UNKNOWN_REALM"))
             local fullName = Core.Characters:FormatName({ name = name, realm = realm }, { realmMode = "full" })
             identity = math.max(identity, self:MeasureText(self.Font.body, fullName))
         end
@@ -221,6 +221,15 @@ function Theme:MeasureText(size, value)
     self._measureText:SetFont(STANDARD_TEXT_FONT, size or self.Font.body)
     self._measureText:SetText(tostring(value or ""))
     return math.ceil(self._measureText:GetStringWidth() or 0)
+end
+
+function Theme:GetNavigationWidth()
+    local width = 140
+    for _, key in ipairs({ "CORE.CORE_SETTINGS", "CORE.CHARACTERS_SORTING", "CORE.DISPLAY_ENTRIES", "CORE.CHARACTER_ARCHIVE" }) do
+        width = math.max(width, self:MeasureText(self.Font.body, Core:Text(key)) + 40)
+    end
+    self.Geometry.navigation = width
+    return width
 end
 
 -- Dense table columns are measured by Core so business pages never invent
@@ -312,11 +321,11 @@ end
 
 function Theme:SetCharacterHeader(header, character, context, options)
     options = options or {}
-    local identity = { id = character and character.id, name = character and character.name or "未知角色", realm = options.realm or (character and character.realm) or "未知服务器" }
+    local identity = { id = character and character.id, name = character and character.name or Core:Text("CORE.UNKNOWN_CHARACTER"), realm = options.realm or (character and character.realm) or Core:Text("CORE.UNKNOWN_REALM") }
     -- Legacy header mode "full" means the original name, without a realm.
     -- Explicit name overrides keep taking precedence for existing consumers.
     local name = options.name or Core.Characters:FormatName(identity, { nameMode = (options.nameMode == nil or options.nameMode == "short") and "short" or "original" })
-    local realm = options.realm or (character and character.realm) or "未知服务器"
+    local realm = options.realm or (character and character.realm) or Core:Text("CORE.UNKNOWN_REALM")
     local class = options.class or (character and character.class)
     local color = options.color or (class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class]) or self.Colors.text
     local showRealm = context and context.scope == "all"
@@ -329,14 +338,14 @@ function Theme:SetCharacterHeader(header, character, context, options)
     local fullName = Core.Characters:FormatName({ name = tostring((character and character.name) or name), realm = tostring(realm) }, { realmMode = "full" })
     local lines = {}
     if tostring(name) ~= tostring(character and character.name or name) then
-        lines[#lines + 1] = { kind = "pair", label = "短名", value = tostring(name) }
+        lines[#lines + 1] = { kind = "pair", label = Core:Text("CORE.SHORT_NAME"), value = tostring(name) }
     end
     if tonumber(options.updatedAt) and tonumber(options.updatedAt) > 0 and date then
-        lines[#lines + 1] = { kind = "pair", label = "最近同步", value = date("%m-%d %H:%M", options.updatedAt) }
+        lines[#lines + 1] = { kind = "pair", label = Core:Text("CORE.LAST_SYNCED"), value = date("%m-%d %H:%M", options.updatedAt) }
     end
     if options.state and options.state ~= "known" then
-        lines[#lines + 1] = { kind = "pair", label = "数据状态", value = self.StatusText[options.state] or self.StatusText.unknown }
-        lines[#lines + 1] = { text = options.recovery or "登录该角色后同步。", color = self.Colors.muted }
+        lines[#lines + 1] = { kind = "pair", label = Core:Text("CORE.DATA_STATUS"), value = self.StatusText[options.state] or self.StatusText.unknown }
+        lines[#lines + 1] = { text = options.recovery or Core:Text("CORE.LOG_IN_TO_THIS_CHARACTER_TO_SYNC"), color = self.Colors.muted }
     end
     self:BindTooltip(header, fullName, #lines > 0 and lines or nil)
     return header
@@ -515,7 +524,12 @@ function Theme:CreateDropdown(parent, width, options)
             for index, option in ipairs(self.options) do if option.value == self.value then self.menuPage = math.floor((index - 1) / self.menuPageSize) + 1; break end end
             self:SetOptions(self.options)
         end
-        self.menu:ClearAllPoints(); self.menu:SetWidth(self:GetWidth())
+        local menuWidth = self:GetWidth()
+        for _, option in ipairs(self.options) do
+            menuWidth = math.max(menuWidth, Theme:MeasureText(Theme.Font.body, option.label or tostring(option.value or "")) + 24)
+        end
+        self.menu:ClearAllPoints(); self.menu:SetWidth(math.min(menuWidth, math.max(1, UIParent:GetWidth() - 32)))
+        self.menu:SetClampedToScreen(true)
         local opensAbove = self.GetBottom and self:GetBottom() and (self:GetBottom() - 2 - self.menu:GetHeight()) < 16
         if opensAbove then self.menu:SetPoint("BOTTOMLEFT", self, "TOPLEFT", 0, 2) else self.menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2) end
         self.menu:SetFrameLevel(math.max((popupOwner:GetFrameLevel() or 0) + 30, (self:GetFrameLevel() or 0) + 10))
@@ -535,7 +549,7 @@ function Theme:CreateMultiSelectDropdown(parent, width, options)
     dropdown.arrow = self:CreateText(dropdown, self.Font.assist, self.Colors.muted, "RIGHT")
     dropdown.arrow:SetPoint("RIGHT", -8, 0); dropdown.arrow:SetText("v")
     dropdown.label:SetPoint("LEFT", 10, 0); dropdown.label:SetPoint("RIGHT", dropdown.arrow, "LEFT", -6, 0)
-    dropdown.options, dropdown.summaryPrefix = {}, "字段"
+    dropdown.options, dropdown.summaryPrefix = {}, Core:Text("CORE.FIELD")
     local popupOwner = parent
     while popupOwner and popupOwner:GetParent() and popupOwner:GetParent() ~= UIParent do popupOwner = popupOwner:GetParent() end
     popupOwner = popupOwner or UIParent
@@ -546,7 +560,7 @@ function Theme:CreateMultiSelectDropdown(parent, width, options)
     dropdown.menu:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     dropdown.menu:SetBackdropColor(Color(self.Colors.panel)); dropdown.menu:SetBackdropBorderColor(Color(self.Colors.line))
     dropdown.menu:Hide(); dropdown.menu.checks = {}
-    function dropdown:SetSummary(prefix) self.summaryPrefix = prefix or "字段" end
+    function dropdown:SetSummary(prefix) self.summaryPrefix = prefix or Core:Text("CORE.FIELD") end
     function dropdown:RefreshSummary()
         local selected = 0
         for _, option in ipairs(self.options) do if type(option.isSelected) == "function" and option.isSelected() then selected = selected + 1 end end
@@ -559,7 +573,7 @@ function Theme:CreateMultiSelectDropdown(parent, width, options)
     function dropdown:RenderOptions()
         self.displayedOptions = {}
         for _, option in ipairs(self.options) do
-            if #self.groups <= 1 or (option.group or "常规") == self.activeGroup then self.displayedOptions[#self.displayedOptions + 1] = option end
+            if #self.groups <= 1 or (option.group or Core:Text("CORE.GENERAL")) == self.activeGroup then self.displayedOptions[#self.displayedOptions + 1] = option end
         end
         local top = #self.groups > 1 and 40 or 5
         for _, check in ipairs(self.menu.checks) do check:Hide() end
@@ -589,7 +603,7 @@ function Theme:CreateMultiSelectDropdown(parent, width, options)
         self.options, self.groups = nextOptions or {}, {}
         local seen = {}
         for _, option in ipairs(self.options) do
-            local group = option.group or "常规"
+            local group = option.group or Core:Text("CORE.GENERAL")
             if not seen[group] then seen[group] = true; self.groups[#self.groups + 1] = group end
         end
         if not seen[self.activeGroup] then self.activeGroup = self.groups[1] end

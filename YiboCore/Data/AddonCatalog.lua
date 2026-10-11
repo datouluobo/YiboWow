@@ -1,117 +1,112 @@
 local Core = _G.YiboCore
-local beastPathsTitle = GetLocale and GetLocale() == "zhCN" and "隐兽寻踪" or "YiboBeastPaths"
-local altoBossTitle = GetLocale and GetLocale() == "zhCN" and "首领追踪" or "Boss Tracker"
-local altoBossDescription = GetLocale and GetLocale() == "zhCN"
-    and "跨角色追踪世界首领、节日首领与自定义目标；副本 CD 监控即将加入。"
-    or "Tracks world bosses, holiday bosses, and custom targets across characters; instance lockout tracking is planned."
 
 -- Static presentation metadata only.  Versions deliberately live in the
 -- generated packaging manifest and in the player's installed TOCs.
-Core.AddonCatalog = {
+Core.AddonCatalog = Core.Locale:Bind(function() return {
     {
         name = "YiboAltoBoss",
-        title = altoBossTitle,
+        title = Core:Text("CORE.BOSS_TRACKER"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboCore\\Media\\YAB_MinimapIcon",
-        description = altoBossDescription,
+        description = Core:Text("CORE.TRACK_WORLD_BOSSES_HOLIDAY_BOSSES_AND_CUSTOM"),
         projectURL = "https://www.curseforge.com/wow/addons/yiboaltoboss",
     },
     {
         name = "YiboBuilds",
-        title = "角色构筑",
+        title = Core:Text("CORE.CHARACTER_BUILDS"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon-v1",
-        description = "跨角色查看装备、天赋与雕文构筑。",
+        description = Core:Text("CORE.VIEW_EQUIPMENT_TALENTS_AND_GLYPH_BUILDS_ACROSS"),
         projectURL = "https://www.curseforge.com/wow/addons/yibobuilds",
     },
     {
         name = "YiboCurrency",
-        title = "货币管家",
+        title = Core:Text("CORE.CURRENCY_MANAGER"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboCurrency\\Media\\YiboCurrencyIcon-v1",
-        description = "跨角色货币追踪。",
+        description = Core:Text("CORE.TRACK_CURRENCIES_ACROSS_CHARACTERS"),
         projectURL = "https://www.curseforge.com/wow/addons/yibocurrency",
     },
     {
         name = "YiboCrafting",
-        title = "专业制造",
+        title = Core:Text("CORE.CRAFTING"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboCrafting\\Media\\YiboCraftingIcon-v2",
-        description = "跨角色查看已确认学习的专业配方。",
+        description = Core:Text("CORE.VIEW_CONFIRMED_LEARNED_PROFESSION_RECIPES_ACROSS_CHARACTERS"),
         projectURL = "https://www.curseforge.com/wow/addons/yibocrafting",
     },
     {
         name = "YiboLegendary",
-        title = "传说之路",
+        title = Core:Text("CORE.LEGENDARY_PATHS"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon-v1",
-        description = "传说物品收集进度。",
+        description = Core:Text("CORE.TRACK_LEGENDARY_ITEM_COLLECTION_PROGRESS"),
         projectURL = "https://www.curseforge.com/wow/addons/yibolegendary",
     },
     {
         name = "YiboQuestBlocker",
-        title = "任务阻断",
+        title = Core:Text("CORE.QUEST_BLOCKER"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboCore\\Media\\YQB_MinimapIcon",
-        description = "任务前置条件与阻断原因。",
+        description = Core:Text("CORE.QUEST_PREREQUISITES_AND_BLOCKING_CONDITIONS"),
         projectURL = "https://www.curseforge.com/wow/addons/yiboquestblocker",
     },
     {
         name = "YiboTodo",
-        title = "账号待办",
+        title = Core:Text("CORE.ACCOUNT_TO_DO"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboTodo\\Media\\YiboTodoIcon-v6",
-        description = "账号待办事项。",
+        description = Core:Text("CORE.ACCOUNT_TASKS"),
         projectURL = "https://www.curseforge.com/wow/addons/yibotodo",
     },
     {
         name = "YiboVault",
-        title = "物品总览",
+        title = Core:Text("CORE.ITEM_OVERVIEW"),
         relation = "core-child",
-        description = "跨角色查询背包、装备与后续已验证的库存来源。",
+        description = Core:Text("CORE.FIND_ITEMS_IN_BAGS_EQUIPMENT_AND_OTHER"),
         icon = "Interface\\AddOns\\YiboVault\\Media\\YiboVaultIcon-v2",
         projectURL = "https://www.curseforge.com/wow/addons/yibovault",
     },
     {
         name = "YiboMail",
-        title = "邮件助手",
+        title = Core:Text("CORE.MAIL_ASSISTANT"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboMail\\Media\\YiboMailIcon-v1",
-        description = "跨角色邮件快照、积压缓存与附件来源。",
+        description = Core:Text("CORE.MAIL_SNAPSHOTS_BACKLOG_CACHES_AND_ATTACHMENT_SOURCES"),
         projectURL = "https://www.curseforge.com/wow/addons/yibomail",
     },
     {
         name = "YiboReputation",
-        title = "声望之路",
+        title = Core:Text("CORE.REPUTATION_PATHS"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboReputation\\Media\\YiboReputationIcon-v1",
-        description = "跨角色声望进度。",
+        description = Core:Text("CORE.REPUTATION_PROGRESS_ACROSS_CHARACTERS"),
         projectURL = "https://www.curseforge.com/wow/addons/yiboreputation",
     },
     {
         name = "YiboAutoOpen",
-        title = "自动开包",
+        title = Core:Text("CORE.AUTO_OPEN"),
         relation = "optional-core",
         icon = "Interface\\AddOns\\YiboAutoOpen\\Media\\YiboAutoOpenIcon-v2",
-        description = "安全地自动开启账号目录中的容器物品。",
+        description = Core:Text("CORE.SAFELY_OPEN_CONTAINER_ITEMS_FROM_THE_ACCOUNT"),
         projectURL = "https://www.curseforge.com/wow/addons/yiboautoopen",
     },
     {
         name = "YiboBeastPaths",
-        title = beastPathsTitle,
+        title = Core:Text("CORE.BEAST_PATHS"),
         relation = "optional-core",
         icon = "Interface\\AddOns\\YiboCore\\Media\\YBP_AddonIcon",
-        description = "潘达利亚隐藏猎人宠物路线图。",
+        description = Core:Text("CORE.HIDDEN_HUNTER_PET_ROUTES_IN_PANDARIA"),
         projectURL = "https://www.curseforge.com/wow/addons/yibobeastpaths",
     },
     {
         name = "YiboMounts",
-        title = "坐骑图鉴",
+        title = Core:Text("CORE.MOUNT_JOURNAL"),
         relation = "optional-core",
         icon = "Interface\\AddOns\\YiboMounts\\Media\\YiboMountsIcon-v1",
-        description = "在光环、聊天链接与坐骑面板提示中显示坐骑获取来源。",
+        description = Core:Text("CORE.SHOW_MOUNT_SOURCES_IN_AURAS_CHAT_LINKS"),
         projectURL = "https://www.curseforge.com/wow/addons/yibomounts",
     },
-}
+} end)
 
 Core.Capabilities:Register("addon-catalog", 1)

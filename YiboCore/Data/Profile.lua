@@ -30,8 +30,8 @@ local function QueueLegacyUpdate(characterID, reason)
 end
 
 function Profile:RegisterCollector(name, callback, events)
-    if type(name) ~= "string" or name == "" or type(callback) ~= "function" then return nil, "角色档案采集器必须提供名称和回调。" end
-    if self._collectors[name] then return nil, "角色档案采集器已存在: " .. name end
+    if type(name) ~= "string" or name == "" or type(callback) ~= "function" then return nil, Core:Text("CORE.CHARACTER_PROFILE_COLLECTORS_REQUIRE_A_NAME_AND") end
+    if self._collectors[name] then return nil, Core:Text("CORE.CHARACTER_PROFILE_COLLECTOR_ALREADY_EXISTS") .. name end
     self._collectors[name] = { callback = callback, events = events }
     return true
 end
@@ -50,7 +50,7 @@ local function RunLegacyCollectors(reason)
                 record.observedAt.collectors = record.observedAt.collectors or {}; record.observedAt.collectors[name] = now
             else
                 record.availability["collector:" .. name] = "error"
-                Core:Print("角色档案采集器 “" .. name .. "” 失败：" .. errorMessage)
+                Core:Print(Core:Text("CORE.CHARACTER_PROFILE_COLLECTOR") .. name .. Core:Text("CORE.FAILED") .. errorMessage)
             end
         end
     end

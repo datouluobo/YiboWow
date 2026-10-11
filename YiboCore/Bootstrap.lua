@@ -4,8 +4,8 @@ local Core = _G.YiboCore or {}
 _G.YiboCore = Core
 
 Core.NAME = "YiboCore"
-Core.VERSION = "1.11.0"
-Core.API_VERSION = 12
+Core.VERSION = "1.12.0"
+Core.API_VERSION = 13
 Core._private = Core._private or {}
 Core._private.addonName = ADDON_NAME or Core.NAME
 Core._private.initialized = false
@@ -29,7 +29,7 @@ end
 
 function Core:Print(message)
     if DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
-        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 核心：" .. tostring(message))
+        DEFAULT_CHAT_FRAME:AddMessage(Core:Text("CORE.CFF20E070_YIBO_R_CORE") .. tostring(message))
     end
 end
 
@@ -50,6 +50,8 @@ lifecycleFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 lifecycleFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 lifecycleFrame:RegisterEvent("UPDATE_FACTION")
 lifecycleFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+lifecycleFrame:RegisterEvent("DISPLAY_SIZE_CHANGED")
+lifecycleFrame:RegisterEvent("UI_SCALE_CHANGED")
 
 lifecycleFrame:SetScript("OnEvent", function(_, event, arg1)
     if event == "ADDON_LOADED" then

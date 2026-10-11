@@ -9,87 +9,83 @@ local AddText = Helpers.AddText
 local CreateChromeButton = Helpers.CreateChromeButton
 local PageEnabled = Helpers.PageEnabled
 
-local aboutAltoBossTitle = GetLocale and GetLocale() == "zhCN" and "首领追踪" or "Boss Tracker"
-local aboutAltoBossDescription = GetLocale and GetLocale() == "zhCN"
-    and "跨角色追踪世界首领、节日首领与自定义目标；副本 CD 监控即将加入。"
-    or "Tracks world bosses, holiday bosses, and custom targets across characters; instance lockout tracking is planned."
 
-local ABOUT_ADDONS = {
+local ABOUT_ADDONS = Core.Locale:Bind(function() return {
     {
         name = "YiboAltoBoss",
-        title = aboutAltoBossTitle,
+        title = Core:Text("CORE.BOSS_TRACKER"),
         version = "2.1",
-        description = aboutAltoBossDescription,
+        description = Core:Text("CORE.TRACK_WORLD_BOSSES_HOLIDAY_BOSSES_AND_CUSTOM"),
         icon = "Interface\\AddOns\\YiboCore\\Media\\YAB_MinimapIcon",
         url = "https://www.curseforge.com/wow/addons/yiboaltoboss",
     },
     {
         name = "YiboCurrency",
         version = "0.1",
-        description = "汇总多角色货币余额，统一查看常规货币与物品代币。",
+        description = Core:Text("CORE.COMPARE_CURRENCY_BALANCES_ACROSS_CHARACTERS_INCLUDING_STANDARD"),
         icon = "Interface\\AddOns\\YiboCurrency\\Media\\YiboCurrencyIcon-v1",
         url = "https://www.curseforge.com/wow/addons/yibocurrency",
     },
     {
         name = "YiboCrafting",
-        title = "专业制造",
-        description = "跨角色查看已确认学习的专业配方。",
+        title = Core:Text("CORE.CRAFTING"),
+        description = Core:Text("CORE.VIEW_CONFIRMED_LEARNED_PROFESSION_RECIPES_ACROSS_CHARACTERS"),
         icon = "Interface\\AddOns\\YiboCrafting\\Media\\YiboCraftingIcon-v2",
         url = "https://www.curseforge.com/wow/addons/yibocrafting",
     },
     {
         name = "YiboBuilds",
         version = "1.0.0",
-        description = "跨角色查看装备、天赋与雕文构筑。",
+        description = Core:Text("CORE.VIEW_EQUIPMENT_TALENTS_AND_GLYPH_BUILDS_ACROSS"),
         icon = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon-v1",
         url = "https://www.curseforge.com/wow/addons/yibobuilds",
     },
     {
         name = "YiboLegendary",
         version = "1.0",
-        description = "追踪多角色传说任务与橙色传说装备进度。",
+        description = Core:Text("CORE.TRACK_LEGENDARY_QUESTS_AND_EQUIPMENT_ACROSS_CHARACTERS"),
         icon = "Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon-v1.tga",
         url = "https://www.curseforge.com/wow/addons/yibolegendary",
     },
     {
         name = "YiboMail",
-        title = "邮件助手",
-        description = "跨角色邮件快照、积压缓存与附件来源。",
+        title = Core:Text("CORE.MAIL_ASSISTANT"),
+        description = Core:Text("CORE.MAIL_SNAPSHOTS_BACKLOG_CACHES_AND_ATTACHMENT_SOURCES"),
         icon = "Interface\\AddOns\\YiboMail\\Media\\YiboMailIcon-v1",
         url = "https://www.curseforge.com/wow/addons/yibomail",
     },
     {
         name = "YiboQuestBlocker",
         version = "2.1",
-        description = "识别任务限制与风险，避免误接关键任务。",
+        description = Core:Text("CORE.IDENTIFY_QUEST_RESTRICTIONS_AND_RISKS_TO_AVOID"),
         icon = "Interface\\AddOns\\YiboCore\\Media\\YQB_MinimapIcon",
         url = "https://www.curseforge.com/wow/addons/yiboquestblocker",
     },
     {
         name = "YiboTodo",
         version = "0.1",
-        description = "汇总多角色待办与专业冷却，明确下一项可做事务。",
+        description = Core:Text("CORE.REVIEW_TASKS_AND_PROFESSION_COOLDOWNS_ACROSS_CHARACTERS"),
         icon = "Interface\\AddOns\\YiboTodo\\Media\\YiboTodoIcon-v6",
         url = "https://www.curseforge.com/wow/addons/yibotodo",
     },
     {
         name = "YiboVault",
-        title = "物品总览",
-        description = "跨角色查询背包、装备、银行、邮件与公会银行物品。",
+        title = Core:Text("CORE.ITEM_OVERVIEW"),
+        description = Core:Text("CORE.FIND_ITEMS_IN_BAGS_EQUIPMENT_BANKS_MAIL"),
         icon = "Interface\\AddOns\\YiboVault\\Media\\YiboVaultIcon-v2",
         url = "https://www.curseforge.com/wow/addons/yibovault",
     },
     {
         name = "YiboReputation",
         version = "1.0",
-        description = "汇总多角色声望，掌握阵营关系与晋升进度。",
+        description = Core:Text("CORE.COMPARE_REPUTATION_STANDINGS_AND_ADVANCEMENT_ACROSS_CHARACTERS"),
         icon = "Interface\\AddOns\\YiboReputation\\Media\\YiboReputationIcon-v1",
         url = "https://www.curseforge.com/wow/addons/yiboreputation",
     },
     {
         name = "YiboAutoOpen",
         version = "1.0",
-        description = "安全地自动开启账号目录中的容器物品。",
+        description = Core:Text("CORE.SAFELY_OPEN_CONTAINER_ITEMS_FROM_THE_ACCOUNT"),
         icon = "Interface\\AddOns\\YiboAutoOpen\\Media\\YiboAutoOpenIcon-v2",
         relation = "optional-core",
         url = "https://www.curseforge.com/wow/addons/yiboautoopen",
@@ -97,7 +93,7 @@ local ABOUT_ADDONS = {
     {
         name = "YiboBeastPaths",
         version = "1.6",
-        description = "在地图上显示稀有猎人宠物的巡逻路线。",
+        description = Core:Text("CORE.SHOW_RARE_HUNTER_PET_PATROL_ROUTES_ON"),
         icon = "Interface\\AddOns\\YiboCore\\Media\\YBP_AddonIcon",
         url = "https://www.curseforge.com/wow/addons/yibobeastpaths",
         relation = "optional-core",
@@ -105,12 +101,12 @@ local ABOUT_ADDONS = {
     {
         name = "YiboMounts",
         version = "0.8.1",
-        description = "在光环、聊天链接与坐骑面板提示中显示坐骑获取来源。",
+        description = Core:Text("CORE.SHOW_MOUNT_SOURCES_IN_AURAS_CHAT_LINKS"),
         icon = "Interface\\AddOns\\YiboMounts\\Media\\YiboMountsIcon-v1",
         relation = "optional-core",
         url = "https://www.curseforge.com/wow/addons/yibomounts",
     },
-}
+} end)
 
 -- Compatibility fallback for an incomplete local checkout only.  Normal
 -- releases replace this legacy presentation list with the shared catalog so
@@ -124,7 +120,7 @@ local function SetAboutLinkOpen(parent, target)
             row.linkOpen = open
             row.linkBox:SetShown(open)
             row.copyHint:SetShown(open)
-            row.linkButton:SetText(open and "收起链接" or "获取链接")
+            row.linkButton:SetText(open and Core:Text("CORE.HIDE_LINK") or Core:Text("CORE.GET_LINK"))
             row:SetHeight(open and 130 or 96)
             if open then
                 row.linkBox:SetText(row.addon.url)
@@ -153,7 +149,7 @@ local function SetAboutCoreLinkOpen(parent)
     hero:SetHeight(hero.linkOpen and 146 or 112)
     hero.linkBox:SetShown(hero.linkOpen)
     hero.copyHint:SetShown(hero.linkOpen)
-    hero.linkButton:SetText(hero.linkOpen and "收起链接" or "获取链接")
+    hero.linkButton:SetText(hero.linkOpen and Core:Text("CORE.HIDE_LINK") or Core:Text("CORE.GET_LINK"))
     if hero.linkOpen then
         hero.linkBox:SetText(CORE_PROJECT_URL)
         hero.linkBox:SetFocus()
@@ -188,6 +184,7 @@ local function CreateAboutAddonRow(parent, addon)
     row.version:SetText(FormatVersion(addon.version))
     row.description = AddText(row, "GameFontNormalSmall", Theme.Font.assist, COLORS.muted)
     row.description:SetPoint("TOPLEFT", row.name, "BOTTOMLEFT", 0, -8); row.description:SetPoint("RIGHT", addon.url and -154 or -12, 0); row.description:SetText(addon.description)
+    row.description:SetWordWrap(true)
     row.relation = addon.relation or (addon.independent and "independent" or "core-child")
     row.isIndependent = row.relation == "independent"
     row.isOptionalCore = row.relation == "optional-core"
@@ -195,11 +192,11 @@ local function CreateAboutAddonRow(parent, addon)
         row.badge = AddText(row, "GameFontNormalSmall", Theme.Font.meta, COLORS.muted)
         row.badge:SetJustifyH("RIGHT")
         row.badge:SetPoint("RIGHT", -142, 0)
-        row.badge:SetText(row.isOptionalCore and "可选接入" or "独立作品")
+        row.badge:SetText(row.isOptionalCore and Core:Text("CORE.OPTIONAL_INTEGRATION") or Core:Text("CORE.STANDALONE_ADDON"))
     end
 
     if addon.url then
-        row.linkButton = CreateChromeButton(row, 112, 26, "获取链接")
+        row.linkButton = CreateChromeButton(row, 112, 26, Core:Text("CORE.GET_LINK"))
         row.linkButton:SetPoint("TOPRIGHT", -12, -22)
         row.linkBox = CreateFrame("EditBox", nil, row, "BackdropTemplate")
         row.linkBox:SetHeight(24); row.linkBox:SetPoint("BOTTOMLEFT", 96, 9); row.linkBox:SetPoint("BOTTOMRIGHT", -128, 9)
@@ -221,7 +218,7 @@ local function CreateAboutAddonRow(parent, addon)
         end)
         row.copyHint = AddText(row, "GameFontNormalSmall", Theme.Font.meta, COLORS.accent)
         row.copyHint:SetJustifyH("RIGHT")
-        row.copyHint:SetPoint("LEFT", row.linkBox, "RIGHT", 8, 0); row.copyHint:SetPoint("RIGHT", -12, 0); row.copyHint:SetText("按 Ctrl+C 复制")
+        row.copyHint:SetPoint("LEFT", row.linkBox, "RIGHT", 8, 0); row.copyHint:SetPoint("RIGHT", -12, 0); row.copyHint:SetText(Core:Text("CORE.PRESS_CTRL_C_TO_COPY"))
         row.linkBox:Hide(); row.copyHint:Hide()
         row.linkButton:SetScript("OnClick", function() SetAboutLinkOpen(parent, row) end)
     end
@@ -245,6 +242,7 @@ local function CreateAbout(parent)
     end
     parent.scroll:SetScript("OnSizeChanged", function(scroll)
         parent.content:SetWidth(GetContentWidth(scroll))
+        if parent.LayoutAboutContent then parent:LayoutAboutContent() end
         scroll:RefreshScrollbar()
     end)
 
@@ -264,14 +262,19 @@ local function CreateAbout(parent)
     parent.hero.title = AddText(parent.hero, "GameFontNormalLarge", Theme.Font.title, COLORS.text)
     parent.hero.title:SetPoint("TOPLEFT", 110, -20); parent.hero.title:SetText("YiboCore")
     parent.hero.description = AddText(parent.hero, "GameFontNormalSmall", Theme.Font.assist, COLORS.text)
-    parent.hero.description:SetPoint("TOPLEFT", parent.hero.title, "BOTTOMLEFT", 0, -9); parent.hero.description:SetText("统一管理 Yibo 系列的账号角色、入口与业务页面")
+    parent.hero.description:SetPoint("TOPLEFT", parent.hero.title, "BOTTOMLEFT", 0, -9); parent.hero.description:SetText(Core:Text("CORE.MANAGE_YIBO_ACCOUNT_CHARACTERS_ENTRIES_AND_BUSINESS"))
+    parent.hero.description:SetPoint("RIGHT", -154, 0); parent.hero.description:SetWordWrap(true)
     parent.hero.status = AddText(parent.hero, "GameFontNormalSmall", Theme.Font.assist, COLORS.muted)
     parent.hero.status:SetJustifyH("RIGHT")
     parent.hero.status:SetPoint("TOPRIGHT", -18, -22)
     parent.hero.metadata = AddText(parent.hero, "GameFontNormalSmall", Theme.Font.meta, COLORS.muted)
     parent.hero.metadata:SetJustifyH("RIGHT")
     parent.hero.metadata:SetPoint("TOPRIGHT", parent.hero.status, "BOTTOMRIGHT", 0, -7)
-    parent.hero.linkButton = CreateChromeButton(parent.hero, 112, 26, "获取链接")
+    parent.hero.metadata:ClearAllPoints()
+    parent.hero.metadata:SetPoint("TOPLEFT", parent.hero.description, "BOTTOMLEFT", 0, -8)
+    parent.hero.metadata:SetPoint("RIGHT", -154, 0)
+    parent.hero.metadata:SetJustifyH("LEFT")
+    parent.hero.linkButton = CreateChromeButton(parent.hero, 112, 26, Core:Text("CORE.GET_LINK"))
     parent.hero.linkButton:SetPoint("TOPRIGHT", -18, -74)
     parent.hero.linkBox = CreateFrame("EditBox", nil, parent.hero, "BackdropTemplate")
     parent.hero.linkBox:SetHeight(24); parent.hero.linkBox:SetPoint("BOTTOMLEFT", 110, 10); parent.hero.linkBox:SetPoint("BOTTOMRIGHT", -128, 10)
@@ -291,26 +294,30 @@ local function CreateAbout(parent)
     end)
     parent.hero.copyHint = AddText(parent.hero, "GameFontNormalSmall", Theme.Font.meta, COLORS.accent)
     parent.hero.copyHint:SetJustifyH("RIGHT")
-    parent.hero.copyHint:SetPoint("LEFT", parent.hero.linkBox, "RIGHT", 8, 0); parent.hero.copyHint:SetPoint("RIGHT", -18, 0); parent.hero.copyHint:SetText("按 Ctrl+C 复制")
+    parent.hero.copyHint:SetPoint("LEFT", parent.hero.linkBox, "RIGHT", 8, 0); parent.hero.copyHint:SetPoint("RIGHT", -18, 0); parent.hero.copyHint:SetText(Core:Text("CORE.PRESS_CTRL_C_TO_COPY"))
     parent.hero.linkBox:Hide(); parent.hero.copyHint:Hide()
     parent.hero.linkButton:SetScript("OnClick", function() SetAboutCoreLinkOpen(parent) end)
 
     parent.childHeading = AddText(parent.content, "GameFontNormal", Theme.Font.section, COLORS.accent)
-    parent.childHeading:SetText("强依赖子插件")
+    parent.childHeading:SetText(Core:Text("CORE.CORE_DEPENDENT_ADDONS"))
     parent.optionalHeading = AddText(parent.content, "GameFontNormal", Theme.Font.section, COLORS.accent)
-    parent.optionalHeading:SetText("可选接入插件")
+    parent.optionalHeading:SetText(Core:Text("CORE.OPTIONAL_INTEGRATIONS"))
     parent.optionalLine = parent.content:CreateTexture(nil, "ARTWORK")
     parent.optionalLine:SetHeight(1)
     parent.optionalLine:SetColorTexture(COLORS.lineSoft[1], COLORS.lineSoft[2], COLORS.lineSoft[3], COLORS.lineSoft[4])
     parent.otherHeading = AddText(parent.content, "GameFontNormal", Theme.Font.section, COLORS.accent)
-    parent.otherHeading:SetText("探索其它 Yibo 插件")
+    parent.otherHeading:SetText(Core:Text("CORE.EXPLORE_OTHER_YIBO_ADDONS"))
     parent.otherLine = parent.content:CreateTexture(nil, "ARTWORK")
     parent.otherLine:SetHeight(1)
     parent.otherLine:SetColorTexture(COLORS.lineSoft[1], COLORS.lineSoft[2], COLORS.lineSoft[3], COLORS.lineSoft[4])
     for _, addon in ipairs(ABOUT_ADDONS) do CreateAboutAddonRow(parent, addon) end
     parent.footer = AddText(parent, "GameFontNormalSmall", Theme.Font.meta, COLORS.muted, "RIGHT")
-    parent.footer:SetPoint("BOTTOMRIGHT", -20, 12); parent.footer:SetText("作者 YiboSoft · CurseForge")
+    parent.footer:SetPoint("BOTTOMRIGHT", -20, 12); parent.footer:SetText(Core:Text("CORE.AUTHOR_YIBOSOFT_CURSEFORGE"))
     parent.LayoutAboutContent = function(container)
+        for _, row in ipairs(container.addonRows) do
+            row:SetHeight(math.max(96, row.description:GetStringHeight() + 50) + (row.linkBox and row.linkBox:IsShown() and 34 or 0))
+        end
+        container.hero:SetHeight(math.max(112, container.hero.description:GetStringHeight() + 82) + (container.hero.linkOpen and 34 or 0))
         local y = (container.hero:GetHeight() or 112) + 28
         container.childHeading:ClearAllPoints(); container.childHeading:SetPoint("TOPLEFT", 0, -y)
         y = y + 26
@@ -359,10 +366,10 @@ local function RefreshAbout(parent)
     parent.hero.title:SetText("YiboCore " .. (coreVersion ~= "" and coreVersion or "v?"))
     local connected = 0
     local stateLabels = {
-        connected = "已连接",
-        ["enabled-not-connected"] = "已启用尚未连接",
-        ["installed-disabled"] = "已安装但未启用",
-        missing = "未安装",
+        connected = Core:Text("CORE.CONNECTED"),
+        ["enabled-not-connected"] = Core:Text("CORE.ENABLED_NOT_CONNECTED"),
+        ["installed-disabled"] = Core:Text("CORE.INSTALLED_DISABLED"),
+        missing = Core:Text("CORE.NOT_INSTALLED"),
     }
     for _, addon in ipairs(ABOUT_ADDONS) do
         local status = Core.AddonStatus and Core.AddonStatus:Get(addon.name) or {}
@@ -370,21 +377,22 @@ local function RefreshAbout(parent)
         if row then
             local installedVersion = FormatVersion(status.installedVersion)
             local packagedVersion = FormatVersion(status.packagedVersion)
-            local installed = installedVersion ~= "" and ("本机 " .. installedVersion) or "本机未安装"
-            local packaged = packagedVersion ~= "" and (" · 打包时 " .. packagedVersion) or ""
+            local installed = installedVersion ~= "" and (Core:Text("CORE.INSTALLED") .. installedVersion) or Core:Text("CORE.NOT_INSTALLED_LOCALLY")
+            local packaged = packagedVersion ~= "" and (Core:Text("CORE.PACKAGED") .. packagedVersion) or ""
             row.version:SetText(installed .. packaged)
-            row.description:SetText((stateLabels[status.state] or "状态未知") .. " · " .. tostring(addon.description or ""))
+            row.description:SetText((stateLabels[status.state] or Core:Text("CORE.UNKNOWN_STATUS")) .. " · " .. tostring(addon.description or ""))
         end
         if row and not row.isIndependent and status.connected then
             connected = connected + 1
         end
     end
-    parent.hero.status:SetText("已连接 " .. connected .. " 个接入插件")
-    parent.hero.metadata:SetText("Public API v" .. tostring(Core.API_VERSION or "?") .. " · 数据库 Schema v" .. tostring(Core.Migrations and Core.Migrations.CURRENT_SCHEMA or "?"))
+    parent.hero.status:SetText(Core:Text("CORE.CONNECTED_302") .. connected .. Core:Text("CORE.ADDONS"))
+    parent.hero.metadata:SetText("Public API v" .. tostring(Core.API_VERSION or "?") .. Core:Text("CORE.DATABASE_SCHEMA_V") .. tostring(Core.Migrations and Core.Migrations.CURRENT_SCHEMA or "?"))
+    parent:LayoutAboutContent()
 end
 
-AccountView._pages.about = {
-    id = "about", title = "关于", order = 990, internal = true,
+AccountView._pages.about = Core.Locale:Bind(function() return {
+    id = "about", title = Core:Text("CORE.ABOUT"), order = 990, internal = true,
     Create = CreateAbout, Refresh = RefreshAbout,
     GetSurfaceMetrics = Helpers.GetAboutSurfaceMetrics,
-}
+} end)

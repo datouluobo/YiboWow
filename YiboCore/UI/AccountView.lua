@@ -9,7 +9,7 @@ AccountView._pageOrder = AccountView._pageOrder or {}
 local Theme = Core.UITheme
 local COLORS = Theme.Colors
 local SORT_MODES = { "recent", "name", "level", "custom" }
-local SORT_LABELS = { recent = "最近登录", name = "角色名称", level = "角色等级", custom = "自定义" }
+local SORT_LABELS = Core.Locale:Bind(function() return { recent = Core:Text("CORE.RECENT_LOGIN"), name = Core:Text("CORE.CHARACTER_NAME"), level = Core:Text("CORE.CHARACTER_LEVEL"), custom = Core:Text("CORE.CUSTOM") } end)
 local Settings
 
 local CORE_ENTRY_MODES = { none = true, broker = true, minimap = true, both = true }
@@ -49,18 +49,7 @@ Settings = function()
         settings.point, settings.relativePoint, settings.x, settings.y = "TOPLEFT", "TOPLEFT", 16, -80
         settings.anchorVersion = 2
     end
-    settings.entry = settings.entry or {}
-    settings.entry.minimap = settings.entry.minimap or { show = true, angle = 225 }
-    settings.entry.broker = settings.entry.broker or { show = true }
-    if not CORE_ENTRY_MODES[settings.entry.coreMode] then
-        local hasBroker = settings.entry.broker.show ~= false
-        local hasMinimap = settings.entry.minimap.show ~= false
-        settings.entry.coreMode = hasBroker and hasMinimap and "both" or (hasBroker and "broker" or (hasMinimap and "minimap" or "none"))
-    end
-    settings.entry.previewPageID = type(settings.entry.previewPageID) == "string" and settings.entry.previewPageID or "overview"
-    settings.entry.showPreviewWhileMainWindowOpen = settings.entry.showPreviewWhileMainWindowOpen == true
-    settings.entry.pageModes = settings.entry.pageModes or {}
-    settings.entry.pagePositions = settings.entry.pagePositions or {}
+    settings.entry = Core.EntryConfig:Normalize(settings.entry)
     return settings
 end
 
@@ -180,7 +169,7 @@ end
 
 function AccountView:GetColumnPagerWidth(noun, total)
     local count = math.max(1, tonumber(total) or 20)
-    local label = string.format("%s %d–%d / %d · %d/%d", noun or "角色", count, count, count, count, count)
+    local label = string.format("%s %d–%d / %d · %d/%d", noun or Core:Text("CORE.CHARACTER"), count, count, count, count, count)
     return Theme:MeasureText(Theme.Font.assist, label) + Theme.Space.xs + Theme.Space.xxs + Theme.Size.compact * 2
 end
 
@@ -199,7 +188,7 @@ function AccountView:UpdateColumnPager(parent, pageID, stateKey, info, anchor, n
     local show = info and info.pages > 1
     pager.previous:SetShown(show); pager.next:SetShown(show); pager.label:SetShown(show)
     if not show then return end
-    local text = string.format("%s %d–%d / %d · %d/%d", noun or "角色", info.first, info.last, info.total, info.page, info.pages)
+    local text = string.format("%s %d–%d / %d · %d/%d", noun or Core:Text("CORE.CHARACTER"), info.first, info.last, info.total, info.page, info.pages)
     pager.label:SetText(text); pager.label:SetWidth(Theme:MeasureText(Theme.Font.assist, text))
     pager.previous:SetState(info.page > 1 and "default" or "disabled")
     pager.next:SetState(info.page < info.pages and "default" or "disabled")
@@ -254,7 +243,7 @@ local function ShellMetrics(preview)
     if preview then
         return geometry.shellBorder * 2, geometry.titleBar + geometry.shellBorder * 2
     end
-    return geometry.navigation + geometry.shellBorder * 2 + 1, geometry.titleBar + geometry.shellBorder * 2
+    return Theme:GetNavigationWidth() + geometry.shellBorder * 2 + 1, geometry.titleBar + geometry.shellBorder * 2
 end
 
 local function ClampWindowSize(width, height)
@@ -310,7 +299,7 @@ local function SurfaceMetrics(page, context)
     if type(callback) ~= "function" then return metrics end
     local ok, supplied = xpcall(function() return callback(context) end, function(message) return tostring(message) end)
     if not ok or type(supplied) ~= "table" then
-        Core:Print("账号视图页面 “" .. tostring(page.title) .. "”尺寸测量失败，使用兼容尺寸。")
+        Core:Print(Core:Text("CORE.ACCOUNT_PAGE") .. tostring(page.title) .. Core:Text("CORE.SIZE_MEASUREMENT_FAILED_USING_COMPATIBLE_DIMENSIONS"))
         return metrics
     end
     -- GetLayoutMetrics is the removed window-sized API.  Retain it only as a
@@ -417,6 +406,7 @@ local function SetHeaderIdentity(frame, page, subtitle)
 end
 
 local function CreateChromeButton(parent, width, height, label, destructive)
+    width = math.max(width or 0, Theme:MeasureText(Theme.Font.body, label or "") + 18)
     local button = Theme:CreateButton(parent, width, label, destructive and "danger" or "default")
     button:SetHeight(height or Theme.Size.standard)
     return button
@@ -440,91 +430,91 @@ end
 
 function AccountView:RegisterPage(addonName, definition)
     if type(addonName) ~= "string" or type(definition) ~= "table" then
-        return nil, "页面注册参数无效。"
+        return nil, Core:Text("CORE.INVALID_PAGE_REGISTRATION")
     end
     if type(definition.id) ~= "string" or definition.id == "" or type(definition.title) ~= "string" then
-        return nil, "页面必须提供 id 和 title。"
+        return nil, Core:Text("CORE.PAGES_REQUIRE_ID_AND_TITLE")
     end
     if type(definition.Create) ~= "function" or type(definition.Refresh) ~= "function" then
-        return nil, "页面必须提供 Create 与 Refresh。"
+        return nil, Core:Text("CORE.PAGES_REQUIRE_CREATE_AND_REFRESH")
     end
     if definition.GetEligibleCharacters ~= nil and type(definition.GetEligibleCharacters) ~= "function" then
-        return nil, "页面 GetEligibleCharacters 必须是 function。"
+        return nil, Core:Text("CORE.PAGE_GETELIGIBLECHARACTERS_MUST_BE_A_FUNCTION")
     end
     if definition.characterFilter ~= nil then
         local filter = definition.characterFilter
         if type(filter) ~= "table" or type(filter.GetExpression) ~= "function" or type(filter.SetExpression) ~= "function" then
-            return nil, "页面 characterFilter 必须提供 GetExpression 与 SetExpression。"
+            return nil, Core:Text("CORE.PAGE_CHARACTERFILTER_REQUIRES_GETEXPRESSION_AND_SETEXPRESSION")
         end
     end
     if definition.GetSurfaceMetrics ~= nil and type(definition.GetSurfaceMetrics) ~= "function" then
-        return nil, "页面 GetSurfaceMetrics 必须是 function。"
+        return nil, Core:Text("CORE.PAGE_GETSURFACEMETRICS_MUST_BE_A_FUNCTION")
     end
     if definition.GetLayoutMetrics ~= nil and type(definition.GetLayoutMetrics) ~= "function" then
-        return nil, "页面 GetLayoutMetrics 必须是 function。"
+        return nil, Core:Text("CORE.PAGE_GETLAYOUTMETRICS_MUST_BE_A_FUNCTION")
     end
     if definition.GetMeasuredHeight ~= nil and type(definition.GetMeasuredHeight) ~= "function" then
-        return nil, "页面 GetMeasuredHeight 必须是 function。"
+        return nil, Core:Text("CORE.PAGE_GETMEASUREDHEIGHT_MUST_BE_A_FUNCTION")
     end
     if definition.viewModes ~= nil then
         if type(definition.viewModes) ~= "table" or #definition.viewModes < 2 then
-            return nil, "页面 viewModes 至少需要两个选项。"
+            return nil, Core:Text("CORE.PAGE_VIEWMODES_REQUIRES_AT_LEAST_TWO_OPTIONS")
         end
         local ids = {}
         for _, mode in ipairs(definition.viewModes) do
             if type(mode) ~= "table" or type(mode.id) ~= "string" or mode.id == "" or type(mode.title) ~= "string" then
-                return nil, "页面 viewModes 必须提供 id 与 title。"
+                return nil, Core:Text("CORE.PAGE_VIEWMODES_REQUIRES_ID_AND_TITLE")
             end
-            if ids[mode.id] then return nil, "页面 viewMode ID 重复: " .. mode.id end
+            if ids[mode.id] then return nil, Core:Text("CORE.DUPLICATE_PAGE_VIEWMODE_ID") .. mode.id end
             ids[mode.id] = true
         end
     end
     if definition.GetHoverMetrics ~= nil and type(definition.GetHoverMetrics) ~= "function" then
-        return nil, "页面 GetHoverMetrics 必须是 function。"
+        return nil, Core:Text("CORE.PAGE_GETHOVERMETRICS_MUST_BE_A_FUNCTION")
     end
     if definition.HasCharacterSnapshot ~= nil and type(definition.HasCharacterSnapshot) ~= "function" then
-        return nil, "页面 HasCharacterSnapshot 必须是 function。"
+        return nil, Core:Text("CORE.PAGE_HASCHARACTERSNAPSHOT_MUST_BE_A_FUNCTION")
     end
     if definition.scope ~= nil then
         if type(definition.scope) == "table" and definition.scope.mode == "realms" then
             -- Realm scopes are derived by Core from its character directory and
             -- the page's business-snapshot admission callback.
         elseif type(definition.scope) ~= "table" or type(definition.scope.default) ~= "string" or type(definition.scope.values) ~= "table" then
-            return nil, "页面 scope 必须提供 default 与 values。"
+            return nil, Core:Text("CORE.PAGE_SCOPE_REQUIRES_DEFAULT_AND_VALUES")
         else
             local scopeIDs = {}
             for _, value in ipairs(definition.scope.values) do
                 if type(value) ~= "table" or type(value.id) ~= "string" or value.id == "" or type(value.title) ~= "string" then
-                    return nil, "页面 scope.values 必须提供 id 与 title。"
+                    return nil, Core:Text("CORE.PAGE_SCOPE_VALUES_REQUIRES_ID_AND_TITLE")
                 end
-                if scopeIDs[value.id] then return nil, "页面 scope ID 重复: " .. value.id end
+                if scopeIDs[value.id] then return nil, Core:Text("CORE.DUPLICATE_PAGE_SCOPE_ID") .. value.id end
                 scopeIDs[value.id] = true
             end
             if not scopeIDs[definition.scope.default] then
-                return nil, "页面 scope.default 必须存在于 scope.values。"
+                return nil, Core:Text("CORE.PAGE_SCOPE_DEFAULT_MUST_EXIST_IN_SCOPE")
             end
         end
     end
     if not (Core.Registry and Core.Registry:Get(addonName)) then
-        return nil, "页面所属插件尚未通过 Core:RegisterAddon 注册: " .. addonName
+        return nil, Core:Text("CORE.PAGE_S_ADDON_HAS_NOT_REGISTERED_THROUGH") .. addonName
     end
     if definition.settings ~= nil and type(definition.settings) ~= "table" then
-        return nil, "页面 settings 必须是 table。"
+        return nil, Core:Text("CORE.PAGE_SETTINGS_MUST_BE_A_TABLE")
     end
     if type(definition.settings) == "table" and definition.settings.title ~= nil and type(definition.settings.title) ~= "string" then
-        return nil, "页面 settings.title 必须是 string。"
+        return nil, Core:Text("CORE.PAGE_SETTINGS_TITLE_MUST_BE_A_STRING")
     end
     if type(definition.settings) == "table" and definition.settings.description ~= nil and type(definition.settings.description) ~= "string" then
-        return nil, "页面 settings.description 必须是 string。"
+        return nil, Core:Text("CORE.PAGE_SETTINGS_DESCRIPTION_MUST_BE_A_STRING")
     end
     local fieldIDs = {}
     for _, field in ipairs(definition.fields or {}) do
-        if type(field.id) ~= "string" or field.id == "" then return nil, "页面字段必须提供 id。" end
-        if fieldIDs[field.id] then return nil, "页面字段 ID 重复: " .. field.id end
+        if type(field.id) ~= "string" or field.id == "" then return nil, Core:Text("CORE.PAGE_FIELDS_REQUIRE_ID") end
+        if fieldIDs[field.id] then return nil, Core:Text("CORE.DUPLICATE_PAGE_FIELD_ID") .. field.id end
         fieldIDs[field.id] = true
     end
     if self._pages[definition.id] then
-        return nil, "页面 ID 已被占用: " .. definition.id
+        return nil, Core:Text("CORE.PAGE_ID_IS_ALREADY_IN_USE") .. definition.id
     end
     local claimed, claimError = Core:ClaimResource("page", definition.id, addonName)
     if not claimed then return nil, claimError end
@@ -543,7 +533,7 @@ function AccountView:RegisterPage(addonName, definition)
             end,
             SetExpression = function(expression)
                 local valid, normalized, badToken = Core.LevelFilter:Validate(expression or "")
-                if not valid then return false, "无效等级规则：" .. tostring(badToken) end
+                if not valid then return false, Core:Text("CORE.INVALID_LEVEL_RULE") .. tostring(badToken) end
                 local changed = (Settings().pageCharacterFilters[page.id] or "") ~= normalized
                 Settings().pageCharacterFilters[page.id] = normalized
                 AccountView:NotifyPageChanged(page.id)
@@ -578,18 +568,18 @@ end
 
 local function PageError(instance, page, phase, errorMessage)
     page.lastError = tostring(errorMessage)
-    Core:Print("账号视图页面 “" .. page.title .. "”（" .. tostring(page.addonName or "Core") .. "）" .. phase .. " 失败：" .. page.lastError)
+    Core:Print(Core:Text("CORE.ACCOUNT_PAGE") .. page.title .. Core:Text("FORMAT.QUOTE_OPEN_PAREN") .. tostring(page.addonName or "Core") .. Core:Text("FORMAT.CLOSE_PAREN") .. phase .. Core:Text("CORE.FAILED_154") .. page.lastError)
     if not instance.errorText then
         instance.errorText = AddText(instance, "GameFontNormal", nil, { 1, 0.48, 0.5 })
         instance.errorText:SetPoint("TOPLEFT", 20, -20); instance.errorText:SetPoint("TOPRIGHT", -20, -20)
         instance.errorText:SetJustifyV("TOP"); instance.errorText:SetWordWrap(true)
     end
-    instance.errorText:SetText("此页面暂时无法显示。\n" .. page.lastError)
+    instance.errorText:SetText(Core:Text("CORE.THIS_PAGE_IS_TEMPORARILY_UNAVAILABLE_N") .. page.lastError)
     instance.errorText:Show()
 end
 
 local function CallPage(instance, page, phase, context)
-    local callback = phase == "创建" and page.Create or page.Refresh
+    local callback = phase == Core:Text("CORE.CREATE") and page.Create or page.Refresh
     local ok, errorMessage = xpcall(function() callback(instance, context) end, function(message) return tostring(message) end)
     if not ok then PageError(instance, page, phase, errorMessage); return false end
     if instance.errorText then instance.errorText:Hide() end
@@ -774,8 +764,12 @@ function AccountView:UpdateSortButton()
     if not show then return end
     local sort = self:GetEffectiveCharacterSort(pageID)
     local arrow = sort.mode == "custom" and "" or (sort.direction == "asc" and " ↑" or " ↓")
-    frame.sortButton:SetText("排序：" .. (SORT_LABELS[sort.mode] or "最近登录") .. arrow)
-    frame.sortButton.sortDescription = (sort.inherited and "跟随通用设置。" or "此页面独立设置。") .. " 左键切换排序；Shift+左键切换方向。"
+    frame.sortButton:SetText(Core:Text("CORE.SORT") .. (SORT_LABELS[sort.mode] or Core:Text("CORE.RECENT_LOGIN")) .. arrow)
+    frame.sortButton:SetWidth(math.max(150, Theme:MeasureText(Theme.Font.body, frame.sortButton.label:GetText()) + 18))
+    if frame.controls and frame.settingsButton and frame.close then
+        frame.controls:SetWidth(frame.sortButton:GetWidth() + frame.settingsButton:GetWidth() + frame.close:GetWidth() + 16)
+    end
+    frame.sortButton.sortDescription = (sort.inherited and Core:Text("CORE.USES_SHARED_SETTINGS") or Core:Text("CORE.USES_PAGE_SPECIFIC_SETTINGS")) .. Core:Text("CORE.LEFT_CLICK_TO_CHANGE_SORT_SHIFT_CLICK")
 end
 
 local function GetScopeDefinition(page, characters)
@@ -788,7 +782,7 @@ local function GetScopeDefinition(page, characters)
             if type(page.HasCharacterSnapshot) == "function" then
                 local ok, result = xpcall(function() return page.HasCharacterSnapshot(character) end, function(message) return tostring(message) end)
                 admitted = ok and result == true
-                if not ok then Core:Print("账号视图页面“" .. tostring(page.title or page.id) .. "”读取角色快照失败：" .. result) end
+                if not ok then Core:Print(Core:Text("CORE.ACCOUNT_PAGE_161") .. tostring(page.title or page.id) .. Core:Text("CORE.COULD_NOT_READ_CHARACTER_SNAPSHOTS") .. result) end
             end
             if admitted and character.realm and character.realm ~= "" then realms[character.realm] = true end
         end
@@ -801,7 +795,7 @@ local function GetScopeDefinition(page, characters)
         local values = {}
         if currentAdmitted then values[#values + 1] = { id = "realm:" .. currentRealm, title = currentRealm } end
         for _, realm in ipairs(others) do values[#values + 1] = { id = "realm:" .. realm, title = realm } end
-        values[#values + 1] = { id = "all", title = page.scope.allTitle or "所有服务器" }
+        values[#values + 1] = { id = "all", title = page.scope.allTitle or Core:Text("CORE.ALL_REALMS") }
         return { default = "realm:" .. currentRealm, values = values, mode = "realms" }
     end
     return type(page) == "table" and type(page.scope) == "table" and page.scope or nil
@@ -866,7 +860,7 @@ local function GetScopeControlMetrics(scope, selectedScope)
     local currentWidth = math.max(88, Theme:MeasureText(Theme.Font.assist, current.title) + 24)
     local otherCount = math.max(0, #realms - 1)
     local directOther = otherCount == 1 and realms[2] or nil
-    local otherTitle = directOther and directOther.title or (selectedOther and selectedOther.title or "其它 v")
+    local otherTitle = directOther and directOther.title or (selectedOther and selectedOther.title or Core:Text("CORE.OTHER_V"))
     local otherWidth = math.max(82, Theme:MeasureText(Theme.Font.assist, otherTitle) + 24)
     local allWidth = math.max(72, Theme:MeasureText(Theme.Font.assist, allValue.title) + 24)
     return {
@@ -1066,7 +1060,7 @@ function AccountView:CreateFrame()
     frame.brand = AddText(frame.titleBar, "GameFontNormalLarge", nil, COLORS.accent)
     frame.brand:Hide()
     frame.title = AddText(frame.titleBar, "GameFontNormalLarge", nil, COLORS.text)
-    frame.title:SetPoint("LEFT", frame.titleBar, "LEFT", 16, 0); frame.title:SetText("账号总览")
+    frame.title:SetPoint("LEFT", frame.titleBar, "LEFT", 16, 0); frame.title:SetText(Core:Text("CORE.ACCOUNT_OVERVIEW"))
     frame.pageIcon = frame.titleBar:CreateTexture(nil, "ARTWORK")
     frame.pageIcon:SetSize(22, 22); frame.pageIcon:SetPoint("LEFT", frame.titleBar, "LEFT", 16, 0); frame.pageIcon:Hide()
     frame.identityHit = CreateFrame("Frame", nil, frame.titleBar)
@@ -1078,28 +1072,29 @@ function AccountView:CreateFrame()
     frame.version = AddText(frame.titleBar, "GameFontNormalSmall", Theme.Font.meta, COLORS.muted)
     frame.version:SetPoint("BOTTOMLEFT", frame.title, "BOTTOMRIGHT", 7, 1); frame.version:SetText("v?")
     frame.subtitle = AddText(frame.titleBar, "GameFontNormalSmall", nil, COLORS.muted)
-    frame.subtitle:SetPoint("BOTTOMLEFT", frame.version, "BOTTOMRIGHT", 12, 1); frame.subtitle:SetText("多角色状态")
+    frame.subtitle:SetPoint("BOTTOMLEFT", frame.version, "BOTTOMRIGHT", 12, 1); frame.subtitle:SetText(Core:Text("CORE.CHARACTER_STATUS"))
     frame.controls = CreateFrame("Frame", nil, frame.titleBar)
     frame.controls:SetSize(256, Theme.Size.standard)
     frame.controls:SetPoint("TOPRIGHT", -14, -8)
-    frame.sortButton = CreateChromeButton(frame.controls, 150, Theme.Size.standard, "排序：最近登录 ↓")
+    frame.sortButton = CreateChromeButton(frame.controls, 150, Theme.Size.standard, Core:Text("CORE.SORT_RECENT_LOGIN"))
     frame.sortButton:SetPoint("LEFT", 0, 0)
     frame.sortButton:SetScript("OnClick", function()
         AccountView:CycleCharacterSort(AccountView.activePageID or "overview", IsShiftKeyDown and IsShiftKeyDown())
     end)
     frame.sortButton:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:AddLine(self.label:GetText() or "角色排序", COLORS.text[1], COLORS.text[2], COLORS.text[3])
+        GameTooltip:AddLine(self.label:GetText() or Core:Text("CORE.CHARACTER_SORTING"), COLORS.text[1], COLORS.text[2], COLORS.text[3])
         GameTooltip:AddLine(self.sortDescription or "", COLORS.muted[1], COLORS.muted[2], COLORS.muted[3], true)
         GameTooltip:Show()
     end)
     frame.sortButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    frame.settingsButton = CreateChromeButton(frame.controls, 62, Theme.Size.standard, "设置")
+    frame.settingsButton = CreateChromeButton(frame.controls, 62, Theme.Size.standard, Core:Text("CORE.SETTINGS"))
     frame.settingsButton:SetPoint("LEFT", frame.sortButton, "RIGHT", 10, 0)
     frame.settingsButton:SetScript("OnClick", function() AccountView:ShowSettings() end)
     frame.close = CreateChromeButton(frame.controls, 28, Theme.Size.standard, "×", true)
     frame.close:SetPoint("LEFT", frame.settingsButton, "RIGHT", 6, 0)
     frame.close.label:SetFont(STANDARD_TEXT_FONT, Theme.Font.section)
+    frame.controls:SetWidth(frame.sortButton:GetWidth() + frame.settingsButton:GetWidth() + frame.close:GetWidth() + 16)
     -- Closing is an icon affordance, not a destructive text action.  Keep it
     -- visually light beside Settings instead of showing a second red button.
     frame.close.SetState = function(control)
@@ -1112,7 +1107,7 @@ function AccountView:CreateFrame()
     frame.close:SetScript("OnLeave", function(control) control:SetState() end)
     frame.close:SetScript("OnClick", function() frame:Hide() end)
     frame.nav = CreateFrame("Frame", nil, frame)
-    frame.nav:SetPoint("TOPLEFT", 1, -47); frame.nav:SetPoint("BOTTOMLEFT", 1, 1); frame.nav:SetWidth(140)
+    frame.nav:SetPoint("TOPLEFT", 1, -47); frame.nav:SetPoint("BOTTOMLEFT", 1, 1); frame.nav:SetWidth(Theme:GetNavigationWidth())
     frame.nav.bg = frame.nav:CreateTexture(nil, "BACKGROUND"); frame.nav.bg:SetAllPoints(); frame.nav.bg:SetColorTexture(COLORS.nav[1], COLORS.nav[2], COLORS.nav[3], COLORS.nav[4])
     frame.content = CreateFrame("Frame", nil, frame)
     frame.content:SetPoint("TOPLEFT", frame.nav, "TOPRIGHT", 1, 0); frame.content:SetPoint("BOTTOMRIGHT", -1, 1)
@@ -1188,6 +1183,10 @@ function AccountView:ApplyPageSize(page, context, forceAutoFitWidth)
     if savedSize and savedSize.height and not page.autoFitHeight then
         height = savedSize.height
     end
+    if page.id=="help" then
+        local aboutSize=GetPageSize({id="about"},context)
+        height=aboutSize and aboutSize.height or preferredHeight
+    end
     width = math.max(math.min(widthFloor, maxWidth), math.min(math.max(minWidth, width), maxWidth))
     height = math.max(math.min(minHeight, maxHeight), math.min(math.max(minHeight, height), maxHeight))
     if math.abs((frame:GetWidth() or 0) - width) < 1 and math.abs((frame:GetHeight() or 0) - height) < 1 then return end
@@ -1236,11 +1235,12 @@ function AccountView:RefreshNavigation()
     if self.activePageID == "settings" then
         local target = self._pages[self.settingsTargetPageID or ""]
         local returnPage = target and not target.internal and target or self._pages.overview
-        pages[#pages + 1] = { id = returnPage.id, title = "‹ 返回" .. returnPage.title }
-        pages[#pages + 1] = { id = "settings-core-heading", title = "Core 常规设置", section = true }
-        pages[#pages + 1] = { id = "settings-core", title = "  窗口", settingsTargetID = "core" }
-        pages[#pages + 1] = { id = "settings-sorting", title = "  角色与排序", settingsTargetID = "sorting" }
-        pages[#pages + 1] = { id = "settings-display", title = "  显示与入口", settingsTargetID = "display" }
+        pages[#pages + 1] = { id = returnPage.id, title = Core:Text("CORE.BACK") .. returnPage.title }
+        pages[#pages + 1] = { id = "settings-core-heading", title = Core:Text("CORE.CORE_SETTINGS"), settingsTargetID = "general", coreHeading = true }
+        pages[#pages + 1] = { id = "settings-core", title = Core:Text("CORE.WINDOW"), settingsTargetID = "core" }
+        pages[#pages + 1] = { id = "settings-sorting", title = Core:Text("CORE.CHARACTERS_SORTING"), settingsTargetID = "sorting" }
+        pages[#pages + 1] = { id = "settings-bar", title = Core:Text("ENTRY.TAB_BAR"), settingsTargetID = "bar" }
+        pages[#pages + 1] = { id = "settings-display", title = Core:Text("CORE.DISPLAY_ENTRIES"), settingsTargetID = "display" }
         local businessSettings = {}
         for _, page in ipairs(self._pageOrder) do
             if not page.internal and not page.hideFromSettings then businessSettings[#businessSettings + 1] = { id = "settings-" .. page.id, title = page.title, settingsTargetID = page.id, addonName = page.addonName or page.id } end
@@ -1278,10 +1278,13 @@ function AccountView:RefreshNavigation()
             end)
             frame.navButtons[index] = button
         end
+        local coreChild=page.settingsTargetID=="core" or page.settingsTargetID=="sorting" or page.settingsTargetID=="display" or page.settingsTargetID=="bar"
+        button:ClearAllPoints();button:SetPoint("TOPLEFT",coreChild and 16 or 8,-8-(index-1)*(Theme.Table.rowHeight+Theme.Space.xxs));button:SetPoint("TOPRIGHT",-8,-8-(index-1)*(Theme.Table.rowHeight+Theme.Space.xxs))
+        button.label:ClearAllPoints();button.label:SetPoint("LEFT",9,0);button.label:SetPoint("RIGHT",-6,0)
         button.pageID = page.id; button.settingsTargetID = page.settingsTargetID; button.section = page.section; button.label:SetText(page.title)
         local selected = page.settingsTargetID and self.activePageID == "settings" and self.settingsTargetPageID == page.settingsTargetID or self.activePageID == page.id
         button:EnableMouse(not page.section)
-        button.label:SetTextColor(page.section and COLORS.accent[1] or COLORS.text[1], page.section and COLORS.accent[2] or COLORS.text[2], page.section and COLORS.accent[3] or COLORS.text[3])
+        button.label:SetTextColor((page.section or page.coreHeading) and COLORS.accent[1] or COLORS.text[1], (page.section or page.coreHeading) and COLORS.accent[2] or COLORS.text[2], (page.section or page.coreHeading) and COLORS.accent[3] or COLORS.text[3])
         button:SetBackdropColor(selected and not page.section and COLORS.selected[1] or 0, selected and not page.section and COLORS.selected[2] or 0, selected and not page.section and COLORS.selected[3] or 0, selected and not page.section and 1 or 0)
         button:Show()
     end
@@ -1333,12 +1336,12 @@ function AccountView:BuildContext(page, options)
             return page.GetEligibleCharacters(characters, baseContext)
         end, function(message) return tostring(message) end)
         if not ok then
-            Core:Print("账号视图页面 “" .. page.title .. "”（" .. tostring(page.addonName or "Core") .. "）角色准入失败：" .. tostring(eligible))
+            Core:Print(Core:Text("CORE.ACCOUNT_PAGE") .. page.title .. Core:Text("FORMAT.QUOTE_OPEN_PAREN") .. tostring(page.addonName or "Core") .. Core:Text("CORE.CHARACTER_ELIGIBILITY_FAILED") .. tostring(eligible))
             characters = {}
         elseif type(eligible) == "table" then
             characters = eligible
         else
-            Core:Print("账号视图页面 “" .. page.title .. "”（" .. tostring(page.addonName or "Core") .. "）角色准入必须返回 table。")
+            Core:Print(Core:Text("CORE.ACCOUNT_PAGE") .. page.title .. Core:Text("FORMAT.QUOTE_OPEN_PAREN") .. tostring(page.addonName or "Core") .. Core:Text("CORE.CHARACTER_ELIGIBILITY_MUST_RETURN_A_TABLE"))
             characters = {}
         end
     end
@@ -1430,7 +1433,7 @@ function AccountView:ShowPage(pageID, options, forceAutoFitWidth)
         instance = CreateFrame("Frame", nil, self.frame.content)
         instance:SetAllPoints(self.frame.content)
         self.frame.instances[page.id] = instance
-        CallPage(instance, page, "创建", context)
+        CallPage(instance, page, Core:Text("CORE.CREATE"), context)
     end
     instance:ClearAllPoints()
     if RefreshScopeBar(self.frame, context) then
@@ -1459,7 +1462,7 @@ function AccountView:ShowPage(pageID, options, forceAutoFitWidth)
     -- Hide the previous page's control first so page switches never leave
     -- stale actions in the shared chrome.
     self:ClearTitleBarControl()
-    CallPage(instance, page, "刷新", context)
+    CallPage(instance, page, Core:Text("CORE.REFRESH"), context)
     -- Pages may create or hide a title-bar pager while refreshing. Resolve
     -- the identity only after that chrome is final for this pass.
     SetHeaderIdentity(self.frame, page, page.title)
@@ -1468,7 +1471,7 @@ function AccountView:ShowPage(pageID, options, forceAutoFitWidth)
     self:UpdateSortButton()
     if not options.preview and type(page.firstUseTip) == "table" then
         Theme:ShowFirstUseTooltip(tostring(page.id), self.frame.titleBar,
-            page.firstUseTip.title or (page.title .. "操作提示"), page.firstUseTip.lines or {})
+            page.firstUseTip.title or (page.title .. Core:Text("CORE.CONTROLS")), page.firstUseTip.lines or {})
     end
 end
 
@@ -1532,7 +1535,7 @@ function AccountView:ApplyNormalLayout()
     frame:ClearAllPoints()
     frame:SetPoint(settings.point or "CENTER", UIParent, settings.relativePoint or "CENTER", settings.x or 0, settings.y or 0)
     frame.nav:Show(); frame.settingsButton:Show(); frame.close:Show(); self:UpdateSortButton()
-    SetHeaderIdentity(frame, self._pages.overview, "账号总览 · 多角色状态")
+    SetHeaderIdentity(frame, self._pages.overview, Core:Text("CORE.ACCOUNT_OVERVIEW_CHARACTER_STATUS"))
     frame.content:ClearAllPoints()
     frame.content:SetPoint("TOPLEFT", frame.nav, "TOPRIGHT", 1, 0)
     frame.content:SetPoint("BOTTOMRIGHT", -1, 1)
@@ -1582,7 +1585,7 @@ local function HoverMetrics(page, context)
             metrics.horizontalOverflow = supplied.horizontalOverflow == "paginate" and "paginate" or supplied.horizontalOverflow == "matrix" and "matrix" or "content"
             metrics.verticalOverflow = supplied.verticalOverflow == "none" and "none" or "content"
         else
-            Core:Print("账号视图页面 “" .. tostring(page.title) .. "”悬停尺寸测量失败，使用兼容尺寸。")
+            Core:Print(Core:Text("CORE.ACCOUNT_PAGE") .. tostring(page.title) .. Core:Text("CORE.HOVER_MEASUREMENT_FAILED_USING_COMPATIBLE_DIMENSIONS"))
         end
     elseif type(page.GetSurfaceMetrics) == "function" then
         local ok, supplied = xpcall(function() return page.GetSurfaceMetrics(context) end, function(message) return tostring(message) end)
@@ -1777,7 +1780,7 @@ end
 
 function AccountView:ShowSettings(targetID)
     if InCombatLockdown and InCombatLockdown() then
-        Core:Print("战斗中不能打开设置。脱离战斗后再试。")
+        Core:Print(Core:Text("CORE.CANNOT_OPEN_SETTINGS_IN_COMBAT_TRY_AGAIN"))
         return false
     end
     self:CreateFrame()
@@ -1819,7 +1822,7 @@ function AccountView:SelectSettingsTarget(targetID)
     local settingsOnlyID = type(targetID) == "string" and targetID:match("^addon%-settings:(.+)$")
     if settingsOnlyID then
         if not (Core.SettingsRegistry and Core.SettingsRegistry._panels[settingsOnlyID]) then return false end
-    elseif targetID ~= "display" and targetID ~= "sorting" and targetID ~= "core" and targetID ~= "filters" then
+    elseif targetID ~= "bar" and targetID ~= "general" and targetID ~= "display" and targetID ~= "sorting" and targetID ~= "core" and targetID ~= "filters" then
         local page = self._pages[targetID]
         if not page or page.internal then return false end
     end

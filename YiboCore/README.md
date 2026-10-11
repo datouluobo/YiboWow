@@ -1,4 +1,6 @@
 # YiboCore
+工作树新增 **1.12.0 / API v13 / localization:1**：Core 公共界面中英文资源、账号语言选择与重载生效、中文回退、非发布预览和静态检查已实现；客户端验收待完成，未发布。Core 常规设置 → 显示与入口 → 插件语言，可选择跟随客户端、中文或 English。业务插件按区域渐进接入，尚未迁移的文字可能仍为中文。契约见 [语言服务](Docs/API-v13-语言服务.md)，验证与待验清单见 [实施记录](../Docs/Core系列中英文客户端适配-实施与验收记录.md)。
+
 ## Public overview / 对外说明
 
 **English.** YiboCore is the shared account window, character directory, and settings framework for Yibo WoW addons. It keeps identity, realm scope, sorting, settings, and entry lifecycle consistent across registered pages. Each business addon owns its own collected data and rules; Core supplies the shared framework and versioned capability contracts.
@@ -34,7 +36,7 @@ Core 的特点是让多个业务插件共用账号与角色管理，同时保留
 
 Yibo WoW 插件的共享运行时、角色档案与账号视图框架。
 
-当前工作树为 **1.11.0 / API v12**，新增 [业务项目主动添加](Docs/API-v12-业务项目主动添加.md) / business-item-actions:1；保留以下 API v11 能力，新增 `business-providers:1`、多来源注册与 `Contracts:List`，契约见 [API v11 跨业务 Provider](Docs/API-v11-跨业务Provider.md)。O4 按真实展示需求补齐 [角色准入通知](Docs/API-v11-角色准入通知.md) / `account-character-admission:1`。Todo 1.1.4 两项来源与 TaskHub 0.3.1 四个展示面已接入；Mail 1.2.6-api1 输出新邮件查看提醒。359 项集成与展示及既有 Service 回归通过，本轮复用已有共享角色控件与行底纹，未新增 Core 接口；未发布，详见 [复核记录](../Docs/行动中心-新邮件语义与角色显示复核.md)。
+当前已发布版本为 **1.11.0 / API v12**，提供 [业务项目主动添加](Docs/API-v12-业务项目主动添加.md) / business-item-actions:1；保留 API v11 能力，并提供 `business-providers:1`、多来源注册与 `Contracts:List`，契约见 [API v11 跨业务 Provider](Docs/API-v11-跨业务Provider.md)。O4 按真实展示需求补齐 [角色准入通知](Docs/API-v11-角色准入通知.md) / `account-character-admission:1`。Todo 1.1.4 两项来源与 TaskHub 0.3.1 四个展示面已接入；Mail 1.2.6-api1 输出新邮件查看提醒。359 项集成与展示及既有 Service 回归通过，详见[复核记录](../Docs/行动中心-新邮件语义与角色显示复核.md)。
 
 2026-10-10 新增 [轻量角色身份](Docs/API-v11-轻量角色身份.md) / character-identity:1，TaskHub、Todo 与 AltoBoss 目标链路已接入，避免高频完整角色深复制。详见 [性能修复记录](../Docs/任务链-性能异常修复-2026-10-10.md)。
 
@@ -55,7 +57,7 @@ O5 在原 API v11 Provider 契约下接入 Mail 邮件待收取，共三个来�
 - 统一角色排序：最近登录、名称、等级、自定义顺序、当前角色置顶与页面级覆盖
 - 统一单角色缓存删除：当前角色保护、跨插件角色级清理、延迟重试与旧缓存防复活
 - 页面级业务角色准入与持久化范围状态 context
-- Core 统一的小地图与可选 LibDataBroker 入口
+- Core 统一管理小地图、外部 Broker 和内置条三处入口；LDB 内置，信息条默认关闭，三处可独立选择
 - 等级表达式解析
 - 窗口命令：`/yco`、`/yco settings`
 
@@ -95,3 +97,7 @@ API v6 保持 API v5 向后兼容。`RegisterSettingsPanel` 只向统一设置�
 公共 API v8 新增 `Characters:FormatName(identity, options)` 和 `character-name-format:1`，保持旧 API 与业务表头调用兼容。接入与验证见 [API v8 公共名称格式化](Docs/API-v8-公共名称格式化.md)。
 
 公共 API v9 新增最小 `business-services:1`，并改进页面刷新合并与物品解析器请求调度。契约见 [API v9 业务服务与刷新](Docs/API-v9-业务服务与刷新.md)。API v10 新增页面首次打开泡泡提示，见 [API v10 首次打开界面提示](Docs/API-v10-首次打开界面提示.md)。
+
+内置信息条设置位于 Core 常规设置 → 信息条。“显示与入口”选择各入口；“信息条”开启总开关、调整外框、背景配色与透明度，并选择按钮前移／后移或恢复默认；也可直接拖动条上图标调序。按钮名称采用页面名称并移除作者前缀。关闭后保留选择、外观和顺序。解锁后通过左侧把手拖动。外部 Broker 停用后图标可能需在外部条隐藏或重载。工作树接口见 [API13 入口三通道与内置条](Docs/API-v13-入口三通道与内置条.md)，客户端验收状态见 [实施记录](Docs/Core-内置LDB与信息条-实施与验收记录.md)。
+
+点击 Core 常规设置：语言和通用悬停选项。显示与入口管理页面、入口和字段；信息条作为左侧独立页面管理外观、位置及排序；插件列表按技术名排序，每插件一行，完整展开并按需纵向滚动，仅有业务设置的插件也会列出并说明适用范围。

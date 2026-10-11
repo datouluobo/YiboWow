@@ -1,7 +1,7 @@
 local Core = _G.YiboCore
 local Actions = { bindings = setmetatable({}, { __mode = "k" }) }
 Core.BusinessItemActions = Actions
-local buttons = { LeftButton = "左键", RightButton = "右键", MiddleButton = "中键", Button4 = "鼠标4", Button5 = "鼠标5" }
+local buttons = Core.Locale:Bind(function() return { LeftButton = Core:Text("CORE.LEFT_CLICK"), RightButton = Core:Text("CORE.RIGHT_CLICK"), MiddleButton = Core:Text("CORE.MIDDLE_CLICK"), Button4 = Core:Text("CORE.MOUSE_4"), Button5 = Core:Text("CORE.MOUSE_5") } end)
 local function SetMenuAdded(binding, added)
     if not binding.menu then return end
     binding.menu:SetText(added and "" or "+")
@@ -28,7 +28,7 @@ function Actions:GetOptions()
     return Core.Defaults:Copy(db.settings.businessItemActions)
 end
 function Actions:SetOptions(options)
-    if InCombatLockdown and InCombatLockdown() then return nil, "请脱离战斗后修改添加方式。" end
+    if InCombatLockdown and InCombatLockdown() then return nil, Core:Text("CORE.LEAVE_COMBAT_BEFORE_CHANGING_HOW_TARGETS_ARE") end
     local clean = self:GetOptions()
     if options.mode then
         if not ({ menu = true, middle = true, ctrlLeft = true, custom = true })[options.mode] then return nil, "invalid-mode" end
@@ -52,9 +52,9 @@ function Actions:SetOptions(options)
 end
 function Actions:GestureLabel()
     local mode = self:GetOptions().mode
-    if mode == "menu" then return "右上角按钮" end
-    if mode == "middle" then return "中键" end
-    if mode == "ctrlLeft" then return "Ctrl+左键" end
+    if mode == "menu" then return Core:Text("CORE.TOP_RIGHT_BUTTON") end
+    if mode == "middle" then return Core:Text("CORE.MIDDLE_CLICK") end
+    if mode == "ctrlLeft" then return Core:Text("CORE.CTRL_CLICK") end
     local g, parts = Settings(), {}
     if g.ctrl then parts[#parts + 1] = "Ctrl" end
     if g.alt then parts[#parts + 1] = "Alt" end
@@ -69,11 +69,11 @@ local function Conflicts(binding, g)
     return binding.reservedButtons and binding.reservedButtons[g.button] == true
 end
 function Actions:SetGesture(g)
-    if InCombatLockdown and InCombatLockdown() then return nil, "请脱离战斗后修改添加方式。" end
-    if type(g) ~= "table" or not buttons[g.button] then return nil, "请选择有效鼠标按键" end
+    if InCombatLockdown and InCombatLockdown() then return nil, Core:Text("CORE.LEAVE_COMBAT_BEFORE_CHANGING_HOW_TARGETS_ARE") end
+    if type(g) ~= "table" or not buttons[g.button] then return nil, Core:Text("CORE.CHOOSE_A_VALID_MOUSE_BUTTON") end
     local clean = { button = g.button, alt = g.alt == true, ctrl = g.ctrl == true, shift = g.shift == true }
     for _, binding in pairs(self.bindings) do
-        if Conflicts(binding, clean) then return nil, "此按键与业务操作冲突，请选择其它组合（安全施法按键不可复用）。" end
+        if Conflicts(binding, clean) then return nil, Core:Text("CORE.THIS_BINDING_CONFLICTS_WITH_A_BUSINESS_ACTION") end
     end
     Core.Database:GetDB().settings.businessItemGesture = clean
     local mode = clean.button == "MiddleButton" and not clean.ctrl and not clean.alt and not clean.shift and "middle" or "custom"
@@ -92,33 +92,33 @@ function Actions:Matches(button)
 end
 function Actions:Invoke(control, options)
     local binding = self.bindings[control]
-    if not binding then return nil, "项目已失效" end
+    if not binding then return nil, Core:Text("CORE.ITEM_IS_NO_LONGER_AVAILABLE") end
     local intent = binding.GetIntent()
-    if not intent then return nil, "该项目没有可添加目标" end
+    if not intent then return nil, Core:Text("CORE.THIS_ITEM_HAS_NO_TARGET_TO_ADD") end
     local ref = Core.Contracts:Resolve("action.demands", { major = 1 })
-    if not ref then Core:Print("行动中心未就绪，请启用兼容版本。"); return nil, "unavailable" end
+    if not ref then Core:Print(Core:Text("CORE.ACTION_CENTER_IS_NOT_READY_ENABLE_A")); return nil, "unavailable" end
     if options and options.toggle then
         local existing = Core.Contracts:Call(binding.owner, ref, "Lookup", { intent = intent })
         if existing then
-            if not existing.revision then Core:Print("取消目标需要新版行动中心，请升级。"); return nil, "incompatible" end
+            if not existing.revision then Core:Print(Core:Text("CORE.REMOVING_TARGETS_REQUIRES_A_NEWER_ACTION_CENTER")); return nil, "incompatible" end
             local removed, err = Core.Contracts:Call(binding.owner, ref, "Update", { id = existing.id, revision = existing.revision, patch = { state = "removed" } })
-            if not removed then Core:Print(err or "取消失败"); return nil, err end
-            Core:Print("已从行动中心移除目标。")
+            if not removed then Core:Print(err or Core:Text("CORE.REMOVAL_FAILED")); return nil, err end
+            Core:Print(Core:Text("CORE.TARGET_REMOVED_FROM_ACTION_CENTER"))
             SetMenuAdded(binding, false)
             self:ScheduleMarkers()
             return { id = existing.id, removed = true }
         end
     end
     local result, err = Core.Contracts:Call(binding.owner, ref, "Add", { intent = intent })
-    if not result then Core:Print(err or "添加失败"); return nil, err end
+    if not result then Core:Print(err or Core:Text("CORE.ADD_FAILED")); return nil, err end
     if result.needsConfiguration then
         binding.needsConfiguration = true
         self:ShowMenu(control)
         if options and options.keepOpen then
-            Core:Print("此项目需要补充目标参数，请点击项目的＋打开配置。")
+            Core:Print(Core:Text("CORE.THIS_ITEM_REQUIRES_TARGET_DETAILS_CLICK_ITS"))
         else Core.Contracts:Call(binding.owner, ref, "Configure", { intent = intent }) end
     else
-        Core:Print(result.existing and ((options and options.keepOpen) and "此目标已加入行动中心。" or "已添加，正在定位目标。") or "已添加到行动中心。")
+        Core:Print(result.existing and ((options and options.keepOpen) and Core:Text("CORE.THIS_TARGET_IS_ALREADY_IN_ACTION_CENTER") or Core:Text("CORE.ADDED_LOCATING_TARGET")) or Core:Text("CORE.ADDED_TO_ACTION_CENTER"))
         if result.existing and not (options and options.keepOpen) then Core.Contracts:Call(binding.owner, ref, "Locate", { id = result.id }) end
         SetMenuAdded(binding, true)
         self:ScheduleMarkers()
@@ -129,7 +129,7 @@ function Actions:Handle(control, button)
     local binding = self.bindings[control]
     if not binding or not self:Matches(button) then return false end
     local g = self:GetGesture()
-    if Conflicts(binding, g) then Core:Print("添加方式与此项目操作冲突，请在 Core 窗口设置选择其它方式。"); return false end
+    if Conflicts(binding, g) then Core:Print(Core:Text("CORE.THIS_ADD_GESTURE_CONFLICTS_WITH_THE_ITEM")); return false end
     self:Invoke(control, { keepOpen = true, toggle = true })
     return true
 end
@@ -178,8 +178,8 @@ function Actions:TooltipLines(lines, control)
     end
     if control and self.bindings[control] then
         local mode = self:GetOptions().mode
-        local actionLine = mode == "menu" and "右上角＋：添加／配置；勾选：定位目标"
-            or (self:GestureLabel() .. "：添加／取消并保持窗口；缺参数时点临时＋补充")
+        local actionLine = mode == "menu" and Core:Text("CORE.TOP_RIGHT_ADD_CONFIGURE_CHECK_MARK_LOCATE")
+            or (self:GestureLabel() .. Core:Text("CORE.ADD_REMOVE_WHILE_KEEPING_THE_WINDOW_OPEN"))
         result[#result + 1] = { kind = "text", text = actionLine }
         control.yiboBusinessItemActionTooltipLine = actionLine
     elseif control then
@@ -197,7 +197,7 @@ function Actions:ShowMenu(control)
     self.hoverControl = control
     local status = binding.itemStatus
     if status and status.count > 0 and GameTooltip and GameTooltip.IsOwned and GameTooltip:IsOwned(control) then
-        GameTooltip:AddLine("已加入目标 · " .. status.count .. " 项（进行中 " .. status.active .. " / 暂停 " .. status.paused .. " / 已完成 " .. status.completed .. "）", unpack(Core.UITheme.Colors.goalAdded))
+        GameTooltip:AddLine(Core:Text("FORMAT.ADDED_TARGETS", status.count, status.active, status.paused, status.completed), unpack(Core.UITheme.Colors.goalAdded))
         GameTooltip:Show()
     end
     if not binding.menu then return end
@@ -298,7 +298,7 @@ function Actions:Bind(control, options)
         binding.menu.yiboActionSource = control
         binding.menu:SetSize(16, 16); binding.menu:SetPoint("TOPRIGHT", 0, 0)
         binding.menu:SetScript("OnClick", function() Actions:Invoke(control) end)
-        Core.UITheme:BindTooltip(binding.menu, "添加到行动中心", { { kind = "text", text = "点击添加或补充参数；已添加时打开目标。添加手势保持当前窗口。" } })
+        Core.UITheme:BindTooltip(binding.menu, Core:Text("CORE.ADD_TO_ACTION_CENTER"), { { kind = "text", text = Core:Text("CORE.CLICK_TO_ADD_OR_ENTER_DETAILS_OPEN") } })
     end
     binding.menu:ClearAllPoints()
     if options.menuPlacement == "right" then binding.menu:SetPoint("TOPLEFT", control, "TOPRIGHT", 2, 0)

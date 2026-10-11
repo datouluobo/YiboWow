@@ -1,5 +1,9 @@
 -- Lua 5.1: actual workspace/models/theme, simulated WoW frames and snapshots.
 local methods = {}
+function methods:SetClampedToScreen() end
+function methods:GetStringHeight()
+    return math.max(1, math.ceil(self:GetStringWidth() / math.max(1, self:GetWidth()))) * (self.fontSize or 16)
+end
 local function Frame(parent)
     local frame = setmetatable({ parent = parent, children = {}, shown = true, enabled = true,
         scripts = {}, hooks = {}, points = {}, level = parent and parent.level + 1 or 1 }, { __index = methods })
@@ -86,7 +90,7 @@ local nativeCalls = 0
 for _, fn in ipairs({ "TakeInboxItem", "TakeInboxMoney", "ReturnInboxItem", "DeleteInboxItem", "SendMail", "GetInboxText" }) do
     _G[fn] = function() nativeCalls = nativeCalls + 1; error("Workspace must only browse cached facts") end
 end
-YiboCore = {}; dofile("YiboCore/UI/Theme.lua")
+YiboCore = {}; dofile("YiboCore/_NonRelease/Tests/LoadLocale.lua"); dofile("YiboCore/UI/Theme.lua")
 YiboCore.Capabilities = { Register = function() end }
 STANDARD_TEXT_FONT = "font"
 dofile("YiboCore/UI/Input.lua")

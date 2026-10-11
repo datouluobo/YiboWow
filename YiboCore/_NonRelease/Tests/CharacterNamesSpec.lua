@@ -10,6 +10,11 @@ function CreateFrame()
 end
 dofile("YiboCore/Bootstrap.lua")
 dofile("YiboCore/Runtime/Capabilities.lua")
+GetLocale = GetLocale or function() return "zhCN" end
+
+dofile("YiboCore/Runtime/Locale.lua")
+dofile("YiboCore/Locales/zhCN.lua")
+dofile("YiboCore/Locales/enUS.lua")
 dofile("YiboCore/Runtime/Events.lua")
 dofile("YiboCore/Util/Defaults.lua")
 local Core = YiboCore
@@ -118,7 +123,7 @@ local matrixWidth = Theme:GetCharacterMatrixColumnWidth({ scope = "all" }, { cha
 assert(matrixWidth > 0, "matrix measurement remains usable")
 
 local fields = {}
-Core.Fields = { Register = function(_, _, definition) fields[definition.id] = definition end }
+Core.Fields = { Register = function(_, _, definition) fields[definition.id] = definition; return definition end }
 dofile("YiboCore/Data/Fields/CharacterArchive.lua")
 Equal(fields["character.identity"].Format(character), "天堂猎手-Silver Moon", "archive identity remains original/full")
 Equal(fields["character.identity"].Format(nil), "—", "empty archive value")

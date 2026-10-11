@@ -49,7 +49,7 @@ function Events:FireIsolated(eventName, ...)
     for _, listener in ipairs(listeners) do
         local values = Core.Defaults:Copy(args)
         local ok, err = pcall(listener.callback, listener.owner, unpack(values, 1, values.n))
-        if not ok then Core:Print("事件回调失败：" .. tostring(err)) end
+        if not ok then Core:Print(Core:Text("CORE.EVENT_CALLBACK_FAILED") .. tostring(err)) end
     end
 end
 

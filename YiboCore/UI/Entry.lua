@@ -7,12 +7,12 @@ local HidePreview
 local CORE_ICON = "Interface\\AddOns\\YiboCore\\Media\\YiboCoreIcon-v20"
 
 local ENTRY_MODES = { "none", "broker", "minimap", "both" }
-local ENTRY_MODE_LABELS = {
-    none = "不显示",
-    broker = "仅 Broker",
-    minimap = "仅小地图",
-    both = "两者都显示",
-}
+local ENTRY_MODE_LABELS = Core.Locale:Bind(function() return {
+    none = Core:Text("CORE.HIDDEN"),
+    broker = Core:Text("CORE.BROKER_ONLY"),
+    minimap = Core:Text("CORE.MINIMAP_ONLY"),
+    both = Core:Text("CORE.BOTH"),
+} end)
 
 local function Toggle(pageID)
     if Core.AccountView then Core.AccountView:Toggle(pageID) end
@@ -52,8 +52,8 @@ local function MinimapFrameName(entryID)
 end
 
 function Entry:GetBusinessEntryMode(entryID)
-    local saved = EntrySettings().pageModes[entryID]
-    return ENTRY_MODE_LABELS[saved] and saved or "none"
+    local c = self:GetEntryChannels(entryID)
+    return c.broker and c.minimap and "both" or (c.broker and "broker" or (c.minimap and "minimap" or "none"))
 end
 
 function Entry:GetBusinessEntryModeLabel(mode)
@@ -61,17 +61,14 @@ function Entry:GetBusinessEntryModeLabel(mode)
 end
 
 function Entry:GetCoreEntryMode()
-    local saved = EntrySettings().coreMode
-    return ENTRY_MODE_LABELS[saved] and saved or "both"
+    return self:GetBusinessEntryMode("YiboCore")
 end
 
 function Entry:SetCoreEntryMode(mode)
     if not ENTRY_MODE_LABELS[mode] then return false end
-    local settings = EntrySettings()
-    settings.coreMode = mode
-    -- Keep the old fields coherent for releases that still read them.
-    settings.broker.show = HasBroker(mode)
-    settings.minimap.show = HasMinimap(mode)
+    local c = Core.EntryConfig:FromMode(mode)
+    c.builtinBar = self:GetEntryChannels("YiboCore").builtinBar
+    EntrySettings().coreChannels = c
     self:Refresh()
     return true
 end
@@ -88,7 +85,9 @@ function Entry:CycleBusinessEntryMode(entryID)
     for index, mode in ipairs(ENTRY_MODES) do
         if mode == current then nextIndex = (index % #ENTRY_MODES) + 1; break end
     end
-    EntrySettings().pageModes[entryID] = ENTRY_MODES[nextIndex]
+    local c = Core.EntryConfig:FromMode(ENTRY_MODES[nextIndex])
+    c.builtinBar = self:GetEntryChannels(entryID).builtinBar
+    EntrySettings().businessChannels[entryID] = c
     self:Refresh()
 end
 
@@ -159,12 +158,12 @@ local function HideBrokerTooltip(tooltip)
 end
 
 function Entry:CreateBusinessBroker(entry)
-    if not entry or entry.disabled or not HasBroker(self:GetBusinessEntryMode(entry.id)) then return end
+    if not entry or entry.disabled or not self:GetEntryAvailability(entry.id) or not HasBroker(self:GetBusinessEntryMode(entry.id)) then return end
     local library = type(LibStub) == "table" and LibStub.GetLibrary and LibStub:GetLibrary("LibDataBroker-1.1", true)
     if not library then return end
     local broker = entry.broker or (library.GetDataObjectByName and library:GetDataObjectByName(entry.brokerName))
     if broker and broker.yiboCoreEntryID ~= entry.id then
-        Core:Print("Broker 名称冲突，未接管数据源: " .. entry.brokerName)
+        Core:Print(Core:Text("CORE.BROKER_NAME_CONFLICT_DATA_SOURCE_LEFT_UNCHANGED") .. entry.brokerName)
         return
     end
     if not broker then broker = library:NewDataObject(entry.brokerName, {}) end
@@ -174,24 +173,14 @@ function Entry:CreateBusinessBroker(entry)
     broker.type = "launcher"
     broker.text = entry.text
     broker.icon = entry.icon
-    broker.OnClick = function(_, mouseButton)
-        if entry.disabled then return end
-        if mouseButton == "RightButton" then
-            -- Open the business workbench in one layout pass.  Going through
-            -- the account page first can leave the shared settings host at its
-            -- previous page's size while an entry hover is being dismissed.
-            Core.AccountView:ShowSettings(entry.pageID)
-        else
-            Toggle(ResolveBusinessPageID(entry))
-        end
-    end
-    broker.OnEnter = function(first, second)
-        if not entry.disabled then ShowPreview(second or first, ResolveBusinessPageID(entry)) end
-    end
+    broker.yiboCoreEntryDisabled = nil
+    broker.yiboCoreEntryID = entry.id
+    broker.OnClick = function(_, button) Entry:HandleEntryClick(entry.id, button) end
+    broker.OnEnter = function(first, second) Entry:ShowEntryPreview(entry.id, second or first, "broker") end
     broker.OnLeave = function() Entry:SchedulePreviewClose() end
     broker.OnTooltipShow = function(tooltip)
-        local owner = tooltip and tooltip.GetOwner and tooltip:GetOwner()
-        if not entry.disabled and ShowPreview(owner, ResolveBusinessPageID(entry)) then HideBrokerTooltip(tooltip) end
+        local anchor = tooltip and tooltip.GetOwner and tooltip:GetOwner()
+        if Entry:ShowEntryPreview(entry.id, anchor, "broker") then HideBrokerTooltip(tooltip) end
     end
 end
 
@@ -210,20 +199,16 @@ end
 local function ConfigureCoreBroker(broker)
     broker.yiboCoreEntryDisabled = nil
     broker.type = "launcher"
-    broker.text = "[Yibo] 账号总览"
+    broker.text = Core:Text("CORE.YIBO_ACCOUNT_OVERVIEW")
     broker.icon = CORE_ICON
-    broker.OnClick = function(_, mouseButton)
-        if mouseButton == "RightButton" then Core.AccountView:ShowSettings() else Toggle() end
-    end
-    broker.OnEnter = function(first, second)
-        local owner = second or first
-        Entry.lastBrokerAnchor = owner
-        ShowPreview(owner)
-    end
+    broker.yiboCoreEntryDisabled = nil
+    broker.yiboCoreEntryID = "YiboCore"
+    broker.OnClick = function(_, button) Entry:HandleEntryClick("YiboCore", button) end
+    broker.OnEnter = function(first, second) Entry:ShowEntryPreview("YiboCore", second or first, "broker") end
     broker.OnLeave = function() Entry:SchedulePreviewClose() end
     broker.OnTooltipShow = function(tooltip)
-        local owner = tooltip and tooltip.GetOwner and tooltip:GetOwner() or Entry.lastBrokerAnchor
-        if ShowPreview(owner) then HideBrokerTooltip(tooltip) end
+        local anchor = tooltip and tooltip.GetOwner and tooltip:GetOwner()
+        if Entry:ShowEntryPreview("YiboCore", anchor, "broker") then HideBrokerTooltip(tooltip) end
     end
 end
 
@@ -246,10 +231,7 @@ function Entry:CreateBusinessMinimap(entry)
     button:SetMovable(true); button:EnableMouse(true); button:RegisterForDrag("LeftButton")
     button.icon = button:CreateTexture(nil, "BACKGROUND"); button.icon:SetTexture(entry.icon); button.icon:SetAllPoints()
     button.border = button:CreateTexture(nil, "OVERLAY"); button.border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder"); button.border:SetSize(53, 53); button.border:SetPoint("TOPLEFT")
-    button:SetScript("OnClick", function(_, mouseButton)
-        if entry.disabled then return end
-        if mouseButton == "RightButton" then Core.AccountView:ShowSettings(entry.pageID) else Toggle(ResolveBusinessPageID(entry)) end
-    end)
+    button:SetScript("OnClick", function(_, button) Entry:HandleEntryClick(entry.id, button) end)
     button:SetScript("OnDragStart", button.StartMoving)
     button:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
@@ -260,28 +242,34 @@ function Entry:CreateBusinessMinimap(entry)
         end
         Entry:Refresh()
     end)
-    button:SetScript("OnEnter", function(self) if not entry.disabled then ShowPreview(self, ResolveBusinessPageID(entry)) end end)
+    button:SetScript("OnEnter", function(self) Entry:ShowEntryPreview(entry.id, self, "minimap") end)
     button:SetScript("OnLeave", function() Entry:SchedulePreviewClose() end)
     entry.button = button
 end
 
 function Entry:RegisterBusinessEntry(addonName, definition)
-    if type(addonName) ~= "string" or type(definition) ~= "table" or type(definition.id) ~= "string" or type(definition.pageID) ~= "string" then
-        return nil, "业务入口必须提供插件名、id 与 pageID。"
+    if type(addonName) ~= "string" or type(definition) ~= "table" or type(definition.id) ~= "string" or definition.id == "" or definition.id == "YiboCore" or type(definition.pageID) ~= "string" then
+        return nil, Core:Text("CORE.BUSINESS_ENTRIES_REQUIRE_ADDON_NAME_ID_AND")
     end
-    if not (Core.Registry and Core.Registry:Get(addonName)) then return nil, "入口所属插件尚未注册: " .. addonName end
+    if not (Core.Registry and Core.Registry:Get(addonName)) then return nil, Core:Text("CORE.ENTRY_S_ADDON_IS_NOT_REGISTERED") .. addonName end
     if definition.brokerName ~= nil and (type(definition.brokerName) ~= "string" or definition.brokerName == "") then
-        return nil, "业务入口 brokerName 必须是非空 string。"
+        return nil, Core:Text("CORE.BUSINESS_ENTRY_BROKERNAME_MUST_BE_A_NON")
     end
     if definition.resolvePageID ~= nil and type(definition.resolvePageID) ~= "function" then
-        return nil, "业务入口 resolvePageID 必须是 function。"
+        return nil, Core:Text("CORE.BUSINESS_ENTRY_RESOLVEPAGEID_MUST_BE_A_FUNCTION")
     end
     if definition.defaultMode ~= nil and not ENTRY_MODE_LABELS[definition.defaultMode] then
-        return nil, "业务入口 defaultMode 无效。"
+        return nil, Core:Text("CORE.INVALID_BUSINESS_ENTRY_DEFAULTMODE")
+    end
+    if definition.defaultChannels ~= nil then
+        if type(definition.defaultChannels) ~= "table" then return nil, Core:Text("ENTRY.INVALID_CHANNELS") end
+        for key, value in pairs(definition.defaultChannels) do
+            if (key ~= "broker" and key ~= "minimap" and key ~= "builtinBar") or type(value) ~= "boolean" then return nil, Core:Text("ENTRY.INVALID_CHANNELS") end
+        end
     end
     local page = Core.AccountView and Core.AccountView._pages[definition.pageID]
-    if not page then return nil, "入口目标页面不存在: " .. definition.pageID end
-    if page.addonName ~= addonName then return nil, "入口只能绑定所属插件自己的页面。" end
+    if not page then return nil, Core:Text("CORE.ENTRY_TARGET_PAGE_DOES_NOT_EXIST") .. definition.pageID end
+    if page.addonName ~= addonName then return nil, Core:Text("CORE.ENTRIES_MAY_ONLY_BIND_TO_PAGES_OWNED") end
     local entryClaim, claimError = Core:ClaimResource("entry", definition.id, addonName)
     if not entryClaim then return nil, claimError end
     local brokerName = BrokerName(addonName, definition)
@@ -308,15 +296,14 @@ function Entry:RegisterBusinessEntry(addonName, definition)
     entry.frameName = frameName
     entry.disabled = false
     local settings = EntrySettings()
-    if settings.pageModes[entry.id] == nil then
+    if settings.businessChannels[entry.id] == nil then
         for _, legacyID in ipairs(definition.legacyIDs or {}) do
-            if settings.pageModes[legacyID] ~= nil then
-                settings.pageModes[entry.id] = settings.pageModes[legacyID]
-                break
+            if settings.businessChannels[legacyID] ~= nil then
+                settings.businessChannels[entry.id] = Core.Defaults:Copy(settings.businessChannels[legacyID]); break
             end
         end
-        if settings.pageModes[entry.id] == nil and definition.defaultMode then
-            settings.pageModes[entry.id] = definition.defaultMode
+        if settings.businessChannels[entry.id] == nil then
+            settings.businessChannels[entry.id] = definition.defaultChannels and Core.Defaults:Copy(definition.defaultChannels) or Core.EntryConfig:FromMode(definition.defaultMode)
         end
     end
     if settings.pagePositions[entry.id] == nil then
@@ -354,13 +341,17 @@ function Entry:GetRegisteredBusinessEntries()
     for _, entry in pairs(self.businessEntries) do
         if not entry.disabled then entries[#entries + 1] = entry end
     end
-    table.sort(entries, function(left, right) return left.id < right.id end)
+    table.sort(entries, function(left, right)
+        if left.addonName ~= right.addonName then return left.addonName < right.addonName end
+        return left.id < right.id
+    end)
     return entries
 end
 
 HidePreview = function()
     Entry.previewToken = (Entry.previewToken or 0) + 1
     Entry:StopPreviewWatch()
+    Entry.previewOwner = nil
     GameTooltip:Hide()
     if Core.AccountView then Core.AccountView:HidePreview() end
 end
@@ -478,9 +469,7 @@ function Entry:Initialize()
         button:SetMovable(true); button:EnableMouse(true); button:RegisterForDrag("LeftButton")
         button.icon = button:CreateTexture(nil, "BACKGROUND"); button.icon:SetTexture(CORE_ICON); button.icon:SetAllPoints()
         button.border = button:CreateTexture(nil, "OVERLAY"); button.border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder"); button.border:SetSize(53, 53); button.border:SetPoint("TOPLEFT")
-        button:SetScript("OnClick", function(_, mouseButton)
-            if mouseButton == "RightButton" then Core.AccountView:ShowSettings() else Toggle() end
-        end)
+        button:SetScript("OnClick", function(_, button) Entry:HandleEntryClick("YiboCore", button) end)
         button:SetScript("OnDragStart", button.StartMoving)
         button:SetScript("OnDragStop", function(self)
             self:StopMovingOrSizing()
@@ -490,10 +479,10 @@ function Entry:Initialize()
             Entry:Refresh()
         end)
         button:SetScript("OnEnter", function(self)
-            if ShowPreview(self) then return end
+            if Entry:ShowEntryPreview("YiboCore", self, "minimap") then return end
             GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-            GameTooltip:AddLine("[Yibo] 账号总览", 0.125, 0.88, 0.44)
-            GameTooltip:AddLine("左键打开多角色状态视图", 0.75, 0.85, 0.87)
+            GameTooltip:AddLine(Core:Text("CORE.YIBO_ACCOUNT_OVERVIEW"), 0.125, 0.88, 0.44)
+            GameTooltip:AddLine(Core:Text("CORE.LEFT_CLICK_TO_OPEN_CHARACTER_STATUS"), 0.75, 0.85, 0.87)
             GameTooltip:Show()
         end)
         button:SetScript("OnLeave", function() Entry:SchedulePreviewClose() end)
@@ -512,9 +501,8 @@ function Entry:Initialize()
     self.library = library
     if library and HasBroker(self:GetCoreEntryMode()) then
         local broker = library.GetDataObjectByName and library:GetDataObjectByName("YiboCore")
-        if not broker then broker = library:NewDataObject("YiboCore", {}) end
-        self.broker = broker
-        ConfigureCoreBroker(broker)
+        if not broker then broker = library:NewDataObject("YiboCore", {yiboCoreEntryID="YiboCore"}) end
+        if broker.yiboCoreEntryID == "YiboCore" then self.broker = broker; ConfigureCoreBroker(broker) end
     end
     for _, entry in pairs(self.businessEntries) do self:CreateBusinessBroker(entry) end
     self:Refresh()
@@ -522,6 +510,13 @@ end
 
 function Entry:Refresh()
     local coreMode = self:GetCoreEntryMode()
+    local library = self.library or (LibStub and LibStub:GetLibrary("LibDataBroker-1.1", true))
+    self.library = library
+    if library and HasBroker(coreMode) and not self.broker then
+        local broker = library:GetDataObjectByName("YiboCore")
+        if not broker then broker = library:NewDataObject("YiboCore", {yiboCoreEntryID="YiboCore"}) end
+        if broker.yiboCoreEntryID == "YiboCore" then self.broker = broker end
+    end
     if self.button then
         local minimap = EntrySettings().minimap
         local angle = math.rad(tonumber(minimap.angle) or 225)
@@ -534,7 +529,8 @@ function Entry:Refresh()
     end
     for _, entry in pairs(self.businessEntries) do
         local mode = self:GetBusinessEntryMode(entry.id)
-        if HasBroker(mode) then
+        local available = self:GetEntryAvailability(entry.id)
+        if HasBroker(mode) and available then
             self:CreateBusinessBroker(entry)
             if entry.broker then entry.broker.yiboCoreEntryDisabled = nil end
         else
@@ -545,11 +541,144 @@ function Entry:Refresh()
             local angle = math.rad(tonumber(EntrySettings().pagePositions[entry.id]) or 225)
             entry.button:ClearAllPoints()
             entry.button:SetPoint("CENTER", Minimap, "CENTER", math.cos(angle) * 80, math.sin(angle) * 80)
-            entry.button:SetShown(not entry.disabled and HasMinimap(mode))
+            entry.button:SetShown(available and HasMinimap(mode))
         end
     end
+    if self.previewOwner and not self:GetEntryAvailability(self.previewOwner.id) then HidePreview() end
+    if Core.EntryBar then Core.EntryBar:Refresh() end
 end
 
 Core.Events:Register("CORE_READY", Entry, function(owner) owner:Initialize() end)
 Core.Events:Register("PLAYER_LOGIN", Entry, function(owner) owner:Initialize() end)
-Core.Capabilities:Register("account-entry", 1)
+local function Settings() return EntrySettings() end
+function Entry:GetEntryChannels(id)
+    local s = Settings()
+    return Core.Defaults:Copy(id == "YiboCore" and s.coreChannels or s.businessChannels[id] or Core.EntryConfig:FromMode("none"))
+end
+function Entry:SetEntryChannel(id, channel, enabled)
+    if channel ~= "minimap" and channel ~= "broker" and channel ~= "builtinBar" then return false end
+    if type(id) ~= "string" or id == "" or type(enabled) ~= "boolean" then return false end
+    local c = self:GetEntryChannels(id); c[channel] = enabled
+    local s = Settings()
+    if id == "YiboCore" then s.coreChannels = c else s.businessChannels[id] = c end
+    if not enabled then self:CloseEntryPreview(id,channel) end
+    self:Refresh(); return true
+end
+function Entry:GetBuiltinBarSettings() return Core.Defaults:Copy(Settings().bar) end
+function Entry:SetBuiltinBarEnabled(enabled)
+    if type(enabled) ~= "boolean" then return false end
+    Settings().bar.enabled = enabled
+    if not enabled then self:CloseEntryPreview(nil, "builtinBar") end
+    self:Refresh(); return true
+end
+function Entry:SetBuiltinBarOption(key, value)
+    local allowed = {locked="boolean",showNames="boolean",showBorder="boolean",background="string",backgroundAlpha="number",iconSize="number",spacing="number"}
+    if not allowed[key] or type(value) ~= allowed[key] then return false end
+    if key == "background" and not ({theme=true,black=true,charcoal=true,navy=true,forest=true})[value] then return false end
+    Settings().bar[key] = value
+    Core.EntryConfig:Normalize(Settings()); self:Refresh(); return true
+end
+function Entry:SetBuiltinBarPosition(point, relativePoint, x, y)
+    local s = Settings().bar
+    s.point,s.relativePoint,s.x,s.y = point,relativePoint,x,y
+    Core.EntryConfig:Normalize(Settings()); self:Refresh()
+end
+function Entry:GetEntryAvailability(id)
+    if id == "YiboCore" then return Core.AccountView ~= nil end
+    local entry = self.businessEntries[id]
+    if not entry or entry.disabled then return false end
+    local page = Core.AccountView._pages[ResolveBusinessPageID(entry)]
+    return page ~= nil and Core.AccountView._internal.PageEnabled(page)
+end
+function Entry:HandleEntryClick(id, button)
+    if not self:GetEntryAvailability(id) then return false end
+    self:CloseEntryPreview()
+    if button == "RightButton" then Core.AccountView:ShowSettings("display")
+    else
+        Core.AccountView:Toggle(id ~= "YiboCore" and ResolveBusinessPageID(self.businessEntries[id]) or nil)
+    end
+    return true
+end
+local function BarName(text)
+    text=tostring(text or ""):gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r","")
+    return (text:gsub("^%s*%[Yibo%]%s*",""):gsub("^Yibo[%w_]*%s*%-%s*",""):gsub("^%s+",""):gsub("%s+$",""))
+end
+function Entry:GetBuiltinBarEntries()
+    local result = {}
+    if self:GetEntryChannels("YiboCore").builtinBar then result[1] = {id="YiboCore",addonName="",text=BarName(Core:Text("CORE.YIBO_ACCOUNT_OVERVIEW")),icon="Interface\\AddOns\\YiboCore\\Media\\YiboCoreIcon-v20"} end
+    for _, entry in pairs(self.businessEntries) do
+        if self:GetEntryChannels(entry.id).builtinBar and self:GetEntryAvailability(entry.id) then result[#result+1] = {id=entry.id,addonName=entry.addonName,text=BarName((Core.AccountView._pages[ResolveBusinessPageID(entry)] or {}).title or entry.text),icon=entry.icon} end
+    end
+    local ranks = {}
+    for index,id in ipairs(Settings().bar.order) do ranks[id]=index end
+    table.sort(result,function(a,b)
+        if ranks[a.id] ~= ranks[b.id] then
+            if ranks[a.id] == nil then return false end
+            if ranks[b.id] == nil then return true end
+            return ranks[a.id] < ranks[b.id]
+        end
+        if a.addonName ~= b.addonName then return a.addonName < b.addonName end
+        return a.id < b.id
+    end)
+    return result
+end
+Core.Events:Register("ACCOUNT_VIEW_PAGE_REGISTERED", Entry, function(owner) owner:Refresh() end)
+Core.Events:Register("ACCOUNT_VIEW_PAGE_UNREGISTERED", Entry, function(owner) owner:Refresh() end)
+Core.Capabilities:Register("account-entry", 2)
+Core.Capabilities:Register("builtin-entry-bar", 3)
+
+function Entry:ShowEntryPreview(id, anchor, source)
+    if not self:GetEntryAvailability(id) then return false end
+    local pageID = id ~= "YiboCore" and ResolveBusinessPageID(self.businessEntries[id]) or nil
+    local page = pageID and Core.AccountView._pages[pageID] or Core.AccountView:GetPreviewPage()
+    local frame = Core.AccountView.frame
+    if not page or not page.previewEnabled or (frame and frame:IsShown() and not frame.preview and not EntrySettings().showPreviewWhileMainWindowOpen) then
+        self:CloseEntryPreview();return false
+    end
+    self.previewOwner = {id=id,source=source}
+    return ShowPreview(anchor, pageID)
+end
+function Entry:CloseEntryPreview(id, source)
+    local owner = self.previewOwner
+    if id == nil and source == nil or owner and (not id or owner.id == id) and (not source or owner.source == source) then HidePreview() end
+end
+
+function Entry:MoveBuiltinBarEntry(id, direction)
+    if direction ~= -1 and direction ~= 1 then return false end
+    local entries = self:GetBuiltinBarEntries()
+    local current
+    for index,entry in ipairs(entries) do if entry.id == id then current=index;break end end
+    local neighbor = current and entries[current+direction]
+    if not neighbor then return false end
+    local order = Settings().bar.order
+    local positions = {}
+    for index,key in ipairs(order) do positions[key]=index end
+    for _,entry in ipairs(entries) do
+        if not positions[entry.id] then order[#order+1]=entry.id;positions[entry.id]=#order end
+    end
+    local a,b = positions[id],positions[neighbor.id]
+    order[a],order[b] = order[b],order[a]
+    self:Refresh();return true
+end
+function Entry:ResetBuiltinBarOrder()
+    Settings().bar.order = {};self:Refresh()
+end
+
+function Entry:ReorderBuiltinBarEntry(id,targetID)
+    local entries=self:GetBuiltinBarEntries()
+    local source,target
+    for i,entry in ipairs(entries) do
+        if entry.id==id then source=i end
+        if entry.id==targetID then target=i end
+    end
+    if not source or not target or source==target then return false end
+    local moved=table.remove(entries,source);table.insert(entries,target,moved)
+    local visible={};for _,entry in ipairs(entries) do visible[entry.id]=true end
+    local order,nextIndex={},1
+    for _,key in ipairs(Settings().bar.order) do
+        if visible[key] then order[#order+1]=entries[nextIndex].id;nextIndex=nextIndex+1
+        else order[#order+1]=key end
+    end
+    while nextIndex<=#entries do order[#order+1]=entries[nextIndex].id;nextIndex=nextIndex+1 end
+    Settings().bar.order=order;self:Refresh();return true
+end

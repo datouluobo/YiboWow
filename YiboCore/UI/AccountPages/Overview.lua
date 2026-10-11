@@ -14,9 +14,9 @@ local function CreateOverview(parent)
     parent.scroll:SetPoint("TOPLEFT", 0, 0); parent.scroll:SetPoint("BOTTOMRIGHT", 0, 0)
     parent.content = CreateFrame("Frame", nil, parent.scroll); parent.scroll:SetScrollChild(parent.content)
     local content = parent.content
-    parent.heading = AddText(content, "GameFontNormalLarge", nil, COLORS.text); parent.heading:SetPoint("TOPLEFT", 20, -18); parent.heading:SetText("账号概览")
+    parent.heading = AddText(content, "GameFontNormalLarge", nil, COLORS.text); parent.heading:SetPoint("TOPLEFT", 20, -18); parent.heading:SetText(Core:Text("CORE.ACCOUNT_OVERVIEW_355"))
     parent.characterSummary = AddText(content, "GameFontNormalSmall", nil, COLORS.muted); parent.characterSummary:Hide()
-    parent.actionHeading = AddText(content, "GameFontNormalSmall", nil, COLORS.muted); parent.actionHeading:SetPoint("TOPLEFT", 20, -47); parent.actionHeading:SetText("下一步行动")
+    parent.actionHeading = AddText(content, "GameFontNormalSmall", nil, COLORS.muted); parent.actionHeading:SetPoint("TOPLEFT", 20, -47); parent.actionHeading:SetText(Core:Text("CORE.NEXT_ACTIONS"))
     parent.lines = {}
     parent.actions = {}
 end
@@ -33,7 +33,7 @@ local function RefreshOverview(parent, context)
         end, function(message) return tostring(message) end)
         if not ok then
             page.lastError = result
-            Core:Print("账号概览读取页面 “" .. page.title .. "”（" .. tostring(page.addonName) .. "）的 " .. callbackName .. " 失败：" .. result)
+            Core:Print(Core:Text("FORMAT.PAGE_CALLBACK_FAILED", page.title, tostring(page.addonName), callbackName, tostring(result)))
             return nil
         end
         return result
@@ -88,7 +88,7 @@ local function RefreshOverview(parent, context)
         end
     end
     local visibleActionCount = math.min(#actions, actionLimit)
-    parent.actionHeading:SetText(#actions > 0 and ("下一步行动（显示 " .. visibleActionCount .. " / " .. #actions .. "）") or "暂无需要处理的账号行动")
+    parent.actionHeading:SetText(#actions > 0 and (Core:Text("FORMAT.NEXT_ACTIONS", visibleActionCount, #actions)) or Core:Text("CORE.NO_ACCOUNT_ACTIONS_NEED_ATTENTION"))
     for index = 1, visibleActionCount do
         local action = actions[index]
         local button = parent.actions[index]
@@ -100,7 +100,7 @@ local function RefreshOverview(parent, context)
             button:SetScript("OnClick", function(self) AccountView:ShowPage(self.pageID) end); parent.actions[index] = button
         end
         button:ClearAllPoints(); button:SetPoint("TOPLEFT", parent.content, "TOPLEFT", 20, actionBase - 24 - ((index - 1) * 38)); button:SetPoint("TOPRIGHT", parent.content, "TOPRIGHT", -20, actionBase - 24 - ((index - 1) * 38))
-        button.title:SetText((action.pageTitle or "业务") .. " · " .. (action.title or "角色")); button.text:SetText(action.text or "")
+        button.title:SetText((action.pageTitle or Core:Text("CORE.ADDON")) .. " · " .. (action.title or Core:Text("CORE.CHARACTER"))); button.text:SetText(action.text or "")
         button.pageID = action.pageID; button:Show()
     end
     for index = visibleActionCount + 1, #parent.actions do parent.actions[index]:Hide() end
@@ -110,9 +110,9 @@ local function RefreshOverview(parent, context)
     parent.scroll:RefreshScrollbar()
 end
 
-AccountView._pages.overview = {
-    id = "overview", title = "概览", order = -20, internal = true, previewEnabled = true,
-    firstUseTip = { title = "账号概览", lines = { "从左侧选择业务页，比较角色的下一步行动。" } },
+AccountView._pages.overview = Core.Locale:Bind(function() return {
+    id = "overview", title = Core:Text("CORE.OVERVIEW"), order = -20, internal = true, previewEnabled = true,
+    firstUseTip = { title = Core:Text("CORE.ACCOUNT_OVERVIEW_355"), lines = { Core:Text("CORE.CHOOSE_A_BUSINESS_PAGE_ON_THE_LEFT") } },
     Create = CreateOverview, Refresh = RefreshOverview,
     GetSurfaceMetrics = Helpers.GetOverviewSurfaceMetrics,
-}
+} end)

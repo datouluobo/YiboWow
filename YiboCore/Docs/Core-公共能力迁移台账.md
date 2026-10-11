@@ -1,6 +1,6 @@
 # Core 公共能力迁移台账
 
-首次审查：2026-10-07。最近更新：2026-10-10。
+首次审查：2026-10-07。最近更新：2026-10-11。
 
 2026-10-10 主动添加实施：当前工作树 **Core 1.11.0 / API v12**，新增 business-item-actions:1；TaskHub 0.5.0 / schema4，九个来源已接入。CAP-008 记录实际范围；230项新目标检查、672项既有集成及相关回归通过，客户端待验收、未发布。以下较早版本说明保留历史。
 
@@ -58,7 +58,7 @@
 | CAP-001 | 公共角色／联系人名称格式化 | 已提供 | Core 1.7.0 / API v8，`character-name-format:1`；用户截图显示 v1.7.0-api8 已 Approved | Core 自身显示已接入；Mail 部分接入，其他业务范围随功能修改迁移 | 游戏内核对及业务剩余显示调用 |
 | CAP-002 | 基础输入控件 | 已提供 | API v7，`basic-input:1`；文档首批 Core 1.6.1 | Currency 有明确接入与验证记录；Mail 版本要求已修正、旧输入部分待迁移；Vault 部分接入 | 对应搜索／输入控件修改时迁移，并核对最低版本 |
 | CAP-003 | 物品解析、选择与操作确认 | 已提供 | API v7，`item-resolver:1`；Core 1.7.1 / API v8 提供 `item-picker:2` 批量扩展 | Currency 保持单物品兼容；Mail 已接入所列范围；Crafting／Vault 部分接入展示加载，TaskHub 0.3.0 部分接入图标；AutoOpen 待评估 | 有真实批量录入需求时使用公开配置；业务校验与执行由业务插件负责 |
-| CAP-004 | 账号页面、入口与设置工作台 | 已提供 | 账号页面／入口基线 API v5、`account-entry:1`；独立设置注册 API v6；API v11 新增 `account-character-admission:1`、`account-surface-budget:1`；`account-view:2` 首次提示另见 CAP-006 | TaskHub O4 接入角色准入通知、悬停及业务设置；仍有旧设置壳、版本和客户端验证待核对项 | 对应功能修改或经确认的集中迁移时处理所列缺口 |
+| CAP-004 | 账号页面、入口与设置工作台 | 已提供 | 账号页面／入口基线 API v5；API13 提供 `account-entry:2` / `builtin-entry-bar:3`（客户端待验收）；独立设置注册 API v6；API v11 新增 `account-character-admission:1`、`account-surface-budget:1`；`account-view:2` 首次提示另见 CAP-006 | TaskHub O4 接入角色准入通知、悬停及业务设置；仍有旧设置壳、版本和客户端验证待核对项 | 对应功能修改或经确认的集中迁移时处理所列缺口 |
 | CAP-005 | 通用跨业务能力连接 | 已提供（Service 与 Provider） | Service 最低 API v9 / business-services:1；Provider 工作树 Core 1.10.0 / API v11 / business-providers:1，未发布；文档见 API-v11 | Mail／Vault／Currency 已有 Service；Todo／Mail 输出三个 action.todo，TaskHub 通用消费 | ContractsSpec 90 项、TaskHub 集成与展示 327 项及邮件回归通过；主页面外观已确认，新来源和 O4 客户端待验收 |
 | CAP-006 | 页面首次打开提示 | 已提供 | Core 1.9.0 / API v10、account-view:2；v1.9.0-api10 上传中，包含 api9 | Core 概览及 Builds／Reputation／Todo 已写入 firstUseTip，业务检查 API v10 与能力；仅静态核对，记部分接入 | 与 api9 同批核对；自动化契约和低版本停止验证、游戏内一次性／预览／超时验收 |
 
@@ -172,6 +172,8 @@
 
 ## CAP-004：账号页面、入口与设置接入基线
 
+2026-10-11：Core 工作树 API13 新增 [三通道入口与内置条契约](API-v13-入口三通道与内置条.md)，account-entry:2 / builtin-entry-bar:2、schema11；旧 RegisterBusinessEntry/defaultMode/legacyIDs 兼容，不提高未改业务插件最低版本。Core 的小地图／Broker／内置条及设置已统一接入，1156项入口／布局专项与相关回归通过；真实业务客户端验收待完成，各插件下表状态不因此变更。没有新增业务本地实现，后续主动消费新 API 时检查 API13 及所需能力。最近审查 2026-10-11；证据见实施记录。
+
 2026-10-09 0.3.0 收拢：AccountPage 新来源／状态下拉全部使用 UITheme:CreateDropdown；预览继续消费可用高度预算；HUD／登录列表入口使用 SetPageScope 与 ShowPage 回到全服第一页。新增 OverviewSpec 验证折叠／展开、筛选、行池按钮及入口重置；无新增 Core 接口。用户 0.2.1 截图证实上一轮修复生效，本轮 UI 仍待验收，见 [收拢记录](../../Docs/行动中心-概念图收拢与流程修正.md)。
 
 2026-10-09 O4／O5 联合复核增加 [视图可用高度](API-v11-视图可用高度.md)：Core 1.10.0 / API v11 / account-surface-budget:1，主页面与悬停在测量前提供高度预算，原有页面行为兼容。TaskHub 0.2.1 显式检查并直接消费；SurfacesSpec 现为 95 项，含真实 Core 测量、压缩后尺寸与缺能力停止。用户 0.2.0 截图已定位问题，修复后仍待客户端验收；其余业务页未触及。
@@ -265,12 +267,12 @@
 | YiboTodo | 部分接入 | CoreIntegration 的设置开关／矩阵列提示；Namespace 与初始化要求 API v10 / account-view:2 | 工作树；低版本提示与停止、一次性显示、预览及计时待验证 |
 | YiboVault | 不适用（当前范围） | 页面无 firstUseTip | 新增首次引导需求时评估 |
 
-## 后续方案观察项（尚无运行时能力）
+## 后续方向与实现状态
 
 | 方向 | 当前证据 | 对迁移节奏的影响 |
 | --- | --- | --- |
-| 中英文客户端适配 | [方案](../../Docs/Core系列中英文客户端适配方案与实施计划.md) 已确认待实施；当前 TOC 未加载公共语言服务 | Core 服务及检查工具可用后，业务插件按用户可见区域或经确认的逐插件收尾接入；目前不登记已接入或猜测 API／能力名称 |
-| 内置 LDB 与信息条 | [方案](Core-内置LDB与信息条实施方案.md) 待实施；当前 TOC 仍仅 OptionalDeps LDB，Entry 仍为四态入口 | 方案明确保留 RegisterBusinessEntry、defaultMode 与 legacyIDs 兼容；主要由 Core 改造，不作为全插件追版本的前提 |
+| 中英文客户端适配 | 已实现 localization:1 / API13，见 CAP-009 与语言服务文档；客户端待验收 | Core 已提供不代表业务已接入；按触及区域迁移并登记最低版本和验证证据 |
+| 内置 LDB 与信息条 | 2026-10-11 工作树已内置三库，提供 account-entry:2 / builtin-entry-bar:2；三通道和总开关实现，1156项专项通过，客户端待验收 | 方案明确保留 RegisterBusinessEntry、defaultMode 与 legacyIDs 兼容；主要由 Core 改造，不作为全插件追版本的前提 |
 | 业务任务聚合 | CAP-005 的 Provider／List 已提供；Todo／Mail 三个 action.todo 与 TaskHub 四个展示面已有代码及自动化 | 按真实提供方／消费方继续扩展；两个业务所有者已接入，不等同于全部业务或跨角色安排已实现 |
 | 网络通讯协议 | 本轮在业务运行 Lua 中未找到 SendAddonMessage／CHAT_MSG_ADDON／RegisterAddonMessagePrefix；本机 Core.Events／Contracts 不属于网络协议 | 需求、契约和实现版本尚未确定；不作为当前追赶完成条件 |
 
@@ -282,7 +284,7 @@
 | --- | --- | --- |
 | 运行与配置 | runtime:1、database:1、migrations:1、events:1、resources:1、fields:1、addon-catalog:1、addon-status:1 | 现有基础设施；发现具体重复实现或版本缺口时建迁移条目 |
 | 角色与数据 | characters:1、character-cleanup:1、character-profile:1、data-domains:1、domain-store:1、level-filter:1 | 角色身份与清理已有公共接口；character-profile 是旧兼容层，新功能按现有指南读取 DataDomains。数据域内容仍须遵守业务所有权 |
-| 账号 UI | account-view:2、account-entry:1、account-character-admission:1 | 角色准入通知见 API-v11-角色准入通知；接入基线见 CAP-004，首次提示见 CAP-006；注册存在不代表全部行为已验收 |
+| 账号 UI | account-view:2、account-entry:2、builtin-entry-bar:3、account-character-admission:1 | 角色准入通知见 API-v11-角色准入通知；接入基线见 CAP-004，首次提示见 CAP-006；注册存在不代表全部行为已验收 |
 | 输入与物品 | basic-input:1、item-resolver:1、item-picker:2、currency-catalog:1 | 迁移见 CAP-002／003；currency-catalog 后续有真实迁移需求时单列 |
 | 名称与连接 | character-name-format:1、business-services:1 | 见 CAP-001／005；business-contracts 尚未注册 |
 
@@ -407,3 +409,45 @@ CAP-008 设置与状态同步追加审查：Core 统一设置提供右上角按�
 2026-10-11 CAP-005 活动关闭同步复核：Todo 通过既有 action.targets 任务的 active/not-applicable 状态表达暗月未开放，Task 复用 Snapshot 筛选并让完成行保留逻辑尊重明确不适用状态；无新增 Core 能力或来源内部访问。EventGoals17 验证午夜缓存到期、当前与其它角色、悬停、完成行移出、目标历史保留及下期恢复。
 
 2026-10-11 CAP-005／008 AltoBoss 自定义目标复核：来源公开目录与进度纳入 custom NPC，Task 继续经 Core Contracts 消费，击杀和有效期仍归 AltoBoss。目录增删改经既有 NotifyChanged 失效；角色状态格复用 API12 / business-item-actions:1，并声明普通按钮安全消费 Ctrl＋左键。无新增 Core 接口、业务分支或跨插件内部访问；CustomBossGoalsSpec25 验证实际来源增删改、添加取消、角色隔离及有效期恢复，客户端仍待复测。
+
+
+## CAP-009：公共语言服务与账号语言偏好
+
+Core 状态：**已提供（1.12.0 / API v13 工作树，未发布）**。能力 `localization:1`，最低 API13。契约见 [API v13 语言服务](API-v13-语言服务.md)；Core 当前 532 对资源已接入，175 项语言验证、206 项语言模拟布局及1133项入口专项与相关回归通过，真实客户端待验收。Core 保留旧 API，不推动无关业务整体提版本。
+
+职责：Core 提供账号模式与会话语言、资源注册/查询/格式化/中文回退/缺失报告；业务拥有翻译目录与业务数据。正常业务注册早于自身页面文件、晚于 Core 就绪；保存语言偏好只在下次重载或登录生效。临时预览只在非发布探针，不保存。
+
+| 插件（技术名排序） | 接入状态 | 已覆盖 / 剩余范围与版本要求 | 验证证据 / 最近审查 |
+|---|---|---|---|
+| YiboAltoBoss | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+| YiboAutoOpen | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+| YiboBeastPaths | 待评估（独立适配） | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+| YiboBuilds | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+| YiboCrafting | 部分接入 | 1.0.8 目标配置、标题、状态／错误与添加提示已接入 owner 资源；目标增强检查 API13 / localization:1 / business-item-actions:2。查询主页面／设置／静态专业目录仍待迁移，基础最低版本保持 | GoalSourcesSpec70 含默认目标、中英文资源和旧 Core 拒绝；静态报告已审查，真实语言客户端待验收 / 2026-10-12 |
+| YiboCurrency | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+| YiboLegendary | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+| YiboMail | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+| YiboMounts | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+| YiboQuestBlocker | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+| YiboReputation | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+| YiboTaskHub | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+| YiboTodo | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+| YiboVault | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+
+证据：[实施与验收记录](../../Docs/Core系列中英文客户端适配-实施与验收记录.md)，`_NonRelease/Localization/{Core-Report,Workspace-Report}.md`。字符串数不是加权区域覆盖度。后续新增/修改区域触发接入；达到单插件收尾条件时固定能力基线并集中验证。Core 间接给旧业务页面提供英文壳，不等于该业务已接入语言服务。
+
+本轮仅修改 Core 运行代码及直接关联测试夹具；业务源代码没有因语言服务新增而迁移，CAP-001～008 状态保持。模拟布局中的 Fixture 是测试数据，不登记为插件接入。
+
+2026-10-11 CAP-009：本轮 Core 入口／设置新增18对资源（总497对），继续 Core:Text 与统一会话语言，未涉及业务源码语言迁移；严格静态检查零缺失／未知／参数差异／硬编码，客户端待验收。
+
+2026-10-11 CAP-009 文档同步：正式三模式设置承担插件显示语言覆盖，接口为 Core.Locale:GetLanguage() → zh/en，GetLocale() 保持客户端值；无需另建覆盖开关。zhCN 手动英文用于日常开发，真实 enUS 的原生名称、字体和业务场景验收仍待完成。探针仅作 Core 快速预览，未迁移业务状态保持。此次仅补齐文档，沿用既有验证证据，未新增运行验证。
+
+2026-10-11 CAP-004／CAP-009 设置迭代：Core 新增 builtin-entry-bar:2 的外框、背景配色、透明度与稳定 ID 调序；设置三个固定页签、业务入口按高度分页。新增22对资源，当前519对；1156项入口专项、40项语言布局、175项语言契约通过，严格静态检查零缺失／未知／参数差异／硬编码。业务源码与接入范围未变；客户端验收待完成。
+
+2026-10-12 CAP-004／CAP-009：Core 通用和信息条成为独立设置页，入口列表合并仅注册设置的插件，使用显式分页与总数；统一控件高度、行距和紧凑宽度。当前526对资源，1116项入口专项、58项语言布局通过；能力仍 API13 / account-entry:2 / builtin-entry-bar:2，业务源码与接入状态未变，客户端修正版待验收。
+
+2026-10-12 本轮调整：点击 Core 常规设置直接显示语言与悬停，信息条与窗口等导航缩进为下一级。显示与入口完整展示注册的业务页面与独立设置，每个插件30高单行、38行距、共享表头，字段下拉仅显示数量；列表纵向滚动。builtin-entry-bar:3 增加图标拖拽调序，取消拖拽不改顺序，拖拽松开不触发打开页面；条与调序下拉统一使用去作者前缀的页面名称。Core 公共能力变化仅涉及 CAP-004／CAP-009，业务源码与接入范围未变。1133项入口专项、58项语言布局与532对资源严格检查通过；客户端交互仍待验收。
+
+2026-10-12 文案与高度调整：Core 子页面统一导航按钮和文字锚点，信息条与其它子项对齐；设置隐藏重复页说明，入口表移除重复提示、注册数量与底部提示，保留字段表头、操作控件及必要风险确认。语言、重载、信息条拖拽与仅设置状态同步精简中英文。帮助页复用关于页高度规则，并优先读取关于页保存高度，覆盖旧帮助小窗口高度。1133项入口专项、61项布局（含子项对齐、帮助／关于默认及保存高度一致）、175项语言契约通过；532对资源严格静态检查无异常，客户端待验收。能力版本与业务接入范围未变。
+
+2026-10-12 角色设置布局：信息条移至角色与排序、显示与入口之间；去掉三个导航资源文字内的前导空格，缩进统一由导航锚点控制。默认排序改下拉，操作按钮按文案宽度，业务等级过滤按宽度两至三列；角色档案过滤控件恢复分栏，等级输入固定120宽。Core 等级与短名输入改为既有 Theme:CreateInput（CAP-002 / basic-input:1），保留校验、回车保存、失焦保存和取消。仅 Core 消费实现接入变化，业务插件状态不变，无公共能力升版。206项布局覆盖中英文620／1200宽度、12业务过滤、共享输入与表达式保存、导航顺序与缩进；1133项入口专项通过。532对资源严格检查无异常，游戏内布局待验收。

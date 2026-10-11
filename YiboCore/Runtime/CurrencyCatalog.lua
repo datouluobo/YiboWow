@@ -6,32 +6,32 @@ local Catalog = { _currencies = {}, _items = {} }
 Core.CurrencyCatalog = Catalog
 
 local function Register(bucket, owner, definition, kind)
-    if type(owner) ~= "string" or owner == "" then return nil, "货币目录必须声明 owner。" end
+    if type(owner) ~= "string" or owner == "" then return nil, Core:Text("CORE.CURRENCY_CATALOGS_MUST_DECLARE_OWNER") end
     if type(definition) ~= "table" or type(definition.id) ~= "string" or definition.id == "" then
-        return nil, "货币目录条目必须提供稳定 id。"
+        return nil, Core:Text("CORE.CURRENCY_CATALOG_ENTRIES_REQUIRE_A_STABLE_ID")
     end
-    if bucket[definition.id] then return nil, kind .. " 已被 " .. bucket[definition.id].owner .. " 注册: " .. definition.id end
+    if bucket[definition.id] then return nil, kind .. Core:Text("CORE.IS_ALREADY_REGISTERED_BY") .. bucket[definition.id].owner .. Core:Text("CORE.PUNCTUATION") .. definition.id end
     bucket[definition.id] = { id = definition.id, owner = owner, title = definition.title, metadata = Core.Defaults:Copy(definition) }
     return bucket[definition.id]
 end
 
 function Catalog:RegisterCurrency(owner, definition)
-    if not tonumber(definition and definition.currencyID) then return nil, "标准货币必须提供 currencyID。" end
+    if not tonumber(definition and definition.currencyID) then return nil, Core:Text("CORE.STANDARD_CURRENCIES_REQUIRE_CURRENCYID") end
     definition.id = definition.id or ("currency:" .. tostring(definition.currencyID))
-    return Register(self._currencies, owner, definition, "标准货币")
+    return Register(self._currencies, owner, definition, Core:Text("CORE.STANDARD_CURRENCY"))
 end
 
 function Catalog:RegisterItem(owner, definition)
-    if not tonumber(definition and definition.itemID) then return nil, "物品代币必须提供 itemID。" end
+    if not tonumber(definition and definition.itemID) then return nil, Core:Text("CORE.ITEM_CURRENCIES_REQUIRE_ITEMID") end
     definition.id = definition.id or ("item:" .. tostring(definition.itemID))
-    return Register(self._items, owner, definition, "物品代币")
+    return Register(self._items, owner, definition, Core:Text("CORE.ITEM_CURRENCY"))
 end
 
 function Catalog:UnregisterItem(owner, itemID)
     local id = "item:" .. tostring(tonumber(itemID) or "")
     local entry = self._items[id]
-    if not entry then return false, "物品代币不在 Core 目录中。" end
-    if entry.owner ~= owner then return false, "只有注册插件可以移除该物品代币。" end
+    if not entry then return false, Core:Text("CORE.ITEM_CURRENCY_IS_NOT_IN_THE_CORE") end
+    if entry.owner ~= owner then return false, Core:Text("CORE.ONLY_THE_REGISTERING_ADDON_CAN_REMOVE_THIS") end
     self._items[id] = nil
     return true
 end

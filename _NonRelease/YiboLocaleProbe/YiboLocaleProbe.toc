@@ -1,0 +1,8 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r Locale Preview Probe
+## Notes: Non-release Core language preview and missing translation report.
+## Author: YiboSoft
+## Version: 0.1.0
+## RequiredDeps: YiboCore
+
+Probe.lua

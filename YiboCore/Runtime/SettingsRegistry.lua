@@ -15,16 +15,16 @@ local function CopyDefinition(definition)
 end
 
 function SettingsRegistry:Register(addonName, definition)
-    if not (Core.Registry and Core.Registry:Get(addonName)) then return nil, "设置面板所属插件尚未注册。" end
-    if type(definition) ~= "table" or type(definition.id) ~= "string" or definition.id == "" then return nil, "设置面板必须提供 id。" end
-    if type(definition.title) ~= "string" or definition.title == "" then return nil, "设置面板必须提供 title。" end
-    if type(definition.CreateSettingsPanel) ~= "function" then return nil, "设置面板必须提供 CreateSettingsPanel。" end
-    if definition.description ~= nil and type(definition.description) ~= "string" then return nil, "设置面板 description 必须是 string。" end
-    if definition.icon ~= nil and type(definition.icon) ~= "string" then return nil, "设置面板 icon 必须是 string。" end
+    if not (Core.Registry and Core.Registry:Get(addonName)) then return nil, Core:Text("CORE.SETTINGS_PANEL_S_ADDON_IS_NOT_REGISTERED") end
+    if type(definition) ~= "table" or type(definition.id) ~= "string" or definition.id == "" then return nil, Core:Text("CORE.SETTINGS_PANELS_REQUIRE_ID") end
+    if type(definition.title) ~= "string" or definition.title == "" then return nil, Core:Text("CORE.SETTINGS_PANELS_REQUIRE_TITLE") end
+    if type(definition.CreateSettingsPanel) ~= "function" then return nil, Core:Text("CORE.SETTINGS_PANELS_REQUIRE_CREATESETTINGSPANEL") end
+    if definition.description ~= nil and type(definition.description) ~= "string" then return nil, Core:Text("CORE.SETTINGS_PANEL_DESCRIPTION_MUST_BE_A_STRING") end
+    if definition.icon ~= nil and type(definition.icon) ~= "string" then return nil, Core:Text("CORE.SETTINGS_PANEL_ICON_MUST_BE_A_STRING") end
     local existing = self._panels[definition.id]
     if existing then
         if existing.addonName == addonName then return existing end
-        return nil, "设置面板 ID 已被插件 " .. tostring(existing.addonName) .. " 占用。"
+        return nil, Core:Text("CORE.SETTINGS_PANEL_ID_IS_ALREADY_OWNED_BY") .. tostring(existing.addonName) .. Core:Text("CORE.PUNCTUATION_120")
     end
     local claimed, errorMessage = Core:ClaimResource("settings", definition.id, addonName)
     if not claimed then return nil, errorMessage end
@@ -37,7 +37,7 @@ end
 function SettingsRegistry:Unregister(id, addonName)
     local panel = self._panels[id]
     if not panel then return false end
-    if addonName and panel.addonName ~= addonName then return false, "设置面板不属于此插件。" end
+    if addonName and panel.addonName ~= addonName then return false, Core:Text("CORE.SETTINGS_PANEL_DOES_NOT_BELONG_TO_THIS") end
     self._panels[id] = nil
     Core.Registry:ReleaseResource("settings", id, addonName)
     return true

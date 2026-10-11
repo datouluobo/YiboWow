@@ -1,17 +1,16 @@
 local Core = _G.YiboCore
-local altoBossCleanupLabel = GetLocale and GetLocale() == "zhCN" and "首领追踪角色记录" or "Boss Tracker character records"
 
 local CharacterCleanup = {}
 Core.CharacterCleanup = CharacterCleanup
 CharacterCleanup._owners = CharacterCleanup._owners or {}
 CharacterCleanup.MAX_HISTORY = 100
-CharacterCleanup.EXPECTED_OWNERS = {
-    YiboAltoBoss = altoBossCleanupLabel,
-    YiboLegendary = "传说之路角色进度",
-    YiboQuestBlocker = "任务屏蔽个人设置",
-    YiboVault = "账号物品库存快照",
-    YiboMail = "邮件快照与积压缓存",
-}
+CharacterCleanup.EXPECTED_OWNERS = Core.Locale:Bind(function() return {
+    YiboAltoBoss = Core:Text("CORE.BOSS_TRACKER_CHARACTER_RECORDS"),
+    YiboLegendary = Core:Text("CORE.LEGENDARY_PATHS_CHARACTER_PROGRESS"),
+    YiboQuestBlocker = Core:Text("CORE.QUEST_BLOCKER_PERSONAL_SETTINGS"),
+    YiboVault = Core:Text("CORE.ACCOUNT_INVENTORY_SNAPSHOTS"),
+    YiboMail = Core:Text("CORE.MAIL_SNAPSHOTS_AND_BACKLOG_CACHE"),
+} end)
 
 local function Copy(value)
     return Core.Defaults:Copy(value)
@@ -70,7 +69,7 @@ end
 
 local function CallOwner(owner, method, ...)
     local callback = owner and owner[method]
-    if type(callback) ~= "function" then return nil, "数据所有者未提供 " .. tostring(method) .. "。" end
+    if type(callback) ~= "function" then return nil, Core:Text("CORE.DATA_OWNER_DOES_NOT_PROVIDE") .. tostring(method) .. Core:Text("FORMAT.PERIOD") end
     local arguments = { ... }
     local unpackArguments = unpack or table.unpack
     local ok, first, second = xpcall(function() return callback(unpackArguments(arguments)) end, function(message) return tostring(message) end)
@@ -86,7 +85,7 @@ end
 
 function CharacterCleanup:ProcessOwnerRecord(addonName, record)
     local owner = self._owners[addonName]
-    if not owner or type(record) ~= "table" then return nil, "数据所有者当前不可用。" end
+    if not owner or type(record) ~= "table" then return nil, Core:Text("CORE.DATA_OWNER_IS_CURRENTLY_UNAVAILABLE") end
     record.acknowledgedOwners = type(record.acknowledgedOwners) == "table" and record.acknowledgedOwners or {}
     record.failures = type(record.failures) == "table" and record.failures or {}
     if record.acknowledgedOwners[addonName] == true then return true end
@@ -96,22 +95,22 @@ function CharacterCleanup:ProcessOwnerRecord(addonName, record)
         record.failures[addonName] = nil
         return true
     end
-    errorMessage = tostring(errorMessage or "角色缓存删除失败。")
+    errorMessage = tostring(errorMessage or Core:Text("CORE.FAILED_TO_DELETE_CHARACTER_CACHE"))
     record.failures[addonName] = errorMessage
     return nil, errorMessage
 end
 
 function CharacterCleanup:RegisterOwner(addonName, definition)
     if type(addonName) ~= "string" or addonName == "" or type(definition) ~= "table" then
-        return nil, "角色数据所有者注册参数无效。"
+        return nil, Core:Text("CORE.INVALID_CHARACTER_DATA_OWNER_REGISTRATION")
     end
     if not (Core.Registry and Core.Registry:Get(addonName)) then
-        return nil, "角色数据所有者所属插件尚未注册: " .. addonName
+        return nil, Core:Text("CORE.CHARACTER_DATA_OWNER_S_ADDON_IS_NOT") .. addonName
     end
     if type(definition.Inspect) ~= "function" or type(definition.Delete) ~= "function" then
-        return nil, "角色数据所有者必须提供 Inspect 与 Delete。"
+        return nil, Core:Text("CORE.CHARACTER_DATA_OWNERS_MUST_PROVIDE_INSPECT_AND")
     end
-    if self._owners[addonName] then return nil, "角色数据所有者已注册: " .. addonName end
+    if self._owners[addonName] then return nil, Core:Text("CORE.CHARACTER_DATA_OWNER_ALREADY_REGISTERED") .. addonName end
     self._owners[addonName] = { addonName = addonName, Inspect = definition.Inspect, Delete = definition.Delete }
     self:RetryPending(addonName)
     return true
@@ -135,7 +134,7 @@ end
 
 function CharacterCleanup:GetImpact(characterID)
     local character = Core.Characters:Get(characterID)
-    if not character then return nil, "角色缓存不存在。" end
+    if not character then return nil, Core:Text("CORE.CHARACTER_CACHE_DOES_NOT_EXIST") end
     local aliases = Core.Characters:GetAliases(characterID)
     local impact = { character = character, aliases = aliases, owners = {} }
     for addonName, owner in pairs(self._owners) do
@@ -143,12 +142,12 @@ function CharacterCleanup:GetImpact(characterID)
         if type(supplied) == "table" then
             impact.owners[addonName] = supplied
         else
-            impact.owners[addonName] = { hasData = nil, label = addonName, error = tostring(errorMessage or "无法读取缓存摘要。") }
+            impact.owners[addonName] = { hasData = nil, label = addonName, error = tostring(errorMessage or Core:Text("CORE.CANNOT_READ_CACHE_SUMMARY")) }
         end
     end
     for addonName, label in pairs(self.EXPECTED_OWNERS) do
         if not impact.owners[addonName] then
-            impact.owners[addonName] = { hasData = nil, label = label, detail = "插件当前未加载；以后加载时清理" }
+            impact.owners[addonName] = { hasData = nil, label = label, detail = Core:Text("CORE.ADDON_NOT_LOADED_CLEAN_UP_WHEN_IT") }
         end
     end
     return impact
@@ -162,7 +161,7 @@ function CharacterCleanup:Delete(characterID)
     local canDelete, errorMessage = self:CanDelete(characterID)
     if not canDelete then return nil, errorMessage end
     local impact = self:GetImpact(characterID)
-    if not impact then return nil, "无法读取角色缓存。" end
+    if not impact then return nil, Core:Text("CORE.CANNOT_READ_CHARACTER_CACHE") end
 
     local now = Timestamp()
     local deletionID = "delete:" .. tostring(now) .. ":" .. tostring(characterID)
@@ -192,7 +191,7 @@ function CharacterCleanup:Delete(characterID)
             result.owners[addonName] = deleted and { status = "deleted" } or { status = "pending", error = ownerError }
             if not deleted then result.complete = false end
         else
-            result.owners[addonName] = { status = "pending", error = "插件当前未加载。" }
+            result.owners[addonName] = { status = "pending", error = Core:Text("CORE.ADDON_IS_NOT_LOADED") }
             result.complete = false
         end
     end
