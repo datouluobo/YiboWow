@@ -1,8 +1,48 @@
 # YiboCore
+## Public overview / 对外说明
+
+**English.** YiboCore is the shared account window, character directory, and settings framework for Yibo WoW addons. It keeps identity, realm scope, sorting, settings, and entry lifecycle consistent across registered pages. Each business addon owns its own collected data and rules; Core supplies the shared framework and versioned capability contracts.
+
+**中文。** YiboCore 为 Yibo 系列提供统一账号窗口、角色目录与设置工作台，统一管理角色身份、服务器范围、排序、设置和入口生命周期。业务数据与规则仍归对应插件所有；Core 提供共享框架及带版本声明的能力契约。
+
+### Business addons / 业务插件
+
+以下插件在 TOC 中声明依赖 YiboCore：
+
+- [YiboAltoBoss](https://www.curseforge.com/wow/addons/yiboaltoboss) — Boss and instance-lockout tracking；首领与副本锁定。
+- [YiboBuilds](https://www.curseforge.com/wow/addons/yibobuilds) — Character builds；角色构筑。
+- [YiboCrafting](https://www.curseforge.com/wow/addons/yibocrafting) — Recipe records；专业配方记录。
+- [YiboCurrency](https://www.curseforge.com/wow/addons/yibocurrency) — Account currencies；账号货币。
+- [YiboLegendary](https://www.curseforge.com/wow/addons/yibolegendary) — Legendary progress；传说装备进度。
+- [YiboMail](https://www.curseforge.com/wow/addons/yibomail) — Mailbox tools；邮件管理。
+- [YiboQuestBlocker](https://www.curseforge.com/wow/addons/yiboquestblocker) — Quest blocklists；任务屏蔽。
+- [YiboReputation](https://www.curseforge.com/wow/addons/yiboreputation) — Reputation tracking；声望追踪。
+- [YiboTodo](https://www.curseforge.com/wow/addons/yibotodo) — Account to-do tracking；账号待办。
+- [YiboVault](https://www.curseforge.com/wow/addons/yibovault) — Item inventory search；物品库存搜索。
+
+以下插件的基础功能独立运行，YiboCore 提供可选增强：
+
+- [YiboAutoOpen](https://www.curseforge.com/wow/addons/yiboautoopen) — Container opening；容器自动开启。
+- [YiboBeastPaths](https://www.curseforge.com/wow/addons/yibobeastpaths) — Hidden hunter-pet map routes；隐藏猎人宠物路线。
+- [YiboMounts](https://www.curseforge.com/wow/addons/yibomounts) — Mount-source tooltips；坐骑来源提示。
+
+[YiboCurrency](https://www.curseforge.com/wow/addons/yibocurrency) 可选使用 [YiboVault](https://www.curseforge.com/wow/addons/yibovault) 库存数据；YiboVault 可选使用 [YiboMail](https://www.curseforge.com/wow/addons/yibomail) 的邮件快照。TaskHub 当前在仓库工作树中，尚无公开 CF 页面，发布后再加入公开插件列表。
+
+Core 的特点是让多个业务插件共用账号与角色管理，同时保留各自的数据所有权。玩家少切换分散的界面；插件作者无需重复实现角色目录、排序、设置与入口。Core 不追踪具体业务进度，跨插件集成按公开能力契约和版本协商启用。
+
+下一步 CF 首页稿见：[双语说明草稿](../Docs/Publishing/CurseForge-2026-10-10/descriptions/YiboCore.md)。标题、摘要、分类和依赖建议见[集中整理索引](../Docs/Publishing/CurseForge-2026-10-10/README.md)。
 
 Yibo WoW 插件的共享运行时、角色档案与账号视图框架。
 
-当前发布版本 `1.9.0`（API v10）提供：
+当前工作树为 **1.11.0 / API v12**，新增 [业务项目主动添加](Docs/API-v12-业务项目主动添加.md) / business-item-actions:1；保留以下 API v11 能力，新增 `business-providers:1`、多来源注册与 `Contracts:List`，契约见 [API v11 跨业务 Provider](Docs/API-v11-跨业务Provider.md)。O4 按真实展示需求补齐 [角色准入通知](Docs/API-v11-角色准入通知.md) / `account-character-admission:1`。Todo 1.1.4 两项来源与 TaskHub 0.3.1 四个展示面已接入；Mail 1.2.6-api1 输出新邮件查看提醒。359 项集成与展示及既有 Service 回归通过，本轮复用已有共享角色控件与行底纹，未新增 Core 接口；未发布，详见 [复核记录](../Docs/行动中心-新邮件语义与角色显示复核.md)。
+
+2026-10-10 新增 [轻量角色身份](Docs/API-v11-轻量角色身份.md) / character-identity:1，TaskHub、Todo 与 AltoBoss 目标链路已接入，避免高频完整角色深复制。详见 [性能修复记录](../Docs/任务链-性能异常修复-2026-10-10.md)。
+
+渠道包 v1.9.0-api10 合并 api9 与 api10，未独立发布 v1.8.0-api9。业务插件后续追赶须同批核对并补齐两代适用项，接入与验证分别登记于 [公共能力迁移台账](Docs/Core-公共能力迁移台账.md)；最低 API／能力检查仍按实际使用范围声明。
+
+O5 在原 API v11 Provider 契约下接入 Mail 邮件待收取，共三个来源、两个业务所有者。O4／O5 联合复核新增 [视图可用高度](Docs/API-v11-视图可用高度.md) / account-surface-budget:1，由 TaskHub 0.2.1 接入；Mail 1.2.4-api1 修复同内容重扫后的恢复通知，283 项集成／展示检查通过，见 [联合记录](../Docs/行动中心-O4-O5-联合验收与修复.md)。用户 0.2.0 截图已复核，修复后的客户端待验收。
+
+此前渠道版本 `1.9.0`（API v10）的能力基础包括：
 
 - API 版本与插件注册
 - 能力查询与 Core 内部事件

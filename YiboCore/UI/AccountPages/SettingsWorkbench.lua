@@ -170,7 +170,7 @@ local function RefreshSettings(parent)
     end
     local titles = { display = "显示与入口", sorting = "角色与排序", core = "窗口" }
     parent.heading:SetText(titles[targetID] or ((selected and selected.title) or (settingsOnly and settingsOnly.title) or "插件") .. "业务设置")
-    parent.hint:SetText(displayMode and "集中管理 Core 与插件页面、独立入口及显示字段。" or (sortingMode and "统一设置角色、排序、缓存和业务页面的角色过滤。" or (coreMode and "管理窗口布局。" or "这里只保留该插件自身的业务规则与数据管理。")))
+    parent.hint:SetText(displayMode and "集中管理 Core 与插件页面、独立入口及显示字段。" or (sortingMode and "统一设置角色、排序、缓存和业务页面的角色过滤。" or (coreMode and "管理窗口布局、添加目标的操作方式与已加入标记。" or "这里只保留该插件自身的业务规则与数据管理。")))
     parent.resetLayout:SetShown(coreMode)
 
     local index, y, gridColumn = 0, 0, 0
@@ -730,6 +730,19 @@ local function RefreshSettings(parent)
         Check("悬停筛选时包含已隐藏角色", archive.filters.preview.includeHidden == true, function(checked) archive.filters.preview.includeHidden = checked end)
         Input("悬停等级过滤", archive.filters.preview.levelExpr, function(value) archive.filters.preview.levelExpr = value end)
     elseif coreMode then
+        Heading("添加到行动中心")
+        local actions = Core.BusinessItemActions
+        local options = actions:GetOptions()
+        local modes = { { value = "menu", label = "右上角按钮（＋／勾选）" },
+            { value = "middle", label = "鼠标中键" }, { value = "ctrlLeft", label = "Ctrl＋左键" } }
+        if options.mode == "custom" then modes[#modes + 1] = { value = "custom", label = "原自定义手势：" .. actions:GestureLabel() } end
+        Dropdown("添加方式（三选一）", options.mode, modes, function(value)
+            local ok, err = actions:SetOptions({ mode = value }); if not ok then Core:Print(err) end; AccountView:RefreshPage()
+        end)
+        Dropdown("已加入目标标记", options.markerStyle, {
+            { value = "corner", label = "左下角金色直角" }, { value = "dot", label = "左下角青绿圆点" },
+        }, function(value) local ok, err = actions:SetOptions({ markerStyle = value }); if not ok then Core:Print(err) end; AccountView:RefreshPage() end)
+        Heading("中键／Ctrl＋左键再次点击可取消；缺参数时临时显示＋补参入口。")
         Heading("窗口布局")
         Button("重置窗口位置", function() AccountView:ResetWindowLayout() end)
         Heading("窗口尺寸会随当前页面内容自动适配。")

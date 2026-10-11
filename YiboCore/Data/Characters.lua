@@ -7,9 +7,14 @@ local function GetTimestamp()
     return (GetServerTime and GetServerTime()) or time()
 end
 
-local function Snapshot(record)
+local function Snapshot(record, options)
     if type(record) ~= "table" then
         return nil
+    end
+    if options and options.identityOnly then
+        -- Roster consumers do not need inventory/profession domain payloads.
+        return { id = record.id, name = record.name, realm = record.realm,
+            class = record.class, level = record.level, lastSeenAt = record.lastSeenAt, seenOrder = record.seenOrder }
     end
     return Core.Defaults:Copy(record)
 end
@@ -222,16 +227,16 @@ function Characters:RefreshCurrent()
     return Snapshot(record)
 end
 
-function Characters:GetCurrent()
-    return self:Get(self:GetCurrentID())
+function Characters:GetCurrent(options)
+    return self:Get(self:GetCurrentID(), options)
 end
 
-function Characters:Get(characterID)
+function Characters:Get(characterID, options)
     local store = GetStore()
-    return store and Snapshot(store.byID[characterID]) or nil
+    return store and Snapshot(store.byID[characterID], options) or nil
 end
 
-function Characters:GetAll()
+function Characters:GetAll(options)
     local store = GetStore()
     local items = {}
     if not store then
@@ -239,7 +244,7 @@ function Characters:GetAll()
     end
 
     for _, record in pairs(store.byID) do
-        items[#items + 1] = Snapshot(record)
+        items[#items + 1] = Snapshot(record, options)
     end
     table.sort(items, function(left, right)
         if left.seenOrder ~= right.seenOrder then
@@ -373,4 +378,5 @@ if Core.Events then
 end
 
 Core.Capabilities:Register("characters", 1)
+Core.Capabilities:Register("character-identity", 1)
 Core.Capabilities:Register("character-name-format", 1)

@@ -1,5 +1,5 @@
 local Core = _G.YiboCore
-local Contracts = { _services = {}, _nextRef = 0 }
+local Contracts = { _services = {}, _providers = {}, _registrations = {}, _nextRef = 0 }
 Core.Contracts = Contracts
 
 local function CopyValue(value, seen)
@@ -23,64 +23,110 @@ local function Compatible(entry, version)
         and entry.descriptor.version.minor >= (version.minMinor or 0)
 end
 
+local function ValidVersion(version, registration)
+    if type(version) ~= "table" or type(version.major) ~= "number" or version.major < 1
+        or version.major % 1 ~= 0 then return false end
+    local minor = version.minMinor
+    if registration then minor = version.minor end
+    return (not registration and minor == nil)
+        or type(minor) == "number" and minor >= 0 and minor % 1 == 0
+end
+
 function Contracts:Register(owner, definition)
     if not Core.Registry:Get(owner) then return nil, "owner-unregistered" end
-    if type(definition) ~= "table" or definition.kind ~= "service" or type(definition.name) ~= "string"
+    if type(definition) ~= "table" or (definition.kind ~= "service" and definition.kind ~= "provider") or type(definition.name) ~= "string"
         or definition.name == "" or type(definition.providerID) ~= "string"
         or definition.providerID:sub(1, #owner + 1) ~= owner .. ":" then return nil, "invalid-definition" end
     local version = definition.version
-    if type(version) ~= "table" or type(version.major) ~= "number" or version.major < 1 or version.major % 1 ~= 0
-        or type(version.minor) ~= "number" or version.minor < 0 or version.minor % 1 ~= 0 then return nil, "invalid-version" end
+    if not ValidVersion(version, true) then return nil, "invalid-version" end
     if type(definition.methods) ~= "table" or not next(definition.methods) then return nil, "invalid-methods" end
     for name, callback in pairs(definition.methods) do
         if type(name) ~= "string" or type(callback) ~= "function" then return nil, "invalid-methods" end
     end
     local key = definition.name .. ":" .. version.major
-    local existing = self._services[key]
+    local providers = self._providers[key]
+    if definition.kind == "service" and providers or definition.kind == "provider" and self._services[key] then
+        return nil, "kind-conflict"
+    end
+    local existing = definition.kind == "service" and self._services[key]
+        or providers and providers[definition.providerID]
     if existing then
         local descriptor = existing.descriptor
-        if descriptor.owner ~= owner or descriptor.providerID ~= definition.providerID then return nil, "service-conflict" end
+        if descriptor.owner ~= owner or descriptor.providerID ~= definition.providerID then
+            return nil, definition.kind == "service" and "service-conflict" or "provider-conflict"
+        end
         if descriptor.version.minor ~= version.minor then return nil, "definition-changed" end
         for name, callback in pairs(definition.methods) do if existing.methods[name] ~= callback then return nil, "definition-changed" end end
         for name in pairs(existing.methods) do if not definition.methods[name] then return nil, "definition-changed" end end
         return descriptor.registrationRef
     end
     self._nextRef = self._nextRef + 1
-    local descriptor = { name = definition.name, kind = "service", owner = owner, providerID = definition.providerID,
+    local descriptor = { name = definition.name, kind = definition.kind, owner = owner, providerID = definition.providerID,
         version = { major = version.major, minor = version.minor }, registrationRef = tostring(self._nextRef) }
     local methods = {}
     for name, callback in pairs(definition.methods) do methods[name] = callback end
-    self._services[key] = { descriptor = descriptor, methods = methods }
+    local entry = { descriptor = descriptor, methods = methods }
+    if definition.kind == "service" then
+        self._services[key] = entry
+    else
+        providers = providers or {}
+        self._providers[key] = providers
+        providers[definition.providerID] = entry
+    end
+    self._registrations[descriptor.registrationRef] = entry
     Core.Events:FireIsolated("BUSINESS_CONTRACT_REGISTERED", CopyValue(descriptor))
     return descriptor.registrationRef
 end
 
 function Contracts:Resolve(name, version)
-    if type(name) ~= "string" or type(version) ~= "table" or type(version.major) ~= "number"
-        or version.minMinor ~= nil and type(version.minMinor) ~= "number" then return nil, "invalid-version" end
+    if type(name) ~= "string" or not ValidVersion(version, false) then return nil, "invalid-version" end
     local entry = self._services[name .. ":" .. version.major]
     if not Compatible(entry, version) then return nil, "unavailable" end
     return CopyValue(entry.descriptor)
 end
 
-function Contracts:Unregister(owner, registrationRef)
-    for key, entry in pairs(self._services) do
-        if entry.descriptor.registrationRef == registrationRef then
-            if entry.descriptor.owner ~= owner then return nil, "wrong-owner" end
-            self._services[key] = nil
-            Core.Events:FireIsolated("BUSINESS_CONTRACT_UNREGISTERED", CopyValue(entry.descriptor), "unregistered")
-            return true
-        end
+function Contracts:List(name, version)
+    if type(name) ~= "string" or not ValidVersion(version, false) then return nil, "invalid-version" end
+    local result = {}
+    for _, entry in pairs(self._providers[name .. ":" .. version.major] or {}) do
+        if Compatible(entry, version) then result[#result + 1] = CopyValue(entry.descriptor) end
     end
-    return false, "unregistered"
+    table.sort(result, function(left, right) return left.providerID < right.providerID end)
+    return result
+end
+
+function Contracts:Unregister(owner, registrationRef)
+    local entry = self._registrations[registrationRef]
+    if not entry then return false, "unregistered" end
+    local descriptor = entry.descriptor
+    if descriptor.owner ~= owner then return nil, "wrong-owner" end
+    local key = descriptor.name .. ":" .. descriptor.version.major
+    if descriptor.kind == "service" then
+        self._services[key] = nil
+    else
+        local providers = self._providers[key]
+        providers[descriptor.providerID] = nil
+        if not next(providers) then self._providers[key] = nil end
+    end
+    self._registrations[registrationRef] = nil
+    Core.Events:FireIsolated("BUSINESS_CONTRACT_UNREGISTERED", CopyValue(descriptor), "unregistered")
+    return true
 end
 
 function Contracts:Call(caller, descriptor, method, request)
     if not Core.Registry:Get(caller) then return nil, "caller-unregistered" end
     if type(descriptor) ~= "table" or type(descriptor.version) ~= "table" then return nil, "invalid-descriptor" end
-    local entry = self._services[tostring(descriptor.name) .. ":" .. tostring(descriptor.version.major)]
+    local key = tostring(descriptor.name) .. ":" .. tostring(descriptor.version.major)
+    local entry
+    if descriptor.kind == "provider" then
+        local providers = self._providers[key]
+        entry = providers and providers[descriptor.providerID]
+    else
+        entry = self._services[key]
+    end
     if not entry or entry.descriptor.registrationRef ~= descriptor.registrationRef then return nil, "unregistered" end
-    if descriptor.version.minor ~= entry.descriptor.version.minor or descriptor.owner ~= entry.descriptor.owner
+    if descriptor.kind ~= nil and descriptor.kind ~= entry.descriptor.kind
+        or descriptor.version.minor ~= entry.descriptor.version.minor or descriptor.owner ~= entry.descriptor.owner
         or descriptor.providerID ~= entry.descriptor.providerID then return nil, "invalid-descriptor" end
     local callback = entry.methods[method]
     if not callback then return nil, "method-unavailable" end
@@ -98,14 +144,12 @@ end
 function Contracts:NotifyChanged(owner, registrationRef, change)
     local ok, copy = pcall(CopyValue, change)
     if not ok or type(copy) ~= "table" then return nil, "invalid-change" end
-    for _, entry in pairs(self._services) do
-        if entry.descriptor.registrationRef == registrationRef then
-            if owner ~= entry.descriptor.owner then return nil, "wrong-owner" end
-            Core.Events:FireIsolated("BUSINESS_CONTRACT_CHANGED", CopyValue(entry.descriptor), copy)
-            return true
-        end
-    end
-    return nil, "unregistered"
+    local entry = self._registrations[registrationRef]
+    if not entry then return nil, "unregistered" end
+    if owner ~= entry.descriptor.owner then return nil, "wrong-owner" end
+    Core.Events:FireIsolated("BUSINESS_CONTRACT_CHANGED", CopyValue(entry.descriptor), copy)
+    return true
 end
 
 Core.Capabilities:Register("business-services", 1)
+Core.Capabilities:Register("business-providers", 1)

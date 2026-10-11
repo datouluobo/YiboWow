@@ -1,10 +1,12 @@
 # API v9：业务服务与刷新
 
-2026-10-08 工作树：Core 1.8.0 / API v9。尚未发布、游戏内待验收。
+2026-10-08：Core 1.8.0 / API v9 为实现阶段，未单独发布 v1.8.0-api9；全部增量随 v1.9.0-api10 发起发布，用户截图显示上传中，游戏内待验收。
+
+业务插件追赶 v1.9.0-api10 时须与 [API v10](API-v10-首次打开界面提示.md) 一起核对并补齐适用项，分别记录接入与验证；不能因使用 api10 而漏掉本篇的服务、刷新及物品加载范围。最低接口仍按实际需要检查 API v9 / business-services:1，渠道升级目标为 v1.9.0-api10 或更新版本。合并批次见 [台账](Core-公共能力迁移台账.md)。
 
 ## 最小边界
 
-真实需求是邮件与仓库共用邮箱采集，以及货币读取仓库库存。Core 只负责版本化连接、调用隔离和生命周期，数据、SavedVariables、采集及业务时效仍由业务插件所有。公开入口为 `Core.Contracts`，能力 `business-services:1`，当前只支持单一 Service；行动中心草案中的 Provider、List 和 `business-contracts:1` 尚未实现。
+真实需求是邮件与仓库共用邮箱采集，以及货币读取仓库库存。Core 只负责版本化连接、调用隔离和生命周期，数据、SavedVariables、采集及业务时效仍由业务插件所有。公开入口为 `Core.Contracts`，能力 `business-services:1`，本篇 v9 契约只支持单一 Service。2026-10-09 的工作树新增 [API v11](API-v11-跨业务Provider.md) / business-providers:1 与 List；原 Service 方法保持兼容，业务任务仍须另行接入。
 
 依赖本能力的 Mail、Vault、Currency 检查 API v9 与能力版本；旧 Core 会提示升级并停止初始化。业务提供方缺失、尚未注册或主版本不兼容时只失去相应增强，基础功能继续；不得直接访问其它业务全局对象或存档。Crafting 本轮只接入现有 `ItemResolver`，最低 API v7 / `item-resolver:1`。
 

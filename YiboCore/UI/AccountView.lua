@@ -544,8 +544,10 @@ function AccountView:RegisterPage(addonName, definition)
             SetExpression = function(expression)
                 local valid, normalized, badToken = Core.LevelFilter:Validate(expression or "")
                 if not valid then return false, "无效等级规则：" .. tostring(badToken) end
+                local changed = (Settings().pageCharacterFilters[page.id] or "") ~= normalized
                 Settings().pageCharacterFilters[page.id] = normalized
                 AccountView:NotifyPageChanged(page.id)
+                if changed then Core.Events:FireIsolated("ACCOUNT_VIEW_CHARACTERS_CHANGED", { reason = "page-filter", pageID = page.id }) end
                 return true, normalized
             end,
         }
@@ -844,8 +846,11 @@ function AccountView:SetPageScope(pageID, scopeID)
 end
 
 function AccountView:SetCharacterHidden(characterID, hidden)
-    Settings().hiddenCharacters[characterID] = not not hidden
+    local nextHidden = not not hidden
+    local changed = (Settings().hiddenCharacters[characterID] == true) ~= nextHidden
+    Settings().hiddenCharacters[characterID] = nextHidden
     self:RefreshPage()
+    if changed then Core.Events:FireIsolated("ACCOUNT_VIEW_CHARACTERS_CHANGED", { reason = "visibility", characterID = characterID }) end
 end
 
 local function GetScopeControlMetrics(scope, selectedScope)
@@ -1148,6 +1153,7 @@ function AccountView:ApplyPageSize(page, context, forceAutoFitWidth)
     -- pagination.  Its natural width describes every character column;
     -- pagination begins only when that width reaches this hard boundary.
     context.surfaceAvailableWidth = math.max(1, maxWidth - shellWidth)
+    context.surfaceAvailableHeight = math.max(1, maxHeight - shellHeight)
     local settings, metrics = Settings(), SurfaceMetrics(page, context)
     local preferredWidth = metrics.naturalContentWidth + shellWidth
     local preferredHeight = metrics.naturalContentHeight + shellHeight
@@ -1665,6 +1671,14 @@ function AccountView:ShowPreview(pageID, anchor, forceRefresh)
     local context = self:BuildContext(page, { preview = true, fieldOverrides = fields })
     local safe = SafeRect(true)
     context.surfaceAvailableWidth = safe.width
+    local roomHeight, opensDown = safe.height, false
+    if anchorFrame and not (preservePosition and previousLeft and previousTop) then
+        local top, bottom = anchorFrame:GetTop(), anchorFrame:GetBottom()
+        opensDown = ((top or 0) + (bottom or 0)) / 2 >= (safe.bottom + safe.top) / 2
+        roomHeight = opensDown and ((bottom or safe.top) - safe.bottom) or (safe.top - (top or safe.bottom))
+    end
+    local _, shellHeight = ShellMetrics(true)
+    context.surfaceAvailableHeight = math.max(1, math.min(safe.height, roomHeight) - shellHeight)
     local metrics = HoverMetrics(page, context)
     local width, height = metrics.preferredWidth, metrics.preferredHeight
     width = math.max(math.min(metrics.minWidth, safe.width), math.min(width, safe.width))
@@ -1698,16 +1712,12 @@ function AccountView:ShowPreview(pageID, anchor, forceRefresh)
         frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", clampedLeft, clampedTop)
     elseif anchorFrame then
         local left, right = anchorFrame:GetLeft(), anchorFrame:GetRight()
-        local top, bottom = anchorFrame:GetTop(), anchorFrame:GetBottom()
         local centerX = ((left or 0) + (right or 0)) / 2
-        local centerY = ((top or 0) + (bottom or 0)) / 2
-        local opensDown = centerY >= (safe.bottom + safe.top) / 2
         -- A broker preview must be reachable by moving straight up or down.
         -- The former corner-to-corner anchor left a diagonal gap, so the
         -- hover closed before the pointer could enter it.
         local gap = 0
         local roomWidth = safe.width
-        local roomHeight = opensDown and ((bottom or safe.top) - safe.bottom - gap) or (safe.top - (top or safe.bottom) - gap)
         width = math.max(math.min(metrics.minWidth, safe.width), math.min(width, math.max(1, roomWidth)))
         height = math.max(math.min(metrics.minHeight, safe.height), math.min(height, math.max(1, roomHeight)))
         local offsetX = math.max(safe.left + width / 2 - centerX, math.min(safe.right - width / 2 - centerX, 0))
@@ -1862,3 +1872,5 @@ Core.Events:Register("CHARACTER_CACHE_DELETED", AccountView, function(self)
     self:RefreshPage()
 end)
 Core.Capabilities:Register("account-view", 2)
+Core.Capabilities:Register("account-character-admission", 1)
+Core.Capabilities:Register("account-surface-budget", 1)

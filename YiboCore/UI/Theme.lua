@@ -25,6 +25,8 @@ Theme.Colors = {
     text = { 0.90, 0.96, 0.97 },
     muted = { 0.53, 0.70, 0.73 },
     accent = { 0.125, 0.88, 0.44 },
+    -- Saved goal membership must stand apart from the current-character green.
+    goalAdded = { 1.00, 0.78, 0.25 },
     -- Near-limit values use amber: visible in a dense dark matrix without
     -- competing with the red reserved for destructive or blocked states.
     warning = { 0.96, 0.70, 0.25 },
