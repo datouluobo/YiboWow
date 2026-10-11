@@ -92,6 +92,8 @@ API v6 保持 API v5 向后兼容。`RegisterSettingsPanel` 只向统一设置�
 
 运行 `_NonRelease/Tools/Build-ReleasePackages.ps1` 会在仓库根目录 `Builds/` 生成两份带顶级 `YiboCore/` 目录的 zip：`*-curseforge.zip` 只包含 TOC、其加载的运行时代码与 `.tga` 纹理；`*-github.zip` 保留文档、截图和其它公开资源，但排除构建输出。`Builds/` 是 YiboWow 全仓库统一的安装包目录。
 
+包名包含插件版本与公开 API 版本，例如 `YiboCore-v1.12.0-api13-curseforge.zip` 和 `YiboCore-v1.12.0-api13-github.zip`。旧 Core 安装包自动移入 `Builds/Archive/`。本地化检查生成的 `.md` 人工报告与 `.json` 机器报告保存在仓库根目录 `_NonRelease/Localization/Build/`，不随安装包分发。
+
 公共 API v7 新增基础输入、物品解析与选择器，保持 v5/v6 兼容。见 [API v7 物品选择与基础输入](Docs/API-v7-物品选择与基础输入.md)。配套版本为 Core 1.6.1＋Currency 0.9.1。
 
 公共 API v8 新增 `Characters:FormatName(identity, options)` 和 `character-name-format:1`，保持旧 API 与业务表头调用兼容。接入与验证见 [API v8 公共名称格式化](Docs/API-v8-公共名称格式化.md)。
