@@ -6,6 +6,17 @@ NS.CoreIntegration = Integration
 
 local SETTINGS_ID = "mounts"
 
+local function WarnUnavailable()
+    if Integration.warned then return end
+    Integration.warned = true
+    local message = NS:L("CORE_REQUIRED")
+    if Core and type(Core.Print) == "function" then
+        Core:Print(message)
+    elseif DEFAULT_CHAT_FRAME and type(DEFAULT_CHAT_FRAME.AddMessage) == "function" then
+        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r YiboMounts: " .. message)
+    end
+end
+
 function Integration:IsCollectionStatusAvailable()
     return self.initialized == true
 end
@@ -59,20 +70,40 @@ end
 
 function Integration:Initialize()
     if self.initialized then return true end
-    if not (Core and Core.CheckAPIVersion and Core.RegisterAddon and Core.RegisterSettingsPanel and Core.UITheme) then
-        return nil, "YiboCore 设置 API 不可用。"
+    if not Core then
+        WarnUnavailable()
+        return nil, "core-unavailable"
     end
-    if not Core:CheckAPIVersion(5) then return nil, "需要 YiboCore API v5。" end
+    if not (Core.CheckAPIVersion and Core:CheckAPIVersion(13)
+        and Core.HasCapability and Core:HasCapability("localization", 1)
+        and Core.IsInitialized and Core:IsInitialized()
+        and Core.RegisterAddon and Core.RegisterSettingsPanel and Core.UITheme
+        and Core.Locale and Core.Locale.Register and Core.Locale.Get) then
+        WarnUnavailable()
+        return nil, "core-api-incompatible"
+    end
 
-    local addon, addonError = Core:RegisterAddon(NS.NAME, { version = NS.VERSION, requiredAPI = 5 })
-    if not addon then return nil, addonError end
+    Core.Locale:Register(NS.NAME, "zh", NS.Locale.zhCN)
+    Core.Locale:Register(NS.NAME, "en", NS.Locale.enUS)
+    self.localeAvailable = true
+
+    local addon, addonError = Core:RegisterAddon(NS.NAME, { version = NS.VERSION, requiredAPI = 13 })
+    if not addon then
+        self.localeAvailable = false
+        if type(Core.Print) == "function" then Core:Print(addonError) end
+        return nil, addonError
+    end
     local panel, panelError = Core:RegisterSettingsPanel(NS.NAME, {
         id = SETTINGS_ID,
-        title = "坐骑图鉴",
+        title = NS:L("SETTINGS_TITLE"),
         icon = "Interface\\AddOns\\YiboMounts\\Media\\YiboMountsIcon-v1",
         CreateSettingsPanel = function(parent, context) return self:CreateSettingsPanel(parent, context) end,
     })
-    if not panel then return nil, panelError end
+    if not panel then
+        self.localeAvailable = false
+        if type(Core.Print) == "function" then Core:Print(panelError) end
+        return nil, panelError
+    end
     self.initialized = true
     return true
 end

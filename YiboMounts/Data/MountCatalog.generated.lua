@@ -7707,7 +7707,7 @@ NS.Data = {
             {
               kind = "custom",
               labels = {
-                enUS = "流沙秘宝库",
+                enUS = "Sands of Time Vault",
                 zhCN = "流沙秘宝库"
               },
               refID = nil
@@ -8334,7 +8334,7 @@ NS.Data = {
             {
               kind = "custom",
               labels = {
-                enUS = "流沙秘宝库",
+                enUS = "Sands of Time Vault",
                 zhCN = "流沙秘宝库"
               },
               refID = nil
@@ -9378,7 +9378,7 @@ NS.Data = {
             {
               kind = "custom",
               labels = {
-                enUS = "流沙秘宝库",
+                enUS = "Sands of Time Vault",
                 zhCN = "流沙秘宝库"
               },
               refID = nil
@@ -14966,7 +14966,7 @@ NS.Data = {
             {
               kind = "zone",
               labels = {
-                enUS = "暴风城 / 奥格瑞玛",
+                enUS = "Stormwind / Orgrimmar",
                 zhCN = "暴风城 / 奥格瑞玛"
               },
               refID = nil
@@ -16077,7 +16077,7 @@ NS.Data = {
             {
               kind = "custom",
               labels = {
-                enUS = "流沙秘宝库",
+                enUS = "Sands of Time Vault",
                 zhCN = "流沙秘宝库"
               },
               refID = nil
@@ -34416,7 +34416,7 @@ NS.Data = {
             {
               kind = "custom",
               labels = {
-                enUS = "公会",
+                enUS = "Guild",
                 zhCN = "公会"
               },
               refID = nil
@@ -34424,7 +34424,7 @@ NS.Data = {
             {
               kind = "custom",
               labels = {
-                enUS = "暴风城 / 奥格瑞玛",
+                enUS = "Stormwind / Orgrimmar",
                 zhCN = "暴风城 / 奥格瑞玛"
               },
               refID = nil
@@ -34432,7 +34432,7 @@ NS.Data = {
             {
               kind = "custom",
               labels = {
-                enUS = "公会坐骑商人",
+                enUS = "Guild mount vendor",
                 zhCN = "公会坐骑商人"
               },
               refID = nil
@@ -34466,7 +34466,7 @@ NS.Data = {
             {
               kind = "custom",
               labels = {
-                enUS = "流沙秘宝库",
+                enUS = "Sands of Time Vault",
                 zhCN = "流沙秘宝库"
               },
               refID = nil
@@ -36232,8 +36232,8 @@ NS.Data = {
             {
               kind = "custom",
               labels = {
-                enUS = "火龙",
-                zhCN = "火龙"
+                enUS = "惑龙",
+                zhCN = "惑龙"
               },
               refID = nil
             }

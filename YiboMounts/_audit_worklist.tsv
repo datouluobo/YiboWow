@@ -443,7 +443,7 @@ spellID	key	status	enUS	zhCN	srcType	avail	path	price	notes	nSources	factions	cl
 148396	fact-148396	candidate	Mount 148396	库卡隆战狼	achievement	unavailable	锦绣谷 > 决战奥格瑞玛 > 千钧一发：加尔鲁什·地狱咆哮		10人普通或更高难度、版本阶段限定；不是首领掉落。	1				0			True
 148417	kor-kron-juggernaut	candidate	Kor'kron Juggernaut	库卡隆战蝎	boss_drop	obtainable	锦绣谷 > 决战奥格瑞玛25H > 加尔鲁什·地狱咆哮			1			104253	0			True
 148428	fact-148428	candidate	Mount 148428	灰皮穆山兽	reputation_vendor	obtainable	皇帝少昊（崇拜） > 永恒岛 > 天神庭院 > 发言人古兰	2,000枚永恒铸币		1				0			True
-148476	thundering-onyx-cloud-serpent	candidate	Thundering Onyx Cloud Serpent	雷霆玛瑙云端翔龙	rare_drop	obtainable	永恒岛 > 火龙		世界稀有精英掉落，不是加尔鲁什掉落。	1			104269	0			True
+148476	thundering-onyx-cloud-serpent	candidate	Thundering Onyx Cloud Serpent	雷霆玛瑙云端翔龙	rare_drop	obtainable	永恒岛 > 惑龙		世界稀有精英掉落，不是加尔鲁什掉落。	1			104269	0			True
 148618	fact-148618	candidate	Mount 148618	暴虐角斗士云端翔龙	achievement	limited_time	竞技场 3v3 > 第 13 赛季 > 角斗士赛季奖励		PVP 竞技场 第 13 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
 148619	fact-148619	candidate	Mount 148619	恶孽角斗士云端翔龙	achievement	limited_time	竞技场 3v3 > 第 14 赛季 > 角斗士赛季奖励		PVP 竞技场 第 14 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True
 148620	fact-148620	candidate	Mount 148620	骄矜角斗士云端翔龙	achievement	limited_time	竞技场 3v3 > 第 15 赛季 > 角斗士赛季奖励		PVP 竞技场 第 15 赛季角斗士奖励；赛季限定，非背包物品。	1				0			True

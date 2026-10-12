@@ -1,7 +1,7 @@
 local ADDON_NAME, NS = ...
 
 NS.NAME = ADDON_NAME
-NS.VERSION = "0.8.4"
+NS.VERSION = "1.0.0"
 NS.INTERFACE = 50504
 NS.Locale = NS.Locale or {}
 NS.DefaultSettings = {
@@ -34,19 +34,27 @@ function NS:GetSettings()
 end
 
 function NS:GetLocaleTable()
+    if self.CoreIntegration and self.CoreIntegration.localeAvailable and _G.YiboCore
+        and _G.YiboCore.Locale and _G.YiboCore.Locale.GetLanguage then
+        return _G.YiboCore.Locale:GetLanguage() == "zh" and self.Locale.zhCN or self.Locale.enUS or {}
+    end
     local locale = GetLocale and GetLocale() or "enUS"
+    if locale == "zhTW" then locale = "zhCN" end
     return self.Locale[locale] or self.Locale.enUS or {}
 end
 
 function NS:L(key)
+    if self.CoreIntegration and self.CoreIntegration.localeAvailable then
+        return _G.YiboCore.Locale:Get(self.NAME, key)
+    end
     local active = self:GetLocaleTable()
     return active[key] or (self.Locale.enUS and self.Locale.enUS[key]) or key
 end
 
 function NS:GetLocalizedText(values)
     if type(values) ~= "table" then return nil end
-    local locale = GetLocale and GetLocale() or "enUS"
-    return values[locale] or values.enUS
+    local language = self:GetLocaleTable() == self.Locale.zhCN and "zhCN" or "enUS"
+    return values[language] or values.enUS or values.zhCN
 end
 
 function NS:SafeCall(callback, ...)

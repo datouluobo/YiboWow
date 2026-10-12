@@ -4,7 +4,7 @@ YiboMounts is a lightweight World of Warcraft addon that provides compact mount 
 
 ## Current Scope
 
-Before version 1.0, YiboMounts displays mount source information in the following locations:
+YiboMounts displays mount source information in the following locations:
 
 - The player's buff auras
 - The target's buff auras
@@ -14,7 +14,7 @@ Before version 1.0, YiboMounts displays mount source information in the followin
 
 Mount source details may include dungeons, bosses, vendors, factions, achievements, quests, events, difficulty requirements, reputation requirements, prices, class restrictions, and faction restrictions.
 
-YiboMounts currently integrates with YiboCore, which provides the foundation for additional features and broader mount views.
+YiboMounts optionally integrates with YiboCore API 13 for account language and the shared settings workbench. Its source tooltips remain usable without YiboCore.
 
 ---
 
@@ -24,7 +24,7 @@ YiboMounts 是一款轻量级《魔兽世界》插件，通过游戏内 Tooltip 
 
 ## 当前功能范围
 
-在 1.0 版本以前，YiboMounts 会在以下位置显示坐骑来源信息：
+YiboMounts 会在以下位置显示坐骑来源信息：
 
 - 玩家的 Buff 光环
 - 目标的 Buff 光环
@@ -34,7 +34,7 @@ YiboMounts 是一款轻量级《魔兽世界》插件，通过游戏内 Tooltip 
 
 坐骑来源信息可能包括副本、首领、商人、阵营、成就、任务、活动，以及难度、声望、价格、职业和阵营等限制条件。
 
-YiboMounts 当前已接入 YiboCore，并在此基础上提供后续扩展功能和更完整的坐骑信息视图。
+YiboMounts 可选接入 YiboCore API 13，使用账号语言与统一设置工作台；未安装 Core 时来源 Tooltip 仍可独立使用。
 
 
 ## 行动中心主动添加（2026-10-10 工作树）

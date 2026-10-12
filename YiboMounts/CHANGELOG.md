@@ -1,5 +1,31 @@
 # YiboMounts Changelog / 更新日志
 
+## 1.0.0
+
+### 中文
+
+- 发布坐骑来源 Tooltip、图鉴数据与收藏状态提示的 V1。
+- 全面接入 YiboCore API 13 可选语言服务与统一设置工作台；Core 不可用或版本过低时，独立来源 Tooltip 继续运行。
+- 修正雷霆玛瑙云端翔龙（惑龙）的坐骑名称，并补齐暗色凤凰相关来源的英文标签。
+
+### English
+
+- Released V1 mount source tooltips, catalog data, and collection status hints.
+- Added optional YiboCore API 13 localization and shared settings workbench integration. Standalone source tooltips remain available when Core is missing or outdated.
+- Corrected the Huolon mount name and English source labels for Dark Phoenix entries.
+
+## 0.8.6
+
+### 中文
+
+- 接入 YiboCore 1.12.0 / API 13 语言服务与统一设置面板 API v6；Core 不可用或版本过低时仅关闭 Core 增强，独立来源 Tooltip 仍可用。
+- 修正暗色凤凰的公会商人与流沙秘宝库来源英文标签，并同步更新相关坐骑的活动名称。
+
+### English
+
+- Integrated YiboCore 1.12.0 / API 13 localization and the API v6 settings panel. Core enhancements are disabled when Core is unavailable or outdated; independent source tooltips remain available.
+- Corrected the Dark Phoenix guild vendor and Sands of Time Vault source labels, including related event names.
+
 ## 0.8.5
 
 ### 中文
