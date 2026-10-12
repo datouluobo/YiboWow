@@ -224,7 +224,29 @@ function Provider:CollectForCurrentCharacter(expectedCharacterID, refreshTarget)
     -- Merge its groups into the character record instead of erasing the
     -- observations collected from the other primary profession.
     record.observations = record.observations or {}
-    for groupID, observation in pairs(observations) do record.observations[groupID] = observation end
+    for groupID, observation in pairs(observations) do
+        local previous, group = record.observations[groupID], Addon.Catalog.groups[groupID]
+        -- A successful craft proves today's daily lockout. Some client list
+        -- updates still report zero afterwards; a later scan cannot undo the
+        -- successful event before the source-owned daily boundary.
+        if previous and previous.source == "spellcast-success" and group and group.resetKind == "daily-07"
+            and not Addon.Model.Schedule:CrossedReset(previous.observedAt, Addon:Now(), group.resetHour) then
+            local lockedUntil
+            for _, confirmed in pairs(previous.recipes or {}) do
+                if confirmed.cooldownKnown and confirmed.readyAt and confirmed.readyAt > Addon:Now() then
+                    lockedUntil = math.max(lockedUntil or 0, confirmed.readyAt)
+                end
+            end
+            for _, value in pairs(observation.recipes or {}) do
+                if lockedUntil and value.learned and value.craftable ~= false then
+                    value.cooldownKnown, value.readyAt = true, lockedUntil
+                    value.remainingAtScan = lockedUntil - Addon:Now()
+                    observation.source = "spellcast-success"
+                end
+            end
+        end
+        record.observations[groupID] = observation
+    end
     Addon:NotifyChanged(true, refreshTarget)
     return true, reason
 end

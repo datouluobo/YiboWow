@@ -29,20 +29,28 @@ function GetItemInfo(itemID)
     if itemID == 2001 then return "成品甲" end
     if itemID == 2002 then return "成品乙" end
 end
+C_Item = { IsItemDataCachedByID = function(id) return id == 2001 or id == 2002 end }
 C_Timer = { After = function(_, callback) callback() end }
 
 local domain = { state = "known", data = { professions = { { id = 197, name = "裁缝" } } } }
 YiboCore = {
     CheckAPIVersion = function() return true end,
+    HasCapability = function() return true end,
+    ItemResolver = { GetInfo = function(_, id) return {name=GetItemInfo(id)} end },
     RegisterAddon = function() return true end,
-    Characters = { GetCurrentID = function() return "Player-test" end },
+    Characters = {
+        GetCurrentID = function() return "Player-test" end,
+        FormatName = function(_, identity) return identity.name end,
+    },
     DataDomains = { Get = function() return domain end },
     CharacterCleanup = { RegisterOwner = function(_, _, owner) cleanupOwner = owner; return true end },
-    Events = { Register = function(_, _, _, callback) coreListener = callback end },
+    Events = { Register = function(_, event, _, callback) if event == "CHARACTER_ID_CHANGED" then coreListener = callback end end },
     UITheme = {
         Colors = { text = {}, muted = {}, warning = {} },
         Table = { rowHeight = 28 },
         GetCharacterMatrixColumnWidth = function() return 80 end,
+        CreateMatrixHeader = function() end,
+        SetCharacterHeader = function() end,
     },
     AccountView = {
         RegisterPage = function(_, owner, definition)
@@ -55,12 +63,13 @@ YiboCore = {
 }
 
 dofile("YiboCrafting/Namespace.lua")
+dofile("YiboCrafting/Tests/LoadLocale.lua")
 dofile("YiboCrafting/Store.lua")
 dofile("YiboCrafting/Collector.lua")
 dofile("YiboCrafting/AccountPage.lua")
 dofile("YiboCrafting/Bootstrap.lua")
 eventHandler(nil, "PLAYER_LOGIN")
-assert(YiboCrafting.initialized and YiboCraftingDB.schemaVersion == 1)
+assert(YiboCrafting.initialized and YiboCraftingDB.schemaVersion == 2)
 eventHandler(nil, "TRADE_SKILL_SHOW")
 local store = YiboCrafting.Store
 assert(store:GetRecipeState("Player-test", 197, 1001) == "learned")
@@ -102,6 +111,14 @@ assert(#YiboCrafting.AccountPage:Filtered(entries, snapshotContext.characters, {
 assert(#YiboCrafting.AccountPage:Filtered(entries, snapshotContext.characters, { status = "unknown" }) == 0)
 local accountCatalog = YiboCrafting.AccountPage:Snapshot({ characters = {} })
 assert(#accountCatalog == 2)
+local _, changed = store:ApplyObservation('Player-new', 197, { 1001, 1002 }, 'test', 'partial')
+assert(changed, 'error recovery changes the business state')
+_, changed = store:ApplyObservation('Player-new', 197, { 1001, 1002 }, 'test', 'partial')
+assert(not changed, 'identical scan is not a business change')
+_, changed = store:ApplyObservation('Player-new', 197, { 1001, 1002 }, 'test', 'partial', { [1002] = 2003 })
+assert(changed, 'changed output must refresh even with zero added recipes')
+_, changed = store:ApplyObservation('Player-new', 197, { 1001, 1002 }, 'test', 'partial', nil, { [1002] = '新分类' })
+assert(changed, 'changed category must refresh even with zero added recipes')
 assert(cleanupOwner.Inspect({ id = "Player-new" }).hasData)
 assert(cleanupOwner.Delete({ id = "Player-new" }))
 assert(store:GetProfession("Player-new", 197) == nil)

@@ -19,6 +19,7 @@ CJK = re.compile(r'[\u3400-\u9fff\u3000-\u303f\uff00-\uffef\u201c\u201d]')
 ENTRY = re.compile(r'\["([^"\n]+)"\]\s*=\s*("(?:\\.|[^"\\])*")')
 REFERENCE = re.compile(r'Core:Text\(\s*"([^"\n]+)"|titleKey\s*=\s*"([^"\n]+)"')
 OWNER_REFERENCE = re.compile(r'Core\.Locale:Get\(\s*"([^"\n]+)"\s*,\s*"([^"\n]+)"')
+ADDON_REFERENCE = re.compile(r'Addon:T\(\s*"([^"\n]+)"')
 REGISTER = re.compile(r'Core\.Locale:Register\(\s*"([^"\n]+)"\s*,\s*"(zh|en)"\s*,\s*\{')
 FORMAT = re.compile(r'%(?:[-+ #0]*\d*(?:\.\d+)?[cdiouxXeEfgGqs]|%)')
 EXCEPTIONS = {
@@ -28,6 +29,7 @@ MEASUREMENT = {'"字"', '"字字字字"', '"字字字字字字"'}
 INPUT_PUNCTUATION = {
     'YiboCore/UI/ItemPicker.lua': {'"；"', '"，"'},
     'YiboCore/Util/LevelFilter.lua': {'"，"'},
+    'YiboTaskHub/BossTargets.lua': {'"："', '"·"', '"（"', '"）"'},
 }
 
 
@@ -131,6 +133,11 @@ def audit(addons: list[str]) -> dict:
                 localized += 1
                 if key not in catalogs.get(owner, {}).get('zh', {}):
                     result['unknownKeys'].append({'path': relative, 'line': code.count('\n', 0, match.start()) + 1, 'key': owner + ':' + key})
+            for match in ADDON_REFERENCE.finditer(code):
+                key = match[1]
+                localized += 1
+                if key not in catalogs.get(name, {}).get('zh', {}):
+                    result['unknownKeys'].append({'path': relative, 'line': code.count('\n', 0, match.start()) + 1, 'key': name + ':' + key})
             for token in TOKEN.finditer(source):
                 literal = token[0]
                 if literal.startswith('--') or not CJK.search(literal):

@@ -1,5 +1,7 @@
 ## Interface: 50504
-## Title: |cff20e070[Yibo]|r YiboReputation - 声望之路
+## Title: |cff20e070[Yibo]|r YiboReputation - Reputation Tracker
+## Title-zhCN: |cff20e070[Yibo]|r YiboReputation - 声望之路
+## Title-zhTW: |cff20e070[Yibo]|r YiboReputation - 声望之路
 ## Notes: 多角色声望浏览与比较
 ## Author: YiboSoft
 ## Version: 1.5.2
@@ -20,5 +22,6 @@ CurrentCharacterPreview.lua
 MonitoredPreview.lua
 PreviewController.lua
 Settings.lua
+GoalTargets.lua
 CoreIntegration.lua
 Commands.lua

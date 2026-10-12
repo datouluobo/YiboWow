@@ -344,6 +344,7 @@ function Addon:RefreshMatrixView(parent, context)
         else row.icon:Hide(); row:SetScript("OnClick", function(control) local current=control.matrixNode;expanded[current.key]=not IsOpen(expanded,current);Addon:RefreshMatrixView(parent, context) end) end
         row.tooltipNode, row.tooltipContext, row.tooltipColumns, row.tooltipColumn = node, { characters = characters }, {}, nil
         row.columnDividers = row.columnDividers or {}; local left=0; for ci,column in ipairs(columns) do row.tooltipColumns[ci]={left=left,width=column.width};local cell=row.cells[ci] or Text(row,Theme.Font.body,Theme.Colors.text,ci==1 and "LEFT" or "CENTER");row.cells[ci]=cell;cell:ClearAllPoints();cell:SetPoint("LEFT",row,"LEFT",left+Theme.Space.xxs+(ci==1 and starWidth or 0),0);cell:SetWidth(column.width-Theme.Space.xs-(ci==1 and starWidth or 0));cell:SetJustifyH(ci==1 and "LEFT" or "CENTER");cell:SetText(values[ci] or "");if node.kind=="faction" and ci>1 then local character=characters[ci-1];local data=NodeFaction(Snapshot(character),node,character);local color=data and self:GetReputationColor(data) or Theme.Colors.muted;cell:SetTextColor(color[1],color[2],color[3]) else cell:SetTextColor(Theme.Colors.text[1],Theme.Colors.text[2],Theme.Colors.text[3]) end;cell:Show();left=left+column.width end
+        if Addon.GoalTargets then Addon.GoalTargets:BindRow(row, node, characters) end
         for _, divider in ipairs(row.columnDividers) do divider:Hide() end
         row:SetScript("OnEnter",function(control)
             control.tooltipTracking=true

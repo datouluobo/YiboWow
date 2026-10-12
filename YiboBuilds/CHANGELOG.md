@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — Business goals（2026-10-10）
+
+- Supported gem and enchant candidates can become character-specific goals tied to the observed equipment instance; completion requires the enhancement to be observed on that same item.
+- Replaced or unidentified equipment leaves the goal pending or paused instead of reporting completion. Requires Core API v12 / `business-item-actions:1` and a compatible TaskHub; client verification remains pending.
+
 ## 1.4.2 — 2026-10-08
 
 - Refresh worn equipment when reopening the page or opening an active equipment detail, so stale observations do not hide bag belt buckle candidates or installed tinkers.

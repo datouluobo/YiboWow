@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <title>YiboTaskHub F：任务卷轴与推进箭头，v1 可编辑结构基准</title>
+  <desc>手工建立的 32px 矢量骨架；六边形开放环框、微斜卷轴、纸面内粗直箭头。三大视觉块，外围及环框空隙透明。该 SVG 保存结构；手绘材质由对应 PNG/TGA 保存。</desc>
+  <g id="frame" fill="#58636B" fill-rule="evenodd">
+    <path d="M16 1.5L30 8.75V23.25L16 30.5L2 23.25V8.75Z M16 4L27.75 10.1V21.9L16 28L4.25 21.9V10.1Z"/>
+  </g>
+  <g id="scroll" transform="translate(16 16) scale(0.86) rotate(-14) translate(-16 -16)">
+    <g id="paper-body" fill="#F4F4EF" stroke="#182126" stroke-width="1.5" stroke-linejoin="round">
+      <path d="M10 6.75H21.75C23.15 6.75 24 7.6 24 8.8C24 9.8 23.4 10.4 22.5 10.65V23.1H23.1C24.4 23.1 25 23.8 25 24.75C25 25.7 24.2 26.25 23 26.25H11C9.1 26.25 8.25 25.05 8.25 23.5V11.25C6.65 11.25 6 10.25 6 9C6 7.65 7.35 6.75 10 6.75Z"/>
+    </g>
+    <g id="rolled-lips" fill="none" stroke="#182126" stroke-width="1.7" stroke-linecap="round">
+      <path d="M8.25 11.25V9.7C8.25 8.85 7.6 8.6 7.1 9.25 M11 26.25C12.15 25.65 12.2 24.2 11.35 23.65C10.85 23.3 10.3 23.65 10.15 24.2"/>
+    </g>
+    <g id="progress-arrow" fill="#182126">
+      <path d="M10.4 18.5L17 14L15.1 12.1L21.3 11.45L21.6 17.65L19.65 15.75L12.1 21Z"/>
+    </g>
+  </g>
+</svg>

@@ -89,9 +89,21 @@ function Collector:Scan(reason)
         Addon.Store:RecordAttempt(characterID, professionID, reason, "error")
         return nil, "legacy-api-error"
     end
-    local added = Addon.Store:ApplyObservation(characterID, professionID, result.ids, reason, "partial", result.outputItemIDs, result.recipeCategories)
+    local catalog = Addon.RecipeCatalog
+    local recipeIDs = {}
+    local boundaryActionCount = 0
+    for _, id in ipairs(result.ids) do
+        if catalog and catalog.boundaryActions and catalog.boundaryActions[id] then
+            boundaryActionCount = boundaryActionCount + 1
+        else
+            recipeIDs[#recipeIDs + 1] = id
+        end
+    end
+    result.ids = recipeIDs
+    result.boundaryActionCount = boundaryActionCount
+    local added, changed = Addon.Store:ApplyObservation(characterID, professionID, recipeIDs, reason, "partial", result.outputItemIDs, result.recipeCategories)
     if not added then return nil, "store-unavailable" end
     result.professionID, result.added = professionID, added
-    if Addon.NotifyPageChanged then Addon:NotifyPageChanged() end
+    if changed and Addon.NotifyPageChanged then Addon:NotifyPageChanged() end
     return result
 end

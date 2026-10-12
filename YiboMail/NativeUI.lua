@@ -531,9 +531,10 @@ function Native:OpenMail(entry, keepOpen)
     end
     self.inbox.notice = "原生信件界面尚未就绪，请重新打开邮箱。"; self:RefreshInbox()
 end
-function Native:ReadMail(entry)
+function Native:ReadMail(entry, automatic)
     if Addon.Queue.state == "running" or Addon.Queue.pending then
-        self.inbox.notice = "请先暂停队列并等待当前操作结束。"; self:RefreshInbox(); return nil
+        if not automatic then self.inbox.notice = "请先暂停队列并等待当前操作结束。"; self:RefreshInbox() end
+        return nil
     end
     local current, err
     if Addon.Scanner.ReadEntry then current, err = Addon.Scanner:ReadEntry(entry)
@@ -543,14 +544,33 @@ function Native:ReadMail(entry)
         if current and current.signature ~= entry.mail.signature then current = nil end
     end
     if not current then
-        self.inbox.notice = err or "邮件已变化，请等待更新。"; self:RefreshInbox(); return nil
+        if not automatic then self.inbox.notice = err or "邮件已变化，请等待更新。"; self:RefreshInbox() end
+        return nil
     end
     if type(GetInboxText) == "function" then
         local ok, why = pcall(GetInboxText, entry.mail.inboxIndex)
-        if not ok then self.inbox.notice = tostring(why); self:RefreshInbox(); return nil end
+        if not ok then
+            if not automatic then self.inbox.notice = tostring(why); self:RefreshInbox() end
+            return nil
+        end
+        entry.mail.wasRead = true
+    elseif automatic then
+        return nil
     end
     if Addon.MarkMailOpened then return Addon:MarkMailOpened(entry) end
     entry.mail.openedByUser = true; return true
+end
+function Native:ReadDisplayedMails(entries)
+    -- Only the live mailbox surface acknowledges mail, never background
+    -- snapshots, account previews, or entries excluded by the active filter.
+    if not Addon.Scanner.IsOpen or not Addon.Scanner:IsOpen() then return end
+    local seen = {}
+    for _, entry in ipairs(entries) do
+        if not seen[entry.key] then
+            seen[entry.key] = true
+            if not entry.mail.wasRead or not entry.mail.openedByUser then self:ReadMail(entry, true) end
+        end
+    end
 end
 function Native:CollectCOD(entry, item)
     local ok, current = self:OpenMail(entry, true)
@@ -965,10 +985,16 @@ function Native:RefreshInbox()
         visibleMails = View:GetMails(context, panel.options)
     end
     if panel.mode == "mail" then
+        self:ReadDisplayedMails(visibleMails)
         for _, entry in ipairs(visibleMails) do self:EntryRows(entry) end
     else
         local groups = View.GetGroupsFromEntries and View:GetGroupsFromEntries(visibleMails, panel.options)
             or View:GetGroups(context, panel.options)
+        local displayed = {}
+        for _, group in ipairs(groups) do
+            for _, source in ipairs(group.sources) do displayed[#displayed + 1] = source.entry end
+        end
+        self:ReadDisplayedMails(displayed)
         -- Reserve the possible gutter before wrapping so overflow cannot clip
         -- the last tile when Core resolves the scrollbar on the next frame.
         local gridWidth = math.max(1, math.min(panel.width, panel:GetWidth() - 16 - Addon.Core.UITheme.Geometry.scrollbarGutter))
@@ -977,7 +1003,14 @@ function Native:RefreshInbox()
         for index, group in ipairs(groups) do self:ItemTile(group, index, columns, size) end
         panel.top = #groups > 0 and math.ceil(#groups / columns) * (size + 4) - 4 or 0
     end
-    if panel.top == 0 then self:Row({ title = panel.mode == "items" and "暂无匹配附件" or "暂无匹配邮件", detail = Addon.Scanner.updated and "可清除搜索和筛选。" or "等待原生邮箱列表更新。" }) end
+    if panel.top == 0 then
+        local scan = Addon.Scanner
+        local failed = scan.lastError ~= nil
+        local pending = not scan.validAt or (type(HasNewMail) == "function" and HasNewMail()
+            and type(GetInboxNumItems) == "function" and GetInboxNumItems() == 0)
+        self:Row({ title = failed and "邮件读取失败" or (pending and "正在更新邮箱" or (panel.mode == "items" and "暂无匹配附件" or "暂无匹配邮件")),
+            detail = failed and "请重新打开邮箱重试；诊断：/yma scan。" or (pending and "等待原生邮箱列表更新。" or "可清除搜索和筛选。") })
+    end
     for index = panel.used + 1, #panel.rows do panel.rows[index]:Hide() end
     panel.content:SetSize(panel.width, math.max(1, panel.top)); panel.scroll:SetContentHeight(panel.top)
     local selected = 0; for _ in pairs(panel.selection) do selected = selected + 1 end

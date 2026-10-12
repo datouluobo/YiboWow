@@ -26,6 +26,8 @@ It does not change Auto Loot, click confirmation dialogs, choose rewards, or dis
 - `/yao list [page]` — show catalogued items.
 - `/yao status` — show the current state, next eligible item, and session isolation status.
 
+For example, when a whitelisted source such as Imperial Silk or Pandaria's Dark Soil triggers a Bind on Pickup prompt, the game's confirmation dialog appears under the cursor. The source must be enabled in the allowlist; you still decide whether to confirm or cancel.
+
 ## Optional YiboCore Integration
 
 YiboCore is optional and is not included in this download. Without it, all automatic opening and `/yao` commands remain available. With a compatible YiboCore installed, YiboAutoOpen appears in the shared settings workbench, where you can manage the catalog, safety threshold, login scan, and chat notifications.
@@ -58,6 +60,8 @@ Yibo 自动开包只会开启**你主动加入目录**的容器物品。它使�
 - `/yao del <物品链接、ID 或名称>`：从目录移除。
 - `/yao list [页码]`：查看目录。
 - `/yao status`：查看当前状态、下一个可开启物品与本次登录隔离状态。
+
+例如，帝王丝绸、潘达利亚的黑色泥土等白名单来源触发“拾取后绑定”提示时，游戏原生确认框会出现在鼠标下方。该来源必须已在白名单中启用；是否确定或取消仍由你决定。
 
 ## 可选接入 YiboCore
 

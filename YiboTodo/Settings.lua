@@ -168,14 +168,11 @@ function Settings:CreatePanel(parent, context)
         panel:SetPoint("TOPLEFT"); panel:SetPoint("TOPRIGHT")
         panel.title = context.createText(panel, 12, _G.YiboCore.UITheme.Colors.text, "LEFT")
         panel.title:SetPoint("TOPLEFT", 12, -12)
-        panel.body = context.createText(panel, 11, _G.YiboCore.UITheme.Colors.muted, "LEFT")
-        panel.body:SetPoint("TOPLEFT", 12, -40); panel.body:SetPoint("TOPRIGHT", -12, -40)
         panel.groupChecks, panel.itemChecks = {}, {}
     end
     panel.yiboSettingsOwner = "todo"; panel:Show()
     panel.title:SetText("活动监控")
-    panel.body:SetText("每个开关控制账号矩阵的一列；包含多个项目的列可单独选择项目。")
-    local y, groupIndex, itemIndex = 76, 0, 0
+    local y, groupIndex, itemIndex = 52, 0, 0
     local groups = {}
     for _, group in pairs(Addon.Catalog.monitoringGroups or {}) do
         if #Settings:GetMonitoringItems(group.id) > 0 then groups[#groups + 1] = group end

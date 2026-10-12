@@ -929,6 +929,19 @@ local function TargetMatches(item, source, target)
     return true
 end
 
+function Page:IsGoalTargetApplicable(item, conditions)
+    if conditions.kind == "enchant" then
+        local source = Addon.EnchantCatalog[conditions.enhancementID]
+        return TargetMatches(item, source, source and Addon.ApplyTargets[source.spellID])
+    end
+    local socket = item.gems and item.gems[conditions.socketIndex]
+    if not socket or not GetItemInfo then return false end
+    local classID, subclassID = select(12, GetItemInfo(conditions.enhancementID))
+    local types = classID == 3 and GEM_SUBCLASS_TYPES[subclassID]
+    return types and (types[socket.socketType] or (socket.socketType == "prismatic" and subclassID ~= 6 and subclassID ~= 9)
+        or (subclassID == 8 and (socket.socketType == "red" or socket.socketType == "yellow" or socket.socketType == "blue"))) or false
+end
+
 local function BagApplyingItems()
     local items = {}
     local getCount = C_Container and C_Container.GetContainerNumSlots or GetContainerNumSlots
@@ -1506,6 +1519,10 @@ local function RenderEquipmentDetail(parent, snapshot)
         row.selected:SetShown(visual and visual.selected and not actionable or false)
         local tint = color or (onClick and C.accent or C.muted)
         row.text:SetTextColor(tint[1], tint[2], tint[3])
+        if Addon.GoalTargets and Addon.GoalTargets.ref then
+            Core.BusinessItemActions:Unbind(row)
+            if row.buildsSecureAugmentButton then Core.BusinessItemActions:Unbind(row.buildsSecureAugmentButton) end
+        end
         row:SetScript("OnClick", onClick)
         if link then SetAugmentTooltip(row, label, link)
         else row:SetScript("OnEnter", nil); row:SetScript("OnLeave", nil) end
@@ -1547,7 +1564,7 @@ local function RenderEquipmentDetail(parent, snapshot)
                     and pending.candidate.bag == candidate.bag
                     and pending.candidate.bagSlot == candidate.bagSlot
                 if selected then renderedPending = true end
-                AddRow(candidate.name,
+                local goalRow = AddRow(candidate.name,
                     candidate.link, function()
                         local function Apply() StageNativeGem(parent, slotID, currentIndex, currentCandidate) end
                         if socket.itemLink and StaticPopup_Show then
@@ -1562,6 +1579,7 @@ local function RenderEquipmentDetail(parent, snapshot)
                     end, nil, { icon = candidate.icon, selected = selected, actionable = true,
                         subtitle = "背包 ×" .. tostring(candidate.count) .. " · 可直接镶嵌",
                         badge = selected and "待应用" or "选择 ›" })
+                if Addon.GoalTargets then Addon.GoalTargets:Bind(goalRow, parent, item, slotID, "gem", tonumber(candidate.link:match("item:(%d+)")), currentIndex) end
             end
             if pendingHere and not renderedPending then
                 local chosen = pending.candidate
@@ -1623,6 +1641,7 @@ local function RenderEquipmentDetail(parent, snapshot)
                 end, nil, { icon = candidateIcon, actionable = true,
                     subtitle = sourceText .. " · 可直接施加", badge = "施加 ›" })
                 PrepareItemAugmentAction(row, slotID, item, selectedCandidate, detail.scroll)
+                if Addon.GoalTargets and candidate.enchantID then Addon.GoalTargets:Bind(row, parent, item, slotID, "enchant", candidate.enchantID) end
             end
         end
         for _, candidate in ipairs(augments) do

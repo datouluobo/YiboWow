@@ -1,6 +1,22 @@
 local Addon = _G.YiboMail
 local Scanner = { publishedStatus = {} }; Addon.Scanner = Scanner
+function Scanner:ObserveArrivalSignal()
+    if type(HasNewMail) ~= "function" or not Addon.db then return end
+    local current = Addon.Core.Characters:GetCurrent()
+    if not current then return end
+    local ok, value = pcall(HasNewMail)
+    if not ok then return end
+    local present = value == true or value == 1
+    local previous = Addon.db.mailArrivalSignals[current.id]
+    if previous and previous.present == present then return end
+    Addon.db.mailArrivalSignals[current.id] = { present = present, awaitingScan = present, observedAt = Addon:Now() }
+    Addon:UpdateMailNoticeBatch(current.id)
+    if present or (previous and previous.awaitingScan) then Addon:Publish(current.id, {}, {}, "scan") end
+end
 function Scanner:IsOpen() return self.open and MailFrame and MailFrame:IsShown() end
+function Scanner:RequestInbox()
+    if self.open and type(CheckInbox) == "function" then CheckInbox() end
+end
 function Scanner:PublishStatus(characterID)
     if not characterID or not Addon.db then return end
     local status = Addon.Items:GetState(characterID).status
@@ -161,6 +177,10 @@ function Scanner:ScanAsync(generation)
 end
 function Scanner:Schedule()
     self.validAt = nil
+    -- Readiness changed even when the next scan finds identical mail. Publish
+    -- invalidation now so CommitScan also publishes the recovery to live data.
+    local character = Addon.Core and Addon.Core.Characters:GetCurrent()
+    self:PublishStatus(character and character.id)
     self.generation = (self.generation or 0) + 1
     local generation = self.generation
     if C_Timer and C_Timer.After then
@@ -170,21 +190,38 @@ function Scanner:Schedule()
                 C_Timer.After(0.1, function() RunScan(attempt + 1) end); return
             end
             Scanner:ScanAsync(generation)
+            -- An empty cache can precede delivery of NPC/system mail. Header
+            -- and attachment data can also arrive after the first inbox event.
+            local function RetryPending(remaining)
+                if Scanner.generation ~= generation or not Scanner:IsOpen() then return end
+                local emptyPending = type(HasNewMail) == "function" and HasNewMail()
+                    and GetInboxNumItems() == 0
+                if not Scanner.lastError and not emptyPending then return end
+                Scanner:RequestInbox()
+                if Scanner.generation ~= generation then return end
+                Scanner:ScanAsync(generation)
+                if remaining > 1 then C_Timer.After(1, function() RetryPending(remaining - 1) end) end
+            end
+            C_Timer.After(1, function() RetryPending(3) end)
             C_Timer.After(60.1, function() if Scanner.generation == generation then Scanner:ScanAsync(generation) end end)
         end
         C_Timer.After(0.2, function() RunScan(0) end)
     else self:Scan() end
 end
 function Scanner:OnEvent(event)
+    if event == "UPDATE_PENDING_MAIL" or event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then self:ObserveArrivalSignal() end
     if event == "MAIL_SHOW" then
         self:Close(); self.open = true; self:InstallHooks()
         -- MAIL_INBOX_UPDATE can arrive before this event (or be omitted when
         -- the cached inbox is already populated). Start a delayed first scan
         -- so cached rows do not stay stale and uncollectable after opening.
         self.updated = true
+        self:RequestInbox()
         self:Schedule()
     elseif event == "MAIL_CLOSED" then self:Close()
     elseif event == "MAIL_INBOX_UPDATE" then
         if self.open then self.updated = true; self:Schedule() end
+    elseif event == "UPDATE_PENDING_MAIL" and self:IsOpen() then
+        self:RequestInbox(); self:Schedule()
     elseif event == "ADDON_LOADED" then self:InstallHooks() end
 end

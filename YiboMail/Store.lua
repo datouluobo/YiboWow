@@ -8,6 +8,9 @@ function Addon:InitializeDatabase()
     self.db.nextHistoryID = tonumber(self.db.nextHistoryID) or 0
     self.db.byCharacter = self.db.byCharacter or {}
     self.db.collectedMailMarkers = self.db.collectedMailMarkers or {}
+    self.db.mailArrivalSignals = self.db.mailArrivalSignals or {}
+    self.db.mailNoticeBatches = self.db.mailNoticeBatches or {}
+    self.db.nextMailNoticeID = tonumber(self.db.nextMailNoticeID) or 0
     self.db.settings = self.db.settings or {}
     self.db.contacts = self.db.contacts or {}
     self.db.rules = self.db.rules or {}
@@ -27,6 +30,15 @@ function Addon:InitializeDatabase()
     if self.db.settings.loginReminderEnabled == nil then
         self.db.settings.loginReminderEnabled = true
     end
+    -- Existing mailbox caches are storage, not a backlog of new work. This
+    -- baseline is owned by Mail and does not change the inbox's read styling.
+    if self.db.mailNoticeVersion ~= 1 then
+        for _, snapshot in pairs(self.db.byCharacter) do
+            for _, mail in pairs(snapshot.records or {}) do mail.noticeHandled = true end
+        end
+        self.db.mailNoticeBatches = {}
+        self.db.mailNoticeVersion = 1
+    end
     -- Give legacy events a permanent identity before pruning changes array indexes.
     for _, snapshot in pairs(self.db.byCharacter) do
         for _, record in ipairs(snapshot.history or {}) do
@@ -41,6 +53,19 @@ function Addon:InitializeDatabase()
             end
         end
     end
+end
+function Addon:UpdateMailNoticeBatch(characterID)
+    local signal = self.db.mailArrivalSignals[characterID]
+    local pending = signal and signal.awaitingScan
+    local snapshot = self.db.byCharacter[characterID]
+    for _, key in ipairs(snapshot and snapshot.visibleKeys or {}) do
+        local mail = snapshot.records[key]
+        if mail and mail.state == "observed" and not mail.openedByUser and not mail.noticeHandled then pending = true; break end
+    end
+    if pending and not self.db.mailNoticeBatches[characterID] then
+        self.db.nextMailNoticeID = self.db.nextMailNoticeID + 1
+        self.db.mailNoticeBatches[characterID] = "n" .. self.db.nextMailNoticeID
+    elseif not pending then self.db.mailNoticeBatches[characterID] = nil end
 end
 function Addon:AppendHistory(snapshot, record)
     self.db.nextHistoryID = self.db.nextHistoryID + 1
@@ -119,6 +144,7 @@ function Addon:CommitScan(character, mails, coverage)
             if candidate then
                 mail.mailKey = candidate.mailKey
                 mail.openedByUser = candidate.openedByUser == true
+                mail.noticeHandled = candidate.noticeHandled == true or mail.openedByUser
                 mail.firstSeenAt, mail.discoveryUncertain = candidate.firstSeenAt, candidate.discoveryUncertain
                 local moved = candidate.inboxIndex ~= mail.inboxIndex or candidate.wasRead ~= mail.wasRead
                 for slot, item in ipairs(mail.attachments) do
@@ -135,11 +161,16 @@ function Addon:CommitScan(character, mails, coverage)
                 if collecting then
                     mail.firstSeenAt = pending.action.original.firstSeenAt
                     mail.discoveryUncertain = pending.action.original.discoveryUncertain
+                    mail.noticeHandled = true
                 elseif not knownSignatures[signature] then
                     mail.firstSeenAt = now
                     self:AppendHistory(old, { state = "discovered", mail = mail, attachments = mail.attachments,
                         money = mail.money, codAmount = mail.cod, observedAt = now, timeBasis = "first-seen" })
-                else mail.discoveryUncertain = true end
+                else mail.discoveryUncertain = true; mail.noticeHandled = true end
+                -- The initial client read flag is useful when importing a
+                -- previously read letter. Later background flag changes do
+                -- not count as an explicit user acknowledgement.
+                mail.noticeHandled = mail.noticeHandled == true or mail.wasRead == true
             end
             mail.state, mail.stateEnteredAt = "observed", candidate and candidate.stateEnteredAt or now
             old.records[mail.mailKey] = mail; keys[#keys + 1] = mail.mailKey
@@ -158,6 +189,9 @@ function Addon:CommitScan(character, mails, coverage)
     coverage.revision = old.coverage.revision or self.db.revision
     old.visibleKeys, old.coverage, old.character = keys, coverage, { id = character.id, name = character.name, realm = character.realm }
     self.db.byCharacter[character.id] = old
+    local arrival = self.db.mailArrivalSignals[character.id]
+    if arrival and arrival.awaitingScan then arrival.awaitingScan = false; stateChanged = true end
+    self:UpdateMailNoticeBatch(character.id)
     local markers = self.db.collectedMailMarkers[character.id]
     if markers then
         for index = #markers, 1, -1 do
@@ -172,8 +206,9 @@ function Addon:MarkMailOpened(entry)
     local snapshot = self.db.byCharacter[entry.character.id]
     local mail = snapshot and snapshot.records[entry.key]
     if not mail or mail.signature ~= entry.mail.signature then return nil end
-    if not mail.openedByUser then
-        mail.openedByUser = true
+    if not mail.openedByUser or not mail.noticeHandled then
+        mail.openedByUser, mail.noticeHandled = true, true
+        self:UpdateMailNoticeBatch(entry.character.id)
         self:Publish(entry.character.id, { entry.key }, {}, "scan")
     end
     entry.mail.openedByUser = true
@@ -193,6 +228,9 @@ function Addon:CleanupBacklog(characterID)
 end
 function Addon:DeleteCharacter(character)
     local snapshot = self.db.byCharacter[character.id]
+    local hadArrival = self.db.mailArrivalSignals[character.id] ~= nil
+    self.db.mailArrivalSignals[character.id] = nil
+    self.db.mailNoticeBatches[character.id] = nil
     if snapshot then
         local keys, ids, seen = {}, {}, {}
         for key, mail in pairs(snapshot.records) do
@@ -200,6 +238,7 @@ function Addon:DeleteCharacter(character)
             for _, item in ipairs(mail.attachments) do if not seen[item.itemID] then seen[item.itemID] = true; ids[#ids + 1] = item.itemID end end
         end
         self.db.byCharacter[character.id] = nil; self:Publish(character.id, keys, ids, "cleanup")
+    elseif hadArrival then self:Publish(character.id, {}, {}, "cleanup")
     end
     return true
 end

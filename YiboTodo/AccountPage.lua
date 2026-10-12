@@ -107,12 +107,14 @@ local function GetIcon(parent, index)
     -- the hardware click explicitly so its OnClick action is reliable on the
     -- target client instead of depending on template/default behavior.
     button:EnableMouse(true)
-    button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    button:RegisterForClicks("AnyUp")
     button:SetAttribute("useOnKeyDown", false)
     -- Do not replace SecureActionButtonTemplate's OnClick handler.  It owns
     -- the protected item action; a post-click hook preserves that handler and
     -- still lets ordinary project icons run their Lua-side action afterward.
     button:HookScript("PostClick", function(self, mouseButton)
+        if Addon.Core.BusinessItemActions and Addon.Core.BusinessItemActions:Handle(self, mouseButton) then return end
+        if mouseButton ~= "LeftButton" and mouseButton ~= "RightButton" then return end
         -- Direct crafting from the interactive hover preview is a protected
         -- macro action.  It does not reliably emit UNIT_SPELLCAST_SUCCEEDED
         -- for this addon, so explicitly request the shared, debounced
@@ -202,46 +204,21 @@ local function SetIcon(button, project, isCurrentCharacter)
     -- verified DoTradeSkill macro on left click; right click stays on the
     -- normal action path and opens that profession panel.
     if not (InCombatLockdown and InCombatLockdown()) then
-        local secureItem = itemID and isCurrentCharacter and (itemName or ("item:" .. itemID)) or nil
-        local spellName
-        if spellID and C_Spell and type(C_Spell.GetSpellInfo) == "function" then
-            local info = C_Spell.GetSpellInfo(spellID)
-            spellName = info and info.name
-        elseif spellID and GetSpellInfo then
-            spellName = GetSpellInfo(spellID)
-        end
+        local descriptor = Addon.Actions:Describe(project, isCurrentCharacter)
+        local attributes = descriptor and descriptor.attributes or {}
+        local secureItem, spellName = attributes.item1, descriptor and descriptor.spellName
+        local secureSpell, leftMacro, rightMacro = nil, attributes.macrotext1, attributes.macrotext2
+        local openProfessionMacro = descriptor and descriptor.openProfessionMacro
         local professionProvider = Addon.Providers.Registry:Get("profession-cooldown")
-        local professionLoaded = spellID and professionProvider
-            and professionProvider:IsProfessionLoaded(project.characterID, project.professionID)
+        local professionLoaded = spellID and professionProvider and professionProvider:IsProfessionLoaded(project.characterID, project.professionID)
         local professionName = spellID and isCurrentCharacter and project.professionName
-        local recipeName = spellName or (spellID and project.label)
-        local escapedRecipeName = recipeName and string.gsub(string.gsub(recipeName, "\\", "\\\\"), '"', '\\"')
-        local escapedProfessionName = professionName and string.gsub(string.gsub(professionName, "\\", "\\\\"), '"', '\\"')
-        local openProfessionMacro = escapedProfessionName and string.format('/run if not TradeSkillFrame or not TradeSkillFrame:IsShown()or GetTradeSkillLine()~="%s"then CastSpellByName("%s")end', escapedProfessionName, escapedProfessionName) or nil
-        local craftMacro = escapedRecipeName and escapedProfessionName and string.format('/run for i=1,GetNumTradeSkills()do if GetTradeSkillInfo(i)=="%s"then DoTradeSkill(i,1);return end end;if GetTradeSkillLine()~="%s"then CastSpellByName("%s")end', escapedRecipeName, escapedProfessionName, escapedProfessionName) or nil
-        local secureSpell = nil
-        local baseType = secureItem and "item" or nil
-        local leftMacro = craftMacro or openProfessionMacro
-        local leftType = secureItem and "item" or (leftMacro and "macro" or nil)
-        button:SetAttribute("type", baseType)
-        button:SetAttribute("item", secureItem)
-        button:SetAttribute("spell", nil)
-        button:SetAttribute("macrotext", nil)
-        button:SetAttribute("type1", leftType)
-        button:SetAttribute("item1", secureItem)
-        button:SetAttribute("spell1", nil)
-        button:SetAttribute("macrotext1", leftMacro)
-        -- WoW exposes no secure action type for InteractUnit. Keep the right
-        -- click truthful and useful by selecting the summoned Nomi only;
-        -- opening gossip remains the player's built-in interaction action.
-        local interactMacro = interactName and isCurrentCharacter and string.format("/targetexact %s", interactName) or nil
-        local rightMacro = interactMacro or openProfessionMacro
-        button:SetAttribute("type2", rightMacro and "macro" or nil)
-        button:SetAttribute("macrotext2", rightMacro)
-        button.secureItemAction = itemID ~= nil and isCurrentCharacter == true
-        button.secureLeftAction = button.secureItemAction or leftMacro ~= nil
+        button:SetAttribute("type", secureItem and "item" or nil)
+        button:SetAttribute("item", secureItem); button:SetAttribute("spell", nil); button:SetAttribute("macrotext", nil)
+        for _, key in ipairs({ "type1", "item1", "spell1", "macrotext1", "type2", "macrotext2" }) do button:SetAttribute(key, attributes[key]) end
+        button.secureItemAction = secureItem ~= nil
+        button.secureLeftAction = secureItem ~= nil or leftMacro ~= nil
         button.secureRightAction = rightMacro ~= nil
-        button.professionAction = spellID ~= nil and isCurrentCharacter == true
+        button.professionAction = descriptor and descriptor.professionAction or false
         if spellID and isCurrentCharacter then
             Addon.professionActionDiagnostics = Addon.professionActionDiagnostics or {}
             Addon.professionActionDiagnostics[#Addon.professionActionDiagnostics + 1] = {
@@ -264,9 +241,28 @@ local function SetIcon(button, project, isCurrentCharacter)
         end
     end
     button:SetScript("OnHide", function(self)
+        if Addon.Core.BusinessItemActions then Addon.Core.BusinessItemActions:Unbind(self) end
         self.actionProject = nil; self.actionIsCurrent = false; self.secureLeftAction = false; self.secureRightAction = false; self.professionAction = false; self:SetAlpha(1)
     end)
-    Theme:BindTooltip(button, project.label, ProjectTooltip(project))
+    local lines = ProjectTooltip(project)
+    if Addon.GoalTargets and Addon.GoalTargets.ref and Addon.Core.BusinessItemActions then
+        local intent = Addon.GoalTargets:Intent(project, project.characterID or button.goalCharacterID)
+        if intent and intent.scope.characterID then
+            -- Disable the secure fallback on non-business physical buttons.
+            if not (InCombatLockdown and InCombatLockdown()) then
+                button:SetAttribute("type3", ""); button:SetAttribute("type4", ""); button:SetAttribute("type5", "")
+            end
+            Addon.Core.BusinessItemActions:Bind(button, { owner = Addon.NAME, GetIntent = function() return intent end,
+                ConfigureCtrlLeft = function(enabled)
+                    if InCombatLockdown and InCombatLockdown() then return false end
+                    button:SetAttribute("ctrl-type1", enabled and "" or nil)
+                    return true
+                end,
+                reservedButtons = { LeftButton = true, RightButton = true } })
+            lines = Addon.Core.BusinessItemActions:TooltipLines(lines, button)
+        else Addon.Core.BusinessItemActions:Unbind(button) end
+    end
+    Theme:BindTooltip(button, project.label, lines)
     button:Show()
 end
 
@@ -290,7 +286,7 @@ function Page:RefreshProjectIcon(target)
     return false
 end
 
-local function RenderProjects(cell, projects, isCurrentCharacter, groupIndex)
+local function RenderProjects(cell, projects, isCurrentCharacter, groupIndex, characterID)
     Release(cell.icons or {}, 1)
     cell:Show()
     if #projects == 0 or (#projects == 1 and projects[1].state == "not-applicable") then
@@ -304,6 +300,7 @@ local function RenderProjects(cell, projects, isCurrentCharacter, groupIndex)
     for index, project in ipairs(projects) do
         local icon = GetIcon(cell, index)
         icon:ClearAllPoints(); icon:SetPoint("LEFT", cell, "LEFT", x, 0)
+        icon.goalCharacterID = characterID
         SetIcon(icon, project, isCurrentCharacter)
         x = x + ICON_SIZE + ICON_GAP
     end
@@ -524,25 +521,25 @@ function Page.Refresh(frame, context)
                 if showProfession then
                 local profession = Cell(row, 1)
                 profession:ClearAllPoints(); profession:SetPoint("LEFT", offset, 0); profession:SetSize(professionWidth, ROW_HEIGHT)
-                    RenderProjects(profession, data.professionProjects or {}, current and character.id == current.id, nextCell)
+                    RenderProjects(profession, data.professionProjects or {}, current and character.id == current.id, nextCell, character.id)
                     offset, nextCell = offset + professionWidth + COLUMN_GAP, nextCell + 1
                 end
                 if hasFarm then
                     local farm = Cell(row, nextCell)
                     farm:ClearAllPoints(); farm:SetPoint("LEFT", offset, 0); farm:SetSize(farmWidth, ROW_HEIGHT)
-                    RenderProjects(farm, data.farmProjects or {}, current and character.id == current.id, nextCell)
+                    RenderProjects(farm, data.farmProjects or {}, current and character.id == current.id, nextCell, character.id)
                     offset, nextCell = offset + farmWidth + COLUMN_GAP, nextCell + 1
                 end
                 if hasNomi then
                     local nomi = Cell(row, nextCell)
                     nomi:ClearAllPoints(); nomi:SetPoint("LEFT", offset, 0); nomi:SetSize(nomiWidth, ROW_HEIGHT)
-                    RenderProjects(nomi, data.nomiProjects or {}, current and character.id == current.id, nextCell)
+                    RenderProjects(nomi, data.nomiProjects or {}, current and character.id == current.id, nextCell, character.id)
                     offset, nextCell = offset + nomiWidth + COLUMN_GAP, nextCell + 1
                 end
                 if showJewelcrafting then
                     local jewelcrafting = Cell(row, nextCell)
                     jewelcrafting:ClearAllPoints(); jewelcrafting:SetPoint("LEFT", offset, 0); jewelcrafting:SetSize(jewelcraftingWidth, ROW_HEIGHT)
-                    RenderProjects(jewelcrafting, data.monitoringProjects["jewelcrafting-daily"] or {}, current and character.id == current.id, nextCell)
+                    RenderProjects(jewelcrafting, data.monitoringProjects["jewelcrafting-daily"] or {}, current and character.id == current.id, nextCell, character.id)
                     offset, nextCell = offset + jewelcraftingWidth + COLUMN_GAP, nextCell + 1
                 end
                 if hasCooking then
@@ -551,37 +548,37 @@ function Page.Refresh(frame, context)
                     -- The legacy field contains only the original Halfhill
                     -- projection.  The monitoring-group list also includes
                     -- the WLK and TBC cooking dailies.
-                    RenderProjects(cooking, data.monitoringProjects["cooking-daily"] or {}, current and character.id == current.id, nextCell)
+                    RenderProjects(cooking, data.monitoringProjects["cooking-daily"] or {}, current and character.id == current.id, nextCell, character.id)
                     offset, nextCell = offset + cookingWidth + COLUMN_GAP, nextCell + 1
                 end
                 if showFishing then
                     local fishing = Cell(row, nextCell)
                     fishing:ClearAllPoints(); fishing:SetPoint("LEFT", offset, 0); fishing:SetSize(fishingWidth, ROW_HEIGHT)
-                    RenderProjects(fishing, data.monitoringProjects["fishing-daily"] or {}, current and character.id == current.id, nextCell)
+                    RenderProjects(fishing, data.monitoringProjects["fishing-daily"] or {}, current and character.id == current.id, nextCell, character.id)
                     offset, nextCell = offset + fishingWidth + COLUMN_GAP, nextCell + 1
                 end
                 if showNat then
                     local nat = Cell(row, nextCell)
                     nat:ClearAllPoints(); nat:SetPoint("LEFT", offset, 0); nat:SetSize(natWidth, ROW_HEIGHT)
-                    RenderProjects(nat, data.monitoringProjects["nat-pagle"] or {}, current and character.id == current.id, nextCell)
+                    RenderProjects(nat, data.monitoringProjects["nat-pagle"] or {}, current and character.id == current.id, nextCell, character.id)
                     offset, nextCell = offset + natWidth + COLUMN_GAP, nextCell + 1
                 end
                 if showDarkmoon then
                     local darkmoon = Cell(row, nextCell)
                     darkmoon:ClearAllPoints(); darkmoon:SetPoint("LEFT", offset, 0); darkmoon:SetSize(darkmoonWidth, ROW_HEIGHT)
-                    RenderProjects(darkmoon, data.monitoringProjects["darkmoon-faire"] or {}, current and character.id == current.id, nextCell)
+                    RenderProjects(darkmoon, data.monitoringProjects["darkmoon-faire"] or {}, current and character.id == current.id, nextCell, character.id)
                     offset, nextCell = offset + darkmoonWidth + COLUMN_GAP, nextCell + 1
                 end
                 if showBrilltron then
                     local brilltron = Cell(row, nextCell)
                     brilltron:ClearAllPoints(); brilltron:SetPoint("LEFT", offset, 0); brilltron:SetSize(brilltronWidth, ROW_HEIGHT)
-                    RenderProjects(brilltron, data.monitoringProjects["brilltron-4000"] or {}, current and character.id == current.id, nextCell)
+                    RenderProjects(brilltron, data.monitoringProjects["brilltron-4000"] or {}, current and character.id == current.id, nextCell, character.id)
                     offset, nextCell = offset + brilltronWidth + COLUMN_GAP, nextCell + 1
                 end
                 if hasCommon then
                     local common = Cell(row, nextCell)
                     common:ClearAllPoints(); common:SetPoint("LEFT", offset, 0); common:SetSize(commonWidth, ROW_HEIGHT)
-                    RenderProjects(common, data.commonProjects or {}, current and character.id == current.id, nextCell)
+                    RenderProjects(common, data.commonProjects or {}, current and character.id == current.id, nextCell, character.id)
                 end
                 -- The catalog and Core's profession snapshot are enough to
                 -- decide whether a project belongs to this character.  An

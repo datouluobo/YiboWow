@@ -6,7 +6,7 @@ local ICON = "Interface\\AddOns\\YiboTodo\\Media\\YiboTodoIcon-v6"
 function Integration:Initialize()
     if self.initialized then return true end
     local Core = _G.YiboCore
-    if not (Core and Core:CheckAPIVersion(5) and Core.AccountView and Core.Entry and Core.Characters) then return nil, "需要 YiboCore API v5。" end
+    if not (Core and Core.CheckAPIVersion and Core:CheckAPIVersion(Addon.REQUIRED_CORE_API) and Core.HasCapability and Core:HasCapability("account-view", 2) and Core:HasCapability("character-identity", 1) and Core.AccountView and Core.Entry and Core.Characters) then return nil, "需要 YiboCore API v" .. tostring(Addon.REQUIRED_CORE_API) .. " 及轻量角色身份能力，请升级 Core。" end
     Addon.Core = Core
     local function MoveCharacterData(oldID, newID)
         if Addon.Database:MoveCharacterData(oldID, newID) then Addon:NotifyChanged() end
@@ -29,7 +29,7 @@ function Integration:Initialize()
         end)
         self.domainListenerRegistered = true
     end
-    local addon, err = Core:RegisterAddon(Addon.NAME, { version = Addon.VERSION, requiredAPI = 5 })
+    local addon, err = Core:RegisterAddon(Addon.NAME, { version = Addon.VERSION, requiredAPI = Addon.REQUIRED_CORE_API })
     if not addon then return nil, err end
     if Core.CharacterCleanup then
         local ok, cleanupErr = Core.CharacterCleanup:RegisterOwner(Addon.NAME, {
@@ -40,6 +40,7 @@ function Integration:Initialize()
     end
     local page, pageErr = Core.AccountView:RegisterPage(Addon.NAME, {
         id = "todo", title = "账号待办", icon = ICON, order = 35, defaultEnabled = true, previewEnabled = true, compactWidth = true, scope = { mode = "realms", allTitle = "所有服务器" },
+        firstUseTip = { title = "账号待办设置", lines = { "每个开关控制账号矩阵的一列；包含多个项目的列可单独选择项目。" } },
         characterFilter = {
             defaultExpression = "",
             GetExpression = function() return Addon.db.settings.levelExpr or "" end,
@@ -62,6 +63,10 @@ function Integration:Initialize()
     if not page then return nil, pageErr end
     local entry, entryErr = Core.Entry:RegisterBusinessEntry(Addon.NAME, { id = "ytd", brokerName = "YiboTodo", pageID = "todo", text = "[Yibo] 账号待办", icon = ICON })
     if not entry then return nil, entryErr end
+    if Addon.ActionContracts then
+        local ok, actionErr = Addon.ActionContracts:Initialize()
+        if not ok then Addon:Print(actionErr) end
+    end
     self.initialized = true; return true
 end
 

@@ -44,11 +44,25 @@ local function ValidateScope(scope)
     return nil, "invalid-scope"
 end
 
-local function ResolveCharacters(scope)
+local function ResolveCharacters(scope, identityOnly)
     local core = Addon.Core
     if scope == nil then
         local current = core.Characters:GetCurrent()
         return current and { current } or {}
+    end
+    -- Explicit goal scopes need directory identity, never unrelated domains.
+    -- Preserve the existing Items API behavior for clients before API v11.
+    if identityOnly and scope.mode == "characters" and core.CheckAPIVersion and core:CheckAPIVersion(11)
+        and core.HasCapability and core:HasCapability("character-identity", 1) then
+        local result, seen = {}, {}
+        for _, id in ipairs(scope.characterIDs) do
+            if not seen[id] then
+                seen[id] = true
+                local character = core.Characters:Get(id, { identityOnly = true })
+                if character then result[#result + 1] = character end
+            end
+        end
+        return result
     end
     local all = scope.mode == "characters" and (core.Characters.GetAllCached and core.Characters:GetAllCached() or core.Characters:GetAll())
         or core.AccountView:GetVisibleCharacters()
@@ -259,7 +273,7 @@ function Items:Query(options)
     local records, coverage, totals = {}, {}, {
         totalQuantity = 0, physicalQuantity = 0, listedQuantity = 0, externalQuantity = 0, bySource = {},
     }
-    local characters = ResolveCharacters(options.scope)
+    local characters = ResolveCharacters(options.scope, not selectedSources["guild-bank"])
     for _, character in ipairs(characters) do
         for source in pairs(selectedSources) do
             if source ~= "guild-bank" then
@@ -359,6 +373,7 @@ function Items.Events:Unregister(owner, callback)
 end
 
 function Items.Events:Fire(eventName, payload)
+    if Addon.GoalTargets and Addon.GoalTargets.ref then Addon.Core.Contracts:NotifyChanged(Addon.NAME, Addon.GoalTargets.ref, { reason = eventName }) end
     if Items.serviceRef then
         local change = Addon.Copy(payload)
         change.eventName = eventName

@@ -141,9 +141,10 @@ local function GetSummary(characters)
     for _, character in ipairs(characters or {}) do
         local legacyKey = GetLegacyKeyByCharacterID(character.id)
         if HasEligibleSnapshot(legacyKey) then
-            for _, boss in ipairs(YAB.GetBossList()) do
+            for _, boss in ipairs(YAB.GetBossList({ characters = characters })) do
                 total = total + 1
-                if YAB.IsBossKilled(legacyKey, boss.key) then killed = killed + 1 end
+                local progress = YAB.PlannedTargets and YAB.PlannedTargets:GetBossProgress(legacyKey, boss.key)
+                if (progress and progress.state == "completed") or (not progress and YAB.IsBossKilled(legacyKey, boss.key)) then killed = killed + 1 end
             end
         end
     end
@@ -155,12 +156,13 @@ local function GetActions(characters)
     for _, character in ipairs(characters or {}) do
         local legacyKey = GetLegacyKeyByCharacterID(character.id)
         if HasEligibleSnapshot(legacyKey) then
-            for _, boss in ipairs(YAB.GetBossList()) do
+            for _, boss in ipairs(YAB.GetBossList({ characters = characters })) do
                 local status = YAB.GetBossKillStatus(legacyKey, boss.key)
-                if status ~= "killed" and status ~= "loot_locked" then
+                local progress = YAB.PlannedTargets and YAB.PlannedTargets:GetBossProgress(legacyKey, boss.key)
+                if (progress and progress.state == "ready") or (not progress and status ~= "killed" and status ~= "loot_locked") then
                     actions[#actions + 1] = {
                         priority = 3,
-                        title = YAB.GetCharacterLabel(legacyKey, "all"),
+                        title = progress and Core.Characters:FormatName(character, { nameMode = "short", realmMode = "full" }) or YAB.GetCharacterLabel(legacyKey, "all"),
                         text = "可处理：" .. tostring(boss.name),
                     }
                     break
@@ -196,7 +198,7 @@ function Integration:Initialize()
         return nil, "需要 YiboCore API v5。"
     end
 
-    Core:RegisterAddon("YiboAltoBoss", { version = "2.5", requiredAPI = 5 })
+    Core:RegisterAddon("YiboAltoBoss", { version = "2.6", requiredAPI = 5 })
     if Core.CharacterCleanup then
         local cleanupRegistered, cleanupError = RegisterCharacterCleanupOwner()
         if not cleanupRegistered then return nil, cleanupError end
@@ -303,11 +305,16 @@ function Integration:Initialize()
         icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YAB_MinimapIcon",
     })
     if not entry and entryError then return nil, entryError end
+    if YAB.PlannedTargets then
+        local linked, linkError = YAB.PlannedTargets:Initialize()
+        if not linked and linkError ~= "core-version" and Core.Print then Core:Print("首领目标增强未连接：" .. tostring(linkError)) end
+    end
     self.initialized = true
     return true
 end
 
 function YAB.NotifyCorePageChanged()
+    if YAB.PlannedTargets then YAB.PlannedTargets:ScheduleChange() end
     if Core and Core.AccountView then
         -- Refresh only the page currently being viewed.  The lockout page is
         -- an internal tab hosted by AltoBoss; notifying both pages in a row

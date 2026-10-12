@@ -1,5 +1,7 @@
 ## Interface: 50504
-## Title: |cff20e070[Yibo]|r YiboAutoOpen - 自动开包
+## Title: |cff20e070[Yibo]|r YiboAutoOpen - Auto Open
+## Title-zhCN: |cff20e070[Yibo]|r YiboAutoOpen - 自动开包
+## Title-zhTW: |cff20e070[Yibo]|r YiboAutoOpen - 自动开包
 ## Notes: 安全地自动开启账号目录中的容器物品。
 ## Author: YiboSoft
 ## Version: 1.2.2

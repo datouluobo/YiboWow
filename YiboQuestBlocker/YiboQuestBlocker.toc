@@ -1,5 +1,7 @@
 ## Interface: 50504
-## Title: |cff20e070[Yibo]|r YiboQuestBlocker
+## Title: |cff20e070[Yibo]|r YiboQuestBlocker - Quest Blocker
+## Title-zhCN: |cff20e070[Yibo]|r YiboQuestBlocker
+## Title-zhTW: |cff20e070[Yibo]|r YiboQuestBlocker
 ## Notes: 任务屏蔽管理器 - 自动拒绝指定任务
 ## Author: Reasonix
 ## Version: 3.0.2

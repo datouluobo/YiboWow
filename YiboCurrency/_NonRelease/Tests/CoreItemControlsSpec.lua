@@ -74,7 +74,7 @@ C_Container = { GetContainerNumSlots = function(bag) return bag == 0 and 2 or 0 
 function GetCursorInfo() return unpack(cursor or {}) end
 function ClearCursor() clears = clears + 1; cursor = nil end
 YiboCore = { Capabilities = { Register = function() end } }
-dofile("YiboCore/UI/Theme.lua")
+dofile("YiboCore/_NonRelease/Tests/LoadLocale.lua"); dofile("YiboCore/UI/Theme.lua")
 dofile("YiboCore/UI/Input.lua")
 dofile("YiboCore/Runtime/ItemResolver.lua")
 local resolverFrame = frames[#frames]
@@ -233,7 +233,7 @@ Core.AccountView, Core.Entry, Core.CurrencyCatalog = {}, {}, {}
 Core.RegisterAddon = function() error("old Core must not register") end
 dofile("YiboCurrency/CoreIntegration.lua")
 local ok, err = YiboCurrency.CoreIntegration:Initialize()
-assert(not ok and err:find("1.6.1") and err:find("v7"))
+assert(not ok and err:find("1.8.0") and err:find("v9"))
 print("CoreItemControlsSpec: passed resolver, input, picker, Currency operations, lifecycle, layout and old-Core checks")
 
 -- The same Core control also supports atomic multi-item confirmation.

@@ -75,6 +75,30 @@ local function RecipeForGroup(group)
     return fallback
 end
 
+local function DecorateProfessionProject(activity, builtGroup, observation, provider, slots, slot, characterID, groupID)
+    local recipe = RecipeForGroup(builtGroup)
+    if recipe then
+        activity.groupID, activity.monitoringGroupID, activity.slot, activity.label = groupID, "profession-cooldown", slot, builtGroup.label or groupID
+        activity.iconKind = recipe.resultItemID and "item" or (recipe.recipeSpellID and "spell" or "texture")
+        activity.icon = recipe.resultItemID or recipe.recipeSpellID or slots[slot].icon
+        activity.fallbackIcon = slots[slot].icon
+        activity.fallbackSpellID = recipe.recipeSpellID
+        activity.order, activity.period = builtGroup.order, builtGroup.resetKind
+        activity.professionID, activity.professionName = builtGroup.professionID, slots[slot].name
+        activity.characterID = characterID
+        activity.action = { castSpellID = recipe.action and recipe.action.castSpellID or recipe.recipeSpellID, selectRecipeID = recipe.action and recipe.action.selectRecipeID, selectSpellID = recipe.action and recipe.action.selectSpellID or recipe.recipeSpellID, actionMode = recipe.action and recipe.action.actionMode or "direct-craft", fallbackMode = recipe.action and recipe.action.fallbackMode or "open-and-select-recipe", actionStatus = recipe.action and recipe.action.actionStatus or "pending-live-action-test", members = {} }
+        for _, member in ipairs(builtGroup.members or {}) do
+            local memberObservation = observation and observation.recipes and observation.recipes[member.recipeSpellID]
+            activity.action.members[#activity.action.members + 1] = { id = member.id, recipeSpellID = member.recipeSpellID, castSpellID = member.action and member.action.castSpellID or member.recipeSpellID, selectRecipeID = member.action and member.action.selectRecipeID, selectSpellID = member.action and member.action.selectSpellID or member.recipeSpellID, actionMode = member.action and member.action.actionMode or activity.action.actionMode, fallbackMode = member.action and member.action.fallbackMode or activity.action.fallbackMode, actionStatus = member.action and member.action.actionStatus or "pending-live-action-test", learned = memberObservation and memberObservation.learned, craftable = memberObservation and memberObservation.craftable, readyAt = memberObservation and memberObservation.readyAt, order = member.order or 999 }
+        end
+        local catalogActivity = Addon.Catalog.activities[builtGroup.activityID]
+        activity.sourceExpansion = catalogActivity and catalogActivity.sourceExpansion or recipe.introducedIn
+        activity.catalogPending = recipe.trackCooldown == false or recipe.recipeSpellID == nil
+        activity.observedAt = (observation and observation.observedAt) or (provider and provider.lastSuccessAt)
+    end
+    return activity
+end
+
 local function ProjectPriority(project)
     local priority = { ["ready-to-turn-in"] = 1, ["in-progress"] = 1, actionable = 2, estimated = 3, cooldown = 4, ["skill-insufficient"] = 5, unknown = 6 }
     return priority[project.state] or 99
@@ -94,11 +118,11 @@ local function SortDailyProjects(left, right)
     return SortProjects(left, right)
 end
 
-local function BuildFarmProject(characterID, now)
+local function BuildFarmProject(characterID, now, explicit)
     local provider = Addon.Providers.Registry:Get("farm-operation-observation")
     local day, eligibility, definition
     if provider then day, definition = provider:GetCurrentDay(characterID, now) end
-    if not definition or not MonitoringItemEnabled("farm", definition.id, "activity", definition.defaultMode) then return nil, false end
+    if not definition or (not explicit and not MonitoringItemEnabled("farm", definition.id, "activity", definition.defaultMode)) then return nil, false end
     local operations = day and day.operations or {}
     local kinds = {}
     for _, operation in ipairs(operations) do kinds[operation.kind] = true end
@@ -137,11 +161,11 @@ local function BuildFarmProject(characterID, now)
     }, true
 end
 
-local function BuildNomiProject(characterID, now)
+local function BuildNomiProject(characterID, now, explicit)
     local provider = Addon.Providers.Registry:Get("daily-quest")
     local day, definition
     if provider then day, definition = provider:GetCurrentDay(characterID, now) end
-    if not definition or not MonitoringItemEnabled("nomi", definition.id, "activity", definition.defaultMode) then return nil, false end
+    if not definition or (not explicit and not MonitoringItemEnabled("nomi", definition.id, "activity", definition.defaultMode)) then return nil, false end
     -- A historical Nomi completion establishes access to the repeatable
     -- content. Once the server day changes, that proof is enough to reset the
     -- group to actionable; the exact rotating lesson is still filled in when
@@ -171,16 +195,15 @@ local function BuildNomiProject(characterID, now)
     }, true
 end
 
-local function BuildCookingProject(characterID, characterLevel, now)
+local function BuildCookingProject(characterID, characterLevel, now, currentCharacterID, explicit)
     local provider = Addon.Providers.Registry:Get("daily-quest")
     local definition = provider and provider:GetCookingDefinition()
-    if not definition or not MonitoringItemEnabled("cooking-daily", definition.id, "activity", definition.defaultMode) then return nil, false end
+    if not definition or (not explicit and not MonitoringItemEnabled("cooking-daily", definition.id, "activity", definition.defaultMode)) then return nil, false end
     if (tonumber(characterLevel) or 0) < 90 then return nil, true end
     local day = provider:GetCurrentCookingDay(characterID, now)
     local previousDay = (not day or day.state == "unknown") and provider.GetLatestExpiredCookingDay
         and provider:GetLatestExpiredCookingDay(characterID, now) or nil
-    local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
-    local isCurrentCharacter = current and current.id == characterID
+    local isCurrentCharacter = currentCharacterID ~= nil and currentCharacterID == characterID
     local observedState = day and day.state
     local state = observedState and observedState ~= "unknown" and observedState
         or (previousDay and "actionable" or (isCurrentCharacter and "actionable" or "unknown"))
@@ -208,8 +231,8 @@ local function BuildCookingProject(characterID, characterLevel, now)
     }, true
 end
 
-local function BuildLegacyDailyProject(characterID, definition, monitoringGroupID, now)
-    if not MonitoringItemEnabled(monitoringGroupID, definition.id, "activity", definition.defaultMode) then return nil end
+local function BuildLegacyDailyProject(characterID, definition, monitoringGroupID, now, currentCharacterID, explicit)
+    if not explicit and not MonitoringItemEnabled(monitoringGroupID, definition.id, "activity", definition.defaultMode) then return nil end
     local provider = Addon.Providers.Registry:Get("daily-quest")
     local day = provider and provider:GetCurrentActivityDay(characterID, definition.id, now)
     -- Legacy daily rotations have no tracked prerequisite, but a completely
@@ -217,8 +240,7 @@ local function BuildLegacyDailyProject(characterID, definition, monitoringGroupI
     -- A prior server-day record is the evidence that this activity is tracked.
     local previousDay = (not day or day.state == "unknown") and provider and provider.GetLatestExpiredActivityDay
         and provider:GetLatestExpiredActivityDay(characterID, definition.id, now) or nil
-    local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
-    local isCurrentCharacter = current and current.id == characterID
+    local isCurrentCharacter = currentCharacterID ~= nil and currentCharacterID == characterID
     local observedState = day and day.state
     local state = observedState and observedState ~= "unknown" and observedState
         or (previousDay and "actionable" or (isCurrentCharacter and "actionable" or "unknown"))
@@ -283,13 +305,17 @@ function Snapshot:Build()
     if Addon.Settings and type(Addon.Settings.IsMonitoringGroupEnabled) == "function" and Addon.Settings:IsMonitoringGroupEnabled("darkmoon-faire") then
         nextTransitionAt = Addon.Model.Schedule:NextResetAt(now, 0)
     end
-    local characters = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetAll() or {}
+    local characters = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetAll({ identityOnly = true }) or {}
+    -- Identity is constant for this build; do not deep-copy the current Core
+    -- record once per character and daily activity.
+    local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent({ identityOnly = true })
+    local currentCharacterID = current and current.id
     for _, coreCharacter in ipairs(characters) do
         local characterID, slots = coreCharacter.id, ProfessionSlots(coreCharacter.id)
         local stored = (Addon.db.byCharacter or {})[characterID] or {}
         local farmProject, farmEnabled = BuildFarmProject(characterID, now)
         local nomiProject, nomiEnabled = BuildNomiProject(characterID, now)
-        local cookingProject, cookingEnabled = BuildCookingProject(characterID, coreCharacter.level, now)
+        local cookingProject, cookingEnabled = BuildCookingProject(characterID, coreCharacter.level, now, currentCharacterID)
         local specialProjects, specialEnabled = BuildSpecialProjects(characterID, slots, now)
         if farmProject and farmProject.nextResetAt and farmProject.nextResetAt > now
             and (not nextTransitionAt or farmProject.nextResetAt < nextTransitionAt) then
@@ -315,32 +341,16 @@ function Snapshot:Build()
                     local slot
                     for index = 1, 2 do if slots[index] and slots[index].id == tonumber(builtGroup.professionID) then slot = index; break end end
                     local activity = Addon.Model.State:Evaluate(builtGroup, observation, value.builtAt, slot and slots[slot].skillLevel)
-                    -- Core's profession domain is the source of ownership.
-                    -- As soon as it confirms a matching profession, project
-                    -- the verified group as actionable. Opening the profession
-                    -- window only supplies a cooldown override.
+                    -- Core owns profession identity; the source state model
+                    -- owns cooldown observations and reset-derived estimates.
                     if slot and activity.state ~= "locked" then
-                        local recipe = RecipeForGroup(builtGroup)
-                        if recipe then
-                            activity.groupID, activity.monitoringGroupID, activity.slot, activity.label = groupID, "profession-cooldown", slot, builtGroup.label or groupID
-                            activity.iconKind = recipe.resultItemID and "item" or (recipe.recipeSpellID and "spell" or "texture")
-                            activity.icon = recipe.resultItemID or recipe.recipeSpellID or slots[slot].icon
-                            activity.fallbackIcon = slots[slot].icon
-                            activity.fallbackSpellID = recipe.recipeSpellID
-                            activity.order, activity.period = builtGroup.order, builtGroup.resetKind
-                            activity.professionID, activity.professionName = builtGroup.professionID, slots[slot].name
-                            activity.characterID = characterID
-                            activity.action = { castSpellID = recipe.action and recipe.action.castSpellID or recipe.recipeSpellID, selectRecipeID = recipe.action and recipe.action.selectRecipeID, selectSpellID = recipe.action and recipe.action.selectSpellID or recipe.recipeSpellID, actionMode = recipe.action and recipe.action.actionMode or "direct-craft", fallbackMode = recipe.action and recipe.action.fallbackMode or "open-and-select-recipe", actionStatus = recipe.action and recipe.action.actionStatus or "pending-live-action-test", members = {} }
-                            for _, member in ipairs(builtGroup.members or {}) do
-                                local memberObservation = observation and observation.recipes and observation.recipes[member.recipeSpellID]
-                                activity.action.members[#activity.action.members + 1] = { id = member.id, recipeSpellID = member.recipeSpellID, castSpellID = member.action and member.action.castSpellID or member.recipeSpellID, selectRecipeID = member.action and member.action.selectRecipeID, selectSpellID = member.action and member.action.selectSpellID or member.recipeSpellID, actionMode = member.action and member.action.actionMode or activity.action.actionMode, fallbackMode = member.action and member.action.fallbackMode or activity.action.fallbackMode, actionStatus = member.action and member.action.actionStatus or "pending-live-action-test", learned = memberObservation and memberObservation.learned, craftable = memberObservation and memberObservation.craftable, readyAt = memberObservation and memberObservation.readyAt, order = member.order or 999 }
-                            end
-                            local catalogActivity = Addon.Catalog.activities[builtGroup.activityID]
-                            activity.sourceExpansion = catalogActivity and catalogActivity.sourceExpansion or recipe.introducedIn
-                            activity.catalogPending = recipe.trackCooldown == false or recipe.recipeSpellID == nil
-                            activity.observedAt = (observation and observation.observedAt) or (provider and provider.lastSuccessAt)
+                        if RecipeForGroup(builtGroup) then
+                            DecorateProfessionProject(activity, builtGroup, observation, provider, slots, slot, characterID, groupID)
                             character.activities[groupID] = activity
-                            if activity.state == "cooldown" then
+                            -- A confirmed zero cooldown also expires at the
+                            -- source's daily boundary. Refresh both Todo and
+                            -- its public work projection at that boundary.
+                            if activity.state == "cooldown" or (builtGroup.resetKind == "daily-07" and observation) then
                                 local transitionAt = activity.readyAt
                                 if builtGroup.resetKind == "daily-07" then
                                     transitionAt = Addon.Model.Schedule:NextResetAt(value.builtAt, builtGroup.resetHour)
@@ -392,7 +402,7 @@ function Snapshot:Build()
                             end
                         end
                         if definition and hasRequiredProfession and definition.members and definition.id ~= "mop.halfhill.cooking-daily" then
-                            local project = BuildLegacyDailyProject(characterID, definition, monitoringGroupID, now)
+                            local project = BuildLegacyDailyProject(characterID, definition, monitoringGroupID, now, currentCharacterID)
                             if project then projects[#projects + 1] = project end
                         end
                     end
@@ -410,3 +420,45 @@ function Snapshot:Build()
 end
 
 function Snapshot:GetCharacter(id) return self:Build().characters[id] end
+
+-- Exact goal queries bypass display/monitoring preferences and never build the
+-- account snapshot. They only evaluate the requested object and character.
+function Snapshot:BuildTarget(characterID, groupID)
+    local now = Addon:Now()
+    local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
+    local currentID = current and current.id
+    local group = Addon.Catalog.groups[groupID]
+    if group then
+        local built, slots = BuildGroup(groupID), ProfessionSlots(characterID)
+        local provider = Addon.Database:GetProvider(characterID, "profession-cooldown", false)
+        local observation = provider and provider.observations and provider.observations[groupID]
+        local skill
+        for _, slot in pairs(slots or {}) do if slot and slot.id == tonumber(group.professionID) then skill = slot.skillLevel end end
+        local activity = Addon.Model.State:Evaluate(built, observation, now, skill)
+        local slot
+        for index = 1, 2 do if slots and slots[index] and slots[index].id == tonumber(built.professionID) then slot = index; break end end
+        -- Catalog display metadata remains available before profession facts.
+        local displaySlots = slots or {}
+        slot = slot or 1
+        displaySlots[slot] = displaySlots[slot] or {}
+        DecorateProfessionProject(activity, built, observation, provider, displaySlots, slot, characterID, groupID)
+        return { activities = { [groupID] = activity } }
+    end
+    local project
+    if groupID == "mop.nomi" then project = BuildNomiProject(characterID, now, true)
+    elseif Addon.Catalog.dailyActivities[groupID] then
+        local definition = Addon.Catalog.dailyActivities[groupID]
+        if groupID == "mop.halfhill.cooking-daily" then
+            local c = Addon.Core.Characters:Get(characterID, { identityOnly = true })
+            project = BuildCookingProject(characterID, c and c.level, now, currentID, true)
+        else project = BuildLegacyDailyProject(characterID, definition, "explicit", now, currentID, true) end
+    elseif Addon.Catalog.specialActivities and Addon.Catalog.specialActivities[groupID] then
+        local provider = Addon.Providers.Registry:Get("special-activity")
+        project = provider and provider:GetTargetProject(characterID, Addon.Catalog.specialActivities[groupID], now)
+    end
+    if not project then
+        local farm = BuildFarmProject(characterID, now, true)
+        if farm and farm.groupID == groupID then project = farm end
+    end
+    return { nomiProjects = project and { project } or {}, monitoringProjects = { explicit = project and { project } or {} } }
+end

@@ -18,6 +18,5 @@ function Addon:CreateSettingsPanel(parent, context)
   local down=panel.monitorDown[index] or Theme:CreateButton(panel,28,"↓","secondary");panel.monitorDown[index]=down;down:ClearAllPoints();down:SetPoint("LEFT",up,"RIGHT",4,0);down:SetState(index<#list and "default" or "disabled");down:SetScript("OnClick",function() if index<#list then list[index],list[index+1]=list[index+1],list[index];(context.refreshPanel or context.notifyPageChanged)() end end);down:Show();y=y+30
  end
  for index=#list+1,#panel.monitorRows do panel.monitorRows[index]:Hide();panel.monitorUp[index]:Hide();panel.monitorDown[index]:Hide() end
- local note=panel.monitorNote or Theme:CreateText(panel,Theme.Font.assist,Theme.Colors.muted,"LEFT");panel.monitorNote=note;note:ClearAllPoints();note:SetPoint("TOPLEFT",panel,"TOPLEFT",0,-y);note:SetText("星标可在主矩阵中快速添加；此处按当前顺序显示并可移除。");y=y+24
  panel:SetHeight(y);return y
 end

@@ -5,11 +5,12 @@ local ICON = "Interface\\AddOns\\YiboCurrency\\Media\\YiboCurrencyIcon-v1"
 
 function Integration:Initialize()
     if self.initialized then return true end
-    if not (Core and Core.CheckAPIVersion and Core:CheckAPIVersion(7) and Core.AccountView and Core.Entry and Core.CurrencyCatalog
+    if not (Core and Core.CheckAPIVersion and Core:CheckAPIVersion(9) and Core.Contracts and Core.HasCapability and Core:HasCapability("business-services", 1)
+        and Core.AccountView and Core.Entry and Core.CurrencyCatalog
         and Core.ItemResolver and Core.CreateItemPicker and Core.ItemConfirmation and Core.UITheme and Core.UITheme.CreateInput) then
-        return nil, "请升级到 YiboCore 1.6.1 或更新版本（API v7）；货币管家未初始化。"
+        return nil, "请升级到 YiboCore 1.8.0 或更新版本（API v9）；货币管家未初始化。"
     end
-    local addon, err = Core:RegisterAddon(Addon.NAME, { version = Addon.VERSION, requiredAPI = 7 })
+    local addon, err = Core:RegisterAddon(Addon.NAME, { version = Addon.VERSION, requiredAPI = 9 })
     if not addon then return nil, err end
     Addon:EnsureDB(); Addon:RegisterCatalogWithCore()
     local page, pageError = Core.AccountView:RegisterPage(Addon.NAME, {
@@ -48,16 +49,16 @@ function Integration:Initialize()
     local entry, entryError = Core.Entry:RegisterBusinessEntry(Addon.NAME, { id = "ycu", brokerName = "YiboCurrency", pageID = PAGE_ID, text = "[Yibo] 货币总览", icon = ICON, defaultMode = "none" })
     if not entry then return nil, entryError end
     Core.Events:Register("DATA_DOMAIN_UPDATED", Addon, function(_, payload) if payload.domainID == "economy" or payload.domainID == "economy-items" then Addon:NotifyChanged() end end)
-    local vault = _G.YiboVault and _G.YiboVault.Items
-    if vault and vault.Events and type(vault.Events.Register) == "function" then
-        vault.Events:Register(Addon, function(eventName)
-            if eventName == "VAULT_ITEMS_CHANGED" or eventName == "VAULT_PERSONAL_COUNTS_READY" then Addon:NotifyChanged() end
+    for _, event in ipairs({ "BUSINESS_CONTRACT_REGISTERED", "BUSINESS_CONTRACT_UNREGISTERED", "BUSINESS_CONTRACT_CHANGED" }) do
+        Core.Events:Register(event, Addon, function(_, descriptor)
+            if descriptor.name == "vault.items" then Addon:NotifyChanged() end
         end)
     end
+    if Addon.GoalTargets then Addon.GoalTargets:Initialize() end
     self.initialized = true; return true
 end
-function Addon:NotifyChanged() if Core and Core.AccountView then Core.AccountView:NotifyPageChanged(PAGE_ID) end end
+function Addon:NotifyChanged() if self.GoalTargets and self.GoalTargets.ref then local db = self:EnsureDB(); db.goalRevision = (db.goalRevision or 0) + 1; Core.Contracts:NotifyChanged(self.NAME, self.GoalTargets.ref, { reason = "currency-changed" }) end; if Core and Core.AccountView then Core.AccountView:NotifyPageChanged(PAGE_ID) end end
 function Addon:OpenAccountPage()
-    if not Integration.initialized then Addon:Print("请升级到 YiboCore 1.6.1 或更新版本（API v7），并重新加载界面。"); return end
+    if not Integration.initialized then Addon:Print("请升级到 YiboCore 1.8.0 或更新版本（API v9），并重新加载界面。"); return end
     Core.AccountView:Toggle(PAGE_ID)
 end

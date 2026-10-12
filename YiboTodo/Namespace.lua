@@ -3,8 +3,8 @@ local ADDON_NAME = ...
 local Addon = _G.YiboTodo or {}
 _G.YiboTodo = Addon
 Addon.NAME = ADDON_NAME or "YiboTodo"
-Addon.VERSION = "1.1.1"
-Addon.REQUIRED_CORE_API = 5
+Addon.VERSION = "1.2.0"
+Addon.REQUIRED_CORE_API = 11
 Addon.CATALOG_VERSION = 16
 Addon.RULESET_ID = "mop-classic-50504"
 Addon.Catalog = Addon.Catalog or { activities = {}, groups = {}, recipes = {}, rulesets = {}, farmOperations = {}, dailyActivities = {}, specialActivities = {}, monitoringGroups = {} }
@@ -28,6 +28,7 @@ end
 
 function Addon:NotifyChanged(immediate, refreshTarget)
     if self.Snapshot then self.Snapshot:Invalidate() end
+    if self.ActionContracts then self.ActionContracts:Changed() end
     -- A completed direct craft affects exactly one visible icon.  Update that
     -- control in place instead of rebuilding the whole account matrix.
     if refreshTarget and self.AccountPage and self.AccountPage.RefreshProjectIcon

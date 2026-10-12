@@ -111,8 +111,8 @@ local function GetRecord(charKey, boss, create)
     local character = characters and characters[charKey]
     if not character and create and charKey == (YAB.GetCurrentCharKey and YAB.GetCurrentCharKey()) then character = CurrentCharacter(true) end
     if not character then return nil end
-    character.holidayBosses = character.holidayBosses or {}
-    local records = character.holidayBosses[boss.key]
+    if create then character.holidayBosses = character.holidayBosses or {} end
+    local records = character.holidayBosses and character.holidayBosses[boss.key]
     if not records and create then records = {}; character.holidayBosses[boss.key] = records end
     return records and records[DayKey(boss)]
 end
@@ -122,6 +122,7 @@ local function WriteRecord(boss, source)
     if not character then return false end
     character.holidayBosses = character.holidayBosses or {}
     local records = character.holidayBosses[boss.key] or {}; character.holidayBosses[boss.key] = records
+    if records[DayKey(boss)] and records[DayKey(boss)].completed then return false end
     records[DayKey(boss)] = { completed = true, source = source, completedAt = Now(), observedAt = Now() }
     return true
 end
@@ -167,6 +168,41 @@ function Holiday:GetStatus(charKey, ref)
     return "unobserved"
 end
 
+-- Task goals remain independent of the manual display toggle.
+function Holiday:GetTargetSnapshot(charKey, ref)
+    local boss = self:GetBoss(ref)
+    if not boss then return nil end
+    local now, day = Now(), date("*t", Now())
+    day.hour, day.min, day.sec = boss.resetHour, 0, 0
+    local boundary = time(day)
+    if boundary <= now then day.day = day.day + 1; boundary = time(day) end
+    for _, spec in pairs(boss.activeWindow or {}) do
+        local eventAt = time({ year = date("*t", now).year, month = spec.month, day = spec.day, hour = spec.hour or 0, min = 0, sec = 0 })
+        if eventAt and eventAt > now then boundary = math.min(boundary, eventAt) end
+    end
+    local open = IsCalendarOpen(boss)
+    return { open = open, availability = not IsWithinActiveWindow(boss) and "closed" or (open and "open" or "unknown"), cycleKey = DayKey(boss), nextResetAt = boundary,
+        record = GetRecord(charKey, boss, false) }
+end
+
+function Holiday:ObservePlanned(ref)
+    local boss = self:GetBoss(ref)
+    if not boss or not IsCalendarOpen(boss) then return end
+    local query = C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted or IsQuestFlaggedCompleted
+    if type(query) ~= "function" or type(GetLFGDungeonRewards) ~= "function" then return end
+    local questOK, questDone = pcall(query, boss.questID)
+    local rewardOK, rewardDone = pcall(GetLFGDungeonRewards, boss.lfgDungeonID)
+    if not questOK or not rewardOK then return end
+    if questDone or rewardDone then return WriteRecord(boss, questDone and "quest" or "lfg-reward") end
+    local character = CurrentCharacter(true)
+    if not character then return end
+    character.holidayBosses = character.holidayBosses or {}
+    character.holidayBosses[boss.key] = character.holidayBosses[boss.key] or {}
+    local records, key = character.holidayBosses[boss.key], DayKey(boss)
+    if not records[key] then records[key] = { observedAt = Now() }; return true end
+    return false
+end
+
 function Holiday:ObserveCurrent()
     local changed = false
     for _, boss in ipairs(self:GetActiveBosses()) do
@@ -178,8 +214,7 @@ function Holiday:ObserveCurrent()
                 changed = WriteRecord(boss, questCompleted and "quest" or "lfg-reward") or changed
             end
         elseif record and not record.completed then
-            record.observedAt = Now()
-            changed = true
+            -- Re-observing the same daily state is not a business change.
         else
             local character = CurrentCharacter(true)
             character.holidayBosses = character.holidayBosses or {}
@@ -429,17 +464,30 @@ function Holiday:GetQueueState(ref)
     return { state = "ready", roles = roles }
 end
 
+local function ConfirmQueueChanges(boss, previous)
+    local state = previous.state .. ":" .. tostring(previous.reason)
+    local function Check()
+        local current = Holiday:GetQueueState(boss)
+        local key = current.state .. ":" .. tostring(current.reason)
+        if key ~= state then
+            state = key
+            if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+        end
+    end
+    Check()
+    if C_Timer and type(C_Timer.After) == "function" then
+        C_Timer.After(0.05, Check)
+        C_Timer.After(0.25, Check)
+    end
+end
+
 function Holiday:ToggleQueue(ref)
     local boss = self:GetBoss(ref)
     local queue = self:GetQueueState(boss)
     if queue.state == "queued" then
         if type(LeaveLFG) == "function" then
             LeaveLFG(LE_LFG_CATEGORY_LFD)
-            if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
-            if C_Timer and type(C_Timer.After) == "function" then
-                C_Timer.After(0.05, function() if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end end)
-                C_Timer.After(0.25, function() if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end end)
-            end
+            ConfirmQueueChanges(boss, queue)
             return true, "已取消排队。"
         end
         return false, "客户端不支持取消该队列。"
@@ -448,10 +496,6 @@ function Holiday:ToggleQueue(ref)
     if type(LFDQueueFrame_SetType) == "function" then LFDQueueFrame_SetType(boss.lfgDungeonID) end
     if type(LFG_JoinDungeon) ~= "function" then return false, "客户端不支持地下城查找器排队。" end
     LFG_JoinDungeon(LE_LFG_CATEGORY_LFD, boss.lfgDungeonID, _G.LFDDungeonList, _G.LFDHiddenByCollapseList)
-    if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
-    if C_Timer and type(C_Timer.After) == "function" then
-        C_Timer.After(0.05, function() if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end end)
-        C_Timer.After(0.25, function() if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end end)
-    end
+    ConfirmQueueChanges(boss, queue)
     return true, "已加入节日副本队列。"
 end

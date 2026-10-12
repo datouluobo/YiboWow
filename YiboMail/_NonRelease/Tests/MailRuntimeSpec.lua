@@ -71,7 +71,9 @@ local capabilities = api:GetCapabilities(); capabilities["mail-items.query"] = 9
 assert(api:GetAPIVersion() == 1 and api:HasCapability("mail-items.query", 1) and not api:HasCapability("missing", 1))
 local revision = api:GetRevision(); now = now + 1
 scanner:Schedule(); Flush()
-assert(api:GetRevision() == revision and #notifications == 1 and refreshes >= 2, "unchanged scans refresh UI without publishing")
+assert(api:GetRevision() == revision + 2 and #notifications == 3 and refreshes >= 2, "scheduled rescan publishes invalidation and recovery")
+revision = api:GetRevision(); now = now + 1; assert(scanner:Scan())
+assert(api:GetRevision() == revision and #notifications == 3, "unchanged live scans refresh without publishing")
 assert(api:Query({ includeStale = false }).quantity == 9)
 local entries = addon.ViewModel:GetMails({ characters = { a } }, {})
 assert(not entries[1].mail.openedByUser and not entries[2].mail.openedByUser)
@@ -222,3 +224,41 @@ scanner.open, scanner.lastError = false, 'test-error'
 assert(api:GetState('A').status == 'error')
 assert(api:GetState('other').status == 'not-yet-scanned')
 print('PASS: mailbox status avoids redundant Core copies and preserves live, stale and per-character error states')
+
+-- Opening requests server data; a pending NPC letter can arrive after the
+-- initial empty cache without another MAIL_INBOX_UPDATE being delivered.
+scanner.lastError, timers = nil, {}
+shown, inbox, total = true, {}, 0
+local requested, delivered = 0, false
+HasNewMail = function() return true end
+CheckInbox = function()
+    requested = requested + 1
+    if requested == 2 then
+        local npc = Mail('NPC gift', { Item(69213, 1, 1) })
+        npc.sender = 'Malfurion'
+        inbox, total, delivered = { npc }, 1, true
+    end
+end
+scanner:OnEvent('MAIL_SHOW'); Flush()
+assert(requested == 1 and api:GetState('A').status == 'known-empty')
+local function RunRetry()
+    for i, timer in ipairs(timers) do
+        if timer[1] == 1 then table.remove(timers, i); timer[2](); Flush(); return true end
+    end
+end
+assert(RunRetry() and delivered)
+local npcEntries = addon.ViewModel:GetMails({ characters = { a } }, {})
+assert(#npcEntries == 1 and npcEntries[1].mail.sender == 'Malfurion' and npcEntries[1].actionable)
+assert(scanner:ReadEntry(npcEntries[1]))
+assert(RunRetry() and requested == 2, 'Resolved retries must not request inbox data again')
+scanner:OnEvent('UPDATE_PENDING_MAIL'); assert(requested == 3); Flush()
+scanner:Close(); while RunRetry() do end
+assert(requested == 3, 'Closing cancels pending retries')
+-- Permanent unread arrival signals must not produce an endless request loop.
+inbox, total, timers = {}, 0, {}
+CheckInbox = function() requested = requested + 1 end
+scanner:OnEvent('MAIL_SHOW'); Flush()
+while RunRetry() do end
+assert(requested == 7, 'One opening request plus three bounded retries')
+CheckInbox, HasNewMail = nil, nil
+print('PASS: server inbox request; delayed NPC gift display and action validation; arrival refresh; resolved/closed/bounded retries')

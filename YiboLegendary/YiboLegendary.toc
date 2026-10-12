@@ -1,5 +1,7 @@
 ## Interface: 50504
-## Title: |cff20e070[Yibo]|r YiboLegendary - 传说之路
+## Title: |cff20e070[Yibo]|r YiboLegendary - Legendary Progress Tracker
+## Title-zhCN: |cff20e070[Yibo]|r YiboLegendary - 传说之路
+## Title-zhTW: |cff20e070[Yibo]|r YiboLegendary - 传说之路
 ## Notes: MoP Classic 传说物品获取进度管理。
 ## Author: YiboSoft
 ## Version: 2.1.0
@@ -13,5 +15,6 @@ Bootstrap.lua
 Data.lua
 Catalog.lua
 Model.lua
+GoalTargets.lua
 Probe.lua
 UI.lua

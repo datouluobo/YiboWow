@@ -19,7 +19,9 @@ end
 function Schedule:CurrentResetAt(now, hour)
     now, hour = tonumber(now) or Addon:Now(), tonumber(hour) or 7
     local currentHour, currentMinute = self:RealmClock(now)
-    local todayStart = now - currentHour * 3600 - currentMinute * 60
+    -- GetGameTime has minute precision. Without removing the seconds,
+    -- the same daily boundary drifts on every quest-log observation.
+    local todayStart = now - now % 60 - currentHour * 3600 - currentMinute * 60
     local resetAt = todayStart + hour * 3600
     if now < resetAt then resetAt = resetAt - 86400 end
     return resetAt

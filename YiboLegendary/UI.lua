@@ -451,6 +451,10 @@ function UI:RefreshMain(context)
         local evidenceText = state and state.evidence and ({ real="自动检测", projection="测试投影", manual="玩家确认" })[state.evidence.source] or "—"
         row.tooltipLines = { { text=CharacterLabel(item.character, context), color={red,green,blue} }, { text="状态：" .. meta.label, color=meta.color }, { text="检查点：" .. (state and state.stageLabel or Theme.StatusText.unsynced), color=C.text }, { text="进度：" .. (state and state.progressText or "—"), color=C.muted }, { text="证据：" .. evidenceText, color=C.muted }, { text="下一步：" .. (state and state.nextAction or "登录该角色后同步。"), color=C.muted } }
         if item.snapshot and tonumber(item.snapshot.updatedAt) and tonumber(item.snapshot.updatedAt) > 0 and date then row.tooltipLines[#row.tooltipLines + 1] = { kind="pair", label="最近同步", value=date("%m-%d %H:%M", item.snapshot.updatedAt) } end
+        if Addon.GoalTargets and Addon.GoalTargets.ref then
+            Addon.GoalTargets:Bind(row, target.id, item.character.id, nil)
+            row.tooltipLines = Addon.Core.BusinessItemActions:TooltipLines(row.tooltipLines, row)
+        end
         Theme:BindTooltip(row, nil, row.tooltipLines)
         local offset = CELL_INSET
         for _, key in ipairs({ "character", "stage", "progress", "action" }) do local cell = row.cells[key]; cell:ClearAllPoints(); local iconOffset = key == "character" and (16 + Theme.Table.iconTextGap) or 0; cell:SetPoint("LEFT", offset + iconOffset, 0); cell:SetWidth(tracks[key] - CELL_PADDING - iconOffset); offset = offset + tracks[key] end
@@ -588,5 +592,5 @@ function UI:Initialize()
 end
 function UI:Refresh(reason)
     self._lastRefreshReason = reason or "unspecified"
-    if Addon.Core.AccountView then Addon.Core.AccountView:RefreshPage() end
+    if Addon.Core.AccountView then Addon.Core.AccountView:NotifyPageChanged("legendary") end
 end

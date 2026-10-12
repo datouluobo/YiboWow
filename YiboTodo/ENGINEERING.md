@@ -81,3 +81,11 @@ Todo 的单一业务设置页保存父监控组和子项覆盖；这是业务投
 事件窗口活动可以生成文本单元格投影：日历同步中与窗口外状态不生成可行动图标，也不计入待办。账号级活动只保存一份账号记录；若需要在每行显示，其状态必须由同一记录和当前行角色计算，不得复制成角色完成数据。
 
 矩阵相关回归必须额外验证：所有启用子项直接可见；父组全选、部分监控、关闭、恢复和新子项继承正确；待交状态在快照、待办统计、排序和全部入口一致；主窗口与预览的角色、监控组、项目、状态与顺序完全一致。
+
+### 行动中心每日准备投影
+
+专业 Model.State 的 estimated 由 ActionTodo 投影为 preparation，reason 明示预计与核对材料，confidence 仍为 estimated。freshness known 仅说明本周期派生状态有效，observedAt 不改变；不能据此完成目标，GoalTargets 只将 confirmed cooldown 转 completed。专业未知或未观察仍 unknown。账号快照和精确查询共享 DecorateProfessionProject，避免图标与动作描述分叉。成功制作事件的同周期日冷却优先于滞后零冷却扫描，跨重置恢复正常扫描语义。
+
+已观察到 learned/craftable 但 cooldownKnown=false 时，State 返回 actionable/confidence=profession；ActionTodo 同步投影 preparation，并提示确认冷却与材料。不得将无数值冷却视为已完成，也不改变未观察过的 unknown。
+
+SpecialActivity:GetTargetProject 用于自有精确目标查询：已确认关闭的 event-weekly 返回 active/not-applicable 派生任务，known 时效到下一来源边界；主表继续 GetProject 隐藏关闭项目。活动规则仍由 Todo 所有，Task 不另算活动日期。

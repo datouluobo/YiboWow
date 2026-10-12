@@ -143,6 +143,14 @@ local function StatusCell(parent, index, x, y, column, charKey)
     cell.text:SetAllPoints()
     cell.text:SetText(label)
     Theme:BindTooltip(cell, column.name, YAB.GetLockoutTooltip(charKey, column))
+    if _G.YiboCore.BusinessItemActions then _G.YiboCore.BusinessItemActions:Unbind(cell) end
+    if YAB.GoalTargets and YAB.GoalTargets.ref then
+        local definition
+        for _, d in ipairs(YAB.TargetCatalog:Query().targets) do
+            if d.kind == "instance" and (d.id == column.plannedCatalogID or d.mapID and d.mapID == column.instanceID) then definition = d; break end
+        end
+        if definition then YAB.GoalTargets:Bind(cell, charKey, { catalogID = definition.id, difficultyID = column.plannedDifficultyID or column.difficultyID, scope = "all", encounterIDs = {} }) end
+    end
 end
 
 function YAB.CreateLockoutsPage(parent)

@@ -61,7 +61,7 @@ function OpenMail_Update()
 end
 function ShowUIPanel(control) control:Show() end
 function HideUIPanel(control) control:Hide() end
-YiboCore = { Capabilities = { Register = function() end } }; dofile("YiboCore/UI/Theme.lua"); dofile("YiboCore/UI/Input.lua")
+YiboCore = { Capabilities = { Register = function() end } }; dofile("YiboCore/_NonRelease/Tests/LoadLocale.lua"); dofile("YiboCore/UI/Theme.lua"); dofile("YiboCore/UI/Input.lua")
 dofile('YiboCore/Runtime/ItemResolver.lua')
 -- Keep the real dropdown/buttons; scroll geometry is outside this regression.
 function YiboCore.UITheme:CreateScrollFrame(parent) return Frame(parent) end
@@ -288,3 +288,61 @@ assert(realExpiry(Addon.ViewModel, { expiresAtEstimate = expiryNow + 2 * 3600 })
 assert(realExpiry(Addon.ViewModel, {}) == '期限未知')
 assert(realExpiry(Addon.ViewModel, { expiresAtEstimate = expiryNow - 1 }) == '到期待核实')
 print('PASS: expiry numbers without approximation prefix; hourly, unknown and expired states retained')
+
+panel.options.search = 'missing'
+Addon.Scanner.validAt, Addon.Scanner.lastError = nil, nil
+native:RefreshInbox(); assert(panel.rows[1].title:GetText() == '正在更新邮箱')
+Addon.Scanner.lastError = 'header-unavailable'
+native:RefreshInbox(); assert(panel.rows[1].title:GetText() == '邮件读取失败')
+Addon.Scanner.validAt, Addon.Scanner.lastError = 1000, nil
+native:RefreshInbox(); assert(panel.rows[1].title:GetText() == '暂无匹配邮件')
+HasNewMail, GetInboxNumItems = function() return true end, function() return 0, 0 end
+native:RefreshInbox(); assert(panel.rows[1].title:GetText() == '正在更新邮箱')
+print('PASS: pending/failed mailbox reads are distinct from completed empty search results')
+
+-- A visible mailbox list acknowledges mail through the native read API.
+local autoReads, marked = {}, 0
+local autoOpen, validEntry, textOK = true, true, true
+Addon.Scanner.IsOpen = function() return autoOpen end
+Addon.Scanner.ReadEntry = function(_, candidate) return validEntry and candidate.mail or nil end
+GetInboxText = function(index)
+    if not textOK then error('text pending') end
+    autoReads[#autoReads + 1] = index
+end
+Addon.MarkMailOpened = function(_, candidate)
+    marked = marked + 1; candidate.mail.openedByUser = true; return true
+end
+HasNewMail = function() return false end
+panel.mode, panel.options.search = 'mail', ''
+mail.wasRead, mail.openedByUser = false, false
+native:RefreshInbox()
+assert(#autoReads == 1 and marked == 1 and mail.wasRead and mail.openedByUser)
+native:RefreshInbox(); assert(#autoReads == 1 and marked == 1, 'Repeated renders do not reread acknowledged mail')
+mail.wasRead, mail.openedByUser = false, false
+panel.options.search = 'missing'; native:RefreshInbox()
+assert(#autoReads == 1 and not mail.openedByUser, 'Filtered mail remains unread')
+panel.options.search = ''; autoOpen = false; native:RefreshInbox()
+assert(#autoReads == 1, 'Closed mailbox snapshots remain unread')
+autoOpen, validEntry = true, false; native:RefreshInbox()
+assert(#autoReads == 1 and not mail.openedByUser, 'Changed indexes must be revalidated before reading')
+validEntry, textOK = true, false; native:RefreshInbox()
+assert(marked == 1 and not mail.wasRead and not mail.openedByUser, 'Failed native reads cannot acknowledge mail')
+Addon.Queue.message, Addon.Queue.completed, Addon.Queue.actions = '收取中', 0, {}
+textOK, Addon.Queue.state = true, 'running'; native:RefreshInbox()
+assert(#autoReads == 1, 'Active collection defers automatic reads')
+Addon.Queue.state = 'idle'
+panel.mode = 'items'
+Addon.ViewModel.GetGroups = function()
+    return { { item = first, quantity = 2, sources = { { entry = entry }, { entry = entry } } } }
+end
+native:RefreshInbox()
+assert(#autoReads == 2 and marked == 2 and mail.wasRead and mail.openedByUser, 'Attachment sources acknowledge each mail once')
+mail.wasRead, mail.openedByUser = false, false
+Addon.ViewModel.GetGroups = function() return {} end
+native:RefreshInbox()
+assert(#autoReads == 2 and not mail.openedByUser, 'Mail without a displayed attachment source is not acknowledged')
+panel.mode = 'mail'; local autoAttachments = mail.attachments; mail.attachments = {}
+native:RefreshInbox()
+assert(#autoReads == 3 and mail.wasRead and mail.openedByUser, 'Text-only letters are acknowledged by the inbox list')
+mail.attachments = autoAttachments
+print('PASS: inbox/attachment automatic native read; deduplication; filters; closed/changed/failed/collecting guards; text-only mail')

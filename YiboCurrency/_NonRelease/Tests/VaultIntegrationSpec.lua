@@ -21,6 +21,13 @@ YiboCore = {
     end },
 }
 YiboCurrency = {}
+YiboCurrency.NAME = 'YiboCurrency'
+YiboCore.Defaults = { Copy = function(_, value) local function copy(v) if type(v) ~= 'table' then return v end local r = {}; for k,x in pairs(v) do r[k] = copy(x) end return r end return copy(value) end }
+YiboCore.Capabilities = { Register = function() end }
+YiboCore.Registry = { Get = function() return true end }
+YiboCore.Print = function() end
+dofile('YiboCore/Runtime/Events.lua')
+dofile('YiboCore/Runtime/Contracts.lua')
 dofile("YiboCurrency/Data.lua")
 dofile("YiboCurrency/VaultIntegration.lua")
 local entry = { source = "item", itemID = 72988, verified = "implemented" }
@@ -36,6 +43,7 @@ YiboVault.db = { byCharacter = {}, byGuild = {}, revision = 0 }
 dofile("YiboVault/Store.lua")
 dofile("YiboVault/Items.lua")
 dofile("YiboVault/PersonalCounts.lua")
+assert(YiboVault.Items:RegisterService())
 local function Record(source, quantity, id, owner)
     return { sourceID = id, source = source, sourceClass = YiboVault.SourceClasses[source],
         itemID = 72988, itemKey = "item:72988", variantKey = "item:72988",

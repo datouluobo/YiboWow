@@ -1,0 +1,35 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r YiboTaskHub - Action Hub
+## Title-zhCN: |cff20e070[Yibo]|r YiboTaskHub - 行动中心
+## Title-zhTW: |cff20e070[Yibo]|r YiboTaskHub - 行动中心
+## Notes-zhCN: 汇总业务来源任务，查看当前角色行动与其他角色今日工作。
+## Author: YiboSoft
+## Version: 0.5.1
+## RequiredDeps: YiboCore
+## Group: YiboCore
+## IconTexture: Interface\AddOns\YiboTaskHub\Media\YiboTaskHubIcon-v1
+## LoadOnDemand: 0
+## SavedVariables: YiboTaskHubDB
+
+Locales\zh.lua
+Locales\en.lua
+Namespace.lua
+Database.lua
+Goals.lua
+BossTargets.lua
+Snapshot.lua
+Contracts.lua
+GoalContracts.lua
+Presentation.lua
+TaskActions.lua
+Preview.lua
+AccountPage.lua
+TargetsPage.lua
+GoalEditor.lua
+TargetTabs.lua
+HUD.lua
+Reminders.lua
+Displays.lua
+Settings.lua
+CoreIntegration.lua
+Bootstrap.lua

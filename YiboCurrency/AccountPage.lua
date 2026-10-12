@@ -244,6 +244,17 @@ local function Layout(parent, context, columns, rows, preview, projection)
             Addon:Print((enabling and "已加入悬停监控：" or "已取消悬停监控：") .. rowEntry.title)
             Addon:NotifyChanged()
         end)
+        row.goalHits = row.goalHits or {}
+        for _, hit in pairs(row.goalHits) do hit:Hide(); if Core.BusinessItemActions then Core.BusinessItemActions:Unbind(hit) end end
+        if Addon.GoalTargets and Addon.GoalTargets.ref and not preview and (entry.source == "currency" or entry.source == "money") then
+            for ci, column in ipairs(columns) do if column.character or column.kind == "currency" then
+                local hit = row.goalHits[ci] or CreateFrame("Button", nil, row); row.goalHits[ci] = hit
+                hit:ClearAllPoints(); hit:SetAllPoints(row.cells[ci]); hit:SetFrameLevel(row:GetFrameLevel() + 2)
+                Addon.GoalTargets:Bind(hit, entry.id, column.character and column.character.id, row:GetScript("OnClick"))
+                hit:SetScript("OnEnter", function() AddEntryTooltip(row); GameTooltip:AddLine(Core.BusinessItemActions:GestureLabel() .. "：添加到行动中心；＋：添加菜单"); GameTooltip:Show() end)
+                hit:SetScript("OnLeave", function() GameTooltip:Hide() end); hit:Show()
+            end end
+        end
         row:Show(); y = y + ROW_HEIGHT
     end
     for index = #rows + 1, #parent.currencyRows do parent.currencyRows[index]:Hide() end

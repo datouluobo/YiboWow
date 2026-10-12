@@ -291,6 +291,7 @@ function Addon:RegisterWithCore()
     end
     local page, pageError = self.AccountPage:Register()
     if not page then self:Print(pageError or "账号页面注册失败。"); return false end
+    if self.GoalTargets then self.GoalTargets:Initialize() end
     local service, serviceError = self.Items:RegisterService()
     if not service then self:Print(serviceError); return false end
     return true

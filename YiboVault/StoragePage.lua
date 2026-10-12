@@ -176,6 +176,7 @@ local function CreateItemCell(page, index)
         elseif GameTooltip.SetItemByID then GameTooltip:SetItemByID(control.item.itemID) end
         GameTooltip:Show()
         if Addon.Tooltip then Addon.Tooltip:Append(GameTooltip, control.item.itemID) end
+        if Addon.GoalTargets and Addon.GoalTargets.ref then GameTooltip:AddLine(Addon.Core.BusinessItemActions:GestureLabel() .. "：添加到行动中心；＋：添加菜单"); GameTooltip:Show() end
     end)
     cell:SetScript("OnLeave", function(control)
         control:SetBackdropBorderColor(unpack(control.borderColor or Colors.lineSoft))
@@ -361,6 +362,7 @@ end
 function StoragePage:UpdateItemCell(page, cell, record, index)
     local item = record and record.itemID and record or nil
     local emptySlots = record and record.emptySlots
+    if Addon.GoalTargets then Addon.GoalTargets:Bind(cell, item) end
     cell.item = item
     cell.hiddenGuildKey = item and item.source == "guild-bank" and page.selectedHiddenGuildKey or nil
     cell.icon:SetShown(item ~= nil)

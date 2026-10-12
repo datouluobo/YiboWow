@@ -66,6 +66,10 @@ function Addon:Print(message)
 end
 
 function Addon:NotifyChanged()
+    if self.GoalTargets and self.GoalTargets.ref then
+        local db = self:EnsureDB(); db.goalRevision = (db.goalRevision or 0) + 1
+        self.Core.Contracts:NotifyChanged(self.NAME, self.GoalTargets.ref, { reason = "equipment-changed" })
+    end
     if self.Core and self.Core.AccountView then
         self.Core.AccountView:NotifyPageChanged(self.PAGE_ID)
     end

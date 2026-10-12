@@ -59,7 +59,9 @@ assert(addon.Frame.events.MAIL_INBOX_UPDATE and addon.Frame.events.MAIL_SUCCESS)
 assert(addon.Frame.events.MAIL_SEND_SUCCESS and addon.Frame.events.MAIL_SEND_INFO_UPDATE)
 SlashCmdList.YIBOMAIL("")
 SlashCmdList.YIBOMAIL("status")
-assert(#messages == 1 and messages[1]:find("not-yet-scanned", 1, true))
+assert(#messages == 3 and messages[1]:find("API v12", 1, true) and messages[2]:find("API v11", 1, true) and messages[3]:find("not-yet-scanned", 1, true))
+assert(addon.GoalTargets.ref == nil and addon.initialized) -- New enhancement stops explicitly; base remains available.
+assert(addon.ActionTodo.ref == nil and addon.initialized) -- Optional Provider stops on API9; base mail remains available.
 assert(addon.Core.AccountView)
 addon.Frame.scripts.OnEvent(addon.Frame, "MAIL_CLOSED")
 addon.Frame.scripts.OnEvent(addon.Frame, "PLAYER_REGEN_ENABLED")

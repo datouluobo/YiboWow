@@ -34,7 +34,7 @@ end
 
 local function QueueProfessionScan(refreshTarget)
     if not Addon.initialized then return end
-    local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+    local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent({ identityOnly = true })
     local characterID = current and current.id
     if not characterID then return end
     local pending = scanQueuedByCharacter[characterID]
@@ -46,7 +46,7 @@ local function QueueProfessionScan(refreshTarget)
     scanQueuedByCharacter[characterID] = pending
     local function Scan()
         scanQueuedByCharacter[characterID] = nil
-        local active = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+        local active = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent({ identityOnly = true })
         if not active or active.id ~= characterID then return end
         -- A successful spellcast already wrote the authoritative daily
         -- lockout.  Do not immediately overwrite it with the target client's
@@ -80,7 +80,7 @@ frame:SetScript("OnEvent", function(_, event, ...)
             local provider = Addon.Providers.Registry:Get("daily-quest")
             if provider then provider:QueueObserve() end
             local special = Addon.Providers.Registry:Get("special-activity")
-            local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+            local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent({ identityOnly = true })
             if special and current then special:ObserveCharacter(current.id) end
             Addon:NotifyChanged()
         end
@@ -94,7 +94,7 @@ frame:SetScript("OnEvent", function(_, event, ...)
             if changed then Addon:NotifyChanged() end
         end
         if IsTrackedProfessionSpell(spellID) then
-            local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+            local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent({ identityOnly = true })
             local characterID = current and current.id
             local pending = characterID and scanQueuedByCharacter[characterID]
             local cooldowns = Addon.Providers.Registry:Get("profession-cooldown")
@@ -115,25 +115,25 @@ frame:SetScript("OnEvent", function(_, event, ...)
         local provider = Addon.Providers.Registry:Get("daily-quest")
         if provider then provider:QueueObserve() end
         local special = Addon.Providers.Registry:Get("special-activity")
-        local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+        local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent({ identityOnly = true })
         if special and current then special:ObserveCharacter(current.id) end
     elseif event == "QUEST_TURNED_IN" and Addon.initialized then
-        local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+        local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent({ identityOnly = true })
         local provider = Addon.Providers.Registry:Get("daily-quest")
         if provider and current then provider:RecordTurnIn(current.id, ...) end
         local special = Addon.Providers.Registry:Get("special-activity")
         if special and current then special:RecordTurnIn(current.id, ...) end
         if provider then provider:QueueObserve() end
     elseif event == "CHAT_MSG_LOOT" and Addon.initialized then
-        local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+        local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent({ identityOnly = true })
         local special = Addon.Providers.Registry:Get("special-activity")
         if special and current then special:RecordLoot(current.id, ...) end
     elseif event == "GOSSIP_SHOW" and Addon.initialized then
-        local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+        local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent({ identityOnly = true })
         local provider = Addon.Providers.Registry:Get("daily-quest")
         if provider and current then provider:ObserveNomiGossip(current.id) end
     elseif event == "PLAYER_TARGET_CHANGED" and Addon.initialized then
-        local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+        local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent({ identityOnly = true })
         local provider = Addon.Providers.Registry:Get("daily-quest")
         if provider and current then provider:ObserveTargetCompletion(current.id) end
     end

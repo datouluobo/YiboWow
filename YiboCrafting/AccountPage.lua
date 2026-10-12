@@ -1,4 +1,8 @@
 local Addon, Core = _G.YiboCrafting, _G.YiboCore
+local function L(key, ...)
+    local fullKey = "UI." .. key
+    return Core.Locale:Get("YiboCrafting", fullKey, ...)
+end
 local Theme = Core.UITheme
 local Page = {}
 Addon.AccountPage = Page
@@ -7,34 +11,42 @@ local ID = "crafting"
 local C = Theme.Colors
 local H = Theme.Table.rowHeight
 local professions = {
-    [129] = "急救", [164] = "锻造", [165] = "制皮", [171] = "炼金术",
-    [185] = "烹饪", [186] = "采矿", [197] = "裁缝",
-    [202] = "工程学", [333] = "附魔", [755] = "珠宝加工", [773] = "铭文",
+    [129] = "PROFESSION_129", [164] = "PROFESSION_164", [165] = "PROFESSION_165", [171] = "PROFESSION_171",
+    [185] = "PROFESSION_185", [186] = "PROFESSION_186", [197] = "PROFESSION_197",
+    [202] = "PROFESSION_202", [333] = "PROFESSION_333", [755] = "PROFESSION_755", [773] = "PROFESSION_773", [960] = "PROFESSION_960",
 }
 local EXCLUDED_PROFESSIONS = { [182] = true, [393] = true, [356] = true, [794] = true }
 local PROFESSION_ORDER = {
     [171] = 10, [164] = 20, [333] = 30, [202] = 40,
     [773] = 60, [755] = 70, [165] = 80, [186] = 90,
-    [197] = 110, [185] = 200, [129] = 210,
+    [197] = 110, [960] = 120, [185] = 200, [129] = 210,
 }
 local UNKNOWN_CATEGORY = "unknown"
-local function CategoryKey(professionID, category)
-    return tostring(professionID) .. ":" .. (category or UNKNOWN_CATEGORY)
+local function CategoryKey(professionID, category, categoryID)
+    return tostring(professionID) .. ":" .. tostring(categoryID or category or UNKNOWN_CATEGORY)
 end
-local requestedItemNames = {}
+local ProductInfoReady
+local cachedProductNames = {}
+
+-- GetItemInfo can initiate a server request. Filtering thousands of recipes
+-- must never call it for uncached items or subscribe one request per recipe.
+local function CachedProductName(itemID)
+    local cached = cachedProductNames[itemID]
+    if cached ~= nil then return cached or nil end
+    cachedProductNames[itemID] = false
+    if C_Item and type(C_Item.IsItemDataCachedByID) == "function" and C_Item.IsItemDataCachedByID(itemID) then
+        local info = Core.ItemResolver:GetInfo(itemID)
+        local name = info and info.name
+        cachedProductNames[itemID] = name or false
+        return name
+    end
+end
 
 local function ProductName(itemID)
     if not itemID then return nil end
-    local name
-    if type(GetItemInfo) == "function" then name = GetItemInfo(itemID) end
-    if not name and C_Item and type(C_Item.GetItemNameByID) == "function" then
-        name = C_Item.GetItemNameByID(itemID)
-    end
-    if name then return name end
-    if not requestedItemNames[itemID] and C_Item and type(C_Item.RequestLoadItemDataByID) == "function" then
-        requestedItemNames[itemID] = true
-        C_Item.RequestLoadItemDataByID(itemID)
-    end
+    local info = Core.ItemResolver:GetInfo(itemID)
+    local name = info and info.name
+    if name then cachedProductNames[itemID] = name; return name end
 end
 
 local function Label(parent, size, color, justify)
@@ -54,9 +66,9 @@ local function Panel(parent)
 end
 
 local function CharacterName(character, context)
-    local name = character.name or "未知角色"
-    if context.scope == "all" and character.realm then return name .. "-" .. character.realm end
-    return name
+    return Core.Characters:FormatName({
+        id = character.id, name = character.name or L("UNKNOWN_CHARACTER"), realm = character.realm or L("UNKNOWN_REALM"),
+    }, { nameMode = "original", realmMode = context.scope == "all" and "full" or "omit" })
 end
 
 local function ColoredCharacterName(character, context)
@@ -74,16 +86,16 @@ end
 local function MatrixCharacterWidth()
     -- Status cells fit their two-character values. Long names wrap in headers
     -- instead of widening every character column.
-    return math.ceil(Theme:MeasureText(Theme.Font.assist, "字字字字") + Theme.Table.cellInset * 2 + Theme.Table.iconTextRasterTolerance)
+    return math.ceil(Theme:MeasureText(Theme.Font.assist, L("NAME_WIDTH")) + Theme.Table.cellInset * 2 + Theme.Table.iconTextRasterTolerance)
 end
 
 local function MatrixCharacterMinWidth()
     -- Two-character status values stay readable; long character names wrap.
-    return math.ceil(Theme:MeasureText(Theme.Font.assist, "字字字") + Theme.Table.cellInset * 2 + Theme.Table.iconTextRasterTolerance)
+    return math.ceil(Theme:MeasureText(Theme.Font.assist, L("NAME_MIN_WIDTH")) + Theme.Table.cellInset * 2 + Theme.Table.iconTextRasterTolerance)
 end
 
 local function ProfessionName(id, names)
-    return names[id] or professions[id] or ("专业 " .. tostring(id))
+    return names[id] or (professions[id] and L(professions[id])) or L("PROFESSION_ID", id)
 end
 
 local function CharacterHasProfession(characterID, professionID)
@@ -95,7 +107,18 @@ local function CharacterHasProfession(characterID, professionID)
         return false
     end
     local stored = Addon.Store:GetProfession(characterID, professionID)
-    return stored and next(stored.learnedRecipeIDs or {}) ~= nil or false
+    return stored and (next(stored.learnedRecipeIDs or {}) ~= nil or stored.recipeSpellSnapshot ~= nil) or false
+end
+
+function Page:CharactersForProfession(characters, professionID)
+    if not professionID then return characters or {} end
+    local visible = {}
+    for _, character in ipairs(characters or {}) do
+        if CharacterHasProfession(character.id, professionID) then
+            visible[#visible + 1] = character
+        end
+    end
+    return visible
 end
 
 local function ItemIcon(itemID)
@@ -117,7 +140,7 @@ end
 local function RecipeInfo(id)
     local name = GetSpellInfo and GetSpellInfo(id)
     local icon = GetSpellTexture and GetSpellTexture(id)
-    return name or ("配方 #" .. tostring(id)), icon
+    return name or L("RECIPE_ID", id), icon
 end
 
 function Page:Snapshot(context)
@@ -131,13 +154,35 @@ function Page:Snapshot(context)
             if profession.id and not EXCLUDED_PROFESSIONS[profession.id] then ids[profession.id] = true end
         end
     end
-    -- Observed recipes form an account-wide provisional index. Scope changes
-    -- only the character columns, never whether a recorded recipe exists.
+    -- The offline directory supplies evidence-backed candidate rows. Its
+    -- evidence labels do not prove availability or completeness.
+    local catalog = Addon.RecipeCatalog
+    for professionID, recipes in pairs(catalog and catalog.professions or {}) do
+        if not EXCLUDED_PROFESSIONS[professionID] then
+            ids[professionID] = true
+            for recipeID, data in pairs(recipes) do
+                local key = professionID .. ":" .. recipeID
+                local name, spellIcon = RecipeInfo(recipeID)
+                local outputItemID = #data.outputItemIDs == 1 and data.outputItemIDs[1] or nil
+                records[key] = {
+                    key = key, id = recipeID, professionID = professionID,
+                    name = name, spellIcon = spellIcon, outputItemID = outputItemID,
+                    outputItemIDs = data.outputItemIDs, outputItemNames = data.outputItemNames,
+                    categoryIDs = data.categoryIDs,
+                    evidence = data.evidence, directoryStatus = catalog.status,
+                    category = Addon.CategoryCatalog:Get(professionID, recipeID),
+                }
+            end
+        end
+    end
+    -- Merge positive character facts, including historical spells outside the
+    -- provisional directory. Scope changes only the character columns.
     for _, stored in pairs(Addon.Store.db.characters) do
         for professionID, profession in pairs(stored.professions or {}) do
             if not EXCLUDED_PROFESSIONS[professionID] then
                 for recipeID in pairs(profession.learnedRecipeIDs or {}) do
-                    if type(recipeID) == "number" and type(professionID) == "number" then
+                    if type(recipeID) == "number" and type(professionID) == "number"
+                        and not (catalog and catalog.boundaryActions and catalog.boundaryActions[recipeID]) then
                         local key = professionID .. ":" .. recipeID
                         if not records[key] then
                             local name, spellIcon = RecipeInfo(recipeID)
@@ -154,6 +199,7 @@ function Page:Snapshot(context)
                         if category and not records[key].category then records[key].category = category end
                         if outputItemID and not records[key].outputItemID then
                             records[key].outputItemID = outputItemID
+                            records[key].outputItemIDs = { outputItemID }
                         end
                     end
                 end
@@ -162,6 +208,7 @@ function Page:Snapshot(context)
     end
     local list, professionList = {}, {}
     for _, entry in pairs(records) do
+        entry.categoryID = Addon.CategoryCatalog and Addon.CategoryCatalog.GetID and Addon.CategoryCatalog:GetID(entry.professionID, entry.id)
         entry.icon = ItemIcon(entry.outputItemID) or entry.spellIcon
         list[#list + 1] = entry
     end
@@ -197,30 +244,37 @@ function Page:Filtered(entries, characters, state)
     local result, query = {}, (state.search or ""):lower()
     for _, entry in ipairs(entries) do
         local matchesProfession = not state.profession or entry.professionID == state.profession
-        local matchesCategory = not state.category or CategoryKey(entry.professionID, entry.category) == state.category
+        local matchesCategory = not state.category or CategoryKey(entry.professionID, entry.category, entry.categoryID) == state.category
         if matchesProfession and matchesCategory then
             local matchesName = query == "" or entry.name:lower():find(query, 1, true)
                 or tostring(entry.id):find(query, 1, true)
-                or (entry.outputItemID and tostring(entry.outputItemID):find(query, 1, true))
-            if not matchesName and entry.outputItemID then
-                local productName = ProductName(entry.outputItemID)
-                matchesName = productName and productName:lower():find(query, 1, true)
+            for _, itemID in ipairs(entry.outputItemIDs or {}) do
+                if not matchesName and tostring(itemID):find(query, 1, true) then matchesName = true end
+                if not matchesName then
+                    local productName = (entry.outputItemNames and entry.outputItemNames[itemID])
+                        or CachedProductName(itemID)
+                    matchesName = productName and productName:lower():find(query, 1, true)
+                end
             end
             if matchesName then
-                local matchesCharacter = not state.character or Addon.Store:GetRecipeState(state.character, entry.professionID, entry.id) == "learned"
+                local function HasCharacterState(wanted)
+                    for _, character in ipairs(characters) do
+                        if (not state.character or character.id == state.character)
+                            and Addon.Store:GetRecipeState(character.id, entry.professionID, entry.id) == wanted then
+                            return true
+                        end
+                    end
+                    return false
+                end
                 local matchesStatus = true
                 if state.status == "learned" then
-                    matchesStatus = false
-                    for _, character in ipairs(characters) do
-                        if Addon.Store:GetRecipeState(character.id, entry.professionID, entry.id) == "learned" then matchesStatus = true; break end
-                    end
+                    matchesStatus = HasCharacterState("learned")
                 elseif state.status == "unknown" then
-                    matchesStatus = false
-                    for _, character in ipairs(characters) do
-                        if Addon.Store:GetRecipeState(character.id, entry.professionID, entry.id) ~= "learned" then matchesStatus = true; break end
-                    end
+                    matchesStatus = HasCharacterState("unknown")
+                elseif state.status == "unlearned" then
+                    matchesStatus = HasCharacterState("unlearned")
                 end
-                if matchesCharacter and matchesStatus then result[#result + 1] = entry end
+                if matchesStatus then result[#result + 1] = entry end
             end
         end
     end
@@ -334,7 +388,7 @@ function Page:Create(parent)
     parent.crafting = {}
     local ui = parent.crafting
     ui.toolbar = CreateFrame("Frame", nil, parent)
-    ui.search = CreateFrame("EditBox", nil, ui.toolbar, "InputBoxTemplate")
+    ui.search = Theme:CreateInput(ui.toolbar, { maxLetters = 80, height = 28 })
     ui.search:SetAutoFocus(false)
     ui.search:SetMaxLetters(80)
     ui.search:SetHeight(28)
@@ -366,7 +420,7 @@ function Page:Create(parent)
         if ui.search:IsShown() then Page:RenderResults(parent) end
     end })
     ui.searchHint = Label(ui.toolbar, Theme.Font.assist, C.muted)
-    ui.searchHint:SetText("搜索配方、产物或 ID")
+    ui.searchHint:SetText(L("SEARCH"))
     ui.searchHint:SetPoint("LEFT", ui.search, "LEFT", 6, 0)
     ui.search:SetScript("OnEditFocusGained", function() ui.searchHint:Hide() end)
     ui.search:SetScript("OnEditFocusLost", function(self) ui.searchHint:SetShown(self:GetText() == "") end)
@@ -374,8 +428,8 @@ function Page:Create(parent)
     ui.category = Theme:CreateDropdown(ui.toolbar, 110)
     ui.character = Theme:CreateDropdown(ui.toolbar, 120)
     ui.status = Theme:CreateDropdown(ui.toolbar, 110)
-    ui.modeRecipe = Theme:CreateButton(ui.toolbar, 66, "配方", "secondary")
-    ui.modeProfession = Theme:CreateButton(ui.toolbar, 66, "专业", "secondary")
+    ui.modeRecipe = Theme:CreateButton(ui.toolbar, 66, L("RECIPES"), "secondary")
+    ui.modeProfession = Theme:CreateButton(ui.toolbar, 66, L("PROFESSIONS"), "secondary")
     for mode, button in pairs({ recipes = ui.modeRecipe, professions = ui.modeProfession }) do
         button:SetScript("OnClick", function()
             if mode == "professions" and ui.state.professionFilter then
@@ -401,7 +455,7 @@ function Page:Create(parent)
     ui.matrix.empty:SetPoint("CENTER")
     ui.professions = Panel(parent)
     ui.professions.title = Label(ui.professions, Theme.Font.section, C.text)
-    ui.professions.title:SetText("专业")
+    ui.professions.title:SetText(L("PROFESSIONS"))
     ui.professions.scroll = Theme:CreateScrollFrame(ui.professions)
     ui.professions.body = CreateFrame("Frame", nil, ui.professions.scroll)
     ui.professions.scroll:SetScrollChild(ui.professions.body)
@@ -436,18 +490,23 @@ function Page:Create(parent)
     BindVisibleRows(ui.detail)
     ui.detail.empty = Label(ui.detail, Theme.Font.assist, C.muted, "CENTER")
     ui.detail.empty:SetPoint("CENTER", ui.detail.characters, "CENTER")
-    ui.detail.empty:SetText("当前范围没有拥有该专业的角色。")
+    ui.detail.empty:SetText(L("NO_OWNERS"))
     ui.footer = Label(parent, Theme.Font.assist, C.muted)
     ui.rolePagerAnchor = CreateFrame("Frame", nil, parent)
     ui.rolePagerAnchor:SetSize(1, 26)
     ui.state = { search = "" }
+    self.filterState = ui.state
     ui.itemEvents = CreateFrame("Frame")
     ui.itemEvents:RegisterEvent("GET_ITEM_INFO_RECEIVED")
-    ui.itemEvents:SetScript("OnEvent", function(_, _, itemID, success)
-        if requestedItemNames[itemID] then
-            if success then requestedItemNames[itemID] = nil
-            else requestedItemNames[itemID] = "failed" end
-            if success and ui.state.search ~= "" and not ui.pendingItemRefresh then
+    ProductInfoReady = function(_, _, itemID, success)
+        -- Only data relevant to this catalog and newly available matching
+        -- names may refresh the search. Other addons' item events are ignored.
+        if success and Page.catalogItemIDs and Page.catalogItemIDs[itemID] and not cachedProductNames[itemID] then
+            local info = Core.ItemResolver:GetInfo(itemID)
+            local name = info and info.name
+            cachedProductNames[itemID] = name or false
+            local query = (ui.state.search or ""):lower()
+            if name and query ~= "" and name:lower():find(query, 1, true) and not ui.pendingItemRefresh then
                 ui.pendingItemRefresh = true
                 if C_Timer and C_Timer.After then
                     C_Timer.After(0.15, function()
@@ -460,7 +519,8 @@ function Page:Create(parent)
                 end
             end
         end
-    end)
+    end
+    ui.itemEvents:SetScript("OnEvent", ProductInfoReady)
 end
 
 function Page:Layout(parent, context, mode)
@@ -526,7 +586,7 @@ local function RenderSimpleList(panel, entries, selected, width, click)
         local row = Row(panel, index)
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", panel.body, "TOPLEFT", 0, -(index - 1) * 38)
         row:SetSize(width, 38)
-        local fill = selected == entry.id and C.selected or (index % 2 == 0 and C.alternate or C.row)
+        local fill = selected == entry.id and C.selected or (Theme:GetDataRowColor(index))
         row:SetBackdropColor(fill[1], fill[2], fill[3], fill[4])
         row.icon:ClearAllPoints(); row.icon:SetPoint("LEFT", row, "LEFT", 9, 0); row.icon:SetSize(25, 25)
         row.icon:SetTexture(entry.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
@@ -604,8 +664,10 @@ end
 function Page:RenderMatrix(parent, context, entries, names)
     local ui, panel = parent.crafting, parent.crafting.matrix
     local characters = context.characters or {}
+    local showNames = not context.GetFieldVisible or context:GetFieldVisible("recipe-name")
+    local showStates = not context.GetFieldVisible or context:GetFieldVisible("recipe-state")
     local width = math.max(1, ui.matrixWidth - 2)
-    local recipeWidth = math.max(225, Theme:GetIconTextColumnWidth(23, Theme.Font.body, "配方名称", 8))
+    local recipeWidth = math.max(225, Theme:GetIconTextColumnWidth(23, Theme.Font.body, L("RECIPE_NAME"), 8))
     local characterWidth = Core.AccountView:FitRepeatedColumnWidth(
         width, recipeWidth, #characters, MatrixCharacterWidth(), MatrixCharacterMinWidth())
     local shown, pageInfo = Core.AccountView:GetColumnPage(ID, "characters", characters, width, recipeWidth, characterWidth)
@@ -613,24 +675,25 @@ function Page:RenderMatrix(parent, context, entries, names)
     panel.header:ClearAllPoints(); panel.header:SetPoint("TOPLEFT", panel, "TOPLEFT", 1, -1)
     panel.header:SetSize(width, 42)
     panel.header.title:ClearAllPoints(); panel.header.title:SetPoint("LEFT", panel.header, "LEFT", 8, 0)
-    panel.header.title:SetText("配方名称 · 专业")
+    panel.header.title:SetText(L("RECIPE_HEADER"))
     for index, character in ipairs(displayCharacters) do
-        local label = panel.header.cells[index] or Label(panel.header, Theme.Font.assist, C.muted, "CENTER")
-        panel.header.cells[index] = label
-        label:ClearAllPoints(); label:SetPoint("LEFT", panel.header, "LEFT", recipeWidth + (index - 1) * characterWidth, 0)
-        label:SetSize(characterWidth, 40)
-        label:SetWordWrap(true)
-        label:SetText(Core.Characters:GetDisplayName(character, "short") or character.name or "未知角色")
-        label:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:SetText(CharacterName(character, context), 1, 1, 1, true)
-            GameTooltip:Show()
-        end)
-        label:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        label:Show()
+        local header = panel.header.cells[index] or Theme:CreateMatrixHeader(panel.header)
+        panel.header.cells[index] = header
+        header:ClearAllPoints(); header:SetPoint("LEFT", panel.header, "LEFT", recipeWidth + (index - 1) * characterWidth, 0)
+        header:SetWidth(characterWidth)
+        Theme:SetCharacterHeader(header, character, context, { nameMode = "short" })
     end
     for index = #displayCharacters + 1, #panel.header.cells do panel.header.cells[index]:Hide() end
     PositionScroll(panel, 43)
+    if not panel.gutterBound then panel.scroll:BindScrollbarGutter(panel.header); panel.gutterBound = true end
+    panel.currentOutline = panel.currentOutline or Theme:CreateCurrentCharacterOutline(panel)
+    local currentID = Core.Characters:GetCurrentID()
+    local currentX
+    for index, character in ipairs(displayCharacters) do
+        if character.id == currentID then currentX = recipeWidth + (index - 1) * characterWidth end
+    end
+    Theme:UpdateCurrentCharacterColumnOutline(panel.currentOutline, panel.header, panel.scroll,
+        currentX, characterWidth, currentX ~= nil)
     local items, top, lastProfession = {}, 0, nil
     for _, entry in ipairs(entries) do
         if entry.professionID ~= lastProfession then
@@ -652,25 +715,30 @@ function Page:RenderMatrix(parent, context, entries, names)
             row.name:SetWidth(recipeWidth - 18); row.name:SetText(item.name); SetColor(row.name, C.muted)
             for _, cell in ipairs(row.cells) do cell:Hide() end
             if row.nameHit then row.nameHit:Hide() end
+            if Core.BusinessItemActions then Core.BusinessItemActions:Unbind(row) end
+            for _, hit in ipairs(row.goalHits or {}) do hit:Hide() end
             row:SetScript("OnEnter", nil); row:SetScript("OnLeave", nil); row:SetScript("OnClick", nil)
             return
         end
         local entry = item.entry
-        local fill = entry.key == ui.state.selectedRecipe and C.selected or (index % 2 == 0 and C.alternate or C.row)
+        row.goalHits = row.goalHits or {}
+        local fill = entry.key == ui.state.selectedRecipe and C.selected or (Theme:GetDataRowColor(index))
         row:SetBackdropColor(fill[1], fill[2], fill[3], fill[4])
         row.icon:ClearAllPoints(); row.icon:SetPoint("LEFT", row, "LEFT", 7, 0); row.icon:SetSize(21, 21)
         row.icon:SetTexture(entry.icon or "Interface\\Icons\\INV_Misc_QuestionMark"); row.icon:Show()
-        row.name:ClearAllPoints(); row.name:SetPoint("LEFT", row.icon, "RIGHT", 6, 0)
-        row.name:SetWidth(recipeWidth - 36); row.name:SetText(entry.name); SetColor(row.name, C.text)
+        local actionPadding = Addon.GoalTargets and Addon.GoalTargets.ref and 18 or 0
+        row.name:ClearAllPoints(); row.name:SetPoint("LEFT", row.icon, "RIGHT", 6 + actionPadding, 0)
+        row.name:SetWidth(recipeWidth - 36 - 2 * actionPadding); row.name:SetText(entry.name); SetColor(row.name, C.text)
+        row.name:SetShown(showNames); row.icon:SetShown(showNames)
         for cellIndex, character in ipairs(shown) do
             local cell = row.cells[cellIndex] or Label(row, Theme.Font.assist, C.muted, "CENTER")
             row.cells[cellIndex] = cell
             cell:ClearAllPoints(); cell:SetPoint("LEFT", row, "LEFT", recipeWidth + (cellIndex - 1) * characterWidth, 0)
             cell:SetSize(characterWidth, H)
-            local learned = Addon.Store:GetRecipeState(character.id, entry.professionID, entry.id) == "learned"
-            cell:SetText(learned and "已学" or "？")
-            SetColor(cell, learned and C.accent or C.warning)
-            cell:Show()
+            local state = Addon.Store:GetRecipeState(character.id, entry.professionID, entry.id)
+            cell:SetText(state == "learned" and L("LEARNED") or (state == "unlearned" and L("UNLEARNED") or L("UNKNOWN_SYMBOL")))
+            SetColor(cell, state == "learned" and C.accent or (state == "unlearned" and C.muted or C.warning))
+            cell:SetShown(showStates)
         end
         for cellIndex = #shown + 1, #row.cells do row.cells[cellIndex]:Hide() end
         local function SelectRecipe()
@@ -678,25 +746,41 @@ function Page:RenderMatrix(parent, context, entries, names)
             panel.renderVisible(true)
         end
         row:SetScript("OnClick", SelectRecipe)
-        SetRecipeNameHit(row, entry, 34, recipeWidth - 36, SelectRecipe)
+        SetRecipeNameHit(row, entry, 34 + actionPadding, recipeWidth - 36 - actionPadding, SelectRecipe)
         SetProductHit(row, entry, 7, 21, SelectRecipe)
+        row.nameHit:SetShown(showNames); row.iconHit:SetShown(showNames and entry.outputItemID ~= nil)
+        if Addon.GoalTargets and Addon.GoalTargets.ref then
+            Addon.GoalTargets:Bind(row, entry, nil, SelectRecipe, false)
+            Addon.GoalTargets:BindRecipeHits(row, entry)
+            for ci, character in ipairs(shown) do
+                local hit = row.goalHits[ci] or CreateFrame("Button", nil, row); row.goalHits[ci] = hit
+                hit:SetAllPoints(row.cells[ci]); hit:SetFrameLevel(row:GetFrameLevel() + 2)
+                if showStates and Addon.Store:GetRecipeState(character.id, entry.professionID, entry.id) == "learned" then
+                    Addon.GoalTargets:Bind(hit, entry, character.id, SelectRecipe); hit:Show()
+                else Core.BusinessItemActions:Unbind(hit); hit:Hide() end
+            end
+            for ci = #shown + 1, #row.goalHits do row.goalHits[ci]:Hide() end
+        end
     end)
     panel.empty:SetShown(#entries == 0)
     panel.empty:SetWidth(math.max(220, width - 48))
     panel.empty:SetWordWrap(true)
     if #entries == 0 then
         local hasFilter = ui.state.search ~= "" or ui.state.professionFilter or ui.state.category or ui.state.character or ui.state.status
-        panel.empty:SetText(hasFilter and "当前筛选下没有已记录配方。" or "尚无已记录配方\n在拥有专业的角色上打开本人专业窗口后，插件会采集客户端可确认的已学配方。")
+        panel.empty:SetText(hasFilter and L("EMPTY_FILTER") or L("EMPTY_CATALOG"))
     end
-    Core.AccountView:UpdateColumnPager(parent, ID, "characters", #entries > 0 and pageInfo or nil, ui.rolePagerAnchor, "角色")
-    if #characters == 0 then ui.footer:SetText("当前范围没有角色 · 目录覆盖未验证")
-    else ui.footer:SetText("？ = 待确认 · 仅显示客户端确认并缓存的配方；目录未验证，缺少记录不代表未学") end
+    Core.AccountView:UpdateColumnPager(parent, ID, "characters", #entries > 0 and pageInfo or nil, ui.rolePagerAnchor, L("CHARACTERS"))
+    if #characters == 0 then
+        ui.footer:SetText(ui.state.professionFilter
+            and L("NO_CONFIRMED_OWNERS")
+            or L("NO_CHARACTERS"))
+    else ui.footer:SetText(L("STATE_NOTE")) end
 end
 
 function Page:RenderDetail(parent, context, entry, names)
     local detail = parent.crafting.detail
     detail.title:ClearAllPoints(); detail.title:SetPoint("TOPLEFT", detail, "TOPLEFT", 12, -11)
-    detail.title:SetText("配方详情")
+    detail.title:SetText(L("DETAILS"))
     detail.icon:ClearAllPoints(); detail.icon:SetPoint("TOPLEFT", detail, "TOPLEFT", 14, -50)
     detail.icon:SetSize(42, 42)
     detail.iconHit:ClearAllPoints(); detail.iconHit:SetAllPoints(detail.icon)
@@ -713,11 +797,19 @@ function Page:RenderDetail(parent, context, entry, names)
     detail.iconHit:SetShown(entry ~= nil)
     detail.iconHit:SetScript("OnEnter", entry and function(self) Page:ShowItemTooltip(self, entry) end or nil)
     detail.iconHit:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    detail.name:SetText(entry and entry.name or "选择一项配方")
-    detail.meta:SetText(entry and ("专业：" .. ProfessionName(entry.professionID, names)
-        .. "\n分类：" .. (entry.category or "待分类")
-        .. "\n配方 ID：" .. entry.id .. "\n取得状态：未知") or "")
-    detail.note:SetText(entry and "仅能确认已记录角色。缺少完整扫描证据，其余角色保持待确认。" or "从左侧选择专业，再从中间列表选择已记录配方。")
+    if Addon.GoalTargets and Addon.GoalTargets.ref and entry and entry.outputItemID then
+        local enter = detail.iconHit:GetScript("OnEnter")
+        Addon.GoalTargets:Bind(detail.iconHit, entry, nil, nil, true, true)
+        detail.iconHit:SetScript("OnEnter", enter)
+        detail.iconHit:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    elseif Core.BusinessItemActions then Core.BusinessItemActions:Unbind(detail.iconHit) end
+    detail.name:SetText(entry and entry.name or L("SELECT_RECIPE"))
+    detail.meta:SetText(entry and L("DETAIL_META", ProfessionName(entry.professionID, names),
+        entry.category or L("UNCATEGORIZED"), entry.id,
+        L(entry.directoryStatus == "provisional" and "CATALOG_SOURCE" or "CHARACTER_SOURCE")) or "")
+    detail.note:SetText(entry and (entry.directoryStatus == "provisional"
+        and L("DETAIL_NOTE")
+        or L("RECORDED_NOTE")) or L("DETAIL_EMPTY"))
     local width = math.max(1, parent.crafting.detailWidth - 26)
     local recipeKey = entry and entry.key
     if detail.currentRecipeKey ~= recipeKey then
@@ -733,15 +825,15 @@ function Page:RenderDetail(parent, context, entry, names)
     detail.contentWidth = width
     RenderVisibleRows(detail, items, #items * 32, function(row, item, index)
         local character = item.character
-        local fill = index % 2 == 0 and C.alternate or C.row
+        local fill = Theme:GetDataRowColor(index)
         row:SetBackdropColor(fill[1], fill[2], fill[3], fill[4])
         row.icon:Hide(); row.name:ClearAllPoints(); row.name:SetPoint("LEFT", row, "LEFT", 7, 0)
         row.name:SetWidth(math.max(1, width - 95)); row.name:SetText(CharacterName(character, context))
         row.meta:ClearAllPoints(); row.meta:SetPoint("RIGHT", row, "RIGHT", -8, 0)
         row.meta:SetWidth(80)
-        local learned = Addon.Store:GetRecipeState(character.id, entry.professionID, entry.id) == "learned"
-        row.meta:SetText(learned and "已学" or "待确认")
-        SetColor(row.meta, learned and C.accent or C.warning)
+        local state = Addon.Store:GetRecipeState(character.id, entry.professionID, entry.id)
+        row.meta:SetText(state == "learned" and L("LEARNED") or (state == "unlearned" and L("UNLEARNED") or L("UNKNOWN")))
+        SetColor(row.meta, state == "learned" and C.accent or (state == "unlearned" and C.muted or C.warning))
         row:SetScript("OnClick", nil)
     end)
     detail.empty:SetShown(entry ~= nil and #items == 0)
@@ -777,14 +869,14 @@ function Page:RenderProfessionMode(parent, context, entries, professionList, nam
         Core.AccountView:NotifyPageChanged(ID)
     end)
     ui.professions.empty:SetWidth(math.max(110, ui.professionWidth - 20))
-    ui.professions.empty:SetText(ui.state.character and "该角色暂无已同步的专业\n登录该角色后更新专业信息。" or "当前范围没有专业数据。")
+    ui.professions.empty:SetText(ui.state.character and L("SYNC_PROFESSIONS") or L("NO_PROFESSION_DATA"))
     ui.professions.empty:SetShown(#professionRows == 0)
     local selected = {}
     for _, entry in ipairs(entries) do
         if entry.professionID == ui.state.profession then selected[#selected + 1] = entry end
     end
     ui.list.header:ClearAllPoints(); ui.list.header:SetPoint("TOPLEFT", ui.list, "TOPLEFT", 12, -12)
-    ui.list.header:SetText("配方 · 已记录 " .. #selected)
+    ui.list.header:SetText(L("RECIPE_COUNT", #selected))
     ui.list.scroll:ClearAllPoints(); ui.list.scroll:SetPoint("TOPLEFT", ui.list, "TOPLEFT", 1, -42)
     ui.list.scroll:SetPoint("BOTTOMRIGHT", ui.list, "BOTTOMRIGHT", -1, 1)
     local width = math.max(1, ui.listWidth - 2)
@@ -802,12 +894,14 @@ function Page:RenderProfessionMode(parent, context, entries, professionList, nam
     ui.list.contentWidth = width
     RenderVisibleRows(ui.list, items, #selected * 42, function(row, item, index)
         local entry = item.entry
-        local fill = entry.key == ui.state.selectedRecipe and C.selected or (index % 2 == 0 and C.alternate or C.row)
+        row.goalHits = row.goalHits or {}
+        local fill = entry.key == ui.state.selectedRecipe and C.selected or (Theme:GetDataRowColor(index))
         row:SetBackdropColor(fill[1], fill[2], fill[3], fill[4])
         row.icon:ClearAllPoints(); row.icon:SetPoint("LEFT", row, "LEFT", 8, 0); row.icon:SetSize(27, 27)
         row.icon:SetTexture(entry.icon or "Interface\\Icons\\INV_Misc_QuestionMark"); row.icon:Show()
-        row.name:ClearAllPoints(); row.name:SetPoint("LEFT", row.icon, "RIGHT", 8, 0)
-        row.name:SetPoint("RIGHT", row, "RIGHT", -4, 0); row.name:SetText(entry.name); SetColor(row.name, C.text)
+        local actionPadding = Addon.GoalTargets and Addon.GoalTargets.ref and 18 or 0
+        row.name:ClearAllPoints(); row.name:SetPoint("LEFT", row.icon, "RIGHT", 8 + actionPadding, 0)
+        row.name:SetPoint("RIGHT", row, "RIGHT", -4 - actionPadding, 0); row.name:SetText(entry.name); SetColor(row.name, C.text)
         row.meta:Hide()
         local function SelectRecipe()
             ui.state.selectedRecipe = entry.key
@@ -815,23 +909,24 @@ function Page:RenderProfessionMode(parent, context, entries, professionList, nam
             self:RenderDetail(parent, context, entry, names)
         end
         row:SetScript("OnClick", SelectRecipe)
-        SetRecipeNameHit(row, entry, 43, width - 47, SelectRecipe)
+        SetRecipeNameHit(row, entry, 43 + actionPadding, width - 47 - actionPadding, SelectRecipe)
         SetProductHit(row, entry, 8, 27, SelectRecipe)
+        if Addon.GoalTargets and Addon.GoalTargets.ref then Addon.GoalTargets:BindRecipeHits(row, entry) end
     end)
     ui.list.empty:ClearAllPoints(); ui.list.empty:SetPoint("CENTER", ui.list, "CENTER", 0, -12)
     ui.list.empty:SetWidth(math.max(140, width - 32))
     local emptyText = ""
     if #visibleProfessions == 0 then
-        emptyText = ui.state.character and "该角色没有可查看的专业。" or "当前范围没有可查看的专业。"
+        emptyText = ui.state.character and L("NO_CHARACTER_PROFESSIONS") or L("NO_PROFESSIONS")
     elseif #selected == 0 then
         emptyText = #entries == 0
-            and "尚无已记录配方\n在拥有该专业的角色上打开本人专业窗口后，插件会采集可确认的配方。"
-            or "当前专业没有符合筛选条件的已记录配方。"
+            and L("EMPTY_RECORDED")
+            or L("EMPTY_PROFESSION")
     end
     ui.list.empty:SetText(emptyText)
     ui.list.empty:SetShown(#selected == 0)
     self:RenderDetail(parent, context, selectedEntry, names)
-    ui.footer:SetText("仅显示客户端确认并缓存的配方 · 在本人专业窗口展开分类可补齐分类 · 缺少记录不代表未学")
+    ui.footer:SetText(L("FOOTER"))
 end
 
 function Page:RenderResults(parent)
@@ -839,16 +934,36 @@ function Page:RenderResults(parent)
     if not ui or not ui.snapshot then return end
     GameTooltip:Hide()
     local snapshot = ui.snapshot
-    local mode = Addon.Store.db.settings.viewMode == "professions" and "professions" or "recipes"
+    local mode = not snapshot.context.preview and Addon.Store.db.settings.viewMode == "professions" and "professions" or "recipes"
     if ui.renderedSearch ~= ui.state.search then
         ui.matrix.scroll:SetVerticalScroll(0)
         ui.list.scroll:SetVerticalScroll(0)
     end
-    local filtered = self:Filtered(snapshot.entries, snapshot.context.characters or {}, {
+    local context = snapshot.context
+    if mode == "recipes" then
+        local scoped = {}
+        for key, value in pairs(context) do scoped[key] = value end
+        scoped.characters = self:CharactersForProfession(context.characters, ui.state.professionFilter)
+        context = scoped
+    end
+    local filtered = self:Filtered(snapshot.entries, context.characters or {}, {
         search = ui.state.search, profession = mode == "recipes" and ui.state.professionFilter or nil,
         category = ui.state.category, character = ui.state.character, status = ui.state.status,
     })
-    if mode == "recipes" then self:RenderMatrix(parent, snapshot.context, filtered, snapshot.names)
+    if context.preview then
+        local total, subset, used, last = #filtered, {}, 0, nil
+        local budget = math.max(H + 26, math.min(360, context.surfaceAvailableHeight or 360) - 120)
+        for _, entry in ipairs(filtered) do
+            local cost = H + (last ~= entry.professionID and 26 or 0)
+            if used + cost > budget then break end
+            subset[#subset + 1], used, last = entry, used + cost, entry.professionID
+        end
+        self:RenderMatrix(parent, context, subset, snapshot.names)
+        ui.footer:SetText(L("PREVIEW_REMAINDER", #subset, total))
+        ui.renderedSearch = ui.state.search
+        return
+    end
+    if mode == "recipes" then self:RenderMatrix(parent, context, filtered, snapshot.names)
     else self:RenderProfessionMode(parent, snapshot.context, filtered, snapshot.professionList, snapshot.names) end
     ui.renderedSearch = ui.state.search
 end
@@ -857,10 +972,14 @@ function Page:Refresh(parent, context)
     local ui = parent.crafting
     ui.searchGeneration = (ui.searchGeneration or 0) + 1
     local entries, professionList, names = self:Snapshot(context)
-    local mode = Addon.Store.db.settings.viewMode == "professions" and "professions" or "recipes"
+    self.catalogItemIDs = {}
+    for _, entry in ipairs(entries) do
+        for _, itemID in ipairs(entry.outputItemIDs or {}) do self.catalogItemIDs[itemID] = true end
+    end
+    local mode = not context.preview and Addon.Store.db.settings.viewMode == "professions" and "professions" or "recipes"
     ui.modeRecipe:SetState(mode == "recipes" and "selected" or "default")
     ui.modeProfession:SetState(mode == "professions" and "selected" or "default")
-    local professionOptions = { { value = nil, label = "全部专业" } }
+    local professionOptions = { { value = nil, label = L("ALL_PROFESSIONS") } }
     for _, profession in ipairs(professionList) do
         professionOptions[#professionOptions + 1] = { value = profession.id, label = profession.name }
     end
@@ -871,9 +990,11 @@ function Page:Refresh(parent, context)
         if value then ui.state.profession = value; ui.state.selectedRecipe = nil end
         ui.matrix.scroll:SetVerticalScroll(0); Core.AccountView:NotifyPageChanged(ID)
     end)
-    local characterOptions = { { value = nil, label = "全部角色" } }
+    local characterOptions = { { value = nil, label = L("ALL_CHARACTERS") } }
     local selectedCharacterPresent = ui.state.character == nil
-    for _, character in ipairs(context.characters or {}) do
+    local selectableCharacters = self:CharactersForProfession(context.characters,
+        mode == "recipes" and ui.state.professionFilter or nil)
+    for _, character in ipairs(selectableCharacters) do
         if character.id == ui.state.character then selectedCharacterPresent = true end
         characterOptions[#characterOptions + 1] = { value = character.id, label = ColoredCharacterName(character, context) }
     end
@@ -895,7 +1016,7 @@ function Page:Refresh(parent, context)
         ui.matrix.scroll:SetVerticalScroll(0); ui.list.scroll:SetVerticalScroll(0)
         Core.AccountView:NotifyPageChanged(ID)
     end)
-    ui.status:SetOptions({ { value = nil, label = "全部状态" }, { value = "learned", label = "有角色已学" }, { value = "unknown", label = "含待确认" } })
+    ui.status:SetOptions({ { value = nil, label = L("ALL_STATES") }, { value = "learned", label = L("HAS_LEARNED") }, { value = "unlearned", label = L("HAS_UNLEARNED") }, { value = "unknown", label = L("HAS_UNKNOWN") } })
     ui.status:SetValue(ui.state.status)
     ui.status:SetOnValueChanged(function(value)
         ui.state.status = value
@@ -907,13 +1028,13 @@ function Page:Refresh(parent, context)
     ui.snapshot = { context = context, entries = entries, professionList = professionList, names = names }
     self:RenderResults(parent)
     local selectedProfession = mode == "recipes" and ui.state.professionFilter or ui.state.profession
-    local categoryOptions = { { value = nil, label = selectedProfession and "全部分类" or "先选择专业" } }
+    local categoryOptions = { { value = nil, label = selectedProfession and L("ALL_CATEGORIES") or L("SELECT_PROFESSION") } }
     local categoryLabels = {}
     for _, entry in ipairs(entries) do
         if selectedProfession and entry.professionID == selectedProfession then
-            local key = CategoryKey(entry.professionID, entry.category)
+            local key = CategoryKey(entry.professionID, entry.category, entry.categoryID)
             if not categoryLabels[key] then
-                categoryLabels[key] = entry.category or "待分类"
+                categoryLabels[key] = entry.category or L("UNCATEGORIZED")
             end
         end
     end
@@ -942,17 +1063,60 @@ end
 
 function Page:Register()
     local page, err = Core.AccountView:RegisterPage(Addon.NAME, {
-        id = ID, title = "专业制造", order = 50, defaultEnabled = true,
-        previewEnabled = false, autoFitWidth = true,
-        scope = { mode = "realms", allTitle = "所有服务器" },
+        id = ID, title = L("PAGE_TITLE"), order = 50, defaultEnabled = true,
+        previewEnabled = true, autoFitWidth = true,
+        fields = {
+            { id = "recipe-name", title = L("RECIPE_NAME"), defaultVisible = true },
+            { id = "recipe-state", title = L("LEARNING_STATE"), defaultVisible = true },
+        },
+        HasCharacterSnapshot = function(character)
+            local record = Addon.Store.db.characters[character.id]
+            return record and next(record.professions or {}) ~= nil or false
+        end,
+        GetEligibleCharacters = function(characters, context)
+            if not context.preview then return characters end
+            local result = {}
+            for _, character in ipairs(characters) do
+                local record = Addon.Store.db.characters[character.id]
+                if record and next(record.professions or {}) ~= nil then result[#result + 1] = character end
+            end
+            return result
+        end,
+        GetPreviewFields = function() return Core.Defaults:Copy(Addon.Store.db.settings.previewColumns) end,
+        SetPreviewFieldVisible = function(id, shown)
+            if id == "recipe-name" or id == "recipe-state" then
+                Addon.Store.db.settings.previewColumns[id] = shown == true
+                Addon:NotifyPageChanged()
+            end
+        end,
+        settings = {
+            title = L("PAGE_TITLE"), description = L("SETTINGS_DESCRIPTION"),
+            CreateSettingsPanel = function(parent)
+                parent.craftingInfo = parent.craftingInfo or Label(parent, Theme.Font.body, C.text)
+                parent.craftingInfo:SetPoint("TOPLEFT", 12, -12)
+                parent.craftingInfo:SetPoint("TOPRIGHT", -12, -12)
+                parent.craftingInfo:SetWordWrap(true)
+                parent.craftingInfo:SetText(L("SETTINGS_DESCRIPTION"))
+                parent.craftingInfo:SetHeight(80); parent.craftingInfo:Show()
+                parent:SetHeight(104)
+                return parent
+            end,
+        },
+        scope = { mode = "realms", allTitle = L("ALL_REALMS") },
         GetSurfaceMetrics = function(context)
-            local count = #(context.characters or {})
+            local count = #Page:CharactersForProfession(context.characters,
+                Page.filterState and Page.filterState.professionFilter)
             local matrixWidth = 235 + MatrixCharacterWidth() * count
             return {
                 minContentWidth = 760, naturalContentWidth = math.max(760, matrixWidth),
-                minContentHeight = 470, naturalContentHeight = 640,
+                minContentHeight = context.preview and 180 or 470,
+                naturalContentHeight = context.preview and math.min(360, context.surfaceAvailableHeight or 360) or 640,
                 horizontalOverflow = "paginate",
             }
+        end,
+        GetHoverMetrics = function(context)
+            return { minContentWidth = 760, naturalContentWidth = math.max(760, 235 + MatrixCharacterWidth() * #context.characters),
+                minContentHeight = 180, naturalContentHeight = math.min(360, context.surfaceAvailableHeight or 360) }
         end,
         Create = function(parent) Page:Create(parent) end,
         Refresh = function(parent, context) Page:Refresh(parent, context) end,
@@ -960,9 +1124,9 @@ function Page:Register()
     if not page then return nil, err end
     local entry, entryError = Core.Entry:RegisterBusinessEntry(Addon.NAME, {
         id = "ycr", brokerName = "YiboCrafting", pageID = ID,
-        text = "[Yibo] 专业制造",
+        text = L("ENTRY_TITLE"),
         icon = "Interface\\AddOns\\YiboCrafting\\Media\\YiboCraftingIcon-v2",
-        defaultMode = "none",
+        defaultChannels = { minimap = false, broker = false, builtinBar = false },
     })
     if not entry then return nil, entryError end
     return page

@@ -1,0 +1,282 @@
+{
+  "auditDate": "2026-10-10",
+  "publicationStatus": "not_published",
+  "categoryStatus": "recommendations_verify_available_options_in_author_dashboard",
+  "projects": [
+    {
+      "addon": "YiboAltoBoss",
+      "releaseBaseline": "2.5.1",
+      "url": "https://www.curseforge.com/wow/addons/yiboaltoboss",
+      "suggestedTitle": "YiboAltoBoss - Boss & Lockout Tracker",
+      "suggestedSummary": "Track world bosses, seasonal boss rewards, and raid or dungeon lockouts across your MoP Classic characters.",
+      "primaryCategory": "Boss Encounters",
+      "additionalCategories": [],
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": 5,
+      "entryCommand": "/yab",
+      "description": "descriptions/YiboAltoBoss.md",
+      "status": "draft_for_current_worktree_review",
+      "reason": "基于当前 2.6.0 源码补充跨角色锁定、逐角色首领目标及可选 TaskHub 联动；基础追踪需要 Core API5，主动添加增强需要已发布的 API12。",
+      "workingTreeVersion": "2.6.0"
+    },
+    {
+      "addon": "YiboAutoOpen",
+      "releaseBaseline": "1.2.2",
+      "url": "https://www.curseforge.com/wow/addons/yiboautoopen",
+      "suggestedTitle": "YiboAutoOpen - Auto Open Containers",
+      "suggestedSummary": "Automatically open allowlisted inventory containers, with combat pauses, bag-space checks, and retry handling.",
+      "primaryCategory": "Bags & Inventory",
+      "additionalCategories": [],
+      "requiredDependencies": [],
+      "optionalDependencies": [
+        "YiboCore"
+      ],
+      "minimumCoreAPI": 6,
+      "entryCommand": "/yao status",
+      "description": "descriptions/YiboAutoOpen.md",
+      "status": "draft_for_current_worktree_review",
+      "reason": "补失败恢复、来源白名单和确认框定位；保留“不自动点击确认”的准确边界。",
+      "workingTreeVersion": "1.2.2"
+    },
+    {
+      "addon": "YiboBeastPaths",
+      "releaseBaseline": "1.6",
+      "url": "https://www.curseforge.com/wow/addons/yibobeastpaths",
+      "suggestedTitle": "YiboBeastPaths - Hidden Hunter Pet Routes",
+      "suggestedSummary": "Follow hidden Pandaria hunter pet patrol routes on your world map and minimap, with start markers and pet tooltips.",
+      "primaryCategory": "Map & Minimap",
+      "additionalCategories": [
+        "Hunter"
+      ],
+      "requiredDependencies": [],
+      "optionalDependencies": [
+        "YiboCore"
+      ],
+      "minimumCoreAPI": 6,
+      "entryCommand": "/ybp",
+      "description": "descriptions/YiboBeastPaths.md",
+      "status": "draft_for_current_worktree_review",
+      "reason": "补中英对照和正式服支持说明；已有1.6图库先保留，基础功能不写成Core强依赖。",
+      "workingTreeVersion": "v1.6"
+    },
+    {
+      "addon": "YiboBuilds",
+      "releaseBaseline": "1.4.2",
+      "url": "https://www.curseforge.com/wow/addons/yibobuilds",
+      "suggestedTitle": "YiboBuilds - Talents, Gear & Enhancements",
+      "suggestedSummary": "Browse your characters' talents, glyphs, gear, gems, and enchants, with a current-character equipment enhancement workbench.",
+      "primaryCategory": "Bags & Inventory",
+      "additionalCategories": [],
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": 10,
+      "entryCommand": "/ybb",
+      "description": "descriptions/YiboBuilds.md",
+      "status": "draft_for_current_worktree_review",
+      "reason": "说明从单纯viewer扩展为已发布的装备提升工作台；明确离线只读和当前角色操作。",
+      "workingTreeVersion": "1.4.2"
+    },
+    {
+      "addon": "YiboCore",
+      "releaseBaseline": "1.11.0 / API v12",
+      "url": "https://www.curseforge.com/wow/addons/yibocore",
+      "suggestedTitle": "YiboCore - Shared Account Framework for Yibo Addons",
+      "suggestedSummary": "Shared account window, character directory, sorting, settings, and versioned integration framework for Yibo WoW addons.",
+      "primaryCategory": "Libraries",
+      "additionalCategories": [],
+      "requiredDependencies": [],
+      "optionalDependencies": [],
+      "minimumCoreAPI": null,
+      "entryCommand": "/yco",
+      "description": "descriptions/YiboCore.md",
+      "status": "draft_for_current_worktree_review",
+      "reason": "说明多业务插件共用账号界面和角色管理的独特点；链接所有必需依赖插件并区分独立运行的可选集成。",
+      "workingTreeVersion": "1.11.0"
+    },
+    {
+      "addon": "YiboCrafting",
+      "releaseBaseline": "1.0.0",
+      "url": "https://www.curseforge.com/wow/addons/yibocrafting",
+      "suggestedTitle": "YiboCrafting - Account Recipe Finder",
+      "suggestedSummary": "Find which of your characters has a recorded crafting recipe, with account recipe and profession views.",
+      "primaryCategory": "Professions",
+      "additionalCategories": [],
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": 6,
+      "entryCommand": null,
+      "description": "descriptions/YiboCrafting.md",
+      "status": "draft_for_current_worktree_review",
+      "reason": "只补1.0.0正向配方缓存能力；1.0.6目录/未学判定/登录扫描未发布，不能提前写入。",
+      "workingTreeVersion": "1.0.7"
+    },
+    {
+      "addon": "YiboCurrency",
+      "releaseBaseline": "0.9.1",
+      "url": "https://www.curseforge.com/wow/addons/yibocurrency",
+      "suggestedTitle": "YiboCurrency - Account Gold & Currencies",
+      "suggestedSummary": "Compare gold, currencies, archaeology fragments, and item tokens across characters, with customizable monitoring.",
+      "primaryCategory": "Auction & Economy",
+      "additionalCategories": [],
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [
+        "YiboVault"
+      ],
+      "minimumCoreAPI": 7,
+      "entryCommand": "/ycu",
+      "description": "descriptions/YiboCurrency.md",
+      "status": "draft_for_current_worktree_review",
+      "reason": "补自定义物品、独立监控、Vault可选来源；已发布最低API7，不能照搬工作树API9。",
+      "workingTreeVersion": "0.9.1"
+    },
+    {
+      "addon": "YiboLegendary",
+      "releaseBaseline": "2.1.0",
+      "url": "https://www.curseforge.com/wow/addons/yibolegendary",
+      "suggestedTitle": "YiboLegendary - Legendary Progress Tracker",
+      "suggestedSummary": "Track legendary cloak progress and supported legendary weapon collection checkpoints across your MoP Classic characters.",
+      "primaryCategory": "Quests & Leveling",
+      "additionalCategories": [],
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": 5,
+      "entryCommand": "/yle",
+      "description": "descriptions/YiboLegendary.md",
+      "status": "draft_for_current_worktree_review",
+      "reason": "页面仍只说披风；补已发布多传说路线并说明不同覆盖程度。",
+      "workingTreeVersion": "2.1.0"
+    },
+    {
+      "addon": "YiboMail",
+      "releaseBaseline": "1.2.2-api1",
+      "url": "https://www.curseforge.com/wow/addons/yibomail",
+      "suggestedTitle": "YiboMail - Inbox, Bulk Collect & Send Rules",
+      "suggestedSummary": "Search mail, collect grouped attachments, manage recipients and send rules, and review mailbox snapshots across characters.",
+      "primaryCategory": "Mail",
+      "additionalCategories": [],
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": 9,
+      "entryCommand": "/yma",
+      "description": "descriptions/YiboMail.md",
+      "status": "draft_for_current_worktree_review",
+      "reason": "把已经发布的规则寄件、通讯录、快捷栏、账号浏览/历史从未来计划补为当前功能。",
+      "workingTreeVersion": "1.2.6-api1"
+    },
+    {
+      "addon": "YiboMounts",
+      "releaseBaseline": "0.8.5",
+      "url": "https://www.curseforge.com/wow/addons/yibomounts",
+      "suggestedTitle": "YiboMounts - Mount Source Tooltips",
+      "suggestedSummary": "See mount sources in aura, unit, Mount Journal, and chat-link tooltips, including requirements and restrictions.",
+      "primaryCategory": "Tooltips",
+      "additionalCategories": [],
+      "requiredDependencies": [],
+      "optionalDependencies": [
+        "YiboCore"
+      ],
+      "minimumCoreAPI": 5,
+      "entryCommand": null,
+      "description": "descriptions/YiboMounts.md",
+      "status": "draft_for_current_worktree_review",
+      "reason": "摘要从仅光环扩大到实际多处Tooltip；分类优先Tooltips，保留原品牌词坐骑图鉴在中文正文。",
+      "workingTreeVersion": "0.8.5"
+    },
+    {
+      "addon": "YiboQuestBlocker",
+      "releaseBaseline": "3.0.2",
+      "url": "https://www.curseforge.com/wow/addons/yiboquestblocker",
+      "suggestedTitle": "YiboQuestBlocker - Quest Blocklist",
+      "suggestedSummary": "Block unwanted quests with account-wide and per-character rules, plus decline, abandon, and pause modes.",
+      "primaryCategory": "Quests & Leveling",
+      "additionalCategories": [],
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": 5,
+      "entryCommand": "/yqb",
+      "description": "descriptions/YiboQuestBlocker.md",
+      "status": "draft_for_current_worktree_review",
+      "reason": "以3.0.2包重写拒绝/放弃/暂停和兼容边界；CF抓取失败，后台现值发布前待核对。",
+      "workingTreeVersion": "3.0.2"
+    },
+    {
+      "addon": "YiboReputation",
+      "releaseBaseline": "1.5.2",
+      "url": "https://www.curseforge.com/wow/addons/yiboreputation",
+      "suggestedTitle": "YiboReputation - Account Reputation Tracker",
+      "suggestedSummary": "Browse reputations and friendship progress across characters, with a configurable account monitoring matrix.",
+      "primaryCategory": "Quests & Leveling",
+      "additionalCategories": [],
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": 5,
+      "entryCommand": "/yrp",
+      "description": "descriptions/YiboReputation.md",
+      "status": "draft_for_current_worktree_review",
+      "reason": "调整首屏用途、10项监控和friendship检索词；保留准确数据边界。",
+      "workingTreeVersion": "1.5.2"
+    },
+    {
+      "addon": "YiboTodo",
+      "releaseBaseline": "1.1.2",
+      "url": "https://www.curseforge.com/wow/addons/yibotodo",
+      "suggestedTitle": "YiboTodo - Profession Cooldowns & Dailies",
+      "suggestedSummary": "Track profession cooldowns, farm work, Nomi, supported dailies, and special activities across your MoP Classic characters.",
+      "primaryCategory": "Professions",
+      "additionalCategories": [
+        "Quests & Leveling"
+      ],
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": 5,
+      "entryCommand": "/ytd",
+      "description": "descriptions/YiboTodo.md",
+      "status": "draft_for_current_worktree_review",
+      "reason": "删除0.1版本限制，补农场、诺米、旧日常与特殊活动；不写未发布行动中心集成。",
+      "workingTreeVersion": "1.2.0"
+    },
+    {
+      "addon": "YiboVault",
+      "releaseBaseline": "1.1.1-api1",
+      "url": "https://www.curseforge.com/wow/addons/yibovault",
+      "suggestedTitle": "YiboVault - Account Inventory & Item Search",
+      "suggestedSummary": "Search items across character bags, banks, equipment, mail, auctions, and guild banks, with account inventory tooltips.",
+      "primaryCategory": "Bags & Inventory",
+      "additionalCategories": [],
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [
+        "YiboMail"
+      ],
+      "minimumCoreAPI": 9,
+      "entryCommand": "/yva open",
+      "description": "descriptions/YiboVault.md",
+      "status": "draft_for_current_worktree_review",
+      "reason": "补Tooltip、容量、缓存状态与可选Mail来源；需要新增Tooltip实际截图。",
+      "workingTreeVersion": "1.1.1-api1"
+    }
+  ],
+  "notes": [
+    "Drafts describe current working-tree behavior. Reconcile each page with its final install package and client verification before publishing."
+  ]
+}

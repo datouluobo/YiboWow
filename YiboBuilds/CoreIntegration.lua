@@ -52,6 +52,7 @@ function Integration:Initialize()
         text = "[Yibo] 角色构筑", icon = Addon.ICON, defaultMode = "none",
     })
     if not entry then return nil, entryError end
+    if Addon.GoalTargets then Addon.GoalTargets:Initialize() end
     self.initialized = true
     return true
 end

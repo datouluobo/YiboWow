@@ -1,5 +1,7 @@
 ## Interface: 50504
-## Title: |cff20e070[Yibo]|r YiboMounts - 坐骑图鉴
+## Title: |cff20e070[Yibo]|r YiboMounts - Mount Collection
+## Title-zhCN: |cff20e070[Yibo]|r YiboMounts - 坐骑图鉴
+## Title-zhTW: |cff20e070[Yibo]|r YiboMounts - 坐骑图鉴
 ## Notes: Lightweight bilingual mount source tooltips for auras, chat links, and the Mount Journal.
 ## Notes-zhCN: 在坐骑光环、聊天链接与坐骑面板提示中显示紧凑的图鉴信息。
 ## Author: YiboSoft

@@ -358,6 +358,9 @@ function Page:RefreshSummary(parent, context)
         row:SetScript("OnClick", character and not context.preview and function()
             if parent.onCharacter then parent.onCharacter(character.id) end
         end or nil)
+        if character and not context.preview and Addon.GoalTargets and Addon.GoalTargets.ref then
+            Addon.GoalTargets:Bind(row, "view-mailbox", character.id, row:GetScript("OnClick"))
+        elseif Core.BusinessItemActions then Core.BusinessItemActions:Unbind(row) end
         row:SetScript("OnEnter", character and function()
             if GameTooltip then
                 GameTooltip:SetOwner(row, "ANCHOR_RIGHT"); GameTooltip:SetText(values.character)
@@ -366,6 +369,7 @@ function Page:RefreshSummary(parent, context)
                 for _, field in ipairs(columns) do
                     GameTooltip:AddLine(field.title .. "：" .. tostring(values[field.id] or "—"), 1, 1, 1, true)
                 end
+                if Addon.GoalTargets and Addon.GoalTargets.ref then GameTooltip:AddLine(Core.BusinessItemActions:GestureLabel() .. "：添加新邮件查看目标；＋：添加菜单") end
                 GameTooltip:Show()
             end
         end or nil)

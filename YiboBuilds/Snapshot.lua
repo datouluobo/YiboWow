@@ -783,6 +783,10 @@ local function ReadEquipment(reason)
             icon = GetInventoryItemTexture and GetInventoryItemTexture("player", slotID), gems = {}, enchant = {},
             state = link and "equipped" or "empty",
         }
+        if link and C_Item and C_Item.GetItemGUID and ItemLocation and ItemLocation.CreateFromEquipmentSlot then
+            local ok, guid = pcall(function() return C_Item.GetItemGUID(ItemLocation:CreateFromEquipmentSlot(slotID)) end)
+            if ok and type(guid) == "string" and guid ~= "" then entry.instanceKey = guid end
+        end
         if link then
             local socketTypes = ReadSocketTypes(slotID, link)
             local linkGems = ItemGemLinksFromLink(link)

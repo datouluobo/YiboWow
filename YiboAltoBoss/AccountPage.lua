@@ -381,6 +381,23 @@ local function SetEmptyButton(control)
 end
 
 local function SetStatus(cell, status, key, boss)
+    local planned, characterID, target
+    if YAB.PlannedTargets then planned, characterID, target = YAB.PlannedTargets:IsPlanned(key, boss.key) end
+    if planned then
+        local progress = YAB.PlannedTargets:Progress(characterID, target)
+        local labels = { completed = "已完成", ready = "待刷取", unknown = "待核实", dormant = "未开放" }
+        local color = progress.state == "completed" and C.success or (progress.state == "ready" and C.accent or C.muted)
+        local fill = progress.state == "completed" and C.successSurface or C.chrome
+        cell:SetText((labels[progress.state] or "待核实") .. "·目标"); cell:SetState("default")
+        cell:SetBackdropColor(fill[1], fill[2], fill[3], fill[4] or 1)
+        cell:SetBackdropBorderColor(color[1], color[2], color[3], color[4] or 1)
+        cell.label:SetTextColor(color[1], color[2], color[3])
+        cell:SetScript("OnClick", nil)
+        local lines = { "来源：行动中心刷取目标", "状态：" .. progress.reason }
+        if progress.observedAt then lines[#lines + 1] = "快照：" .. date("%m-%d %H:%M", progress.observedAt) end
+        Theme:BindTooltip(cell, boss.name, lines)
+        return
+    end
     if YAB.Holiday and YAB.Holiday:IsBoss(boss) then
         local completed = status == "completed"
         local labels = { completed = "已击杀", available = "未击杀", unobserved = "未观察" }
@@ -426,6 +443,17 @@ local function SetStatus(cell, status, key, boss)
         control:SetBackdropBorderColor(border[1], border[2], border[3], border[4] or 1)
     end)
     cell:SetScript("OnClick", function() YAB.ToggleBossKill(key, boss.key) end)
+end
+
+local SetBusinessStatus = SetStatus
+SetStatus = function(cell, status, key, boss)
+    if _G.YiboCore.BusinessItemActions then _G.YiboCore.BusinessItemActions:Unbind(cell) end
+    SetBusinessStatus(cell, status, key, boss)
+    if YAB.GoalTargets and YAB.GoalTargets.ref then
+        local definition
+        for _, entry in ipairs(YAB.TargetCatalog:Query().targets) do if entry.bossKey == boss.key then definition = entry; break end end
+        if definition then YAB.GoalTargets:Bind(cell, key, { catalogID = definition.id, scope = "all", encounterIDs = {} }, cell:GetScript("OnClick")) end
+    end
 end
 
 local function PhaseTitle()
@@ -545,7 +573,7 @@ end
 -- columns as one consistent header/data slice.
 local function RefreshAccountPageByCharacterColumns(instance, context)
     local preview = context.preview == true
-    local allKeys, bosses = YAB.GetAccountCharacterKeys(context), YAB.GetBossList()
+    local allKeys, bosses = YAB.GetAccountCharacterKeys(context), YAB.GetBossList(context)
     local showKills = context:GetFieldVisible("kills")
     local showAction = context:GetFieldVisible("action")
     local showPhase = context:GetFieldVisible("phase")
@@ -690,7 +718,7 @@ function YAB.RefreshAccountPage(instance, context)
         return RefreshAccountPageByCharacterColumns(instance, context)
     end
     local preview = context.preview == true
-    local keys, bosses = YAB.GetAccountCharacterKeys(context), YAB.GetBossList()
+    local keys, bosses = YAB.GetAccountCharacterKeys(context), YAB.GetBossList(context)
     local showKills = context:GetFieldVisible("kills")
     local showAction = context:GetFieldVisible("action")
     local showPhase = context:GetFieldVisible("phase")
@@ -786,7 +814,7 @@ function YAB.RefreshAccountPage(instance, context)
 end
 
 local function GetMatrixSize(context)
-    local keys, bosses = YAB.GetAccountCharacterKeys(context), YAB.GetBossList()
+    local keys, bosses = YAB.GetAccountCharacterKeys(context), YAB.GetBossList(context)
     local fixedWidth = GetBossRowLabelWidth(bosses)
         + (context:GetFieldVisible("action") and ACTION_WIDTH or 0)
         + (context:GetFieldVisible("phase") and PHASE_WIDTH or 0)
@@ -803,7 +831,7 @@ local function GetMatrixSize(context)
 end
 
 function YAB.GetAccountSurfaceMetrics(context)
-    local bosses = YAB.GetBossList()
+    local bosses = YAB.GetBossList(context)
     local keys = YAB.GetAccountCharacterKeys(context) or {}
     local inset = Theme:GetMatrixInsets(context and context.preview)
     if context and context.viewMode == "character-columns" then

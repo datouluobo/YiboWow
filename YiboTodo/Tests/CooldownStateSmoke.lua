@@ -64,7 +64,7 @@ assert(unlearnedState.state == "unknown" and unlearnedState.reason == "recipe-un
 local afterDailyReset = Cooling(143011, 200000)
 afterDailyReset.observedAt = 70000
 GetGameTime = function() return 0, 1 end
-assert(Addon.Model.Schedule:NextResetAt(100000, 7) == 125140, "all daily activity types keep the next reset at 07:00 after midnight")
+assert(Addon.Model.Schedule:NextResetAt(100000, 7) == 125100, "all daily activity types keep the next reset exactly at 07:00 after midnight")
 local expiredBeforeSeven = Cooling(143011, 99900)
 expiredBeforeSeven.observedAt = 90000
 assert(State:Evaluate(celestialGroup, expiredBeforeSeven, 100000).state == "cooldown", "a midnight-expiring API countdown does not reset a 07:00 daily cooldown")
@@ -80,7 +80,8 @@ Addon.Now = function() return clock end
 GetGameTime = function() return gameHour, gameMinute end
 Addon.Settings = { GetMode = function() return "required" end }
 Addon.Core = {
-    Characters = { GetAll = function() return { { id = "snapshot-character" } } end },
+    Characters = { GetAll = function() return { { id = "snapshot-character" } } end,
+        GetCurrent = function() return { id = "snapshot-character" } end },
     DataDomains = {
         Get = function()
             return { state = "known", data = { primaryProfessions = { { id = 197, name = "裁缝", icon = "Interface\\Icons\\Trade_Tailoring", skillLevel = 600 } } } }
@@ -100,7 +101,7 @@ Addon.db = {
 }
 Addon.Snapshot:Invalidate()
 assert(Addon.Snapshot:GetCharacter("snapshot-character").activities["mop.tailoring.celestial-cloth"].state == "cooldown", "before 07:00 remains cooldown")
-assert(Addon.Snapshot.nextTransitionAt == 100060, "snapshot schedules 07:00 refresh")
+assert(Addon.Snapshot.nextTransitionAt == 100020, "snapshot schedules exact 07:00 refresh")
 clock, gameHour, gameMinute = 100120, 7, 1
 assert(Addon.Snapshot:GetCharacter("snapshot-character").activities["mop.tailoring.celestial-cloth"].state == "estimated", "snapshot refreshes at 07:00")
 

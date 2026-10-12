@@ -3,16 +3,21 @@ local Addon = _G.YiboCurrency
 -- Vault is optional. Query by explicit character IDs so its last recorded
 -- personal inventory can fill item-token balances for cached characters.
 local function VaultItems()
-    local vault = _G.YiboVault and _G.YiboVault.Items
-    if vault and type(vault.HasCapability) == "function" and type(vault.Query) == "function"
-        and vault:HasCapability("items.query", 1) then return vault end
+    local core = _G.YiboCore
+    local descriptor = core and core.Contracts and core.Contracts:Resolve("vault.items", { major = 1, minMinor = 0 })
+    if not descriptor then return end
+    return {
+        HasCapability = function(_, name, minimumVersion)
+            return core.Contracts:Call(Addon.NAME, descriptor, "HasCapability", { name = name, minimumVersion = minimumVersion })
+        end,
+        Query = function(_, request) return core.Contracts:Call(Addon.NAME, descriptor, "Query", request) end,
+        GetPersonalCounts = function(_, request) return core.Contracts:Call(Addon.NAME, descriptor, "GetPersonalCounts", request) end,
+    }
 end
 
 local function CountsAPI()
-    local vault = _G.YiboVault and _G.YiboVault.Items
-    if vault and type(vault.GetPersonalCounts) == "function"
-        and type(vault.HasCapability) == "function"
-        and vault:HasCapability("items.personal-counts", 1) then return vault end
+    local vault = VaultItems()
+    if vault and vault:HasCapability("items.personal-counts", 1) then return vault end
 end
 
 local function CharacterIDs(characters)
@@ -54,7 +59,7 @@ function Addon:GetVaultItemDetail(entry, characters)
     local itemID = tonumber(entry.itemID)
     if not itemID or itemID <= 0 or itemID % 1 ~= 0 then return nil end
     local vault = VaultItems()
-    if not vault then return nil end
+    if not vault or not vault:HasCapability("items.query", 1) then return nil end
     local ids = CharacterIDs(characters)
     local ok, result = pcall(vault.Query, vault, {
         scope = { mode = "characters", characterIDs = ids },

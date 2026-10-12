@@ -715,12 +715,14 @@ function YBP:RefreshMinimapLayer(force)
     end
 
     if not self.db or not self.db.visible then
+        if minimapState.updateFrame then minimapState.updateFrame:Hide() end
         minimapState.lastSignature = nil
         stats.reason = "addon_hidden"
         HideAllMinimapSegments()
         return
     end
 
+    if minimapState.updateFrame then minimapState.updateFrame:Show() end
     EnsureRouteCache()
     stats.cacheBuilt = minimapState.cacheBuilt or false
 

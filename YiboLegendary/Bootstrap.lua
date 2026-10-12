@@ -62,12 +62,24 @@ function Addon:GetCharacterStore()
     return store, character
 end
 
-function Addon:Refresh(reason, currencyID, quantity, quantityChange, quantityGain)
+local function SameSnapshot(left, right)
+    if left == right then return true end
+    if type(left) ~= type(right) then return false end
+    if type(left) ~= "table" then return false end
+    for key, value in pairs(left) do
+        if key ~= "updatedAt" and key ~= "reason" and not SameSnapshot(value, right[key]) then return false end
+    end
+    for key in pairs(right) do if key ~= "updatedAt" and key ~= "reason" and left[key] == nil then return false end end
+    return true
+end
+
+function Addon:Refresh(reason, currencyID, quantity, quantityChange, quantityGain, trackedProgress)
     local store, character = self:GetCharacterStore()
     if not store then
         return
     end
-    local valorProgress = self.Data:TrackValorProgress(store, currencyID, quantity, quantityChange, quantityGain)
+    local valorProgress = trackedProgress and self.runtime.pendingValorProgress or self.Data:TrackValorProgress(store, currencyID, quantity, quantityChange, quantityGain)
+    local previous = self.runtime.snapshotsByCharacter[character.id]
     local snapshot = self.Model:BuildSnapshot(character, store, self.db.settings.phaseAvailability, valorProgress)
     snapshot.updatedAt = self:GetTimestamp()
     snapshot.reason = reason
@@ -75,9 +87,34 @@ function Addon:Refresh(reason, currencyID, quantity, quantityChange, quantityGai
     local hasProjection = false
     for _, state in pairs(snapshot.targets or {}) do if state.evidence and state.evidence.source == "projection" then hasProjection = true; break end end
     if not hasProjection then store.snapshot = snapshot end
-    if self.UI then
+    if self.GoalTargets and self.GoalTargets.ref and not SameSnapshot(previous, snapshot) then
+        self.db.goalRevision = (self.db.goalRevision or 0) + 1
+        self.Core.Contracts:NotifyChanged(self.NAME, self.GoalTargets.ref, { reason = "legendary-progress-changed", characterID = character.id })
+    end
+    if self.UI and not SameSnapshot(previous, snapshot) then
         self.UI:Refresh(reason)
     end
+end
+
+function Addon:QueueRefresh(event, ...)
+    -- Apply every currency delta in arrival order before coalescing the model.
+    if event == "CURRENCY_DISPLAY_UPDATE" then
+        local store = self:GetCharacterStore()
+        if store then
+            self.runtime.pendingValorProgress = self.Data:TrackValorProgress(store, ...)
+            self.runtime.valorTracked = true
+        end
+    end
+    self.runtime.refreshReason = event
+    if self.runtime.refreshQueued then return end
+    self.runtime.refreshQueued = true
+    local function Run()
+        local reason, tracked = self.runtime.refreshReason, self.runtime.valorTracked
+        self.runtime.refreshQueued, self.runtime.refreshReason, self.runtime.valorTracked = nil, nil, nil
+        self:Refresh(reason, nil, nil, nil, nil, tracked)
+        self.runtime.pendingValorProgress = nil
+    end
+    if C_Timer and C_Timer.After then C_Timer.After(0.1, Run) else Run() end
 end
 
 function Addon:Initialize()
@@ -135,6 +172,7 @@ function Addon:Initialize()
             return
         end
     end
+    if self.GoalTargets then self.GoalTargets:Initialize() end
     self.initialized = true
     self.Probe:Run()
     self:Refresh("initialize")
@@ -161,8 +199,7 @@ frame:SetScript("OnEvent", function(_, event, ...)
     if Addon.initialized then
         -- Keep the complete CURRENCY_DISPLAY_UPDATE payload.  The tracker uses
         -- its quantityChange field and keeps balance-delta fallback support.
-        Addon.Probe:Run()
-        Addon:Refresh(event, arg1, arg2, arg3, arg4)
+        Addon:QueueRefresh(event, arg1, arg2, arg3, arg4)
     end
 end)
 

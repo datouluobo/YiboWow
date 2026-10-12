@@ -48,3 +48,10 @@ assert(cooking[1].state == "actionable" and cooking[2].state == "actionable" and
 local remote = assert(Addon.Snapshot:GetCharacter("remote"))
 assert(remote.cookingProjects[1].state == "unknown", "an unobserved remote character is not reset without daily history")
 print("YiboTodo legacy daily projection smoke passed")
+local currentReads, originalCurrent = 0, Addon.Core.Characters.GetCurrent
+Addon.Core.Characters.GetCurrent = function(...) currentReads = currentReads + 1; return originalCurrent(...) end
+Addon.Snapshot.dirty = true
+Addon.Snapshot:Build()
+assert(currentReads == 1, "one current identity read per complete multi-character snapshot build")
+assert(Addon.Snapshot:GetCharacter("remote").cookingProjects[1].state == "unknown", "remote observation remains unknown")
+print("YiboTodo snapshot identity batching passed")

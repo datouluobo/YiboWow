@@ -3,6 +3,18 @@ local Registry = Addon.Providers.Registry
 local Provider = { id = "daily-quest", schemaVersion = 1, queued = {} }
 local NOMI_NPC_ID = 64337
 
+local function DaySignature(day)
+    return table.concat({ tostring(day.state), tostring(day.questID), tostring(day.label),
+        tostring(day.kind), tostring(day.reason), tostring(day.nextResetAt) }, "\031")
+end
+
+local function Unchanged(day, previous, observedAt, readyAt, record)
+    if observedAt and record.state == "available" and DaySignature(day) == previous then
+        day.observedAt, day.readyToTurnInAt = observedAt, readyAt
+        return true
+    end
+end
+
 local function IsComplete(value)
     return value == true or value == 1
 end
@@ -153,6 +165,7 @@ function Provider:ObserveActivity(characterID, definition)
     local days = record.activityDays[definition.id] or {}; record.activityDays[definition.id] = days
     local dayKey = Addon.Model.Schedule:ServerDay(now, definition.resetHour)
     local day = days[dayKey] or {}; days[dayKey] = day
+    local previous, observedAt, readyAt = DaySignature(day), day.observedAt, day.readyToTurnInAt
     local active, reason = ActiveQuest(definition)
     day.observedAt, day.nextResetAt = now, Addon.Model.Schedule:NextResetAt(now, definition.resetHour)
     if active and not AlreadyHandedIn(day, active) then
@@ -161,8 +174,10 @@ function Provider:ObserveActivity(characterID, definition)
     elseif not active and day.state ~= "completed" and day.state ~= "in-progress" then
         day.state, day.reason = "unknown", reason
     end
+    if Unchanged(day, previous, observedAt, readyAt, record) then return true, day.state end
     record.revision = (tonumber(record.revision) or 0) + 1
     record.lastAttemptAt, record.lastSuccessAt, record.state, record.errorCode = now, now, "available", nil
+    Addon:NotifyChanged()
     return true, day.state
 end
 
@@ -216,6 +231,7 @@ function Provider:Observe(characterID)
     record.days = record.days or {}
     local day = record.days[dayKey] or {}
     record.days[dayKey] = day
+    local previous, observedAt, readyAt = DaySignature(day), day.observedAt, day.readyToTurnInAt
     local active, reason = ActiveQuest(definition)
     day.observedAt, day.nextResetAt = now, Addon.Model.Schedule:NextResetAt(now, definition.resetHour)
     if active then
@@ -233,6 +249,7 @@ function Provider:Observe(characterID)
         day.state, day.reason = "unknown", reason
         day.questID, day.label, day.kind = nil, nil, nil
     end
+    if Unchanged(day, previous, observedAt, readyAt, record) then return true, day.state end
     record.revision = (tonumber(record.revision) or 0) + 1
     record.providerVersion, record.catalogVersion, record.rulesetID = self.schemaVersion, Addon.CATALOG_VERSION, Addon.RULESET_ID
     record.lastAttemptAt, record.lastSuccessAt, record.state, record.errorCode = now, now, "available", nil
@@ -352,6 +369,7 @@ function Provider:RecordTurnIn(characterID, questID)
     else days = record.days or {}; record.days = days end
     local day = days[dayKey] or {}
     days[dayKey] = day
+    if day.state == "completed" and day.questID == item.questID then return true, "already-recorded" end
     day.questID, day.label, day.kind, day.state = item.questID, item.label, kind, "completed"
     day.observedAt, day.completedAt, day.nextResetAt = now, now, Addon.Model.Schedule:NextResetAt(now, definition.resetHour)
     if definition == self:GetDefinition() then MarkEligible(record, item, kind, now) end
@@ -370,6 +388,7 @@ function Provider:ObserveCooking(characterID)
     record.cookingDays = record.cookingDays or {}
     local day = record.cookingDays[dayKey] or {}
     record.cookingDays[dayKey] = day
+    local previous, observedAt, readyAt = DaySignature(day), day.observedAt, day.readyToTurnInAt
     local active, reason = ActiveQuest(definition)
     day.observedAt, day.nextResetAt = now, Addon.Model.Schedule:NextResetAt(now, definition.resetHour)
     if active then
@@ -386,6 +405,7 @@ function Provider:ObserveCooking(characterID)
     elseif day.state ~= "completed" then
         day.state, day.reason = "actionable", reason
     end
+    if Unchanged(day, previous, observedAt, readyAt, record) then return true, day.state end
     record.revision = (tonumber(record.revision) or 0) + 1
     record.providerVersion, record.catalogVersion, record.rulesetID = self.schemaVersion, Addon.CATALOG_VERSION, Addon.RULESET_ID
     record.lastAttemptAt, record.lastSuccessAt, record.state, record.errorCode = now, now, "available", nil
@@ -402,6 +422,7 @@ function Provider:ObserveNomiGossip(characterID)
     local dayKey = Addon.Model.Schedule:ServerDay(now, definition.resetHour)
     local day = record.days[dayKey] or {}
     record.days[dayKey] = day
+    local previous, observedAt, readyAt = DaySignature(day), day.observedAt, day.readyToTurnInAt
     local offered, reason = AvailableNomiQuest(definition)
     day.observedAt, day.nextResetAt = now, Addon.Model.Schedule:NextResetAt(now, definition.resetHour)
     if offered then
@@ -419,6 +440,7 @@ function Provider:ObserveNomiGossip(characterID)
         day.state, day.reason = "unknown", reason
         day.questID, day.label, day.kind = nil, nil, nil
     end
+    if Unchanged(day, previous, observedAt, readyAt, record) then return true, day.state end
     record.revision = (tonumber(record.revision) or 0) + 1
     record.providerVersion, record.catalogVersion, record.rulesetID = self.schemaVersion, Addon.CATALOG_VERSION, Addon.RULESET_ID
     record.lastAttemptAt, record.lastSuccessAt, record.state, record.errorCode = now, now, "available", nil
@@ -427,13 +449,13 @@ function Provider:ObserveNomiGossip(characterID)
 end
 
 function Provider:QueueObserve()
-    local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+    local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent({ identityOnly = true })
     local characterID = current and current.id
     if not characterID or self.queued[characterID] then return end
     self.queued[characterID] = true
     local function Run()
         self.queued[characterID] = nil
-        local active = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+        local active = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent({ identityOnly = true })
         if active and active.id == characterID then
             self:Observe(characterID)
             self:ObserveCooking(characterID)

@@ -1,0 +1,230 @@
+{
+  "auditDate": "2026-10-10",
+  "packages": [
+    {
+      "addon": "YiboAltoBoss",
+      "release": "2.5.1",
+      "package": "E:\\Development\\YiboWow\\Builds\\YiboAltoBoss-v2.5.1-curseforge.zip",
+      "sha256": "abb5d4cca9bd5a911ff155971afc9d9ced0ea4e8d88e216007fa429b8f83ca83",
+      "toc": {
+        "YiboAltoBoss/YiboAltoBoss.toc": "## Interface: 50504\n## Title: |cff20e070[Yibo]|r YiboAltoBoss - 首领追踪\n## Notes: Cross-character boss progress and phase observations.\n## Notes-zhCN: 跨角色首领进度与位面观察总览\n## Author: YiboSoft\n## Version: 2.5.1\n## IconTexture: Interface\\AddOns\\YiboAltoBoss\\Media\\YAB_MinimapIcon\n## SavedVariables: YiboAltoBossDB\n## RequiredDeps: YiboCore\n## Group: YiboCore\n## LoadOnDemand: 0\n\nCore.lua\nHolidayBoss.lua\nTrackingV3.lua\nSettings.lua\nInstanceLockouts.lua\nLockoutsPage.lua\nAccountPage.lua\nCoreIntegration.lua\nCommands.lua\n"
+      },
+      "commands": [
+        {
+          "file": "YiboAltoBoss/Commands.lua",
+          "registration": "SLASH_YIBOALTOBOSS1 = \"/yab\""
+        }
+      ],
+      "publicPage": "https://www.curseforge.com/wow/addons/yiboaltoboss"
+    },
+    {
+      "addon": "YiboAutoOpen",
+      "release": "1.2.2",
+      "package": "E:\\Development\\YiboWow\\Builds\\YiboAutoOpen-v1.2.2-curseforge.zip",
+      "sha256": "0578ef77664722c19f63a84da12a262b356af9b91a7deca88d7a27bdc25d9d84",
+      "toc": {
+        "YiboAutoOpen/YiboAutoOpen.toc": "## Interface: 50504\n## Title: |cff20e070[Yibo]|r YiboAutoOpen - 自动开包\n## Notes: 安全地自动开启账号目录中的容器物品。\n## Author: YiboSoft\n## Version: 1.2.2\n## IconTexture: Interface\\AddOns\\YiboAutoOpen\\Media\\YiboAutoOpenIcon-v2\n## SavedVariables: YiboAutoOpenDB\n## OptionalDeps: YiboCore\n## LoadOnDemand: 0\n\nBootstrap.lua\nDefaults.lua\nDatabase.lua\nCatalog.lua\nItemResolver.lua\nBagAdapter.lua\nSafety.lua\nQueue.lua\nBindConfirmAssist.lua\nCommands.lua\nSettings.lua\nCoreIntegration.lua\n"
+      },
+      "commands": [
+        {
+          "file": "YiboAutoOpen/Commands.lua",
+          "registration": "SLASH_YIBOAUTOOPEN1 = \"/yao\""
+        }
+      ],
+      "publicPage": "https://www.curseforge.com/wow/addons/yiboautoopen"
+    },
+    {
+      "addon": "YiboBeastPaths",
+      "release": "1.6",
+      "package": "E:\\Development\\YiboWow\\Builds\\YiboBeastPaths-v1.6.zip",
+      "sha256": "c6733a1aa3505c3f685cb34f72160e4beddde5f88663e86fbc90dd85c2cfc230",
+      "toc": {
+        "YiboBeastPaths/YiboBeastPaths.toc": "## Interface: 120007\r\n## Title: |cff20e070[Yibo]|r YiboBeastPaths\r\n## Title-zhCN: |cff20e070[Yibo]|r YiboBeastPaths - 闅愬吔瀵昏釜\r\n## Notes: World map route overlays for Pandaria hidden hunter pets.\r\n## Notes-zhCN: 鐩存帴鍦ㄤ笘鐣屽湴鍥炬樉绀烘綐杈惧埄浜氶殣钘忕寧浜哄疇鐗╄矾绾垮浘銆?\r\n## Author: 澶╁爞鏆撮\r\n## Version: v1.6\r\n## IconTexture: Interface\\AddOns\\YiboBeastPaths\\Assets\\Brand\\icon-addon\r\n## SavedVariables: YiboBeastPathsDB, YiboBeastPathsDebugDB\r\n## OptionalDeps: YiboCore\r\n## X-GameFlavor: Mainline\r\n\r\nLibs\\LibStub\\LibStub.lua\r\nLibs\\CallbackHandler-1.0\\CallbackHandler-1.0.xml\r\nLibs\\HereBeDragons\\HereBeDragons-2.0.lua\r\nLibs\\HereBeDragons\\HereBeDragons-Pins-2.0.lua\r\n\r\nFlavor.lua\r\nData.lua\r\nCuratedRoutes.lua\r\nFootprintAnchors.lua\r\nReferenceRoutes.lua\r\nResolvedRoutes.lua\r\nReferenceRoutePoints.lua\r\nReferenceRouteSources.lua\r\nRouteDisplayMeta.lua\r\nRouteOverlays.lua\r\nRouteNodes.lua\r\nMapCanvasBounds.lua\r\nRouteTransforms.lua\r\nMinimapTransforms.lua\r\nFlavorOverrides.lua\r\nCore.lua\r\nRouteResolver.lua\r\nRenderer.lua\r\nMinimapRenderer.lua\r\nMaintenance\\DebugCalibrator.lua\r\nMaintenance\\CoreDebugView.lua\r\nMaintenance\\CoreDebugAdapter.lua\r\n",
+        "YiboBeastPaths/YiboBeastPaths_Mainline.toc": "## Interface: 120007\r\n## Title: |cff20e070[Yibo]|r YiboBeastPaths\r\n## Title-zhCN: |cff20e070[Yibo]|r YiboBeastPaths - 闅愬吔瀵昏釜\r\n## Notes: World map route overlays for Pandaria hidden hunter pets.\r\n## Notes-zhCN: 鐩存帴鍦ㄤ笘鐣屽湴鍥炬樉绀烘綐杈惧埄浜氶殣钘忕寧浜哄疇鐗╄矾绾垮浘銆?## Author: 澶╁爞鏆撮\r\n## Version: v1.6\r\n## IconTexture: Interface\\AddOns\\YiboBeastPaths\\Assets\\Brand\\icon-addon\r\n## SavedVariables: YiboBeastPathsDB, YiboBeastPathsDebugDB\r\n## OptionalDeps: YiboCore\r\n## X-GameFlavor: Mainline\r\n\r\nLibs\\LibStub\\LibStub.lua\r\nLibs\\CallbackHandler-1.0\\CallbackHandler-1.0.xml\r\nLibs\\HereBeDragons\\HereBeDragons-2.0.lua\r\nLibs\\HereBeDragons\\HereBeDragons-Pins-2.0.lua\r\n\r\nFlavor.lua\r\nData.lua\r\nCuratedRoutes.lua\r\nFootprintAnchors.lua\r\nReferenceRoutes.lua\r\nResolvedRoutes.lua\r\nReferenceRoutePoints.lua\r\nReferenceRouteSources.lua\r\nRouteDisplayMeta.lua\r\nRouteOverlays.lua\r\nRouteNodes.lua\r\nMapCanvasBounds.lua\r\nRouteTransforms.lua\r\nMinimapTransforms.lua\r\nFlavorOverrides.lua\r\nCore.lua\r\nRouteResolver.lua\r\nRenderer.lua\r\nMinimapRenderer.lua\r\nMaintenance\\DebugCalibrator.lua\r\nMaintenance\\CoreDebugView.lua\r\nMaintenance\\CoreDebugAdapter.lua\r\n",
+        "YiboBeastPaths/YiboBeastPaths_Mists.toc": "## Interface: 50400\r\n## Title: |cff20e070[Yibo]|r YiboBeastPaths\r\n## Title-zhCN: |cff20e070[Yibo]|r YiboBeastPaths - 闅愬吔瀵昏釜\r\n## Notes: World map route overlays for Pandaria hidden hunter pets.\r\n## Notes-zhCN: 鐩存帴鍦ㄤ笘鐣屽湴鍥炬樉绀烘綐杈惧埄浜氶殣钘忕寧浜哄疇鐗╄矾绾垮浘銆?## Author: 澶╁爞鏆撮\r\n## Version: v1.6\r\n## IconTexture: Interface\\AddOns\\YiboBeastPaths\\Assets\\Brand\\icon-addon\r\n## SavedVariables: YiboBeastPathsDB, YiboBeastPathsDebugDB\r\n## OptionalDeps: YiboCore\r\n## X-GameFlavor: Mists\r\n\r\nLibs\\LibStub\\LibStub.lua\r\nLibs\\CallbackHandler-1.0\\CallbackHandler-1.0.xml\r\nLibs\\HereBeDragons\\HereBeDragons-2.0.lua\r\nLibs\\HereBeDragons\\HereBeDragons-Pins-2.0.lua\r\n\r\nFlavor.lua\r\nData.lua\r\nCuratedRoutes.lua\r\nFootprintAnchors.lua\r\nReferenceRoutes.lua\r\nResolvedRoutes.lua\r\nReferenceRoutePoints.lua\r\nReferenceRouteSources.lua\r\nRouteDisplayMeta.lua\r\nRouteOverlays.lua\r\nRouteNodes.lua\r\nMapCanvasBounds.lua\r\nRouteTransforms.lua\r\nMinimapTransforms.lua\r\nFlavorOverrides.lua\r\nCore.lua\r\nRouteResolver.lua\r\nRenderer.lua\r\nMinimapRenderer.lua\r\nMaintenance\\DebugCalibrator.lua\r\nMaintenance\\CoreDebugView.lua\r\nMaintenance\\CoreDebugAdapter.lua\r\n"
+      },
+      "commands": [
+        {
+          "file": "YiboBeastPaths/Core.lua",
+          "registration": "SLASH_YIBOBEASTPATHS1 = \"/ybp\""
+        },
+        {
+          "file": "YiboBeastPaths/Core.lua",
+          "registration": "SLASH_YIBOBEASTPATHS2 = \"/yibobeastpaths\""
+        }
+      ],
+      "publicPage": "https://www.curseforge.com/wow/addons/yibobeastpaths"
+    },
+    {
+      "addon": "YiboBuilds",
+      "release": "1.4.2",
+      "package": "E:\\Development\\YiboWow\\Builds\\YiboBuilds-v1.4.2-curseforge.zip",
+      "sha256": "7d7c638f785b842112209b65262aab5b3224d5dcdca3321fe3ebea5a15659c50",
+      "toc": {
+        "YiboBuilds/YiboBuilds.toc": "## Interface: 50504\n## Title: |cff20e070[Yibo]|r YiboBuilds - 角色构筑\n## Notes: 多角色构筑、装备、天赋与雕文总览\n## Author: YiboSoft\n## Version: 1.4.2\n## IconTexture: Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon-v1\n## SavedVariables: YiboBuildsDB\n## RequiredDeps: YiboCore\n## Group: YiboCore\n## LoadOnDemand: 0\n\nBootstrap.lua\nData\\EnchantCatalog.lua\nData\\ApplyTargets.lua\nData\\CraftSources.lua\nData\\EngineeringCatalog.lua\nData\\EngineeringApply.lua\nData\\RecipeReagents.lua\nData\\ProfessionCatalog.lua\nData\\SocketEffectCatalog.lua\nSnapshot.lua\nAccountPage.lua\nCoreIntegration.lua\nCommands.lua\n"
+      },
+      "commands": [
+        {
+          "file": "YiboBuilds/Commands.lua",
+          "registration": "SLASH_YIBOBUILDS1 = \"/ybb\""
+        }
+      ],
+      "publicPage": "https://www.curseforge.com/wow/addons/yibobuilds"
+    },
+    {
+      "addon": "YiboCore",
+      "release": "1.9.0-api10",
+      "package": "E:\\Development\\YiboWow\\Builds\\YiboCore-v1.9.0-api10.zip",
+      "sha256": "d3029473d6c231a22f38ba1aeeb5329605a47abc537c3f0d403f7f349fd624a4",
+      "toc": {
+        "YiboCore/YiboCore.toc": "## Interface: 50504\r\n## Title: |cff20e070[Yibo]|r YiboCore\r\n## Notes: Shared runtime and account data foundation for Yibo WoW addons.\r\n## Notes-zhCN: Yibo 系列插件的运行时与账号数据基础框架。\r\n## Author: YiboSoft\r\n## Version: 1.9.0\r\n## IconTexture: Interface\\AddOns\\YiboCore\\Media\\YiboCoreIcon-v13\r\n## SavedVariables: YiboCoreDB\r\n## OptionalDeps: LibDataBroker-1.1\r\n## LoadOnDemand: 0\r\n\r\nBootstrap.lua\r\nUtil\\Defaults.lua\r\nRuntime\\Capabilities.lua\r\nRuntime\\Registry.lua\r\nRuntime\\SettingsRegistry.lua\r\nRuntime\\Events.lua\r\nRuntime\\Contracts.lua\r\nRuntime\\DataDomains.lua\r\nRuntime\\Resources.lua\r\nRuntime\\CurrencyCatalog.lua\r\nRuntime\\ItemResolver.lua\r\nRuntime\\Fields.lua\r\nRuntime\\Commands.lua\r\nData\\Migrations.lua\r\nData\\Database.lua\r\nData\\Characters.lua\r\nData\\CharacterCleanup.lua\r\nData\\DomainStore.lua\r\nData\\Domains\\Identity.lua\r\nData\\Domains\\Economy.lua\r\nData\\Domains\\EconomyItems.lua\r\nData\\Domains\\Reputation.lua\r\nData\\Domains\\Professions.lua\r\nData\\Domains\\Equipment.lua\r\nData\\Domains\\Location.lua\r\nData\\Domains\\Specialization.lua\r\nData\\Resources\\Economy.lua\r\nData\\Fields\\CharacterArchive.lua\r\nData\\AddonCatalog.lua\r\nData\\PackagedAddonVersions.lua\r\nRuntime\\AddonStatus.lua\r\nData\\Profile.lua\r\nUtil\\LevelFilter.lua\r\nUtil\\CharacterSort.lua\r\nUI\\Theme.lua\r\nUI\\Input.lua\r\nUI\\ItemConfirmation.lua\r\nUI\\ItemPicker.lua\r\nUI\\IconPicker.lua\r\nUI\\AccountView.lua\r\nUI\\AccountPages\\Overview.lua\r\nUI\\AccountPages\\CharacterArchive.lua\r\nUI\\AccountPages\\SettingsWorkbench.lua\r\nUI\\AccountPages\\Help.lua\r\nUI\\AccountPages\\About.lua\r\nUI\\Entry.lua\r\n"
+      },
+      "commands": [
+        {
+          "file": "YiboCore/Runtime/Commands.lua",
+          "registration": "SLASH_YIBOCORE1 = \"/yco\""
+        }
+      ],
+      "publicPage": "https://www.curseforge.com/wow/addons/yibocore"
+    },
+    {
+      "addon": "YiboCrafting",
+      "release": "1.0.0",
+      "package": "E:\\Development\\YiboWow\\Builds\\YiboCrafting-v1.0.0-curseforge.zip",
+      "sha256": "7115054ffd85629df2bca0fbe46165b09079e7e582a933c0e3f9fcc0600f6efa",
+      "toc": {
+        "YiboCrafting/YiboCrafting.toc": "## Interface: 50504\n## Title: |cff20e070[Yibo]|r YiboCrafting - 专业制造\n## Notes-zhCN: 账号级专业配方正向缓存；未验证的配方状态保持未知。\n## Author: YiboSoft\n## Version: 1.0.0\n## IconTexture: Interface\\AddOns\\YiboCrafting\\Media\\YiboCraftingIcon-v2\n## RequiredDeps: YiboCore\n## Group: YiboCore\n## SavedVariables: YiboCraftingDB\n\nNamespace.lua\nStore.lua\nCollector.lua\nCategoryCatalog.lua\nAccountPage.lua\nBootstrap.lua\n"
+      },
+      "commands": [],
+      "publicPage": "https://www.curseforge.com/wow/addons/yibocrafting"
+    },
+    {
+      "addon": "YiboCurrency",
+      "release": "0.9.1",
+      "package": "E:\\Development\\YiboWow\\Builds\\YiboCurrency-v0.9.1.zip",
+      "sha256": "7c888304ec21e2a876b46ea28d1e1bb749ed539b49a9d5df29ebb897a26320e4",
+      "toc": {
+        "YiboCurrency/YiboCurrency.toc": "## Interface: 50504\r\n## Title: |cff20e070[Yibo]|r YiboCurrency - 货币管家\r\n## Notes: 多角色货币余额总览\r\n## Author: YiboSoft\r\n## Version: 0.9.1\r\n## IconTexture: Interface\\AddOns\\YiboCurrency\\Media\\YiboCurrencyIcon-v1\r\n## SavedVariables: YiboCurrencyDB\r\n## RequiredDeps: YiboCore\r\n## OptionalDeps: YiboVault\r\n## Group: YiboCore\r\n## LoadOnDemand: 0\r\n\r\nBootstrap.lua\r\nCatalog.lua\r\nData.lua\r\nVaultIntegration.lua\r\nProjection.lua\r\nAccountPage.lua\r\nSettings.lua\r\nCoreIntegration.lua\r\nCommands.lua\r\n"
+      },
+      "commands": [
+        {
+          "file": "YiboCurrency/Commands.lua",
+          "registration": "SLASH_YCU1 = \"/ycu\""
+        }
+      ],
+      "publicPage": "https://www.curseforge.com/wow/addons/yibocurrency"
+    },
+    {
+      "addon": "YiboLegendary",
+      "release": "2.1.0",
+      "package": "E:\\Development\\YiboWow\\Builds\\YiboLegendary-v2.1.0-curseforge.zip",
+      "sha256": "680029a8fb664f37bf39893922e9e730343332f1ec03125464c8fe8b49ed3d5b",
+      "toc": {
+        "YiboLegendary/YiboLegendary.toc": "## Interface: 50504\n## Title: |cff20e070[Yibo]|r YiboLegendary - 传说之路\n## Notes: MoP Classic 传说物品获取进度管理。\n## Author: YiboSoft\n## Version: 2.1.0\n## IconTexture: Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon-v1\n## RequiredDeps: YiboCore\n## Group: YiboCore\n## SavedVariables: YiboLegendaryDB, YiboCloakProgressDB\n## LoadOnDemand: 0\n\nBootstrap.lua\nData.lua\nCatalog.lua\nModel.lua\nProbe.lua\nUI.lua\n"
+      },
+      "commands": [
+        {
+          "file": "YiboLegendary/Bootstrap.lua",
+          "registration": "SLASH_YIBOLEGENDARY1 = \"/yle\""
+        }
+      ],
+      "publicPage": "https://www.curseforge.com/wow/addons/yibolegendary"
+    },
+    {
+      "addon": "YiboMail",
+      "release": "1.2.2-api1",
+      "package": "E:\\Development\\YiboWow\\Builds\\YiboMail-v1.2.2-api1-curseforge.zip",
+      "sha256": "aecbfed18643709807f0cdf9843a20c30353d5043cf96f638bab36e57f3e84a6",
+      "toc": {
+        "YiboMail/YiboMail.toc": "## Interface: 50504\r\n## Title: |cff20e070[Yibo]|r YiboMail - 邮件助手\r\n## Notes-zhCN: 原生收件箱增强、账号邮件视图、到期提醒与附件收取。\r\n## Author: YiboSoft\r\n## Version: 1.2.2-api1\r\n## RequiredDeps: YiboCore\r\n## Group: YiboCore\r\n## SavedVariables: YiboMailDB\r\n## IconTexture: Interface\\AddOns\\YiboMail\\Media\\YiboMailIcon-v1\r\n\r\nNamespace.lua\r\nStore.lua\r\nRecipients.lua\r\nRecipientUI.lua\r\nSendRules.lua\r\nRuleSendController.lua\r\nSendRulesSettings.lua\r\nRuleSendUI.lua\r\nItems.lua\r\nScanner.lua\r\nViewModel.lua\r\nWorkspaceState.lua\r\nMailUI.lua\r\nCacheModel.lua\r\nHistoryModel.lua\r\nCacheUI.lua\r\nAccountPage.lua\r\nInbox.lua\r\nQueue.lua\r\nCompose.lua\r\nNativeUI.lua\r\nBootstrap.lua\r\n"
+      },
+      "commands": [
+        {
+          "file": "YiboMail/Bootstrap.lua",
+          "registration": "SLASH_YIBOMAIL1 = \"/yma\""
+        }
+      ],
+      "publicPage": "https://www.curseforge.com/wow/addons/yibomail"
+    },
+    {
+      "addon": "YiboMounts",
+      "release": "0.8.5",
+      "package": "E:\\Development\\YiboWow\\Builds\\YiboMounts-v0.8.5-curseforge.zip",
+      "sha256": "0bb227e89a48150b86df72623912b860a99b43dcf38baf3fa1f39a5292b89611",
+      "toc": {
+        "YiboMounts/YiboMounts.toc": "## Interface: 50504\n## Title: |cff20e070[Yibo]|r YiboMounts - 坐骑图鉴\n## Notes: Lightweight bilingual mount source tooltips for auras, chat links, and the Mount Journal.\n## Notes-zhCN: 在坐骑光环、聊天链接与坐骑面板提示中显示紧凑的图鉴信息。\n## Author: YiboSoft\n## Version: 0.8.5\n## Group: Yibo\n## SavedVariables: YiboMountsDB, YiboMountsDiagnostics\n## IconTexture: Interface\\AddOns\\YiboMounts\\Media\\YiboMountsIcon-v1\n\nNamespace.lua\nLocale\\enUS.lua\nLocale\\zhCN.lua\nData\\MountCatalog.generated.lua\nCatalog.lua\nSourceFormatter.lua\nProbe.lua\nInventoryProbe.lua\nTooltip.lua\nCoreIntegration.lua\nBootstrap.lua\n"
+      },
+      "commands": [
+        {
+          "file": "YiboMounts/Probe.lua",
+          "registration": "SLASH_YIBOMOUNTS1 = \"/ymt\""
+        }
+      ],
+      "publicPage": "https://www.curseforge.com/wow/addons/yibomounts"
+    },
+    {
+      "addon": "YiboQuestBlocker",
+      "release": "3.0.2",
+      "package": "E:\\Development\\YiboWow\\Builds\\YiboQuestBlocker-v3.0.2-curseforge.zip",
+      "sha256": "eb0161f758f9a27e2031024fccef17ef9988abe658d7e2f735864c56e50c74e2",
+      "toc": {
+        "YiboQuestBlocker/YiboQuestBlocker.toc": "## Interface: 50504\r\n## Title: |cff20e070[Yibo]|r YiboQuestBlocker\n## Notes: 任务屏蔽管理器 - 自动拒绝指定任务\r\n## Author: Reasonix\r\n## Version: 3.0.2\n## IconTexture: Interface\\AddOns\\YiboQuestBlocker\\Media\\YQB_MinimapIcon\n## SavedVariables: YiboQuestBlockerDB\n## RequiredDeps: YiboCore\n## Group: YiboCore\n## LoadOnDemand: 0\n\r\nYiboQuestBlocker_Core.lua\nAccountPage.lua\nSettings.lua\nCoreIntegration.lua\n"
+      },
+      "commands": [
+        {
+          "file": "YiboQuestBlocker/CoreIntegration.lua",
+          "registration": "SLASH_YQB1 = \"/yqb\""
+        }
+      ],
+      "publicPage": "https://www.curseforge.com/wow/addons/yiboquestblocker"
+    },
+    {
+      "addon": "YiboReputation",
+      "release": "1.5.2",
+      "package": "E:\\Development\\YiboWow\\Builds\\YiboReputation-v1.5.2-curseforge.zip",
+      "sha256": "8ce878c76c671352483a2ce45a47b7d44bac84c3f53099a0ba8f06844a933ae3",
+      "toc": {
+        "YiboReputation/YiboReputation.toc": "## Interface: 50504\n## Title: |cff20e070[Yibo]|r YiboReputation - 声望之路\n## Notes: 多角色声望浏览与比较\n## Author: YiboSoft\n## Version: 1.5.2\n## IconTexture: Interface\\AddOns\\YiboReputation\\Media\\YiboReputationIcon-v1\n## SavedVariables: YiboReputationDB\n## RequiredDeps: YiboCore\n## Group: YiboCore\n## LoadOnDemand: 0\n\nBootstrap.lua\nReputationCatalog.lua\nReputationHierarchy.lua\nReputationFormat.lua\nFriendship.lua\nNomi.lua\nAccountMatrixView.lua\nCurrentCharacterPreview.lua\nMonitoredPreview.lua\nPreviewController.lua\nSettings.lua\nCoreIntegration.lua\nCommands.lua\n"
+      },
+      "commands": [
+        {
+          "file": "YiboReputation/Commands.lua",
+          "registration": "SLASH_YIBOREPUTATION1=\"/yrp\""
+        }
+      ],
+      "publicPage": "https://www.curseforge.com/wow/addons/yiboreputation"
+    },
+    {
+      "addon": "YiboTodo",
+      "release": "1.1.2",
+      "package": "E:\\Development\\YiboWow\\Builds\\YiboTodo-v1.1.2-curseforge.zip",
+      "sha256": "3307488635157234414cd035709ac2858a507b87a5ec7a7761d46f1ed2f016e7",
+      "toc": {
+        "YiboTodo/YiboTodo.toc": "## Interface: 50504\n## Title: |cff20e070[Yibo]|r YiboTodo - 账号待办\n## Notes: 熊猫人之谜专业冷却与农场操作记录的账号待办视图。\n## Author: YiboSoft\n## Version: 1.1.2\n## IconTexture: Interface\\AddOns\\YiboTodo\\Media\\YiboTodoIcon-v6\n## RequiredDeps: YiboCore\n## Group: YiboCore\n## SavedVariables: YiboTodoDB\n## LoadOnDemand: 0\n\nNamespace.lua\nDatabase.lua\nCatalog\\MonitoringGroupCatalog.lua\nCatalog\\ActivityCatalog.lua\nCatalog\\CooldownGroupCatalog.lua\nCatalog\\CooldownCatalog_MoP.lua\nCatalog\\Ruleset_50504.lua\nCatalog\\FarmOperationCatalog.lua\nCatalog\\DailyActivityCatalog_MoP.lua\nCatalog\\DailyActivityCatalog_Legacy.lua\nCatalog\\SpecialActivityCatalog_MoP.lua\nCatalog\\Validator.lua\nModel\\Schedule.lua\nModel\\State.lua\nModel\\Snapshot.lua\nProviders\\Registry.lua\nProviders\\ProfessionCooldown.lua\nProviders\\FarmOperationObservation.lua\nProviders\\DailyQuest.lua\nProviders\\SpecialActivity.lua\nProbe.lua\nSettings.lua\nActions.lua\nAccountPage.lua\nCoreIntegration.lua\nCommands.lua\nBootstrap.lua\n"
+      },
+      "commands": [
+        {
+          "file": "YiboTodo/Commands.lua",
+          "registration": "SLASH_YIBOTODO1 = \"/ytd\""
+        }
+      ],
+      "publicPage": "https://www.curseforge.com/wow/addons/yibotodo"
+    },
+    {
+      "addon": "YiboVault",
+      "release": "1.1.1-api1",
+      "package": "E:\\Development\\YiboWow\\Builds\\YiboVault-v1.1.1-api1.zip",
+      "sha256": "39cfc29869bac5a297c4429ed386c01d2643e00f40e80c7da5c03ecc92bbe7e9",
+      "toc": {
+        "YiboVault/YiboVault.toc": "## Interface: 50504\n## Title: |cff20e070[Yibo]|r YiboVault - 物品总览\n## Notes: Account-wide item cache and read-only item query API.\n## Notes-zhCN: Yibo 系列账号物品缓存与只读查询服务。\n## Author: YiboSoft\n## Version: 1.1.1-api1\n## RequiredDeps: YiboCore\n## Group: YiboCore\n## SavedVariables: YiboVaultDB\n## IconTexture: Interface\\AddOns\\YiboVault\\Media\\YiboVaultIcon-v2\n## LoadOnDemand: 0\n\nNamespace.lua\nStore.lua\nItems.lua\nPersonalCounts.lua\nCollector.lua\nGuildBank.lua\nAuctionHouse.lua\nMailItems.lua\nMailProvider.lua\nStoragePage.lua\nAccountPage.lua\nTooltip.lua\nBootstrap.lua\nCommands.lua\n"
+      },
+      "commands": [
+        {
+          "file": "YiboVault/Commands.lua",
+          "registration": "SLASH_YIBOVAULT1 = \"/yva\""
+        }
+      ],
+      "publicPage": "https://www.curseforge.com/wow/addons/yibovault"
+    }
+  ]
+}

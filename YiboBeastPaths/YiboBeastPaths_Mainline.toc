@@ -1,5 +1,6 @@
 ## Interface: 120007
-## Title: |cff20e070[Yibo]|r YiboBeastPaths
+## Title: |cff20e070[Yibo]|r YiboBeastPaths - Hunter Pet Routes
+## Title-zhTW: |cff20e070[Yibo]|r YiboBeastPaths
 ## Title-zhCN: |cff20e070[Yibo]|r YiboBeastPaths - 隐兽寻踪
 ## Notes: World map route overlays for Pandaria hidden hunter pets.
 ## Notes-zhCN: 直接在世界地图显示潘达利亚隐藏猎人宠物路线图。

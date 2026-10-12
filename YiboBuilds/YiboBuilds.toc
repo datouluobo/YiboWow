@@ -1,5 +1,7 @@
 ## Interface: 50504
-## Title: |cff20e070[Yibo]|r YiboBuilds - 角色构筑
+## Title: |cff20e070[Yibo]|r YiboBuilds - Character Builds
+## Title-zhCN: |cff20e070[Yibo]|r YiboBuilds - 角色构筑
+## Title-zhTW: |cff20e070[Yibo]|r YiboBuilds - 角色构筑
 ## Notes: 多角色构筑、装备、天赋与雕文总览
 ## Author: YiboSoft
 ## Version: 1.4.2
@@ -20,5 +22,6 @@ Data\ProfessionCatalog.lua
 Data\SocketEffectCatalog.lua
 Snapshot.lua
 AccountPage.lua
+GoalTargets.lua
 CoreIntegration.lua
 Commands.lua

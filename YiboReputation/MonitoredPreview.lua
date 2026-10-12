@@ -9,22 +9,24 @@ local function Snapshot(character)
     return Core.DataDomains:Get(character.id, "reputation")
 end
 
-local function Data(character, factionID)
-    return Addon:GetFactionData(Snapshot(character), factionID)
-end
-
 local function ShowMonitoredTooltip(row)
     local context = row.monitoredTooltip
     if not context then return end
     local scale = (row.GetEffectiveScale and row:GetEffectiveScale()) or 1
     local cursorX = (GetCursorPosition and GetCursorPosition() or 0) / scale
     local relative = cursorX - (row:GetLeft() or cursorX)
-    if relative < context.nameWidth then GameTooltip:Hide(); return end
-    local character = context.characters[context.first + math.floor((relative - context.nameWidth) / context.cellWidth)]
-    local data = character and Data(character, context.factionID)
+    local column = math.floor((relative - context.nameWidth) / context.cellWidth) + 1
+    if relative < context.nameWidth or column > #context.characters then
+        row.monitoredTooltipColumn = nil; GameTooltip:Hide(); return
+    end
+    if row.monitoredTooltipColumn == column and GameTooltip.YiboMonitoredRow == row and GameTooltip:IsShown() then return end
+    row.monitoredTooltipColumn = column
+    local character = context.characters[column]
+    local data = character and Addon:GetFactionData(context.snapshots[character.id], context.factionID)
     local compact, detail = data and Addon:FormatCompact(data), data and Addon:FormatReputation(data)
     if not detail or compact == detail or not detail:find("/", 1, true) then GameTooltip:Hide(); return end
     GameTooltip:SetOwner(row, "ANCHOR_CURSOR"); GameTooltip:ClearLines()
+    GameTooltip.YiboMonitoredRow = row
     GameTooltip:AddLine(detail, Theme.Colors.text[1], Theme.Colors.text[2], Theme.Colors.text[3]); GameTooltip:Show()
 end
 
@@ -50,6 +52,8 @@ function Addon:RefreshMonitoredPreview(parent, context)
     local cellWidth = Theme:GetCharacterMatrixColumnWidth(context)
     local current = Core.Characters:GetCurrent()
     local shown, pageInfo = Core.AccountView:GetColumnPage("reputation", "monitored", context.characters, availableWidth, nameWidth, cellWidth, current and current.id)
+    local snapshots = {}
+    for _, character in ipairs(shown) do snapshots[character.id] = Snapshot(character) end
     local columns = { { width = nameWidth } }
     for _ = 1, #shown do columns[#columns + 1] = { width = cellWidth } end
 
@@ -85,7 +89,8 @@ function Addon:RefreshMonitoredPreview(parent, context)
         row.cells = row.cells or {}
         local values = { self:GetFactionName(factionID) }
         for _, character in ipairs(shown) do
-            values[#values + 1] = self:FormatSnapshotValue(Snapshot(character), Data(character, factionID), "compact", self:GetFactionState(Snapshot(character), factionID))
+            local snapshot = snapshots[character.id]
+            values[#values + 1] = self:FormatSnapshotValue(snapshot, self:GetFactionData(snapshot, factionID), "compact", self:GetFactionState(snapshot, factionID))
         end
         local x = 0
         for columnIndex, value in ipairs(values) do
@@ -94,17 +99,18 @@ function Addon:RefreshMonitoredPreview(parent, context)
             row.cells[columnIndex] = cell
             cell:ClearAllPoints(); cell:SetPoint("LEFT", row, "LEFT", x + Theme.Table.cellInset, 0); cell:SetWidth(width - Theme.Table.cellInset * 2); cell:SetText(value)
             if columnIndex > 1 then
-                local data = Data(shown[columnIndex - 1], factionID)
+                local data = self:GetFactionData(snapshots[shown[columnIndex - 1].id], factionID)
                 local color = data and self:GetReputationColor(data) or Theme.Colors.muted
                 cell:SetTextColor(color[1], color[2], color[3])
             else cell:SetTextColor(Theme.Colors.text[1], Theme.Colors.text[2], Theme.Colors.text[3]) end
             cell:Show(); x = x + width
         end
         for index = #values + 1, #row.cells do row.cells[index]:Hide() end
-        row.monitoredTooltip = { characters = context.characters, first = pageInfo.first, nameWidth = nameWidth, cellWidth = cellWidth, factionID = factionID }
+        row.monitoredTooltipColumn = nil
+        row.monitoredTooltip = { characters = shown, snapshots = snapshots, nameWidth = nameWidth, cellWidth = cellWidth, factionID = factionID }
         row:SetScript("OnEnter", function(control) control.monitoredTooltipTracking = true; ShowMonitoredTooltip(control) end)
         row:SetScript("OnUpdate", function(control) if control.monitoredTooltipTracking then ShowMonitoredTooltip(control) end end)
-        row:SetScript("OnLeave", function(control) control.monitoredTooltipTracking = false; GameTooltip:Hide() end)
+        row:SetScript("OnLeave", function(control) control.monitoredTooltipTracking = false; control.monitoredTooltipColumn = nil; GameTooltip.YiboMonitoredRow = nil; GameTooltip:Hide() end)
         row:Show(); y = y + Theme.Table.previewRowHeight
     end
     for index = #factionIDs + 1, #parent.monitoredRows do parent.monitoredRows[index]:Hide() end

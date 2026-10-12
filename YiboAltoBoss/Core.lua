@@ -247,6 +247,14 @@ local function RebuildBossCache()
     end
 end
 
+local function NotifyTargetCatalogChanged()
+    if YAB.TargetCatalog then YAB.TargetCatalog:Invalidate() end
+    local plans = YAB.PlannedTargets
+    if plans and plans.catalogRef and _G.YiboCore and _G.YiboCore.Contracts then
+        _G.YiboCore.Contracts:NotifyChanged("YiboAltoBoss", plans.catalogRef, { reason = "target-catalog-changed" })
+    end
+end
+
 local function GetTargetKey(target)
     if type(target) == "table" then
         return target.key or (target.id and tostring(target.id)) or target.name
@@ -1374,9 +1382,10 @@ local function MarkBossKilled(charKey, bossId, source, phaseId, actualNpcId)
     return true
 end
 
+local persistenceReady = false
 function YAB.PersistDB()
     YiboAltoBossDB = YiboAltoBossDB or {}
-    EnsureDB()
+    if not persistenceReady then EnsureDB(); persistenceReady = true end
 end
 
 function YAB.GetAddonName()
@@ -1762,6 +1771,7 @@ function YAB.AddCustomTarget(input, localizedName)
         reset = "respawn",
     }
     RebuildBossCache()
+    NotifyTargetCatalogChanged()
     YAB.PersistDB()
     if YAB.NotifyCorePageChanged then
         YAB.NotifyCorePageChanged()
@@ -1799,6 +1809,7 @@ function YAB.UpdateCustomTargetName(npcId, localizedName)
 
     custom.name = name
     RebuildBossCache()
+    NotifyTargetCatalogChanged()
     return true
 end
 
@@ -1846,6 +1857,7 @@ function YAB.RemoveCustomTarget(input)
     YiboAltoBossDB.respawnSamples = retainedSamples
 
     RebuildBossCache()
+    NotifyTargetCatalogChanged()
     YAB.PersistDB()
     if YAB.NotifyCorePageChanged then
         YAB.NotifyCorePageChanged()

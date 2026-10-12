@@ -188,6 +188,7 @@ end
 function YAB.GetInstanceCatalog()
     return BuildInstanceCatalog()
 end
+function YAB.InvalidateInstanceCatalog() instanceCatalog = nil end
 
 function YAB.SetLockoutColumnEnabled(key, enabled)
     local db = DB()
@@ -292,39 +293,64 @@ function YAB.GetThrottleStatus()
     return #bucket.entries, db.settings.normalInstanceLimit, earliest, bucket.entries
 end
 
+local function SameLockouts(left, right, key)
+    if key == "resetAt" and type(left) == "number" and type(right) == "number" then return math.abs(left - right) <= 2 end
+    if type(left) ~= type(right) then return false end
+    if type(left) ~= "table" then return left == right end
+    for field, value in pairs(left) do if not SameLockouts(value, right[field], field) then return false end end
+    for field in pairs(right) do if left[field] == nil then return false end end
+    return true
+end
+
 function YAB.RefreshInstanceLockouts()
     local key = CurrentKey()
     local record = EnsureCharacter(key)
     if not record or not GetNumSavedInstances then return end
-    local lockouts, now = {}, Now()
+    local lockouts, now, directoryChanged = {}, Now(), false
     for index = 1, GetNumSavedInstances() do
-        local name, id, reset, difficultyID, locked, extended, _, _, maxPlayers, _, _, _, _, instanceID = GetSavedInstanceInfo(index)
+        local name, id, reset, difficultyID, locked, extended, _, _, maxPlayers, difficultyName, numEncounters, _, _, instanceID = GetSavedInstanceInfo(index)
         if locked and name then
             local lockKey = tostring(instanceID or id or name) .. ":" .. tostring(difficultyID or difficultyName or "normal")
             local item = {
                 key = lockKey, name = name, shortName = ShortName(name), id = id,
                 instanceID = instanceID, resetAt = reset and now + reset or 0,
                 difficultyID = difficultyID,
-                difficultyName = GetDifficultyInfo and (select(2, GetDifficultyInfo(difficultyID)) or "") or tostring(difficultyID or ""),
+                difficultyName = difficultyName or (GetDifficultyInfo and GetDifficultyInfo(difficultyID)) or tostring(difficultyID or ""),
                 maxPlayers = maxPlayers,
                 locked = locked, extended = extended, bosses = {},
             }
             if GetSavedInstanceEncounterInfo then
                 local bossCount = 0
                 for bossIndex = 1, 20 do
-                    local bossName, _, isKilled, encounterID = GetSavedInstanceEncounterInfo(index, bossIndex)
+                    local bossName, _, isKilled = GetSavedInstanceEncounterInfo(index, bossIndex)
                     if not bossName then break end
+                    -- Return #4 is not a DungeonEncounterID. Resolve the
+                    -- localized API label only inside a verified map/difficulty
+                    -- directory, then persist its stable business identity.
+                    local encounterID = YAB.TargetCatalog and YAB.TargetCatalog:ResolveSavedEncounter(instanceID, difficultyID, bossName)
                     bossCount = bossCount + 1
                     item.bosses[#item.bosses + 1] = { name = bossName, killed = isKilled, encounterID = encounterID }
                 end
-                item.bossCount = bossCount
+                item.bossCount = tonumber(numEncounters) or bossCount
+                if YAB.TargetCatalog and YAB.TargetCatalog:ObserveLegacyLockout(item) then directoryChanged = true end
+                for _, boss in ipairs(item.bosses) do
+                    boss.encounterID = YAB.TargetCatalog and YAB.TargetCatalog:ResolveSavedEncounter(instanceID, difficultyID, boss.name)
+                end
             end
             lockouts[lockKey] = item
         end
     end
+    local changed = not record.instanceLockoutsObservedAt or not SameLockouts(record.instanceLockouts, lockouts)
     record.instanceLockouts = lockouts
     record.instanceLockoutsObservedAt = now
-    Notify()
+    if YAB.PlannedTargets and YAB.PlannedTargets.providerRef then
+        record.targetLockoutCycles = { weekly = YAB.PlannedTargets:Period("weekly"), daily = YAB.PlannedTargets:Period("daily") }
+        YAB.PlannedTargets:ScheduleChange()
+        if directoryChanged then
+            YiboCore.Contracts:NotifyChanged("YiboAltoBoss", YAB.PlannedTargets.catalogRef, { reason = "legacy-directory-observed" })
+        end
+    end
+    if changed then Notify() end
 end
 
 function YAB.GetLockoutColumns(context)
@@ -447,8 +473,48 @@ function YAB.RecordEncounterKill(encounterName, encounterID)
 end
 
 local frame = CreateFrame("Frame")
+local requestQueued, requestPending, requestToken, lastRequestAt = false, false, 0, -math.huge
+local function ScheduleRequest()
+    if requestQueued or requestPending then return end
+    requestQueued = true
+    local delay = math.max(1, 5 - ((GetTime and GetTime() or 0) - lastRequestAt))
+    C_Timer.After(delay, function()
+        requestQueued = false
+        if requestPending then return end
+        YAB.RecordNormalInstanceEntry()
+        if not RequestRaidInfo then YAB.RefreshInstanceLockouts(); return end
+        requestPending, lastRequestAt = true, GetTime and GetTime() or 0
+        requestToken = requestToken + 1
+        local token = requestToken
+        RequestRaidInfo()
+        C_Timer.After(5, function()
+            if requestPending and requestToken == token then
+                requestPending = false
+                YAB.RefreshInstanceLockouts()
+            end
+        end)
+    end)
+end
+
+local function IsResetMessage(message)
+    if type(message) ~= "string" then return false end
+    for _, name in ipairs({ "INSTANCE_RESET_SUCCESS", "INSTANCE_RESET_FAILED", "INSTANCE_RESET_FAILED_ZONING", "INSTANCE_RESET_FAILED_OFFLINE" }) do
+        local format = _G[name]
+        if type(format) == "string" then
+            local pattern = format:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1"):gsub("%%%%s", ".+"):gsub("%%%%d", "%%d+")
+            if message:match("^" .. pattern .. "$") then return true end
+        end
+    end
+    return false
+end
+
 for _, event in ipairs({ "PLAYER_LOGIN", "PLAYER_ENTERING_WORLD", "RAID_INSTANCE_WELCOME", "ZONE_CHANGED_NEW_AREA", "ZONE_CHANGED_INDOORS", "UPDATE_INSTANCE_INFO", "ENCOUNTER_END", "BOSS_KILL", "CHAT_MSG_SYSTEM" }) do frame:RegisterEvent(event) end
 frame:SetScript("OnEvent", function(_, event, encounterID, encounterName, difficultyID, _, success)
+    if event == "UPDATE_INSTANCE_INFO" then
+        requestPending = false
+        YAB.RefreshInstanceLockouts()
+        return
+    end
     if event == "ENCOUNTER_END" then
         if tonumber(success) == 1 then YAB.RecordEncounterKill(encounterName, encounterID) end
         C_Timer.After(1, YAB.RefreshInstanceLockouts)
@@ -459,12 +525,8 @@ frame:SetScript("OnEvent", function(_, event, encounterID, encounterName, diffic
         return
     end
     if event == "CHAT_MSG_SYSTEM" then
-        C_Timer.After(0.5, YAB.RefreshInstanceLockouts)
+        if IsResetMessage(encounterID) then ScheduleRequest() end
         return
     end
-    C_Timer.After(1, function()
-        if RequestRaidInfo then RequestRaidInfo() end
-        YAB.RefreshInstanceLockouts()
-        YAB.RecordNormalInstanceEntry()
-    end)
+    ScheduleRequest()
 end)

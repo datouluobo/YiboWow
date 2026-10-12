@@ -1,11 +1,11 @@
 # YiboCore
-工作树新增 **1.12.0 / API v13 / localization:1**：Core 公共界面中英文资源、账号语言选择与重载生效、中文回退、非发布预览和静态检查已实现；客户端验收待完成，未发布。Core 常规设置 → 显示与入口 → 插件语言，可选择跟随客户端、中文或 English。业务插件按区域渐进接入，尚未迁移的文字可能仍为中文。契约见 [语言服务](Docs/API-v13-语言服务.md)，验证与待验清单见 [实施记录](../Docs/Core系列中英文客户端适配-实施与验收记录.md)。
+工作树新增 **1.12.0 / API v13 / localization:1**：YiboCore 已支持中英文界面适配与语言切换。Core 常规设置 → 通用 → 插件语言，可选择跟随客户端、中文或 English；选择后重载界面生效，缺失英文资源会回退中文。该支持覆盖 Core 自身界面；业务插件正按区域渐进接入，尚未迁移的文字可能仍为中文。当前工作树尚未发布，客户端验收状态见 [实施记录](../Docs/Core系列中英文客户端适配-实施与验收记录.md)；语言服务契约见 [API v13 语言服务](Docs/API-v13-语言服务.md)。
 
 ## Public overview / 对外说明
 
-**English.** YiboCore is the shared account window, character directory, and settings framework for Yibo WoW addons. It keeps identity, realm scope, sorting, settings, and entry lifecycle consistent across registered pages. Each business addon owns its own collected data and rules; Core supplies the shared framework and versioned capability contracts.
+**English.** YiboCore is the shared account window, character directory, and settings framework for Yibo WoW addons. It keeps identity, realm scope, sorting, settings, and entry lifecycle consistent across registered pages. Each business addon owns its own collected data and rules; Core supplies the shared framework and versioned capability contracts. YiboCore's interface supports Chinese and English, with an account-wide language setting for following the client language or choosing Chinese or English; changes take effect after a UI reload. Business addons are migrating their own text progressively, so untranslated addon content may remain in Chinese.
 
-**中文。** YiboCore 为 Yibo 系列提供统一账号窗口、角色目录与设置工作台，统一管理角色身份、服务器范围、排序、设置和入口生命周期。业务数据与规则仍归对应插件所有；Core 提供共享框架及带版本声明的能力契约。
+**中文。** YiboCore 为 Yibo 系列提供统一账号窗口、角色目录与设置工作台，统一管理角色身份、服务器范围、排序、设置和入口生命周期。业务数据与规则仍归对应插件所有；Core 提供共享框架及带版本声明的能力契约。YiboCore 界面支持中文和英文，可在账号级语言设置中选择跟随客户端、中文或 English，重载界面后生效。业务插件的自有文本正逐步适配，尚未迁移的内容可能仍显示中文。
 
 ### Business addons / 业务插件
 

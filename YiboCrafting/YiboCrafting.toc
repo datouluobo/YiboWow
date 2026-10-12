@@ -1,16 +1,24 @@
 ## Interface: 50504
-## Title: |cff20e070[Yibo]|r YiboCrafting - 专业制造
-## Notes-zhCN: 账号级专业配方正向缓存；未验证的配方状态保持未知。
+## Title: |cff20e070[Yibo]|r YiboCrafting - Profession Crafting
+## Title-zhCN: |cff20e070[Yibo]|r YiboCrafting - 专业制造
+## Title-zhTW: |cff20e070[Yibo]|r YiboCrafting - 专业制造
+## Notes-zhCN: 账号级专业配方学习状态；目录覆盖仍待验证。
 ## Author: YiboSoft
-## Version: 1.0.0
+## Version: 1.0.8
 ## IconTexture: Interface\AddOns\YiboCrafting\Media\YiboCraftingIcon-v2
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
 ## SavedVariables: YiboCraftingDB
 
 Namespace.lua
+Locales/Interface.lua
+Locales/Categories.lua
+Locales/Targets.lua
 Store.lua
 Collector.lua
 CategoryCatalog.lua
+RecipeCatalog.lua
+RecipeStateScanner.lua
+GoalTargets.lua
 AccountPage.lua
 Bootstrap.lua

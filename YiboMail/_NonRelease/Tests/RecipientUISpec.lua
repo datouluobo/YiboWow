@@ -1,5 +1,7 @@
 -- Run from the repository root: lua YiboMail/_NonRelease/Tests/NativeInboxSpec.lua
 local methods = {}
+function methods:GetStringWidth() return #(self.text or ""):gsub("[\128-\191]", "") * 12 end
+function methods:GetStringHeight() return math.max(1, math.ceil(self:GetStringWidth() / math.max(1, self:GetWidth()))) * 16 end
 function methods:RegisterForDrag(...) self.dragButtons = { ... } end
 function methods:IsMouseOver() return self.mouseOver == true end
 function methods:GetEffectiveScale() return 1 end
@@ -81,7 +83,7 @@ SendMailFrame = Frame(MailFrame); GameTooltip = Frame(); UISpecialFrames = {}
 SendMailNameEditBox = Frame(SendMailFrame); SendMailSubjectEditBox = Frame(SendMailFrame); SendMailBodyEditBox = Frame(SendMailFrame)
 SendMailMailButton = Frame(SendMailFrame); SendMailCancelButton = Frame(SendMailFrame)
 STANDARD_TEXT_FONT = 'font'; date = os.date
-YiboCore = { Capabilities = { Register = function() end } }; dofile('YiboCore/UI/Theme.lua'); dofile('YiboCore/UI/Input.lua'); dofile('YiboMail/Namespace.lua')
+YiboCore = { Capabilities = { Register = function() end } }; dofile("YiboCore/_NonRelease/Tests/LoadLocale.lua"); dofile('YiboCore/UI/Theme.lua'); dofile('YiboCore/UI/Input.lua'); dofile('YiboMail/Namespace.lua')
 function GetLooseMacroIcons(result) result[#result + 1] = "1001" end
 function GetLooseMacroItemIcons(result) result[#result + 1] = "INV_Letter_15" end
 function GetMacroIcons(result)

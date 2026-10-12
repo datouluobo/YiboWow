@@ -98,18 +98,26 @@ function Provider:ObserveCharacter(characterID)
     if not characterID then return false end
     local now, record = Addon:Now(), Addon.Database:GetProvider(characterID, self.id, true)
     record.days = record.days or {}
+    local changed = record.state ~= "available"
     for id, definition in pairs(Addon.Catalog.specialActivities or {}) do
         if definition.scope == "character" and (definition.scheduleKind == "daily-07" or (definition.scheduleKind == "event-daily-07" and IsRegistered(definition) and IsHolidayOpen(definition))) then
             local days = record.days[id] or {}; record.days[id] = days
             local key, day = ServerDay(definition, now), nil
             day = days[key] or {}; days[key] = day
+            local previous = day.state
             local active = QuestInLog(definition.questID)
-            day.observedAt, day.nextResetAt = now, NextReset(definition, now)
             if active ~= nil then day.state = active and "in-progress" or "actionable"
-            elseif IsCompleted(definition.questID) then day.state, day.completedAt = "completed", now
+            elseif IsCompleted(definition.questID) then
+                day.state = "completed"
+                if previous ~= "completed" then day.completedAt = now end
             elseif day.state ~= "completed" then day.state = "actionable" end
+            if previous ~= day.state or not day.observedAt then
+                day.observedAt, day.nextResetAt = now, NextReset(definition, now)
+                changed = true
+            end
         end
     end
+    if not changed then return false end
     record.revision, record.lastSuccessAt, record.state = (tonumber(record.revision) or 0) + 1, now, "available"
     Addon:NotifyChanged()
     return true
@@ -165,7 +173,7 @@ function Provider:RecordTurnIn(characterID, questID)
     return false
 end
 
-function Provider:GetProject(characterID, definition, now)
+function Provider:BuildProject(characterID, definition, now)
     local iconKind = definition.iconItemID and "item" or "texture"
     local icon = definition.iconItemID or definition.icon
     if definition.scope == "account" then
@@ -194,6 +202,34 @@ function Provider:GetProject(characterID, definition, now)
     local record = Addon.Database:GetProvider(characterID, self.id, false)
     local day = record and record.days and record.days[definition.id] and record.days[definition.id][ServerDay(definition, now)]
     return { groupID = definition.id, monitoringGroupID = definition.monitoringGroupID, label = definition.label, order = definition.order, state = day and day.state or "actionable", iconKind = iconKind, icon = icon, fallbackIcon = definition.icon, nextResetAt = day and day.nextResetAt or NextReset(definition, now), questID = definition.questID, statusText = day and day.state == "completed" and "本服务器日已完成" or "每日可完成" }
+end
+
+-- Publish source-owned period/scope metadata alongside the same view model.
+function Provider:GetProject(characterID, definition, now)
+    local project = self:BuildProject(characterID, definition, now)
+    if not project then return nil end
+    project.scope = definition.scope
+    project.period = definition.scheduleKind == "event-weekly" and "weekly" or "daily"
+    project.cycleKey = definition.scheduleKind == "event-weekly" and EventKey(now) or ServerDay(definition, now)
+    -- Re-evaluate calendar visibility at midnight as well as the source reset.
+    project.nextChangeAt = definition.scheduleKind == "event-weekly" and Addon.Model.Schedule:NextResetAt(now, 0) or project.nextResetAt
+    local record = Addon.Database:GetProvider(characterID, self.id, false)
+    local day = record and record.days and record.days[definition.id] and record.days[definition.id][project.cycleKey]
+    local account = definition.scope == "account" and Addon.db.byAccount.specialActivities and Addon.db.byAccount.specialActivities[definition.id]
+    project.observedAt = day and day.observedAt or (account and account.serverDay == project.cycleKey and account.completedAt) or nil
+    return project
+end
+
+-- Exact goals need to distinguish a closed event from missing observations.
+-- Normal Todo views keep using GetProject and omit the closed event entirely.
+function Provider:GetTargetProject(characterID, definition, now)
+    local project = self:GetProject(characterID, definition, now)
+    if project then return project end
+    if definition.scheduleKind == "event-weekly" and IsDarkmoonOpen() == false then
+        return { groupID = definition.id, label = definition.label, state = "not-applicable",
+            scope = definition.scope, period = "weekly", cycleKey = EventKey(now),
+            nextChangeAt = Addon.Model.Schedule:NextResetAt(now, 0), statusText = "活动未开放" }
+    end
 end
 
 Addon.Providers.Registry:Register(Provider)

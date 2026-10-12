@@ -2,7 +2,11 @@
 
 ![YiboMail 邮件助手](Media/YiboMailIcon-v1-128.png)
 
-当前版本 `1.2.2-api1` 提供原生邮箱增强，以及由 YiboCore 承载的收件箱、账号总览、历史记录三个标签页，可选 Broker/小地图入口、六列邮件悬停摘要和登录到期提醒，依赖 **YiboCore 1.8.0 / API v9**、`business-services:1`、`character-name-format:1` 和 `item-picker:2`，能力不足时提示升级并停止初始化。打开游戏邮箱即可收取和发送；跨角色查看可从 Core 统一窗口访问。邮件快照通过 Core 的 `mail.items` 服务提供给仓库，契约见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
+当前工作树 `1.2.6-api1` 提供原生邮箱增强，以及由 YiboCore 承载的收件箱、账号总览、历史记录三个标签页，可选 Broker/小地图入口、六列邮件悬停摘要和登录到期提醒，基础功能依赖 **YiboCore 1.8.0 / API v9**、`business-services:1`、`character-name-format:1` 和 `item-picker:2`，能力不足时提示升级并停止基础初始化。打开游戏邮箱即可收取和发送；跨角色查看可从 Core 统一窗口访问。邮件快照通过 Core 的 `mail.items` 服务提供给仓库，契约见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
+
+按物品或分类为收件人建立规则后，规则寄件页会汇总命中物品、按角色整理并按单封附件容量拆分寄件批次。玩家集中核对后即可逐封确认发送；保存的分配规则能大幅减少重复查找物品、选择收件人和手工装填，是多角色物资转移的主要省时点。
+
+可选 `action.todo` / `YiboMail:inbox-collection` 当前显示为“新邮件”，经 Core 提供给行动中心，单独要求 API v11 / business-providers:1；不足时只停止此集成并提示升级。每角色最多一条查看提醒；收件箱当前筛选结果显示信件、或附件箱显示对应附件／金币图块时即自动读信并确认提醒；同步调用游戏原生读信接口，使小地图新邮件提示随原生状态更新。无需取走附件，关闭邮箱或重载不会重新催收。筛除、隐藏与未展示来源不确认；收取期间暂缓，身份校验或原生读信失败不确认。升级前缓存建立基线；邮箱外原生新邮件信号可提示查看，扫描后细化数量。原库存 API 仍包含已看未取附件。359 项集成／展示／总览检查及 Mail／Vault 回归通过，详见 [当前邮件契约与显示复核](../Docs/行动中心-新邮件语义与角色显示复核.md)。本轮可 `/reload`，未发布、客户端待验收。
 
 ## 当前功能
 
@@ -47,6 +51,7 @@ RuleSendUI.lua
 Items.lua
 Scanner.lua
 ViewModel.lua
+ActionTodo.lua
 WorkspaceState.lua
 MailUI.lua
 CacheModel.lua
@@ -131,6 +136,15 @@ lua YiboMail/_NonRelease/Tests/WorkspaceSpec.lua
 - [产品边界与开发路线图](../Docs/YiboMail-产品边界与开发路线图.md)
 - [Public API v1 契约](../Docs/YiboVault-Mail-API-v1-契约.md)
 - [阶段 0 客户端验证记录](_NonRelease/Docs/Stage0-客户端验证记录.md)
-- [阶段 0 非发布客户端探针](../_NonRelease/YiboMailStage0Probe/README.md)
+- [阶段 0 客户端验证记录](_NonRelease/Docs/Stage0-客户端验证记录.md)
 
 本轮设置内容、概念图与客户端检查见 [设置页实施记录](../Docs/Design/YiboMail-Settings/设置页-2026-10-06.md)。
+
+
+## 行动中心主动添加（2026-10-10 工作树）
+
+角色行可明确添加查看新邮件；不自动导入邮箱工作，不以库存催收。本轮没有寄达／收取需求关联。
+
+新增强最低 Core API v12 / business-item-actions:1，不足提示升级并停止增强；原基础业务保留既有最低版本，作为旧 Core 兼容例外，无新交互本地回退。整体提高最低版本时收拢此例外。
+
+实际契约、自动化与客户端待验收范围见 [实施与验证](../Docs/行动中心-主动添加实施与验证.md)。

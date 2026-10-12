@@ -2,6 +2,31 @@ local Addon = _G.YiboTodo
 local Actions = {}
 Addon.Actions = Actions
 
+-- Plain-value action description shared by Todo icons and optional consumers.
+-- Only a hardware-clicked secure button may execute these attributes.
+function Actions:Describe(project, isCurrentCharacter)
+    if not self:IsEligible(project, isCurrentCharacter) then return nil end
+    local action = project.action
+    local itemID = action.actionMode == "use-item" and tonumber(action.itemID)
+    local item = itemID and (action.itemName or (GetItemInfo and GetItemInfo(itemID)) or ("item:" .. itemID))
+    local spellID = action.actionMode == "direct-craft" and tonumber(action.castSpellID)
+    local spellName
+    if spellID and C_Spell and C_Spell.GetSpellInfo then local info = C_Spell.GetSpellInfo(spellID); spellName = info and info.name
+    elseif spellID and GetSpellInfo then spellName = GetSpellInfo(spellID) end
+    local function Escape(value) return value and string.gsub(string.gsub(value, "\\", "\\\\"), '"', '\\"') end
+    local profession = spellID and Escape(project.professionName)
+    local recipe = spellID and Escape(spellName or project.label)
+    local open = profession and string.format('/run if not TradeSkillFrame or not TradeSkillFrame:IsShown()or GetTradeSkillLine()~="%s"then CastSpellByName("%s")end', profession, profession)
+    local craft = recipe and profession and string.format('/run for i=1,GetNumTradeSkills()do if GetTradeSkillInfo(i)=="%s"then DoTradeSkill(i,1);return end end;if GetTradeSkillLine()~="%s"then CastSpellByName("%s")end', recipe, profession, profession)
+    local target = itemID and action.interactName and string.format("/targetexact %s", action.interactName)
+    if not item and not craft and not open then return nil end
+    return { attributes = { type1 = item and "item" or "macro", item1 = item, macrotext1 = craft or open,
+        type2 = (target or open) and "macro" or "", macrotext2 = target or open },
+        professionAction = spellID ~= nil, spellID = spellID, spellName = spellName,
+        itemID = itemID, itemName = item, openProfessionMacro = open,
+        leftTitle = item and "使用物品" or "制作一次（未打开专业时先打开）", rightTitle = target and "选中诺米" or "打开专业" }
+end
+
 local function Call(fn, ...)
     if type(fn) ~= "function" then return false, "api-unavailable" end
     local ok, result = pcall(fn, ...)

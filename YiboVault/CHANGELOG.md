@@ -1,5 +1,10 @@
 # YiboVault 更新日志
 
+## 未发布 — 库存数量目标（2026-10-10）
+
+- 物品可添加角色或明确账号范围的数量目标，统计范围支持背包、银行、装备、邮件及这些个人来源合计。
+- 公会银行与拍卖上架不纳入本轮个人持有目标；来源未完整扫描时保持待确认。需要 Core API v12 / `business-item-actions:1` 和兼容 TaskHub，客户端待验收。
+
 ## 1.1.1-api1（2026-10-09）
 
 - 需要 YiboCore API v9、business-services:1（正式渠道包使用 Core 1.9.0 或更新版本）；经 Core 发现 mail.items，并注册 vault.items 供可选消费方查询。
