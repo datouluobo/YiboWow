@@ -4,19 +4,25 @@ local character = { id = "A", name = "Alpha", realm = "Realm" }
 local other = { id = "B", name = "Beta", realm = "Realm" }
 local core = { Characters = { GetCurrent = function() return character end, GetAllCached = function() return { character, other } end },
     AccountView = { GetVisibleCharacters = function() return { character, other } end, NotifyPageChanged = function() end } }
+core.Characters.Get = function(_, id) if id == character.id then return character elseif id == other.id then return other end end
 MailFrame = { IsShown = function() return true end }
 YiboCore = core
 core.Defaults = { Copy = function(_, value) local function copy(v) if type(v) ~= 'table' then return v end local r = {}; for k,x in pairs(v) do r[k] = copy(x) end return r end return copy(value) end }
 core.Capabilities = { Register = function() end }
+core.Database = { GetDB = function() return nil end }
+dofile('YiboCore/_NonRelease/Tests/LoadLocale.lua')
+local characterFixture = core.Characters
+dofile('YiboCore/Data/Characters.lua')
+characterFixture.FormatName = core.Characters.FormatName; core.Characters = characterFixture
 core.Registry = { Get = function(_, name) return name == 'YiboMail' or name == 'YiboVault' end }
 core.Print = function() end
 dofile('YiboCore/Runtime/Events.lua')
 dofile('YiboCore/Runtime/Contracts.lua')
-for _, file in ipairs({ "Namespace", "Store", "Items", "Scanner" }) do dofile("YiboMail/" .. file .. ".lua") end
+for _, file in ipairs({ "Namespace", "Locales/zh", "Locales/en", "Store", "Recipients", "Items", "Scanner" }) do dofile("YiboMail/" .. file .. ".lua") end
 YiboMail.Core = core; YiboMail:InitializeDatabase()
 local mail = YiboMail
 assert(mail.Items:RegisterService())
-for _, file in ipairs({ "Namespace", "Store", "Items", "MailItems", "MailProvider" }) do dofile("YiboVault/" .. file .. ".lua") end
+for _, file in ipairs({ "Namespace", "Locales/zh", "Locales/en", "Store", "Items", "MailItems", "MailProvider" }) do dofile("YiboVault/" .. file .. ".lua") end
 local vault, provider = YiboVault, YiboVault.MailProvider
 vault.Core = core
 vault.db = { revision = 0, byCharacter = {}, byGuild = {}, settings = {} }
@@ -121,3 +127,25 @@ assert(Query("A").totals.externalQuantity == 0
     and TooltipText() == "",
     "an error after successful empty Mail retains that empty snapshot instead of resurrecting old local attachments")
 print("PASS: real Mail API integration; per-character fallback; no duplicate totals; query/state/storage projections; partial/stale/error/empty; committed single Vault events; read-only scan suppression; early consumer race; optional load and subscription lifecycle")
+local transitItem = { itemID = 123, quantity = 10, variantKey = "link:item:123:0", itemLink = "|Hitem:123:0|h[Item]|h" }
+mail:AddHistory("B", { state = "in-transit", recipient = "Alpha-Realm", subject = "Transfer", attachments = { transitItem }, observedAt = 1000 })
+assert(Query("A").totals.inTransitQuantity == 10, "Real contract notification must expose the new transit stack")
+mail:AddHistory("A", { state = "collected-archived", mail = { sender = "Beta", subject = "Transfer", attachments = { transitItem } }, observedAt = 1000 })
+assert(Query("A").totals.inTransitQuantity == 0, "Receipt history must invalidate the indexed transit projection through the service")
+assert(mail.db.byCharacter.B.history[#mail.db.byCharacter.B.history].state == "in-transit", "Matching never rewrites send history")
+print("PASS: real Mail/Vault contracts publish transit and receipt invalidation without rewriting history or duplicating inventory")
+local refreshed, originalRefresh = {}, provider.Refresh
+function provider:Refresh(id) refreshed[#refreshed + 1] = id; return originalRefresh(self, id) end
+mail:Publish("A", {}, {}, "scan", true)
+assert(#refreshed == 1 and refreshed[1] == "A", "Readiness-only changes must not refresh unrelated characters")
+refreshed = {}
+mail:Publish("A", {}, {}, "archive")
+assert(#refreshed == 2, "Missing optimization hint must retain full account transfer refresh")
+refreshed = {}
+mail:WithPublicationBatch(function()
+    mail:Publish("A", {}, {}, "scan", true)
+    mail:Publish("A", {}, {}, "archive")
+end)
+assert(#refreshed == 2, "A merged data change must not inherit the readiness-only hint")
+provider.Refresh = originalRefresh
+print("PASS: status changes refresh one character; mixed/archive and older-provider notifications refresh all possible transit recipients")

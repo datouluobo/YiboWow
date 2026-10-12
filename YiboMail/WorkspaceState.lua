@@ -44,7 +44,7 @@ function State:ValidateCharacters(characters)
     local inbox, exists = self:Get().inbox, {}
     for _, character in ipairs(characters) do exists[character.id] = true end
     if not inbox.initialized or (inbox.character and not exists[inbox.character]) then
-        local current = Addon.Core.Characters:GetCurrent()
+        local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
         inbox.character = current and exists[current.id] and current.id or (characters[1] and characters[1].id)
         inbox.scroll, inbox.anchor, inbox.anchorOffset = 0, nil, nil; inbox.initialized = true
     end

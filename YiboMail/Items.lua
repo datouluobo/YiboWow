@@ -6,14 +6,8 @@ function Items:HasCapability(name, minimumVersion)
     local version = Addon.CAPABILITIES[name]; return version ~= nil and version >= (tonumber(minimumVersion) or 1), version
 end
 function Items:GetRevision() return Addon.db and Addon.db.revision or 0 end
-local function CharacterByAddress(address, defaultRealm)
-    local normalized, _, name, realm = Addon.Recipients:Normalize(address, defaultRealm)
-    if not normalized then return nil end
-    local key = Addon.Recipients:Key(name .. "-" .. realm)
-    for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do
-        if character.name and character.realm
-            and Addon.Recipients:Key(character.name .. "-" .. character.realm) == key then return character end
-    end
+function Items:OnPublish(revision, transfersUnchanged)
+    if not transfersUnchanged or self.transferDataRevision == nil then self.transferDataRevision = revision end
 end
 local function ItemVariantKey(item)
     if type(item) ~= "table" then return nil end
@@ -34,14 +28,83 @@ local function AttachmentSignature(items)
     table.sort(identities)
     return Addon.Encode(identities)
 end
-local function SenderMatches(sender, senderCharacter, recipientRealm)
-    if type(sender) ~= "string" or sender == "" then return false end
-    local normalized, _, name, realm = Addon.Recipients:Normalize(sender, recipientRealm)
-    if normalized then
-        return Addon.Recipients:Key(name) == Addon.Recipients:Key(senderCharacter.name)
-            and Addon.Recipients:Key(realm) == Addon.Recipients:Key(senderCharacter.realm)
+local function TransferIndex(characters)
+    local addresses, seen, index = {}, {}, { sends = {}, received = {}, returned = {} }
+    for _, character in ipairs(characters) do
+        if character.name and character.realm then
+            addresses[Addon.Recipients:Key(character.name .. "-" .. character.realm)] = character
+        end
     end
-    return false
+    local function Resolve(address, realm)
+        local normalized = Addon.Recipients:Normalize(address, realm)
+        return normalized and addresses[Addon.Recipients:Key(normalized)]
+    end
+    local function Evidence(owner, mail, stamp, identity, allowReturn)
+        if not mail or type(stamp) ~= "number" or (mail.wasReturned and not allowReturn) then return end
+        local other = Resolve(mail.sender, owner.realm)
+        local attachmentKey = other and AttachmentSignature(mail.attachments)
+        if not attachmentKey then return end
+        local key = Addon.Encode({ owner.id, other.id, mail.subject or "", attachmentKey })
+        local bucket = mail.wasReturned and index.returned or index.received
+        bucket[key] = bucket[key] or {}
+        local identityKey = Addon.Encode({ mail.wasReturned == true, key, identity })
+        if seen[identityKey] then return end
+        seen[identityKey] = true
+        bucket[key][#bucket[key] + 1] = { at = stamp, id = identity }
+    end
+    -- Visit each mailbox/history once for the whole account, rather than
+    -- rescanning every sender's history for each send and each recipient.
+    for _, owner in ipairs(characters) do
+        local snapshot = Addon.db.byCharacter[owner.id]
+        for key, mail in pairs(snapshot and snapshot.records or {}) do
+            if mail.state == "observed" or mail.wasReturned then
+                Evidence(owner, mail, mail.observedAt, "inbox:" .. owner.id .. ":" .. key, true)
+            end
+        end
+        for _, history in ipairs(snapshot and snapshot.history or {}) do
+            if history.state == "discovered" or history.state == "collected-archived" then
+                local mail = history.mail or history
+                Evidence(owner, mail, history.observedAt or mail.observedAt,
+                    "history:" .. owner.id .. ":" .. tostring(history.eventID or history.sourceMailKey or ""), history.state == "collected-archived")
+            elseif history.state == "in-transit" and type(history.recipient) == "string" then
+                local recipient = Resolve(history.recipient, owner.realm)
+                local attachmentKey = recipient and AttachmentSignature(history.attachments)
+                if attachmentKey then
+                    index.sends[recipient.id] = index.sends[recipient.id] or {}
+                    local sends = index.sends[recipient.id]
+                    sends[#sends + 1] = { history = history, sender = owner, attachmentKey = attachmentKey }
+                end
+            end
+        end
+    end
+    for _, buckets in ipairs({ index.received, index.returned }) do
+        for _, evidence in pairs(buckets) do
+            table.sort(evidence, function(a, b) if a.at ~= b.at then return a.at < b.at end; return a.id < b.id end)
+        end
+    end
+    return index
+end
+local function ConsumeEvidence(evidence, at, consumed)
+    if not evidence then return false end
+    -- Find the first sufficiently recent occurrence. Path compression skips
+    -- already consumed occurrences even when sends are not timestamp ordered.
+    local low, high = 1, #evidence + 1
+    while low < high do
+        local middle = math.floor((low + high) / 2)
+        if evidence[middle].at < at then low = middle + 1 else high = middle end
+    end
+    local parents = consumed[evidence]
+    if not parents then parents = {}; consumed[evidence] = parents end
+    local function Next(slot)
+        local result = slot
+        while parents[result] do result = parents[result] end
+        while parents[slot] do local nextSlot = parents[slot]; parents[slot] = result; slot = nextSlot end
+        return result
+    end
+    local slot = Next(low)
+    if slot > #evidence then return false end
+    parents[slot] = Next(slot + 1)
+    return true
 end
 function Items:GetTransfers(characterID)
     if type(characterID) ~= "string" or characterID == "" then return nil, "invalid-character-id" end
@@ -52,9 +115,11 @@ function Items:GetTransfers(characterID)
         directory[#directory + 1] = Addon.Encode({ character.id, character.name or "", character.realm or "" })
     end
     table.sort(directory)
-    local cacheKey = Addon.Encode({ revision, table.concat(directory) })
+    local cacheKey = Addon.Encode({ self.transferDataRevision or revision, table.concat(directory) })
     local cached = self.transfersCache[characterID]
-    if cached and cached.cacheKey == cacheKey then return Addon.Copy(cached.result) end
+    if cached and cached.cacheKey == cacheKey then
+        local result = Addon.Copy(cached.result); result.revision = revision; return result
+    end
     local target
     for _, character in ipairs(characters) do
         if character.id == characterID then target = character end
@@ -65,92 +130,35 @@ function Items:GetTransfers(characterID)
         return Addon.Copy(empty)
     end
 
-    -- A scanned receipt confirms a send only when its sender and complete
-    -- attachment multiset match. Identical messages are counted by occurrence.
-    local received = {}
-    local targetSnapshot = Addon.db.byCharacter[characterID]
-    local function AddReceived(mail, observedAt, identity)
-        if not mail or mail.wasReturned or type(observedAt) ~= "number" then return end
-        local senderCharacter
-        for _, candidate in ipairs(characters) do
-            if SenderMatches(mail.sender, candidate, target.realm) then senderCharacter = candidate; break end
-        end
-        local attachmentKey = AttachmentSignature(mail.attachments)
-        if not senderCharacter or not attachmentKey then return end
-        local signature = Addon.Encode({ senderCharacter.id, mail.subject or "", attachmentKey })
-        received[signature] = received[signature] or {}
-        if not received[signature][identity] then received[signature][identity] = observedAt end
+    if self.transferIndexKey ~= cacheKey then
+        self.transferIndex = TransferIndex(characters)
+        self.transferIndexKey = cacheKey
+        self.transfersCache = {}
     end
-    if targetSnapshot then
-        for key, mail in pairs(targetSnapshot.records or {}) do
-            if mail.state == "observed" then AddReceived(mail, mail.observedAt, "inbox:" .. key) end
-        end
-        for _, history in ipairs(targetSnapshot.history or {}) do
-            if history.state == "discovered" or history.state == "collected-archived" then
-                local mail = history.mail or history
-                AddReceived(mail, history.observedAt or mail.observedAt, "history:" .. tostring(history.eventID or history.sourceMailKey or ""))
-            end
-        end
-    end
-
-    local consumed, consumedReturns = {}, {}
-    local records = {}
-    for _, senderCharacter in ipairs(characters) do
-        local snapshot = Addon.db.byCharacter[senderCharacter.id]
-        for _, history in ipairs(snapshot and snapshot.history or {}) do
-            if history.state == "in-transit" and type(history.recipient) == "string" then
-                local recipient = CharacterByAddress(history.recipient, senderCharacter.realm)
-                local attachmentKey = AttachmentSignature(history.attachments)
-                if recipient and recipient.id == characterID and attachmentKey then
-                    local sentAt = tonumber(history.observedAt or history.attemptedAt) or 0
-                    local signature = Addon.Encode({ senderCharacter.id, history.subject or "", attachmentKey })
-                    local returned = false
-                    local function CheckReturn(mail, observedAt, identity)
-                        if returned or consumedReturns[identity] or not mail or not mail.wasReturned
-                            or (tonumber(observedAt) or 0) < sentAt or (mail.subject or "") ~= (history.subject or "")
-                            or AttachmentSignature(mail.attachments) ~= attachmentKey
-                            or not SenderMatches(mail.sender, recipient, senderCharacter.realm) then return end
-                        returned, consumedReturns[identity] = true, true
-                    end
-                    for key, mail in pairs(snapshot and snapshot.records or {}) do
-                        CheckReturn(mail, mail.observedAt, "return-inbox:" .. senderCharacter.id .. ":" .. key)
-                    end
-                    for _, mailHistory in ipairs(snapshot and snapshot.history or {}) do
-                        if mailHistory.state == "collected-archived" then
-                            local returnedMail = mailHistory.mail or mailHistory
-                            CheckReturn(returnedMail, mailHistory.observedAt or returnedMail.observedAt,
-                                "return-history:" .. senderCharacter.id .. ":" .. tostring(mailHistory.eventID or mailHistory.sourceMailKey or ""))
-                        end
-                    end
-                    local matchedReceipt
-                    if not returned then
-                        for receiptID, receivedAt in pairs(received[signature] or {}) do
-                            if not consumed[receiptID] and receivedAt >= sentAt then matchedReceipt = receiptID; break end
-                        end
-                    end
-                    if returned then
-                        -- A returned attachment is back with its sender; do not
-                        -- continue showing it as addressed to the recipient.
-                    elseif matchedReceipt then
-                        consumed[matchedReceipt] = true
-                    else
-                        for attachmentIndex, item in ipairs(history.attachments) do
-                            local variantKey = ItemVariantKey(item)
-                            records[#records + 1] = {
-                                sourceID = "mail-transit:" .. senderCharacter.id .. ":" .. tostring(history.eventID or sentAt) .. ":" .. attachmentIndex,
-                                source = "mail", sourceClass = "external", mailStatus = "in-transit",
-                                itemID = item.itemID, itemLink = item.itemLink,
-                                itemKey = item.itemKey or ("item:" .. item.itemID), variantKey = variantKey,
-                                identityQuality = variantKey and variantKey ~= ("item:" .. item.itemID) and "full-link" or "item-id-only",
-                                quantity = item.quantity,
-                                characterID = characterID, realm = target.realm, senderCharacterID = senderCharacter.id,
-                                senderName = senderCharacter.name, recipientCharacterID = characterID,
-                                location = { container = "in-transit", attachmentIndex = attachmentIndex },
-                                observedAt = sentAt, state = "in-transit", subject = history.subject,
-                            }
-                        end
-                    end
-                end
+    local index = self.transferIndex
+    local consumed, consumedReturns, records = {}, {}, {}
+    for _, candidate in ipairs(index.sends[characterID] or {}) do
+        local history, senderCharacter = candidate.history, candidate.sender
+        local sentAt = tonumber(history.observedAt or history.attemptedAt) or 0
+        local receiptKey = Addon.Encode({ characterID, senderCharacter.id, history.subject or "", candidate.attachmentKey })
+        local returnKey = Addon.Encode({ senderCharacter.id, characterID, history.subject or "", candidate.attachmentKey })
+        local returned = ConsumeEvidence(index.returned[returnKey], sentAt, consumedReturns)
+        local received = not returned and ConsumeEvidence(index.received[receiptKey], sentAt, consumed)
+        if not returned and not received then
+            for attachmentIndex, item in ipairs(history.attachments) do
+                local variantKey = ItemVariantKey(item)
+                records[#records + 1] = {
+                    sourceID = "mail-transit:" .. senderCharacter.id .. ":" .. tostring(history.eventID or sentAt) .. ":" .. attachmentIndex,
+                    source = "mail", sourceClass = "external", mailStatus = "in-transit",
+                    itemID = item.itemID, itemLink = item.itemLink,
+                    itemKey = item.itemKey or ("item:" .. item.itemID), variantKey = variantKey,
+                    identityQuality = variantKey and variantKey ~= ("item:" .. item.itemID) and "full-link" or "item-id-only",
+                    quantity = item.quantity,
+                    characterID = characterID, realm = target.realm, senderCharacterID = senderCharacter.id,
+                    senderName = senderCharacter.name, recipientCharacterID = characterID,
+                    location = { container = "in-transit", attachmentIndex = attachmentIndex },
+                    observedAt = sentAt, state = "in-transit", subject = history.subject,
+                }
             end
         end
     end
@@ -201,7 +209,7 @@ function Items:GetState(characterID)
     -- Closed mailbox state is stale without consulting a full Core snapshot.
     -- When live/error identity is needed, read it once for this query.
     local mailboxOpen = Addon.Scanner:IsOpen()
-    local current = (mailboxOpen or Addon.Scanner.lastError) and Addon.Core and Addon.Core.Characters:GetCurrent()
+    local current = (mailboxOpen or Addon.Scanner.lastError) and Addon.Core and Addon.Core.Characters:GetCurrent({ identityOnly = true })
     if snapshot then
         local live = current and current.id == characterID and mailboxOpen and Addon.Scanner.updated
             and Addon.Scanner.validAt == snapshot.coverage.observedAt and not Addon.Scanner.lastError
@@ -218,7 +226,7 @@ end
 local function Resolve(scope)
     local core = Addon.Core
     if not core then return {} end
-    if scope == nil then local current = core.Characters:GetCurrent(); return current and { current } or {} end
+    if scope == nil then local current = core.Characters:GetCurrent({ identityOnly = true }); return current and { current } or {} end
     if type(scope) ~= "table" then return nil, "invalid-scope" end
     if scope.mode == "characters" then
         if type(scope.characterIDs) ~= "table" then return nil, "invalid-scope" end
@@ -253,7 +261,7 @@ function Items:Query(options)
     local characters, err = Resolve(options.scope); if not characters then return nil, err end
     local now = Addon:Now()
     local result = { apiVersion = 1, revision = self:GetRevision(), generatedAt = now, records = {}, quantity = 0, coverage = {} }
-    local current = Addon.Core and Addon.Core.Characters:GetCurrent()
+    local current = Addon.Core and Addon.Core.Characters:GetCurrent({ identityOnly = true })
     for _, character in ipairs(characters) do
         result.coverage[character.id] = self:GetState(character.id)
         local snapshot = Addon.db and Addon.db.byCharacter[character.id]

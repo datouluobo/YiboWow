@@ -329,7 +329,7 @@ function UI:Owners(root, characters, entries, state, x, top, width, height)
     for _, entry in ipairs(entries) do matches[entry.character.id] = (matches[entry.character.id] or 0) + 1 end
     local list = { { name = Addon:T("UI.TEXT_0136"), count = #entries } }
     for _, character in ipairs(characters) do list[#list + 1] = character end
-    local current = Core.Characters:GetCurrent()
+    local current = Core.Characters:GetCurrent({ identityOnly = true })
     for index, character in ipairs(list) do
         local row = root.ownerRows[index]
         if not row then

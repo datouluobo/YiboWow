@@ -547,3 +547,97 @@ for _, field in ipairs(englishFields) do if field.key == 'content' then attachme
 assert(attachmentWidth >= 160, 'Long status text must not squeeze history attachments into the former 100px column')
 assert(Addon.HistoryModel:Content({ items = longHistory.items, state = 'unverified', money = 0, record = { cacheProjection = true } }, true) == '')
 print('PASS: English filters fit or wrap without overlap; compact tabs; attachment budget and uncertainty details stay separate')
+
+-- A late-sorted warehouse role must survive the real Core scope/admission
+-- path in Mail, while existing pages retain their default 20-role limit.
+local function RegisterMailPage()
+    local savedRegister = YiboCore.AccountView.RegisterPage
+    YiboCore.AccountView.RegisterPage = function(self, _, page) self._pages[page.id] = page; return page end
+    assert(Addon.AccountPage:Register())
+    YiboCore.AccountView.RegisterPage = savedRegister
+    return YiboCore.AccountView._pages[Addon.AccountPage.ID]
+end
+local mailPage = RegisterMailPage()
+local roster = {}
+for index = 1, 24 do
+    local character = { id = 'Preview' .. index, name = index == 24 and '天堂仓库一号' or ('Role' .. index),
+        realm = index <= 18 and 'Two' or 'One', class = 'MAGE' }
+    roster[index] = character
+    Snapshot(character, { Mail('Preview', { Item(100, 1) }, now + 10 * 86400) })
+end
+YiboCore.AccountView.GetVisibleCharacters = function() return roster end
+YiboCore.Characters.GetAllCached = function() return roster end
+YiboCore.Characters.GetCurrentID = function() return roster[24].id end
+YiboCore.CharacterSort.Sort = function(_, characters) return characters end
+YiboCore.CharacterSort.BuildCustomOrder = function() return {} end
+local view = YiboCore.AccountView
+local function PreviewContext(scope)
+    view:GetSettings().selectedRealmScope = scope
+    return view:BuildContext(mailPage, { preview = true, fieldOverrides = mailPage.GetPreviewFields() })
+end
+local all = PreviewContext('all')
+assert(#all.characters == 24 and all.characters[24].id == roster[24].id)
+assert(#PreviewContext('realm:One').characters == 6 and #PreviewContext('realm:Two').characters == 18)
+mailPage.previewCharacterLimit = nil
+assert(#PreviewContext('all').characters == 20, 'Unchanged pages still default to 20')
+assert(#view:BuildContext(mailPage, { preview = true, characterLimit = 7 }).characters == 7)
+mailPage.previewCharacterLimit = false
+
+-- Resolve the anchored scroll viewport from the real rendered header and
+-- Core shell geometry, then exercise Theme's real overflow decision.
+for _, language in ipairs({ 'zh', 'en' }) do
+    YiboCore.Locale.language = language
+    dofile('YiboMail/AccountPage.lua'); mailPage = RegisterMailPage()
+    for _, rowCount in ipairs({ 1, 4, 18, 24 }) do
+        local previewContext = PreviewContext('all')
+        previewContext.characters = {}
+        for index = 1, rowCount do previewContext.characters[index] = roster[index] end
+        for _, hasAlert in ipairs({ false, true }) do
+            roster[1].realm = 'Two'
+            Addon.db.byCharacter[roster[1].id].records.Preview11.expiresAtEstimate = now + (hasAlert and 2 or 10) * 86400
+            local measured = mailPage.GetHoverMetrics(previewContext)
+            local shellHeight = theme.Geometry.titleBar + theme.Geometry.shellBorder * 2
+            local preview = Frame(UIParent); preview:SetSize(measured.preferredWidth - 2, measured.preferredHeight - shellHeight)
+            Addon.AccountPage:CreateSummary(preview)
+            local function RenderAtHeight(height)
+                preview:SetHeight(height)
+                Addon.AccountPage:RefreshSummary(preview, previewContext)
+                local header = preview.mailHeader
+                local headerTop = -header.points[1][3]
+                local viewport = height - headerTop - header:GetHeight() - 1 - 8
+                preview.mailScroll:SetHeight(viewport); preview.mailScroll:UpdateScrollbar()
+            end
+            RenderAtHeight(preview:GetHeight())
+            assert(not preview.mailScroll.ScrollBar:IsShown(), 'Natural height fits every row, including title bar, alert and header')
+            assert(preview.mailRows[rowCount]:IsShown() and preview.mailRows[rowCount].cells[1]:GetText() == roster[rowCount].name)
+            if rowCount > 4 then
+                RenderAtHeight(preview:GetHeight() - 100)
+                assert(preview.mailScroll.ScrollBar:IsShown(), 'Real screen constraints still allow reaching later rows')
+            end
+        end
+    end
+    local scoped = PreviewContext('realm:Two')
+    local preview = Frame(UIParent); preview:SetSize(900, 700)
+    Addon.AccountPage:CreateSummary(preview); Addon.AccountPage:RefreshSummary(preview, scoped)
+    assert(preview.mailRows[1].realmLabels[1]:GetText() == '', 'A single other realm has the same compact name layout as the current realm')
+end
+print('PASS: real Core realm admission retains 24 Mail roles including late warehouse; legacy/default/explicit limits; zh/en 1/4/18/24 rows fit and constrained height scrolls')
+
+-- The new optional Core contract is required before Mail initializes data.
+local savedCore, savedInitialized = _G.YiboCore, Addon.initialized
+local upgradeMessage
+_G.YiboCore = {
+    CheckAPIVersion = function() return true end, IsInitialized = function() return true end,
+    HasCapability = function(_, capability) return capability ~= 'account-preview-characters' end,
+    Locale = { Get = function() return 'Upgrade Core' end, Register = function() end },
+    Contracts = { Register = function() end, NotifyChanged = function() end },
+}
+local savedPrint, savedInitializeDatabase = Addon.Print, Addon.InitializeDatabase
+Addon.Print = function(_, message) upgradeMessage = message end
+Addon.InitializeDatabase = function() error('Missing preview contract must stop before data initialization') end
+Addon.Frame.RegisterEvent = function() end
+Addon.initialized = nil; dofile('YiboMail/Bootstrap.lua'); Addon:Initialize()
+assert(not Addon.initialized and upgradeMessage)
+_G.YiboCore, Addon.initialized = savedCore, savedInitialized
+Addon.Print, Addon.InitializeDatabase = savedPrint, savedInitializeDatabase
+print('PASS: Core missing account-preview-characters:1 prompts upgrade and stops Mail initialization')

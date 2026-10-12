@@ -117,7 +117,7 @@ function U:Refresh()
     local c, root = Addon.RuleSendController, self.root
     if not root or not self.active or self.refreshing then return end
     self.refreshing = true
-    local current = Addon.Core.Characters:GetCurrent()
+    local current = Addon.Recipients:Current()
     local match = c.match or { byRule = {}, conflicts = {}, items = {} }
     local entries, groups = {}, {}
     for _, rule in ipairs(Addon.SendRules:List()) do

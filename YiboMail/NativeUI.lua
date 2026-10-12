@@ -190,7 +190,7 @@ function Native:ApplyInboxPreferences(deferWhileOpen)
     self:RefreshInbox()
 end
 function Native:Context()
-    local character = Addon.Core.Characters:GetCurrent()
+    local character = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     return { characters = character and { character } or {} }
 end
 function Native:Dropdown(parent, width, label)
@@ -485,7 +485,7 @@ function Native:RowItems(row, items)
 end
 function Native:DeleteEmptyMail(entry)
     if self.deleting or Addon.Queue.state == "running" or Addon.Queue.pending then return end
-    local character = Addon.Core.Characters:GetCurrent()
+    local character = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     local mails, err = Addon.Scanner:ReadVisible()
     local index = entry.mail.inboxIndex
     local mail = mails and mails[index]
@@ -540,7 +540,7 @@ function Native:OpenMail(entry, keepOpen)
     end
     self.inbox.notice = Addon:T("UI.TEXT_0171"); self:RefreshInbox()
 end
-function Native:ReadMail(entry, automatic)
+function Native:ReadMail(entry, automatic, batch)
     if Addon.Queue.state == "running" or Addon.Queue.pending then
         if not automatic then self.inbox.notice = Addon:T("UI.TEXT_0529"); self:RefreshInbox() end
         return nil
@@ -566,19 +566,23 @@ function Native:ReadMail(entry, automatic)
     elseif automatic then
         return nil
     end
-    if Addon.MarkMailOpened then return Addon:MarkMailOpened(entry) end
+    if Addon.MarkMailOpened then return Addon:MarkMailOpened(entry, batch) end
     entry.mail.openedByUser = true; return true
 end
 function Native:ReadDisplayedMails(entries)
     -- Only the live mailbox surface acknowledges mail, never background
     -- snapshots, account previews, or entries excluded by the active filter.
     if not Addon.Scanner.IsOpen or not Addon.Scanner:IsOpen() then return end
-    local seen = {}
+    local seen, batch = {}, {}
     for _, entry in ipairs(entries) do
         if not seen[entry.key] then
             seen[entry.key] = true
-            if not entry.mail.wasRead or not entry.mail.openedByUser then self:ReadMail(entry, true) end
+            if not entry.mail.wasRead or not entry.mail.openedByUser then self:ReadMail(entry, true, batch) end
         end
+    end
+    for characterID, keys in pairs(batch) do
+        Addon:UpdateMailNoticeBatch(characterID)
+        Addon:Publish(characterID, keys, {}, "scan", true)
     end
 end
 function Native:CollectCOD(entry, item)
@@ -919,7 +923,7 @@ function Native:RefreshCollectedMailRow(action)
     local mail, entry
     if action.resultMail and mainRow then
         mail = action.resultMail
-        entry = { character = Addon.Core.Characters:GetCurrent(), key = action.resultMailKey, mail = mail,
+        entry = { character = Addon.Core.Characters:GetCurrent({ identityOnly = true }), key = action.resultMailKey, mail = mail,
             actionable = mail.cod == 0 and mail.state == "observed" }
         local extra = {}
         if mail.money > 0 then extra[#extra + 1] = Addon:T("UI.TEXT_0615") .. View:Money(mail.money) end
@@ -1742,7 +1746,7 @@ function Native:RefreshSend()
     self:RefreshBasicSend()
     if Addon.RuleSendUI then Addon.RuleSendUI:Refresh() end
 end
-local function StyleNativeActionButton(button, primary)
+local function StyleNativeActionButton(button, primary, labelKey)
     if not button then return end
     local theme = Addon.Core.UITheme
     local skin = CreateFrame("Frame", nil, button, "BackdropTemplate")
@@ -1757,7 +1761,7 @@ local function StyleNativeActionButton(button, primary)
         local border = enabled and (hovered and theme.Colors.accent or (primary and theme.Colors.line or theme.Colors.lineSoft)) or theme.Colors.lineSoft
         skin:SetBackdropColor(unpack(fill))
         skin:SetBackdropBorderColor(unpack(border))
-        skin.label:SetText(button:GetText() or "")
+        skin.label:SetText(Addon:T(labelKey))
         skin.label:SetTextColor(unpack(enabled and theme.Colors.text or theme.Colors.muted))
         for _, region in ipairs({ button:GetRegions() }) do
             if type(region.GetObjectType) == "function" then
@@ -1800,8 +1804,8 @@ function Native:Install()
         end)
     end
     if Addon.FEATURES.send and not Addon.FEATURES.sendAssist then
-        StyleNativeActionButton(_G.SendMailMailButton or _G.SendMailSendButton, true)
-        StyleNativeActionButton(SendMailCancelButton, false)
+        StyleNativeActionButton(_G.SendMailMailButton or _G.SendMailSendButton, true, "UI.TEXT_0182")
+        StyleNativeActionButton(SendMailCancelButton, false, "UI.TEXT_0192")
     end
     self:CreateInbox()
     if Addon.FEATURES.send then self:CreateBasicSend(); if Addon.RuleSendUI then Addon.RuleSendUI:Install() end end

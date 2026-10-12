@@ -78,20 +78,43 @@ Get-ChildItem -LiteralPath $projectRoot -Recurse -File | Sort-Object FullName | 
 }
 
 New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
-$releasePath = Join-Path $outputRoot "$addonName-v$expectedVersion.zip"
+$releasePath = Join-Path $outputRoot "$addonName-v$expectedVersion-curseforge.zip"
 $githubPath = Join-Path $outputRoot "$addonName-v$expectedVersion-github.zip"
 $releaseTemp = "$releasePath.building"
 $githubTemp = "$githubPath.building"
 if ((Test-Path -LiteralPath $releasePath) -or (Test-Path -LiteralPath $githubPath) -or (Test-Path -LiteralPath $releaseTemp) -or (Test-Path -LiteralPath $githubTemp)) {
     throw "A package or intermediate file already exists for $expectedVersion"
 }
-New-PackageFile $releaseTemp $releaseFiles
-New-PackageFile $githubTemp $githubFiles
-Move-Item -LiteralPath $releaseTemp -Destination $releasePath
-Move-Item -LiteralPath $githubTemp -Destination $githubPath
+$archiveRoot = Join-Path $outputRoot "Archive"
+$previousPackages = @(Get-ChildItem -LiteralPath $outputRoot -File -Filter "$addonName-*.zip" -ErrorAction SilentlyContinue)
+if ($previousPackages.Count -gt 0) { New-Item -ItemType Directory -Path $archiveRoot -Force | Out-Null }
+$archiveMoves = @()
+try {
+    New-PackageFile $releaseTemp $releaseFiles
+    New-PackageFile $githubTemp $githubFiles
+    foreach ($package in $previousPackages) {
+        $destination = Join-Path $archiveRoot $package.Name
+        if (Test-Path -LiteralPath $destination) {
+            $destination = Join-Path $archiveRoot ("{0}-{1}-{2}{3}" -f $package.BaseName, (Get-Date -Format "yyyyMMdd-HHmmssfff"), [guid]::NewGuid().ToString("N"), $package.Extension)
+        }
+        $archiveMoves += [pscustomobject]@{ Source = $package.FullName; Destination = $destination }
+    }
+    foreach ($move in $archiveMoves) { Move-Item -LiteralPath $move.Source -Destination $move.Destination }
+    Move-Item -LiteralPath $releaseTemp -Destination $releasePath
+    Move-Item -LiteralPath $githubTemp -Destination $githubPath
+}
+catch {
+    foreach ($move in $archiveMoves) {
+        if ((Test-Path -LiteralPath $move.Destination) -and -not (Test-Path -LiteralPath $move.Source)) {
+            Move-Item -LiteralPath $move.Destination -Destination $move.Source
+        }
+    }
+    throw
+}
 [pscustomobject]@{
     Version = $expectedVersion
     APIVersion = [int]$apiVersion
-    Release = $releasePath
+    CurseForge = $releasePath
     GitHub = $githubPath
+    Archived = $previousPackages.Count
 } | Format-List

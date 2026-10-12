@@ -2,7 +2,7 @@ local Addon = _G.YiboMail
 local Scanner = { publishedStatus = {} }; Addon.Scanner = Scanner
 function Scanner:ObserveArrivalSignal()
     if type(HasNewMail) ~= "function" or not Addon.db then return end
-    local current = Addon.Core.Characters:GetCurrent()
+    local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     if not current then return end
     local ok, value = pcall(HasNewMail)
     if not ok then return end
@@ -11,7 +11,7 @@ function Scanner:ObserveArrivalSignal()
     if previous and previous.present == present then return end
     Addon.db.mailArrivalSignals[current.id] = { present = present, awaitingScan = present, observedAt = Addon:Now() }
     Addon:UpdateMailNoticeBatch(current.id)
-    if present or (previous and previous.awaitingScan) then Addon:Publish(current.id, {}, {}, "scan") end
+    if present or (previous and previous.awaitingScan) then Addon:Publish(current.id, {}, {}, "scan", true) end
 end
 function Scanner:IsOpen() return self.open and MailFrame and MailFrame:IsShown() end
 function Scanner:RequestInbox()
@@ -23,7 +23,7 @@ function Scanner:PublishStatus(characterID)
     local previous = self.publishedStatus[characterID] or (Addon.db.byCharacter[characterID] and "stale" or "not-yet-scanned")
     if previous ~= status then
         self.publishedStatus[characterID] = status
-        Addon:Publish(characterID, {}, {}, "scan")
+        Addon:Publish(characterID, {}, {}, "scan", true)
     end
 end
 function Scanner:Close()
@@ -31,7 +31,7 @@ function Scanner:Close()
     if Addon.Compose then Addon.Compose:OnEvent("MAIL_CLOSED") end
     self.open, self.updated, self.stable, self.validAt, self.lastError = false, false, nil, nil, nil
     self.generation = (self.generation or 0) + 1
-    local character = Addon.Core and Addon.Core.Characters:GetCurrent()
+    local character = Addon.Core and Addon.Core.Characters:GetCurrent({ identityOnly = true })
     self:PublishStatus(character and character.id)
     if Addon.FEATURES.account and Addon.Core and Addon.Core.AccountView then Addon.Core.AccountView:NotifyPageChanged("mail-inbox") end
 end
@@ -108,18 +108,22 @@ function Scanner:ReadEntry(entry)
     return current
 end
 local function CommitScan(character, mails, visible, total, now, clock)
-    local signatures = {}; for _, mail in ipairs(mails) do signatures[#signatures + 1] = mail.signature end; table.sort(signatures)
-    local fingerprint = Addon.Encode(signatures)
-    Scanner.lastError, Scanner.validAt = nil, now
-    Addon:CommitScan(character, mails, { status = visible < total and "partial" or (total == 0 and "known-empty" or "known"),
-        currentCount = visible, totalCount = total, unscannedCount = total - visible, observedAt = now, clockSource = clock })
-    if visible == total and total <= 100 then
-        local stable = Scanner.stable
-        if stable and stable.characterID == character.id and stable.fingerprint == fingerprint and stable.count == total then
-            if now - stable.at >= 60 then Addon:CleanupBacklog(character.id) end
-        else Scanner.stable = { characterID = character.id, fingerprint = fingerprint, count = total, at = now } end
-    else Scanner.stable = nil end
-    local queueRefreshed = Addon.Queue and Addon.Queue:OnScan(mails)
+    local queueRefreshed
+    Addon:WithPublicationBatch(function()
+        local signatures = {}; for _, mail in ipairs(mails) do signatures[#signatures + 1] = mail.signature end; table.sort(signatures)
+        local fingerprint = Addon.Encode(signatures)
+        Scanner.lastError, Scanner.validAt = nil, now
+        Addon:CommitScan(character, mails, { status = visible < total and "partial" or (total == 0 and "known-empty" or "known"),
+            currentCount = visible, totalCount = total, unscannedCount = total - visible, observedAt = now, clockSource = clock })
+        if visible == total and total <= 100 then
+            local stable = Scanner.stable
+            if stable and stable.characterID == character.id and stable.fingerprint == fingerprint and stable.count == total then
+                if now - stable.at >= 60 then Addon:CleanupBacklog(character.id) end
+            else Scanner.stable = { characterID = character.id, fingerprint = fingerprint, count = total, at = now } end
+        else Scanner.stable = nil end
+        queueRefreshed = Addon.Queue and Addon.Queue:OnScan(mails)
+    end)
+    if Addon.Queue and Addon.Queue.notifyPending then Addon.Queue:Notify() end
     if Addon.NativeUI then
         Addon.NativeUI.deleting = nil
         if not queueRefreshed then Addon.NativeUI:Refresh() end
@@ -133,7 +137,7 @@ local function ScanError(character, err)
 end
 function Scanner:Scan()
     if not self:IsOpen() or not self.updated then self.stable = nil; return nil, "mailbox-unavailable" end
-    local character = Addon.Core.Characters:GetCurrent(); if not character then return nil, "character-unavailable" end
+    local character = Addon.Core.Characters:GetCurrent({ identityOnly = true }); if not character then return nil, "character-unavailable" end
     local now, clock = Addon:Now()
     local ok, mails, visible, total = pcall(function()
         local count, all = GetInboxNumItems()
@@ -152,7 +156,7 @@ function Scanner:Scan()
 end
 function Scanner:ScanAsync(generation)
     if not self:IsOpen() or not self.updated then self.stable = nil; return nil, "mailbox-unavailable" end
-    local character = Addon.Core.Characters:GetCurrent(); if not character then return nil, "character-unavailable" end
+    local character = Addon.Core.Characters:GetCurrent({ identityOnly = true }); if not character then return nil, "character-unavailable" end
     local now, clock = Addon:Now()
     local ok, count, total = pcall(GetInboxNumItems)
     if not ok or type(count) ~= "number" or type(total) ~= "number" or count < 0 or total < count then
@@ -179,7 +183,7 @@ function Scanner:Schedule()
     self.validAt = nil
     -- Readiness changed even when the next scan finds identical mail. Publish
     -- invalidation now so CommitScan also publishes the recovery to live data.
-    local character = Addon.Core and Addon.Core.Characters:GetCurrent()
+    local character = Addon.Core and Addon.Core.Characters:GetCurrent({ identityOnly = true })
     self:PublishStatus(character and character.id)
     self.generation = (self.generation or 0) + 1
     local generation = self.generation

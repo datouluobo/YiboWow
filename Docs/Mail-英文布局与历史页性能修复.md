@@ -1,5 +1,18 @@
 # Mail 英文布局与历史页性能修复
 
+## 2026-10-13 后续反馈：取消文字、时间单位与服务器悬停
+
+当前工作树 Mail 1.2.13-api1 / Core 1.12.1 / API13，代码与模拟完成，客户端待复验。
+
+- 寄信的原生取消／发送按钮皮肤改用 Mail owner 语言资源，保留期确认也不再优先使用客户端 CANCEL／ACCEPT。中文客户端手动英文显示 Cancel／Send，中文模式仍显示取消／发送。
+- 到期数值在中英文下使用 d／h；账号估算显示~，提醒栏的天单位同步缩短。动态物品、角色名、历史数据保持原文。
+- 单服务器以选中服务器作为 Core FormatName 参考，省略重复后缀。全服务器不再截掉第20名之后的角色；Core 通用新增 `account-preview-characters:1`，Mail 显式检查并声明完整范围，其余页面默认仍为20名。详见 [契约](../YiboCore/Docs/API-v13-悬停角色范围.md)。
+- 原高度把内容尺寸当作完整窗口尺寸，漏了 Core 标题栏与边框。现按实际行数加壳申请高度，最小高度允许屏幕安全区钳取，超界后用 Core 滚动条到达末行。
+
+验证：WorkspaceSpec 的真实 Core BuildContext 保留24角色中末位“天堂仓库一号”，单服务器6／18名筛选一致；中英文1／4／18／24行、提醒有／无均完整显示，限制高度时可滚动；默认20／显式7的旧行为保留，缺少新能力时提示升级并停止初始化。NativeInboxSpec 验证按钮语言在启禁、悬停刷新时保持正确；RuleSendUISpec、MailRuntimeSpec（含90附件）、Core CharacterNamesSpec77项与 RuntimePerformanceSpec通过。两插件80个发布Lua语法通过；已生成并查看 Workspace-Report，Mail0硬编码候选，资源缺英文／未知key／格式差异为0。
+
+额外 TaskHub SurfacesSpec 被前置 ActionIntegrationSpec:188 的 YiboTodo `ACTION.RECIPE_UNLEARNED` 未加载资源夹具挡住，尚未进入本轮相关界面验证；不计通过，未改动该夹具。真实游戏内中英文、入口位置与UI缩放仍需复验。改动在本地主分支，未提交、推送或发布。
+
 日期：2026-10-12。范围：YiboMail 1.2.9-api1 工作树，Core 1.12.0 / API13。状态：代码与模拟回归完成，实际客户端待复验。
 
 ## 截图对应处理

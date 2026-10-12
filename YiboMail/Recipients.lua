@@ -8,7 +8,17 @@ Addon.RECIPIENT_SOURCES = {
 }
 R.sources = Addon.RECIPIENT_SOURCES
 local function Trim(value) return type(value) == "string" and value:match("^%s*(.-)%s*$") or "" end
-function R:Current() return Addon.Core.Characters:GetCurrent() end
+function R:Current()
+    local characters = Addon.Core.Characters
+    local current = characters:GetCurrent({ identityOnly = true })
+    if not current then return nil end
+    -- Faction is outside the identity projection. Read the shared directory
+    -- without retaining or copying the current character's domain payloads.
+    for _, character in ipairs(characters:GetAllCached()) do
+        if character.id == current.id then current.faction = character.faction; break end
+    end
+    return current
+end
 function R:Key(address) return Trim(address):gsub("%s+", ""):lower() end
 function R:GetFaction(address)
     local normalized = self:Normalize(address)

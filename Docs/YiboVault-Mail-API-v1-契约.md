@@ -402,6 +402,8 @@ YiboVault.Items.Events:Unregister(owner, callback)
 
 ## 10. 兼容承诺
 
+- 2026-10-12：Mail 变更通知可选带 `transfersUnchanged = true`，表示本次变更仅影响 `characterID` 的就绪／已读状态，未改变任一角色的在途投影。Vault 可只刷新该角色；字段缺失或非 true 时继续刷新全账号。混合批次中只要有实际扫描／归档／清理变更，此提示为 false；公共 revision、变更键和物品 ID 保持完整。旧消费者忽略此字段仍正确，mail.items 版本不变。
+- 同一次扫描确认中的 Mail 扫描提交、已读保留和成功归档可合并为一个通知；变更键和物品 ID 去重排序，revision 为该角色批次的最新值，有归档时 reason 为 archive。消费者在通知中读取到完整确认后的状态，不依赖每个内部写入各产生一次通知；就绪失效继续即时通知，失败／暂停不会重试未知收取动作。
 - v1 只增可选字段和新 capability；既有字段类型、枚举含义、默认范围和事件名不变。
 - 需要删除字段、改变默认范围、改变 item/variant key 含义或复用来源 ID 时，提升业务 API 主版本。
 - 尚未通过阶段验收的 capability 只出现在文档的“规划”部分，运行时不得声明。

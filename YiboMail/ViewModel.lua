@@ -28,7 +28,7 @@ local function NormalizeContactAddress(value)
     local name, realm = address:match("^([^-]+)%-(.+)$")
     if not name then
         if address:find("-", 1, true) then return nil, Addon:T("UI.TEXT_0538") end
-        local character = Addon.Core.Characters:GetCurrent()
+        local character = Addon.Core.Characters:GetCurrent({ identityOnly = true })
         name, realm = address, character and character.realm
     end
     name, realm = Trim(name), Trim(realm)
@@ -42,7 +42,7 @@ end
 function View:Escape(value) return tostring(value or ""):gsub("|", "||") end
 function View:CharacterLabel(character, full)
     local characters = Addon.Core.Characters
-    local current = characters:GetCurrent()
+    local current = characters:GetCurrent({ identityOnly = true })
     local reference = current and current.realm
     local mode = full and "full" or (reference and reference:find("%S") and "sameRealm" or "full")
     if not character.realm or character.realm == "" then mode = "omit" end
@@ -95,7 +95,7 @@ end
 function View:ActionID(characterID, mailKey, slot) return Addon.Encode({ characterID, mailKey, slot }) end
 function View:GetMails(context, options)
     options = options or {}; local result = {}
-    local current = Addon.Core.Characters:GetCurrent()
+    local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     local query = string.lower(options.search or "")
     local liveStates = {}
     for _, character in ipairs(context.characters or {}) do

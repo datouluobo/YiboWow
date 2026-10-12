@@ -107,7 +107,7 @@ end
 function Compose:Install()
     if self.hooked or not hooksecurefunc or not SendMail then return end
     hooksecurefunc("SendMail", function(recipient, subject)
-        local character = Addon.Core.Characters:GetCurrent()
+        local character = Addon.Recipients:Current()
         if character then Compose.pendingSend = { characterID = character.id, senderFaction = character.faction, recipient = recipient, subject = subject,
             attachments = Compose:GetAttachments(), observedAt = Addon:Now(), state = "unverified",
             copper = MoneyInputFrame_GetCopper and SendMailMoney and MoneyInputFrame_GetCopper(SendMailMoney) or 0,

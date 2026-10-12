@@ -36,7 +36,7 @@ function Action:Query(request)
     end
     local meta, now, tasks, partial = self:Metadata(), Addon:Now(), {}, false
     for _, state in pairs(coverage) do if state.state ~= "known" and state.state ~= "known-empty" then partial = true end end
-    local notices, current = {}, Addon.Core.Characters:GetCurrent()
+    local notices, current = {}, Addon.Core.Characters:GetCurrent({ identityOnly = true })
     for _, entry in ipairs(Addon.ViewModel:GetMails({ characters = characters })) do
         local mail = entry.mail
         if mail.state == "observed" and not mail.openedByUser and not mail.noticeHandled then

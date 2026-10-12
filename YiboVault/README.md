@@ -1,6 +1,6 @@
 # YiboVault
 
-当前版本：`1.2.1-api1`。`1.2.1` 为插件版本，`api1` 为对外 `Items` API 版本。当前工作树要求 YiboCore 1.12.0 / API 13，并检查 `localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`character-identity:1` 与 `account-entry:2`；缺失或版本不足时停止 Vault 初始化并提示升级。Core 的语言、名称、输入、入口和物品显示能力只通过公开接口使用。YiboCurrency 是可选调用方。Vault 通过 Core 发现 `mail.items`，提供方兼容时消费邮件快照及可选在途投影；缺失或不兼容时独立采集。Vault 通过 `vault.items` 提供只读库存查询，Service 契约仍为 `business-services:1`，见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
+当前版本：`1.2.2-api1`。`1.2.2` 为插件版本，`api1` 为对外 `Items` API 版本。当前工作树要求 YiboCore 1.12.0 / API 13，并检查 `localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`character-identity:1` 与 `account-entry:2`；缺失或版本不足时停止 Vault 初始化并提示升级。Core 的语言、名称、输入、入口和物品显示能力只通过公开接口使用。YiboCurrency 是可选调用方。Vault 通过 Core 发现 `mail.items`，提供方兼容时消费邮件快照及可选在途投影；缺失或不兼容时独立采集。Vault 通过 `vault.items` 提供只读库存查询，Service 契约仍为 `business-services:1`，见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
 
 正式版变化见 [更新日志](CHANGELOG.md)。
 

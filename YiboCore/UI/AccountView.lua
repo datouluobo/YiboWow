@@ -1368,11 +1368,14 @@ function AccountView:BuildContext(page, options)
         Core.Characters:GetCurrentID(),
         self:GetCustomCharacterOrder()
     )
-    -- 悬停预览是正式账号视图的投影，但不应成为可滚动的小窗口。
-    -- 统一限定为前 20 名有效角色，保证业务页可按固定行高一次排完。
+    -- Keep the legacy 20-character default. Pages that support a full account
+    -- table can explicitly retain every admitted character and scroll only
+    -- when their measured content reaches the safe screen boundary.
     if options.preview and page.id ~= "characters" then
-        local limit = math.max(1, math.floor(tonumber(options.characterLimit) or 20))
-        if #characters > limit then
+        local requestedLimit = options.characterLimit
+        if requestedLimit == nil then requestedLimit = page.previewCharacterLimit end
+        local limit = requestedLimit ~= false and math.max(1, math.floor(tonumber(requestedLimit) or 20)) or nil
+        if limit and #characters > limit then
             local limited = {}
             for index = 1, limit do limited[index] = characters[index] end
             characters = limited
@@ -1875,5 +1878,6 @@ Core.Events:Register("CHARACTER_CACHE_DELETED", AccountView, function(self)
     self:RefreshPage()
 end)
 Core.Capabilities:Register("account-view", 2)
+Core.Capabilities:Register("account-preview-characters", 1)
 Core.Capabilities:Register("account-character-admission", 1)
 Core.Capabilities:Register("account-surface-budget", 1)

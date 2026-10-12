@@ -79,7 +79,7 @@ end
 function Addon:AddHistory(characterID, record)
     local snapshot = self.db.byCharacter[characterID]
     if not snapshot then
-        local character = self.Core.Characters:GetCurrent()
+        local character = self.Core.Characters:GetCurrent({ identityOnly = true })
         snapshot = { records = {}, visibleKeys = {}, coverage = { status = "not-yet-scanned" }, character = self.Copy(character or {}) }
         self.db.byCharacter[characterID] = snapshot
     end
@@ -114,13 +114,49 @@ local function Groups(mails)
     end
     return groups
 end
-function Addon:Publish(characterID, keys, itemIDs, reason)
+function Addon:Publish(characterID, keys, itemIDs, reason, transfersUnchanged)
     self.db.revision = self.db.revision + 1
+    if self.Items.OnPublish then self.Items:OnPublish(self.db.revision, transfersUnchanged) end
     local snapshot = self.db.byCharacter[characterID]
     if snapshot then snapshot.coverage.revision = self.db.revision end
     table.sort(keys); table.sort(itemIDs)
-    self.Items.Events:Emit({ apiVersion = 1, revision = self.db.revision, characterID = characterID,
-        changedMailKeys = keys, changedItemIDs = itemIDs, reason = reason, observedAt = self:Now() })
+    local payload = { apiVersion = 1, revision = self.db.revision, characterID = characterID,
+        changedMailKeys = keys, changedItemIDs = itemIDs, reason = reason, observedAt = self:Now(),
+        transfersUnchanged = transfersUnchanged == true }
+    local batch = self.publicationBatch
+    if not batch then self.Items.Events:Emit(payload); return end
+    local change = batch.byCharacter[characterID]
+    if not change then
+        change = { payload = payload, keys = {}, items = {} }
+        payload.changedMailKeys, payload.changedItemIDs = {}, {}
+        batch.byCharacter[characterID] = change; batch.changes[#batch.changes + 1] = change
+    end
+    for _, key in ipairs(keys) do
+        if not change.keys[key] then change.keys[key] = true; table.insert(change.payload.changedMailKeys, key) end
+    end
+    for _, id in ipairs(itemIDs) do
+        if not change.items[id] then change.items[id] = true; table.insert(change.payload.changedItemIDs, id) end
+    end
+    change.payload.revision, change.payload.observedAt = payload.revision, payload.observedAt
+    change.payload.transfersUnchanged = change.payload.transfersUnchanged and payload.transfersUnchanged
+    if reason == "archive" then change.payload.reason = reason end
+end
+function Addon:WithPublicationBatch(callback)
+    if self.publicationBatch then return callback() end
+    local batch = { byCharacter = {}, changes = {} }; self.publicationBatch = batch
+    local ok, result = pcall(callback)
+    -- Release the batch before notifying consumers; reentrant changes start
+    -- their own publication and cannot be swallowed by this completed scan.
+    self.publicationBatch = nil
+    for _, change in ipairs(batch.changes) do
+        table.sort(change.payload.changedMailKeys); table.sort(change.payload.changedItemIDs)
+        self.Items.Events:Emit(change.payload)
+    end
+    if batch.refreshPage and #batch.changes == 0 and self.Core.AccountView then
+        self.Core.AccountView:NotifyPageChanged("mail-inbox")
+    end
+    if not ok then error(result, 0) end
+    return result
 end
 function Addon:CommitScan(character, mails, coverage)
     local now = coverage.observedAt
@@ -200,16 +236,24 @@ function Addon:CommitScan(character, mails, coverage)
         if #markers == 0 then self.db.collectedMailMarkers[character.id] = nil end
     end
     if #changed > 0 or stateChanged then self:Publish(character.id, changed, itemIDs, "scan") end
-    if self.FEATURES.account and self.Core.AccountView then self.Core.AccountView:NotifyPageChanged("mail-inbox") end
+    if self.FEATURES.account and self.Core.AccountView then
+        if self.publicationBatch then self.publicationBatch.refreshPage = true
+        else self.Core.AccountView:NotifyPageChanged("mail-inbox") end
+    end
 end
-function Addon:MarkMailOpened(entry)
+function Addon:MarkMailOpened(entry, batch)
     local snapshot = self.db.byCharacter[entry.character.id]
     local mail = snapshot and snapshot.records[entry.key]
     if not mail or mail.signature ~= entry.mail.signature then return nil end
     if not mail.openedByUser or not mail.noticeHandled then
         mail.openedByUser, mail.noticeHandled = true, true
-        self:UpdateMailNoticeBatch(entry.character.id)
-        self:Publish(entry.character.id, { entry.key }, {}, "scan")
+        if batch then
+            local keys = batch[entry.character.id] or {}; batch[entry.character.id] = keys
+            keys[#keys + 1] = entry.key
+        else
+            self:UpdateMailNoticeBatch(entry.character.id)
+            self:Publish(entry.character.id, { entry.key }, {}, "scan", true)
+        end
     end
     entry.mail.openedByUser = true
     return true

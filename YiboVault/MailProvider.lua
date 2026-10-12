@@ -152,7 +152,8 @@ function Provider:Install()
             if change and change.characterID then
                 -- A send recorded by one character can change the transit view
                 -- of any other character in the account.
-                for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do Provider:Refresh(character.id) end
+                if change.transfersUnchanged == true then Provider:Refresh(change.characterID)
+                else for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do Provider:Refresh(character.id) end end
             else
                 for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do Provider:Refresh(character.id) end
                 if not Provider.api and Addon.MailItems and Addon.MailItems:IsOpen() then

@@ -285,8 +285,8 @@ assert(panel.collect:GetHeight() == Addon.Core.UITheme.Size.compact)
 print('PASS: attachment grid fills seven-column width with scrollbar gutter; responsive tile sizing; single-row inbox/attachment footers')
 local expiryNow = 1000
 Addon.Now = function() return expiryNow end
-assert(realExpiry(Addon.ViewModel, { expiresAtEstimate = expiryNow + 29.6 * 86400 }) == '29.6 天')
-assert(realExpiry(Addon.ViewModel, { expiresAtEstimate = expiryNow + 2 * 3600 }) == '2.0 小时')
+assert(realExpiry(Addon.ViewModel, { expiresAtEstimate = expiryNow + 29.6 * 86400 }) == '29.6d')
+assert(realExpiry(Addon.ViewModel, { expiresAtEstimate = expiryNow + 2 * 3600 }) == '2.0h')
 assert(realExpiry(Addon.ViewModel, {}) == '期限未知')
 assert(realExpiry(Addon.ViewModel, { expiresAtEstimate = expiryNow - 1 }) == '到期待核实')
 print('PASS: expiry numbers without approximation prefix; hourly, unknown and expired states retained')
@@ -361,3 +361,23 @@ assert(emptyRow.detail.points[1][3] < emptyRow.title.points[1][3], 'Empty-state 
 panel.options.search = ''; native:RefreshInbox()
 assert(panel.rows[1]:GetHeight() == regularHeight, 'A recycled empty-state row restores ordinary mail geometry')
 print('PASS: English empty title and wrapped guidance use full row width; pooled mail rows restore their layout')
+
+-- Style the real native send controls with Chinese client text while Core is
+-- in English. Native enable/hover callbacks must not restore client labels.
+SendMailCancelButton, SendMailMailButton, SendMailNameEditBox = Frame(SendMailFrame), Frame(SendMailFrame), Frame(SendMailFrame)
+SendMailCancelButton:SetText('取消'); SendMailMailButton:SetText('发送')
+local savedCreate = native.CreateBasicSend
+native.CreateBasicSend = function() end -- Native edit widgets are outside this regression.
+Addon.FEATURES.send, native.installed = true, nil
+native:Install(); native.CreateBasicSend = savedCreate
+for _, language in ipairs({ 'en', 'zh' }) do
+    Addon.Core.Locale.language = language
+    for _, event in ipairs({ 'OnEnable', 'OnDisable', 'OnEnter', 'OnLeave' }) do
+        SendMailCancelButton.hooks[event](); SendMailMailButton.hooks[event]()
+        assert(SendMailCancelButton.yiboMailSkin.label:GetText() == (language == 'en' and 'Cancel' or '取消'))
+        assert(SendMailMailButton.yiboMailSkin.label:GetText() == (language == 'en' and 'Send' or '发送'))
+    end
+    assert(realExpiry(Addon.ViewModel, { expiresAtEstimate = expiryNow + 29.6 * 86400 }) == '29.6d')
+    assert(realExpiry(Addon.ViewModel, { expiresAtEstimate = expiryNow + 2 * 3600 }) == '2.0h')
+end
+print('PASS: Chinese native send/cancel text respects Core English/Chinese on hover and enable changes; compact d/h units in both languages')

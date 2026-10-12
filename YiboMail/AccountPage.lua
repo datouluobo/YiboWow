@@ -44,7 +44,7 @@ function Page:HasSnapshot(character)
         and type(coverage.observedAt) == "number" and type(snapshot.visibleKeys) == "table"
 end
 
-local function Summary(character)
+local function Summary(character, context)
     local snapshot = Addon.db.byCharacter[character.id]
     local coverage = snapshot.coverage
     local now = Addon:Now()
@@ -111,10 +111,11 @@ local function Summary(character)
     if counts.soon > 0 then alerts[#alerts + 1] = Addon:T("UI.TEXT_0097") .. counts.soon end
 
     local severity = counts.expired > 0 and 3 or (counts.urgent > 0 and 2 or (counts.soon > 0 and 1 or 0))
-    local current = Core.Characters:GetCurrent()
+    local current = Core.Characters:GetCurrent({ identityOnly = true })
+    local referenceRealm = context and context.scope and context.scope:match("^realm:(.+)$") or (current and current.realm)
     local name = Core.Characters:FormatName(character, { nameMode = "short" }) or Addon:T("UI.TEXT_0400")
     local identity = Core.Characters:FormatName(character, { nameMode = "short",
-        realmMode = current and current.realm and "sameRealm" or "full", referenceRealm = current and current.realm })
+        realmMode = referenceRealm and "sameRealm" or "full", referenceRealm = referenceRealm })
     return {
         character = name,
         realm = identity and identity ~= name and character.realm or "",
@@ -166,7 +167,7 @@ local function GetPreviewColumns(context)
         end
     end
     for _, character in ipairs(context.characters or {}) do
-        local values = Summary(character)
+        local values = Summary(character, context)
         for _, field in ipairs(columns) do
             local needed
             if field.id == "character" then
@@ -200,7 +201,7 @@ function Page:SetRetention(key, value, onChanged)
     if value >= previous then Apply(); return true end
     if not StaticPopupDialogs or not StaticPopup_Show then return false end
     StaticPopupDialogs.YIBOMAIL_RETENTION = StaticPopupDialogs.YIBOMAIL_RETENTION or {
-        text = "%s", button1 = ACCEPT or Addon:T("UI.TEXT_0463"), button2 = CANCEL or Addon:T("UI.TEXT_0192"), timeout = 0, whileDead = true,
+        text = "%s", button1 = Addon:T("UI.TEXT_0463"), button2 = Addon:T("UI.TEXT_0192"), timeout = 0, whileDead = true,
         hideOnEscape = true, preferredIndex = 3,
         OnAccept = function(_, data) if data then data.Apply() end end,
     }
@@ -412,7 +413,7 @@ function Page:RefreshSummary(parent, context)
     end
     for index = first, last do
         local character = context.characters[index]
-        local values = Summary(character)
+        local values = Summary(character, context)
         Row(values, false, character)
     end
     if #(context.characters or {}) == 0 then
@@ -657,6 +658,7 @@ function Page:Register()
             end,
         },
         scope = { mode = "realms", allTitle = Addon:T("UI.TEXT_0311") },
+        previewCharacterLimit = false,
         HasCharacterSnapshot = function(character) return Page:HasSnapshot(character) or Addon.HistoryModel:HasHistory(character) end,
         GetEligibleCharacters = function(characters, baseContext)
             local eligible = {}
@@ -677,16 +679,17 @@ function Page:Register()
             local rows = #(context and context.characters or {}) + 1
             local hasAlert = GetPreviewAlert(context) ~= nil
             local _, _, tableWidth = GetPreviewColumns(context)
-            -- Match the actual scroll viewport exactly: top offset (alert or
-            -- no alert), 24px rows with 1px gaps, and the 8px bottom inset.
-            local height = (hasAlert and 36 or 10) + 8 + rows * 25 + 2
+            -- GetHoverMetrics returns the whole window, including Core's
+            -- title bar/borders. The header is outside the scroll viewport.
+            local shellHeight = Theme.Geometry.titleBar + Theme.Geometry.shellBorder * 2
+            local height = shellHeight + (hasAlert and 36 or 10) + 24 + 1 + 8 + (rows - 1) * 25
             return {
                 minWidth = 440,
                 preferredWidth = math.max(480, tableWidth + 34),
-                minHeight = height,
+                minHeight = shellHeight + (hasAlert and 36 or 10) + 24 + 1 + 8 + 25,
                 preferredHeight = height,
                 horizontalOverflow = "content",
-                verticalOverflow = "none",
+                verticalOverflow = "content",
             }
         end,
         GetSurfaceMetrics = function(context)

@@ -8,8 +8,8 @@ function GetServerTime() return now end
 function GetTime() return now end
 MailFrame = { IsShown = function() return shown end, HookScript = function() end }
 C_Timer = { After = function(delay, callback) timers[#timers + 1] = { delay, callback } end }
-local function Flush()
-    for iteration = 1, 80 do
+local function Flush(limit)
+    for iteration = 1, limit or 80 do
         local found
         for index, timer in ipairs(timers) do
             if timer[1] < 1 then found = index; break end
@@ -262,3 +262,53 @@ while RunRetry() do end
 assert(requested == 7, 'One opening request plus three bounded retries')
 CheckInbox, HasNewMail = nil, nil
 print('PASS: server inbox request; delayed NPC gift display and action validation; arrival refresh; resolved/closed/bounded retries')
+
+-- Multi-mail collection publishes the committed scan and its archive together.
+-- Exercise real scanner chunks, queue confirmation, index shifts and copies.
+assert(queue:Discard()); timers = {}; scanner.lastError = nil
+local bulk = {}
+for index = 1, 30 do bulk[index] = Mail("Bulk" .. index, { Item(100, 1, 1), Item(200, 4, 2), Item(300, 8, 3) }) end
+Scan(bulk)
+local bulkSelection = {}
+for _, value in ipairs(addon.ViewModel:GetMails({ characters = { a } })) do
+    for _, action in ipairs(addon:GetInboxActions(value)) do bulkSelection[action.id] = true end
+end
+local bulkActions = assert(queue:Prepare(bulkSelection, { characters = { a } }))
+local publications, archives, progressRefreshes, fullRefreshes = 0, 0, 0, 0
+api.Events:Register("bulk", function(_, payload)
+    publications = publications + 1
+    if payload.reason == "archive" then
+        archives = archives + 1
+        assert(queue.completed == archives and queue.pending == nil, "Consumer sees a completed confirmation, not intermediate scan state")
+        assert(addon.db.byCharacter.A.history[#addon.db.byCharacter.A.history].state == "collected-archived")
+        assert(payload.revision == api:GetRevision())
+        assert(#payload.changedMailKeys > 0 and #payload.changedItemIDs > 0)
+    end
+end)
+local oldNative = addon.NativeUI
+addon.NativeUI = { inbox = { keepTilesDuringQueue = true },
+    RefreshInboxProgress = function() progressRefreshes = progressRefreshes + 1 end,
+    Refresh = function() fullRefreshes = fullRefreshes + 1 end, OnCollected = function() end }
+local beforeTaken, started = taken, os.clock()
+assert(queue:Start(bulkActions))
+bulkActions[1].original.subject = "Caller mutation"
+bulkActions[1].item.quantity = 999
+assert(queue.actions[1].original.subject ~= "Caller mutation" and queue.actions[1].item.quantity ~= 999)
+Flush(5000)
+assert(queue.state == "complete" and queue.completed == 90 and taken - beforeTaken == 90)
+assert(api:Query().quantity == 0 and archives == 90)
+assert(publications == 180, "Each attachment publishes readiness plus one combined confirmation, without an intermediate archive refresh")
+assert(fullRefreshes == 1 and progressRefreshes >= 90, "Mounted batch only fully refreshes at completion")
+assert(addon.publicationBatch == nil and not queue.notifyPending)
+api.Events:Unregister("bulk"); addon.NativeUI = oldNative
+print(string.format("PASS: 30-mail/90-attachment real queue %.3fs; %d publications, %d full refresh, isolated caller data, complete inventory/history", os.clock() - started, publications, fullRefreshes))
+local failedBatchEvents = 0
+api.Events:Register("failed-batch", function() failedBatchEvents = failedBatchEvents + 1; assert(addon.publicationBatch == nil) end)
+local ok = pcall(function()
+    addon:WithPublicationBatch(function() addon:Publish("A", {}, {}, "scan", true); error("simulated callback failure") end)
+end)
+assert(not ok and addon.publicationBatch == nil and failedBatchEvents == 1)
+addon:Publish("A", {}, {}, "scan", true)
+assert(failedBatchEvents == 2, "A failed scan callback must not trap subsequent publications")
+api.Events:Unregister("failed-batch")
+print("PASS: publication batch releases and flushes committed changes on callback failure")

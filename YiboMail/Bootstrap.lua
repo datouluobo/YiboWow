@@ -17,6 +17,7 @@ function Addon:Initialize()
         and core:HasCapability("characters", 1)
         and core:HasCapability("character-cleanup", 1)
         and core:HasCapability("account-view", 2)
+        and core:HasCapability("account-preview-characters", 1)
         and core:HasCapability("account-character-admission", 1)
         and core:HasCapability("account-surface-budget", 1)
         and core:HasCapability("account-entry", 2)
@@ -36,7 +37,7 @@ function Addon:Initialize()
         and type(core.CreateItemPicker) == "function"
         and type(core.ItemResolver.Request) == "function") then
         if core and type(core.Print) == "function" and not (core.Locale and type(core.Locale.Get) == "function") then
-            core:Print("YiboMail requires YiboCore 1.12.0 / API 13 with localization:1.")
+            core:Print("YiboMail requires YiboCore 1.12.1 / API 13 with localization:1 and account-preview-characters:1.")
         else
             self:Print(self:T("BOOTSTRAP.UPGRADE_CORE"))
         end

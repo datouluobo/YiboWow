@@ -206,6 +206,8 @@ YiboMounts 1.0.0 已按 API13 接入 `localization:1` 和 API v6 独立设置注
 | YiboCurrency | 部分接入 | [CoreIntegration.lua](../../YiboCurrency/CoreIntegration.lua) 注册页面、入口与业务设置 | 核对入口与设置现行契约的实际行为；CAP-003 所列物品控件验证不代替此范围验收 |
 | YiboLegendary | 部分接入 | [UI.lua](../../YiboLegendary/UI.lua) 注册账号页、入口与业务设置 | 核对预览、完整页和设置行为 |
 | YiboMail | 部分接入 | [AccountPage.lua](../../YiboMail/AccountPage.lua) 注册页面、入口与业务设置 | 当前工作树业务设置改造进行中；核对入口／账号快照与设置跳转，不能按旧文档直接认定完成 |
+2026-10-13：Core 1.12.1 / API13 工作树新增 `account-preview-characters:1`，公开页面字段 `previewCharacterLimit`，默认20名兼容、false保留全部准入角色。契约见 [悬停角色范围](API-v13-悬停角色范围.md)。消费者按技术名：YiboMail 1.2.13 已接入代码，显式检查能力；WorkspaceSpec 验证24角色跨服务器、末位仓库角色、旧默认与显式数量，中英文1／4／18／24行含提醒／无提醒完整尺寸与受限滚动、缺失能力停止。客户端仍待验收，记部分接入；其它业务插件新字段待评估，默认行为保持。CAP-001 本轮服务器名称继续复用 FormatName，以选中范围为参考；CAP-002 原生输入未改、CAP-003 附件解析未改、CAP-005 队列通知未改、CAP-006 无新增引导、CAP-007 既有 identityOnly 保持、CAP-008 既有目标绑定保持，无新增本地公共能力实现。
+
 | YiboMounts | 部分接入（可选设置增强） | 1.0.0 检查 Core API13、初始化状态与 `localization:1`，注册 Locale 资源和 v6 设置面板；TOC 使用 `OptionalDeps: YiboCore` 保证加载顺序，未转为硬依赖 | Core 缺失／低版本时保留独立来源 Tooltip，停用收藏状态与 Core 设置；游戏内注册、设置保存和 Core 缺失／旧版路径待验收 / 2026-10-12 |
 | YiboQuestBlocker | 部分接入 | [CoreIntegration.lua](../../YiboQuestBlocker/CoreIntegration.lua) 注册账号页、入口与业务设置 | 核对显示字段、预览与设置契约 |
 | YiboReputation | 部分接入 | [CoreIntegration.lua](../../YiboReputation/CoreIntegration.lua) 注册账号页、入口与业务设置；当前最低 API v10 / account-view:2 | 核对矩阵／预览、设置及低版本停止；首次提示见 CAP-006。声望快照现有归属另需按业务边界评估，不以本次基线登记宣告迁移 |
@@ -240,7 +242,7 @@ YiboMounts 1.0.0 已按 API13 接入 `localization:1` 和 API v6 独立设置注
 | YiboCrafting | 部分接入（当前连接代码完成） | 1.2.0 / API13；action.targets v1.2 注册／发现／公开库存调用，生命周期通知；制造规则与基线归来源，无业务私有访问 | GoalSourcesSpec72／GoalTargets 通过，尊重公开库存 validUntil；可选来源客户端待验收，配方只读 Service 是后续产品功能 / 2026-10-12 |
 | YiboCurrency | 已接入（本轮范围） | VaultIntegration 经 Core 发现 vault.items；缺失/不兼容保留 Core 基础快照；VaultIntegrationSpec、CoreItemControlsSpec 通过 | 最低接口 API v9 / business-services:1，渠道包需 v1.9.0-api10；业务接入未发布、游戏内待验收；追赶须另核对 api10 |
 | YiboLegendary | 待评估 | 无该新连接接入证据 | 真实待办／目标接入时评估 |
-| YiboMail | 部分接入（Provider 代码与自动化完成） | 1.2.7-api1 工作树增加 mail.items v1.1 `GetTransfers` 与 mail-items.transfers:1；按 Core 角色目录投影成功发件历史并核对已扫描收件，数据仍归 Mail；action.todo / inbox-collection 继续由 Mail 所有新邮件查看状态；本次未运行自动化 | 基础 API9 / business-services:1；转移增强仍经同一 Core Service，客户端待验收；需求附件关联／logistics／evidence 仍未公开，追赶须另核对 api10 / 2026-10-12 |
+| YiboMail | 部分接入（Provider代码与自动化完成／客户端待验收） | 1.2.11-api1：既有mail.items v1.1 GetTransfers按全账号签名／时间证据索引匹配，纯状态复用缓存且公共revision保持最新；自动查看多封信合并通知。邮件与新邮件查看状态仍由Mail所有，Vault仅经Core Service消费 | 基础API13 / business-services:1；TransfersPerformanceSpec 20角色／3411历史约0.04秒（旧约0.73秒），100封确认1次通知；MailProviderSpec真实服务集成与缺失／不兼容／晚注册通过。客户端仍待复验；logistics／evidence仍未公开 / 2026-10-12 |
 | YiboMounts | 不适用 | 1.0.0 全面接入复核：Tooltip 图鉴只读取自身坐骑目录与 Core 账号级设置，无跨业务查询、提供或聚合需求 | 出现真实跨业务需求时按 Service／Provider 契约评估 / 2026-10-12 |
 | YiboQuestBlocker | 待评估 | 无该新连接接入证据 | 不把阻止接任务当成任务数据能力；真实需求出现再评估 |
 | YiboReputation | 待评估 | 无该新连接接入证据 | 真实待办／目标接入时评估 |
@@ -346,7 +348,10 @@ Core 1.7.0 新增 `character-name-format:1`，接入进度见 CAP-001。接口�
 | 2026-10-09 | Crafting 角色表头及名称 API v8 接入 | 矩阵使用 Core 共享表头，角色下拉／详情使用 FormatName；初始化与注册要求 API v8，检查名称能力和方法，失败时提示升级并停止初始化。CoreNameIntegration、Crafting Smoke、Core 名称 77 项及四个相关文件语法通过；CAP-001 部分接入、AUD-011 代码已修复，游戏显示待验收 |
 
 
-2026-10-09 CAP-005 / Todo 全量接入复核：YiboTodo 1.2.0 保持 API v11 / business-providers:1 门槛，基础 UI 继续最低 API v10。`profession-cooldown` 输出全部适用冷却组；`nomi` 保留；新增 `activities` 输出其余 `monitoringProjects`，账号布林顿去重并投影候选。Core 连接实现和 TaskHub 消费实现无需改动。TodoSourcesSpec 177 项、原 359 项以及全部 Todo 烟雾测试通过；低版本停止、三来源注销／重注册已验证。状态仍为“部分接入（运行代码与自动化完成，客户端待验收）”。CAP-001／002／003／004／006 本次无新接入变化；未触及调用继续保持原台账状态。范围与实际契约见 [全量接入记录](../../Docs/行动中心-Todo全量接入.md)。
+2026-10-09 CAP-005 / Todo 全量接入复核：YiboTodo 1.2.0 保持 API v11 / business-providers:1 门槛，基础 UI 继续最低 API v10。`profession-cooldown` 输出全部适用冷却组；
+omi` 保留；新增 `activities` 输出其余 `monitoringProjects`，账号布林顿去重并投影候选。Core 连接实现和 TaskHub 消费实现无需改动。TodoSourcesSpec 177 项、原 359 项以及全部 Todo 烟雾测试通过；低版本停止、三来源注销／重注册已验证。状态仍为“部分接入（运行代码与自动化完成，客户端待验收）”。CAP-001／002／003／004／006 本次无新接入变化；未触及调用继续保持原台账状态。范围与实际契约见 [全量接入记录](../../Docs/行动中心-Todo全量接入.md)。
+
+2026-10-12 CAP-005 Mail／Vault批量取件：Mail 1.2.12合并同轮扫描与收取归档通知、队列中间状态只更新原生进度；Vault 1.2.2经Core Contracts消费可选transfersUnchanged提示，仅状态变化刷新当前角色，缺失提示／实际数据／混合批次保持全账号刷新。最低API13／business-services:1不变，无来源私有访问；MailRuntimeSpec 30封90附件库存与归档一致、180次通知、1次队列完整刷新；MailProviderSpec含状态范围、混合失效、在途核实与缺失／不兼容／晚注册通过，客户端待验收。Core公共接口没有变化，CAP-007身份调用继续沿用既有接入，无新增能力迁移。
 
 ## CAP-007：轻量角色身份投影
 
@@ -376,6 +381,7 @@ CAP-005 本轮复核：TaskHub 仅按稳定 Provider 标识与范围缓存、精
 
 2026-10-10 客户端反馈复核：Core 菜单改为悬停显示与延迟 Lookup，九个业务绑定继续复用同一公共能力，无本地重复按钮。Task 添加导航经 CAP-005 的 action.targets v1.1 GetEntry 发现九个来源；v1.0 评估保持兼容。Task 角色显示偏好、分页及源状态继续复用 CAP-001／002／004／007 的名称、共享控件、账号壳与轻量身份，不建立第二套角色数据或设置窗口。AltoBoss 补 action.targets 变化通知，Task 目标投影不复制历史并仅清过期缓存。230项目标专项及相关回归通过；客户端视觉、战斗安全和性能采样待复测。详见 [反馈记录](../../Docs/行动中心-客户端反馈修复与发布前检查-2026-10-10.md)。
 
+| YiboMail | 部分接入（高频身份路径代码完成／客户端待验收） | 1.2.11-api1 收件箱／账号视图、名称、状态、扫描、队列、行动投影及新建历史占位使用 identityOnly；联系人与寄送经公开只读目录补阵营；既有最低 API13 并检查 character-identity:1。未触及的设置页／诊断低频完整读取保留 | 真实 Core 10,000物品对照，100轮邮箱身份／名称／状态／联系人约180KB、0领域复制；相关7个Spec通过，另2个既有夹具失败已用HEAD复核。详见 `../../Docs/Mail-内存与首次打开性能修复.md` / 2026-10-12 |
 Core 状态：已提供，工作树 1.11.0 / API v12 / business-item-actions:1，未发布。职责、方法、失败行为与版本要求以 [API v12](API-v12-业务项目主动添加.md) 为准。目标写入与业务评估经 CAP-005 的既有 Contracts；Core 不保存用户目标或业务数据。
 
 | 插件技术名 | 接入状态／已覆盖 | 剩余范围与验证 | 最近审查 |
@@ -450,6 +456,8 @@ Core 状态：**已提供（1.12.0 / API v13 工作树，未发布）**。能力
 | YiboTaskHub | 部分接入（静态文案已迁移） | 工作树 0.6.0：最低 YiboCore 1.12.0 / API13、localization:1、account-entry:2、builtin-entry-bar:1；TOC 注册 zh/en 资源，页面、入口、错误、摘要、HUD、设置、状态、目标编辑与 Boss 目录静态文案均通过 `Addon:T` 调用 Core Locale。动态来源名称仍由来源插件提供；搜索归一化用标点不属于显示文案 | 6 个 TaskHub 独立 Spec 均通过；静态报告 `_NonRelease/Localization/TaskHub-API13-Report.md`：0 未处理候选、0 缺失英文／未知 key／参数差异；中英文客户端布局及登录验收待完成 / 2026-10-12 |
 | YiboTodo | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
 | YiboVault | 部分接入（适用区域代码完成） | 工作树要求 YiboCore 1.12.0 / API13 与 `localization:1`；TOC 注册 zh/en 资源，页面、设置、入口、Tooltip、状态／错误与固定目录文本经 Core Locale。动态游戏名称、历史快照与玩家自定义文本保持原文 | `Vault-Core13-Report.md`：0 硬编码候选、缺失英文、未知 key、格式差异；中英文客户端、手动语言模式与登录验收待完成 / 2026-10-12 |
+2026-10-13 Mail 1.2.13 截图修复：寄信发送／取消按钮和保留期确认直接使用 Mail owner 的 Core.Locale 资源，不再让客户端 CANCEL／ACCEPT 覆盖手动英文；中英文到期数值统一 d／h、估算保留~。NativeInboxSpec 验证中文原生标签在 Core 英文及中文的悬停／启禁刷新，WorkspaceSpec 验证两种语言的范围与高度。基础最低 Core 1.12.1 / API13，新增范围能力见 CAP-004；语言能力仍 localization:1。未修改游戏动态名称、历史快照或用户文本，客户端语言／布局验收仍待完成。
+
 
 证据：[实施与验收记录](../../Docs/Core系列中英文客户端适配-实施与验收记录.md)，`_NonRelease/Localization/{Core-Report,Workspace-Report}.md`。字符串数不是加权区域覆盖度。后续新增/修改区域触发接入；达到单插件收尾条件时固定能力基线并集中验证。Core 间接给旧业务页面提供英文壳，不等于该业务已接入语言服务。
 

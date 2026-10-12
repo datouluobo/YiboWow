@@ -71,7 +71,7 @@ function Rules:SetBlockedSender(characterID, blocked)
     local senders = Addon.db.sendBlacklist.senders
     if not blocked then senders[characterID] = nil; self:Changed(true); return true end
     local characters = Addon.Core.Characters:GetAllCached()
-    local current = Addon.Core.Characters:GetCurrent()
+    local current = Addon.Recipients:Current()
     local character = current and current.id == characterID and current
     for _, entry in ipairs(characters) do if entry.id == characterID then character = entry; break end end
     if not character then return nil, Addon:T("UI.TEXT_0532") end
@@ -237,7 +237,7 @@ function Rules:Delete(id)
     Addon.db.sendRules[id] = nil; self:Changed(); return true
 end
 function Rules:Match(bags, skipped)
-    local current = Addon.Core.Characters:GetCurrent()
+    local current = Addon.Recipients:Current()
     local currentAddress = current and Addon.Recipients:Normalize(current.name .. "-" .. current.realm)
     local active, result = {}, { items = {}, conflicts = {}, pending = 0, groups = {}, byRule = {}, factionIssues = {} }
     if self.incompatible then

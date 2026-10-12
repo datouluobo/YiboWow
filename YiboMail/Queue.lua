@@ -4,6 +4,15 @@ local function Fingerprint(mails)
     local parts = {}; for _, mail in ipairs(mails) do parts[#parts + 1] = mail.signature end; table.sort(parts); return Addon.Encode(parts)
 end
 function Queue:Notify()
+    if Addon.publicationBatch then self.notifyPending = true; return end
+    self.notifyPending = nil
+    -- Mail mutations already notify the account view. Intermediate queue
+    -- progress only needs the mounted inbox footer; terminal states rebuild.
+    local native = Addon.NativeUI
+    if self.state == "running" and native and native.RefreshInboxProgress
+        and native.inbox and native.inbox.keepTilesDuringQueue then
+        native:RefreshInboxProgress(); return
+    end
     if Addon.Core and Addon.FEATURES.account then Addon.Core.AccountView:NotifyPageChanged("mail-inbox") end
     if Addon.NativeUI then Addon.NativeUI:Refresh() end
 end
@@ -20,17 +29,32 @@ local function CurrentInboxIndex(queue, originalIndex)
     for index in pairs(queue.removedIndexes or {}) do if index < originalIndex then removedBefore = removedBefore + 1 end end
     return originalIndex - removedBefore
 end
+local function CopyActions(actions)
+    local result, originals = {}, {}
+    for _, action in ipairs(actions) do
+        local copy = {}
+        for key, value in pairs(action) do
+            if key == "original" and type(value) == "table" then
+                if not originals[value] then originals[value] = Addon.Copy(value) end
+                copy[key] = originals[value]
+            else copy[key] = Addon.Copy(value) end
+        end
+        result[#result + 1] = copy
+    end
+    return result
+end
 function Queue:Prepare(selection, context)
     if self.pending then return nil, Addon:T("UI.TEXT_0085") end
     local actions = {}
     for _, entry in ipairs(Addon.ViewModel:GetMails(context, {})) do
-        local mail = entry.mail
+        local mail, original = entry.mail, nil
         local function Selected(slot, item)
             local id = Addon.ViewModel:ActionID(entry.character.id, entry.key, slot)
             if not selection[id] then return true end
             if not entry.actionable then return nil, entry.restriction end
+            if not original then original = Addon.Copy(mail) end
             actions[#actions + 1] = { id = id, characterID = entry.character.id, mailKey = entry.key,
-                signature = mail.signature, original = Addon.Copy(mail), slot = slot, item = Addon.Copy(item), state = "pending" }
+                signature = mail.signature, original = original, slot = slot, item = Addon.Copy(item), state = "pending" }
             return true
         end
         if mail.money > 0 then local ok, err = Selected("money"); if not ok then return nil, err end end
@@ -73,7 +97,7 @@ function Queue:Start(actions)
     if self.pending then return nil, Addon:T("UI.TEXT_0550") end
     if type(actions) ~= "table" or #actions == 0 then return nil, Addon:T("UI.TEXT_0559") end
     local mails, err = Addon.Scanner:ReadVisible(); if not mails then return nil, err end
-    local current, selected = Addon.Core.Characters:GetCurrent(), {}
+    local current, selected = Addon.Core.Characters:GetCurrent({ identityOnly = true }), {}
     for _, action in ipairs(actions) do
         if not current or current.id ~= action.characterID then return nil, Addon:T("UI.TEXT_0279") end
         if selected[action.id] then return nil, Addon:T("UI.TEXT_0351") end
@@ -92,7 +116,7 @@ function Queue:Start(actions)
             if not found then return nil, Addon:T("UI.TEXT_0633") end
         end
     end
-    self.actions, self.completed, self.index, self.state, self.message = Addon.Copy(actions), 0, 1, "running", Addon:T("UI.TEXT_0426")
+    self.actions, self.completed, self.index, self.state, self.message = CopyActions(actions), 0, 1, "running", Addon:T("UI.TEXT_0426")
     self.verifiedMails, self.removedIndexes = mails, {}
     self:Next(); return true
 end
@@ -104,7 +128,7 @@ function Queue:Next()
         if Addon:GetInboxPreferences().showSummary then Addon:Print(Addon:T("UI.TEXT_0405") .. self.completed .. "/" .. #self.actions .. Addon:T("UI.TEXT_0053")) end
         self:Notify(); return
     end
-    local current = Addon.Core.Characters:GetCurrent()
+    local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     if not current or current.id ~= action.characterID then self:Pause(Addon:T("UI.TEXT_0278")); return end
     if InCombatLockdown and InCombatLockdown() then self:Pause(Addon:T("UI.TEXT_0306")); return end
     local mails = self.verifiedMails
