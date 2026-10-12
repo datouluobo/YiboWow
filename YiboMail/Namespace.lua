@@ -1,15 +1,11 @@
 local Addon = {}
 _G.YiboMail = Addon
-Addon.NAME, Addon.VERSION, Addon.API_VERSION = "YiboMail", "1.2.7-api1", 1
+Addon.NAME, Addon.VERSION, Addon.API_VERSION = "YiboMail", "1.2.9-api1", 1
+Addon.REQUIRED_CORE_API = 13
 Addon.FEATURES = { send = true, sendAssist = false, account = true, settings = true }
 Addon.CAPABILITIES = { ["mail-items.query"] = 1, ["mail-items.state"] = 1, ["mail-items.events"] = 1,
     ["mail-items.transfers"] = 1 }
 Addon.Frame = CreateFrame("Frame")
-Addon.RECIPIENT_SOURCES = {
-    { id = "contacts", label = "常用收件人" }, { id = "characters", label = "账号角色" },
-    { id = "recent", label = "最近邮寄" }, { id = "friends", label = "角色好友" },
-    { id = "accountFriends", label = "账号好友" }, { id = "guild", label = "公会" },
-}
 function Addon:IsRecipientSourceVisible(id)
     local settings = self.db and self.db.settings
     return not (settings and settings.recipientGroups and settings.recipientGroups[id] == false)
@@ -32,7 +28,14 @@ function Addon:Now()
     return time(), "client"
 end
 function Addon:Print(message)
-    if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 邮件：" .. tostring(message)) end
+    if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage(self:T("APP.PREFIX") .. tostring(message)) end
+end
+function Addon:T(key, ...)
+    local core = self.Core or _G.YiboCore
+    if core and core.Locale and type(core.Locale.Get) == "function" then
+        return core.Locale:Get(self.NAME, key, ...)
+    end
+    return "[" .. self.NAME .. ":" .. tostring(key) .. "]"
 end
 -- Length prefixes prevent subjects containing delimiters from colliding.
 function Addon.Encode(values)

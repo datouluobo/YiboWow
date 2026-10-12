@@ -120,19 +120,19 @@ function Model:Totals(entries)
 end
 function Model:MailDetail(entry)
     local mail = entry.mail
-    local text = #(mail.attachments or {}) .. " 个附件槽"
-    if (mail.money or 0) > 0 and (mail.cod or 0) == 0 then text = text .. " · 待取金币 " .. View:Money(mail.money) end
-    if (mail.cod or 0) > 0 then text = text .. " · 付款取信 " .. View:Money(mail.cod) end
-    if mail.wasReturned or mail.returned then text = text .. " · 退回邮件" end
+    local text = #(mail.attachments or {}) .. Addon:T("UI.TEXT_0025")
+    if (mail.money or 0) > 0 and (mail.cod or 0) == 0 then text = text .. Addon:T("UI.TEXT_0010") .. View:Money(mail.money) end
+    if (mail.cod or 0) > 0 then text = text .. Addon:T("UI.TEXT_0004") .. View:Money(mail.cod) end
+    if mail.wasReturned or mail.returned then text = text .. Addon:T("UI.TEXT_0019") end
     return text .. " · " .. View:Expiry(mail)
 end
 function Model:Coverage(character)
     local snapshot = Addon.db.byCharacter[character.id]
     local coverage, state = snapshot.coverage, Addon.Items:GetState(character.id)
-    local parts = { "上次扫描 " .. (coverage.observedAt and date("%m-%d %H:%M", coverage.observedAt) or "未知") }
-    if coverage.status == "partial" then parts[#parts + 1] = "部分 · " .. (coverage.currentCount or 0) .. "/" .. (coverage.totalCount or "?") .. " · 本轮未扫描 " .. (coverage.unscannedCount or 0)
-    else parts[#parts + 1] = "完整扫描" end
-    if state.status == "error" then parts[#parts + 1] = "本次读取失败"
-    elseif state.status == "stale" then parts[#parts + 1] = "历史快照" end
+    local parts = { Addon:T("UI.TEXT_0088") .. (coverage.observedAt and date("%m-%d %H:%M", coverage.observedAt) or Addon:T("UI.TEXT_0399")) }
+    if coverage.status == "partial" then parts[#parts + 1] = Addon:T("UI.TEXT_0609") .. (coverage.currentCount or 0) .. "/" .. (coverage.totalCount or "?") .. Addon:T("UI.TEXT_0015") .. (coverage.unscannedCount or 0)
+    else parts[#parts + 1] = Addon:T("UI.TEXT_0218") end
+    if state.status == "error" then parts[#parts + 1] = Addon:T("UI.TEXT_0407")
+    elseif state.status == "stale" then parts[#parts + 1] = Addon:T("UI.TEXT_0169") end
     return table.concat(parts, " · ")
 end

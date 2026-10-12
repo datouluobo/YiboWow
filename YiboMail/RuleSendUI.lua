@@ -24,16 +24,16 @@ function U:Install()
     root:SetFrameLevel(native.send:GetFrameLevel() + 6)
     root:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8" })
     root:SetBackdropColor(unpack(theme.Colors.bg))
-    root.manage = theme:CreateButton(native.send, 88, "管理规则")
+    root.manage = theme:CreateButton(native.send, 88, Addon:T("UI.TEXT_0480"))
     root.manage:SetHeight(theme.Size.compact); root.manage:SetScript("OnClick", function() U:OpenSettings() end)
     root.scroll = theme:CreateScrollFrame(root); root.scroll:SetPoint("TOPLEFT", 6, -6); root.scroll:SetPoint("BOTTOMRIGHT", -6, 6)
     root.content = CreateFrame("Frame", nil, root.scroll); root.content:SetSize(1, 1); root.scroll:SetScrollChild(root.content)
     root.rows = {}
     root.scroll:HookScript("OnSizeChanged", function() U:Refresh() end)
-    self.action = theme:CreateButton(native.send, 80, "装填", "primary")
+    self.action = theme:CreateButton(native.send, 80, Addon:T("UI.TEXT_0496"), "primary")
     self.action:SetPoint("RIGHT", SendMailCancelButton, "LEFT", -6, 0)
     self.action:SetScript("OnClick", function() Run(Addon.RuleSendController.Primary) end)
-    self.undo = theme:CreateButton(native.send, 64, "撤下", "secondary")
+    self.undo = theme:CreateButton(native.send, 64, Addon:T("UI.TEXT_0329"), "secondary")
     self.undo:SetPoint("RIGHT", self.action, "LEFT", -6, 0)
     self.undo:SetScript("OnClick", function() Run(Addon.RuleSendController.Undo) end)
     self.status = theme:CreateText(native.send, theme.Font.assist, theme.Colors.muted, "LEFT")
@@ -51,8 +51,9 @@ function U:LayoutFooter()
     if not self.recipient then return end
     local native, theme = Addon.NativeUI, Addon.Core.UITheme
     local layout, field = native:SendRegionLayout(), native.send.recipientField
-    self.recipient:ClearAllPoints(); self.recipient:SetPoint("LEFT", field, "LEFT", 74, 0)
-    self.recipient:SetSize(math.max(80, field:GetWidth() - 80), theme.Size.standard)
+    local inset = native.send.inputInset or 74
+    self.recipient:ClearAllPoints(); self.recipient:SetPoint("LEFT", field, "LEFT", inset, 0)
+    self.recipient:SetSize(math.max(1, field:GetWidth() - inset - 6), theme.Size.standard)
     self.recipient:SetFrameLevel(field:GetFrameLevel() + 2)
     local width = math.max(1, MailFrame:GetWidth() - 16)
     local usedColumns = layout.count % layout.columns
@@ -151,8 +152,8 @@ function U:Refresh()
     end
     for _, conflict in ipairs(match.conflicts) do entries[#entries + 1] = { conflict = conflict } end
     for _, issue in ipairs(match.factionIssues or {}) do entries[#entries + 1] = { factionIssue = issue } end
-    if match.pending and match.pending > 0 then entries[#entries + 1] = { message = match.unavailable or ("待识别分类：" .. match.pending .. " 组") } end
-    if #entries == 0 then entries[1] = { message = match.blockedSender and "当前角色已被排除" or "暂无可寄物品，点击管理规则设置。" } end
+    if match.pending and match.pending > 0 then entries[#entries + 1] = { message = match.unavailable or (Addon:T("UI.TEXT_0293") .. match.pending .. Addon:T("UI.TEXT_0046")) } end
+    if #entries == 0 then entries[1] = { message = match.blockedSender and Addon:T("UI.TEXT_0280") or Addon:T("UI.TEXT_0383") } end
     local width = math.max(1, root.scroll:GetWidth())
     root.content:SetWidth(width)
     local top = 0
@@ -162,7 +163,7 @@ function U:Refresh()
             row = CreateFrame("Frame", nil, root.content); root.rows[index] = row
             row.main = Addon.Core.UITheme:CreateButton(row, width, "")
             row.main:SetPoint("TOPLEFT", 0, 0)
-            row.skip = Addon.Core.UITheme:CreateButton(row.main, 58, "跳过")
+            row.skip = Addon.Core.UITheme:CreateButton(row.main, 58, Addon:T("UI.TEXT_0570"))
             row.skip:SetPoint("TOPRIGHT", -6, -3); row.skip:SetHeight(22)
         end
         row:Show(); row:SetSize(width, 48); row:ClearAllPoints(); row:SetPoint("TOPLEFT", 0, -top)
@@ -173,16 +174,16 @@ function U:Refresh()
         local conflict = entry.conflict
         if entry.recipient then
             local label = "→ " .. Addon.ViewModel:CounterpartLabel(entry.recipient, current)
-            label = label .. " · " .. (entry.skipped and "本次已跳过" or (entry.quantity .. "个 / " .. entry.stacks .. "组" .. (entry.staged and " · 已装填" or "")))
+            label = label .. " · " .. (entry.skipped and Addon:T("UI.TEXT_0406") or (entry.quantity .. Addon:T("UI.TEXT_0094") .. entry.stacks .. Addon:T("UI.TEXT_0486") .. (entry.staged and Addon:T("UI.TEXT_0007") or "")))
             row.main:SetText(label); row.main:SetEnabled(not entry.skipped and c.state ~= "sending" and c.state ~= "filling")
             row.main:SetScript("OnClick", function() Run(c.Select, { kind = "recipient", value = entry.key }) end)
-            row.skip:Show(); row.skip:SetText(entry.skipped and "恢复" or "跳过")
+            row.skip:Show(); row.skip:SetText(entry.skipped and Addon:T("UI.TEXT_0302") or Addon:T("UI.TEXT_0570"))
             row.skip:SetEnabled(c.state ~= "sending" and c.state ~= "filling")
             row.skip:SetScript("OnClick", function() Run(c.Skip, entry.ruleIDs, entry.skipped) end)
-            local lines = { entry.quantity .. " 个 · " .. entry.stacks .. " 组", "第一次点击装填，再次点击同一收件人发送。" }
-            for _, rule in ipairs(entry.rules) do lines[#lines + 1] = Addon.SendRules:Label(rule) .. (c.skipped[rule.id] and " · 已跳过" or "") end
+            local lines = { entry.quantity .. Addon:T("UI.TEXT_0022") .. entry.stacks .. Addon:T("UI.TEXT_0046"), Addon:T("UI.TEXT_0473") }
+            for _, rule in ipairs(entry.rules) do lines[#lines + 1] = Addon.SendRules:Label(rule) .. (c.skipped[rule.id] and Addon:T("UI.TEXT_0008") or "") end
             Addon.Core.UITheme:BindTooltip(row.main, entry.recipient, lines)
-            Addon.Core.UITheme:BindTooltip(row.skip, entry.skipped and "恢复收件人规则" or "跳过收件人规则", { entry.recipient, "本次邮箱会话对框内全部规则生效。" })
+            Addon.Core.UITheme:BindTooltip(row.skip, entry.skipped and Addon:T("UI.TEXT_0303") or Addon:T("UI.TEXT_0571"), { entry.recipient, Addon:T("UI.TEXT_0408") })
             if not row.items then
                 row.items = CreateFrame("Button", nil, row.main)
                 row.items.cell = Addon.Core.UITheme:CreateText(row.items, Addon.Core.UITheme.Font.body, Addon.Core.UITheme.Colors.text, "LEFT")
@@ -202,11 +203,11 @@ function U:Refresh()
             row.main.label:SetHeight(20); row.main.label:SetWordWrap(false)
         elseif entry.factionIssue then
             local issue = entry.factionIssue
-            row.main:SetText(issue.rule.recipient .. "\n" .. issue.reason .. " · 点击处理")
+            row.main:SetText(issue.rule.recipient .. "\n" .. issue.reason .. Addon:T("UI.TEXT_0017"))
             row.main:SetEnabled(true); row.skip:Hide()
             row.main:SetScript("OnClick", function() U:OpenSettings(issue.rule.id) end)
         elseif conflict then
-            row.main:SetText("! " .. conflict.label .. "\n点击处理冲突")
+            row.main:SetText("! " .. conflict.label .. Addon:T("UI.TEXT_0074"))
             row.main:SetEnabled(true); row.skip:Hide()
             row.main:SetScript("OnClick", function() U:OpenSettings(conflict.ruleIDs[1]) end)
             local lines = {}
@@ -229,22 +230,23 @@ function U:Refresh()
     for index = #entries + 1, #root.rows do root.rows[index]:Hide() end
     root.content:SetHeight(top); root.scroll:SetContentHeight(top)
     local label, enabled = c:ButtonState()
-    self.action:SetText(label == "填入附件" and "装填" or label == "填入下一封" and "下一封" or label); self.action:SetEnabled(enabled)
+    self.action:SetText(label == Addon:T("UI.TEXT_0209") and Addon:T("UI.TEXT_0496") or label == Addon:T("UI.TEXT_0208") and Addon:T("UI.TEXT_0089")
+        or label == Addon:T("UI.TEXT_0614") and Addon:T("RULE.MATCH") or label); self.action:SetEnabled(enabled)
     self.action:SetState(enabled and "default" or "disabled")
     self.undo:SetEnabled((c.owned ~= nil or #Addon.Compose:GetAttachments() > 0) and c.state ~= "sending" and c.state ~= "filling")
     self.undo:SetState(self.undo:IsEnabled() and "default" or "disabled")
     local recipient = SendMailNameEditBox and SendMailNameEditBox:GetText() or ""
-    self.recipient.value:SetText(recipient ~= "" and Addon.ViewModel:CounterpartLabel(recipient, current) or "待装填")
+    self.recipient.value:SetText(recipient ~= "" and Addon.ViewModel:CounterpartLabel(recipient, current) or Addon:T("UI.TEXT_0292"))
     self:Layout()
     local remaining, packets, last, stacks = #match.items, 0, nil, 0
     for _, item in ipairs(c:ScopeItems()) do
         if item.recipient ~= last or stacks >= (ATTACHMENTS_MAX_SEND or 12) then packets = packets + 1; last, stacks = item.recipient, 0 end
         stacks = stacks + 1
     end
-    local summary = "本封 " .. #Addon.Compose:GetAttachments() .. " · 待寄 " .. remaining .. " 组 / " .. packets .. " 封"
+    local summary = Addon:T("RULE.STATUS", #Addon.Compose:GetAttachments(), remaining, packets)
     self.status:SetText(c.notice or summary)
-    Addon.Core.UITheme:BindTooltip(self.recipient, "本封收件人", { recipient ~= "" and Addon.ViewModel:Escape(recipient) or "待装填", c.notice or summary })
-    Addon.Core.UITheme:BindTooltip(self.action, label, { summary, recipient ~= "" and ("收件人：" .. recipient) or "选择规则或快捷联系人装填，再次点击发送。" })
+    Addon.Core.UITheme:BindTooltip(self.recipient, Addon:T("UI.TEXT_0402"), { recipient ~= "" and Addon.ViewModel:Escape(recipient) or Addon:T("UI.TEXT_0292"), c.notice or summary })
+    Addon.Core.UITheme:BindTooltip(self.action, label, { summary, recipient ~= "" and (Addon:T("UI.TEXT_0340") .. recipient) or Addon:T("UI.TEXT_0582") })
     Addon.NativeUI:RefreshFavoriteButtons()
     self.refreshing = nil
     if math.abs(width - root.scroll:GetWidth()) > 0.1 then self:Refresh() end
@@ -256,7 +258,7 @@ function U:Drop(contact)
     if self.active then
         if ClearCursor then ClearCursor() end
         local item = Addon.SendRules:GetItem(itemID)
-        if not item or not item.ready then Addon:Print("物品尚未加载，请稍后重试。"); return end
+        if not item or not item.ready then Addon:Print(Addon:T("UI.TEXT_0458")); return end
         local existing
         for _, rule in ipairs(Addon.SendRules:List()) do
             if rule.kind == "item" and Addon.SendRules:HasItem(rule, item.itemID)
@@ -266,11 +268,11 @@ function U:Drop(contact)
             end
         end
         if existing and Addon.Recipients:Key(existing.recipient) == Addon.Recipients:Key(address) then
-            local message = "该规则已存在，无需重复添加：" .. item.name .. " → " .. Addon.Recipients:Label(contact) .. "。"
+            local message = Addon:T("UI.TEXT_0517") .. item.name .. " → " .. Addon.Recipients:Label(contact) .. Addon:T("UI.TEXT_0079")
             Addon.RuleSendController.notice = message; Addon:Print(message); U:Refresh(); return
         end
-        local text = "将「" .. item.name .. "」寄给「" .. address .. "」？"
-        if existing then text = text .. "\n将更新整条规则（" .. Addon.SendRules:Label(existing) .. "）的收件人；原收件人：" .. existing.recipient end
+        local text = Addon:T("UI.TEXT_0241") .. item.name .. Addon:T("UI.TEXT_0081") .. address .. Addon:T("UI.TEXT_0082")
+        if existing then text = text .. Addon:T("UI.TEXT_0072") .. Addon.SendRules:Label(existing) .. Addon:T("UI.TEXT_0651") .. existing.recipient end
         local revision = Addon.db.sendRuleRevision
         Addon.Core.ItemConfirmation:Show({ text = text,
             IsCurrent = function() return Addon.db.sendRuleRevision == revision end,
@@ -283,14 +285,14 @@ function U:Drop(contact)
             end })
     else
         local ok, err = Addon.RuleSendController:Guard(true)
-        if not ok or not Addon.RuleSendController:DraftEmpty() then Addon:Print(err or "请先处理当前邮件草稿。"); return end
-        if not ClickSendMailItemButton then Addon:Print("客户端装填接口不可用。"); return end
+        if not ok or not Addon.RuleSendController:DraftEmpty() then Addon:Print(err or Addon:T("UI.TEXT_0523")); return end
+        if not ClickSendMailItemButton then Addon:Print(Addon:T("UI.TEXT_0229")); return end
         -- Stage only the exact cursor stack before attempting one player-triggered send.
         local success = pcall(ClickSendMailItemButton, 1)
         if not success or (CursorHasItem and CursorHasItem()) or #Addon.Compose:GetAttachments() ~= 1 then
-            Addon:Print("客户端未确认装填，请检查鼠标与附件。"); return
+            Addon:Print(Addon:T("UI.TEXT_0226")); return
         end
-        Addon.NativeUI:SetMailRecipient(address); SendMailSubjectEditBox:SetText("物品寄送")
+        Addon.NativeUI:SetMailRecipient(address); SendMailSubjectEditBox:SetText(Addon:T("UI.TEXT_0457"))
         local button = _G.SendMailMailButton or _G.SendMailSendButton
         if SendMailFrame_Update then SendMailFrame_Update() end
         local click = button and button:GetScript("OnClick")
@@ -301,6 +303,6 @@ function U:Drop(contact)
             if Addon.Compose.pendingSend then return end -- Await the result; never issue a second call.
             if sent and #Addon.Compose:GetAttachments() == 0 then return end
         end
-        Addon:Print("客户端未确认直接发送，已填入物品和收件人；请检查邮件后点击发送。")
+        Addon:Print(Addon:T("UI.TEXT_0224"))
     end
 end

@@ -24,6 +24,7 @@ REGISTER = re.compile(r'Core\.Locale:Register\(\s*"([^"\n]+)"\s*,\s*"(zh|en)"\s*
 FORMAT = re.compile(r'%(?:[-+ #0]*\d*(?:\.\d+)?[cdiouxXeEfgGqs]|%)')
 EXCEPTIONS = {
     'YiboCore/Data/Domains/Professions.lua': 'Client-native profession aliases; stable skill-line IDs own identity.',
+    'YiboMail/SendRules.lua': 'Native item-category markers used only to recognize obsolete client categories; never displayed.',
 }
 MEASUREMENT = {'"字"', '"字字字字"', '"字字字字字字"'}
 INPUT_PUNCTUATION = {

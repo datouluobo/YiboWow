@@ -214,11 +214,11 @@ local function OperationButton(picker)
     end
 end
 assert(p.item.drop:IsShown() and p.item.drop.label:GetText() == '拖放到此')
-assert(OperationButton(p.item):GetWidth() == 72 and p.item.drop:GetWidth() == 80)
+assert(OperationButton(p.item):GetWidth() >= 72 and p.item.drop:GetWidth() >= 80)
 assert(OperationButton(p.item).points[1][3] == p.item.drop.points[1][3], 'Left-column picker actions share a line')
 assert(p.item.input.points[1][3] == p.item.drop.points[1][3])
-assert(p.target.points[1][3] == p.contacts.points[1][3] and p.contacts:GetWidth() == 96)
-assert(p.kind.points[1][3] == p.item.points[1][3] and not p.kind.menu)
+assert(p.target.points[1][3] == p.contacts.points[1][3] and p.contacts:GetWidth() >= 96)
+assert(p.kind.points[1][3] > p.item.points[1][3] and not p.kind.menu)
 assert(p.item.input:GetHeight() == p.save:GetHeight())
 Click(p.cancel); assert(not S.editID and p.save.label:GetText() == '添加规则')
 p.target:SetValue('First-Realm', true); p.kind.onValueChanged('category')
@@ -241,8 +241,8 @@ Click(p.class); Click(p.class.menu.buttons[2])
 assert(S.draft.classID == 7 and p.subclass:IsEnabled() and not p.class.menu:IsShown())
 assert(p.subclass.state == 'default')
 assert(p.class.label:GetText() == '交易材料' and not p.categoryStatus:IsShown())
-assert(p.class.points[1][3] == p.subclass.points[1][3] and p.subclass:GetWidth() == p.class:GetWidth())
-assert(p.class:GetWidth() <= 180 and p.subclass.points[1][2] + p.subclass:GetWidth() <= p.editor:GetWidth())
+assert(p.class.points[1][3] == p.subclass.points[1][3] and p.subclass:GetWidth() >= 130)
+assert(p.class:GetWidth() >= 130 and p.subclass.points[1][2] + p.subclass:GetWidth() <= p.editor:GetWidth())
 Click(p.subclass); assert(p.subclass.menu:IsShown() and #p.subclass.options == 3)
 Click(p.subclass.menu.buttons[2]); assert(S.draft.subclassID == 7 and not p.subclass.menu:IsShown())
 -- A broken legacy entry point must not hide valid modern subclasses.
@@ -278,7 +278,7 @@ S:Edit(categoryID); assert(p.subclass.value == 7)
 Click(p.class); Click(p.class.menu.buttons[2]); assert(S.draft.subclassID == nil and p.subclass.value == -1)
 Click(p.subclass); Click(p.subclass.menu.buttons[2]); Click(p.save)
 parent:SetWidth(400); host.refreshPanel()
-assert(p.class.points[1][3] == p.subclass.points[1][3])
+assert(p.class.points[1][3] > p.subclass.points[1][3], 'Narrow category controls stack as complete label/dropdown groups')
 assert(p.subclass.points[1][2] + p.subclass:GetWidth() <= p.editor:GetWidth())
 parent:SetWidth(1104); host.refreshPanel()
 assert(p.editor:IsShown() and p.list:IsShown())
@@ -526,7 +526,7 @@ for _, tab in ipairs({ 'send', 'rules', 'send' }) do
     N:RefreshSend()
     for index = 8, 12 do assert(_G['SendMailAttachment' .. index]:IsShown()) end
     local geometry = N:SendRegionLayout()
-    assert(SendMailMoney.points[1][5] == geometry.controlsBottom and geometry.controlsBottom > 42 + 2 * SendMailAttachment1:GetHeight() + 4)
+    assert(SendMailMoney.points[1][5] == geometry.controlsBottom + A.Core.UITheme.Size.compact + 4 and geometry.controlsBottom > 42 + 2 * SendMailAttachment1:GetHeight() + 4)
     assert(SendMailCODButton.points[1][5] == geometry.controlsBottom + 4)
     assert(MailEditBox.points[2][2] == MailFrame and MailEditBox.points[2][5] > geometry.controlsBottom + A.Core.UITheme.Size.compact)
     if tab == 'rules' then
@@ -749,3 +749,54 @@ N:SelectMailboxTab('send'); N:SelectMailboxTab('rules')
 assert(C.state == 'idle' and not C.owned and not C.packet, 'Reentering with a cleared draft releases stale ownership: ' .. tostring(C.state) .. '/' .. tostring(C.owned) .. '/' .. tostring(C.packet))
 ClickSendMailItemButton = undoSlot
 print('PASS: real compose/rule transitions expose manual-attachment undo, detect changed stacks without events, and release stale cleared plans')
+
+-- English controls use their real label widths on the 340px native surface.
+A.Core.Locale.language = 'en'
+MailFrame:SetWidth(340)
+N.send.recipientField.label:SetText(A:T('UI.TEXT_0332'))
+N.send.subjectField.label:SetText(A:T('UI.TEXT_0100'))
+SendMailSendMoneyButton.Text = CreateFrame('Frame', nil, SendMailSendMoneyButton)
+SendMailCODButton.Text = CreateFrame('Frame', nil, SendMailCODButton)
+N:SelectMailboxTab('send'); N:LayoutBasicSend()
+local recipientField = N.send.recipientField
+assert(recipientField.label:GetWidth() >= A.Core.UITheme:MeasureText(A.Core.UITheme.Font.body, 'Recipient'))
+assert(SendMailNameEditBox.points[1][4] >= 8 + recipientField.label:GetWidth() + 8)
+assert(SendMailNameEditBox.points[1][4] + SendMailNameEditBox:GetWidth() <= recipientField:GetWidth())
+local sendRadio, codRadio = SendMailSendMoneyButton, SendMailCODButton
+assert(codRadio.Text:GetText() == 'Cash on delivery', 'Retain the recognizable delivery term in full')
+assert(codRadio.points[1][4] >= sendRadio.points[1][4] + 18 + 4 + sendRadio.Text:GetWidth() + 8)
+assert(codRadio.points[1][4] + 18 + 4 + codRadio.Text:GetWidth() <= MailFrame:GetWidth() - 8)
+assert(SendMailMoney.points[1][5] >= codRadio.points[1][5] + codRadio:GetHeight() + 4)
+for id, key in pairs({ mail = 'UI.TEXT_0344', items = 'UI.TEXT_0635', send = 'UI.TEXT_0179', rules = 'MAILBOX.RULES' }) do
+    local tab = N.mailboxTabs[id]
+    tab:SetText(A:T(key))
+    assert(tab:GetWidth() >= A.Core.UITheme:MeasureText(A.Core.UITheme.Font.body, tab.label:GetText()) + 20)
+end
+print('PASS: English mailbox tabs fit; recipient label/input stay separate; full delivery label fits below money inputs')
+
+dofile('YiboMail/SendRulesSettings.lua')
+local englishSettings = A.SendRulesSettings
+local englishParent = CreateFrame('Frame', nil, UIParent); englishParent:SetWidth(1000)
+local englishBusiness, englishCache = CreateFrame('Frame', nil, englishParent), CreateFrame('Frame', nil, englishParent)
+local englishHost = { availableHeight = 600 }
+englishHost.refreshPanel = function() return englishSettings:Host(englishParent, englishHost, englishBusiness, englishCache, englishParent:GetWidth(), 376) end
+englishSettings.tab = 'rules'; englishHost.refreshPanel()
+for _, width in ipairs({ 1000, 560, 340 }) do
+    englishParent:SetWidth(width); englishHost.refreshPanel()
+    local editor, theme = englishSettings.panel, A.Core.UITheme
+    assert(editor.kind.points[1][3] > editor.item.points[1][3])
+    assert(editor.item:GetWidth() == editor.editor:GetWidth())
+    for _, button in pairs(editor.kind.buttons) do
+        assert(button:GetWidth() >= theme:MeasureText(theme.Font.body, button.label:GetText()) + 24)
+    end
+    for _, button in ipairs({ editor.contacts, editor.blockSender, editor.blockCurrent, OperationButton(editor.item), editor.item.drop }) do
+        assert(button:GetWidth() >= theme:MeasureText(theme.Font.body, button.label:GetText()) + 20)
+    end
+    for _, row in ipairs(editor.rows) do
+        if row:IsShown() then
+            assert(row.toggle:GetWidth() >= theme:MeasureText(theme.Font.body, row.toggle.label:GetText()) + 24)
+            assert(row.toggle.points[1][2] + row.toggle:GetWidth() <= row:GetWidth())
+        end
+    end
+end
+print('PASS: English item/category, recipient, picker, blocklist and rule-enable controls retain readable bounds at wide/narrow widths')

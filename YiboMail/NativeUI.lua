@@ -48,7 +48,7 @@ function Native:InstallMailboxTabs()
     if self.mailboxTabs or not MailFrameTab1 or not MailFrameTab2 then return end
     self.mailboxTabs = {}
     -- Own the navigation controls; leave Blizzard's two-page registry untouched.
-    for _, entry in ipairs({ { "mail", "收件箱" }, { "items", "附件箱" }, { "send", "发件箱" }, { "rules", "规则寄" } }) do
+    for _, entry in ipairs({ { "mail", Addon:T("UI.TEXT_0344") }, { "items", Addon:T("UI.TEXT_0635") }, { "send", Addon:T("UI.TEXT_0179") }, { "rules", Addon:T("MAILBOX.RULES") } }) do
         local key = entry[1]
         local tab = Addon.Core.UITheme:CreateButton(MailFrame, 1, entry[2], "secondary")
         local theme = Addon.Core.UITheme
@@ -218,7 +218,7 @@ function Native:SelectInboxActions()
             if action.actionable and Addon:SelectByDefault(action) then
                 if not selection[action.id] then selection[action.id] = true; count = count + 1 end
             elseif not action.actionable then
-                entrySkipped = entry.restriction or "当前邮件暂不可收取"
+                entrySkipped = entry.restriction or Addon:T("UI.TEXT_0284")
             else
                 skipped.preference = skipped.preference + 1
             end
@@ -231,7 +231,7 @@ function Native:InboxMenuAction(value)
     local panel, queue = self.inbox, Addon.Queue
     panel.menu.menu:Hide(); panel.notice = nil
     if value == "select" or value == "clear" then
-        if queue.state == "running" or queue.pending then panel.notice = "请先暂停队列并等待当前操作结束。"
+        if queue.state == "running" or queue.pending then panel.notice = Addon:T("UI.TEXT_0529")
         elseif value == "select" then
             if queue.state == "paused" then queue:Discard() end
             local count, skipped
@@ -239,25 +239,25 @@ function Native:InboxMenuAction(value)
             local details, reasons = {}, {}
             for reason in pairs(skipped) do reasons[#reasons + 1] = reason end
             table.sort(reasons)
-            for _, reason in ipairs(reasons) do details[#details + 1] = skipped[reason] .. " 封" .. reason end
-            if skipped.preference > 0 then details[#details + 1] = skipped.preference .. " 项被默认收取设置排除" end
-            panel.notice = count > 0 and ("已选择 " .. count .. " 项" .. (#details > 0 and ("；跳过：" .. table.concat(details, "、")) or "。"))
-                or (#details > 0 and ("没有选中项目；跳过：" .. table.concat(details, "、")) or "当前筛选下没有符合全选范围的可收项目。")
+            for _, reason in ipairs(reasons) do details[#details + 1] = skipped[reason] .. Addon:T("UI.TEXT_0032") .. reason end
+            if skipped.preference > 0 then details[#details + 1] = skipped.preference .. Addon:T("UI.TEXT_0055") end
+            panel.notice = count > 0 and (Addon:T("UI.TEXT_0256") .. count .. Addon:T("UI.TEXT_0052") .. (#details > 0 and (Addon:T("UI.TEXT_0658") .. table.concat(details, Addon:T("UI.TEXT_0078"))) or Addon:T("UI.TEXT_0079")))
+                or (#details > 0 and (Addon:T("UI.TEXT_0438") .. table.concat(details, Addon:T("UI.TEXT_0078"))) or Addon:T("UI.TEXT_0272"))
             panel.scroll:SetVerticalScroll(0)
         else
             local ok, err = queue:Discard()
-            if ok then panel.selection, panel.notice = {}, "选择与队列已清空。" else panel.notice = err end
+            if ok then panel.selection, panel.notice = {}, Addon:T("UI.TEXT_0580") else panel.notice = err end
         end
     elseif value == "pause" then
-        if queue.state == "running" then queue:Pause("玩家已暂停，当前操作仍等待结果。") else panel.notice = "当前没有运行中的收取队列。" end
+        if queue.state == "running" then queue:Pause(Addon:T("UI.TEXT_0461")) else panel.notice = Addon:T("UI.TEXT_0271") end
     elseif value == "sort" then
         panel.options.sort = panel.options.sort == "expiry" and "inbox" or "expiry"
         self:RememberInboxSort()
-        panel.scroll:SetVerticalScroll(0); panel.notice = panel.options.sort == "expiry" and "已按临期优先排序。" or "已按邮箱顺序排序。"
+        panel.scroll:SetVerticalScroll(0); panel.notice = panel.options.sort == "expiry" and Addon:T("UI.TEXT_0249") or Addon:T("UI.TEXT_0250")
     elseif value == "account" and Addon.FEATURES.account then
-        if Addon.Core.AccountView:Toggle("mail-inbox") == false then panel.notice = "战斗中无法打开账号邮件视图。" end
+        if Addon.Core.AccountView:Toggle("mail-inbox") == false then panel.notice = Addon:T("UI.TEXT_0308") end
     end
-    panel.menu:SetValue(nil); panel.menu:SetText("更多")
+    panel.menu:SetValue(nil); panel.menu:SetText(Addon:T("UI.TEXT_0385"))
     self:RememberInboxFilters(); self:RefreshInbox()
 end
 function Native:SetInboxShell(shown)
@@ -318,16 +318,16 @@ function Native:CreateInbox()
     panel.search:SetScript("OnEditFocusGained", function(control) control:SetBackdropBorderColor(unpack(theme.Colors.accent)) end)
     panel.search:SetScript("OnEditFocusLost", function(control) control:SetBackdropBorderColor(unpack(theme.Colors.lineSoft)) end)
     panel.search:SetScript("OnEscapePressed", function(control) control:ClearFocus() end)
-    panel.search.hint = Text(panel.search); panel.search.hint:SetPoint("LEFT", 8, 0); panel.search.hint:SetText("搜索物品、发件人或主题"); panel.search.hint:SetTextColor(unpack(theme.Colors.muted))
+    panel.search.hint = Text(panel.search); panel.search.hint:SetPoint("LEFT", 8, 0); panel.search.hint:SetText(Addon:T("UI.TEXT_0328")); panel.search.hint:SetTextColor(unpack(theme.Colors.muted))
     panel.search.hint:SetFont(STANDARD_TEXT_FONT, theme.Font.body, ""); panel.search.hint:SetPoint("RIGHT", -8, 0)
     panel.search:SetScript("OnTextChanged", function(control)
         panel.options.search = control:GetText(); control.hint:SetShown(control:GetText() == ""); Native:RememberInboxFilters(); Native:RefreshInbox()
     end)
     theme:AttachClearButton(panel.search)
-    panel.filter = self:Dropdown(panel, 96, "全部邮件"); panel.filter:SetHeight(height); panel.filter:SetPoint("RIGHT", panel.close, "LEFT", -6, 0)
+    panel.filter = self:Dropdown(panel, 96, Addon:T("UI.TEXT_0138")); panel.filter:SetHeight(height); panel.filter:SetPoint("RIGHT", panel.close, "LEFT", -6, 0)
     panel.search:SetPoint("RIGHT", panel.filter, "LEFT", -6, 0)
-    panel.filter:SetOptions({ { value = "all", label = "全部邮件" }, { value = "items", label = "含附件" }, { value = "money", label = "含金币" },
-        { value = "cod", label = "付款取信" }, { value = "returned", label = "退回邮件" }, { value = "urgent", label = "三天内到期" } })
+    panel.filter:SetOptions({ { value = "all", label = Addon:T("UI.TEXT_0138") }, { value = "items", label = Addon:T("UI.TEXT_0205") }, { value = "money", label = Addon:T("UI.TEXT_0204") },
+        { value = "cod", label = Addon:T("UI.TEXT_0110") }, { value = "returned", label = Addon:T("UI.TEXT_0578") }, { value = "urgent", label = Addon:T("UI.TEXT_0084") } })
     panel.filter:SetValue("all"); panel.filter:SetOnValueChanged(function(value) panel.options.kind = value; Native:RememberInboxFilters(); Native:RefreshInbox() end)
     panel.scroll = Addon.Core.UITheme:CreateScrollFrame(panel); panel.scroll:SetPoint("TOPLEFT", 8, -height - 14); panel.scroll:SetPoint("BOTTOMRIGHT", -8, theme.Size.compact + 20)
     panel.scroll:SetFrameLevel(panel:GetFrameLevel() + 2)
@@ -345,13 +345,13 @@ function Native:CreateInbox()
             Native:InboxMenuAction("select")
         end
     end)
-    Tooltip(panel.selectAll, "全选当前可收项目", "勾选后选择当前筛选下默认允许收取的项目；再次点击清空选择。")
+    Tooltip(panel.selectAll, Addon:T("UI.TEXT_0131"), Addon:T("UI.TEXT_0165"))
     panel.status = Text(panel); panel.status:SetHeight(theme.Size.compact); panel.status:SetWordWrap(false)
     panel.statusHover = CreateFrame("Frame", nil, panel); panel.statusHover:SetAllPoints(panel.status); panel.statusHover:EnableMouse(true)
-    panel.collect = InboxButton(panel, 72, "收取", function() Native:Collect() end)
+    panel.collect = InboxButton(panel, 72, Addon:T("UI.TEXT_0347"), function() Native:Collect() end)
     panel.collect.kind = "primary"
     panel.collect:SetHeight(theme.Size.compact); panel.collect:SetPoint("BOTTOMRIGHT", -76, 8)
-    panel.menu = self:Dropdown(panel, 64, "更多"); panel.menu:SetHeight(theme.Size.compact); panel.menu:SetPoint("BOTTOMRIGHT", -8, 8)
+    panel.menu = self:Dropdown(panel, 64, Addon:T("UI.TEXT_0385")); panel.menu:SetHeight(theme.Size.compact); panel.menu:SetPoint("BOTTOMRIGHT", -8, 8)
     -- Action menus need their own width and open upward from the footer.
     panel.menu:SetScript("OnClick", function(control)
         if control.menu:IsShown() then control.menu:Hide(); return end
@@ -398,6 +398,7 @@ function Native:Row(data)
     local bodyWidth = math.max(1, row:GetWidth() - 58 - (data.expiry and 76 or 6))
     local titleWidth = data.mailAttachmentSlot and bodyWidth or math.min(100, bodyWidth * 0.38)
     row.title:ClearAllPoints(); row.title:SetPoint("TOPLEFT", 58, -7); row.title:SetSize(titleWidth, 18)
+    row.title:SetWordWrap(false); row.detail:SetWordWrap(false)
     row.detail:ClearAllPoints(); row.detail:SetPoint("TOPLEFT", 58 + titleWidth + 6, -7); row.detail:SetSize(math.max(1, bodyWidth - titleWidth - 6), 18)
     row.detail:SetShown(not data.mailAttachmentSlot)
     row.icon:ClearAllPoints(); row.icon:SetPoint("TOPLEFT", 28, -4); row.icon:SetSize(24, 24)
@@ -423,11 +424,11 @@ function Native:Row(data)
     row.delete:SetEnabled(data.onDelete ~= nil and not self.deleting and Addon.Queue.state ~= "running" and not Addon.Queue.pending)
     row.delete:SetAlpha(row.delete:IsEnabled() and 1 or 0.45)
     row.delete:SetScript("OnClick", data.onDelete)
-    Tooltip(row.delete, "删除空邮件")
+    Tooltip(row.delete, Addon:T("UI.TEXT_0155"))
     row.check:SetShown(#actions > 0); row.check:SetCheckState(selected > 0 and (selected == eligible and "checked" or "partial") or "unchecked")
     row.check:SetEnabled(eligible > 0 and Addon.Queue.state ~= "running" and not Addon.Queue.pending)
     row.check:SetAlpha(row.check:IsEnabled() and 1 or 0.45)
-    Tooltip(row.check, "勾选收取项目", Addon.Queue.pending and "当前收取结果仍待核实，请等待邮箱更新。" or (Addon.Queue.state == "running" and "收取队列运行中，请先暂停。" or (eligible == 0 and (data.tooltip or data.detail or "当前项目不可收取。") or "点击勾选／取消勾选；部分选择时点击全选这一行。")))
+    Tooltip(row.check, Addon:T("UI.TEXT_0166"), Addon.Queue.pending and Addon:T("UI.TEXT_0265") or (Addon.Queue.state == "running" and Addon:T("UI.TEXT_0350") or (eligible == 0 and (data.tooltip or data.detail or Addon:T("UI.TEXT_0285")) or Addon:T("UI.TEXT_0447"))))
     if selected > 0 then row:SetBackdropColor(0.02, 0.17, 0.14, 1) end
     row.check:SetScript("OnClick", function()
         if eligible == 0 or Addon.Queue.state == "running" or Addon.Queue.pending then return end
@@ -447,6 +448,14 @@ function Native:Row(data)
     Tooltip(row.iconHover, data.title, data.tooltip or data.detail, item and (item.itemLink or item.itemID and ("item:" .. item.itemID)) or data.itemLink)
     row.iconHover:SetShown(item ~= nil or data.itemLink ~= nil)
     self:RowItems(row, data.itemList)
+    if data.empty then
+        -- Empty-state text has the whole row; it is not a sender/subject pair.
+        row.title:SetWidth(math.max(1, row:GetWidth() - 64))
+        row.detail:ClearAllPoints(); row.detail:SetPoint("TOPLEFT", 58, -30)
+        row.detail:SetWidth(math.max(1, row:GetWidth() - 64)); row.detail:SetHeight(0); row.detail:SetWordWrap(true)
+        local detailHeight = math.max(18, row.detail:GetStringHeight())
+        row.detail:SetHeight(detailHeight); row:SetHeight(38 + detailHeight)
+    end
     height = row:GetHeight()
     row:Show(); panel.top = panel.top + height + 2
 end
@@ -458,7 +467,7 @@ function Native:RowItems(row, items)
     row:SetHeight(32)
     if #(items or {}) <= 1 then return end
     local ui, width = Addon.CacheUI, math.max(1, row:GetWidth() - 62)
-    local values = { itemList = items, items = "点击展开附件或打开信件" }
+    local values = { itemList = items, items = Addon:T("UI.TEXT_0448") }
     local _, height = ui:ItemLayout(values, width)
     if not row.attachments then
         row.attachments = CreateFrame("Button", nil, row)
@@ -482,10 +491,10 @@ function Native:DeleteEmptyMail(entry)
     local mail = mails and mails[index]
     if not character or character.id ~= entry.character.id or not mail or mail.signature ~= entry.mail.signature
         or #mail.attachments > 0 or mail.money > 0 or mail.cod > 0 then
-        self.inbox.notice = err or "邮件已变化，请等待更新。"; self:RefreshInbox(); return
+        self.inbox.notice = err or Addon:T("UI.TEXT_0594"); self:RefreshInbox(); return
     end
     if type(InboxItemCanDelete) ~= "function" or not InboxItemCanDelete(index) or type(DeleteInboxItem) ~= "function" then
-        self.inbox.notice = "当前邮件无法删除。"; self:RefreshInbox(); return
+        self.inbox.notice = Addon:T("UI.TEXT_0283"); self:RefreshInbox(); return
     end
     self.deleting = true
     self.deleteStartedAt = GetTime()
@@ -503,7 +512,7 @@ function Native:OpenMail(entry, keepOpen)
         if HideUIPanel then HideUIPanel(OpenMailFrame) else OpenMailFrame:Hide() end
         return
     end
-    if Addon.Queue.state == "running" or Addon.Queue.pending then self.inbox.notice = "请先暂停队列并等待当前操作结束。"; self:RefreshInbox(); return end
+    if Addon.Queue.state == "running" or Addon.Queue.pending then self.inbox.notice = Addon:T("UI.TEXT_0529"); self:RefreshInbox(); return end
     local current, err
     if Addon.Scanner.ReadEntry then current, err = Addon.Scanner:ReadEntry(entry)
     else
@@ -511,7 +520,7 @@ function Native:OpenMail(entry, keepOpen)
         current = mails and mails[entry.mail.inboxIndex]
         if current and current.signature ~= entry.mail.signature then current = nil end
     end
-    if not current then self.inbox.notice = err or "邮件已变化，请等待更新。"; self:RefreshInbox(); return end
+    if not current then self.inbox.notice = err or Addon:T("UI.TEXT_0594"); self:RefreshInbox(); return end
     if OpenMail_Update and ShowUIPanel then
         local index = entry.mail.inboxIndex
         InboxFrame.openMailID = index
@@ -529,11 +538,11 @@ function Native:OpenMail(entry, keepOpen)
         if Addon.Scanner.Schedule then Addon.Scanner:Schedule() end
         return true, current
     end
-    self.inbox.notice = "原生信件界面尚未就绪，请重新打开邮箱。"; self:RefreshInbox()
+    self.inbox.notice = Addon:T("UI.TEXT_0171"); self:RefreshInbox()
 end
 function Native:ReadMail(entry, automatic)
     if Addon.Queue.state == "running" or Addon.Queue.pending then
-        if not automatic then self.inbox.notice = "请先暂停队列并等待当前操作结束。"; self:RefreshInbox() end
+        if not automatic then self.inbox.notice = Addon:T("UI.TEXT_0529"); self:RefreshInbox() end
         return nil
     end
     local current, err
@@ -544,7 +553,7 @@ function Native:ReadMail(entry, automatic)
         if current and current.signature ~= entry.mail.signature then current = nil end
     end
     if not current then
-        if not automatic then self.inbox.notice = err or "邮件已变化，请等待更新。"; self:RefreshInbox() end
+        if not automatic then self.inbox.notice = err or Addon:T("UI.TEXT_0594"); self:RefreshInbox() end
         return nil
     end
     if type(GetInboxText) == "function" then
@@ -580,34 +589,34 @@ function Native:CollectCOD(entry, item)
         if attachment.attachmentIndex == item.attachmentIndex and attachment.variantKey == item.variantKey and attachment.quantity == item.quantity then matched = attachment end
     end
     if not matched or current.cod <= 0 then
-        self.inbox.notice = "附件或付款金额已变化，请等待更新。"; self:RefreshInbox(); return
+        self.inbox.notice = Addon:T("UI.TEXT_0629"); self:RefreshInbox(); return
     end
     if type(OpenMailAttachment_OnClick) ~= "function" then
-        self.inbox.notice = "请点击原生信件中的附件完成付款。"; self:RefreshInbox(); return
+        self.inbox.notice = Addon:T("UI.TEXT_0546"); self:RefreshInbox(); return
     end
     OpenMailAttachment_OnClick(_G["OpenMailAttachmentButton" .. item.attachmentIndex] or OpenMailFrame, item.attachmentIndex)
 end
 function Native:EntryRows(entry)
     local panel, mail = self.inbox, entry.mail
     local expandable = #mail.attachments > 0 or mail.money > 0
-    local attachmentSummary = "附件 " .. #mail.attachments .. " 个"
+    local attachmentSummary = Addon:T("UI.TEXT_0623") .. #mail.attachments .. Addon:T("UI.TEXT_0023")
     local parts = {}
-    if mail.money > 0 then parts[#parts + 1] = "金币 " .. View:Money(mail.money) end
-    if mail.cod > 0 then parts[#parts + 1] = "付款 " .. View:Money(mail.cod) end
-    if mail.wasReturned then parts[#parts + 1] = "退回" end
+    if mail.money > 0 then parts[#parts + 1] = Addon:T("UI.TEXT_0615") .. View:Money(mail.money) end
+    if mail.cod > 0 then parts[#parts + 1] = Addon:T("UI.TEXT_0109") .. View:Money(mail.cod) end
+    if mail.wasReturned then parts[#parts + 1] = Addon:T("UI.TEXT_0577") end
     local extra = table.concat(parts, " · ")
     local subject = View:Escape(mail.subject) .. (extra ~= "" and (" · " .. extra) or "")
     local function ToggleAttachments()
         if not expandable then return end
         panel.expanded[entry.key] = not panel.expanded[entry.key]; Native:RefreshInbox()
     end
-    local middleClickHelp = entry.actionable and #mail.attachments > 0 and "\n中键直接收取本封邮件的附件。" or ""
+    local middleClickHelp = entry.actionable and #mail.attachments > 0 and Addon:T("UI.TEXT_0070") or ""
     self:Row({ title = View:CounterpartLabel(mail.sender, entry.character), detail = subject, summary = attachmentSummary, wasRead = mail.openedByUser,
         itemList = mail.attachments,
         onDelete = #mail.attachments == 0 and mail.money == 0 and mail.cod == 0 and function() Native:DeleteEmptyMail(entry) end or nil,
         texture = mail.attachments[1] and mail.attachments[1].texture, quantity = #mail.attachments == 1 and mail.attachments[1].quantity or nil,
         mailOriginalIndex = mail.inboxIndex, mailEntryKey = entry.key,
-        expiry = View:Expiry(mail), expiryMail = mail, actions = Addon:GetInboxActions(entry), tooltip = subject .. "\n" .. attachmentSummary .. "\n到期：" .. View:Expiry(mail) .. "\n左键展开／收起附件；右键打开／关闭原生信件。" .. middleClickHelp .. (not entry.actionable and ("\n" .. entry.restriction) or ""),
+        expiry = View:Expiry(mail), expiryMail = mail, actions = Addon:GetInboxActions(entry), tooltip = subject .. "\n" .. attachmentSummary .. Addon:T("UI.TEXT_0071") .. View:Expiry(mail) .. Addon:T("UI.TEXT_0073") .. middleClickHelp .. (not entry.actionable and ("\n" .. entry.restriction) or ""),
         onClick = function(_, mouse)
             if mouse == "MiddleButton" then Native:CollectMailAttachments(entry)
             elseif mouse == "RightButton" or not expandable then Native:OpenMail(entry)
@@ -617,7 +626,7 @@ function Native:EntryRows(entry)
     panel.rows[panel.used]:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonUp")
     if panel.expanded[entry.key] then
         for _, item in ipairs(mail.attachments) do
-            self:Row({ title = item.itemLink or View:Escape(item.name), detail = "附件槽 " .. item.attachmentIndex .. " · " .. (mail.cod > 0 and ("付款 " .. View:Money(mail.cod)) or (entry.actionable and "可收取" or entry.restriction)),
+            self:Row({ title = item.itemLink or View:Escape(item.name), detail = Addon:T("UI.TEXT_0631") .. item.attachmentIndex .. " · " .. (mail.cod > 0 and (Addon:T("UI.TEXT_0109") .. View:Money(mail.cod)) or (entry.actionable and Addon:T("UI.TEXT_0196") or entry.restriction)),
                 mailOriginalIndex = mail.inboxIndex, mailEntryKey = entry.key, mailAttachmentSlot = item.attachmentIndex,
                 texture = item.texture, quantity = item.quantity, expiry = View:Expiry(mail), expiryMail = mail, indent = true, item = item, itemLink = item.itemLink, actions = Addon:GetInboxActions(entry, item),
                 onClick = function(_, mouse)
@@ -628,7 +637,7 @@ function Native:EntryRows(entry)
         end
         if mail.money > 0 then
             local actions = {}; for _, action in ipairs(Addon:GetInboxActions(entry)) do if action.slot == "money" then actions[1] = action end end
-            self:Row({ title = "金币 " .. View:Money(mail.money), detail = "来自：" .. View:Escape(mail.sender), mailOriginalIndex = mail.inboxIndex,
+            self:Row({ title = Addon:T("UI.TEXT_0615") .. View:Money(mail.money), detail = Addon:T("UI.TEXT_0412") .. View:Escape(mail.sender), mailOriginalIndex = mail.inboxIndex,
                 mailEntryKey = entry.key, mailAttachmentSlot = "money", indent = true,
                 texture = "Interface\\Icons\\INV_Misc_Coin_01", actions = actions })
         end
@@ -636,7 +645,7 @@ function Native:EntryRows(entry)
 end
 function Native:Collect()
     local panel, queue = self.inbox, Addon.Queue; panel.notice = nil
-    if queue.state == "running" or queue.pending then panel.notice = "请等待当前收取操作结束。"; self:RefreshInbox(); return end
+    if queue.state == "running" or queue.pending then panel.notice = Addon:T("UI.TEXT_0552"); self:RefreshInbox(); return end
     local actions, err = queue:Prepare(panel.selection, self:Context())
     panel.notice = err
     if actions then
@@ -652,7 +661,7 @@ end
 function Native:CollectMailAttachments(entry)
     local panel, queue = self.inbox, Addon.Queue
     if queue.state == "running" or queue.pending then
-        panel.notice = "请等待当前收取操作结束。"; self:RefreshInbox(); return
+        panel.notice = Addon:T("UI.TEXT_0552"); self:RefreshInbox(); return
     end
     local selection = {}
     for _, item in ipairs(entry.mail.attachments or {}) do
@@ -661,7 +670,7 @@ function Native:CollectMailAttachments(entry)
         end
     end
     if not next(selection) then
-        panel.notice = entry.mail.cod > 0 and "付款取信请使用原生邮箱。" or "这封邮件没有可直接收取的附件。"
+        panel.notice = entry.mail.cod > 0 and Addon:T("UI.TEXT_0112") or Addon:T("UI.TEXT_0576")
         self:RefreshInbox(); return
     end
     panel.notice = nil
@@ -695,7 +704,7 @@ function Native:CollectItem(group, single)
         end
         if single and next(selection) then break end
     end
-    if single and not next(selection) then panel.notice = group.money and "没有可单独收取的金币邮件。" or "该物品组中没有可单独收取的附件。"; self:RefreshInbox(); return end
+    if single and not next(selection) then panel.notice = group.money and Addon:T("UI.TEXT_0437") or Addon:T("UI.TEXT_0516"); self:RefreshInbox(); return end
     local actions, err = queue:Prepare(selection, self:Context())
     panel.notice = err
     if actions then
@@ -763,7 +772,7 @@ function Native:ItemTile(group, index, columns, size)
         GameTooltip:SetOwner(control, "ANCHOR_RIGHT")
         GameTooltip:ClearLines()
         if group.money then
-            GameTooltip:SetText("待收金币 " .. View:Money(group.quantity))
+            GameTooltip:SetText(Addon:T("UI.TEXT_0286") .. View:Money(group.quantity))
             local orderedSources = {}
             for _, source in ipairs(group.sources) do orderedSources[#orderedSources + 1] = source end
             table.sort(orderedSources, function(a, b)
@@ -775,7 +784,7 @@ function Native:ItemTile(group, index, columns, size)
                 local subject = mail.subject and mail.subject ~= "" and (" · " .. mail.subject) or ""
                 GameTooltip:AddLine(View:Escape((mail.sender or "") .. subject .. " · " .. View:Money(source.money) .. " · " .. View:Expiry(mail)), red, green, blue, false)
             end
-            if (control.eligibleCount or eligible) > 0 then GameTooltip:AddLine("Alt+左键：只收最早到期邮件中的金币", 0.25, 0.9, 0.75, true) end
+            if (control.eligibleCount or eligible) > 0 then GameTooltip:AddLine(Addon:T("UI.TEXT_0067"), 0.25, 0.9, 0.75, true) end
             GameTooltip:Show()
             return
         end
@@ -788,7 +797,7 @@ function Native:ItemTile(group, index, columns, size)
             -- normal item tooltip from that ID.
             GameTooltip:SetHyperlink("item:" .. tostring(group.item.itemID))
         end
-        if GameTooltip:NumLines() == 0 then GameTooltip:SetText(group.item.name or "附件") end
+        if GameTooltip:NumLines() == 0 then GameTooltip:SetText(group.item.name or Addon:T("UI.TEXT_0624")) end
         local mailSources, orderedSources, seenMails, mailCount = {}, {}, {}, 0
         for _, source in ipairs(group.sources) do
             local mail = source.entry.mail
@@ -817,18 +826,18 @@ function Native:ItemTile(group, index, columns, size)
             return a.order < b.order
         end)
         if #orderedSources > 0 then GameTooltip:AddLine(" ") end
-        GameTooltip:AddLine("合计 " .. group.quantity .. " 件 · 来自 " .. mailCount .. " 封邮件", 1, 1, 1)
+        GameTooltip:AddLine(Addon:T("UI.TEXT_0201") .. group.quantity .. Addon:T("UI.TEXT_0027") .. mailCount .. Addon:T("UI.TEXT_0033"), 1, 1, 1)
         for _, source in ipairs(orderedSources) do
             local mail = source.mail
             local red, green, blue = View:ExpiryColor(mail)
             local sender = mail.sender and mail.sender ~= "" and (mail.sender .. " · ") or ""
             local itemName = source.item.name
-            if not itemName or itemName == "" then itemName = (source.item.itemLink or ""):match("%[(.-)%]") or group.item.name or "附件" end
-            local line = sender .. itemName .. "（" .. source.quantity .. "）×" .. source.slots .. "件"
+            if not itemName or itemName == "" then itemName = (source.item.itemLink or ""):match("%[(.-)%]") or group.item.name or Addon:T("UI.TEXT_0624") end
+            local line = sender .. itemName .. Addon:T("UI.TEXT_0646") .. source.quantity .. Addon:T("UI.TEXT_0650") .. source.slots .. Addon:T("UI.TEXT_0115")
             line = line .. " · " .. View:Expiry(mail)
             GameTooltip:AddLine(View:Escape(line), red, green, blue, false)
         end
-        if (control.eligibleCount or eligible) > 0 then GameTooltip:AddLine("Alt+左键：只收最早到期邮件中的一个附件", 0.25, 0.9, 0.75, true) end
+        if (control.eligibleCount or eligible) > 0 then GameTooltip:AddLine(Addon:T("UI.TEXT_0066"), 0.25, 0.9, 0.75, true) end
         GameTooltip:Show()
     end)
     tile:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -839,14 +848,14 @@ function Native:RefreshInboxProgress()
     if not self.readyInbox or not panel or not panel:IsShown() then return end
     local progress
     if queue.pending then
-        local state = queue.pending.success or queue.pending.updated and "正在核对" or "正在收取"
-        if type(state) == "boolean" then state = "正在核对" end
+        local state = queue.pending.success or queue.pending.updated and Addon:T("UI.TEXT_0424") or Addon:T("UI.TEXT_0422")
+        if type(state) == "boolean" then state = Addon:T("UI.TEXT_0424") end
         progress = state .. " " .. tostring(queue.completed + 1) .. "/" .. #queue.actions
     else
         progress = queue.message .. " " .. queue.completed .. "/" .. #queue.actions
     end
     panel.status:SetText(progress)
-    Tooltip(panel.statusHover, "收件状态", progress)
+    Tooltip(panel.statusHover, Addon:T("UI.TEXT_0342"), progress)
     panel.collect:SetEnabled(false)
     panel.collect:SetState("disabled")
     self:LayoutInboxFooter()
@@ -875,7 +884,7 @@ function Native:RefreshCollectedMailRow(action)
     for _, row in ipairs(panel.rows) do
         if row:IsShown() and row.mailOriginalIndex == originalIndex then
             if row.mailAttachmentSlot == action.slot then
-                row.detail:SetText(action.slot == "money" and "金币 · 已收取" or ("附件槽 " .. tostring(action.slot) .. " · 已收取"))
+                row.detail:SetText(action.slot == "money" and Addon:T("UI.TEXT_0616") or (Addon:T("UI.TEXT_0631") .. tostring(action.slot) .. Addon:T("UI.TEXT_0006")))
                 row.check:SetShown(false)
             elseif row.mailAttachmentSlot == nil then
                 mainRow = row
@@ -913,11 +922,11 @@ function Native:RefreshCollectedMailRow(action)
         entry = { character = Addon.Core.Characters:GetCurrent(), key = action.resultMailKey, mail = mail,
             actionable = mail.cod == 0 and mail.state == "observed" }
         local extra = {}
-        if mail.money > 0 then extra[#extra + 1] = "金币 " .. View:Money(mail.money) end
-        if mail.cod > 0 then extra[#extra + 1] = "付款 " .. View:Money(mail.cod) end
-        if mail.wasReturned then extra[#extra + 1] = "退回" end
+        if mail.money > 0 then extra[#extra + 1] = Addon:T("UI.TEXT_0615") .. View:Money(mail.money) end
+        if mail.cod > 0 then extra[#extra + 1] = Addon:T("UI.TEXT_0109") .. View:Money(mail.cod) end
+        if mail.wasReturned then extra[#extra + 1] = Addon:T("UI.TEXT_0577") end
         mainRow.detail:SetText(View:Escape(mail.subject) .. (#extra > 0 and (" · " .. table.concat(extra, " · ")) or ""))
-        mainRow.summary:SetText("附件 " .. #mail.attachments .. " 个")
+        mainRow.summary:SetText(Addon:T("UI.TEXT_0623") .. #mail.attachments .. Addon:T("UI.TEXT_0023"))
         mainRow.icon:SetTexture(mail.attachments[1] and mail.attachments[1].texture or "Interface\\Icons\\INV_Letter_15")
         local previousHeight = mainRow:GetHeight()
         self:RowItems(mainRow, mail.attachments)
@@ -937,9 +946,9 @@ function Native:RefreshCollectedMailRow(action)
         Tooltip(mainRow.iconHover, View:Escape(mail.sender), View:Escape(mail.subject), item and (item.itemLink or item.itemID and ("item:" .. item.itemID)))
         mainRow.iconHover:SetShown(item ~= nil)
         mainRow.expiry:SetText(View:Expiry(mail)); mainRow.expiry:SetTextColor(View:ExpiryColor(mail))
-        local attachments = {}; for _, item in ipairs(mail.attachments) do attachments[#attachments + 1] = View:Escape(item.name or item.itemLink or "附件") end
+        local attachments = {}; for _, item in ipairs(mail.attachments) do attachments[#attachments + 1] = View:Escape(item.name or item.itemLink or Addon:T("UI.TEXT_0624")) end
         Tooltip(mainRow, View:Escape(mail.sender), View:Escape(mail.subject) .. "\n"
-            .. (#attachments > 0 and table.concat(attachments, "、") or "没有剩余附件"))
+            .. (#attachments > 0 and table.concat(attachments, Addon:T("UI.TEXT_0078")) or Addon:T("UI.TEXT_0434")))
         local actions, eligible, selected = Addon:GetInboxActions(entry), 0, 0
         for _, candidate in ipairs(actions) do
             if candidate.actionable then
@@ -959,8 +968,8 @@ function Native:RefreshCollectedMailRow(action)
         mainRow.check:SetEnabled(false)
         mainRow:SetBackdropColor(selected > 0 and 0.02 or 0, selected > 0 and 0.17 or 0, selected > 0 and 0.14 or 0, 1)
     elseif mainRow then
-        mainRow.detail:SetText("本批已收取")
-        mainRow.summary:SetText("已收取")
+        mainRow.detail:SetText(Addon:T("UI.TEXT_0403"))
+        mainRow.summary:SetText(Addon:T("UI.TEXT_0251"))
         mainRow.count:SetText("")
         mainRow.check:SetShown(false)
         mainRow:SetBackdropColor(0.025, 0.055, 0.055, 1)
@@ -1008,8 +1017,8 @@ function Native:RefreshInbox()
         local failed = scan.lastError ~= nil
         local pending = not scan.validAt or (type(HasNewMail) == "function" and HasNewMail()
             and type(GetInboxNumItems) == "function" and GetInboxNumItems() == 0)
-        self:Row({ title = failed and "邮件读取失败" or (pending and "正在更新邮箱" or (panel.mode == "items" and "暂无匹配附件" or "暂无匹配邮件")),
-            detail = failed and "请重新打开邮箱重试；诊断：/yma scan。" or (pending and "等待原生邮箱列表更新。" or "可清除搜索和筛选。") })
+        self:Row({ empty = true, title = failed and Addon:T("UI.TEXT_0600") or (pending and Addon:T("UI.TEXT_0423") or (panel.mode == "items" and Addon:T("UI.TEXT_0382") or Addon:T("UI.TEXT_0381"))),
+            detail = failed and Addon:T("UI.TEXT_0561") or (pending and Addon:T("UI.TEXT_0476") or Addon:T("UI.TEXT_0198")) })
     end
     for index = panel.used + 1, #panel.rows do panel.rows[index]:Hide() end
     panel.content:SetSize(panel.width, math.max(1, panel.top)); panel.scroll:SetContentHeight(panel.top)
@@ -1038,22 +1047,22 @@ function Native:RefreshInbox()
     panel.selectAll:SetCheckState(selectable > 0 and selectedSelectable == selectable and "checked"
         or (selectedSelectable > 0 and "partial" or "unchecked"))
     panel.selectAll:SetEnabled(not progress and not Addon.Queue.pending and selectable > 0)
-    local coverageText = "可见 " .. tostring(coverage and coverage.currentCount or 0) .. "/" .. tostring(coverage and coverage.totalCount or 0) .. " 封"
+    local coverageText = Addon:T("UI.TEXT_0199") .. tostring(coverage and coverage.currentCount or 0) .. "/" .. tostring(coverage and coverage.totalCount or 0) .. Addon:T("UI.TEXT_0032")
     panel.status:SetText(panel.notice or (progress and (Addon.Queue.message .. " " .. Addon.Queue.completed .. "/" .. #Addon.Queue.actions))
-        or (panel.mode == "items" and ("邮件 " .. tostring(coverage and coverage.currentCount or 0) .. "/" .. tostring(coverage and coverage.totalCount or 0)) or ("已选 " .. selected)))
-    Tooltip(panel.statusHover, "收件状态", panel.status:GetText() .. "\n" .. coverageText)
+        or (panel.mode == "items" and (Addon:T("UI.TEXT_0588") .. tostring(coverage and coverage.currentCount or 0) .. "/" .. tostring(coverage and coverage.totalCount or 0)) or (Addon:T("UI.TEXT_0255") .. selected)))
+    Tooltip(panel.statusHover, Addon:T("UI.TEXT_0342"), panel.status:GetText() .. "\n" .. coverageText)
     self:LayoutInboxFooter()
-    panel.collect:SetText(selected > 0 and ("收取 " .. selectedAttachments) or "收取")
+    panel.collect:SetText(selected > 0 and (Addon:T("UI.TEXT_0346") .. selectedAttachments) or Addon:T("UI.TEXT_0347"))
     panel.collect:SetEnabled(selected > 0 and Addon.Queue.state ~= "running" and not Addon.Queue.pending)
     panel.collect:SetShown(panel.mode == "mail")
     panel.collect:SetState(panel.collect:IsEnabled() and "default" or "disabled")
     self:RefreshMailboxTabs()
     local options = {}
-    if panel.mode == "mail" then options[#options + 1] = { value = "select", label = "全选当前可收项目" } end
-    options[#options + 1] = { value = "clear", label = panel.mode == "mail" and "清空选择" or "清空队列" }
-    options[#options + 1] = { value = "pause", label = "暂停队列" }
-    options[#options + 1] = { value = "sort", label = "切换临期／邮箱排序" }
-    if Addon.FEATURES.account then options[#options + 1] = { value = "account", label = "账号邮件视图" } end
+    if panel.mode == "mail" then options[#options + 1] = { value = "select", label = Addon:T("UI.TEXT_0131") } end
+    options[#options + 1] = { value = "clear", label = panel.mode == "mail" and Addon:T("UI.TEXT_0443") or Addon:T("UI.TEXT_0444") }
+    options[#options + 1] = { value = "pause", label = Addon:T("UI.TEXT_0379") }
+    options[#options + 1] = { value = "sort", label = Addon:T("UI.TEXT_0151") }
+    if Addon.FEATURES.account then options[#options + 1] = { value = "account", label = Addon:T("UI.TEXT_0568") } end
     panel.menu:SetOptions(options)
     self:RaiseDropdown(panel.menu)
     for index, option in ipairs(options) do
@@ -1079,8 +1088,8 @@ function Native:CreateBasicSend()
         field.label:SetText(label)
         return field
     end
-    panel.recipientField = CreateSendField("收件人")
-    panel.subjectField = CreateSendField("主题")
+    panel.recipientField = CreateSendField(Addon:T("UI.TEXT_0332"))
+    panel.subjectField = CreateSendField(Addon:T("UI.TEXT_0100"))
     panel.close = InboxButton(panel, 22, "x", function() if HideUIPanel then HideUIPanel(MailFrame) else MailFrame:Hide() end end)
     panel.close:SetSize(theme.Size.standard, theme.Size.standard); panel.close:SetPoint("TOPRIGHT", MailFrame, "TOPRIGHT", -8, -6)
     panel.contactPage, panel.serverPage = 1, 1
@@ -1135,7 +1144,7 @@ function Native:CreateBasicSend()
             local hasAttachments = Addon.Compose and #Addon.Compose:GetAttachments() > 0
             if hasText and hasAttachments then
                 local sendButton = _G.SendMailMailButton or _G.SendMailSendButton
-                if not sendButton then Addon:Print("原生发送按钮不可用，请检查发件箱。"); return end
+                if not sendButton then Addon:Print(Addon:T("UI.TEXT_0174")); return end
                 -- Recompute the native button state after changing the recipient, then
                 -- run its Blizzard click handler directly. Button:Click() ignores a
                 -- disabled button, which made the first favorite click only fill the
@@ -1164,10 +1173,10 @@ function Native:CreateBasicSend()
             if Addon.RuleSendUI and Addon.RuleSendUI.active then
                 local c = Addon.RuleSendController
                 local ready = c.state == "ready" and c.packet and Addon.Recipients:Key(c.packet[1].recipient) == Addon.Recipients:Key(contact.address)
-                GameTooltip:AddLine(ready and "再次点击：发送当前邮件" or "点击：填入此人规则物品", 0.55, 0.78, 0.78, true)
-                GameTooltip:AddLine("拖入物品或拿起后左键点击：建立指定物品规则", 0.55, 0.78, 0.78, true)
-            else GameTooltip:AddLine("拖入物品或拿起后左键点击：快速填入此组附件与收件人", 0.55, 0.78, 0.78, true) end
-            GameTooltip:AddLine("左键拖动：移到空格，或与已有收件人对调。", 0.55, 0.78, 0.78, true)
+                GameTooltip:AddLine(ready and Addon:T("UI.TEXT_0146") or Addon:T("UI.TEXT_0451"), 0.55, 0.78, 0.78, true)
+                GameTooltip:AddLine(Addon:T("UI.TEXT_0318"), 0.55, 0.78, 0.78, true)
+            else GameTooltip:AddLine(Addon:T("UI.TEXT_0319"), 0.55, 0.78, 0.78, true) end
+            GameTooltip:AddLine(Addon:T("UI.TEXT_0244"), 0.55, 0.78, 0.78, true)
             GameTooltip:Show()
         end)
         button:SetScript("OnLeave", function(control)
@@ -1181,18 +1190,18 @@ function Native:CreateBasicSend()
         panel.favoritesExpanded = not panel.favoritesExpanded
         panel.favoritesPanel:SetShown(panel.favoritesExpanded)
         panel.favoriteToggle:SetText(panel.favoritesExpanded and "<" or ">")
-        Tooltip(panel.favoriteToggle, panel.favoritesExpanded and "收起快捷寄件栏" or "展开快捷寄件栏")
+        Tooltip(panel.favoriteToggle, panel.favoritesExpanded and Addon:T("UI.TEXT_0352") or Addon:T("UI.TEXT_0243"))
     end)
     panel.favoriteToggle:SetSize(theme.Size.standard, theme.Size.standard)
     panel.favoriteToggle:SetPoint("LEFT", panel.contacts, "RIGHT", 6, 0)
-    Tooltip(panel.favoriteToggle, "收起快捷寄件栏")
+    Tooltip(panel.favoriteToggle, Addon:T("UI.TEXT_0352"))
     panel.favoriteEntries = {}
     panel.contacts:SetScript("OnClick", function(control)
         local picker = Addon.RecipientUI
         if picker.popup and picker.popup:IsShown() and picker.anchor == control then picker:Hide()
         else picker:Open(control) end
     end)
-    Tooltip(panel.contacts, "收件人通讯录", "搜索、筛选并选择收件人；常用名单与快捷寄件栏分别保存。")
+    Tooltip(panel.contacts, Addon:T("UI.TEXT_0338"), Addon:T("UI.TEXT_0325"))
     if SendMailNameEditBox then SendMailNameEditBox:HookScript("OnTextChanged", function() Addon.RecipientUI.confirm = nil; Addon.RecipientUI:Refresh() end) end
     panel.balance = theme:CreateText(panel, theme.Font.body, theme.Colors.text, "LEFT")
     panel.balance:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMLEFT", 14, 8)
@@ -1279,7 +1288,7 @@ end
 function Native:EditShortcutIcon(slot)
     local saved = Addon.db.quickRecipients[slot]
     if not saved then return end
-    if type(Addon.Core.ShowIconPicker) ~= "function" then Addon:Print("请同步更新 YiboCore 后选择图标。"); return end
+    if type(Addon.Core.ShowIconPicker) ~= "function" then Addon:Print(Addon:T("UI.TEXT_0537")); return end
     self:CancelShortcutDrag()
     local contact = self.send.favoriteEntries[slot]
     local coords = contact and contact.class and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[contact.class]
@@ -1324,7 +1333,7 @@ function Native:PromptAddFavorite(prefill, slot)
         editor:SetClampedToScreen(true); editor:EnableMouse(true); editor:SetToplevel(true)
         editor:SetBackdrop(BACKDROP); editor:SetBackdropColor(unpack(theme.Colors.bg)); editor:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
         editor.title = theme:CreateText(editor, theme.Font.section, theme.Colors.text, "LEFT")
-        editor.title:SetPoint("TOPLEFT", 14, -12); editor.title:SetText("配置快捷收件人")
+        editor.title:SetPoint("TOPLEFT", 14, -12); editor.title:SetText(Addon:T("UI.TEXT_0613"))
         editor.address = CreateFrame("EditBox", nil, editor, "BackdropTemplate")
         editor.address:SetPoint("TOPLEFT", 14, -42); editor.address:SetSize(316, theme.Size.standard)
         editor.address:SetAutoFocus(false); editor.address:SetMaxLetters(160)
@@ -1333,9 +1342,9 @@ function Native:PromptAddFavorite(prefill, slot)
         editor.address:SetBackdropColor(unpack(theme.Colors.panel)); editor.address:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
         editor.status = theme:CreateText(editor, theme.Font.assist, theme.Colors.muted, "LEFT")
         editor.status:SetPoint("TOPLEFT", editor.address, "BOTTOMLEFT", 0, -5); editor.status:SetPoint("RIGHT", editor, "RIGHT", -14, 0); editor.status:SetHeight(20)
-        editor.cancel = InboxButton(editor, 76, "取消", function() editor:Hide() end)
+        editor.cancel = InboxButton(editor, 76, Addon:T("UI.TEXT_0192"), function() editor:Hide() end)
         editor.cancel:SetPoint("BOTTOMRIGHT", -14, 10)
-        editor.save = InboxButton(editor, 76, "保存", function() Native:SaveFavoriteFromEditor() end)
+        editor.save = InboxButton(editor, 76, Addon:T("UI.TEXT_0118"), function() Native:SaveFavoriteFromEditor() end)
         editor.save:SetPoint("RIGHT", editor.cancel, "LEFT", -6, 0)
         editor.address:SetScript("OnEnterPressed", function() Native:SaveFavoriteFromEditor() end)
         editor.address:SetScript("OnEscapePressed", function()
@@ -1349,7 +1358,7 @@ function Native:PromptAddFavorite(prefill, slot)
         self.favoriteEditor = editor
     end
     editor.slot = slot
-    editor.title:SetText("配置快捷收件人 · 第 " .. tostring(slot) .. " 格")
+    editor.title:SetText(Addon:T("UI.TEXT_0612") .. tostring(slot) .. Addon:T("UI.TEXT_0041"))
     editor.address:SetText(prefill or ""); editor.status:SetText(""); editor:Show()
 end
 function Native:SaveFavoriteFromEditor()
@@ -1358,8 +1367,8 @@ function Native:SaveFavoriteFromEditor()
     local address = editor.address:GetText()
     if editor.address.IsInIMEComposition and editor.address:IsInIMEComposition() then return end
     local ok, err = Addon.Recipients:SetShortcut(editor.slot, address)
-    if not ok then editor.status:SetText(err or "保存失败，请检查联系人地址。"); editor.address:SetFocus(); editor.address:HighlightText(); return end
-    Addon:Print("快捷格已保存。")
+    if not ok then editor.status:SetText(err or Addon:T("UI.TEXT_0120")); editor.address:SetFocus(); editor.address:HighlightText(); return end
+    Addon:Print(Addon:T("UI.TEXT_0300"))
     editor:Hide()
     self:RefreshBasicSend()
 end
@@ -1393,7 +1402,7 @@ function Native:RefreshFavoriteButtons()
             button.hitLabel = Addon.Core.UITheme:CreateText(button, Addon.Core.UITheme.Font.assist, Addon.Core.UITheme.Colors.text, "RIGHT")
             button.hitLabel:SetPoint("BOTTOMRIGHT", -2, 2)
         end
-        button.hitLabel:SetText(selected and "发送" or hit and tostring(hit.quantity) or "")
+        button.hitLabel:SetText(selected and Addon:T("UI.TEXT_0182") or hit and tostring(hit.quantity) or "")
         local rows, columns = Addon:GetShortcutLayout()
         button:SetShown(panel.favoritesExpanded and index <= rows * columns)
         button.emptyMark:SetShown(contact == nil)
@@ -1420,6 +1429,9 @@ function Native:LayoutBasicSend()
     local theme = Addon.Core.UITheme
     local frameWidth = MailFrame:GetWidth()
     local fieldWidth = math.max(170, frameWidth - 124)
+    local labelWidth = math.max(theme:MeasureText(theme.Font.body, Addon:T("UI.TEXT_0332")), theme:MeasureText(theme.Font.body, Addon:T("UI.TEXT_0100")))
+    panel.inputInset = labelWidth + 20
+    panel.recipientField.label:SetWidth(labelWidth); panel.subjectField.label:SetWidth(labelWidth)
     panel.recipientField:ClearAllPoints(); panel.recipientField:SetPoint("TOPLEFT", MailFrame, "TOPLEFT", 8, -6); panel.recipientField:SetSize(fieldWidth, theme.Size.standard)
     panel.subjectField:ClearAllPoints(); panel.subjectField:SetPoint("TOPLEFT", panel.recipientField, "BOTTOMLEFT", 0, -4); panel.subjectField:SetSize(fieldWidth, theme.Size.standard)
     local function StyleInput(editBox, field)
@@ -1429,7 +1441,7 @@ function Native:LayoutBasicSend()
         -- Keep the native input above it for both text rendering and mouse input.
         if editBox:GetParent() ~= field then editBox:SetParent(field) end
         editBox:SetFrameLevel(field:GetFrameLevel() + 1)
-        editBox:ClearAllPoints(); editBox:SetPoint("LEFT", field, "LEFT", 74, 0); editBox:SetWidth(math.max(80, fieldWidth - 80))
+        editBox:ClearAllPoints(); editBox:SetPoint("LEFT", field, "LEFT", panel.inputInset, 0); editBox:SetWidth(math.max(1, fieldWidth - panel.inputInset - 6))
         editBox:SetFont(STANDARD_TEXT_FONT, theme.Font.body, "OUTLINE"); editBox:SetTextColor(unpack(theme.Colors.text))
         for _, region in ipairs({ editBox:GetRegions() }) do
             if type(region.GetObjectType) == "function" then
@@ -1442,7 +1454,7 @@ function Native:LayoutBasicSend()
                     local text = region:GetText()
                     if text and ((type(MAIL_TO_LABEL) == "string" and text == MAIL_TO_LABEL)
                         or (type(MAIL_SUBJECT_LABEL) == "string" and text == MAIL_SUBJECT_LABEL)
-                        or text == "收件人：" or text == "收件人:" or text == "主题：" or text == "主题:") then region:Hide() end
+                        or text == Addon:T("UI.TEXT_0340") or text == Addon:T("UI.TEXT_0333") or text == Addon:T("UI.TEXT_0102") or text == Addon:T("UI.TEXT_0101")) then region:Hide() end
                 end
             end
         end
@@ -1596,7 +1608,8 @@ function Native:SendRegionLayout()
     local size = math.min(36, (MailFrame:GetWidth() - 16 - gap * (columns - 1)) / columns)
     local bottom = 42
     return { columns = columns, gap = gap, count = count, rows = rows, size = size,
-        attachmentBottom = bottom, controlsBottom = bottom + rows * size + (rows - 1) * gap + 8 }
+        attachmentBottom = bottom, controlsBottom = bottom + rows * size + (rows - 1) * gap + 8,
+        moneyHeight = Addon.Core.UITheme.Size.compact * 2 + 4 }
 end
 function Native:LayoutSendAttachments()
     local layout = self:SendRegionLayout()
@@ -1617,11 +1630,11 @@ function Native:LayoutSendAttachments()
     end
     if SendMailScrollFrame and SendMailAttachment1 then
         SendMailScrollFrame:ClearAllPoints(); SendMailScrollFrame:SetPoint("TOPLEFT", MailFrame, "TOPLEFT", 8, -82)
-        SendMailScrollFrame:SetPoint("BOTTOMRIGHT", MailFrame, "BOTTOMRIGHT", -8, layout.controlsBottom + Addon.Core.UITheme.Size.compact + 10)
+        SendMailScrollFrame:SetPoint("BOTTOMRIGHT", MailFrame, "BOTTOMRIGHT", -8, layout.controlsBottom + layout.moneyHeight + 10)
     end
     if _G.MailEditBox and SendMailAttachment1 then
         MailEditBox:ClearAllPoints(); MailEditBox:SetPoint("TOPLEFT", MailFrame, "TOPLEFT", 8, -82)
-        MailEditBox:SetPoint("BOTTOMRIGHT", MailFrame, "BOTTOMRIGHT", -8, layout.controlsBottom + Addon.Core.UITheme.Size.compact + 10)
+        MailEditBox:SetPoint("BOTTOMRIGHT", MailFrame, "BOTTOMRIGHT", -8, layout.controlsBottom + layout.moneyHeight + 10)
     end
 end
 function Native:StyleSendAttachment(button, index)
@@ -1654,7 +1667,7 @@ function Native:LayoutSendMoney()
     if money then
         if money:GetParent() ~= self.send then money:SetParent(self.send) end
         money:SetFrameLevel(self.send:GetFrameLevel() + 2)
-        money:ClearAllPoints(); money:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMLEFT", 8, bottom); money:SetHeight(theme.Size.compact)
+        money:ClearAllPoints(); money:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMLEFT", 8, bottom + theme.Size.compact + 4); money:SetHeight(theme.Size.compact)
         for _, unit in ipairs({ "Gold", "Silver", "Copper" }) do
             local input = _G["SendMailMoney" .. unit] or money[unit:lower()] or money[unit]
             if input then
@@ -1677,7 +1690,8 @@ function Native:LayoutSendMoney()
         end
     end
     if _G.SendMailMoneyText then _G.SendMailMoneyText:Hide() end
-    local controls = { { "SendMailSendMoneyButton", "寄币", -132 }, { "SendMailCODButton", "到付", -66 } }
+    local controls = { { "SendMailSendMoneyButton", Addon:T("UI.TEXT_0231") }, { "SendMailCODButton", Addon:T("UI.TEXT_0157") } }
+    local left = 8
     for _, entry in ipairs(controls) do
         local control = _G[entry[1]]
         if control then
@@ -1694,13 +1708,15 @@ function Native:LayoutSendMoney()
             end
             control.yiboMailRadio.mark:SetShown(control.GetChecked and control:GetChecked() or false)
             control:ClearAllPoints(); control:SetSize(18, 18)
-            control:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMRIGHT", entry[3], bottom + 4)
+            control:SetPoint("BOTTOMLEFT", MailFrame, "BOTTOMLEFT", left, bottom + 4)
             local label = _G[entry[1] .. "Text"] or control.Text
             if label then
                 if label:GetParent() ~= control then label:SetParent(control) end
                 label:SetText(entry[2]); label:SetFont(STANDARD_TEXT_FONT, theme.Font.assist, "")
                 label:ClearAllPoints(); label:SetPoint("LEFT", control, "RIGHT", 4, 0)
+                label:SetWidth(theme:MeasureText(theme.Font.assist, entry[2]) + 2); label:SetHeight(theme.Size.compact); label:SetWordWrap(false)
             end
+            left = left + 18 + 4 + theme:MeasureText(theme.Font.assist, entry[2]) + 16
         end
     end
 end
@@ -1844,7 +1860,7 @@ function Native:Install()
     Addon.Frame:HookScript("OnUpdate", function()
         if Addon.RuleSendController then Addon.RuleSendController:Tick() end
         if Native.deleting and GetTime() - Native.deleteStartedAt > 12 then
-            Native.deleting = nil; Native.inbox.notice = "删除未确认，请检查邮箱后重试。"; Native:RefreshInbox()
+            Native.deleting = nil; Native.inbox.notice = Addon:T("UI.TEXT_0154"); Native:RefreshInbox()
         end
     end)
     self:RestoreBrowsePageWhenShown()
@@ -1894,7 +1910,7 @@ function Native:OnCollected(id, action)
 end
 function Native:OnEvent(event, itemID, success)
     if event == "MAIL_FAILED" and self.deleting then
-        self.deleting = nil; self.inbox.notice = "删除未完成，请检查游戏提示。"
+        self.deleting = nil; self.inbox.notice = Addon:T("UI.TEXT_0153")
     end
     if event == "GET_ITEM_INFO_RECEIVED" then
         if self.pendingItemInfo and self.pendingItemInfo[itemID] then
@@ -1906,11 +1922,11 @@ function Native:OnEvent(event, itemID, success)
     if event == "ADDON_LOADED" or event == "MAIL_SHOW" or event == "PLAYER_REGEN_ENABLED" then self:Install() end
     if event == "MAIL_SEND_SUCCESS" then
         if self.send then
-            self.send.notice = "发送成功。"
-            if self.send.status then self.send.status:SetText("发送成功 · 已记录为在途，尚未确认送达") end
+            self.send.notice = Addon:T("UI.TEXT_0184")
+            if self.send.status then self.send.status:SetText(Addon:T("UI.TEXT_0183")) end
         end
     elseif event == "MAIL_FAILED" and self.send and self.send.status then
-        self.send.status:SetText("发送未确认 · 请检查原生游戏提示")
+        self.send.status:SetText(Addon:T("UI.TEXT_0188"))
     end
     if self.installed and (event == "MAIL_INBOX_UPDATE" or event == "MAIL_SUCCESS" or event == "MAIL_SHOW" or event == "MAIL_SEND_INFO_UPDATE" or event == "MAIL_SEND_SUCCESS" or event == "MAIL_FAILED" or event == "BAG_UPDATE_DELAYED") then self:Refresh() end
 end

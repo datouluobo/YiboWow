@@ -78,33 +78,33 @@ function Scanner:Signature(mail)
     return Addon.Encode({ mail.sender, mail.subject, mail.money, mail.cod, mail.wasReturned, table.concat(identities) })
 end
 function Scanner:ReadVisible()
-    if not self:IsOpen() or not self.updated then return nil, "请先打开邮箱并等待列表更新。" end
+    if not self:IsOpen() or not self.updated then return nil, Addon:T("UI.TEXT_0526") end
     local now, clock = Addon:Now()
     local ok, result = pcall(function()
         local count, total = GetInboxNumItems(); local mails = {}
         for index = 1, count do mails[index] = ReadMail(index, now, clock) end
         local after, all = GetInboxNumItems()
-        if after ~= count or total ~= all then error("邮箱正在变化，请稍后重试。") end
+        if after ~= count or total ~= all then error(Addon:T("UI.TEXT_0606")) end
         return mails
     end)
     if not ok then return nil, tostring(result) end
     return result
 end
 function Scanner:ReadEntry(entry)
-    if not self:IsOpen() or not self.updated then return nil, "请先打开邮箱并等待列表更新。" end
+    if not self:IsOpen() or not self.updated then return nil, Addon:T("UI.TEXT_0526") end
     local index = entry and entry.mail and tonumber(entry.mail.inboxIndex)
-    if not index or index < 1 or index % 1 ~= 0 then return nil, "邮件位置无效，请等待邮箱更新。" end
+    if not index or index < 1 or index % 1 ~= 0 then return nil, Addon:T("UI.TEXT_0591") end
     local now, clock = Addon:Now()
     local ok, current, count = pcall(function()
         local visible, total = GetInboxNumItems()
-        if type(visible) ~= "number" or type(total) ~= "number" or visible < index or total < visible then error("邮件位置已变化，请等待更新。") end
+        if type(visible) ~= "number" or type(total) ~= "number" or visible < index or total < visible then error(Addon:T("UI.TEXT_0590")) end
         local mail = ReadMail(index, now, clock)
         local afterVisible, afterTotal = GetInboxNumItems()
-        if afterVisible ~= visible or afterTotal ~= total then error("邮箱正在变化，请稍后重试。") end
+        if afterVisible ~= visible or afterTotal ~= total then error(Addon:T("UI.TEXT_0606")) end
         return mail, visible
     end)
     if not ok then return nil, tostring(current) end
-    if current.signature ~= entry.mail.signature then return nil, "邮件已变化，请等待更新。" end
+    if current.signature ~= entry.mail.signature then return nil, Addon:T("UI.TEXT_0594") end
     return current
 end
 local function CommitScan(character, mails, visible, total, now, clock)

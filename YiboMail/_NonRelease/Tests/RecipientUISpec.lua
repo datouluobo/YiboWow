@@ -84,6 +84,7 @@ SendMailNameEditBox = Frame(SendMailFrame); SendMailSubjectEditBox = Frame(SendM
 SendMailMailButton = Frame(SendMailFrame); SendMailCancelButton = Frame(SendMailFrame)
 STANDARD_TEXT_FONT = 'font'; date = os.date
 YiboCore = { Capabilities = { Register = function() end } }; dofile("YiboCore/_NonRelease/Tests/LoadLocale.lua"); dofile('YiboCore/UI/Theme.lua'); dofile('YiboCore/UI/Input.lua'); dofile('YiboMail/Namespace.lua')
+dofile("YiboMail/Locales/zh.lua"); dofile("YiboMail/Locales/en.lua")
 function GetLooseMacroIcons(result) result[#result + 1] = "1001" end
 function GetLooseMacroItemIcons(result) result[#result + 1] = "INV_Letter_15" end
 function GetMacroIcons(result)

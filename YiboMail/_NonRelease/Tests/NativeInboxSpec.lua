@@ -66,6 +66,7 @@ dofile('YiboCore/Runtime/ItemResolver.lua')
 -- Keep the real dropdown/buttons; scroll geometry is outside this regression.
 function YiboCore.UITheme:CreateScrollFrame(parent) return Frame(parent) end
 dofile("YiboMail/Namespace.lua")
+dofile("YiboMail/Locales/zh.lua"); dofile("YiboMail/Locales/en.lua")
 local Addon = YiboMail; Addon.Core = YiboCore
 Addon.db = { settings = {} }
 local current = { id = "char", name = "Current", realm = "Realm" }
@@ -102,6 +103,7 @@ local stubView = Addon.ViewModel
 dofile("YiboMail/ViewModel.lua")
 dofile("YiboMail/CacheUI.lua")
 function methods:GetStringWidth() return #(self.text or "") * 7 end
+function methods:GetStringHeight() return math.max(1, math.ceil(self:GetStringWidth() / math.max(1, self:GetWidth()))) * 14 end
 local realExpiry = Addon.ViewModel.Expiry
 stubView.ItemBorder, stubView.AttachmentBorder = Addon.ViewModel.ItemBorder, Addon.ViewModel.AttachmentBorder
 stubView.CharacterLabel, stubView.CounterpartLabel = Addon.ViewModel.CharacterLabel, Addon.ViewModel.CounterpartLabel
@@ -346,3 +348,16 @@ native:RefreshInbox()
 assert(#autoReads == 3 and mail.wasRead and mail.openedByUser, 'Text-only letters are acknowledged by the inbox list')
 mail.attachments = autoAttachments
 print('PASS: inbox/attachment automatic native read; deduplication; filters; closed/changed/failed/collecting guards; text-only mail')
+
+Addon.Core.Locale.language = 'en'
+native:RefreshInbox()
+local regularHeight = panel.rows[1]:GetHeight()
+panel.options.search = 'missing'; native:RefreshInbox()
+local emptyRow = panel.rows[1]
+assert(emptyRow.title:GetText() == 'No mail found')
+assert(emptyRow.title:GetWidth() >= emptyRow.title:GetStringWidth())
+assert(emptyRow.detail:GetWidth() == emptyRow:GetWidth() - 64 and emptyRow:GetHeight() > 32)
+assert(emptyRow.detail.points[1][3] < emptyRow.title.points[1][3], 'Empty-state guidance is below the title, not in a tiny adjacent subject cell')
+panel.options.search = ''; native:RefreshInbox()
+assert(panel.rows[1]:GetHeight() == regularHeight, 'A recycled empty-state row restores ordinary mail geometry')
+print('PASS: English empty title and wrapped guidance use full row width; pooled mail rows restore their layout')

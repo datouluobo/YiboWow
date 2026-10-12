@@ -1,21 +1,21 @@
 local Addon = _G.YiboMail
 local Rules = {}; Addon.SendRules = Rules
 local classLabels = {
-    [0] = "消耗品", [1] = "容器", [2] = "武器", [3] = "宝石", [4] = "护甲",
-    [5] = "施法材料", [6] = "弹药", [7] = "交易材料", [8] = "物品强化",
-    [9] = "配方", [10] = "货币（作废）", [11] = "箭袋", [12] = "任务",
-    [13] = "钥匙", [14] = "永久（作废）", [15] = "其它", [16] = "雕文",
-    [17] = "战斗宠物", [18] = "魔兽世界时光徽章", [19] = "专业", [20] = "住宅",
+    [0] = Addon:T("UI.TEXT_0439"), [1] = Addon:T("UI.TEXT_0230"), [2] = Addon:T("UI.TEXT_0432"), [3] = Addon:T("UI.TEXT_0219"), [4] = Addon:T("UI.TEXT_0317"),
+    [5] = Addon:T("UI.TEXT_0362"), [6] = Addon:T("UI.TEXT_0261"), [7] = Addon:T("UI.TEXT_0105"), [8] = Addon:T("UI.TEXT_0459"),
+    [9] = Addon:T("UI.TEXT_0611"), [10] = Addon:T("UI.TEXT_0569"), [11] = Addon:T("UI.TEXT_0481"), [12] = Addon:T("UI.TEXT_0116"),
+    [13] = Addon:T("UI.TEXT_0622"), [14] = Addon:T("UI.TEXT_0433"), [15] = Addon:T("UI.TEXT_0143"), [16] = Addon:T("UI.TEXT_0637"),
+    [17] = Addon:T("UI.TEXT_0310"), [18] = Addon:T("UI.TEXT_0643"), [19] = Addon:T("UI.TEXT_0092"), [20] = Addon:T("UI.TEXT_0117"),
 }
 local function ClassLabel(id, name)
     if id == 5 or id == 7 then return classLabels[id] end
     if name and name:find("[A-Za-z]") then
         local upper = name:upper()
-        if id == 8 and upper:find("GENERIC", 1, true) then return "通用（作废）" end
-        if id == 10 and upper:find("MONEY", 1, true) then return "金钱（作废）" end
+        if id == 8 and upper:find("GENERIC", 1, true) then return Addon:T("UI.TEXT_0584") end
+        if id == 10 and upper:find("MONEY", 1, true) then return Addon:T("UI.TEXT_0621") end
         return classLabels[id] or name
     end
-    return name or classLabels[id] or ("分类 " .. tostring(id))
+    return name or classLabels[id] or (Addon:T("UI.TEXT_0148") .. tostring(id))
 end
 local hiddenClasses = { [6] = true, [10] = true, [11] = true, [14] = true, [18] = true }
 local function IsObsolete(name)
@@ -63,7 +63,7 @@ function Rules:Initialize()
 end
 function Rules:SetBlockedItem(itemID, blocked)
     itemID = tonumber(itemID)
-    if not itemID or itemID < 1 or itemID ~= math.floor(itemID) then return nil, "请确认有效物品。" end
+    if not itemID or itemID < 1 or itemID ~= math.floor(itemID) then return nil, Addon:T("UI.TEXT_0549") end
     Addon.db.sendBlacklist.items[itemID] = blocked and true or nil
     self:Changed(true); return true
 end
@@ -74,13 +74,13 @@ function Rules:SetBlockedSender(characterID, blocked)
     local current = Addon.Core.Characters:GetCurrent()
     local character = current and current.id == characterID and current
     for _, entry in ipairs(characters) do if entry.id == characterID then character = entry; break end end
-    if not character then return nil, "请先登录该角色，建立账号角色记录。" end
+    if not character then return nil, Addon:T("UI.TEXT_0532") end
     senders[characterID] = character.name .. "-" .. character.realm
     self:Changed(true); return true
 end
 function Rules:Changed(rematch)
     Addon.db.sendRuleRevision = Addon.db.sendRuleRevision + 1
-    if Addon.RuleSendController then Addon.RuleSendController:Invalidate("规则已修改，请重新匹配。") end
+    if Addon.RuleSendController then Addon.RuleSendController:Invalidate(Addon:T("UI.TEXT_0501")) end
     if rematch and Addon.RuleSendController and Addon.RuleSendController.state ~= "sending" and Addon.RuleSendController.state ~= "filling" then
         Addon.RuleSendController:Scan()
     end
@@ -90,7 +90,7 @@ function Rules:GetItem(id)
     id = tonumber(id)
     if not id or id <= 0 or id % 1 ~= 0 then return end
     local name, link, icon, class, subclass = ItemInfo(id)
-    return { itemID = id, name = name or ("物品 " .. id), link = link, icon = icon,
+    return { itemID = id, name = name or (Addon:T("UI.TEXT_0453") .. id), link = link, icon = icon,
         classID = class, subclassID = subclass, ready = name ~= nil }
 end
 function Rules:Categories(classID)
@@ -118,7 +118,7 @@ function Rules:Categories(classID)
             end
         end
     else
-        result[1] = { value = -1, label = "全部子分类" }
+        result[1] = { value = -1, label = Addon:T("UI.TEXT_0134") }
         for id = 0, 30 do
             local name = Name(C_Item and C_Item.GetItemSubClassInfo, GetItemSubClassInfo, classID, id)
             if name and not IsObsolete(name) then result[#result + 1] = { value = id, label = name } end
@@ -129,8 +129,8 @@ end
 function Rules:Label(rule)
     if rule.kind == "item" then
         local names = {}
-        for _, id in ipairs(self:ItemIDs(rule)) do names[#names + 1] = (self:GetItem(id) or {}).name or ("物品 " .. id) end
-        return #names > 0 and table.concat(names, "、") or "无效物品"
+        for _, id in ipairs(self:ItemIDs(rule)) do names[#names + 1] = (self:GetItem(id) or {}).name or (Addon:T("UI.TEXT_0453") .. id) end
+        return #names > 0 and table.concat(names, Addon:T("UI.TEXT_0078")) or Addon:T("UI.TEXT_0366")
     end
     local label = ClassLabel(rule.classID)
     for _, entry in ipairs(self:Categories()) do if entry.value == rule.classID then label = entry.label end end
@@ -167,7 +167,7 @@ function Rules:RecipientsOverlap(first, second)
     return not (firstFaction and secondFaction and firstFaction ~= secondFaction)
 end
 function Rules:Save(draft, id)
-    if self.incompatible then return nil, "规则数据版本不兼容，请同步插件版本。" end
+    if self.incompatible then return nil, Addon:T("UI.TEXT_0502") end
     local rule = Addon.Copy(draft)
     local address, err = Addon.Recipients:Normalize(rule.recipient)
     if not address then return nil, err end
@@ -176,21 +176,21 @@ function Rules:Save(draft, id)
         local ids, seen = {}, {}
         for _, id in ipairs(self:ItemIDs(rule)) do
             local item = self:GetItem(id)
-            if not item or not item.ready then return nil, "请确认所有物品，等待信息加载完成。" end
+            if not item or not item.ready then return nil, Addon:T("UI.TEXT_0548") end
             if not seen[item.itemID] then seen[item.itemID] = true; ids[#ids + 1] = item.itemID end
         end
-        if #ids == 0 then return nil, "请先确认物品。" end
+        if #ids == 0 then return nil, Addon:T("UI.TEXT_0533") end
         rule.itemIDs, rule.itemID = ids, ids[1]
     elseif rule.kind == "category" then
         local valid
         for _, entry in ipairs(self:Categories()) do if entry.value == rule.classID then valid = true end end
-        if not valid then return nil, "请选择客户端支持的游戏分类。" end
+        if not valid then return nil, Addon:T("UI.TEXT_0554") end
         if rule.subclassID ~= nil then
             valid = false
             for _, entry in ipairs(self:Categories(rule.classID)) do if entry.value == rule.subclassID then valid = true end end
-            if not valid then return nil, "请选择有效子分类。" end
+            if not valid then return nil, Addon:T("UI.TEXT_0556") end
         end
-    else return nil, "请选择规则类型。" end
+    else return nil, Addon:T("UI.TEXT_0560") end
     -- Matching objects must be unambiguous within one realm and faction.
     for _, other in ipairs(self:List()) do
         local overlap = false
@@ -201,12 +201,12 @@ function Rules:Save(draft, id)
             or rule.kind == "category" and rule.classID == other.classID and rule.subclassID == other.subclassID)
         if other.id ~= id and same and self:RecipientsOverlap(address, other.recipient) then
             if Addon.Recipients:Key(other.recipient) == Addon.Recipients:Key(address) then
-                return nil, "该规则已存在，无需重复添加；请编辑已有规则以调整物品。", other.id
+                return nil, Addon:T("UI.TEXT_0518"), other.id
             end
-            return nil, "该匹配对象已有发往其它收件人的规则，请编辑已有规则以变更收件人。", other.id
+            return nil, Addon:T("UI.TEXT_0514"), other.id
         end
     end
-    if id and not Addon.db.sendRules[id] then return nil, "原规则已不存在，请重新选择。" end
+    if id and not Addon.db.sendRules[id] then return nil, Addon:T("UI.TEXT_0175") end
     if not id then Addon.db.nextSendRuleID = Addon.db.nextSendRuleID + 1; id = "r" .. Addon.db.nextSendRuleID end
     rule.id, rule.enabled = id, rule.enabled ~= false
     Addon.db.sendRules[id] = rule; self:Changed(); return true, id
@@ -220,7 +220,7 @@ function Rules:IsRecipientEnabled(address)
 end
 function Rules:SetRecipientEnabled(address, enabled)
     local normalized = Addon.Recipients:Normalize(address)
-    if not normalized then return nil, "无效收件人。" end
+    if not normalized then return nil, Addon:T("UI.TEXT_0365") end
     Addon.db.sendRecipientDisabled = Addon.db.sendRecipientDisabled or {}
     Addon.db.sendRecipientDisabled[Addon.Recipients:Key(normalized)] = not enabled or nil
     self:Changed(); return true
@@ -233,7 +233,7 @@ function Rules:Icon(rule)
     return "Interface\\Icons\\" .. icon
 end
 function Rules:Delete(id)
-    if not Addon.db.sendRules[id] then return nil, "规则已不存在。" end
+    if not Addon.db.sendRules[id] then return nil, Addon:T("UI.TEXT_0499") end
     Addon.db.sendRules[id] = nil; self:Changed(); return true
 end
 function Rules:Match(bags, skipped)
@@ -241,7 +241,7 @@ function Rules:Match(bags, skipped)
     local currentAddress = current and Addon.Recipients:Normalize(current.name .. "-" .. current.realm)
     local active, result = {}, { items = {}, conflicts = {}, pending = 0, groups = {}, byRule = {}, factionIssues = {} }
     if self.incompatible then
-        result.pending = 1; result.unavailable = "规则数据版本不兼容，请同步插件版本。"; return result
+        result.pending = 1; result.unavailable = Addon:T("UI.TEXT_0502"); return result
     end
     local blacklist = Addon.db.sendBlacklist
     if current and blacklist.senders[current.id] then result.blockedSender = true; return result end
@@ -256,7 +256,7 @@ function Rules:Match(bags, skipped)
                 local allowed, reason = Addon.Recipients:CanRuleSend(address, current)
                 if allowed then active[#active + 1] = { rule = rule, address = address }
                 elseif allowed == nil then active[#active + 1] = { rule = rule, address = address, factionReason = reason } end
-            elseif not address then result.conflicts[#result.conflicts + 1] = { ruleIDs = { rule.id }, label = self:Label(rule) .. "：收件人无效" } end
+            elseif not address then result.conflicts[#result.conflicts + 1] = { ruleIDs = { rule.id }, label = self:Label(rule) .. Addon:T("UI.TEXT_0655") } end
         end
     end
     for _, bagItem in ipairs(allowedBags) do
@@ -305,7 +305,7 @@ function Rules:Match(bags, skipped)
                 if Addon.Recipients:Key(entry.address) ~= Addon.Recipients:Key(target) then conflict = true end
             end
             if conflict then result.conflicts[#result.conflicts + 1] = { itemID = item.itemID, ruleIDs = ids,
-                label = (name or ("物品 " .. item.itemID)) .. "：收件人冲突", quantity = item.quantity }
+                label = (name or (Addon:T("UI.TEXT_0453") .. item.itemID)) .. Addon:T("UI.TEXT_0654"), quantity = item.quantity }
             else
                 -- Keep ownership stable even when that rule is temporarily skipped.
                 item.ruleID, item.ruleIDs, item.recipient = ids[1], ids, target

@@ -5,28 +5,28 @@ Page.ID = "mail-inbox"
 
 local Theme = Core.UITheme
 local fields = {
-    { id = "character", title = "角色" },
-    { id = "count", title = "邮件数" },
-    { id = "attachments", title = "附件数" },
-    { id = "money", title = "可收金币" },
-    { id = "expires", title = "最早到期" },
-    { id = "status", title = "更新状态" },
-    { id = "alert", title = "到期提醒" },
-    { id = "cod", title = "COD邮件" },
-    { id = "backlog", title = "待核实缓存", defaultVisible = false },
+    { id = "character", title = Addon:T("UI.TEXT_0504") },
+    { id = "count", title = Addon:T("UI.TEXT_0598") },
+    { id = "attachments", title = Addon:T("UI.TEXT_0630") },
+    { id = "money", title = Addon:T("UI.TEXT_0197") },
+    { id = "expires", title = Addon:T("UI.TEXT_0392") },
+    { id = "status", title = Addon:T("UI.TEXT_0386") },
+    { id = "alert", title = Addon:T("UI.TEXT_0160") },
+    { id = "cod", title = Addon:T("UI.TEXT_0068") },
+    { id = "backlog", title = Addon:T("UI.TEXT_0290"), defaultVisible = false },
 }
-for _, field in ipairs(fields) do field.group = "账号总览" end
+for _, field in ipairs(fields) do field.group, field.groupID = Addon:T("UI.TEXT_0564"), "overview" end
 local pageFields = {}
 for _, field in ipairs(fields) do pageFields[#pageFields + 1] = field end
 for _, group in ipairs({
-    { "收件箱", "inbox", { { "character", "角色", 130 }, { "sender", "发件人", 110 }, { "subject", "主题", 160 },
-        { "items", "附件", 160 }, { "amount", "金币/COD", 100 }, { "expiry", "期限", 100 }, { "coverage", "更新状态", 180 } } },
-    { "历史记录", "history", { { "time", "时间", 120 }, { "character", "角色", 180 },
-        { "counterpart", "对方", 180 }, { "subject", "主题", 240, 240 }, { "content", "附件/金币", 280, 280 }, { "result", "事件/结果", 160 } } },
+    { Addon:T("UI.TEXT_0344"), "inbox", { { "character", Addon:T("UI.TEXT_0504"), 130 }, { "sender", Addon:T("UI.TEXT_0176"), 110 }, { "subject", Addon:T("UI.TEXT_0100"), 160 },
+        { "items", Addon:T("UI.TEXT_0624"), 160 }, { "amount", Addon:T("UI.TEXT_0618"), 100 }, { "expiry", Addon:T("UI.TEXT_0397"), 100 }, { "coverage", Addon:T("UI.TEXT_0386"), 180 } } },
+    { Addon:T("UI.TEXT_0170"), "history", { { "time", Addon:T("UI.TEXT_0371"), 120 }, { "character", Addon:T("UI.TEXT_0504"), 180 },
+        { "counterpart", Addon:T("UI.TEXT_0232"), 180 }, { "subject", Addon:T("UI.TEXT_0100"), 240, 240 }, { "content", Addon:T("UI.TEXT_0625"), 280, 280 }, { "result", Addon:T("UI.TEXT_0103"), 160 } } },
 }) do
     for _, definition in ipairs(group[3]) do
         pageFields[#pageFields + 1] = { id = group[2] .. "." .. definition[1], key = definition[1], title = definition[2],
-            width = definition[3], maxWidth = definition[4], group = group[1], preview = false }
+            width = definition[3], maxWidth = definition[4], group = group[1], groupID = group[2], preview = false }
     end
 end
 Page.Fields, Page.SummaryFields = pageFields, fields
@@ -93,26 +93,26 @@ local function Summary(character)
 
     local expires = "—"
     if counts.expired > 0 then
-        expires = "待核实 " .. counts.expired
+        expires = Addon:T("UI.TEXT_0288") .. counts.expired
     elseif nextExpiry then
-        if nextExpiry < 86400 then expires = string.format("约%.1f小时", nextExpiry / 3600)
-        else expires = string.format("约%.1f天", nextExpiry / 86400) end
-    elseif counts.unknown > 0 then expires = "期限未知"
+        if nextExpiry < 86400 then expires = string.format(Addon:T("UI.TEXT_0485"), nextExpiry / 3600)
+        else expires = string.format(Addon:T("UI.TEXT_0484"), nextExpiry / 86400) end
+    elseif counts.unknown > 0 then expires = Addon:T("UI.TEXT_0398")
     end
-    counts.nearest = counts.expired > 0 and "已有邮件到估算期限" or (expires ~= "—" and ("最早 " .. expires) or nil)
+    counts.nearest = counts.expired > 0 and Addon:T("UI.TEXT_0253") or (expires ~= "—" and (Addon:T("UI.TEXT_0391") .. expires) or nil)
 
     local status = coverage.observedAt and date("%m-%d %H:%M", coverage.observedAt) or "—"
     local live = Addon.Items:GetState(character.id)
-    if live.status == "error" then status = "读取失败 · " .. status
-    elseif coverage.status == "partial" then status = "部分 · " .. status end
+    if live.status == "error" then status = Addon:T("UI.TEXT_0562") .. status
+    elseif coverage.status == "partial" then status = Addon:T("UI.TEXT_0609") .. status end
     local alerts = {}
-    if counts.expired > 0 then alerts[#alerts + 1] = "到期待核实 " .. counts.expired end
-    if counts.urgent > 0 then alerts[#alerts + 1] = "紧急 " .. counts.urgent end
-    if counts.soon > 0 then alerts[#alerts + 1] = "临期 " .. counts.soon end
+    if counts.expired > 0 then alerts[#alerts + 1] = Addon:T("UI.TEXT_0158") .. counts.expired end
+    if counts.urgent > 0 then alerts[#alerts + 1] = Addon:T("UI.TEXT_0483") .. counts.urgent end
+    if counts.soon > 0 then alerts[#alerts + 1] = Addon:T("UI.TEXT_0097") .. counts.soon end
 
     local severity = counts.expired > 0 and 3 or (counts.urgent > 0 and 2 or (counts.soon > 0 and 1 or 0))
     local current = Core.Characters:GetCurrent()
-    local name = Core.Characters:FormatName(character, { nameMode = "short" }) or "未知角色"
+    local name = Core.Characters:FormatName(character, { nameMode = "short" }) or Addon:T("UI.TEXT_0400")
     local identity = Core.Characters:FormatName(character, { nameMode = "short",
         realmMode = current and current.realm and "sameRealm" or "full", referenceRealm = current and current.realm })
     return {
@@ -121,7 +121,7 @@ local function Summary(character)
         class = character.class,
         count = mailCount,
         attachments = tostring(attachmentSlots),
-        money = availableMoney > 0 and string.format("%.1f 金", availableMoney / 10000) or "—",
+        money = availableMoney > 0 and string.format(Addon:T("UI.TEXT_0058"), availableMoney / 10000) or "—",
         expires = expires,
         status = status,
         alert = #alerts > 0 and table.concat(alerts, " · ") or "—",
@@ -144,13 +144,13 @@ local function GetPreviewAlert(context)
         if summary._nextExpiry then nearest = math.min(nearest or math.huge, summary._nextExpiry) end
     end
     if expired > 0 then
-        return { title = "待核实", text = expired .. " 封邮件已到估算期限 · 请打开邮箱重新核对", severity = 2 }
+        return { title = Addon:T("UI.TEXT_0289"), text = expired .. Addon:T("UI.TEXT_0036"), severity = 2 }
     elseif within3Days > 0 then
-        local when = nearest and string.format("最早约 %.1f 天", nearest / 86400) or ""
-        return { title = "即将到期", text = within3Days .. " 封邮件将在 3 天内到期" .. (when ~= "" and (" · " .. when) or ""), severity = 2 }
+        local when = nearest and string.format(Addon:T("UI.TEXT_0393"), nearest / 86400) or ""
+        return { title = Addon:T("UI.TEXT_0168"), text = within3Days .. Addon:T("UI.TEXT_0034") .. (when ~= "" and (" · " .. when) or ""), severity = 2 }
     elseif within7Days > 0 then
-        local when = nearest and string.format("最早约 %.1f 天", nearest / 86400) or ""
-        return { title = "即将到期", text = within7Days .. " 封邮件将在 7 天内到期" .. (when ~= "" and (" · " .. when) or ""), severity = 1 }
+        local when = nearest and string.format(Addon:T("UI.TEXT_0393"), nearest / 86400) or ""
+        return { title = Addon:T("UI.TEXT_0168"), text = within7Days .. Addon:T("UI.TEXT_0035") .. (when ~= "" and (" · " .. when) or ""), severity = 1 }
     end
 end
 
@@ -200,11 +200,11 @@ function Page:SetRetention(key, value, onChanged)
     if value >= previous then Apply(); return true end
     if not StaticPopupDialogs or not StaticPopup_Show then return false end
     StaticPopupDialogs.YIBOMAIL_RETENTION = StaticPopupDialogs.YIBOMAIL_RETENTION or {
-        text = "%s", button1 = ACCEPT or "确认", button2 = CANCEL or "取消", timeout = 0, whileDead = true,
+        text = "%s", button1 = ACCEPT or Addon:T("UI.TEXT_0463"), button2 = CANCEL or Addon:T("UI.TEXT_0192"), timeout = 0, whileDead = true,
         hideOnEscape = true, preferredIndex = 3,
         OnAccept = function(_, data) if data then data.Apply() end end,
     }
-    StaticPopup_Show("YIBOMAIL_RETENTION", "保留期限从 " .. previous .. " 天缩短为 " .. value .. " 天。确认后按新期限清理超期历史与待核实记录，无法恢复。", nil, { Apply = Apply })
+    StaticPopup_Show("YIBOMAIL_RETENTION", Addon:T("UI.TEXT_0123") .. previous .. Addon:T("UI.TEXT_0031") .. value .. Addon:T("UI.TEXT_0030"), nil, { Apply = Apply })
     return false -- Keep the old selection until the player accepts.
 end
 
@@ -223,7 +223,7 @@ function Page:CreateSummary(parent)
     parent.mailAlert.text = Theme:CreateText(parent.mailAlert, Theme.Font.assist, Theme.Colors.text, "LEFT")
     parent.mailAlert.text:SetPoint("LEFT", parent.mailAlert.title, "RIGHT", 4, 0)
     parent.mailAlert.text:SetPoint("RIGHT", parent.mailAlert, "RIGHT", -116, 0)
-    parent.mailAlert.action = Theme:CreateButton(parent.mailAlert, 104, "打开邮件页 →", "secondary")
+    parent.mailAlert.action = Theme:CreateButton(parent.mailAlert, 104, Addon:T("UI.TEXT_0314"), "secondary")
     parent.mailAlert.action:SetPoint("RIGHT", parent.mailAlert, "RIGHT", -5, 0)
     parent.mailAlert.action:SetHeight(20)
     parent.mailAlert.action:SetScript("OnClick", function() Core.AccountView:Toggle(Page.ID) end)
@@ -250,6 +250,13 @@ function Page:RefreshSummary(parent, context)
         local surface = alert.severity >= 2 and Theme.Colors.dangerSurface or Theme.Colors.panel
         parent.mailAlert.background:SetColorTexture(surface[1], surface[2], surface[3], surface[4] or 1)
         parent.mailAlert.title:SetText(alert.title)
+        parent.mailAlert.title:SetWidth(Theme:MeasureText(Theme.Font.assist, alert.title) + 2)
+        local actionWidth = math.max(104, Theme:MeasureText(Theme.Font.body, parent.mailAlert.action.label:GetText()) + 18)
+        parent.mailAlert.action:SetWidth(actionWidth)
+        parent.mailAlert.text:ClearAllPoints()
+        parent.mailAlert.text:SetPoint("LEFT", parent.mailAlert.title, "RIGHT", 8, 0)
+        parent.mailAlert.text:SetPoint("RIGHT", parent.mailAlert, "RIGHT", -actionWidth - 16, 0)
+        Theme:BindTooltip(parent.mailAlert, alert.title, { alert.text })
         parent.mailAlert.title:SetTextColor(color[1], color[2], color[3])
         parent.mailAlert.text:SetText(alert.text)
         parent.mailScroll:ClearAllPoints()
@@ -367,9 +374,9 @@ function Page:RefreshSummary(parent, context)
                 GameTooltip:AddLine(Addon.CacheModel:Coverage(character), 1, 1, 1, true)
                 GameTooltip:AddLine(values.alert, 1, 1, 1, true)
                 for _, field in ipairs(columns) do
-                    GameTooltip:AddLine(field.title .. "：" .. tostring(values[field.id] or "—"), 1, 1, 1, true)
+                    GameTooltip:AddLine(field.title .. Addon:T("UI.TEXT_0653") .. tostring(values[field.id] or "—"), 1, 1, 1, true)
                 end
-                if Addon.GoalTargets and Addon.GoalTargets.ref then GameTooltip:AddLine(Core.BusinessItemActions:GestureLabel() .. "：添加新邮件查看目标；＋：添加菜单") end
+                if Addon.GoalTargets and Addon.GoalTargets.ref then GameTooltip:AddLine(Core.BusinessItemActions:GestureLabel() .. Addon:T("UI.TEXT_0656")) end
                 GameTooltip:Show()
             end
         end or nil)
@@ -479,11 +486,11 @@ function Page:OnLogin()
         local parts, signatureParts, stateRows, level = {}, {}, {}, 0
         for _, row in ipairs(rows) do
             local counts = row.counts
-            local label = row.name .. "："
-            if counts.expired > 0 then label = label .. "到期待核实 " .. counts.expired .. "封 · " end
-            if counts.urgent > 0 then label = label .. "紧急 " .. counts.urgent .. "封 · " end
-            if counts.soon > 0 then label = label .. "临期 " .. counts.soon .. "封" end
-            if counts.nearest then label = label:gsub(" · $", "") .. "（" .. counts.nearest .. "）" end
+            local label = row.name .. Addon:T("UI.TEXT_0653")
+            if counts.expired > 0 then label = label .. Addon:T("UI.TEXT_0158") .. counts.expired .. Addon:T("UI.TEXT_0235") end
+            if counts.urgent > 0 then label = label .. Addon:T("UI.TEXT_0483") .. counts.urgent .. Addon:T("UI.TEXT_0235") end
+            if counts.soon > 0 then label = label .. Addon:T("UI.TEXT_0097") .. counts.soon .. Addon:T("UI.TEXT_0239") end
+            if counts.nearest then label = label:gsub(" · $", "") .. Addon:T("UI.TEXT_0646") .. counts.nearest .. Addon:T("UI.TEXT_0649") end
             parts[#parts + 1] = label:gsub(" · $", "")
             signatureParts[#signatureParts + 1] = Addon.Encode({ row.id, counts.expired, counts.urgent, counts.soon })
             stateRows[row.id] = { expired = counts.expired, urgent = counts.urgent, soon = counts.soon }
@@ -505,8 +512,8 @@ function Page:OnLogin()
 
         local visible = {}
         for index = 1, math.min(3, #parts) do visible[#visible + 1] = parts[index] end
-        if #parts > #visible then visible[#visible + 1] = "另有 " .. (#parts - #visible) .. " 个角色需处理" end
-        Addon:Print(table.concat(visible, "；") .. "。按上次扫描估算，请打开邮件页查看。")
+        if #parts > #visible then visible[#visible + 1] = Addon:T("UI.TEXT_0193") .. (#parts - #visible) .. Addon:T("UI.TEXT_0024") end
+        Addon:Print(table.concat(visible, Addon:T("UI.TEXT_0657")) .. Addon:T("UI.TEXT_0080"))
         Addon.db.settings.loginReminderState = { day = day, signature = signature, level = level, rows = stateRows }
     end)
 end
@@ -520,25 +527,25 @@ function Page:RefreshShortcutPreview(section)
             -(section.previewY + math.floor((index - 1) / columns) * step))
         slot:SetShown(index <= rows * columns)
     end
-    section.gridCount:SetText("当前显示：" .. rows * columns .. " 格")
+    section.gridCount:SetText(Addon:T("UI.TEXT_0268") .. rows * columns .. Addon:T("UI.TEXT_0041"))
 end
 
 function Page:Register()
     local registered, err = Core.AccountView:RegisterPage(Addon.NAME, {
         id = self.ID,
-        title = "邮件助手",
+        title = Addon:T("UI.TEXT_0592"),
         fields = pageFields,
         defaultEnabled = true,
         previewEnabled = true,
         settings = {
-            title = "邮件助手",
-            description = "到期提醒使用最后一次成功扫描的邮件估算。",
+            title = Addon:T("UI.TEXT_0592"),
+            description = Addon:T("UI.TEXT_0161"),
             CreateSettingsPanel = function(parent, host)
                 local width = math.max(280, parent:GetWidth() or 600)
                 local narrow = width < 600
                 local columnWidth = narrow and width - 24 or (width - 48) / 2
                 local businessHeight = narrow and 712 or 376
-                local section = parent.mailBusinessSettings or host.createSection(parent, "业务设置", width, businessHeight)
+                local section = parent.mailBusinessSettings or host.createSection(parent, Addon:T("UI.TEXT_0093"), width, businessHeight)
                 parent.mailBusinessSettings = section
                 section:SetSize(width, businessHeight); section:Show(); section:ClearAllPoints()
                 section:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
@@ -555,8 +562,8 @@ function Page:Register()
                     label:SetWidth(textWidth); label:SetHeight(height or 24); label:SetWordWrap(true); label:SetText(value)
                     return label
                 end
-                Text("groupsTitle", "通讯录分组", 12, 40, columnWidth)
-                Text("groupsHelp", "选择通讯录中显示的分组", 12, 68, columnWidth, 24, true)
+                Text("groupsTitle", Addon:T("UI.TEXT_0586"), 12, 40, columnWidth)
+                Text("groupsHelp", Addon:T("UI.TEXT_0583"), 12, 68, columnWidth, 24, true)
                 section.groups = section.groups or {}
                 for index, source in ipairs(Addon.RECIPIENT_SOURCES) do
                     local sourceID = source.id
@@ -571,9 +578,9 @@ function Page:Register()
                         if Addon.Recipients then Addon.Recipients:Changed() end
                     end)
                 end
-                Text("groupsNote", "隐藏分组保留已有数据与快捷收件人。", 12, 204, columnWidth, 40, true)
-                Text("reminderTitle", "到期提醒", 12, 258, columnWidth)
-                local checkbox = section.reminder or host.createCheckbox(section, "登录时提醒临期或到期邮件")
+                Text("groupsNote", Addon:T("UI.TEXT_0636"), 12, 204, columnWidth, 40, true)
+                Text("reminderTitle", Addon:T("UI.TEXT_0160"), 12, 258, columnWidth)
+                local checkbox = section.reminder or host.createCheckbox(section, Addon:T("UI.TEXT_0462"))
                 section.reminder = checkbox; checkbox:ClearAllPoints(); checkbox:SetPoint("TOPLEFT", 12, -290)
                 checkbox:SetWidth(columnWidth); checkbox:SetChecked(Addon.db.settings.loginReminderEnabled ~= false)
                 checkbox.label:SetWordWrap(true)
@@ -581,14 +588,14 @@ function Page:Register()
                 checkbox:SetScript("OnClick", function(control)
                     control:SetChecked(not control:GetChecked()); Addon.db.settings.loginReminderEnabled = control:GetChecked()
                 end)
-                Text("reminderNote", "按最近一次邮箱扫描估算，同日重复风险不重复提醒。", 12, 322, columnWidth, 42, true)
+                Text("reminderNote", Addon:T("UI.TEXT_0321"), 12, 322, columnWidth, 42, true)
                 local gridX, gridY = narrow and 12 or 36 + columnWidth, narrow and 384 or 40
-                Text("gridTitle", "快捷寄件栏", gridX, gridY, columnWidth)
+                Text("gridTitle", Addon:T("UI.TEXT_0294"), gridX, gridY, columnWidth)
                 local rows, columns = Addon:GetShortcutLayout()
                 local function GridOption(key, title, x, maximum, current)
                     local fieldWidth = (columnWidth - 12) / 2
                     Text(key .. "Title", title, x, gridY + 32, fieldWidth)
-                    local options = {}; for value = 1, maximum do options[#options + 1] = { value = value, label = value .. (key == "shortcutRows" and " 行" or " 列") } end
+                    local options = {}; for value = 1, maximum do options[#options + 1] = { value = value, label = value .. (key == "shortcutRows" and Addon:T("UI.TEXT_0048") or Addon:T("UI.TEXT_0029")) } end
                     local dropdown = section[key] or Theme:CreateDropdown(section, fieldWidth, options)
                     section[key] = dropdown; dropdown:ClearAllPoints(); dropdown:SetWidth(fieldWidth); dropdown:SetOptions(options)
                     dropdown:SetPoint("TOPLEFT", x, -(gridY + 58)); dropdown:SetValue(current)
@@ -601,8 +608,8 @@ function Page:Register()
                         Page:RefreshShortcutPreview(section)
                     end)
                 end
-                GridOption("shortcutRows", "显示行数", gridX, 12, rows)
-                GridOption("shortcutColumns", "显示列数", gridX + (columnWidth + 12) / 2, 6, columns)
+                GridOption("shortcutRows", Addon:T("UI.TEXT_0376"), gridX, 12, rows)
+                GridOption("shortcutColumns", Addon:T("UI.TEXT_0375"), gridX + (columnWidth + 12) / 2, 6, columns)
                 section.previewSlots = section.previewSlots or {}
                 for index = 1, 72 do
                     local slot = section.previewSlots[index] or CreateFrame("Frame", nil, section, "BackdropTemplate")
@@ -612,9 +619,9 @@ function Page:Register()
                 end
                 section.previewX, section.previewY = gridX, gridY + 104
                 Text("gridCount", "", gridX + 114, gridY + 104, columnWidth - 114, 26, true)
-                Text("gridNote", "减少行列时保留隐藏槽位配置。", gridX + 114, gridY + 138, columnWidth - 114, 66, true)
+                Text("gridNote", Addon:T("UI.TEXT_0147"), gridX + 114, gridY + 138, columnWidth - 114, 66, true)
                 Page:RefreshShortcutPreview(section)
-                local cache = parent.mailCacheSettings or host.createSection(parent, "数据与缓存", width, 156)
+                local cache = parent.mailCacheSettings or host.createSection(parent, Addon:T("UI.TEXT_0353"), width, 156)
                 parent.mailCacheSettings = cache; cache:SetSize(width, 156); cache:Show()
                 if not cache.cleanupHook then
                     cache.cleanupHook = true; cache:HookScript("OnHide", function()
@@ -629,7 +636,7 @@ function Page:Register()
                     cache[key .. "Title"] = title; title:ClearAllPoints()
                     title:SetPoint("TOPLEFT", x, -36); title:SetWidth(columnWidth); title:SetText(label)
                     local found = false; for _, choice in ipairs(choices) do if choice.value == Addon.db.settings[key] then found = true end end
-                    if not found then choices[#choices + 1] = { value = Addon.db.settings[key], label = Addon.db.settings[key] .. "天" } end
+                    if not found then choices[#choices + 1] = { value = Addon.db.settings[key], label = Addon.db.settings[key] .. Addon:T("UI.TEXT_0212") } end
                     local dropdown = cache[key] or Theme:CreateDropdown(cache, columnWidth, choices)
                     dropdown:ClearAllPoints(); dropdown:SetWidth(columnWidth); dropdown:SetOptions(choices)
                     dropdown:SetPoint("TOPLEFT", x, -58); dropdown:SetValue(Addon.db.settings[key])
@@ -639,17 +646,17 @@ function Page:Register()
                     end)
                     cache[key] = dropdown
                 end
-                Retention(12, "已确认历史保留", "historyDays", { { value = 7, label = "7天" }, { value = 30, label = "30天" }, { value = 90, label = "90天" }, { value = 180, label = "180天" } })
-                Retention(24 + columnWidth, "待核实记录保留", "unverifiedDays", { { value = 7, label = "7天" }, { value = 30, label = "30天" }, { value = 90, label = "90天" } })
+                Retention(12, Addon:T("UI.TEXT_0254"), "historyDays", { { value = 7, label = Addon:T("UI.TEXT_0064") }, { value = 30, label = Addon:T("UI.TEXT_0063") }, { value = 90, label = Addon:T("UI.TEXT_0065") }, { value = 180, label = Addon:T("UI.TEXT_0060") } })
+                Retention(24 + columnWidth, Addon:T("UI.TEXT_0291"), "unverifiedDays", { { value = 7, label = Addon:T("UI.TEXT_0064") }, { value = 30, label = Addon:T("UI.TEXT_0063") }, { value = 90, label = Addon:T("UI.TEXT_0065") } })
                 local note = cache.note or Theme:CreateText(cache, Theme.Font.assist, Theme.Colors.muted, "LEFT")
                 cache.note = note; note:ClearAllPoints()
                 note:SetPoint("TOPLEFT", 12, -98); note:SetPoint("TOPRIGHT", -12, -98); note:SetHeight(48); note:SetWordWrap(true)
-                note:SetText("缩短保留期限时，确认后清理超期记录。")
+                note:SetText(Addon:T("UI.TEXT_0490"))
                 if Addon.SendRulesSettings then return Addon.SendRulesSettings:Host(parent, host, section, cache, width, businessHeight) end
                 return businessHeight + 8 + 156
             end,
         },
-        scope = { mode = "realms", allTitle = "所有服务器" },
+        scope = { mode = "realms", allTitle = Addon:T("UI.TEXT_0311") },
         HasCharacterSnapshot = function(character) return Page:HasSnapshot(character) or Addon.HistoryModel:HasHistory(character) end,
         GetEligibleCharacters = function(characters, baseContext)
             local eligible = {}
@@ -693,8 +700,8 @@ function Page:Register()
             local inboxWidth, historyWidth = math.min(284, sidebarWidth + 24) + 8, 32
             for _, field in ipairs(pageFields) do
                 if field.width and context:GetFieldVisible(field.id) then
-                    if field.group == "收件箱" then inboxWidth = inboxWidth + field.width
-                    elseif field.group == "历史记录" then historyWidth = historyWidth + field.width end
+                    if field.groupID == "inbox" then inboxWidth = inboxWidth + field.width
+                    elseif field.groupID == "history" then historyWidth = historyWidth + field.width end
                 end
             end
             return { minContentWidth = 1000, naturalContentWidth = math.max(1154, width + 34, inboxWidth, historyWidth),
@@ -708,7 +715,8 @@ function Page:Register()
         id = "yma",
         brokerName = "YiboMail",
         pageID = self.ID,
-        text = "[Yibo] YiboMail - 邮件助手",
+        text = Addon:T("ENTRY.TITLE"),
         icon = "Interface\\AddOns\\YiboMail\\Media\\YiboMailIcon-v1",
+        defaultChannels = { minimap = false, broker = false, builtinBar = false },
     })
 end

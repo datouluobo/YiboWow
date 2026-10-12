@@ -24,15 +24,15 @@ local function Trim(value) return tostring(value or ""):match("^%s*(.-)%s*$") en
 local function NormalizeContactAddress(value)
     if Addon.Recipients then return Addon.Recipients:Normalize(value) end
     local address = Trim(value)
-    if address == "" or address:find("[|\n\r]") then return nil, "请填写有效收件人。" end
+    if address == "" or address:find("[|\n\r]") then return nil, Addon:T("UI.TEXT_0540") end
     local name, realm = address:match("^([^-]+)%-(.+)$")
     if not name then
-        if address:find("-", 1, true) then return nil, "请填写完整的角色名-服务器。" end
+        if address:find("-", 1, true) then return nil, Addon:T("UI.TEXT_0538") end
         local character = Addon.Core.Characters:GetCurrent()
         name, realm = address, character and character.realm
     end
     name, realm = Trim(name), Trim(realm)
-    if name == "" or realm == "" or name:find("%s") then return nil, "当前服务器未知，请填写角色名-服务器。" end
+    if name == "" or realm == "" or name:find("%s") then return nil, Addon:T("UI.TEXT_0269") end
     return name .. "-" .. realm
 end
 local function ContactAddressKey(value)
@@ -47,8 +47,8 @@ function View:CharacterLabel(character, full)
     local mode = full and "full" or (reference and reference:find("%S") and "sameRealm" or "full")
     if not character.realm or character.realm == "" then mode = "omit" end
     local options = { nameMode = full and "original" or "short", realmMode = mode, referenceRealm = reference }
-    local label = characters:FormatName(character, options) or "未知角色"
-    local name = characters:FormatName(character, { nameMode = options.nameMode }) or "未知角色"
+    local label = characters:FormatName(character, options) or Addon:T("UI.TEXT_0400")
+    local name = characters:FormatName(character, { nameMode = options.nameMode }) or Addon:T("UI.TEXT_0400")
     local color = character.class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[character.class]
     local displayName = self:Escape(name)
     if color then displayName = string.format("|cff%02x%02x%02x%s|r", math.floor(color.r * 255 + 0.5), math.floor(color.g * 255 + 0.5), math.floor(color.b * 255 + 0.5), displayName) end
@@ -58,19 +58,19 @@ function View:CounterpartLabel(address, owner)
     -- Unqualified senders belong to the mailbox owner's realm, including
     -- offline mailboxes. Formatting never changes a saved business address.
     local name, realm = tostring(address or ""):match("^([^-]+)%-(.+)$")
-    name, realm = name or tostring(address or "未知"), realm or (owner and owner.realm)
+    name, realm = name or tostring(address or Addon:T("UI.TEXT_0399")), realm or (owner and owner.realm)
     local function Key(value) return tostring(value or ""):gsub("%s+", ""):lower() end
     for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do
         if Key(character.name) == Key(name) and Key(character.realm) == Key(realm) then return self:CharacterLabel(character) end
     end
     return self:CharacterLabel({ name = name, realm = realm })
 end
-function View:Money(value) return string.format("%.2f 金", (tonumber(value) or 0) / 10000) end
+function View:Money(value) return string.format(Addon:T("UI.TEXT_0059"), (tonumber(value) or 0) / 10000) end
 function View:Expiry(mail)
     local expiry = tonumber(mail and mail.expiresAtEstimate)
-    if not expiry or expiry <= 0 then return "期限未知" end
+    if not expiry or expiry <= 0 then return Addon:T("UI.TEXT_0398") end
     local seconds = expiry - Addon:Now()
-    return seconds <= 0 and "到期待核实" or (seconds < 86400 and string.format("%.1f 小时", seconds / 3600) or string.format("%.1f 天", seconds / 86400))
+    return seconds <= 0 and Addon:T("UI.TEXT_0159") or (seconds < 86400 and string.format(Addon:T("UI.TEXT_0057"), seconds / 3600) or string.format(Addon:T("UI.TEXT_0056"), seconds / 86400))
 end
 function View:ExpiryColor(mail)
     local seconds = (tonumber(mail and mail.expiresAtEstimate) or 0) - Addon:Now()
@@ -122,14 +122,14 @@ function View:GetMails(context, options)
                     local actionable = current and current.id == character.id and (live.status == "known" or live.status == "partial")
                         and mail.state == "observed" and mail.cod == 0
                     local restriction
-                    if mail.cod > 0 then restriction = "付款取信请使用原生邮箱"
-                    elseif not current or current.id ~= character.id then restriction = "只能收取当前角色的邮件"
-                    elseif mail.state ~= "observed" then restriction = "邮件待核实，暂不加入批量收取"
-                    elseif live.status == "error" then restriction = "邮箱扫描失败，请等待重新核对"
-                    elseif live.status == "stale" then restriction = "邮箱列表正在核对，请稍后重试"
-                    elseif live.status == "not-yet-scanned" then restriction = "邮箱尚未完成扫描，请稍后重试"
-                    elseif live.status ~= "known" and live.status ~= "partial" then restriction = "邮箱状态尚未确认，请稍后重试"
-                    else restriction = "当前邮件暂不可收取" end
+                    if mail.cod > 0 then restriction = Addon:T("UI.TEXT_0111")
+                    elseif not current or current.id ~= character.id then restriction = Addon:T("UI.TEXT_0195")
+                    elseif mail.state ~= "observed" then restriction = Addon:T("UI.TEXT_0595")
+                    elseif live.status == "error" then restriction = Addon:T("UI.TEXT_0605")
+                    elseif live.status == "stale" then restriction = Addon:T("UI.TEXT_0601")
+                    elseif live.status == "not-yet-scanned" then restriction = Addon:T("UI.TEXT_0602")
+                    elseif live.status ~= "known" and live.status ~= "partial" then restriction = Addon:T("UI.TEXT_0607")
+                    else restriction = Addon:T("UI.TEXT_0284") end
                     result[#result + 1] = { character = character, mail = mail, key = key,
                         actionable = actionable, restriction = restriction }
                 end
@@ -153,7 +153,7 @@ function View:GetGroupsFromEntries(entries, options)
         if (tonumber(entry.mail.money) or 0) > 0 and (tonumber(entry.mail.cod) or 0) == 0 then
             local group = groups.money
             if not group then
-                group = { id = "money", money = true, item = { name = "金币", texture = "Interface\\Icons\\INV_Misc_Coin_01" },
+                group = { id = "money", money = true, item = { name = Addon:T("UI.TEXT_0617"), texture = "Interface\\Icons\\INV_Misc_Coin_01" },
                     quantity = 0, sources = {}, expiresAtEstimate = entry.mail.expiresAtEstimate }
                 groups.money = group; result[#result + 1] = group
             end
@@ -194,9 +194,9 @@ function View:SaveContact(address, label, oldAddress)
     local key = ContactAddressKey(address)
     for _, contact in ipairs(Addon.db.contacts) do
         local priorAddress = NormalizeContactAddress(contact.address) or contact.address
-        if contact.address ~= oldAddress and ContactAddressKey(priorAddress) == key then return nil, "联系人已存在。" end
+        if contact.address ~= oldAddress and ContactAddressKey(priorAddress) == key then return nil, Addon:T("UI.TEXT_0491") end
     end
     if oldAddress then for _, contact in ipairs(Addon.db.contacts) do if contact.address == oldAddress then contact.address, contact.label = address, label ~= "" and label or address; return true end end end
-    if #Addon.db.contacts >= MAX_FAVORITE_CONTACTS then return nil, "常用发件人最多保存 16 位；请先在联系人管理中移除一位再添加。" end
+    if #Addon.db.contacts >= MAX_FAVORITE_CONTACTS then return nil, Addon:T("UI.TEXT_0259") end
     Addon.db.contacts[#Addon.db.contacts + 1] = { address = address, label = label ~= "" and label or address }; return true
 end

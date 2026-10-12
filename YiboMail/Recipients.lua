@@ -1,6 +1,11 @@
 local Addon = _G.YiboMail
 local R = { revision = 0, friendRevision = 0 }
 Addon.Recipients = R
+Addon.RECIPIENT_SOURCES = {
+    { id = "contacts", label = Addon:T("UI.TEXT_0260") }, { id = "characters", label = Addon:T("UI.TEXT_0566") },
+    { id = "recent", label = Addon:T("UI.TEXT_0394") }, { id = "friends", label = Addon:T("UI.TEXT_0507") },
+    { id = "accountFriends", label = Addon:T("UI.TEXT_0563") }, { id = "guild", label = Addon:T("UI.TEXT_0139") },
+}
 R.sources = Addon.RECIPIENT_SOURCES
 local function Trim(value) return type(value) == "string" and value:match("^%s*(.-)%s*$") or "" end
 function R:Current() return Addon.Core.Characters:GetCurrent() end
@@ -21,9 +26,9 @@ end
 function R:SetFaction(address, faction)
     local normalized, err = self:Normalize(address)
     if not normalized then return nil, err end
-    if faction ~= "Alliance" and faction ~= "Horde" then return nil, "请选择联盟或部落。" end
+    if faction ~= "Alliance" and faction ~= "Horde" then return nil, Addon:T("UI.TEXT_0558") end
     local _, source = self:GetFaction(normalized)
-    if source == "core" then return nil, "账号角色阵营由 Core 登录采集。" end
+    if source == "core" then return nil, Addon:T("UI.TEXT_0567") end
     Addon.db.recipientFactions = Addon.db.recipientFactions or {}
     Addon.db.recipientFactions[self:Key(normalized)] = { faction = faction, source = "confirmed", updatedAt = Addon:Now() }
     self:Changed()
@@ -33,14 +38,14 @@ end
 function R:CanRuleSend(address, current)
     current = current or self:Current()
     local normalized, _, _, realm = self:Normalize(address)
-    if not normalized then return false, "收件人无效" end
-    if not current or not current.realm then return nil, "当前角色服务器待采集" end
-    if self:Key(realm) ~= self:Key(current.realm) then return false, "不同服务器，当前角色不适用" end
+    if not normalized then return false, Addon:T("UI.TEXT_0337") end
+    if not current or not current.realm then return nil, Addon:T("UI.TEXT_0281") end
+    if self:Key(realm) ~= self:Key(current.realm) then return false, Addon:T("UI.TEXT_0091") end
     local faction = current and current.faction
     local target = self:GetFaction(address)
-    if faction ~= "Alliance" and faction ~= "Horde" then return nil, "当前角色阵营待采集" end
-    if not target then return nil, "收件人阵营待确认" end
-    if faction ~= target then return false, "对立阵营，当前角色不适用" end
+    if faction ~= "Alliance" and faction ~= "Horde" then return nil, Addon:T("UI.TEXT_0282") end
+    if not target then return nil, Addon:T("UI.TEXT_0339") end
+    if faction ~= target then return false, Addon:T("UI.TEXT_0234") end
     return true
 end
 function R:ObserveSuccessfulMail(address, senderFaction, ordinary)
@@ -54,11 +59,11 @@ function R:ObserveSuccessfulMail(address, senderFaction, ordinary)
 end
 function R:Normalize(value, realm)
     value = Trim(value)
-    if value == "" or value:find("[|%c]") then return nil, "请填写有效的角色名或角色名-服务器。" end
+    if value == "" or value:find("[|%c]") then return nil, Addon:T("UI.TEXT_0541") end
     local name, server = value:match("^([^-]+)%-(.+)$")
     if not name then name, server = value, realm or (self:Current() or {}).realm end
     name, server = Trim(name), Trim(server)
-    if name == "" or name:find("%s") or name:find("-", 1, true) or server == "" or server:find("[|%c]") then return nil, "请填写完整的角色名-服务器。" end
+    if name == "" or name:find("%s") or name:find("-", 1, true) or server == "" or server:find("[|%c]") then return nil, Addon:T("UI.TEXT_0538") end
     -- Preserve a known realm's spelling; matching also ignores realm whitespace.
     if not self.realms then
         self.realms = {}
@@ -130,36 +135,36 @@ function R:SaveContact(value, label, oldAddress)
     local address, err = self:Normalize(value); if not address then return nil, err end
     local index = self:FindContact(address)
     local oldIndex = oldAddress and self:FindContact(oldAddress)
-    if index and index ~= oldIndex then return nil, "收件人已在常用名单中。" end
+    if index and index ~= oldIndex then return nil, Addon:T("UI.TEXT_0335") end
     Addon.db.contacts[oldIndex or #Addon.db.contacts + 1] = { address = address, label = Trim(label) }
     self:Changed(); return true
 end
 function R:RemoveContact(address)
-    local index = self:FindContact(address); if not index then return nil, "收件人已不在常用名单中。" end
+    local index = self:FindContact(address); if not index then return nil, Addon:T("UI.TEXT_0334") end
     table.remove(Addon.db.contacts, index); self:Changed(); return true
 end
 function R:SetShortcut(slot, value, label)
-    if type(slot) ~= "number" or slot < 1 or slot > 72 or slot ~= math.floor(slot) then return nil, "快捷格不可用。" end
+    if type(slot) ~= "number" or slot < 1 or slot > 72 or slot ~= math.floor(slot) then return nil, Addon:T("UI.TEXT_0299") end
     local address, err = self:Normalize(value); if not address then return nil, err end
     local previous = Addon.db.quickRecipients[slot]
     Addon.db.quickRecipients[slot] = { address = address, label = Trim(label), icon = previous and previous.icon }; self:Changed(); return true
 end
 function R:SetShortcutIcon(slot, icon, expected)
     local saved = Addon.db.quickRecipients[slot]
-    if not saved or (expected and saved ~= expected) then return nil, "快捷收件人已改变，请重新选择。" end
-    if icon ~= nil and not Addon.Core:IsBuiltinIcon(icon) then return nil, "请选择游戏图标。" end
+    if not saved or (expected and saved ~= expected) then return nil, Addon:T("UI.TEXT_0297") end
+    if icon ~= nil and not Addon.Core:IsBuiltinIcon(icon) then return nil, Addon:T("UI.TEXT_0557") end
     saved.icon = icon; self:Changed(); return true
 end
 function R:ClearShortcut(slot, expected)
     if type(slot) ~= "number" or slot < 1 or slot > 72 or slot ~= math.floor(slot) then return nil end
-    if expected and Addon.db.quickRecipients[slot] ~= expected then return nil, "快捷收件人已改变，请重新拖动。" end
+    if expected and Addon.db.quickRecipients[slot] ~= expected then return nil, Addon:T("UI.TEXT_0296") end
     Addon.db.quickRecipients[slot] = nil; self:Changed(); return true
 end
 function R:MoveShortcut(source, target, expected)
     local function Valid(slot) return type(slot) == "number" and slot >= 1 and slot <= 72 and slot == math.floor(slot) end
-    if not Valid(source) or not Valid(target) then return nil, "快捷格不可用。" end
+    if not Valid(source) or not Valid(target) then return nil, Addon:T("UI.TEXT_0299") end
     local slots = Addon.db.quickRecipients
-    if not slots[source] or (expected and slots[source] ~= expected) then return nil, "快捷收件人已改变，请重新拖动。" end
+    if not slots[source] or (expected and slots[source] ~= expected) then return nil, Addon:T("UI.TEXT_0296") end
     if source == target then return true end
     slots[source], slots[target] = slots[target], slots[source]
     self:Changed(); return true
@@ -179,11 +184,11 @@ local function SameSet(a, b)
 end
 function R:CommitFriends(character, entries, ready)
     if not character then return false end
-    if not ready then self:SetFriendStatus("好友名单尚未就绪"); return false end
+    if not ready then self:SetFriendStatus(Addon:T("UI.TEXT_0215")); return false end
     local addresses = {}
     for _, value in ipairs(entries) do
         local address = self:Normalize(value, character.realm)
-        if not address then self:SetFriendStatus("好友名单读取未完成"); return false end
+        if not address then self:SetFriendStatus(Addon:T("UI.TEXT_0216")); return false end
         addresses[self:Key(address)] = address
     end
     local prior = Addon.db.friendsByCharacter[character.id]
@@ -203,18 +208,18 @@ function R:ReadFriends(readyEvent)
     local api = _G.C_FriendList
     local countFn = api and api.GetNumFriends or _G.GetNumFriends
     local infoFn = api and api.GetFriendInfoByIndex or _G.GetFriendInfo
-    if type(countFn) ~= "function" or type(infoFn) ~= "function" then self:SetFriendStatus("客户端好友接口不可用"); return end
+    if type(countFn) ~= "function" or type(infoFn) ~= "function" then self:SetFriendStatus(Addon:T("UI.TEXT_0221")); return end
     local ok, count = pcall(countFn)
-    if not ok or type(count) ~= "number" or (count == 0 and not readyEvent) then self:SetFriendStatus("好友名单尚未就绪"); return end
+    if not ok or type(count) ~= "number" or (count == 0 and not readyEvent) then self:SetFriendStatus(Addon:T("UI.TEXT_0215")); return end
     local entries = {}
     for index = 1, count do
         local success, info = pcall(infoFn, index)
         local name = type(info) == "table" and info.name or info
-        if not success or type(name) ~= "string" or name == "" then self:SetFriendStatus("好友名单读取未完成"); return end
+        if not success or type(name) ~= "string" or name == "" then self:SetFriendStatus(Addon:T("UI.TEXT_0216")); return end
         entries[#entries + 1] = name
     end
     local success, afterCount = pcall(countFn)
-    if not success or afterCount ~= count then self:SetFriendStatus("好友名单读取未完成"); return end
+    if not success or afterCount ~= count then self:SetFriendStatus(Addon:T("UI.TEXT_0216")); return end
     self:CommitFriends(self:Current(), entries, true)
 end
 function R:RequestFriends(request)
@@ -244,9 +249,9 @@ end
 function R:ReadGuild()
     self.guild = {}; self.guildStatus = nil
     if not _G.IsInGuild or not IsInGuild() then return end
-    if not _G.GetNumGuildMembers or not _G.GetGuildRosterInfo then self.guildStatus = "公会接口不可用"; return end
+    if not _G.GetNumGuildMembers or not _G.GetGuildRosterInfo then self.guildStatus = Addon:T("UI.TEXT_0141"); return end
     local count = GetNumGuildMembers(true)
-    if type(count) ~= "number" or count == 0 then self.guildStatus = "公会名单尚未就绪"; return end
+    if type(count) ~= "number" or count == 0 then self.guildStatus = Addon:T("UI.TEXT_0140"); return end
     local seen = {}
     for index = 1, count do
         local name = GetGuildRosterInfo(index)

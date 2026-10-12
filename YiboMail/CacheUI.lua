@@ -9,10 +9,10 @@ local function Place(control, x, y, width, height)
     control:ClearAllPoints(); control:SetPoint("TOPLEFT", x, -y); control:SetSize(math.max(1, width), math.max(1, height))
 end
 local function Escape(value) return View:Escape(value or "") end
-local function Name(character) return Core.Characters:FormatName(character, { nameMode = "short" }) or "未知角色" end
+local function Name(character) return Core.Characters:FormatName(character, { nameMode = "short" }) or Addon:T("UI.TEXT_0400") end
 local function Identity(character, full) return View:CharacterLabel(character, full) end
 local function Counterpart(address, owner) return View:CounterpartLabel(address, owner) end
-local function Stamp(time) return time and date("%m-%d %H:%M", time) or "时间未知" end
+local function Stamp(time) return time and date("%m-%d %H:%M", time) or Addon:T("UI.TEXT_0373") end
 local function Enable(button, enabled)
     button:SetEnabled(enabled); button:SetState(enabled and "default" or "disabled")
 end
@@ -22,19 +22,19 @@ local function Tooltip(control, lines, item, wrap)
         GameTooltip:SetOwner(control, "ANCHOR_RIGHT")
         if item and item.itemLink and item.itemLink ~= "" then GameTooltip:SetHyperlink(item.itemLink)
         elseif item and item.itemID then GameTooltip:SetHyperlink("item:" .. tostring(item.itemID))
-        else GameTooltip:SetText(lines[1] or "邮件") end
+        else GameTooltip:SetText(lines[1] or Addon:T("UI.TEXT_0589")) end
         for index = item and 1 or 2, #lines do GameTooltip:AddLine(lines[index], 1, 1, 1, wrap ~= false) end
         GameTooltip:Show()
     end)
     control:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
 end
 function UI:AttachmentTooltip(group)
-    local lines = { Escape(group.item.name or ("物品 " .. tostring(group.item.itemID))),
-        "合计 " .. group.quantity .. "件 · " .. group.mailCount .. "封邮件",
-        "普通附件 " .. group.normalQuantity .. " · COD附件 " .. group.codQuantity }
+    local lines = { Escape(group.item.name or (Addon:T("UI.TEXT_0453") .. tostring(group.item.itemID))),
+        Addon:T("UI.TEXT_0201") .. group.quantity .. Addon:T("UI.TEXT_0114") .. group.mailCount .. Addon:T("UI.TEXT_0240"),
+        Addon:T("UI.TEXT_0378") .. group.normalQuantity .. Addon:T("UI.TEXT_0003") .. group.codQuantity }
     for _, source in ipairs(group.sources) do
         local entry = source.entry
-        lines[#lines + 1] = "邮箱：" .. Identity(entry.character, true) .. " · 发件人：" .. Escape(entry.mail.sender)
+        lines[#lines + 1] = Addon:T("UI.TEXT_0608") .. Identity(entry.character, true) .. Addon:T("UI.TEXT_0005") .. Escape(entry.mail.sender)
             .. " · ×" .. source.item.quantity .. " · " .. View:Expiry(entry.mail)
     end
     return lines
@@ -49,13 +49,13 @@ function UI:Create(parent)
         control:SetScript("OnClick", callback); return control
     end
     root.tabs = Theme:CreateBusinessTabs(root, {
-        { id = "inbox", title = "收件箱", width = 112 }, { id = "overview", title = "账号总览", width = 126 },
-        { id = "history", title = "历史记录", width = 126 },
+        { id = "inbox", title = Addon:T("UI.TEXT_0344"), width = 112 }, { id = "overview", title = Addon:T("UI.TEXT_0564"), width = 126 },
+        { id = "history", title = Addon:T("UI.TEXT_0170"), width = 126 },
     }, function(id) Addon.WorkspaceState:Get().tab = id; root.notice = nil; Refresh() end)
     root.heading = Text(root, Theme.Font.section)
     root.note = Text(root, Theme.Font.assist, Theme.Colors.muted)
     root.search = Theme:CreateInput(root, {
-        width = 260, placeholder = "全局搜索角色、对方、主题、物品 / ID", maxLetters = 120, clearable = true,
+        width = 260, placeholder = Addon:T("UI.TEXT_0129"), maxLetters = 120, clearable = true,
         OnChanged = function(value)
             if root.syncing then return end
             root.searchQuery = value
@@ -65,7 +65,7 @@ function UI:Create(parent)
             Refresh()
         end,
     })
-    root.clear = Button("清除条件", function()
+    root.clear = Button(Addon:T("UI.TEXT_0445"), function()
         local workspace = Addon.WorkspaceState:Get()
         if workspace.tab == "inbox" then
             Addon.WorkspaceState:Search("")
@@ -77,8 +77,8 @@ function UI:Create(parent)
         local state = workspace[workspace.tab]; state.scroll, state.anchor, state.anchorOffset = 0, nil, nil
         Refresh()
     end)
-    root.mail = Button("按邮件", function() local s = Addon.WorkspaceState:Get().inbox; s.mode, s.scroll, s.detail, s.detailReturn, s.anchor = "mail", 0, nil, nil, nil; Refresh() end, 84)
-    root.items = Button("附件汇总", function() local s = Addon.WorkspaceState:Get().inbox; s.mode, s.scroll, s.detail, s.detailReturn, s.anchor = "items", 0, nil, nil, nil; Refresh() end, 96)
+    root.mail = Button(Addon:T("UI.TEXT_0322"), function() local s = Addon.WorkspaceState:Get().inbox; s.mode, s.scroll, s.detail, s.detailReturn, s.anchor = "mail", 0, nil, nil, nil; Refresh() end, 84)
+    root.items = Button(Addon:T("UI.TEXT_0634"), function() local s = Addon.WorkspaceState:Get().inbox; s.mode, s.scroll, s.detail, s.detailReturn, s.anchor = "items", 0, nil, nil, nil; Refresh() end, 96)
     local function Dropdown(choices, key, width)
         local control = Theme:CreateDropdown(root, width or 140, choices)
         control:SetOnValueChanged(function(value)
@@ -89,19 +89,19 @@ function UI:Create(parent)
         end)
         return control
     end
-    root.scope = Dropdown({ { value = "latest", label = "最新快照" }, { value = "unverified", label = "待核实缓存" } }, "scope", 148)
+    root.scope = Dropdown({ { value = "latest", label = Addon:T("UI.TEXT_0390") }, { value = "unverified", label = Addon:T("UI.TEXT_0290") } }, "scope", 148)
     root.kind = Dropdown({}, "kind", 134)
-    root.risk = Dropdown({ { value = "all", label = "风险：全部" }, { value = "urgent", label = "24小时内" },
-        { value = "soon", label = "1–3天" }, { value = "threeDays", label = "三天内到期" },
-        { value = "sevenDays", label = "七天内到期" }, { value = "attention", label = "全部到期提醒" },
-        { value = "expired", label = "到期待核实" }, { value = "unknown", label = "期限未知" } }, "risk", 150)
-    root.sort = Dropdown({ { value = "expiry", label = "临期优先" }, { value = "character", label = "角色顺序" } }, "sort", 154)
-    root.days = Dropdown({ { value = 7, label = "近7天" }, { value = 30, label = "近30天" }, { value = 90, label = "近90天" }, { value = 0, label = "保留范围内全部" } }, "days", 160)
+    root.risk = Dropdown({ { value = "all", label = Addon:T("UI.TEXT_0638") }, { value = "urgent", label = Addon:T("UI.TEXT_0062") },
+        { value = "soon", label = Addon:T("UI.TEXT_0061") }, { value = "threeDays", label = Addon:T("UI.TEXT_0084") },
+        { value = "sevenDays", label = Addon:T("UI.TEXT_0083") }, { value = "attention", label = Addon:T("UI.TEXT_0133") },
+        { value = "expired", label = Addon:T("UI.TEXT_0159") }, { value = "unknown", label = Addon:T("UI.TEXT_0398") } }, "risk", 150)
+    root.sort = Dropdown({ { value = "expiry", label = Addon:T("UI.TEXT_0098") }, { value = "character", label = Addon:T("UI.TEXT_0508") } }, "sort", 154)
+    root.days = Dropdown({ { value = 7, label = Addon:T("UI.TEXT_0573") }, { value = 30, label = Addon:T("UI.TEXT_0572") }, { value = 90, label = Addon:T("UI.TEXT_0574") }, { value = 0, label = Addon:T("UI.TEXT_0124") } }, "days", 160)
     root.historyCharacter = Dropdown({}, "character", 190)
     root.historyCharacter:SetMenuPageSize(8)
-    root.result = Dropdown({ { value = "all", label = "结果：全部" }, { value = "collected-archived", label = "已收取" },
-        { value = "in-transit", label = "已发送 / 在途" }, { value = "unverified", label = "待核实" },
-        { value = "received-confirmed", label = "确认收到" }, { value = "return-confirmed", label = "确认退回" } }, "result", 154)
+    root.result = Dropdown({ { value = "all", label = Addon:T("UI.TEXT_0488") }, { value = "collected-archived", label = Addon:T("UI.TEXT_0251") },
+        { value = "in-transit", label = Addon:T("UI.TEXT_0246") }, { value = "unverified", label = Addon:T("UI.TEXT_0289") },
+        { value = "received-confirmed", label = Addon:T("UI.TEXT_0464") }, { value = "return-confirmed", label = Addon:T("UI.TEXT_0468") } }, "result", 154)
     root.summary = Text(root, Theme.Font.assist)
     root.tableHeader = CreateFrame("Frame", nil, root); root.tableHeader.cells = {}
     root.tableHeader.background = root.tableHeader:CreateTexture(nil, "BACKGROUND"); root.tableHeader.background:SetAllPoints()
@@ -133,11 +133,11 @@ function UI:Create(parent)
     root.overview.mailAlert.action:SetScript("OnClick", function()
         Addon.WorkspaceState:Locate(nil, root.overview.alertExpired and "expired" or "sevenDays"); Refresh()
     end)
-    root.overview.mailAlert.action:SetText("查看邮件 →")
-    root.previous = Button("上一页", function() local s = Addon.WorkspaceState:Get(); s[s.tab].page = s[s.tab].page - 1; s[s.tab].anchor = nil; Refresh() end, 90)
-    root.next = Button("下一页", function() local s = Addon.WorkspaceState:Get(); s[s.tab].page = s[s.tab].page + 1; s[s.tab].anchor = nil; Refresh() end, 90)
+    root.overview.mailAlert.action:SetText(Addon:T("UI.TEXT_0415"))
+    root.previous = Button(Addon:T("UI.TEXT_0087"), function() local s = Addon.WorkspaceState:Get(); s[s.tab].page = s[s.tab].page - 1; s[s.tab].anchor = nil; Refresh() end, 90)
+    root.next = Button(Addon:T("UI.TEXT_0090"), function() local s = Addon.WorkspaceState:Get(); s[s.tab].page = s[s.tab].page + 1; s[s.tab].anchor = nil; Refresh() end, 90)
     root.pages = Text(root, Theme.Font.assist, Theme.Colors.muted)
-    root.back = Button("返回", function()
+    root.back = Button(Addon:T("UI.TEXT_0575"), function()
         local workspace = Addon.WorkspaceState:Get(); local s = workspace[workspace.tab]
         if s.detail then
             s.detail, s.detailScroll = s.detailReturn, s.detailReturnScroll or 0
@@ -155,12 +155,14 @@ function UI:Create(parent)
     end)
 end
 local function Flow(controls, x, y, width)
-    local total, left = 0, 0
-    for _, entry in ipairs(controls) do total = total + entry[2] end
-    local scale = math.min(1, math.max(1, width - (#controls - 1) * 6) / math.max(1, total))
+    local left = 0
     for _, entry in ipairs(controls) do
         local control, wanted = entry[1], entry[2]
-        local actual = wanted * scale
+        if control.label then
+            wanted = math.max(wanted, Theme:MeasureText(Theme.Font.body, control.label:GetText()) + (control.menu and 38 or 20))
+        end
+        local actual = math.min(width, wanted)
+        if left > 0 and left + actual > width then left, y = 0, y + 38 end
         Place(control, x + left, y, actual, 30); control:Show(); left = left + actual + 6
     end
     return y + 38
@@ -168,7 +170,7 @@ end
 function UI:Columns(root, prefix, global)
     local columns = {}
     for _, field in ipairs(Addon.AccountPage.Fields) do
-        if field.group == ({ inbox = "收件箱", history = "历史记录", attachment = "附件汇总" })[prefix] and root.context:GetFieldVisible(field.id)
+        if field.groupID == prefix and root.context:GetFieldVisible(field.id)
             and not (prefix == "inbox" and field.key == "character" and not global) then columns[#columns + 1] = Addon.Copy(field) end
     end
     return columns
@@ -207,17 +209,18 @@ function UI:TableRow(root, row, fields, values, width, height, header)
     end
     for index = #fields + 1, #row.cells do row.cells[index]:Hide() end
 end
-function UI:ItemLayout(values, width)
+function UI:ItemLayout(values, width, measure)
     local items, extra = values.itemList, values.extraContent or ""
     local available, x, y, positions = math.max(1, width - 12), 0, 0, {}
     for index, item in ipairs(items or {}) do
-        local needed = math.min(available, math.max(60, Theme:MeasureText(Theme.Font.body, item.name or ("物品 " .. tostring(item.itemID))) + 32))
+        local name = item.name or (Addon:T("UI.TEXT_0453") .. tostring(item.itemID))
+        local needed = math.min(available, math.max(60, (measure and measure(name) or Theme:MeasureText(Theme.Font.body, name)) + 32))
         if x > 0 and x + needed > available then x, y = 0, y + 28 end
         positions[index] = { x = x, y = y, width = needed }
         x = x + needed + 6
     end
     local extraY = extra ~= "" and (#positions > 0 and y + 28 or 0) or nil
-    local extraHeight = extraY and math.max(22, math.ceil(Theme:MeasureText(Theme.Font.body, extra) / available) * (Theme.Font.body + 4)) or 0
+    local extraHeight = extraY and math.max(22, math.ceil((measure and measure(extra) or Theme:MeasureText(Theme.Font.body, extra)) / available) * (Theme.Font.body + 4)) or 0
     return positions, math.max(28, extraY and extraY + extraHeight or y + 28), extraY, extraHeight
 end
 function UI:ItemCell(row, cell, values, left, width, height)
@@ -243,9 +246,9 @@ function UI:ItemCell(row, cell, values, left, width, height)
         button.icon:SetTexture(item.texture or "Interface\\Icons\\INV_Misc_QuestionMark")
         button.count:SetText((tonumber(item.quantity) or 0) > 1 and tostring(item.quantity) or "")
         Place(button.name, 26, 1, math.max(1, position.width - 26), 22)
-        button.name:SetText(Escape(item.name or ("物品 " .. tostring(item.itemID))):gsub("[\r\n]+", " "))
+        button.name:SetText(Escape(item.name or (Addon:T("UI.TEXT_0453") .. tostring(item.itemID))):gsub("[\r\n]+", " "))
         button.name:SetShown(position.width >= 60)
-        Tooltip(button, { "数量：" .. tostring(item.quantity or 0), values.content or values.items or "", "点击查看邮件内容" }, item)
+        Tooltip(button, { Addon:T("UI.TEXT_0355") .. tostring(item.quantity or 0), values.content or values.items or "", Addon:T("UI.TEXT_0449") }, item)
         button:SetScript("OnClick", Click)
         button:SetScript("OnHide", function(control) if GameTooltip and GameTooltip.IsOwned and GameTooltip:IsOwned(control) then GameTooltip:Hide() end end)
         button:Show()
@@ -259,33 +262,21 @@ function UI:HistoryValues(value)
         icon = value.items[1], itemList = value.items, extraContent = Addon.HistoryModel:Content(value, true) }
 end
 function UI:HistoryLayout(root, fields, width, data)
-    local offsets, heights, total, weight = {}, {}, 0, 0
+    local weight, minimum = 0, 0
+    local budgets = { time = { 110, 110 }, character = { 100, 150 }, counterpart = { 100, 150 },
+        subject = { 110, 200 }, content = { 160, 250 }, result = { 110, 160 } }
     for _, field in ipairs(fields) do
-        field.width = math.max(field.width, Theme:MeasureText(Theme.Font.body, field.title) + 12)
+        local budget = budgets[field.key] or { 80, field.width }
+        field.minimum = math.max(budget[1], Theme:MeasureText(Theme.Font.body, field.title) + 12)
+        field.width = math.min(field.maxWidth or math.huge, math.max(field.minimum, budget[2]))
+        minimum, weight = minimum + field.minimum, weight + field.width
     end
-    for index, entry in ipairs(data) do
-        local values = self:HistoryValues(entry)
+    if weight > width then
+        local room = math.max(0, width - minimum)
         for _, field in ipairs(fields) do
-            field.width = math.min(field.maxWidth or math.huge, math.max(field.width, Theme:MeasureText(Theme.Font.body, values[field.key] or "—") + (field.key == "content" and values.icon and 37 or 12) + 2))
+            field.width = minimum > width and field.minimum * width / minimum
+                or field.minimum + (field.width - field.minimum) * room / math.max(1, weight - minimum)
         end
-        offsets[index], heights[index] = total, 38
-        total = total + 38
-    end
-    for _, field in ipairs(fields) do weight = weight + field.width end
-    -- Keep every column visible. Flexible text columns yield space first;
-    -- the capped subject and attachment columns never expand with the window.
-    if weight > width then
-        for _, key in ipairs({ "content", "subject" }) do
-            for _, field in ipairs(fields) do
-                if field.key == key then
-                    local reduction = math.min(weight - width, math.max(0, field.width - 100))
-                    field.width, weight = field.width - reduction, weight - reduction
-                end
-            end
-        end
-    end
-    if weight > width then
-        for _, field in ipairs(fields) do field.width = field.width * width / weight end
     elseif weight < width then
         local flexible = 0
         for _, field in ipairs(fields) do if not field.maxWidth then flexible = flexible + 1 end end
@@ -294,17 +285,25 @@ function UI:HistoryLayout(root, fields, width, data)
         end
     end
     for _, field in ipairs(fields) do field.fittedWidth = field.width end
-    offsets, heights, total = self:RecordHeights(fields, data, true)
+    local offsets, heights, total = self:RecordHeights(fields, data, true)
     return offsets, heights, total, width
 end
 function UI:RecordHeights(fields, data, history)
     local offsets, heights, total = {}, {}, 0
+    local measured = {}
+    local function Measure(text)
+        if not measured[text] then measured[text] = Theme:MeasureText(Theme.Font.body, text) end
+        return measured[text]
+    end
     for index, entry in ipairs(data) do
-        local values = history and self:HistoryValues(entry) or self:MailValues(entry, true)
+        -- Layout needs only attachments and money, never character-directory
+        -- queries or complete display strings for thousands of hidden rows.
+        local values = history and { itemList = entry.items, extraContent = Addon.HistoryModel:Content(entry, true) }
+            or self:MailValues(entry, true)
         local height = 38
         for _, field in ipairs(fields) do
             if (field.key == "content" or field.key == "items") and #(values.itemList or {}) > 0 then
-                local _, itemHeight = self:ItemLayout(values, field.fittedWidth or field.width)
+                local _, itemHeight = self:ItemLayout(values, field.fittedWidth or field.width, Measure)
                 height = math.max(height, itemHeight + 10)
             end
         end
@@ -328,7 +327,7 @@ function UI:Owners(root, characters, entries, state, x, top, width, height)
     Place(root.owners, x, top, width, height); root.owners:Show()
     local matches = {}
     for _, entry in ipairs(entries) do matches[entry.character.id] = (matches[entry.character.id] or 0) + 1 end
-    local list = { { name = "全部角色", count = #entries } }
+    local list = { { name = Addon:T("UI.TEXT_0136"), count = #entries } }
     for _, character in ipairs(characters) do list[#list + 1] = character end
     local current = Core.Characters:GetCurrent()
     for index, character in ipairs(list) do
@@ -342,8 +341,8 @@ function UI:Owners(root, characters, entries, state, x, top, width, height)
             row.current = Text(row, Theme.Font.meta, Theme.Colors.accent); row.current:SetText("●"); row.current:SetPoint("RIGHT", -5, 0)
             root.ownerRows[index] = row
         end
-        local rowWidth = width - (#list * 34 > height and Theme.Geometry.scrollbarGutter or 0)
-        Place(row, 0, (index - 1) * 34, rowWidth, 32)
+        local rowWidth = width - (#list * 42 > height and Theme.Geometry.scrollbarGutter or 0)
+        Place(row, 0, (index - 1) * 42, rowWidth, 40)
         local searching = (state.search or ""):find("%S") ~= nil
         local selected = not searching and state.character == character.id
         row:SetBackdropColor(unpack(selected and Theme.Colors.selected or Theme:GetDataRowColor(index)))
@@ -351,37 +350,38 @@ function UI:Owners(root, characters, entries, state, x, top, width, height)
         local coords = character.class and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[character.class]
         row.icon:SetTexture(coords and "Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES" or "Interface\\Icons\\INV_Letter_15")
         if coords then row.icon:SetTexCoord(unpack(coords)) else row.icon:SetTexCoord(0, 1, 0, 1) end
-        Place(row.name, 36, 4, rowWidth - 133, 24); Place(row.meta, rowWidth - 91, 4, 48, 24); Place(row.risk, rowWidth - 44, 4, 28, 24)
+        Place(row.name, 36, 1, rowWidth - 54, 20)
+        Place(row.meta, 36, 22, 70, 14); Place(row.risk, 112, 22, rowWidth - 132, 14)
         local summary = character.id and Addon.AccountPage:GetSummary(character)
-        row.name:SetText(character.id and Identity(character) or "全部角色")
+        row.name:SetText(character.id and Identity(character) or Addon:T("UI.TEXT_0136"))
         local color = character.class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[character.class]
         if color then row.name:SetTextColor(color.r, color.g, color.b) else row.name:SetTextColor(unpack(Theme.Colors.text)) end
         row.current:SetShown(character.id and current and current.id == character.id or false)
-        row.meta:SetText(searching and tostring(matches[character.id] or (#entries * (not character.id and 1 or 0))) .. "封"
-            or (character.id and summary.count .. "封" or #entries .. "封"))
+        row.meta:SetText(searching and tostring(matches[character.id] or (#entries * (not character.id and 1 or 0))) .. Addon:T("UI.TEXT_0239")
+            or (character.id and summary.count .. Addon:T("UI.TEXT_0239") or #entries .. Addon:T("UI.TEXT_0239")))
         local counts = summary and summary._counts
-        row.risk:SetText(counts and (counts.expired > 0 and "核" or (counts.urgent > 0 and "急" or (counts.soon > 0 and "临" or ""))) or "")
+        row.risk:SetText(counts and (counts.expired > 0 and Addon:T("UI.TEXT_0418") or (counts.urgent > 0 and Addon:T("UI.TEXT_0301") or (counts.soon > 0 and Addon:T("UI.TEXT_0096") or ""))) or "")
         row.risk:SetTextColor(unpack(counts and (counts.expired + counts.urgent) > 0 and Theme.Colors.limitReached or Theme.Colors.warning))
         row:SetScript("OnClick", function()
             Addon.WorkspaceState:SelectCharacter(character.id, characters, root.data, root.capacity)
             root.refresh()
         end)
-        local lines = { character.id and Identity(character, true) or "全部角色", summary and summary.alert or "在当前 Core 范围内查看所有角色" }
+        local lines = { character.id and Identity(character, true) or Addon:T("UI.TEXT_0136"), summary and summary.alert or Addon:T("UI.TEXT_0207") }
         if character.id then lines[#lines + 1] = Model:Coverage(character) end
         Tooltip(row, lines); row:Show()
     end
     for index = #list + 1, #root.ownerRows do root.ownerRows[index]:Hide() end
-    root.ownersContent:SetSize(width, #list * 34); root.owners:SetContentHeight(#list * 34)
+    root.ownersContent:SetSize(width, #list * 42); root.owners:SetContentHeight(#list * 42)
 end
 local function ItemsText(items)
     local parts = {}
-    for _, item in ipairs(items or {}) do parts[#parts + 1] = Escape(item.name or ("物品 " .. tostring(item.itemID))) .. " ×" .. tostring(item.quantity or 0) end
-    return #parts > 0 and table.concat(parts, "，") or "无物品附件"
+    for _, item in ipairs(items or {}) do parts[#parts + 1] = Escape(item.name or (Addon:T("UI.TEXT_0453") .. tostring(item.itemID))) .. " ×" .. tostring(item.quantity or 0) end
+    return #parts > 0 and table.concat(parts, Addon:T("UI.TEXT_0652")) or Addon:T("UI.TEXT_0369")
 end
 function UI:MailValues(entry, global)
     local expiry = tonumber(entry.mail.expiresAtEstimate)
     local remaining = expiry and expiry > 0 and expiry - Addon:Now()
-    return { character = Identity(entry.character), sender = Counterpart(entry.mail.sender, entry.character), subject = ((entry.mail.wasReturned or entry.mail.returned) and "[退回] " or "") .. Escape(entry.mail.subject),
+    return { character = Identity(entry.character), sender = Counterpart(entry.mail.sender, entry.character), subject = ((entry.mail.wasReturned or entry.mail.returned) and Addon:T("UI.TEXT_0069") or "") .. Escape(entry.mail.subject),
         items = ItemsText(entry.mail.attachments), icon = (entry.mail.attachments or {})[1], itemList = entry.mail.attachments,
         amount = (entry.mail.cod or 0) > 0 and ("COD " .. View:Money(entry.mail.cod)) or View:Money(entry.mail.money),
         expiry = View:Expiry(entry.mail), coverage = Model:Coverage(entry.character),
@@ -395,7 +395,7 @@ function UI:OpenMail(root, entry)
     root.refresh()
 end
 function UI:Detail(root, state, data, x, top, width, height)
-    local detail, lines, title = state.detail, {}, "详情"
+    local detail, lines, title = state.detail, {}, Addon:T("UI.TEXT_0519")
     local function Add(text, item, callback) lines[#lines + 1] = { text = text, item = item, onClick = callback } end
     if detail.type == "mail" then
         local character
@@ -404,44 +404,44 @@ function UI:Detail(root, state, data, x, top, width, height)
         local mail = snapshot and snapshot.records[detail.key]
         if mail then
             title = Identity(character) .. " · " .. Escape(mail.subject)
-            Add("发件人：" .. Escape(mail.sender)); Add(Model:Coverage(character))
+            Add(Addon:T("UI.TEXT_0177") .. Escape(mail.sender)); Add(Model:Coverage(character))
             Add(Model:MailDetail({ mail = mail }))
-            Add("最后可见 " .. Stamp(mail.observedAt) .. (mail.state == "unverified" and " · 待核实缓存" or ""))
-            Add(mail.firstSeenAt and ("首次发现 " .. Stamp(mail.firstSeenAt) .. "（扫描时间）") or "首次发现时间未知")
-            for _, item in ipairs(mail.attachments or {}) do Add(ItemsText({ item }) .. " · 附件槽 " .. tostring(item.attachmentIndex or "—"), item) end
-            if #(mail.attachments or {}) == 0 then Add("无物品附件") end
-        else Add("来源已变化，请返回列表重新核对。") end
+            Add(Addon:T("UI.TEXT_0389") .. Stamp(mail.observedAt) .. (mail.state == "unverified" and Addon:T("UI.TEXT_0012") or ""))
+            Add(mail.firstSeenAt and (Addon:T("UI.TEXT_0639") .. Stamp(mail.firstSeenAt) .. Addon:T("UI.TEXT_0647")) or Addon:T("UI.TEXT_0641"))
+            for _, item in ipairs(mail.attachments or {}) do Add(ItemsText({ item }) .. Addon:T("UI.TEXT_0020") .. tostring(item.attachmentIndex or "—"), item) end
+            if #(mail.attachments or {}) == 0 then Add(Addon:T("UI.TEXT_0369")) end
+        else Add(Addon:T("UI.TEXT_0409")) end
     elseif detail.type == "item" then
         local group
         for _, candidate in ipairs(data) do if candidate.id == detail.id then group = candidate; break end end
         if group then
-            title = Escape(group.item.name or ("物品 " .. tostring(group.item.itemID))) .. " · 来源"
-            Add("普通附件 " .. group.normalQuantity .. " · COD附件 " .. group.codQuantity .. " · " .. group.mailCount .. " 封邮件")
+            title = Escape(group.item.name or (Addon:T("UI.TEXT_0453") .. tostring(group.item.itemID))) .. Addon:T("UI.TEXT_0016")
+            Add(Addon:T("UI.TEXT_0378") .. group.normalQuantity .. Addon:T("UI.TEXT_0003") .. group.codQuantity .. " · " .. group.mailCount .. Addon:T("UI.TEXT_0033"))
             for _, source in ipairs(group.sources) do
                 local entry = source.entry
                 Add(Identity(entry.character) .. " · " .. Escape(entry.mail.sender) .. " · " .. Escape(entry.mail.subject)
                     .. " · ×" .. source.item.quantity .. " · " .. View:Expiry(entry.mail)
-                    .. " · 最后可见 " .. Stamp(entry.mail.observedAt)
-                    .. ((entry.mail.cod or 0) > 0 and (" · 整封COD " .. View:Money(entry.mail.cod)) or ""), source.item,
+                    .. Addon:T("UI.TEXT_0014") .. Stamp(entry.mail.observedAt)
+                    .. ((entry.mail.cod or 0) > 0 and (Addon:T("UI.TEXT_0013") .. View:Money(entry.mail.cod)) or ""), source.item,
                     function() UI:OpenMail(root, entry) end)
             end
-        else Add("物品来源已变化，请返回结果重新核对。") end
+        else Add(Addon:T("UI.TEXT_0460")) end
     else
         local entry
         for _, candidate in ipairs(data) do if candidate.id == detail.id then entry = candidate; break end end
         if entry then
             title = entry.event .. " · " .. Identity(entry.character) .. " · " .. Escape(entry.subject)
-            Add("对方：" .. Escape(entry.counterpart)); Add("时间：" .. Stamp(entry.time) .. (entry.state == "discovered" and "（首次扫描发现）" or ""))
-            if entry.record.cacheProjection then Add("时间为扫描转入待核实的时间；最后可见 " .. Stamp(entry.mail.observedAt)) end
-            Add("结果：" .. entry.result); Add("来源记录：" .. tostring(entry.sourceKey or "未知"))
-            local sourceNames = { ["rule-send"] = "规则寄", ["shortcut-drop"] = "快捷拖放", ["native-send"] = "发件箱" }
-            if sourceNames[entry.record.source] then Add("发送方式：" .. sourceNames[entry.record.source]) end
-            if entry.record.ruleIDs and #entry.record.ruleIDs > 0 then Add("来源规则：" .. table.concat(entry.record.ruleIDs, "、")) end
+            Add(Addon:T("UI.TEXT_0233") .. Escape(entry.counterpart)); Add(Addon:T("UI.TEXT_0374") .. Stamp(entry.time) .. (entry.state == "discovered" and Addon:T("UI.TEXT_0648") or ""))
+            if entry.record.cacheProjection then Add(Addon:T("UI.TEXT_0372") .. Stamp(entry.mail.observedAt)) end
+            Add(Addon:T("UI.TEXT_0487") .. entry.result); Add(Addon:T("UI.TEXT_0411") .. tostring(entry.sourceKey or Addon:T("UI.TEXT_0399")))
+            local sourceNames = { ["rule-send"] = Addon:T("UI.TEXT_0498"), ["shortcut-drop"] = Addon:T("UI.TEXT_0295"), ["native-send"] = Addon:T("UI.TEXT_0179") }
+            if sourceNames[entry.record.source] then Add(Addon:T("UI.TEXT_0187") .. sourceNames[entry.record.source]) end
+            if entry.record.ruleIDs and #entry.record.ruleIDs > 0 then Add(Addon:T("UI.TEXT_0410") .. table.concat(entry.record.ruleIDs, Addon:T("UI.TEXT_0078"))) end
             for _, item in ipairs(entry.items) do Add(ItemsText({ item }), item) end
             Add(Addon.HistoryModel:Content(entry))
-            if entry.record.attemptedAt then Add("发送操作 " .. Stamp(entry.record.attemptedAt)) end
-            if (entry.record.codAmount or 0) > 0 then Add("整封付款金额：" .. View:Money(entry.record.codAmount)) end
-        else Add("记录已超出当前过滤或保留范围，请返回列表。") end
+            if entry.record.attemptedAt then Add(Addon:T("UI.TEXT_0186") .. Stamp(entry.record.attemptedAt)) end
+            if (entry.record.codAmount or 0) > 0 then Add(Addon:T("UI.TEXT_0357") .. View:Money(entry.record.codAmount)) end
+        else Add(Addon:T("UI.TEXT_0512")) end
     end
     root.summary:SetText(title)
     Place(root.detail, x, top, width, height); root.detail:Show()
@@ -509,7 +509,7 @@ function UI:RenderList(root, offset)
                 lines = { value.event .. " · " .. Identity(value.character, true), Escape(value.subject), Escape(value.counterpart), values.content, Stamp(value.time) .. " · " .. value.result }
             else
                 values = self:MailValues(value, true)
-                lines = { "邮箱：" .. Identity(value.character, true) .. " · 发件人：" .. Escape(value.mail.sender), values.subject, values.items, values.amount .. " · " .. values.expiry, values.coverage }
+                lines = { Addon:T("UI.TEXT_0608") .. Identity(value.character, true) .. Addon:T("UI.TEXT_0005") .. Escape(value.mail.sender), values.subject, values.items, values.amount .. " · " .. values.expiry, values.coverage }
             end
             local rowTop, rowHeight = layout.offsets and layout.offsets[index] or (index - 1) * layout.pitch, (layout.heights and layout.heights[index] or layout.pitch) - 2
             Place(row, 0, rowTop, layout.width, rowHeight)
@@ -562,7 +562,7 @@ function UI:Refresh(parent, context)
         for _, character in ipairs(characters) do if Addon.AccountPage:GetSummary(character)._counts.expired > 0 then root.overview.alertExpired = true end end
         root.heading:Hide(); root.note:Hide(); root.summary:Hide()
         root.pageCount, root.total, root.capacity = root.overview.pageCount, root.overview.total, root.overview.capacity
-        root.empty:SetText(root.overview.mailColumnsHidden and "账号总览字段全部隐藏，请在 Core 的显示与入口中启用字段。" or "打开对应角色邮箱完成一次扫描后，可查看账号邮件。")
+        root.empty:SetText(root.overview.mailColumnsHidden and Addon:T("UI.TEXT_0565") or Addon:T("UI.TEXT_0313"))
         Place(root.empty, 16, 110, width - 16, 48); root.empty:SetShown(#characters == 0 or root.overview.mailColumnsHidden)
     elseif workspace.tab == "inbox" then
         Addon.WorkspaceState:ValidateCharacters(characters)
@@ -577,27 +577,33 @@ function UI:Refresh(parent, context)
         data = state.mode == "items" and Model:GetGroups(entries, state.sort, state.search) or entries
         local selected
         for _, character in ipairs(characters) do if character.id == state.character then selected = character end end
-        root.heading:SetText(global and ("全局搜索结果（当前范围 · " .. #characters .. "角色）") or (selected and Identity(selected) or ("全部角色（当前范围 · " .. #characters .. "角色）")))
-        root.note:SetText(global and "搜索全部有效角色，不受左侧角色选择限制；点击角色定位其命中记录。"
-            or (selected and Model:Coverage(selected) or "数量与期限按各角色最后一次成功扫描估算。"))
+        root.heading:SetText(global and (Addon:T("UI.TEXT_0128") .. #characters .. Addon:T("UI.TEXT_0509")) or (selected and Identity(selected) or (Addon:T("UI.TEXT_0137") .. #characters .. Addon:T("UI.TEXT_0509"))))
+        root.note:SetText(global and Addon:T("UI.TEXT_0326")
+            or (selected and Model:Coverage(selected) or Addon:T("UI.TEXT_0354")))
         Place(root.heading, left, 44, contentWidth, 24); Place(root.note, left, 72, contentWidth, 22)
+        root.note:SetWordWrap(true); root.note:SetHeight(0)
+        local noteHeight = math.max(22, root.note:GetStringHeight()); root.note:SetHeight(noteHeight)
+        top = math.max(top, 72 + noteHeight + 10)
         local searchWidth = math.max(160, contentWidth - 108)
         top = Flow({ { root.search, searchWidth }, { root.clear, 100 } }, left, top, contentWidth)
         root.scope:SetValue(state.scope); root.sort:SetValue(state.sort); root.risk:SetValue(state.risk)
-        root.kind:SetOptions({ { value = "all", label = "类别：全部" }, { value = "items", label = "含物品附件" }, { value = "money", label = "含金币" },
-            { value = "cod", label = "付款取信" }, { value = "returned", label = "退回邮件" }, { value = "empty", label = "无附件及金币" } }); root.kind:SetValue(state.kind)
+        root.kind:SetOptions({ { value = "all", label = Addon:T("UI.TEXT_0482") }, { value = "items", label = Addon:T("UI.TEXT_0203") }, { value = "money", label = Addon:T("UI.TEXT_0204") },
+            { value = "cod", label = Addon:T("UI.TEXT_0110") }, { value = "returned", label = Addon:T("UI.TEXT_0578") }, { value = "empty", label = Addon:T("UI.TEXT_0370") } }); root.kind:SetValue(state.kind)
         top = Flow({ { root.scope, 126 }, { root.kind, 128 }, { root.risk, 130 }, { root.sort, 114 }, { root.mail, 78 }, { root.items, 96 } }, left, top, contentWidth)
         root.mail:SetState(state.mode == "mail" and "selected" or "default"); root.items:SetState(state.mode == "items" and "selected" or "default")
         local totals = Model:Totals(entries)
-        root.summary:SetText((state.scope == "unverified" and "曾扫描，待确认" or "筛选结果") .. " · " .. totals.count .. "封 · 含附件 " .. totals.attachmentMails
-            .. "封 · 待取 " .. View:Money(totals.money) .. " · COD " .. totals.cod .. "封 · 紧急 " .. totals.urgent .. " / 临期 " .. totals.soon .. " / 到期待核实 " .. totals.expired)
-        if state.mode == "items" then root.summary:SetText(root.summary:GetText() .. " · " .. #data .. "个物品组") end
+        root.summary:SetText((state.scope == "unverified" and (Addon:T("UI.TEXT_0388") .. " · ") or "")
+            .. Addon:T("INBOX.SUMMARY", totals.count, totals.attachmentMails, View:Money(totals.money), totals.cod, totals.urgent, totals.soon, totals.expired))
+        if state.mode == "items" then root.summary:SetText(root.summary:GetText() .. " · " .. #data .. Addon:T("UI.TEXT_0095")) end
         fields = self:Columns(root, "inbox", global or not state.character)
         if state.mode == "mail" then fields = self:FitColumns(fields, contentWidth, "inbox") end
     else
-        root.heading:SetText("历史记录")
-        root.note:SetText("首次发现是扫描时间；成功发送不代表已送达。已确认保留 " .. Addon.db.settings.historyDays .. "天，待核实 " .. Addon.db.settings.unverifiedDays .. "天。")
-        local options, valid = { { value = "all", label = "全部角色" } }, not state.character
+        root.heading:SetText(Addon:T("UI.TEXT_0170"))
+        root.note:SetText(Addon:T("HISTORY.RETENTION_NOTE", Addon.db.settings.historyDays, Addon.db.settings.unverifiedDays))
+        root.note:SetWordWrap(true); root.note:SetHeight(0)
+        local noteHeight = math.max(22, root.note:GetStringHeight()); root.note:SetHeight(noteHeight)
+        top = math.max(top, 72 + noteHeight + 10)
+        local options, valid = { { value = "all", label = Addon:T("UI.TEXT_0136") } }, not state.character
         for _, character in ipairs(context.characters) do
             if Addon.HistoryModel:HasHistory(character) then
                 options[#options + 1] = { value = character.id, label = Identity(character) }
@@ -607,15 +613,17 @@ function UI:Refresh(parent, context)
         if not valid then state.character, state.scroll, state.anchor = nil, 0, nil end
         root.historyCharacter:SetOptions(options); root.historyCharacter:SetValue(state.character or "all")
         root.days:SetValue(state.days); root.result:SetValue(state.result)
-        root.kind:SetOptions({ { value = "all", label = "事件：全部" }, { value = "inbox", label = "收件相关" }, { value = "send", label = "发件相关" },
-            { value = "discovered", label = "首次发现" }, { value = "collected", label = "实际收取" } }); root.kind:SetValue(state.kind)
+        root.kind:SetOptions({ { value = "all", label = Addon:T("UI.TEXT_0104") }, { value = "inbox", label = Addon:T("UI.TEXT_0343") }, { value = "send", label = Addon:T("UI.TEXT_0178") },
+            { value = "discovered", label = Addon:T("UI.TEXT_0640") }, { value = "collected", label = Addon:T("UI.TEXT_0220") } }); root.kind:SetValue(state.kind)
         top = Flow({ { root.search, math.max(200, contentWidth - 108) }, { root.clear, 100 } }, left, top, contentWidth)
         top = Flow({ { root.days, 160 }, { root.historyCharacter, 190 }, { root.kind, 134 }, { root.result, 154 } }, left, top, contentWidth)
         data = Addon.HistoryModel:Query(context, state); fields = self:Columns(root, "history", true); rowHeight = 38
-        root.summary:SetText("筛选结果 " .. #data .. " 条 · 按事件时间倒序")
+        root.summary:SetText(Addon:T("HISTORY.RESULT_COUNT", #data))
     end
     if workspace.tab ~= "overview" then
-        Place(root.summary, left, top, contentWidth, 40); root.summary:SetWordWrap(true); top = top + 44
+        Place(root.summary, left, top, contentWidth, 1); root.summary:SetWordWrap(true); root.summary:SetHeight(0)
+        local summaryHeight = math.max(26, root.summary:GetStringHeight())
+        root.summary:SetHeight(summaryHeight); top = top + summaryHeight + 8
         root.data, root.capacity = data, math.max(1, math.floor((height - top - 76) / rowHeight))
         if workspace.tab == "inbox" then self:Owners(root, characters, entries, state, 8, 44, left - 24, height - 94) end
         root.total = #data
@@ -657,10 +665,10 @@ function UI:Refresh(parent, context)
             local first, start = self:ListIndex(root.listLayout, offset)
             state.anchor, state.anchorOffset = data[first] and data[first].id, offset - start
             Place(root.empty, left + 12, top + 54, contentWidth - 24, 64); root.empty:SetShown(#data == 0)
-            root.empty:SetText(workspace.tab == "history" and "当前时间与筛选范围没有历史记录，可调整条件。"
-                or ((state.search or ""):find("%S") and "全局搜索没有匹配结果，请清除搜索或调整筛选。"
-                or (#characters == 0 and "请打开对应角色邮箱完成首次扫描。"
-                or (state.scope == "unverified" and "此范围没有待核实缓存。" or (state.mode == "items" and "此范围没有物品附件，可切换按邮件查看。" or "此范围最新快照没有邮件，或没有符合筛选的邮件。")))))
+            root.empty:SetText(workspace.tab == "history" and Addon:T("UI.TEXT_0267")
+                or ((state.search or ""):find("%S") and Addon:T("UI.TEXT_0127")
+                or (#characters == 0 and Addon:T("UI.TEXT_0543")
+                or (state.scope == "unverified" and Addon:T("UI.TEXT_0430") or (state.mode == "items" and Addon:T("UI.TEXT_0431") or Addon:T("UI.TEXT_0429"))))))
         end
     end
     Place(root.back, width - 64, height - 38, 72, 30)
@@ -669,7 +677,7 @@ function UI:Refresh(parent, context)
     if overview then
         Place(root.previous, left, height - 38, 90, 30); Place(root.next, left + 98, height - 38, 90, 30)
         Place(root.pages, left + 198, height - 36, contentWidth - 278, 26)
-        root.pages:SetText(state.page .. " / " .. root.pageCount .. " 页 · " .. root.total .. " 角色")
+        root.pages:SetText(Addon:T("OVERVIEW.PAGE_STATUS", state.page, root.pageCount, root.total))
         Enable(root.previous, state.page > 1); Enable(root.next, state.page < root.pageCount)
     end
     root.back:SetShown(state.detail ~= nil or workspace.returnTo ~= nil)

@@ -96,6 +96,7 @@ STANDARD_TEXT_FONT = "font"
 dofile("YiboCore/UI/Input.lua")
 RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.78, b = 0.92 }, DRUID = { r = 1, g = 0.49, b = 0.04 } }
 dofile("YiboMail/Namespace.lua")
+dofile("YiboMail/Locales/zh.lua"); dofile("YiboMail/Locales/en.lua")
 local Addon = YiboMail; Addon.Core = YiboCore
 local a = { id = "A", name = "Alpha", realm = "One", class = "MAGE" }
 local b = { id = "B", name = "Beta", realm = "Two", class = "DRUID" }
@@ -114,7 +115,7 @@ characterAPI.FormatName = YiboCore.Characters.FormatName; YiboCore.Characters = 
 local definition
 YiboCore.AccountView = { NotifyPageChanged = function() end, RegisterPage = function(_, _, page) definition = page; return true end }
 YiboCore.Entry = { RegisterBusinessEntry = function() return true end }
-for _, file in ipairs({ "Store", "ViewModel", "WorkspaceState", "MailUI", "CacheModel", "HistoryModel", "AccountPage", "CacheUI" }) do dofile("YiboMail/" .. file .. ".lua") end
+for _, file in ipairs({ "Store", "Recipients", "ViewModel", "WorkspaceState", "MailUI", "CacheModel", "HistoryModel", "AccountPage", "CacheUI" }) do dofile("YiboMail/" .. file .. ".lua") end
 Addon.Items = {
     Events = { Emit = function() end },
     GetState = function(_, id) return { status = id == "B" and "stale" or "known" } end,
@@ -188,7 +189,7 @@ local root = host.mailWorkspace
 local function Click(control) assert(control:IsShown() and control:IsEnabled()); control:Fire("OnClick") end
 assert(root.search.placeholder and root.search.SetValue, "Search must use Core's input control")
 assert(root.tabs.activeGap:IsShown() and root.tabs.activeGap.points[1][2] == root.tabs.buttons.inbox)
-assert(root.ownerRows[2]:GetHeight() == 32 and root.ownerRows[2].name.points[1][3] == root.ownerRows[2].meta.points[1][3])
+assert(root.ownerRows[2]:GetHeight() == 40 and root.ownerRows[2].name.points[1][3] > root.ownerRows[2].meta.points[1][3])
 Click(root.tabs.buttons.history); assert(state.tab == "history" and root.total == 3)
 assert(root.tabs.activeGap.points[1][2] == root.tabs.buttons.history)
 assert(root.historyCharacter.options[2].label:find("|cff", 1, true), "Character filters need class colors")
@@ -262,7 +263,7 @@ Click(root.tabs.buttons.inbox)
 assert(root.list:GetHeight() > 0 and not root.previous:IsShown() and not root.next:IsShown())
 local filterY = root.scope.points[1][3]
 for _, control in ipairs({ root.kind, root.risk, root.sort, root.mail, root.items }) do
-    assert(control.points[1][3] == filterY, "Filters must occupy exactly one row")
+    assert(control.points[1][3] <= filterY, "Whole filter controls wrap to additional rows")
     assert(control.points[1][2] + control:GetWidth() <= host:GetWidth() - 8)
 end
 local matchingID = root.data[1] and root.data[1].id
@@ -498,3 +499,51 @@ print('PASS: tall Core shell can move vertically with reachable title; full prev
 shell:Fire('OnDragStart'); shell:Hide()
 assert(not shell.windowDrag and not shell:GetScript('OnUpdate'), 'Hide releases cursor tracking')
 print('PASS: scaled mouse tracking, saved final anchor, and drag cleanup')
+
+-- The player's 3411-entry history must not trigger hidden-row formatting or
+-- repeated Core character-directory snapshots during column/height layout.
+local directoryCalls, valueCalls, measureCalls = 0, 0, 0
+local savedDirectory, savedValues, savedMeasure = YiboCore.Characters.GetAllCached, Addon.CacheUI.HistoryValues, YiboCore.UITheme.MeasureText
+YiboCore.Characters.GetAllCached = function(...) directoryCalls = directoryCalls + 1; return savedDirectory(...) end
+Addon.CacheUI.HistoryValues = function(...) valueCalls = valueCalls + 1; return savedValues(...) end
+YiboCore.UITheme.MeasureText = function(...) measureCalls = measureCalls + 1; return savedMeasure(...) end
+local bulk = {}
+for index = 1, 3411 do bulk[index] = index % 2 == 0 and longHistory or shortHistory end
+local started = os.clock()
+local bulkOffsets, bulkHeights, bulkTotal = Addon.CacheUI:HistoryLayout({}, Addon.Copy(historyFields), 1000, bulk)
+local elapsed = os.clock() - started
+assert(#bulkOffsets == 3411 and #bulkHeights == 3411 and bulkTotal > 3411 * 30)
+assert(directoryCalls == 0 and valueCalls == 0, 'History layout only reads attachment data, never formats hidden character rows')
+assert(measureCalls < 32, 'Repeated item names are measured once per layout, not once per record')
+YiboCore.Characters.GetAllCached, Addon.CacheUI.HistoryValues, YiboCore.UITheme.MeasureText = savedDirectory, savedValues, savedMeasure
+print(string.format('PASS: 3411 history rows laid out in %.4fs; %d text measurements, no hidden-row formatting or directory reads', elapsed, measureCalls))
+
+-- Recreate the business page in English, as a language reload would do.
+YiboCore.Locale.language = 'en'
+dofile('YiboMail/HistoryModel.lua'); dofile('YiboMail/AccountPage.lua'); dofile('YiboMail/CacheUI.lua')
+local englishHost = Frame(UIParent); englishHost:SetSize(1050, 650)
+Addon.WorkspaceState:Get().tab = 'inbox'
+Addon.AccountPage:Create(englishHost); Addon.AccountPage:Refresh(englishHost, context)
+local englishRoot, theme = englishHost.mailWorkspace, YiboCore.UITheme
+assert(englishRoot.tabs.buttons.overview.label:GetText() == 'Overview')
+for _, viewportWidth in ipairs({ 640, 1050 }) do
+    englishHost:SetWidth(viewportWidth); Addon.AccountPage:Refresh(englishHost, context)
+    local previousControl
+    for _, control in ipairs({ englishRoot.scope, englishRoot.kind, englishRoot.risk, englishRoot.sort, englishRoot.mail, englishRoot.items }) do
+        local point = control.points[1]
+        assert(point[2] + control:GetWidth() <= viewportWidth - 8)
+        assert(control:GetWidth() >= theme:MeasureText(theme.Font.body, control.label:GetText()) + (control.menu and 38 or 20))
+        if previousControl and point[3] == previousControl.points[1][3] then
+            assert(point[2] >= previousControl.points[1][2] + previousControl:GetWidth() + 5)
+        end
+        previousControl = control
+    end
+    assert(englishRoot.list:GetHeight() > 60, 'Wrapping leaves a usable results viewport')
+end
+local englishFields = Addon.CacheUI:Columns(englishRoot, 'history', true)
+Addon.CacheUI:HistoryLayout({}, englishFields, 960, bulk)
+local attachmentWidth
+for _, field in ipairs(englishFields) do if field.key == 'content' then attachmentWidth = field.fittedWidth end end
+assert(attachmentWidth >= 160, 'Long status text must not squeeze history attachments into the former 100px column')
+assert(Addon.HistoryModel:Content({ items = longHistory.items, state = 'unverified', money = 0, record = { cacheProjection = true } }, true) == '')
+print('PASS: English filters fit or wrap without overlap; compact tabs; attachment budget and uncertainty details stay separate')

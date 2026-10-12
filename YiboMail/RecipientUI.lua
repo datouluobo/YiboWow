@@ -26,7 +26,7 @@ function U:Create()
         local b = theme:CreateButton(p, 100, label); b:SetHeight(ROW)
         b:SetScript("OnClick", action); return b
     end
-    p.back = Button("‹ 返回", function()
+    p.back = Button(Addon:T("UI.TEXT_0075"), function()
         U.confirm = nil
         if U.realmMode then U.realmMode = nil elseif U.source then U.source, U.realm = nil, nil end
         U.page = 1; U:Refresh()
@@ -38,7 +38,7 @@ function U:Create()
     p.search:SetAutoFocus(false); p.search:SetMaxLetters(100); p.search:SetFont(STANDARD_TEXT_FONT, theme.Font.body, "OUTLINE")
     p.search:SetTextColor(unpack(theme.Colors.text)); p.search:SetTextInsets(8, 8, 0, 0)
     p.search.hint = theme:CreateText(p.search, theme.Font.assist, theme.Colors.muted, "LEFT")
-    p.search.hint:SetPoint("LEFT", 8, 0); p.search.hint:SetText("全局搜索")
+    p.search.hint:SetPoint("LEFT", 8, 0); p.search.hint:SetText(Addon:T("UI.TEXT_0126"))
     p.search:SetBackdrop(BACKDROP); p.search:SetBackdropColor(unpack(theme.Colors.panel))
     p.search:SetScript("OnTextChanged", function() U.page = 1; U.confirm = nil; U.realmMode = nil; U:Refresh() end)
     theme:AttachClearButton(p.search)
@@ -47,7 +47,7 @@ function U:Create()
         if edit:GetText() ~= "" then edit:SetText("") else U:Hide() end
     end)
     p.search:SetScript("OnEnterPressed", function(edit) if not IME(edit) then edit:ClearFocus() end end)
-    p.filter = Button("服务器：全部", function() U.realmMode = not U.realmMode; U.page = 1; U:Refresh() end)
+    p.filter = Button(Addon:T("UI.TEXT_0396"), function() U.realmMode = not U.realmMode; U.page = 1; U:Refresh() end)
     p.filter:SetPoint("TOPLEFT", GAP, -40); p.filter:SetPoint("TOPRIGHT", -GAP, -40)
     p.rows = {}
     p.prev = Button("‹", function() U.page = U.page - 1; U:Refresh() end)
@@ -56,7 +56,7 @@ function U:Create()
     p.next:SetWidth(32); p.next:SetPoint("BOTTOMRIGHT", -GAP, FOOT)
     p.page = theme:CreateText(p, theme.Font.assist, theme.Colors.muted, "CENTER")
     p.page:SetPoint("LEFT", p.prev, "RIGHT", GAP, 0); p.page:SetPoint("RIGHT", p.next, "LEFT", -GAP, 0); p.page:SetHeight(ROW)
-    p.action = Button("加入常用", function() U:Action() end)
+    p.action = Button(Addon:T("UI.TEXT_0163"), function() U:Action() end)
     p.action:SetPoint("BOTTOMLEFT", GAP, GAP)
     p.action:SetScript("OnEnter", function(control)
         GameTooltip:SetOwner(control, "ANCHOR_RIGHT")
@@ -65,27 +65,27 @@ function U:Create()
         GameTooltip:SetText((R:Escape(address))); GameTooltip:Show()
     end)
     p.action:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    p.manage = Button("设置", function()
+    p.manage = Button(Addon:T("UI.TEXT_0513"), function()
         U:Hide()
         Addon.Core.AccountView:ShowSettings("mail-inbox")
     end)
     p.manage:SetPoint("BOTTOMRIGHT", -GAP, GAP); p.manage:SetWidth(76)
     p.action:SetPoint("RIGHT", p.manage, "LEFT", -GAP, 0)
     p.manage:SetScript("OnEnter", function(control)
-        GameTooltip:SetOwner(control, "ANCHOR_RIGHT"); GameTooltip:SetText("通讯录分组与快捷寄件栏设置"); GameTooltip:Show()
+        GameTooltip:SetOwner(control, "ANCHOR_RIGHT"); GameTooltip:SetText(Addon:T("UI.TEXT_0587")); GameTooltip:Show()
     end)
     p.manage:SetScript("OnLeave", function() GameTooltip:Hide() end)
     self:Hide()
 end
 function U:SourceEntries()
     local entries = {}
-    if self.slot then entries[#entries + 1] = { label = "自定义…", custom = true } end
-    if self.slot and Addon.db.quickRecipients[self.slot] then entries[#entries + 1] = { label = "修改图标…", editIcon = true } end
+    if self.slot then entries[#entries + 1] = { label = Addon:T("UI.TEXT_0493"), custom = true } end
+    if self.slot and Addon.db.quickRecipients[self.slot] then entries[#entries + 1] = { label = Addon:T("UI.TEXT_0125"), editIcon = true } end
     for _, source in ipairs(R.sources) do
         if Addon:IsRecipientSourceVisible(source.id) then
             local count = #R:Candidates(source.id)
             local status = source.id == "friends" and R.friendStatus or source.id == "guild" and R.guildStatus
-            entries[#entries + 1] = { label = source.label .. " · " .. count .. " 人" .. (status and " · " .. status or ""), source = source.id, disabled = count == 0 }
+            entries[#entries + 1] = { label = source.label .. " · " .. count .. Addon:T("UI.TEXT_0026") .. (status and " · " .. status or ""), source = source.id, disabled = count == 0 }
         end
     end
     return entries
@@ -97,7 +97,7 @@ function U:ShowSources(x, y, width)
         home = CreateFrame("Frame", nil, UIParent, "BackdropTemplate"); self.home = home
         home:SetFrameStrata("FULLSCREEN_DIALOG"); home:SetFrameLevel(20); home:SetClampedToScreen(true); home:EnableMouse(true)
         home:SetBackdrop(BACKDROP); home:SetBackdropColor(unpack(theme.Colors.bg)); home:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
-        home.title = theme:CreateButton(home, 180, "‹ 通讯录"); home.title:SetHeight(ROW)
+        home.title = theme:CreateButton(home, 180, Addon:T("UI.TEXT_0077")); home.title:SetHeight(ROW)
         home.title:SetPoint("TOPLEFT", GAP, -GAP)
         home.title:SetScript("OnClick", function()
             U.source, U.realm, U.realmMode, U.page = nil, nil, nil, 1
@@ -151,7 +151,7 @@ function U:Entries()
     local query = self.popup.search:GetText()
     local searching = query:match("%S")
     if self.realmMode then
-        local entries = { { label = "全部服务器", chooseRealm = true } }; local seen = {}
+        local entries = { { label = Addon:T("UI.TEXT_0135"), chooseRealm = true } }; local seen = {}
         for _, source in ipairs(R.sources) do
             if Addon:IsRecipientSourceVisible(source.id) and (searching or source.id == self.source) then
                 for _, candidate in ipairs(R:Query(source.id, searching and query or "")) do
@@ -218,14 +218,14 @@ function U:Action()
         local saved = Addon.db.quickRecipients[self.slot]; if not saved then return end
         local token = self.slot .. ":" .. saved.address
         if self.confirm == token then R:ClearShortcut(self.slot); self:Hide()
-        else self.confirm = token; self.popup.action:SetText("确认清空第 " .. self.slot .. " 格？") end
+        else self.confirm = token; self.popup.action:SetText(Addon:T("UI.TEXT_0465") .. self.slot .. Addon:T("UI.TEXT_0042")) end
         return
     end
     local address = R:Normalize(SendMailNameEditBox and SendMailNameEditBox:GetText())
     if not address then return end
     if R:FindContact(address) then
         if self.confirm == address then R:RemoveContact(address); self.confirm = nil; self:Refresh()
-        else self.confirm = address; self.popup.action:SetText("确认移出：" .. R:Label({ address = address }) .. "？") end
+        else self.confirm = address; self.popup.action:SetText(Addon:T("UI.TEXT_0466") .. R:Label({ address = address }) .. Addon:T("UI.TEXT_0659")) end
     else R:SaveContact(address); self:Refresh() end
 end
 function U:Refresh()
@@ -288,14 +288,14 @@ function U:Refresh()
         p:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x, math.max(height + 12, math.min(y, screenHeight - 12)))
     end
     p.back:SetShown(self.source == nil)
-    p.back:SetText(self.slot and "快捷格" or "通讯录")
+    p.back:SetText(self.slot and Addon:T("UI.TEXT_0298") or Addon:T("UI.TEXT_0585"))
     p.back:SetEnabled(false)
     p.search:ClearAllPoints()
     p.search:SetPoint("TOPLEFT", self.source and GAP or 72, -GAP)
     p.search:SetPoint("TOPRIGHT", p.close, "TOPLEFT", -GAP, 0)
     p.manage:SetWidth(math.min(64, math.floor(width * 0.34)))
     p.filter:SetShown(self.source ~= nil)
-    p.filter:SetText(self.realmMode and "‹ 返回名单" or "服务器：" .. R:Escape(self.realm or "全部"))
+    p.filter:SetText(self.realmMode and Addon:T("UI.TEXT_0076") or Addon:T("UI.TEXT_0395") .. R:Escape(self.realm or Addon:T("UI.TEXT_0132")))
     for index = 1, visible do
         local row = p.rows[index]
         if not row then
@@ -305,21 +305,21 @@ function U:Refresh()
                 local entry = control.entry; if not entry then return end
                 if entry.source then U:HoverSource(control) end
                 if entry.source == "contacts" and (R.invalidContacts or 0) > 0 then
-                    GameTooltip:SetOwner(control, "ANCHOR_RIGHT"); GameTooltip:SetText("常用收件人")
-                    GameTooltip:AddLine("保留了 " .. R.invalidContacts .. " 条无法解析的旧记录，未加入候选。", 0.8, 0.85, 0.83, true); GameTooltip:Show(); return
+                    GameTooltip:SetOwner(control, "ANCHOR_RIGHT"); GameTooltip:SetText(Addon:T("UI.TEXT_0260"))
+                    GameTooltip:AddLine(Addon:T("UI.TEXT_0122") .. R.invalidContacts .. Addon:T("UI.TEXT_0039"), 0.8, 0.85, 0.83, true); GameTooltip:Show(); return
                 end
                 if not entry.address then return end
                 GameTooltip:SetOwner(control, "ANCHOR_RIGHT"); GameTooltip:SetText((R:Escape(entry.address)))
-                if entry.sources then GameTooltip:AddLine(table.concat(entry.sources, "、"), 0.8, 0.85, 0.83, true) end
+                if entry.sources then GameTooltip:AddLine(table.concat(entry.sources, Addon:T("UI.TEXT_0078")), 0.8, 0.85, 0.83, true) end
                 if U.source == "accountFriends" then
                     for _, owner in ipairs(R:FriendOwners(entry.address)) do GameTooltip:AddLine(R:Escape(owner), 0.8, 0.85, 0.83, true) end
-                    GameTooltip:AddLine("其它角色最近完整快照；登录后刷新。", 0.55, 0.78, 0.78, true)
+                    GameTooltip:AddLine(Addon:T("UI.TEXT_0144"), 0.55, 0.78, 0.78, true)
                 end
                 GameTooltip:Show()
             end)
             row:SetScript("OnLeave", function(control) if U.hoveredSource == control then U.hoveredSource = nil end; GameTooltip:Hide() end); p.rows[index] = row
         end
-        local entry = entries[first + index - 1] or { label = "暂无匹配的收件人", disabled = true }
+        local entry = entries[first + index - 1] or { label = Addon:T("UI.TEXT_0380"), disabled = true }
         row.entry = entry; row:ClearAllPoints(); row:SetPoint("TOPLEFT", GAP, -(header + (index - 1) * ROW))
         row:SetWidth(width - GAP * 2); row:SetText(entry.address and R:Label(entry) or R:Escape(entry.label) .. (entry.source and " ›" or ""))
         row:SetEnabled(not entry.disabled); row:SetState(entry.disabled and "disabled" or "default"); row:Show()
@@ -327,10 +327,10 @@ function U:Refresh()
     for index = visible + 1, #p.rows do p.rows[index].entry = nil; p.rows[index]:Hide() end
     p.prev:SetShown(paging); p.next:SetShown(paging); p.page:SetShown(paging)
     p.prev:SetEnabled(self.page > 1); p.next:SetEnabled(self.page < self.pageCount)
-    p.page:SetText(self.page .. " / " .. self.pageCount .. " · " .. #entries .. " 项")
+    p.page:SetText(self.page .. " / " .. self.pageCount .. " · " .. #entries .. Addon:T("UI.TEXT_0052"))
     local saved = self.slot and Addon.db.quickRecipients[self.slot]
     local address = not self.slot and R:Normalize(SendMailNameEditBox and SendMailNameEditBox:GetText())
-    p.action:SetText(self.slot and "清空此快捷格" or address and R:FindContact(address) and "移出常用" or "加入常用")
+    p.action:SetText(self.slot and Addon:T("UI.TEXT_0442") or address and R:FindContact(address) and Addon:T("UI.TEXT_0470") or Addon:T("UI.TEXT_0163"))
     local enabled = self.slot and saved ~= nil or not self.slot and address ~= nil
     p.action:SetEnabled(enabled); p.action:SetState(enabled and "default" or "disabled")
     self.refreshing = nil

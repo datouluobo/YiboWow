@@ -89,7 +89,7 @@ YiboMounts 1.0.0 已按 API13 接入 `localization:1` 和 API v6 独立设置注
 | YiboCrafting | 8 | RequiredDeps | character-name-format:1、item-resolver:1；共享角色表头／FormatName 方法检查，搜索输入待迁移 |
 | YiboCurrency | 9 | RequiredDeps | business-services:1；检查物品控件方法；仍有 OptionalDeps: YiboVault，见 AUD-007 |
 | YiboLegendary | 5 | RequiredDeps | 页面内业务设置；名称待迁移 |
-| YiboMail | 9；新增集成 11 | RequiredDeps | 1.2.6-api1 基础业务保留 business-services:1、character-name-format:1、item-picker:2；action.todo 新邮件查看提醒单独检查 API11 / business-providers:1，不足仅停止新集成并提示升级 |
+| YiboMail | 13；action.todo 提醒 11 | RequiredDeps | 1.2.9-api1 基础业务要求 localization:1、business-services:1、character-name-format:1、basic-input:1、item-resolver:1、item-picker:2、character-identity:1、characters:1、character-cleanup:1、account-view:2、account-character-admission:1、account-surface-budget:1、account-entry:2；邮件目标操作要求 business-item-actions:1；action.todo 新邮件提醒单独要求 business-providers:1，不足仅停止对应可选功能 |
 | YiboMounts | 13（可选 Core 设置／语言增强） | OptionalDeps | 1.0.0：Core v6 设置面板与 API13 localization:1；Core 缺失或不兼容时来源 Tooltip 独立运行，见 Core-API13-接入说明 |
 | YiboQuestBlocker | 5 | RequiredDeps | 页面内业务设置；名称与基础输入待迁移 |
 | YiboReputation | 10 | RequiredDeps | account-view:2；搜索输入和首次提示验证待完成 |
@@ -443,7 +443,7 @@ Core 状态：**已提供（1.12.0 / API v13 工作树，未发布）**。能力
 | YiboCrafting | 部分接入（适用区域代码完成） | 1.2.0 整体 API13 / localization:1；页面、设置、入口、Tooltip、状态／错误、目标和稳定分类 ID 均迁移，动态名称／历史来源原文保留 | CoreAdaptation 双语资源／页面与静态报告通过；真实中文／enUS／手动语言模式待客户端 / 2026-10-12 |
 | YiboCurrency | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
 | YiboLegendary | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
-| YiboMail | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+| YiboMail | 部分接入（适用区域代码与布局模拟完成） | 工作树 1.2.9-api1，最低 Core 1.12.0 / API13；Mail 静态玩家文案、账号入口、邮件状态／错误、目标与目录使用 Mail 自有 zh/en 稳定 ASCII key 并由 Core.Locale 按账号会话语言解析；动态游戏名称、历史快照及存档值保持原文。可选 action.todo 继续单独要求 API11 / business-providers:1；邮件目标操作检查 business-item-actions:1 | `YiboMail-API13-Report.md`：0 硬编码候选、0 缺失英文、0 未知 key、0 格式参数差异；WorkspaceSpec／NativeInboxSpec／RuleSendUISpec 英文尺寸回归通过，详见 `Docs/Mail-英文布局与历史页性能修复.md`；客户端中文／enUS、手动语言模式和登录验收待完成 / 2026-10-12 |
 | YiboMounts | 部分接入（Core 增强） | 1.0.0 注册 `YiboMounts` zh/en 资源；Core 可用时设置面板、收藏状态 Tooltip 和固定文案使用账号会话语言。双语源目录保留其数据字段，独立模式保留本地 Locale 兼容文本以满足 Core 可选契约；Core 增强最低 API13 + `localization:1` | 静态检查到注册／查询路径；中文／英文会话、手动语言、设置保存、Core 缺失／旧版验收待完成 / 2026-10-12 |
 | YiboQuestBlocker | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
 | YiboReputation | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
@@ -474,3 +474,9 @@ Core 状态：**已提供（1.12.0 / API v13 工作树，未发布）**。能力
 2026-10-12 角色设置布局：信息条移至角色与排序、显示与入口之间；去掉三个导航资源文字内的前导空格，缩进统一由导航锚点控制。默认排序改下拉，操作按钮按文案宽度，业务等级过滤按宽度两至三列；角色档案过滤控件恢复分栏，等级输入固定120宽。Core 等级与短名输入改为既有 Theme:CreateInput（CAP-002 / basic-input:1），保留校验、回车保存、失焦保存和取消。仅 Core 消费实现接入变化，业务插件状态不变，无公共能力升版。206项布局覆盖中英文620／1200宽度、12业务过滤、共享输入与表达式保存、导航顺序与缩进；1133项入口专项通过。532对资源严格检查无异常，游戏内布局待验收。
 
 2026-10-12 Vault Core 1.12.0 / API13 最新工作树复核：Vault 整体最低版本为 API13，启动时检查 `localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`character-identity:1`、`account-entry:2` 及实际调用方法；能力不满足时提示并停止初始化。页面过滤输入迁移到 Core `CreateInput`，角色标签迁移到 `FormatName`，物品显示继续使用 ItemResolver；入口显式声明三个默认关闭通道；固定仓储页不需要 `account-surface-budget:1`。Core 最新 `business-item-actions:2` 向后兼容 v1，Vault 库存目标增强只调用并检查 v1；`builtin-entry-bar:3` 的拖拽排序由 Core 内部使用，Vault 未调用，不需依赖 v3。目标增强不满足 API13、`business-item-actions:1`、身份方法和 Core Contracts/绑定方法时单独停用。`vault.items` / `mail.items` 数据所有权和 Service 契约不变，Core 无需新增业务分支。语言静态报告为 0 硬编码候选、0 缺失英文、0 未知 key、0 格式差异；尚未做中英文游戏客户端与入口交互验收。
+
+2026-10-12 YiboMail 1.2.8-api1 Core 1.12.0 / API13 适配：基础能力门槛增加 localization:1 与实际调用能力检查；Mail 玩家可见静态文本迁移到自有 zh/en 资源与稳定 ASCII key，目标操作检查 business-item-actions:1，action.todo 仍独立检查 API11 / business-providers:1。`YiboMail-API13-Report.md` 显示 0 硬编码候选、0 缺失英文／未知 key／格式参数差异；原生分类标记仅作内部识别。完整尺寸与中英文客户端、手动语言模式及登录验收待完成，故状态为部分接入。
+
+2026-10-12 Mail 英文截图修复（CAP-004／CAP-009）：账号／邮箱／规则控件复用 Theme 文字测量与既有共享控件，完整组换行；字段关联改用插件内部稳定 groupID，显示标题继续本地化。历史隐藏行停止逐条读取角色目录，角色名称仍经公开接口格式化。API13 门槛不变，无新公共能力。三个 UI Spec 与26个运行Lua语法检查通过，3411条历史模拟布局约0.02秒；游戏内待复验。CAP-002：账号搜索与规则输入继续公共输入，原生寄信控件保留原对象；NativeUI／RecipientUI／MailUI 的旧自建输入剩余范围仍待迁移，不据本轮尺寸修复升级为全部接入。
+
+2026-10-12 Mail 1.2.9-api1 版本整理：合并 API13 适配与英文布局／历史性能修复，生成双渠道安装包；客户端验收状态仍保持待完成。

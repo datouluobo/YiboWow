@@ -48,7 +48,7 @@ function Action:Query(request)
             if not notice then notice = { count = 0, known = true, subjects = {} }; notices[id] = notice end
             notice.count, notice.known = notice.count + 1, notice.known and known
             if expiry and (not notice.expiry or expiry < notice.expiry) then notice.expiry = expiry end
-            if #notice.subjects < 3 then notice.subjects[#notice.subjects + 1] = Addon.ViewModel:Escape(mail.subject ~= "" and mail.subject or "无主题邮件") end
+            if #notice.subjects < 3 then notice.subjects[#notice.subjects + 1] = Addon.ViewModel:Escape(mail.subject ~= "" and mail.subject or Addon:T("UI.TEXT_0363")) end
             notice.observedAt, notice.clockSource = mail.observedAt, mail.clockSource
         end
     end
@@ -70,23 +70,23 @@ function Action:Query(request)
             local task = {
                 itemKey = key,
                 businessRef = { capability = "action.todo", providerID = self.PROVIDER, sourceEpoch = meta.sourceEpoch, key = key },
-                title = notice.pending and "新邮件 · 待查看" or ("新邮件 · " .. notice.count .. " 封"),
+                title = notice.pending and Addon:T("UI.TEXT_0359") or (Addon:T("UI.TEXT_0358") .. notice.count .. Addon:T("UI.TEXT_0032")),
                 icon = "Interface\\Icons\\INV_Letter_15",
-                summary = (notice.pending and "游戏提示收到新邮件，打开邮箱核对。" or
-                    ("尚未查看：" .. table.concat(notice.subjects, "、") .. (notice.count > 3 and "等。" or "。")))
-                    .. "查看信件或展开附件后即停止提醒；附件可继续保存在邮箱。",
+                summary = (notice.pending and Addon:T("UI.TEXT_0446") or
+                    (Addon:T("UI.TEXT_0242") .. table.concat(notice.subjects, Addon:T("UI.TEXT_0078")) .. (notice.count > 3 and Addon:T("UI.TEXT_0475") or Addon:T("UI.TEXT_0079"))))
+                    .. Addon:T("UI.TEXT_0413"),
                 execution = { mode = "self", characterID = character.id },
                 beneficiary = { mode = "character", characterID = character.id },
-                state = "active", readiness = known and "actionable" or "unknown", reason = known and "待查看" or "新邮件待核实",
+                state = "active", readiness = known and "actionable" or "unknown", reason = known and Addon:T("UI.TEXT_0287") or Addon:T("UI.TEXT_0361"),
                 temporal = { kind = "persistent", nextChangeAt = expiry and expiry > now and expiry or nil },
                 freshness = { state = freshness, observedAt = notice.observedAt,
                     validUntil = expiry, clockSource = notice.clockSource },
             }
-            if Addon.FEATURES.account then task.nextAction = { kind = "open-page", title = "查看邮件", pageID = "mail-inbox" } end
+            if Addon.FEATURES.account then task.nextAction = { kind = "open-page", title = Addon:T("UI.TEXT_0416"), pageID = "mail-inbox" } end
             tasks[#tasks + 1] = task
         end
     end
-    return { providerID = self.PROVIDER, sourceTitle = "新邮件", sourceEpoch = meta.sourceEpoch, revision = meta.revision,
+    return { providerID = self.PROVIDER, sourceTitle = Addon:T("UI.TEXT_0360"), sourceEpoch = meta.sourceEpoch, revision = meta.revision,
         generatedAt = now, status = partial and "partial" or "ready", coverage = coverage, data = { tasks = tasks } }
 end
 
@@ -110,7 +110,7 @@ function Action:Initialize()
     local core = Addon.Core
     if not (core and core:CheckAPIVersion(11) and core:HasCapability("business-providers", 1)
         and core.Contracts and type(core.Contracts.List) == "function") then
-        return nil, "行动中心邮件集成需要升级 YiboCore 至 API v11；邮件基础功能仍可使用。"
+        return nil, Addon:T("UI.TEXT_0495")
     end
     self:Metadata()
     self.callback = self.callback or function() Action:Changed() end

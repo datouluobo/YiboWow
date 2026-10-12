@@ -1,0 +1,310 @@
+{
+  "resources": 532,
+  "missingEnglish": [],
+  "extraEnglish": [],
+  "duplicateKeys": [],
+  "formatMismatch": [],
+  "unknownKeys": [],
+  "hardcoded": [],
+  "layoutReview": [
+    {
+      "path": "YiboMail/AccountPage.lua",
+      "line": 217
+    },
+    {
+      "path": "YiboMail/AccountPage.lua",
+      "line": 222
+    },
+    {
+      "path": "YiboMail/AccountPage.lua",
+      "line": 228
+    },
+    {
+      "path": "YiboMail/AccountPage.lua",
+      "line": 235
+    },
+    {
+      "path": "YiboMail/AccountPage.lua",
+      "line": 238
+    },
+    {
+      "path": "YiboMail/AccountPage.lua",
+      "line": 290
+    },
+    {
+      "path": "YiboMail/AccountPage.lua",
+      "line": 324
+    },
+    {
+      "path": "YiboMail/AccountPage.lua",
+      "line": 345
+    },
+    {
+      "path": "YiboMail/AccountPage.lua",
+      "line": 587
+    },
+    {
+      "path": "YiboMail/AccountPage.lua",
+      "line": 653
+    },
+    {
+      "path": "YiboMail/CacheUI.lua",
+      "line": 52
+    },
+    {
+      "path": "YiboMail/CacheUI.lua",
+      "line": 53
+    },
+    {
+      "path": "YiboMail/CacheUI.lua",
+      "line": 58
+    },
+    {
+      "path": "YiboMail/CacheUI.lua",
+      "line": 236
+    },
+    {
+      "path": "YiboMail/CacheUI.lua",
+      "line": 338
+    },
+    {
+      "path": "YiboMail/CacheUI.lua",
+      "line": 584
+    },
+    {
+      "path": "YiboMail/CacheUI.lua",
+      "line": 603
+    },
+    {
+      "path": "YiboMail/CacheUI.lua",
+      "line": 624
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 56
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 334
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 337
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 359
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 374
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 375
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 378
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 380
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 382
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 383
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 384
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 385
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 404
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 405
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 406
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 407
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 444
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 455
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 457
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 467
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 484
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 724
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 986
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 1087
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 1208
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 1331
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 1338
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 1344
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 1547
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 1680
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "line": 1710
+    },
+    {
+      "path": "YiboMail/RecipientUI.lua",
+      "line": 34
+    },
+    {
+      "path": "YiboMail/RecipientUI.lua",
+      "line": 54
+    },
+    {
+      "path": "YiboMail/RecipientUI.lua",
+      "line": 56
+    },
+    {
+      "path": "YiboMail/RecipientUI.lua",
+      "line": 72
+    },
+    {
+      "path": "YiboMail/RuleSendUI.lua",
+      "line": 30
+    },
+    {
+      "path": "YiboMail/RuleSendUI.lua",
+      "line": 41
+    },
+    {
+      "path": "YiboMail/RuleSendUI.lua",
+      "line": 61
+    },
+    {
+      "path": "YiboMail/RuleSendUI.lua",
+      "line": 167
+    },
+    {
+      "path": "YiboMail/RuleSendUI.lua",
+      "line": 173
+    },
+    {
+      "path": "YiboMail/RuleSendUI.lua",
+      "line": 203
+    },
+    {
+      "path": "YiboMail/RuleSendUI.lua",
+      "line": 219
+    },
+    {
+      "path": "YiboMail/RuleSendUI.lua",
+      "line": 224
+    },
+    {
+      "path": "YiboMail/SendRulesSettings.lua",
+      "line": 44
+    },
+    {
+      "path": "YiboMail/SendRulesSettings.lua",
+      "line": 45
+    },
+    {
+      "path": "YiboMail/SendRulesSettings.lua",
+      "line": 46
+    },
+    {
+      "path": "YiboMail/SendRulesSettings.lua",
+      "line": 87
+    },
+    {
+      "path": "YiboMail/SendRulesSettings.lua",
+      "line": 162
+    },
+    {
+      "path": "YiboMail/SendRulesSettings.lua",
+      "line": 359
+    },
+    {
+      "path": "YiboMail/SendRulesSettings.lua",
+      "line": 392
+    },
+    {
+      "path": "YiboMail/SendRulesSettings.lua",
+      "line": 463
+    }
+  ],
+  "exceptions": [
+    {
+      "path": "YiboMail/SendRules.lua",
+      "line": 22,
+      "text": "\"作废\"",
+      "reason": "Native item-category markers used only to recognize obsolete client categories; never displayed."
+    },
+    {
+      "path": "YiboMail/SendRules.lua",
+      "line": 22,
+      "text": "\"废弃\"",
+      "reason": "Native item-category markers used only to recognize obsolete client categories; never displayed."
+    }
+  ],
+  "addons": {
+    "YiboMail": {
+      "shippedFiles": 26,
+      "hardcodedCandidates": 0,
+      "localizedReferences": 816,
+      "regions": {}
+    }
+  },
+  "catalogReview": []
+}

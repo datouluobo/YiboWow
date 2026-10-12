@@ -20,20 +20,20 @@ function Compose:GetAttachments()
     return result
 end
 function Compose:OpenNative()
-    if SendMailFrameLockSendMail and SendMailFrameLockSendMail:IsShown() then return nil, "请先处理原生附件确认提示。" end
-    if Addon.Queue.state == "running" or Addon.Queue.pending then return nil, "请先暂停收件队列并等待当前操作结束。" end
-    if not Addon.Scanner:IsOpen() then return nil, "请先在游戏中打开邮箱。" end
-    if InCombatLockdown and InCombatLockdown() then return nil, "战斗中无法装填邮件。" end
-    if not MailFrameTab_OnClick or not SendMailNameEditBox or not SendMailSubjectEditBox or not self:GetBodyEditBox() then return nil, "当前客户端发件界面未就绪。" end
+    if SendMailFrameLockSendMail and SendMailFrameLockSendMail:IsShown() then return nil, Addon:T("UI.TEXT_0522") end
+    if Addon.Queue.state == "running" or Addon.Queue.pending then return nil, Addon:T("UI.TEXT_0528") end
+    if not Addon.Scanner:IsOpen() then return nil, Addon:T("UI.TEXT_0520") end
+    if InCombatLockdown and InCombatLockdown() then return nil, Addon:T("UI.TEXT_0309") end
+    if not MailFrameTab_OnClick or not SendMailNameEditBox or not SendMailSubjectEditBox or not self:GetBodyEditBox() then return nil, Addon:T("UI.TEXT_0262") end
     if securecallfunction then securecallfunction(MailFrameTab_OnClick, nil, 2)
     else MailFrameTab_OnClick(nil, 2) end
     return true
 end
 function Compose:ApplyDraft()
     local ok, err = self:OpenNative(); if not ok then return nil, err end
-    if self.draft.recipient == "" then return nil, "请填写收件人。" end
-    if self.draft.cod and #self:GetAttachments() == 0 then return nil, "付款取信需要附件。" end
-    if self.draft.copper > 0 and (not MoneyInputFrame_SetCopper or not SendMailMoney or not SendMailRadioButton_OnClick) then return nil, "当前客户端无法装填寄送金额，请在原生发件箱填写。" end
+    if self.draft.recipient == "" then return nil, Addon:T("UI.TEXT_0539") end
+    if self.draft.cod and #self:GetAttachments() == 0 then return nil, Addon:T("UI.TEXT_0113") end
+    if self.draft.copper > 0 and (not MoneyInputFrame_SetCopper or not SendMailMoney or not SendMailRadioButton_OnClick) then return nil, Addon:T("UI.TEXT_0263") end
     SendMailNameEditBox:SetText(self.draft.recipient); SendMailSubjectEditBox:SetText(self.draft.subject); self:GetBodyEditBox():SetText(self.draft.body)
     if MoneyInputFrame_SetCopper and SendMailMoney and SendMailRadioButton_OnClick then
         MoneyInputFrame_SetCopper(SendMailMoney, self.draft.copper); SendMailRadioButton_OnClick(self.draft.cod and 2 or 1)
@@ -42,7 +42,7 @@ function Compose:ApplyDraft()
 end
 function Compose:ClickSlot(slot, clear)
     local ok, err = self:OpenNative(); if not ok then return nil, err end
-    if not ClickSendMailItemButton then return nil, "当前客户端未提供附件装填接口。" end
+    if not ClickSendMailItemButton then return nil, Addon:T("UI.TEXT_0264") end
     local success, errorMessage = pcall(ClickSendMailItemButton, slot, clear); return success, errorMessage
 end
 function Compose:BagItems()
@@ -68,14 +68,14 @@ function Compose:BagItems()
     return result
 end
 function Compose:AddMatchingBagItems(bag, slot)
-    if not Addon.Scanner:IsOpen() or not SendMailFrame or not SendMailFrame:IsShown() then return nil, "请先打开原生发件箱。" end
-    if InCombatLockdown and InCombatLockdown() then return nil, "战斗中无法装填邮件。" end
-    if CursorHasItem and CursorHasItem() then return nil, "请先放下鼠标上的物品。" end
+    if not Addon.Scanner:IsOpen() or not SendMailFrame or not SendMailFrame:IsShown() then return nil, Addon:T("UI.TEXT_0524") end
+    if InCombatLockdown and InCombatLockdown() then return nil, Addon:T("UI.TEXT_0309") end
+    if CursorHasItem and CursorHasItem() then return nil, Addon:T("UI.TEXT_0527") end
     local selected
     for _, item in ipairs(self:BagItems()) do
         if item.bag == bag and item.slot == slot then selected = item; break end
     end
-    if not selected then return nil, "该物品当前不可寄送。" end
+    if not selected then return nil, Addon:T("UI.TEXT_0515") end
     local attached, matching = self:GetAttachments(), {}
     local occupied = {}
     for _, item in ipairs(attached) do
@@ -83,13 +83,13 @@ function Compose:AddMatchingBagItems(bag, slot)
         if item.itemID == selected.itemID then matching[#matching + 1] = item end
     end
     local capacity = ATTACHMENTS_MAX_SEND or 12
-    if #matching > 0 then return nil, "同种物品已经在附件中。" end
+    if #matching > 0 then return nil, Addon:T("UI.TEXT_0202") end
     local candidates = {}
     for _, item in ipairs(self:BagItems()) do
         if item.itemID == selected.itemID then candidates[#candidates + 1] = item end
     end
     local pickup = C_Container and C_Container.PickupContainerItem or PickupContainerItem
-    if not pickup or not ClickSendMailItemButton then return nil, "装填接口不可用。" end
+    if not pickup or not ClickSendMailItemButton then return nil, Addon:T("UI.TEXT_0497") end
     local added = 0
     for _, item in ipairs(candidates) do
         if added + #attached >= capacity then break end
@@ -102,7 +102,7 @@ function Compose:AddMatchingBagItems(bag, slot)
             occupied[target] = true; added = added + 1
         else break end
     end
-    return added > 0, added > 0 and ("已加入 " .. added .. " 组同种物品。") or "没有可加入的同种物品或附件位已满。"
+    return added > 0, added > 0 and (Addon:T("UI.TEXT_0245") .. added .. Addon:T("UI.TEXT_0047")) or Addon:T("UI.TEXT_0436")
 end
 function Compose:Install()
     if self.hooked or not hooksecurefunc or not SendMail then return end
