@@ -4,7 +4,7 @@
 ## Title-zhTW: |cff20e070[Yibo]|r YiboTodo - 账号待办
 ## Notes: 熊猫人之谜专业冷却与农场操作记录的账号待办视图。
 ## Author: YiboSoft
-## Version: 1.2.0
+## Version: 1.3.1
 ## IconTexture: Interface\AddOns\YiboTodo\Media\YiboTodoIcon-v6
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
@@ -12,6 +12,7 @@
 ## LoadOnDemand: 0
 
 Namespace.lua
+Locale.lua
 Database.lua
 Catalog\MonitoringGroupCatalog.lua
 Catalog\ActivityCatalog.lua

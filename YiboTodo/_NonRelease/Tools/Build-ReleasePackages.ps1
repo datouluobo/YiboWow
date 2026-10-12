@@ -21,14 +21,12 @@ $curseForgeTemp = Join-Path $tempRoot (Split-Path $curseForgeOutput -Leaf)
 $githubTemp = Join-Path $tempRoot (Split-Path $githubOutput -Leaf)
 
 function Move-PreviousPackagesToArchive {
-    $archiveRoot = Join-Path $outputRoot "Archive"
+    $archiveRoot = Join-Path (Join-Path $outputRoot "Archive") $addonName
     New-Item -ItemType Directory -Path $archiveRoot -Force | Out-Null
     $moved = 0
     Get-ChildItem -LiteralPath $outputRoot -File -Filter "$addonName-*.zip" | ForEach-Object {
         $destination = Join-Path $archiveRoot $_.Name
-        if (Test-Path -LiteralPath $destination) {
-            $destination = Join-Path $archiveRoot ("{0}-{1}{2}" -f $_.BaseName, (Get-Date -Format "yyyyMMdd-HHmmssfff"), $_.Extension)
-        }
+        if (Test-Path -LiteralPath $destination) { throw "Archive package already exists: $destination" }
         Move-Item -LiteralPath $_.FullName -Destination $destination
         $moved++
     }

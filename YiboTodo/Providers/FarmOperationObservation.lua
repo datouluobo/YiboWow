@@ -41,7 +41,16 @@ function Provider:ResolveRule(spellID)
     local definition = self:GetDefinition()
     local rules = definition and definition.rules or {}
     local exact = rules[tonumber(spellID)]
-    if exact then return exact end
+    if exact then
+        -- Exact IDs remain the authoritative recognition rule. Use the
+        -- client's localized spell name only for display and retain the
+        -- existing Chinese catalog label whenever the API has no result.
+        return {
+            kind = exact.kind, plantType = exact.plantType,
+            label = Addon:GetLocalizedGameName("spell", spellID, exact.label),
+            verificationStatus = exact.verificationStatus,
+        }
+    end
     local name = SpellName(spellID)
     local plantType = InferPlantType(name)
     if plantType then

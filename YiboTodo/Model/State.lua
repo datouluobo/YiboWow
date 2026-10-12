@@ -2,7 +2,7 @@ local Addon = _G.YiboTodo
 local State = {}
 Addon.Model.State = State
 
-State.Labels = { actionable = "可制作", cooldown = "冷却中", estimated = "预计可用", ["skill-insufficient"] = "专业技能不足", locked = "未学习", unknown = "待确认", ["not-applicable"] = "不适用" }
+State.Labels = { actionable = Addon:T("STATUS.ACTIONABLE"), cooldown = Addon:T("STATUS.COOLDOWN"), estimated = Addon:T("STATUS.ESTIMATED"), ["skill-insufficient"] = Addon:T("STATUS.SKILL_LOW"), locked = Addon:T("STATE.UNLEARNED"), unknown = Addon:T("STATUS.UNKNOWN"), ["not-applicable"] = Addon:T("STATE.NOT_APPLICABLE") }
 
 function State:Evaluate(group, observation, now, skillLevel)
     now = tonumber(now) or Addon:Now()

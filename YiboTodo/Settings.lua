@@ -7,6 +7,17 @@ Addon.Settings = Settings
 -- settings page groups related recipes together before applying recipe order.
 local PROFESSION_ORDER = { [171] = 10, [164] = 20, [333] = 30, [202] = 40, [773] = 50, [755] = 60, [165] = 70, [197] = 80 }
 
+local function LocalizedCatalogLabel(kind, id, fallback)
+    local key = "SETTINGS.CATALOG." .. kind .. "." .. id
+    local value = Addon.Core.Locale:Get(Addon.NAME, key)
+    if value:match("^%[YiboTodo:") then return fallback or id end
+    return value
+end
+
+local function MonitoringGroupLabel(group)
+    return LocalizedCatalogLabel("GROUP", group.id, group.label)
+end
+
 function Settings:GetMode(kind, id, fallback)
     local overrides = Addon.db.settings.modeOverrides[kind] or {}
     return overrides[id] or fallback or "required"
@@ -48,7 +59,7 @@ function Settings:GetMonitoringItems(groupID)
                 for _, recipe in pairs(Addon.Catalog.recipes or {}) do
                     if recipe.cooldownGroupID == group.id and recipe.verificationStatus == "needs-live-confirmation" then candidate = true; break end
                 end
-                items[#items + 1] = { id = group.id, label = group.label, order = group.order, professionID = group.professionID, professionOrder = PROFESSION_ORDER[tonumber(group.professionID)] or 999, kind = "cooldown-group", defaultEnabled = not candidate, candidate = candidate }
+                items[#items + 1] = { id = group.id, label = LocalizedCatalogLabel("ITEM", group.id, Addon:GetCooldownGroupLabel(group)), order = group.order, professionID = group.professionID, professionOrder = PROFESSION_ORDER[tonumber(group.professionID)] or 999, kind = "cooldown-group", defaultEnabled = not candidate, candidate = candidate }
             end
         end
     else
@@ -59,7 +70,7 @@ function Settings:GetMonitoringItems(groupID)
             if source and source.registrationStatus ~= "pending-client-verification" then
                 local defaultEnabled = source.defaultEnabled
                 if defaultEnabled == nil then defaultEnabled = source.verificationStatus ~= "needs-live-confirmation" end
-                items[#items + 1] = { id = id, label = source.label or id, order = source.order, kind = definition.memberKind, defaultEnabled = defaultEnabled, candidate = source.verificationStatus == "needs-live-confirmation" }
+                items[#items + 1] = { id = id, label = LocalizedCatalogLabel("ITEM", id, source.label or id), order = source.order, kind = definition.memberKind, defaultEnabled = defaultEnabled, candidate = source.verificationStatus == "needs-live-confirmation" }
             end
         end
     end
@@ -171,7 +182,7 @@ function Settings:CreatePanel(parent, context)
         panel.groupChecks, panel.itemChecks = {}, {}
     end
     panel.yiboSettingsOwner = "todo"; panel:Show()
-    panel.title:SetText("活动监控")
+    panel.title:SetText(Addon:T("SETTINGS.MONITORING"))
     local y, groupIndex, itemIndex = 52, 0, 0
     local groups = {}
     for _, group in pairs(Addon.Catalog.monitoringGroups or {}) do
@@ -193,7 +204,7 @@ function Settings:CreatePanel(parent, context)
         if #items == 1 then
             -- A one-item column has no meaningful parent/child choice.
             parentCheck:SetChecked(state ~= "hidden")
-            parentCheck.label:SetText(group.label)
+            parentCheck.label:SetText(MonitoringGroupLabel(group))
             BindMonitoringCheckbox(parentCheck, function(enabled)
                 Settings:SetMonitoringGroupEnabled(groupID, enabled)
                 context.notifyPageChanged(); context.refreshPage()
@@ -201,7 +212,7 @@ function Settings:CreatePanel(parent, context)
             parentCheck:Show(); y = y + 32
         else
             parentCheck:SetCheckState(state == "partial" and "partial" or (state == "enabled" and "checked" or "unchecked"))
-            parentCheck.label:SetText(group.label)
+            parentCheck.label:SetText(MonitoringGroupLabel(group))
             BindMonitoringGroupCheckbox(parentCheck, function(enabled, selectAll)
                 Settings:SetMonitoringGroupEnabled(groupID, enabled, selectAll)
                 context.notifyPageChanged(); context.refreshPage()

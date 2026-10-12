@@ -75,7 +75,7 @@ frame:SetScript("OnEvent", function(_, event, ...)
         Addon:ValidateCatalog()
     elseif event == "PLAYER_LOGIN" then
         local ok, err = Addon.CoreIntegration:Initialize()
-        if not ok then Addon:Print("Core 接入失败：" .. tostring(err)) else
+        if not ok then Addon:Print(Addon:T("ERROR.INTEGRATION", tostring(err))) else
             Addon.initialized = true
             local provider = Addon.Providers.Registry:Get("daily-quest")
             if provider then provider:QueueObserve() end

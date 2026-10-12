@@ -24,7 +24,7 @@ function Actions:Describe(project, isCurrentCharacter)
         type2 = (target or open) and "macro" or "", macrotext2 = target or open },
         professionAction = spellID ~= nil, spellID = spellID, spellName = spellName,
         itemID = itemID, itemName = item, openProfessionMacro = open,
-        leftTitle = item and "使用物品" or "制作一次（未打开专业时先打开）", rightTitle = target and "选中诺米" or "打开专业" }
+        leftTitle = item and Addon:T("ACTION.USE_ITEM") or Addon:T("ACTION.CRAFT_ONCE"), rightTitle = target and Addon:T("ACTION.TARGET_NOMI") or Addon:T("ACTION.OPEN_PROFESSION") }
 end
 
 local function Call(fn, ...)

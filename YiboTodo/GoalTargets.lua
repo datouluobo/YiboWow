@@ -16,12 +16,12 @@ end
 function Targets:Normalize(request)
     local intent = request.intent
     local definition = type(intent) == "table" and Definition(intent.objectID)
-    if not definition then return nil, "此项目尚无可验证的目标定义" end
+    if not definition then return nil, Addon:T("GOAL.INVALID") end
     local scope = intent.scope or {}
-    if scope.mode ~= "character" and scope.mode ~= "account" then return nil, "请选择执行范围" end
+    if scope.mode ~= "character" and scope.mode ~= "account" then return nil, Addon:T("GOAL.SCOPE") end
     if scope.mode == "character" and not scope.characterID then return { needsConfiguration = true, fields = {} } end
-    if scope.mode == "character" and not Addon.Core.Characters:Get(scope.characterID, { identityOnly = true }) then return nil, "角色不存在" end
-    if scope.mode == "account" and (type(scope.characterIDs) ~= "table" or #scope.characterIDs == 0) then return nil, "账号目标需要明确角色范围" end
+    if scope.mode == "character" and not Addon.Core.Characters:Get(scope.characterID, { identityOnly = true }) then return nil, Addon:T("GOAL.CHARACTER_MISSING") end
+    if scope.mode == "account" and (type(scope.characterIDs) ~= "table" or #scope.characterIDs == 0) then return nil, Addon:T("GOAL.ACCOUNT_SCOPE") end
     local clean = Addon.Core.Defaults:Copy(intent)
     clean.repeatPolicy = "recurring"; clean.conditions = {}; clean.targetType = "activity"
     local scopeKey = scope.mode == "character" and scope.characterID or table.concat(scope.characterIDs, ",")
@@ -30,7 +30,7 @@ function Targets:Normalize(request)
 end
 function Targets:Evaluate(request)
     local meta = Addon.ActionTodo:GetMetadata()
-    local result = { sourceEpoch = meta.sourceEpoch, revision = meta.revision, sourceTitle = "账号待办", evaluations = {} }
+    local result = { sourceEpoch = meta.sourceEpoch, revision = meta.revision, sourceTitle = Addon:T("GOAL.SOURCE_TITLE"), evaluations = {} }
     for _, goal in ipairs(request.goals or {}) do
         local clean, err = self:Normalize({ intent = goal.intent })
         local task, coverage, display
@@ -55,17 +55,17 @@ function Targets:Evaluate(request)
                 task.execution = { mode = "account", candidateCharacterIDs = intent.scope.characterIDs }; task.beneficiary = { mode = "account" }
             end
         end
-        result.evaluations[goal.id] = { task = task, display = display, reason = err or (coverage and coverage.reason) or "需要采集此项目的角色数据" }
+        result.evaluations[goal.id] = { task = task, display = display, reason = err or (coverage and coverage.reason) or Addon:T("GOAL.NEEDS_DATA") }
     end
     return result
 end
 function Targets:Initialize()
     local core = Addon.Core
     if not (core:CheckAPIVersion(12) and core:HasCapability("business-item-actions", 1)) then
-        Addon:Print("主动添加目标需要 YiboCore API v12，请升级 Core。"); return nil
+        Addon:Print(Addon:T("GOAL.API_REQUIRED")); return nil
     end
     if self.ref then return true end
-    self.definition = { name = "action.targets", kind = "provider", providerID = self.PROVIDER, version = { major = 1, minor = 2 }, methods = { GetEntry = function() return { title = "账号待办", pageID = "todo" } end,
+    self.definition = { name = "action.targets", kind = "provider", providerID = self.PROVIDER, version = { major = 1, minor = 2 }, methods = { GetEntry = function() return { title = Addon:T("PAGE.TITLE"), pageID = "todo" } end,
         GetClickAction = function(r) return Targets:GetClickAction(r.intent) end,
         AfterClick = function(r) return Targets:AfterClick(r.intent, r.button) end,
         Normalize = function(r) return Targets:Normalize(r) end, Evaluate = function(r) return Targets:Evaluate(r) end } }

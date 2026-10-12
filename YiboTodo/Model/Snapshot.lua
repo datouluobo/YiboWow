@@ -78,7 +78,7 @@ end
 local function DecorateProfessionProject(activity, builtGroup, observation, provider, slots, slot, characterID, groupID)
     local recipe = RecipeForGroup(builtGroup)
     if recipe then
-        activity.groupID, activity.monitoringGroupID, activity.slot, activity.label = groupID, "profession-cooldown", slot, builtGroup.label or groupID
+        activity.groupID, activity.monitoringGroupID, activity.slot, activity.label = groupID, "profession-cooldown", slot, Addon:GetCooldownGroupLabel(builtGroup)
         activity.iconKind = recipe.resultItemID and "item" or (recipe.recipeSpellID and "spell" or "texture")
         activity.icon = recipe.resultItemID or recipe.recipeSpellID or slots[slot].icon
         activity.fallbackIcon = slots[slot].icon
@@ -139,7 +139,10 @@ local function BuildFarmProject(characterID, now, explicit)
     if not plantedToday and not harvestedToday and not readyFromPreviousPlant then return nil, true end
     local labels = {}
     for _, kind in ipairs({ "harvest", "till", "plant", "weed", "pest", "care" }) do
-        if kinds[kind] then labels[#labels + 1] = ({ harvest = "收获", till = "开垦", plant = "播种", weed = "除草", pest = "除虫", care = "照料" })[kind] end
+        if kinds[kind] then labels[#labels + 1] = ({
+            harvest = Addon:T("OP.HARVEST"), till = Addon:T("OP.TILL"), plant = Addon:T("OP.PLANT"),
+            weed = Addon:T("OP.WEED"), pest = Addon:T("OP.PEST"), care = Addon:T("OP.CARE"),
+        })[kind] end
     end
     return {
         groupID = definition.id, label = definition.label, order = 1,
@@ -153,10 +156,10 @@ local function BuildFarmProject(characterID, now, explicit)
         nextResetAt = (day and day.nextResetAt) or Addon.Model.Schedule:NextResetAt(now, definition.resetHour),
         operationObserved = #operations > 0, operationLabels = labels,
         optimisticFarm = true,
-        statusText = kinds.growing and "已收菜并种菜（目视生长作物投影）"
-            or plantedToday and "已种菜（一次操作按全农场投影）"
-            or harvestedToday and "已收菜（一次操作按全农场投影）"
-            or "可收菜（依据前日种菜投影）",
+        statusText = kinds.growing and Addon:T("STATUS.FARM_GROWING")
+            or plantedToday and Addon:T("STATUS.FARM_PLANTED")
+            or harvestedToday and Addon:T("STATUS.FARM_HARVESTED")
+            or Addon:T("STATUS.FARM_READY"),
         providerState = (day or previousDay) and "available" or "not-yet-observed",
     }, true
 end
@@ -175,11 +178,11 @@ local function BuildNomiProject(characterID, now, explicit)
     local state = observedState and observedState ~= "unknown" and observedState
         or (eligibility and "actionable" or "unknown")
     local statusText
-    if state == "ready-to-turn-in" or state == "in-progress" then statusText = "任务目标已完成，待交付"
-    elseif state == "actionable" then statusText = observedState == "actionable" and "任务日志已确认，可处理" or "已满足诺米日常条件，今日已重置，可处理"
-    elseif state == "completed" then statusText = "本服务器日已完成"
-    elseif eligibility then statusText = "已满足诺米日常条件，等待今日任务日志确认"
-    else statusText = "尚未在任务日志中确认当前诺米日常"
+    if state == "ready-to-turn-in" or state == "in-progress" then statusText = Addon:T("STATUS.NOMI_TURN_IN")
+    elseif state == "actionable" then statusText = observedState == "actionable" and Addon:T("STATUS.NOMI_CONFIRMED") or Addon:T("STATUS.NOMI_RESET")
+    elseif state == "completed" then statusText = Addon:T("STATUS.SERVER_DAY_DONE")
+    elseif eligibility then statusText = Addon:T("STATUS.NOMI_WAIT_LOG")
+    else statusText = Addon:T("STATUS.NOMI_UNKNOWN")
     end
     return {
         groupID = definition.id, label = definition.label, order = 1, state = state,
@@ -187,7 +190,8 @@ local function BuildNomiProject(characterID, now, explicit)
         iconKind = definition.iconItemID and "item" or "texture", icon = definition.iconItemID or definition.icon, fallbackIcon = definition.icon,
         observedAt = (day and day.observedAt) or (eligibility and eligibility.confirmedAt),
         nextResetAt = day and day.nextResetAt or Addon.Model.Schedule:NextResetAt(now, definition.resetHour),
-        questID = day and day.questID, questKind = day and day.kind, dailyTaskLabel = day and day.label,
+        questID = day and day.questID, questKind = day and day.kind,
+        dailyTaskLabel = day and Addon:GetLocalizedGameName("quest", day.questID, day.label),
         eligibilityKnown = eligibility ~= nil,
         statusText = statusText, reason = day and day.reason,
         action = definition.iconItemID and { actionMode = "use-item", itemID = definition.iconItemID, itemName = definition.itemName, interactName = definition.interactName } or nil,
@@ -221,11 +225,11 @@ local function BuildCookingProject(characterID, characterLevel, now, currentChar
         iconKind = iconKind, icon = icon, fallbackIcon = definition.icon,
         observedAt = day and day.observedAt,
         nextResetAt = day and day.nextResetAt or Addon.Model.Schedule:NextResetAt(now, definition.resetHour),
-        dailyTaskLabel = day and day.label,
-        statusText = (state == "ready-to-turn-in" or state == "in-progress") and "任务目标已完成，待交付"
-            or state == "completed" and "本服务器日已完成"
-            or observedState == "actionable" and "任务日志已确认，可处理"
-            or "每日重置，可处理",
+        dailyTaskLabel = day and Addon:GetLocalizedGameName("quest", day.questID, day.label),
+        statusText = (state == "ready-to-turn-in" or state == "in-progress") and Addon:T("STATUS.NOMI_TURN_IN")
+            or state == "completed" and Addon:T("STATUS.SERVER_DAY_DONE")
+            or observedState == "actionable" and Addon:T("STATUS.NOMI_CONFIRMED")
+            or Addon:T("STATUS.DAILY_READY"),
         providerState = observedState and observedState ~= "unknown" and "available"
             or (previousDay and "available" or (isCurrentCharacter and "available" or "not-yet-observed")),
     }, true
@@ -247,17 +251,17 @@ local function BuildLegacyDailyProject(characterID, definition, monitoringGroupI
     local iconKind = definition.iconCurrencyID and "currency" or (definition.iconItemID and "item" or "texture")
     local icon = definition.iconCurrencyID or definition.iconItemID or definition.icon
     local statusText
-    if state == "in-progress" then statusText = "任务目标已完成，待交付"
-    elseif state == "actionable" then statusText = observedState == "actionable" and "任务日志已确认，可处理" or "每日重置，可处理"
-    elseif state == "completed" then statusText = "本服务器日已完成"
-    else statusText = "等待任务日志确认" end
+    if state == "in-progress" then statusText = Addon:T("STATUS.NOMI_TURN_IN")
+    elseif state == "actionable" then statusText = observedState == "actionable" and Addon:T("STATUS.NOMI_CONFIRMED") or Addon:T("STATUS.DAILY_READY")
+    elseif state == "completed" then statusText = Addon:T("STATUS.SERVER_DAY_DONE")
+    else statusText = Addon:T("STATUS.WAIT_LOG") end
     return {
         groupID = definition.id, monitoringGroupID = monitoringGroupID,
         label = definition.label, order = definition.order or 999,
         state = state, iconKind = iconKind, icon = icon, fallbackIcon = definition.icon,
         observedAt = day and day.observedAt,
         nextResetAt = day and day.nextResetAt or Addon.Model.Schedule:NextResetAt(now, definition.resetHour),
-        questID = day and day.questID, dailyTaskLabel = day and day.label,
+        questID = day and day.questID, dailyTaskLabel = day and Addon:GetLocalizedGameName("quest", day.questID, day.label),
         statusText = statusText,
         providerState = observedState and observedState ~= "unknown" and "available"
             or (previousDay and "available" or (isCurrentCharacter and "available" or "not-yet-observed")), catalogPending = definition.verificationStatus == "needs-live-confirmation",
@@ -364,12 +368,12 @@ function Snapshot:Build()
                     end
                     if slot then
                         if activity.state == "actionable" or activity.state == "in-progress" or activity.state == "ready-to-turn-in" then character.summary.todo = character.summary.todo + 1; character.summary.actionable = character.summary.actionable + 1; character.summary.items[#character.summary.items + 1] = group.label or groupID
-                        elseif activity.state == "estimated" then character.summary.todo = character.summary.todo + 1; character.summary.items[#character.summary.items + 1] = "预计：" .. (group.label or groupID)
+                        elseif activity.state == "estimated" then character.summary.todo = character.summary.todo + 1; character.summary.items[#character.summary.items + 1] = Addon:T("SUMMARY.ESTIMATED", group.label or groupID)
                         elseif activity.state == "cooldown" then
                             character.summary.cooldown = character.summary.cooldown + 1
                             if not character.summary.nearestReady or activity.readyAt < character.summary.nearestReady then character.summary.nearestReady = activity.readyAt end
                         elseif activity.state == "unknown" then
-                            character.summary.items[#character.summary.items + 1] = "待确认：" .. (group.label or groupID)
+                            character.summary.items[#character.summary.items + 1] = Addon:T("SUMMARY.CONFIRM", group.label or groupID)
                         end
                     end
                 end

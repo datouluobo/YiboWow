@@ -1,5 +1,5 @@
 local Addon = _G.YiboTodo
-local Action = { PROVIDER = "YiboTodo:activities", METADATA_KEY = "actionActivities", SOURCE_TITLE = "日常与活动" }
+local Action = { PROVIDER = "YiboTodo:activities", METADATA_KEY = "actionActivities" }
 Addon.ActionActivities = Action
 Action.GetMetadata = Addon.ActionTodo.GetMetadata
 Action.Commit = Addon.ActionTodo.Commit
@@ -44,7 +44,7 @@ function Action:ProjectAll(characterID, snapshot, now, epoch, explicit)
                         beneficiary = { mode = "character", characterID = characterID },
                         temporal = { kind = project.period or "daily", cycleKey = project.cycleKey or Addon.Model.Schedule:ServerDay(now, 7), nextChangeAt = at },
                         freshness = { state = fresh, observedAt = project.observedAt, validUntil = at, clockSource = "server" },
-                        nextAction = { kind = "open-page", title = "查看待办", pageID = "todo" },
+                        nextAction = { kind = "open-page", title = Addon:T("ACTION.OPEN_TODO"), pageID = "todo" },
                         item = project.iconKind == "item" and { itemID = project.icon } or nil,
                         icon = project.iconKind ~= "item" and (project.iconKind == "texture" and project.icon or project.fallbackIcon) or nil,
                     }

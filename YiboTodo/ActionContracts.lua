@@ -18,7 +18,7 @@ function Contracts:Initialize()
     local core = Addon.Core
     if not (core and core:CheckAPIVersion(11) and core:HasCapability("business-providers", 1)
         and core.Contracts and type(core.Contracts.List) == "function") then
-        return nil, "行动中心集成需要升级 YiboCore 至 API v11；账号待办基础功能仍可使用。"
+        return nil, Addon:T("ACTION.API11_REQUIRED")
     end
     if Addon.GoalTargets then Addon.GoalTargets:Initialize() end
     for _, source in ipairs(sources) do

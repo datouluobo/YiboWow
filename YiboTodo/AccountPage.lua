@@ -9,9 +9,19 @@ local ROW_HEIGHT, ROW_GAP, ICON_SIZE, ICON_GAP = Theme.Table.iconRowHeight, 0, 2
 -- scannable without adding a foreign divider treatment.
 local COLUMN_GAP = Theme.Space.xs
 local MIN_PROJECT_SLOTS = 1
-local FARM_COLUMN_WIDTH = ICON_SIZE + 8
-local NOMI_COLUMN_WIDTH = ICON_SIZE + 8
-local STATUS_TEXT = { actionable = "可制作", ["ready-to-turn-in"] = "任务目标已完成，待交付", ["in-progress"] = "任务目标已完成，待交付", cooldown = "冷却中", completed = "已完成", estimated = "可制作（按冷却时间）", ["skill-insufficient"] = "专业技能不足", unknown = Theme.StatusText.unknown }
+local ICON_COLUMN_MIN_WIDTH = ICON_SIZE + 8
+
+local function IconColumnWidth(headerTitle)
+    -- Match the width consumed by Theme:SetMatrixHeader's built-in label inset.
+    -- This does not add table-cell padding; it keeps the measured title inside
+    -- the text region the shared header actually provides.
+    local titleWidth = Theme:MeasureText(Theme.Font.assist, headerTitle or "") + Theme.Table.cellInset * 2
+    return math.max(ICON_COLUMN_MIN_WIDTH, math.ceil(titleWidth))
+end
+local function StatusText(state)
+    local key = ({ actionable = "STATUS.ACTIONABLE", ["ready-to-turn-in"] = "STATUS.TURN_IN", ["in-progress"] = "STATUS.TURN_IN", cooldown = "STATUS.COOLDOWN", completed = "STATUS.COMPLETED", estimated = "STATUS.ESTIMATED", ["skill-insufficient"] = "STATUS.SKILL_LOW", unknown = "STATUS.UNKNOWN" })[state]
+    return key and Addon:T(key) or Theme.StatusText.unknown
+end
 
 local function ProjectColumnWidth(slots)
     slots = math.max(MIN_PROJECT_SLOTS, tonumber(slots) or 0)
@@ -22,8 +32,8 @@ local MIN_PROJECT_COLUMN_WIDTH = ProjectColumnWidth(MIN_PROJECT_SLOTS)
 
 local function CharacterLabel(character, showRealm)
     local name = tostring(character and character.name or "?")
-    if showRealm then return name .. "-" .. tostring(character and character.realm or "未知服务器") end
-    return name
+    local formatted = Addon.Core.Characters:FormatName(character, { nameMode = "original", realmMode = showRealm and "full" or "omit" })
+    return formatted or name
 end
 
 local function CharacterColumnWidth(context)
@@ -53,47 +63,47 @@ local function Release(pool, from)
 end
 
 local function ProjectTooltip(project)
-    local lines = { { kind = "pair", label = "状态", value = project.statusText or STATUS_TEXT[project.state] or "状态异常" } }
+    local lines = { { kind = "pair", label = Addon:T("TOOLTIP.STATUS"), value = project.statusText or StatusText(project.state) or Addon:T("STATUS.INVALID") } }
     if project.state == "actionable" then
-        lines[#lines + 1] = { kind = "text", text = "当前角色可以立即处理。" }
+        lines[#lines + 1] = { kind = "text", text = Addon:T("TOOLTIP.READY_NOW") }
     elseif project.state == "cooldown" then
-        lines[#lines + 1] = { kind = "text", text = "当前正在冷却；图标上的勾号表示已记录为等待中，不代表本周期已完成。" }
+        lines[#lines + 1] = { kind = "text", text = Addon:T("TOOLTIP.COOLDOWN") }
     elseif project.state == "completed" then
-        lines[#lines + 1] = { kind = "text", text = "本周期已完成。" }
+        lines[#lines + 1] = { kind = "text", text = Addon:T("TOOLTIP.CYCLE_DONE") }
     elseif project.state == "ready-to-turn-in" or project.state == "in-progress" then
-        lines[#lines + 1] = { kind = "text", text = "目标已完成，请返回交付。" }
+        lines[#lines + 1] = { kind = "text", text = Addon:T("TOOLTIP.RETURN_TURN_IN") }
     end
     if project.action then
         if project.action.actionMode == "use-item" and project.action.itemID then
-            lines[#lines + 1] = { kind = "text", text = "左键：召唤/解散诺米；右键：选中诺米" }
+            lines[#lines + 1] = { kind = "text", text = Addon:T("TOOLTIP.NOMI_ACTION") }
         elseif project.action.actionMode == "direct-craft" and project.action.castSpellID then
-            lines[#lines + 1] = { kind = "text", text = "左键：首次打开专业面板，载入后制作" }
-            lines[#lines + 1] = { kind = "text", text = "右键：打开对应专业面板" }
+            lines[#lines + 1] = { kind = "text", text = Addon:T("TOOLTIP.CRAFT_FIRST") }
+            lines[#lines + 1] = { kind = "text", text = Addon:T("TOOLTIP.OPEN_PROFESSION") }
         elseif project.action.fallbackMode == "open-and-select-recipe" then
-            lines[#lines + 1] = { kind = "text", text = "左键：打开专业面板并定位配方" }
+            lines[#lines + 1] = { kind = "text", text = Addon:T("TOOLTIP.SELECT_RECIPE") }
         else
-            lines[#lines + 1] = { kind = "text", text = "左键：打开专业面板" }
+            lines[#lines + 1] = { kind = "text", text = Addon:T("TOOLTIP.OPEN_PROFESSION_LEFT") }
         end
     end
-    if project.dailyTaskLabel then lines[#lines + 1] = { kind = "pair", label = "当日任务", value = project.dailyTaskLabel } end
+    if project.dailyTaskLabel then lines[#lines + 1] = { kind = "pair", label = Addon:T("TOOLTIP.DAILY_TASK"), value = project.dailyTaskLabel } end
     if project.state == "unknown" and not project.optimisticFarm then
         local detail = project.reason == "recipe-unlearned"
-            and "该角色尚未学会此配方。"
-            or "尚未取得该角色自己的可靠冷却记录，因此不会按可制作处理。"
+            and Addon:T("TOOLTIP.UNLEARNED_RECIPE")
+            or Addon:T("TOOLTIP.NO_RELIABLE_COOLDOWN")
         lines[#lines + 1] = { kind = "text", text = detail }
     end
     if project.readyAt and project.state == "cooldown" then
-        lines[#lines + 1] = { kind = "pair", label = "恢复", value = date("%m-%d %H:%M", project.readyAt) }
+        lines[#lines + 1] = { kind = "pair", label = Addon:T("TOOLTIP.RECOVERY"), value = date("%m-%d %H:%M", project.readyAt) }
     end
     if project.state == "skill-insufficient" then
         local current, required = tonumber(project.skillLevel), tonumber(project.requiredSkillLevel)
-        local detail = current and required and string.format("当前专业技能点不足（%d/%d），提升技能后即可制作。", current, required) or "当前专业技能点不足，提升技能后即可制作。"
+        local detail = current and required and Addon:T("TOOLTIP.SKILL_LOW_VALUE", current, required) or Addon:T("TOOLTIP.SKILL_LOW")
         lines[#lines + 1] = { kind = "text", text = detail }
     end
-    if project.operationLabels and #project.operationLabels > 0 then lines[#lines + 1] = { kind = "pair", label = "今日记录", value = table.concat(project.operationLabels, "、") } end
-    if project.observedAt then lines[#lines + 1] = { kind = "pair", label = "最近观察", value = date("%m-%d %H:%M", project.observedAt) } end
-    if project.nextResetAt then lines[#lines + 1] = { kind = "pair", label = "本日截止", value = date("%m-%d %H:%M", project.nextResetAt) } end
-    if project.optimisticFarm then lines[#lines + 1] = { kind = "text", text = "低保真规则：一次已验证操作按整轮农场流程投影。" } end
+    if project.operationLabels and #project.operationLabels > 0 then lines[#lines + 1] = { kind = "pair", label = Addon:T("TOOLTIP.TODAY_RECORD"), value = table.concat(project.operationLabels, Addon:T("LIST.SEP")) } end
+    if project.observedAt then lines[#lines + 1] = { kind = "pair", label = Addon:T("TOOLTIP.LAST_OBSERVED"), value = date("%m-%d %H:%M", project.observedAt) } end
+    if project.nextResetAt then lines[#lines + 1] = { kind = "pair", label = Addon:T("TOOLTIP.ENDS_TODAY"), value = date("%m-%d %H:%M", project.nextResetAt) } end
+    if project.optimisticFarm then lines[#lines + 1] = { kind = "text", text = Addon:T("TOOLTIP.FARM_PROJECTION") } end
     return lines
 end
 
@@ -392,7 +402,7 @@ function Page.Create(frame)
     frame.header = CreateFrame("Frame", nil, frame); frame.header:SetHeight(Theme.Table.headerHeight)
     frame.account = CreateFrame("Frame", nil, frame, "BackdropTemplate"); frame.account:SetHeight(ROW_HEIGHT)
     frame.account:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    frame.account.label = Text(frame.account, Theme.Font.assist, C.muted); frame.account.label:SetPoint("LEFT", 8, 0); frame.account.label:SetText("账号共享")
+    frame.account.label = Text(frame.account, Theme.Font.assist, C.muted); frame.account.label:SetPoint("LEFT", 8, 0); frame.account.label:SetText(Addon:T("PAGE.ACCOUNT_SHARED"))
     frame.account.projects = CreateFrame("Frame", nil, frame.account)
     frame.account.projects.empty = Text(frame.account.projects, Theme.Font.body, C.muted, "CENTER"); frame.account.projects.empty:SetAllPoints()
     frame.scroll = Theme:CreateScrollFrame(frame)
@@ -404,8 +414,8 @@ function Page.Create(frame)
     frame.rows, frame.headers = {}, {}
 end
 
-local function Layout(characterWidth, professionWidth, hasFarm, hasNomi, hasCooking, hasCommon)
-    return characterWidth, professionWidth, hasFarm and FARM_COLUMN_WIDTH or 0, hasNomi and NOMI_COLUMN_WIDTH or 0, hasCooking and NOMI_COLUMN_WIDTH or 0, hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0
+local function Layout(characterWidth, professionWidth, farmWidth, nomiWidth, hasCooking, hasCommon)
+    return characterWidth, professionWidth, farmWidth, nomiWidth, hasCooking and ICON_COLUMN_MIN_WIDTH or 0, hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0
 end
 
 local function ConfigureScroll(frame, top, tableWidth, contentHeight, inset)
@@ -441,32 +451,34 @@ function Page.Refresh(frame, context)
     local hasFarm = showFarm and HasFarmColumn()
     local hasNomi = showNomi and HasNomiColumn()
     local hasCooking = showCooking and HasCookingColumn()
-    local jewelcraftingWidth = showJewelcrafting and DailyColumnWidth(snapshot, context.characters, "jewelcrafting-daily", "珠宝") or 0
-    local fishingWidth = showFishing and DailyColumnWidth(snapshot, context.characters, "fishing-daily", "钓鱼") or 0
-    local natWidth = showNat and DailyColumnWidth(snapshot, context.characters, "nat-pagle", "纳特·帕格") or 0
-    local darkmoonWidth = showDarkmoon and DailyColumnWidth(snapshot, context.characters, "darkmoon-faire", "暗月") or 0
+    local jewelcraftingWidth = showJewelcrafting and DailyColumnWidth(snapshot, context.characters, "jewelcrafting-daily", Addon:T("COLUMN.JEWELCRAFTING")) or 0
+    local fishingWidth = showFishing and DailyColumnWidth(snapshot, context.characters, "fishing-daily", Addon:T("COLUMN.FISHING")) or 0
+    local natWidth = showNat and DailyColumnWidth(snapshot, context.characters, "nat-pagle", Addon:T("COLUMN.NAT")) or 0
+    local darkmoonWidth = showDarkmoon and DailyColumnWidth(snapshot, context.characters, "darkmoon-faire", Addon:T("COLUMN.DARKMOON")) or 0
     -- 布林顿表头使用物品图标，与单一内容格同宽；不要为了标题文字把
     -- 一整列撑宽。
     local brilltronWidth = showBrilltron and DailyColumnWidth(snapshot, context.characters, "brilltron-4000", nil, true) or 0
-    local characterWidth, professionWidth, farmWidth, nomiWidth, cookingWidth, commonWidth = Layout(CharacterColumnWidth(context), ProfessionColumnWidth(snapshot, context.characters), hasFarm, hasNomi, hasCooking, hasCommon)
-    if hasCooking then cookingWidth = DailyColumnWidth(snapshot, context.characters, "cooking-daily", "烹饪") end
+    local farmWidth = hasFarm and IconColumnWidth(Addon:T("COLUMN.FARM")) or 0
+    local nomiWidth = hasNomi and IconColumnWidth(Addon:T("COLUMN.NOMI")) or 0
+    local characterWidth, professionWidth, farmWidth, nomiWidth, cookingWidth, commonWidth = Layout(CharacterColumnWidth(context), ProfessionColumnWidth(snapshot, context.characters), farmWidth, nomiWidth, hasCooking, hasCommon)
+    if hasCooking then cookingWidth = DailyColumnWidth(snapshot, context.characters, "cooking-daily", Addon:T("COLUMN.COOKING")) end
     local tableWidth = characterWidth + (showProfession and professionWidth or 0) + farmWidth + nomiWidth + jewelcraftingWidth + cookingWidth + fishingWidth + natWidth + darkmoonWidth + brilltronWidth + commonWidth
     local inset = Theme:GetMatrixInsets(context.preview)
     for _, row in ipairs(frame.rows) do row:Hide() end
     frame.header:ClearAllPoints(); frame.header:SetPoint("TOPLEFT", frame, "TOPLEFT", inset.left, -inset.top); frame.header:SetSize(tableWidth, Theme.Table.headerHeight)
-    local columns = { { "角色", characterWidth } }
+    local columns = { { Addon:T("COLUMN.CHARACTER"), characterWidth } }
     if showProfession then
-        columns[#columns + 1] = { "商业冷却", professionWidth }
+        columns[#columns + 1] = { Addon:T("COLUMN.PROFESSION"), professionWidth }
     end
-    if hasFarm then columns[#columns + 1] = { "农场", farmWidth } end
-    if hasNomi then columns[#columns + 1] = { "诺米", nomiWidth } end
-    if showJewelcrafting then columns[#columns + 1] = { "珠宝", jewelcraftingWidth } end
-    if hasCooking then columns[#columns + 1] = { "烹饪", cookingWidth } end
-    if showFishing then columns[#columns + 1] = { "钓鱼", fishingWidth } end
-    if showNat then columns[#columns + 1] = { "纳特·帕格", natWidth } end
-    if showDarkmoon then columns[#columns + 1] = { "暗月", darkmoonWidth } end
-    if showBrilltron then columns[#columns + 1] = { "布林顿 4000", brilltronWidth, "brilltron-4000" } end
-    if hasCommon then columns[#columns + 1] = { "通用项目", commonWidth } end
+    if hasFarm then columns[#columns + 1] = { Addon:T("COLUMN.FARM"), farmWidth } end
+    if hasNomi then columns[#columns + 1] = { Addon:T("COLUMN.NOMI"), nomiWidth } end
+    if showJewelcrafting then columns[#columns + 1] = { Addon:T("COLUMN.JEWELCRAFTING"), jewelcraftingWidth } end
+    if hasCooking then columns[#columns + 1] = { Addon:T("COLUMN.COOKING"), cookingWidth } end
+    if showFishing then columns[#columns + 1] = { Addon:T("COLUMN.FISHING"), fishingWidth } end
+    if showNat then columns[#columns + 1] = { Addon:T("COLUMN.NAT"), natWidth } end
+    if showDarkmoon then columns[#columns + 1] = { Addon:T("COLUMN.DARKMOON"), darkmoonWidth } end
+    if showBrilltron then columns[#columns + 1] = { Addon:T("COLUMN.BRILLTRON"), brilltronWidth, "brilltron-4000" } end
+    if hasCommon then columns[#columns + 1] = { Addon:T("COLUMN.COMMON"), commonWidth } end
     tableWidth = tableWidth + math.max(0, #columns - 1) * COLUMN_GAP
     local x = 0
     for index, definition in ipairs(columns) do
@@ -597,8 +609,8 @@ function Page.Refresh(frame, context)
     if count > 0 then ConfigureScroll(frame, top, tableWidth, y, inset) end
     frame.emptyTitle:SetShown(count == 0); frame.empty:SetShown(count == 0)
     if count == 0 then
-        frame.emptyTitle:ClearAllPoints(); frame.emptyTitle:SetPoint("TOPLEFT", 24, -26); frame.emptyTitle:SetText("等待角色快照")
-        frame.empty:ClearAllPoints(); frame.empty:SetPoint("TOPLEFT", 24, -56); frame.empty:SetPoint("TOPRIGHT", -24, -56); frame.empty:SetText("YiboCore 尚未提供可显示角色。第一次或长时间未登录该角色，需要打开对应专业窗口自动同步；完成同步后再打开账号待办即可查看。")
+        frame.emptyTitle:ClearAllPoints(); frame.emptyTitle:SetPoint("TOPLEFT", 24, -26); frame.emptyTitle:SetText(Addon:T("PAGE.EMPTY_TITLE"))
+        frame.empty:ClearAllPoints(); frame.empty:SetPoint("TOPLEFT", 24, -56); frame.empty:SetPoint("TOPRIGHT", -24, -56); frame.empty:SetText(Addon:T("PAGE.EMPTY_BODY"))
     end
 end
 
@@ -623,8 +635,10 @@ function Page.GetSurfaceMetrics(context)
     local accountHeight = showCommon and #(snapshot.accountActivities or {}) > 0 and ROW_HEIGHT + ROW_GAP or 0
     local visibleRows = math.max(1, math.min(20, count))
     local professionWidth = ProfessionColumnWidth(snapshot, context and context.characters)
+    local farmWidth = hasFarm and IconColumnWidth(Addon:T("COLUMN.FARM")) or 0
+    local nomiWidth = hasNomi and IconColumnWidth(Addon:T("COLUMN.NOMI")) or 0
     local columnCount = 1 + (showProfession and 1 or 0) + (hasFarm and 1 or 0) + (hasNomi and 1 or 0) + (showJewelcrafting and 1 or 0) + (hasCooking and 1 or 0) + (showFishing and 1 or 0) + (showNat and 1 or 0) + (showDarkmoon and 1 or 0) + (showBrilltron and 1 or 0) + (hasCommon and 1 or 0)
-    local tableWidth = CharacterColumnWidth(context) + (showProfession and professionWidth or 0) + (hasFarm and FARM_COLUMN_WIDTH or 0) + (hasNomi and NOMI_COLUMN_WIDTH or 0) + (showJewelcrafting and DailyColumnWidth(snapshot, context and context.characters, "jewelcrafting-daily", "珠宝") or 0) + (hasCooking and DailyColumnWidth(snapshot, context and context.characters, "cooking-daily", "烹饪") or 0) + (showFishing and DailyColumnWidth(snapshot, context and context.characters, "fishing-daily", "钓鱼") or 0) + (showNat and DailyColumnWidth(snapshot, context and context.characters, "nat-pagle", "纳特·帕格") or 0) + (showDarkmoon and DailyColumnWidth(snapshot, context and context.characters, "darkmoon-faire", "暗月") or 0) + (showBrilltron and DailyColumnWidth(snapshot, context and context.characters, "brilltron-4000", nil, true) or 0) + (hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0) + math.max(0, columnCount - 1) * COLUMN_GAP
+    local tableWidth = CharacterColumnWidth(context) + (showProfession and professionWidth or 0) + farmWidth + nomiWidth + (showJewelcrafting and DailyColumnWidth(snapshot, context and context.characters, "jewelcrafting-daily", Addon:T("COLUMN.JEWELCRAFTING")) or 0) + (hasCooking and DailyColumnWidth(snapshot, context and context.characters, "cooking-daily", Addon:T("COLUMN.COOKING")) or 0) + (showFishing and DailyColumnWidth(snapshot, context and context.characters, "fishing-daily", Addon:T("COLUMN.FISHING")) or 0) + (showNat and DailyColumnWidth(snapshot, context and context.characters, "nat-pagle", Addon:T("COLUMN.NAT")) or 0) + (showDarkmoon and DailyColumnWidth(snapshot, context and context.characters, "darkmoon-faire", Addon:T("COLUMN.DARKMOON")) or 0) + (showBrilltron and DailyColumnWidth(snapshot, context and context.characters, "brilltron-4000", nil, true) or 0) + (hasCommon and MIN_PROJECT_COLUMN_WIDTH or 0) + math.max(0, columnCount - 1) * COLUMN_GAP
     -- The scrollbar uses the page inset rather than a data-column gutter.
     -- The table width therefore remains the same with and without overflow.
     local projectsWidth = tableWidth + inset.left + inset.right

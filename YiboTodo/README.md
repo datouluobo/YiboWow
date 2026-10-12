@@ -1,6 +1,6 @@
 # YiboTodo — 账号待办
 
-当前工作树版本为 **1.2.0**，基础账号页面要求 **YiboCore API v11**，并检查 `character-identity:1)。它把已支持的专业冷却、农场操作、日常和特殊活动放进按角色组织的账号矩阵，可用 `/ytd` 打开。
+当前工作树版本为 **1.3.1**，要求 **YiboCore API v13**，并检查 `localization:1`、`account-view:2`、`character-identity:1`、`character-name-format:1` 与 `account-entry:2`。它把已支持的专业冷却、农场操作、日常和特殊活动放进按角色组织的账号矩阵，可用 `/ytd` 打开。
 
 ## 功能
 
@@ -15,8 +15,8 @@
 
 ## 可选行动中心集成
 
-工作树中的 Todo 通过 Core Provider 输出来源任务，供兼容版本的 YiboTaskHub 读取。基础账号待办仍要求 API v11；行动中心新增展示与执行能力需要更新的 Core 和 TaskHub。TaskHub 当前尚未发布。集成状态、能力版本与验收范围见 [更新日志](CHANGELOG.md)及 [行动中心 Todo 接入记录](../Docs/行动中心-Todo全量接入.md)。
+Todo 通过 Core Provider 输出来源任务，供兼容版本的 YiboTaskHub 读取。行动中心目标增强仍独立检查 API v12 与 `business-item-actions:1`；Todo 基础功能要求 API v13。集成状态、能力版本与验收范围见 [更新日志](CHANGELOG.md)及 [行动中心 Todo 接入记录](../Docs/行动中心-Todo全量接入.md)。
 
 ## 状态与发布
 
-1.2.0 当前为工作树版本，尚未发布。新增来源与行动中心相关功能的发布状态详见[更新日志](CHANGELOG.md)。插件不把未知或过期来源推断为待办已完成。
+1.3.1 当前为工作树版本，尚未发布。新增来源与行动中心相关功能的发布状态详见[更新日志](CHANGELOG.md)。插件不把未知或过期来源推断为待办已完成。

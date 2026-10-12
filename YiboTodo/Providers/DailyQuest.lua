@@ -169,7 +169,7 @@ function Provider:ObserveActivity(characterID, definition)
     local active, reason = ActiveQuest(definition)
     day.observedAt, day.nextResetAt = now, Addon.Model.Schedule:NextResetAt(now, definition.resetHour)
     if active and not AlreadyHandedIn(day, active) then
-        day.questID, day.label, day.kind = active.item.questID, active.item.label, active.kind
+        day.questID, day.label, day.kind = active.item.questID, Addon:GetLocalizedGameName("quest", active.item.questID, active.item.label), active.kind
         day.state = active.complete and "in-progress" or "actionable"
     elseif not active and day.state ~= "completed" and day.state ~= "in-progress" then
         day.state, day.reason = "unknown", reason
@@ -236,7 +236,7 @@ function Provider:Observe(characterID)
     day.observedAt, day.nextResetAt = now, Addon.Model.Schedule:NextResetAt(now, definition.resetHour)
     if active then
         if not AlreadyHandedIn(day, active) then
-            day.questID, day.label, day.kind = active.item.questID, active.item.label, active.kind
+            day.questID, day.label, day.kind = active.item.questID, Addon:GetLocalizedGameName("quest", active.item.questID, active.item.label), active.kind
             -- The quest is still in the log at this point, so its objectives
             -- are done but the player has not handed it in yet.
             day.state = active.complete and "in-progress" or "actionable"
@@ -370,7 +370,7 @@ function Provider:RecordTurnIn(characterID, questID)
     local day = days[dayKey] or {}
     days[dayKey] = day
     if day.state == "completed" and day.questID == item.questID then return true, "already-recorded" end
-    day.questID, day.label, day.kind, day.state = item.questID, item.label, kind, "completed"
+    day.questID, day.label, day.kind, day.state = item.questID, Addon:GetLocalizedGameName("quest", item.questID, item.label), kind, "completed"
     day.observedAt, day.completedAt, day.nextResetAt = now, now, Addon.Model.Schedule:NextResetAt(now, definition.resetHour)
     if definition == self:GetDefinition() then MarkEligible(record, item, kind, now) end
     record.revision = (tonumber(record.revision) or 0) + 1
@@ -393,7 +393,7 @@ function Provider:ObserveCooking(characterID)
     day.observedAt, day.nextResetAt = now, Addon.Model.Schedule:NextResetAt(now, definition.resetHour)
     if active then
         if not AlreadyHandedIn(day, active) then
-            day.questID, day.label, day.kind = active.item.questID, active.item.label, active.kind
+            day.questID, day.label, day.kind = active.item.questID, Addon:GetLocalizedGameName("quest", active.item.questID, active.item.label), active.kind
             -- Keep the visible distinction between a completed objective and
             -- a completed daily: only QUEST_TURNED_IN calls RecordTurnIn.
             day.state = active.complete and "in-progress" or "actionable"
@@ -426,7 +426,7 @@ function Provider:ObserveNomiGossip(characterID)
     local offered, reason = AvailableNomiQuest(definition)
     day.observedAt, day.nextResetAt = now, Addon.Model.Schedule:NextResetAt(now, definition.resetHour)
     if offered then
-        day.questID, day.label, day.kind, day.state = offered.item.questID, offered.item.label, offered.kind, "actionable"
+        day.questID, day.label, day.kind, day.state = offered.item.questID, Addon:GetLocalizedGameName("quest", offered.item.questID, offered.item.label), offered.kind, "actionable"
         day.reason = reason
     elseif day.state == "ready-to-turn-in" or day.state == "in-progress" then
         -- The available-quest list excludes a quest waiting to be handed in.

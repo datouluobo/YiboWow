@@ -1,6 +1,6 @@
 local Addon = _G.YiboTodo
 local Action = { GROUP = "mop.tailoring.celestial-cloth", PROVIDER = "YiboTodo:profession-cooldown",
-    METADATA_KEY = "actionTodo", SOURCE_TITLE = "账号待办" }
+    METADATA_KEY = "actionTodo" }
 Addon.ActionTodo = Action
 
 -- This adapter owns the business projection. The consumer never sees Todo's
@@ -52,31 +52,31 @@ function Action:Project(characterID, snapshot, now, epoch, groupID, explicit)
     local observedAt = observation and tonumber(observation.observedAt)
     local nextReset = Addon.Model.Schedule:NextResetAt(now, group.resetHour)
     local freshness = observedAt and observedAt > 0 and "known" or "not-yet-scanned"
-    local readiness, reason = "unknown", "打开专业界面核实"
+    local readiness, reason = "unknown", Addon:T("ACTION.PROFESSION_VERIFY")
     if activity.state == "actionable" then
         -- A learned, craftable recipe can project as actionable even when
         -- this client returns no cooldown value. Reuse the source readiness;
         -- preparation is not proof of zero cooldown or a completed craft.
         readiness = "preparation"
-        reason = activity.confidence == "confirmed" and "冷却可用，核对材料" or "配方可用，打开专业确认冷却与材料"
+        reason = activity.confidence == "confirmed" and Addon:T("ACTION.COOLDOWN_MATERIALS") or Addon:T("ACTION.RECIPE_CONFIRM")
     elseif activity.state == "cooldown" and activity.confidence == "confirmed" then
-        readiness, reason = "blocked", "冷却中"
+        readiness, reason = "blocked", Addon:T("ACTION.COOLDOWN")
     elseif activity.state == "skill-insufficient" then
-        readiness, reason = "blocked", "专业技能不足"
+        readiness, reason = "blocked", Addon:T("ACTION.SKILL_LOW")
     elseif activity.state == "estimated" then
         -- The source knows the reset-derived preparation state, while the
         -- cooldown itself remains explicitly estimated. This is not proof
         -- of completion and must never be promoted to a confirmed cooldown.
-        freshness, readiness, reason = "known", "preparation", "预计可用，核对材料；打开专业后确认"
+        freshness, readiness, reason = "known", "preparation", Addon:T("ACTION.ESTIMATED_CONFIRM")
     elseif activity.reason == "recipe-unlearned" then
-        readiness, reason = "blocked", "配方未学习"
+        readiness, reason = "blocked", Addon:T("ACTION.RECIPE_UNLEARNED")
     elseif activity.diagnostic == "group-conflict" then
-        freshness, reason = "partial", "冷却观察冲突"
+        freshness, reason = "partial", Addon:T("ACTION.COOLDOWN_CONFLICT")
     end
     -- Old observations cannot confirm an action in the new daily cycle.
     -- Reset-derived estimates above remain explicitly preparation only.
     if activity.state ~= "estimated" and observedAt and Addon.Model.Schedule:CrossedReset(observedAt, now, group.resetHour) then
-        freshness, readiness, reason = "stale", "unknown", "快照已过期，需重新观察"
+        freshness, readiness, reason = "stale", "unknown", Addon:T("ACTION.SNAPSHOT_EXPIRED")
     end
     local key = characterID .. ":" .. groupID
     local task = {
@@ -90,7 +90,7 @@ function Action:Project(characterID, snapshot, now, epoch, groupID, explicit)
         sourceState = activity.state, confidence = activity.confidence,
         temporal = { kind = "daily", cycleKey = Addon.Model.Schedule:ServerDay(now, group.resetHour), nextChangeAt = nextReset },
         freshness = { state = freshness, observedAt = observedAt, validUntil = nextReset, clockSource = "server" },
-        nextAction = { kind = "open-page", title = "查看待办", pageID = "todo" },
+        nextAction = { kind = "open-page", title = Addon:T("ACTION.OPEN_TODO"), pageID = "todo" },
         item = activity.iconKind == "item" and { itemID = activity.icon } or nil,
         icon = activity.iconKind ~= "item" and (activity.iconKind == "texture" and activity.icon or activity.fallbackIcon) or nil,
     }
@@ -154,7 +154,7 @@ function Action:Query(request)
     if count ~= #ids then return nil, "invalid-request" end
     local _, meta = self:Commit()
     local result = { providerID = self.PROVIDER, sourceEpoch = meta.sourceEpoch, revision = meta.revision,
-        generatedAt = Addon:Now(), sourceTitle = self.SOURCE_TITLE, status = "ready", coverage = {}, data = { tasks = {} } }
+        generatedAt = Addon:Now(), sourceTitle = Addon:T("PROVIDER.TODO"), status = "ready", coverage = {}, data = { tasks = {} } }
     if self.DisplayGroups then result.displayGroups = self:DisplayGroups() end
     local seen = {}
     for _, id in ipairs(ids) do

@@ -1,6 +1,6 @@
 local Addon = _G.YiboTodo
 local Action = { GROUP = "mop.nomi", PROVIDER = "YiboTodo:nomi",
-    METADATA_KEY = "actionNomi", SOURCE_TITLE = "诺米日常" }
+    METADATA_KEY = "actionNomi" }
 Addon.ActionNomi = Action
 
 -- Reuse only envelope/version/cache operations. Each adapter owns its own
@@ -31,13 +31,13 @@ function Action:Project(characterID, snapshot, now, epoch, groupID, explicit)
     local observedAt = tonumber(project.observedAt)
     local nextReset = project.nextResetAt
     local freshness = observedAt and observedAt > 0 and "known" or "not-yet-scanned"
-    local state, readiness, reason = "active", "unknown", "待核实"
+    local state, readiness, reason = "active", "unknown", Addon:T("ACTION.NOMI_UNKNOWN")
     if project.state == "actionable" then
-        readiness, reason = "actionable", project.questID and "可处理" or "可接取"
+        readiness, reason = "actionable", project.questID and Addon:T("ACTION.NOMI_READY") or Addon:T("ACTION.NOMI_ACCEPT")
     elseif project.state == "in-progress" or project.state == "ready-to-turn-in" then
-        readiness, reason = "actionable", "待交付"
+        readiness, reason = "actionable", Addon:T("ACTION.NOMI_TURN_IN")
     elseif project.state == "completed" then
-        state, readiness, reason = "completed", "not-applicable", "今日已完成"
+        state, readiness, reason = "completed", "not-applicable", Addon:T("ACTION.NOMI_DONE")
     else
         freshness = observedAt and observedAt > 0 and "partial" or "not-yet-scanned"
     end
@@ -57,7 +57,7 @@ function Action:Project(characterID, snapshot, now, epoch, groupID, explicit)
         questID = project.questID, questKind = project.questKind,
         temporal = { kind = "daily", cycleKey = Addon.Model.Schedule:ServerDay(now, definition.resetHour), nextChangeAt = nextReset },
         freshness = { state = freshness, observedAt = observedAt, validUntil = nextReset, clockSource = "server" },
-        nextAction = { kind = "open-page", title = "查看待办", pageID = "todo" },
+        nextAction = { kind = "open-page", title = Addon:T("ACTION.OPEN_TODO"), pageID = "todo" },
         item = project.iconKind == "item" and { itemID = project.icon } or nil,
         icon = project.iconKind ~= "item" and (project.iconKind == "texture" and project.icon or project.fallbackIcon) or nil,
     }

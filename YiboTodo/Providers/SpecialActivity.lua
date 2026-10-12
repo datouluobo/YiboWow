@@ -94,6 +94,17 @@ local function IsRegistered(definition)
     return definition and definition.registrationStatus ~= "pending-client-verification"
 end
 
+local function ActivityLabel(definition)
+    if definition and definition.monitoringGroupID == "nat-pagle" and definition.iconItemID then
+        return Addon:GetLocalizedGameName("item", definition.iconItemID, definition.label)
+    end
+    return definition and definition.label
+end
+
+local function ActivityTaskLabel(definition)
+    return definition and Addon:GetLocalizedGameName("quest", definition.questID, definition.taskLabel)
+end
+
 function Provider:ObserveCharacter(characterID)
     if not characterID then return false end
     local now, record = Addon:Now(), Addon.Database:GetProvider(characterID, self.id, true)
@@ -180,14 +191,14 @@ function Provider:BuildProject(characterID, definition, now)
         local stored = Addon.db.byAccount.specialActivities and Addon.db.byAccount.specialActivities[definition.id]
         local completed = stored and stored.serverDay == ServerDay(definition, now)
         local isOwner = completed and stored.completedByCharacterID == characterID
-        return { groupID = definition.id, monitoringGroupID = definition.monitoringGroupID, label = definition.label, order = definition.order, state = completed and (isOwner and "completed" or "not-applicable") or "actionable", iconKind = iconKind, icon = icon, fallbackIcon = definition.icon, nextResetAt = completed and stored.nextResetAt or NextReset(definition, now), statusText = completed and (isOwner and "本账号今日已领取" or "本账号已由其它角色领取") or "本账号今日可领取" }
+        return { groupID = definition.id, monitoringGroupID = definition.monitoringGroupID, label = ActivityLabel(definition), order = definition.order, state = completed and (isOwner and "completed" or "not-applicable") or "actionable", iconKind = iconKind, icon = icon, fallbackIcon = definition.icon, nextResetAt = completed and stored.nextResetAt or NextReset(definition, now), statusText = completed and (isOwner and Addon:T("STATUS.ACCOUNT_CLAIMED") or Addon:T("STATUS.OTHER_CLAIMED")) or Addon:T("STATUS.ACCOUNT_AVAILABLE") }
     end
     if definition.scheduleKind == "event-daily-07" then
         if not IsRegistered(definition) or not IsHolidayOpen(definition) then return nil end
         local record = Addon.Database:GetProvider(characterID, self.id, false)
         local day = record and record.days and record.days[definition.id] and record.days[definition.id][ServerDay(definition, now)]
         local completed = day and day.state == "completed"
-        return { groupID = definition.id, monitoringGroupID = definition.monitoringGroupID, label = definition.label, order = definition.order, state = completed and "completed" or "actionable", iconKind = iconKind, icon = icon, fallbackIcon = definition.icon, nextResetAt = NextReset(definition, now), questID = definition.questID, observedAt = day and day.observedAt, statusText = completed and "本服务器日已领取节日奖励" or (day and day.observedAt and "今日尚未领取节日奖励" or "尚未观察，按可领取提醒") }
+        return { groupID = definition.id, monitoringGroupID = definition.monitoringGroupID, label = ActivityLabel(definition), order = definition.order, state = completed and "completed" or "actionable", iconKind = iconKind, icon = icon, fallbackIcon = definition.icon, nextResetAt = NextReset(definition, now), questID = definition.questID, observedAt = day and day.observedAt, statusText = completed and Addon:T("STATUS.HOLIDAY_CLAIMED") or (day and day.observedAt and Addon:T("STATUS.HOLIDAY_NOT_CLAIMED") or Addon:T("STATUS.CLAIM_UNOBSERVED")) }
     end
     if definition.scheduleKind ~= "daily-07" then
         local open = IsDarkmoonOpen()
@@ -197,11 +208,11 @@ function Provider:BuildProject(characterID, definition, now)
         if open ~= true then return nil end
         local record = Addon.Database:GetProvider(characterID, self.id, false)
         local day = record and record.days and record.days[definition.id] and record.days[definition.id][EventKey(now)]
-        return { groupID = definition.id, monitoringGroupID = definition.monitoringGroupID, label = definition.label, order = definition.order, state = day and day.state == "completed" and "completed" or "actionable", iconKind = iconKind, icon = icon, fallbackIcon = definition.icon, dailyTaskLabel = definition.taskLabel, statusText = day and day.state == "completed" and "本次暗月活动已完成" or "暗月马戏团正在开放" }
+        return { groupID = definition.id, monitoringGroupID = definition.monitoringGroupID, label = ActivityLabel(definition), order = definition.order, state = day and day.state == "completed" and "completed" or "actionable", iconKind = iconKind, icon = icon, fallbackIcon = definition.icon, dailyTaskLabel = ActivityTaskLabel(definition), statusText = day and day.state == "completed" and Addon:T("STATUS.DARKMOON_DONE") or Addon:T("STATUS.DARKMOON_OPEN") }
     end
     local record = Addon.Database:GetProvider(characterID, self.id, false)
     local day = record and record.days and record.days[definition.id] and record.days[definition.id][ServerDay(definition, now)]
-    return { groupID = definition.id, monitoringGroupID = definition.monitoringGroupID, label = definition.label, order = definition.order, state = day and day.state or "actionable", iconKind = iconKind, icon = icon, fallbackIcon = definition.icon, nextResetAt = day and day.nextResetAt or NextReset(definition, now), questID = definition.questID, statusText = day and day.state == "completed" and "本服务器日已完成" or "每日可完成" }
+    return { groupID = definition.id, monitoringGroupID = definition.monitoringGroupID, label = ActivityLabel(definition), order = definition.order, state = day and day.state or "actionable", iconKind = iconKind, icon = icon, fallbackIcon = definition.icon, nextResetAt = day and day.nextResetAt or NextReset(definition, now), questID = definition.questID, statusText = day and day.state == "completed" and Addon:T("STATUS.DAILY_DONE") or Addon:T("STATUS.DAILY_AVAILABLE") }
 end
 
 -- Publish source-owned period/scope metadata alongside the same view model.
@@ -226,9 +237,9 @@ function Provider:GetTargetProject(characterID, definition, now)
     local project = self:GetProject(characterID, definition, now)
     if project then return project end
     if definition.scheduleKind == "event-weekly" and IsDarkmoonOpen() == false then
-        return { groupID = definition.id, label = definition.label, state = "not-applicable",
+        return { groupID = definition.id, label = ActivityLabel(definition), state = "not-applicable",
             scope = definition.scope, period = "weekly", cycleKey = EventKey(now),
-            nextChangeAt = Addon.Model.Schedule:NextResetAt(now, 0), statusText = "活动未开放" }
+            nextChangeAt = Addon.Model.Schedule:NextResetAt(now, 0), statusText = Addon:T("STATUS.ACTIVITY_CLOSED") }
     end
 end
 
