@@ -176,6 +176,10 @@ local function CreateItemCell(page, index)
         elseif GameTooltip.SetItemByID then GameTooltip:SetItemByID(control.item.itemID) end
         GameTooltip:Show()
         if Addon.Tooltip then Addon.Tooltip:Append(GameTooltip, control.item.itemID) end
+        if control.item.mailStatus == "in-transit" then
+            GameTooltip:AddLine(Addon:T("MAIL.IN_TRANSIT_FROM", control.item.senderName or ""), 0.53, 0.70, 0.73)
+            GameTooltip:Show()
+        end
         if Addon.GoalTargets and Addon.GoalTargets.ref then GameTooltip:AddLine(Addon.Core.BusinessItemActions:GestureLabel() .. Addon:T("TEXT.ADD_TO_ACTION_HUB_OPEN_THE_ADD_MENU_1EB204")); GameTooltip:Show() end
     end)
     cell:SetScript("OnLeave", function(control)
@@ -370,7 +374,9 @@ function StoragePage:UpdateItemCell(page, cell, record, index)
     local itemLevel
     if item then itemLevel = self:GetItemLevel(item) end
     cell.itemLevel:SetText(itemLevel and tostring(itemLevel) or "")
-    local quantity = item and not itemLevel and tostring(item.quantity or 1) or ""
+    local quantity = item and (item.mailStatus == "in-transit"
+        and (Addon:T("MAIL.TRANSIT_SHORT") .. tostring(item.quantity or 1))
+        or not itemLevel and tostring(item.quantity or 1)) or ""
     cell.count:SetFont(STANDARD_TEXT_FONT,
         #quantity > 3 and Theme.Font.assist or Theme.Font.section, "OUTLINE")
     cell.count:SetText(quantity)
@@ -560,6 +566,7 @@ function StoragePage:Refresh(host, context)
     end
 
     self:CollectMatches(query.records, needle, ownerByKey)
+    self:CollectMatches(query.transitRecords, needle, ownerByKey)
     if searching then
         local matched = {}
         for _, owner in ipairs(owners) do

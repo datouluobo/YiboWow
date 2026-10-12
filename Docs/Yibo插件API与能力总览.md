@@ -21,9 +21,9 @@ O5 当前语义：每角色一条新邮件查看提醒，用户查看但未取�
 | **YiboQuestBlocker** | 阻止或筛选任务接受流程，提供任务/规则配置及诊断 | Core 页面、入口、设置、角色缓存清理；另含兼容入口组件 | 阻止任务接受是副作用型能力，不能当作通用任务数据 API；未声明稳定消费者 API |
 | **YiboReputation（声望之路）** | 角色声望事实的账号矩阵、声望目录/过滤、最多 10 项快速监控和预览 | Core 收集并保存 `reputation` 领域；插件注册页面/入口并消费 `DATA_DOMAIN_UPDATED` | action.targets v1 标准／友谊等级阈值，业务解释归插件；增强API12，客户端待验收 |
 | **YiboTodo** | 账号待办与活动状态、日常/周常/专业冷却/特殊活动观察、业务动作 | Core 页面、入口、设置、角色清理；新任务输出另查 API v11 / business-providers:1 | action.targets v1 精确项目；action.todo旧来源契约保持，增强API12，客户端待验收 |
-| **YiboMail** | 邮件快照、到期/收件状态、新邮件查看确认、邮件物品来源、规则寄送和联系人辅助 | 工作树 1.2.6-api1，基础 API9 / mail.items v1.0；任务集成单独要求 API11 / business-providers:1 | mail.items及action.todo旧契约保持；action.targets v1 明确查看邮件目标，增强API12，客户端待验收 |
+| **YiboMail** | 邮件快照、到期/收件状态、新邮件查看确认、可解析的成功发件在途附件、规则寄送和联系人辅助 | 工作树 1.2.7-api1，基础 API9 / mail.items v1.1；任务集成单独要求 API11 / business-providers:1 | mail.items v1.1 新增可选 GetTransfers；已扫描的匹配收件会结束在途投影；任务契约不变，客户端待验收 |
 | **YiboTaskHub** | 0.5.0 账号任务／悬停／HUD／提醒及逐角色刷取计划、双向复制 | API11，经 Core 通用枚举 action.todo；提供 task.boss-targets，消费 boss.target-catalog；标签页、输入、设置与身份使用共享能力 | 0.5.0 / schema4：action.demands v1、目标管理与按目标评估；整体API12，客户端待验收 |
-| **YiboVault** | 背包/装备/银行/公会银行/AH/邮箱附件缓存、搜索与物品 Tooltip | 当前 TOC 1.1.0-api1；工作树最低 Core API v9；消费 `mail.items` 并注册 `vault.items` v1.0 | vault.items旧契约保持；action.targets v1 角色／固定账号范围库存阈值，增强API12，客户端待验收 |
+| **YiboVault** | 背包/装备/银行/公会银行/AH/邮箱附件与在途邮件投影、搜索与物品 Tooltip | 当前 TOC 1.2.1-api1；工作树最低 Core API v13；消费 `mail.items` v1.1 并注册 `vault.items` v1.1 | 在途数量单独提供，不计入角色已持有量；action.targets v1 角色／固定账号范围库存阈值，客户端待验收 |
 
 > 插件功能以仓库当前主线 `.toc` 和运行时代码为准；`dist/`、`Builds/` 等历史/打包副本不作为当前 API 来源。
 
@@ -78,17 +78,17 @@ Core 是共享运行时与通用角色事实层，不是所有业务数据的集
 3. **Core 管中性事实与共用机制。** Core 负责通用角色事实、账号 UI、生命周期和连接，不接管库存／邮件等业务数据；物品来源聚合与业务查询仍由 Vault 解释。
 4. **领域协议匹配领域。** Mail→Vault 当前使用 `mail.items`，Currency→Vault 使用 `vault.items`。Reputation／Todo 后续需要库存时按实际契约经 Core 接入；不能推定当前已经提供其所有所需方法。
 5. **状态与缺失必须可区分。** 未加载、未采集、不可用、陈旧、错误、已知空结果不可混为一谈；缓存数据不能被描述成实时完整状态。
-6. **可选消费者不应成为硬依赖。** Vault 无 Mail 时使用自有精简邮箱附件快照；未扫描的邮箱保持未扫描状态。Mail 上线后按角色择一来源，具体状态由协议契约定义。
+6. **可选消费者不应成为硬依赖。** Vault 无 Mail 时使用自有精简邮箱附件快照；未扫描的邮箱保持未扫描状态。Mail 上线后按角色选择收件箱来源，并可额外提供不计入持有量的在途发件投影，具体状态由协议契约定义。
 7. **公开 API 需有契约。** 稳定 ID、参数、结果 schema、版本/能力、状态语义、变更通知和兼容承诺都应有文档。插件当前导出的全局命名空间或内部 Lua 模块并不自动构成兼容承诺。
 
 ## 4. 当前工作树的物品数据链
 
 ```text
 YiboMail（邮件采集与邮件 SavedVariables）
-       └─ mail.items v1.0（Core.Contracts）─┐
+       └─ mail.items v1.1（Core.Contracts，收件快照 + 可选在途投影）─┐
                                         ↓
 YiboVault（来源适配、各容器缓存与查询 API）
-       ├─ vault.items v1.0（Core.Contracts）→ YiboCurrency
+       ├─ vault.items v1.1（Core.Contracts）→ YiboCurrency
        └─ Reputation / Todo / TaskHub 等后续真实需求再接入
 ```
 

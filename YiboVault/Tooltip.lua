@@ -160,7 +160,8 @@ function Tooltip:Append(tooltip, knownItemID)
         scope = { mode = "characters", characterIDs = {} }, guildKey = hiddenGuildKey,
         sources = { "guild-bank" }, itemID = itemID,
     })
-    if #result.records == 0 and not (hiddenResult and #hiddenResult.records > 0) then return end
+    if #result.records == 0 and #(result.transitRecords or {}) == 0
+        and not (hiddenResult and #hiddenResult.records > 0) then return end
 
     local byCharacter, guilds = {}, {}
     local current = Addon.Core and Addon.Core.Characters:GetCurrent()
@@ -180,9 +181,16 @@ function Tooltip:Append(tooltip, knownItemID)
             if type(tabName) == "string" and tabName ~= "" then entry.tabNames[tabID] = tabName end
         elseif record.characterID then
             local counts = byCharacter[record.characterID]
-            if not counts then counts = { total = 0 }; byCharacter[record.characterID] = counts end
+            if not counts then counts = { total = 0, transit = 0 }; byCharacter[record.characterID] = counts end
             counts[record.source] = (counts[record.source] or 0) + record.quantity
             counts.total = counts.total + record.quantity
+        end
+    end
+    for _, record in ipairs(result.transitRecords or {}) do
+        if record.characterID then
+            local counts = byCharacter[record.characterID]
+            if not counts then counts = { total = 0, transit = 0 }; byCharacter[record.characterID] = counts end
+            counts.transit = counts.transit + record.quantity
         end
     end
 
@@ -243,6 +251,9 @@ function Tooltip:Append(tooltip, knownItemID)
                 referenceRealm = current and current.realm or nil,
             }) or tostring(character.name or character.id or Addon:T("TEXT.CHARACTER_6B2669"))
             local parts = SourceParts(counts, counts.unknown)
+            if counts.transit > 0 then
+                parts[#parts + 1] = Addon:T("MAIL.IN_TRANSIT") .. " " .. GreenNumber(counts.transit)
+            end
             local label = TotalLabel(counts.shownTotal, counts.partial or next(counts.unknown) ~= nil)
             local right, extra = RowLines(tooltip, name, label, parts)
             if shown >= 20 or used + 1 + #extra > budget then

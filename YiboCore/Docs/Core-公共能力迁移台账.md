@@ -240,13 +240,13 @@ YiboMounts 1.0.0 已按 API13 接入 `localization:1` 和 API v6 独立设置注
 | YiboCrafting | 部分接入（当前连接代码完成） | 1.2.0 / API13；action.targets v1.2 注册／发现／公开库存调用，生命周期通知；制造规则与基线归来源，无业务私有访问 | GoalSourcesSpec72／GoalTargets 通过，尊重公开库存 validUntil；可选来源客户端待验收，配方只读 Service 是后续产品功能 / 2026-10-12 |
 | YiboCurrency | 已接入（本轮范围） | VaultIntegration 经 Core 发现 vault.items；缺失/不兼容保留 Core 基础快照；VaultIntegrationSpec、CoreItemControlsSpec 通过 | 最低接口 API v9 / business-services:1，渠道包需 v1.9.0-api10；业务接入未发布、游戏内待验收；追赶须另核对 api10 |
 | YiboLegendary | 待评估 | 无该新连接接入证据 | 真实待办／目标接入时评估 |
-| YiboMail | 部分接入（Provider 代码与自动化完成） | 1.2.6-api1 保留 mail.items v1.0／Items API v1；action.todo / inbox-collection 当前输出每角色一条新邮件查看提醒，Mail 所有已处理标记与批次；MailSourceSpec 80 项及邮件／Vault 消费回归通过 | 基础 API9 / business-services:1；可选任务集成 API11 / business-providers:1；客户端待验收，需求附件关联／logistics／evidence 仍未公开，追赶须另核对 api10 |
+| YiboMail | 部分接入（Provider 代码与自动化完成） | 1.2.7-api1 工作树增加 mail.items v1.1 `GetTransfers` 与 mail-items.transfers:1；按 Core 角色目录投影成功发件历史并核对已扫描收件，数据仍归 Mail；action.todo / inbox-collection 继续由 Mail 所有新邮件查看状态；本次未运行自动化 | 基础 API9 / business-services:1；转移增强仍经同一 Core Service，客户端待验收；需求附件关联／logistics／evidence 仍未公开，追赶须另核对 api10 / 2026-10-12 |
 | YiboMounts | 不适用 | 1.0.0 全面接入复核：Tooltip 图鉴只读取自身坐骑目录与 Core 账号级设置，无跨业务查询、提供或聚合需求 | 出现真实跨业务需求时按 Service／Provider 契约评估 / 2026-10-12 |
 | YiboQuestBlocker | 待评估 | 无该新连接接入证据 | 不把阻止接任务当成任务数据能力；真实需求出现再评估 |
 | YiboReputation | 待评估 | 无该新连接接入证据 | 真实待办／目标接入时评估 |
 | YiboTaskHub | 部分接入（运行代码与自动化完成） | 2026-10-10 0.4.0 通用消费 Todo 全量／Mail／AltoBoss action.todo，并提供 task.boss-targets、消费 boss.target-catalog；计划由 Task 保存，逐角色双向复制通过 Service 协作，schema3 迁移；672项检查通过 | API11 / business-services:1 / business-providers:1；本轮仅实现刷取计划安排，通用跨角色制作／任务链未实现；客户端待验收，见 [运行契约](../../Docs/行动中心-AltoBoss-运行契约与验收.md) |
 | YiboTodo | 部分接入（运行代码与自动化完成） | 2026-10-09 1.1.4 注册神纹布与诺米 action.todo，独立 epoch／revision／覆盖与合并通知，持久元数据分开；实际模型及 133 项集成、日常／冷却／动作／旧日常回归通过 | 新集成 API v11 / business-providers:1；基础 UI 保留 API v10。游戏内观察、交付／重置与中心一致性待验收；当前已扩展至全部适用监控项目，见下方 2026-10-09 全量接入复核 |
-| YiboVault | 部分接入 | v1.1.1-api1 的 `vault.items` v1 与 MailProvider `mail.items` 消费保持原契约；邮件来源仍按注册发现、快照与注销生命周期协作 | 插件整体最低 Core API13；Service 本身仍只需 `business-services:1`。邮件联动客户端验收与既有 inventory/evidence 计划仍按原范围 / 2026-10-12 |
+| YiboVault | 部分接入 | 1.2.1-api1 工作树消费 Mail `mail.items` v1.1 可选转移投影；Query、邮件仓储格与 Tooltip 单独显示在途，且不计入持有小计；vault.items 提升 v1.1 并保持 v1.0 消费兼容；本次未运行自动化 | 插件整体最低 Core API13；Service 仍只需 `business-services:1`。Mail 缺失／v1.0 时保留本地扫描基础行为；客户端联动待验收 / 2026-10-12 |
 
 行动中心技术名为 YiboTaskHub；2026-10-08 建立项目基础与客户端联接，2026-10-09 O2 已完成首项 Provider 消费及 Core 主页／入口，客户端待验收。其他业务能力仍按真实接入分别登记，不能推定全仓库迁移完成。
 
@@ -473,4 +473,4 @@ Core 状态：**已提供（1.12.0 / API v13 工作树，未发布）**。能力
 
 2026-10-12 角色设置布局：信息条移至角色与排序、显示与入口之间；去掉三个导航资源文字内的前导空格，缩进统一由导航锚点控制。默认排序改下拉，操作按钮按文案宽度，业务等级过滤按宽度两至三列；角色档案过滤控件恢复分栏，等级输入固定120宽。Core 等级与短名输入改为既有 Theme:CreateInput（CAP-002 / basic-input:1），保留校验、回车保存、失焦保存和取消。仅 Core 消费实现接入变化，业务插件状态不变，无公共能力升版。206项布局覆盖中英文620／1200宽度、12业务过滤、共享输入与表达式保存、导航顺序与缩进；1133项入口专项通过。532对资源严格检查无异常，游戏内布局待验收。
 
-2026-10-12 Vault Core 1.12.0 / API13 适配审查：Vault 整体最低版本提高到 API13，启动时检查 `localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`character-identity:1`、`account-entry:2` 及实际调用方法；能力不满足时提示并停止初始化。页面过滤输入迁移到 Core `CreateInput`，角色标签迁移到 `FormatName`，物品显示继续使用 ItemResolver；入口显式声明三个默认关闭通道；固定仓储页不需要 `account-surface-budget:1`。库存目标增强额外检查 API13、`business-item-actions:1`、身份方法和 Core Contracts/绑定方法；不满足时只停用目标增强。`vault.items` / `mail.items` 数据所有权和 Service 契约不变，Core 无需新增业务分支。语言静态报告为 0 硬编码候选、0 缺失英文、0 未知 key、0 格式差异；尚未做中英文游戏客户端与入口交互验收。
+2026-10-12 Vault Core 1.12.0 / API13 最新工作树复核：Vault 整体最低版本为 API13，启动时检查 `localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`character-identity:1`、`account-entry:2` 及实际调用方法；能力不满足时提示并停止初始化。页面过滤输入迁移到 Core `CreateInput`，角色标签迁移到 `FormatName`，物品显示继续使用 ItemResolver；入口显式声明三个默认关闭通道；固定仓储页不需要 `account-surface-budget:1`。Core 最新 `business-item-actions:2` 向后兼容 v1，Vault 库存目标增强只调用并检查 v1；`builtin-entry-bar:3` 的拖拽排序由 Core 内部使用，Vault 未调用，不需依赖 v3。目标增强不满足 API13、`business-item-actions:1`、身份方法和 Core Contracts/绑定方法时单独停用。`vault.items` / `mail.items` 数据所有权和 Service 契约不变，Core 无需新增业务分支。语言静态报告为 0 硬编码候选、0 缺失英文、0 未知 key、0 格式差异；尚未做中英文游戏客户端与入口交互验收。

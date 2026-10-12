@@ -1,6 +1,9 @@
 local Core = _G.YiboCore
 if Core and Core.Locale and type(Core.Locale.Register) == "function" then
     Core.Locale:Register("YiboVault", "zh", {
+        ["MAIL.IN_TRANSIT"] = "在途",
+        ["MAIL.IN_TRANSIT_FROM"] = "在途 · 寄件角色：%s",
+        ["MAIL.TRANSIT_SHORT"] = "途",
         ["TEXT.ACCOUNT_CHARACTERS_SAVE_THE_CURRENT_DIRECT_68F438"] = "账号角色（保存当前目录范围）",
         ["TEXT.ADD_TO_ACTION_HUB_OPEN_THE_ADD_MENU_1EB204"] = "：添加到行动中心；＋：添加菜单",
         ["TEXT.ALL_REALMS_A166AB"] = "所有服务器",

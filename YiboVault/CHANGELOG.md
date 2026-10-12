@@ -1,5 +1,11 @@
 # YiboVault 更新日志
 
+## 1.2.1-api1（2026-10-12）
+
+- 安装提供 `mail.items` v1.1 的 YiboMail 时，将可解析到账号角色的成功发件历史投影为收件角色的“在途”邮件物品；匹配收件确认或寄件角色收到的退回邮件后移除在途状态。
+- 在途数量单独显示，不计入已持有总量；仓储邮件区域显示在途标记，查询 API 将其放在 `transitRecords`，并通过 `totals.inTransitQuantity` 汇总。
+- Mail 未安装或仅提供 v1.0 时，Vault 继续按实际扫描快照工作；不读取 Mail 私有表。
+
 ## 1.2.0-api1（2026-10-12）
 
 - 最低 Core API 提高到 13；初始化检查语言、业务 Service、公共名称、输入、物品解析、角色身份与 `account-entry:2` 能力及所需方法。能力缺失时 Vault 停止初始化并提示升级；库存目标增强单独检查 `business-item-actions:1`，不可用时不影响基础 Vault。

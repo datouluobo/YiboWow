@@ -28,12 +28,14 @@ Core.Events 发送 `BUSINESS_CONTRACT_REGISTERED(descriptor)`、`BUSINESS_CONTRA
 
 | 能力 | 所有者 / 提供者 | 消费方 | 方法 |
 | --- | --- | --- | --- |
-| `mail.items` v1.0 | YiboMail / `YiboMail:inbox` | YiboVault | GetState({characterID})、GetByCharacter({characterID,options})、GetRevision() |
-| `vault.items` v1.0 | YiboVault / `YiboVault:inventory` | YiboCurrency | Query(options)、GetPersonalCounts(options)、HasCapability({name,minimumVersion}) |
+| `mail.items` v1.1 (v1.0 compatible) | YiboMail / `YiboMail:inbox` | YiboVault | GetState({characterID})、GetByCharacter({characterID,options})、GetTransfers({characterID})、GetRevision() |
+| `vault.items` v1.1 (v1.0 compatible) | YiboVault / `YiboVault:inventory` | YiboCurrency | Query(options)、GetPersonalCounts(options)、HasCapability({name,minimumVersion}) |
 
 角色使用 Core characterID，账号范围和过滤复用原业务 Items API；Mail 方法返回语义见 Mail 的 API 文档，Vault 查询与 personal-counts 语义见 Vault 文档。本次只注册已有方法，不扩大库存来源或引入第二份权威缓存。变更负载保留业务 eventName、characterID、revision、来源与涉及 itemID；Vault 只对其有效投影视图改变发布变更，避免通知循环。
 
 Mail 通过 observedAt、status、lastScanStatus、revision 表达就绪与时效。已注册但未完成扫描时 Vault 等待 Mail 采集，可读自身此前缓存，但不开始第二轮采集，也不认定邮箱为空。成功快照关闭邮箱后变为 stale，仍可作为明确的上次观测；失败保留 Mail 的最后数据及 error 覆盖，不切换到另一份更老缓存。Tooltip 对已完成且上次结果 known/known-empty/partial 的关闭邮箱保留可见数量；error 和没有成功观测的 stale 继续显示未知。partial 仅是可见范围下限，不冒充完整邮箱。
+
+Mail v1.1 的 `GetTransfers({characterID})` 是可选增强，不影响 v1.0 的收件箱方法。Mail 仅把成功发件历史中能通过 Core 角色目录解析到的收件人返回给 Vault；Vault 将其单独标记为 `in-transit`，不计入角色持有总量。收件角色被扫描到相符发件人、主题、附件集合和发送时间后，该发件不再出现在在途结果中。Vault 在来源事件后刷新所有角色投影，因为一名角色的发件会改变另一名角色的在途视图。
 
 Mail 缺失、禁用、注销或主版本不兼容时，Vault 独立采集继续可用；晚注册立即切换来源、取消待执行本地扫描并重新投影。Currency 每次能力查询重新发现 Vault，缺失或库存子能力不足时使用原有 Core 快照。返回副本防止消费方修改所有者数据。
 

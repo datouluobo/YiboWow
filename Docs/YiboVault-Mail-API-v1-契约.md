@@ -1,6 +1,6 @@
 # YiboVault / YiboMail Public API v1 契约
 
-> 状态：YiboVault `1.0.0-api1` 的 Items API v1 已实施；YiboMail `0.4.0-api1` 已实施公开附件接口、原生邮箱增强、Core 业务面板及三标签设置，游戏内验收及 Vault 双插件适配待完成。2026-10-01。
+> 状态：Vault 与 Mail 当前工作树在既有 `mail.items` / `vault.items` Service 上增加可选在途投影；Mail `mail.items` v1.1 的 `GetTransfers` 与 Vault 在途展示已实施，客户端联动待验收。2026-10-12。
 >
 > 适用范围：YiboVault 物品查询 API、YiboMail 邮件附件来源 API，以及二者的状态、范围和变更通知语义。
 >
@@ -11,6 +11,8 @@
 - `YiboVault.Items.API_VERSION = 1`；`YiboMail.Items.API_VERSION = 1`。业务 API 版本独立于 `YiboCore.API_VERSION`。
 - `YiboVaultDB` 保存 Vault 采集的实体容器、本人拍卖行和精简邮箱附件快照；`YiboMailDB` 保存 Mail 自己的邮件快照、归档和规则。两个插件均可独立安装、独立采集。
 - 双插件共存时，Vault 对每个角色优先选择兼容的 `YiboMail.Items` 公开附件来源；Mail 数据不可用时使用 Vault 自有快照。一个角色一次查询只能选择一份邮箱来源，不能叠加。Vault 不读取 `YiboMailDB` 私有表。Vault 的 `MailProvider` 已接入 v1，并复用同一来源供查询、仓储页和 tooltip；Mail 的变更只在 Vault 邮件投影实际改变时转发一次事件。
+- `mail.items` v1.1 可选增加 `GetTransfers({characterID})`。Mail 作为发件历史所有者，仅返回可按 Core 角色目录精确解析收件人的 `in-transit` 物品；Vault 把结果投影到收件角色的邮件来源并标记 `mailStatus = "in-transit"`。v1.0 Mail 服务仍提供普通收件箱快照，但不提供在途增强。
+- 已扫描到收件角色且发件人、主题、完整附件多重集合及时间相符的收件邮件，或发件角色收到匹配的退回邮件，会结束对应在途投影。Vault 不把在途数量计入 `totalQuantity`、`externalQuantity` 或角色已持有量；新增 `totals.inTransitQuantity` 与 `totals.bySource["in-transit"]` 单独报告。
 - 所有公共查询返回新建的 Lua table 投影。调用方可以修改返回值，但修改不会写回提供者。
 - 时间戳均为 Unix 秒；优先使用 `GetServerTime()`，不可用时使用 `time()`，并在记录的 `clockSource` 中注明 `server` 或 `client`。
 
@@ -25,9 +27,9 @@
 | `bank` | Vault | `physical` | 是 |
 | `guild-bank` | Vault | `physical` | 是 |
 | `auction` | Vault | `listed` | 否 |
-| `mail` | Vault 自有快照；未来可切换至 Mail 公共来源 | `external` | 否 |
+| `mail` | Vault 自有快照，或 Mail 收件快照及可选在途投影 | `external` | 否 |
 
-`totalQuantity = physicalQuantity + listedQuantity + externalQuantity`。接口必须同时返回三类小计，调用方不得把 AH 上架或待取邮件描述成背包/银行实体库存。
+`totalQuantity = physicalQuantity + listedQuantity + externalQuantity`。在途物品不参与这些小计，独立计入 `inTransitQuantity` 和 `bySource["in-transit"]`；调用方不得把在途或待取邮件描述成角色已持有的背包/银行实体库存。
 
 ### 2.2 来源状态
 
@@ -49,6 +51,8 @@
 
 - Vault 实体与 AH 当前记录使用 `observed`；旧但仍保留的记录使用 `stale`。
 - Mail 待取附件使用 `observed`；邮件归档后不再出现在 `YiboMail.Items` 当前来源查询中。
+- Mail 发件历史投影到 Vault 时仍保留 `state = "in-transit"`，并使用 `mailStatus = "in-transit"`；角色所有权指向可解析的收件角色，来源仍为 `mail`。此状态属于在途量，不是收件角色已持有量。
+- Vault `Query` 将在途记录单独放在 `transitRecords`，不混入已观察的 `records`；读取 `totals.inTransitQuantity` / `totals.bySource["in-transit"]` 可获得在途数量。此字段为新增可选字段，既有 `Items` API 主版本仍为 1。
 - `collected-archived`、`return-confirmed`、`unverified` 等邮件生命周期状态属于 Mail 邮件查询，不作为 Vault 当前持有量记录返回。
 
 ## 3. 物品身份
@@ -121,6 +125,7 @@ scope = { mode = "account" }
 - `sourceID` 只用于同一提供者内定位和替换，不宣称为暴雪永久 ID。
 - 公会银行记录以 `guildKey` 与 `location.tabID` 标识共享页签，不设置角色库存归属；`visitorCharacterID` 仅记录最近一次改变该快照的访问角色，查询须按范围内角色的服务器与公会名匹配，并对同一 `guildKey` 只计一次。
 - Mail 提供者的记录可额外包含 `mailKey`、`attachmentIndex`、`expiresAtEstimate`、`daysLeftAtScan`、`sender`、`subject` 与 `mailType`；Vault 自有精简附件记录仅保证位置中的 `attachmentIndex`，不伪造邮件生命周期字段。
+- Vault 转移记录额外包含 `mailStatus = "in-transit"`、`senderCharacterID`、`senderName`，`characterID` 指向明确解析到的收件角色。收件匹配仅根据 Mail 当前拥有的扫描和历史数据；尚未扫描、无法唯一匹配或字段不足时保留在途状态，不推断已送达。
 - AH 记录额外包含可取得的 `auctionID`、`stackCount`、`unitPrice`、`buyoutAmount`、`timeLeft`；字段均待客户端验证并保持可空。
 
 ## 6. YiboMail.Items v1
@@ -140,6 +145,7 @@ v1 冻结能力：
   ["mail-items.query"] = 1,
   ["mail-items.state"] = 1,
   ["mail-items.events"] = 1,
+  ["mail-items.transfers"] = 1, -- mail.items service minor 1
 }
 ```
 
@@ -156,6 +162,7 @@ YiboMail.Items:Query({
 })
 YiboMail.Items:GetState(characterID)
 YiboMail.Items:GetRevision()
+YiboMail.Items:GetTransfers(characterID) -- 服务 v1.1；返回投影到此收件角色的在途附件
 ```
 
 `Query` 返回：
@@ -290,7 +297,12 @@ YiboVault.Items:GetRevision()
     physicalQuantity = 20,
     listedQuantity = 3,
     externalQuantity = 2,
-    bySource = { bags = 20, auction = 3, mail = 2 },
+    inTransitQuantity = 1,
+    bySource = { bags = 20, auction = 3, mail = 2, ["in-transit"] = 1 },
+  },
+  transitRecords = {
+    { characterID = "realm:recipient", itemID = 123, quantity = 1,
+      source = "mail", mailStatus = "in-transit", senderCharacterID = "realm:sender" },
   },
   coverage = {
     bags = {

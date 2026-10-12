@@ -268,8 +268,9 @@ function Items:Query(options)
     else
         for source in pairs(Addon.SourceClasses) do selectedSources[source] = true end
     end
-    local records, coverage, totals = {}, {}, {
-        totalQuantity = 0, physicalQuantity = 0, listedQuantity = 0, externalQuantity = 0, bySource = {},
+    local records, transitRecords, coverage, totals = {}, {}, {}, {
+        totalQuantity = 0, physicalQuantity = 0, listedQuantity = 0, externalQuantity = 0,
+        inTransitQuantity = 0, bySource = {},
     }
     local characters = ResolveCharacters(options.scope, not selectedSources["guild-bank"])
     for _, character in ipairs(characters) do
@@ -285,23 +286,30 @@ function Items:Query(options)
                     elseif source == "auction" then
                         locationKey = "auction"
                     elseif source == "mail" then
-                        locationKey = "inbox"
+                        locationKey = record.mailStatus == "in-transit" and "transit" or "inbox"
                     else
                         locationKey = "equipment"
                     end
                     local locationState = states[locationKey]
-                    local fresh = locationState and (locationState.status == "known" or locationState.status == "known-empty"
+                    local fresh = record.mailStatus == "in-transit" and locationState and locationState.status == "known"
+                        or locationState and (locationState.status == "known" or locationState.status == "known-empty"
                         or source == "mail" and locationState.status == "partial")
-                    record.state = fresh and "observed" or "stale"
+                    if record.mailStatus ~= "in-transit" then record.state = fresh and "observed" or "stale" end
                     local identityMatches = identityMode ~= "strict" or not options.variantKey
                         or record.variantKey == options.variantKey
                     if (options.includeStale ~= false or fresh)
                         and identityMatches and (not options.itemID or record.itemID == requestedItemID) then
-                        records[#records + 1] = record
-                        totals.totalQuantity = totals.totalQuantity + record.quantity
-                        local class = Addon.SourceClasses[source]
-                        totals[class .. "Quantity"] = totals[class .. "Quantity"] + record.quantity
-                        totals.bySource[source] = (totals.bySource[source] or 0) + record.quantity
+                        if record.mailStatus == "in-transit" then
+                            transitRecords[#transitRecords + 1] = record
+                            totals.inTransitQuantity = totals.inTransitQuantity + record.quantity
+                            totals.bySource["in-transit"] = (totals.bySource["in-transit"] or 0) + record.quantity
+                        else
+                            records[#records + 1] = record
+                            totals.totalQuantity = totals.totalQuantity + record.quantity
+                            local class = Addon.SourceClasses[source]
+                            totals[class .. "Quantity"] = totals[class .. "Quantity"] + record.quantity
+                            totals.bySource[source] = (totals.bySource[source] or 0) + record.quantity
+                        end
                     end
                 end
             end
@@ -330,6 +338,7 @@ function Items:Query(options)
         end
     end
     table.sort(records, function(a, b) return a.sourceID < b.sourceID end)
+    table.sort(transitRecords, function(a, b) return a.sourceID < b.sourceID end)
     local generatedAt = Addon:Now()
     return {
         apiVersion = self.API_VERSION,
@@ -337,6 +346,7 @@ function Items:Query(options)
         generatedAt = generatedAt,
         identityMode = identityMode,
         records = records,
+        transitRecords = transitRecords,
         totals = totals,
         coverage = coverage,
     }
@@ -344,7 +354,7 @@ end
 
 function Items:RegisterService()
     self.serviceDefinition = self.serviceDefinition or {
-        name = "vault.items", kind = "service", providerID = Addon.NAME .. ":inventory", version = { major = 1, minor = 0 },
+        name = "vault.items", kind = "service", providerID = Addon.NAME .. ":inventory", version = { major = 1, minor = 1 },
         methods = {
             Query = function(request) return Items:Query(request) end,
             GetPersonalCounts = function(request) return Items:GetPersonalCounts(request) end,

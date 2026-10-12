@@ -2,7 +2,7 @@ local Addon = _G.YiboVault or {}
 _G.YiboVault = Addon
 
 Addon.NAME = "YiboVault"
-Addon.RELEASE_VERSION = "1.2.0"
+Addon.RELEASE_VERSION = "1.2.1"
 Addon.REQUIRED_CORE_API = 13
 Addon.SCHEMA_VERSION = 1
 Addon.API_VERSION = 1
@@ -19,6 +19,7 @@ Addon.CAPABILITIES = {
     ["source.guild-bank"] = 1,
     ["source.auction"] = 1,
     ["source.mail"] = 1,
+    ["source.mail.transit"] = 1,
 }
 Addon.SourceClasses = { bags = "physical", equipment = "physical", bank = "physical", ["guild-bank"] = "physical", auction = "listed", mail = "external" }
 Addon.Frame = CreateFrame("Frame")

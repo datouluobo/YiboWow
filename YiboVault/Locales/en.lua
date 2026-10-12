@@ -1,6 +1,9 @@
 local Core = _G.YiboCore
 if Core and Core.Locale and type(Core.Locale.Register) == "function" then
     Core.Locale:Register("YiboVault", "en", {
+        ["MAIL.IN_TRANSIT"] = "In transit",
+        ["MAIL.IN_TRANSIT_FROM"] = "In transit · Sent by: %s",
+        ["MAIL.TRANSIT_SHORT"] = "T",
         ["TEXT.ACCOUNT_CHARACTERS_SAVE_THE_CURRENT_DIRECT_68F438"] = "Account characters (save the current directory scope)",
         ["TEXT.ADD_TO_ACTION_HUB_OPEN_THE_ADD_MENU_1EB204"] = ": Add to Action Hub; +: open the add menu",
         ["TEXT.ALL_REALMS_A166AB"] = "All Realms",
