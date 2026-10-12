@@ -50,10 +50,8 @@ local function ResolveCharacters(scope, identityOnly)
         local current = core.Characters:GetCurrent()
         return current and { current } or {}
     end
-    -- Explicit goal scopes need directory identity, never unrelated domains.
-    -- Preserve the existing Items API behavior for clients before API v11.
-    if identityOnly and scope.mode == "characters" and core.CheckAPIVersion and core:CheckAPIVersion(11)
-        and core.HasCapability and core:HasCapability("character-identity", 1) then
+    -- Explicit character scopes only need public identity, never unrelated domains.
+    if identityOnly and scope.mode == "characters" then
         local result, seen = {}, {}
         for _, id in ipairs(scope.characterIDs) do
             if not seen[id] then
@@ -64,7 +62,7 @@ local function ResolveCharacters(scope, identityOnly)
         end
         return result
     end
-    local all = scope.mode == "characters" and (core.Characters.GetAllCached and core.Characters:GetAllCached() or core.Characters:GetAll())
+    local all = scope.mode == "characters" and core.Characters:GetAllCached()
         or core.AccountView:GetVisibleCharacters()
     if scope.mode == "account" then return all end
     if scope.mode == "characters" then
@@ -360,7 +358,7 @@ function Items:RegisterService()
 end
 
 function Items.Events:Register(owner, callback)
-    if owner == nil or type(callback) ~= "function" then return nil, "事件订阅参数无效。" end
+    if owner == nil or type(callback) ~= "function" then return nil, Addon:T("TEXT.INVALID_EVENT_SUBSCRIPTION_ARGUMENTS_61AB74") end
     self._listeners[#self._listeners + 1] = { owner = owner, callback = callback }
     return true
 end
@@ -381,6 +379,6 @@ function Items.Events:Fire(eventName, payload)
     end
     for _, listener in ipairs(self._listeners) do
         local ok, errorMessage = pcall(listener.callback, eventName, Addon.Copy(payload))
-        if not ok then Addon:Print("事件订阅回调失败：" .. tostring(errorMessage)) end
+        if not ok then Addon:Print(Addon:T("TEXT.EVENT_SUBSCRIBER_CALLBACK_FAILED_417A42") .. tostring(errorMessage)) end
     end
 end

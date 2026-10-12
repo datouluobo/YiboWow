@@ -10,9 +10,9 @@ local OWNER_HEIGHT = 42
 local OWNER_WIDTH, CONTENT_LEFT = 190, 217
 
 local CHARACTER_AREAS = {
-    { id = "bags", label = "背包" }, { id = "mail", label = "邮件" },
-    { id = "bank", label = "个人银行" }, { id = "auction", label = "拍卖" },
-    { id = "equipment", label = "装备" },
+    { id = "bags", label = Addon:T("TEXT.BAGS_FF3D08") }, { id = "mail", label = Addon:T("TEXT.MAIL_1C8E46") },
+    { id = "bank", label = Addon:T("TEXT.PERSONAL_BANK_225443") }, { id = "auction", label = Addon:T("TEXT.AUCTIONS_89A4A2") },
+    { id = "equipment", label = Addon:T("TEXT.EQUIPMENT_1FAF33") },
 }
 local GUILD_TAB_COUNT = 8
 local itemNameCache = {}
@@ -50,11 +50,11 @@ end
 
 local function CapacityText(area)
     if not area or not area.totalSlots then return "" end
-    local prefix = area.completeCapacity and "" or "已知 "
+    local prefix = area.completeCapacity and "" or Addon:T("TEXT.KNOWN_A96951")
     if area.freeSlots ~= nil then
-        return string.format("%s空位 %d / %d", prefix, area.freeSlots, area.totalSlots)
+        return string.format(Addon:T("TEXT.S_FREE_SLOTS_D_D_46FDF4"), prefix, area.freeSlots, area.totalSlots)
     end
-    return string.format("%s总格数 %d", prefix, area.totalSlots)
+    return string.format(Addon:T("TEXT.S_TOTAL_SLOTS_D_E4410B"), prefix, area.totalSlots)
 end
 
 local function CompositionText(area)
@@ -62,8 +62,8 @@ local function CompositionText(area)
     for _, location in ipairs(area and area.locations or {}) do
         local capacity = location.capacity
         if capacity and capacity.totalSlots and capacity.totalSlots > 0 then
-            local name = capacity.bagName or (tonumber(location.locationKey) == 0 and "背包"
-                or ("容器 " .. tostring(location.locationKey)))
+            local name = capacity.bagName or (tonumber(location.locationKey) == 0 and Addon:T("TEXT.BAGS_FF3D08")
+                or (Addon:T("TEXT.CONTAINER_FDA18C") .. tostring(location.locationKey)))
             parts[#parts + 1] = name .. "(" .. capacity.totalSlots .. ")"
         end
     end
@@ -162,7 +162,7 @@ local function CreateItemCell(page, index)
     cell.emptyLabel:SetPoint("TOPLEFT", 2, -3)
     cell.emptyLabel:SetPoint("TOPRIGHT", -2, -3)
     cell.emptyLabel:SetHeight(15)
-    cell.emptyLabel:SetText("空位")
+    cell.emptyLabel:SetText(Addon:T("TEXT.EMPTY_A3EEF8"))
     cell.emptyCount = Text(cell, Theme.Font.assist, Colors.text, "CENTER")
     cell.emptyCount:SetPoint("BOTTOMLEFT", 2, 2)
     cell.emptyCount:SetPoint("BOTTOMRIGHT", -2, 2)
@@ -176,7 +176,7 @@ local function CreateItemCell(page, index)
         elseif GameTooltip.SetItemByID then GameTooltip:SetItemByID(control.item.itemID) end
         GameTooltip:Show()
         if Addon.Tooltip then Addon.Tooltip:Append(GameTooltip, control.item.itemID) end
-        if Addon.GoalTargets and Addon.GoalTargets.ref then GameTooltip:AddLine(Addon.Core.BusinessItemActions:GestureLabel() .. "：添加到行动中心；＋：添加菜单"); GameTooltip:Show() end
+        if Addon.GoalTargets and Addon.GoalTargets.ref then GameTooltip:AddLine(Addon.Core.BusinessItemActions:GestureLabel() .. Addon:T("TEXT.ADD_TO_ACTION_HUB_OPEN_THE_ADD_MENU_1EB204")); GameTooltip:Show() end
     end)
     cell:SetScript("OnLeave", function(control)
         control:SetBackdropBorderColor(unpack(control.borderColor or Colors.lineSoft))
@@ -208,7 +208,7 @@ function StoragePage:Create(parent)
     end)
 
     page.search = Theme:CreateInput(page, {
-        width = 340, height = 30, placeholder = "搜索账号物品名称 / ID", clearable = true,
+        width = 340, height = 30, placeholder = Addon:T("TEXT.SEARCH_ACCOUNT_ITEMS_BY_NAME_OR_ID_CD46C9"), clearable = true,
         OnChanged = function(_, _, control)
             local active = (control:GetText() or ""):match("%S") ~= nil
             if active and not page.searchActive then
@@ -229,7 +229,7 @@ function StoragePage:Create(parent)
     })
     page.search:SetPoint("TOPLEFT", page, "TOPLEFT", CONTENT_LEFT, -10)
     page.searchBox, page.searchHint, page.searchClear = page.search, page.search.placeholder, page.search.clearButton
-    page.showHidden = Theme:CreateCheckbox(page, "显示隐藏公会")
+    page.showHidden = Theme:CreateCheckbox(page, Addon:T("TEXT.SHOW_HIDDEN_GUILDS_4B158B"))
     page.showHidden:SetPoint("TOPLEFT", page, "TOPLEFT", 12, -8)
     page.showHidden:SetWidth(OWNER_WIDTH)
     page.showHidden:SetScript("OnClick", function(control)
@@ -474,7 +474,7 @@ end
 function StoragePage:Refresh(host, context)
     local page = host and (host.yiboVaultStoragePage or host)
     if not page then return end
-    if not page.ready then error(page.createError or "YiboVault 仓储页尚未完成创建。") end
+    if not page.ready then error(page.createError or Addon:T("TEXT.THE_YIBOVAULT_STORAGE_PAGE_COULD_NOT_BE_CR_4D13AE")) end
     if self.pendingGuildKey then
         page.explicitGuildKey = self.pendingGuildKey
         page.showHiddenGuilds = true
@@ -514,7 +514,11 @@ function StoragePage:Refresh(host, context)
     for _, character in ipairs(characters) do
         local entry = summaryByID[character.id]
         local auction = auctionStates[character.id] and auctionStates[character.id].locations.auction
-        local owner = { key = character.id, label = character.name or character.id,
+        local displayName = Addon.Core.Characters:FormatName(character, {
+            nameMode = "short", realmMode = "sameRealm",
+            referenceRealm = (Addon.Core.Characters:GetCurrent() or {}).realm,
+        })
+        local owner = { key = character.id, label = displayName or character.id,
             realm = character.realm, entry = entry, character = character,
             auction = auction and auction.completedScan and {
                 hasStale = auction.status ~= "known" and auction.status ~= "known-empty" } or nil,
@@ -529,7 +533,7 @@ function StoragePage:Refresh(host, context)
     end
     local guildOwnerCount = 0
     for _, guild in ipairs(summary.guilds) do
-        local guildName = guild.guildName or "公会"
+        local guildName = guild.guildName or Addon:T("TEXT.GUILD_AE2266")
         local hidden = Addon:IsGuildHidden(guild.guildKey)
         local owner = { key = guild.guildKey, label = guild.realm and (guildName .. " · " .. tostring(guild.realm)) or guildName,
             realm = guild.realm, guildKey = guild.guildKey, hidden = hidden, tabAreas = {}, tabs = {},
@@ -543,12 +547,12 @@ function StoragePage:Refresh(host, context)
                     hasStale = tab.status ~= "known" and tab.status ~= "known-empty" }
                 owner.tabAreas[GuildTabKey(tabID)] = area
                 owner.tabs[tabID] = { id = GuildTabKey(tabID),
-                    label = tab.location.tabName or ("页签 " .. tabID), enabled = true }
+                    label = tab.location.tabName or (Addon:T("TEXT.TAB_0C0C77") .. tabID), enabled = true }
             end
         end
         for tabID = 1, GUILD_TAB_COUNT do
             if not owner.tabs[tabID] then owner.tabs[tabID] = {
-                id = GuildTabKey(tabID), label = "页签 " .. tabID, enabled = false } end
+                id = GuildTabKey(tabID), label = Addon:T("TEXT.TAB_0C0C77") .. tabID, enabled = false } end
         end
         guildOwnerCount = guildOwnerCount + 1
         table.insert(owners, guildOwnerCount, owner)
@@ -610,8 +614,8 @@ function StoragePage:Refresh(host, context)
         local classColor = owner.character and RAID_CLASS_COLORS and RAID_CLASS_COLORS[owner.character.class or ""]
         row.name:SetTextColor(classColor and classColor.r or Colors.text[1],
             classColor and classColor.g or Colors.text[2], classColor and classColor.b or Colors.text[3])
-        row.meta:SetText((owner.hidden and "已隐藏 · 不计入合计" or tostring(owner.realm or ""))
-            .. (searching and ("  ·  命中 ×" .. tostring(owner.matchQuantity)) or ""))
+        row.meta:SetText((owner.hidden and Addon:T("TEXT.HIDDEN_EXCLUDED_FROM_TOTALS_9EDBA9") or tostring(owner.realm or ""))
+            .. (searching and (Addon:T("TEXT.MATCH_6E5E57") .. tostring(owner.matchQuantity)) or ""))
         local coords = owner.character and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[owner.character.class]
         if coords then
             row.icon:SetTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES")
@@ -634,11 +638,11 @@ function StoragePage:Refresh(host, context)
     local mailCoverage = selected and page.area == "mail" and selected.character
         and Addon:GetCharacterCoverage(selected.key, "mail").inbox
     local partialMail = mailCoverage and (mailCoverage.unscannedCount or 0) > 0
-    page.heading:SetText(selected and (selected.label .. (selected.hidden and " · 已隐藏，不计入合计" or "")
-        .. (partialMail and (showStale and " · 邮箱上次仅部分可见" or " · 邮箱仅部分可见")
-        or showStale and " · 上次缓存" or "")) or "物品总览")
+    page.heading:SetText(selected and (selected.label .. (selected.hidden and Addon:T("TEXT.HIDDEN_EXCLUDED_FROM_TOTAL_EA8796") or "")
+        .. (partialMail and (showStale and Addon:T("TEXT.MAIL_WAS_ONLY_PARTLY_VISIBLE_LAST_SCAN_CE80CD") or Addon:T("TEXT.MAIL_IS_ONLY_PARTLY_VISIBLE_760FD7"))
+        or showStale and Addon:T("TEXT.LAST_CACHED_E8E0E4") or "")) or Addon:T("TEXT.ITEM_OVERVIEW_70B215"))
     page.identityMeta:SetText(selected and (selected.character and
-        ("等级 " .. tostring(selected.character.level or "?") .. " · " .. tostring(selected.realm or "") .. " · " .. tostring(selected.character.class or ""))
+        (Addon:T("TEXT.LEVEL_347FBE") .. tostring(selected.character.level or "?") .. " · " .. tostring(selected.realm or "") .. " · " .. tostring(selected.character.class or ""))
         or tostring(selected.realm or "")) or "")
     local classCoords = selected and selected.character and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[selected.character.class]
     if classCoords then
@@ -650,8 +654,8 @@ function StoragePage:Refresh(host, context)
     end
     local bagArea = selected and selected.entry and selected.entry.bags
     local bankArea = selected and selected.entry and selected.entry.bank
-    page.bagCapacity:SetText(bagArea and ("背包 · " .. CapacityText(bagArea)) or "")
-    page.bankCapacity:SetText(bankArea and ("个人银行 · " .. CapacityText(bankArea)) or "")
+    page.bagCapacity:SetText(bagArea and (Addon:T("TEXT.BAGS_CBB611") .. CapacityText(bagArea)) or "")
+    page.bankCapacity:SetText(bankArea and (Addon:T("TEXT.PERSONAL_BANK_32E155") .. CapacityText(bankArea)) or "")
     page.composition:SetText(bagArea and CompositionText(bagArea) or
         (selected and selected.guildKey and CapacityText(area) or ""))
 
@@ -659,10 +663,10 @@ function StoragePage:Refresh(host, context)
     table.sort(records, function(left, right) return tostring(left.sourceID) < tostring(right.sourceID) end)
     local freeSlots = not searching and area and tonumber(area.freeSlots) or nil
     page.slots = selected and self:BuildSlots(records, searching and "search" or page.area, freeSlots) or {}
-    local emptyMessage = not selected and "当前范围没有角色或已采集的公会银行。"
-        or not page.area and "尚未扫描任何可查看的来源。"
-        or "这个储存区尚无已记录物品。"
-    page.empty:SetText(searching and (#page.slots == 0 and "没有匹配的已缓存物品。" or "")
+    local emptyMessage = not selected and Addon:T("TEXT.NO_CHARACTERS_OR_SCANNED_GUILD_BANKS_ARE_I_F21456")
+        or not page.area and Addon:T("TEXT.NO_VIEWABLE_SOURCE_HAS_BEEN_SCANNED_YET_63655B")
+        or Addon:T("TEXT.NO_RECORDED_ITEMS_IN_THIS_STORAGE_AREA_34E6E1")
+    page.empty:SetText(searching and (#page.slots == 0 and Addon:T("TEXT.NO_CACHED_ITEMS_MATCH_89E336") or "")
         or #page.slots == 0 and emptyMessage or "")
     self:LayoutCells(page)
 end

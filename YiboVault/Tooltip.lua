@@ -169,7 +169,7 @@ function Tooltip:Append(tooltip, knownItemID)
             local key = record.guildKey or "guild"
             local entry = guilds[key]
             if not entry then
-                entry = { name = record.guildName or "公会", realm = record.realm,
+                entry = { name = record.guildName or Addon:T("TEXT.GUILD_AE2266"), realm = record.realm,
                     quantity = 0, tabs = {}, tabNames = {} }
                 guilds[key] = entry
             end
@@ -231,16 +231,17 @@ function Tooltip:Append(tooltip, knownItemID)
     if not hasCharacterRows and knownTotal == 0 and not hiddenResult then return end
 
     tooltip:AddLine(" ")
-    tooltip:AddDoubleLine("|cff20e070[Yibo]|r 账号库存", GreenNumber(TotalLabel(knownTotal, anyUnknown)),
+    tooltip:AddDoubleLine(Addon:T("TEXT.CFF20E070_YIBO_R_ACCOUNT_INVENTORY_02CF83"), GreenNumber(TotalLabel(knownTotal, anyUnknown)),
         0.90, 0.96, 0.97, 0.53, 0.70, 0.73)
     local budget, used, shown, remaining = RowBudget(tooltip), 0, 0, 0
     for _, character in ipairs(characters or {}) do
         local counts = byCharacter[character.id]
         if counts then
-            local name = tostring(character.name or character.id or "角色")
-            if allRealms and character.realm and current and character.realm ~= current.realm then
-                name = name .. "-" .. tostring(character.realm)
-            end
+            local realmMode = allRealms and (current and "sameRealm" or "full") or "omit"
+            local name = Addon.Core.Characters:FormatName(character, {
+                nameMode = "short", realmMode = realmMode,
+                referenceRealm = current and current.realm or nil,
+            }) or tostring(character.name or character.id or Addon:T("TEXT.CHARACTER_6B2669"))
             local parts = SourceParts(counts, counts.unknown)
             local label = TotalLabel(counts.shownTotal, counts.partial or next(counts.unknown) ~= nil)
             local right, extra = RowLines(tooltip, name, label, parts)
@@ -254,7 +255,7 @@ function Tooltip:Append(tooltip, knownItemID)
             end
         end
     end
-    if remaining > 0 then tooltip:AddLine("另有 " .. remaining .. " 名角色，已计入合计", 0.53, 0.70, 0.73) end
+    if remaining > 0 then tooltip:AddLine(Addon:T("TEXT.PLUS_A298C2") .. remaining .. Addon:T("TEXT.MORE_CHARACTERS_INCLUDED_IN_THE_TOTAL_D19702"), 0.53, 0.70, 0.73) end
     local guildKeys = {}
     for key, guild in pairs(guilds) do
         if guild.shownTotal > 0 then guildKeys[#guildKeys + 1] = key end
@@ -267,7 +268,7 @@ function Tooltip:Append(tooltip, knownItemID)
         if allRealms and guild.realm then name = name .. "-" .. tostring(guild.realm) end
         local parts = {}
         for _, tabID in ipairs(guild.tabIDs) do
-            local tabName = guild.tabNames[tabID] or "未命名"
+            local tabName = guild.tabNames[tabID] or Addon:T("TEXT.UNNAMED_355630")
             parts[#parts + 1] = "P" .. tostring(tabID) .. "·" .. tabName .. " " .. GreenNumber(guild.tabs[tabID])
         end
         local label = tostring(guild.shownTotal)
@@ -279,7 +280,7 @@ function Tooltip:Append(tooltip, knownItemID)
             used = used + 1 + #extra
         end
     end
-    if remainingGuilds > 0 then tooltip:AddLine("另有 " .. remainingGuilds .. " 个公会，已计入合计", 0.53, 0.70, 0.73) end
+    if remainingGuilds > 0 then tooltip:AddLine(Addon:T("TEXT.PLUS_A298C2") .. remainingGuilds .. Addon:T("TEXT.MORE_GUILDS_INCLUDED_IN_THE_TOTAL_41FE32"), 0.53, 0.70, 0.73) end
     if hiddenResult and #hiddenResult.records > 0 then
         local hiddenGuild = Addon.db.byGuild[hiddenGuildKey]
         local hiddenCoverage = hiddenResult.coverage["guild-bank"]
@@ -292,17 +293,17 @@ function Tooltip:Append(tooltip, knownItemID)
             if tabID and SnapshotAvailable(state, "guild-bank") then
                 if not tabCounts[tabID] then tabIDs[#tabIDs + 1] = tabID end
                 tabCounts[tabID] = (tabCounts[tabID] or 0) + record.quantity
-                tabNames[tabID] = record.location.tabName or "未命名"
+                tabNames[tabID] = record.location.tabName or Addon:T("TEXT.UNNAMED_355630")
                 hiddenTotal = hiddenTotal + record.quantity
             end
         end
         table.sort(tabIDs)
-        tooltip:AddLine("已隐藏 · 不计入账号合计", 0.53, 0.70, 0.73)
+        tooltip:AddLine(Addon:T("TEXT.HIDDEN_EXCLUDED_FROM_ACCOUNT_TOTAL_79BC9B"), 0.53, 0.70, 0.73)
         local parts = {}
         for _, tabID in ipairs(tabIDs) do
             parts[#parts + 1] = "P" .. tabID .. "·" .. tabNames[tabID] .. " " .. GreenNumber(tabCounts[tabID])
         end
-        local name = hiddenGuild.guildName or "公会"
+        local name = hiddenGuild.guildName or Addon:T("TEXT.GUILD_AE2266")
         if allRealms and hiddenGuild.realm then name = name .. "-" .. hiddenGuild.realm end
         AddOwnerRow(tooltip, name, hiddenTotal > 0 and tostring(hiddenTotal) or "~", parts)
     end

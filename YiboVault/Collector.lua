@@ -122,7 +122,7 @@ function Addon:ScanBank()
     end
     wipe(self._dirtyBank)
     if failed > 0 then
-        self:Print(string.format("个人银行扫描失败：%d/%d 个容器未能读取。", failed, #BankContainerIDs()))
+        self:Print(string.format(Addon:T("TEXT.PERSONAL_BANK_SCAN_FAILED_D_OF_D_CONTAINER_0C2648"), failed, #BankContainerIDs()))
     end
     return success, failed
 end
@@ -170,8 +170,8 @@ end
 function Addon:ScanInitial()
     local _, failed = self:ScanBags()
     local equipmentOK, equipmentError = self:ScanEquipment()
-    if failed > 0 then self:Print("背包扫描失败：" .. failed .. " 个容器未能读取。") end
-    if not equipmentOK then self:Print("装备扫描失败：" .. tostring(equipmentError) .. "。") end
+    if failed > 0 then self:Print(Addon:T("TEXT.BAG_SCAN_FAILED_FABD98") .. failed .. Addon:T("TEXT.CONTAINERS_COULD_NOT_BE_READ_6271F9")) end
+    if not equipmentOK then self:Print(Addon:T("ERROR.EQUIPMENT_SCAN_FAILED", tostring(equipmentError))) end
 end
 
 function Addon:OnEvent(event, arg1, arg2)
@@ -274,23 +274,50 @@ end
 
 function Addon:RegisterWithCore()
     local core = _G.YiboCore
-    if not core or not core:CheckAPIVersion(self.REQUIRED_CORE_API) or not core.Contracts
-        or not core.HasCapability or not core:HasCapability("business-services", 1) then
-        self:Print("需要 YiboCore API v" .. self.REQUIRED_CORE_API .. "。")
+    if not (core and type(core.CheckAPIVersion) == "function" and core:CheckAPIVersion(self.REQUIRED_CORE_API)
+        and type(core.HasCapability) == "function" and core:HasCapability("localization", 1)
+        and type(core.IsInitialized) == "function" and core:IsInitialized()
+        and core.Locale and type(core.Locale.Get) == "function"
+        and type(core.RegisterAddon) == "function" and core.Contracts
+        and type(core.Contracts.Register) == "function" and type(core.Contracts.NotifyChanged) == "function"
+        and core.AccountView and type(core.AccountView.RegisterPage) == "function"
+        and type(core.AccountView.GetRegisteredPages) == "function"
+        and type(core.AccountView.BuildContext) == "function"
+        and type(core.AccountView.GetEffectiveCharacterSort) == "function"
+        and type(core.AccountView.GetCustomCharacterOrder) == "function"
+        and type(core.AccountView.NotifyPageChanged) == "function"
+        and type(core.AccountView.ShowPage) == "function" and type(core.AccountView.Toggle) == "function"
+        and core.Entry and type(core.Entry.RegisterBusinessEntry) == "function"
+        and core:HasCapability("business-services", 1)
+        and core:HasCapability("character-name-format", 1)
+        and core:HasCapability("basic-input", 1)
+        and core:HasCapability("item-resolver", 1)
+        and core:HasCapability("character-identity", 1)
+        and core:HasCapability("account-entry", 2)
+        and core.Characters and type(core.Characters.GetCurrent) == "function"
+        and type(core.Characters.GetCurrentID) == "function"
+        and type(core.Characters.GetAllCached) == "function"
+        and type(core.Characters.GetAll) == "function" and type(core.Characters.Get) == "function"
+        and type(core.Characters.FormatName) == "function"
+        and core.CharacterSort and type(core.CharacterSort.Sort) == "function"
+        and core.UITheme and type(core.UITheme.CreateInput) == "function"
+        and core.ItemResolver and type(core.ItemResolver.GetInfo) == "function"
+        and type(core.ItemResolver.Request) == "function") then
+        Addon:PrintBootstrap("Requires YiboCore 1.12.0 / API 13 with localization:1 and the declared Vault capabilities.")
         return false
     end
     self.Core = core
     local registered, registerError = core:RegisterAddon(self.NAME, { version = self.VERSION, requiredAPI = self.REQUIRED_CORE_API })
-    if not registered then self:Print(registerError or "Core 插件注册失败。"); return false end
-    if core.CharacterCleanup then
+    if not registered then self:Print(registerError or self:T("ERROR.CORE_REGISTER")); return false end
+    if core.CharacterCleanup and type(core.CharacterCleanup.RegisterOwner) == "function" then
         local cleanup, cleanupError = core.CharacterCleanup:RegisterOwner(self.NAME, {
             Inspect = function(character) return Addon:InspectCharacter(character) end,
             Delete = function(character) return Addon:DeleteCharacter(character) end,
         })
-        if not cleanup then self:Print(cleanupError or "角色缓存清理注册失败。"); return false end
+        if not cleanup then self:Print(cleanupError or self:T("ERROR.CLEANUP_REGISTER")); return false end
     end
     local page, pageError = self.AccountPage:Register()
-    if not page then self:Print(pageError or "账号页面注册失败。"); return false end
+    if not page then self:Print(pageError or self:T("ERROR.PAGE_REGISTER")); return false end
     if self.GoalTargets then self.GoalTargets:Initialize() end
     local service, serviceError = self.Items:RegisterService()
     if not service then self:Print(serviceError); return false end

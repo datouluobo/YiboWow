@@ -97,12 +97,12 @@ function GuildBank:OnFrameShown()
     if self.open and (self.scan or self.lastStatus == "complete") then return end
     self.open = true
     self.lastOpenSource = "GuildBankFrame.OnShow"
-    self.lastStatus, self.lastResult = "starting", "已检测到 GuildBankFrame 显示，正在准备扫描"
+    self.lastStatus, self.lastResult = "starting", Addon:T("TEXT.GUILDBANKFRAME_IS_VISIBLE_PREPARING_TO_SCA_18CB29")
     local ok, result = pcall(self.Start, self)
     if not ok then
-        self.lastStatus, self.lastResult = "error", "窗口显示启动异常：" .. tostring(result)
+        self.lastStatus, self.lastResult = "error", Addon:T("TEXT.ERROR_WHILE_STARTING_AFTER_THE_WINDOW_APPE_FB8EFB") .. tostring(result)
         self.scan = nil
-        Addon:Print("公会银行扫描启动失败：" .. tostring(result))
+        Addon:Print(Addon:T("TEXT.COULD_NOT_START_GUILD_BANK_SCAN_862CEF") .. tostring(result))
     end
 end
 
@@ -140,13 +140,13 @@ function GuildBank:Finish(reason)
     if not state then return end
     self.scan = nil
     if reason == "closed" then
-        self.lastResult = "扫描在窗口关闭时中止"
+        self.lastResult = Addon:T("TEXT.SCAN_STOPPED_BECAUSE_THE_WINDOW_CLOSED_57E7C0")
         self.lastStatus = "closed"
         return
     end
-    self.lastResult = string.format("成功 %d/%d 个页签，失败 %d。", state.completed, #state.queue, state.failed)
+    self.lastResult = string.format(Addon:T("TEXT.SCANNED_D_D_TABS_SUCCESSFULLY_D_FAILED_5D49B0"), state.completed, #state.queue, state.failed)
     self.lastStatus = state.failed > 0 and "error" or "complete"
-    if state.failed > 0 then Addon:Print("公会银行扫描失败：" .. self.lastResult) end
+    if state.failed > 0 then Addon:Print(Addon:T("TEXT.GUILD_BANK_SCAN_FAILED_F6E494") .. self.lastResult) end
 end
 
 function GuildBank:RequestNext()
@@ -156,7 +156,7 @@ function GuildBank:RequestNext()
     local tabID = state.queue[state.index]
     if not tabID then self:Finish("complete"); return end
     self.lastStatus = "waiting"
-    self.lastResult = string.format("等待页签 %d 的客户端响应", tabID)
+    self.lastResult = string.format(Addon:T("TEXT.WAITING_FOR_THE_CLIENT_RESPONSE_FOR_TAB_D_C19740"), tabID)
     if type(QueryGuildBankTab) ~= "function" then
         MarkTabError(state, tabID, "guild-bank-query-api-unavailable")
         self:RequestNext()
@@ -189,19 +189,19 @@ function GuildBank:Start()
     if not IsOpen() or self.scan then return false end
     local guild, identityError = CurrentGuildIdentity()
     if not guild then
-        self.lastStatus, self.lastResult = "error", "未开始：" .. tostring(identityError)
-        Addon:Print("公会银行未开始扫描：" .. tostring(identityError))
+        self.lastStatus, self.lastResult = "error", Addon:T("TEXT.NOT_STARTED_FBE9F2") .. tostring(identityError)
+        Addon:Print(Addon:T("TEXT.GUILD_BANK_SCAN_DID_NOT_START_8FEB1D") .. tostring(identityError))
         return false
     end
     if type(GetNumGuildBankTabs) ~= "function" or type(QueryGuildBankTab) ~= "function" then
-        self.lastStatus, self.lastResult = "error", "客户端缺少页签查询 API"
-        Addon:Print("公会银行扫描不可用：客户端缺少页签查询 API。")
+        self.lastStatus, self.lastResult = "error", Addon:T("TEXT.THE_CLIENT_IS_MISSING_THE_GUILD_TAB_QUERY_C3FA4F")
+        Addon:Print(Addon:T("TEXT.GUILD_BANK_SCAN_UNAVAILABLE_THE_CLIENT_DOE_4A72A4"))
         return false
     end
     local countOK, tabCount = pcall(GetNumGuildBankTabs)
     if not countOK then
-        self.lastStatus, self.lastResult = "error", "读取页签数量失败：" .. tostring(tabCount)
-        Addon:Print("公会银行扫描失败：读取页签数量时发生错误。")
+        self.lastStatus, self.lastResult = "error", Addon:T("TEXT.COULD_NOT_READ_THE_TAB_COUNT_162BED") .. tostring(tabCount)
+        Addon:Print(Addon:T("TEXT.GUILD_BANK_SCAN_FAILED_WHILE_READING_THE_T_23A16E"))
         return false
     end
     tabCount = tonumber(tabCount) or 0
@@ -222,7 +222,7 @@ function GuildBank:Start()
     self.token = (self.token or 0) + 1
     self.scan = { token = self.token, guild = guild, queue = queue, index = 0, requestToken = 0, completed = 0, failed = 0 }
     self.lastStatus = "scanning"
-    self.lastResult = string.format("已启动，排队 %d 个可访问页签", #queue)
+    self.lastResult = string.format(Addon:T("TEXT.STARTED_D_ACCESSIBLE_TABS_QUEUED_036ADE"), #queue)
     self:RequestNext()
     return true
 end
@@ -270,12 +270,12 @@ function GuildBank:OnEvent(event)
         if self.open and (self.scan or self.lastStatus == "complete") then return end
         self.open = true
         self.lastOpenSource = "GUILDBANKFRAME_OPENED"
-        self.lastStatus, self.lastResult = "starting", "已收到公会银行打开事件，正在准备扫描"
+        self.lastStatus, self.lastResult = "starting", Addon:T("TEXT.GUILD_BANK_OPEN_EVENT_RECEIVED_PREPARING_T_4100A9")
         local ok, result = pcall(self.Start, self)
         if not ok then
-            self.lastStatus, self.lastResult = "error", "打开事件启动异常：" .. tostring(result)
+            self.lastStatus, self.lastResult = "error", Addon:T("TEXT.ERROR_WHILE_STARTING_FROM_THE_OPEN_EVENT_EED437") .. tostring(result)
             self.scan = nil
-            Addon:Print("公会银行扫描启动失败：" .. tostring(result))
+            Addon:Print(Addon:T("TEXT.COULD_NOT_START_GUILD_BANK_SCAN_862CEF") .. tostring(result))
         end
     elseif event == "GUILDBANKFRAME_CLOSED" then
         self.open = false
@@ -294,11 +294,11 @@ end
 function GuildBank:GetStatus()
     local scan = self.scan
     if scan then
-        return self.lastStatus or "scanning", string.format("%d/%d 页已完成；失败 %d；等待页签 %s",
-            scan.completed, #scan.queue, scan.failed, tostring(scan.waitingTab or "无"))
+        return self.lastStatus or "scanning", string.format(Addon:T("TEXT.D_D_TABS_COMPLETE_D_FAILED_WAITING_FOR_TAB_4DC3BE"),
+            scan.completed, #scan.queue, scan.failed, tostring(scan.waitingTab or Addon:T("TEXT.NONE_720777")))
     end
     if self.lastResult then return self.lastStatus or "idle", self.lastResult end
-    return self.open and "open" or "idle", self.open and "窗口已打开，尚未开始扫描" or "尚未收到打开事件"
+    return self.open and "open" or "idle", self.open and Addon:T("TEXT.THE_WINDOW_IS_OPEN_BUT_SCANNING_HAS_NOT_ST_86D45E") or Addon:T("TEXT.THE_OPEN_EVENT_HAS_NOT_ARRIVED_YET_3AC74E")
 end
 
 function GuildBank:OnAddonLoaded(addonName)

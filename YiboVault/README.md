@@ -1,6 +1,6 @@
 # YiboVault
 
-当前版本：`1.1.1-api1`。`1.1.1` 为插件版本，`api1` 为对外 `Items` API 版本。需要 YiboCore API v9 和 `business-services:1`，正式渠道包使用 Core 1.9.0 或更新版本；YiboCurrency 是可选调用方。通过 Core 发现 `mail.items`，提供方兼容时只消费邮件快照；缺失或不兼容时独立采集。Vault 通过 `vault.items` 提供只读库存查询，见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
+当前版本：`1.2.0-api1`。`1.2.0` 为插件版本，`api1` 为对外 `Items` API 版本。当前工作树要求 YiboCore 1.12.0 / API 13，并检查 `localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`character-identity:1` 与 `account-entry:2`；缺失或版本不足时停止 Vault 初始化并提示升级。Core 的语言、名称、输入、入口和物品显示能力只通过公开接口使用。YiboCurrency 是可选调用方。Vault 通过 Core 发现 `mail.items`，提供方兼容时只消费邮件快照；缺失或不兼容时独立采集。Vault 通过 `vault.items` 提供只读库存查询，Service 契约仍为 `business-services:1`，见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
 
 正式版变化见 [更新日志](CHANGELOG.md)。
 
@@ -55,6 +55,7 @@ YiboVault 是 Yibo 系列的账号物品缓存与查询服务。首轮实现顺�
 - 打开 AH 后自动调用本人上架查询；任意页签均可触发，不要求切到“取消”。
 - 仅在 `OWNED_AUCTIONS_UPDATED` 响应后提交整份本人上架快照；关闭期间的空返回不会覆盖已有数据。
 - 使用 `GetNumOwnedAuctions` 与逐条 `GetOwnedAuctionInfo` 读取本人上架；首次扫描完成后，拍卖行打开期间的后续更新事件仍会刷新快照。逐条记录缺失或读取期间数量变化时保留已有快照。
+- 按稳定 `auctionID` 保存首次观测时间与当前剩余时间档位上界；服务端时间超过保守到期点后，自动从 Vault 的 AH 数量移除，并通过既有库存修订通知消费方。该规则只表示不再计入上架，不判断售出或退回；旧快照可在支持的客户端 API 下按最近观测时间补建到期点。
 - 仓储页的全局搜索包含 AH 上架物品；角色可在“拍卖上架”储存区查看命中记录，AH 仍由查询 API 与实体库存分开统计。
 - 客户端扫描、重复打开和当前角色明细验证见[阶段 1 客户端首轮验证记录](_NonRelease/Docs/Stage1-客户端首轮验证.md)中的“AH 正式接入客户端初测”。
 

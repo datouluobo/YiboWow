@@ -43,7 +43,7 @@ function MailItems:ScheduleScan(reason, delay, retries)
             if success or self.lastStatus ~= "error" then return end
         end
         if remaining <= 0 then
-            if self.lastStatus == "error" then Addon:Print("邮箱附件扫描失败：" .. tostring(self.lastResult) .. "。") end
+            if self.lastStatus == "error" then Addon:Print(Addon:T("ERROR.MAIL_SCAN_FAILED", tostring(self.lastResult))) end
             return
         end
         if C_Timer and type(C_Timer.After) == "function" then
@@ -89,49 +89,49 @@ function MailItems:Scan(reason)
         return true, false, Addon.Copy(provided.coverage.inbox)
     end
     if Addon.MailProvider and Addon.MailProvider:Connect() then
-        self.lastStatus, self.lastResult = "not-yet-scanned", "等待邮件提供方快照"
+        self.lastStatus, self.lastResult = "not-yet-scanned", Addon:T("TEXT.WAITING_FOR_THE_MAIL_PROVIDER_SNAPSHOT_B9550C")
         return false
     end
     if not self:IsOpen() then
-        self.lastStatus, self.lastResult = "closed", "邮箱未打开，保留已有快照"
+        self.lastStatus, self.lastResult = "closed", Addon:T("TEXT.MAILBOX_IS_CLOSED_KEEPING_THE_EXISTING_SNA_DA928E")
         return false
     end
     local character = Addon.Core and Addon.Core.Characters:GetCurrent()
     if not character then
-        return self:Fail("当前角色不可用")
+        return self:Fail(Addon:T("TEXT.THE_CURRENT_CHARACTER_IS_UNAVAILABLE_657D67"))
     end
     if type(GetInboxNumItems) ~= "function" or type(GetInboxHeaderInfo) ~= "function"
         or type(GetInboxItem) ~= "function" or type(GetInboxItemLink) ~= "function" then
-        return self:Fail("邮箱附件 API 不可用")
+        return self:Fail(Addon:T("TEXT.MAIL_ATTACHMENT_API_IS_UNAVAILABLE_A5A688"))
     end
     local ok, currentCount, totalCount = pcall(GetInboxNumItems)
     currentCount, totalCount = tonumber(currentCount), tonumber(totalCount)
     if not ok or not currentCount or not totalCount or currentCount < 0 or totalCount < currentCount then
-        return self:Fail("邮箱数量读取失败")
+        return self:Fail(Addon:T("TEXT.COULD_NOT_READ_THE_MAILBOX_COUNT_015038"))
     end
     local records, observedAt, clockSource = {}, Addon:Now()
     local attachmentSlots = tonumber(ATTACHMENTS_MAX_RECEIVE) or 16
     for mailIndex = 1, currentCount do
         local header = { pcall(GetInboxHeaderInfo, mailIndex) }
         if not header[1] then
-            return self:Fail("邮件头读取失败：" .. mailIndex)
+            return self:Fail(Addon:T("TEXT.COULD_NOT_READ_MAIL_HEADERS_0508A3") .. mailIndex)
         end
         local expectedAttachments = tonumber(header[9])
         if not expectedAttachments or expectedAttachments < 0 or expectedAttachments > attachmentSlots then
-            return self:Fail("邮件头附件数量尚未就绪：" .. mailIndex)
+            return self:Fail(Addon:T("TEXT.ATTACHMENT_COUNT_IS_NOT_READY_FOR_MAIL_C028B0") .. mailIndex)
         end
         local foundAttachments = 0
         for attachmentIndex = 1, attachmentSlots do
             local itemOK, _, itemID, _, quantity = pcall(GetInboxItem, mailIndex, attachmentIndex)
             local linkOK, link = pcall(GetInboxItemLink, mailIndex, attachmentIndex)
             if not itemOK or not linkOK then
-                return self:Fail("附件读取失败：" .. mailIndex .. "/" .. attachmentIndex)
+                return self:Fail(Addon:T("TEXT.COULD_NOT_READ_ATTACHMENT_DFDF21") .. mailIndex .. "/" .. attachmentIndex)
             end
             itemID = tonumber(itemID) or ItemIDFromLink(link)
             quantity = tonumber(quantity)
             if itemID or quantity or link then
                 if not itemID or itemID <= 0 or not quantity or quantity <= 0 then
-                    return self:Fail("附件身份或数量不完整：" .. mailIndex .. "/" .. attachmentIndex)
+                    return self:Fail(Addon:T("TEXT.ATTACHMENT_IDENTITY_OR_QUANTITY_IS_INCOMPL_41E6FC") .. mailIndex .. "/" .. attachmentIndex)
                 end
                 foundAttachments = foundAttachments + 1
                 records[#records + 1] = MakeRecord(character, mailIndex, attachmentIndex,
@@ -139,12 +139,12 @@ function MailItems:Scan(reason)
             end
         end
         if foundAttachments ~= expectedAttachments then
-            return self:Fail("附件尚未完全载入：" .. mailIndex)
+            return self:Fail(Addon:T("TEXT.ATTACHMENTS_ARE_NOT_FULLY_LOADED_092E6B") .. mailIndex)
         end
     end
     local stillCurrent = Addon.Core.Characters:GetCurrent()
     if not self:IsOpen() or not stillCurrent or stillCurrent.id ~= character.id then
-        self.lastStatus, self.lastResult = "closed", "邮箱或角色状态已变化，保留已有快照"
+        self.lastStatus, self.lastResult = "closed", Addon:T("TEXT.MAILBOX_OR_CHARACTER_STATE_CHANGED_KEEPING_15BC9D")
         return false
     end
     table.sort(records, function(left, right) return left.sourceID < right.sourceID end)
@@ -154,8 +154,8 @@ function MailItems:Scan(reason)
         { container = "inbox" }, nil,
         { status = status, currentCount = currentCount, totalCount = totalCount, unscannedCount = unscannedCount })
     self.lastStatus = status
-    self.lastResult = string.format("可见 %d/%d 封、附件 %d 件；%s", currentCount, totalCount, #records,
-        changed and "缓存已更新" or "内容未变化")
+    self.lastResult = string.format(Addon:T("TEXT.VISIBLE_D_D_MESSAGES_D_ATTACHMENTS_S_6CC433"), currentCount, totalCount, #records,
+        changed and Addon:T("TEXT.CACHE_UPDATED_A90A54") or Addon:T("TEXT.NO_CONTENT_CHANGES_B20790"))
     return true, changed, coverage
 end
 
@@ -174,5 +174,5 @@ function MailItems:OnEvent(event)
 end
 
 function MailItems:GetStatus()
-    return self.lastStatus or "idle", self.lastResult or "尚未在本次会话扫描邮箱"
+    return self.lastStatus or "idle", self.lastResult or Addon:T("TEXT.THE_MAILBOX_HAS_NOT_BEEN_SCANNED_THIS_SESS_517443")
 end

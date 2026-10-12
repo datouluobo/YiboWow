@@ -7,6 +7,7 @@ function Addon:Initialize()
     if self.Items.WarmPersonalCountsIndex then self.Items:WarmPersonalCountsIndex() end
     if self.Tooltip then self.Tooltip:Install() end
     self.initialized = true
+    if self.AuctionHouse and self.AuctionHouse.ScheduleExpiry then self.AuctionHouse:ScheduleExpiry() end
     self.MailProvider:Install()
     self.Frame:RegisterEvent("PLAYER_LOGIN")
     self.Frame:RegisterEvent("PLAYER_ENTERING_WORLD")

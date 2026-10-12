@@ -45,7 +45,9 @@ local function SameContent(left, right)
             or a.itemKey ~= b.itemKey or a.variantKey ~= b.variantKey or a.identityQuality ~= b.identityQuality
             or a.quantity ~= b.quantity or a.location.container ~= b.location.container or a.location.slot ~= b.location.slot
             or a.auctionID ~= b.auctionID or a.stackCount ~= b.stackCount or a.buyoutAmount ~= b.buyoutAmount
-            or a.bidAmount ~= b.bidAmount or a.unitPrice ~= b.unitPrice or a.timeLeft ~= b.timeLeft or a.status ~= b.status then
+            or a.bidAmount ~= b.bidAmount or a.unitPrice ~= b.unitPrice or a.timeLeft ~= b.timeLeft or a.status ~= b.status
+            or a.firstObservedAt ~= b.firstObservedAt or a.expiryAt ~= b.expiryAt
+            or a.expiryClockSource ~= b.expiryClockSource then
             return false
         end
     end
@@ -224,7 +226,7 @@ end
 
 function Addon:SetGuildHidden(guildKey, hidden)
     local guild = self.db.byGuild and self.db.byGuild[guildKey]
-    if type(guild) ~= "table" then return nil, "公会缓存不存在。" end
+    if type(guild) ~= "table" then return nil, Addon:T("TEXT.GUILD_CACHE_DOES_NOT_EXIST_419DD9") end
     hidden = hidden == true
     if (guild.hidden == true) == hidden then return true, false end
     guild.hidden = hidden or nil
@@ -241,7 +243,7 @@ end
 
 function Addon:DeleteGuild(guildKey)
     local guild = self.db.byGuild and self.db.byGuild[guildKey]
-    if type(guild) ~= "table" then return nil, "公会缓存不存在。" end
+    if type(guild) ~= "table" then return nil, Addon:T("TEXT.GUILD_CACHE_DOES_NOT_EXIST_419DD9") end
     local affected = {}
     for _, records in pairs(guild.tabs or {}) do
         for _, record in ipairs(records) do affected[record.itemID] = true end
@@ -275,6 +277,43 @@ function Addon:GetCachedCharacterCoverage(characterID, source)
     local character = self.db.byCharacter[characterID]
     return Copy(character and character.coverage and character.coverage[source] or {})
 end
+
+function Addon:ExpireAuctions(now)
+    local currentTime, clockSource = self:Now()
+    if clockSource ~= "server" then return false end
+    now = tonumber(now) or currentTime
+    local anyChanged = false
+    for characterID, character in pairs(self.db.byCharacter or {}) do
+        local locations = character.auction or {}
+        for locationKey, records in pairs(locations) do
+            local kept, changedIDs = {}, {}
+            for _, record in ipairs(records) do
+                if record.expiryClockSource == "server" and type(record.expiryAt) == "number"
+                    and now >= record.expiryAt then
+                    if type(record.itemID) == "number" then changedIDs[record.itemID] = true end
+                else
+                    kept[#kept + 1] = record
+                end
+            end
+            if #kept ~= #records then
+                locations[locationKey] = kept
+                local sortedIDs = {}
+                for itemID in pairs(changedIDs) do sortedIDs[#sortedIDs + 1] = itemID end
+                table.sort(sortedIDs)
+                local coverage = character.coverage and character.coverage.auction
+                    and character.coverage.auction[locationKey]
+                if coverage then
+                    coverage.recordCount = #kept
+                    coverage.revision = (tonumber(self.db.revision) or 0) + 1
+                end
+                FireChanged("auction", characterID, sortedIDs, now, true, "expiry")
+                anyChanged = true
+            end
+        end
+    end
+    return anyChanged
+end
+
 function Addon:GetCharacterRecords(characterID, source, itemID)
     local snapshot = source == "mail" and self.MailProvider and self.MailProvider:GetSnapshot(characterID)
     if not snapshot then return self:GetCachedCharacterRecords(characterID, source, itemID) end
@@ -291,7 +330,7 @@ function Addon:NotifyMailProviderChanged(characterID, itemIDs)
 end
 
 function Addon:DeleteCharacter(character)
-    if not (character and type(character.id) == "string") then return nil, "角色 ID 无效。" end
+    if not (character and type(character.id) == "string") then return nil, Addon:T("TEXT.INVALID_CHARACTER_ID_D405B2") end
     local existed = self.db.byCharacter[character.id]
     if existed then
         local changedBySource, observedAt = { bags = {}, equipment = {}, bank = {}, auction = {}, mail = {} }, self:Now()
@@ -332,7 +371,8 @@ function Addon:InspectCharacter(character)
             for _ in pairs(store[source] or {}) do locations = locations + 1 end
         end
     end
-    return { hasData = locations > 0, label = "物品库存快照", detail = locations > 0 and ("已采集 " .. locations .. " 个位置") or "无角色库存缓存" }
+    return { hasData = locations > 0, label = Addon:T("TEXT.ITEM_INVENTORY_SNAPSHOT_EEF518"),
+        detail = locations > 0 and Addon:T("DATA.STORED_LOCATIONS", locations) or Addon:T("TEXT.NO_CHARACTER_INVENTORY_CACHE_C6981F") }
 end
 
 Addon.Copy = Copy

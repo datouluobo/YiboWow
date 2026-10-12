@@ -83,7 +83,7 @@
 | YiboReputation | 10 | RequiredDeps | account-view:2；搜索输入和首次提示验证待完成 |
 | YiboTaskHub | 11 | RequiredDeps | 0.4.0 增加 Service 双向查询、basic-input:1 与 CreateBusinessTabs／CreateInput 检查；既有角色／高度／物品要求保留。672项自动化通过，客户端待验收 |
 | YiboTodo | 10 | RequiredDeps | account-view:2；名称与首次提示验证待完成 |
-| YiboVault | 9 | RequiredDeps | business-services:1；搜索输入部分接入，名称与另一过滤输入待迁移 |
+| YiboVault | 13（1.12.0 工作树） | RequiredDeps | localization:1、business-services:1、character-name-format:1、basic-input:1、item-resolver:1、character-identity:1、account-entry:2；初始化逐项检查版本与所需方法 |
 
 源码依据：各插件 Bootstrap、Namespace 或 CoreIntegration，及各自根目录 TOC。强依赖插件仍须按实际所需 API／能力检查，不能统一把最低版本改成 10；业务提供方缺失与 Core 版本不足是两种不同的失败路径。
 
@@ -117,7 +117,7 @@
 | YiboReputation | 待迁移 | [AccountMatrixView.lua](../../YiboReputation/AccountMatrixView.lua) 与 [MonitoredPreview.lua](../../YiboReputation/MonitoredPreview.lua) 已调用共享角色表头 | Core 1.7.0 表头内部已接入；后续核对业务侧遗漏标签、最低要求与游戏表现，再记录业务显式接入。公会名称与公会键不属于角色显示 |
 | YiboTaskHub | 部分接入 | 2026-10-09 0.3.1 主表执行角色／跨角色受益者、悬停角色标题／摘要复用 CreateMatrixHeader／SetCharacterHeader；FormatName short／sameRealm 用于紧凑角色行，详情执行者和跨角色受益者 original／full。显式检查共享方法，359 项回归及 Core 名称 77 项通过 | 修复 0.3.0 普通文本缺少职业色／统一身份提示；紧凑任务行采用共享控件单行模式；游戏内职业色／跨服身份待验收 |
 | YiboTodo | 待迁移 | [AccountPage.lua](../../YiboTodo/AccountPage.lua) 的 CharacterLabel 本地按 showRealm 组合身份 | 账号待办角色标签与相关身份提示；保留活动名称和业务状态文本 |
-| YiboVault | 待迁移 | [Tooltip.lua](../../YiboVault/Tooltip.lua) 本地按当前服务器拼角色名称；[StoragePage.lua](../../YiboVault/StoragePage.lua) 所有者标签使用原名 | 库存 tooltip 与仓储角色标签；公会显示、容器名称和公会身份键继续由各自逻辑处理 |
+| YiboVault | 部分接入（代码完成／客户端待验收） | [Tooltip.lua](../../YiboVault/Tooltip.lua) 与 [StoragePage.lua](../../YiboVault/StoragePage.lua) 角色显示使用 `Characters:FormatName`；最低 API13 / `character-name-format:1` | 公会显示、容器名称和公会身份键仍由各自逻辑处理；角色显示待客户端核对 / 2026-10-12 |
 
 ### 首次审查注意事项
 
@@ -147,7 +147,7 @@
 | YiboReputation | 待迁移 | [AccountMatrixView.lua](../../YiboReputation/AccountMatrixView.lua) 的搜索框本地创建 | 搜索框及其状态；未登记接入版本 |
 | YiboTaskHub | 部分接入（本轮范围） | 2026-10-10 0.4.0 TargetsPage 的搜索使用 CreateInput(clearable=true)，复用清空与 IME 处理；检查 API11 / basic-input:1 及方法；BossTargetsSpec 覆盖缺失能力停止和真实标签页操作 | 新增输入均已收拢，中文输入法与客户端布局待验收；无物品选择需求 |
 | YiboTodo | 不适用 | 当前待办设置与页面未发现本地 EditBox | 新增输入时使用公共控件；无接入版本 |
-| YiboVault | 部分接入 | [StoragePage.lua](../../YiboVault/StoragePage.lua) 的搜索框已使用公共输入 | [AccountPage.lua](../../YiboVault/AccountPage.lua) 的物品过滤输入仍本地创建；[Namespace.lua](../../YiboVault/Namespace.lua) 本轮最低 API 提高至 9。工作树，未登记首次发布版本／运行验证 |
+| YiboVault | 部分接入（适用输入已收拢） | [StoragePage.lua](../../YiboVault/StoragePage.lua) 搜索与 [AccountPage.lua](../../YiboVault/AccountPage.lua) 物品过滤均使用 Core `CreateInput`；初始化检查 API13 / `basic-input:1` 和方法 | IME、输入交互及设置布局待客户端验收 / 2026-10-12 |
 
 ## CAP-003：物品解析、选择与操作确认
 
@@ -170,7 +170,7 @@
 | YiboReputation | 不适用 | 搜索声望目录，未发现通用物品身份录入 | 声望搜索不属于物品解析 |
 | YiboTaskHub | 部分接入 | 2026-10-09 0.3.1 的 Presentation 为三展示面使用 ItemResolver:GetInfo／Request 加载 item.itemID 图标；显式检查 API11 / item-resolver:1 和方法；来源 icon 直接渲染，缺失时通用任务图标 | OverviewSpec 包含一次请求、加载完成、非法元数据与缺能力停止；共 359 项回归通过，游戏内图标与加载效果待验收；后续编辑器仍需重新评估控件 |
 | YiboTodo | 不适用 | 当前配置选择活动／目标，未发现通用物品身份录入 | 活动 ID 与业务条件不属于物品解析 |
-| YiboVault | 部分接入 | StoragePage 格子复用 ItemResolver 展示加载，最低 API v9；过滤输入仍仅接受物品 ID | 选择器需求按过滤功能评估；展示异步加载游戏内待验收 |
+| YiboVault | 部分接入（展示代码完成） | StoragePage 格子复用 `item-resolver:1` 加载展示；初始化检查 API13、能力与输入所需方法 | 输入按物品 ID 过滤是既定业务行为，无选择器迁移项；异步展示待客户端验收 / 2026-10-12 |
 
 ## CAP-004：账号页面、入口与设置接入基线
 
@@ -199,7 +199,7 @@
 | YiboReputation | 部分接入 | [CoreIntegration.lua](../../YiboReputation/CoreIntegration.lua) 注册账号页、入口与业务设置；当前最低 API v10 / account-view:2 | 核对矩阵／预览、设置及低版本停止；首次提示见 CAP-006。声望快照现有归属另需按业务边界评估，不以本次基线登记宣告迁移 |
 | YiboTaskHub | 部分接入 | 0.5.0 检查 API13 / account-entry:2、builtin-entry-bar:1，RegisterBusinessEntry 通过 defaultChannels 明确三个入口默认关闭；保留 Core 对用户选择的统一管理 | ActionIntegrationSpec 检查最低 API 与默认值；客户端验证三个通道切换、悬停与页面跳转待做；旧截图不替代新编辑器、窄窗口、IME 和完整登录流程验收 |
 | YiboTodo | 部分接入 | [CoreIntegration.lua](../../YiboTodo/CoreIntegration.lua) 注册账号页、入口与业务设置；当前最低 API v10 / account-view:2 | 核对业务设置与通用字段配置职责、实际行为及低版本停止；首次提示见 CAP-006 |
-| YiboVault | 部分接入 | [AccountPage.lua](../../YiboVault/AccountPage.lua) 注册账号页、入口与业务设置 | 核对存储页、账号入口及设置行为 |
+| YiboVault | 部分接入（适用接口代码完成） | [AccountPage.lua](../../YiboVault/AccountPage.lua) 注册账号页、Core 业务设置及 `account-entry:2` 三通道入口；默认通道均关闭，最低 API13 | 账号页、入口通道与统一设置工作台行为待客户端验收；固定仓储页面由 Core 统一页面容器处理，不消费动态高度预算 / 2026-10-12 |
 
 ## CAP-005：通用跨业务能力连接
 
@@ -234,7 +234,7 @@
 | YiboReputation | 待评估 | 无该新连接接入证据 | 真实待办／目标接入时评估 |
 | YiboTaskHub | 部分接入（运行代码与自动化完成） | 2026-10-10 0.4.0 通用消费 Todo 全量／Mail／AltoBoss action.todo，并提供 task.boss-targets、消费 boss.target-catalog；计划由 Task 保存，逐角色双向复制通过 Service 协作，schema3 迁移；672项检查通过 | API11 / business-services:1 / business-providers:1；本轮仅实现刷取计划安排，通用跨角色制作／任务链未实现；客户端待验收，见 [运行契约](../../Docs/行动中心-AltoBoss-运行契约与验收.md) |
 | YiboTodo | 部分接入（运行代码与自动化完成） | 2026-10-09 1.1.4 注册神纹布与诺米 action.todo，独立 epoch／revision／覆盖与合并通知，持久元数据分开；实际模型及 133 项集成、日常／冷却／动作／旧日常回归通过 | 新集成 API v11 / business-providers:1；基础 UI 保留 API v10。游戏内观察、交付／重置与中心一致性待验收；当前已扩展至全部适用监控项目，见下方 2026-10-09 全量接入复核 |
-| YiboVault | 部分接入 | v1.1.1-api1 发布 Items 的 vault.items v1.0 与 MailProvider 的 mail.items 消费；16 项 Vault 测试通过，覆盖来源生命周期、失败后历史缓存与实际 Mail API 的 Tooltip 投影；2026-10-09 审查 | 最低接口 API v9 / business-services:1，正式 Core 包需 1.9.0；inventory／evidence 仍是计划，双插件游戏内联动待验收；追赶须另核对 api10 |
+| YiboVault | 部分接入 | v1.1.1-api1 的 `vault.items` v1 与 MailProvider `mail.items` 消费保持原契约；邮件来源仍按注册发现、快照与注销生命周期协作 | 插件整体最低 Core API13；Service 本身仍只需 `business-services:1`。邮件联动客户端验收与既有 inventory/evidence 计划仍按原范围 / 2026-10-12 |
 
 行动中心技术名为 YiboTaskHub；2026-10-08 建立项目基础与客户端联接，2026-10-09 O2 已完成首项 Provider 消费及 Core 主页／入口，客户端待验收。其他业务能力仍按真实接入分别登记，不能推定全仓库迁移完成。
 
@@ -346,6 +346,7 @@ Core 1.7.0 新增 `character-name-format:1`，接入进度见 CAP-001。接口�
 | YiboCrafting | 部分接入（适用代码完成） | 1.2.0 目标角色目录／存在性使用 identityOnly；领域快照单独 DataDomains:Get，检查 character-identity:1 / API13 | GoalTargets／来源集成通过，客户端待验收 / 2026-10-12 |
 | YiboTaskHub | 已接入：全部角色身份、目录、受益者、目标校验、主视图／预览／提醒；检查能力 | 无本次范围遗漏；Overview50项及依赖回归、专项219项通过 | 2026-10-10 |
 | YiboTodo | 已接入：Bootstrap 任务事件、DailyQuest 观察、Snapshot、行动投影；最低API v11并检查能力 | 未触及的专业／农场采集和旧页面完整读取为后续库存；九个smoke与TodoSources177项、专项219项通过 | 2026-10-10 |
+| YiboVault | 部分接入（代码完成／客户端待验收） | Tooltip 与仓储页使用 FormatName；业务目标显式范围使用 `identityOnly` 身份查询；初始化检查 API13 / `character-identity:1` | 仅覆盖本插件实际角色标签与身份查询；显示、范围与目标交互待客户端验收 / 2026-10-12 |
 
 其它插件尚未审查本能力，不推定已接入或不适用。未来触及只需身份、存在性或等级的查询时迁移；需要完整领域快照的既有查询保持默认形式。
 
@@ -379,7 +380,7 @@ Core 状态：已提供，工作树 1.11.0 / API v12 / business-item-actions:1�
 | YiboReputation | 部分接入：角色声望单元格、来源等级；增强最低API12 | 客户端；未采集／友谊rank缺失未知 | 2026-10-10 |
 | YiboTaskHub | 部分接入：action.demands v1、参数面板、手势消费与目标定位；整体最低API12 | 客户端；代码及自动化闭环完成 | 2026-10-10 |
 | YiboTodo | 部分接入：角色项目精确目标，不依赖显示监控；增强最低API12 | 客户端周期／账号活动；基础旧版本分支属兼容例外 | 2026-10-10 |
-| YiboVault | 部分接入：仓储物品格、阈值与固定账号范围；增强最低API12 | 客户端仓储完整性；公会／拍卖目标未接入 | 2026-10-10 |
+| YiboVault | 部分接入：仓储物品格、阈值与固定账号范围；整体最低API13，增强检查兼容的 `business-item-actions:1` 与角色身份能力 | 客户端仓储完整性；公会／拍卖目标未接入；Core v2 扩展保持对 v1 调用兼容 / 2026-10-12 |
 
 验证证据：GoalsSpec62、GoalSources40、BossGoals15、GoalSurfaces12；相关原集成672、性能219、布局197、显隐46、Core连接90／名称77、Todo九个smoke及Crafting两个smoke通过；17TOC／255Lua语法通过。详见 [实施与验证](../../Docs/行动中心-主动添加实施与验证.md)。自动化帧夹具不代替客户端验收，因此业务状态记“部分接入”。新增实际对象或修改同类入口时复用本能力；暂无对象的插件不提前生成空Provider。
 
@@ -391,7 +392,7 @@ Core 状态：已提供，工作树 1.11.0 / API v12 / business-item-actions:1�
 - CAP-006：本轮未修改首次提示机制，原接入状态保持；新增空态引导是必要产品说明。
 - 兼容例外：九个来源仅主动添加增强要求API12，原有基础业务继续自身旧最低版本；低版本显式提示并停止增强，没有新交互本地回退。适用旧Core；当来源整体提升最低版本时收拢此分支。TaskHub整体最低API12。
 
-CAP-007 本轮补充：Vault Items 对个人仓储的明确 characters 范围在 API11 / character-identity:1 可用时逐个 Get(identityOnly=true)，不枚举并复制全部角色领域；增强入口仍最低API12并检查身份能力。Items原API服务旧Core分支保留，属于基础库存查询的明确兼容例外，整体提高版本时收拢。本轮调用已收拢，客户端性能待采样。
+CAP-007 历史记录：Vault Items 对个人仓储的明确 characters 范围逐个 Get(identityOnly=true)，不枚举并复制全部角色领域。此前 Items 查询兼容旧 Core；2026-10-12 Vault 整体最低版本升至 API13，旧 Core 身份回退已收拢；目标增强仍单独检查角色身份能力。本轮代码完成，客户端范围与目标行为待验收。
 
 2026-10-10 CAP-008 追加审查：九类来源已有绑定直接复用 Core 常驻已加入折角与保持窗口的手势；无业务本地实现新增。CAP-005 的 action.demands v1.1 新增 LookupItems，按帧批量、按库 revision 索引；旧 minor0 保留添加，仅不显示可选标记。GoalsSpec 87 项覆盖角色、状态、移除、复用、注销、查询合并和中键不导航；客户端悬停与图标位置待复测。
 
@@ -435,7 +436,7 @@ Core 状态：**已提供（1.12.0 / API v13 工作树，未发布）**。能力
 | YiboReputation | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
 | YiboTaskHub | 部分接入（静态文案已迁移） | 工作树 0.5.1：最低 YiboCore 1.12.0 / API13、localization:1、account-entry:2、builtin-entry-bar:1；TOC 注册 zh/en 资源，页面、入口、错误、摘要、HUD、设置、状态、目标编辑与 Boss 目录静态文案均通过 `Addon:T` 调用 Core Locale。动态来源名称仍由来源插件提供；搜索归一化用标点不属于显示文案 | 6 个 TaskHub 独立 Spec 均通过；静态报告 `_NonRelease/Localization/TaskHub-API13-Report.md`：0 未处理候选、0 缺失英文／未知 key／参数差异；中英文客户端布局及登录验收待完成 / 2026-10-12 |
 | YiboTodo | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
-| YiboVault | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+| YiboVault | 部分接入（适用区域代码完成） | 工作树要求 YiboCore 1.12.0 / API13 与 `localization:1`；TOC 注册 zh/en 资源，页面、设置、入口、Tooltip、状态／错误与固定目录文本经 Core Locale。动态游戏名称、历史快照与玩家自定义文本保持原文 | `Vault-Core13-Report.md`：0 硬编码候选、缺失英文、未知 key、格式差异；中英文客户端、手动语言模式与登录验收待完成 / 2026-10-12 |
 
 证据：[实施与验收记录](../../Docs/Core系列中英文客户端适配-实施与验收记录.md)，`_NonRelease/Localization/{Core-Report,Workspace-Report}.md`。字符串数不是加权区域覆盖度。后续新增/修改区域触发接入；达到单插件收尾条件时固定能力基线并集中验证。Core 间接给旧业务页面提供英文壳，不等于该业务已接入语言服务。
 
@@ -458,3 +459,5 @@ Core 状态：**已提供（1.12.0 / API v13 工作树，未发布）**。能力
 2026-10-12 Crafting 截图反馈修正（CAP-002／CAP-009）：已知专业显示按稳定 ID 优先使用 owner 双语资源，覆盖选择、列表、矩阵分组和详情，修复中文原生快照覆盖手动英文的遗漏。Core Theme 统一管理单选／多选下拉互斥与嵌套菜单关闭；Crafting 继续使用共用控件，无本地并行实现。公共接口与最低 API13 要求不变。CoreAdaptation、LocaleLayoutSpec 213项及运行文件语法检查通过；语言报告缺英文／未知 key／参数差异为0。原生配方／角色名称与历史数据保留，游戏菜单交互与专业显示待复验，状态仍为部分接入。
 
 2026-10-12 角色设置布局：信息条移至角色与排序、显示与入口之间；去掉三个导航资源文字内的前导空格，缩进统一由导航锚点控制。默认排序改下拉，操作按钮按文案宽度，业务等级过滤按宽度两至三列；角色档案过滤控件恢复分栏，等级输入固定120宽。Core 等级与短名输入改为既有 Theme:CreateInput（CAP-002 / basic-input:1），保留校验、回车保存、失焦保存和取消。仅 Core 消费实现接入变化，业务插件状态不变，无公共能力升版。206项布局覆盖中英文620／1200宽度、12业务过滤、共享输入与表达式保存、导航顺序与缩进；1133项入口专项通过。532对资源严格检查无异常，游戏内布局待验收。
+
+2026-10-12 Vault Core 1.12.0 / API13 适配审查：Vault 整体最低版本提高到 API13，启动时检查 `localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`character-identity:1`、`account-entry:2` 及实际调用方法；能力不满足时提示并停止初始化。页面过滤输入迁移到 Core `CreateInput`，角色标签迁移到 `FormatName`，物品显示继续使用 ItemResolver；入口显式声明三个默认关闭通道；固定仓储页不需要 `account-surface-budget:1`。库存目标增强额外检查 API13、`business-item-actions:1`、身份方法和 Core Contracts/绑定方法；不满足时只停用目标增强。`vault.items` / `mail.items` 数据所有权和 Service 契约不变，Core 无需新增业务分支。语言静态报告为 0 硬编码候选、0 缺失英文、0 未知 key、0 格式差异；尚未做中英文游戏客户端与入口交互验收。

@@ -2,8 +2,8 @@ local Addon = _G.YiboVault or {}
 _G.YiboVault = Addon
 
 Addon.NAME = "YiboVault"
-Addon.RELEASE_VERSION = "1.1.1"
-Addon.REQUIRED_CORE_API = 9
+Addon.RELEASE_VERSION = "1.2.0"
+Addon.REQUIRED_CORE_API = 13
 Addon.SCHEMA_VERSION = 1
 Addon.API_VERSION = 1
 Addon.VERSION = Addon.RELEASE_VERSION .. "-api" .. Addon.API_VERSION
@@ -31,9 +31,23 @@ function Addon:Now()
     return (type(time) == "function" and time() or 0), "client"
 end
 
+function Addon:T(key, ...)
+    local core = self.Core or _G.YiboCore
+    if core and core.Locale and type(core.Locale.Get) == "function" then
+        return core.Locale:Get(self.NAME, key, ...)
+    end
+    return "[" .. self.NAME .. ":" .. tostring(key) .. "]"
+end
+
+function Addon:PrintBootstrap(message)
+    if DEFAULT_CHAT_FRAME and type(DEFAULT_CHAT_FRAME.AddMessage) == "function" then
+        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r Vault: " .. tostring(message))
+    end
+end
+
 function Addon:Print(message)
     if DEFAULT_CHAT_FRAME and type(DEFAULT_CHAT_FRAME.AddMessage) == "function" then
-        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 物品总览：" .. tostring(message))
+        DEFAULT_CHAT_FRAME:AddMessage(self:T("CHAT.PREFIX") .. tostring(message))
     end
 end
 

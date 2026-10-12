@@ -62,8 +62,8 @@ local function CachedGuilds()
     local guilds = {}
     for key, guild in pairs(Addon.db.byGuild or {}) do
         if type(guild) == "table" then
-            guilds[#guilds + 1] = { key = key, name = guild.guildName or "历史公会",
-                realm = guild.realm or "未知服务器", hidden = guild.hidden == true }
+            guilds[#guilds + 1] = { key = key, name = guild.guildName or Addon:T("TEXT.PREVIOUS_GUILD_380DF6"),
+                realm = guild.realm or Addon:T("TEXT.UNKNOWN_REALM_7EFD20"), hidden = guild.hidden == true }
         end
     end
     table.sort(guilds, function(left, right)
@@ -77,7 +77,7 @@ local function ConfirmGuildDelete(key, refresh)
     local guild = Addon.db.byGuild and Addon.db.byGuild[key]
     if not guild then return end
     StaticPopupDialogs[DELETE_GUILD_POPUP] = {
-        text = "%s", button1 = "删除缓存", button2 = "取消", timeout = 0,
+        text = "%s", button1 = Addon:T("TEXT.DELETE_CACHE_EA92B8"), button2 = Addon:T("TEXT.CANCEL_4D0B46"), timeout = 0,
         whileDead = true, hideOnEscape = true, preferredIndex = 3,
         OnAccept = function(_, data)
             local ok, errorMessage = Addon:DeleteGuild(data.key)
@@ -85,9 +85,9 @@ local function ConfirmGuildDelete(key, refresh)
             if data.refresh then data.refresh() end
         end,
     }
-    local name = tostring(guild.guildName or "历史公会") .. "-" .. tostring(guild.realm or "未知服务器")
+    local name = tostring(guild.guildName or Addon:T("TEXT.PREVIOUS_GUILD_380DF6")) .. "-" .. tostring(guild.realm or Addon:T("TEXT.UNKNOWN_REALM_7EFD20"))
     StaticPopup_Show(DELETE_GUILD_POPUP,
-        "确定删除“" .. name .. "”的全部公会银行页签、物品和容量缓存吗？\n隐藏状态也会清除。此操作不可撤销；再次访问后可重新采集。",
+        Addon:T("TEXT.DELETE_017540") .. name .. Addon:T("TEXT.AND_ALL_GUILD_BANK_TABS_ITEMS_AND_CAPACITY_CD1BD3"),
         nil, { key = key, refresh = refresh })
 end
 
@@ -101,12 +101,12 @@ function Page:CreateSettingsPanel(parent, context)
     panel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     panel:SetWidth(width); panel:Show()
 
-    local business = panel.business or context.createSection(panel, "业务设置", width, 236)
+    local business = panel.business or context.createSection(panel, Addon:T("TEXT.BUSINESS_SETTINGS_60735B"), width, 236)
     panel.business = business
     business:ClearAllPoints(); business:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, 0)
     business:SetHeight(236)
     business:SetWidth(width); business:Show()
-    local enabled = panel.enabled or context.createCheckbox(business, "显示 Vault 物品 Tooltip 摘要")
+    local enabled = panel.enabled or context.createCheckbox(business, Addon:T("TEXT.SHOW_VAULT_ITEM_TOOLTIP_SUMMARY_93E771"))
     panel.enabled = enabled
     enabled:ClearAllPoints(); enabled:SetPoint("TOPLEFT", business, "TOPLEFT", 14, -35)
     enabled:SetWidth(width - 28); enabled:SetChecked(Addon.db.settings.tooltipEnabled ~= false)
@@ -120,11 +120,11 @@ function Page:CreateSettingsPanel(parent, context)
     local scopeLabel = panel.scopeLabel or context.createText(business, theme.Font.assist, theme.Colors.text, "LEFT")
     panel.scopeLabel = scopeLabel
     scopeLabel:ClearAllPoints(); scopeLabel:SetPoint("TOPLEFT", business, "TOPLEFT", 14, -76)
-    scopeLabel:SetText("物品 Tooltip 的服务器范围"); scopeLabel:Show()
+    scopeLabel:SetText(Addon:T("TEXT.ITEM_TOOLTIP_REALM_SCOPE_EDD971")); scopeLabel:Show()
     local scope = panel.scope or theme:CreateDropdown(business, 188, {})
     panel.scope = scope
     scope:ClearAllPoints(); scope:SetPoint("TOPLEFT", business, "TOPLEFT", math.max(14, math.min(214, width - 202)), -69)
-    scope:SetOptions({ { value = "current", label = "当前服务器" }, { value = "all", label = "所有服务器" } })
+    scope:SetOptions({ { value = "current", label = Addon:T("TEXT.CURRENT_REALM_1BC56D") }, { value = "all", label = Addon:T("TEXT.ALL_REALMS_A166AB") } })
     scope:SetValue(Addon.db.settings.tooltipRealmScope)
     scope:SetOnValueChanged(function(value)
         Addon.db.settings.tooltipRealmScope = value == "all" and "all" or "current"
@@ -135,23 +135,26 @@ function Page:CreateSettingsPanel(parent, context)
     panel.scopeNote = scopeNote
     scopeNote:ClearAllPoints(); scopeNote:SetPoint("TOPLEFT", business, "TOPLEFT", 14, -117)
     scopeNote:SetPoint("RIGHT", business, "RIGHT", -14, 0)
-    scopeNote:SetText("只影响物品悬停；仓储页面使用 Core 的范围切换。")
+    scopeNote:SetText(Addon:T("TEXT.ONLY_AFFECTS_ITEM_TOOLTIPS_THE_STORAGE_PAG_6CE57D"))
     scopeNote:Show()
 
     local filterLabel = panel.filterLabel or context.createText(business, theme.Font.assist, theme.Colors.text, "LEFT")
     panel.filterLabel = filterLabel
     filterLabel:ClearAllPoints(); filterLabel:SetPoint("TOPLEFT", business, "TOPLEFT", 14, -148)
-    filterLabel:SetText("按物品过滤 Tooltip 摘要（输入物品 ID）"); filterLabel:Show()
-    local itemInput = panel.itemInput or CreateFrame("EditBox", nil, business, "InputBoxTemplate")
+    filterLabel:SetText(Addon:T("TEXT.FILTER_THE_ITEM_TOOLTIP_SUMMARY_BY_ITEM_ID_9DF46F")); filterLabel:Show()
+    local UpdateItemFilter
+    local itemInput = panel.itemInput or theme:CreateInput(business, {
+        width = 150, height = 24, numeric = true, maxLetters = 10,
+        OnSubmit = function() if UpdateItemFilter then UpdateItemFilter(true) end end,
+    })
     panel.itemInput = itemInput
     itemInput:ClearAllPoints(); itemInput:SetPoint("TOPLEFT", business, "TOPLEFT", 14, -176)
-    itemInput:SetSize(150, 24); itemInput:SetAutoFocus(false); itemInput:SetNumeric(true); itemInput:SetMaxLetters(10)
     local addButton = panel.addItemButton or CreateFrame("Button", nil, business, "UIPanelButtonTemplate")
     panel.addItemButton = addButton
-    addButton:ClearAllPoints(); addButton:SetPoint("LEFT", itemInput, "RIGHT", 8, 0); addButton:SetSize(72, 24); addButton:SetText("过滤")
+    addButton:ClearAllPoints(); addButton:SetPoint("LEFT", itemInput, "RIGHT", 8, 0); addButton:SetSize(72, 24); addButton:SetText(Addon:T("TEXT.FILTER_527086"))
     local removeButton = panel.removeItemButton or CreateFrame("Button", nil, business, "UIPanelButtonTemplate")
     panel.removeItemButton = removeButton
-    removeButton:ClearAllPoints(); removeButton:SetPoint("LEFT", addButton, "RIGHT", 6, 0); removeButton:SetSize(72, 24); removeButton:SetText("取消过滤")
+    removeButton:ClearAllPoints(); removeButton:SetPoint("LEFT", addButton, "RIGHT", 6, 0); removeButton:SetSize(72, 24); removeButton:SetText(Addon:T("TEXT.REMOVE_FILTER_91AC42"))
     local filterItems = panel.filterItems or context.createText(business, theme.Font.assist, theme.Colors.muted, "LEFT")
     panel.filterItems = filterItems
     filterItems:ClearAllPoints(); filterItems:SetPoint("TOPLEFT", business, "TOPLEFT", 14, -207)
@@ -164,23 +167,23 @@ function Page:CreateSettingsPanel(parent, context)
         table.sort(ids)
         local labels = {}
         for _, id in ipairs(ids) do labels[#labels + 1] = tostring(id) end
-        filterItems:SetText(#labels > 0 and ("已过滤物品 ID：" .. table.concat(labels, "、")) or "当前没有过滤物品。")
+        filterItems:SetText(#labels > 0 and Addon:T("TEXT.FILTERED_ITEM_IDS", table.concat(labels, Addon:T("TEXT.LIST_SEPARATOR")))
+            or Addon:T("TEXT.NO_ITEMS_ARE_FILTERED_A58C1D"))
     end
-    local function UpdateItemFilter(add)
+    UpdateItemFilter = function(add)
         local id = tonumber(itemInput:GetText())
         if not id or id <= 0 then return end
         Addon.db.settings.hiddenTooltipItems = Addon.db.settings.hiddenTooltipItems or {}
         Addon.db.settings.hiddenTooltipItems[id] = add and true or nil
-        itemInput:SetText("")
+        itemInput:SetValue("")
         RefreshFilteredItems()
         if Addon.Tooltip then Addon.Tooltip:Invalidate() end
     end
     addButton:SetScript("OnClick", function() UpdateItemFilter(true) end)
     removeButton:SetScript("OnClick", function() UpdateItemFilter(false) end)
-    itemInput:SetScript("OnEnterPressed", function(self) UpdateItemFilter(true); self:ClearFocus() end)
     itemInput:Show(); addButton:Show(); removeButton:Show(); RefreshFilteredItems(); filterItems:Show()
 
-    local data = panel.data or context.createSection(panel, "数据与缓存", width, 130)
+    local data = panel.data or context.createSection(panel, Addon:T("TEXT.DATA_AND_CACHE_DF7FFF"), width, 130)
     panel.data = data
     data:ClearAllPoints(); data:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, -246)
     data:SetWidth(width); data:Show()
@@ -191,7 +194,7 @@ function Page:CreateSettingsPanel(parent, context)
     local stacked = width < 540
     note:SetWordWrap(true)
     note:SetHeight(stacked and 36 or 20)
-    note:SetText("角色缓存在 Core 的“角色与排序”中管理。隐藏公会仍会采集，但默认不显示或统计。")
+    note:SetText(Addon:T("TEXT.MANAGE_CHARACTER_CACHES_IN_CORE_S_CHARACTE_23BC9A"))
     note:Show()
     local guilds = CachedGuilds()
     panel.guildPage = math.max(1, math.min(panel.guildPage or 1, math.max(1, math.ceil(#guilds / GUILDS_PER_PAGE))))
@@ -207,9 +210,9 @@ function Page:CreateSettingsPanel(parent, context)
         if not row then
             row = CreateFrame("Frame", nil, data)
             row.name = context.createText(row, theme.Font.assist, theme.Colors.text, "LEFT")
-            row.view = context.createButton(row, 54, "查看", "secondary")
-            row.toggle = context.createButton(row, 62, "隐藏", "secondary")
-            row.delete = context.createButton(row, 90, "删除缓存", "danger")
+            row.view = context.createButton(row, 54, Addon:T("TEXT.VIEW_F7ACEF"), "secondary")
+            row.toggle = context.createButton(row, 62, Addon:T("TEXT.HIDE_BB0E7E"), "secondary")
+            row.delete = context.createButton(row, 90, Addon:T("TEXT.DELETE_CACHE_EA92B8"), "danger")
             panel.guildRows[index] = row
         end
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", data, "TOPLEFT", 14, -rowTop - (index - 1) * rowPitch)
@@ -226,7 +229,7 @@ function Page:CreateSettingsPanel(parent, context)
                 row.name:SetPoint("LEFT", row, "LEFT", 0, 0)
                 row.name:SetPoint("RIGHT", row, "RIGHT", -230, 0)
             end
-            row.name:SetText(guild.name .. " · " .. guild.realm .. (guild.hidden and " · 已隐藏" or ""))
+            row.name:SetText(guild.name .. " · " .. guild.realm .. (guild.hidden and Addon:T("TEXT.HIDDEN_5FC6CF") or ""))
             row.view:ClearAllPoints()
             row.toggle:ClearAllPoints()
             row.delete:ClearAllPoints()
@@ -234,7 +237,7 @@ function Page:CreateSettingsPanel(parent, context)
             row.view:SetPoint(anchor, row, anchor, -168, 0)
             row.toggle:SetPoint(anchor, row, anchor, -98, 0)
             row.delete:SetPoint(anchor, row, anchor, 0, 0)
-            row.toggle:SetText(guild.hidden and "恢复" or "隐藏")
+            row.toggle:SetText(guild.hidden and Addon:T("TEXT.RESTORE_79748C") or Addon:T("TEXT.HIDE_BB0E7E"))
             row.view:SetScript("OnClick", function()
                 Addon.StoragePage:OpenGuild(guild.key)
             end)
@@ -253,8 +256,8 @@ function Page:CreateSettingsPanel(parent, context)
     local pager = panel.guildPager or context.createText(data, theme.Font.assist, theme.Colors.muted, "LEFT")
     panel.guildPager = pager
     pager:ClearAllPoints(); pager:SetPoint("TOPLEFT", data, "TOPLEFT", 14, -footerTop - 5)
-    pager:SetText(#guilds == 0 and "暂无公会银行缓存" or
-        ("公会缓存 " .. #guilds .. " 项 · 第 " .. panel.guildPage .. "/" .. math.ceil(#guilds / GUILDS_PER_PAGE) .. " 页"))
+    pager:SetText(#guilds == 0 and Addon:T("TEXT.NO_GUILD_BANK_CACHES_YET_7D4D4E") or
+        (Addon:T("TEXT.GUILD_CACHES_B08D11") .. #guilds .. Addon:T("TEXT.ITEMS_PAGE_2CD1D3") .. panel.guildPage .. "/" .. math.ceil(#guilds / GUILDS_PER_PAGE) .. Addon:T("TEXT.PAGES_AF8438")))
     pager:Show()
     local previous = panel.previous or context.createButton(data, 42, "‹", "secondary")
     panel.previous = previous
@@ -293,7 +296,7 @@ end
 function Page:Register()
     local registered, err = Core.AccountView:RegisterPage(Addon.NAME, {
         id = PAGE_ID,
-        title = "物品总览",
+        title = Addon:T("TEXT.ITEM_OVERVIEW_70B215"),
         order = 50,
         defaultEnabled = true,
         previewEnabled = false,
@@ -301,10 +304,10 @@ function Page:Register()
             return { minContentWidth = 650, naturalContentWidth = 1000,
                 minContentHeight = 490, naturalContentHeight = 630 }
         end,
-        scope = { mode = "realms", allTitle = "所有服务器" },
+        scope = { mode = "realms", allTitle = Addon:T("TEXT.ALL_REALMS_A166AB") },
         settings = {
-            title = "物品总览",
-            description = "Vault 物品悬停与缓存设置。",
+            title = Addon:T("TEXT.ITEM_OVERVIEW_70B215"),
+            description = Addon:T("TEXT.VAULT_ITEM_TOOLTIP_AND_CACHE_SETTINGS_03FFD9"),
             CreateSettingsPanel = function(parent, context) return Page:CreateSettingsPanel(parent, context) end,
         },
         Create = function(parent) Page:Create(parent) end,
@@ -313,7 +316,8 @@ function Page:Register()
     if not registered then return nil, err end
     local entry, entryError = Core.Entry:RegisterBusinessEntry(Addon.NAME, {
         id = "yva", brokerName = "YiboVault", pageID = PAGE_ID,
-        text = "[Yibo] 物品总览", icon = "Interface\\AddOns\\YiboVault\\Media\\YiboVaultIcon-v2",
+        text = Addon:T("TEXT.YIBO_ITEM_OVERVIEW_CBF21F"), icon = "Interface\\AddOns\\YiboVault\\Media\\YiboVaultIcon-v2",
+        defaultChannels = { minimap = false, broker = false, builtinBar = false },
     })
     if not entry then return nil, entryError end
     Addon.Items.Events:Register(Page, function()
