@@ -1,4 +1,5 @@
 local YQB = _G.YQB
+if not (YQB and YQB.CoreCompatible) then return end
 local Core = _G.YiboCore
 local Theme = Core.UITheme
 
@@ -15,7 +16,7 @@ function YQB.CreateSettingsPanel(parent, context)
     panel.controls = panel.controls or {}
 
     local y = 0
-    local section = context.createSection(panel, "处理模式", width, 250)
+    local section = context.createSection(panel, YQB.T("SETTINGS.MODE"), width, 250)
     section:ClearAllPoints(); section:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, -y); section:Show()
     local options = YQB.GetProcessModeOptions()
     local modeControl = panel.modeControl or Theme:CreateDropdown(section, 188, options)
@@ -29,11 +30,11 @@ function YQB.CreateSettingsPanel(parent, context)
     local note = section.note or context.createText(section, Theme.Font.assist, Theme.Colors.muted, "LEFT")
     section.note = note; note:ClearAllPoints(); note:SetPoint("TOPLEFT", section, "TOPLEFT", 14, -84); note:SetPoint("TOPRIGHT", section, "TOPRIGHT", -14, -84)
     note:SetWordWrap(true)
-    note:SetText("拒绝模式（推荐）：在选择与接取阶段跳过或拒绝已屏蔽任务；若任务异常进入日志，会在交互结束后安全放弃。\n\n放弃模式（旧版兼容）：不干预选择与接取；已屏蔽任务进入日志后，在任务交互结束时自动放弃。\n\n暂停模式：不拦截、不自动放弃，也不能使用手动放弃；规则和矩阵继续保留，切回任一处理模式即可恢复。")
+    note:SetText(YQB.T("SETTINGS.MODE_HELP"))
     note:Show()
     y = y + 260
 
-    local adapterSection = context.createSection(panel, "适配状态", width, 118)
+    local adapterSection = context.createSection(panel, YQB.T("SETTINGS.ADAPTER_STATUS"), width, 118)
     adapterSection:ClearAllPoints(); adapterSection:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, -y); adapterSection:Show()
     local adapterText = adapterSection.text or context.createText(adapterSection, Theme.Font.assist, Theme.Colors.muted, "LEFT")
     adapterSection.text = adapterText; adapterText:ClearAllPoints(); adapterText:SetPoint("TOPLEFT", 12, -38); adapterText:SetPoint("TOPRIGHT", -12, -38); adapterText:SetWordWrap(true)
@@ -42,16 +43,16 @@ function YQB.CreateSettingsPanel(parent, context)
         if adapter.loaded then
             local status
             if adapter.continuationStatus == "incompatible" then
-                status = "不兼容，请关闭自动接任务功能"
+                status = YQB.T("SETTINGS.ADAPTER_INCOMPATIBLE")
             elseif adapter.continuationVerified then
-                status = "支持自动接任务"
+                status = YQB.T("SETTINGS.ADAPTER_SUPPORTED")
             else
-                status = "仅直接拒绝，续办待实机验证"
+                status = YQB.T("SETTINGS.ADAPTER_UNVERIFIED")
             end
-            lines[#lines + 1] = string.format("%s%s：%s", adapter.label, adapter.version and (" " .. adapter.version) or "", status)
+            lines[#lines + 1] = YQB.T("SETTINGS.ADAPTER_LINE", adapter.label, adapter.version and (" " .. adapter.version) or "", status)
         end
     end
-    adapterText:SetText(#lines > 0 and table.concat(lines, "\n") or "未检测到已加载的已知自动接任务插件。未知插件同样只启用直接拒绝。")
+    adapterText:SetText(#lines > 0 and table.concat(lines, "\n") or YQB.T("SETTINGS.NO_ADAPTERS"))
     adapterText:Show()
     y = y + 128
 

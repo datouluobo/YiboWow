@@ -1,4 +1,5 @@
 local YQB = _G.YQB
+if not (YQB and YQB.CoreCompatible) then return end
 local Core = _G.YiboCore
 local Theme = _G.YiboCore.UITheme
 
@@ -40,21 +41,10 @@ local function StatusCheck(parent)
     return check
 end
 
-local function ShortName(characterID)
-    local character = _G.YiboCore.Characters:Get(characterID)
-    return character and character.name or "?"
-end
-
-local function CharacterIdentity(character, fallbackKey)
-    -- v2 uses Core character records.  The fallback only protects rendering
-    -- while Core is promoting an early-login fallback ID to the player GUID.
-    local key = tostring(fallbackKey or (type(character) == "string" and character) or "?")
-    local keyName, keyRealm = key:match("^(.-)%-(.+)$")
-    local name = type(character) == "table" and character.name or nil
-    local realm = type(character) == "table" and character.realm or nil
-    if not name or name == "" then name = keyName or key end
-    if not realm or realm == "" then realm = keyRealm or "未知服务器" end
-    return tostring(name), tostring(realm)
+local function CharacterDisplayName(characterID)
+    local character = Core.Characters:Get(characterID)
+    if not character then return "?" end
+    return Core.Characters:FormatName(character, { nameMode = "short" }) or character.name or "?"
 end
 
 local function DB()
@@ -195,9 +185,8 @@ local function Header(instance, characters, showGlobal, showCharacters, context)
                 cell = Theme:CreateMatrixHeader(instance.header)
                 instance.headerCharacters[index] = cell
             end
-            local name, realm = CharacterIdentity(instance.characterRecords[key], key)
             local color = ClassColor(key)
-            Theme:SetCharacterHeader(cell, instance.characterRecords[key], context, { name=name, realm=realm, color=color })
+            Theme:SetCharacterHeader(cell, instance.characterRecords[key], context, { color=color })
             cell:ClearAllPoints(); cell:SetPoint("LEFT", instance.header, "LEFT", x, 0)
             cell:SetSize(characterWidth, headerHeight)
             if key == YQB.GetCurrentCharacterID() then
@@ -214,7 +203,7 @@ local function RenderQuest(instance, item, characters, showGlobal, showCharacter
     instance.dataRowCount = instance.dataRowCount + 1
     if row.groupArrow then row.groupArrow:Hide() end
     row.task:ClearAllPoints(); row.task:SetPoint("LEFT", row, "LEFT", 8, 0)
-    row.task:SetText("[" .. item.id .. "] " .. tostring(item.name or "未知任务"))
+    row.task:SetText("[" .. item.id .. "] " .. tostring(item.name or YQB.T("PAGE.UNKNOWN_QUEST")))
     row.task:SetTextColor(COLORS.text[1], COLORS.text[2], COLORS.text[3])
     row.task:SetWidth(instance.taskWidth - 12)
     -- Keep row parity readable even for the current-task group. Its border
@@ -277,16 +266,29 @@ function Page.Create(instance)
     instance.toolbar = CreateFrame("Frame", nil, instance, "BackdropTemplate"); instance.toolbar:SetPoint("TOPLEFT", mainInset.left, -mainInset.top); instance.toolbar:SetPoint("TOPRIGHT", -mainInset.right, -mainInset.top); instance.toolbar:SetHeight(Theme.Size.standard)
     instance.toolbar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     instance.toolbar:SetBackdropColor(COLORS.toolbar[1], COLORS.toolbar[2], COLORS.toolbar[3], 0.9); instance.toolbar:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.52)
-    instance.daily = Check(instance.toolbar, "日常"); instance.daily:SetPoint("LEFT", 7, 0)
-    instance.normal = Check(instance.toolbar, "普通"); instance.normal:SetPoint("LEFT", instance.daily.label, "RIGHT", Theme.Space.sm, 0)
-    instance.hideComplete = Check(instance.toolbar, "隐藏已完成"); instance.hideComplete:SetPoint("LEFT", instance.normal.label, "RIGHT", Theme.Space.sm, 0)
+    instance.daily = Check(instance.toolbar, YQB.T("PAGE.DAILY")); instance.daily:SetPoint("LEFT", 7, 0)
+    instance.normal = Check(instance.toolbar, YQB.T("PAGE.NORMAL")); instance.normal:SetPoint("LEFT", instance.daily.label, "RIGHT", Theme.Space.sm, 0)
+    instance.hideComplete = Check(instance.toolbar, YQB.T("PAGE.HIDE_COMPLETE")); instance.hideComplete:SetPoint("LEFT", instance.normal.label, "RIGHT", Theme.Space.sm, 0)
     instance.processMode = Theme:CreateDropdown(instance.toolbar, 156, YQB.GetProcessModeOptions()); instance.processMode:SetPoint("LEFT", instance.hideComplete.label, "RIGHT", Theme.Space.sm, 0)
-    instance.level = CreateFrame("EditBox", nil, instance.toolbar, "InputBoxTemplate"); instance.level:SetSize(104, 20); instance.level:SetPoint("RIGHT", -7, 0); instance.level:SetAutoFocus(false)
-    instance.levelLabel = Text(instance.toolbar, "GameFontNormalSmall", COLORS.muted); instance.levelLabel:SetPoint("RIGHT", instance.level, "LEFT", -6, 0); instance.levelLabel:SetText("等级")
+    instance.level = Theme:CreateInput(instance.toolbar, {
+        width = 104, height = 20, maxLetters = 80, placeholder = YQB.T("PAGE.LEVEL"),
+        Validate = function(text)
+            local valid, normalized, badToken = YQB.ValidateLevelExpr(text)
+            if valid then return true end
+            return false, YQB.T("PAGE.INVALID_LEVEL", tostring(badToken or text))
+        end,
+        OnInvalid = function(message) Core:Print(message) end,
+        OnSubmit = function(text, input)
+            local valid, normalized = YQB.ValidateLevelExpr(text)
+            if valid then DB().filters.levelExpr = normalized; YQB.PersistDB(); if instance.context then instance.context:Refresh() end end
+        end,
+    })
+    instance.level:SetPoint("RIGHT", -7, 0)
+    instance.levelLabel = Text(instance.toolbar, "GameFontNormalSmall", COLORS.muted); instance.levelLabel:SetPoint("RIGHT", instance.level, "LEFT", -6, 0); instance.levelLabel:SetText(YQB.T("PAGE.LEVEL"))
     instance.header = CreateFrame("Frame", nil, instance); instance.header:SetPoint("TOPLEFT", instance.toolbar, "BOTTOMLEFT", 0, -Theme.Space.sm); instance.header:SetPoint("TOPRIGHT", instance.toolbar, "BOTTOMRIGHT", 0, -Theme.Space.sm); instance.header:SetHeight(GROUP_H)
     instance.header.bg = instance.header:CreateTexture(nil, "BACKGROUND"); instance.header.bg:SetAllPoints(); instance.header.bg:SetColorTexture(COLORS.chrome[1], COLORS.chrome[2], COLORS.chrome[3], 0.98)
-    instance.headerTask = Text(instance.header, "GameFontNormalSmall", COLORS.muted); instance.headerTask:SetPoint("LEFT", 8, 0); instance.headerTask:SetText("任务")
-    instance.headerGlobal = Text(instance.header, "GameFontNormalSmall", COLORS.muted); instance.headerGlobal:SetWidth(GLOBAL_W); instance.headerGlobal:SetJustifyH("CENTER"); instance.headerGlobal:SetText("全局")
+    instance.headerTask = Text(instance.header, "GameFontNormalSmall", COLORS.muted); instance.headerTask:SetPoint("LEFT", 8, 0); instance.headerTask:SetText(YQB.T("PAGE.QUEST"))
+    instance.headerGlobal = Text(instance.header, "GameFontNormalSmall", COLORS.muted); instance.headerGlobal:SetWidth(GLOBAL_W); instance.headerGlobal:SetJustifyH("CENTER"); instance.headerGlobal:SetText(YQB.T("PAGE.GLOBAL"))
     instance.scroll = Theme:CreateScrollFrame(instance); instance.scroll:BindScrollbarGutter(instance.header); instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs)
     instance.content = CreateFrame("Frame", nil, instance.scroll); instance.content:SetWidth(700); instance.scroll:SetScrollChild(instance.content)
     instance.currentCharacterOutline = Theme:CreateCurrentCharacterOutline(instance)
@@ -295,11 +297,12 @@ function Page.Create(instance)
     instance.addPanel = CreateFrame("Frame", nil, instance, "BackdropTemplate"); instance.addPanel:SetPoint("BOTTOMLEFT", mainInset.left, mainInset.bottom); instance.addPanel:SetPoint("BOTTOMRIGHT", -mainInset.right, mainInset.bottom); instance.addPanel:SetHeight(29)
     instance.scroll:SetPoint("BOTTOMRIGHT", instance.addPanel, "TOPRIGHT", 0, Theme.Space.sm)
     instance.addPanel:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 }); instance.addPanel:SetBackdropColor(COLORS.toolbar[1], COLORS.toolbar[2], COLORS.toolbar[3], 0.9); instance.addPanel:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.52)
-    instance.manualLabel = Text(instance.addPanel, "GameFontNormalSmall", COLORS.muted, Theme.Font.assist); instance.manualLabel:SetPoint("LEFT", 7, 0); instance.manualLabel:SetText("任务 ID")
-    instance.manual = CreateFrame("EditBox", nil, instance.addPanel, "InputBoxTemplate"); instance.manual:SetSize(108, 20); instance.manual:SetPoint("LEFT", instance.manualLabel, "RIGHT", 6, 0); instance.manual:SetAutoFocus(false); instance.manual:SetNumeric(true)
-    instance.addChar = Button(instance.addPanel, "+ 当前角色", 92); instance.addChar:SetPoint("LEFT", instance.manual, "RIGHT", 8, 0)
-    instance.addGlobal = Button(instance.addPanel, "+ 全局", 68); instance.addGlobal:SetPoint("LEFT", instance.addChar, "RIGHT", 6, 0)
-    instance.abandon = Button(instance.addPanel, "放弃日志中的已拒绝任务", 174); instance.abandon:SetPoint("RIGHT", -7, 0)
+    instance.manualLabel = Text(instance.addPanel, "GameFontNormalSmall", COLORS.muted, Theme.Font.assist); instance.manualLabel:SetPoint("LEFT", 7, 0); instance.manualLabel:SetText(YQB.T("PAGE.QUEST_ID"))
+    instance.manual = Theme:CreateInput(instance.addPanel, { width = 108, height = 20, maxLetters = 12, numeric = true })
+    instance.manual:SetPoint("LEFT", instance.manualLabel, "RIGHT", 6, 0)
+    instance.addChar = Button(instance.addPanel, YQB.T("PAGE.ADD_CURRENT"), 92); instance.addChar:SetPoint("LEFT", instance.manual, "RIGHT", 8, 0)
+    instance.addGlobal = Button(instance.addPanel, YQB.T("PAGE.ADD_GLOBAL"), 68); instance.addGlobal:SetPoint("LEFT", instance.addChar, "RIGHT", 6, 0)
+    instance.abandon = Button(instance.addPanel, YQB.T("PAGE.ABANDON"), 174); instance.abandon:SetPoint("RIGHT", -7, 0)
     local function RefreshFromControl() if instance.context then instance.context:Refresh() end end
     instance.daily:SetScript("OnClick", function(self) self:SetChecked(not self:GetChecked()); DB().filters.showDaily = self:GetChecked(); YQB.PersistDB(); RefreshFromControl() end)
     instance.normal:SetScript("OnClick", function(self) self:SetChecked(not self:GetChecked()); DB().filters.showNormal = self:GetChecked(); YQB.PersistDB(); RefreshFromControl() end)
@@ -307,14 +310,9 @@ function Page.Create(instance)
     instance.processMode:SetOnValueChanged(function(mode)
         YQB.SetProcessMode(mode); RefreshFromControl()
     end)
-    instance.level:SetScript("OnEnterPressed", function(self)
-        local valid, normalized = YQB.ValidateLevelExpr(self:GetText())
-        if valid then DB().filters.levelExpr = normalized; YQB.PersistDB(); RefreshFromControl() end
-        self:ClearFocus()
-    end)
     local function Add(scope)
         local id = tonumber(instance.manual:GetText()); if not id then return end
-        YQB.AddBlock(id, scope); instance.manual:SetText("")
+        YQB.AddBlock(id, scope); instance.manual:SetValue("")
     end
     instance.addChar:SetScript("OnClick", function() Add("char") end)
     instance.addGlobal:SetScript("OnClick", function() Add("global") end)
@@ -358,15 +356,15 @@ function Page.Refresh(instance, context)
         instance.header:SetPoint("TOPLEFT", instance.toolbar, "BOTTOMLEFT", 0, -Theme.Space.sm); instance.header:SetPoint("TOPRIGHT", instance.toolbar, "BOTTOMRIGHT", 0, -Theme.Space.sm)
         instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs); instance.scroll:SetPoint("BOTTOMRIGHT", instance.addPanel, "TOPRIGHT", 0, Theme.Space.sm)
     end
-    instance.title:SetText("任务屏蔽")
+    instance.title:SetText(YQB.T("PAGE.TITLE"))
     instance.daily:SetChecked(filters.showDaily); instance.normal:SetChecked(filters.showNormal); instance.hideComplete:SetChecked(filters.hideComplete)
     instance.processMode:SetValue(YQB.GetProcessMode())
     local paused = YQB.IsProcessingPaused()
     instance.abandon:SetState(paused and "disabled" or "default")
-    instance.abandon:SetText(paused and "暂停模式：不可手动放弃" or "放弃日志中的已屏蔽任务")
-    instance.level:SetText(filters.levelExpr or "")
+    instance.abandon:SetText(paused and YQB.T("PAGE.PAUSED_ABANDON") or YQB.T("PAGE.ABANDON"))
+    instance.level:SetValue(filters.levelExpr or "")
     local globalCount, charCount, total = YQB.GetStats()
-    instance.summary:SetText(string.format("全局 %d · 当前 %d · 总计 %d", globalCount, charCount, total))
+    instance.summary:SetText(YQB.T("PAGE.SUMMARY", globalCount, charCount, total))
     local allCharacters, characters = {}, {}
     instance.characterRecords = instance.characterRecords or {}
     for _, character in ipairs(context.characters or {}) do
@@ -381,7 +379,7 @@ function Page.Refresh(instance, context)
     local fixedWidth = instance.taskWidth + (showGlobal and GLOBAL_W or 0)
     local availableWidth = math.max(fixedWidth + COMPACT_CHARACTER_COL_W, (tonumber(context.surfaceAvailableWidth) or instance:GetWidth() or 1) - inset.left - inset.right)
     local visibleCharacters, pageInfo = Core.AccountView:GetColumnPage("quest-blocker", "characters", allCharacters, availableWidth, fixedWidth, Theme:GetCharacterMatrixColumnWidth(context), YQB.GetCurrentCharacterID())
-    Core.AccountView:UpdateColumnPager(instance, "quest-blocker", "characters", pageInfo, instance.header, "角色")
+    Core.AccountView:UpdateColumnPager(instance, "quest-blocker", "characters", pageInfo, instance.header, YQB.T("PAGE.CHARACTER"))
     for _, character in ipairs(visibleCharacters) do characters[#characters + 1] = character.id end
     -- Character columns must remain directly comparable across every account
     -- page.  Do not stretch a short roster into wider, page-specific cells.
@@ -389,7 +387,7 @@ function Page.Refresh(instance, context)
     Header(instance, characters, showGlobal, showCharacters, context)
     ClearRows(instance)
     local blocked = YQB.GetBlockedQuestList()
-    local blockedExpanded = RenderGroup(instance, "拒绝任务 (" .. #blocked .. " 个)", characters, showGlobal, showCharacters, "blocked")
+    local blockedExpanded = RenderGroup(instance, YQB.T("PAGE.BLOCKED_GROUP", #blocked), characters, showGlobal, showCharacters, "blocked")
     if blockedExpanded then
         for _, item in ipairs(blocked) do RenderQuest(instance, item, characters, showGlobal, showCharacters, false) end
     end
@@ -397,7 +395,7 @@ function Page.Refresh(instance, context)
     local currentVisible = false
     for _, key in ipairs(characters) do if key == YQB.GetCurrentCharacterID() then currentVisible = true; break end end
     if currentVisible then
-        local currentExpanded = RenderGroup(instance, "当前角色任务 (" .. ShortName(YQB.GetCurrentCharacterID()) .. ")", characters, showGlobal, showCharacters, "current")
+        local currentExpanded = RenderGroup(instance, YQB.T("PAGE.CURRENT_GROUP", CharacterDisplayName(YQB.GetCurrentCharacterID())), characters, showGlobal, showCharacters, "current")
         if currentExpanded then
             for _, item in ipairs(current) do
                 if not YQB.IsQuestBlockedByAny(item.id) then RenderQuest(instance, item, characters, showGlobal, showCharacters, true) end

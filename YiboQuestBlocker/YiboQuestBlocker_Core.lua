@@ -3,6 +3,8 @@
 -- 数据层 + AcceptQuest 拦截
 -- ============================================================================
 
+if not (_G.YQB and _G.YQB.CoreCompatible) then return end
+
 -- ==================== 数据初始化 ====================
 YiboQuestBlockerDB = YiboQuestBlockerDB or {}
 
@@ -13,9 +15,9 @@ local DEFAULT_RUNTIME_SETTINGS = {
     processMode = "direct",
 }
 local PROCESS_MODE_OPTIONS = {
-    { value = "direct", label = "处理模式：拒绝" },
-    { value = "abandon", label = "处理模式：放弃" },
-    { value = "paused", label = "处理模式：暂停" },
+    { value = "direct", label = _G.YQB.T("MODE.DIRECT") },
+    { value = "abandon", label = _G.YQB.T("MODE.ABANDON") },
+    { value = "paused", label = _G.YQB.T("MODE.PAUSED") },
 }
 
 local ADDON_NAME = ...
@@ -173,7 +175,7 @@ local blocked = YiboQuestBlockerDB.globalBlocked
 local cache   = YiboQuestBlockerDB.globalCache
 local characterData = YiboQuestBlockerDB.characterData
 
-local PREFIX      = "|cff20e070[Yibo]|r 任务屏蔽："
+local PREFIX      = _G.YQB.T("CHAT.PREFIX")
 local PREFIX_ERR  = PREFIX
 local PREFIX_INFO = PREFIX
 local recentBlockNotices = {}
@@ -196,7 +198,7 @@ local knownAutomation = {
         label = "Questie",
         continuationVerified = false,
         continuationStatus = "incompatible",
-        continuationNote = "请关闭自动接任务功能",
+        continuationNote = _G.YQB.T("CHAT.TURN_OFF_AUTO_ACCEPT"),
     },
     -- !Pig enumerates every available quest in a single QUEST_GREETING pass.
     -- Filtering SelectAvailableQuest is a verified selection-layer adapter:
@@ -206,19 +208,19 @@ local knownAutomation = {
         label = "!Pig",
         continuationVerified = true,
         continuationStatus = "supported",
-        continuationNote = "支持自动接任务",
+        continuationNote = _G.YQB.T("CHAT.AUTO_ACCEPT_SUPPORTED"),
     },
     ["NDui"] = {
         label = "NDui QuickQuest",
         continuationVerified = true,
         continuationStatus = "supported",
-        continuationNote = "支持自动接任务",
+        continuationNote = _G.YQB.T("CHAT.AUTO_ACCEPT_SUPPORTED"),
     },
     ["Leatrix_Plus"] = {
         label = "Leatrix Plus",
         continuationVerified = false,
         continuationStatus = "incompatible",
-        continuationNote = "请关闭自动接任务功能",
+        continuationNote = _G.YQB.T("CHAT.TURN_OFF_AUTO_ACCEPT"),
     },
     ["Blitz"] = { label = "Blitz", continuationVerified = false },
 }
@@ -508,7 +510,7 @@ local function CurrentInteractionIdentity()
 end
 
 local function EndQuestBatch(reason)
-    if activeBatch and reason then AddDiagnostic("自动续办停止", activeBatch.expectedQuestID, reason) end
+    if activeBatch and reason then AddDiagnostic(_G.YQB.T("STATUS.AUTO_CONTINUE_STOPPED"), activeBatch.expectedQuestID, reason) end
     if activeBatch then
         local prefix = tostring(activeBatch.serial) .. ":"
         for key in pairs(directRejectActions) do
@@ -702,12 +704,13 @@ local function ReportQueuedQuest(scope, questID, name, confirmType)
 
     recentBlockNotices[key] = true
 
-    local actionText = confirmType and "已标记确认型拒绝任务: " or "已标记"
+    local messageKey
     if scope == "global" then
-        YQB.ReportMessage(actionText .. "全局拒绝任务，等待自动放弃: " .. name, true)
+        messageKey = confirmType and "STATUS.QUEUED_GLOBAL_CONFIRM" or "STATUS.QUEUED_GLOBAL"
     else
-        YQB.ReportMessage(actionText .. "个人拒绝任务，等待自动放弃: " .. name, true)
+        messageKey = confirmType and "STATUS.QUEUED_CHARACTER_CONFIRM" or "STATUS.QUEUED_CHARACTER"
     end
+    YQB.ReportMessage(_G.YQB.T(messageKey, name), true)
 end
 
 local function QueueRejectedQuest(questID, scope, confirmType)
@@ -854,7 +857,7 @@ MaybeStartAutoAbandonTimer = function()
             RemoveAutoAbandonQuest(questID)
             if not reportedUnabandonable[questID] then
                 reportedUnabandonable[questID] = true
-                YQB.ReportMessage("任务无法放弃: " .. (YQB.GetQuestName(questID) or ("ID: " .. questID)), true)
+                YQB.ReportMessage(_G.YQB.T("STATUS.CANNOT_ABANDON", YQB.GetQuestName(questID) or ("ID: " .. questID)), true)
             end
         end
 
@@ -1332,10 +1335,10 @@ local function RejectCurrentQuest(questID, scope, confirmType)
     local name = YQB.GetQuestName(questID) or ("ID: " .. tostring(questID))
     if DeclineQuest then
         DeclineQuest()
-        AddDiagnostic("已直接拒绝", questID, scope == "global" and "全局规则" or "当前角色规则")
-        YQB.ReportMessage("已直接拒绝" .. (scope == "global" and "全局" or "个人") .. "任务: " .. name, true)
+        AddDiagnostic(_G.YQB.T("DIAGNOSTIC.DIRECT_REJECTED"), questID, scope == "global" and _G.YQB.T("DIAGNOSTIC.GLOBAL_RULE") or _G.YQB.T("DIAGNOSTIC.CHARACTER_RULE"))
+        YQB.ReportMessage(_G.YQB.T("STATUS.DIRECT_REJECTED", scope == "global" and _G.YQB.T("STATUS.GLOBAL") or _G.YQB.T("STATUS.PERSONAL"), name), true)
     else
-        AddDiagnostic("无法自动处理", questID, "客户端未提供 DeclineQuest")
+        AddDiagnostic(_G.YQB.T("DIAGNOSTIC.CANNOT_HANDLE"), questID, _G.YQB.T("DIAGNOSTIC.NO_DECLINE_API"))
         -- Keep the legacy recovery layer available only when direct rejection
         -- cannot be invoked on this client.
         QueueRejectedQuest(questID, scope, confirmType)
@@ -1353,8 +1356,8 @@ local function SkipBlockedQuestSelection(questID)
     local actionKey = tostring(activeBatch and activeBatch.serial or interactionSerial) .. ":select:" .. tostring(questID)
     if directRejectActions[actionKey] then return true end
     directRejectActions[actionKey] = true
-    AddDiagnostic("已在列表跳过", questID, scope == "global" and "全局规则" or "当前角色规则")
-    YQB.ReportMessage("已在列表跳过" .. (scope == "global" and "全局" or "个人") .. "任务: " .. (YQB.GetQuestName(questID) or ("ID: " .. tostring(questID))), true)
+    AddDiagnostic(_G.YQB.T("DIAGNOSTIC.SKIPPED"), questID, scope == "global" and _G.YQB.T("DIAGNOSTIC.GLOBAL_RULE") or _G.YQB.T("DIAGNOSTIC.CHARACTER_RULE"))
+    YQB.ReportMessage(_G.YQB.T("STATUS.SKIPPED", scope == "global" and _G.YQB.T("STATUS.GLOBAL") or _G.YQB.T("STATUS.PERSONAL"), YQB.GetQuestName(questID) or ("ID: " .. tostring(questID))), true)
     PersistDB()
     return true
 end
