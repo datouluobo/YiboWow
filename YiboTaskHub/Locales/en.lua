@@ -210,6 +210,7 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["TEXT.GOAL_SOURCE_IS_NOT_READY_ENABLE_A_CO.6C513C"] = "Goal source is not ready. Enable a compatible source addon.",
         ["TEXT.GOAL_CATALOG_TEMPORARILY_UNAVAILABLE.B2AFCD"] = "Goal catalog temporarily unavailable",
         ["TEXT.GOAL_MANAGEMENT.D90E7E"] = "Goal Management",
+        ["GOALS_TAB"] = "Goals",
         ["TEXT.TARGET_CHARACTER_NOT_FOUND.5BE13A"] = "Target character not found.",
         ["TEXT.GOAL_SETTINGS_AND_COMPLETION_HISTORY.958089"] = "Goal settings and completion history are stored by Action Hub.",
         ["TEXT.DESTINATION_CHARACTER.86A095"] = "Destination character",
@@ -244,6 +245,7 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["TEXT.RUN_AGAIN.AC1BA6"] = "Run Again",
         ["TEXT.PREVIEW_COPY.F55AE8"] = "Preview Copy",
         ["TEXT.BOSS_CATALOG_BULK_COPY.10F6A0"] = "Boss Catalog & Bulk Copy",
+        ["BOSS_GOALS_COPY"] = "Boss Goals & Copy",
         ["TEXT.BOSS_CATALOG_IS_UNAVAILABLE_ENABLE_A.AE7BF0"] = "Boss catalog is unavailable. Enable a compatible boss tracker.",
         ["TEXT.LIST_SEPARATOR"] = ", ",
     })

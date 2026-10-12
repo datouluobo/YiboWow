@@ -14,7 +14,7 @@ function Page.Create(frame)
     frame.back = Addon.Core.UITheme:CreateButton(frame, 180, Addon:T("TEXT.BACK_TO_GOAL_MANAGEMENT.D16267"))
     frame.back:SetPoint("TOPLEFT", 8, -40)
     frame.back:SetScript("OnClick", function() Page.activeTab = "goals"; Addon.Core.AccountView:NotifyPageChanged(Addon.PAGE_ID) end)
-    frame.tabs = Addon.Core.UITheme:CreateBusinessTabs(frame, { { id = "overview", title = Addon:T("TEXT.OVERVIEW.5F32FF") }, { id = "goals", title = Addon:T("TEXT.GOAL_MANAGEMENT.D90E7E") } }, function(id)
+    frame.tabs = Addon.Core.UITheme:CreateBusinessTabs(frame, { { id = "overview", title = Addon:T("TEXT.OVERVIEW.5F32FF") }, { id = "goals", title = Addon:T("GOALS_TAB") } }, function(id)
         Page.activeTab = id; Page.Refresh(frame, frame.context); Addon.Core.AccountView:NotifyPageChanged(Addon.PAGE_ID)
     end)
 end

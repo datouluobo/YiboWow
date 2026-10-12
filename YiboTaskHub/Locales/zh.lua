@@ -210,6 +210,7 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["TEXT.GOAL_SOURCE_IS_NOT_READY_ENABLE_A_CO.6C513C"] = "目标来源未就绪，请启用兼容来源插件。",
         ["TEXT.GOAL_CATALOG_TEMPORARILY_UNAVAILABLE.B2AFCD"] = "目标目录暂不可用",
         ["TEXT.GOAL_MANAGEMENT.D90E7E"] = "目标管理",
+        ["GOALS_TAB"] = "目标",
         ["TEXT.TARGET_CHARACTER_NOT_FOUND.5BE13A"] = "目标角色不存在",
         ["TEXT.GOAL_SETTINGS_AND_COMPLETION_HISTORY.958089"] = "目标配置与完成历史由行动中心保存。",
         ["TEXT.DESTINATION_CHARACTER.86A095"] = "目的角色",
@@ -244,6 +245,7 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["TEXT.RUN_AGAIN.AC1BA6"] = "重新执行",
         ["TEXT.PREVIEW_COPY.F55AE8"] = "预览复制",
         ["TEXT.BOSS_CATALOG_BULK_COPY.10F6A0"] = "首领目录与批量复制",
+        ["BOSS_GOALS_COPY"] = "首领目标/复制",
         ["TEXT.BOSS_CATALOG_IS_UNAVAILABLE_ENABLE_A.AE7BF0"] = "首领目录未连接，请启用兼容的首领追踪。",
         ["TEXT.LIST_SEPARATOR"] = "、",
     })
