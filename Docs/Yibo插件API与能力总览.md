@@ -1,6 +1,6 @@
 # Yibo 插件 API 与能力总览
 
-> 文档状态：2026-10-12 工作树。Core **1.12.0 / API v13** 新增 [语言服务](../YiboCore/Docs/API-v13-语言服务.md) / localization:1，Core 公共界面已接入；TaskHub **0.5.1 / schema4** 的静态界面已接入 Core 中英文资源，客户端待验收。保留的 API v12 已提供 business-item-actions:1；九个来源的 action.targets v1 与 Task 的 action.demands v1 已接入。230项新目标检查及672项既有集成回归通过。TaskHub 尚未发布，详见 [实施与验证](行动中心-主动添加实施与验证.md)。
+> 文档状态：2026-10-12 工作树。Core **1.12.0 / API v13** 新增 [语言服务](../YiboCore/Docs/API-v13-语言服务.md) / localization:1，Core 公共界面已接入；TaskHub **0.6.0 / schema4** 的静态界面已接入 Core 中英文资源，客户端待验收。保留的 API v12 已提供 business-item-actions:1；九个来源的 action.targets v1 与 Task 的 action.demands v1 已接入。230项新目标检查及672项既有集成回归通过。TaskHub 尚未发布，详见 [实施与验证](行动中心-主动添加实施与验证.md)。
 >
 > 本文区分“当前已实现”和“方案规划中”。详细接口以版本契约为准，接入范围、最低版本、验证缺口和迁移状态以 [Core 公共能力迁移台账](../YiboCore/Docs/Core-公共能力迁移台账.md) 为准。内部 Lua 模块不自动构成公共 API。
 

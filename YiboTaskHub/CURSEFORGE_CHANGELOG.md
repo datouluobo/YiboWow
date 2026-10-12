@@ -1,9 +1,9 @@
-## YiboTaskHub 0.5.1
+## YiboTaskHub 0.6.0
 
 - Localized the Action Hub overview, goal management and editor, boss catalog, settings, hover summary, HUD, and status text through YiboCore's English and Chinese resources.
 - Localized list separators. Automated localization checks and addon tests pass; in-game English layout and login-flow checks remain.
 
-## YiboTaskHub 0.5.1 中文
+## YiboTaskHub 0.6.0 中文
 
 - 行动总览、目标管理与编辑、Boss 目录、设置、悬停摘要、HUD 和状态文案接入 YiboCore 中英文资源。
 - 列表分隔符随语言切换。自动化本地化检查与插件测试通过；英语客户端布局和登录流程仍待验收。
