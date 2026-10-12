@@ -78,3 +78,26 @@ YiboCrafting.GoalTargets:RecipeStatesChanged("Learned", 197)
 assert(goalNotifications == 1 and YiboCrafting.Store.db.goalRevision == 1,
     "a changed recipe snapshot invalidates Hub's cached goal projection")
 print("GoalTargets OK: only confirmed recipe learners are projected as crafting candidates")
+-- The provider normalizes its own baselines through aliases; Hub need not read
+-- Crafting's database or know the meaning of manufacturing counters.
+local previousStore = YiboCrafting.Store
+dofile("YiboCrafting/Store.lua")
+local store = YiboCrafting.Store
+store.db = previousStore.db; store.db.characters = { Learned = { professions = {} } }
+store.GetRecipeState = previousStore.GetRecipeState
+store.db.goalCraftCounts.Learned = {[500]=10}
+local saved = Copy(base)
+saved.scope={mode="character",characterID="Learned"}
+saved.conditions.executorMode="character"; saved.conditions.quantity=3
+saved.conditions.baselineCharacterID="Learned"; saved.conditions.startCount=8
+store:MoveCharacterID("Learned","NewLearned")
+characters[1].id="NewLearned"; recipeStates.NewLearned="learned"
+YiboCore.DataDomains.Get=function()return{state="known",data={professions={{id=197}}}}end
+local moved = assert(YiboCrafting.GoalTargets:Normalize({intent=saved}))
+assert(moved.intent.scope.characterID=="NewLearned" and moved.intent.conditions.startCount==8)
+assert(store.db.goalCraftCounts.NewLearned[500]==10 and store.db.goalCraftCounts.Learned==nil)
+local shared=Copy(saved);shared.scope={mode="account"};shared.conditions.executorMode="any"
+shared.conditions.baselineScope="account";shared.conditions.startCounts={Learned=8}
+local sharedMoved=assert(YiboCrafting.GoalTargets:Normalize({intent=shared}))
+assert(sharedMoved.intent.conditions.startCounts.NewLearned==8 and not sharedMoved.intent.conditions.startCounts.Learned)
+print("Goal baseline migration OK: counters, specific and shared baselines follow Core identity changes")

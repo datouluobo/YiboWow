@@ -73,6 +73,17 @@ theme.SetCharacterHeader = function(_, header, character, context, options)
     headerCalls[#headerCalls + 1] = { header = header, character = character, context = context, options = options }
 end
 writes, registrations = 0, 0
+local wasReady = YiboCore.IsInitialized
+YiboCore.IsInitialized = function() return false end
+assert(YiboCrafting:Initialize() == nil and writes == 0, "Core readiness must precede business writes")
+YiboCore.IsInitialized = wasReady
+local hasCapability = YiboCore.HasCapability
+for _, missing in ipairs({"localization","basic-input","item-resolver","character-identity","account-view",
+    "account-entry","account-surface-budget","character-cleanup","business-services","business-providers","business-item-actions"}) do
+    YiboCore.HasCapability = function(_, name) return name ~= missing end
+    assert(YiboCrafting:Initialize() == nil and writes == 0, "missing capability must stop initialization: " .. missing)
+end
+YiboCore.HasCapability = hasCapability
 assert(YiboCrafting:Initialize() and writes == 1 and registrations == 1)
 assert(YiboCrafting:Initialize() and writes == 1 and registrations == 1)
 

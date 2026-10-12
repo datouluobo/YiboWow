@@ -529,12 +529,19 @@ function Page:Layout(parent, context, mode)
     local width = math.max(1, (context.surfaceAvailableWidth or parent:GetWidth() or 900) - inset.left - inset.right)
     ui.toolbar:ClearAllPoints(); ui.toolbar:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top)
     ui.toolbar:SetSize(width, 32)
-    local modeWidth = 136 -- two 66px tabs plus their 4px gap
+    local modeButtonWidth = math.max(66, Theme:GetIconTextColumnWidth(0, Theme.Font.body, L("PROFESSIONS"), 1))
+    ui.modeRecipe:SetWidth(modeButtonWidth); ui.modeProfession:SetWidth(modeButtonWidth)
+    local modeWidth = modeButtonWidth * 2 + 4
+    ui.modeRecipe:SetShown(not context.preview); ui.modeProfession:SetShown(not context.preview)
+    if context.preview then modeWidth = 0 end
     local gapBudget = mode == "recipes" and 34 or 28
-    local characterWidth = math.max(96, math.min(136, math.floor(width * 0.14)))
-    local professionWidth = mode == "recipes" and math.max(88, math.min(108, math.floor(width * 0.11))) or 0
-    local categoryWidth = math.max(88, math.min(100, math.floor(width * 0.10)))
-    local statusWidth = math.max(88, math.min(100, math.floor(width * 0.10)))
+    local function FilterWidth(label, base)
+        return math.max(base, Theme:GetIconTextColumnWidth(16, Theme.Font.body, label, 1))
+    end
+    local characterWidth = FilterWidth(L("ALL_CHARACTERS"), 96)
+    local professionWidth = mode == "recipes" and FilterWidth(L("ALL_PROFESSIONS"), 88) or 0
+    local categoryWidth = FilterWidth(L("SELECT_PROFESSION"), 88)
+    local statusWidth = FilterWidth(L("HAS_UNLEARNED"), 88)
     local fixedWidth = characterWidth + professionWidth + categoryWidth + statusWidth + modeWidth + gapBudget + 12
     local searchWidth = math.max(120, math.min(300, width - fixedWidth))
     ui.profession:SetWidth(professionWidth); ui.character:SetWidth(characterWidth)
@@ -551,6 +558,13 @@ function Page:Layout(parent, context, mode)
     if mode == "recipes" then ui.category:SetPoint("LEFT", ui.profession, "RIGHT", 4, 0)
     else ui.category:SetPoint("LEFT", ui.character, "RIGHT", 6, 0) end
     ui.status:ClearAllPoints(); ui.status:SetPoint("LEFT", ui.category, "RIGHT", 4, 0)
+    if fixedWidth + 120 > width then
+        ui.toolbar:SetHeight(70)
+        ui.search:SetWidth(math.max(120, width - modeWidth - 24))
+        ui.search:ClearAllPoints(); ui.search:SetPoint("TOPLEFT", ui.toolbar, "TOPLEFT", 6, -2)
+        ui.modeProfession:ClearAllPoints(); ui.modeProfession:SetPoint("TOPRIGHT", ui.toolbar, "TOPRIGHT", -2, -2)
+        ui.character:ClearAllPoints(); ui.character:SetPoint("TOPLEFT", ui.toolbar, "TOPLEFT", 6, -38)
+    end
     local contentTop = ui.toolbar
     ui.footer:ClearAllPoints(); ui.footer:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", inset.left + 2, inset.bottom)
     ui.footer:SetWidth(math.max(240, width * 0.72)); ui.footer:SetWordWrap(false)
@@ -666,14 +680,15 @@ function Page:RenderMatrix(parent, context, entries, names)
     local characters = context.characters or {}
     local showNames = not context.GetFieldVisible or context:GetFieldVisible("recipe-name")
     local showStates = not context.GetFieldVisible or context:GetFieldVisible("recipe-state")
-    local width = math.max(1, ui.matrixWidth - 2)
+    PositionScroll(panel, 43)
+    local width = math.max(1, panel.scroll:GetWidth() or (ui.matrixWidth - 2))
     local recipeWidth = math.max(225, Theme:GetIconTextColumnWidth(23, Theme.Font.body, L("RECIPE_NAME"), 8))
     local characterWidth = Core.AccountView:FitRepeatedColumnWidth(
         width, recipeWidth, #characters, MatrixCharacterWidth(), MatrixCharacterMinWidth())
     local shown, pageInfo = Core.AccountView:GetColumnPage(ID, "characters", characters, width, recipeWidth, characterWidth)
-    local displayCharacters = #entries > 0 and shown or {}
+    local displayCharacters = #entries > 0 and showStates and shown or {}
     panel.header:ClearAllPoints(); panel.header:SetPoint("TOPLEFT", panel, "TOPLEFT", 1, -1)
-    panel.header:SetSize(width, 42)
+    panel.header:SetHeight(42); panel.header:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -1, -1)
     panel.header.title:ClearAllPoints(); panel.header.title:SetPoint("LEFT", panel.header, "LEFT", 8, 0)
     panel.header.title:SetText(L("RECIPE_HEADER"))
     for index, character in ipairs(displayCharacters) do
@@ -684,7 +699,6 @@ function Page:RenderMatrix(parent, context, entries, names)
         Theme:SetCharacterHeader(header, character, context, { nameMode = "short" })
     end
     for index = #displayCharacters + 1, #panel.header.cells do panel.header.cells[index]:Hide() end
-    PositionScroll(panel, 43)
     if not panel.gutterBound then panel.scroll:BindScrollbarGutter(panel.header); panel.gutterBound = true end
     panel.currentOutline = panel.currentOutline or Theme:CreateCurrentCharacterOutline(panel)
     local currentID = Core.Characters:GetCurrentID()
@@ -708,6 +722,7 @@ function Page:RenderMatrix(parent, context, entries, names)
     RenderVisibleRows(panel, items, top, function(row, item, index)
         row.meta:Hide()
         if item.kind == "group" then
+            Theme:ApplyDataColumnTints(row, {}, H)
             row:SetBackdropColor(C.panel[1], C.panel[2], C.panel[3], C.panel[4])
             row.icon:Hide()
             if row.iconHit then row.iconHit:Hide() end
@@ -721,6 +736,9 @@ function Page:RenderMatrix(parent, context, entries, names)
             return
         end
         local entry = item.entry
+        local columnWidths = {}
+        for ci = 1, #shown do columnWidths[ci] = characterWidth end
+        Theme:ApplyDataColumnTints(row, columnWidths, H, recipeWidth)
         row.goalHits = row.goalHits or {}
         local fill = entry.key == ui.state.selectedRecipe and C.selected or (Theme:GetDataRowColor(index))
         row:SetBackdropColor(fill[1], fill[2], fill[3], fill[4])
@@ -769,7 +787,7 @@ function Page:RenderMatrix(parent, context, entries, names)
         local hasFilter = ui.state.search ~= "" or ui.state.professionFilter or ui.state.category or ui.state.character or ui.state.status
         panel.empty:SetText(hasFilter and L("EMPTY_FILTER") or L("EMPTY_CATALOG"))
     end
-    Core.AccountView:UpdateColumnPager(parent, ID, "characters", #entries > 0 and pageInfo or nil, ui.rolePagerAnchor, L("CHARACTERS"))
+    Core.AccountView:UpdateColumnPager(parent, ID, "characters", #entries > 0 and showStates and pageInfo or nil, panel.header, L("CHARACTERS"))
     if #characters == 0 then
         ui.footer:SetText(ui.state.professionFilter
             and L("NO_CONFIRMED_OWNERS")

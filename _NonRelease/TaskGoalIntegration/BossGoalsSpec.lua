@@ -39,6 +39,8 @@ dofile("YiboCore/Bootstrap.lua")
 dofile("YiboCore/Util/Defaults.lua")
 dofile("YiboCore/Runtime/Capabilities.lua")
 dofile("YiboCore/_NonRelease/Tests/LoadLocale.lua")
+dofile("YiboTaskHub/Locales/zh.lua")
+dofile("YiboTaskHub/Locales/en.lua")
 dofile("YiboCore/Runtime/Events.lua")
 dofile("YiboCore/Runtime/Registry.lua")
 dofile("YiboCore/Runtime/Contracts.lua")
@@ -193,7 +195,7 @@ dofile("YiboTaskHub/GoalEditor.lua")
 local management = CreateFrame("Frame"); Hub.GoalEditor.Create(management); Hub.GoalEditor.Refresh(management,{characters=characters})
 local cycleCompleted = false
 for _, row in ipairs(management.rows) do if row.goal and row.goal.intent.scope.characterID == "A"
-    and row.goal.intent.conditions.catalogID == "world:galleon" then cycleCompleted = row.detail.text:find("本周期已完成",1,true) ~= nil end end
+    and row.goal.intent.conditions.catalogID == "world:galleon" then cycleCompleted = row.detail.text:find(Core.Locale:Get("YiboTaskHub", "TEXT.COMPLETED_THIS_CYCLE.A1A9A4"),1,true) ~= nil end end
 Equal(cycleCompleted,true,"management explains why completed Boss is absent from work list")
 Equal(Plans:IsPlanned("暮光-甲","galleon"),false,"unplanned role does not inherit another role's goal")
 local first=Hub.Goals:List()[1]; local preview=assert(Hub.Goals:PreviewCopy({first.id},{"C"})); assert(Hub.Goals:ApplyCopy(preview.token))

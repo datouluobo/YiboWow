@@ -28,4 +28,5 @@ if Core.UITheme then
     Theme.GetDataRowColor = Theme.GetDataRowColor or function() return Theme.Colors.row or {0,0,0,1} end
     Theme.CreateCurrentCharacterOutline = Theme.CreateCurrentCharacterOutline or function() return CreateFrame("Frame") end
     Theme.UpdateCurrentCharacterColumnOutline = Theme.UpdateCurrentCharacterColumnOutline or function() end
+    Theme.ApplyDataColumnTints = Theme.ApplyDataColumnTints or function() end
 end

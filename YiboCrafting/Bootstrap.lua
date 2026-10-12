@@ -13,6 +13,7 @@ function Addon:Initialize()
     for name, version in pairs({ ["localization"] = 1, ["basic-input"] = 1, ["item-resolver"] = 1,
         ["character-name-format"] = 1, ["character-identity"] = 1, ["account-view"] = 2,
         ["account-entry"] = 2, ["account-surface-budget"] = 1, ["character-cleanup"] = 1,
+        ["characters"] = 1, ["data-domains"] = 1, ["events"] = 1, ["fields"] = 1,
         ["business-services"] = 1, ["business-providers"] = 1, ["business-item-actions"] = 2 }) do
         if not Core:HasCapability(name, version) then return nil, L("UPGRADE") .. " (" .. name .. ":" .. version .. ")" end
     end
