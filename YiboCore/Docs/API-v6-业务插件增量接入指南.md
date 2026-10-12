@@ -84,6 +84,7 @@ Core 已在构造 context 时依次应用：账号隐藏规则、业务角色准
 - `defaultVisible = false` 同时适用于字段对象和 `context:GetFieldVisible("field-id")` 字符串查询；已有显隐配置优先。
 - `Core.UITheme:CreateBusinessTabs(parent, definitions, onSelect)` 接收 `{id, title, width}` 定义列表，返回 `SetActive(id)` 与按 ID 索引的 `buttons`；业务插件拥有标签状态，Core 提供视觉与控件。
 - `Core.UITheme:CreateDropdown(...)` 增加可选 `SetMenuPageSize(size)`，只对显式启用的菜单分页；`nil` 恢复完整菜单。关闭控件会关闭其弹出菜单，屏幕下缘空间不足时向上展开。
+- API13 基线的共用 `CreateDropdown` / `CreateMultiSelectDropdown` 自动管理互斥：打开菜单关闭其它非祖先菜单，嵌套下拉保留父菜单；父菜单或源控件隐藏时关闭整条子菜单链。业务插件无需维护独立的展开状态或关闭其它控件。接口签名与能力版本不变。
 
 这些控件不保存业务浏览状态，不增加业务依赖，也不改变现有 API 版本。
 

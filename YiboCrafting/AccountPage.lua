@@ -1,4 +1,5 @@
 local Addon, Core = _G.YiboCrafting, _G.YiboCore
+if not (Core and Core.UITheme) then return end
 local function L(key, ...)
     local fullKey = "UI." .. key
     return Core.Locale:Get("YiboCrafting", fullKey, ...)
@@ -95,7 +96,7 @@ local function MatrixCharacterMinWidth()
 end
 
 local function ProfessionName(id, names)
-    return names[id] or (professions[id] and L(professions[id])) or L("PROFESSION_ID", id)
+    return (professions[id] and L(professions[id])) or names[id] or L("PROFESSION_ID", id)
 end
 
 local function CharacterHasProfession(characterID, professionID)
@@ -381,49 +382,46 @@ local function BindVisibleRows(panel)
         GameTooltip:Hide()
         if panel.renderVisible then panel.renderVisible() end
     end)
-    panel.scroll:HookScript("OnSizeChanged", function() if panel.renderVisible then panel.renderVisible() end end)
+    panel.scroll:HookScript("OnSizeChanged", function(scroll)
+        local width = scroll:GetWidth()
+        if panel.lastViewportWidth and panel.lastViewportWidth ~= width then Addon:NotifyPageChanged() end
+        panel.lastViewportWidth = width
+        if panel.renderVisible then panel.renderVisible() end
+    end)
 end
 
 function Page:Create(parent)
     parent.crafting = {}
     local ui = parent.crafting
     ui.toolbar = CreateFrame("Frame", nil, parent)
-    ui.search = Theme:CreateInput(ui.toolbar, { maxLetters = 80, height = 28 })
-    ui.search:SetAutoFocus(false)
-    ui.search:SetMaxLetters(80)
-    ui.search:SetHeight(28)
-    ui.search:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    ui.search:SetScript("OnEnterPressed", function(self)
-        self:ClearFocus()
-        ui.searchGeneration = (ui.searchGeneration or 0) + 1
-        if ui.search:IsShown() and ui.renderedSearch ~= ui.state.search then Page:RenderResults(parent) end
-    end)
-    ui.search:SetScript("OnTextChanged", function(self, userInput)
-        if not userInput then return end
-        ui.state.search = self:GetText() or ""
-        ui.searchGeneration = (ui.searchGeneration or 0) + 1
-        local generation = ui.searchGeneration
-        if C_Timer and C_Timer.After then
-            C_Timer.After(0.15, function()
-                if generation == ui.searchGeneration and ui.search:IsShown()
-                    and ui.renderedSearch ~= ui.state.search then
-                    Page:RenderResults(parent)
-                end
-            end)
-        elseif ui.search:IsShown() then
-            Page:RenderResults(parent)
-        end
-    end)
+    ui.search = Theme:CreateInput(ui.toolbar, {
+        maxLetters = 80, height = 28, placeholder = L("SEARCH"),
+        OnSubmit = function()
+            ui.searchGeneration = (ui.searchGeneration or 0) + 1
+            if ui.search:IsShown() and ui.renderedSearch ~= ui.state.search then Page:RenderResults(parent) end
+        end,
+        OnChanged = function(text, userInput)
+            if not userInput then return end
+            ui.state.search = text or ""
+            ui.searchGeneration = (ui.searchGeneration or 0) + 1
+            local generation = ui.searchGeneration
+            if C_Timer and C_Timer.After then
+                C_Timer.After(0.15, function()
+                    if generation == ui.searchGeneration and ui.search:IsShown()
+                        and ui.renderedSearch ~= ui.state.search then Page:RenderResults(parent) end
+                end)
+            elseif ui.search:IsShown() then Page:RenderResults(parent) end
+        end,
+        OnFocus = function(focused, input)
+            input.placeholder:SetShown(not focused and input:GetText() == "")
+        end,
+    })
     Theme:AttachClearButton(ui.search, { OnClear = function()
         ui.state.search = ""
         ui.searchGeneration = (ui.searchGeneration or 0) + 1
         if ui.search:IsShown() then Page:RenderResults(parent) end
     end })
-    ui.searchHint = Label(ui.toolbar, Theme.Font.assist, C.muted)
-    ui.searchHint:SetText(L("SEARCH"))
-    ui.searchHint:SetPoint("LEFT", ui.search, "LEFT", 6, 0)
-    ui.search:SetScript("OnEditFocusGained", function() ui.searchHint:Hide() end)
-    ui.search:SetScript("OnEditFocusLost", function(self) ui.searchHint:SetShown(self:GetText() == "") end)
+    ui.searchHint = ui.search.placeholder
     ui.profession = Theme:CreateDropdown(ui.toolbar, 130)
     ui.category = Theme:CreateDropdown(ui.toolbar, 110)
     ui.character = Theme:CreateDropdown(ui.toolbar, 120)
@@ -567,7 +565,7 @@ function Page:Layout(parent, context, mode)
     end
     local contentTop = ui.toolbar
     ui.footer:ClearAllPoints(); ui.footer:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", inset.left + 2, inset.bottom)
-    ui.footer:SetWidth(math.max(240, width * 0.72)); ui.footer:SetWordWrap(false)
+    ui.footer:SetWidth(math.max(240, width - 4)); ui.footer:SetHeight(28); ui.footer:SetWordWrap(true)
     ui.rolePagerAnchor:ClearAllPoints()
     ui.rolePagerAnchor:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset.right, inset.bottom)
     if mode == "recipes" then
@@ -687,14 +685,17 @@ function Page:RenderMatrix(parent, context, entries, names)
         width, recipeWidth, #characters, MatrixCharacterWidth(), MatrixCharacterMinWidth())
     local shown, pageInfo = Core.AccountView:GetColumnPage(ID, "characters", characters, width, recipeWidth, characterWidth)
     local displayCharacters = #entries > 0 and showStates and shown or {}
+    local headerHeight = pageInfo and pageInfo.pages and pageInfo.pages > 1 and 72 or 42
+    PositionScroll(panel, headerHeight + 1)
     panel.header:ClearAllPoints(); panel.header:SetPoint("TOPLEFT", panel, "TOPLEFT", 1, -1)
-    panel.header:SetHeight(42); panel.header:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -1, -1)
-    panel.header.title:ClearAllPoints(); panel.header.title:SetPoint("LEFT", panel.header, "LEFT", 8, 0)
+    panel.header:SetHeight(headerHeight); panel.header:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -1, -1)
+    panel.header.title:ClearAllPoints(); panel.header.title:SetPoint("BOTTOMLEFT", panel.header, "BOTTOMLEFT", 8, 0)
+    panel.header.title:SetSize(math.max(1, recipeWidth - 8), 42)
     panel.header.title:SetText(L("RECIPE_HEADER"))
     for index, character in ipairs(displayCharacters) do
         local header = panel.header.cells[index] or Theme:CreateMatrixHeader(panel.header)
         panel.header.cells[index] = header
-        header:ClearAllPoints(); header:SetPoint("LEFT", panel.header, "LEFT", recipeWidth + (index - 1) * characterWidth, 0)
+        header:ClearAllPoints(); header:SetPoint("BOTTOMLEFT", panel.header, "BOTTOMLEFT", recipeWidth + (index - 1) * characterWidth, 0)
         header:SetWidth(characterWidth)
         Theme:SetCharacterHeader(header, character, context, { nameMode = "short" })
     end
@@ -807,7 +808,7 @@ function Page:RenderDetail(parent, context, entry, names)
     detail.meta:ClearAllPoints(); detail.meta:SetPoint("TOPLEFT", detail.icon, "BOTTOMLEFT", 0, -16)
     detail.meta:SetPoint("RIGHT", detail, "RIGHT", -10, 0); detail.meta:SetHeight(64)
     detail.note:ClearAllPoints(); detail.note:SetPoint("TOPLEFT", detail.meta, "BOTTOMLEFT", 0, -10)
-    detail.note:SetPoint("RIGHT", detail, "RIGHT", -10, 0); detail.note:SetHeight(54)
+    detail.note:SetPoint("RIGHT", detail, "RIGHT", -10, 0); detail.note:SetHeight(80)
     detail.characters:ClearAllPoints(); detail.characters:SetPoint("TOPLEFT", detail.note, "BOTTOMLEFT", 0, -12)
     detail.characters:SetPoint("BOTTOMRIGHT", detail, "BOTTOMRIGHT", -12, 10)
     detail.icon:SetTexture(entry and (entry.icon or "Interface\\Icons\\INV_Misc_QuestionMark") or nil)
@@ -970,7 +971,7 @@ function Page:RenderResults(parent)
     })
     if context.preview then
         local total, subset, used, last = #filtered, {}, 0, nil
-        local budget = math.max(H + 26, math.min(360, context.surfaceAvailableHeight or 360) - 120)
+        local budget = math.max(H + 26, math.min(360, context.surfaceAvailableHeight or 360) - (ui.toolbar:GetHeight() + 72 + 48))
         for _, entry in ipairs(filtered) do
             local cost = H + (last ~= entry.professionID and 26 or 0)
             if used + cost > budget then break end

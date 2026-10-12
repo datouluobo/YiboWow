@@ -233,6 +233,12 @@ local function HoldingTask()
 end
 Equal(HoldingTask().state, "active", "inventory is not summed across profession characters")
 stock.D = 3; Equal(HoldingTask().state, "completed", "one role inventory completes product target")
+YiboVault.GoalTargets.Evaluate = function(_, request)
+    return {evaluations={[request.goals[1].id]={task={state="completed",
+        freshness={state="known",observedAt=clock-10,validUntil=clock-1},item={quantity=3}}}}}
+end
+Equal(HoldingTask().state,"active","expired inventory evidence cannot complete a crafting product goal")
+Equal(HoldingTask().readiness,"unknown","expired public source evidence stays unknown")
 YiboVault.GoalTargets.Evaluate = vaultEvaluate
 local recipeState = YiboCrafting.Store.GetRecipeState
 YiboCrafting.Store.GetRecipeState = function() return "unlearned" end

@@ -153,4 +153,25 @@ for _,button in ipairs(view.frame.navButtons) do
  if button.shown and button.settingsTargetID then order[#order+1]=button.settingsTargetID end
 end
 Check(order[3]=="sorting" and order[4]=="bar" and order[5]=="display","bar is between role sorting and display")
+-- Real shared dropdown factories: peers exclude each other; nested group
+-- selectors retain their parent and cannot survive the parent's closure.
+local theme=Core.UITheme
+local first=theme:CreateDropdown(UIParent,120,{{value=1,label="One"}})
+local second=theme:CreateDropdown(UIParent,120,{{value=2,label="Two"}})
+local multi=theme:CreateMultiSelectDropdown(UIParent,180,{
+ {title="First",group="A"},{title="Second",group="B"},
+})
+first:Fire("OnClick");second:Fire("OnClick")
+Check(not first.menu:IsShown() and second.menu:IsShown(),"ordinary dropdown peers are exclusive")
+multi:Fire("OnClick")
+Check(not second.menu:IsShown() and multi.menu:IsShown(),"multiselect excludes ordinary dropdown")
+multi.groupSelector:Fire("OnClick")
+Check(multi.menu:IsShown() and multi.groupSelector.menu:IsShown(),"nested group selector preserves parent")
+first:Fire("OnClick")
+Check(first.menu:IsShown() and not multi.menu:IsShown() and not multi.groupSelector.menu:IsShown(),"switching roots closes whole old menu chain")
+first:Fire("OnClick");Check(not first.menu:IsShown(),"same button toggles closed")
+multi:Fire("OnClick");multi.groupSelector:Fire("OnClick");multi:Hide()
+Check(not multi.menu:IsShown() and not multi.groupSelector.menu:IsShown(),"hidden source closes its descendants")
+first:Fire("OnClick");first.menu.buttons[1]:Fire("OnClick")
+Check(first.value==1 and not first.menu:IsShown(),"selection still closes popup")
 print("LocaleLayoutSpec passed: " .. checks .. " checks")

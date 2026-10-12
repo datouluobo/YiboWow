@@ -4,6 +4,7 @@
 
 ### 中文
 
+- 共用单选／多选下拉互斥展开；内部子菜单保留父菜单，关闭父菜单或隐藏控件时同步关闭子菜单。
 - 新增中英文界面，支持跟随客户端、中文或 English，重载后生效。
 - 内置 LDB 与信息条，小地图、外部 Broker、内置信息条可独立开关。
 - 信息条支持外框、背景颜色、透明度、图标大小与间距设置，以及拖拽调序。
@@ -15,6 +16,7 @@
 
 ### English
 
+- Shared single-select and multi-select dropdowns now close other open menus. Nested menus retain their parent and close when the parent menu or source control is hidden.
 - Added Chinese and English UI options: follow the client, Chinese, or English. Changes take effect after reloading.
 - Bundled LDB and added a built-in bar, with separate toggles for minimap, external Broker, and built-in bar entries.
 - Added bar border, background color, opacity, icon size and spacing settings, plus drag-and-drop reordering.

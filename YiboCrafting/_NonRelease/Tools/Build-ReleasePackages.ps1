@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [string]$ProjectRoot,
-    [string]$OutputRoot
+    [string]$OutputRoot,
+    [switch]$KeepStaging
 )
 
 $ErrorActionPreference = "Stop"
@@ -28,6 +29,8 @@ if ((Test-Path -LiteralPath $releasePath) -or (Test-Path -LiteralPath $githubPat
 $tempRoot = Join-Path ([IO.Path]::GetTempPath()) ("$addonName-build-" + [guid]::NewGuid().ToString("N"))
 $releaseStage = Join-Path $tempRoot "curseforge\$addonName"
 $githubStage = Join-Path $tempRoot "github\$addonName"
+$stagedReleasePath = Join-Path $tempRoot "$addonName-v$version-curseforge.zip"
+$stagedGithubPath = Join-Path $tempRoot "$addonName-v$version-github.zip"
 try {
     New-Item -ItemType Directory -Path $releaseStage, $githubStage, $outputRoot -Force | Out-Null
     Copy-Item -LiteralPath $tocPath -Destination $releaseStage
@@ -49,10 +52,29 @@ try {
     }
     & robocopy $projectRoot $githubStage /E /R:1 /W:1 /NFL /NDL /NJH /NJS /NP /XD .git dist Builds tmp _NonRelease /XF AGENTS.md | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE" }
-    Compress-Archive -LiteralPath $releaseStage -DestinationPath $releasePath -CompressionLevel Optimal
-    Compress-Archive -LiteralPath $githubStage -DestinationPath $githubPath -CompressionLevel Optimal
+    Compress-Archive -LiteralPath $releaseStage -DestinationPath $stagedReleasePath -CompressionLevel Optimal
+    Compress-Archive -LiteralPath $githubStage -DestinationPath $stagedGithubPath -CompressionLevel Optimal
+    # Finish both packages before moving any previous successful output.
+    $archiveRoot = Join-Path $outputRoot "Archive"
+    $previousPackages = @(Get-ChildItem -LiteralPath $outputRoot -File -Filter "$addonName-v*.zip")
+    if ($previousPackages.Count -gt 0) { New-Item -ItemType Directory -Path $archiveRoot -Force | Out-Null }
+    foreach ($previousPackage in $previousPackages) {
+        $archivePath = Join-Path $archiveRoot $previousPackage.Name
+        if (Test-Path -LiteralPath $archivePath) { throw "Archive already contains $archivePath" }
+    }
+    foreach ($previousPackage in $previousPackages) {
+        Move-Item -LiteralPath $previousPackage.FullName -Destination (Join-Path $archiveRoot $previousPackage.Name)
+    }
+    Move-Item -LiteralPath $stagedReleasePath -Destination $releasePath
+    Move-Item -LiteralPath $stagedGithubPath -Destination $githubPath
     [pscustomobject]@{ Version = $version; CurseForge = $releasePath; GitHub = $githubPath } | Format-List
 }
 finally {
-    if (Test-Path -LiteralPath $tempRoot) { Remove-Item -LiteralPath $tempRoot -Recurse -Force }
+    if ($KeepStaging) { Write-Host "Staging retained: $tempRoot" }
+    elseif (Test-Path -LiteralPath $tempRoot) {
+        $resolvedStage = [IO.Path]::GetFullPath($tempRoot)
+        $tempPrefix = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\') + '\'
+        if (-not $resolvedStage.StartsWith($tempPrefix, [StringComparison]::OrdinalIgnoreCase)) { throw "Unsafe staging path: $resolvedStage" }
+        Remove-Item -LiteralPath $resolvedStage -Recurse -Force
+    }
 }

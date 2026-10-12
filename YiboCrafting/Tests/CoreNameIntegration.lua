@@ -51,9 +51,12 @@ YiboCore = {
 }
 dofile("YiboCrafting/Namespace.lua")
 dofile("YiboCrafting/Tests/LoadLocale.lua")
+local readyCallbacks = {}
+YiboCore.Events.Register = function(_, event, owner, callback) readyCallbacks[event] = function() return callback(owner) end end
 YiboCrafting.Store = { Initialize = function() writes = writes + 1; return {} end,
     GetRecipeState = function() return "unknown" end }
 YiboCrafting.AccountPage = { Register = function() return true end }
+YiboCrafting.Collector = { Scan = function() end }
 dofile("YiboCrafting/Bootstrap.lua")
 local function Reject()
     writes, registrations, printed = 0, 0, nil
@@ -78,12 +81,14 @@ YiboCore.IsInitialized = function() return false end
 assert(YiboCrafting:Initialize() == nil and writes == 0, "Core readiness must precede business writes")
 YiboCore.IsInitialized = wasReady
 local hasCapability = YiboCore.HasCapability
-for _, missing in ipairs({"localization","basic-input","item-resolver","character-identity","account-view",
+for _, missing in ipairs({"localization","basic-input","item-resolver","character-identity","account-view","characters","data-domains","events","fields",
     "account-entry","account-surface-budget","character-cleanup","business-services","business-providers","business-item-actions"}) do
     YiboCore.HasCapability = function(_, name) return name ~= missing end
     assert(YiboCrafting:Initialize() == nil and writes == 0, "missing capability must stop initialization: " .. missing)
 end
 YiboCore.HasCapability = hasCapability
+readyCallbacks.CORE_READY()
+assert(YiboCrafting.initialized and writes == 1 and registrations == 1, "late Core readiness initializes once")
 assert(YiboCrafting:Initialize() and writes == 1 and registrations == 1)
 assert(YiboCrafting:Initialize() and writes == 1 and registrations == 1)
 

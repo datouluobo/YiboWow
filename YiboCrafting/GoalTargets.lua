@@ -138,6 +138,7 @@ function Targets:Evaluate(r)
                         scope = { mode = "character", characterID = id }, conditions = { quantity = c.quantity, storage = "bags", mode = "once", scopeMode = "character" }, repeatPolicy = "once" } } } })
                     local task = response and response.evaluations and response.evaluations[goal.id] and response.evaluations[goal.id].task
                     roleKnown = task and task.freshness and task.freshness.state == "known"
+                        and (not task.freshness.validUntil or task.freshness.validUntil > Now())
                     roleDone = roleKnown and task.state == "completed"
                     roleCount = task and task.item and task.item.quantity or 0
                     if task and task.freshness and task.freshness.observedAt then observedAt = task.freshness.observedAt end
@@ -147,8 +148,11 @@ function Targets:Evaluate(r)
                 count = math.max(count, roleCount or 0)
             end
             known = done or known
-            local reason = (any and L("ANY_INDEPENDENT") or "") .. count .. " / " .. c.quantity
-            if not known then reason = reason .. (c.mode == "holding" and L("INVENTORY_PENDING") or L("CAST_PENDING")) end
+            local reasonKey = any and "PROGRESS_SHARED" or "PROGRESS"
+            if not known then
+                reasonKey = (any and "SHARED_" or "") .. (c.mode == "holding" and "HOLD_PROGRESS_PENDING" or "CAST_PROGRESS_PENDING")
+            end
+            local reason = L(reasonKey, count, c.quantity)
             result.evaluations[goal.id] = { task = { title = clean.title, reason = reason, summary = reason,
                 state = done and "completed" or "active",
                 readiness = done and "not-applicable" or ((not known or not learned) and "unknown" or "preparation"),

@@ -36,7 +36,7 @@ theme.CreateDropdown=function()local f=Frame();f.menu=Frame();return f end
 theme.CreateScrollFrame=function()return Frame()end
 local registered,entry,refreshes=nil,nil,0
 YiboCore={UITheme=theme,ItemResolver={GetInfo=function()return{state="unloaded"}end},
-    DataDomains={Get=function()return{state="known",data={professions={{id=333}}}}end},
+    DataDomains={Get=function()return{state="known",data={professions={{id=333,name="附魔"}}}}end},
     Characters={GetCurrentID=function()return"A"end,FormatName=function(_,identity)return identity.name end},
     AccountView={RegisterPage=function(_,_,p)registered=p;return p end,
         FitRepeatedColumnWidth=function()return 110 end,
@@ -71,10 +71,20 @@ assert(parent.crafting.search.SetValue,"uses Core basic-input rather than a loca
 local context={characters={chars[1]},scope="all",preview=true,surfaceAvailableWidth=1200,surfaceAvailableHeight=300,
     GetFieldVisible=function()return true end}
 YiboCore.Locale.previewLanguage="en";Page:Refresh(parent,context)
+assert(select(2,Page:Snapshot(context))[1].name=="Enchanting","profession ID localization overrides native snapshot names")
 assert(parent.crafting.searchHint.text=="Search recipes, products or IDs", "English search hint: "..tostring(parent.crafting.searchHint.text))
 assert(#parent.crafting.matrix.visibleItems<100,"hover is a bounded projection of the shared recipe snapshot")
 assert(not parent.crafting.modeProfession.shown,"hover cannot misleadingly switch to a hidden layout")
+local input=parent.crafting.search
+local composing=true
+input.IsInIMECompositionMode=function()return composing end
+input:SetText("灯");input.scripts.OnTextChanged(input,true)
+assert(parent.crafting.state.search=="","IME composition must not bypass the Core input handler")
+composing=false;input.scripts.OnUpdate(input)
+assert(parent.crafting.state.search=="灯","Core input forwards the committed IME text")
+parent.crafting.state.search=""
 YiboCore.Locale.previewLanguage="zh";parent=Frame();Page:Create(parent);Page:Refresh(parent,context)
+assert(select(2,Page:Snapshot(context))[1].name=="附魔","Chinese profession label")
 assert(parent.crafting.searchHint.text=="搜索配方、产物或 ID")
 local category=YiboCrafting.CategoryCatalog
 assert(category:GetID(129,3275)=="BANDAGES")

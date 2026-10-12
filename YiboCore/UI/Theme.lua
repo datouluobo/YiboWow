@@ -429,6 +429,39 @@ function Theme:CreateButton(parent, width, label, kind)
     return button
 end
 
+-- Popups live under the shell rather than their controls, so track the
+-- logical ancestry explicitly. Keep an open parent's submenu, close peers.
+local openDropdowns = setmetatable({}, { __mode = "k" })
+local function IsDropdownDescendant(control, menu)
+    local parent = control:GetParent()
+    while parent do
+        if parent == menu then return true end
+        parent = parent:GetParent()
+    end
+    return false
+end
+
+local function TrackDropdown(dropdown)
+    dropdown.menu:HookScript("OnShow", function()
+        local close = {}
+        for other in pairs(openDropdowns) do
+            if other ~= dropdown and not IsDropdownDescendant(dropdown, other.menu) then
+                close[#close + 1] = other
+            end
+        end
+        for _, other in ipairs(close) do other.menu:Hide() end
+        openDropdowns[dropdown] = true
+    end)
+    dropdown.menu:HookScript("OnHide", function()
+        openDropdowns[dropdown] = nil
+        local close = {}
+        for other in pairs(openDropdowns) do
+            if IsDropdownDescendant(other, dropdown.menu) then close[#close + 1] = other end
+        end
+        for _, other in ipairs(close) do other.menu:Hide() end
+    end)
+end
+
 function Theme:CreateDropdown(parent, width, options)
     local dropdown = self:CreateButton(parent, width or 220, "", "secondary")
     dropdown.arrow = self:CreateText(dropdown, self.Font.assist, self.Colors.muted, "RIGHT")
@@ -455,6 +488,7 @@ function Theme:CreateDropdown(parent, width, options)
     dropdown.menu:SetBackdropColor(Color(self.Colors.panel)); dropdown.menu:SetBackdropBorderColor(Color(self.Colors.line))
     dropdown.menu:Hide()
     dropdown.menu.buttons = {}
+    TrackDropdown(dropdown)
     function dropdown:SetOptions(nextOptions)
         self.options = nextOptions or {}
         local pageSize = self.menuPageSize or math.max(1, #self.options)
@@ -560,6 +594,7 @@ function Theme:CreateMultiSelectDropdown(parent, width, options)
     dropdown.menu:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     dropdown.menu:SetBackdropColor(Color(self.Colors.panel)); dropdown.menu:SetBackdropBorderColor(Color(self.Colors.line))
     dropdown.menu:Hide(); dropdown.menu.checks = {}
+    TrackDropdown(dropdown)
     function dropdown:SetSummary(prefix) self.summaryPrefix = prefix or Core:Text("CORE.FIELD") end
     function dropdown:RefreshSummary()
         local selected = 0

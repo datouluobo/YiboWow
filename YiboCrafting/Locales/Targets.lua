@@ -2,6 +2,12 @@ local Core = _G.YiboCore
 if not (Core and Core.Locale) then return end
 
 Core.Locale:Register("YiboCrafting", "zh", {
+    ["PROGRESS"] = "%d / %d",
+    ["PROGRESS_SHARED"] = "任一已学角色独立达成：%d / %d",
+    ["CAST_PROGRESS_PENDING"] = "制造进度 %d / %d；离线制造证据待核实。",
+    ["SHARED_CAST_PROGRESS_PENDING"] = "任一已学角色独立制造：%d / %d；离线证据待核实。",
+    ["HOLD_PROGRESS_PENDING"] = "持有进度 %d / %d；背包证据待采集。",
+    ["SHARED_HOLD_PROGRESS_PENDING"] = "任一已学角色独立持有：%d / %d；部分角色背包证据待采集。",
     ["RECIPE_REQUIRED"] = "请选择有来源目录依据的制造配方",
     ["SCOPE_REQUIRED"] = "请选择执行范围",
     ["EXECUTION_SCOPE"] = "执行范围",
@@ -31,6 +37,12 @@ Core.Locale:Register("YiboCrafting", "zh", {
 })
 
 Core.Locale:Register("YiboCrafting", "en", {
+    ["PROGRESS"] = "%d / %d",
+    ["PROGRESS_SHARED"] = "Any eligible character independently: %d / %d",
+    ["CAST_PROGRESS_PENDING"] = "Craft progress %d / %d; offline crafting evidence needs verification.",
+    ["SHARED_CAST_PROGRESS_PENDING"] = "Any eligible character crafts independently: %d / %d; offline evidence needs verification.",
+    ["HOLD_PROGRESS_PENDING"] = "Holding progress %d / %d; bag evidence is missing.",
+    ["SHARED_HOLD_PROGRESS_PENDING"] = "Any eligible character holds independently: %d / %d; bag evidence is missing for some characters.",
     ["RECIPE_REQUIRED"] = "Select a crafting recipe with catalog evidence.",
     ["SCOPE_REQUIRED"] = "Select an execution scope.",
     ["EXECUTION_SCOPE"] = "Execution scope",
