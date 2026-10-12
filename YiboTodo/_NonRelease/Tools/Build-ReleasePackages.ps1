@@ -11,6 +11,10 @@ if (-not $OutputRoot) { $OutputRoot = Join-Path (Resolve-Path (Join-Path $PSScri
 $projectRoot = (Resolve-Path $ProjectRoot).Path
 $tocPath = Join-Path $projectRoot "$addonName.toc"
 $version = (Select-String -LiteralPath $tocPath -Pattern '^## Version:\s*(.+)$').Matches[0].Groups[1].Value.Trim().TrimStart('v', 'V')
+$runtimeVersionMatch = Select-String -LiteralPath (Join-Path $projectRoot "Namespace.lua") -Pattern '^Addon\.VERSION\s*=\s*"([^"]+)"$'
+if (-not $runtimeVersionMatch -or $runtimeVersionMatch.Matches[0].Groups[1].Value -ne $version) {
+    throw "TOC version ($version) does not match Namespace.lua runtime version."
+}
 $outputRoot = [IO.Path]::GetFullPath($OutputRoot)
 $tempRoot = Join-Path ([IO.Path]::GetTempPath()) ("$addonName-build-" + [guid]::NewGuid().ToString("N"))
 $curseForgeStage = Join-Path $tempRoot "curseforge\$addonName"
@@ -24,7 +28,9 @@ function Move-PreviousPackagesToArchive {
     $archiveRoot = Join-Path (Join-Path $outputRoot "Archive") $addonName
     New-Item -ItemType Directory -Path $archiveRoot -Force | Out-Null
     $moved = 0
-    Get-ChildItem -LiteralPath $outputRoot -File -Filter "$addonName-*.zip" | ForEach-Object {
+    Get-ChildItem -LiteralPath $outputRoot -File -Filter "$addonName-*.zip" | Where-Object {
+        $_.Name -ne (Split-Path $curseForgeOutput -Leaf) -and $_.Name -ne (Split-Path $githubOutput -Leaf)
+    } | ForEach-Object {
         $destination = Join-Path $archiveRoot $_.Name
         if (Test-Path -LiteralPath $destination) { throw "Archive package already exists: $destination" }
         Move-Item -LiteralPath $_.FullName -Destination $destination
@@ -52,8 +58,8 @@ try {
     Compress-Archive -LiteralPath $curseForgeStage -DestinationPath $curseForgeTemp -CompressionLevel Optimal
     Compress-Archive -LiteralPath $githubStage -DestinationPath $githubTemp -CompressionLevel Optimal
     $archived = Move-PreviousPackagesToArchive
-    Move-Item -LiteralPath $curseForgeTemp -Destination $curseForgeOutput
-    Move-Item -LiteralPath $githubTemp -Destination $githubOutput
+    Move-Item -LiteralPath $curseForgeTemp -Destination $curseForgeOutput -Force
+    Move-Item -LiteralPath $githubTemp -Destination $githubOutput -Force
     [pscustomobject]@{ Version = $version; CurseForge = $curseForgeOutput; GitHub = $githubOutput; Archived = $archived } | Format-List
 }
 finally {
