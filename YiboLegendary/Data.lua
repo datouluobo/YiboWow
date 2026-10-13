@@ -18,75 +18,75 @@ Data.VENDOR_PRICE_SNAPSHOTS = {
 }
 
 local actions = {
-    ["ORANGE-PRE-01"] = "90 级前往雾沙栈道迷雾酒肆找黑王子",
-    ["ORANGE-C1-01"] = "前往迷雾栈道，与拉西奥喝一杯。",
-    ["ORANGE-C1-02"] = "通过天神尾王获得印记，或按当前商店价格兑换力量/智慧印记。",
-    ["ORANGE-C1-03"] = "完成黑王子阵营日常或击杀相应敌人，将声望提升至尊敬。",
-    ["ORANGE-C1-04"] = "进入永春台，击败惧之煞并取得任务物品。",
-    ["ORANGE-C1-05"] = "返回迷雾栈道，向拉西奥领取第一章奖励。",
-    ["ORANGE-C2-01"] = "前往迷雾栈道，与拉西奥开启战争篇。",
-    ["ORANGE-C2-02"] = "前往迷雾栈道，与拉西奥对话。",
-    ["ORANGE-C2-03"] = "通过地下城、场景战役或日常活动累计 1,600 点勇气。",
-    ["ORANGE-C2-04"] = "完成黑王子阵营日常或击杀相应敌人，将声望提升至崇敬。",
-    ["ORANGE-C2-05A"] = "排队寇魔古寺和碎银矿脉，分别取得一场胜利。",
-    ["ORANGE-C2-05H"] = "排队寇魔古寺和碎银矿脉，分别取得一场胜利。",
-    ["ORANGE-C2-06"] = "前往卡桑琅丛林敌对阵营营地，建议组队击杀指挥官；少数职业可单刷。",
-    ["ORANGE-C2-07A"] = "完成联盟结尾剧情，并向拉西奥领取奖励。",
-    ["ORANGE-C2-07H"] = "完成部落结尾剧情，并向拉西奥领取奖励。",
-    ["ORANGE-C3-01"] = "前往迷雾栈道酒馆，与拉西奥联系。",
-    ["ORANGE-C3-02"] = "前往酒馆二楼，与拉西奥会面。",
-    ["ORANGE-C3-03"] = "进入雷电王座收集帝国秘史，并准备 40 个延极锭。",
-    ["ORANGE-C3-04"] = "完成黑王子阵营日常或击杀相应敌人，将声望提升至崇拜。",
-    ["ORANGE-C3-05"] = "完成雷神岛单人战役，解锁雷神之基。",
-    ["ORANGE-C3-06"] = "单人：对纳拉克用长枪，跑到副本门口让 NPC 拉怪；1 分钟后再用一次，躲开追击数秒。",
-    ["ORANGE-C3-07"] = "返回拉西奥处，领取传说多彩宝石。",
-    ["ORANGE-C3-08"] = "继续挑战雷电王座，收集 12 个泰坦符文石。",
-    ["ORANGE-C3-09"] = "进入雷电王座击败雷神，取得雷神之心。",
-    ["ORANGE-C3-10"] = "返回拉西奥处，完成雷电王座篇收尾。",
-    ["ORANGE-C4-01"] = "拜访四天神，并完成适合职责的天神挑战。",
-    ["ORANGE-C4-02"] = "从拉西奥提供的奖励中选择一件 600 装等史诗披风。",
-    ["ORANGE-C4-03"] = "与拉西奥对话，等待最终阶段开放。",
-    ["ORANGE-C5-01"] = "前往永恒岛，与拉西奥交谈。",
-    ["ORANGE-C5-02"] = "在永恒岛收集 5,000 枚永恒铸币。",
-    ["ORANGE-C5-03"] = "在永恒岛分别击败玉珑、赤精、雪怒、砮皂，四项全部完成。",
-    ["ORANGE-C5-04"] = "完成最终仪式，将史诗披风升级为传说披风。",
-    ["ORANGE-C5-05"] = "进入决战奥格瑞玛，击败加尔鲁什·地狱咆哮。",
+    ["ORANGE-PRE-01"] = "QUEST.ACTION.ORANGE-PRE-01",
+    ["ORANGE-C1-01"] = "QUEST.ACTION.ORANGE-C1-01",
+    ["ORANGE-C1-02"] = "QUEST.ACTION.ORANGE-C1-02",
+    ["ORANGE-C1-03"] = "QUEST.ACTION.ORANGE-C1-03",
+    ["ORANGE-C1-04"] = "QUEST.ACTION.ORANGE-C1-04",
+    ["ORANGE-C1-05"] = "QUEST.ACTION.ORANGE-C1-05",
+    ["ORANGE-C2-01"] = "QUEST.ACTION.ORANGE-C2-01",
+    ["ORANGE-C2-02"] = "QUEST.ACTION.ORANGE-C2-02",
+    ["ORANGE-C2-03"] = "QUEST.ACTION.ORANGE-C2-03",
+    ["ORANGE-C2-04"] = "QUEST.ACTION.ORANGE-C2-04",
+    ["ORANGE-C2-05A"] = "QUEST.ACTION.ORANGE-C2-05A",
+    ["ORANGE-C2-05H"] = "QUEST.ACTION.ORANGE-C2-05H",
+    ["ORANGE-C2-06"] = "QUEST.ACTION.ORANGE-C2-06",
+    ["ORANGE-C2-07A"] = "QUEST.ACTION.ORANGE-C2-07A",
+    ["ORANGE-C2-07H"] = "QUEST.ACTION.ORANGE-C2-07H",
+    ["ORANGE-C3-01"] = "QUEST.ACTION.ORANGE-C3-01",
+    ["ORANGE-C3-02"] = "QUEST.ACTION.ORANGE-C3-02",
+    ["ORANGE-C3-03"] = "QUEST.ACTION.ORANGE-C3-03",
+    ["ORANGE-C3-04"] = "QUEST.ACTION.ORANGE-C3-04",
+    ["ORANGE-C3-05"] = "QUEST.ACTION.ORANGE-C3-05",
+    ["ORANGE-C3-06"] = "QUEST.ACTION.ORANGE-C3-06",
+    ["ORANGE-C3-07"] = "QUEST.ACTION.ORANGE-C3-07",
+    ["ORANGE-C3-08"] = "QUEST.ACTION.ORANGE-C3-08",
+    ["ORANGE-C3-09"] = "QUEST.ACTION.ORANGE-C3-09",
+    ["ORANGE-C3-10"] = "QUEST.ACTION.ORANGE-C3-10",
+    ["ORANGE-C4-01"] = "QUEST.ACTION.ORANGE-C4-01",
+    ["ORANGE-C4-02"] = "QUEST.ACTION.ORANGE-C4-02",
+    ["ORANGE-C4-03"] = "QUEST.ACTION.ORANGE-C4-03",
+    ["ORANGE-C5-01"] = "QUEST.ACTION.ORANGE-C5-01",
+    ["ORANGE-C5-02"] = "QUEST.ACTION.ORANGE-C5-02",
+    ["ORANGE-C5-03"] = "QUEST.ACTION.ORANGE-C5-03",
+    ["ORANGE-C5-04"] = "QUEST.ACTION.ORANGE-C5-04",
+    ["ORANGE-C5-05"] = "QUEST.ACTION.ORANGE-C5-05",
 }
 
 local tableActions = {
-    ["ORANGE-PRE-01"] = "90 级前往雾沙栈道迷雾酒肆找黑王子",
-    ["ORANGE-C1-01"] = "迷雾栈道与拉西奥喝一杯",
-    ["ORANGE-C1-02"] = "天神尾王掉落或按商店当前价格兑换印记",
-    ["ORANGE-C1-03"] = "完成黑王子日常提升声望",
-    ["ORANGE-C1-04"] = "进入永春台击败惧之煞",
-    ["ORANGE-C1-05"] = "迷雾栈道找拉西奥",
-    ["ORANGE-C2-01"] = "迷雾栈道找拉西奥",
-    ["ORANGE-C2-02"] = "迷雾栈道找拉西奥",
-    ["ORANGE-C2-03"] = "累计 1,600 点勇气",
-    ["ORANGE-C2-04"] = "完成黑王子日常提升声望",
-    ["ORANGE-C2-05A"] = "排队两张战场并获胜",
-    ["ORANGE-C2-05H"] = "排队两张战场并获胜",
-    ["ORANGE-C2-06"] = "卡桑琅丛林敌对营地击杀指挥官（建议组队）",
-    ["ORANGE-C2-07A"] = "完成联盟结尾剧情",
-    ["ORANGE-C2-07H"] = "完成部落结尾剧情",
-    ["ORANGE-C3-01"] = "迷雾栈道酒馆找拉西奥",
-    ["ORANGE-C3-02"] = "前往酒馆二楼",
-    ["ORANGE-C3-03"] = "雷电王座收集帝国秘史并制作延极锭",
-    ["ORANGE-C3-04"] = "完成黑王子日常提升声望",
-    ["ORANGE-C3-05"] = "完成雷神岛单人战役，解锁雷神之基",
-    ["ORANGE-C3-06"] = "纳拉克用长枪 → NPC 拉怪 → 1 分钟后再用 → 躲避",
-    ["ORANGE-C3-07"] = "返回拉西奥处",
-    ["ORANGE-C3-08"] = "挑战雷电王座收集符文石",
-    ["ORANGE-C3-09"] = "雷电王座击败雷神",
-    ["ORANGE-C3-10"] = "返回拉西奥处",
-    ["ORANGE-C4-01"] = "拜访四天神并完成适合职责的挑战",
-    ["ORANGE-C4-02"] = "选择 600 装等史诗披风",
-    ["ORANGE-C4-03"] = "与拉西奥对话",
-    ["ORANGE-C5-01"] = "永恒岛找拉西奥",
-    ["ORANGE-C5-02"] = "永恒岛收集永恒铸币",
-    ["ORANGE-C5-03"] = "永恒岛分别击败玉珑、赤精、雪怒、砮皂",
-    ["ORANGE-C5-04"] = "完成披风升级仪式",
-    ["ORANGE-C5-05"] = "决战奥格瑞玛击败加尔鲁什",
+    ["ORANGE-PRE-01"] = "QUEST.TABLE_ACTION.ORANGE-PRE-01",
+    ["ORANGE-C1-01"] = "QUEST.TABLE_ACTION.ORANGE-C1-01",
+    ["ORANGE-C1-02"] = "QUEST.TABLE_ACTION.ORANGE-C1-02",
+    ["ORANGE-C1-03"] = "QUEST.TABLE_ACTION.ORANGE-C1-03",
+    ["ORANGE-C1-04"] = "QUEST.TABLE_ACTION.ORANGE-C1-04",
+    ["ORANGE-C1-05"] = "QUEST.TABLE_ACTION.ORANGE-C1-05",
+    ["ORANGE-C2-01"] = "QUEST.TABLE_ACTION.ORANGE-C2-01",
+    ["ORANGE-C2-02"] = "QUEST.TABLE_ACTION.ORANGE-C2-02",
+    ["ORANGE-C2-03"] = "QUEST.TABLE_ACTION.ORANGE-C2-03",
+    ["ORANGE-C2-04"] = "QUEST.TABLE_ACTION.ORANGE-C2-04",
+    ["ORANGE-C2-05A"] = "QUEST.TABLE_ACTION.ORANGE-C2-05A",
+    ["ORANGE-C2-05H"] = "QUEST.TABLE_ACTION.ORANGE-C2-05H",
+    ["ORANGE-C2-06"] = "QUEST.TABLE_ACTION.ORANGE-C2-06",
+    ["ORANGE-C2-07A"] = "QUEST.TABLE_ACTION.ORANGE-C2-07A",
+    ["ORANGE-C2-07H"] = "QUEST.TABLE_ACTION.ORANGE-C2-07H",
+    ["ORANGE-C3-01"] = "QUEST.TABLE_ACTION.ORANGE-C3-01",
+    ["ORANGE-C3-02"] = "QUEST.TABLE_ACTION.ORANGE-C3-02",
+    ["ORANGE-C3-03"] = "QUEST.TABLE_ACTION.ORANGE-C3-03",
+    ["ORANGE-C3-04"] = "QUEST.TABLE_ACTION.ORANGE-C3-04",
+    ["ORANGE-C3-05"] = "QUEST.TABLE_ACTION.ORANGE-C3-05",
+    ["ORANGE-C3-06"] = "QUEST.TABLE_ACTION.ORANGE-C3-06",
+    ["ORANGE-C3-07"] = "QUEST.TABLE_ACTION.ORANGE-C3-07",
+    ["ORANGE-C3-08"] = "QUEST.TABLE_ACTION.ORANGE-C3-08",
+    ["ORANGE-C3-09"] = "QUEST.TABLE_ACTION.ORANGE-C3-09",
+    ["ORANGE-C3-10"] = "QUEST.TABLE_ACTION.ORANGE-C3-10",
+    ["ORANGE-C4-01"] = "QUEST.TABLE_ACTION.ORANGE-C4-01",
+    ["ORANGE-C4-02"] = "QUEST.TABLE_ACTION.ORANGE-C4-02",
+    ["ORANGE-C4-03"] = "QUEST.TABLE_ACTION.ORANGE-C4-03",
+    ["ORANGE-C5-01"] = "QUEST.TABLE_ACTION.ORANGE-C5-01",
+    ["ORANGE-C5-02"] = "QUEST.TABLE_ACTION.ORANGE-C5-02",
+    ["ORANGE-C5-03"] = "QUEST.TABLE_ACTION.ORANGE-C5-03",
+    ["ORANGE-C5-04"] = "QUEST.TABLE_ACTION.ORANGE-C5-04",
+    ["ORANGE-C5-05"] = "QUEST.TABLE_ACTION.ORANGE-C5-05",
 }
 
 local definitions = {
@@ -379,27 +379,27 @@ function Data:BuildSnapshot(character, phaseAvailability, valorProgress)
 end
 
 function Data:GetNextAction(entry)
-    if not entry then return "继续完成任务线前置条件。" end
+    if not entry then return Addon:T("QUEST.ACTION_GENERIC.PREREQUISITES") end
     if entry.definition.reputation and entry.reputationMet then
-        return "声望门槛已满足，继续任务线。"
+        return Addon:T("QUEST.ACTION_GENERIC.REPUTATION_MET")
     end
-    if entry.status == "in_progress" or entry.status == "available" then return actions[entry.definitionId] or "继续完成当前任务目标。" end
+    if entry.status == "in_progress" or entry.status == "available" then return Addon:T(actions[entry.definitionId]) or Addon:T("QUEST.ACTION_GENERIC.CURRENT") end
     if entry.status == "unavailable" then
-        return "等待服务器开放对应阶段。"
+        return Addon:T("QUEST.ACTION_GENERIC.PHASE")
     end
-    return "完成前置任务或声望门槛后再继续。"
+    return Addon:T("QUEST.ACTION_GENERIC.PREREQUISITES")
 end
 
 function Data:GetTableAction(entry)
-    if not entry then return "—" end
+    if not entry then return Addon:T("COMMON.EM_DASH") end
     if entry.definition.reputation and entry.reputationMet then
-        return "声望门槛已满足，继续任务线"
+        return Addon:T("QUEST.ACTION_GENERIC.REPUTATION_MET")
     end
     if entry.definition.phase and entry.phaseStatus == "unknown" then
-        return "确认服务器阶段后继续"
+        return Addon:T("QUEST.ACTION_GENERIC.CONFIRM_PHASE")
     end
     if entry.status == "in_progress" or entry.status == "available" then
-        return tableActions[entry.definitionId] or self:GetNextAction(entry)
+        return Addon:T(tableActions[entry.definitionId]) or self:GetNextAction(entry)
     end
     return self:GetNextAction(entry)
 end

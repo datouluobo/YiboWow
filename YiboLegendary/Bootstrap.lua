@@ -6,8 +6,22 @@ Addon.runtime = Addon.runtime or { testProjectionByCharacter = {}, snapshotsByCh
 Addon.runtime.testProjectionByCharacter = {}
 Addon.runtime.snapshotsByCharacter = {}
 Addon.NAME = "YiboLegendary"
-Addon.VERSION = "2.1.0"
-Addon.REQUIRED_CORE_API = 5
+Addon.VERSION = "2.2.0"
+Addon.REQUIRED_CORE_API = 13
+
+function Addon:T(key, ...)
+    local core = self.Core or _G.YiboCore
+    if core and core.Locale and type(core.Locale.Get) == "function" then
+        return core.Locale:Get(self.NAME, key, ...)
+    end
+    local locale = GetLocale and GetLocale() or "enUS"
+    local english = locale ~= "zhCN" and locale ~= "zhTW"
+    if key == "ERROR.CORE_REQUIRED" then
+        return english and "YiboLegendary requires YiboCore API v13 with localization:1 and character-name-format:1. Please update YiboCore." or "YiboLegendary 需要 YiboCore API v13、localization:1 和 character-name-format:1。请升级 YiboCore。"
+    end
+    if key == "CHAT.PREFIX" then return english and "|cff20e070[Yibo]|r Legendary Progress: " or "|cff20e070[Yibo]|r 传说之路：" end
+    return "[" .. self.NAME .. ":" .. tostring(key) .. "]"
+end
 
 local DEFAULTS = {
     schemaVersion = 2,
@@ -42,7 +56,7 @@ end
 
 function Addon:Print(message)
     if DEFAULT_CHAT_FRAME then
-        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 传说物品：" .. tostring(message))
+        DEFAULT_CHAT_FRAME:AddMessage(self:T("CHAT.PREFIX") .. tostring(message))
     end
 end
 
@@ -122,12 +136,27 @@ function Addon:Initialize()
         return
     end
     local core = _G.YiboCore
-    if not core or not core:CheckAPIVersion(self.REQUIRED_CORE_API) then
-        self:Print("需要 YiboCore API v" .. self.REQUIRED_CORE_API .. "。")
+    if not (core and core.CheckAPIVersion and core:CheckAPIVersion(self.REQUIRED_CORE_API)
+        and core.HasCapability and core:HasCapability("localization", 1)
+        and core:HasCapability("character-name-format", 1)
+        and core:HasCapability("account-view", 2)
+        and core:HasCapability("account-entry", 2)
+        and core.Locale and type(core.Locale.Get) == "function"
+        and core.Characters and type(core.Characters.FormatName) == "function"
+        and core.AccountView and type(core.AccountView.RegisterPage) == "function"
+        and core.Entry and type(core.Entry.RegisterBusinessEntry) == "function"
+        and core.LevelFilter and type(core.LevelFilter.Validate) == "function"
+        and type(core.IsInitialized) == "function") then
+        self:Print(self:T("ERROR.CORE_REQUIRED"))
         return
     end
 
     self.Core = core
+    local initialized = core:IsInitialized()
+    if not initialized then
+        self:Print(self:T("ERROR.CORE_NOT_READY", "not-ready"))
+        return
+    end
     -- 将尚未发布的开发版存档迁移到正式名称，随后不再保存旧变量。
     _G.YiboLegendaryDB = _G.YiboLegendaryDB or _G.YiboCloakProgressDB or {}
     _G.YiboCloakProgressDB = nil
@@ -152,12 +181,13 @@ function Addon:Initialize()
         if settings.previewColumns[target.id] == nil then settings.previewColumns[target.id] = true end
     end
     settings.previewColumnsVersion = math.max(7, tonumber(settings.previewColumnsVersion) or 0)
-    self.Core:RegisterAddon(self.NAME, { version = self.VERSION, requiredAPI = self.REQUIRED_CORE_API })
+    local registered, registerError = self.Core:RegisterAddon(self.NAME, { version = self.VERSION, requiredAPI = self.REQUIRED_CORE_API })
+    if not registered then self:Print(self:T("ERROR.CORE_REGISTRATION", tostring(registerError))); return end
     if self.Core.CharacterCleanup then
         local cleanupRegistered, cleanupError = self.Core.CharacterCleanup:RegisterOwner(self.NAME, {
             Inspect = function(character)
                 local hasData = type(Addon.db.byCharacter[character.id]) == "table"
-                return { hasData = hasData, label = "传说之路角色进度", detail = hasData and "已有任务进度快照" or "无角色缓存" }
+            return { hasData = hasData, label = Addon:T("CLEANUP.LABEL"), detail = hasData and Addon:T("CLEANUP.HAS_DATA") or Addon:T("CLEANUP.NO_DATA") }
             end,
             Delete = function(character)
                 Addon.db.byCharacter[character.id] = nil
@@ -168,7 +198,7 @@ function Addon:Initialize()
             end,
         })
         if not cleanupRegistered then
-            self:Print("角色缓存清理接入失败：" .. tostring(cleanupError))
+            self:Print(self:T("ERROR.CLEANUP", tostring(cleanupError)))
             return
         end
     end
@@ -214,14 +244,14 @@ SlashCmdList.YIBOLEGENDARY = function(command)
         Addon.UI:DebugMatrix("dump")
     elseif command == "probe" then
         Addon.Probe:Run(true)
-        Addon:Print("客户端探针已刷新；使用 /yle probe 查看聊天输出。")
+        Addon:Print(self:T("CHAT.PROBE_REFRESHED"))
     elseif command == "status" then
         Addon.UI:PrintStatus()
     elseif command:match("^test%s+") then
         local targetID, nodeID = command:match("^test%s+(%S+)%s*(%S*)")
         local store, character = Addon:GetCharacterStore()
         local ok, message = character and Addon.Model:SetTestProjection(character.id, string.upper(targetID or ""), nodeID ~= "" and nodeID or nil)
-        Addon:Print(ok and "测试投影已更新。" or (message or "无法写入测试投影。"))
+        Addon:Print(ok and self:T("CHAT.TEST_UPDATED") or (message or self:T("CHAT.TEST_FAILED")))
         if ok then Addon:Refresh("test") end
     else
         Addon.UI:ToggleDetails()

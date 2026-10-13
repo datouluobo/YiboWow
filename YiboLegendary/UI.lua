@@ -9,36 +9,37 @@ local CELL_INSET = Theme.Table.cellInset
 local CELL_PADDING = Theme.Table.cellPadding
 
 local STATUS = {
-    completed = { label = "已获得", color = C.success, icon = "Interface\\RaidFrame\\ReadyCheck-Ready" },
-    in_progress = { label = "进行中", color = { 1, 0.78, 0.34 }, icon = "Interface\\RaidFrame\\ReadyCheck-Waiting" },
-    obtainable = { label = "可刷", color = { 0.48, 0.76, 0.96 }, icon = "Interface\\Buttons\\UI-GroupLoot-Dice-Up" },
-    pending_sync = { label = "待同步", color = C.muted, icon = "Interface\\RaidFrame\\ReadyCheck-NotReady" },
-    unavailable = { label = "绝版", color = { 1, 0.48, 0.5 }, icon = "Interface\\Buttons\\UI-GroupLoot-Pass-Up" },
-    ineligible = { label = "不适用", color = C.muted, icon = "Interface\\RaidFrame\\ReadyCheck-NotReady" },
-    unknown = { label = "无法读取", color = { 1, 0.48, 0.5 }, icon = "Interface\\RaidFrame\\ReadyCheck-NotReady" },
+    completed = { label = Addon:T("STATUS.COMPLETED"), color = C.success, icon = "Interface\\RaidFrame\\ReadyCheck-Ready" },
+    in_progress = { label = Addon:T("STATUS.IN_PROGRESS"), color = { 1, 0.78, 0.34 }, icon = "Interface\\RaidFrame\\ReadyCheck-Waiting" },
+    obtainable = { label = Addon:T("STATUS.OBTAINABLE"), color = { 0.48, 0.76, 0.96 }, icon = "Interface\\Buttons\\UI-GroupLoot-Dice-Up" },
+    pending_sync = { label = Addon:T("STATUS.PENDING_SYNC"), color = C.muted, icon = "Interface\\RaidFrame\\ReadyCheck-NotReady" },
+    unavailable = { label = Addon:T("STATUS.UNAVAILABLE"), color = { 1, 0.48, 0.5 }, icon = "Interface\\Buttons\\UI-GroupLoot-Pass-Up" },
+    ineligible = { label = Addon:T("STATUS.INELIGIBLE"), color = C.muted, icon = "Interface\\RaidFrame\\ReadyCheck-NotReady" },
+    unknown = { label = Addon:T("STATUS.UNKNOWN"), color = { 1, 0.48, 0.5 }, icon = "Interface\\RaidFrame\\ReadyCheck-NotReady" },
 }
 
 local function CharacterLabel(character, context)
-    local name = character.name or "未知角色"
-    return context and context.scope == "all" and (name .. "-" .. (character.realm or "未知服务器")) or name
+    local realmMode = context and context.scope == "all" and "full" or "omit"
+    local formatted = Addon.Core.Characters:FormatName(character, { realmMode = realmMode })
+    return formatted or character.name or Addon:T("CHARACTER.UNKNOWN")
 end
 local function TargetState(snapshot, id) return snapshot and snapshot.targets and snapshot.targets[id] end
 local function DisplayState(snapshot, target)
     local state = TargetState(snapshot, target.id)
     if state or not target.catalogOnly then return state end
     if target.archived then
-        return { targetId=target.id, status="unavailable", placeholder=true, acquired=false, stageLabel="已绝版", progressText="不可从零开始", nextAction="仅保留历史收藏入口。" }
+    return { targetId=target.id, status="unavailable", placeholder=true, acquired=false, stageLabel=Addon:T("TARGET.ARCHIVED_BADGE"), progressText=Addon:T("TARGET.ARCHIVED_HINT"), nextAction=Addon:T("TARGET.ARCHIVE_HINT") }
     end
-    return { targetId=target.id, status="pending_sync", placeholder=true, acquired=false, stageLabel="待接入", progressText="仅图标占位", nextAction="后续版本接入采集器。" }
+    return { targetId=target.id, status="pending_sync", placeholder=true, acquired=false, stageLabel=Addon:T("TARGET.PENDING_BADGE"), progressText=Addon:T("TARGET.PENDING_HINT"), nextAction=Addon:T("TARGET.PENDING_NEXT") }
 end
 local function StateMeta(state)
     if state and state.placeholder and state.status == "unavailable" then return STATUS.unavailable end
-    if state and state.placeholder then return { label="待接入", color=C.muted } end
+    if state and state.placeholder then return { label=Addon:T("TARGET.PENDING_BADGE"), color=C.muted } end
     return STATUS[state and state.status or "unknown"] or STATUS.unknown
 end
 local function EvidenceLabel(state)
     local source = state and state.evidence and state.evidence.source
-    return ({ real = "自动", manual = "确认", projection = "测试" })[source] or "—"
+    return ({ real = Addon:T("EVIDENCE.AUTO_SHORT"), manual = Addon:T("EVIDENCE.MANUAL_SHORT"), projection = Addon:T("EVIDENCE.PROJECTION_SHORT") })[source] or Addon:T("EVIDENCE.NONE")
 end
 local function CellProjection(snapshot, target)
     local state = DisplayState(snapshot, target)
@@ -47,19 +48,19 @@ local function CellProjection(snapshot, target)
     if state and state.acquired then
         -- The matrix is a decision surface: show the player's outcome, not
         -- the collection mechanism. Evidence remains available in the tooltip.
-        value = state.evidence and state.evidence.kind == "quest" and "已完成" or "已拥有"
-    elseif state and state.placeholder then value = state.status == "unavailable" and "绝版" or "待接入"
-    elseif not state then value = "待同步"
-    elseif state.status == "ineligible" then value = "不适用"
-    elseif state.status == "unknown" then value = "无法读取"
-    elseif state.status == "pending_sync" then value = "待同步"
+        value = state.evidence and state.evidence.kind == "quest" and Addon:T("STATUS.QUEST_COMPLETE") or Addon:T("STATUS.OWNED")
+    elseif state and state.placeholder then value = state.status == "unavailable" and Addon:T("TARGET.ARCHIVED_BADGE") or Addon:T("TARGET.PENDING_BADGE")
+    elseif not state then value = Addon:T("STATUS.PENDING_SYNC")
+    elseif state.status == "ineligible" then value = Addon:T("STATUS.INELIGIBLE")
+    elseif state.status == "unknown" then value = Addon:T("STATUS.UNKNOWN")
+    elseif state.status == "pending_sync" then value = Addon:T("STATUS.PENDING_SYNC")
     else
         local progress = tostring(state.progressText or "")
         value = progress:match("(%d+/%d+)") or (progress:find("材料已齐") and "材料齐") or (progress:find("可刷") and "可刷") or progress
         if value == "" or value == "未获得" then value = meta.label end
     end
     return { state=state, icon=meta.icon, color=meta.color, value=value, status=meta.label,
-        tooltipValue=(state and state.progressText) or "等待角色数据同步。", evidence=EvidenceLabel(state) }
+        tooltipValue=(state and state.progressText) or Addon:T("STATUS.UNSYNCED"), evidence=EvidenceLabel(state) }
 end
 local function TargetIcon(target)
     local itemID = target and target.iconItemId
@@ -289,18 +290,18 @@ function UI:LayoutTargetBar(width)
     archiveButton:ClearAllPoints(); archiveButton:SetSize(layout.buttonSize, layout.buttonSize); archiveButton:SetPoint("TOPRIGHT", -Theme.Space.xs, -Theme.Space.xxs)
     archiveButton.icon:SetSize(math.max(26, layout.buttonSize - 10), math.max(26, layout.buttonSize - 10))
     archiveButton:SetState(self:IsArchivePage() and "selected" or "default")
-    Theme:BindTooltip(archiveButton, self:IsArchivePage() and "返回传说目标" or "绝版目标", { { text = self:IsArchivePage() and "返回当前与待接入目标" or "查看已绝版传说物品", color = C.muted } })
+    Theme:BindTooltip(archiveButton, self:IsArchivePage() and Addon:T("TARGET.RETURN") or Addon:T("TARGET.ARCHIVE"), { { text = self:IsArchivePage() and Addon:T("TARGET.RETURN_HINT") or Addon:T("TARGET.ARCHIVE_HINT"), color = C.muted } })
     archiveButton:Show()
     local divider = bar.archiveDivider
     divider:ClearAllPoints(); divider:SetPoint("RIGHT", archiveButton, "LEFT", -math.floor(layout.gap / 2), 0); divider:SetHeight(math.max(1, layout.height - Theme.Space.xs * 2)); divider:Show()
-    bar.title:SetText(self:IsArchivePage() and "绝版目标" or "传说目标")
+    bar.title:SetText(self:IsArchivePage() and Addon:T("TARGET.ARCHIVE") or Addon:T("TARGET.ACTIVE"))
 end
 
 function UI:CreateMain(parent)
     local frame = CreateFrame("Frame", nil, parent); frame:SetAllPoints(parent)
     frame.targets = CreateFrame("Frame", nil, frame); frame.targets:SetHeight(64); frame.targets:SetPoint("TOPLEFT", Theme.Space.sm, -Theme.Space.sm); frame.targets:SetPoint("TOPRIGHT", -Theme.Space.sm, -Theme.Space.sm)
     frame.targets.bg = frame.targets:CreateTexture(nil, "BACKGROUND"); frame.targets.bg:SetAllPoints(); frame.targets.bg:SetColorTexture(C.nav[1], C.nav[2], C.nav[3], 0.82)
-    frame.targets.title = self:Text(frame.targets, Theme.Font.assist, C.muted); frame.targets.title:SetPoint("TOPLEFT", Theme.Space.xs, -Theme.Space.xs); frame.targets.title:SetText("传说目标")
+    frame.targets.title = self:Text(frame.targets, Theme.Font.assist, C.muted); frame.targets.title:SetPoint("TOPLEFT", Theme.Space.xs, -Theme.Space.xs); frame.targets.title:SetText(Addon:T("TARGET.ACTIVE"))
     frame.targets.buttons = {}
     for index, target in ipairs(Addon.Catalog:GetTargets()) do frame.targets.buttons[target.id] = self:CreateTargetButton(frame.targets, index, target) end
     frame.targets.archiveButton = self:CreateArchiveButton(frame.targets)
@@ -315,7 +316,7 @@ function UI:CreateMain(parent)
     frame.detail.header = CreateFrame("Frame", nil, frame.detail); frame.detail.header:SetHeight(Theme.Table.headerHeight); frame.detail.header:SetPoint("TOPLEFT", frame.detail.route, "BOTTOMLEFT", 0, -Theme.Space.sm); frame.detail.header:SetPoint("TOPRIGHT", 0, 0)
     frame.detail.header.bg = frame.detail.header:CreateTexture(nil, "BACKGROUND"); frame.detail.header.bg:SetAllPoints(); frame.detail.header.bg:SetColorTexture(C.chrome[1], C.chrome[2], C.chrome[3], 0.96)
     frame.detail.header.cells = {}
-    for _, data in ipairs({ { "character", "角色" }, { "stage", "当前检查点" }, { "progress", "进度" }, { "action", "下一步" } }) do frame.detail.header.cells[data[1]] = self:Text(frame.detail.header, Theme.Font.assist, C.muted); frame.detail.header.cells[data[1]]:SetText(data[2]) end
+    for _, data in ipairs({ { "character", Addon:T("HEADER.CHARACTER") }, { "stage", Addon:T("HEADER.STAGE") }, { "progress", Addon:T("HEADER.PROGRESS") }, { "action", Addon:T("HEADER.ACTION") } }) do frame.detail.header.cells[data[1]] = self:Text(frame.detail.header, Theme.Font.assist, C.muted); frame.detail.header.cells[data[1]]:SetText(data[2]) end
     -- Preserve a real right inset for the shared scrollbar; it must not sit
     -- on the final “下一步” cell when this target has a long roster.
     frame.detail.scroll = Theme:CreateScrollFrame(frame.detail); frame.detail.scroll:BindScrollbarGutter(frame.detail.header); frame.detail.scroll:SetPoint("TOPLEFT", frame.detail.header, "BOTTOMLEFT", 0, -Theme.Space.xxs); frame.detail.scroll:SetPoint("BOTTOMRIGHT", 0, 0)
@@ -402,7 +403,7 @@ function UI:LayoutMainHeader(page, width, context)
     local header = page.detail.header
     local characterWidth = Theme:GetCharacterRowHeaderWidth(true, context, context and context.characters)
     local tracks = { character = characterWidth, stage = 184, progress = 150, action = math.max(180, width - characterWidth - 334) }
-    local titles = { character = "角色", stage = "当前检查点", progress = "进度", action = "下一步" }
+    local titles = { character = Addon:T("HEADER.CHARACTER"), stage = Addon:T("HEADER.STAGE"), progress = Addon:T("HEADER.PROGRESS"), action = Addon:T("HEADER.ACTION") }
     local offset = CELL_INSET
     for _, key in ipairs({ "character", "stage", "progress", "action" }) do
         local cell = header.cells[key]
@@ -429,13 +430,13 @@ function UI:RefreshMain(context)
         local complete, total = 0, 0
         for _, item in ipairs(roster) do local state = DisplayState(item.snapshot, Addon.Catalog:GetTarget(id)); if state and not state.placeholder and state.status ~= "ineligible" then total = total + 1; if state.acquired then complete = complete + 1 end end end
         local targetDefinition = Addon.Catalog:GetTarget(id)
-        local tooltipText = targetDefinition.archived and "已绝版 · 不可从零开始" or targetDefinition.availability == "catalog" and "待接入采集器" or string.format("%d/%d 已获得", complete, total)
-        Theme:BindTooltip(button, targetDefinition.title, { { text = tooltipText, color = C.muted }, { text = id == target.id and "当前目标" or "点击查看路线", color = C.accent } })
+        local tooltipText = targetDefinition.archived and Addon:T("TARGET.ARCHIVED_HINT") or targetDefinition.availability == "catalog" and Addon:T("TARGET.PENDING_HINT") or Addon:T("TARGET.ACQUIRED_COUNT", complete, total)
+        Theme:BindTooltip(button, targetDefinition.title, { { text = tooltipText, color = C.muted }, { text = id == target.id and Addon:T("TARGET.CURRENT") or Addon:T("TARGET.CLICK_HINT"), color = C.accent } })
     end
-    page.detail.title:SetText(target.title); page.detail.meta:SetText(target.expansionLabel .. " · " .. target.routeLabel); page.detail.badge:SetText(target.archived and "已绝版" or target.availability == "obtainable" and "当前可获取" or target.availability == "catalog" and "待接入" or "历史归档")
+    page.detail.title:SetText(target.title); page.detail.meta:SetText(target.expansionLabel .. " · " .. target.routeLabel); page.detail.badge:SetText(target.archived and Addon:T("TARGET.ARCHIVED_BADGE") or target.availability == "obtainable" and Addon:T("TARGET.OBTAINABLE_BADGE") or target.availability == "catalog" and Addon:T("TARGET.PENDING_BADGE") or Addon:T("TARGET.HISTORY_BADGE"))
     local lines = {}
-    if target.id == "CLOAK" then lines = { "黑王子任务线：第 1–5 章；声望门槛与收集目标可能并行。", "选择角色行可查看当前任务、目标和行动。" } else for _, node in ipairs(target.nodes or {}) do lines[#lines + 1] = node.title .. " · " .. (node.boss or "任务材料") end end
-    if #lines == 0 then lines = { target.routeDescription or "该目标的路线尚未接入。" } end
+    if target.id == "CLOAK" then lines = { Addon:T("ROUTE.CLOAK_1"), Addon:T("ROUTE.CLOAK_2") } else for _, node in ipairs(target.nodes or {}) do lines[#lines + 1] = node.title .. " · " .. (node.boss or Addon:T("ROUTE.QUEST_MATERIALS")) end end
+    if #lines == 0 then lines = { target.routeDescription or Addon:T("ROUTE.FALLBACK") } end
     page.detail.route:SetText(table.concat(lines, "\n"))
     local currentCharacter = Addon.Core.Characters:GetCurrent()
     for index, item in ipairs(roster) do
@@ -565,8 +566,8 @@ end
 function UI:PrintStatus() local store,character=Addon:GetCharacterStore();local target=self:GetSelectedTarget();local snapshot=character and (Addon.runtime.snapshotsByCharacter[character.id] or (store and store.snapshot));local state=snapshot and TargetState(snapshot,target.id);Addon:Print(target.shortTitle.."："..(state and state.stageLabel or Theme.StatusText.unsynced)) end
 function UI:ConfirmManualEvidence(character, targetID, revoke)
     StaticPopupDialogs.YIBO_LEGENDARY_MANUAL = {
-        text = revoke and string.format("撤销 %s 的 %s 人工确认？", CharacterLabel(character), (Addon.Catalog:GetTarget(targetID) or {}).title or targetID) or string.format("确认 %s 已获得 %s？\n不会伪装成自动检测，仅记录玩家确认。", CharacterLabel(character), (Addon.Catalog:GetTarget(targetID) or {}).title or targetID),
-        button1 = revoke and "撤销确认" or "标记已获得", button2 = "取消", timeout = 0, whileDead = true, hideOnEscape = true,
+        text = revoke and Addon:T("CONFIRM.REVOKE", CharacterLabel(character, {scope="all"}), (Addon.Catalog:GetTarget(targetID) or {}).title or targetID) or Addon:T("CONFIRM.ACQUIRE", CharacterLabel(character, {scope="all"}), (Addon.Catalog:GetTarget(targetID) or {}).title or targetID),
+        button1 = revoke and Addon:T("CONFIRM.REVOKE_BUTTON") or Addon:T("CONFIRM.ACQUIRE_BUTTON"), button2 = Addon:T("CONFIRM.CANCEL"), timeout = 0, whileDead = true, hideOnEscape = true,
         OnAccept = function() if revoke then Addon.Model:ClearManualEvidence(character.id, targetID) else Addon.Model:SetManualEvidence(character.id, targetID) end; Addon:Refresh("manual") end,
     }
     StaticPopup_Show("YIBO_LEGENDARY_MANUAL")
@@ -583,12 +584,52 @@ function UI:GetPreviewSettingsFields()
 end
 
 function UI:Initialize()
-    Addon.Core.AccountView:RegisterPage(Addon.NAME,{id="legendary",title="传说之路",icon="Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon-v1",order=20,defaultEnabled=true,previewEnabled=true,scope={mode="realms",allTitle="所有服务器"},characterFilter={defaultExpression="",GetExpression=function()return Addon.db.settings.levelExpr or "" end,SetExpression=function(expression)local valid,normalized,bad=Addon.Core.LevelFilter:Validate(expression or "");if not valid then return false,bad end;Addon.db.settings.levelExpr=normalized;UI:Refresh();return true,normalized end},HasCharacterSnapshot=function(character)local store=Addon.db.byCharacter[character.id];return (character.level or 0)>=90 and (Addon.runtime.snapshotsByCharacter[character.id] or (store and store.snapshot))~=nil end,GetEligibleCharacters=function(characters)return UI:GetEligibleCharacters(characters) end,settings={title="传说之路",description="页面、入口、角色范围和悬停目标列由 Core 统一管理；传说路线与角色快照由本插件保存。",CreateSettingsPanel=function(parent,host)
-        local section=host.createSection(parent,"业务设置",parent:GetWidth() or 600,70)
-        local label=host.createText(section,12,C.muted); label:SetPoint("TOPLEFT",4,-4); label:SetText("索利达尔人工证据保留在角色数据中，可在角色缓存清理时一并删除。")
-        return 70
-    end},fields=UI:GetPreviewSettingsFields(),GetPreviewFields=function()return UI:GetPreviewColumns() end,SetPreviewFieldVisible=function(id,visible)Addon.db.settings.previewColumns[id]=not not visible;if Addon.Core.AccountView then Addon.Core.AccountView:RefreshPage() end end,GetSurfaceMetrics=function(context)return UI:GetSurfaceMetrics(context) end,Create=function(parent)UI:CreateAccountPage(parent) end,Refresh=function(_,context)UI:RefreshDetails(context) end,GetSummary=function(characters)return string.format("传说目标 %d · 已同步角色 %d",#Addon.Catalog:GetTargets(),#UI:GetVisibleCharacters(characters)) end,GetActions=function(characters)local actions={};for _,item in ipairs(UI:GetVisibleCharacters(characters)) do for _,target in ipairs(Addon.Catalog:GetTargets()) do local state=TargetState(item.snapshot,target.id);if state and(state.status=="obtainable" or state.status=="in_progress")then actions[#actions+1]={priority=1,title=CharacterLabel(item.character).." · "..target.shortTitle,text=state.nextAction}end end end;return actions end})
-    Addon.Core.Entry:RegisterBusinessEntry(Addon.NAME,{id="YiboLegendary",brokerName="YiboLegendary",pageID="legendary",text="[Yibo] 传说之路",icon="Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon-v1"})
+    local page, pageError = Addon.Core.AccountView:RegisterPage(Addon.NAME, {
+        id="legendary", title=Addon:T("PAGE.TITLE"), icon="Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon-v1",
+        order=20, defaultEnabled=true, previewEnabled=true, scope={mode="realms",allTitle=Addon:T("PAGE.ALL_REALMS")},
+        characterFilter={
+            defaultExpression="", GetExpression=function() return Addon.db.settings.levelExpr or "" end,
+            SetExpression=function(expression)
+                local valid, normalized, bad = Addon.Core.LevelFilter:Validate(expression or "")
+                if not valid then return false, bad end
+                Addon.db.settings.levelExpr=normalized; UI:Refresh(); return true, normalized
+            end,
+        },
+        HasCharacterSnapshot=function(character)
+            local store=Addon.db.byCharacter[character.id]
+            return (character.level or 0)>=90 and (Addon.runtime.snapshotsByCharacter[character.id] or (store and store.snapshot))~=nil
+        end,
+        GetEligibleCharacters=function(characters) return UI:GetEligibleCharacters(characters) end,
+        settings={title=Addon:T("PAGE.TITLE"), description=Addon:T("PAGE.SETTINGS_DESCRIPTION"), CreateSettingsPanel=function(parent,host)
+            local section=host.createSection(parent,Addon:T("PAGE.SETTINGS_SECTION"),parent:GetWidth() or 600,70)
+            local label=host.createText(section,12,C.muted); label:SetPoint("TOPLEFT",4,-4); label:SetText(Addon:T("PAGE.MANUAL_EVIDENCE_NOTE"))
+            return 70
+        end},
+        fields=UI:GetPreviewSettingsFields(), GetPreviewFields=function() return UI:GetPreviewColumns() end,
+        SetPreviewFieldVisible=function(id,visible) Addon.db.settings.previewColumns[id]=not not visible; if Addon.Core.AccountView then Addon.Core.AccountView:RefreshPage() end end,
+        GetSurfaceMetrics=function(context) return UI:GetSurfaceMetrics(context) end,
+        Create=function(parent) UI:CreateAccountPage(parent) end, Refresh=function(_,context) UI:RefreshDetails(context) end,
+        GetSummary=function(characters) return Addon:T("PAGE.SUMMARY",#Addon.Catalog:GetTargets(),#UI:GetVisibleCharacters(characters)) end,
+        GetActions=function(characters)
+            local actions={}
+            for _,item in ipairs(UI:GetVisibleCharacters(characters)) do
+                for _,target in ipairs(Addon.Catalog:GetTargets()) do
+                    local state=TargetState(item.snapshot,target.id)
+                    if state and (state.status=="obtainable" or state.status=="in_progress") then
+                        actions[#actions+1]={priority=1,title=CharacterLabel(item.character,{scope="all"}).." · "..target.shortTitle,text=state.nextAction}
+                    end
+                end
+            end
+            return actions
+        end,
+    })
+    if not page then Addon:Print(Addon:T("ERROR.CORE_REGISTRATION",tostring(pageError))); return end
+    local entry, entryError = Addon.Core.Entry:RegisterBusinessEntry(Addon.NAME, {
+        id="YiboLegendary", brokerName="YiboLegendary", pageID="legendary", text=Addon:T("ENTRY.TEXT"),
+        icon="Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon-v1",
+        defaultChannels={minimap=false,broker=false,builtinBar=false},
+    })
+    if not entry then Addon:Print(Addon:T("ERROR.CORE_REGISTRATION",tostring(entryError))); return end
 end
 function UI:Refresh(reason)
     self._lastRefreshReason = reason or "unspecified"

@@ -3,10 +3,10 @@ local Targets = { PROVIDER = "YiboLegendary:targets" }; Addon.GoalTargets = Targ
 function Targets:Normalize(r)
     local intent = r.intent
     local target = type(intent) == "table" and Addon.Catalog:GetTarget(intent.objectID)
-    if not target then return nil, "请选择传奇目标" end
+    if not target then return nil, Addon:T("GOAL.SELECT_TARGET") end
     local clean = Addon.Core.Defaults:Copy(intent); clean.scope = clean.scope or { mode = "character" }
     if not clean.scope.characterID then return { needsConfiguration = true, fields = {} } end
-    if not Addon.Core.Characters:Get(clean.scope.characterID, { identityOnly = true }) then return nil, "角色不存在" end
+    if not Addon.Core.Characters or type(Addon.Core.Characters.Get) ~= "function" or not Addon.Core.Characters:Get(clean.scope.characterID, { identityOnly = true }) then return nil, Addon:T("GOAL.CHARACTER_MISSING") end
     clean.targetType, clean.repeatPolicy, clean.scope.mode, clean.conditions = "legendary", "once", "character", {}
     return { intent = clean, identity = self.PROVIDER .. ":" .. clean.scope.characterID .. ":" .. target.id, title = target.title, fields = {} }
 end
@@ -35,13 +35,19 @@ end
 
 function Targets:Initialize()
     local core = Addon.Core
-    if not (core:CheckAPIVersion(12) and core:HasCapability("business-item-actions", 1)) then core:Print("主动添加目标需要 Core API v12，请升级 Core。"); return end
+    if not (core:CheckAPIVersion(12) and core:HasCapability("business-item-actions", 1)
+        and core.Contracts and type(core.Contracts.Register) == "function"
+        and core.BusinessItemActions and type(core.BusinessItemActions.Bind) == "function"
+        and type(core.BusinessItemActions.Handle) == "function") then
+        core:Print(Addon:T("GOAL.CORE_ACTIONS_REQUIRED")); return false
+    end
     if self.ref then return true end
     local db = Addon.db
     db.goalSourceEpoch = db.goalSourceEpoch or ("yibolegendary:" .. Addon:GetTimestamp() .. ":" .. math.random(100000,999999))
     self.definition = { name = "action.targets", kind = "provider", providerID = self.PROVIDER, version = { major = 1, minor = 1 },
         methods = { GetEntry = function() return { title = "传奇之路", pageID = "legendary" } end, Normalize = function(r) return Targets:Normalize(r) end, Evaluate = function(r) return Targets:Evaluate(r) end } }
-    self.ref = core.Contracts:Register("YiboLegendary", self.definition); return self.ref ~= nil
+    self.ref = core.Contracts:Register("YiboLegendary", self.definition)
+    return self.ref ~= nil
 end
 function Targets:Bind(control, objectID, characterID, original)
     if not self.ref then return end

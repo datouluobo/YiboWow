@@ -169,8 +169,30 @@ table.sort(Catalog.targets, function(left, right)
     return leftOrder > rightOrder
 end)
 
+local expansionLabels = {
+    MOP=Addon:T("CATALOG.EXPANSION.MOP"), CLASSIC=Addon:T("CATALOG.EXPANSION.CLASSIC"),
+    TBC=Addon:T("CATALOG.EXPANSION.TBC"), WLK=Addon:T("CATALOG.EXPANSION.WLK"),
+    CATACLYSM=Addon:T("CATALOG.EXPANSION.CATACLYSM"),
+}
+
 Catalog.byID = {}
-for _, target in ipairs(Catalog.targets) do Catalog.byID[target.id] = target end
+for _, target in ipairs(Catalog.targets) do
+    Catalog.byID[target.id] = target
+    local prefix = "CATALOG.TARGET." .. target.id .. "."
+    target.title = Addon:T(prefix .. "TITLE")
+    target.shortTitle = Addon:T(prefix .. "SHORT_TITLE")
+    target.expansionLabel = expansionLabels[target.expansion] or target.expansionLabel
+    target.routeLabel = Addon:T(prefix .. "ROUTE_LABEL")
+    target.routeDescription = Addon:T(prefix .. "ROUTE_DESCRIPTION")
+    for _, node in ipairs(target.nodes or {}) do
+        if not node.questId then
+            local nodePrefix = "CATALOG.NODE." .. node.id .. "."
+            node.title = Addon:T(nodePrefix .. "TITLE")
+            if node.boss then node.boss = Addon:T(nodePrefix .. "BOSS") end
+            if node.sourceZone then node.sourceZone = Addon:T(nodePrefix .. "ZONE") end
+        end
+    end
+end
 
 function Catalog:GetTargets()
     return self.targets

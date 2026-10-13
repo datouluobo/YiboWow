@@ -2,9 +2,11 @@
 ## Title: |cff20e070[Yibo]|r YiboLegendary - Legendary Progress Tracker
 ## Title-zhCN: |cff20e070[Yibo]|r YiboLegendary - 传说之路
 ## Title-zhTW: |cff20e070[Yibo]|r YiboLegendary - 传说之路
-## Notes: MoP Classic 传说物品获取进度管理。
+## Notes: MoP Classic legendary progress tracker.
+## Notes-zhCN: MoP Classic 传说物品获取进度管理。
+## Notes-zhTW: MoP Classic 傳說物品獲取進度管理。
 ## Author: YiboSoft
-## Version: 2.1.0
+## Version: 2.2.0
 ## IconTexture: Interface\AddOns\YiboLegendary\Media\YiboLegendaryIcon-v1
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
@@ -12,6 +14,7 @@
 ## LoadOnDemand: 0
 
 Bootstrap.lua
+Locales\Interface.lua
 Data.lua
 Catalog.lua
 Model.lua

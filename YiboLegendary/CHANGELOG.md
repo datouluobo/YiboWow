@@ -1,5 +1,13 @@
 # YiboLegendary 更新日志
 
+## 2.2.0
+
+- 适配 YiboCore API v13：启动时校验 `localization:1`、`character-name-format:1`、`account-view:2` 与 `account-entry:2`，不兼容时提示升级并停止初始化。
+- 注册 YiboLegendary 自有中英文资源，Core 账号语言设置驱动页面标题、摘要、设置说明、启动错误及人工确认。
+- 角色名称统一使用 `Characters:FormatName`；人工确认与撤销提示显示真实完整角色身份。
+- 入口注册显式声明小地图、Broker、内置信息条均默认关闭；目标主动添加增强继续独立要求 API v12 / `business-item-actions:1`。
+- 当前路线目录与自动进度快照中的静态中文文案尚未完成双语迁移，客户端中英文验收待完成。
+
 ## 未发布 — 行动中心主动添加（2026-10-10）
 
 - 传说披风与已支持装备路线可按角色加入一次性目标；新目标的完成状态依据本插件拥有的进度快照。
