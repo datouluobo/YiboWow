@@ -6,7 +6,7 @@
 ## Notes-zhCN: MoP Classic 传说物品获取进度管理。
 ## Notes-zhTW: MoP Classic 傳說物品獲取進度管理。
 ## Author: YiboSoft
-## Version: 2.2.1
+## Version: 2.2.2
 ## IconTexture: Interface\AddOns\YiboLegendary\Media\YiboLegendaryIcon-v1
 ## RequiredDeps: YiboCore
 ## Group: YiboCore

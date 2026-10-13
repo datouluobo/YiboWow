@@ -124,7 +124,7 @@ local function SoridalSnapshot(character, store, target)
     end
     local manual = ManualState(store, target.id)
     if manual then return Snapshot(target.id, "completed", true, "已获得", "玩家确认", "—", { "SORIDAL_ITEM" }, Evidence("manual", manual.updatedAt, manual)) end
-    return Snapshot(target.id, "obtainable", false, "基尔加丹掉落", "未获得 · 可刷取", "前往太阳之井高地击败基尔加丹。", { "SORIDAL_DROP" }, Evidence("real", Addon:GetTimestamp(), { kind="bossDrop", boss="基尔加丹" }))
+    return Snapshot(target.id, "obtainable", false, "基尔加丹掉落", "未获得", "前往太阳之井高地击败基尔加丹。", { "SORIDAL_DROP" }, Evidence("real", Addon:GetTimestamp(), { kind="bossDrop", boss="基尔加丹" }))
 end
 
 local function CollectionSnapshot(character, store, target)
@@ -162,7 +162,7 @@ local function CollectionSnapshot(character, store, target)
     local intermediate = IntermediateSnapshot(store, target, LatestIntermediate(store, target))
     if intermediate then return intermediate end
     local firstNode = target.nodes and target.nodes[1]
-    return Snapshot(target.id, "obtainable", false, target.routeLabel or "可获取", "未获得 · 可继续收集", target.routeDescription or "按路线继续收集。", firstNode and { firstNode.id } or nil, Evidence("real", Addon:GetTimestamp(), { kind="route", targetId=target.id }))
+    return Snapshot(target.id, "obtainable", false, target.routeLabel or "可获取", "未获得", target.routeDescription or "按路线继续收集。", firstNode and { firstNode.id } or nil, Evidence("real", Addon:GetTimestamp(), { kind="route", targetId=target.id }))
 end
 
 local function HistoricalItemSnapshot(character, store, target)

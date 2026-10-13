@@ -56,8 +56,8 @@ local function CellProjection(snapshot, target)
     elseif state.status == "pending_sync" then value = Addon:T("STATUS.PENDING_SYNC")
     else
         local progress = tostring(state.progressText or "")
-        value = progress:match("(%d+/%d+)") or (progress:find("材料已齐") and "材料齐") or (progress:find("可刷") and "可刷") or progress
-        if value == "" or value == "未获得" then value = meta.label end
+        value = progress:match("(%d+/%d+)") or (progress:find("材料已齐") and "材料齐") or (progress:match("^未获得") and Addon:T("STATUS.NOT_ACQUIRED")) or (progress:find("可刷") and "可刷") or progress
+        if value == "" then value = meta.label end
     end
     return { state=state, icon=meta.icon, color=meta.color, value=value, status=meta.label,
         tooltipValue=(state and state.progressText) or Addon:T("STATUS.UNSYNCED"), evidence=EvidenceLabel(state) }
@@ -74,10 +74,16 @@ local function TargetIcon(target)
     end
     return "Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon-v1"
 end
-local function PreviewTargetWidths(target)
-    -- Core owns all icon-text and column-padding geometry. This page supplies
-    -- only its title content; the returned width also drives Core pagination.
-    return Theme:GetMatrixTargetColumnWidths(16, Theme.Font.assist, target.shortTitle or target.title or target.id)
+local function PreviewTargetWidths(target, roster)
+    -- Keep the natural width required by both the header and the values shown
+    -- for this target. Core expands the complete matrix to the safe screen
+    -- width, then paginates columns only when the full set cannot fit.
+    local preferred = Theme:GetMatrixTargetColumnWidth(16, Theme.Font.assist, target.shortTitle or target.title or target.id)
+    for _, item in ipairs(roster or {}) do
+        local projection = CellProjection(item.snapshot, target)
+        preferred = math.max(preferred, Theme:GetIconTextColumnWidth(14, Theme.Font.body, projection.value))
+    end
+    return preferred, math.max(1, preferred - Theme.Table.iconTextRasterTolerance)
 end
 local function ArchiveIcon()
     return "Interface\\Icons\\INV_Misc_Book_09"
@@ -326,19 +332,40 @@ end
 
 function UI:CreatePreview(parent)
     local frame = CreateFrame("Frame", nil, parent); frame:SetAllPoints(parent)
-    frame.legend = CreateFrame("Frame", nil, frame); frame.legend:SetHeight(18); frame.legend:SetPoint("TOPLEFT", Theme.Space.xs, -Theme.Space.xs); frame.legend:SetPoint("TOPRIGHT", -Theme.Space.xs, -Theme.Space.xs)
+    frame.legend = CreateFrame("Frame", nil, frame); frame.legend:SetHeight(18); frame.legend:SetPoint("TOPLEFT", Theme.Space.xs, -Theme.Space.xs); frame.legend:SetPoint("TOPRIGHT", -Theme.Space.xs, -Theme.Space.xs); frame.legend.items = {}
     local legendOrder = { "completed", "in_progress", "obtainable", "pending_sync", "ineligible", "unavailable" }
-    local offset = 0
     for _, id in ipairs(legendOrder) do
-        local meta = STATUS[id]; local item = CreateFrame("Frame", nil, frame.legend); item:SetSize(52, 18); item:SetPoint("LEFT", offset, 0)
+        local meta = STATUS[id]; local item = CreateFrame("Frame", nil, frame.legend)
         item.icon = item:CreateTexture(nil, "ARTWORK"); item.icon:SetSize(12, 12); item.icon:SetPoint("LEFT", 0, 0); item.icon:SetTexture(meta.icon); item.icon:SetVertexColor(meta.color[1], meta.color[2], meta.color[3])
-        item.label = self:Text(item, Theme.Font.meta, meta.color); item.label:SetPoint("LEFT", item.icon, "RIGHT", 2, 0); item.label:SetPoint("RIGHT", 0, 0); item.label:SetText(meta.label)
-        offset = offset + 52
+        item.label = self:Text(item, Theme.Font.meta, meta.color); item.label:SetPoint("LEFT", item.icon, "RIGHT", 2, 0); item.label:SetText(meta.label)
+        item.naturalWidth = Theme:MeasureText(Theme.Font.meta, meta.label) + 12 + 2 + Theme.Space.xxs
+        item:SetHeight(18); frame.legend.items[#frame.legend.items + 1] = item
     end
     frame.header = CreateFrame("Frame", nil, frame); frame.header:SetHeight(Theme.Table.headerHeight); frame.header:SetPoint("TOPLEFT", frame.legend, "BOTTOMLEFT", 0, -Theme.Space.xxs); frame.header:SetPoint("TOPRIGHT", frame.legend, "BOTTOMRIGHT", 0, -Theme.Space.xxs); frame.header.bg = frame.header:CreateTexture(nil, "BACKGROUND"); frame.header.bg:SetAllPoints(); frame.header.bg:SetColorTexture(C.toolbar[1], C.toolbar[2], C.toolbar[3], 0.96); frame.header.cells = {}
     frame.scroll = Theme:CreateScrollFrame(frame); frame.scroll:BindScrollbarGutter(frame.header); frame.scroll:SetPoint("TOPLEFT", frame.header, "BOTTOMLEFT", 0, -Theme.Space.xxs); frame.scroll:SetPoint("BOTTOMRIGHT", -Theme.Space.xs, Theme.Space.xs)
     frame.content = CreateFrame("Frame", nil, frame.scroll); frame.content:SetWidth(1); frame.scroll:SetScrollChild(frame.content); frame.rows = {}
     return frame
+end
+
+function UI:LayoutPreviewLegend(width)
+    local legend = self.details and self.details.preview and self.details.preview.legend
+    if not legend then return 18 end
+    width = math.max(1, tonumber(width) or legend:GetWidth() or 1)
+    local x, row, rows = 0, 0, 1
+    for _, item in ipairs(legend.items or {}) do
+        local itemWidth = item.naturalWidth or 1
+        if x > 0 and x + itemWidth > width then
+            row, x, rows = row + 1, 0, rows + 1
+        end
+        item:ClearAllPoints(); item:SetSize(itemWidth, 18); item:SetPoint("TOPLEFT", x, -row * 18)
+        item.label:SetWidth(math.max(1, itemWidth - 16))
+        x = x + itemWidth + Theme.Space.xxs
+    end
+    local height = rows * 18
+    legend:SetHeight(height)
+    local header = self.details.preview.header
+    header:ClearAllPoints(); header:SetPoint("TOPLEFT", legend, "BOTTOMLEFT", 0, -Theme.Space.xxs); header:SetPoint("TOPRIGHT", legend, "BOTTOMRIGHT", 0, -Theme.Space.xxs)
+    return height
 end
 
 function UI:CreateAccountPage(parent)
@@ -469,11 +496,12 @@ end
 function UI:GetMatrixColumns(context)
     local fixed = { { id="character", title="角色", previewMinWidth=Theme:GetCharacterRowHeaderWidth(false, context, context and context.characters) } }
     local targets = {}
+    local roster = self:GetVisibleCharacters(context and context.characters)
     for _, target in ipairs(Addon.Catalog:GetTargets()) do
         -- 由 Core 的 preview field override 统一决策；插件只提供保存的
         -- 目标 ID 映射，不绕过 Core 的显示设置与页面上下文。
         if context:GetFieldVisible(target.id) then
-            local preferredWidth, compactWidth = PreviewTargetWidths(target)
+            local preferredWidth, compactWidth = PreviewTargetWidths(target, roster)
             targets[#targets + 1] = { id=target.id, title=target.shortTitle, target=target, previewMinWidth=preferredWidth, previewCompactMinWidth=compactWidth, defaultVisible=true }
         end
     end
@@ -489,10 +517,7 @@ function UI:RefreshPreview(context)
     local surfaceWidth = context and context.surfaceAvailableWidth or page:GetWidth()
     local width = math.max(1, surfaceWidth - Theme.Space.xs * 2); local fixedWidth = 0
     for _, field in ipairs(fixed) do fixedWidth = fixedWidth + field.previewMinWidth end
-    if #candidates > 0 then
-        local targetWidth = Addon.Core.AccountView:FitRepeatedColumnWidth(width, fixedWidth, #candidates, candidates[1].previewMinWidth, candidates[1].previewCompactMinWidth)
-        for _, field in ipairs(candidates) do field.previewMinWidth = targetWidth end
-    end
+    self:LayoutPreviewLegend(width)
     local visible, info = Addon.Core.AccountView:GetColumnPageByWidth("legendary", "targets", candidates, width, fixedWidth, function(field) return field.previewMinWidth end)
     -- Core owns the title-bar chrome and the saved page index.  The matrix only
     -- supplies its stable target slice, so headers and cells always share it.
@@ -554,7 +579,17 @@ function UI:GetSurfaceMetrics(context)
         local width = 0
         for _, field in ipairs(fixed) do width = width + field.previewMinWidth end
         for _, field in ipairs(targets) do width = width + field.previewMinWidth end
-        return {minContentWidth=310,naturalContentWidth=width+Theme.Space.xs*2,minContentHeight=122,naturalContentHeight=Theme.Space.xs+18+Theme.Space.xxs+Theme.Table.headerHeight+Theme.Space.xxs+rows*Theme.Table.previewRowHeight+Theme.Space.xs,fixedLeftWidth=fixed[1] and fixed[1].previewMinWidth or 0,fixedTopHeight=18+Theme.Space.xxs+Theme.Table.headerHeight,horizontalOverflow="paginate",verticalOverflow="content"}
+        local availableWidth = context and context.surfaceAvailableWidth or 900
+        local legendHeight = 18
+        local legendWidth, lineCount = 0, 1
+        for _, id in ipairs({ "completed", "in_progress", "obtainable", "pending_sync", "ineligible", "unavailable" }) do
+            local label = STATUS[id].label
+            local itemWidth = Theme:MeasureText(Theme.Font.meta, label) + 12 + 2 + Theme.Space.xxs
+            if legendWidth > 0 and legendWidth + itemWidth > math.max(1, availableWidth - Theme.Space.xs * 2) then lineCount, legendWidth = lineCount + 1, 0 end
+            legendWidth = legendWidth + itemWidth + Theme.Space.xxs
+        end
+        legendHeight = lineCount * 18
+        return {minContentWidth=310,naturalContentWidth=width+Theme.Space.xs*2,minContentHeight=122,naturalContentHeight=Theme.Space.xs+legendHeight+Theme.Space.xxs+Theme.Table.headerHeight+Theme.Space.xxs+rows*Theme.Table.previewRowHeight+Theme.Space.xs,fixedLeftWidth=fixed[1] and fixed[1].previewMinWidth or 0,fixedTopHeight=legendHeight+Theme.Space.xxs+Theme.Table.headerHeight,horizontalOverflow="paginate",verticalOverflow="content"}
     end
     local targetBar = self:GetTargetBarLayout(context and context.surfaceAvailableWidth or 900)
     return {minContentWidth=720,naturalContentWidth=910,minContentHeight=270,naturalContentHeight=math.min(640,targetBar.height+126+rows*ROW_HEIGHT),horizontalOverflow="none",verticalOverflow="content"}

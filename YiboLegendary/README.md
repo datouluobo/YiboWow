@@ -1,6 +1,6 @@
 # YiboLegendary — 传说之路
 
-当前工作树版本为 **2.2.1**，最低依赖 **YiboCore API v13**，并要求 `localization:1`、`character-name-format:1`、`account-view:2` 与 `account-entry:2`。插件通过统一账号页追踪多角色的传说装备进度，使用 `/yle` 打开。
+当前工作树版本为 **2.2.2**，最低依赖 **YiboCore API v13**，并要求 `localization:1`、`character-name-format:1`、`account-view:2` 与 `account-entry:2`。插件通过统一账号页追踪多角色的传说装备进度，使用 `/yle` 打开。
 
 ## 功能范围
 
