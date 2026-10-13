@@ -136,8 +136,7 @@ local function GetIcon(parent, index)
         if mouseButton == "LeftButton" and self.secureLeftAction then return end
         if mouseButton == "RightButton" and self.secureRightAction then return end
         if not self.actionProject or not self.actionIsCurrent or not Addon.Actions then return end
-        local ok = Addon.Actions:Execute(self.actionProject, self.actionIsCurrent)
-        if ok then self:SetAlpha(0.65); C_Timer.After(0.35, function() if self:IsShown() then self:SetAlpha(1) end end) end
+        Addon.Actions:Execute(self.actionProject, self.actionIsCurrent)
     end)
     button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     button.texture = button:CreateTexture(nil, "ARTWORK")
