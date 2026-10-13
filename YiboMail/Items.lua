@@ -23,7 +23,9 @@ local function AttachmentSignature(items)
     local identities = {}
     for _, item in ipairs(items) do
         if type(item) ~= "table" or type(item.itemID) ~= "number" or type(item.quantity) ~= "number" then return nil end
-        identities[#identities + 1] = Addon.Encode({ ItemVariantKey(item) or ("item:" .. item.itemID), item.quantity })
+        -- Item links can differ between the send and inbox APIs for the same
+        -- item. Correlate the complete attachment multiset by item ID/count.
+        identities[#identities + 1] = Addon.Encode({ item.itemID, item.quantity })
     end
     table.sort(identities)
     return Addon.Encode(identities)
@@ -44,7 +46,9 @@ local function TransferIndex(characters)
         local other = Resolve(mail.sender, owner.realm)
         local attachmentKey = other and AttachmentSignature(mail.attachments)
         if not attachmentKey then return end
-        local key = Addon.Encode({ owner.id, other.id, mail.subject or "", attachmentKey })
+        -- Subjects are user-editable and can summarize only one attachment,
+        -- so they must never participate in send/receipt correlation.
+        local key = Addon.Encode({ owner.id, other.id, attachmentKey })
         local bucket = mail.wasReturned and index.returned or index.received
         bucket[key] = bucket[key] or {}
         local identityKey = Addon.Encode({ mail.wasReturned == true, key, identity })
@@ -140,8 +144,8 @@ function Items:GetTransfers(characterID)
     for _, candidate in ipairs(index.sends[characterID] or {}) do
         local history, senderCharacter = candidate.history, candidate.sender
         local sentAt = tonumber(history.observedAt or history.attemptedAt) or 0
-        local receiptKey = Addon.Encode({ characterID, senderCharacter.id, history.subject or "", candidate.attachmentKey })
-        local returnKey = Addon.Encode({ senderCharacter.id, characterID, history.subject or "", candidate.attachmentKey })
+        local receiptKey = Addon.Encode({ characterID, senderCharacter.id, candidate.attachmentKey })
+        local returnKey = Addon.Encode({ senderCharacter.id, characterID, candidate.attachmentKey })
         local returned = ConsumeEvidence(index.returned[returnKey], sentAt, consumedReturns)
         local received = not returned and ConsumeEvidence(index.received[receiptKey], sentAt, consumed)
         if not returned and not received then

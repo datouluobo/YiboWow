@@ -1,10 +1,10 @@
 # YiboVault
 
-当前版本：`1.2.2-api1`。`1.2.2` 为插件版本，`api1` 为对外 `Items` API 版本。当前工作树要求 YiboCore 1.12.0 / API 13，并检查 `localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`character-identity:1` 与 `account-entry:2`；缺失或版本不足时停止 Vault 初始化并提示升级。Core 的语言、名称、输入、入口和物品显示能力只通过公开接口使用。YiboCurrency 是可选调用方。Vault 通过 Core 发现 `mail.items`，提供方兼容时消费邮件快照及可选在途投影；缺失或不兼容时独立采集。Vault 通过 `vault.items` 提供只读库存查询，Service 契约仍为 `business-services:1`，见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
+当前版本：`1.2.3-api1`。`1.2.3` 为插件版本，`api1` 为对外 `Items` API 版本。当前工作树要求 YiboCore 1.12.0 / API 13，并检查 `localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`character-identity:1` 与 `account-entry:2`；缺失或版本不足时停止 Vault 初始化并提示升级。Core 的语言、名称、输入、入口和物品显示能力只通过公开接口使用。YiboCurrency 是可选调用方。Vault 通过 Core 发现 `mail.items`，提供方兼容时消费邮件快照及可选在途投影；缺失或不兼容时独立采集。Vault 通过 `vault.items` 提供只读库存查询，Service 契约仍为 `business-services:1`，见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
 
 正式版变化见 [更新日志](CHANGELOG.md)。
 
-安装 YiboMail 时，Vault 通过 Core 的 `mail.items` 服务按角色优先使用 Mail 邮箱快照。v1.1 还会把 Mail 成功发件历史中可精确解析到账号角色的物品，显示在收件角色的邮件区域并标记“在途”；收件角色扫描到匹配的发件人、主题和附件后，或发件角色收到匹配的退回邮件后，移除在途投影。该数量单独展示，不计入已持有合计。v1.0 Mail 仍提供收件箱快照，但没有在途增强。Mail 关闭、历史状态或刷新失败但仍有成功快照时，继续使用该快照；成功空邮箱覆盖旧数量。Mail 从未采集该角色、公开接口不可用或不兼容时，使用 Vault 自有缓存。收件箱来源不会重复叠加；主窗口、仓储页、查询 API 与 Tooltip 共用同一投影。兼容 Mail 服务已注册时，Vault 不启动第二套邮箱扫描；服务缺失或注销后恢复独立采集。未安装 Mail 时，Vault 只记录实际扫描到的邮件物品。TOC 变化后需完整退出并重新进入游戏。
+安装 YiboMail 时，Vault 通过 Core 的 `mail.items` 服务按角色优先使用 Mail 邮箱快照。v1.1 还会把 Mail 成功发件历史中可精确解析到账号角色的物品，显示在收件角色的邮件区域并标记“在途”；收件角色扫描到匹配的发件人和附件后，或发件角色收到匹配的退回邮件后，移除在途投影。该数量单独展示，不计入已持有合计。v1.0 Mail 仍提供收件箱快照，但没有在途增强。Mail 关闭、历史状态或刷新失败但仍有成功快照时，继续使用该快照；成功空邮箱覆盖旧数量。Mail 从未采集该角色、公开接口不可用或不兼容时，使用 Vault 自有缓存。收件箱来源不会重复叠加；主窗口、仓储页、查询 API 与 Tooltip 共用同一投影。兼容 Mail 服务已注册时，Vault 不启动第二套邮箱扫描；服务缺失或注销后恢复独立采集。未安装 Mail 时，Vault 只记录实际扫描到的邮件物品。TOC 变化后需完整退出并重新进入游戏。
 
 收件箱来源联动回归命令：`lua YiboVault/_NonRelease/Tests/MailProviderSpec.lua`。该用例覆盖既有 Mail API、Vault 查询与来源适配器；本次 v1.1 在途扩展尚未运行自动化，需补充角色匹配、在途计数隔离和收件／退回结束状态的验证。客户端联动也待验收。
 

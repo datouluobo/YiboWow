@@ -2,7 +2,7 @@ local Addon = _G.YiboVault or {}
 _G.YiboVault = Addon
 
 Addon.NAME = "YiboVault"
-Addon.RELEASE_VERSION = "1.2.2"
+Addon.RELEASE_VERSION = "1.2.3"
 Addon.REQUIRED_CORE_API = 13
 Addon.SCHEMA_VERSION = 1
 Addon.API_VERSION = 1

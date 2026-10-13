@@ -10,6 +10,7 @@ local SOURCE_ICONS = {
     equipment = "Interface\\Icons\\INV_Chest_Cloth_01",
     auction = "Interface\\Icons\\INV_Misc_Coin_02",
 }
+local IN_TRANSIT_ICON = "Interface\\AddOns\\YiboVault\\Media\\YiboVaultMailTransitIcon-v2.tga"
 local GREEN = "|cff20e070"
 local MUTED = "|cff87b3ba"
 local RESET = "|r"
@@ -252,7 +253,8 @@ function Tooltip:Append(tooltip, knownItemID)
             }) or tostring(character.name or character.id or Addon:T("TEXT.CHARACTER_6B2669"))
             local parts = SourceParts(counts, counts.unknown)
             if counts.transit > 0 then
-                parts[#parts + 1] = Addon:T("MAIL.IN_TRANSIT") .. " " .. GreenNumber(counts.transit)
+                parts[#parts + 1] = "|T" .. IN_TRANSIT_ICON .. ":16:16:0:-2|t "
+                    .. GreenNumber(counts.transit)
             end
             local label = TotalLabel(counts.shownTotal, counts.partial or next(counts.unknown) ~= nil)
             local right, extra = RowLines(tooltip, name, label, parts)
