@@ -6,7 +6,7 @@ Addon.runtime = Addon.runtime or { testProjectionByCharacter = {}, snapshotsByCh
 Addon.runtime.testProjectionByCharacter = {}
 Addon.runtime.snapshotsByCharacter = {}
 Addon.NAME = "YiboLegendary"
-Addon.VERSION = "2.2.0"
+Addon.VERSION = "2.2.1"
 Addon.REQUIRED_CORE_API = 13
 
 function Addon:T(key, ...)

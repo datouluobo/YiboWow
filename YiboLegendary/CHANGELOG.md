@@ -1,5 +1,10 @@
 # YiboLegendary 更新日志
 
+## 2.2.1
+
+- 明确英文覆盖范围：菜单、矩阵表头、按钮、控件与通用状态／错误提示使用英文；任务步骤、专有名词、路线说明和目标进度保留中文原文。
+- 移除任务行动与路线目录中未经可靠英文来源校对的占位译文。
+
 ## 2.2.0
 
 - 适配 YiboCore API v13：启动时校验 `localization:1`、`character-name-format:1`、`account-view:2` 与 `account-entry:2`，不兼容时提示升级并停止初始化。
