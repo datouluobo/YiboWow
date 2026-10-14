@@ -734,7 +734,8 @@ function Native:ItemTile(group, index, columns, size)
     size = size or 42
     tile:SetSize(size, size)
     tile:ClearAllPoints(); tile:SetPoint("TOPLEFT", ((index - 1) % columns) * (size + 4), -math.floor((index - 1) / columns) * (size + 4))
-    tile.icon:SetTexture(group.item.texture or "Interface\\Icons\\INV_Misc_QuestionMark")
+    local texture = group.item.texture or "Interface\\Icons\\INV_Misc_QuestionMark"
+    if tile.displayTexture ~= texture then tile.icon:SetTexture(texture); tile.displayTexture = texture end
     tile.count:SetText(group.money and tostring(math.floor(group.quantity / 10000)) or tostring(group.quantity))
     local eligible, codSource = 0, nil
     for _, source in ipairs(group.sources) do
@@ -761,7 +762,14 @@ function Native:ItemTile(group, index, columns, size)
             end)
         end
     end
-    tile.icon:SetDesaturated(eligible == 0 and not codSource)
+    local groupKey = group.id or (group.money and "money") or group.item.variantKey or group.item.itemID
+    local available = eligible > 0 or codSource ~= nil
+    local rechecking = Addon.Scanner.refreshPending and not Addon.Scanner.lastError
+    -- Display continuity is independent of eligibleCount and the click guard.
+    local displayAvailable = available
+        or (rechecking and groupKey ~= nil and tile.displayKey == groupKey and tile.displayAvailable) or false
+    if tile.displayAvailable ~= displayAvailable then tile.icon:SetDesaturated(not displayAvailable) end
+    tile.displayKey, tile.displayAvailable = groupKey, displayAvailable
     tile.mailGroup = group
     tile.eligibleCount = eligible
     -- Keep the tile active so its hover tooltip remains available while the
@@ -988,7 +996,7 @@ function Native:RefreshInbox()
     if Addon.Queue.state ~= "running" then panel.keepTilesDuringQueue = nil end
     self.refreshingInbox = true
     panel.used, panel.top, panel.available, panel.width = 0, 0, {}, math.max(1, panel.scroll:GetWidth())
-    for _, tile in ipairs(panel.tiles or {}) do tile:Hide() end
+    local usedTiles = 0
     local context = self:Context()
     local allMails = panel.mode == "mail" and View:GetMails(context, { sort = panel.options.sort }) or nil
     local visibleMails
@@ -1014,6 +1022,7 @@ function Native:RefreshInbox()
         local columns = math.max(1, math.min(7, math.floor((gridWidth + 4) / 42)))
         local size = math.max(1, (gridWidth - (columns - 1) * 4) / columns)
         for index, group in ipairs(groups) do self:ItemTile(group, index, columns, size) end
+        usedTiles = #groups
         panel.top = #groups > 0 and math.ceil(#groups / columns) * (size + 4) - 4 or 0
     end
     if panel.top == 0 then
@@ -1024,6 +1033,7 @@ function Native:RefreshInbox()
         self:Row({ empty = true, title = failed and Addon:T("UI.TEXT_0600") or (pending and Addon:T("UI.TEXT_0423") or (panel.mode == "items" and Addon:T("UI.TEXT_0382") or Addon:T("UI.TEXT_0381"))),
             detail = failed and Addon:T("UI.TEXT_0561") or (pending and Addon:T("UI.TEXT_0476") or Addon:T("UI.TEXT_0198")) })
     end
+    for index = usedTiles + 1, #(panel.tiles or {}) do panel.tiles[index]:Hide() end
     for index = panel.used + 1, #panel.rows do panel.rows[index]:Hide() end
     panel.content:SetSize(panel.width, math.max(1, panel.top)); panel.scroll:SetContentHeight(panel.top)
     local selected = 0; for _ in pairs(panel.selection) do selected = selected + 1 end
@@ -1932,5 +1942,10 @@ function Native:OnEvent(event, itemID, success)
     elseif event == "MAIL_FAILED" and self.send and self.send.status then
         self.send.status:SetText(Addon:T("UI.TEXT_0188"))
     end
-    if self.installed and (event == "MAIL_INBOX_UPDATE" or event == "MAIL_SUCCESS" or event == "MAIL_SHOW" or event == "MAIL_SEND_INFO_UPDATE" or event == "MAIL_SEND_SUCCESS" or event == "MAIL_FAILED" or event == "BAG_UPDATE_DELAYED") then self:Refresh() end
+    if not self.installed then return end
+    if event == "MAIL_INBOX_UPDATE" or event == "MAIL_SUCCESS" or event == "MAIL_SHOW" or event == "MAIL_FAILED" then
+        self:Refresh()
+    elseif Addon.FEATURES.send and (event == "MAIL_SEND_INFO_UPDATE" or event == "MAIL_SEND_SUCCESS" or event == "BAG_UPDATE_DELAYED") then
+        self:RefreshSend()
+    end
 end

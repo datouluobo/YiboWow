@@ -29,7 +29,8 @@ end
 function Scanner:Close()
     if Addon.Queue then Addon.Queue:OnEvent("MAIL_CLOSED") end
     if Addon.Compose then Addon.Compose:OnEvent("MAIL_CLOSED") end
-    self.open, self.updated, self.stable, self.validAt, self.lastError = false, false, nil, nil, nil
+    self.open, self.updated, self.stable, self.validAt, self.lastError, self.refreshPending = false, false, nil, nil, nil, nil
+    self.scheduledScan = nil
     self.generation = (self.generation or 0) + 1
     local character = Addon.Core and Addon.Core.Characters:GetCurrent({ identityOnly = true })
     self:PublishStatus(character and character.id)
@@ -42,10 +43,13 @@ function Scanner:InstallHooks()
 end
 local function ReadMail(index, now, clock)
     local _, _, sender, subject, money, cod, days, expectedAttachments, wasRead, wasReturned = GetInboxHeaderInfo(index)
-    if type(sender) ~= "string" or type(subject) ~= "string" or type(days) ~= "number" then
+    if (sender ~= nil and type(sender) ~= "string") or type(subject) ~= "string" or type(days) ~= "number" then
         error(string.format("header-unavailable:index=%d:sender=%s:subject=%s:days=%s",
             index, type(sender), type(subject), type(days)))
     end
+    -- A missing sender name does not invalidate an otherwise readable letter.
+    -- Keep absence as data, rather than persisting a localized display label.
+    sender = sender or ""
     local mail = { inboxIndex = index, sender = sender, subject = subject, money = tonumber(money) or 0,
         cod = tonumber(cod) or 0, daysLeftAtScan = days, observedAt = now, clockSource = clock,
         expiresAtEstimate = now + days * 86400, wasRead = not not wasRead, wasReturned = not not wasReturned, attachments = {} }
@@ -112,7 +116,7 @@ local function CommitScan(character, mails, visible, total, now, clock)
     Addon:WithPublicationBatch(function()
         local signatures = {}; for _, mail in ipairs(mails) do signatures[#signatures + 1] = mail.signature end; table.sort(signatures)
         local fingerprint = Addon.Encode(signatures)
-        Scanner.lastError, Scanner.validAt = nil, now
+        Scanner.lastError, Scanner.validAt, Scanner.refreshPending = nil, now, nil
         Addon:CommitScan(character, mails, { status = visible < total and "partial" or (total == 0 and "known-empty" or "known"),
             currentCount = visible, totalCount = total, unscannedCount = total - visible, observedAt = now, clockSource = clock })
         if visible == total and total <= 100 then
@@ -130,7 +134,7 @@ local function CommitScan(character, mails, visible, total, now, clock)
     end
 end
 local function ScanError(character, err)
-    Scanner.stable, Scanner.validAt, Scanner.lastError = nil, nil, tostring(err)
+    Scanner.stable, Scanner.validAt, Scanner.lastError, Scanner.refreshPending = nil, nil, tostring(err), nil
     Scanner:PublishStatus(character.id)
     if Addon.NativeUI then Addon.NativeUI:Refresh() end
     if Addon.FEATURES.account then Addon.Core.AccountView:NotifyPageChanged("mail-inbox") end
@@ -180,19 +184,27 @@ function Scanner:ScanAsync(generation)
     return true
 end
 function Scanner:Schedule()
+    -- Retain presentation during a recheck of this open session's last valid
+    -- snapshot. Public readiness and all collection checks still become stale.
+    self.refreshPending = self.validAt ~= nil or self.refreshPending
     self.validAt = nil
     -- Readiness changed even when the next scan finds identical mail. Publish
     -- invalidation now so CommitScan also publishes the recovery to live data.
     local character = Addon.Core and Addon.Core.Characters:GetCurrent({ identityOnly = true })
     self:PublishStatus(character and character.id)
     self.generation = (self.generation or 0) + 1
-    local generation = self.generation
     if C_Timer and C_Timer.After then
+        -- Coalesce updates into the first scheduled read instead of continually
+        -- postponing it. The actual read still uses the newest generation.
+        if self.scheduledScan then return end
+        local request = {}; self.scheduledScan = request
         local function RunScan(attempt)
-            if Scanner.generation ~= generation then return end
+            if Scanner.scheduledScan ~= request then return end
             if Scanner.open and not Scanner:IsOpen() and attempt < 10 then
                 C_Timer.After(0.1, function() RunScan(attempt + 1) end); return
             end
+            Scanner.scheduledScan = nil
+            local generation = Scanner.generation
             Scanner:ScanAsync(generation)
             -- An empty cache can precede delivery of NPC/system mail. Header
             -- and attachment data can also arrive after the first inbox event.

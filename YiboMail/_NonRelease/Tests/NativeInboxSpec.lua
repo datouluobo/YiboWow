@@ -381,3 +381,58 @@ for _, language in ipairs({ 'en', 'zh' }) do
     assert(realExpiry(Addon.ViewModel, { expiresAtEstimate = expiryNow + 2 * 3600 }) == '2.0h')
 end
 print('PASS: Chinese native send/cancel text respects Core English/Chinese on hover and enable changes; compact d/h units in both languages')
+
+do
+    local g = { id = 'stable-attachment', item = first, quantity = first.quantity,
+        sources = { { entry = entry, item = first } } }
+    local scanner = Addon.Scanner
+    panel = native.inbox; MailFrame:Show(); InboxFrame:Show(); panel:Show()
+    panel.mode, panel.options.search = 'items', ''
+    queue.state, queue.pending, panel.keepTilesDuringQueue = 'idle', nil, nil
+    entry.actionable, mail.cod, scanner.refreshPending, scanner.lastError = true, 0, nil, nil
+    local groupQuery = Addon.ViewModel.GetGroups
+    Addon.ViewModel.GetGroups = function() return { g } end
+    native:RefreshInbox()
+    local iconTile = panel.tiles[1]
+    local hides, textures, desaturations = 0, 0, 0
+    local hide, setTexture = iconTile.Hide, iconTile.icon.SetTexture
+    iconTile.Hide = function(self) hides = hides + 1; return hide(self) end
+    iconTile.icon.SetTexture = function(self, value) textures = textures + 1; return setTexture(self, value) end
+    iconTile.icon.SetDesaturated = function(self, value) self.desaturated = value; desaturations = desaturations + 1 end
+    iconTile.icon.desaturated = not iconTile.displayAvailable
+    native:RefreshInbox(); native:RefreshInbox()
+    assert(hides == 0 and textures == 0 and desaturations == 0 and iconTile:IsEnabled(),
+        'Unchanged attachment refreshes retain mounted tiles and loaded textures')
+    entry.actionable, scanner.refreshPending = false, true
+    assert(g.sources[1].entry == entry and not Addon:GetInboxActions(entry, first)[1].actionable)
+    native:RefreshInbox(); native:RefreshInbox()
+    assert(iconTile.mailGroup == g, tostring(iconTile.mailGroup and iconTile.mailGroup.id))
+    assert(not iconTile.icon.desaturated and not iconTile:IsEnabled() and iconTile.eligibleCount == 0,
+        tostring(iconTile.icon.desaturated) .. '/' .. tostring(iconTile:IsEnabled()) .. '/' .. tostring(iconTile.eligibleCount) .. '/' .. tostring(iconTile.displayAvailable))
+    assert(hides == 0 and textures == 0 and desaturations == 0)
+    local collectionCalls = calls; iconTile:GetScript('OnClick')()
+    assert(calls == collectionCalls, 'Stable appearance never permits collection from an unverified snapshot')
+    g.id = 'replacement-attachment'; native:RefreshInbox()
+    assert(iconTile.icon.desaturated and not iconTile:IsEnabled(), 'Recycled tiles cannot lend availability to another group')
+    entry.actionable, scanner.refreshPending = true, nil; native:RefreshInbox()
+    assert(not iconTile.icon.desaturated and iconTile:IsEnabled())
+    entry.actionable, scanner.refreshPending, scanner.lastError = false, true, 'scan-error'
+    native:RefreshInbox(); assert(iconTile.icon.desaturated and not iconTile:IsEnabled())
+    scanner.lastError, scanner.refreshPending = nil, nil
+    native:RefreshInbox(); assert(iconTile.icon.desaturated, 'Persistent stale data still appears unavailable')
+    Addon.ViewModel.GetGroups = function() return {} end
+    native:RefreshInbox(); assert(hides == 1 and not iconTile:IsShown())
+    Addon.ViewModel.GetGroups = function() return { g } end
+    entry.actionable = true; native:RefreshInbox(); assert(iconTile:IsShown())
+    panel.mode = 'mail'; native:RefreshInbox(); assert(not iconTile:IsShown())
+    iconTile.Hide, iconTile.icon.SetTexture = hide, setTexture
+    Addon.ViewModel.GetGroups = groupQuery
+    local inboxRefresh, sendRefresh, inboxCalls, sendCalls = native.RefreshInbox, native.RefreshSend, 0, 0
+    native.RefreshInbox = function() inboxCalls = inboxCalls + 1 end
+    native.RefreshSend = function() sendCalls = sendCalls + 1 end
+    native:OnEvent('BAG_UPDATE_DELAYED'); native:OnEvent('MAIL_SEND_INFO_UPDATE'); native:OnEvent('MAIL_SEND_SUCCESS')
+    assert(inboxCalls == 0 and sendCalls == 3, 'Bag and compose changes only refresh the send surface')
+    native:OnEvent('MAIL_INBOX_UPDATE'); assert(inboxCalls == 1)
+    native.RefreshInbox, native.RefreshSend = inboxRefresh, sendRefresh
+end
+print('PASS: attachment tiles/textures remain mounted; scan rechecks retain appearance but block collection; new groups/errors/stale states reset gray; removed/hidden groups unmount; send/bag events skip inbox redraw')

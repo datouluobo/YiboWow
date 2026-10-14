@@ -234,7 +234,7 @@ function Rules:Icon(rule)
 end
 function Rules:Delete(id)
     if not Addon.db.sendRules[id] then return nil, Addon:T("UI.TEXT_0499") end
-    Addon.db.sendRules[id] = nil; self:Changed(); return true
+    Addon.db.sendRules[id] = nil; self:Changed(true); return true
 end
 function Rules:Match(bags, skipped)
     local current = Addon.Recipients:Current()

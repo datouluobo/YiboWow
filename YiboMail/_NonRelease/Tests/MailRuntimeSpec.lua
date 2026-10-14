@@ -312,3 +312,26 @@ addon:Publish("A", {}, {}, "scan", true)
 assert(failedBatchEvents == 2, "A failed scan callback must not trap subsequent publications")
 api.Events:Unregister("failed-batch")
 print("PASS: publication batch releases and flushes committed changes on callback failure")
+
+do
+    inbox, total, timers = { Mail('Refresh stability', { Item(991, 1, 1) }) }, 1, {}
+    shown, scanner.open, scanner.updated = true, true, true
+    assert(scanner:Scan() and not scanner.refreshPending and api:GetState('A').status == 'known')
+    scanner:Schedule(); scanner:Schedule()
+    assert(scanner.refreshPending and scanner.validAt == nil and api:GetState('A').status == 'stale')
+    assert(not addon.ViewModel:GetMails({ characters = { a } }, {})[1].actionable,
+        'Visual scan continuity does not weaken public readiness or collection checks')
+    Flush(); assert(not scanner.refreshPending and api:GetState('A').status == 'known')
+    local header = GetInboxHeaderInfo
+    GetInboxHeaderInfo = function() error('simulated scan failure') end
+    scanner:Schedule(); assert(scanner.refreshPending); Flush()
+    assert(not scanner.refreshPending and scanner.lastError and api:GetState('A').status == 'error')
+    GetInboxHeaderInfo = header
+    scanner:Schedule(); assert(not scanner.refreshPending); Flush()
+    assert(not scanner.refreshPending and api:GetState('A').status == 'known')
+    scanner:Schedule(); assert(scanner.refreshPending); scanner:Close()
+    assert(not scanner.refreshPending and api:GetState('A').status == 'stale')
+    scanner:OnEvent('MAIL_SHOW'); assert(not scanner.refreshPending)
+    Flush(); assert(not scanner.refreshPending and api:GetState('A').status == 'known')
+end
+print('PASS: visual recheck flag survives event bursts; readiness remains stale; commit/error/close clear it; reopening cannot reuse the prior session flag')

@@ -55,6 +55,7 @@ function View:CharacterLabel(character, full)
     return displayName .. self:Escape(label:sub(#name + 1))
 end
 function View:CounterpartLabel(address, owner)
+    if not address or address == "" then return Addon:T("UI.TEXT_0399") end
     -- Unqualified senders belong to the mailbox owner's realm, including
     -- offline mailboxes. Formatting never changes a saved business address.
     local name, realm = tostring(address or ""):match("^([^-]+)%-(.+)$")

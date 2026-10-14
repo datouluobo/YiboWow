@@ -45,12 +45,18 @@ function R:SetFaction(address, faction)
     if Addon.SendRules then Addon.SendRules:Changed(true) end
     return true
 end
-function R:CanRuleSend(address, current)
+function R:CheckRuleRealm(address, current)
     current = current or self:Current()
     local normalized, _, _, realm = self:Normalize(address)
     if not normalized then return false, Addon:T("UI.TEXT_0337") end
-    if not current or not current.realm then return nil, Addon:T("UI.TEXT_0281") end
+    if not current or self:Key(current.realm) == "" then return nil, Addon:T("UI.TEXT_0281") end
     if self:Key(realm) ~= self:Key(current.realm) then return false, Addon:T("UI.TEXT_0091") end
+    return true
+end
+function R:CanRuleSend(address, current)
+    current = current or self:Current()
+    local allowed, reason = self:CheckRuleRealm(address, current)
+    if not allowed then return allowed, reason end
     local faction = current and current.faction
     local target = self:GetFaction(address)
     if faction ~= "Alliance" and faction ~= "Horde" then return nil, Addon:T("UI.TEXT_0282") end

@@ -362,7 +362,7 @@ Click(p.cancel); A.confirmation.OnAccept()
 local collapsed = S.collapsed; S.panel=nil; host.refreshPanel(); p=S.panel; assert(S.collapsed==collapsed)
 assert(p.editor:IsShown())
 S:OpenTab('business'); assert(business:IsShown() and host.refreshPanel()==420)
-S:OpenTab('cache'); assert(cache:IsShown() and host.refreshPanel()==242)
+S:OpenTab('cache'); assert(cache:IsShown() and host.refreshPanel()==44 + cache:GetHeight())
 S:OpenTab('rules')
 print('PASS: persistent two-column editor/list; plain rows and icons; ASCII folding independent of drafts; recipient gate preserves individual flags; same-realm labels; category blacklist; single add/save action; async cancellation; paging/narrow bounds; other tabs unchanged')
 -- Click placement shares the real drop route. Rule placement stores identity only.
@@ -370,14 +370,15 @@ local held = true
 function GetCursorInfo() if held then return 'item', 2 end end
 function ClearCursor() held = false end
 function CursorHasItem() return held end
-A.Recipients:SetShortcut(1, 'Second-Other'); A.NativeUI:RefreshFavoriteButtons()
+A.Recipients:SetShortcut(1, 'First-Realm'); A.NativeUI:RefreshFavoriteButtons()
 local shortcut = A.NativeUI.send.favoriteButtons[1]
 U.active = true; Click(shortcut); assert(not held and A.confirmation)
 A.confirmation.OnAccept()
 local found
 for _, rule in ipairs(A.SendRules:List()) do if rule.itemID == 2 then found = rule end end
-assert(found and found.recipient == 'Second-Other')
+assert(found and found.recipient == 'First-Realm')
 -- Native drop stages one exact cursor stack and attempts at most one send.
+A.Recipients:SetShortcut(1, 'Second-Other'); A.NativeUI:RefreshFavoriteButtons()
 U.active = false; held = true
 SendMailSubjectEditBox:SetText(''); modernBody:SetText('')
 local dropped, attempts = {}, 0
@@ -577,16 +578,35 @@ U:Drop({ address = 'Changed-Realm' })
 assert(shownConfirmation and shownConfirmation.text:find('更新整条规则', 1, true) and A.db.sendRuleRevision == revision)
 shownConfirmation = nil
 U:Drop({ address = 'Foreign-Other' })
-assert(shownConfirmation and not shownConfirmation.text:find('更新整条规则', 1, true))
+assert(not shownConfirmation and A.db.sendRuleRevision == revision and C.notice == A:T('UI.TEXT_0091'))
+-- A foreign existing rule must report the realm mismatch before duplicate lookup.
+local _, foreignRule = A.SendRules:Save({ kind = 'item', itemID = 502, recipient = 'Foreign-Other' })
+assert(foreignRule); revision = A.db.sendRuleRevision
+U:Drop({ address = 'Foreign-Other' })
+assert(not shownConfirmation and A.db.sendRuleRevision == revision and C.notice == A:T('UI.TEXT_0091'))
+assert(A.db.sendRules[batchRule.id].recipient == 'Batch-Realm' and A.db.sendRules[foreignRule].recipient == 'Foreign-Other')
+local getCurrent = A.Core.Characters.GetCurrent
+A.Core.Characters.GetCurrent = function() return { id = 'a', name = 'A', realm = '' } end
+U:Drop({ address = 'Batch-Realm' })
+assert(not shownConfirmation and A.db.sendRuleRevision == revision and C.notice == A:T('UI.TEXT_0281'))
+A.Core.Characters.GetCurrent = getCurrent
+U:Drop({ address = 'Batch-r e a l m' })
+assert(not shownConfirmation and C.notice:find('该规则已存在', 1, true), 'Realm comparison ignores case and whitespace')
+U:Drop({ address = 'Changed-Realm' })
+assert(shownConfirmation and shownConfirmation.IsCurrent())
+A.Core.Characters.GetCurrent = function() return { id = 'a', name = 'A', realm = 'Other' } end
+assert(not shownConfirmation.IsCurrent())
 shownConfirmation.OnAccept()
-assert(A.db.sendRules[batchRule.id].recipient == 'Batch-Realm', 'Cross-realm shortcut drop must not rewrite local ownership')
+assert(A.db.sendRuleRevision == revision and C.notice == A:T('UI.TEXT_0091'), 'Confirmation must recheck the current realm')
+A.Core.Characters.GetCurrent = getCurrent
+shownConfirmation = nil
 assert(A.Recipients:SetFaction('Foreign-Other', 'Alliance'))
 U:Refresh()
 for _, row in ipairs(U.root.rows) do assert(not row:IsShown() or row.entry.recipient ~= 'Foreign-Other') end
 A.Core.ItemConfirmation.Show = showConfirmation
 local ok, message = A.SendRules:Save({ kind = 'item', itemIDs = { 502 }, recipient = 'Batch-Realm' })
 assert(not ok and message:find('该规则已存在', 1, true))
-print('PASS: duplicate rule clearly reports already present without mutation; changed recipient still requires a concrete confirmation')
+print('PASS: realm validation precedes duplicate lookup; cross-realm and missing-realm drops cannot mutate rules; normalized same-realm duplicates and confirmation realm recheck')
 
 N:SelectMailboxTab('rules')
 SendMailNameEditBox:SetText('Batch-Realm'); C.notice = '请核对收件人和附件，再点击发送。'; U:Refresh()
@@ -752,6 +772,12 @@ print('PASS: real compose/rule transitions expose manual-attachment undo, detect
 
 -- English controls use their real label widths on the 340px native surface.
 A.Core.Locale.language = 'en'
+N:SelectMailboxTab('rules'); shownConfirmation = nil
+A.Core.ItemConfirmation.Show = function(_, options) shownConfirmation = options; return {} end
+revision = A.db.sendRuleRevision
+U:Drop({ address = 'Foreign-Other' })
+assert(not shownConfirmation and A.db.sendRuleRevision == revision and C.notice == 'Different realm; not available to this character')
+A.Core.ItemConfirmation.Show = showConfirmation
 MailFrame:SetWidth(340)
 N.send.recipientField.label:SetText(A:T('UI.TEXT_0332'))
 N.send.subjectField.label:SetText(A:T('UI.TEXT_0100'))
@@ -786,6 +812,12 @@ for _, width in ipairs({ 1000, 560, 340 }) do
     local editor, theme = englishSettings.panel, A.Core.UITheme
     assert(editor.kind.points[1][3] > editor.item.points[1][3])
     assert(editor.item:GetWidth() == editor.editor:GetWidth())
+    for _, button in ipairs({ editor.deleteShortcut, editor.cancel, editor.save }) do
+        assert(button:GetWidth() >= theme:MeasureText(theme.Font.body, button.label:GetText()) + 20)
+        assert(button.points[1][2] >= 0 and button.points[1][2] + button:GetWidth() <= editor.editor:GetWidth())
+    end
+    local deletePoint, cancelPoint = editor.deleteShortcut.points[1], editor.cancel.points[1]
+    assert(deletePoint[3] > cancelPoint[3] or deletePoint[2] + editor.deleteShortcut:GetWidth() + 8 <= cancelPoint[2])
     for _, button in pairs(editor.kind.buttons) do
         assert(button:GetWidth() >= theme:MeasureText(theme.Font.body, button.label:GetText()) + 24)
     end
@@ -800,3 +832,52 @@ for _, width in ipairs({ 1000, 560, 340 }) do
     end
 end
 print('PASS: English item/category, recipient, picker, blocklist and rule-enable controls retain readable bounds at wide/narrow widths')
+
+do
+    local D, R = englishSettings, A.SendRules
+    D.dirty = nil; D:Edit()
+    assert(not D.panel.deleteShortcut:IsEnabled(), 'Unsaved rules cannot be deleted')
+    local _, deleteID = R:Save({ kind = 'item', itemID = 9201, recipient = 'Delete-Realm' })
+    local _, keepID = R:Save({ kind = 'item', itemID = 9202, recipient = 'Keep-Realm' })
+    assert(deleteID and keepID and A.Recipients:SetFaction('Delete-Realm', 'Alliance'))
+    local savedBags = A.Compose.BagItems
+    A.Compose.BagItems = function() return { { itemID = 9201, quantity = 1, bag = 0, slot = 1 } } end
+    C.state, C.owned, C.packet, C.skipped = 'idle', nil, nil, {}; C:Scan()
+    assert(C.match.byRule[deleteID])
+    D:Edit(deleteID)
+    local revision = A.db.sendRuleRevision
+    assert(D.panel.deleteShortcut:IsEnabled())
+    D.dirty = true
+    Click(D.panel.deleteShortcut)
+    assert(D.tab == 'rules' and A.db.sendRuleRevision == revision and A.confirmation)
+    A.confirmation.OnAccept()
+    assert(D.tab == 'cache' and englishCache:IsShown() and A.db.sendRuleRevision == revision)
+    assert(englishCache.ruleDeleteTarget:GetText():find('Delete-Realm', 1, true))
+    assert(englishCache.ruleDeleteTarget:GetText():find('9201', 1, true))
+    assert(englishCache.ruleDeleteRisk:GetText():find('restore', 1, true))
+    assert(englishCache.ruleDelete.points[1][3] < englishCache.ruleDeleteRisk.points[1][3])
+    Click(englishCache.ruleDelete)
+    local cancelled = A.confirmation
+    assert(cancelled.text:find('Delete-Realm', 1, true) and cancelled.text:find('9201', 1, true))
+    assert(cancelled.IsCurrent() and A.db.sendRules[deleteID] and A.db.sendRuleRevision == revision,
+        'Opening or dismissing confirmation preserves the saved rule')
+    D:Edit(keepID)
+    assert(not cancelled.IsCurrent()); cancelled.OnAccept()
+    assert(A.db.sendRules[deleteID] and A.db.sendRules[keepID], 'Changed selection invalidates stale deletion')
+    D:Edit(deleteID); Click(englishCache.ruleDelete)
+    local stale = A.confirmation
+    R:SetEnabled(keepID, false)
+    assert(not stale.IsCurrent()); stale.OnAccept(); assert(A.db.sendRules[deleteID])
+    Click(englishCache.ruleDelete); local accepted = A.confirmation
+    assert(accepted.IsCurrent()); accepted.OnAccept()
+    assert(not A.db.sendRules[deleteID] and A.db.sendRules[keepID] and not D.editID and not D.draft)
+    assert(not C.match.byRule[deleteID] and not englishCache.ruleDelete:IsEnabled())
+    assert(englishCache.ruleDeleteTarget:GetText() == A:T('RULE.DELETED'))
+    revision = A.db.sendRuleRevision; accepted.OnAccept(); assert(A.db.sendRuleRevision == revision)
+    D:OpenTab('rules'); assert(not D.panel.deleteShortcut:IsEnabled())
+    for _, row in ipairs(D.panel.rows) do
+        assert(not row:IsShown() or row.kind ~= 'rule' or row.rule.id ~= deleteID)
+    end
+    A.Compose.BagItems = savedBags
+end
+print('PASS: visible delete navigation; selected rule/recipient and risk; confirmation-only deletion; stale revision/selection/repeat protection; immediate match refresh; fresh editor and disabled deletion')

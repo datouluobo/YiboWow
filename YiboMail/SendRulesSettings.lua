@@ -30,11 +30,56 @@ function S:Edit(id, recipient)
         S.inlineRecipient = id and S.draft.recipient or recipient
         S.focusRecipient = S.inlineRecipient and Addon.Recipients:Key(S.inlineRecipient) or nil
         if S.focusRecipient then S.collapsed[S.focusRecipient] = false end
-        S.dirty, S.notice, S.more, S.factionEdit = nil, nil, false, nil; S.syncDraft = true; S:Refresh()
+        S.dirty, S.notice, S.more, S.factionEdit, S.deleteNotice = nil, nil, false, nil, nil; S.syncDraft = true; S:Refresh()
     end)
 end
 function S:OpenTab(tab)
     self:ConfirmLeave(function() S.tab = tab; S:Refresh() end)
+end
+function S:DeleteSelectedRule()
+    local id = self.editID
+    local rule = id and Addon.db.sendRules[id]
+    if not rule then return end
+    local revision = Addon.db.sendRuleRevision
+    local function IsCurrent()
+        return S.editID == id and Addon.db.sendRuleRevision == revision and Addon.db.sendRules[id] == rule
+    end
+    Addon.Core.ItemConfirmation:Show({
+        text = Addon:T("RULE.DELETE_CONFIRM", Addon.SendRules:Label(rule), rule.recipient),
+        IsCurrent = IsCurrent,
+        OnAccept = function()
+            if not IsCurrent() then return end
+            local ok, err = Addon.SendRules:Delete(id)
+            if ok then
+                S.editID, S.draft, S.dirty, S.notice, S.inlineRecipient, S.focusRecipient = nil, nil, nil, nil, nil, nil
+                S.syncDraft = true
+            end
+            S.deleteNotice = ok and Addon:T("RULE.DELETED") or err; S:Refresh()
+        end,
+    })
+end
+function S:RenderRuleDelete(cache, width)
+    local t = Theme()
+    if not cache.ruleDelete then
+        cache.ruleDeleteTitle = t:CreateText(cache, t.Font.body, t.Colors.text, "LEFT")
+        cache.ruleDeleteTarget = t:CreateText(cache, t.Font.assist, t.Colors.muted, "LEFT")
+        cache.ruleDeleteRisk = t:CreateText(cache, t.Font.assist, t.Colors.warning, "LEFT")
+        cache.ruleDelete = t:CreateButton(cache, 180, Addon:T("RULE.DELETE"), "danger")
+        cache.ruleDelete:SetScript("OnClick", function() S:DeleteSelectedRule() end)
+    end
+    local rule = self.editID and Addon.db.sendRules[self.editID]
+    local y, contentWidth = 152, math.max(1, width - 24)
+    Place(cache.ruleDeleteTitle, 12, y, contentWidth, 24); cache.ruleDeleteTitle:SetText(Addon:T("RULE.DELETE")); y = y + 28
+    cache.ruleDeleteTarget:SetText(rule and Addon:T("RULE.DELETE_TARGET", Addon.SendRules:Label(rule), rule.recipient)
+        or self.deleteNotice or Addon:T("RULE.DELETE_EMPTY"))
+    cache.ruleDeleteRisk:SetText(Addon:T("RULE.DELETE_RISK"))
+    for _, text in ipairs({ cache.ruleDeleteTarget, cache.ruleDeleteRisk }) do
+        Place(text, 12, y, contentWidth, 0); text:SetWordWrap(true)
+        local height = math.max(24, text:GetStringHeight()); text:SetHeight(height); y = y + height + 6
+    end
+    local buttonWidth = math.max(112, t:MeasureText(t.Font.body, cache.ruleDelete.label:GetText()) + 20)
+    Place(cache.ruleDelete, 12, y, buttonWidth, t.Size.standard); cache.ruleDelete:SetEnabled(rule ~= nil)
+    cache:SetHeight(y + t.Size.standard + 12)
 end
 function S:Host(parent, host, business, cache, width, businessHeight)
     self.host, self.parent = host, parent
@@ -72,23 +117,11 @@ function S:Host(parent, host, business, cache, width, businessHeight)
     business:SetShown(self.tab == "business"); cache:SetShown(self.tab == "cache")
     Place(business, 0, 44); Place(cache, 0, 44)
     if self.tab == "cache" then
-        if not cache.ruleDelete then
-            cache.ruleDelete = t:CreateButton(cache, 180, Addon:T("UI.TEXT_0152"), "danger")
-            cache.ruleDelete:SetScript("OnClick", function()
-                local id = S.editID; local rule = id and Addon.db.sendRules[id]
-                if not rule then return end
-                local revision = Addon.db.sendRuleRevision
-                Addon.Core.ItemConfirmation:Show({ text = Addon:T("UI.TEXT_0156") .. Addon.SendRules:Label(rule) .. " → " .. rule.recipient .. Addon:T("UI.TEXT_0082"),
-                    IsCurrent = function() return Addon.db.sendRuleRevision == revision end,
-                    OnAccept = function() Addon.SendRules:Delete(id); S.editID, S.draft, S.dirty = nil, nil, nil; S:Refresh() end })
-            end)
-        end
-        Place(cache.ruleDelete, 12, 152); cache.ruleDelete:SetEnabled(self.editID ~= nil and Addon.db.sendRules[self.editID] ~= nil)
-        cache:SetHeight(198)
+        self:RenderRuleDelete(cache, width)
     end
     if self.panel then self.panel:SetShown(self.tab == "rules") end
     if self.tab == "rules" then return 44 + self:Render(parent, width, host) end
-    return 44 + (self.tab == "business" and businessHeight or 198)
+    return 44 + (self.tab == "business" and businessHeight or cache:GetHeight())
 end
 local function Count(values)
     local count = 0; for _ in pairs(values or {}) do count = count + 1 end; return count
@@ -216,6 +249,8 @@ function S:Create(parent)
     p.exclude = RulePicker(p.editor, Addon:T("UI.TEXT_0164"), function(info) S.draft.excluded[info.itemID] = true; S.dirty = true; S:Refresh(); return true end,
         function() return S.draft.kind == "category", Addon:T("UI.TEXT_0106") end)
     p.cancel = Button(p.editor, Addon:T("UI.TEXT_0441"), function() S:ReturnToList() end)
+    p.deleteShortcut = Button(p.editor, Addon:T("RULE.DELETE_LINK"), function() S:OpenTab("cache") end)
+    t:BindTooltip(p.deleteShortcut, Addon:T("RULE.DELETE"), { Addon:T("RULE.DELETE_HELP") })
     p.save = Button(p.editor, Addon:T("UI.TEXT_0121"), function()
         if S.draft.kind == "item" and (p.item.busy or p.item.input:GetText() ~= table.concat(Addon.SendRules:ItemIDs(S.draft), ";")) then
             S.notice = Addon:T("UI.TEXT_0531"); S:Refresh(); return
@@ -584,7 +619,14 @@ function S:RenderEditor(width)
         end
         y = y + 6
     end
-    Place(p.cancel, math.max(0, editorWidth - bw * 2 - 8), y, bw, h); Place(p.save, editorWidth - bw, y, bw, h); y = y + 40
+    local deleteWidth = math.max(96, t:MeasureText(t.Font.body, p.deleteShortcut.label:GetText()) + 20)
+    local cancelWidth = math.max(80, t:MeasureText(t.Font.body, p.cancel.label:GetText()) + 20)
+    local saveWidth = math.max(112, t:MeasureText(t.Font.body, p.save.label:GetText()) + 20)
+    p.deleteShortcut:SetEnabled(self.editID ~= nil and Addon.db.sendRules[self.editID] ~= nil)
+    Place(p.deleteShortcut, 0, y, deleteWidth, h)
+    if deleteWidth + cancelWidth + saveWidth + 16 > editorWidth then y = y + step end
+    Place(p.cancel, editorWidth - cancelWidth - saveWidth - 8, y, cancelWidth, h)
+    Place(p.save, editorWidth - saveWidth, y, saveWidth, h); y = y + 40
     p.notice:SetShown(self.notice ~= nil)
     if self.notice then Place(p.notice, 0, y, editorWidth, 0); p.notice:SetText(self.notice); local h = math.max(24, p.notice:GetStringHeight()); p.notice:SetHeight(h); y = y + h + 8 end
     return self:RenderBlacklist(editorWidth, y)

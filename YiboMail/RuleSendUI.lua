@@ -257,6 +257,10 @@ function U:Drop(contact)
     local address = contact.address
     if self.active then
         if ClearCursor then ClearCursor() end
+        local allowed, reason = Addon.Recipients:CheckRuleRealm(address)
+        if not allowed then
+            Addon.RuleSendController.notice = reason; Addon:Print(reason); U:Refresh(); return
+        end
         local item = Addon.SendRules:GetItem(itemID)
         if not item or not item.ready then Addon:Print(Addon:T("UI.TEXT_0458")); return end
         local existing
@@ -275,8 +279,13 @@ function U:Drop(contact)
         if existing then text = text .. Addon:T("UI.TEXT_0072") .. Addon.SendRules:Label(existing) .. Addon:T("UI.TEXT_0651") .. existing.recipient end
         local revision = Addon.db.sendRuleRevision
         Addon.Core.ItemConfirmation:Show({ text = text,
-            IsCurrent = function() return Addon.db.sendRuleRevision == revision end,
+            IsCurrent = function() return Addon.db.sendRuleRevision == revision
+                and Addon.Recipients:CheckRuleRealm(address) == true end,
             OnAccept = function()
+                local allowed, reason = Addon.Recipients:CheckRuleRealm(address)
+                if not allowed then
+                    Addon.RuleSendController.notice = reason; Addon:Print(reason); U:Refresh(); return
+                end
                 local draft = existing and Addon.Copy(existing) or { kind = "item", itemID = item.itemID, enabled = true }
                 draft.recipient = address
                 local ok, err = Addon.SendRules:Save(draft, existing and existing.id)

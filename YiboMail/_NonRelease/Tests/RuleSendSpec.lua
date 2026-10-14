@@ -252,7 +252,7 @@ local withBody = C:Fingerprint(); modernBody:SetText('')
 assert(C:Fingerprint() ~= withBody)
 local modernWrapper = MailEditBox; MailEditBox = nil
 local fillOK, fillError = C:Fill()
-assert(not fillOK and fillError == '当前客户端发件界面未就绪。' and C.state == 'idle' and #attached == 0)
+assert(not fillOK and fillError == A:T('UI.TEXT_0262') and C.state == 'idle' and #attached == 0)
 MailEditBox = modernWrapper
 A.Compose.draft = { recipient = 'Warehouse-Realm', subject = '', body = 'Modern body', copper = 0, cod = false }
 assert(A.Compose:ApplyDraft() and modernBody:GetText() == 'Modern body')
@@ -335,3 +335,13 @@ C:OnEvent('MAIL_SEND_SUCCESS')
 assert(C.state == 'idle' and not C.owned and not C.packet and not C.draftFields)
 assert(sends == recoverySends, 'Recovery never sends or retries a mail')
 print('PASS: edited attachments recover through undo; page-entry reconciliation; manual drafts preserve text; empty draft releases stale plan; full bags retain recovery; native-send success clears rule ownership; no automatic sends')
+
+C:OnEvent('MAIL_CLOSED'); attached = {}; bags = { { id = 30, quantity = 2 } }
+SendMailNameEditBox:SetText(''); SendMailSubjectEditBox:SetText(''); SendMailBodyEditBox:SetText('')
+assert(C:Contact('Local-Realm') and C.state == 'ready')
+local deletedID, deletionSends = C.packet[1].ruleID, sends
+assert(R:Delete(deletedID))
+assert(C.state == 'invalid' and not C.match.byRule[deletedID] and #C.match.items == 0)
+assert(not C:Send() and sends == deletionSends and #A.Compose:GetAttachments() == 1)
+assert(C:Undo() and #A.Compose:GetAttachments() == 0 and not C.owned and sends == deletionSends)
+print('PASS: deleting a staged rule refreshes matching, prevents stale sending and preserves attachment recovery without sending')

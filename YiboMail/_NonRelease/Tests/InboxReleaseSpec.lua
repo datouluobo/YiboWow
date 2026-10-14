@@ -11,22 +11,48 @@ function GetServerTime() return 1000 end
 SlashCmdList = {}
 local messages = {}
 DEFAULT_CHAT_FRAME = { AddMessage = function(_, message) messages[#messages + 1] = message end }
-local function Forbidden() error("Disabled feature was registered or opened") end
-local owner
+local function Forbidden() error("Release startup must not construct or open native UI") end
+local owner, registeredAddons, registeredContracts, contractRegistrations = nil, 0, {}, 0
+local current = { id = "test", name = "Test", realm = "Realm", faction = "Alliance" }
+local coreAPI = 13
+local requiredCapabilities = {
+    localization = 1, ["business-services"] = 1, ["character-name-format"] = 1,
+    ["basic-input"] = 1, ["item-resolver"] = 1, ["item-picker"] = 2,
+    ["character-identity"] = 1, characters = 1, ["character-cleanup"] = 1,
+    ["account-view"] = 2, ["account-preview-characters"] = 1,
+    ["account-character-admission"] = 1, ["account-surface-budget"] = 1, ["account-entry"] = 2,
+}
 YiboCore = {
-    CheckAPIVersion = function(_, version) return version <= 9 end,
-    HasCapability = function(_, name, version) return name == "business-services" and version == 1 or name == "character-name-format" and version == 1 or name == "item-picker" and version == 2 end,
-    RegisterAddon = function(_, name, options) assert(name == "YiboMail" and options.requiredAPI == 9); return true end,
-    Contracts = { Register = function() return 'mail-service' end, NotifyChanged = function() end },
+    CheckAPIVersion = function(_, version) return version <= coreAPI end,
+    IsInitialized = function() return true end,
+    Print = function(_, message) messages[#messages + 1] = message end,
+    RegisterAddon = function(_, name, options)
+        assert(name == "YiboMail" and options.requiredAPI == 13)
+        registeredAddons = registeredAddons + 1; return true
+    end,
+    Contracts = {
+        Register = function(_, name, definition)
+            assert(name == "YiboMail" and definition.version.major == 1)
+            contractRegistrations = contractRegistrations + 1
+            registeredContracts[definition.name] = definition
+            return "release:" .. definition.name
+        end,
+        NotifyChanged = function() end, List = function() return {} end,
+        Unregister = function(_, _, ref) registeredContracts[ref:match("^release:(.+)$")] = nil end,
+    },
     CharacterCleanup = { RegisterOwner = function(_, name, callbacks) owner = callbacks; assert(name == "YiboMail"); return true end },
-    Characters = { GetCurrent = function() return { id = "test", name = "Test", realm = "Realm" } end, FormatName = function(_, character) return character.name end },
+    Characters = {
+        GetCurrent = function() return current end, GetAllCached = function() return { current } end,
+        Get = function(_, id) return id == current.id and current or nil end,
+        FormatName = function(_, character) return character.name end,
+    },
     AccountView = {
         RegisterPage = function(_, addonName, definition)
             assert(addonName == "YiboMail" and definition.id == "mail-inbox")
             assert(#definition.fields == 22 and definition.previewEnabled)
             local seen = {}; for _, field in ipairs(definition.fields) do
                 assert(not seen[field.id]); seen[field.id] = true
-                if field.group ~= "账号总览" then assert(field.preview == false) end
+                if field.groupID ~= "overview" then assert(field.preview == false) end
             end
             assert(seen["inbox.subject"] and seen["history.result"] and seen.backlog)
             return definition
@@ -34,13 +60,19 @@ YiboCore = {
         Toggle = function() end,
         NotifyPageChanged = function() end,
         ShowSettings = function() end,
+        BuildContext = Forbidden, GetVisibleCharacters = function() return { current } end,
+        GetEffectiveCharacterSort = function() return "default" end, GetCustomCharacterOrder = function() return {} end,
     },
     Entry = { RegisterBusinessEntry = function(_, addonName, definition)
         assert(addonName == "YiboMail" and definition.id == "yma" and definition.pageID == "mail-inbox")
         return definition
     end },
-    UITheme = {},
+    UITheme = { CreateInput = Forbidden },
+    CreateItemPicker = Forbidden, ItemResolver = { Request = Forbidden },
+    Defaults = { Copy = function(_, value) return YiboMail.Copy(value) end },
 }
+dofile("YiboCore/_NonRelease/Tests/LoadLocale.lua")
+for name, version in pairs(requiredCapabilities) do YiboCore.Capabilities:Register(name, version) end
 YiboMailDB = { contacts = { marker = "contact" }, rules = { marker = "rule" }, settings = { inbox = { sort = "inbox" } } }
 for line in io.lines("YiboMail/YiboMail.toc") do
     local file = line:match("^%s*([^#%s].-)%s*$")
@@ -59,9 +91,12 @@ assert(addon.Frame.events.MAIL_INBOX_UPDATE and addon.Frame.events.MAIL_SUCCESS)
 assert(addon.Frame.events.MAIL_SEND_SUCCESS and addon.Frame.events.MAIL_SEND_INFO_UPDATE)
 SlashCmdList.YIBOMAIL("")
 SlashCmdList.YIBOMAIL("status")
-assert(#messages == 3 and messages[1]:find("API v12", 1, true) and messages[2]:find("API v11", 1, true) and messages[3]:find("not-yet-scanned", 1, true))
+assert(#messages == 3 and messages[1] == addon:T("APP.PREFIX") .. addon:T("UI.TEXT_0099")
+    and messages[2] == addon:T("APP.PREFIX") .. addon:T("UI.TEXT_0495") and messages[3]:find("not-yet-scanned", 1, true))
 assert(addon.GoalTargets.ref == nil and addon.initialized) -- New enhancement stops explicitly; base remains available.
-assert(addon.ActionTodo.ref == nil and addon.initialized) -- Optional Provider stops on API9; base mail remains available.
+assert(addon.ActionTodo.ref == nil and addon.initialized) -- Missing optional provider capability preserves base mail.
+assert(registeredAddons == 1 and registeredContracts['mail.items'] and not registeredContracts['action.todo']
+    and not registeredContracts['action.targets'])
 assert(addon.Core.AccountView)
 addon.Frame.scripts.OnEvent(addon.Frame, "MAIL_CLOSED")
 addon.Frame.scripts.OnEvent(addon.Frame, "PLAYER_REGEN_ENABLED")
@@ -97,18 +132,68 @@ assert(owner.Inspect({ id = "friendOnly" }, {}).hasData)
 owner.Delete({ id = "friendOnly" }, {}); assert(not addon.db.friendsByCharacter.friendOnly)
 print("PASS: release send success captured recipient; failed/unassociated sends excluded; friend-only cleanup owner")
 print("PASS: release TOC boot; native send tracking without send-assist UI; Core page and entry registration; saved rules and contacts preserved; diagnostic slash and mailbox lifecycle")
-local originalCheck, originalCapability, originalFormat = YiboCore.CheckAPIVersion, YiboCore.HasCapability, YiboCore.Characters.FormatName
-local originalDB = addon.InitializeDatabase
+addon:Initialize(); assert(registeredAddons == 1 and contractRegistrations == 1, 'Startup is idempotent')
+-- Optional capabilities may register after base startup without restarting it.
+YiboCore.Capabilities:Register('business-providers', 1)
+assert(addon.ActionTodo:Initialize() and registeredContracts['action.todo'])
+local tasks = registeredContracts['action.todo'].methods.Query({ scope = { characterIDs = { 'test' } } })
+assert(tasks.providerID == addon.ActionTodo.PROVIDER and tasks.coverage.test.state == 'known')
+YiboCore.Capabilities:Register('business-item-actions', 1)
+YiboCore.BusinessItemActions = { Bind = Forbidden, Handle = Forbidden }
+assert(addon.GoalTargets:Initialize() and registeredContracts['action.targets'])
+local intent = { objectID = 'view-mailbox', scope = { characterID = 'test' } }
+local normalized = registeredContracts['action.targets'].methods.Normalize({ intent = intent })
+assert(normalized.intent.scope.characterID == 'test' and normalized.intent.targetType == 'mail-view' and not intent.targetType)
+assert(contractRegistrations == 3)
+assert(addon.ActionTodo:Initialize() and addon.GoalTargets:Initialize() and contractRegistrations == 3)
+addon.ActionTodo:Shutdown(); assert(not addon.ActionTodo.ref and not registeredContracts['action.todo'] and addon.initialized)
+local list = YiboCore.Contracts.List
+YiboCore.Contracts.List = nil
+assert(not addon.ActionTodo:Initialize() and not addon.ActionTodo.ref and addon.initialized)
+YiboCore.Contracts.List = list
+assert(addon.ActionTodo:Initialize() and registeredContracts['action.todo'])
+print('PASS: missing optional enhancements preserve base mail; late registration, public provider methods, repeated registration and provider shutdown/recovery')
+
+local originalDB, savedDB = addon.InitializeDatabase, addon.db
 addon.InitializeDatabase = function() error('Unsupported Core must stop before database initialization') end
-for _, scenario in ipairs({ 'api', 'names', 'batch', 'method' }) do
-    addon.initialized = nil
-    YiboCore.CheckAPIVersion = scenario == 'api' and function() return false end or originalCheck
-    YiboCore.HasCapability = function(_, name, version)
-        if scenario == 'names' and name == 'character-name-format' or scenario == 'batch' and name == 'item-picker' then return false end
-        return originalCapability(nil, name, version)
+local rejectionCount = 0
+local function Reject(label, apply, restore)
+    for _, language in ipairs({ 'zh', 'en' }) do
+        YiboCore.Locale.language = language
+        local messageCount, addonCount = #messages, registeredAddons
+        addon.initialized = nil; apply()
+        addon:Initialize()
+        assert(not addon.initialized and registeredAddons == addonCount and addon.db == savedDB, label)
+        assert(#messages == messageCount + 1 and messages[#messages]:find('YiboCore', 1, true), label .. ': upgrade prompt missing')
+        restore(); rejectionCount = rejectionCount + 1
     end
-    YiboCore.Characters.FormatName = scenario ~= 'method' and originalFormat or nil
-    addon:Initialize(); assert(not addon.initialized and messages[#messages]:find('升级', 1, true))
 end
-addon.InitializeDatabase = originalDB
-print('PASS: old API, missing name/batch capabilities and missing method all prompt upgrade and stop initialization')
+Reject('Core API12', function() coreAPI = 12 end, function() coreAPI = 13 end)
+local isInitialized = YiboCore.IsInitialized
+Reject('Core not ready', function() YiboCore.IsInitialized = function() return false end end,
+    function() YiboCore.IsInitialized = isInitialized end)
+for name, version in pairs(requiredCapabilities) do
+    local capability, minimum = name, version
+    Reject('capability ' .. capability,
+        function() YiboCore.Capabilities._items[capability] = minimum - 1 end,
+        function() YiboCore.Capabilities._items[capability] = minimum end)
+end
+local requiredMethods = {
+    { YiboCore, 'CheckAPIVersion' }, { YiboCore, 'HasCapability' }, { YiboCore, 'IsInitialized' },
+    { YiboCore.Locale, 'Get' }, { YiboCore.Locale, 'Register' },
+    { YiboCore.Contracts, 'Register' }, { YiboCore.Contracts, 'NotifyChanged' },
+    { YiboCore.Characters, 'FormatName' }, { YiboCore.Characters, 'GetAllCached' }, { YiboCore.Characters, 'Get' },
+    { YiboCore.CharacterCleanup, 'RegisterOwner' },
+    { YiboCore.AccountView, 'RegisterPage' }, { YiboCore.AccountView, 'NotifyPageChanged' },
+    { YiboCore.AccountView, 'Toggle' }, { YiboCore.AccountView, 'BuildContext' },
+    { YiboCore.AccountView, 'GetVisibleCharacters' }, { YiboCore.AccountView, 'GetEffectiveCharacterSort' },
+    { YiboCore.AccountView, 'GetCustomCharacterOrder' }, { YiboCore.Entry, 'RegisterBusinessEntry' },
+    { YiboCore.UITheme, 'CreateInput' }, { YiboCore, 'CreateItemPicker' }, { YiboCore.ItemResolver, 'Request' },
+}
+for _, entry in ipairs(requiredMethods) do
+    local target, method = entry[1], entry[2]
+    local original = target[method]
+    Reject('method ' .. method, function() target[method] = nil end, function() target[method] = original end)
+end
+addon.InitializeDatabase, addon.initialized = originalDB, true
+print(string.format('PASS: %d Chinese/English API, readiness, capability-version and required-method failures prompt upgrade before database initialization', rejectionCount))
