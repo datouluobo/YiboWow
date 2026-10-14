@@ -174,13 +174,20 @@ function Actions:TooltipLines(lines, control)
     local previous = control and control.yiboBusinessItemActionTooltipLine
     for _, line in ipairs(lines or {}) do
         local isPreviousActionLine = previous and type(line) == "table" and line.kind == "text" and line.text == previous
-        if not isPreviousActionLine then result[#result + 1] = Core.Defaults:Copy(line) end
+        local isActionSpacer = type(line) == "table" and line.businessActionSpacer == true
+        if not isPreviousActionLine and not isActionSpacer then result[#result + 1] = Core.Defaults:Copy(line) end
     end
     if control and self.bindings[control] then
         local mode = self:GetOptions().mode
         local actionLine = mode == "menu" and Core:Text("CORE.TOP_RIGHT_ADD_CONFIGURE_CHECK_MARK_LOCATE")
             or (self:GestureLabel() .. Core:Text("CORE.ADD_REMOVE_WHILE_KEEPING_THE_WINDOW_OPEN"))
-        result[#result + 1] = { kind = "text", text = actionLine }
+        local compact = self.bindings[control].compactTooltip
+        if compact then
+            actionLine = mode == "menu" and Core:Text("CORE.COMPACT_TARGET_MENU")
+                or Core:Text("CORE.COMPACT_TARGET_TOGGLE", self:GestureLabel())
+        end
+        if compact then result[#result + 1] = { kind = "spacer", businessActionSpacer = true } end
+        result[#result + 1] = { kind = "text", text = actionLine, color = compact and Core.UITheme.Colors.muted or nil }
         control.yiboBusinessItemActionTooltipLine = actionLine
     elseif control then
         control.yiboBusinessItemActionTooltipLine = nil
@@ -268,7 +275,8 @@ function Actions:Bind(control, options)
     if not control or type(options) ~= "table" or type(options.GetIntent) ~= "function" or type(options.owner) ~= "string" then return nil, "invalid-binding" end
     local previous = self.bindings[control]
     local binding = { owner = options.owner, GetIntent = options.GetIntent, markerEnabled = options.menu ~= false, reservedButtons = options.reservedButtons or {}, menu = control.yiboItemMenu or (previous and previous.menu),
-        ctrlLeftSafe = options.ctrlLeftSafe == true, ConfigureCtrlLeft = options.ConfigureCtrlLeft }
+        ctrlLeftSafe = options.ctrlLeftSafe == true, ConfigureCtrlLeft = options.ConfigureCtrlLeft,
+        compactTooltip = options.compactTooltip == true }
     if binding.ConfigureCtrlLeft then binding.ctrlLeftSafe = binding.ConfigureCtrlLeft(self:GetOptions().mode == "ctrlLeft") == true end
     self.bindings[control] = binding
     if not control.yiboItemCleanup then
@@ -325,4 +333,4 @@ for _, event in ipairs({ "BUSINESS_CONTRACT_REGISTERED", "BUSINESS_CONTRACT_UNRE
         if descriptor.name == "action.demands" then Actions:ScheduleMarkers() end
     end)
 end
-Core.Capabilities:Register("business-item-actions", 2)
+Core.Capabilities:Register("business-item-actions", 3)

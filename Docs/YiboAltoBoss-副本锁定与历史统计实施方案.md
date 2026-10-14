@@ -194,6 +194,8 @@ encounters[instanceKey][encounterKey] = {
 
 ### 5.3 历史次数
 
+2026-10-13 实机补充：普通五人本不一定派发遭遇成功事件，且 SavedInstances 没有普通本锁定。已按副本地图／Boss NPC ID 目录增加死亡日志补记、重置成功后的去重失效，以及无锁定时的悬停历史显示。实际字段、目录覆盖和验收以 [五人本 Boss 记录](../YiboAltoBoss/Docs/FivePlayerBossRecording.md) 为准；下方为原方案字段示例。
+
 ```lua
 statistics.bosses[bossKey] = {
     totalKills = 12,

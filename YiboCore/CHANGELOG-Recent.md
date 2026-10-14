@@ -1,5 +1,11 @@
 # YiboCore Changelog / 近期更新
 
+## 1.12.2 · API13 · 2026-10-14
+
+- 新增兼容的 business-item-actions:3：Bind.compactTooltip 按全局操作模式提供简短双语提示，默认保留既有提示。AltoBoss 2.6.1 副本格已接入。
+- Added opt-in compact target-action hints; existing consumers keep their default behavior.
+- 静态语法与语言检查通过；本次未运行自动化测试，客户端交互及英文验收待完成。
+
 ## 1.12.0 · API v13 · 2026-10-12
 
 ### 中文

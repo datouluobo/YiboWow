@@ -206,6 +206,8 @@ Core.Locale:Register("YiboCore", "zh", {
     ["CORE.ADDED_TO_ACTION_CENTER"] = "已添加到行动中心。",
     ["CORE.THIS_ADD_GESTURE_CONFLICTS_WITH_THE_ITEM"] = "添加方式与此项目操作冲突，请在 Core 窗口设置选择其它方式。",
     ["CORE.TOP_RIGHT_ADD_CONFIGURE_CHECK_MARK_LOCATE"] = "右上角＋：添加／配置；勾选：定位目标",
+    ["CORE.COMPACT_TARGET_TOGGLE"] = "%s：添加／取消目标",
+    ["CORE.COMPACT_TARGET_MENU"] = "右上角：添加／查看目标",
     ["CORE.ADD_REMOVE_WHILE_KEEPING_THE_WINDOW_OPEN"] = "：添加／取消并保持窗口；缺参数时点临时＋补充",
     ["CORE.TARGETS_ADDED"] = "已加入目标 · ",
     ["CORE.ACTIVE"] = " 项（进行中 ",

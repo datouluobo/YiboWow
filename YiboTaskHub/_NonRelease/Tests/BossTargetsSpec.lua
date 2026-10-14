@@ -105,12 +105,15 @@ YAB = {
 YiboAltoBossDB = { settings = { lockoutColumns = {} }, knownChars = { ["星河-甲"] = {}, ["星河-乙"] = {}, ["暮光-甲"] = {}, ["新角色-甲"] = {} },
     characters = { ["星河-甲"] = {}, ["星河-乙"] = {}, ["暮光-甲"] = {}, ["新角色-甲"] = {} } }
 dofile("YiboAltoBoss/HolidayBoss.lua")
+dofile("YiboAltoBoss/LockoutLocale.lua")
+dofile("YiboAltoBoss/DungeonBossCatalog.lua")
+dofile("YiboAltoBoss/DungeonRuns.lua")
 dofile("YiboAltoBoss/InstanceLockouts.lua")
 dofile("YiboAltoBoss/TargetCatalog.lua")
 dofile("YiboAltoBoss/PlannedTargets.lua")
 dofile("YiboAltoBoss/GoalTargets.lua")
 dofile("YiboAltoBoss/TargetProjection.lua")
-assert(Core:RegisterAddon("YiboAltoBoss", { requiredAPI = 5 }))
+assert(Core:RegisterAddon("YiboAltoBoss", { requiredAPI = 13 }))
 local Plans = YAB.PlannedTargets
 local originalAPI = Core.API_VERSION
 Core.API_VERSION = 10; Equal(Plans:Initialize(), nil, "low API stops optional integration"); Core.API_VERSION = originalAPI

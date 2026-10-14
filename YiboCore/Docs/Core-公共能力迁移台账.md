@@ -82,7 +82,7 @@ YiboMounts 1.0.0 已按 API13 接入 `localization:1` 和 API v6 独立设置注
 
 | 插件技术名 | 最低 Core API | TOC Core 依赖 | 已检查的新能力 / 主要缺口 |
 | --- | --- | --- | --- |
-| YiboAltoBoss | 5（基础）／11（目标增强） | RequiredDeps | 2.6.0 的刷取目标要求 business-services:1 / business-providers:1；基础追踪保留 API5，版本不足提示升级并停止增强；既有独立设置壳见 AUD-005 |
+| YiboAltoBoss | 13（基础与增强） | RequiredDeps | 工作树副本状态／悬停使用 localization:1；五人本 DBM 可选桥接使用 events:1，目标增强继续要求 business-services:1 / business-providers:1；旧设置库存见 AUD-005 |
 | YiboAutoOpen | 6（可选设置） | OptionalDeps | 独立基础队列保留；本地输入与解析待评估 |
 | YiboBeastPaths | 6（可选维护页） | OptionalDeps（各客户端 TOC） | Mists 维护适配；独立路线功能保留 |
 | YiboBuilds | 10 | RequiredDeps | account-view:2；名称仍待迁移，首次提示验收待完成 |
@@ -235,7 +235,7 @@ YiboMounts 1.0.0 已按 API13 接入 `localization:1` 和 API v6 独立设置注
 
 | 插件技术名 | 接入状态 | 已覆盖及证据 | 剩余范围与版本 |
 | --- | --- | --- | --- |
-| YiboAltoBoss | 部分接入（运行代码与自动化完成） | 2026-10-10 2.6.0 经 Core 提供 boss.target-catalog 与 action.todo / planned-targets，消费 task.boss-targets；奖励观察、精确副本／难度、旧目录稳定键及自动投影均由来源负责，136项联动检查通过 | 可选增强显式 API11 / business-services:1 / business-providers:1；基础 API5 兼容边界已记录；客户端映射、窗口、切号及重置待验收 |
+| YiboAltoBoss | 部分接入（运行代码与自动化完成） | 2026-10-10 2.6.0 经 Core 提供 boss.target-catalog 与 action.todo / planned-targets，消费 task.boss-targets；奖励观察、精确副本／难度、旧目录稳定键及自动投影均由来源负责，136项联动检查通过 | 基础 API13 / localization:1；目标能力继续要求 business-services:1 / business-providers:1，五人本 DBM 可选桥接复用 events:1 与 character-identity:1；客户端映射、窗口、切号及重置待验收 |
 | YiboAutoOpen | 待评估 | 无该新连接接入证据 | 真实协作出现时评估，独立开包功能不因此扩展 |
 | YiboBeastPaths | 待评估 | 无该新连接接入证据 | 真实协作出现时评估 |
 | YiboBuilds | 待评估 | 已盘点 [Snapshot](../../YiboBuilds/Snapshot.lua) 与内部提升页面，尚无目标契约接入 | 计划 targets 与需求下发，核实装备身份和完成证据；当前 UI 最低 API v10 不代表服务已接入，扩展版本待定 |
@@ -442,7 +442,7 @@ Core 状态：**已提供（1.12.0 / API v13 工作树，未发布）**。能力
 
 | 插件（技术名排序） | 接入状态 | 已覆盖 / 剩余范围与版本要求 | 验证证据 / 最近审查 |
 |---|---|---|---|
-| YiboAltoBoss | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+| YiboAltoBoss | 部分接入（副本状态／单元格悬停） | 基础最低 API13 + localization:1；35对 owner 资源覆盖副本状态、锁定详情、无锁定击杀历史、普通本本轮进度及副本 TP／历史显示设置，Boss 页面／设置／目录等剩余区域待迁移；动态 API 名称与旧快照保留 | InstanceKillsSpec：双语、旧Core停止／升级提示及日志回放通过；客户端中文／enUS／手动语言验收待完成，见 AltoBoss/Docs/FivePlayerBossRecording.md / 2026-10-13 |
 | YiboAutoOpen | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
 | YiboBeastPaths | 待评估（独立适配） | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
 | YiboBuilds | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
@@ -492,3 +492,11 @@ Core 状态：**已提供（1.12.0 / API v13 工作树，未发布）**。能力
 2026-10-13 YiboTodo 列头英文文案：CAP-009 接入范围内将职业列标题改为 `Cooldowns`，珠宝列标题改为 `JC`（Jewelcrafting 的常用缩写）；中文资源保持不变。职业列继续按图标内容宽度计算，珠宝列沿用当前语言标题测量，因此英语标题变短后列宽随之缩小。最低 Core API 与调用范围不变；游戏内英文／中文显示待验收。
 
 2026-10-13 YiboTodo 设置页目录文案（CAP-009）：监控组标题和设置内静态目录项现在按稳定 group/item ID 查询 zh/en 资源，覆盖职业冷却、农场、诺米、日常分类、纳特、暗月与布林顿项目；业务设置页不再直接显示目录中的中文标签。角色动态采集名称仍遵循当前游戏 API 原文。Core API 与能力依赖不变；中英文客户端及手动语言模式待验收。
+
+2026-10-14 CAP-005：AltoBoss 五人本可选 DBM 适配器通过既有 Core events:1 发布 YIBOALTOBOSS_DUNGEON_COMPLETED v1 隔离事实；回调注册／注销、晚加载、版本化负载、Core 唯一角色ID／地图／难度／本轮校验与去重均由业务侧负责。无 DBM 依赖或 Core 业务分支，团本原生路径保持。最低 API13，接口与失效细节见 YiboAltoBoss/Docs/FivePlayerBossRecording.md；自动化通过，真实客户端待验收。
+
+2026-10-14 YiboAltoBoss 普通五人本主表进度（CAP-009）：本轮完成集合投影到现有副本格及入口预览；新增 LOCKOUT.KILL_COUNT / LOCKOUT.CURRENT_RUN 双语资源，继续使用 owner Core.Locale:Get、API13 / localization:1。复用现有 Core 账号视图与入口，不新增公共能力。玩家截图已确认监狱三个 Boss 的历史采集；本次展示改动未运行自动化测试，中文／英文客户端及手动语言模式、击杀后显示和重置后恢复待客户端验收。
+
+2026-10-14 CAP-008／CAP-009 AltoBoss 副本 TP：Core 提供 business-item-actions:3 / API13 的通用 Bind.compactTooltip 选项，保持既有调用默认行为与必要参数补充流程；契约见 API-v12-业务项目主动添加.md。AltoBoss 目标增强已检查能力3，副本格启用简短提示，缺能力提示升级并停止增强；基础采集／展示继续。副本 TP 使用既有 UITheme 双列／间隔／文本行，历史次数、最近时间、进入次数开关纳入统一业务设置；新增 TP.* owner 双语资源，历史默认关闭。CAP-001／CAP-004 继续复用现有账号视图、入口及工作台，不新增窗口或缓存权威。静态语法与语言检查通过，本次未运行自动化测试，客户端及交互验收待完成；按部分接入记录。其他插件与 AltoBoss Boss 格未启用简短提示，不推定其已接入能力3。
+
+2026-10-14 CAP-009 AltoBoss 普通本显示时效：新增 TP.STALE／TP.STALE_HINT 中英文 owner 资源，离本 30 分钟后显示待刷新；业务时效和轮次事实仍由 AltoBoss 所有，复用现有 Core Locale／账号页刷新，公共契约与最低 API13 不变。Lua 语法与语言静态报告通过，本次未运行自动化测试，客户端计时／返回／重置及语言验收待完成。

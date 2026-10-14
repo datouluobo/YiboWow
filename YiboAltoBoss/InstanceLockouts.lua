@@ -1,4 +1,6 @@
 local YAB = _G.YAB
+if not YAB.LockoutLocaleReady then return end
+local Core = _G.YiboCore
 local throttleRuntime = {}
 local instanceCatalog
 
@@ -147,9 +149,11 @@ local function BuildInstanceCatalog()
                     local instanceID = EJ_GetInstanceByIndex(index, isRaid)
                     if not instanceID then break end
                     local name = EJ_GetInstanceInfo(instanceID)
+                    local mapID = select(10, EJ_GetInstanceInfo(instanceID))
                     if name and not instanceCatalog[tostring(instanceID)] then
                         instanceCatalog[tostring(instanceID)] = {
                             key = "ej:" .. tostring(instanceID), instanceID = instanceID,
+                            mapID = mapID,
                             name = name, shortName = ShortName(name), expansion = expansion,
                             abbreviation = Abbreviation(name, "EJ" .. tostring(instanceID)),
                             isRaid = isRaid,
@@ -174,6 +178,7 @@ local function BuildInstanceCatalog()
             local key = "legacy:" .. tostring(definition.mapID)
             instanceCatalog[key] = {
                 key = key, instanceID = definition.mapID,
+                mapID = definition.mapID,
                 name = name, shortName = ShortName(name), expansion = definition.expansion,
                 abbreviation = Abbreviation(name, definition.abbr),
                 isRaid = true, tierOrder = EXPANSION_ORDER[definition.expansion],
@@ -226,7 +231,9 @@ local function EnsureCharacter(key)
     return record
 end
 
+local UpdateProgressMonitor
 local function Notify()
+    if UpdateProgressMonitor then UpdateProgressMonitor() end
     if YAB.PersistDB then YAB.PersistDB() end
     if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
 end
@@ -343,6 +350,7 @@ function YAB.RefreshInstanceLockouts()
     local changed = not record.instanceLockoutsObservedAt or not SameLockouts(record.instanceLockouts, lockouts)
     record.instanceLockouts = lockouts
     record.instanceLockoutsObservedAt = now
+    if YAB.GetDungeonRunToken then YAB.GetDungeonRunToken() end
     if YAB.PlannedTargets and YAB.PlannedTargets.providerRef then
         record.targetLockoutCycles = { weekly = YAB.PlannedTargets:Period("weekly"), daily = YAB.PlannedTargets:Period("daily") }
         YAB.PlannedTargets:ScheduleChange()
@@ -357,7 +365,8 @@ function YAB.GetLockoutColumns(context)
     local db, result, seen = DB(), {}, {}
     local function Add(item, key)
         if not item then return end
-        local identity = item.instanceID and ("instance:" .. tostring(item.instanceID)) or ("name:" .. tostring(item.name or key))
+        local mapID = item.mapID or item.instanceID
+        local identity = mapID and ("instance:" .. tostring(mapID)) or ("name:" .. tostring(item.name or key))
         if seen[identity] then return end
         seen[identity] = true
         result[#result + 1] = {
@@ -367,7 +376,8 @@ function YAB.GetLockoutColumns(context)
             abbreviation = item.abbreviation or Abbreviation(item.name or key, item.instanceID and ("ID" .. tostring(item.instanceID)) or nil),
             difficultyName = item.difficultyName,
             expansion = item.expansion,
-            instanceID = item.instanceID,
+            instanceID = mapID,
+            mapID = mapID,
             isRaid = item.isRaid,
             tierOrder = item.tierOrder,
             indexOrder = item.indexOrder,
@@ -411,6 +421,38 @@ function YAB.GetLockoutColumns(context)
     return result
 end
 
+local function NormalDungeonProgress(record, column)
+    if column.isRaid or (column.difficultyID and column.difficultyID ~= 1) or not YAB.DungeonRuns then return end
+    local mapID = tonumber(column.mapID or column.instanceID)
+    if not mapID then return end
+    if YAB.DungeonRuns:IsStale(record, mapID, 1) then
+        return "unknown", Core.Locale:Get("YiboAltoBoss", "TP.STALE")
+    end
+    local killed = YAB.DungeonRuns:GetProgress(record, mapID, 1)
+    if killed == 0 then return end
+    local total
+    if YAB.TargetCatalog then
+        for _, target in ipairs(YAB.TargetCatalog:Query().targets or {}) do
+            if target.kind == "instance" and target.mapID == mapID and not target.isRaid then
+                for _, difficulty in ipairs(target.difficulties or {}) do
+                    if difficulty.id == 1 and difficulty.complete and #(difficulty.encounters or {}) > 0 then
+                        total = #difficulty.encounters
+                        break
+                    end
+                end
+                break
+            end
+        end
+    end
+    -- Verified MoP Stockade roster: Hogger, Lord Overheat, Randolph Moloch.
+    -- The general death whitelist is deliberately incomplete and is not a total.
+    if not total and mapID == 34 then total = 3 end
+    if total and killed <= total then
+        return killed == total and "clear" or "progress", Core.Locale:Get("YiboAltoBoss", "LOCKOUT.PROGRESS", killed, total)
+    end
+    return "progress", Core.Locale:Get("YiboAltoBoss", "LOCKOUT.KILL_COUNT", killed)
+end
+
 function YAB.GetLockoutStatus(charKey, column)
     local record = EnsureCharacter(charKey)
     local lockout = record and record.instanceLockouts and record.instanceLockouts[column.key]
@@ -423,56 +465,261 @@ function YAB.GetLockoutStatus(charKey, column)
         end
     end
     if not lockout then
-        if not record.instanceLockoutsObservedAt then return "unknown", "未扫描", nil end
-        return "open", "未锁定", nil
+        local status, label = NormalDungeonProgress(record, column)
+        if status then return status, label, nil end
+        if not record.instanceLockoutsObservedAt then return "unknown", Core.Locale:Get("YiboAltoBoss", "LOCKOUT.UNKNOWN"), nil end
+        return "open", Core.Locale:Get("YiboAltoBoss", "LOCKOUT.OPEN"), nil
     end
     local killed, total = 0, tonumber(lockout.bossCount) or 0
     for _, boss in ipairs(lockout.bosses or {}) do if boss.killed then killed = killed + 1 end end
     local completed = total > 0 and killed >= total
-    local label = completed and "已完成" or (total > 0 and string.format("%d/%d", killed, total) or "已锁定")
+    local label = completed and Core.Locale:Get("YiboAltoBoss", "LOCKOUT.CLEAR") or (total > 0 and Core.Locale:Get("YiboAltoBoss", "LOCKOUT.PROGRESS", killed, total) or Core.Locale:Get("YiboAltoBoss", "LOCKOUT.LOCKED"))
     return completed and "clear" or "locked", label, lockout
 end
 
 function YAB.GetLockoutTooltip(charKey, column)
     local status, label, lockout = YAB.GetLockoutStatus(charKey, column)
-    if not lockout then return { "未发现当前副本锁定" } end
-    local charRecord = EnsureCharacter(charKey)
-    local lines = { "状态：" .. label }
-    for _, stat in pairs(charRecord.statistics.instances or {}) do
-        if stat.name == lockout.name and stat.difficultyID == lockout.difficultyID then
-            lines[#lines + 1] = "历史进入：" .. tostring(stat.runs or 0) .. " 次"
-            break
+    local record = EnsureCharacter(charKey)
+    local options = DB().settings.lockoutTooltip or {}
+    local mapID = tonumber(column.mapID or column.instanceID)
+    local difficultyID = lockout and lockout.difficultyID or 1
+    local function Text(key, ...) return Core.Locale:Get("YiboAltoBoss", key, ...) end
+    local difficulty = lockout and lockout.difficultyName or (GetDifficultyInfo and GetDifficultyInfo(difficultyID))
+    if column.isRaid and not lockout then difficulty = nil end
+    local heading = difficulty and Text("TP.TITLE", column.name, difficulty) or column.name
+    local colors = Core.UITheme and Core.UITheme.Colors or {}
+    if not lockout and not column.isRaid and status == "open" then label = Text("TP.NOT_STARTED") end
+    local lines = { { kind = "pair", label = heading, value = label,
+        labelColor = colors.text, valueColor = status == "clear" and colors.success or colors.accent } }
+    if not lockout and not column.isRaid and YAB.DungeonRuns:IsStale(record, mapID, difficultyID) then
+        lines[#lines + 1] = { kind = "text", text = Text("TP.STALE_HINT"), color = colors.muted }
+    end
+    if lockout and lockout.resetAt and lockout.resetAt > Now() then
+        lines[#lines + 1] = { kind = "pair", label = Text("TP.RESET"), value = date("%m-%d %H:%M", lockout.resetAt) }
+    end
+    local history, byEncounter, byName = {}, {}, {}
+    for _, boss in pairs(record.statistics.bosses or {}) do
+        if (mapID and boss.instanceID == mapID or boss.instanceName == column.name)
+            and (boss.difficultyID or 1) == difficultyID then
+            history[#history + 1] = boss
+            if boss.encounterID then byEncounter[boss.encounterID] = boss end
+            byName[boss.name] = boss
         end
     end
-    if lockout.difficultyName and lockout.difficultyName ~= "" then lines[#lines + 1] = "难度：" .. lockout.difficultyName end
-    if lockout.resetAt and lockout.resetAt > 0 then lines[#lines + 1] = "重置：" .. date("%m-%d %H:%M", lockout.resetAt) end
-    for _, boss in ipairs(lockout.bosses or {}) do
-        local history
-        for _, stat in pairs(charRecord.statistics.bosses or {}) do
-            if stat.name == boss.name and stat.instanceName == lockout.name then history = stat.kills; break end
+    local roster = {}
+    if lockout then
+        for _, boss in ipairs(lockout.bosses or {}) do
+            local stat
+            for _, candidate in ipairs(history) do if candidate.name == boss.name then stat = candidate; break end end
+            roster[#roster + 1] = { name = boss.name, killed = boss.killed == true, stat = stat }
         end
-        lines[#lines + 1] = (boss.killed and "已击杀  " or "未击杀  ") .. boss.name .. (history and ("  · 历史 " .. tostring(history) .. " 次") or "")
+    elseif not column.isRaid then
+        local directory
+        if YAB.TargetCatalog then
+            for _, target in ipairs(YAB.TargetCatalog:Query().targets or {}) do
+                if target.kind == "instance" and target.mapID == mapID then
+                    for _, d in ipairs(target.difficulties or {}) do
+                        if d.id == difficultyID and d.complete then directory = d.encounters; break end
+                    end
+                    break
+                end
+            end
+        end
+        if directory then
+            for _, boss in ipairs(directory) do
+                local stat = byEncounter[boss.id] or byName[boss.name]
+                roster[#roster + 1] = { name = boss.name, stat = stat,
+                    killed = YAB.DungeonRuns:IsCompleted(record, mapID, difficultyID, boss.id, stat and stat.npcID) }
+            end
+        else
+            -- Historical names identify known bosses; lifetime counts never imply current completion.
+            table.sort(history, function(a, b)
+                if (a.encounterID or 0) ~= (b.encounterID or 0) then return (a.encounterID or 0) < (b.encounterID or 0) end
+                return a.name < b.name
+            end)
+            for _, boss in ipairs(history) do
+                roster[#roster + 1] = { name = boss.name, stat = boss,
+                    killed = YAB.DungeonRuns:IsCompleted(record, mapID, difficultyID, boss.encounterID, boss.npcID) }
+            end
+        end
+    end
+    if #roster > 0 then lines[#lines + 1] = { kind = "spacer" } end
+    for _, boss in ipairs(roster) do
+        local key = boss.killed == true and "TP.KILLED" or boss.killed == false and "TP.ALIVE" or "TP.UNKNOWN"
+        lines[#lines + 1] = { kind = "pair", label = boss.name, value = Text(key), labelColor = colors.text,
+            valueColor = boss.killed and colors.success or colors.text }
+        local details = {}
+        if options.historyKills and boss.stat then details[#details + 1] = Text("TP.HISTORY", tonumber(boss.stat.kills) or 0) end
+        if options.lastKill and boss.stat and boss.stat.lastAt then details[#details + 1] = Text("TP.LAST", date("%m-%d %H:%M", boss.stat.lastAt)) end
+        if #details > 0 then lines[#lines + 1] = { kind = "text", text = table.concat(details, "  ·  "), color = colors.muted } end
+    end
+    -- Without a current raid lockout, history is shown only when explicitly requested.
+    if column.isRaid and not lockout and (options.historyKills or options.lastKill) then
+        table.sort(history, function(a, b) return a.name < b.name end)
+        for _, boss in ipairs(history) do
+            local details = {}
+            if options.historyKills then details[#details + 1] = Text("TP.HISTORY", tonumber(boss.kills) or 0) end
+            if options.lastKill and boss.lastAt then details[#details + 1] = Text("TP.LAST", date("%m-%d %H:%M", boss.lastAt)) end
+            lines[#lines + 1] = { kind = "pair", label = boss.name, value = table.concat(details, "  ·  ") }
+        end
+    end
+    if options.entryCount then
+        for _, stat in pairs(record.statistics.instances or {}) do
+            if stat.name == column.name and stat.difficultyID == difficultyID then
+                lines[#lines + 1] = { kind = "pair", label = Text("TP.ENTRIES"), value = Text("TP.TIMES", tonumber(stat.runs) or 0) }
+                break
+            end
+        end
     end
     return lines
 end
 
-function YAB.RecordEncounterKill(encounterName, encounterID)
+function YAB.RecordEncounterKill(encounterName, encounterID, evidence)
+    evidence = evidence or {}
     local key = CurrentKey()
     local record = EnsureCharacter(key)
     if not record or not encounterName then return end
-    local instanceName, instanceType, difficultyID = InstanceInfo()
+    local instanceName, instanceType, difficultyID, _, maxPlayers, instanceID = InstanceInfo()
     if instanceType ~= "party" and instanceType ~= "raid" then return end
-    local now, token = Now(), tostring(instanceName) .. ":" .. tostring(difficultyID) .. ":" .. tostring(encounterName)
-    if record.statistics.recent[token] and now - record.statistics.recent[token] < 60 then return end
-    record.statistics.recent[token] = now
-    local boss = record.statistics.bosses[token] or { name = encounterName, instanceName = instanceName, kills = 0, firstAt = now }
+    local now = Now()
+    local legacyToken = tostring(instanceName) .. ":" .. tostring(difficultyID) .. ":" .. tostring(encounterName)
+    local identity = tonumber(encounterID) and tonumber(encounterID) > 0 and ("encounter:" .. encounterID)
+        or evidence.npcID and ("npc:" .. evidence.npcID)
+    local token = identity and ("instance:" .. tostring(instanceID) .. ":" .. tostring(difficultyID) .. ":" .. identity) or legacyToken
+    local guidToken = evidence.guid and ("guid:" .. evidence.guid)
+    if guidToken and record.statistics.recent[guidToken] and now - record.statistics.recent[guidToken] < 3600 then return end
+    local dungeon = instanceType == "party" and tonumber(maxPlayers or 0) <= 5
+        and identity and YAB.DungeonRuns
+    if dungeon then
+        YAB.GetDungeonRunToken(evidence.guid)
+        local npcID = evidence.npcID
+        if not npcID and encounterID then
+            for id, nativeID in pairs(YAB.DungeonBossCatalog[instanceID] or {}) do
+                if nativeID == tonumber(encounterID) then npcID = id; break end
+            end
+        end
+        if not YAB.DungeonRuns:Claim(record, instanceID, difficultyID, instanceName, identity, npcID, evidence.guid) then return end
+    else
+        -- Raid recording retains its existing short-window correlation.
+        for _, recentKey in ipairs({ token, legacyToken }) do
+            if record.statistics.recent[recentKey] and now - record.statistics.recent[recentKey] < 60 then return end
+        end
+    end
+    for recentKey, at in pairs(record.statistics.recent) do
+        if type(at) ~= "number" or now - at > 3600 then record.statistics.recent[recentKey] = nil end
+    end
+    record.statistics.recent[token], record.statistics.recent[legacyToken] = now, now
+    if guidToken then record.statistics.recent[guidToken] = now end
+    -- Enrich an existing legacy statistic in place; do not duplicate its total.
+    local statKey = record.statistics.bosses[token] and token or record.statistics.bosses[legacyToken] and legacyToken or token
+    if not record.statistics.bosses[statKey] then
+        for existingKey, stat in pairs(record.statistics.bosses) do
+            if stat.instanceID == instanceID and stat.difficultyID == difficultyID
+                and ((evidence.npcID and stat.npcID == evidence.npcID) or stat.name == encounterName) then
+                statKey = existingKey
+                break
+            end
+        end
+    end
+    local boss = record.statistics.bosses[statKey] or { name = encounterName, instanceName = instanceName, kills = 0, firstAt = now }
     boss.kills = (boss.kills or 0) + 1
     boss.lastAt = now
-    record.statistics.bosses[token] = boss
+    boss.instanceID, boss.difficultyID = instanceID, difficultyID
+    boss.encounterID = tonumber(encounterID) or boss.encounterID
+    boss.npcID = evidence.npcID or boss.npcID
+    boss.lastSource = evidence.source or "encounter-event"
+    record.statistics.bosses[statKey] = boss
+    Notify()
+end
+
+function YAB.GetDungeonRunToken(guid)
+    local name, kind, difficultyID, _, maxPlayers, mapID = InstanceInfo()
+    maxPlayers = tonumber(maxPlayers)
+    if kind ~= "party" or not maxPlayers or maxPlayers < 1 or maxPlayers > 5 or not YAB.DungeonRuns then return end
+    local record = EnsureCharacter(CurrentKey())
+    if not record then return end
+    if not guid and UnitGUID then
+        for _, unit in ipairs({ "target", "boss1", "boss2", "boss3", "boss4" }) do
+            local value = UnitGUID(unit)
+            if value and value:match("^Creature%-") then guid = value; break end
+        end
+    end
+    return YAB.DungeonRuns:Observe(record, mapID, difficultyID, name, guid)
+end
+
+function YAB.RecordDungeonDeath(guid, name)
+    if type(guid) ~= "string" or not name then return end
+    local npcID = tonumber(guid:match("^Creature%-%d+%-%d+%-%d+%-%d+%-(%d+)%-"))
+    if not npcID then return end
+    local _, instanceType, difficultyID, _, maxPlayers, instanceID = InstanceInfo()
+    if instanceType ~= "party" or tonumber(maxPlayers or 0) > 5 then return end
+    local bosses = YAB.DungeonBossCatalog and YAB.DungeonBossCatalog[instanceID]
+    local encounterID = bosses and bosses[npcID]
+    if encounterID == nil then return end
+    if YAB.TargetCatalog and YAB.TargetCatalog.ResolveSavedEncounter then
+        local currentID = YAB.TargetCatalog:ResolveSavedEncounter(instanceID, difficultyID, name)
+        if type(currentID) == "number" and currentID > 0 then encounterID = currentID end
+    end
+    YAB.RecordEncounterKill(name, encounterID > 0 and encounterID or nil, {
+        npcID = npcID, guid = guid, source = "unit-died",
+    })
+end
+
+function YAB.ResetInstanceKillDedupe(instanceName)
+    local record = EnsureCharacter(CurrentKey())
+    if not record then return end
+    if YAB.DungeonRuns then
+        local difficultyID = (GetDungeonDifficultyID and GetDungeonDifficultyID()) or 1
+        YAB.DungeonRuns:Reset(record, instanceName, difficultyID)
+    end
+    local prefixes = { tostring(instanceName) .. ":" }
+    for _, stat in pairs(record.statistics.bosses) do
+        if stat.instanceName == instanceName and stat.instanceID then
+            prefixes[#prefixes + 1] = "instance:" .. stat.instanceID .. ":"
+        end
+    end
+    for token in pairs(record.statistics.recent) do
+        for _, prefix in ipairs(prefixes) do
+            if token:sub(1, #prefix) == prefix then record.statistics.recent[token] = nil; break end
+        end
+    end
     Notify()
 end
 
 local frame = CreateFrame("Frame")
+local activeNormalMap
+local function MarkProgressLeave(record, mapID)
+    local state = (record.statistics.dungeonCycles or {})[tostring(mapID) .. ":1"]
+    if state and next(state.completed or {}) then YAB.DungeonRuns:Leave(record, mapID, 1) end
+end
+local function SyncDungeonDeathListener()
+    local _, instanceType, difficultyID, _, maxPlayers, mapID = InstanceInfo()
+    local record = EnsureCharacter(CurrentKey())
+    local normalMap = instanceType == "party" and tonumber(maxPlayers or 0) <= 5 and difficultyID == 1 and mapID or nil
+    if record and YAB.DungeonRuns then
+        if activeNormalMap and activeNormalMap ~= normalMap then MarkProgressLeave(record, activeNormalMap) end
+        if not activeNormalMap then
+            -- Covers login outside, missed exits and pre-timeout-format data.
+            -- Unknown old observation times expire immediately, without
+            -- deleting completion facts or pretending the dungeon reset.
+            for key, state in pairs(record.statistics.dungeonCycles or {}) do
+                local savedMap = tonumber(key:match("^(%d+):1$"))
+                if savedMap and savedMap ~= normalMap then
+                    YAB.DungeonRuns:IsStale(record, savedMap, 1)
+                    MarkProgressLeave(record, savedMap)
+                end
+            end
+        end
+    end
+    activeNormalMap = normalMap
+    if instanceType == "party" and tonumber(maxPlayers or 0) <= 5 then
+        YAB.GetDungeonRunToken()
+        frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+    else
+        frame:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+    end
+    if UpdateProgressMonitor then UpdateProgressMonitor() end
+end
 local requestQueued, requestPending, requestToken, lastRequestAt = false, false, 0, -math.huge
 local function ScheduleRequest()
     if requestQueued or requestPending then return end
@@ -501,15 +748,29 @@ local function IsResetMessage(message)
     for _, name in ipairs({ "INSTANCE_RESET_SUCCESS", "INSTANCE_RESET_FAILED", "INSTANCE_RESET_FAILED_ZONING", "INSTANCE_RESET_FAILED_OFFLINE" }) do
         local format = _G[name]
         if type(format) == "string" then
-            local pattern = format:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1"):gsub("%%%%s", ".+"):gsub("%%%%d", "%%d+")
-            if message:match("^" .. pattern .. "$") then return true end
+            local pattern = format:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1"):gsub("%%%%s", "(.+)"):gsub("%%%%d", "%%d+")
+            local instanceName = message:match("^" .. pattern .. "$")
+            if instanceName then return true, name == "INSTANCE_RESET_SUCCESS" and instanceName or nil end
         end
     end
     return false
 end
 
-for _, event in ipairs({ "PLAYER_LOGIN", "PLAYER_ENTERING_WORLD", "RAID_INSTANCE_WELCOME", "ZONE_CHANGED_NEW_AREA", "ZONE_CHANGED_INDOORS", "UPDATE_INSTANCE_INFO", "ENCOUNTER_END", "BOSS_KILL", "CHAT_MSG_SYSTEM" }) do frame:RegisterEvent(event) end
+for _, event in ipairs({ "PLAYER_LOGIN", "PLAYER_ENTERING_WORLD", "PLAYER_LOGOUT", "RAID_INSTANCE_WELCOME", "ZONE_CHANGED_NEW_AREA", "ZONE_CHANGED_INDOORS", "UPDATE_INSTANCE_INFO", "ENCOUNTER_END", "BOSS_KILL", "CHAT_MSG_SYSTEM" }) do frame:RegisterEvent(event) end
 frame:SetScript("OnEvent", function(_, event, encounterID, encounterName, difficultyID, _, success)
+    if event == "PLAYER_LOGOUT" then
+        local record = EnsureCharacter(CurrentKey())
+        if record and activeNormalMap and YAB.DungeonRuns then YAB.DungeonRuns:Leave(record, activeNormalMap, 1) end
+        return
+    end
+    if event == "COMBAT_LOG_EVENT_UNFILTERED" then
+        local _, subevent, _, _, _, _, _, guid, name = CombatLogGetCurrentEventInfo()
+        if subevent == "UNIT_DIED" then
+            YAB.GetDungeonRunToken(guid)
+            YAB.RecordDungeonDeath(guid, name)
+        end
+        return
+    end
     if event == "UPDATE_INSTANCE_INFO" then
         requestPending = false
         YAB.RefreshInstanceLockouts()
@@ -525,8 +786,60 @@ frame:SetScript("OnEvent", function(_, event, encounterID, encounterName, diffic
         return
     end
     if event == "CHAT_MSG_SYSTEM" then
-        if IsResetMessage(encounterID) then ScheduleRequest() end
+        local isReset, resetName = IsResetMessage(encounterID)
+        if resetName then YAB.ResetInstanceKillDedupe(resetName) end
+        if isReset then ScheduleRequest() end
         return
     end
+    SyncDungeonDeathListener()
     ScheduleRequest()
 end)
+
+-- Only nonempty, unexpired normal progress needs the periodic safety check.
+-- The OnUpdate handler is detached entirely when that work set is empty.
+local progressElapsed = 0
+local progressStates = setmetatable({}, { __mode = "k" })
+local monitoringProgress = false
+local function CheckProgress(_, elapsed)
+    progressElapsed = progressElapsed + elapsed
+    if progressElapsed < 15 or not YAB.DungeonRuns then return end
+    progressElapsed = 0
+    SyncDungeonDeathListener()
+    local changed = false
+    for _, record in pairs(DB().characters) do
+        if record.statistics then
+            local previous = progressStates[record] or {}
+            progressStates[record] = previous
+            for key in pairs(record.statistics.dungeonCycles or {}) do
+                local mapID = tonumber(key:match("^(%d+):1$"))
+                if mapID then
+                    local stale = YAB.DungeonRuns:IsStale(record, mapID, 1)
+                    if previous[key] ~= stale and (previous[key] ~= nil or stale) then changed = true end
+                    previous[key] = stale
+                end
+            end
+        end
+    end
+    if changed then Notify() end
+    if UpdateProgressMonitor then UpdateProgressMonitor() end
+end
+
+UpdateProgressMonitor = function()
+    local needed = false
+    if YAB.DungeonRuns then
+        for _, record in pairs(DB().characters) do
+            for key, state in pairs(record.statistics and record.statistics.dungeonCycles or {}) do
+                local mapID = tonumber(key:match("^(%d+):1$"))
+                if mapID and next(state.completed or {}) and not YAB.DungeonRuns:IsStale(record, mapID, 1) then
+                    needed = true
+                    break
+                end
+            end
+            if needed then break end
+        end
+    end
+    if needed == monitoringProgress then return end
+    monitoringProgress = needed
+    progressElapsed = 0
+    frame:SetScript("OnUpdate", needed and CheckProgress or nil)
+end

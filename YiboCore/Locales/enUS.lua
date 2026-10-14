@@ -206,6 +206,8 @@ Core.Locale:Register("YiboCore", "en", {
     ["CORE.ADDED_TO_ACTION_CENTER"] = "Added to Action Center.",
     ["CORE.THIS_ADD_GESTURE_CONFLICTS_WITH_THE_ITEM"] = "This add gesture conflicts with the item action. Choose another in Core window settings.",
     ["CORE.TOP_RIGHT_ADD_CONFIGURE_CHECK_MARK_LOCATE"] = "Top-right +: add/configure; check mark: locate target",
+    ["CORE.COMPACT_TARGET_TOGGLE"] = "%s: add/remove target",
+    ["CORE.COMPACT_TARGET_MENU"] = "Top-right: add/view target",
     ["CORE.ADD_REMOVE_WHILE_KEEPING_THE_WINDOW_OPEN"] = ": add/remove while keeping the window open; use the temporary + for required details",
     ["CORE.TARGETS_ADDED"] = "Targets added · ",
     ["CORE.ACTIVE"] = " (active ",

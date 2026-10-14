@@ -136,20 +136,20 @@ local function StatusCell(parent, index, x, y, column, charKey)
     cell:SetPoint("TOPLEFT", x, y)
     cell:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     local status, label = YAB.GetLockoutStatus(charKey, column)
-    local color = status == "clear" and C.success or status == "locked" and C.accent or C.muted
+    local color = status == "clear" and C.success or (status == "locked" or status == "progress") and C.accent or C.muted
     cell:SetBackdropColor(color[1] * 0.18, color[2] * 0.18, color[3] * 0.18, 0.95)
     cell:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], 1)
     cell.text = cell.text or Text(cell, Theme.Font.body, color, "CENTER")
     cell.text:SetAllPoints()
     cell.text:SetText(label)
-    Theme:BindTooltip(cell, column.name, YAB.GetLockoutTooltip(charKey, column))
+    Theme:BindTooltip(cell, column.plannedCatalogID and column.name or nil, YAB.GetLockoutTooltip(charKey, column))
     if _G.YiboCore.BusinessItemActions then _G.YiboCore.BusinessItemActions:Unbind(cell) end
     if YAB.GoalTargets and YAB.GoalTargets.ref then
         local definition
         for _, d in ipairs(YAB.TargetCatalog:Query().targets) do
             if d.kind == "instance" and (d.id == column.plannedCatalogID or d.mapID and d.mapID == column.instanceID) then definition = d; break end
         end
-        if definition then YAB.GoalTargets:Bind(cell, charKey, { catalogID = definition.id, difficultyID = column.plannedDifficultyID or column.difficultyID, scope = "all", encounterIDs = {} }) end
+        if definition then YAB.GoalTargets:Bind(cell, charKey, { catalogID = definition.id, difficultyID = column.plannedDifficultyID or column.difficultyID, scope = "all", encounterIDs = {} }, nil, true) end
     end
 end
 

@@ -52,3 +52,9 @@ Crafting 1.0.7 的目标增强要求能力 2；低版本明确提示升级并停
 所有新绑定要求 API12 / business-item-actions:1。TaskHub 整体要求 API12；来源保留旧基础最低版本作为明确兼容例外，只有新增强停用，无第二套本地绑定回退。现有 Service、Provider、事件、账号页与输入 API 保持兼容。
 
 已接入调用位于 AltoBoss / Builds / Crafting / Currency / Legendary / Mail / Reputation / Todo / Vault 的 GoalTargets 与实际业务页面；Core 手势设置在 SettingsWorkbench。其它来源当前无合适持久目标，未注册占位能力。来源新增可验证对象或修改同类点击入口时接入本能力。客户端安全交互与布局仍待验收，自动化与范围以实施记录为准。
+
+## 简短悬停说明（2026-10-14，business-item-actions:3）
+
+API13 工作树提供能力3，兼容能力1／2的已有调用。`Bind(control, {owner, GetIntent, compactTooltip=true, ...})` 可选择简短操作说明；默认 false，已有消费者显示不变。`TooltipLines(lines, control)` 根据已注册绑定和当前全局操作模式生成一行中英文提示并用辅助色呈现；手势模式描述添加／取消，菜单模式描述添加／查看。必要参数缺失仍由现有 Invoke 流程提示并提供补参入口。无绑定时不输出操作说明，重复调用不会堆积提示或分隔行。没有业务数据输入或业务分支，Core 不读取消费者内部状态。
+
+AltoBoss 的目标增强检查 API13 / business-item-actions:3，不满足时提示升级并停止该增强；基础采集及副本展示继续运行，不提供本地手势回退。副本格启用 compactTooltip，其他格及其他插件保持原默认。后续业务调用触及同类简化需求时按需接入；本次仅静态语法及语言检查，实际交互待客户端验收。

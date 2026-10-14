@@ -193,12 +193,12 @@ function Integration:Initialize()
     if not (Core and Core.CheckAPIVersion and Core.AccountView) then
         return nil, "YiboCore 不可用。"
     end
-    local compatible = Core:CheckAPIVersion(5)
-    if not compatible then
-        return nil, "需要 YiboCore API v5。"
+    local compatible = Core:CheckAPIVersion(13)
+    if not compatible or not Core.HasCapability or not Core:HasCapability("localization", 1) or not YAB.LockoutLocaleReady then
+        return nil, "YiboAltoBoss requires YiboCore API v13 / localization:1. 请升级 YiboCore。"
     end
 
-    Core:RegisterAddon("YiboAltoBoss", { version = "2.6", requiredAPI = 5 })
+    Core:RegisterAddon("YiboAltoBoss", { version = "2.6.1", requiredAPI = 13 })
     if Core.CharacterCleanup then
         local cleanupRegistered, cleanupError = RegisterCharacterCleanupOwner()
         if not cleanupRegistered then return nil, cleanupError end

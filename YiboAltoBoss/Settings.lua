@@ -1070,6 +1070,26 @@ function YAB.CreateCoreSettingsPanel(parent, context)
             local value = math.max(1, math.floor(tonumber(self:GetText()) or 5))
             YiboAltoBossDB.settings.normalInstanceLimit = value; self:SetText(tostring(value)); YAB.PersistDB(); if context and context.notifyPageChanged then context.notifyPageChanged() end; self:ClearFocus()
         end)
+        local function TPText(key) return _G.YiboCore.Locale:Get("YiboAltoBoss", key) end
+        panel.tooltipDetails = Section(panel, TPText("TP.SETTINGS"), 292, 140)
+        panel.tooltipChecks = {}
+        for index, definition in ipairs({
+            { key = "historyKills", label = "TP.SHOW_HISTORY" },
+            { key = "lastKill", label = "TP.SHOW_LAST" },
+            { key = "entryCount", label = "TP.SHOW_ENTRIES" },
+        }) do
+            local optionKey = definition.key
+            local check = context.createCheckbox(panel.tooltipDetails, TPText(definition.label))
+            check:SetPoint("TOPLEFT", 12, -40 - (index - 1) * 28)
+            check:SetScript("OnClick", function(self)
+                self:SetChecked(not self:GetChecked())
+                YiboAltoBossDB.settings.lockoutTooltip = YiboAltoBossDB.settings.lockoutTooltip or {}
+                YiboAltoBossDB.settings.lockoutTooltip[optionKey] = self:GetChecked() == true
+                YAB.PersistDB()
+                if context.notifyPageChanged then context.notifyPageChanged() end
+            end)
+            panel.tooltipChecks[optionKey] = check
+        end
         panel.instanceCatalog = Section(panel, "悬停固定副本", 292, 1)
         panel.instanceCatalogHint = context.createText(panel.instanceCatalog, Theme.Font.assist, Theme.Colors.muted, "LEFT")
         panel.instanceCatalogHint:SetPoint("TOPLEFT", 12, -40); panel.instanceCatalogHint:SetPoint("TOPRIGHT", -12, -40)
@@ -1106,6 +1126,8 @@ function YAB.CreateCoreSettingsPanel(parent, context)
     panel.custom:SetWidth(halfWidth)
     panel.holiday:SetWidth(halfWidth)
     panel.lockout:SetWidth(halfWidth)
+    panel.tooltipDetails:SetWidth(halfWidth)
+    for _, check in pairs(panel.tooltipChecks) do check:SetWidth(halfWidth - 24) end
     panel.instanceCatalog:SetWidth(panelWidth)
     local groups = YAB.GetDisplayGroups and YAB.GetDisplayGroups() or {}
     for _, check in pairs(panel.groupChecks) do check:Hide() end
@@ -1205,9 +1227,13 @@ function YAB.CreateCoreSettingsPanel(parent, context)
     panel.holidayCheck:SetChecked(not (YiboAltoBossDB.settings and YiboAltoBossDB.settings.showHolidayBosses == false))
     panel.lockout:ClearAllPoints(); panel.lockout:SetPoint("TOPLEFT", panel.holiday, "BOTTOMLEFT", 0, -12)
     panel.lockoutInput:SetText(tostring((YiboAltoBossDB.settings and YiboAltoBossDB.settings.normalInstanceLimit) or 5))
+    panel.tooltipDetails:ClearAllPoints(); panel.tooltipDetails:SetPoint("TOPLEFT", panel.lockout, "BOTTOMLEFT", 0, -12)
+    for key, check in pairs(panel.tooltipChecks) do
+        check:SetChecked(YiboAltoBossDB.settings.lockoutTooltip and YiboAltoBossDB.settings.lockoutTooltip[key] == true or false)
+    end
     -- Keep a real vertical safety gap below the tallest upper column. The
     -- catalog is full width, so it must never overlap the right-side cards.
-    local rightColumnHeight = panel.custom:GetHeight() + 12 + panel.holiday:GetHeight() + 12 + panel.lockout:GetHeight() + 24
+    local rightColumnHeight = panel.custom:GetHeight() + 12 + panel.holiday:GetHeight() + 12 + panel.lockout:GetHeight() + 12 + panel.tooltipDetails:GetHeight() + 24
     local upperSectionHeight = math.max(panel.targets:GetHeight(), rightColumnHeight)
     panel.instanceCatalogAnchor:SetHeight(upperSectionHeight)
     panel.instanceCatalog:ClearAllPoints()

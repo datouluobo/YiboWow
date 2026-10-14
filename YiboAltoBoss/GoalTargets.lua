@@ -82,20 +82,20 @@ function Targets:Evaluate(r)
 end
 function Targets:Initialize()
     local core = Core()
-    if not (core:CheckAPIVersion(12) and core:HasCapability("business-item-actions", 1)) then core:Print("首领主动添加需要 Core API v12，请升级 Core。"); return end
+    if not (core:CheckAPIVersion(13) and core:HasCapability("business-item-actions", 3)) then core:Print(core.Locale:Get("YiboAltoBoss", "TP.UPGRADE_ACTIONS")); return end
     if self.ref then return true end
     self.definition = { name = "action.targets", kind = "provider", providerID = self.PROVIDER, version = { major = 1, minor = 1 },
         methods = { GetEntry = function() return { title = "首领与副本", pageID = "alto-boss" } end, Normalize = function(r) return Targets:Normalize(r) end, Evaluate = function(r) return Targets:Evaluate(r) end } }
     self.ref = core.Contracts:Register("YiboAltoBoss", self.definition)
     return self.ref ~= nil
 end
-function Targets:Bind(control, key, target, original)
+function Targets:Bind(control, key, target, original, compactTooltip)
     local core = Core()
     if not self.ref then return end
     local id = core.Characters:ResolveLegacyKey(key)
     if not id then core.BusinessItemActions:Unbind(control); return end
     local intent = { providerID = self.PROVIDER, objectID = target.catalogID, targetType = "boss", scope = { mode = "character", characterID = id }, conditions = target, repeatPolicy = "recurring" }
-    core.BusinessItemActions:Bind(control, { owner = "YiboAltoBoss", GetIntent = function() return intent end, ctrlLeftSafe = true, reservedButtons = { LeftButton = true } })
+    core.BusinessItemActions:Bind(control, { owner = "YiboAltoBoss", GetIntent = function() return intent end, ctrlLeftSafe = true, reservedButtons = { LeftButton = true }, compactTooltip = compactTooltip == true })
     control:RegisterForClicks("AnyUp")
     control:SetScript("OnClick", function(self, button)
         if core.BusinessItemActions:Handle(self, button) then return end

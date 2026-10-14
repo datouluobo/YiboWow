@@ -1,5 +1,53 @@
 # YiboAltoBoss 更新日志 / Changelog
 
+## 2.6.1 — 2026-10-14
+
+发布五人本独立记录与可选 DBM 补充、本轮进度、精简 TP 与历史开关、进度时效和按需校对。基础最低 Core API13 / localization:1；目标操作使用 Core 1.12.2 / business-item-actions:3。下列实施条目归入此版本；实际验收边界见 Docs/FivePlayerBossRecording.md。
+
+## 未发布 — 普通本超时校对按需运行（2026-10-14）
+
+- 仅有非空、未过期普通本进度时启用 15 秒安全校对；没有进度、全部过期或重置清空时注销 OnUpdate。
+- 移除重复到期计时器；新击杀和游戏事件按需重新启用，单纯历史／英雄本／团本不启动此校对。
+
+## 未发布 — 普通本超时旧记录修复（2026-10-14）
+
+- 补齐旧轮次缺少离本时间时的显示时效迁移，避免旧 3/3 无期限保留。
+- 每 15 秒校对位置及过期状态，修正区域事件时序与离线角色行的显示刷新；不清除历史或完成事实。
+
+## 未发布 — 普通本离本后进度时效（2026-10-14）
+
+- 普通本离本／退出角色后 30 分钟，旧进度自动变为待刷新；本内长驻不超时，历史与去重事实保留。
+- 本轮范围重验和明确重置仍控制实际轮次；英雄本／团本沿用 API 锁定到期，不按此期限处理。
+- Normal-dungeon progress becomes stale 30 minutes after leaving or logging out, without resetting the game instance or discarding kill history.
+
+## 未发布 — 精简副本 TP 与历史开关（2026-10-14）
+
+- 副本 TP 采用副本／难度与进度标题、逐 Boss 状态和单行操作提示；历史击杀、最近时间、进入次数默认隐藏，可在统一业务设置分别开启。
+- 状态以当前轮次或游戏锁定为准，历史不推断本轮进度；团本／英雄本有效重置时间仍显示。
+- 目标操作增强最低 Core API13 / business-item-actions:3；采集和副本展示仍使用 API13 / localization:1。
+- Compact instance tooltips show current boss states. Optional history fields default off and can be enabled independently in unified settings. Target actions require Core business-item-actions:3.
+
+## 未发布 — 普通五人本本轮进度（2026-10-14）
+
+- 普通本没有游戏锁定快照时，主表与入口预览从本轮完成集合显示 Boss 进度；监狱显示 1/3、2/3、3/3。完整目录未知时仅显示击杀数。
+- 成功重置后恢复未锁定，累计历史保留；悬停区分本轮进度与历史，团本继续使用锁定快照。
+- Normal dungeon cells now show current-run progress without a saved lockout. Resetting clears the progress while preserving kill history; raid status is unchanged.
+
+## 未发布 — 五人本 DBM 可选补充（2026-10-14）
+
+- 五人本通过公开 DBM 开战／完成回调补齐复杂遭遇，按客户端副本、难度和遭遇目录校验身份；缺少 DBM 时保留独立记录。
+- 五人本原生事件、死亡日志和 DBM 通知按本轮统一去重，支持重置、实例范围变化与已知英雄锁定到期后的新一轮；轮次跨重载保留。
+- 团本继续使用已有原生记录和去重逻辑。DBM 适配通过既有 Core events:1 传递隔离事实，未增加业务依赖。
+- Optional public DBM callbacks supplement five-player encounters. Dungeon sources share persistent per-run deduplication; raid recording retains its native behavior.
+
+## 未发布 — 五人本 Boss 击杀历史（2026-10-13）
+
+- 按地图与 NPC ID 过滤单体 Boss 死亡日志，与原生完成事件合并计数；成功重置后短期内重打可再次记录。
+- 普通本无锁定时也能悬停副本格查看历史次数、难度与最近击杀；剧情 NPC 和小怪不纳入历史。
+- 副本状态与单元格详情使用 Core 账号语言；基础最低 Core API13 / localization:1。复杂遭遇的覆盖范围与客户端待验项见五人本记录文档。
+- Added map/NPC-filtered single-boss death history, completion-event deduplication and counting after successful resets.
+- Instance cells show kill history even without a saved lockout. Lockout status and detail text use the Core account language; Core API13 / localization:1 is required.
+
 ## 未发布 — 自定义目标接入行动中心（2026-10-11）
 
 - 自定义 NPC 纳入公开首领目录，可从角色状态格加入任务目标；Ctrl＋左键安全消费添加操作，普通左键保留击杀标记。
