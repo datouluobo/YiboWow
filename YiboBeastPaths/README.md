@@ -3,9 +3,9 @@
 潘达利亚隐藏猎人宠物路线图插件。  
 作用是把部分稀有猎人宠物的巡逻/活动路线直接覆盖显示在世界地图上，方便在游戏内快速查看和蹲守。
 
-当前版本：`v1.6`
+当前版本：`v1.8`（60Hz 小地图跟随已实机确认；Core 维护功能完整客户端验收待完成）
 
-![Logo](Assets/Brand/logo-main.png)
+![Logo](Media/YiboBeastPathsLogo.png)
 
 ## 界面预览
 
@@ -19,7 +19,8 @@
 - 已提供插件列表图标资源。
 - 已为每条路线提供起点标记与悬浮信息。
 - 已移除按钮切换时的聊天框刷屏提示。
-- 已提供随插件发行的 `Maintenance/` 路线维护模块；仅 Mists Classic 且安装 YiboCore API v6 时可通过 Core 使用。
+- 已提供随插件发行的 `Maintenance/` 路线维护模块；仅 Mists Classic 且具备 YiboCore API13 所需能力时通过 Core 使用，当前适配基线为 Core 1.12.1。
+- Core 维护页、统一设置、地图开关与命令提示接入 Core 会话语言；独立运行模式按客户端语言显示这部分中英文文案。详见 [Core 接入与验收](Docs/Core-API13-接入说明.md)。
 
 ## 当前收录宠物
 
@@ -47,7 +48,7 @@
   - `/ybp`
   - `/ybp show`
   - `/ybp hide`
-  - `/ybp debug`（仅 Mists Classic；需要 YiboCore API v6）
+  - `/ybp debug`（仅 Mists Classic；需要 YiboCore API13）
   - `/ybp mmdebug`
 
 ## 安装方式
@@ -95,3 +96,9 @@
 本轮审查为当前对象不适用：路线／起点说明未提供角色驯服完成证据，不注册占位目标。
 
 实际契约、自动化与客户端待验收范围见 [实施与验证](../Docs/行动中心-主动添加实施与验证.md)。
+
+## 图标资源（2026-10-14）
+
+当前图标为 `Media/YiboBeastPathsIcon`：默认TGA为64px，插件列表使用128px TGA；PNG提供16/24/32/64/128/512/1024px，母版为312px透明位图。版本、统一缩放和验证范围见[系列资源记录](../Docs/Design/Yibo系列Logo-20261014/README.md)。
+
+![YiboBeastPaths 图标](Media/YiboBeastPathsIcon-128.png)

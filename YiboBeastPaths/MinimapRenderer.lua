@@ -28,6 +28,7 @@ local MINIMAP_ROUTE_SEGMENT_OVERLAP_PX = 2
 local MINIMAP_ROUTE_EDGE_PADDING_PX = 3
 local MINIMAP_ROUTE_SCREEN_SMOOTH_PASSES = 2
 local MINIMAP_FOOTPRINT_SIZE = 12
+local MINIMAP_REFRESH_INTERVAL = 1 / 60
 
 local minimapSizes = {
     indoor = {
@@ -674,7 +675,7 @@ function YBP:InitializeMinimapRenderer()
     end)
     minimapState.updateFrame:SetScript("OnUpdate", function(_, elapsed)
         minimapState.updateFrame.elapsed = minimapState.updateFrame.elapsed + elapsed
-        if minimapState.updateFrame.elapsed < 0.15 then
+        if minimapState.updateFrame.elapsed < MINIMAP_REFRESH_INTERVAL then
             return
         end
 

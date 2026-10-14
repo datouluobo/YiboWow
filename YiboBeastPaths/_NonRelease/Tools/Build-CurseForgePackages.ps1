@@ -80,14 +80,12 @@ function Remove-NonReleaseTocEntries {
 
 function Move-PreviousPackagesToArchive {
     param([Parameter(Mandatory = $true)][string]$OutputRoot, [Parameter(Mandatory = $true)][string]$AddonName)
-    $archiveRoot = Join-Path $OutputRoot "Archive"
+    $archiveRoot = Join-Path (Join-Path $OutputRoot "Archive") $AddonName
     New-Item -ItemType Directory -Path $archiveRoot -Force | Out-Null
     $moved = 0
     Get-ChildItem -LiteralPath $OutputRoot -File -Filter ("{0}-*.zip" -f $AddonName) | ForEach-Object {
         $destination = Join-Path $archiveRoot $_.Name
-        if (Test-Path -LiteralPath $destination) {
-            $destination = Join-Path $archiveRoot ("{0}-{1}{2}" -f $_.BaseName, (Get-Date -Format "yyyyMMdd-HHmmssfff"), $_.Extension)
-        }
+        if (Test-Path -LiteralPath $destination) { throw "Archive package already exists: $destination" }
         Move-Item -LiteralPath $_.FullName -Destination $destination
         $moved++
     }
@@ -102,7 +100,7 @@ $tocPath = Join-Path $projectRoot "YiboBeastPaths.toc"
 $version = Get-AddonVersion -TocPath $tocPath
 $versionTag = $version.TrimStart("vV")
 
-$curseForgeZipPath = Join-Path $outputRoot ("YiboBeastPaths-v{0}.zip" -f $versionTag)
+$curseForgeZipPath = Join-Path $outputRoot ("YiboBeastPaths-v{0}-curseforge.zip" -f $versionTag)
 $githubZipPath = Join-Path $outputRoot ("YiboBeastPaths-v{0}-github.zip" -f $versionTag)
 
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("YiboBeastPaths-build-" + [System.Guid]::NewGuid().ToString("N"))
@@ -133,6 +131,9 @@ try {
         (Join-Path $projectRoot "Builds"),
         (Join-Path $projectRoot "_NonRelease")
     )
+    # Keep historical artwork in source packages, outside client installation packages.
+    $curseForgeExcludeDirs += @(Get-ChildItem -LiteralPath (Join-Path $projectRoot 'Media') -Directory |
+        Where-Object { $_.Name -match '^v\d+$' } | ForEach-Object { $_.FullName })
     $curseForgeExcludeFiles = @(
         "AGENTS.md",
         "PRODUCT.md"

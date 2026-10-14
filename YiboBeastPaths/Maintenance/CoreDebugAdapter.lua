@@ -1,14 +1,15 @@
 local addonName, ns = ...
 local YBP = _G.YiboBeastPaths
+local T = ns.Text
 
 -- Mists-only adapter.  BeastPaths stays independently loadable: this file
 -- merely registers optional Core UI when the required host is present.
 local ADDON_ID = "YiboBeastPaths"
-local ADDON_TITLE = GetLocale and GetLocale() == "zhCN" and "隐兽寻踪" or ADDON_ID
 local PAGE_ID = "yibo-beastpaths-route-maintenance"
 local SETTINGS_ID = "yibo-beastpaths"
 local registered, pageRegistered, unavailableReason = false, false, nil
 local notifiedReasons = {}
+local waitingCore, OnCoreReady
 
 local function IsMists()
     return ns and ns.IS_MISTS == true
@@ -16,20 +17,30 @@ end
 
 local function GetCore()
     local core = _G.YiboCore
-    if not core then return nil, "需要 YiboCore API v6。" end
-    local compatible = core.CheckAPIVersion and core:CheckAPIVersion(6)
-    if not compatible then return nil, "需要 YiboCore API v6。" end
-    if not (core.Registry and core.SettingsRegistry and core.AccountView) then
-        return nil, "YiboCore 正在初始化，请稍后重试路线维护。"
+    if not (core and core.CheckAPIVersion and core:CheckAPIVersion(13)
+        and core.HasCapability) then return nil, T("CORE_REQUIRED") end
+    for name, version in pairs({ localization = 1, ["basic-input"] = 1,
+        ["account-view"] = 2, ["account-surface-budget"] = 1 }) do
+        if not core:HasCapability(name, version) then return nil, T("CORE_REQUIRED") end
     end
+    if not (core.IsInitialized and core:IsInitialized()) then return nil, T("CORE_NOT_READY") end
+    if not (core.Registry and core.SettingsRegistry and core.AccountView
+        and core.RegisterAddon and core.RegisterSettingsPanel and core.Events
+        and core.Events.Register and core.Events.Unregister
+        and core.AccountView.RegisterPage and core.AccountView.UnregisterPage
+        and core.AccountView.ShowPage and core.AccountView.ShowSettings
+        and core.AccountView.RefreshPage and core.AccountView.NotifyPageChanged
+        and core.UITheme and core.UITheme.CreateInput and core.UITheme.CreateScrollFrame
+        and core.UITheme.CreateButton and core.UITheme.CreateText
+        and ns.RegisterLocale(core)) then return nil, T("CORE_REQUIRED") end
     return core
 end
 
 local function PrintUnavailable(reason)
-    reason = reason or unavailableReason or "路线维护功能当前不可用。"
+    reason = reason or unavailableReason or T("MAINTENANCE_UNAVAILABLE")
     if notifiedReasons[reason] then return end
     notifiedReasons[reason] = true
-    print("|cff20e070[Yibo]|r 隐兽寻踪：" .. reason)
+    print(reason)
 end
 
 local function RefreshCorePage()
@@ -65,6 +76,7 @@ local function CreateDebugPage(parent)
     parent.scroll:SetScrollChild(parent.content)
     parent.scroll:BindScrollbarGutter(parent.content)
     parent.debugPanel = YBP.CreateCoreDebugPanel and YBP:CreateCoreDebugPanel(parent.content) or nil
+    parent:HookScript("OnHide", function() YBP:CancelCoreDebugInteraction() end)
     -- Core releases/reserves its scrollbar gutter asynchronously.  The
     -- business panel has an explicit width, so keep it tied to the actual
     -- viewport rather than the pre-gutter surface metric.
@@ -98,14 +110,16 @@ local function RegisterPage(core)
     if pageRegistered or not YBP:IsDebugEnabled() then return true end
     local page, err = core.AccountView:RegisterPage(ADDON_ID, {
         id = PAGE_ID,
-        title = ADDON_TITLE,
+        title = T("TITLE"),
         hideFromSettings = true,
         compactWidth = true,
         defaultEnabled = true,
         Create = CreateDebugPage,
         Refresh = RefreshDebugPage,
-        GetSurfaceMetrics = function()
-            return { minContentWidth = 620, naturalContentWidth = 760, minContentHeight = 460, naturalContentHeight = 720 }
+        GetSurfaceMetrics = function(context)
+            local budget = context and context.surfaceAvailableHeight or 720
+            return { minContentWidth = 620, naturalContentWidth = 760,
+                minContentHeight = math.min(460, budget), naturalContentHeight = math.min(720, budget) }
         end,
     })
     if not page then
@@ -122,14 +136,17 @@ local function SetMaintenanceMode(enabled)
         PrintUnavailable()
         return false
     end
-    YBP:SetDebugEnabled(enabled)
     local core = _G.YiboCore
     if enabled then
-        if not RegisterPage(core) then return false end
+        YBP:SetDebugEnabled(true)
+        if not RegisterPage(core) then YBP:SetDebugEnabled(false); return false end
         core.AccountView:ShowPage(PAGE_ID)
-    elseif pageRegistered then
-        core.AccountView:UnregisterPage(PAGE_ID)
-        pageRegistered = false
+    else
+        YBP:SetDebugEnabled(false)
+        if pageRegistered then
+            core.AccountView:UnregisterPage(PAGE_ID)
+            pageRegistered = false
+        end
     end
     return true
 end
@@ -137,28 +154,27 @@ end
 local function CreateSettingsPanel(row, host)
     local core, theme = _G.YiboCore, _G.YiboCore.UITheme
     if row.yiboBeastPathsSettings then row.yiboBeastPathsSettings:Hide() end
-    local section = host.createSection(row, "业务设置", row:GetWidth() or 560, 178)
+    local section = host.createSection(row, T("BUSINESS_SETTINGS"), row:GetWidth() or 560, 178)
     section:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
     row.yiboBeastPathsSettings = section
     local status = theme:CreateText(section, theme.Font.assist, theme.Colors.muted, "LEFT")
     status:SetPoint("TOPLEFT", section, "TOPLEFT", 12, -42)
     status:SetPoint("TOPRIGHT", section, "TOPRIGHT", -12, -42)
     status:SetWordWrap(true)
-    local toggle = theme:CreateButton(section, 160, YBP:IsDebugEnabled() and "关闭路线维护模式" or "开启路线维护模式", YBP:IsDebugEnabled() and "danger" or "default")
+    local toggle = theme:CreateButton(section, 240, YBP:IsDebugEnabled() and T("MAINTENANCE_DISABLE") or T("MAINTENANCE_ENABLE"), "default")
     toggle:SetPoint("TOPLEFT", section, "TOPLEFT", 12, -92)
     toggle:SetScript("OnClick", function()
         SetMaintenanceMode(not YBP:IsDebugEnabled())
         core.AccountView:RefreshPage()
     end)
-    local open = theme:CreateButton(section, 160, "前往路线维护", "secondary")
+    local open = theme:CreateButton(section, 190, T("MAINTENANCE_OPEN"), "secondary")
     open:SetPoint("LEFT", toggle, "RIGHT", 12, 0)
     open:SetEnabled(YBP:IsDebugEnabled() and pageRegistered)
     open:SetScript("OnClick", function()
         if pageRegistered then core.AccountView:ShowPage(PAGE_ID) end
     end)
-    local coreOK = GetCore() and "可用（API v6）" or "不可用"
-    local pageState = YBP:IsDebugEnabled() and pageRegistered and "已启用" or "已关闭"
-    status:SetText("路线维护模式允许修改本地路线维护数据。客户端：Mists Classic；Core：" .. coreOK .. "；业务页：" .. pageState .. "。")
+    local pageState = YBP:IsDebugEnabled() and pageRegistered and T("ON") or T("OFF")
+    status:SetText(T("MAINTENANCE_STATUS", pageState))
     row:SetHeight(178)
     return 178
 end
@@ -167,17 +183,21 @@ local function TryRegister()
     if registered or not IsMists() then return registered end
     local core, reason = GetCore()
     if not core then unavailableReason = reason; return false end
-    local addon, err = core:RegisterAddon(ADDON_ID, { requiredAPI = 6, version = "1.6" })
+    local addon, err = core:RegisterAddon(ADDON_ID, { requiredAPI = 13, version = "1.8" })
     if not addon then unavailableReason = err; return false end
     local settings, settingsErr = core:RegisterSettingsPanel(ADDON_ID, {
         id = SETTINGS_ID,
-        title = ADDON_TITLE,
+        title = T("TITLE"),
         CreateSettingsPanel = CreateSettingsPanel,
     })
     if not settings then unavailableReason = settingsErr; return false end
     registered = true
-    RegisterPage(core)
-    return true
+    if waitingCore then waitingCore.Events:Unregister("CORE_READY", ADDON_ID, OnCoreReady) end
+    waitingCore = nil
+    unavailableReason = nil
+    if not RegisterPage(core) then YBP:SetDebugEnabled(false) end
+    YBP:RefreshWorldMapButton()
+    return registered
 end
 
 function YBP:OpenCoreRouteMaintenance()
@@ -194,10 +214,27 @@ function YBP:OpenCoreRouteMaintenance()
 end
 
 local init = CreateFrame("Frame")
+OnCoreReady = function()
+    if waitingCore then waitingCore.Events:Unregister("CORE_READY", ADDON_ID, OnCoreReady) end
+    waitingCore = nil
+    TryRegister()
+end
+local function WaitForCore()
+    local core = _G.YiboCore
+    if not IsMists() or registered or waitingCore == core then return end
+    if core and core.Events and core.Events.Register and core.Events.Unregister then
+        if waitingCore then waitingCore.Events:Unregister("CORE_READY", ADDON_ID, OnCoreReady) end
+        waitingCore = core
+        core.Events:Register("CORE_READY", ADDON_ID, OnCoreReady)
+    end
+end
 init:RegisterEvent("ADDON_LOADED")
 init:RegisterEvent("PLAYER_LOGIN")
 init:SetScript("OnEvent", function(_, event, name)
     if event == "PLAYER_LOGIN" or name == addonName or name == "YiboCore" then
-        TryRegister()
+        if not TryRegister() then
+            WaitForCore()
+            if event == "PLAYER_LOGIN" and IsMists() and _G.YiboCore then PrintUnavailable() end
+        end
     end
 end)

@@ -7,6 +7,7 @@ local function widget(parent)
         if key == "GetParent" then return function() return rawget(self, "parent") end end
         if key == "GetWidth" then return function() return self.width end end
         if key == "GetHeight" then return function() return self.height end end
+        if key == "GetStringHeight" then return function() return 28 end end
         if key == "IsShown" then return function() return self.shown end end
         if key == "SetShown" then return function(_, value) self.shown = value end end
         if key == "SetWidth" then return function(_, value) self.width = value end end
@@ -33,6 +34,12 @@ local theme = {
         bg = { 0, 0, 0, 1 } },
 }
 function theme:CreateText(parent) return widget(parent) end
+function theme:CreateInput(parent, options)
+    assert(options.maxLetters == 0, "Exports must not be truncated")
+    local input = widget(parent)
+    input.sharedInput = true
+    return input
+end
 function theme:CreateButton(parent, _, label)
     local button = widget(parent)
     button.text = label
@@ -42,7 +49,11 @@ function theme:CreateButton(parent, _, label)
     return button
 end
 
-_G.YiboCore = { UITheme = theme }
+_G.YiboCore = { UITheme = theme, ready = false, CheckAPIVersion = function() return true end,
+    HasCapability = function() return true end, IsInitialized = function(self) return self.ready end,
+    Capabilities = { Register = function() end } }
+assert(loadfile("YiboCore/Runtime/Locale.lua"))()
+_G.YiboCore.Locale.language = arg[1] or "zh"
 local selected, mapID = nil, nil
 _G.YiboBeastPathsDebugDB = { ui = { activeTab = "calibrate", stepMove = .005,
     stepScale = .01, footprintListOffset = 0, exportView = "current" } }
@@ -63,20 +74,26 @@ function ybp:GetFootprintStore() return { points = {} } end
 function ybp:GetRouteDisplaySettings() return { showResolved = true } end
 local ns = { pets = { [376] = { name = "测试宠物", zone = "测试地图" } },
     routeNodeTooltips = { [376] = { imageTexture = "test-pet-texture" } } }
+assert(loadfile("YiboBeastPaths/Locale.lua"))("YiboBeastPaths", ns)
 local chunk = assert(loadfile("YiboBeastPaths/Maintenance/CoreDebugView.lua"))
 chunk("YiboBeastPaths", ns)
+-- The view file can load before Core resolves a manual session language.
+-- Labels must be resolved on construction rather than cached at file load.
+_G.YiboCore.ready = true
 local page = widget()
 page:SetWidth(792)
 local scroll = widget(page)
 local parent = widget(scroll)
 local panel = assert(ybp:CreateCoreDebugPanel(parent))
+assert(panel.tabButtons.calibrate.text == ns.Text("TAB_CALIBRATE"))
 assert(panel:GetHeight() > 360)
 assert(#panel.tabs.calibrate.groups == 5)
-assert(panel.tabs.calibrate.groups[1].title.text == "调节步进")
-assert(panel.tabs.calibrate.groups[2].title.text == "大地图路线")
+assert(panel.tabs.calibrate.groups[1].title.text == ns.Text("STEPS"))
+assert(panel.tabs.calibrate.groups[2].title.text == ns.Text("WORLD_ROUTE"))
 assert(#panel.tabs.fusion.groups == 5)
 assert(#panel.tabs.footprints.rows == 6)
 assert(panel.tabs.export.box)
+assert(panel.tabs.export.box.sharedInput)
 assert(not panel.petIconFrame:IsShown())
 local actionCount = 0
 for _, tab in pairs(panel.tabs) do
@@ -106,8 +123,10 @@ for _, width in ipairs({ 760, 620, 600 }) do
         end
     end
     local firstRow = panel.tabs.calibrate.groups[2].buttons
-    assert(firstRow[1].point[3] == firstRow[6].point[3], width)
-    assert(firstRow[6].point[2] + firstRow[6]:GetWidth() == width - 52, width)
+    if _G.YiboCore.Locale.language == "zh" then
+        assert(firstRow[1].point[3] == firstRow[6].point[3], width)
+        assert(firstRow[6].point[2] + firstRow[6]:GetWidth() == width - 52, width)
+    end
     local lastTab = panel.tabButtons.export
     local card = panel.tabs.export.groups[1].frame
     assert(math.abs((lastTab.point[2] + lastTab:GetWidth()) - (16 + card:GetWidth())) < .001, width)
@@ -121,8 +140,10 @@ for _, button in pairs(panel.tabButtons) do assert(button:GetWidth() == fixedTab
 panel:SetWidth(760)
 ybp:RefreshDebugPanel()
 local mapButtons = panel.tabs.calibrate.groups[2].buttons
-assert(mapButtons[1].point[3] == mapButtons[6].point[3])
-assert(mapButtons[7].point[3] ~= mapButtons[6].point[3])
+if _G.YiboCore.Locale.language == "zh" then
+    assert(mapButtons[1].point[3] == mapButtons[6].point[3])
+    assert(mapButtons[7].point[3] ~= mapButtons[6].point[3])
+end
 for _, tab in ipairs({ "calibrate", "fusion", "footprints", "export" }) do
     ybp:SetActiveDebugTab(tab)
     assert(panel.tabs[tab].frame:IsShown())

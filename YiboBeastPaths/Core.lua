@@ -1,4 +1,5 @@
 local addonName, ns = ...
+local T = ns.Text
 
 local defaults = {
     selectedPet = 50812,
@@ -49,7 +50,7 @@ function YBP:RefreshWorldMapButton()
     end
 
     local enabled = self.db and self.db.visible
-    local label = enabled and "宠物路线: 开" or "宠物路线: 关"
+    local label = enabled and T("ROUTES_ON") or T("ROUTES_OFF")
     if button.SetText then
         button:SetText(label)
     end
@@ -102,9 +103,9 @@ function YBP:CreateWorldMapButton()
     end)
     button:SetScript("OnEnter", function(btn)
         GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
-        GameTooltip:AddLine("|cff20e070[Yibo]|r 隐兽寻踪")
-        GameTooltip:AddLine("左键: 开关世界地图路线", 1, 1, 1)
-        GameTooltip:AddLine(YBP.db and YBP.db.visible and "当前状态: 已开启" or "当前状态: 已关闭", 1, 0.82, 0)
+        GameTooltip:AddLine(T("BRAND"))
+        GameTooltip:AddLine(T("TOGGLE_HINT"), 1, 1, 1)
+        GameTooltip:AddLine(YBP.db and YBP.db.visible and T("STATUS_ON") or T("STATUS_OFF"), 1, 0.82, 0)
         GameTooltip:Show()
     end)
     button:SetScript("OnLeave", function()
@@ -151,7 +152,6 @@ function YBP:TryInitializeMinimapIntegration()
 end
 
 SLASH_YIBOBEASTPATHS1 = "/ybp"
-SLASH_YIBOBEASTPATHS2 = "/yibobeastpaths"
 SlashCmdList.YIBOBEASTPATHS = function(msg)
     msg = strtrim(msg or "")
 
@@ -165,7 +165,7 @@ SlashCmdList.YIBOBEASTPATHS = function(msg)
                 print(line)
             end
         else
-            print("|cff20e070[Yibo]|r 隐兽寻踪：小地图调试信息不可用")
+            print(T("MINIMAP_UNAVAILABLE"))
         end
         return
     end
@@ -174,7 +174,7 @@ SlashCmdList.YIBOBEASTPATHS = function(msg)
         if YBP.OpenCoreRouteMaintenance then
             YBP:OpenCoreRouteMaintenance()
         else
-            print("|cff20e070[Yibo]|r 隐兽寻踪：路线维护功能需要 YiboCore API v6。")
+            print(T("CORE_REQUIRED"))
         end
         return
     end
@@ -204,7 +204,7 @@ SlashCmdList.YIBOBEASTPATHS = function(msg)
         return
     end
 
-    print("|cff20e070[Yibo]|r 隐兽寻踪：用法: /ybp, /ybp show, /ybp hide, /ybp debug, /ybp mmdebug")
+    print(T("COMMAND_HELP"))
 end
 
 YBP:SetScript("OnEvent", function(self, event, arg1)

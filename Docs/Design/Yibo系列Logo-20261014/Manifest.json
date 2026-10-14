@@ -1,0 +1,141 @@
+{
+  "date": "2026-10-14",
+  "source_sha256": "0120914b2d222d833571de205760876855951bd0db1d322d9b53dc5d6a63131c",
+  "master_type": "RGBA bitmap",
+  "master_size": 312,
+  "default_game_texture_size": 64,
+  "sizes": [
+    16,
+    24,
+    32,
+    64,
+    128,
+    512,
+    1024
+  ],
+  "assets": {
+    "YiboCore": {
+      "directory": "YiboCore/Media",
+      "stem": "YiboCoreIcon",
+      "source_visual_revision": 21,
+      "archives": [
+        "v1",
+        "v2",
+        "v3"
+      ]
+    },
+    "YiboMail": {
+      "directory": "YiboMail/Media",
+      "stem": "YiboMailIcon",
+      "source_visual_revision": 2,
+      "archives": [
+        "v1"
+      ]
+    },
+    "YiboVault": {
+      "directory": "YiboVault/Media",
+      "stem": "YiboVaultIcon",
+      "source_visual_revision": 3,
+      "archives": [
+        "v1"
+      ]
+    },
+    "YiboBuilds": {
+      "directory": "YiboBuilds/Media",
+      "stem": "YiboBuildsIcon",
+      "source_visual_revision": 2,
+      "archives": [
+        "v1"
+      ]
+    },
+    "YiboAutoOpen": {
+      "directory": "YiboAutoOpen/Media",
+      "stem": "YiboAutoOpenIcon",
+      "source_visual_revision": 3,
+      "archives": [
+        "v1"
+      ]
+    },
+    "YiboCurrency": {
+      "directory": "YiboCurrency/Media",
+      "stem": "YiboCurrencyIcon",
+      "source_visual_revision": 2,
+      "archives": [
+        "v1"
+      ]
+    },
+    "YiboCrafting": {
+      "directory": "YiboCrafting/Media",
+      "stem": "YiboCraftingIcon",
+      "source_visual_revision": 3,
+      "archives": [
+        "v1"
+      ]
+    },
+    "YiboTodo": {
+      "directory": "YiboTodo/Media",
+      "stem": "YiboTodoIcon",
+      "source_visual_revision": 7,
+      "archives": [
+        "v1"
+      ]
+    },
+    "YiboReputation": {
+      "directory": "YiboReputation/Media",
+      "stem": "YiboReputationIcon",
+      "source_visual_revision": 2,
+      "archives": [
+        "v1"
+      ]
+    },
+    "YiboAltoBoss": {
+      "directory": "YiboAltoBoss/Media",
+      "stem": "YiboAltoBossIcon",
+      "source_visual_revision": 1,
+      "archives": [
+        "v1"
+      ]
+    },
+    "YiboLegendary": {
+      "directory": "YiboLegendary/Media",
+      "stem": "YiboLegendaryIcon",
+      "source_visual_revision": 2,
+      "archives": [
+        "v1"
+      ]
+    },
+    "YiboMounts": {
+      "directory": "YiboMounts/Media",
+      "stem": "YiboMountsIcon",
+      "source_visual_revision": 2,
+      "archives": [
+        "v1"
+      ]
+    },
+    "YiboBeastPaths": {
+      "directory": "YiboBeastPaths/Media",
+      "stem": "YiboBeastPathsIcon",
+      "source_visual_revision": 1,
+      "archives": [
+        "v1"
+      ]
+    },
+    "YiboQuestBlocker": {
+      "directory": "YiboQuestBlocker/Media",
+      "stem": "YiboQuestBlockerIcon",
+      "source_visual_revision": 1,
+      "archives": [
+        "v1"
+      ]
+    },
+    "YiboTaskHub": {
+      "directory": "YiboTaskHub/Media",
+      "stem": "YiboTaskHubIcon",
+      "source_visual_revision": 2,
+      "archives": [
+        "v1"
+      ]
+    }
+  },
+  "changed_files": []
+}

@@ -20,7 +20,9 @@ function ybp:GetCurrentWorldMapID() return visibleMapID end
 function ybp:GetVisiblePetIDsForMap(mapID) return routes[mapID] or {} end
 function ybp:RefreshMapLayer() end
 local chunk = assert(loadfile("YiboBeastPaths/Maintenance/DebugCalibrator.lua"))
-chunk("YiboBeastPaths", {})
+local ns = {}
+assert(loadfile("YiboBeastPaths/Locale.lua"))("YiboBeastPaths", ns)
+chunk("YiboBeastPaths", ns)
 ybp:InitDebugDB()
 
 -- Opening the workbench with the world map closed chooses a route near the

@@ -1,12 +1,13 @@
 local addonName, ns = ...
+local T = ns.Text
 local YBP = _G.YiboBeastPaths
 
 -- The calibrator owns the saved data and actions.  This file owns only the
 -- Core-hosted presentation; the legacy UIPanelButtonTemplate panel is never
 -- constructed by the Core page.
 local view
-local tabs = { { "calibrate", "路线校准" }, { "fusion", "融合工作台" },
-    { "footprints", "脚印管理" }, { "export", "导出" } }
+local tabs = { { "calibrate", "TAB_CALIBRATE" }, { "fusion", "TAB_FUSION" },
+    { "footprints", "TAB_FOOTPRINTS" }, { "export", "TAB_EXPORT" } }
 local presets = { fine = { 0.002, 0.005 }, medium = { 0.005, 0.01 }, coarse = { 0.01, 0.02 } }
 local BUTTON_MIN_WIDTH, BUTTON_MAX_WIDTH = 80, 176
 local BUTTON_GAP, MAX_BUTTONS_PER_ROW = 8, 6
@@ -120,7 +121,7 @@ local function makeTabs(theme, panel)
     panel.tabs = {}
     panel.tabButtons = {}
     for _, spec in ipairs(tabs) do
-        local key, label = spec[1], spec[2]
+        local key, label = spec[1], T(spec[2])
         local button = theme:CreateButton(panel, 120, label, "secondary")
         button:SetScript("OnClick", function() YBP:SetActiveDebugTab(key) end)
         panel.tabButtons[key] = button
@@ -130,8 +131,8 @@ local function makeTabs(theme, panel)
 end
 
 local function buildCalibrate(theme, tab)
-    local group = addGroup(theme, tab, "调节步进", "先选择每次点击的幅度；大图、起点和小图共用。")
-    for _, spec in ipairs({ { "细调", "fine" }, { "中调", "medium" }, { "粗调", "coarse" } }) do
+    local group = addGroup(theme, tab, T("STEPS"), T("STEPS_NOTE"))
+    for _, spec in ipairs({ { T("FINE"), "fine" }, { T("MEDIUM"), "medium" }, { T("COARSE"), "coarse" } }) do
         local name, key = spec[1], spec[2]
         local button = addButton(theme, group, name, function()
             local state = ui()
@@ -140,45 +141,45 @@ local function buildCalibrate(theme, tab)
         button.preset = key
     end
 
-    group = addGroup(theme, tab, "大地图路线", "依次调整位置、缩放比例、线宽和透明度。")
-    addPair(theme, group, "左移", "右移", "offsetX")
-    addPair(theme, group, "上移", "下移", "offsetY")
-    addPair(theme, group, "缩小", "放大", "scale")
-    addPair(theme, group, "横缩", "横放", "scaleX")
-    addPair(theme, group, "竖缩", "竖放", "scaleY")
-    addButton(theme, group, "线条变细", function() YBP:AdjustDebugRouteThickness(-0.10) end)
-    addButton(theme, group, "线条变粗", function() YBP:AdjustDebugRouteThickness(0.10) end)
-    addButton(theme, group, "更透明", function() current(function(id) YBP:AdjustDebugValue(id, "opacity", -0.05) end) end)
-    addButton(theme, group, "更明显", function() current(function(id) YBP:AdjustDebugValue(id, "opacity", 0.05) end) end)
+    group = addGroup(theme, tab, T("WORLD_ROUTE"), T("WORLD_NOTE"))
+    addPair(theme, group, T("LEFT"), T("RIGHT"), "offsetX")
+    addPair(theme, group, T("UP"), T("DOWN"), "offsetY")
+    addPair(theme, group, T("SMALLER"), T("LARGER"), "scale")
+    addPair(theme, group, T("NARROWER"), T("WIDER"), "scaleX")
+    addPair(theme, group, T("SHORTER"), T("TALLER"), "scaleY")
+    addButton(theme, group, T("THINNER"), function() YBP:AdjustDebugRouteThickness(-0.10) end)
+    addButton(theme, group, T("THICKER"), function() YBP:AdjustDebugRouteThickness(0.10) end)
+    addButton(theme, group, T("FADE"), function() current(function(id) YBP:AdjustDebugValue(id, "opacity", -0.05) end) end)
+    addButton(theme, group, T("OPAQUE"), function() current(function(id) YBP:AdjustDebugValue(id, "opacity", 0.05) end) end)
 
-    group = addGroup(theme, tab, "起点节点", "调整路线首节点的位置和大小。")
-    addPair(theme, group, "节点左", "节点右", "nodeX")
-    addPair(theme, group, "节点上", "节点下", "nodeY")
-    addPair(theme, group, "节点小", "节点大", "nodeScale")
+    group = addGroup(theme, tab, T("START_NODE"), T("START_NOTE"))
+    addPair(theme, group, T("NODE_LEFT"), T("NODE_RIGHT"), "nodeX")
+    addPair(theme, group, T("NODE_UP"), T("NODE_DOWN"), "nodeY")
+    addPair(theme, group, T("NODE_SMALL"), T("NODE_LARGE"), "nodeScale")
 
-    group = addGroup(theme, tab, "小地图路线", "调整小图路线的偏移、缩放比例和线宽。")
-    addPair(theme, group, "小图左", "小图右", "mmX")
-    addPair(theme, group, "小图上", "小图下", "mmY")
-    addPair(theme, group, "小图缩小", "小图放大", "mmScale")
-    addPair(theme, group, "小图横缩", "小图横放", "mmScaleX")
-    addPair(theme, group, "小图竖缩", "小图竖放", "mmScaleY")
-    addPair(theme, group, "小图线细", "小图线粗", "mmThickness")
-    addButton(theme, group, "小图清零", function()
-        confirm("确定清除当前宠物的小地图变换吗？", function(id) YBP:ResetDebugMinimapTransform(id) end)
+    group = addGroup(theme, tab, T("MINIMAP_ROUTE"), T("MINIMAP_NOTE"))
+    addPair(theme, group, T("MM_LEFT"), T("MM_RIGHT"), "mmX")
+    addPair(theme, group, T("MM_UP"), T("MM_DOWN"), "mmY")
+    addPair(theme, group, T("MM_SMALL"), T("MM_LARGE"), "mmScale")
+    addPair(theme, group, T("MM_NARROW"), T("MM_WIDE"), "mmScaleX")
+    addPair(theme, group, T("MM_SHORT"), T("MM_TALL"), "mmScaleY")
+    addPair(theme, group, T("MM_THIN"), T("MM_THICK"), "mmThickness")
+    addButton(theme, group, T("MM_RESET"), function()
+        confirm(T("MM_RESET_CONFIRM"), function(id) YBP:ResetDebugMinimapTransform(id) end)
     end, "danger")
 
-    group = addGroup(theme, tab, "当前路线", "保存当前宠物的路线或参考层参数；重置会清除路线、起点及小图变换。")
-    addButton(theme, group, "保存当前", function()
+    group = addGroup(theme, tab, T("CURRENT_ROUTE"), T("CURRENT_NOTE"))
+    addButton(theme, group, T("SAVE"), function()
         current(function(id)
             YBP:EnsureDebugTransform(id)
             YBP:EnsureDebugRouteNode(id, "start")
             local savedReference = YBP:SaveCurrentReferenceDisplayTransform(id)
-            print(string.format("|cff20e070[Yibo]|r 隐兽寻踪调试：已保存宠物 [%d] 的%s调试参数。",
-                id, savedReference and "参考层" or "路线与起点"))
+            print(string.format(T("SAVED"),
+                id, savedReference and T("REFERENCE") or T("ROUTE_START")))
         end)
     end, "default")
-    addButton(theme, group, "重置当前", function()
-        confirm("确定重置当前宠物的路线、节点与小地图变换吗？", function(id)
+    addButton(theme, group, T("RESET"), function()
+        confirm(T("RESET_CONFIRM"), function(id)
             YBP:ResetDebugTransform(id)
             YBP:ResetDebugMinimapTransform(id)
             YBP:ResetDebugRouteNode(id, "start")
@@ -187,17 +188,17 @@ local function buildCalibrate(theme, tab)
 end
 
 local function buildFusion(theme, tab)
-    local group = addGroup(theme, tab, "路线重算", "选择只重算当前宠物，或重算当前地图的全部路线。")
-    addButton(theme, group, "重算当前", function()
+    local group = addGroup(theme, tab, T("RECALCULATE"), T("RECALCULATE_NOTE"))
+    addButton(theme, group, T("RECALCULATE_CURRENT"), function()
         current(function(id) if YBP.ResolveRouteForPet then YBP:ResolveRouteForPet(id) end end)
     end, "default")
-    addButton(theme, group, "重算本图", function()
+    addButton(theme, group, T("RECALCULATE_MAP"), function()
         local mapID = YBP.GetDebugContextMapID and YBP:GetDebugContextMapID() or YBP:GetCurrentWorldMapID()
         if mapID and YBP.ResolveRoutesForMap then YBP:ResolveRoutesForMap(mapID) end
     end)
-    group = addGroup(theme, tab, "图层显示", "开关只改变图层可见性，不删除路线或脚印数据。")
-    for _, spec in ipairs({ { "最终层", "showResolved" }, { "底稿层", "showLegacyOverlay" },
-        { "参考层", "showReference" }, { "脚印层", "showFootprints" } }) do
+    group = addGroup(theme, tab, T("LAYERS"), T("LAYERS_NOTE"))
+    for _, spec in ipairs({ { T("RESOLVED"), "showResolved" }, { T("LEGACY"), "showLegacyOverlay" },
+        { T("REFERENCE"), "showReference" }, { T("FOOTPRINT_LAYER"), "showFootprints" } }) do
         local label, key = spec[1], spec[2]
         local button = addButton(theme, group, label, function()
             local settings = YBP.GetRouteDisplaySettings and YBP:GetRouteDisplaySettings()
@@ -205,84 +206,84 @@ local function buildFusion(theme, tab)
         end)
         button.settingKey, button.baseLabel = key, label
     end
-    group.autoButton = addButton(theme, group, "自动重算", function()
+    group.autoButton = addButton(theme, group, T("AUTO"), function()
         if YBP.SetRouteAutoResolveEnabled then
             YBP:SetRouteAutoResolveEnabled(not YBP:IsRouteAutoResolveEnabled())
         end
     end)
-    group = addGroup(theme, tab, "显示预设与导出", "预设批量切换图层；导出融合会打开导出页。")
-    addButton(theme, group, "全开", function() if YBP.ApplyRouteDisplayPreset then YBP:ApplyRouteDisplayPreset("all") end end)
-    addButton(theme, group, "仅最终层", function() if YBP.ApplyRouteDisplayPreset then YBP:ApplyRouteDisplayPreset("resolvedOnly") end end)
-    addButton(theme, group, "重置显示", function()
+    group = addGroup(theme, tab, T("PRESETS"), T("PRESETS_NOTE"))
+    addButton(theme, group, T("ALL"), function() if YBP.ApplyRouteDisplayPreset then YBP:ApplyRouteDisplayPreset("all") end end)
+    addButton(theme, group, T("RESOLVED_ONLY"), function() if YBP.ApplyRouteDisplayPreset then YBP:ApplyRouteDisplayPreset("resolvedOnly") end end)
+    addButton(theme, group, T("RESET_DISPLAY"), function()
         if YBP.ApplyRouteDisplayPreset then YBP:ApplyRouteDisplayPreset("default") end
         if YBP.ResetRouteVisualSettings then YBP:ResetRouteVisualSettings() end
     end)
-    addButton(theme, group, "导出融合", function()
+    addButton(theme, group, T("EXPORT_FUSION"), function()
         YBP:SetActiveDebugTab("export")
         if view and view.exportBox then view.exportBox:SetText(YBP:ExportCurrentRouteFusionSnapshot() or "") end
     end, "default")
-    addButton(theme, group, "重置细节", function() if YBP.ResetRouteVisualSettings then YBP:ResetRouteVisualSettings() end end)
+    addButton(theme, group, T("RESET_DETAILS"), function() if YBP.ResetRouteVisualSettings then YBP:ResetRouteVisualSettings() end end)
 
-    group = addGroup(theme, tab, "路线与脚印细节", "调整线宽、点位密度和脚印外观，不改动路线点位。")
+    group = addGroup(theme, tab, T("DETAILS"), T("DETAILS_NOTE"))
     for _, spec in ipairs({
-        { "主线细", "resolvedThickness", -0.5, 1, 8, 1 }, { "主线粗", "resolvedThickness", 0.5, 1, 8, 1 },
-        { "脚印小", "footprintSize", -1, 4, 24, 0 }, { "脚印大", "footprintSize", 1, 4, 24, 0 },
-        { "脚印淡", "footprintAlpha", -0.05, 0.15, 1, 2 }, { "脚印亮", "footprintAlpha", 0.05, 0.15, 1, 2 },
-        { "参考细", "referenceThickness", -0.5, 1, 8, 1 }, { "参考粗", "referenceThickness", 0.5, 1, 8, 1 },
-        { "点位疏", "routeDensity", -1, 1, 8, 0 }, { "点位密", "routeDensity", 1, 1, 8, 0 },
-        { "小图点少", "minimapNearbyPointLimit", -1, 0, 20, 0 },
-        { "小图点多", "minimapNearbyPointLimit", 1, 0, 20, 0 },
+        { T("MAIN_THIN"), "resolvedThickness", -0.5, 1, 8, 1 }, { T("MAIN_THICK"), "resolvedThickness", 0.5, 1, 8, 1 },
+        { T("FOOT_SMALL"), "footprintSize", -1, 4, 24, 0 }, { T("FOOT_LARGE"), "footprintSize", 1, 4, 24, 0 },
+        { T("FOOT_FADE"), "footprintAlpha", -0.05, 0.15, 1, 2 }, { T("FOOT_BRIGHT"), "footprintAlpha", 0.05, 0.15, 1, 2 },
+        { T("REF_THIN"), "referenceThickness", -0.5, 1, 8, 1 }, { T("REF_THICK"), "referenceThickness", 0.5, 1, 8, 1 },
+        { T("SPARSE"), "routeDensity", -1, 1, 8, 0 }, { T("DENSE"), "routeDensity", 1, 1, 8, 0 },
+        { T("MM_FEWER"), "minimapNearbyPointLimit", -1, 0, 20, 0 },
+        { T("MM_MORE"), "minimapNearbyPointLimit", 1, 0, 20, 0 },
     }) do
         local label, key, delta, low, high, decimals = unpack(spec)
         addButton(theme, group, label, function() visual(key, delta, low, high, decimals) end)
     end
-    group = addGroup(theme, tab, "融合详情")
+    group = addGroup(theme, tab, T("FUSION_DETAILS"))
     group.detail = makeText(theme, group.frame, theme.Font.assist, theme.Colors.muted)
 end
 
 local function buildFootprints(theme, tab)
-    local group = addGroup(theme, tab, "脚印采集", "记录当前位置；删除与清空只作用于当前宠物。")
-    addButton(theme, group, "记录脚印", function()
+    local group = addGroup(theme, tab, T("CAPTURE"), T("CAPTURE_NOTE"))
+    addButton(theme, group, T("RECORD"), function()
         local _, message = YBP:CaptureCurrentFootprintForSelectedPet()
-        if message then print("|cff20e070[Yibo]|r 隐兽寻踪调试：" .. message) end
+        if message then print(T("DEBUG_PREFIX") .. message) end
     end, "default")
-    addButton(theme, group, "影响短", function() visual("footprintInfluenceArc", -0.1, 0.5, 2.5, 1) end)
-    addButton(theme, group, "影响长", function() visual("footprintInfluenceArc", 0.1, 0.5, 2.5, 1) end)
-    addButton(theme, group, "删最后点", function()
+    addButton(theme, group, T("ARC_SHORT"), function() visual("footprintInfluenceArc", -0.1, 0.5, 2.5, 1) end)
+    addButton(theme, group, T("ARC_LONG"), function() visual("footprintInfluenceArc", 0.1, 0.5, 2.5, 1) end)
+    addButton(theme, group, T("DELETE_LAST"), function()
         if YBP.RemoveLastFootprintAnchor then
-            confirm("确定删除最后一个脚印点吗？", function(id) YBP:RemoveLastFootprintAnchor(id) end)
+            confirm(T("DELETE_LAST_CONFIRM"), function(id) YBP:RemoveLastFootprintAnchor(id) end)
         end
     end, "danger")
-    addButton(theme, group, "清空脚印", function()
+    addButton(theme, group, T("CLEAR"), function()
         if YBP.ClearFootprintAnchors then
-            confirm("确定清空当前宠物的全部脚印点吗？此操作不可恢复。", function(id) YBP:ClearFootprintAnchors(id) end)
+            confirm(T("CLEAR_CONFIRM"), function(id) YBP:ClearFootprintAnchors(id) end)
         end
     end, "danger")
-    group = addGroup(theme, tab, "脚印列表", "每页 6 点，可逐点启用、禁用或删除。")
+    group = addGroup(theme, tab, T("FOOTPRINT_LIST"), T("FOOTPRINT_NOTE"))
     tab.rows = {}
     for i = 1, 6 do
         local row = CreateFrame("Frame", nil, group.frame, "BackdropTemplate")
         row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
         row:SetBackdropColor(unpack(theme.Colors.row))
         row.label = makeText(theme, row, theme.Font.assist, theme.Colors.text)
-        row.toggle = theme:CreateButton(row, 84, "禁用", "secondary")
-        row.delete = theme:CreateButton(row, 84, "删除", "danger")
+        row.toggle = theme:CreateButton(row, 84, T("DISABLE"), "secondary")
+        row.delete = theme:CreateButton(row, 84, T("DELETE"), "danger")
         tab.rows[i] = row
     end
-    tab.pageGroup = addGroup(theme, tab, "分页")
-    tab.prev = addButton(theme, tab.pageGroup, "上一页", function()
+    tab.pageGroup = addGroup(theme, tab, T("PAGINATION"))
+    tab.prev = addButton(theme, tab.pageGroup, T("PREVIOUS_PAGE"), function()
         local state = ui(); YBP:SetFootprintListOffset((state and state.footprintListOffset or 0) - 6)
     end)
-    tab.next = addButton(theme, tab.pageGroup, "下一页", function()
+    tab.next = addButton(theme, tab.pageGroup, T("NEXT_PAGE"), function()
         local state = ui(); YBP:SetFootprintListOffset((state and state.footprintListOffset or 0) + 6)
     end)
     tab.page = makeText(theme, tab.pageGroup.frame, theme.Font.assist, theme.Colors.muted)
 end
 
 local function buildExport(theme, tab)
-    local group = addGroup(theme, tab, "参数导出", "先选择片段，再点全选复制；编辑文本不会修改路线数据。")
-    for _, spec in ipairs({ { "参数当前", "current" }, { "脚印片段", "footprints" },
-        { "融合片段", "resolved" }, { "参数本图", "map" }, { "本图改动", "mapFusion" } }) do
+    local group = addGroup(theme, tab, T("EXPORT_PARAMS"), T("EXPORT_NOTE"))
+    for _, spec in ipairs({ { T("EXPORT_CURRENT"), "current" }, { T("EXPORT_FOOT"), "footprints" },
+        { T("EXPORT_RESOLVED"), "resolved" }, { T("EXPORT_MAP"), "map" }, { T("EXPORT_MAP_FUSION"), "mapFusion" } }) do
         local label, key = spec[1], spec[2]
         local button = addButton(theme, group, label, function()
             YBP:SetDebugExportView(key)
@@ -290,7 +291,7 @@ local function buildExport(theme, tab)
         end)
         button.exportKey = key
     end
-    addButton(theme, group, "全选", function()
+    addButton(theme, group, T("SELECT_ALL"), function()
         if view and view.exportBox then view.exportBox:SetFocus(); view.exportBox:HighlightText() end
     end, "default")
     local boxFrame = CreateFrame("Frame", nil, tab.frame, "BackdropTemplate")
@@ -300,14 +301,12 @@ local function buildExport(theme, tab)
     local scroll = CreateFrame("ScrollFrame", nil, boxFrame, "UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT", 8, -8)
     scroll:SetPoint("BOTTOMRIGHT", -28, 8)
-    local box = CreateFrame("EditBox", nil, scroll)
+    local box = theme:CreateInput(scroll, { width = 500, height = 700, maxLetters = 0 })
     box:SetMultiLine(true)
-    box:SetAutoFocus(false)
-    box:SetFontObject("GameFontHighlightSmall")
-    box:SetWidth(500)
-    box:SetHeight(700)
-    box:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    box:SetScript("OnTextChanged", function(self) self:GetParent():UpdateScrollChildRect() end)
+    -- Unlimited Lua snippets; Enter inserts a newline instead of submitting.
+    -- Keep Core's IME, Escape and hide/focus lifecycle intact.
+    box:SetScript("OnEnterPressed", nil)
+    box:HookScript("OnTextChanged", function(self) self:GetParent():UpdateScrollChildRect() end)
     scroll:SetScrollChild(box)
     tab.boxFrame, tab.box = boxFrame, box
 end
@@ -320,8 +319,10 @@ local function layoutGroup(group, width, y, isFootprintList, isPage)
     local top = 38
     if group.note then
         group.note:ClearAllPoints(); group.note:SetPoint("TOPLEFT", 12, -top)
-        group.note:SetWidth(width - 40); group.note:SetHeight(28)
-        top = top + 32
+        group.note:SetWidth(width - 40)
+        local height = math.max(28, (group.note:GetStringHeight() or 28) + 4)
+        group.note:SetHeight(height)
+        top = top + height + 4
     end
     local rows, currentRow = {}, { buttons = {}, widths = {}, minimumTotal = 0 }
     local availableWidth = width - 40
@@ -369,8 +370,10 @@ local function layoutGroup(group, width, y, isFootprintList, isPage)
     top = top + #rows * 38
     if group.detail then
         group.detail:ClearAllPoints(); group.detail:SetPoint("TOPLEFT", 12, -top)
-        group.detail:SetWidth(width - 40); group.detail:SetHeight(56)
-        top = top + 58
+        group.detail:SetWidth(width - 40)
+        local height = math.max(56, (group.detail:GetStringHeight() or 56) + 4)
+        group.detail:SetHeight(height)
+        top = top + height + 2
     end
     if isFootprintList then
         for index, row in ipairs(isFootprintList.rows) do
@@ -398,6 +401,11 @@ local function layout(panel)
     -- Share the content cards' x=16 and right=width-24 guide lines.
     local headerLeft, headerRight, headerTop, headerBottom = 16, 24, 8, 12
     local controlWidth = width < 700 and 96 or 112
+    local theme = _G.YiboCore.UITheme
+    if theme.MeasureText then
+        controlWidth = math.max(controlWidth, theme:MeasureText(theme.Font.body, T("PREVIOUS_ROUTE")) + 20,
+            theme:MeasureText(theme.Font.body, T("NEXT_ROUTE")) + 20)
+    end
     local buttonHeight = panel.previous:GetHeight()
     local countHeight = 22
     local controlHeight = buttonHeight * 2 + 4 * 2 + countHeight
@@ -496,11 +504,11 @@ local function update(panel)
     local node = id and YBP.GetResolvedRouteNodes and YBP:GetResolvedRouteNodes(id)
     local start = node and node[1]
     local state = ui()
-    local step = state and state.stepMove == presets.fine[1] and "细"
-        or state and state.stepMove == presets.coarse[1] and "粗" or "中"
+    local step = state and state.stepMove == presets.fine[1] and T("STEP_FINE")
+        or state and state.stepMove == presets.coarse[1] and T("STEP_COARSE") or T("STEP_MEDIUM")
     local index = id and YBP:GetPetIndexInCurrentMap(id) or 0
     panel.summary:SetText(string.format(
-        "地图  %s%s    ·    宠物  %s%s\n位置  X %s  /  Y %s    缩放 %s [%s]    线宽 %s    透明 %s\n横缩 %s  /  竖缩 %s    ·    起点 X %s  /  Y %s  /  大小 %s\n小图  X %s  /  Y %s    缩放 %s    横缩 %s  /  竖缩 %s    线宽 %s",
+        T("SUMMARY"),
         pet and pet.zone or "—", mapID and (" [" .. mapID .. "]") or "",
         pet and (pet.name or pet.nameEN) or "—", id and (" [" .. id .. "]") or "",
         fmt(transform and transform.offsetX), fmt(transform and transform.offsetY), fmt(transform and transform.scale), step,
@@ -509,7 +517,7 @@ local function update(panel)
         fmt(start and start.normalizedX), fmt(start and start.normalizedY), fmt(start and start.nodeScale),
         fmt(minimap and minimap.offsetX), fmt(minimap and minimap.offsetY), fmt(minimap and minimap.scale),
         fmt(minimap and minimap.scaleX), fmt(minimap and minimap.scaleY), fmt(minimap and minimap.lineThickness)))
-    panel.routeCount:SetText(string.format("当前路线  %d / %d", index, #ids))
+    panel.routeCount:SetText(string.format(T("ROUTE_COUNT"), index, #ids))
     panel.previous:SetEnabled(#ids > 0); panel.next:SetEnabled(#ids > 0)
 
     for _, group in ipairs(panel.tabs.calibrate.groups) do
@@ -522,14 +530,14 @@ local function update(panel)
         for _, button in ipairs(group.buttons) do
             if button.settingKey then
                 local enabled = display[button.settingKey]
-                button.layoutLabel = (enabled and "[开] " or "[关] ") .. button.baseLabel
+                button.layoutLabel = (enabled and T("ON_PREFIX") or T("OFF_PREFIX")) .. button.baseLabel
                 button:SetText(button.layoutLabel)
                 button:SetState(enabled and "selected" or "default")
             end
         end
         if group.autoButton and YBP.IsRouteAutoResolveEnabled then
             local enabled = YBP:IsRouteAutoResolveEnabled()
-            group.autoButton.layoutLabel = (enabled and "[开] " or "[关] ") .. "自动重算"
+            group.autoButton.layoutLabel = (enabled and T("ON_PREFIX") or T("OFF_PREFIX")) .. T("AUTO")
             group.autoButton:SetText(group.autoButton.layoutLabel)
             group.autoButton:SetState(enabled and "selected" or "default")
         end
@@ -537,8 +545,8 @@ local function update(panel)
             local settings = YBP.GetRouteVisualSettings and YBP:GetRouteVisualSettings() or {}
             local resolved = id and YBP.GetResolvedRoute and YBP:GetResolvedRoute(id)
             group.detail:SetText(string.format(
-                "融合段 %d    状态 %s\n主线宽 %s    参考宽 %s    点位密度 %s    脚印大小 %s    脚印透明 %s    影响弧长 %s    小图近点 %s",
-                resolved and #(resolved.segments or {}) or 0, resolved and (resolved.resolvedAt or "已生成") or "未生成",
+                T("FUSION_SUMMARY"),
+                resolved and #(resolved.segments or {}) or 0, resolved and (resolved.resolvedAt or T("GENERATED")) or T("NOT_GENERATED"),
                 fmt(settings.resolvedThickness), fmt(settings.referenceThickness), fmt(settings.routeDensity),
                 fmt(settings.footprintSize), fmt(settings.footprintAlpha), fmt(settings.footprintInfluenceArc),
                 fmt(settings.minimapNearbyPointLimit)))
@@ -556,15 +564,15 @@ local function update(panel)
         row:SetShown(point ~= nil)
         if point then
             row.label:SetText(string.format("#%d [%s] X %s  Y %s%s", pointIndex,
-                point.enabled == false and "关" or "开", fmt(point.x), fmt(point.y),
+                point.enabled == false and T("OFF") or T("ON"), fmt(point.x), fmt(point.y),
                 point.note and point.note ~= "" and ("  " .. point.note) or ""))
-            row.toggle:SetText(point.enabled == false and "启用" or "禁用")
+            row.toggle:SetText(point.enabled == false and T("ENABLE") or T("DISABLE"))
             row.toggle:SetScript("OnClick", function()
                 YBP:SetFootprintAnchorEnabled(id, pointIndex, point.enabled == false)
                 YBP:RefreshDebugPanel()
             end)
             row.delete:SetScript("OnClick", function()
-                YBP:ConfirmDebugAction("确定删除此脚印点吗？", function()
+                YBP:ConfirmDebugAction(T("DELETE_POINT_CONFIRM"), function()
                     YBP:RemoveFootprintAnchor(id, pointIndex)
                     YBP:RefreshDebugPanel()
                 end)
@@ -572,7 +580,7 @@ local function update(panel)
         end
     end
     local pages = #points == 0 and 0 or math.ceil(#points / 6)
-    tab.page:SetText(string.format("共 %d 点    ·    第 %d / %d 页", #points,
+    tab.page:SetText(string.format(T("PAGE_COUNT"), #points,
         #points == 0 and 0 or math.floor(offset / 6) + 1, pages))
     tab.prev:SetEnabled(offset > 0)
     tab.next:SetEnabled(offset < math.max(0, #points - 6))
@@ -611,9 +619,9 @@ function YBP:CreateCoreDebugPanel(parent)
     panel.petIcon:SetPoint("BOTTOMRIGHT", -2, 2)
     panel.summary = makeText(theme, panel, theme.Font.assist, theme.Colors.text)
     panel.summary:SetJustifyV("MIDDLE")
-    panel.previous = theme:CreateButton(panel, 90, "上一条", "secondary")
+    panel.previous = theme:CreateButton(panel, 90, T("PREVIOUS_ROUTE"), "secondary")
     panel.previous:SetScript("OnClick", function() cycleRoute(-1) end)
-    panel.next = theme:CreateButton(panel, 90, "下一条", "secondary")
+    panel.next = theme:CreateButton(panel, 90, T("NEXT_ROUTE"), "secondary")
     panel.next:SetScript("OnClick", function() cycleRoute(1) end)
     panel.routeCount = makeText(theme, panel, theme.Font.assist, theme.Colors.muted)
     panel.routeCount:SetJustifyH("CENTER")
@@ -630,4 +638,9 @@ end
 
 function YBP:RefreshDebugPanel()
     if view and view:IsShown() then update(view) end
+end
+
+function YBP:CancelCoreDebugInteraction()
+    if view and view.tabs.export.box then view.tabs.export.box:ClearFocus() end
+    if StaticPopup_Hide then StaticPopup_Hide("YIBO_BEAST_PATHS_CONFIRM_DEBUG_ACTION") end
 end

@@ -1,0 +1,47 @@
+{
+  "archived_on": "2026-10-14",
+  "addon": "YiboBeastPaths",
+  "archive": "v1",
+  "files": [
+    {
+      "file": "icon-addon-128.png",
+      "original_version": "legacy",
+      "original_path": "YiboBeastPaths/Assets/Brand/icon-addon-128.png"
+    },
+    {
+      "file": "icon-addon-32.png",
+      "original_version": "legacy",
+      "original_path": "YiboBeastPaths/Assets/Brand/icon-addon-32.png"
+    },
+    {
+      "file": "icon-addon-64.png",
+      "original_version": "legacy",
+      "original_path": "YiboBeastPaths/Assets/Brand/icon-addon-64.png"
+    },
+    {
+      "file": "icon-addon-chromakey.png",
+      "original_version": "legacy",
+      "original_path": "YiboBeastPaths/Assets/Brand/icon-addon-chromakey.png"
+    },
+    {
+      "file": "icon-addon.png",
+      "original_version": "legacy",
+      "original_path": "YiboBeastPaths/Assets/Brand/icon-addon.png"
+    },
+    {
+      "file": "icon-addon.tga",
+      "original_version": "legacy",
+      "original_path": "YiboBeastPaths/Assets/Brand/icon-addon.tga"
+    },
+    {
+      "file": "logo-main-chromakey.png",
+      "original_version": "legacy",
+      "original_path": "YiboBeastPaths/Assets/Brand/logo-main-chromakey.png"
+    },
+    {
+      "file": "logo-main.png",
+      "original_version": "legacy",
+      "original_path": "YiboBeastPaths/Assets/Brand/logo-main.png"
+    }
+  ]
+}

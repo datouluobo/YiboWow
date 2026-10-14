@@ -457,12 +457,12 @@ end
 
 function YBP:SaveCurrentReferenceDisplayTransform(petID)
     if not petID then
-        return false, "未选中宠物"
+        return false, ns.Text("NO_PET")
     end
 
     local route = (ns.referenceRoutes and ns.referenceRoutes[petID]) or (ns.curatedRoutes and ns.curatedRoutes[petID]) or nil
     if not route then
-        return false, "当前宠物没有参考层可保存"
+        return false, ns.Text("NO_REFERENCE")
     end
 
     local snapshot = BuildReferenceDisplayTransformSnapshot(self, petID)
@@ -785,16 +785,16 @@ end
 function YBP:CaptureCurrentFootprintForSelectedPet()
     local petID = self:GetSelectedDebugPetID()
     if not petID or not self.AddFootprintAnchor then
-        return false, "未选中宠物"
+        return false, ns.Text("NO_PET")
     end
 
     local mapID, x, y = self:GetCurrentPlayerMapPosition()
     if not mapID or not x or not y then
-        return false, "无法获取当前角色坐标"
+        return false, ns.Text("NO_POSITION")
     end
 
     self:AddFootprintAnchor(petID, mapID, x, y, "Captured in debug panel", false)
-    return true, string.format("已记录脚印 %.4f, %.4f", x, y)
+    return true, string.format(ns.Text("RECORDED"), x, y)
 end
 
 ----------------------------------------------------------------
@@ -1145,8 +1145,8 @@ local FOOTPRINT_LIST_PAGE_SIZE = 6
 
 StaticPopupDialogs["YIBO_BEAST_PATHS_CONFIRM_DEBUG_ACTION"] = {
     text = "%s",
-    button1 = "确认",
-    button2 = "取消",
+    button1 = ACCEPT,
+    button2 = CANCEL,
     OnAccept = function(_, action)
         if type(action) == "function" then action() end
     end,
