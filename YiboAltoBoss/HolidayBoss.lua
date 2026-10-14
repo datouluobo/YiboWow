@@ -1,3 +1,4 @@
+if _G.YAB and _G.YAB.CoreReady == false then return end
 local YAB = _G.YAB
 
 -- Seasonal queue targets are intentionally kept separate from the world-boss
@@ -9,7 +10,7 @@ YAB.Holiday = Holiday
 local BOSSES = {
     {
         key = "holiday:coren-direbrew",
-        name = "美酒节·科林·烈酒",
+        name = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.BREWFEST_COREN_DIREBREW"),
         reset = "holiday-daily",
         order = 80,
         group = "holiday",
@@ -325,7 +326,7 @@ end
 
 function Holiday:GetRoles()
     local selected = self:GetRoleSelection()
-    if not selected then return {}, "未检测到地下城查找器职责。" end
+    if not selected then return {}, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.DUNGEON_FINDER_ROLES_ARE_UNAVAILABLE") end
     return self:BuildRoleList(selected.tank, selected.healer, selected.damage)
 end
 
@@ -341,9 +342,9 @@ function Holiday:GetRoleNames()
     local selected = self:GetRoleSelection()
     if not selected then return {} end
     local roles = {}
-    if selected.tank then roles[#roles + 1] = "T坦克" end
-    if selected.damage then roles[#roles + 1] = "D输出" end
-    if selected.healer then roles[#roles + 1] = "N治疗" end
+    if selected.tank then roles[#roles + 1] = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.T_TANK") end
+    if selected.damage then roles[#roles + 1] = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.D_DPS") end
+    if selected.healer then roles[#roles + 1] = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.H_HEALER") end
     return roles
 end
 
@@ -402,9 +403,9 @@ function Holiday:OpenRoleSelector(anchor)
             end
         end
         local menu = {
-            { text = "坦克", checked = selected.tank, disabled = not available.tank, func = function() ToggleRole("tank") end },
-            { text = "治疗", checked = selected.healer, disabled = not available.healer, func = function() ToggleRole("healer") end },
-            { text = "输出", checked = selected.damage, disabled = not available.damage, func = function() ToggleRole("damage") end },
+            { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.TANK"), checked = selected.tank, disabled = not available.tank, func = function() ToggleRole("tank") end },
+            { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.HEALER"), checked = selected.healer, disabled = not available.healer, func = function() ToggleRole("healer") end },
+            { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.DPS"), checked = selected.damage, disabled = not available.damage, func = function() ToggleRole("damage") end },
         }
         EasyMenu(menu, self.roleMenu, "cursor", 0, 0, "MENU")
         return true
@@ -434,8 +435,8 @@ end
 
 function Holiday:GetQueueState(ref)
     local boss = self:GetBoss(ref)
-    if not boss then return { state = "unavailable", reason = "节日 Boss 不可用。" } end
-    if not IsExpectedDungeon(boss) then return { state = "unavailable", reason = "客户端未提供匹配的节日副本。" } end
+    if not boss then return { state = "unavailable", reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SEASONAL_BOSS_UNAVAILABLE") } end
+    if not IsExpectedDungeon(boss) then return { state = "unavailable", reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THE_CLIENT_HAS_NO_MATCHING_SEASONAL_DUNGEON") } end
     local category = LE_LFG_CATEGORY_LFD
     if type(GetLFGQueuedList) == "function" then
         local queued = GetLFGQueuedList(category)
@@ -452,15 +453,15 @@ function Holiday:GetQueueState(ref)
     local available, joinable = false, false
     if type(IsLFGDungeonJoinable) == "function" then available, joinable = IsLFGDungeonJoinable(boss.lfgDungeonID) end
     if not joinable then
-        local reason = "当前角色暂不可排队。"
+        local reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THIS_CHARACTER_CANNOT_QUEUE_RIGHT_NOW")
         if type(GetLFDLockInfo) == "function" then
             local _, lockedReason, _, _, _, lockedText = GetLFDLockInfo(boss.lfgDungeonID, 1)
-            if lockedText and lockedText ~= "" then reason = lockedText elseif lockedReason and lockedReason ~= 0 then reason = "当前角色不满足副本要求。" end
+            if lockedText and lockedText ~= "" then reason = lockedText elseif lockedReason and lockedReason ~= 0 then reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THIS_CHARACTER_DOES_NOT_MEET_THE_DUNGEON_REQUIREMENTS") end
         end
         return { state = "locked", reason = reason, available = available }
     end
     local roles = self:GetRoles()
-    if #roles == 0 then return { state = "no-roles", reason = "请先在地下城查找器选择职责。" } end
+    if #roles == 0 then return { state = "no-roles", reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SELECT_ROLES_IN_THE_DUNGEON_FINDER_FIRST") } end
     return { state = "ready", roles = roles }
 end
 
@@ -488,14 +489,14 @@ function Holiday:ToggleQueue(ref)
         if type(LeaveLFG) == "function" then
             LeaveLFG(LE_LFG_CATEGORY_LFD)
             ConfirmQueueChanges(boss, queue)
-            return true, "已取消排队。"
+            return true, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.LEFT_THE_QUEUE")
         end
-        return false, "客户端不支持取消该队列。"
+        return false, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THE_CLIENT_CANNOT_CANCEL_THIS_QUEUE")
     end
-    if queue.state ~= "ready" then return false, queue.reason or "当前不可排队。" end
+    if queue.state ~= "ready" then return false, queue.reason or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CANNOT_QUEUE_RIGHT_NOW") end
     if type(LFDQueueFrame_SetType) == "function" then LFDQueueFrame_SetType(boss.lfgDungeonID) end
-    if type(LFG_JoinDungeon) ~= "function" then return false, "客户端不支持地下城查找器排队。" end
+    if type(LFG_JoinDungeon) ~= "function" then return false, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THE_CLIENT_DOES_NOT_SUPPORT_DUNGEON_FINDER_QUEUES") end
     LFG_JoinDungeon(LE_LFG_CATEGORY_LFD, boss.lfgDungeonID, _G.LFDDungeonList, _G.LFDHiddenByCollapseList)
     ConfirmQueueChanges(boss, queue)
-    return true, "已加入节日副本队列。"
+    return true, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.JOINED_THE_SEASONAL_DUNGEON_QUEUE")
 end

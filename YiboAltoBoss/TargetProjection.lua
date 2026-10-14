@@ -1,3 +1,4 @@
+if _G.YAB and _G.YAB.CoreReady == false then return end
 local YAB = _G.YAB
 local Plans = YAB.PlannedTargets
 local function Core() return _G.YiboCore end
@@ -70,22 +71,22 @@ function YAB.GetLockoutStatus(legacyKey, column)
     if not target then return "not-applicable", "—" end
     local p = Plans:Progress(id, target)
     return p.state == "completed" and "clear" or (p.state == "ready" and "open" or "unknown"),
-        p.state == "unknown" and "待核实" or p.reason, p.lockout
+        p.state == "unknown" and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNCONFIRMED") or p.reason, p.lockout
 end
 function YAB.GetLockoutTooltip(legacyKey, column)
     if not column.plannedCatalogID then return Tooltip(legacyKey, column) end
     local id, target = Goal(legacyKey, column)
-    if not target then return { "该角色未安排此难度的刷取目标。" } end
+    if not target then return { _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THIS_CHARACTER_HAS_NO_GOAL_FOR_THIS_DIFFICULTY") } end
     local p = Plans:Progress(id, target)
-    local lines = { "来源：行动中心刷取目标", "难度：" .. tostring(target.difficultyName), "状态：" .. p.reason }
+    local lines = { _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SOURCE_ACTION_CENTER_GOAL"), _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.DIFFICULTY_2") .. tostring(target.difficultyName), _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.STATUS_2") .. p.reason }
     local definition = YAB.TargetCatalog:Get(target.catalogID)
     local wanted = {}; for _, eid in ipairs(target.encounterIDs) do wanted[eid] = true end
-    if target.scope == "all" then lines[#lines + 1] = "刷取范围：整本全部首领"
+    if target.scope == "all" then lines[#lines + 1] = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SCOPE_ALL_INSTANCE_BOSSES")
     else
         for _, difficulty in ipairs(definition and definition.difficulties or {}) do if difficulty.id == target.difficultyID then
-            for _, encounter in ipairs(difficulty.encounters) do if wanted[encounter.id] then lines[#lines + 1] = "目标：" .. encounter.name end end
+            for _, encounter in ipairs(difficulty.encounters) do if wanted[encounter.id] then lines[#lines + 1] = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.TARGET_2") .. encounter.name end end
         end end
     end
-    if p.observedAt then lines[#lines + 1] = "快照：" .. date("%m-%d %H:%M", p.observedAt) end
+    if p.observedAt then lines[#lines + 1] = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SNAPSHOT") .. date("%m-%d %H:%M", p.observedAt) end
     return lines
 end

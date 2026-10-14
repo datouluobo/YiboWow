@@ -1,3 +1,4 @@
+if _G.YAB and _G.YAB.CoreReady == false then return end
 local ADDON_NAME = ...
 
 local YAB = _G.YAB or {}
@@ -17,7 +18,6 @@ local bossByKey = {}
 local npcTargets = {}
 local customTargetCache = {}
 local recentPersonalCombatTargets = {}
-local levelExprCacheText, levelExprCacheRules, levelExprCacheError
 local EnsureWorldTables
 
 local function GetServerTimestamp()
@@ -28,17 +28,17 @@ local function GetServerTimestamp()
 end
 
 local DEFAULT_BOSSES = {
-    { key = "ordos", type = "single_npc", id = 72057, name = "斡耳朵斯", reset = "weekly", order = 10, group = "world_boss" },
-    { key = "celestials", type = "single_npc", name = "四天神", reset = "weekly", order = 20, group = "world_boss", allowedNpcIds = { 71952, 71953, 71954, 71955 }, npcNames = { [71952] = "朱鹤赤精", [71953] = "白虎雪怒", [71954] = "玄牛砮皂", [71955] = "青龙玉珑" }, trackPhase = false, hideAction = true, hidePhase = true },
-    { key = "nalak", type = "single_npc", id = 69099, name = "纳拉克", reset = "weekly", order = 30, group = "world_boss" },
-    { key = "oondasta", type = "single_npc", id = 69161, name = "乌达斯塔", reset = "weekly", order = 40, group = "world_boss" },
-    { key = "galleon", type = "single_npc", id = 62346, name = "炮舰", reset = "weekly", order = 50, group = "world_boss" },
-    { key = "sha_of_anger", type = "single_npc", id = 60491, name = "怒之煞", reset = "weekly", order = 60, group = "world_boss" },
-    { key = "warbringer_jade_forest", type = "location_rule", name = "战争使者·翡翠林", reset = "manual", order = 210, group = "warbringer", zone = "翡翠林", allowedNpcIds = { 69769, 69841, 69842 } },
-    { key = "warbringer_kun_lai_summit", type = "location_rule", name = "战争使者·昆莱山", reset = "manual", order = 220, group = "warbringer", zone = "昆莱山", allowedNpcIds = { 69769, 69841, 69842 } },
-    { key = "warbringer_townlong_steppes", type = "location_rule", name = "战争使者·螳螂高原", reset = "manual", order = 230, group = "warbringer", zone = "螳螂高原", allowedNpcIds = { 69769, 69841, 69842 } },
-    { key = "warbringer_krasarang_wilds", type = "location_rule", name = "战争使者·卡桑琅丛林", reset = "manual", order = 240, group = "warbringer", zone = "卡桑琅丛林", allowedNpcIds = { 69769, 69841, 69842 } },
-    { key = "warbringer_dread_wastes", type = "location_rule", name = "战争使者·恐惧废土", reset = "manual", order = 250, group = "warbringer", zone = "恐惧废土", allowedNpcIds = { 69769, 69841, 69842 } },
+    { key = "ordos", type = "single_npc", id = 72057, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ORDOS"), reset = "weekly", order = 10, group = "world_boss" },
+    { key = "celestials", type = "single_npc", name = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.AUGUST_CELESTIALS"), reset = "weekly", order = 20, group = "world_boss", allowedNpcIds = { 71952, 71953, 71954, 71955 }, npcNames = { [71952] = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHI_JI"), [71953] = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.XUEN"), [71954] = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NIUZAO"), [71955] = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.YU_LON") }, trackPhase = false, hideAction = true, hidePhase = true },
+    { key = "nalak", type = "single_npc", id = 69099, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NALAK"), reset = "weekly", order = 30, group = "world_boss" },
+    { key = "oondasta", type = "single_npc", id = 69161, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.OONDASTA"), reset = "weekly", order = 40, group = "world_boss" },
+    { key = "galleon", type = "single_npc", id = 62346, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.GALLEON"), reset = "weekly", order = 50, group = "world_boss" },
+    { key = "sha_of_anger", type = "single_npc", id = 60491, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SHA_OF_ANGER"), reset = "weekly", order = 60, group = "world_boss" },
+    { key = "warbringer_jade_forest", type = "location_rule", name = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.WARBRINGER_JADE_FOREST"), reset = "manual", order = 210, group = "warbringer", zoneKey = "jade_forest", zone = "翡翠林", allowedNpcIds = { 69769, 69841, 69842 } },
+    { key = "warbringer_kun_lai_summit", type = "location_rule", name = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.WARBRINGER_KUN_LAI_SUMMIT"), reset = "manual", order = 220, group = "warbringer", zoneKey = "kun_lai_summit", zone = "昆莱山", allowedNpcIds = { 69769, 69841, 69842 } },
+    { key = "warbringer_townlong_steppes", type = "location_rule", name = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.WARBRINGER_TOWNLONG_STEPPES"), reset = "manual", order = 230, group = "warbringer", zoneKey = "townlong_steppes", zone = "螳螂高原", allowedNpcIds = { 69769, 69841, 69842 } },
+    { key = "warbringer_krasarang_wilds", type = "location_rule", name = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.WARBRINGER_KRASARANG_WILDS"), reset = "manual", order = 240, group = "warbringer", zoneKey = "krasarang_wilds", zone = "卡桑琅丛林", allowedNpcIds = { 69769, 69841, 69842 } },
+    { key = "warbringer_dread_wastes", type = "location_rule", name = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.WARBRINGER_DREAD_WASTES"), reset = "manual", order = 250, group = "warbringer", zoneKey = "dread_wastes", zone = "恐惧废土", allowedNpcIds = { 69769, 69841, 69842 } },
 }
 
 local STANDARD_WORLD_BOSS_KEYS = {
@@ -51,9 +51,9 @@ local STANDARD_WORLD_BOSS_KEYS = {
 }
 
 local TARGET_GROUPS = {
-    { key = "world_boss", name = "世界 Boss", order = 10 },
-    { key = "warbringer", name = "战争使者", order = 20 },
-    { key = "custom", name = "自定义目标", order = 30 },
+    { key = "world_boss", name = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.WORLD_BOSSES"), order = 10 },
+    { key = "warbringer", name = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.WARBRINGERS"), order = 20 },
+    { key = "custom", name = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CUSTOM_TARGETS"), order = 30 },
 }
 
 -- These are server-side weekly loot-lockout flags, not player quest progress.
@@ -279,11 +279,20 @@ local function GetBossDefinition(target)
     return nil
 end
 
-local function IsZoneMatch(expectedZone, zone, subZone)
-    if not expectedZone or expectedZone == "" then
-        return true
+-- Stable location keys own the rule; native names are only bilingual input aliases.
+local ZONE_ALIASES = {
+    ["jade_forest"] = { "翡翠林", "The Jade Forest" },
+    ["kun_lai_summit"] = { "昆莱山", "Kun-Lai Summit" },
+    ["townlong_steppes"] = { "螳螂高原", "Townlong Steppes" },
+    ["krasarang_wilds"] = { "卡桑琅丛林", "Krasarang Wilds" },
+    ["dread_wastes"] = { "恐惧废土", "Dread Wastes" },
+}
+local function IsZoneMatch(zoneKey, zone, subZone)
+    if not zoneKey or zoneKey == "" then return true end
+    for _, alias in ipairs(ZONE_ALIASES[zoneKey] or {}) do
+        if alias == zone or alias == subZone then return true end
     end
-    return expectedZone == zone or expectedZone == subZone
+    return false
 end
 
 local function IsTargetEnabled(target)
@@ -314,7 +323,7 @@ local function ResolveTargetsByNpcContext(npcId, zone, subZone)
     for _, boss in ipairs(items) do
         if IsTargetEnabled(boss) then
             if boss.type == "location_rule" then
-                if IsZoneMatch(boss.zone, zone, subZone) then
+                if IsZoneMatch(boss.zoneKey, zone, subZone) then
                     matched[#matched + 1] = boss
                 end
             else
@@ -407,10 +416,10 @@ local LEGACY_CELESTIAL_KEYS = {
 }
 
 local LEGACY_CELESTIAL_NAMES = {
-    celestial_niuzao = "玄牛砮皂",
-    celestial_yulon = "青龙玉珑",
-    celestial_chiji = "朱鹤赤精",
-    celestial_xuen = "白虎雪怒",
+    celestial_niuzao = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NIUZAO"),
+    celestial_yulon = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.YU_LON"),
+    celestial_chiji = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHI_JI"),
+    celestial_xuen = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.XUEN"),
 }
 
 local function MigrateCelestialTargets()
@@ -580,7 +589,7 @@ local function BuildObservationLabel(unit)
     end
 
     if #labels == 0 then
-        labels[#labels + 1] = "当前场景"
+        labels[#labels + 1] = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CURRENT_INSTANCE")
     end
     return table.concat(labels, " / ")
 end
@@ -622,7 +631,7 @@ end
 
 local function GetShortRealmName(realm)
     if not realm or realm == "" then
-        return "未知"
+        return _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNKNOWN")
     end
     return realm
 end
@@ -700,102 +709,11 @@ local function RefreshCurrentCharacterCache()
 end
 
 function YAB.NormalizeLevelExpr(expr)
-    expr = tostring(expr or "")
-    expr = expr:gsub("%s+", "")
-    expr = expr:gsub("，", ",")
-    expr = expr:gsub(",+", ",")
-    expr = expr:gsub("^,", "")
-    expr = expr:gsub(",$", "")
-    return expr
-end
-
-local function ParseLevelExpr(expr)
-    local normalized = YAB.NormalizeLevelExpr(expr)
-    if normalized == "" or normalized == "0" then
-        return true, {}, ""
-    end
-
-    if levelExprCacheText == normalized then
-        return levelExprCacheError == nil, levelExprCacheRules or {}, levelExprCacheError
-    end
-
-    local rules = {}
-    for token in string.gmatch(normalized, "[^,]+") do
-        local a, b = string.match(token, "^(%d+)%-(%d+)$")
-        if a and b then
-            local minLevel = tonumber(a)
-            local maxLevel = tonumber(b)
-            if minLevel > maxLevel then
-                minLevel, maxLevel = maxLevel, minLevel
-            end
-            rules[#rules + 1] = { kind = "range", min = minLevel, max = maxLevel }
-        else
-            local ge = string.match(token, "^>=(%d+)$")
-            local le = string.match(token, "^<=(%d+)$")
-            local gt = string.match(token, "^>(%d+)$")
-            local lt = string.match(token, "^<(%d+)$")
-            local eq = string.match(token, "^(%d+)$")
-
-            if ge then
-                rules[#rules + 1] = { kind = "ge", value = tonumber(ge) }
-            elseif le then
-                rules[#rules + 1] = { kind = "le", value = tonumber(le) }
-            elseif gt then
-                rules[#rules + 1] = { kind = "gt", value = tonumber(gt) }
-            elseif lt then
-                rules[#rules + 1] = { kind = "lt", value = tonumber(lt) }
-            elseif eq then
-                rules[#rules + 1] = { kind = "eq", value = tonumber(eq) }
-            else
-                levelExprCacheText = normalized
-                levelExprCacheRules = nil
-                levelExprCacheError = token
-                return false, {}, token
-            end
-        end
-    end
-
-    levelExprCacheText = normalized
-    levelExprCacheRules = rules
-    levelExprCacheError = nil
-    return true, rules, ""
+    return _G.YiboCore.LevelFilter:Normalize(expr)
 end
 
 function YAB.ValidateLevelExpr(expr)
-    local valid, _, badToken = ParseLevelExpr(expr)
-    return valid, YAB.NormalizeLevelExpr(expr), badToken
-end
-
-function YAB.GetCharacterLevel(charKey)
-    local info = YiboAltoBossDB.knownChars[charKey] or {}
-    return tonumber(info.level) or 0
-end
-
-function YAB.CharPassLevelFilter(charKey)
-    local filter = YiboAltoBossDB.filters or {}
-    local level = YAB.GetCharacterLevel(charKey)
-    local valid, rules = ParseLevelExpr(filter.levelExpr)
-
-    if not valid or not rules or #rules == 0 then
-        return true
-    end
-
-    for _, rule in ipairs(rules) do
-        if rule.kind == "range" and level >= rule.min and level <= rule.max then
-            return true
-        elseif rule.kind == "ge" and level >= rule.value then
-            return true
-        elseif rule.kind == "le" and level <= rule.value then
-            return true
-        elseif rule.kind == "gt" and level > rule.value then
-            return true
-        elseif rule.kind == "lt" and level < rule.value then
-            return true
-        elseif rule.kind == "eq" and level == rule.value then
-            return true
-        end
-    end
-    return false
+    return _G.YiboCore.LevelFilter:Validate(expr)
 end
 
 local function NormalizePhaseLabel(phaseText, zone, subZone, phaseId)
@@ -812,8 +730,8 @@ local function NormalizePhaseLabel(phaseText, zone, subZone, phaseId)
     if phaseNum then
         return "phase:" .. phaseNum, "P" .. phaseNum
     end
-    if raw:find("稀有") then
-        return "unknown", "稀有"
+    if raw:find(_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.RARE")) then
+        return "unknown", _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.RARE")
     end
     if subZone and subZone ~= "" then
         return "unknown", subZone
@@ -826,7 +744,7 @@ local function NormalizePhaseLabel(phaseText, zone, subZone, phaseId)
         compact = compact:gsub("^phase:", "P")
         return "unknown", compact
     end
-    return "unknown", "未知"
+    return "unknown", _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNKNOWN")
 end
 
 local function IsStablePhaseKey(phaseKey)
@@ -849,6 +767,7 @@ local function MergePhaseState(target, source)
         target.lastObservedBy = source.lastObservedBy
         target.observedSource = source.observedSource
         target.zone = source.zone
+        target.zoneKey = source.zoneKey
         target.subZone = source.subZone
         target.rawPhase = source.rawPhase
     end
@@ -862,7 +781,7 @@ local function MergePhaseState(target, source)
     end
 
     if source.phaseLabel and source.phaseLabel ~= "" then
-        if not target.phaseLabel or target.phaseLabel == "" or target.phaseLabel == "未知" then
+        if not target.phaseLabel or target.phaseLabel == "" or target.phaseLabel == _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNKNOWN") then
             target.phaseLabel = source.phaseLabel
         elseif sourceObservedAt >= targetObservedAt then
             target.phaseLabel = source.phaseLabel
@@ -901,7 +820,7 @@ local function NormalizeLegacyWorldState()
                     unstableKeys[#unstableKeys + 1] = phaseKey
                     mergedUnknown = MergePhaseState(mergedUnknown or {
                         phaseKey = "unknown",
-                        phaseLabel = "未知",
+                        phaseLabel = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNKNOWN"),
                         realm = phaseState.realm,
                     }, phaseState)
                 end
@@ -924,7 +843,7 @@ local function NormalizeLegacyWorldState()
                 if not targetState then
                     targetState = {
                         phaseKey = "unknown",
-                        phaseLabel = "未知",
+                        phaseLabel = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNKNOWN"),
                         realm = next(bossState.phases or {}) and nil or nil,
                     }
                     bossState.phases.unknown = targetState
@@ -952,12 +871,12 @@ local function NormalizeLegacyWorldState()
                 phaseKey = "unknown",
                 phaseId = "?",
                 displayId = "?",
-                sampleLabel = "未知",
+                sampleLabel = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNKNOWN"),
             }
             unknownEntry.phaseKey = "unknown"
             unknownEntry.phaseId = unknownEntry.phaseId or "?"
             unknownEntry.displayId = unknownEntry.displayId or "?"
-            unknownEntry.sampleLabel = unknownEntry.sampleLabel or "未知"
+            unknownEntry.sampleLabel = unknownEntry.sampleLabel or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNKNOWN")
             realmState.phaseCatalog.unknown = unknownEntry
         end
     end
@@ -1119,29 +1038,6 @@ local function UpsertWorldPhaseState(realm, bossId, phaseText, charKey, payload)
     return phaseState
 end
 
-local function SortCharacterKeys(keys)
-    table.sort(keys, function(left, right)
-        local leftInfo = YiboAltoBossDB.knownChars[left] or {}
-        local rightInfo = YiboAltoBossDB.knownChars[right] or {}
-        local realmCompare = CompareRealmOrder(leftInfo.realm or GetServerFromKey(left), rightInfo.realm or GetServerFromKey(right))
-        if realmCompare ~= 0 then
-            return realmCompare < 0
-        end
-        local leftOrder = leftInfo.seenOrder or math.huge
-        local rightOrder = rightInfo.seenOrder or math.huge
-        if leftOrder ~= rightOrder then
-            return leftOrder < rightOrder
-        end
-        local leftName = leftInfo.name or GetNameFromKey(left)
-        local rightName = rightInfo.name or GetNameFromKey(right)
-        if leftName ~= rightName then
-            return leftName < rightName
-        end
-        return left < right
-    end)
-    return keys
-end
-
 local function CleanupExpiredPhases()
     local now = time()
     for _, charData in pairs(YiboAltoBossDB.characters) do
@@ -1218,42 +1114,7 @@ local function EnsureDB()
             },
             items = {},
         },
-        minimap = {
-            hide = false,
-            minimapPos = 225,
-            hoverMode = "full",
-            hoverScale = 1,
-        },
-        ui = {
-            width = 820,
-            height = 420,
-            windowShown = false,
-            showAllServers = false,
-            viewMode = "current",
-            selectedTab = "kills",
-            settingsShown = false,
-            characterCacheShowAll = false,
-            position = {
-                point = "CENTER",
-                relativePoint = "CENTER",
-                x = 0,
-                y = -88,
-            },
-            viewSizes = {
-                current = { width = 820, height = 420 },
-                other = { width = 820, height = 420 },
-                all = { width = 820, height = 420 },
-            },
-            viewScaleStrategy = {
-                mode = "relative",
-                lastWidthOffset = 0,
-                lastHeightOffset = 0,
-                lastManualWidth = 820,
-                lastManualHeight = 420,
-                viewOffsets = {},
-                touchedViews = {},
-            },
-        },
+        ui = { viewMode = "current", settingsExpandedGroups = {} },
         worldState = {
             realms = {},
         },
@@ -1417,17 +1278,6 @@ function YAB.GetOtherRealmNames()
     return GetKnownOtherRealms()
 end
 
-function YAB.GetOtherRealmButtonLabel()
-    local realms = YAB.GetOtherRealmNames()
-    if #realms == 0 then
-        return "其它服务器"
-    end
-    if #realms == 1 then
-        return GetShortRealmName(realms[1])
-    end
-    return "其它服务器"
-end
-
 function YAB.GetCurrentCharacterName()
     return curCharName
 end
@@ -1473,42 +1323,6 @@ function YAB.GetCurrentPhaseInfo()
     return bestPhase
 end
 
-function YAB.GetViewLabel(viewMode)
-    viewMode = NormalizeViewMode(viewMode)
-    if viewMode == "all" then
-        return "所有服务器视图"
-    end
-    if viewMode == "other" then
-        local realms = YAB.GetOtherRealmNames()
-        if #realms == 1 then
-            return GetShortRealmName(realms[1]) .. " 服务器视图"
-        end
-        return "其它服务器视图"
-    end
-    return YAB.GetCurrentRealmLabel() .. " 服务器视图"
-end
-
-function YAB.GetMinimapConfig()
-    return YiboAltoBossDB.minimap
-end
-
-function YAB.GetHoverMode()
-    EnsureDB()
-    return YiboAltoBossDB.minimap.hoverMode or "full"
-end
-
-function YAB.GetHoverScale()
-    EnsureDB()
-    local minimap = YiboAltoBossDB.minimap or {}
-    local scale = tonumber(minimap.hoverScale) or 1
-    if scale < 0.8 then
-        scale = 0.8
-    elseif scale > 1.6 then
-        scale = 1.6
-    end
-    return math.floor(scale * 100 + 0.5) / 100
-end
-
 function YAB.GetLevelFilterExpr()
     return (YiboAltoBossDB.filters and YiboAltoBossDB.filters.levelExpr) or ""
 end
@@ -1527,53 +1341,6 @@ function YAB.SetLevelFilterExpr(expr)
         YAB.RefreshSettingsUI()
     end
     return true, normalized
-end
-
-function YAB.ShouldShowHover()
-    return YAB.GetHoverMode() ~= "off"
-end
-
-function YAB.SetHoverMode(mode)
-    EnsureDB()
-    local allowed = {
-        full = true,
-        simple = true,
-        off = true,
-    }
-    YiboAltoBossDB.minimap.hoverMode = allowed[mode] and mode or "full"
-    YAB.PersistDB()
-    if YAB.NotifyCorePageChanged then
-        YAB.NotifyCorePageChanged()
-    end
-    if YAB.RefreshSettingsUI then
-        YAB.RefreshSettingsUI()
-    end
-end
-
-function YAB.SetHoverScale(scale)
-    EnsureDB()
-    local value = tonumber(scale) or 1
-    value = math.floor(value * 100 + 0.5) / 100
-    if value < 0.8 then
-        value = 0.8
-    elseif value > 1.6 then
-        value = 1.6
-    end
-    YiboAltoBossDB.minimap.hoverScale = value
-    YAB.PersistDB()
-    if YAB.NotifyCorePageChanged then
-        YAB.NotifyCorePageChanged()
-    end
-    if YAB.RefreshSettingsUI then
-        YAB.RefreshSettingsUI()
-    end
-    return value
-end
-
-function YAB.SetMinimapHidden(hidden)
-    YiboAltoBossDB.minimap.hide = not not hidden
-    YAB.PersistDB()
-    if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
 end
 
 function YAB.ToggleBossKill(charKey, bossId)
@@ -1605,20 +1372,20 @@ function YAB.RecordBossManually(charKey, bossId)
     YAB.CheckForReset()
     if YAB.Holiday and YAB.Holiday:IsBoss(bossId) then
         local changed = YAB.Holiday:ToggleManual(bossId, charKey or curCharKey)
-        return changed, changed and "已更新节日 Boss 的人工标记。" or "该状态由自动证据记录，不能手动覆盖。"
+        return changed, changed and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UPDATED_THE_SEASONAL_BOSS_MANUAL_MARK") or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THIS_STATUS_WAS_RECORDED_AUTOMATICALLY_AND_CANNOT_BE_OVERWRITTEN_MANUALL")
     end
     local boss = GetBossDefinition(bossId)
     if not boss or not IsTargetEnabled(boss) then
-        return false, "目标不可用。"
+        return false, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.TARGET_UNAVAILABLE")
     end
     if not MarkBossKilled(charKey or curCharKey, boss.key, "manual_recovery") then
-        return false, boss.name .. " 已有本周击杀记录。"
+        return false, boss.name .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ALREADY_HAS_A_KILL_RECORDED_THIS_WEEK")
     end
     YAB.PersistDB()
     if YAB.NotifyCorePageChanged then
         YAB.NotifyCorePageChanged()
     end
-    return true, "已补记当前角色的“" .. boss.name .. "”击杀。"
+    return true, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.RECORDED_YOUR_KILL_OF") .. boss.name .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.LABEL")
 end
 
 function YAB.IsBossKilled(charKey, bossId)
@@ -1754,15 +1521,15 @@ end
 function YAB.AddCustomTarget(input, localizedName)
     local value = tonumber(input)
     if not value or value <= 0 then
-        return false, "请输入有效 NPC ID"
+        return false, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ENTER_A_VALID_NPC_ID")
     end
 
     local key = tostring(value)
     if YiboAltoBossDB.customTargets[key] then
-        return false, "该 NPC ID 已存在"
+        return false, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THIS_NPC_ID_ALREADY_EXISTS")
     end
 
-    local name = type(localizedName) == "string" and localizedName ~= "" and localizedName or ("自定义目标 " .. value)
+    local name = type(localizedName) == "string" and localizedName ~= "" and localizedName or (_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CUSTOM_TARGET") .. value)
     YiboAltoBossDB.customTargets[key] = {
         key = "custom:" .. key,
         id = value,
@@ -1784,12 +1551,12 @@ end
 
 function YAB.AddCurrentTarget()
     if not UnitExists or not UnitExists("target") then
-        return false, "请先选中一个 NPC。"
+        return false, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SELECT_AN_NPC_FIRST")
     end
 
     local npcId = ExtractNpcIDFromGUID(UnitGUID("target"))
     if not npcId then
-        return false, "当前目标不是可识别的 NPC。"
+        return false, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THE_SELECTED_TARGET_IS_NOT_A_RECOGNIZABLE_NPC")
     end
 
     local name = UnitName and UnitName("target") or nil
@@ -1797,7 +1564,7 @@ function YAB.AddCurrentTarget()
     if not ok then
         return false, err
     end
-    return true, "已添加当前目标：" .. tostring(name or "NPC") .. "（ID: " .. tostring(npcId) .. "）"
+    return true, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ADDED_CURRENT_TARGET") .. tostring(name or "NPC") .. " (ID: " .. tostring(npcId) .. ")"
 end
 
 function YAB.UpdateCustomTargetName(npcId, localizedName)
@@ -1816,13 +1583,13 @@ end
 function YAB.RemoveCustomTarget(input)
     local value = tonumber(input)
     if not value or value <= 0 then
-        return false, "请输入要删除的 NPC ID"
+        return false, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ENTER_THE_NPC_ID_TO_REMOVE")
     end
 
     local idKey = tostring(value)
     local custom = YiboAltoBossDB.customTargets[idKey]
     if not custom then
-        return false, "未找到该自定义 NPC"
+        return false, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CUSTOM_NPC_NOT_FOUND")
     end
 
     local targetKey = custom.key or ("custom:" .. idKey)
@@ -1865,7 +1632,7 @@ function YAB.RemoveCustomTarget(input)
     if YAB.RefreshSettingsUI then
         YAB.RefreshSettingsUI()
     end
-    return true, "已删除自定义目标 " .. idKey
+    return true, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.REMOVED_CUSTOM_TARGET") .. idKey
 end
 
 function YAB.GetAllBossList()
@@ -1991,204 +1758,20 @@ function YAB.SetDisplayItemEnabled(targetKey, enabled)
     end
 end
 
-function YAB.GetCachedCharacterKeys(showAll)
-    EnsureDB()
-    local result = {}
-    for charKey in pairs(YiboAltoBossDB.knownChars or {}) do
-        if showAll or YAB.CharPassLevelFilter(charKey) then
-            result[#result + 1] = charKey
-        end
-    end
-    return SortCharacterKeys(result)
+function YAB.GetCharacterIdentity(charKey)
+    local Core = _G.YiboCore
+    local id = Core.Characters:ResolveLegacyKey(charKey)
+    return id and Core.Characters:Get(id, { identityOnly = true }) or nil
 end
 
-function YAB.GetCharacterCacheShowAll()
-    EnsureDB()
-    return not not (YiboAltoBossDB.ui and YiboAltoBossDB.ui.characterCacheShowAll)
-end
-
-function YAB.SetCharacterCacheShowAll(showAll)
-    EnsureDB()
-    YiboAltoBossDB.ui.characterCacheShowAll = not not showAll
-    YAB.PersistDB()
-    if YAB.RefreshSettingsUI then
-        YAB.RefreshSettingsUI()
-    end
-end
-
-function YAB.GetFilteredOutCachedCharacterKeys()
-    EnsureDB()
-    local result = {}
-    local currentCharKey = curCharKey
-    for charKey in pairs(YiboAltoBossDB.knownChars or {}) do
-        if charKey ~= currentCharKey and not YAB.CharPassLevelFilter(charKey) then
-            result[#result + 1] = charKey
-        end
-    end
-    return SortCharacterKeys(result)
-end
-
-function YAB.GetCachedCharacterLabel(charKey)
-    EnsureDB()
-    local info = YiboAltoBossDB.knownChars[charKey] or {}
-    return info.displayName or charKey
-end
-
-function YAB.CanDeleteCharacter(charKey)
-    EnsureDB()
-    if not charKey or charKey == "" then
-        return false, "未选择角色。"
-    end
-    if charKey == curCharKey then
-        return false, "当前登录角色不能删除，请切换到其它角色后再删除。"
-    end
-    if not YiboAltoBossDB.knownChars[charKey] and not YiboAltoBossDB.characters[charKey] then
-        return false, "该角色缓存不存在。"
-    end
-    return true
-end
-
-function YAB.DeleteCharacter(charKey)
-    return false, "角色缓存删除已统一迁移到 YiboCore 角色档案，请在那里逐个操作。"
-end
-
-function YAB.DeleteCharacters(charKeys)
-    return 0, #(charKeys or {}), "不支持批量删除角色缓存；请在 YiboCore 角色档案中逐个操作。"
-end
-
-function YAB.GetCharacterKeys(viewMode)
-    viewMode = NormalizeViewMode(viewMode)
-    local result = {}
-    for charKey in pairs(YiboAltoBossDB.knownChars) do
-        if IsRealmVisibleForView(GetServerFromKey(charKey), viewMode) and YAB.CharPassLevelFilter(charKey) then
-            result[#result + 1] = charKey
-        end
-    end
-    return SortCharacterKeys(result)
-end
-
-function YAB.GetCharacterLabel(charKey, viewMode)
-    viewMode = NormalizeViewMode(viewMode)
-    local info = YiboAltoBossDB.knownChars[charKey] or {}
-    if viewMode ~= "current" then
-        return info.displayName or charKey
-    end
-    return info.name or GetNameFromKey(charKey)
-end
-
-function YAB.GetUIState()
-    return YiboAltoBossDB.ui
-end
-
-function YAB.GetStoredViewSize(viewMode)
-    local ui = YiboAltoBossDB.ui or {}
-    local sizes = ui.viewSizes or {}
-    viewMode = NormalizeViewMode(viewMode)
-    local viewSize = sizes[viewMode] or {}
-    return tonumber(viewSize.width), tonumber(viewSize.height)
-end
-
-function YAB.SetStoredViewSize(viewMode, width, height)
-    local ui = YiboAltoBossDB.ui or {}
-    ui.viewSizes = ui.viewSizes or {}
-    viewMode = NormalizeViewMode(viewMode)
-    ui.viewSizes[viewMode] = ui.viewSizes[viewMode] or {}
-    if width then
-        ui.viewSizes[viewMode].width = math.floor(width + 0.5)
-        ui.width = ui.viewSizes[viewMode].width
-    end
-    if height then
-        ui.viewSizes[viewMode].height = math.floor(height + 0.5)
-        ui.height = ui.viewSizes[viewMode].height
-    end
-end
-
-function YAB.GetStoredViewScaleOffsets(viewMode)
-    return 0, 0, false
-end
-
-function YAB.SetStoredViewScaleOffsets(viewMode, widthOffset, heightOffset, updateLast)
-    return
-end
-
-function YAB.GetLastManualViewSize()
-    local ui = YiboAltoBossDB.ui or {}
-    local strategy = ui.viewScaleStrategy or {}
-    return tonumber(strategy.lastManualWidth), tonumber(strategy.lastManualHeight)
-end
-
-function YAB.SetLastManualViewSize(width, height)
-    local ui = YiboAltoBossDB.ui or {}
-    ui.viewScaleStrategy = ui.viewScaleStrategy or {}
-    if width then
-        ui.viewScaleStrategy.lastManualWidth = math.floor((tonumber(width) or 0) + 0.5)
-    end
-    if height then
-        ui.viewScaleStrategy.lastManualHeight = math.floor((tonumber(height) or 0) + 0.5)
-    end
-end
-
-function YAB.GetStoredWindowPosition()
-    local ui = YiboAltoBossDB.ui or {}
-    local position = ui.position or {}
-    return position.point or "CENTER", position.relativePoint or "CENTER", tonumber(position.x) or 0, tonumber(position.y) or -88
-end
-
-function YAB.SetStoredWindowPosition(point, relativePoint, x, y)
-    local ui = YiboAltoBossDB.ui or {}
-    ui.position = ui.position or {}
-    ui.position.point = point or "CENTER"
-    ui.position.relativePoint = relativePoint or point or "CENTER"
-    ui.position.x = math.floor((tonumber(x) or 0) + 0.5)
-    ui.position.y = math.floor((tonumber(y) or 0) + 0.5)
-end
-
-function YAB.SetWindowState(isShown, viewMode)
-    viewMode = NormalizeViewMode(viewMode)
-    YiboAltoBossDB.ui.windowShown = not not isShown
-    if viewMode ~= nil then
-        YiboAltoBossDB.ui.viewMode = viewMode
-        YiboAltoBossDB.ui.showAllServers = viewMode == "all"
-    end
-    YAB.PersistDB()
-end
-
-function YAB.GetSelectedTab()
-    local ui = YiboAltoBossDB.ui or {}
-    local value = ui.selectedTab
-    if value ~= "kills" and value ~= "phases" then
-        return "kills"
-    end
-    return value
-end
-
-function YAB.SetSelectedTab(tabKey)
-    if tabKey ~= "kills" and tabKey ~= "phases" then
-        return
-    end
-    YiboAltoBossDB.ui.selectedTab = tabKey
-    YAB.PersistDB()
-end
-
-function YAB.SetSettingsShown(isShown)
-    YiboAltoBossDB.ui.settingsShown = not not isShown
-    YAB.PersistDB()
-end
-
-function YAB.GetBossSummary(viewMode)
-    local total = 0
-    local killed = 0
-    local chars = YAB.GetCharacterKeys(viewMode)
-    local bosses = YAB.GetBossList()
-    for _, charKey in ipairs(chars) do
-        for _, boss in ipairs(bosses) do
-            total = total + 1
-            if YAB.IsBossKilled(charKey, boss.key) then
-                killed = killed + 1
-            end
-        end
-    end
-    return killed, total
+function YAB.FormatCharacterName(charKey, viewMode, original)
+    local Core = _G.YiboCore
+    local identity = YAB.GetCharacterIdentity(charKey)
+    if not identity then return YAB.Text("IDENTITY.UNKNOWN") end
+    return Core.Characters:FormatName(identity, {
+        nameMode = original and "original" or "short",
+        realmMode = NormalizeViewMode(viewMode) == "current" and "omit" or "full",
+    })
 end
 
 function YAB.GetPhaseColumns(viewMode)
@@ -2212,7 +1795,7 @@ function YAB.GetPhaseColumns(viewMode)
                             key = compositeKey,
                             realm = realm,
                             phaseKey = phaseKey,
-                            label = phaseState.phaseLabel or "未知",
+                            label = phaseState.phaseLabel or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNKNOWN"),
                             displayId = catalogEntry and catalogEntry.displayId or phaseState.phaseDisplayId or "00",
                             sortObservedAt = tonumber(phaseState.observedAt or phaseState.lastKilledAt or 0) or 0,
                         }
@@ -2256,7 +1839,7 @@ function YAB.GetPhaseColumns(viewMode)
             key = fallbackRealm .. "::unknown",
             realm = fallbackRealm,
             phaseKey = "unknown",
-            label = "未知",
+            label = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNKNOWN"),
             displayId = "00",
             sortObservedAt = 0,
         }
@@ -2306,7 +1889,7 @@ function YAB.GetBossPhaseState(bossId, column)
     return {
         realm = column.realm,
         phaseKey = column.phaseKey,
-        phaseLabel = phaseState.phaseLabel or column.label or "未知",
+        phaseLabel = phaseState.phaseLabel or column.label or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNKNOWN"),
         phaseDisplayId = phaseState.phaseDisplayId or column.displayId or "00",
         observedAt = phaseState.observedAt,
         lastObservedBy = phaseState.lastObservedBy,
@@ -2350,27 +1933,6 @@ function YAB.GetBossPhaseSummary(viewMode)
         end
     end
     return activeKills, tracked
-end
-
-function YAB.GetSimpleHoverLines(viewMode)
-    ResetRecurringStateIfNeeded()
-    local lines = {}
-    viewMode = NormalizeViewMode(viewMode)
-    local activeKills, tracked = YAB.GetBossPhaseSummary(viewMode)
-    lines[#lines + 1] = YAB.GetViewLabel(viewMode):gsub("视图$", "") .. ": " .. tracked
-    lines[#lines + 1] = "击杀计时: " .. activeKills
-
-    local columns = YAB.GetPhaseColumns(viewMode)
-    if #columns > 0 and columns[1] then
-        if viewMode ~= "current" then
-            lines[#lines + 1] = "最近位面: " .. tostring(columns[1].label) .. " / " .. tostring(columns[1].realm)
-        else
-            lines[#lines + 1] = "最近位面: " .. tostring(columns[1].label)
-        end
-    else
-        lines[#lines + 1] = "最近位面: 暂无 6 小时内记录"
-    end
-    return lines
 end
 
 local function BuildRespawnEstimate(samples)
@@ -2439,21 +2001,21 @@ local function BuildRespawnEstimate(samples)
     local windowMinSeconds = minSeconds
     local windowMaxSeconds = maxSeconds
     local mode = "range"
-    local confidence = "初步"
+    local confidence = "preliminary"
     if count >= 4 and spreadSeconds <= 90 then
         mode = "fixed"
         windowMinSeconds = estimateSeconds
         windowMaxSeconds = estimateSeconds
-        confidence = "较高"
+        confidence = "high"
     elseif count >= 3 and spreadSeconds <= 180 then
         mode = "fixed"
         windowMinSeconds = estimateSeconds
         windowMaxSeconds = estimateSeconds
-        confidence = "中等"
+        confidence = "medium"
     elseif count >= 2 then
         windowMinSeconds = math.min(p20, p80)
         windowMaxSeconds = math.max(p20, p80)
-        confidence = "参考"
+        confidence = "reference"
     end
 
     return {
@@ -2474,6 +2036,16 @@ local function BuildRespawnEstimate(samples)
         spreadSeconds = spreadSeconds,
         confidence = confidence,
     }
+end
+
+function YAB.FormatRespawnConfidence(value)
+    local keys = {
+        preliminary = "UI.PRELIMINARY", high = "UI.HIGH", medium = "UI.MEDIUM", reference = "UI.REFERENCE",
+        ["初步"] = "UI.PRELIMINARY", ["较高"] = "UI.HIGH", ["中等"] = "UI.MEDIUM", ["参考"] = "UI.REFERENCE",
+        Preliminary = "UI.PRELIMINARY", High = "UI.HIGH", Medium = "UI.MEDIUM", Reference = "UI.REFERENCE",
+    }
+    local key = keys[value]
+    return key and _G.YiboCore.Locale:Get("YiboAltoBoss", key) or tostring(value or "")
 end
 
 function YAB.GetBossRespawnEstimate(bossId)
@@ -2908,12 +2480,9 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
         if YAB.CoreIntegration and YAB.CoreIntegration.Initialize then
             local ok, errorMessage = YAB.CoreIntegration:Initialize()
             if not ok and DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
-                DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 首领追踪：|cffff5555Core 接入失败：|r " .. tostring(errorMessage))
+                DEFAULT_CHAT_FRAME:AddMessage(_G.YiboCore.Locale:Get("YiboAltoBoss", "CHAT.CORE_INTEGRATION_FAILED") .. tostring(errorMessage))
             end
         end
-        -- Settings are hosted exclusively by YiboCore's workbench.  Do not
-        -- initialize AltoBoss's retired standalone frame here: keeping that
-        -- shell alive would reintroduce a competing title bar and scroll area.
     elseif event == "PLAYER_ENTERING_WORLD" then
         HandleWorldEntry()
     elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then

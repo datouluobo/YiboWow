@@ -116,7 +116,7 @@ YiboMounts 1.0.0 已按 API13 接入 `localization:1` 和 API v6 独立设置注
 
 | 插件 | 状态 | 已有路径与证据 | 剩余范围 / 后续触发 |
 | --- | --- | --- | --- |
-| YiboAltoBoss | 部分接入（目标增强范围） | 2026-10-10 2.6.0 的目标行动标题使用 Core FormatName，增强初始化检查 API11 / character-name-format:1；基础 API5 行动保留原显示逻辑，此版本兼容边界已记录 | 既有账号表头／角色行／设置与 Core.lua 的名字组合继续是迁移库存，本轮未改该显示逻辑；LockoutsPage 身份回退另待涉及时核对。源矩阵状态与目标联动自动化通过，客户端待验收 |
+| YiboAltoBoss | 部分接入（适用代码完成，客户端待验收） | Core API13 / character-name-format:1；主矩阵、转置及副本角色行／测量／行动统一 Core FormatName，经唯一ID与轻量身份读取 | 历史原生文本保留；短名及跨服实机待验，见 AltoBoss/Docs/Core-API13-完整接入.md / 2026-10-14 |
 | YiboAutoOpen | 不适用 | [加载清单](../../YiboAutoOpen/YiboAutoOpen.toc) 与设置／队列代码未发现账号角色或联系人的名称显示需求 | 新增相应显示需求时重审；物品别名不属于角色短名 |
 | YiboBeastPaths | 不适用 | [加载清单](../../YiboBeastPaths/YiboBeastPaths.toc) 及路线维护适配器以路线、宠物和坐标为显示对象 | 新增角色／联系人显示时重审；宠物名称不属于本能力 |
 | YiboBuilds | 待迁移 | [AccountPage.lua](../../YiboBuilds/AccountPage.lua) 的 CharacterLabel 使用 Core 短名后本地追加服务器，角色行另用原名 | 预览标签、角色行与相应身份提示；装备装等等附加信息继续由业务组合 |
@@ -146,7 +146,7 @@ YiboMounts 1.0.0 已按 API13 接入 `localization:1` 和 API v6 独立设置注
 
 | 插件 | 状态 | 已覆盖 / 证据 | 剩余范围与接入版本 |
 | --- | --- | --- | --- |
-| YiboAltoBoss | 待迁移 | [Settings.lua](../../YiboAltoBoss/Settings.lua) 有本地 EditBox | Core 托管业务面板的等级、NPC、副本录入；旧独立设置壳另见 CAP-004。未登记接入版本 |
+| YiboAltoBoss | 部分接入（适用代码完成，客户端待验收） | API13 / basic-input:1 / level-filter:1；NPC与小时上限使用 CreateInput，等级表达式委托Core，旧重复过滤面板及解析已清理 | 中文输入法、失焦／提交及英文布局待验 / 2026-10-14 |
 | YiboAutoOpen | 待迁移 | [Settings.lua](../../YiboAutoOpen/Settings.lua) 中空位、物品、确认来源和别名输入均本地创建 | 仅 Core 托管设置范围接入；独立运行与 OptionalDeps 关系须在实施时确认。未登记接入版本 |
 | YiboBeastPaths | 待迁移 | [CoreDebugView.lua](../../YiboBeastPaths/Maintenance/CoreDebugView.lua) 的 Core 维护页本地创建多行输入 | 评估公共输入对多行导出的适配；独立 DebugCalibrator 窗口不自动扩大迁移。未登记接入版本 |
 | YiboBuilds | 不适用 | 当前账号页面与设置接入代码未发现本地 EditBox | 新增输入时使用公共控件；无接入版本 |
@@ -169,7 +169,7 @@ YiboMounts 1.0.0 已按 API13 接入 `localization:1` 和 API v6 独立设置注
 
 | 插件 | 状态 | 已覆盖 / 证据 | 剩余范围与接入版本 |
 | --- | --- | --- | --- |
-| YiboAltoBoss | 不适用 | 设置录入是 NPC／副本 ID | 不将这些 ID 当作物品；无接入版本 |
+| YiboAltoBoss | 部分接入（确认代码完成，客户端待验收） | API13 Core.ItemConfirmation；目标移除位于数据区末尾，复核目标并在隐藏时取消 | NPC非物品，物品解析／选择不适用；确认／取消／切页待验 / 2026-10-14 |
 | YiboAutoOpen | 待评估 | [ItemResolver.lua](../../YiboAutoOpen/ItemResolver.lua) 本地解析物品 ID／链接／名字；TOC 将 Core 列为 OptionalDeps | Core 托管物品录入是候选；先确认独立运行约束与解析语义，再定范围，不能仅为迁移强制 Core 依赖 |
 | YiboBeastPaths | 不适用 | 路线维护以坐标和路线数据为输入 | 无物品录入迁移项 |
 | YiboBuilds | 不适用 | 当前构筑页面读取装备／配方数据，未发现可直接替换的物品输入选择器 | 业务动作与装备应用不自动纳入此项 |
@@ -198,7 +198,7 @@ YiboMounts 1.0.0 已按 API13 接入 `localization:1` 和 API v6 独立设置注
 
 | 插件 | 状态 | 已有接入与证据 | 剩余核对范围 |
 | --- | --- | --- | --- |
-| YiboAltoBoss | 部分接入 | [CoreIntegration.lua](../../YiboAltoBoss/CoreIntegration.lua) 注册页面、入口和业务设置 | [Settings.lua](../../YiboAltoBoss/Settings.lua) 仍保留 Core 缺失时的独立窗口分支；后续设置修改时收拢并核对升级提示 |
+| YiboAltoBoss | 部分接入（适用代码完成，客户端待验收） | API13 / account-view:2 / account-entry:2；仅Core设置／账号页／入口；固定副本选择接入account-preview-field-groups:1；独立设置壳、旧窗口及小地图接口已移除 | 旧SavedVariables字段保留而不读取；双语布局及入口组合待验 / 2026-10-14 |
 | YiboAutoOpen | 部分接入 | [CoreIntegration.lua](../../YiboAutoOpen/CoreIntegration.lua) 可选注册统一业务设置 | 验证 Core 可用／缺失时的设置路由；基础队列独立运行不自动纳入迁移 |
 | YiboBeastPaths | 部分接入 | [CoreDebugAdapter.lua](../../YiboBeastPaths/Maintenance/CoreDebugAdapter.lua) 在 Mists 下可选注册维护页面与设置 | 核对客户端分支、晚接入与关闭行为；独立路线校准工具保留其既有范围 |
 | YiboBuilds | 部分接入 | [CoreIntegration.lua](../../YiboBuilds/CoreIntegration.lua) 注册账号页与入口，业务设置只有描述元数据；当前最低 API v10 / account-view:2 | 验证页面／入口及低版本停止；当前无业务设置面板，不能虚记为已迁移面板；首次提示见 CAP-006 |
@@ -359,7 +359,7 @@ omi` 保留；新增 `activities` 输出其余 `monitoringProjects`，账号布�
 
 | 插件 | 状态与已覆盖范围 | 剩余范围／验证 | 最近审查 |
 | --- | --- | --- | --- |
-| YiboAltoBoss | 已接入：目标进度、行动投影、目标配置范围；增强初始化检查能力 | 基础 API v5 旧页面未触及的完整读取保留；缺少新能力停止增强、基础可用。专项219项与BossTargets136项通过 | 2026-10-10 |
+| YiboAltoBoss | 部分接入（适用代码完成，客户端待验收） | API13 / character-identity:1；身份读取统一 identityOnly，公开角色引用经Core唯一ID，旧数据存储键不变 | 多角色／改名／缺失身份实机待验 / 2026-10-14 |
 | YiboCrafting | 部分接入（适用代码完成） | 1.2.0 目标角色目录／存在性使用 identityOnly；领域快照单独 DataDomains:Get，检查 character-identity:1 / API13 | GoalTargets／来源集成通过，客户端待验收 / 2026-10-12 |
 | YiboMounts | 不适用 | 本轮审查的 Tooltip、坐骑目录与独立设置不读取 Core 角色身份目录或领域快照 | 新增账号角色级坐骑页面时重审 / 2026-10-12 |
 | YiboTaskHub | 已接入：全部角色身份、目录、受益者、目标校验、主视图／预览／提醒；检查能力 | 无本次范围遗漏；Overview50项及依赖回归、专项219项通过 | 2026-10-10 |
@@ -386,7 +386,7 @@ Core 状态：已提供，工作树 1.11.0 / API v12 / business-item-actions:1�
 
 | 插件技术名 | 接入状态／已覆盖 | 剩余范围与验证 | 最近审查 |
 | --- | --- | --- | --- |
-| YiboAltoBoss | 部分接入：世界／节日及锁定对象、GoalTargets；增强最低API12 | 客户端；原刷取编辑与批量复制复用同库，普通无周期锁定本不适用 | 2026-10-10 |
+| YiboAltoBoss | 部分接入（适用代码完成，客户端待验收） | API13 / business-item-actions:3；世界／节日／副本及自定义目标通过公开主动添加，副本启用Core精简TP | 手势／菜单／缺参数待实机；不保留本地按钮回退 / 2026-10-14 |
 | YiboAutoOpen | 本轮对象不适用：即时操作 | 后续真实持久目标出现时评估；未改变基础功能 | 2026-10-10 |
 | YiboBeastPaths | 本轮对象不适用：路线说明 | 无角色驯服完成采集；后续收藏入口再评估 | 2026-10-10 |
 | YiboBuilds | 部分接入：宝石／附魔实际候选、具体装备与孔位；增强最低API12 | 客户端GUID、安全点击；其它强化不注册占位目标 | 2026-10-10 |
@@ -442,7 +442,7 @@ Core 状态：**已提供（1.12.0 / API v13 工作树，未发布）**。能力
 
 | 插件（技术名排序） | 接入状态 | 已覆盖 / 剩余范围与版本要求 | 验证证据 / 最近审查 |
 |---|---|---|---|
-| YiboAltoBoss | 部分接入（副本状态／单元格悬停） | 基础最低 API13 + localization:1；35对 owner 资源覆盖副本状态、锁定详情、无锁定击杀历史、普通本本轮进度及副本 TP／历史显示设置，Boss 页面／设置／目录等剩余区域待迁移；动态 API 名称与旧快照保留 | InstanceKillsSpec：双语、旧Core停止／升级提示及日志回放通过；客户端中文／enUS／手动语言验收待完成，见 AltoBoss/Docs/FivePlayerBossRecording.md / 2026-10-13 |
+| YiboAltoBoss | 部分接入（适用代码完成，客户端待验收） | API13 / localization:1；311对owner资源覆盖正式UI、设置、状态／错误、静态回退目录与目标／命令反馈，无独立语言开关 | 原生API名、历史、自定义文本与输入别名保留；中英文及手动语言模式待验 / 2026-10-14 |
 | YiboAutoOpen | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
 | YiboBeastPaths | 待评估（独立适配） | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
 | YiboBuilds | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
@@ -500,3 +500,11 @@ Core 状态：**已提供（1.12.0 / API v13 工作树，未发布）**。能力
 2026-10-14 CAP-008／CAP-009 AltoBoss 副本 TP：Core 提供 business-item-actions:3 / API13 的通用 Bind.compactTooltip 选项，保持既有调用默认行为与必要参数补充流程；契约见 API-v12-业务项目主动添加.md。AltoBoss 目标增强已检查能力3，副本格启用简短提示，缺能力提示升级并停止增强；基础采集／展示继续。副本 TP 使用既有 UITheme 双列／间隔／文本行，历史次数、最近时间、进入次数开关纳入统一业务设置；新增 TP.* owner 双语资源，历史默认关闭。CAP-001／CAP-004 继续复用现有账号视图、入口及工作台，不新增窗口或缓存权威。静态语法与语言检查通过，本次未运行自动化测试，客户端及交互验收待完成；按部分接入记录。其他插件与 AltoBoss Boss 格未启用简短提示，不推定其已接入能力3。
 
 2026-10-14 CAP-009 AltoBoss 普通本显示时效：新增 TP.STALE／TP.STALE_HINT 中英文 owner 资源，离本 30 分钟后显示待刷新；业务时效和轮次事实仍由 AltoBoss 所有，复用现有 Core Locale／账号页刷新，公共契约与最低 API13 不变。Lua 语法与语言静态报告通过，本次未运行自动化测试，客户端计时／返回／重置及语言验收待完成。
+
+2026-10-14 AltoBoss 2.6.1 对 Core1.12.2 审查：当前API13、localization:1、events:1／character-identity:1与business-item-actions:3调用兼容；InstanceKills带样本58项、BossGoals19项、CustomBossGoals25项通过。CAP-001角色名称、CAP-002公共输入、CAP-004旧独立设置分支与CAP-009其余界面语言仍未完成，保留部分接入／待迁移状态。发现Core TOC1.12.2与Bootstrap.VERSION1.12.1不一致，尚未修改运行代码。两组完整回归受前置测试阻断，详见 [审查报告](../../YiboAltoBoss/Docs/Core-1.12.2-适配审查.md)。
+
+2026-10-14 AltoBoss API13 迁入收尾：按Core1.12.2既有能力补齐适用运行代码，删除独立设置壳、局部输入／名称／旧入口及窗口分支；统一工作台的数据区复用公共确认，历史不清除。Core Bootstrap版本与TOC对齐；CAP-004补齐既有预览字段group元数据传递并声明account-preview-field-groups:1，见[契约](API-v13-预览字段分组.md)。AltoBoss固定副本选择迁入Core显示与入口，旧选择导入previewColumns，客户端待验。适用代码与验证边界逐项见 [完整记录](../../YiboAltoBoss/Docs/Core-API13-完整接入.md)；保留客户端待验，台账不将其记为全部验收完成。
+
+2026-10-15 CAP-004／CAP-009 AltoBoss设置页续改：公共能力调用无新增／遗漏，继续复用Core统一工作台、按钮／输入、BindTooltip与owner语言。业务规则前置，两个增长列表使用独立分页与窄宽度单列，破坏性操作保留数据区末尾及Core确认。新增5对资源（现316对），静态语法及语言报告通过；未运行测试，实际中文／英文客户端布局验收待完成。Core运行代码本轮无改动。
+
+2026-10-15 CAP-004／CAP-009 发布记录：AltoBoss2.7.0与Core1.12.3 / API13同步发布，预览字段分组最低Core1.12.3 / account-preview-field-groups:1。保留本轮静态验证证据与客户端待验状态。

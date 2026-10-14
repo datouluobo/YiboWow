@@ -1,3 +1,4 @@
+if _G.YAB and _G.YAB.CoreReady == false then return end
 -- MoP Classic single-creature death facts; see Docs/FivePlayerBossRecording.md.
 -- Zero means no verified DungeonEncounterID; identity is still map/NPC ID.
 local YAB = _G.YAB

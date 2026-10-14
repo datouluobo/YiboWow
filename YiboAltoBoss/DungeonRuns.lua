@@ -1,3 +1,4 @@
+if _G.YAB and _G.YAB.CoreReady == false then return end
 local Runs = {}
 YAB.DungeonRuns = Runs
 local NORMAL_PROGRESS_TTL = 30 * 60

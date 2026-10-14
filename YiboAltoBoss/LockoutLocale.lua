@@ -1,3 +1,4 @@
+if _G.YAB and _G.YAB.CoreReady == false then return end
 local Core, YAB = _G.YiboCore, _G.YAB
 YAB.LockoutLocaleReady = Core and Core.CheckAPIVersion and Core:CheckAPIVersion(13)
     and Core.HasCapability and Core:HasCapability("localization", 1) and Core.Locale ~= nil

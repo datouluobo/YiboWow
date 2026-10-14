@@ -1,3 +1,4 @@
+if _G.YAB and _G.YAB.CoreReady == false then return end
 local YAB = _G.YAB
 if not YAB.LockoutLocaleReady then return end
 local Core = _G.YiboCore
@@ -79,27 +80,27 @@ end
 -- Mists Classic's Encounter Journal does not expose every legacy raid.
 -- Map IDs keep these entries compatible with GetSavedInstanceInfo lockouts.
 local LEGACY_RAIDS = {
-    { expansion = "巫妖王之怒", mapID = 724, name = "红玉圣殿", abbr = "RS" },
-    { expansion = "巫妖王之怒", mapID = 631, name = "冰冠堡垒", abbr = "ICC" },
-    { expansion = "巫妖王之怒", mapID = 649, name = "十字军的试炼", abbr = "ToC" },
-    { expansion = "巫妖王之怒", mapID = 249, name = "奥妮克希亚的巢穴", abbr = "Ony" },
-    { expansion = "巫妖王之怒", mapID = 603, name = "奥杜尔", abbr = "ULD" },
-    { expansion = "巫妖王之怒", mapID = 624, name = "阿尔卡冯的宝库", abbr = "VoA" },
-    { expansion = "巫妖王之怒", mapID = 616, name = "永恒之眼", abbr = "EoE" },
-    { expansion = "巫妖王之怒", mapID = 615, name = "黑曜石圣殿", abbr = "OS" },
-    { expansion = "巫妖王之怒", mapID = 533, name = "纳克萨玛斯", abbr = "NAXX" },
-    { expansion = "燃烧的远征", mapID = 580, name = "太阳之井高地", abbr = "SWP" },
-    { expansion = "燃烧的远征", mapID = 564, name = "黑暗神殿", abbr = "BT" },
-    { expansion = "燃烧的远征", mapID = 534, name = "海加尔峰", abbr = "MH" },
-    { expansion = "燃烧的远征", mapID = 550, name = "风暴要塞", abbr = "TK" },
-    { expansion = "燃烧的远征", mapID = 548, name = "毒蛇神殿", abbr = "SSC" },
-    { expansion = "燃烧的远征", mapID = 544, name = "玛瑟里顿的巢穴", abbr = "Mag" },
-    { expansion = "燃烧的远征", mapID = 565, name = "格鲁尔的巢穴", abbr = "Gruul" },
-    { expansion = "燃烧的远征", mapID = 532, name = "卡拉赞", abbr = "Kara" },
-    { expansion = "经典旧世", mapID = 531, name = "安其拉神殿", abbr = "AQ40" },
-    { expansion = "经典旧世", mapID = 509, name = "安其拉废墟", abbr = "AQ20" },
-    { expansion = "经典旧世", mapID = 469, name = "黑翼之巢", abbr = "BWL" },
-    { expansion = "经典旧世", mapID = 409, name = "熔火之心", abbr = "MC" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.WRATH"), mapID = 724, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.724"), abbr = "RS" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.WRATH"), mapID = 631, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.631"), abbr = "ICC" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.WRATH"), mapID = 649, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.649"), abbr = "ToC" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.WRATH"), mapID = 249, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.249"), abbr = "Ony" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.WRATH"), mapID = 603, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.603"), abbr = "ULD" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.WRATH"), mapID = 624, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.624"), abbr = "VoA" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.WRATH"), mapID = 616, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.616"), abbr = "EoE" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.WRATH"), mapID = 615, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.615"), abbr = "OS" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.WRATH"), mapID = 533, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.533"), abbr = "NAXX" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.TBC"), mapID = 580, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.580"), abbr = "SWP" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.TBC"), mapID = 564, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.564"), abbr = "BT" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.TBC"), mapID = 534, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.534"), abbr = "MH" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.TBC"), mapID = 550, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.550"), abbr = "TK" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.TBC"), mapID = 548, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.548"), abbr = "SSC" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.TBC"), mapID = 544, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.544"), abbr = "Mag" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.TBC"), mapID = 565, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.565"), abbr = "Gruul" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.TBC"), mapID = 532, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.532"), abbr = "Kara" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.CLASSIC"), mapID = 531, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.531"), abbr = "AQ40" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.CLASSIC"), mapID = 509, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.509"), abbr = "AQ20" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.CLASSIC"), mapID = 469, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.469"), abbr = "BWL" },
+    { expansion = _G.YiboCore.Locale:Get("YiboAltoBoss", "EXPANSION.CLASSIC"), mapID = 409, name = _G.YiboCore.Locale:Get("YiboAltoBoss", "INSTANCE.409"), abbr = "MC" },
 }
 
 local function DB()
@@ -108,6 +109,14 @@ local function DB()
     YiboAltoBossDB.settings = YiboAltoBossDB.settings or {}
     YiboAltoBossDB.settings.normalInstanceLimit = tonumber(YiboAltoBossDB.settings.normalInstanceLimit) or 5
     YiboAltoBossDB.settings.lockoutColumns = YiboAltoBossDB.settings.lockoutColumns or {}
+    local settings = YiboAltoBossDB.settings
+    settings.previewColumns = settings.previewColumns or {}
+    for key, item in pairs(settings.lockoutColumns) do
+        local fieldID = "instance:" .. tostring(key)
+        if settings.previewColumns[fieldID] == nil then
+            settings.previewColumns[fieldID] = item.enabled == true
+        end
+    end
     return YiboAltoBossDB
 end
 
@@ -120,11 +129,11 @@ local function CurrentKey()
 end
 
 local function CurrentRealm()
-    return YAB.GetCurrentRealm and YAB.GetCurrentRealm() or GetRealmName() or "未知服务器"
+    return YAB.GetCurrentRealm and YAB.GetCurrentRealm() or GetRealmName() or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNKNOWN_REALM")
 end
 
 local function ShortName(name)
-    name = tostring(name or "未知副本")
+    name = tostring(name or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNKNOWN_INSTANCE"))
     local count, index = 0, 1
     while index <= #name do
         local byte = name:byte(index)
@@ -143,7 +152,7 @@ local function BuildInstanceCatalog()
         local tierCount = EJ_GetNumTiers()
         for tier = 1, tierCount do
             EJ_SelectTier(tier)
-            local expansion = (EJ_GetTierInfo and EJ_GetTierInfo(tier)) or ("资料片 " .. tostring(tier))
+            local expansion = (EJ_GetTierInfo and EJ_GetTierInfo(tier)) or (_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.EXPANSION") .. tostring(tier))
             for _, isRaid in ipairs({ false, true }) do
                 for index = 1, 200 do
                     local instanceID = EJ_GetInstanceByIndex(index, isRaid)
@@ -203,19 +212,48 @@ function YAB.SetLockoutColumnEnabled(key, enabled)
             if candidate.key == key then item = candidate; break end
         end
     end
+    item = item or db.settings.lockoutColumns[tostring(key)]
     if item then
-        db.settings.lockoutColumns[item.key] = {
-            enabled = not not enabled, name = item.name, shortName = item.shortName,
-            abbreviation = item.abbreviation, expansion = item.expansion, instanceID = item.instanceID,
-        }
+        local itemKey = item.key or tostring(key)
+        db.settings.previewColumns["instance:" .. itemKey] = not not enabled
         if YAB.PersistDB then YAB.PersistDB() end
         if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
     end
 end
 
 function YAB.IsLockoutColumnEnabled(key)
-    local saved = DB().settings.lockoutColumns[tostring(key)]
-    return saved and saved.enabled == true or false
+    return DB().settings.previewColumns["instance:" .. tostring(key)] == true
+end
+
+function YAB.GetLockoutPreviewFieldDefinitions()
+    local db, items, seen = DB(), {}, {}
+    for _, item in pairs(BuildInstanceCatalog()) do
+        items[#items + 1] = item
+        seen[item.key] = true
+    end
+    for key, item in pairs(db.settings.lockoutColumns) do
+        if not seen[key] then
+            local copy = {}
+            for field, value in pairs(item) do copy[field] = value end
+            copy.key = key
+            items[#items + 1] = copy
+        end
+    end
+    table.sort(items, function(a, b)
+        if (a.tierOrder or 999) ~= (b.tierOrder or 999) then return (a.tierOrder or 999) < (b.tierOrder or 999) end
+        if a.isRaid ~= b.isRaid then return a.isRaid == true end
+        if (a.indexOrder or 999) ~= (b.indexOrder or 999) then return (a.indexOrder or 999) < (b.indexOrder or 999) end
+        return tostring(a.key) < tostring(b.key)
+    end)
+    local result, counts = {}, {}
+    for _, item in ipairs(items) do
+        local label = item.expansion or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.OTHER")
+        counts[label] = (counts[label] or 0) + 1
+        local page = math.floor((counts[label] - 1) / 12) + 1
+        result[#result + 1] = { id = "instance:" .. item.key, title = item.name or item.key,
+            group = string.format("%s · %d", label, page) }
+    end
+    return result
 end
 
 local function EnsureCharacter(key)
@@ -281,7 +319,7 @@ function YAB.RecordNormalInstanceEntry()
     end
     bucket.entries[#bucket.entries + 1] = {
         key = key, name = ShortName(name), difficultyID = difficultyID,
-        difficultyName = difficultyName or "普通", at = now,
+        difficultyName = difficultyName or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NORMAL"), at = now,
     }
     throttleRuntime[realm] = bucket
     Notify()
@@ -391,8 +429,11 @@ function YAB.GetLockoutColumns(context)
         for key, item in pairs(BuildInstanceCatalog()) do Add(item, item.key or key) end
     else
         -- Hover starts with the user's fixed columns.
+        for key, item in pairs(BuildInstanceCatalog()) do
+            if YAB.IsLockoutColumnEnabled(item.key or key) then Add(item, item.key or key) end
+        end
         for key, item in pairs(db.settings.lockoutColumns or {}) do
-            if item.enabled then
+            if YAB.IsLockoutColumnEnabled(key) then
                 local catalogItem = item.instanceID and BuildInstanceCatalog()[tostring(item.instanceID)]
                 Add(catalogItem or item, item.key or key)
             end

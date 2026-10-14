@@ -1,3 +1,4 @@
+if _G.YAB and _G.YAB.CoreReady == false then return end
 local Core = _G.YiboCore
 local YAB = _G.YAB
 local Theme = Core.UITheme
@@ -33,7 +34,7 @@ function YAB.CreateBusinessTabs(parent, active)
     tabs.rightBridge:SetHeight(1)
     local defs = {
         { id = "boss", title = "Boss", page = "alto-boss", width = 112 },
-        { id = "lockouts", title = "副本", page = "alto-lockouts", width = 126 },
+        { id = "lockouts", title = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.INSTANCES"), page = "alto-lockouts", width = 126 },
     }
     for index, def in ipairs(defs) do
         local button = CreateFrame("Button", nil, tabs, "BackdropTemplate")
@@ -106,8 +107,8 @@ local function Text(parent, size, color, justify)
 end
 
 local function CharacterInfo(key)
-    local info = YiboAltoBossDB.knownChars[key] or {}
-    return info.name or key:match("^(.-)-") or key, info.realm or key:match("-(.+)$") or "未知服务器", info.class
+    local identity = YAB.GetCharacterIdentity(key)
+    return YAB.FormatCharacterName(key, "current"), identity and identity.realm or "", identity and identity.class
 end
 
 local function CharacterColor(key)
@@ -178,7 +179,7 @@ function YAB.RefreshLockoutsPage(instance, context)
     instance.body:ClearAllPoints()
     instance.body:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs)
     instance.body:SetPoint("TOPRIGHT", instance.header, "BOTTOMRIGHT", 0, -Theme.Space.xs)
-    local charWidth = math.max(150, Theme:MeasureText(Theme.Font.body, "角色") + Theme.Space.lg * 2)
+    local charWidth = math.max(150, Theme:MeasureText(Theme.Font.body, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTER")) + Theme.Space.lg * 2)
     local availableWidth = math.max(
         charWidth + CELL_W,
         (tonumber(context and context.surfaceAvailableWidth) or instance:GetWidth() or 1) - inset.left - inset.right
@@ -188,9 +189,9 @@ function YAB.RefreshLockoutsPage(instance, context)
     )
     -- Pagination shares the tab row so no separate status strip interrupts
     -- the active tab's connection to the matrix header.
-    Core.AccountView:UpdateColumnPager(instance, "alto-lockouts", "instances", pageInfo, instance.businessTabs, "副本")
+    Core.AccountView:UpdateColumnPager(instance, "alto-lockouts", "instances", pageInfo, instance.businessTabs, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.INSTANCES"))
     Release(instance.headers)
-    local first = HeaderCell(instance.header, 0, charWidth, "角色")
+    local first = HeaderCell(instance.header, 0, charWidth, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTER"))
     instance.headers[1] = first
     for index, column in ipairs(columns) do
         local abbreviation = column.abbreviation or "INST"
@@ -199,9 +200,9 @@ function YAB.RefreshLockoutsPage(instance, context)
             charWidth + (index - 1) * CELL_W,
             CELL_W,
             column.shortName or column.name,
-            "（" .. abbreviation .. "）"
+            "(" .. abbreviation .. ")"
         )
-        Theme:BindTooltip(header, string.format("%s（%s）", column.name, abbreviation))
+        Theme:BindTooltip(header, string.format("%s (%s)", column.name, abbreviation))
         instance.headers[index + 1] = header
     end
     local y = 0
@@ -215,7 +216,7 @@ function YAB.RefreshLockoutsPage(instance, context)
         row:SetPoint("TOPLEFT", 0, -y)
         row:SetPoint("TOPRIGHT", 0, -y)
         row.cells = row.cells or {}
-        local name = CharacterInfo(charKey)
+        local name = YAB.FormatCharacterName(charKey, context and context.scope == "all" and "all" or "current")
         row.label = row.label or Text(row, Theme.Font.body, C.text, "LEFT")
         row.label:SetPoint("LEFT", 6, 0)
         row.label:SetWidth(charWidth - 12)
@@ -272,7 +273,7 @@ end
 
 function YAB.GetLockoutsSummary(characters)
     local count, limit = YAB.GetThrottleStatus()
-    return string.format("普通本 %d/%d", count, limit)
+    return string.format(_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NORMAL_DUNGEONS_D_D"), count, limit)
 end
 
 function YAB.GetLockoutsActions() return {} end

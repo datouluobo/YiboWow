@@ -68,7 +68,8 @@ for era in ("Vanilla", "BC", "WotLK", "Cataclysm", "MoP"):
             raise ValueError("Conflicting numeric facts: " + str(key))
         rows[key] = value
 
-lines = ["-- MoP Classic single-creature death facts; see Docs/FivePlayerBossRecording.md.",
+lines = ["if _G.YAB and _G.YAB.CoreReady == false then return end",
+         "-- MoP Classic single-creature death facts; see Docs/FivePlayerBossRecording.md.",
          "-- Zero means no verified DungeonEncounterID; identity is still map/NPC ID.",
          "local YAB = _G.YAB", "local bosses = {"]
 for map_id in sorted({key[0] for key in rows}):

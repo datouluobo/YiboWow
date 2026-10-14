@@ -1,5 +1,11 @@
 # YiboCore 更新日志
 
+## 1.12.3 / API v13（2026-10-15）
+
+- 统一设置工作台传递预览字段分组，声明 `account-preview-field-groups:1`；未提供分组的页面行为保持。
+- AltoBoss 2.7.0 的固定副本预览选择接入此能力；Core不保存副本业务状态。
+- 运行时版本与TOC一致。语法／语言静态检查通过，中文／英文客户端菜单验收待完成。
+
 ## 1.12.1 / API v13（2026-10-13，工作树）
 
 - 新增 `account-preview-characters:1`：页面可通过 `previewCharacterLimit = false` 保留全部有效悬停角色，或声明数量上限；原有页面默认前20名行为保持兼容。

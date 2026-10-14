@@ -1,10 +1,9 @@
+if _G.YAB and _G.YAB.CoreReady == false then return end
 local Core = _G.YiboCore
 local YAB = _G.YAB
-local addonTitle = GetLocale and GetLocale() == "zhCN" and "首领追踪" or "Boss Tracker"
-local addonDescription = GetLocale and GetLocale() == "zhCN"
-    and "首领击杀、位面观测、刷新样本和自定义目标由首领追踪自行保存。"
-    or "Boss kills, phase observations, respawn samples, and custom targets are stored by Boss Tracker."
-local characterRecordLabel = GetLocale and GetLocale() == "zhCN" and "首领追踪角色记录" or "Boss Tracker character records"
+local addonTitle = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.BOSS_TRACKER")
+local addonDescription = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.BOSS_TRACKER_OWNS_BOSS_KILLS_PHASE_OBSERVATIONS_RESPAWN_SAMPLES_AND_CUST")
+local characterRecordLabel = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.BOSS_TRACKER_CHARACTER_RECORDS")
 
 -- AltoBoss 的账号视图、预览和可选入口均由 YiboCore 承载；此处只保留业务数据适配。
 local Integration = {}
@@ -76,14 +75,14 @@ local function GetCleanupLegacyKeys(character, aliases)
 end
 
 local function RegisterCharacterCleanupOwner()
-    if not Core.CharacterCleanup then return nil, "YiboCore 角色清理能力不可用。" end
+    if not Core.CharacterCleanup then return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.YIBOCORE_CHARACTER_CLEANUP_IS_UNAVAILABLE") end
     return Core.CharacterCleanup:RegisterOwner("YiboAltoBoss", {
         Inspect = function(character, aliases)
             local keys = GetCleanupLegacyKeys(character, aliases)
             return {
                 hasData = #keys > 0,
                 label = characterRecordLabel,
-                detail = #keys > 0 and (tostring(#keys) .. " 组角色缓存") or "无角色缓存",
+                detail = #keys > 0 and (tostring(#keys) .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTER_CACHES")) or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NO_CHARACTER_CACHE"),
             }
         end,
         Delete = function(character, aliases)
@@ -148,7 +147,7 @@ local function GetSummary(characters)
             end
         end
     end
-    return string.format("Boss 击杀 %d/%d", killed, total)
+    return string.format(_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.BOSS_KILLS_D_D"), killed, total)
 end
 
 local function GetActions(characters)
@@ -162,8 +161,8 @@ local function GetActions(characters)
                 if (progress and progress.state == "ready") or (not progress and status ~= "killed" and status ~= "loot_locked") then
                     actions[#actions + 1] = {
                         priority = 3,
-                        title = progress and Core.Characters:FormatName(character, { nameMode = "short", realmMode = "full" }) or YAB.GetCharacterLabel(legacyKey, "all"),
-                        text = "可处理：" .. tostring(boss.name),
+                        title = Core.Characters:FormatName(character, { nameMode = "short", realmMode = "full" }),
+                        text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.AVAILABLE") .. tostring(boss.name),
                     }
                     break
                 end
@@ -174,11 +173,16 @@ local function GetActions(characters)
 end
 
 function Integration:GetPreviewFields()
+    YAB.GetLockoutPreviewFieldDefinitions() -- Also imports legacy selections once.
     local settings = YiboAltoBossDB.settings or {}
-    return settings.previewColumns or {}
+    return Core.Defaults:Copy(settings.previewColumns or {})
 end
 
 function Integration:SetPreviewFieldVisible(fieldID, visible)
+    if fieldID:sub(1, 9) == "instance:" then
+        YAB.SetLockoutColumnEnabled(fieldID:sub(10), visible)
+        return
+    end
     YiboAltoBossDB.settings = YiboAltoBossDB.settings or {}
     YiboAltoBossDB.settings.previewColumns = YiboAltoBossDB.settings.previewColumns or {}
     YiboAltoBossDB.settings.previewColumns[fieldID] = not not visible
@@ -191,11 +195,11 @@ function Integration:Initialize()
         return true
     end
     if not (Core and Core.CheckAPIVersion and Core.AccountView) then
-        return nil, "YiboCore 不可用。"
+        return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.YIBOCORE_IS_UNAVAILABLE")
     end
     local compatible = Core:CheckAPIVersion(13)
     if not compatible or not Core.HasCapability or not Core:HasCapability("localization", 1) or not YAB.LockoutLocaleReady then
-        return nil, "YiboAltoBoss requires YiboCore API v13 / localization:1. 请升级 YiboCore。"
+        return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "ERROR.CORE_API13_REQUIRED")
     end
 
     Core:RegisterAddon("YiboAltoBoss", { version = "2.6.1", requiredAPI = 13 })
@@ -217,15 +221,15 @@ function Integration:Initialize()
         order = 30,
         previewEnabled = true,
         fields = {
-            { id = "kills", title = "击杀", defaultVisible = true },
-            { id = "action", title = "行动", defaultVisible = true },
-            { id = "phase", title = "位面", defaultVisible = true },
+            { id = "kills", title = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.KILLS_3"), defaultVisible = true },
+            { id = "action", title = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ACTION_2"), defaultVisible = true },
+            { id = "phase", title = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.PHASE_2"), defaultVisible = true },
         },
         viewModes = {
-            { id = "character-rows", title = "角色为行" },
-            { id = "character-columns", title = "角色为列" },
+            { id = "character-rows", title = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTERS_AS_ROWS") },
+            { id = "character-columns", title = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTERS_AS_COLUMNS") },
         },
-        scope = { mode = "realms", allTitle = "所有服务器" },
+        scope = { mode = "realms", allTitle = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ALL_REALMS") },
         characterFilter = {
             defaultExpression = "90",
             GetExpression = function() return YAB.GetLevelFilterExpr() end,
@@ -235,6 +239,7 @@ function Integration:Initialize()
             return HasEligibleSnapshot(GetLegacyKeyByCharacterID(character.id))
         end,
         GetEligibleCharacters = GetEligibleCharacters,
+        GetPreviewFieldDefinitions = function() return YAB.GetLockoutPreviewFieldDefinitions() end,
         GetPreviewFields = function() return Integration:GetPreviewFields() end,
         SetPreviewFieldVisible = function(fieldID, visible) Integration:SetPreviewFieldVisible(fieldID, visible) end,
         defaultEnabled = true,
@@ -261,7 +266,7 @@ function Integration:Initialize()
     end
     local lockoutPage, lockoutError = Core.AccountView:RegisterPage("YiboAltoBoss", {
         id = LOCKOUT_PAGE_ID,
-        title = "副本",
+        title = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.INSTANCES"),
         icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YAB_MinimapIcon",
         order = 31,
         previewEnabled = true,
@@ -270,8 +275,8 @@ function Integration:Initialize()
         compactWidth = true,
         autoFitWidth = true,
         autoFitHeight = true,
-        fields = { { id = "lockout", title = "锁定", defaultVisible = true } },
-        scope = { mode = "realms", allTitle = "所有服务器" },
+        fields = { { id = "lockout", title = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.LOCKOUTS"), defaultVisible = true } },
+        scope = { mode = "realms", allTitle = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ALL_REALMS") },
         characterFilter = {
             defaultExpression = "90",
             GetExpression = function() return YAB.GetLevelFilterExpr() end,
@@ -307,7 +312,7 @@ function Integration:Initialize()
     if not entry and entryError then return nil, entryError end
     if YAB.PlannedTargets then
         local linked, linkError = YAB.PlannedTargets:Initialize()
-        if not linked and linkError ~= "core-version" and Core.Print then Core:Print("首领目标增强未连接：" .. tostring(linkError)) end
+        if not linked and linkError ~= "core-version" and Core.Print then Core:Print(_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.BOSS_TARGET_INTEGRATION_UNAVAILABLE") .. tostring(linkError)) end
     end
     self.initialized = true
     return true
@@ -329,7 +334,8 @@ function YAB.NotifyCorePageChanged()
 end
 
 function YAB.RefreshCoreSettingsPage()
-    if Core and Core.AccountView and Core.AccountView.activePageID == "settings" then
+    if Core and Core.AccountView and Core.AccountView.activePageID == "settings"
+        and Core.AccountView.settingsTargetPageID == PAGE_ID then
         Core.AccountView:RefreshPage()
     end
 end

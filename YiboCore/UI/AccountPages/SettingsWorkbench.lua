@@ -409,6 +409,7 @@ local function RefreshSettings(parent)
                 if currentField.preview ~= false and page.previewEnabled and type(page.SetPreviewFieldVisible) == "function" then
                     previewOptions[#previewOptions + 1] = {
                         title = currentField.title,
+                        group = currentField.group,
                         isSelected = function() return GetPreviewFieldVisible(page, currentField) end,
                         setSelected = function(visible) page.SetPreviewFieldVisible(currentField.id, visible) end,
                     }
@@ -419,6 +420,7 @@ local function RefreshSettings(parent)
                     local currentField = field
                     previewOptions[#previewOptions + 1] = {
                         title = currentField.title,
+                        group = currentField.group,
                         isSelected = function() return GetPreviewFieldVisible(page, currentField) end,
                         setSelected = function(visible) page.SetPreviewFieldVisible(currentField.id, visible) end,
                     }
@@ -926,3 +928,5 @@ AccountView._pages.settings = Core.Locale:Bind(function() return {
     id = "settings", title = Core:Text("CORE.SETTINGS"), order = 999, internal = true,
     Create = CreateSettings, Refresh = RefreshSettings,
 } end)
+
+Core.Capabilities:Register("account-preview-field-groups", 1)

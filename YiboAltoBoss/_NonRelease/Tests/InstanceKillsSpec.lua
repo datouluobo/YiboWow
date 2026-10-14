@@ -36,11 +36,12 @@ YiboCore = {
     HasCapability = function() return api >= 13 end,
     IsInitialized = function() return true end,
     Locale = {
-        Register = function(_, owner, lang, values) resources[lang] = values end,
+        Register = function(_, owner, lang, values) resources[lang] = resources[lang] or {}; for key, value in pairs(values) do resources[lang][key] = value end end,
         Get = function(_, owner, key, ...) return string.format(assert(resources[language][key], key), ...) end,
     },
 }
 YAB = { GetCurrentCharKey = function() return "Tester-Realm" end }
+dofile(root .. "Locale.lua")
 dofile(root .. "LockoutLocale.lua")
 local resourceCount = 0
 for key, zh in pairs(resources.zh) do
@@ -52,7 +53,7 @@ for key, zh in pairs(resources.zh) do
     end
     assert(signature(zh) == signature(en), key .. " format signature")
 end
-check(resourceCount == 35, "all 35 resource pairs have matching format arguments")
+check(resourceCount >= 35, "all loaded resource pairs have matching format arguments")
 dofile(root .. "DungeonBossCatalog.lua")
 dofile(root .. "DungeonRuns.lua")
 dofile(root .. "InstanceLockouts.lua")

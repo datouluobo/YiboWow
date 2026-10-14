@@ -1,3 +1,4 @@
+if _G.YAB and _G.YAB.CoreReady == false then return end
 local YAB = _G.YAB
 
 local Tracking = {}
@@ -84,7 +85,7 @@ local function AddDiagnostic(kind, event, detail)
     while #items > DIAGNOSTIC_LIMIT do table.remove(items, 1) end
     root.meta.diagnosticsDirty = true
     if root.meta and root.meta.traceEnabled and DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
-        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 首领追踪采样：" .. tostring(kind)
+        DEFAULT_CHAT_FRAME:AddMessage(_G.YiboCore.Locale:Get("YiboAltoBoss", "DEBUG.PREFIX") .. tostring(kind)
             .. " " .. tostring(event and event.bossKey or "-")
             .. " P" .. tostring(event and event.phaseId or "?")
             .. (detail and (" · " .. tostring(detail)) or ""))
@@ -97,7 +98,7 @@ local function PhaseLabel(event)
     end
     if event.subZone and event.subZone ~= "" then return event.subZone end
     if event.zone and event.zone ~= "" then return event.zone end
-    return "未知"
+    return _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNKNOWN")
 end
 
 local function PhaseKey(event)
@@ -387,7 +388,7 @@ function Tracking:GetPhaseColumns(viewMode)
                             key = realmKey .. "::" .. phaseKey,
                             realm = realmKey,
                             phaseKey = phaseKey,
-                            label = phase.phaseLabel or "未知",
+                            label = phase.phaseLabel or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNKNOWN"),
                             displayId = phase.phaseId and tostring(phase.phaseId) or "00",
                             sortObservedAt = tonumber(phase.lastObservedAt or phase.lastDeathAt) or 0,
                         }

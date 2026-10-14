@@ -1,32 +1,33 @@
+if _G.YAB and _G.YAB.CoreReady == false then return end
 local YAB = _G.YAB
 local Targets = { PROVIDER = "YiboAltoBoss:targets" }
 YAB.GoalTargets = Targets
 local function Core() return _G.YiboCore end
 local function Now() return GetServerTime and GetServerTime() or time() end
 local function Validate(target)
-    if type(target) ~= "table" or type(target.catalogID) ~= "string" then return nil, "请选择目标" end
+    if type(target) ~= "table" or type(target.catalogID) ~= "string" then return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SELECT_A_TARGET") end
     local definition = YAB.TargetCatalog:Get(target.catalogID)
-    if not definition then return nil, "目标目录已变化，请重新选择" end
-    if definition.available == false then return nil, definition.reason or "该目标暂不支持" end
-    if target.scope ~= "all" and target.scope ~= "boss" then return nil, "请选择整本或指定首领" end
+    if not definition then return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THE_TARGET_CATALOG_CHANGED_SELECT_THE_TARGET_AGAIN") end
+    if definition.available == false then return nil, definition.reason or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THIS_TARGET_IS_NOT_SUPPORTED_YET") end
+    if target.scope ~= "all" and target.scope ~= "boss" then return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SELECT_THE_WHOLE_INSTANCE_OR_SPECIFIC_BOSSES") end
     local result = { catalogID = definition.id, title = definition.name, kind = definition.kind, active = target.active ~= false,
         scope = target.scope == "all" and "all" or "boss", encounterIDs = {} }
     if definition.kind == "instance" then
         local difficulty
         for _, d in ipairs(definition.difficulties or {}) do if d.id == target.difficultyID then difficulty = d end end
-        if not difficulty then return nil, "请选择已验证的副本难度" end
-        if not definition.complete or not difficulty.complete then return nil, "首领目录尚未完整，暂不能保存该副本目标" end
-        if difficulty.trackable == false then return nil, "普通五人副本没有周期锁定，暂不支持自动完成判断" end
+        if not difficulty then return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SELECT_A_VERIFIED_INSTANCE_DIFFICULTY") end
+        if not definition.complete or not difficulty.complete then return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THE_BOSS_CATALOG_IS_INCOMPLETE_THIS_INSTANCE_GOAL_CANNOT_BE_SAVED_YET") end
+        if difficulty.trackable == false then return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NORMAL_FIVE_PLAYER_DUNGEONS_HAVE_NO_PERIODIC_LOCKOUT_AUTOMATIC_GOAL_COMP") end
         result.difficultyID, result.difficultyName = difficulty.id, difficulty.name
         if result.scope == "boss" then
             local valid, seen = {}, {}
             for _, e in ipairs(difficulty.encounters or definition.encounters or {}) do valid[e.id] = true end
-            if type(target.encounterIDs) ~= "table" then return nil, "请选择首领" end
+            if type(target.encounterIDs) ~= "table" then return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SELECT_BOSSES") end
             for _, id in ipairs(target.encounterIDs) do
-                if not valid[id] then return nil, "首领目录已变化" end
+                if not valid[id] then return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THE_BOSS_CATALOG_CHANGED") end
                 if not seen[id] then result.encounterIDs[#result.encounterIDs + 1], seen[id] = id, true end
             end
-            if #result.encounterIDs == 0 then return nil, "至少选择一个首领" end
+            if #result.encounterIDs == 0 then return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SELECT_AT_LEAST_ONE_BOSS") end
             table.sort(result.encounterIDs)
         end
     else result.scope = "all" end
@@ -35,24 +36,24 @@ end
 
 function Targets:Normalize(r)
     local intent = r.intent
-    if type(intent) ~= "table" or type(intent.conditions) ~= "table" then return nil, "请选择首领目标" end
+    if type(intent) ~= "table" or type(intent.conditions) ~= "table" then return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SELECT_A_BOSS_TARGET") end
     local raw, scope = intent.conditions, intent.scope or {}
     local definition = YAB.TargetCatalog:Get(raw.catalogID)
-    if not definition then return nil, "目标目录暂不可用" end
-    local fields = { { id = "repeatPolicy", label = "完成方式", kind = "select", default = intent.repeatPolicy or "recurring",
-        options = { { value = "recurring", label = "按来源周期重复" }, { value = "once", label = "仅完成一次" } } } }
+    if not definition then return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.TARGET_CATALOG_TEMPORARILY_UNAVAILABLE") end
+    local fields = { { id = "repeatPolicy", label = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.COMPLETION_POLICY"), kind = "select", default = intent.repeatPolicy or "recurring",
+        options = { { value = "recurring", label = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.REPEAT_BY_SOURCE_CYCLE") }, { value = "once", label = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.COMPLETE_ONCE") } } } }
     if definition.kind == "instance" then
         local options = {}
         for _, d in ipairs(definition.difficulties or {}) do if d.trackable ~= false and d.complete then options[#options+1] = { value = d.id, label = d.name } end end
-        fields[#fields+1] = { id = "difficultyID", label = "副本难度", kind = "select", options = options }
+        fields[#fields+1] = { id = "difficultyID", label = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.INSTANCE_DIFFICULTY"), kind = "select", options = options }
     end
     if not scope.characterID or (definition.kind == "instance" and not raw.difficultyID) then return { needsConfiguration = true, fields = fields, title = definition.name } end
     local clean, err = Validate(raw)
     if not clean then return nil, err end
-    if not Core().Characters:Get(scope.characterID, { identityOnly = true }) then return nil, "角色不存在" end
+    if not Core().Characters:Get(scope.characterID, { identityOnly = true }) then return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTER_NOT_FOUND") end
     clean.active = nil; clean.id = nil
     local policy = raw.repeatPolicy or intent.repeatPolicy or "recurring"
-    if policy ~= "recurring" and policy ~= "once" then return nil, "请选择完成方式" end
+    if policy ~= "recurring" and policy ~= "once" then return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SELECT_A_COMPLETION_POLICY") end
     clean.repeatPolicy = policy
     local normalized = { providerID = self.PROVIDER, objectID = clean.catalogID, targetType = "boss", conditions = clean,
         scope = { mode = "character", characterID = scope.characterID }, repeatPolicy = policy }
@@ -62,7 +63,7 @@ function Targets:Normalize(r)
 end
 function Targets:Evaluate(r)
     local meta = YiboAltoBossDB.plannedTargetSource
-    local result = { sourceEpoch = meta.sourceEpoch, revision = meta.revision, sourceTitle = "首领与副本", evaluations = {} }
+    local result = { sourceEpoch = meta.sourceEpoch, revision = meta.revision, sourceTitle = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.BOSSES_AND_INSTANCES"), evaluations = {} }
     for _, goal in ipairs(r.goals or {}) do
         local clean, err = self:Normalize({ intent = goal.intent })
         if clean and not clean.needsConfiguration then
@@ -76,7 +77,7 @@ function Targets:Evaluate(r)
                 temporal = { kind = p.kind or "weekly", cycleKey = p.cycleKey, nextChangeAt = p.validUntil },
                 freshness = { state = p.freshness, observedAt = p.observedAt, validUntil = p.validUntil },
                 nextAction = { kind = "open-page", pageID = intent.conditions.kind == "instance" and "alto-lockouts" or "alto-boss" } } }
-        else result.evaluations[goal.id] = { reason = err or "目标参数待核实" } end
+        else result.evaluations[goal.id] = { reason = err or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.TARGET_PARAMETERS_UNCONFIRMED") } end
     end
     return result
 end
@@ -85,7 +86,7 @@ function Targets:Initialize()
     if not (core:CheckAPIVersion(13) and core:HasCapability("business-item-actions", 3)) then core:Print(core.Locale:Get("YiboAltoBoss", "TP.UPGRADE_ACTIONS")); return end
     if self.ref then return true end
     self.definition = { name = "action.targets", kind = "provider", providerID = self.PROVIDER, version = { major = 1, minor = 1 },
-        methods = { GetEntry = function() return { title = "首领与副本", pageID = "alto-boss" } end, Normalize = function(r) return Targets:Normalize(r) end, Evaluate = function(r) return Targets:Evaluate(r) end } }
+        methods = { GetEntry = function() return { title = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.BOSSES_AND_INSTANCES"), pageID = "alto-boss" } end, Normalize = function(r) return Targets:Normalize(r) end, Evaluate = function(r) return Targets:Evaluate(r) end } }
     self.ref = core.Contracts:Register("YiboAltoBoss", self.definition)
     return self.ref ~= nil
 end

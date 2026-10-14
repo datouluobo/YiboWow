@@ -1,8 +1,9 @@
+if _G.YAB and _G.YAB.CoreReady == false then return end
 local YAB = _G.YAB
 
 local function Print(message)
     if DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
-        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 首领追踪：" .. tostring(message))
+        DEFAULT_CHAT_FRAME:AddMessage(_G.YiboCore.Locale:Get("YiboAltoBoss", "CHAT.PREFIX") .. tostring(message))
     end
 end
 
@@ -28,17 +29,17 @@ SlashCmdList["YIBOALTOBOSS"] = function(message)
         return
     end
     if command == "trace" then
-        if not YAB.TrackingV3 then Print("TrackingV3 不可用。"); return end
+        if not YAB.TrackingV3 then Print(_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.TRACKINGV3_IS_UNAVAILABLE")); return end
         local enabled = argument == "on"
         YAB.TrackingV3:SetTraceEnabled(enabled)
         YAB.PersistDB()
-        Print("状态转换跟踪：" .. (enabled and "开启" or "关闭"))
+        Print(_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.STATE_TRANSITION_TRACING") .. (enabled and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ON") or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.OFF")))
         return
     end
     if command == "selftest" then
-        if not YAB.TrackingV3 then Print("TrackingV3 不可用。"); return end
+        if not YAB.TrackingV3 then Print(_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.TRACKINGV3_IS_UNAVAILABLE")); return end
         local passed, detail = YAB.TrackingV3:RunSelfTest()
-        Print((passed and "自测通过：" or "自测失败：") .. tostring(detail))
+        Print((passed and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SELF_CHECK_PASSED") or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SELF_CHECK_FAILED")) .. tostring(detail))
         return
     end
     if command == "celestial" or command == "celestials" then
@@ -47,15 +48,15 @@ SlashCmdList["YIBOALTOBOSS"] = function(message)
         return
     end
     if command == "holiday" then
-        if not YAB.Holiday then Print("节日 Boss 模块不可用。") return end
+        if not YAB.Holiday then Print(_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SEASONAL_BOSS_MODULE_IS_UNAVAILABLE")) return end
         local bosses = YAB.Holiday:GetActiveBosses()
-        if #bosses == 0 then Print("当前没有已确认开放的节日 Boss。") return end
+        if #bosses == 0 then Print(_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NO_SEASONAL_BOSS_IS_CONFIRMED_ACTIVE")) return end
         for _, boss in ipairs(bosses) do
             local status, record = YAB.Holiday:GetStatus(YAB.GetCurrentCharKey(), boss)
             local queue = YAB.Holiday:GetQueueState(boss)
-            Print(boss.name .. "：状态=" .. tostring(status) .. "，队列=" .. tostring(queue.state) .. "，来源=" .. tostring(record and record.source or "—"))
+            Print(boss.name .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.STATUS_3") .. tostring(status) .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.QUEUE_2") .. tostring(queue.state) .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SOURCE_2") .. tostring(record and record.source or "—"))
         end
         return
     end
-    Print("支持 /yab debug [boss]、/yab trace on|off、/yab selftest、/yab celestial、/yab holiday。")
+    Print(_G.YiboCore.Locale:Get("YiboAltoBoss", "COMMANDS.HELP"))
 end

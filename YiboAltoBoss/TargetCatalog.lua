@@ -1,3 +1,4 @@
+if _G.YAB and _G.YAB.CoreReady == false then return end
 local YAB = _G.YAB
 local Catalog = {}
 YAB.TargetCatalog = Catalog
@@ -155,7 +156,7 @@ function Catalog:Build()
                     EJ_SetDifficulty(difficultyID)
                     local encounters, complete = Encounters(journalID)
                     local name = GetDifficultyInfo and GetDifficultyInfo(difficultyID)
-                    entry.difficulties[#entry.difficulties + 1] = { id = difficultyID, name = name or ("难度 " .. difficultyID), encounters = encounters, complete = complete }
+                    entry.difficulties[#entry.difficulties + 1] = { id = difficultyID, name = name or (_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.DIFFICULTY") .. difficultyID), encounters = encounters, complete = complete }
                     if complete then entry.complete = true; entry.encounters = encounters end
                 end
             end
@@ -183,7 +184,7 @@ function Catalog:Build()
         entry.searchCoverage = { instanceNames = #entry.aliases > 1 and "bilingual" or "client-locale", encounterNames = "client-locale-and-curated-aliases" }
         entry.available = mapID ~= nil
         if not mapID then entry.complete = false end
-        entry.reason = not entry.complete and "目录待核实：请先访问该副本或刷新团队信息" or nil
+        entry.reason = not entry.complete and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CATALOG_UNCONFIRMED_VISIT_THE_INSTANCE_OR_REFRESH_RAID_INFORMATION_FIRST") or nil
         Add(entry)
     end
     if oldInstance and EJ_SelectInstance then EJ_SelectInstance(oldInstance) end

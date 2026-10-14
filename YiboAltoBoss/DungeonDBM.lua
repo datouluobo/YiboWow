@@ -1,3 +1,4 @@
+if _G.YAB and _G.YAB.CoreReady == false then return end
 -- Optional external signal adapter. DBM module objects are callback payloads;
 -- only id/encounterId are inspected, and neither is trusted without our directory.
 local YAB, Core = _G.YAB, _G.YiboCore

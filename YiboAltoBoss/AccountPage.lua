@@ -1,3 +1,4 @@
+if _G.YAB and _G.YAB.CoreReady == false then return end
 local YAB = _G.YAB
 local Theme = _G.YiboCore.UITheme
 local C = Theme.Colors
@@ -23,20 +24,13 @@ local function Release(pool, start)
 end
 
 local function CharacterInfo(key)
-    local info = (YiboAltoBossDB and YiboAltoBossDB.knownChars and YiboAltoBossDB.knownChars[key]) or {}
-    return info.name or key:match("^(.-)-") or key, info.realm or key:match("-(.+)$") or "未知服务器"
+    local identity = YAB.GetCharacterIdentity(key)
+    return YAB.FormatCharacterName(key, "current"), identity and identity.realm or ""
 end
 
 local function CharacterColor(key)
-    local info = (YiboAltoBossDB and YiboAltoBossDB.knownChars and YiboAltoBossDB.knownChars[key]) or {}
-    local class = info.class
-    if not class and _G.YiboCore and _G.YiboCore.Characters then
-        local name, realm = CharacterInfo(key)
-        for _, character in ipairs(_G.YiboCore.Characters:GetAll()) do
-            if character.name == name and character.realm == realm then class = character.class; break end
-        end
-    end
-    local color = class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class]
+    local identity = YAB.GetCharacterIdentity(key)
+    local color = identity and identity.class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[identity.class]
     return color or C.text
 end
 
@@ -80,9 +74,7 @@ local function GetHeaderHeight(context)
 end
 
 local function GetCharacterRowLabel(key, context)
-    local name, realm = CharacterInfo(key)
-    if context and context.scope == "all" then return name .. " - " .. realm end
-    return name
+    return YAB.FormatCharacterName(key, context and context.scope == "all" and "all" or "current")
 end
 
 local function GetCharacterRowWidth(keys, context)
@@ -99,7 +91,7 @@ end
 -- compact data column. Measure the current target names so Chinese labels
 -- remain fully legible instead of inheriting the 88px status-cell width.
 local function GetBossRowLabelWidth(bosses)
-    local width = Theme:MeasureText(Theme.Font.body, "Boss / 目标")
+    local width = Theme:MeasureText(Theme.Font.body, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.BOSS_TARGET"))
     for _, boss in ipairs(bosses or {}) do
         width = math.max(width, Theme:MeasureText(Theme.Font.body, boss.name or ""))
     end
@@ -108,15 +100,15 @@ end
 
 local function FormatDuration(seconds)
     seconds = math.max(0, math.floor(tonumber(seconds) or 0))
-    if seconds < 60 then return tostring(seconds) .. "秒" end
-    if seconds < 3600 then return tostring(math.floor(seconds / 60)) .. "分" end
+    if seconds < 60 then return tostring(seconds) .. _G.YiboCore.Locale:Get("YiboAltoBoss", "TIME.SECONDS_SUFFIX") end
+    if seconds < 3600 then return tostring(math.floor(seconds / 60)) .. _G.YiboCore.Locale:Get("YiboAltoBoss", "TIME.MINUTES_SUFFIX") end
     local hours = math.floor(seconds / 3600)
     local minutes = math.floor((seconds % 3600) / 60)
-    return minutes > 0 and (hours .. "时" .. minutes .. "分") or (hours .. "时")
+    return minutes > 0 and (hours .. _G.YiboCore.Locale:Get("YiboAltoBoss", "TIME.HOURS_SUFFIX") .. minutes .. _G.YiboCore.Locale:Get("YiboAltoBoss", "TIME.MINUTES_SUFFIX")) or (hours .. _G.YiboCore.Locale:Get("YiboAltoBoss", "TIME.HOURS_SUFFIX"))
 end
 
 local function FormatClock(timestamp)
-    return date and date("%H:%M", timestamp) or "待定"
+    return date and date("%H:%M", timestamp) or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.PENDING")
 end
 
 local function GetScopedPhaseStates(boss, scope)
@@ -139,7 +131,7 @@ local function BuildActionCandidate(state, column)
         column = column,
         realm = state.realm or column.realm or YAB.GetCurrentRealm(),
         phaseDisplayId = state.phaseDisplayId or column.displayId or "00",
-        phaseLabel = state.phaseLabel or column.label or "未知",
+        phaseLabel = state.phaseLabel or column.label or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNKNOWN"),
         priority = 0,
         orderValue = math.huge,
         text = "—",
@@ -152,27 +144,27 @@ local function BuildActionCandidate(state, column)
         if now < startsAt then
             local remaining = startsAt - now
             if remaining <= 600 then
-                candidate.text, candidate.kind, candidate.priority = FormatDuration(remaining) .. "后", "soon", 6
+                candidate.text, candidate.kind, candidate.priority = FormatDuration(remaining) .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.REMAINING"), "soon", 6
             else
                 candidate.text, candidate.kind, candidate.priority = FormatClock(startsAt), "scheduled", 5
             end
             candidate.orderValue = remaining
         elseif now <= endsAt then
-            candidate.text, candidate.kind, candidate.priority = "窗口中", "window", 7
+            candidate.text, candidate.kind, candidate.priority = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.IN_WINDOW"), "window", 7
             candidate.orderValue = endsAt - now
         else
-            candidate.text, candidate.kind, candidate.priority = "已过", "overdue", 4
+            candidate.text, candidate.kind, candidate.priority = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.OVERDUE"), "overdue", 4
             candidate.orderValue = now - endsAt
         end
         return candidate
     end
     if state.lastKilledAt then
-        candidate.text, candidate.kind, candidate.priority = "样本少", "weak", 3
+        candidate.text, candidate.kind, candidate.priority = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.FEW_SAMPLES"), "weak", 3
         candidate.orderValue = now - state.lastKilledAt
         return candidate
     end
     if state.observedAt then
-        candidate.text, candidate.kind, candidate.priority = "仅观测", "observed", 2
+        candidate.text, candidate.kind, candidate.priority = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.OBSERVED_ONLY"), "observed", 2
         candidate.orderValue = now - state.observedAt
         return candidate
     end
@@ -222,7 +214,7 @@ local function AppendPredictionLines(lines, estimate, lastKilledAt, sectionTitle
     local v3Samples = tonumber(estimate.respawnEstimateV3Samples or estimate.v3SampleCount) or 0
     local legacySamples = tonumber(estimate.respawnEstimateLegacySamples or estimate.legacySampleCount) or 0
 
-    AddTooltipSection(lines, sectionTitle or "刷新预测")
+    AddTooltipSection(lines, sectionTitle or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.RESPAWN_ESTIMATE"))
     if predictedMin and predictedMax then
         local predictionText
         if predictedMax > predictedMin then
@@ -230,58 +222,58 @@ local function AppendPredictionLines(lines, estimate, lastKilledAt, sectionTitle
         else
             predictionText = FormatDuration(predictedMin)
         end
-        AddTooltipPair(lines, "预计刷新", predictionText, C.accent)
+        AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ESTIMATED_RESPAWN"), predictionText, C.accent)
         if lastKilledAt then
             local startsAt, endsAt = lastKilledAt + predictedMin, lastKilledAt + predictedMax
             if endsAt > startsAt then
-                AddTooltipPair(lines, "预计时段", FormatClock(startsAt) .. " – " .. FormatClock(endsAt), C.accent)
+                AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ESTIMATED_WINDOW"), FormatClock(startsAt) .. " – " .. FormatClock(endsAt), C.accent)
             else
-                AddTooltipPair(lines, "预计时刻", FormatClock(startsAt), C.accent)
+                AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ESTIMATED_TIME"), FormatClock(startsAt), C.accent)
             end
         end
     end
     if observedMin then
         local observedText = FormatDuration(observedMin)
         if observedMax and observedMax ~= observedMin then observedText = observedText .. " – " .. FormatDuration(observedMax) end
-        AddTooltipPair(lines, "实测范围", observedText)
+        AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.OBSERVED_RANGE"), observedText)
     end
     if estimate.lastRespawnSampleSeconds then
-        AddTooltipPair(lines, "最近实测", FormatDuration(estimate.lastRespawnSampleSeconds))
+        AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.LATEST_SAMPLE"), FormatDuration(estimate.lastRespawnSampleSeconds))
     end
-    if realmCount > 0 then AddTooltipPair(lines, "样本来源", realmCount .. " 个服务器") end
-    AddTooltipPair(lines, "已完成样本", tostring(samples))
-    if v3Samples > 0 then AddTooltipPair(lines, "v3 实测", tostring(v3Samples)) end
-    if legacySamples > 0 then AddTooltipPair(lines, "v2 历史参考", tostring(legacySamples)) end
-    AddTooltipPair(lines, "参与预测", tostring(effectiveSamples > 0 and effectiveSamples or samples))
-    if excludedSamples > 0 then AddTooltipPair(lines, "排除异常", tostring(excludedSamples)) end
-    local modelText = mode == "fixed" and "固定刷新" or "区间刷新"
-    if confidence then modelText = modelText .. " · " .. tostring(confidence) end
-    AddTooltipPair(lines, "模型", modelText)
+    if realmCount > 0 then AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SAMPLE_SOURCES"), realmCount .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.REALMS")) end
+    AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.COMPLETED_SAMPLES"), tostring(samples))
+    if v3Samples > 0 then AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.V3_OBSERVATIONS"), tostring(v3Samples)) end
+    if legacySamples > 0 then AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.V2_HISTORICAL_REFERENCE"), tostring(legacySamples)) end
+    AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.USED_IN_ESTIMATE"), tostring(effectiveSamples > 0 and effectiveSamples or samples))
+    if excludedSamples > 0 then AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.OUTLIERS_EXCLUDED"), tostring(excludedSamples)) end
+    local modelText = mode == "fixed" and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.FIXED_INTERVAL") or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.INTERVAL_RANGE")
+    if confidence then modelText = modelText .. " · " .. YAB.FormatRespawnConfidence(confidence) end
+    AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.MODEL"), modelText)
 end
 
 local function BuildActionTooltip(boss, candidate, scope)
     if not candidate then
         local estimate = GetHistoricalPrediction(boss)
-        if not estimate then return { { text = "暂无近期位面记录或可用共享刷新样本。", color = C.muted } } end
-        local lines = { { text = "近期位面记录已过期，显示跨服务器共享样本。", color = C.muted } }
-        AppendPredictionLines(lines, estimate, nil, "共享刷新模型")
+        if not estimate then return { { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NO_RECENT_PHASE_OBSERVATIONS_OR_USABLE_SHARED_RESPAWN_SAMPLES"), color = C.muted } } end
+        local lines = { { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.RECENT_PHASE_OBSERVATIONS_EXPIRED_SHOWING_SHARED_SAMPLES_FROM_OTHER_REAL"), color = C.muted } }
+        AppendPredictionLines(lines, estimate, nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SHARED_RESPAWN_MODEL"))
         return lines
     end
     local state, now = candidate.state, YAB.GetServerTimestamp()
     local statusColors = { window = C.success, soon = C.accent, scheduled = C.accent, overdue = C.danger, weak = C.muted, observed = C.muted }
     local lines = {}
-    AddTooltipPair(lines, "状态", candidate.text, statusColors[candidate.kind] or C.text)
+    AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.STATUS"), candidate.text, statusColors[candidate.kind] or C.text)
     local displayID = tostring(candidate.phaseDisplayId or "00")
     local phaseLabel = tostring(candidate.phaseLabel or "")
-    local target = "位面 " .. displayID
-    if phaseLabel ~= "" and phaseLabel ~= "未知" and phaseLabel ~= displayID then target = target .. " · " .. phaseLabel end
+    local target = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.PHASE") .. displayID
+    if phaseLabel ~= "" and phaseLabel ~= _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNKNOWN") and phaseLabel ~= displayID then target = target .. " · " .. phaseLabel end
     if scope == "all" then target = tostring(candidate.realm) .. " · " .. target end
-    AddTooltipPair(lines, "目标", target)
-    if state.lastKilledAt then AddTooltipPair(lines, "计时起点", FormatDuration(now - state.lastKilledAt) .. "前") end
+    AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.TARGET"), target)
+    if state.lastKilledAt then AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.TIMER_START"), FormatDuration(now - state.lastKilledAt) .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.AGO")) end
     if (tonumber(state.pendingCycleCount) or 0) > 0 then
-        AddTooltipPair(lines, "待完成周期", tostring(state.pendingCycleCount) .. " · 等待下一次刷新", C.accent)
+        AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CYCLE_PENDING"), tostring(state.pendingCycleCount) .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.WAITING_FOR_NEXT_RESPAWN"), C.accent)
     end
-    AppendPredictionLines(lines, state, state.lastKilledAt, "共享刷新模型")
+    AppendPredictionLines(lines, state, state.lastKilledAt, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SHARED_RESPAWN_MODEL"))
     return lines
 end
 
@@ -298,27 +290,27 @@ local function BuildPhaseSummary(boss, scope)
         local state, column = item.state, item.column
         if state.lastKilledAt then killed = killed + 1 elseif state.observedAt then observed = observed + 1 end
         local displayID = tostring(state.phaseDisplayId or column.displayId or "00")
-        local sectionTitle = "位面 " .. displayID
+        local sectionTitle = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.PHASE") .. displayID
         if scope == "all" then sectionTitle = tostring(column.realm) .. " · " .. sectionTitle end
         AddTooltipSection(lines, sectionTitle)
         local phaseLabel = tostring(state.phaseLabel or column.label or "")
-        if phaseLabel ~= "" and phaseLabel ~= "未知" and phaseLabel ~= displayID then
-            AddTooltipPair(lines, "位面标识", phaseLabel)
+        if phaseLabel ~= "" and phaseLabel ~= _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNKNOWN") and phaseLabel ~= displayID then
+            AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.PHASE_IDENTIFIER"), phaseLabel)
         end
-        if state.observedAt then AddTooltipPair(lines, "最近观测", FormatDuration(YAB.GetServerTimestamp() - state.observedAt) .. "前") end
-        if state.lastKilledAt then AddTooltipPair(lines, "最近击杀", FormatDuration(YAB.GetServerTimestamp() - state.lastKilledAt) .. "前") end
-        if state.lastObservedBy then AddTooltipPair(lines, "观测角色", tostring(state.lastObservedBy)) end
-        if state.lastKilledBy then AddTooltipPair(lines, "击杀角色", tostring(state.lastKilledBy)) end
-        if state.zone and state.zone ~= "" then AddTooltipPair(lines, "区域", tostring(state.zone)) end
+        if state.observedAt then AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.LAST_OBSERVED"), FormatDuration(YAB.GetServerTimestamp() - state.observedAt) .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.AGO")) end
+        if state.lastKilledAt then AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.LAST_KILL"), FormatDuration(YAB.GetServerTimestamp() - state.lastKilledAt) .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.AGO")) end
+        if state.lastObservedBy then AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.OBSERVER"), tostring(state.lastObservedBy)) end
+        if state.lastKilledBy then AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.KILLED_BY"), tostring(state.lastKilledBy)) end
+        if state.zone and state.zone ~= "" then AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ZONE"), tostring(state.zone)) end
         if state.subZone and state.subZone ~= "" and state.subZone ~= state.zone then
-            AddTooltipPair(lines, "子区域", tostring(state.subZone))
+            AddTooltipPair(lines, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SUBZONE"), tostring(state.subZone))
         end
     end
     local summary = "—"
-    if killed > 0 and observed > 0 then summary = killed .. "击/" .. observed .. "观"
-    elseif killed > 0 then summary = killed .. "击"
-    elseif observed > 0 then summary = observed .. "观" end
-    if #lines == 0 then lines[1] = { text = "暂无 6 小时内的位面记录。", color = C.muted } end
+    if killed > 0 and observed > 0 then summary = killed .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.KILLS") .. observed .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.OBSERVATIONS")
+    elseif killed > 0 then summary = killed .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.KILLS_2")
+    elseif observed > 0 then summary = observed .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.OBSERVATIONS") end
+    if #lines == 0 then lines[1] = { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NO_PHASE_OBSERVATIONS_IN_THE_LAST_6_HOURS"), color = C.muted } end
     return summary, lines, killed > 0, observed > 0
 end
 
@@ -385,23 +377,23 @@ local function SetStatus(cell, status, key, boss)
     if YAB.PlannedTargets then planned, characterID, target = YAB.PlannedTargets:IsPlanned(key, boss.key) end
     if planned then
         local progress = YAB.PlannedTargets:Progress(characterID, target)
-        local labels = { completed = "已完成", ready = "待刷取", unknown = "待核实", dormant = "未开放" }
+        local labels = { completed = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.COMPLETED"), ready = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.READY"), unknown = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNCONFIRMED"), dormant = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNAVAILABLE") }
         local color = progress.state == "completed" and C.success or (progress.state == "ready" and C.accent or C.muted)
         local fill = progress.state == "completed" and C.successSurface or C.chrome
-        cell:SetText((labels[progress.state] or "待核实") .. "·目标"); cell:SetState("default")
+        cell:SetText((labels[progress.state] or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNCONFIRMED")) .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.GOAL")); cell:SetState("default")
         cell:SetBackdropColor(fill[1], fill[2], fill[3], fill[4] or 1)
         cell:SetBackdropBorderColor(color[1], color[2], color[3], color[4] or 1)
         cell.label:SetTextColor(color[1], color[2], color[3])
         cell:SetScript("OnClick", nil)
-        local lines = { "来源：行动中心刷取目标", "状态：" .. progress.reason }
-        if progress.observedAt then lines[#lines + 1] = "快照：" .. date("%m-%d %H:%M", progress.observedAt) end
+        local lines = { _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SOURCE_ACTION_CENTER_GOAL"), _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.STATUS_2") .. progress.reason }
+        if progress.observedAt then lines[#lines + 1] = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SNAPSHOT") .. date("%m-%d %H:%M", progress.observedAt) end
         Theme:BindTooltip(cell, boss.name, lines)
         return
     end
     if YAB.Holiday and YAB.Holiday:IsBoss(boss) then
         local completed = status == "completed"
-        local labels = { completed = "已击杀", available = "未击杀", unobserved = "未观察" }
-        local text = labels[status] or "不可用"
+        local labels = { completed = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.DEFEATED"), available = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NOT_DEFEATED"), unobserved = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NOT_OBSERVED") }
+        local text = labels[status] or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNAVAILABLE_2")
         cell:SetText(text); cell:SetState("default")
         local fill, border, labelColor = C.chrome, C.matrixLine, C.text
         if completed then fill, border, labelColor = C.successSurface, C.success, C.success
@@ -410,20 +402,20 @@ local function SetStatus(cell, status, key, boss)
         cell:SetBackdropBorderColor(border[1], border[2], border[3], border[4] or 1)
         cell.label:SetTextColor(labelColor[1], labelColor[2], labelColor[3])
         local _, record = YAB.Holiday:GetStatus(key, boss)
-        local sourceLabels = { quest = "每日任务", ["lfg-reward"] = "副本完成奖励", manual = "人工标记" }
-        local lines = { { text = completed and "已完成节日 Boss。" or (status == "unobserved" and "尚未读取到今日状态。" or "已读取状态，今日尚未完成。"), color = labelColor } }
-        if record and record.source then lines[#lines + 1] = { text = "来源：" .. (sourceLabels[record.source] or tostring(record.source)), color = C.muted } end
+        local sourceLabels = { quest = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.DAILY_QUEST"), ["lfg-reward"] = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.DUNGEON_COMPLETION_REWARD"), manual = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.MANUAL_MARK") }
+        local lines = { { text = completed and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SEASONAL_BOSS_COMPLETED") or (status == "unobserved" and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.TODAY_S_STATUS_HAS_NOT_BEEN_OBSERVED") or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.OBSERVED_TODAY_NOT_COMPLETED_YET")), color = labelColor } }
+        if record and record.source then lines[#lines + 1] = { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SOURCE") .. (sourceLabels[record.source] or tostring(record.source)), color = C.muted } end
         if not (record and record.source and record.source ~= "manual") then
-            lines[#lines + 1] = { text = "点击可添加或取消人工标记。", color = C.muted }
+            lines[#lines + 1] = { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CLICK_TO_ADD_OR_REMOVE_A_MANUAL_MARK"), color = C.muted }
             cell:SetScript("OnClick", function() YAB.Holiday:ToggleManual(boss, key) end)
         else
             cell:SetScript("OnClick", nil)
         end
-        Theme:BindTooltip(cell, boss.name .. " / 每日奖励", lines)
+        Theme:BindTooltip(cell, boss.name .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.DAILY_REWARD"), lines)
         return
     end
     local killed = status == "killed"
-    cell:SetText(killed and "已击杀" or "未击杀")
+    cell:SetText(killed and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.DEFEATED") or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NOT_DEFEATED"))
     cell:SetState("default")
     if killed then
         cell:SetBackdropColor(C.successSurface[1], C.successSurface[2], C.successSurface[3], C.successSurface[4])
@@ -457,21 +449,21 @@ SetStatus = function(cell, status, key, boss)
 end
 
 local function PhaseTitle()
-    return YAB.Holiday and YAB.Holiday:HasActiveBosses() and "位面 / 职责" or "位面"
+    return YAB.Holiday and YAB.Holiday:HasActiveBosses() and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.PHASE_ROLE") or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.PHASE_2")
 end
 
 local function SetHolidayAction(control, boss)
     local queue = YAB.Holiday:GetQueueState(boss)
-    local text, lines = "排队", {}
+    local text, lines = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.QUEUE"), {}
     if queue.state == "queued" then
-        text = "取消排队"; lines[1] = { text = "当前角色正在该节日副本队列中。点击立即取消。", color = C.accent }
+        text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.LEAVE_QUEUE"); lines[1] = { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.YOU_ARE_QUEUED_FOR_THIS_SEASONAL_DUNGEON_CLICK_TO_LEAVE"), color = C.accent }
     elseif queue.state == "ready" then
-        lines[1] = { text = "使用当前已选职责加入节日副本队列。", color = C.text }
-        lines[#lines + 1] = { text = "职责：" .. table.concat(YAB.Holiday:GetRoleNames(), " / "), color = C.muted }
+        lines[1] = { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.QUEUE_FOR_THE_SEASONAL_DUNGEON_USING_YOUR_SELECTED_ROLES"), color = C.text }
+        lines[#lines + 1] = { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ROLES") .. table.concat(YAB.Holiday:GetRoleNames(), " / "), color = C.muted }
     else
-        text = "不可排队"; lines[1] = { text = queue.reason or "当前角色暂不可排队。", color = C.muted }
+        text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CANNOT_QUEUE"); lines[1] = { text = queue.reason or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THIS_CHARACTER_CANNOT_QUEUE_RIGHT_NOW"), color = C.muted }
     end
-    SetSemanticButton(control, text, queue.state == "ready" and C.successSurface or (queue.state == "queued" and C.timer or FIXED_CELL), boss.name .. " / 行动", lines)
+    SetSemanticButton(control, text, queue.state == "ready" and C.successSurface or (queue.state == "queued" and C.timer or FIXED_CELL), boss.name .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ACTION"), lines)
     if queue.state == "ready" then
         -- Reuse Core's selected-state language for an actionable holiday
         -- button: the bright teal outline and label are visible in the dense
@@ -488,9 +480,9 @@ end
 local function SetHolidayPhase(control, boss)
     local roles, note = YAB.Holiday:GetRoles()
     local roleNames = YAB.Holiday:GetRoleNames()
-    local text = #roles > 0 and table.concat(roles, "/") or "未选职责"
-    local lines = { { text = #roles > 0 and ("当前已选职责：" .. table.concat(roleNames, " / ")) or (note or "请先在地下城查找器选择职责。"), color = #roles > 0 and C.text or C.muted }, { text = "点击选择系统职责。", color = C.muted } }
-    SetSemanticButton(control, text, #roles > 0 and C.current or FIXED_CELL, boss.name .. " / 职责", lines)
+    local text = #roles > 0 and table.concat(roles, "/") or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NO_ROLE")
+    local lines = { { text = #roles > 0 and (_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SELECTED_ROLES") .. table.concat(roleNames, " / ")) or (note or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SELECT_ROLES_IN_THE_DUNGEON_FINDER_FIRST")), color = #roles > 0 and C.text or C.muted }, { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CLICK_TO_SELECT_DUNGEON_FINDER_ROLES"), color = C.muted } }
+    SetSemanticButton(control, text, #roles > 0 and C.current or FIXED_CELL, boss.name .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ROLES_2"), lines)
     control:SetScript("OnClick", function() YAB.Holiday:OpenRoleSelector(control) end)
 end
 
@@ -512,8 +504,8 @@ local function RefreshHeaders(instance, context, keys, showAction, showPhase, sh
         header:Show(); x = x + width
         return header
     end
-    Place("Boss / 目标", bossNameWidth, nil, nil, true)
-    if showAction then Place("行动", ACTION_WIDTH, nil, nil, true) end
+    Place(_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.BOSS_TARGET"), bossNameWidth, nil, nil, true)
+    if showAction then Place(_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ACTION_2"), ACTION_WIDTH, nil, nil, true) end
     if showPhase then Place(PhaseTitle(), PHASE_WIDTH, nil, nil, true) end
     instance.fixedWidth = x
     instance.header.fixedDivider:ClearAllPoints()
@@ -536,7 +528,7 @@ local function RefreshHeaders(instance, context, keys, showAction, showPhase, sh
                 instance.currentColumnWidth = columnWidth
             end
             local header = Place(name, columnWidth, realmSubtitle, CharacterColor(key), false, titleFont)
-            Theme:BindTooltip(header, name .. "-" .. realm)
+            Theme:BindTooltip(header, YAB.FormatCharacterName(key, "all", true))
         end
     end
     Release(instance.headers, index + 1)
@@ -609,7 +601,7 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
     )
     instance.characterColumnWidth = characterWidth
     local keys, pageInfo = _G.YiboCore.AccountView:GetColumnPage("alto-boss", "characters", allKeys, availableWidth, fixedWidth, instance.characterColumnWidth, YAB.GetCurrentCharKey and YAB.GetCurrentCharKey() or nil)
-    _G.YiboCore.AccountView:UpdateColumnPager(instance, "alto-boss", "characters", pageInfo, instance.header, "角色")
+    _G.YiboCore.AccountView:UpdateColumnPager(instance, "alto-boss", "characters", pageInfo, instance.header, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTER"))
     RefreshHeaders(instance, context, keys, showAction, showPhase, showKills, bossNameWidth)
 
     for rowIndex, boss in ipairs(bosses) do
@@ -644,7 +636,7 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
             else
                 local candidate = PickBestAction(boss, context.scope)
                 local fills = { window = C.successSurface, soon = C.successSurface, scheduled = C.selected, weak = C.timer, observed = C.current, overdue = C.dangerSurface }
-                SetSemanticButton(row.action, candidate and candidate.text or "—", fills[candidate and candidate.kind or ""] or FIXED_CELL, boss.name .. " / 行动", BuildActionTooltip(boss, candidate, context.scope))
+                SetSemanticButton(row.action, candidate and candidate.text or "—", fills[candidate and candidate.kind or ""] or FIXED_CELL, boss.name .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ACTION"), BuildActionTooltip(boss, candidate, context.scope))
             end
         end
 
@@ -658,7 +650,7 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
             else
                 local summary, lines, hasKill, hasObserve = BuildPhaseSummary(boss, context.scope)
                 local fill = hasKill and C.timer or (hasObserve and C.current or FIXED_CELL)
-                SetSemanticButton(row.phase, summary, fill, boss.name .. " / 位面", lines)
+                SetSemanticButton(row.phase, summary, fill, boss.name .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.PHASE_3"), lines)
             end
         end
 
@@ -701,10 +693,11 @@ local function RefreshBossColumnHeaders(instance, bosses, showBossColumns, chara
         Theme:SetMatrixHeader(header,title,{height=headerHeight,secondary=sub,color=textColor,fill=fill,rule=C.lineSoft});header:Show()
         x = x + width
     end
-    Place("角色", characterWidth, nil, nil, true)
+    Place(_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTER"), characterWidth, nil, nil, true)
     if showBossColumns then
         for _, boss in ipairs(bosses) do
             Place(boss.name, BOSS_WIDTH)
+            Theme:BindTooltip(instance.headers[index], boss.name)
         end
     end
     Release(instance.headers, index + 1)
@@ -753,14 +746,14 @@ function YAB.RefreshAccountPage(instance, context)
     if showAction then
         rowIndex = rowIndex + 1
         local row = GetRow(instance, rowIndex); PrepareRow(row, rowIndex)
-        row.professionIcon:Hide(); row.name:ClearAllPoints(); row.name:SetPoint("LEFT", Theme.Table.cellPadding, 0); row.name:SetWidth(Theme:GetTableCellContentWidth(characterWidth)); row.name:SetText("行动"); row.name:SetTextColor(C.muted[1], C.muted[2], C.muted[3]); row.name:Show()
+        row.professionIcon:Hide(); row.name:ClearAllPoints(); row.name:SetPoint("LEFT", Theme.Table.cellPadding, 0); row.name:SetWidth(Theme:GetTableCellContentWidth(characterWidth)); row.name:SetText(_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ACTION_2")); row.name:SetTextColor(C.muted[1], C.muted[2], C.muted[3]); row.name:Show()
         local x = characterWidth
         for bossIndex, boss in ipairs(bosses) do
             local cell = GetCell(row, bossIndex); cell:SetWidth(BOSS_WIDTH - 2); cell:ClearAllPoints(); cell:SetPoint("LEFT", x + 1, 0); cell:Show()
             if YAB.Holiday and YAB.Holiday:IsBoss(boss) then SetHolidayAction(cell, boss)
             elseif boss.hideAction then SetEmptyButton(cell) else
                 local candidate = PickBestAction(boss, context.scope)
-                SetSemanticButton(cell, candidate and candidate.text or "—", actionFills[candidate and candidate.kind or ""] or FIXED_CELL, boss.name .. " / 行动", BuildActionTooltip(boss, candidate, context.scope))
+                SetSemanticButton(cell, candidate and candidate.text or "—", actionFills[candidate and candidate.kind or ""] or FIXED_CELL, boss.name .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ACTION"), BuildActionTooltip(boss, candidate, context.scope))
             end
             x = x + BOSS_WIDTH
         end
@@ -776,7 +769,7 @@ function YAB.RefreshAccountPage(instance, context)
             if YAB.Holiday and YAB.Holiday:IsBoss(boss) then SetHolidayPhase(cell, boss)
             elseif boss.hidePhase then SetEmptyButton(cell) else
                 local summary, lines, hasKill, hasObserve = BuildPhaseSummary(boss, context.scope)
-                SetSemanticButton(cell, summary, hasKill and C.timer or (hasObserve and C.current or FIXED_CELL), boss.name .. " / 位面", lines)
+                SetSemanticButton(cell, summary, hasKill and C.timer or (hasObserve and C.current or FIXED_CELL), boss.name .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.PHASE_3"), lines)
             end
             x = x + BOSS_WIDTH
         end
@@ -793,7 +786,7 @@ function YAB.RefreshAccountPage(instance, context)
         row.professionIcon:Hide()
         row.name:ClearAllPoints(); row.name:SetPoint("LEFT", Theme.Table.cellPadding, 0)
         row.name:SetWidth(Theme:GetTableCellContentWidth(characterWidth))
-        row.name:SetText(context.scope == "all" and (name .. "-" .. realm) or name); row.name:SetTextColor(color.r or color[1], color.g or color[2], color.b or color[3]); row.name:Show()
+        row.name:SetText(YAB.FormatCharacterName(key, context.scope == "all" and "all" or "current")); row.name:SetTextColor(color.r or color[1], color.g or color[2], color.b or color[3]); row.name:Show()
         local x = characterWidth
         if showKills then
             for bossIndex, boss in ipairs(bosses) do

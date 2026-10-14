@@ -1,3 +1,4 @@
+if _G.YAB and _G.YAB.CoreReady == false then return end
 local YAB = _G.YAB
 local Plans = { OWNER = "YiboAltoBoss", PROVIDER = "YiboAltoBoss:planned-targets" }
 YAB.PlannedTargets = Plans
@@ -80,8 +81,8 @@ function Plans:Observe()
 end
 function Plans:Progress(characterID, target)
     local definition = YAB.TargetCatalog:Get(target.catalogID)
-    local unknown = { state = "unknown", freshness = "not-yet-scanned", reason = "尚未采集角色进度", kind = "weekly" }
-    if not definition then unknown.reason = "目标目录暂不可用"; return unknown end
+    local unknown = { state = "unknown", freshness = "not-yet-scanned", reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTER_PROGRESS_HAS_NOT_BEEN_OBSERVED"), kind = "weekly" }
+    if not definition then unknown.reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.TARGET_CATALOG_TEMPORARILY_UNAVAILABLE"); return unknown end
     local key = self:LegacyKey(characterID)
     local record = key and YiboAltoBossDB.characters and YiboAltoBossDB.characters[key]
     if definition.kind == "custom" then
@@ -93,10 +94,10 @@ function Plans:Progress(characterID, target)
         if status == "killed" and info and info.updatedAt and info.expiresAt and info.expiresAt > Now() then
             return { state = "completed", freshness = "known", observedAt = info.updatedAt,
                 validUntil = info.expiresAt, kind = "cooldown", cycleKey = definition.id .. ":" .. tostring(info.updatedAt),
-                reason = "已记录击杀，按自定义目标规则恢复" }
+                reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.KILL_RECORDED_RECOVERY_FOLLOWS_THE_CUSTOM_TARGET_RULES") }
         elseif status == "available" then
             return { state = "ready", freshness = "known", kind = "cooldown",
-                cycleKey = definition.id .. ":pending", reason = "自定义目标待击杀" }
+                cycleKey = definition.id .. ":pending", reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CUSTOM_TARGET_NOT_DEFEATED") }
         end
         return unknown
     end
@@ -109,12 +110,12 @@ function Plans:Progress(characterID, target)
         return { state = closed and "dormant" or (snapshot.open and observation and observation.completed and "completed" or (verified and "ready" or "unknown")),
             freshness = closed and "known" or (verified and "known" or "not-yet-scanned"),
             observedAt = observation and observation.observedAt, validUntil = snapshot.nextResetAt,
-            cycleKey = snapshot.cycleKey, kind = "daily", reason = closed and "活动未开放" or (not snapshot.open and "活动日历待核实" or "节日每日目标") }
+            cycleKey = snapshot.cycleKey, kind = "daily", reason = closed and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.EVENT_INACTIVE") or (not snapshot.open and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.EVENT_CALENDAR_UNCONFIRMED") or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SEASONAL_DAILY_TARGET")) }
     end
     local kind = definition.kind == "instance" and not definition.isRaid and "daily" or "weekly"
     local cycle, boundary = self:Period(kind)
     unknown.kind, unknown.cycleKey, unknown.validUntil = kind, cycle, boundary
-    if not cycle then unknown.reason = "服务器重置时间暂不可用"; return unknown end
+    if not cycle then unknown.reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SERVER_RESET_TIME_IS_TEMPORARILY_UNAVAILABLE"); return unknown end
     if not record then return unknown end
     if definition.kind == "world" then
         local obs = record.targetObservations and record.targetObservations[definition.bossKey]
@@ -124,15 +125,15 @@ function Plans:Progress(characterID, target)
         local eligible = character and tonumber(character.level) and character.level >= 90 and definition.bossKey ~= "ordos"
         if fresh and not obs.completed and not eligible then
             return { state = "unknown", freshness = "partial", observedAt = obs.observedAt, validUntil = boundary,
-                cycleKey = cycle, kind = kind, reason = definition.bossKey == "ordos" and "斡耳朵斯准入条件待核实" or "角色等级资格待核实" }
+                cycleKey = cycle, kind = kind, reason = definition.bossKey == "ordos" and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ORDOS_ACCESS_ELIGIBILITY_UNCONFIRMED") or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTER_LEVEL_ELIGIBILITY_UNCONFIRMED") }
         end
         return { state = fresh and (obs.completed and "completed" or "ready") or "unknown", freshness = fresh and "known" or "stale",
             observedAt = obs.observedAt, validUntil = boundary, cycleKey = cycle, kind = kind,
-            reason = fresh and (obs.completed and "本周已完成" or "本周待击杀") or "重置后待重新采集" }
+            reason = fresh and (obs.completed and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.COMPLETED_THIS_WEEK") or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NOT_DEFEATED_THIS_WEEK")) or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.OBSERVE_AGAIN_AFTER_RESET") }
     end
     local difficulty
     for _, d in ipairs(definition.difficulties or {}) do if d.id == target.difficultyID then difficulty = d end end
-    if not difficulty or not difficulty.complete or difficulty.trackable == false then unknown.reason = "该难度的目录或锁定规则待核实"; return unknown end
+    if not difficulty or not difficulty.complete or difficulty.trackable == false then unknown.reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THIS_DIFFICULTY_S_CATALOG_OR_LOCKOUT_RULES_ARE_UNCONFIRMED"); return unknown end
     local observedAt = record.instanceLockoutsObservedAt
     local fresh = record.targetLockoutCycles and record.targetLockoutCycles[kind] == cycle
     if not fresh or not observedAt then unknown.freshness = observedAt and "stale" or "not-yet-scanned"; unknown.observedAt = observedAt; return unknown end
@@ -147,7 +148,7 @@ function Plans:Progress(characterID, target)
     for _, e in ipairs(difficulty.encounters) do if target.scope == "all" then wanted[e.id] = true end end
     if target.scope ~= "all" then for _, id in ipairs(target.encounterIDs or {}) do wanted[id] = true end end
     for _ in pairs(wanted) do total = total + 1 end
-    if total == 0 or not definition.mapID then unknown.reason = "副本身份或首领目录待核实"; return unknown end
+    if total == 0 or not definition.mapID then unknown.reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.INSTANCE_IDENTITY_OR_BOSS_CATALOG_IS_UNCONFIRMED"); return unknown end
     local seen, found = {}, 0
     for _, boss in ipairs(lockout and lockout.bosses or {}) do if wanted[boss.encounterID] and not seen[boss.encounterID] then
         seen[boss.encounterID], found = true, found + 1
@@ -157,20 +158,20 @@ function Plans:Progress(characterID, target)
     return { state = verified and (killed >= total and "completed" or "ready") or "unknown",
         freshness = verified and "known" or "partial", observedAt = observedAt, validUntil = boundary,
         cycleKey = cycle, kind = kind, killed = killed, total = total,
-        reason = not verified and "锁定中的首领记录不完整" or string.format("%d/%d 首领", killed, total), lockout = lockout }
+        reason = not verified and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THE_SAVED_LOCKOUT_HAS_INCOMPLETE_BOSS_RECORDS") or string.format(_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.D_D_BOSSES"), killed, total), lockout = lockout }
 end
 function Plans:Describe(target)
     local title = target.title .. (target.difficultyName and (" · " .. target.difficultyName) or "")
     if target.kind ~= "instance" then return title, "" end
-    if target.scope == "all" then return title .. " · 整本", "整本全部首领" end
+    if target.scope == "all" then return title .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.WHOLE_INSTANCE"), _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ALL_INSTANCE_BOSSES") end
     local wanted, names = {}, {}
     for _, id in ipairs(target.encounterIDs) do wanted[id] = true end
     local definition = YAB.TargetCatalog:Get(target.catalogID)
     for _, difficulty in ipairs(definition and definition.difficulties or {}) do if difficulty.id == target.difficultyID then
         for _, encounter in ipairs(difficulty.encounters) do if wanted[encounter.id] then names[#names + 1] = encounter.name end end
     end end
-    local summary = #names > 0 and table.concat(names, "、") or "指定首领目录待核实"
-    return title .. " · " .. (#names == 1 and names[1] or (tostring(#target.encounterIDs) .. " 位首领")), summary
+    local summary = #names > 0 and table.concat(names, ", ") or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SELECTED_BOSS_CATALOG_IS_UNCONFIRMED")
+    return title .. " · " .. (#names == 1 and names[1] or (tostring(#target.encounterIDs) .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.BOSSES"))), summary
 end
 local function RequestIDs(request)
     local ids = type(request) == "table" and type(request.scope) == "table" and request.scope.characterIDs
@@ -185,13 +186,13 @@ local function RequestIDs(request)
 end
 function Plans:Project(ids)
     local db, seen = YiboAltoBossDB.plannedTargetSource, {}
-    local result = { providerID = self.PROVIDER, sourceTitle = "首领与副本目标", sourceEpoch = db.sourceEpoch, revision = db.revision,
+    local result = { providerID = self.PROVIDER, sourceTitle = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.BOSS_AND_INSTANCE_GOALS"), sourceEpoch = db.sourceEpoch, revision = db.revision,
         generatedAt = Now(), status = "ready", coverage = {}, data = { tasks = {} } }
     local config = self:Configuration(ids)
     for _, id in ipairs(ids) do if not seen[id] then
         seen[id] = true
         local known = Core().Characters:Get(id, { identityOnly = true }) ~= nil
-        local coverage = { state = known and config and "known-empty" or "unavailable", reason = not known and "角色不在目录中" or (config and "未配置目标" or "目标服务未连接") }
+        local coverage = { state = known and config and "known-empty" or "unavailable", reason = not known and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTER_NOT_IN_CATALOG") or (config and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NO_GOAL_CONFIGURED") or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.GOAL_SERVICE_DISCONNECTED")) }
         for _, target in ipairs(known and config and config.targets[id] or {}) do if target.active then
             local p = self:Progress(id, target)
             local title, description = self:Describe(target)
@@ -203,7 +204,7 @@ function Plans:Project(ids)
                 execution = { mode = "self", characterID = id }, beneficiary = { mode = "character", characterID = id },
                 temporal = { kind = p.kind, cycleKey = p.cycleKey, nextChangeAt = p.validUntil },
                 freshness = { state = p.freshness, observedAt = p.observedAt, validUntil = p.validUntil, clockSource = "server" },
-                nextAction = { kind = "open-page", pageID = target.kind == "instance" and "alto-lockouts" or "alto-boss", title = "查看首领追踪" } }
+                nextAction = { kind = "open-page", pageID = target.kind == "instance" and "alto-lockouts" or "alto-boss", title = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.OPEN_BOSS_TRACKER") } }
             result.data.tasks[#result.data.tasks + 1] = task
             if coverage.state == "known-empty" or p.freshness ~= "known" then coverage = { state = p.freshness, observedAt = p.observedAt, validUntil = p.validUntil, nextChangeAt = p.validUntil } end
         end end
@@ -236,12 +237,12 @@ function Plans:Query(request)
     local allowed, coverage, tasks = {}, {}, {}
     for _, id in ipairs(ids) do
         allowed[id] = true
-        coverage[id] = self.value.coverage[id] or { state = "unavailable", reason = "角色不在目录中" }
+        coverage[id] = self.value.coverage[id] or { state = "unavailable", reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTER_NOT_IN_CATALOG") }
     end
     for _, task in ipairs(self.value.data.tasks) do if allowed[task.execution.characterID] then tasks[#tasks + 1] = task end end
     local status = "ready"
     for _, item in pairs(coverage) do if item.state ~= "known" and item.state ~= "known-empty" then status = "partial" end end
-    return Copy({ providerID = self.PROVIDER, sourceTitle = "首领与副本目标", sourceEpoch = meta.sourceEpoch,
+    return Copy({ providerID = self.PROVIDER, sourceTitle = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.BOSS_AND_INSTANCE_GOALS"), sourceEpoch = meta.sourceEpoch,
         revision = meta.revision, generatedAt = Now(), status = status, coverage = coverage, data = { tasks = tasks } })
 end
 function Plans:ScheduleChange()
@@ -267,9 +268,9 @@ end
 function Plans:Initialize()
     if self.providerRef then return true end
     local core = Core()
-    if not (core and core:CheckAPIVersion(11) and core:HasCapability("business-services", 1) and core:HasCapability("business-providers", 1)
+    if not (core and core:CheckAPIVersion(13) and core:HasCapability("business-services", 1) and core:HasCapability("business-providers", 1)
         and core:HasCapability("character-name-format", 1) and core:HasCapability("character-identity", 1) and core.Characters and core.Characters.FormatName) then
-        if core and core.Print then core:Print("首领刷取目标需要 YiboCore API v11，请升级 Core。") end
+        if core and core.Print then core:Print(_G.YiboCore.Locale:Get("YiboAltoBoss", "ERROR.GOALS_CORE_API13_REQUIRED")) end
         return nil, "core-version"
     end
     YiboAltoBossDB.plannedTargetSource = YiboAltoBossDB.plannedTargetSource or { sourceEpoch = "boss:" .. Now() .. ":" .. math.random(100000,999999), revision = 0 }
