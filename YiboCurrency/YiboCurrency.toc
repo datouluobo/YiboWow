@@ -6,7 +6,7 @@
 ## Notes-zhCN: 多角色货币余额总览
 ## Notes-zhTW: 多角色貨幣餘額總覽
 ## Author: YiboSoft
-## Version: 0.9.2
+## Version: 1.0.0
 ## IconTexture: Interface\AddOns\YiboCurrency\Media\YiboCurrencyIcon-v1
 ## SavedVariables: YiboCurrencyDB
 ## RequiredDeps: YiboCore

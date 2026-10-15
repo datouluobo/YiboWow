@@ -61,7 +61,10 @@ function Get-YiboReleaseProfile {
     if ($tocVersion -ne $version) { throw "TOC version '$tocVersion' does not match source version '$version'." }
     if ($version -notmatch '^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)*$') { throw "Unsafe package version: $version" }
     $requiredCoreAPI = if ($addonProfile.ContainsKey('RequiredCorePattern')) {
-        [int](Read-YiboRequiredValue $versionText $addonProfile.RequiredCorePattern 'required Core API')
+        $requiredText = if ($addonProfile.ContainsKey('RequiredCoreFile')) {
+            [IO.File]::ReadAllText((Resolve-YiboSourceFile $root $addonProfile.RequiredCoreFile))
+        } else { $versionText }
+        [int](Read-YiboRequiredValue $requiredText $addonProfile.RequiredCorePattern 'required Core API')
     } else { $null }
     return [pscustomobject]@{
         Config = $config; Addon = $addonID; Target = $targetID; Root = $root

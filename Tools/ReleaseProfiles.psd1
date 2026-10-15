@@ -10,6 +10,27 @@
         Forever = @{ Slug = 'forever'; Directory = 'Forever' }
     }
     Addons = @{
+        YiboCurrency = @{
+            VersionFile = 'Bootstrap.lua'
+            VersionPattern = '^Addon\.NAME, Addon\.VERSION\s*=\s*"YiboCurrency",\s*"([^"]+)"'
+            RequiredCoreFile = 'CoreIntegration.lua'
+            RequiredCorePattern = 'Core:CheckAPIVersion\((\d+)\)'
+            VersionIncludesAPI = $false
+            ResourceDirectories = @('Media')
+            ExtraFiles = @()
+            Targets = @{
+                Mists = @{
+                    SourceToc = 'YiboCurrency.toc'
+                    LoadToc = 'YiboCurrency.toc'
+                    Interfaces = @(50504)
+                    CurseForgeFlavor = 'mists'
+                    CurseForgeVersionNames = @('5.5.4')
+                    LuaVersion = '5.1'
+                    ValidationState = 'existing-mists-baseline'
+                }
+            }
+        }
+
         YiboBuilds = @{
             VersionFile = 'Bootstrap.lua'
             VersionPattern = '^Addon\.VERSION\s*=\s*"([^"]+)"'

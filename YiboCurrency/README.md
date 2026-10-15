@@ -1,8 +1,8 @@
 # YiboCurrency - 货币管家
 
-当前工作树版本：**0.9.2**。统一矩阵预算已通过离线回归，用户于2026-10-16确认实机检查无问题；尚未打包发布。 请配套使用 **YiboCore 1.12.6 / API13**，启动时检查 `account-surface-budget:2` 及实际方法。
+当前版本：**1.0.0**。统一矩阵预算已通过离线回归，用户于2026-10-16确认实机检查无问题。 请配套使用 **YiboCore 1.12.6 / API13**，启动时检查 `account-surface-budget:2` 及实际方法。
 
-YiboCurrency 0.9.2 工作树依赖 **YiboCore 1.12.6 / API13**，并要求 `character-archive-providers:1`、`character-cleanup:2`、`account-dynamic-fields:1` 等实际接入能力。使用 `/ycu` 打开统一账号窗口；`/ycu probe` 输出诊断。缺少必要能力时提示升级并停止初始化。
+YiboCurrency 1.0.0依赖 **YiboCore 1.12.6 / API13**，并要求 `character-archive-providers:1`、`character-cleanup:2`、`account-dynamic-fields:1` 等实际接入能力。使用 `/ycu` 打开统一账号窗口；`/ycu probe` 输出诊断。缺少必要能力时提示升级并停止初始化。
 
 主表按货币为行、角色为列展示金币、标准货币、节日代币和自定义物品代币。悬停复用同一快照、角色筛选、状态颜色和数值格式化，只展示选中的货币；Core统一设置 → 货币管家 → 业务设置可启用“悬停行列转置”，改为角色为行、货币为列，默认关闭且不改变主窗口方向。主窗口自动按完整角色列展开，达到屏幕安全宽度后先紧凑排列，确实无法容纳才使用Core分页；默认最多20名有效角色。显示与悬停货币统一在 Core“显示与入口”中选择，自定义代币在业务设置的“数据与缓存”中添加和确认删除。
 
