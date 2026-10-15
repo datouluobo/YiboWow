@@ -1,5 +1,7 @@
 # YiboReputation
 
+当前工作树版本：**1.7.2**。统一矩阵预算已通过离线回归，用户于2026-10-16确认实机检查无问题；尚未打包发布。 请配套使用 **YiboCore 1.12.6 / API13**，启动时检查 `account-surface-budget:2` 及实际方法。
+
 依赖 YiboCore 的多角色声望浏览与比较插件。
 
 新版界面采用明确分工：
@@ -9,7 +11,7 @@
 
 主窗口与悬停预览共享本插件的稳定 faction ID 快照、数据状态和数值格式。入口、窗口壳、角色范围、角色排序和设置工作台由 YiboCore 统一承载。
 
-1.7.1 要求 YiboCore 1.12.4 / API13，并检查角色身份、缓存删除协调等能力。声望由 Reputation 采集并保存在 `YiboReputationDB.characters`；Core 的旧声望快照自动逐角色导入一次，原始时间和旧版本标识保留。旧 Core 数据冻结保留，新采集不再写入 Core。过旧数据需登录对应角色重扫。
+1.7.2 要求 YiboCore 1.12.6 / API13，并检查角色身份、缓存删除协调等能力。声望由 Reputation 采集并保存在 `YiboReputationDB.characters`；Core 的旧声望快照自动逐角色导入一次，原始时间和旧版本标识保留。旧 Core 数据冻结保留，新采集不再写入 Core。过旧数据需登录对应角色重扫。
 
 Core 与 Reputation 需配套升级。旧 Core 仍注册声望采集器时停止初始化并提示升级；旧版 Reputation 与新 Core 搭配会读到不再更新的历史快照，属于不支持组合。降级不能自动带回切换后的新采集。
 

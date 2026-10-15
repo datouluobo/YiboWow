@@ -1,6 +1,8 @@
 # YiboAltoBoss
 
-Boss Tracker (YiboAltoBoss) tracks world-boss progress, seasonal encounters, custom targets, raid and dungeon lockouts, and dungeon entry history across a MoP Classic account. The current source version is 2.7.0. Basic tracking uses the YiboCore account page and requires Core 1.12.3 / API v13 and the documented UI and localization capabilities. The optional per-character goal integration requires Core 1.12.2 / API v13, `business-item-actions:3`, and a compatible YiboTaskHub installation. TaskHub is still an unpublished project, so goal integration is available only when that compatible build is installed; base Boss tracking remains available without TaskHub; YiboCore is always required.
+当前工作树版本：**2.7.1**。统一矩阵预算已通过离线回归，用户于2026-10-16确认实机检查无问题；尚未打包发布。 请配套使用 **YiboCore 1.12.6 / API13**，启动时检查 `account-surface-budget:2` 及实际方法。
+
+Boss Tracker (YiboAltoBoss) tracks world-boss progress, seasonal encounters, custom targets, raid and dungeon lockouts, and dungeon entry history across a MoP Classic account. The current source version is 2.7.1. Basic tracking uses the YiboCore account page and requires Core 1.12.6 / API v13 and the documented UI and localization capabilities. The optional per-character goal integration requires Core 1.12.2 / API v13, `business-item-actions:3`, and a compatible YiboTaskHub installation. TaskHub is still an unpublished project, so goal integration is available only when that compatible build is installed; base Boss tracking remains available without TaskHub; YiboCore is always required.
 
 Optional YiboTaskHub integration supports per-character world-boss, seasonal-boss, and instance goals. AltoBoss provides the encounter catalog and progress; TaskHub owns the goal configuration and its account-page presentation. Goals can target a whole instance or selected encounters at an exact supported difficulty. Automatic display can be disabled while retaining manual views and kill history. World-boss progress uses reward observations; instance completion requires a complete encounter catalog and exact lockout data. Unknown or stale data remains unconfirmed. Older instances need a complete scan to establish a stable catalog; automatic cycle tracking for repeatedly run normal dungeons is not supported. The current goal integration requires the compatible, currently unpublished TaskHub build. See [runtime contract and acceptance](../Docs/行动中心-AltoBoss-运行契约与验收.md).
 
@@ -78,3 +80,5 @@ Optional DBM completion callbacks supplement complex five-player encounters. Nat
 Settings, character display, inputs, confirmations and minimap entries use Core APIs. Core API13 and the documented capabilities are required; optional TaskHub/DBM integrations retain their own checks. Client acceptance is pending.
 
 本次源码还要求 Core `account-preview-field-groups:1`：固定副本选择位于「显示与入口 → YiboAltoBoss → 预览字段」，旧选择自动沿用。请同步安装 Core 1.12.3 / API13；此前2.6.1发布包未包含这次迁入。
+
+2026-10-16 未发布工作树：首领主表两方向与锁定矩阵已接入Core统一滚动预算，要求API13／`account-surface-budget:2`及`AccountView:GetScrollSurfaceWidth`。Core决定滚动槽、自然窗口宽度和必要分页；版本／方法不足时提示升级并停止初始化。代码和离线回归通过，实机待验；本轮未更新版本或发布。见[统一接入与验收](../YiboCore/Docs/矩阵预算统一接入-实施与验收.md)。

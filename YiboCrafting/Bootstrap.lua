@@ -12,7 +12,7 @@ function Addon:Initialize()
     end
     for name, version in pairs({ ["localization"] = 1, ["basic-input"] = 1, ["item-resolver"] = 1,
         ["character-name-format"] = 1, ["character-identity"] = 1, ["account-view"] = 2,
-        ["account-entry"] = 2, ["account-surface-budget"] = 1, ["character-cleanup"] = 1,
+        ["account-entry"] = 2, ["account-surface-budget"] = 2, ["character-cleanup"] = 1,
         ["characters"] = 1, ["data-domains"] = 1, ["events"] = 1, ["fields"] = 1,
         ["business-services"] = 1, ["business-providers"] = 1, ["business-item-actions"] = 2 }) do
         if not Core:HasCapability(name, version) then return nil, L("UPGRADE") .. " (" .. name .. ":" .. version .. ")" end
@@ -23,7 +23,8 @@ function Addon:Initialize()
         and type(Core.UITheme.CreateInput) == "function"
         and type(Core.Characters.FormatName) == "function"
         and type(Core.UITheme.CreateMatrixHeader) == "function"
-        and type(Core.UITheme.SetCharacterHeader) == "function") then return nil, L("UPGRADE") end
+        and type(Core.UITheme.SetCharacterHeader) == "function"
+        and type(Core.AccountView.GetScrollSurfaceWidth) == "function") then return nil, L("UPGRADE") end
     local db, errorMessage = self.Store:Initialize()
     if not db then return nil, errorMessage end
     local registered, registerError = Core:RegisterAddon(self.NAME, { version = self.VERSION, requiredAPI = 13 })

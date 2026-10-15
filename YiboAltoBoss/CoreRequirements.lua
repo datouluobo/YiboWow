@@ -5,7 +5,7 @@ YAB.CoreReady = false
 local required = {
     { "localization", 1 }, { "characters", 1 }, { "character-identity", 1 },
     { "character-name-format", 1 }, { "basic-input", 1 }, { "account-view", 2 },
-    { "account-preview-field-groups", 1 }, { "account-entry", 2 }, { "character-cleanup", 1 }, { "level-filter", 1 },
+    { "account-surface-budget", 2 }, { "account-preview-field-groups", 1 }, { "account-entry", 2 }, { "character-cleanup", 1 }, { "level-filter", 1 },
 }
 local ready = Core and Core.CheckAPIVersion and Core:CheckAPIVersion(13)
     and Core.HasCapability and Core.IsInitialized and Core:IsInitialized()
@@ -15,6 +15,7 @@ local ready = Core and Core.CheckAPIVersion and Core:CheckAPIVersion(13)
     and type(Core.Characters.FormatName) == "function" and type(Core.Characters.ResolveLegacyKey) == "function"
     and Core.UITheme and type(Core.UITheme.CreateInput) == "function"
     and Core.AccountView and type(Core.AccountView.RegisterPage) == "function"
+    and type(Core.AccountView.GetScrollSurfaceWidth) == "function"
     and Core.Entry and type(Core.Entry.RegisterBusinessEntry) == "function"
     and Core.CharacterCleanup and type(Core.CharacterCleanup.RegisterOwner) == "function"
     and Core.LevelFilter and type(Core.LevelFilter.Validate) == "function" and type(Core.LevelFilter.Normalize) == "function"
@@ -25,7 +26,7 @@ if ready then
 end
 if not ready then
     if DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
-        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r YiboAltoBoss requires YiboCore API13 and current UI/locale capabilities. Please upgrade YiboCore. 请升级 YiboCore。")
+        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r YiboAltoBoss requires YiboCore API13 and current UI/locale capabilities and account-surface-budget:2. Please upgrade YiboCore. 请升级 YiboCore。")
     end
     return
 end

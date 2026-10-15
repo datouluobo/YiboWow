@@ -37,7 +37,23 @@ function Addon:GetVaultPersonalCounts(characters, itemIDs)
     local ok, result = pcall(vault.GetPersonalCounts, vault, {
         scope = { mode = "characters", characterIDs = CharacterIDs(characters) }, itemIDs = itemIDs,
     })
-    if ok and type(result) == "table" and type(result.characters) == "table" then return result end
+    if not (ok and type(result) == "table" and type(result.characters) == "table") then return nil end
+    for _, row in pairs(result.characters) do
+        if type(row) ~= "table" or type(row.items) ~= "table" or type(row.coverage) ~= "table"
+            or type(row.coverage.bags) ~= "table" or type(row.coverage.bank) ~= "table" then return nil end
+        for _, source in ipairs({ "bags", "bank", "equipment" }) do
+            local coverage = row.coverage[source]
+            if coverage ~= nil and (type(coverage) ~= "table" or type(coverage.hasSnapshot) ~= "boolean") then return nil end
+        end
+        for _, item in pairs(row.items) do
+            if type(item) ~= "table" then return nil end
+            for _, source in ipairs({ "bags", "bank", "equipment" }) do
+                local count = item[source]
+                if count ~= nil and (type(count) ~= "number" or count < 0 or count % 1 ~= 0) then return nil end
+            end
+        end
+    end
+    return result
 end
 
 function Addon:GetVaultItemBalance(character, itemID)

@@ -79,6 +79,22 @@ function AccountView:GetSettings()
     return Settings()
 end
 
+-- One owner for scroll-track geometry in both window sizing and table rendering.
+local function ScrollSurfaceGutter(bodyHeight, height, fixedHeight)
+    return math.max(0, tonumber(bodyHeight) or 0) > math.max(1, (tonumber(height) or 0) - (tonumber(fixedHeight) or 0)) + 0.0001
+        and Theme.Geometry.scrollbarGutter or 0
+end
+function AccountView:GetScrollSurfaceWidth(context, parent, bodyHeight, fixedHeight)
+    local width = tonumber(context and context.surfaceAvailableWidth) or parent:GetWidth()
+    return math.max(1, width - ScrollSurfaceGutter(bodyHeight, parent:GetHeight(), fixedHeight))
+end
+local function CopyScrollMetrics(target, source)
+    if type(source.scrollContentHeight) == "number" and source.scrollContentHeight >= 0 and source.scrollContentHeight < math.huge
+        and type(source.scrollFixedHeight) == "number" and source.scrollFixedHeight >= 0 and source.scrollFixedHeight < math.huge then
+        target.scrollContentHeight, target.scrollFixedHeight = source.scrollContentHeight, source.scrollFixedHeight
+    end
+end
+
 -- Resolve one shared width for a repeated matrix column.  A complete roster
 -- may compact down to its semantic minimum before column pagination begins.
 function AccountView:FitRepeatedColumnWidth(availableWidth, fixedWidth, columnCount, preferredWidth, minimumWidth)
@@ -314,9 +330,10 @@ local function SurfaceMetrics(page, context)
     } or supplied
     for _, key in ipairs({ "minContentWidth", "naturalContentWidth", "minContentHeight", "naturalContentHeight", "fixedLeftWidth", "fixedTopHeight" }) do
         local value = tonumber(values[key])
-        if value and value >= 0 then metrics[key] = math.floor(value + 0.5) end
+        if value and value >= 0 then metrics[key] = key:find("Width", 1, true) and math.ceil(value) or math.floor(value + 0.5) end
     end
-    metrics.naturalContentWidth = math.max(metrics.minContentWidth, metrics.naturalContentWidth)
+    CopyScrollMetrics(metrics, values)
+    metrics.naturalContentWidth = math.ceil(math.max(metrics.minContentWidth, tonumber(values.naturalContentWidth) or metrics.naturalContentWidth))
     metrics.naturalContentHeight = math.max(metrics.minContentHeight, metrics.naturalContentHeight)
     -- A paginated matrix reports its full roster in naturalContentWidth.
     -- ApplyPageSize consumes that width up to the screen-safe edge; a page's
@@ -429,6 +446,8 @@ local function SortPages(left, right)
 end
 
 function AccountView:RegisterPage(addonName, definition)
+    if type(definition) == "table" and definition.GetFieldDefinitions ~= nil
+        and type(definition.GetFieldDefinitions) ~= "function" then return nil, "invalid-field-definitions" end
     if type(addonName) ~= "string" or type(definition) ~= "table" then
         return nil, Core:Text("CORE.INVALID_PAGE_REGISTRATION")
     end
@@ -587,14 +606,35 @@ local function CallPage(instance, page, phase, context)
     return true
 end
 
+function AccountView:GetFieldDefinitions(pageID)
+    local page = self._pages[pageID]
+    if not page then return {} end
+    local fields = page.fields
+    if page.GetFieldDefinitions then
+        local ok, result = pcall(page.GetFieldDefinitions)
+        if not ok then return {}, "field-definitions-error" end
+        fields = result
+    end
+    if type(fields) ~= "table" then return {}, "invalid-field-definitions" end
+    local seen = {}
+    for _, field in ipairs(fields) do
+        if type(field) ~= "table" or type(field.id) ~= "string" or field.id == ""
+            or type(field.title) ~= "string" or seen[field.id] then return {}, "invalid-field-definitions" end
+        seen[field.id] = true
+    end
+    for key in pairs(fields) do
+        if type(key) ~= "number" or key % 1 ~= 0 or key < 1 or key > #fields then return {}, "invalid-field-definitions" end
+    end
+    return Copy(fields)
+end
+
 function AccountView:GetFieldVisible(pageID, field, overrides)
     local fieldID = type(field) == "table" and field.id or field
     if overrides and overrides[fieldID] ~= nil then
         return overrides[fieldID] == true
     end
     if type(field) ~= "table" then
-        local page = self._pages[pageID]
-        for _, definition in ipairs(page and page.fields or {}) do if definition.id == fieldID then field = definition; break end end
+        for _, definition in ipairs(self:GetFieldDefinitions(pageID)) do if definition.id == fieldID then field = definition; break end end
     end
     local default = type(field) ~= "table" or field.defaultVisible ~= false
     local saved = Settings().fields[pageID] and Settings().fields[pageID][fieldID]
@@ -634,9 +674,8 @@ local function GetPreviewFieldVisible(page, field)
 end
 
 function AccountView:GetVisibleFields(pageID, overrides)
-    local page = self._pages[pageID]
     local visible = {}
-    for _, field in ipairs(page and page.fields or {}) do
+    for _, field in ipairs(self:GetFieldDefinitions(pageID)) do
         if self:GetFieldVisible(pageID, field, overrides) then visible[#visible + 1] = Copy(field) end
     end
     return visible
@@ -1189,6 +1228,11 @@ function AccountView:ApplyPageSize(page, context, forceAutoFitWidth)
     end
     width = math.max(math.min(widthFloor, maxWidth), math.min(math.max(minWidth, width), maxWidth))
     height = math.max(math.min(minHeight, maxHeight), math.min(math.max(minHeight, height), maxHeight))
+    if metrics.scrollContentHeight then
+        local gutter = ScrollSurfaceGutter(metrics.scrollContentHeight, height - shellHeight, metrics.scrollFixedHeight)
+        -- A saved narrow width cannot paginate a complete matrix before the safe edge.
+        width = math.min(maxWidth, math.max(width, math.ceil(metrics.naturalContentWidth + shellWidth + gutter)))
+    end
     if math.abs((frame:GetWidth() or 0) - width) < 1 and math.abs((frame:GetHeight() or 0) - height) < 1 then return end
     self._applyingPageSize = true
     frame._pageSizePage, frame._pageSizeContext = page, context
@@ -1583,8 +1627,9 @@ local function HoverMetrics(page, context)
         if ok and type(supplied) == "table" then
             for _, key in ipairs({ "minWidth", "preferredWidth", "minHeight", "preferredHeight" }) do
                 local value = tonumber(supplied[key])
-                if value and value > 0 then metrics[key] = math.floor(value + 0.5) end
+                if value and value > 0 then metrics[key] = (key == "minWidth" or key == "preferredWidth") and math.ceil(value) or math.floor(value + 0.5) end
             end
+            CopyScrollMetrics(metrics, supplied)
             metrics.horizontalOverflow = supplied.horizontalOverflow == "paginate" and "paginate" or supplied.horizontalOverflow == "matrix" and "matrix" or "content"
             metrics.verticalOverflow = supplied.verticalOverflow == "none" and "none" or "content"
         else
@@ -1598,6 +1643,7 @@ local function HoverMetrics(page, context)
             metrics.preferredWidth = math.max(metrics.minWidth, (tonumber(supplied.naturalContentWidth) or 0) + shellWidth)
             metrics.minHeight = math.max(metrics.minHeight, (tonumber(supplied.minContentHeight) or 0) + shellHeight)
             metrics.preferredHeight = math.max(metrics.minHeight, (tonumber(supplied.naturalContentHeight) or 0) + shellHeight)
+            CopyScrollMetrics(metrics, supplied)
             metrics.horizontalOverflow = supplied.horizontalOverflow == "paginate" and "paginate" or supplied.horizontalOverflow == "matrix" and "matrix" or "content"
             metrics.verticalOverflow = supplied.verticalOverflow == "none" and "none" or "content"
         end
@@ -1689,6 +1735,12 @@ function AccountView:ShowPreview(pageID, anchor, forceRefresh)
     local width, height = metrics.preferredWidth, metrics.preferredHeight
     width = math.max(math.min(metrics.minWidth, safe.width), math.min(width, safe.width))
 
+    if metrics.scrollContentHeight then
+        local limitHeight = preservePosition and previousLeft and previousTop and safe.height or math.min(safe.height, roomHeight)
+        local budgetHeight = math.max(math.min(metrics.minHeight, safe.height), math.min(height, math.max(1, limitHeight)))
+        local gutter = ScrollSurfaceGutter(metrics.scrollContentHeight, budgetHeight - shellHeight, metrics.scrollFixedHeight)
+        width = math.min(safe.width, math.max(width, math.ceil(metrics.preferredWidth + gutter)))
+    end
     frame.preview = true
     UpdateWindowClamp(frame, frame:GetHeight())
     -- The normal window installs a large minimum resize bound.  A hover is
@@ -1878,6 +1930,7 @@ Core.Events:Register("CHARACTER_CACHE_DELETED", AccountView, function(self)
     self:RefreshPage()
 end)
 Core.Capabilities:Register("account-view", 2)
+Core.Capabilities:Register("account-dynamic-fields", 1)
 Core.Capabilities:Register("account-preview-characters", 1)
 Core.Capabilities:Register("account-character-admission", 1)
-Core.Capabilities:Register("account-surface-budget", 1)
+Core.Capabilities:Register("account-surface-budget", 2)

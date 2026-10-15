@@ -56,13 +56,15 @@ function Integration:Initialize()
         and Core:HasCapability("basic-input", 1)
         and Core:HasCapability("account-view", 2)
         and Core:HasCapability("account-entry", 2)
+        and Core:HasCapability("account-surface-budget", 2)
+        and type(Core.AccountView.GetScrollSurfaceWidth) == "function"
         and Core.RegisterAddon and Core.AccountView.RegisterPage
         and Core.Entry.RegisterBusinessEntry and Core.Characters.FormatName
         and Core.UITheme.CreateInput) then
         return nil, YQB.T("CORE.UPGRADE")
     end
 
-    local addon, addonError = Core:RegisterAddon("YiboQuestBlocker", { version = "3.1.0", requiredAPI = 13 })
+    local addon, addonError = Core:RegisterAddon("YiboQuestBlocker", { version = "3.1.1", requiredAPI = 13 })
     if not addon then return nil, addonError end
     local database = YQB.GetDatabase()
     database.filters = database.filters or {}

@@ -6,7 +6,7 @@ local function HasCoreRequirements()
  return Core and Core.CheckAPIVersion and Core:CheckAPIVersion(REQUIRED_CORE_API)
   and Core.HasCapability and Core:HasCapability("localization",1)
   and Core:HasCapability("account-view",2)
-  and Core:HasCapability("account-surface-budget",1)
+  and Core:HasCapability("account-surface-budget",2)
   and Core:HasCapability("data-domains",1)
   and Core:HasCapability("events",1)
   and Core:HasCapability("basic-input",1)
@@ -28,6 +28,7 @@ local function HasCoreRequirements()
   and Core.LevelFilter and type(Core.LevelFilter.Validate)=="function"
   and Core.AccountView and type(Core.AccountView.RegisterPage)=="function"
   and type(Core.AccountView.GetColumnPage)=="function"
+  and type(Core.AccountView.GetScrollSurfaceWidth)=="function"
   and type(Core.AccountView.UpdateColumnPager)=="function"
   and type(Core.AccountView.NotifyPageChanged)=="function"
   and Core.Entry and type(Core.Entry.RegisterBusinessEntry)=="function"
@@ -114,15 +115,13 @@ local function GetSurfaceMetrics(context)
   return Addon:GetMatrixSurfaceRowCount(characters)
  end, function() return nil end)
  if rowsOK and type(measuredRows) == "number" then rows = math.max(0, measuredRows) end
- local scrollbarWidth = rows > 20 and Core.UITheme.Geometry.scrollbarGutter or 0
+ local scrollFixedHeight=inset.top+Core.UITheme.Size.compact+Core.UITheme.Space.xs+Core.UITheme:GetCharacterHeaderHeight(context)+inset.bottom
  return {
   minContentWidth=layout.nameWidth+characterWidth+inset.left+inset.right,
-  -- Reserve the shared vertical track only when this capped matrix actually
-  -- overflows.  Otherwise the track appears correctly but trims the final
-  -- character column by its 14px lane.
-  naturalContentWidth=matrixWidth+inset.left+inset.right+scrollbarWidth,
-  minContentHeight=inset.top+Core.UITheme.Size.standard+Core.UITheme.Space.sm+Core.UITheme:GetCharacterHeaderHeight(context)+Core.UITheme.Space.xxs+Core.UITheme.Table.rowHeight+inset.bottom,
-  naturalContentHeight=inset.top+Core.UITheme.Size.standard+Core.UITheme.Space.sm+Core.UITheme:GetCharacterHeaderHeight(context)+Core.UITheme.Space.xxs+math.max(1,math.min(rows,20))*Core.UITheme.Table.rowHeight+inset.bottom,
+  naturalContentWidth=matrixWidth+inset.left+inset.right,
+  scrollContentHeight=rows*Core.UITheme.Table.rowHeight,scrollFixedHeight=scrollFixedHeight,
+  minContentHeight=scrollFixedHeight+Core.UITheme.Table.rowHeight,
+  naturalContentHeight=scrollFixedHeight+math.max(1,math.min(rows,20))*Core.UITheme.Table.rowHeight,
   fixedLeftWidth=layout.nameWidth,fixedTopHeight=Core.UITheme.Size.standard+Core.UITheme:GetCharacterHeaderHeight(context),horizontalOverflow="paginate",verticalOverflow="content"
  }
 end

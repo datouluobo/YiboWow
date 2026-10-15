@@ -116,17 +116,12 @@ local function ShowCharacterDeleteConfirmation(characterID)
         Core:Text("CORE.WILL_DELETE"),
         Core:Text("CORE.CORE_CHARACTER_PROFILE"),
     }
-    local ownerOrder = { "YiboAltoBoss", "YiboLegendary", "YiboQuestBlocker" }
-    local added = {}
+    local ownerOrder = {}
+    for addonName in pairs(impact.owners) do ownerOrder[#ownerOrder + 1] = addonName end
+    table.sort(ownerOrder)
     for _, addonName in ipairs(ownerOrder) do
         local ownerImpact = impact.owners[addonName]
-        if ownerImpact then
-            lines[#lines + 1] = "• " .. tostring(ownerImpact.label or addonName) .. Core:Text("FORMAT.COLON") .. tostring(ownerImpact.detail or (ownerImpact.hasData and Core:Text("CORE.CACHED") or Core:Text("CORE.NO_CACHE")))
-            added[addonName] = true
-        end
-    end
-    for addonName, ownerImpact in pairs(impact.owners) do
-        if not added[addonName] then lines[#lines + 1] = "• " .. tostring(ownerImpact.label or addonName) end
+        lines[#lines + 1] = "• " .. tostring(ownerImpact.label or addonName) .. Core:Text("FORMAT.COLON") .. tostring(ownerImpact.detail or (ownerImpact.hasData and Core:Text("CORE.CACHED") or Core:Text("CORE.NO_CACHE")))
     end
     lines[#lines + 1] = ""
     lines[#lines + 1] = Core:Text("CORE.ACCOUNT_WIDE_SETTINGS_AND_THE_GAME_CHARACTER")
@@ -134,8 +129,8 @@ local function ShowCharacterDeleteConfirmation(characterID)
     StaticPopup_Show(DELETE_POPUP, table.concat(lines, "\n"), nil, characterID)
 end
 
-local function ArchiveFieldText(character, field)
-    return Core.Fields:FormatValue(character, field)
+local function ArchiveFieldText(character, field, snapshot)
+    return Core.Fields:FormatValue(character, field, snapshot)
 end
 
 local function ArchiveCharacters(context)
@@ -192,6 +187,7 @@ local function RefreshCharacters(parent, context)
     if contentWidth <= 0 then contentWidth = 832 end
     parent.listContent:SetWidth(contentWidth)
     local fields = GetArchiveFields(preview)
+    local providerSnapshot = Core.ArchiveFields and Core.ArchiveFields:Read(characters, fields)
     local widths = GetArchiveColumnWidths(fields)
     local tableWidth = GetArchiveTableWidth(fields, widths)
     local surfaceWidth = math.max(contentWidth, tableWidth)
@@ -247,7 +243,7 @@ local function RefreshCharacters(parent, context)
             end
             local width = widths[fieldIndex]
             cell:ClearAllPoints(); cell:SetPoint("LEFT", x, 0); cell:SetWidth(width)
-            local text, value = ArchiveFieldText(character, field)
+            local text, value = ArchiveFieldText(character, field, providerSnapshot)
             local icon = field.GetIcon and field.GetIcon(value, character)
             if icon and text ~= "—" then
                 cell:SetText("|T" .. tostring(icon) .. ":16:16:0:0:64:64|t " .. text)

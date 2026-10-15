@@ -1,7 +1,7 @@
 local ADDON_NAME = ...
 local Addon = _G.YiboCurrency or {}
 _G.YiboCurrency = Addon
-Addon.NAME, Addon.VERSION = "YiboCurrency", "0.9.1"
+Addon.NAME, Addon.VERSION = "YiboCurrency", "0.9.2"
 
 local function Defaults(target, values)
     for key, value in pairs(values) do
@@ -13,26 +13,46 @@ function Addon:EnsureDB()
     YiboCurrencyDB = YiboCurrencyDB or {}
     local version = tonumber(YiboCurrencyDB.version) or 0
     YiboCurrencyDB.settings = YiboCurrencyDB.settings or {}
-    -- Monitoring changed from a field projection into its own ordered matrix.
-    -- Do not guess at a player's former selection: it had different semantics.
-    if version < 3 then
-        YiboCurrencyDB.settings.previewColumns = nil
-        YiboCurrencyDB.settings.monitored = {}
-        YiboCurrencyDB.settings.hoverOrderOverride = nil
-    end
     if version < 2 and YiboCurrencyDB.settings.levelExpr == "90" then YiboCurrencyDB.settings.levelExpr = "" end
-    Defaults(YiboCurrencyDB, { version = 3, settings = { visible = {}, monitored = {}, hoverOrderOverride = nil, levelExpr = "", customItems = {} } })
-    YiboCurrencyDB.version = math.max(version, 3)
+    Defaults(YiboCurrencyDB, { version = 4, settings = { visible = {}, monitored = {}, hoverOrderOverride = nil, hoverTranspose = false, levelExpr = "", customItems = {} } })
+    if version < 4 then
+        if type(YiboCurrencyDB.settings.previewColumns) ~= "table" then
+            YiboCurrencyDB.settings.previewColumns = {}
+            for id, enabled in pairs(YiboCurrencyDB.settings.monitored or {}) do
+                YiboCurrencyDB.settings.previewColumns[id] = enabled == true
+            end
+        end
+    end
+    YiboCurrencyDB.settings.previewColumns = type(YiboCurrencyDB.settings.previewColumns) == "table" and YiboCurrencyDB.settings.previewColumns or {}
+    YiboCurrencyDB.version = math.max(version, 4)
     return YiboCurrencyDB
 end
 function Addon:GetSettings() return self:EnsureDB().settings end
-function Addon:Print(message) if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 货币管家：" .. tostring(message)) end end
+function Addon:T(key, ...)
+    local core = _G.YiboCore
+    if core and core.Locale and type(core.Locale.Get) == "function" then return core.Locale:Get(self.NAME, key, ...) end
+    return "[" .. self.NAME .. ":" .. key .. "]"
+end
+function Addon:UpgradeMessage()
+    local core = _G.YiboCore
+    if core and core.Locale and type(core.Locale.Get) == "function" then return self:T("UI.CORE_UPGRADE") end
+    return "YiboCurrency requires YiboCore 1.12.4 / API13 with account-dynamic-fields:1; upgrade Core and reload."
+end
+function Addon:Print(message)
+    if not DEFAULT_CHAT_FRAME then return end
+    local core = _G.YiboCore
+    if core and core.Locale and type(core.Locale.Get) == "function" then
+        DEFAULT_CHAT_FRAME:AddMessage(self:T("CHAT.MESSAGE", tostring(message)))
+    else
+        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r Currency: " .. tostring(message))
+    end
+end
 
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED"); frame:RegisterEvent("PLAYER_LOGIN")
 frame:SetScript("OnEvent", function(_, event, name)
     if event == "ADDON_LOADED" and name == ADDON_NAME then Addon:EnsureDB()
     elseif event == "PLAYER_LOGIN" and Addon.CoreIntegration then
-        local ok, err = Addon.CoreIntegration:Initialize(); if not ok then Addon:Print("Core 接入失败：" .. tostring(err)) end
+        local ok, err = Addon.CoreIntegration:Initialize(); if not ok then Addon:Print(tostring(err)) end
     end
 end)

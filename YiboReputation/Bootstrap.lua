@@ -1,7 +1,7 @@
 local ADDON_NAME = ...
 local Addon = _G.YiboReputation or {}
 _G.YiboReputation = Addon
-Addon.NAME, Addon.VERSION = "YiboReputation", "1.7.1"
+Addon.NAME, Addon.VERSION = "YiboReputation", "1.7.2"
 YiboReputationDB = YiboReputationDB or {}
 
 local function Defaults(target, values)
@@ -44,8 +44,8 @@ function Addon:T(key, ...)
     if key == "ERROR.CORE_REQUIRED" then
         local locale = GetLocale and GetLocale() or "enUS"
         return (locale == "zhCN" or locale == "zhTW")
-            and "YiboReputation 需要 YiboCore 1.12.4 / API13，以及语言、账号视图、角色身份、角色缓存清理、事件与标准控件能力。请升级 YiboCore。"
-            or "YiboReputation requires YiboCore 1.12.4 / API13 with localization, account views, character identity, character cleanup, events, and standard controls. Please update YiboCore."
+            and "YiboReputation 需要 YiboCore 1.12.4 / API13，以及 account-surface-budget:2、语言、账号视图、角色身份、角色缓存清理、事件与标准控件能力。请升级 YiboCore。"
+            or "YiboReputation requires YiboCore 1.12.4 / API13 with account-surface-budget:2, localization, account views, character identity, character cleanup, events, and standard controls. Please update YiboCore."
     end
     local value = "[YiboReputation:" .. tostring(key) .. "]"
     if select("#", ...) > 0 then return string.format(value, ...) end

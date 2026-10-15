@@ -37,6 +37,3 @@ Register({ id = "character.archaeology", consumer = "character-archive", domain 
 Register({ id = "character.fishing", consumer = "character-archive", domain = "professions", titleKey = "CORE.FISHING", order = 80, width = 54, defaultVisible = true, defaultPreviewVisible = true, Read = ProfessionValue(nil, 356), Format = ProfessionFormat })
 Register({ id = "character.cooking", consumer = "character-archive", domain = "professions", titleKey = "CORE.COOKING", order = 90, width = 54, defaultVisible = true, defaultPreviewVisible = true, Read = ProfessionValue(nil, 185), Format = ProfessionFormat })
 Register({ id = "character.first-aid", consumer = "character-archive", domain = "professions", titleKey = "CORE.FIRST_AID", order = 100, width = 54, defaultVisible = true, defaultPreviewVisible = true, Read = ProfessionValue(nil, 129), Format = ProfessionFormat })
-Register({ id = "character.money", consumer = "character-archive", domain = "economy", resource = "money", titleKey = "CORE.GOLD", order = 110, width = 72, defaultVisible = false, defaultPreviewVisible = false,
-    Read = function(character, data) return data and data.money or Profile(character).money end,
-    Format = function(value) return value == nil and "—" or tostring(math.floor(value / 10000)) .. Core:Text("CORE.G") end })

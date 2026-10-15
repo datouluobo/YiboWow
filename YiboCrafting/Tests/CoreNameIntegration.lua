@@ -25,6 +25,8 @@ end
 GameTooltip = Frame()
 local theme = {
     Colors = { text = {1,1,1}, muted = {1,1,1}, warning = {1,1,1}, panel = {0,0,0,1}, row = {0,0,0,1}, alternate = {0,0,0,1} },
+    Space = { xs = 4, sm = 8, md = 16 },
+    GetMatrixInsets = function() return { top = 8, bottom = 8, left = 8, right = 8 } end,
     Font = { body = 16, assist = 14 }, Table = { rowHeight = 28, cellInset = 4, iconTextRasterTolerance = 1 },
     GetIconTextColumnWidth = function() return 225 end,
     MeasureText = function() return 60 end,
@@ -44,6 +46,7 @@ YiboCore = {
     RegisterAddon = function(_, _, info) registrations = registrations + 1; assert(info.requiredAPI == 13); return true end,
     Print = function(_, message) printed = message end,
     AccountView = {
+        GetScrollSurfaceWidth = function(_, context, parent) return context.surfaceAvailableWidth or 600 end,
         FitRepeatedColumnWidth = function() return 80 end,
         GetColumnPage = function(_, _, _, characters) return characters, {} end,
         UpdateColumnPager = function() end,

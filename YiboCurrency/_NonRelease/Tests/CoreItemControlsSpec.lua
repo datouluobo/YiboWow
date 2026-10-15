@@ -143,7 +143,8 @@ assert(#committed == 2, "Hiding an input discards pending composition notificati
 YiboCurrency = { NAME = "YiboCurrency", Catalog = { { itemID = 4, id = "item:4", title = "内置" } },
     CoreIntegration = { initialized = true }, Print = function(_, message) assert(message) end,
     NotifyChanged = function() end }
-local settings = { customItems = {}, visible = {}, monitored = {} }
+local settings = { customItems = {}, visible = {}, monitored = {}, previewColumns = {} }
+dofile("YiboCurrency/_NonRelease/Tests/LoadLocale.lua")
 function YiboCurrency:GetSettings() return settings end
 dofile("YiboCurrency/Data.lua")
 dofile("YiboCurrency/Settings.lua")
@@ -152,10 +153,17 @@ local refresh, reflows = 0, 0
 local context = { notifyPageChanged = function() end, refreshPage = function() refresh = refresh + 1 end }
 context.refreshPanel = function() reflows = reflows + 1; YiboCurrency:CreateSettingsPanel(host, context) end
 YiboCurrency:CreateSettingsPanel(host, context)
+local transpose = host.ycuSettings.transpose
+assert(transpose and not transpose:GetChecked(), "hover transpose defaults off")
+transpose.scripts.OnClick(transpose)
+assert(settings.hoverTranspose == true and transpose:GetChecked(), "hosted business setting persists hover orientation")
+transpose.scripts.OnClick(transpose)
+assert(settings.hoverTranspose == false and not transpose:GetChecked(), "hover orientation can be restored")
+refresh = 0
 local picker = host.ycuSettings.itemPicker
 local emptyHeight = picker:GetHeight()
 assert(not picker.dropdown:IsShown() and not picker.retry:IsShown() and not picker.preview:IsShown())
-picker:SetValue("同名"); picker:Resolve("add"); assert(not popup and picker.preview:GetText():find("多个"))
+picker:SetValue("同名"); picker:Resolve("add"); assert(not popup and picker.preview:GetText() == Core:Text("CORE.MULTIPLE_ITEMS_FOUND_SELECT_A_MATCH_BEFORE"))
 assert(picker.dropdown:IsShown() and not picker.retry:IsShown() and picker:GetHeight() > emptyHeight and reflows > 0)
 picker.dropdown.onValueChanged(2); picker:Resolve("add"); assert(popup)
 Cancel(); assert(#settings.customItems == 0 and picker.input:GetText() == "同名")
@@ -173,7 +181,7 @@ settings.visible["item:2"], settings.monitored["item:2"] = true, true
 settings.hoverOrderOverride = { "item:2" }
 cursor = { "item", 2 }; picker:ReadCursor(); assert(popup and clears == 1)
 Accept(); assert(#settings.customItems == 0 and settings.monitored["item:2"] == nil and #settings.hoverOrderOverride == 0)
-cursor = { "item", 4 }; picker:ReadCursor(); assert(not popup and picker.preview:GetText():find("内置"))
+cursor = { "item", 4 }; picker:ReadCursor(); assert(not popup and picker.preview:GetText() == YiboCurrency:T("CURRENCY.BUILT_IN_CATALOG_ENTRIES_CANNOT_BE_REMOVED_9762CB"))
 cursor = { "spell", 1 }; picker:ReadCursor(); assert(clears == 2 and not popup)
 cursor = { "item", 3 }; picker:ReadCursor(); assert(popup)
 local stale = popup.data; picker:SetValue("1"); assert(not popup)
@@ -227,13 +235,52 @@ local extension = selectPicker.controls[#selectPicker.controls].control
 extension.scripts.OnClick(extension); assert(selectPicker.preview:GetText() == "已添加 NPC 目标")
 selectPicker:Unbind(); cached[49] = "解绑"; selectPicker:Resolve("select"); assert(not popup)
 
+-- Existing saved items must be listed even before any add operation this session.
+local originalItems = settings.customItems
+settings.customItems = { { itemID = 3, title = "Saved item", icon = 134400 } }
+for i = 1, 11 do settings.customItems[#settings.customItems + 1] = { itemID = 100 + i, title = "Saved " .. i, icon = 134400 } end
+host.ycuSettings.customPage = 1
+YiboCurrency:CreateSettingsPanel(host, context)
+local panel = host.ycuSettings
+assert(panel.rows[1]:IsShown() and panel.rows[1].itemID == 3 and panel.rows[1].label:GetText():find("Saved item", 1, true), "saved catalog renders on first settings refresh")
+assert(panel.rows[1].idLabel:GetText():find("3", 1, true), "saved rows expose stable item IDs")
+assert(panel.rows[8]:IsShown() and #panel.rows == 8 and panel.customNext:IsShown(), "custom list uses a bounded eight-row page")
+panel.rows[1].scripts.OnClick(panel.rows[1])
+assert(picker.input:GetText() == "3" and #settings.customItems == 12 and not popup, "selecting a saved item fills management controls without deleting it")
+YiboCurrency:ConfirmRemoveCustomItem(3, context.refreshPanel, host)
+assert(popup and #settings.customItems == 12, "listed item removal waits for confirmation")
+Cancel(); assert(#settings.customItems == 12)
+YiboCurrency:ConfirmRemoveCustomItem(3, context.refreshPanel, host); Accept()
+assert(#settings.customItems == 11 and panel.rows[1].itemID == 101, "confirmed removal refreshes saved list")
+panel.customNext.scripts.OnClick(panel.customNext)
+assert(panel.customPage == 2 and panel.rows[1].itemID == 109 and panel.rows[3]:IsShown() and not panel.rows[4]:IsShown(), "last page replaces pooled rows without stale entries")
+assert(not panel.customNext.enabled and panel.customPrevious.enabled, "custom paging respects end boundaries")
+host:SetWidth(1100); panel.customPage = 1; YiboCurrency:CreateSettingsPanel(host, context)
+assert(panel.rows[1]:GetWidth() < picker.layoutContentWidth / 2 and panel.rows[2].point[4] > panel.rows[1].point[4]
+    and panel.rows[2].point[5] == panel.rows[1].point[5], "wide settings use compact items on the same row")
+for _, row in ipairs(panel.rows) do if row:IsShown() then
+    assert(row.point[4] + row:GetWidth() <= 1100, "custom item grid stays inside wide settings")
+end end
+local lastColumn = panel.rows[1]
+for _, row in ipairs(panel.rows) do if row:IsShown() and row.point[5] == panel.rows[1].point[5] then lastColumn = row end end
+assert(math.abs(lastColumn.point[4] + lastColumn:GetWidth() - picker.layoutContentWidth) < 0.01, "custom grid and management controls share the exact right edge")
+assert(panel.rows[1].point[4] == picker.point[2], "custom grid and management controls share the left edge")
+host:SetWidth(220); YiboCurrency:CreateSettingsPanel(host, context)
+assert(panel.rows[1]:GetWidth() == picker.layoutContentWidth and panel.rows[2].point[4] == 0
+    and panel.rows[2].point[5] < panel.rows[1].point[5], "narrow settings switch to one compact column")
+host:SetWidth(600)
+settings.customItems = {}; YiboCurrency:CreateSettingsPanel(host, context)
+assert(panel.customPage == 1 and not panel.rows[1]:IsShown() and panel.ycuLabels.customEmpty:IsShown() and not panel.customNext:IsShown(), "empty catalog clears old rows and resets page")
+settings.customItems = originalItems
+print("PASS: saved custom item list, stable IDs, selection, confirmed removal, bounded pagination and empty state")
+
 -- Old Core must stop before registering a page or touching the new controls.
 Core.CheckAPIVersion = function() return false end
 Core.AccountView, Core.Entry, Core.CurrencyCatalog = {}, {}, {}
 Core.RegisterAddon = function() error("old Core must not register") end
 dofile("YiboCurrency/CoreIntegration.lua")
 local ok, err = YiboCurrency.CoreIntegration:Initialize()
-assert(not ok and err:find("1.8.0") and err:find("v9"))
+assert(not ok and err:find("1.12.4", 1, true) and err:find("API13", 1, true))
 print("CoreItemControlsSpec: passed resolver, input, picker, Currency operations, lifecycle, layout and old-Core checks")
 
 -- The same Core control also supports atomic multi-item confirmation.

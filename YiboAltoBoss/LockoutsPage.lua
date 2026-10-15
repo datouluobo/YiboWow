@@ -159,10 +159,8 @@ function YAB.CreateLockoutsPage(parent)
     parent.businessTabs = YAB.CreateBusinessTabs(parent, "lockouts")
     parent.header = CreateFrame("Frame", nil, parent)
     parent.header:SetHeight(Theme.Table.headerHeight)
-    -- The lockout page is a compact character-row matrix.  Its host window
-    -- measures the rendered rows and grows to fit them, so a second vertical
-    -- scrollbar would only duplicate Core's page sizing behavior.
-    parent.body = CreateFrame("Frame", nil, parent)
+    parent.scroll = Theme:CreateScrollFrame(parent); parent.scroll:BindScrollbarGutter(parent.header)
+    parent.body = CreateFrame("Frame", nil, parent.scroll); parent.scroll:SetScrollChild(parent.body)
     parent.headers, parent.rows = {}, {}
     return parent
 end
@@ -177,12 +175,14 @@ function YAB.RefreshLockoutsPage(instance, context)
     instance.header:SetPoint("TOPLEFT", inset.left, -TAB_H)
     instance.header:SetPoint("TOPRIGHT", -inset.right, -TAB_H)
     instance.body:ClearAllPoints()
-    instance.body:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs)
-    instance.body:SetPoint("TOPRIGHT", instance.header, "BOTTOMRIGHT", 0, -Theme.Space.xs)
+    instance.scroll:ClearAllPoints(); instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs)
+    instance.scroll:SetPoint("BOTTOMRIGHT", instance, "BOTTOMRIGHT", -inset.right, inset.bottom)
+    instance.body:SetPoint("TOPLEFT", instance.scroll, "TOPLEFT", 0, 0)
     local charWidth = math.max(150, Theme:MeasureText(Theme.Font.body, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTER")) + Theme.Space.lg * 2)
     local availableWidth = math.max(
-        charWidth + CELL_W,
-        (tonumber(context and context.surfaceAvailableWidth) or instance:GetWidth() or 1) - inset.left - inset.right
+        1,
+        Core.AccountView:GetScrollSurfaceWidth(context, instance, #keys * (ROW_H + 2),
+            TAB_H + Theme.Table.headerHeight + Theme.Space.xs + inset.bottom) - inset.left - inset.right
     )
     local columns, pageInfo = Core.AccountView:GetColumnPage(
         "alto-lockouts", "instances", allColumns, availableWidth, charWidth, CELL_W
@@ -229,6 +229,7 @@ function YAB.RefreshLockoutsPage(instance, context)
     end
     Release(instance.rows, #keys + 1)
     instance.body:SetSize(math.max(1, charWidth + #columns * CELL_W), math.max(1, y))
+    instance.scroll:SetContentHeight(math.max(1, y)); instance.scroll:RefreshScrollbar()
     instance.renderedContentHeight = TAB_H + Theme.Table.headerHeight
         + Theme.Space.xs + math.max(1, y) + inset.bottom
 end
@@ -244,10 +245,12 @@ function YAB.GetLockoutsSurfaceMetrics(context)
         naturalContentWidth = inset.left + charWidth + #columns * CELL_W + inset.right,
         minContentWidth = inset.left + charWidth + math.min(1, #columns) * CELL_W + inset.right,
         naturalContentHeight = height,
-        minContentHeight = height,
+        minContentHeight = TAB_H + Theme.Table.headerHeight + Theme.Space.xs + ROW_H + inset.bottom,
+        scrollContentHeight = #keys * (ROW_H + 2),
+        scrollFixedHeight = TAB_H + Theme.Table.headerHeight + Theme.Space.xs + inset.bottom,
         fixedTopHeight = TAB_H,
         horizontalOverflow = "paginate",
-        verticalOverflow = "none",
+        verticalOverflow = "content",
     }
 end
 
@@ -266,8 +269,9 @@ function YAB.GetLockoutsHoverMetrics(context)
         preferredWidth = metrics.naturalContentWidth + Theme.Geometry.shellBorder * 2,
         minHeight = metrics.minContentHeight + Theme.Geometry.titleBar + Theme.Geometry.shellBorder * 2,
         preferredHeight = metrics.naturalContentHeight + Theme.Geometry.titleBar + Theme.Geometry.shellBorder * 2,
+        scrollContentHeight = metrics.scrollContentHeight, scrollFixedHeight = metrics.scrollFixedHeight,
         horizontalOverflow = "paginate",
-        verticalOverflow = "none",
+        verticalOverflow = "content",
     }
 end
 

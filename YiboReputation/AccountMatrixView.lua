@@ -289,7 +289,22 @@ function Addon:RefreshMatrixView(parent, context)
     local layout = self.MatrixColumnLayout
     local nameWidth, starWidth = layout.nameWidth, layout.starWidth
     local allCharacters = context.characters or {}
-    local availableWidth = math.max(1, (tonumber(context.surfaceAvailableWidth) or parent:GetWidth() or 1) - inset.left - inset.right)
+    local nodes, cacheKey = self:GetMatrixNodeCache(allCharacters)
+    if parent.matrixNodeCacheKey ~= cacheKey then parent.matrixNodeCache, parent.matrixNodeCacheKey = nodes, cacheKey end
+    local query, filter = string.lower(settings.matrixSearch or ""), settings.matrixFilter or settings.defaultMatrixFilter
+    local display = {}
+    local function Add(node, depth, forced)
+        local visible = Matches(self, node, allCharacters, filter, query); local childVisible = false
+        for _, child in ipairs(node.children or {}) do if Matches(self, child, allCharacters, filter, query) then childVisible = true end end
+        if node.kind ~= "faction" and not childVisible and query ~= "" then return false end
+        if node.kind == "faction" and not visible then return false end
+        display[#display + 1] = { node=node, depth=depth }
+        if #node.children > 0 and (forced or IsOpen(expanded, node)) then for _, child in ipairs(node.children) do Add(child, depth + 1, forced) end end
+        return true
+    end
+    for _, node in ipairs(parent.matrixNodeCache) do Add(node, 0, query ~= "" or filter ~= "all") end
+    local fixedHeight = inset.top + Theme.Size.compact + Theme.Space.xs + headerHeight + inset.bottom
+    local availableWidth = math.max(1, Core.AccountView:GetScrollSurfaceWidth(context, parent, #display * Theme.Table.rowHeight, fixedHeight) - inset.left - inset.right)
     local characterWidth = self:GetMatrixCharacterColumnWidth(context, availableWidth, nameWidth, #allCharacters)
     local characters, pageInfo = Core.AccountView:GetColumnPage("reputation", "matrix", allCharacters, availableWidth, nameWidth, characterWidth)
     Core.AccountView:UpdateColumnPager(parent, "reputation", "matrix", pageInfo, parent.matrixHeader, self:T("MATRIX.CHARACTERS"))
@@ -313,20 +328,6 @@ function Addon:RefreshMatrixView(parent, context)
         tableWidth = tableWidth + column.width
     end
     for index = #columns + 1, #parent.matrixHeaders do parent.matrixHeaders[index]:Hide() end
-    local nodes, cacheKey = self:GetMatrixNodeCache(characters)
-    if parent.matrixNodeCacheKey ~= cacheKey then parent.matrixNodeCache, parent.matrixNodeCacheKey = nodes, cacheKey end
-    local query, filter = string.lower(settings.matrixSearch or ""), settings.matrixFilter or settings.defaultMatrixFilter
-    local display = {}
-    local function Add(node, depth, forced)
-        local visible = Matches(self, node, characters, filter, query); local childVisible = false
-        for _, child in ipairs(node.children or {}) do if Matches(self, child, characters, filter, query) then childVisible = true end end
-        if node.kind ~= "faction" and not childVisible and query ~= "" then return false end
-        if node.kind == "faction" and not visible then return false end
-        display[#display + 1] = { node=node, depth=depth }
-        if #node.children > 0 and (forced or IsOpen(expanded, node)) then for _, child in ipairs(node.children) do Add(child, depth + 1, forced) end end
-        return true
-    end
-    for _, node in ipairs(parent.matrixNodeCache) do Add(node, 0, query ~= "" or filter ~= "all") end
     local dataRowIndex = 0
     for rowIndex, entry in ipairs(display) do
         local node, row = entry.node, parent.matrixRows[rowIndex] or CreateFrame("Button", nil, parent.matrixBody, "BackdropTemplate"); parent.matrixRows[rowIndex] = row; row:SetSize(tableWidth, Theme.Table.rowHeight); row:ClearAllPoints(); row:SetPoint("TOPLEFT", parent.matrixBody, "TOPLEFT", 0, -((rowIndex-1)*Theme.Table.rowHeight)); row:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8x8",edgeFile="Interface\\Buttons\\WHITE8x8",edgeSize=1}); row.matrixNode = node

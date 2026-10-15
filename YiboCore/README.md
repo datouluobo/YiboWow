@@ -1,6 +1,10 @@
 # YiboCore
 
+当前工作树版本：**1.12.6**。统一矩阵预算已通过离线回归，用户于2026-10-16确认实机检查无问题；尚未打包发布。 公共API仍为13，提供 `account-surface-budget:2`。
+
 1.12.5 / API13发布 `character-cleanup:2`，用于动态所有者留存与带时间上下文的延后清理；与Builds1.5.0配套，旧消费者保持兼容。见[清理v2契约](Docs/API-v13-角色清理v2.md)。
+
+1.12.4工作树 / API13工作树已停止货币业务采集，Currency0.9.1工作树通过公开接口导入旧快照并接管新存储。旧Core货币记录冻结保留，不自动清理；需配套升级，见[货币迁移记录](../YiboCurrency/Docs/货币数据归属迁移-实施与验收记录.md)。Core新增[通用档案字段与清理所有者能力](Docs/API-v13-档案业务字段与清理所有者.md)，不直接读取业务存档。
 
 1.12.4 / API13 工作树已将声望采集和新快照存储交给 YiboReputation 1.7.1。旧 Core 声望快照冻结保留，通过现有公开读取接口供一次性导入；请配套升级 Reputation，旧版只会显示冻结数据。实施与待验收范围见 [声望迁移记录](../YiboReputation/Docs/声望数据归属迁移-实施与验收记录.md)。
 当前工作树 **1.12.1 / API13** 增加可声明的悬停角色范围，旧页面默认仍为前20名；Mail 1.2.13 按需保留全部有效角色。见 [悬停角色范围契约](Docs/API-v13-悬停角色范围.md)。
@@ -79,6 +83,7 @@ Core 不保存任务、Boss、收藏等业务状态，也不接管业务插件�
 local compatible = YiboCore:CheckAPIVersion(6)
 local character = YiboCore.Characters:GetCurrent()
 local allCharacters = YiboCore.Characters:GetAll()
+-- Core1.12.4工作树: legacy import only; live balances belong to Currency.
 local economy = YiboCore.DataDomains:Get(character.id, "economy")
 YiboCore.AccountView:RegisterPage("YiboNewAddon", pageDefinition)
 YiboCore:RegisterSettingsPanel("YiboNewAddon", {
@@ -119,3 +124,7 @@ CF 包名按目标、插件版本、公开 API 排列，例如 `YiboCore-mists-v
 ## 1.12.2 / API13（2026-10-14）
 
 提供 business-item-actions:3 的可选 compactTooltip，兼容既有绑定；用于 AltoBoss 2.6.1 的精简副本提示。部署 AltoBoss 目标操作增强时请同时更新 Core。静态检查通过，真实客户端交互与英文验收待完成。
+
+## 工作树：动态账号字段（2026-10-15）
+
+Core1.12.4 / API13新增 `account-dynamic-fields:1`。业务可通过只读 `GetFieldDefinitions` 回调提供运行时变化的显示与悬停选项，Core统一读取、校验并保存主表选择；静态字段注册保持兼容。Currency0.10.0用于自定义代币目录，离线验证通过、客户端待验，见[公开契约](Docs/API-v13-动态账号字段.md)。

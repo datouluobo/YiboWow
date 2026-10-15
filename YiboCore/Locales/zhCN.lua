@@ -1,6 +1,7 @@
 -- Core-owned resources. Keys are stable and independent of display text.
 local Core = _G.YiboCore
 Core.Locale:Register("YiboCore", "zh", {
+    ["ARCHIVE.FIELD_CONFLICT"] = "档案字段 ID 冲突，已隔离重复提供者：%s",
     ["CORE.REPUTATION_CHARACTER_SNAPSHOTS"] = "声望角色快照",
     ["CORE.CFF20E070_YIBO_R_CORE"] = "|cff20e070[Yibo]|r 核心：",
     ["CORE.BEAST_PATHS"] = "隐兽寻踪",

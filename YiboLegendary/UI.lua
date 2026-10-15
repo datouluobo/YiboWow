@@ -56,7 +56,7 @@ local function CellProjection(snapshot, target)
     elseif state.status == "pending_sync" then value = Addon:T("STATUS.PENDING_SYNC")
     else
         local progress = tostring(state.progressText or "")
-        value = progress:match("(%d+/%d+)") or (progress:find("材料已齐") and "材料齐") or (progress:match("^未获得") and Addon:T("STATUS.NOT_ACQUIRED")) or (progress:find("可刷") and "可刷") or progress
+        value = progress:match("(%d+/%d+)") or (progress:find("材料已齐") and Addon:T("STATUS.MATERIALS_READY")) or (progress:match("^未获得") and Addon:T("STATUS.NOT_ACQUIRED")) or (progress:find("可刷") and Addon:T("STATUS.OBTAINABLE")) or progress
         if value == "" then value = meta.label end
     end
     return { state=state, icon=meta.icon, color=meta.color, value=value, status=meta.label,
@@ -494,7 +494,7 @@ function UI:RefreshMain(context)
 end
 
 function UI:GetMatrixColumns(context)
-    local fixed = { { id="character", title="角色", previewMinWidth=Theme:GetCharacterRowHeaderWidth(false, context, context and context.characters) } }
+    local fixed = { { id="character", title=Addon:T("HEADER.CHARACTER"), previewMinWidth=Theme:GetCharacterRowHeaderWidth(false, context, context and context.characters) } }
     local targets = {}
     local roster = self:GetVisibleCharacters(context and context.characters)
     for _, target in ipairs(Addon.Catalog:GetTargets()) do
@@ -514,17 +514,23 @@ function UI:RefreshPreview(context)
     -- to its safe screen boundary before any target paging is allowed. Do not
     -- use a transient child-frame width here: it may still belong to the
     -- preceding layout pass and would paginate early.
-    local surfaceWidth = context and context.surfaceAvailableWidth or page:GetWidth()
-    local width = math.max(1, surfaceWidth - Theme.Space.xs * 2); local fixedWidth = 0
+    local roster = self:GetVisibleCharacters(context.characters)
+    local width = math.max(1, (context.surfaceAvailableWidth or page:GetWidth()) - Theme.Space.xs * 2)
+    for pass = 1, 2 do
+        local legendHeight = self:LayoutPreviewLegend(width)
+        local fixedHeight = Theme.Space.xs * 2 + legendHeight + Theme.Space.xxs * 2 + Theme.Table.headerHeight
+        width = math.max(1, Addon.Core.AccountView:GetScrollSurfaceWidth(context, page, #roster * Theme.Table.previewRowHeight, fixedHeight) - Theme.Space.xs * 2)
+    end
+    local fixedWidth = 0
     for _, field in ipairs(fixed) do fixedWidth = fixedWidth + field.previewMinWidth end
     self:LayoutPreviewLegend(width)
     local visible, info = Addon.Core.AccountView:GetColumnPageByWidth("legendary", "targets", candidates, width, fixedWidth, function(field) return field.previewMinWidth end)
     -- Core owns the title-bar chrome and the saved page index.  The matrix only
     -- supplies its stable target slice, so headers and cells always share it.
     page.pagerHost = page.pagerHost or CreateFrame("Frame", nil, page)
-    Addon.Core.AccountView:UpdateColumnPager(page.pagerHost, "legendary", "targets", info, nil, "目标")
+    Addon.Core.AccountView:UpdateColumnPager(page.pagerHost, "legendary", "targets", info, nil, Addon:T("TARGET.ACTIVE"))
     if info.pages > 1 then
-        local pagerWidth = Addon.Core.AccountView:GetColumnPagerWidth("目标", info.total)
+        local pagerWidth = Addon.Core.AccountView:GetColumnPagerWidth(Addon:T("TARGET.ACTIVE"), info.total)
         page.pagerHost:SetSize(pagerWidth, Theme.Size.compact)
         context:SetTitleBarControl(page.pagerHost, pagerWidth)
     else
@@ -535,11 +541,11 @@ function UI:RefreshPreview(context)
     local rendered = {}
     for _, field in ipairs(columns) do
         local cell = page.header.cells[field.id] or self:CreatePreviewHeaderCell(page.header, field); page.header.cells[field.id]=cell
-        if field.id == "character" then cell:SetText(field.title) else cell.targetID=field.id; cell.icon:SetTexture(TargetIcon(field.target)); cell.label:SetText(field.title); Theme:BindTooltip(cell, field.target.title, { { text=field.target.expansionLabel .. " · " .. field.target.routeLabel, color=C.muted }, { text="点击查看路线", color=C.accent } }) end
+        if field.id == "character" then cell:SetText(field.title) else cell.targetID=field.id; cell.icon:SetTexture(TargetIcon(field.target)); cell.label:SetText(field.title); Theme:BindTooltip(cell, field.target.title, { { text=field.target.expansionLabel .. " · " .. field.target.routeLabel, color=C.muted }, { text=Addon:T("TARGET.CLICK_HINT"), color=C.accent } }) end
         cell:ClearAllPoints(); cell:SetPoint("LEFT", offset, 0); cell:SetSize(Theme:GetTableCellContentWidth(field.previewMinWidth), Theme.Table.headerHeight); cell:Show(); field.yiboOffset=offset; rendered[field.id]=true; offset=offset+field.previewMinWidth
     end
     for id, cell in pairs(page.header.cells) do if not rendered[id] then cell:Hide() end end
-    local currentCharacter = Addon.Core.Characters:GetCurrent(); local roster = self:GetVisibleCharacters(context.characters)
+    local currentCharacter = Addon.Core.Characters:GetCurrent()
     for index,item in ipairs(roster) do
         local row = page.rows[index] or self:CreatePreviewRow(index); local bg = Theme:GetDataRowColor(index); row.bg:SetColorTexture(bg[1],bg[2],bg[3],bg[4]); Theme:SetCurrentCharacterOutline(row.outline,currentCharacter and item.character.id==currentCharacter.id)
         -- Cells and column tints share Core's left inset. The row itself is
@@ -554,7 +560,7 @@ function UI:RefreshPreview(context)
             local cell=row.cells[field.id] or (field.id=="character" and self:Text(row,Theme.Font.body) or self:CreatePreviewTargetCell(row,field.id)); row.cells[field.id]=cell; cell:ClearAllPoints(); cell:SetPoint("LEFT",field.yiboOffset,0); cell:SetWidth(Theme:GetTableCellContentWidth(field.previewMinWidth)); if field.id ~= "character" then cell:SetHeight(Theme.Table.previewRowHeight) end; cell:Show()
             if field.id=="character" then cell:SetText(CharacterLabel(item.character, context));cell:SetTextColor(red,green,blue) else
                 local projection=CellProjection(item.snapshot,field.target); cell.targetID=field.id; cell.icon:SetTexture(projection.icon); cell.icon:SetVertexColor(projection.color[1],projection.color[2],projection.color[3]); cell.label:SetText(projection.value); cell.label:SetTextColor(projection.color[1],projection.color[2],projection.color[3])
-                Theme:BindTooltip(cell, field.target.title, { { text="状态："..projection.status, color=projection.color }, { text="进度："..projection.tooltipValue, color=C.text }, { text="证据："..projection.evidence, color=C.muted }, { text="点击进入传说之路", color=C.accent } })
+                Theme:BindTooltip(cell, field.target.title, { { text=Addon:T("TOOLTIP.STATUS", projection.status), color=projection.color }, { text=Addon:T("TOOLTIP.PROGRESS", projection.tooltipValue), color=C.text }, { text=Addon:T("TOOLTIP.EVIDENCE", projection.evidence), color=C.muted }, { text=Addon:T("ACTION.PREVIEW_TARGET"), color=C.accent } })
             end
         end
         for id,cell in pairs(row.cells) do if not rendered[id] then cell:Hide() end end; Theme:BindTooltip(row,nil,row.tooltipLines); row:Show()
@@ -579,7 +585,7 @@ function UI:GetSurfaceMetrics(context)
         local width = 0
         for _, field in ipairs(fixed) do width = width + field.previewMinWidth end
         for _, field in ipairs(targets) do width = width + field.previewMinWidth end
-        local availableWidth = context and context.surfaceAvailableWidth or 900
+        local availableWidth = math.min(math.max(310, width + Theme.Space.xs * 2), context and context.surfaceAvailableWidth or math.huge)
         local legendHeight = 18
         local legendWidth, lineCount = 0, 1
         for _, id in ipairs({ "completed", "in_progress", "obtainable", "pending_sync", "ineligible", "unavailable" }) do
@@ -589,7 +595,8 @@ function UI:GetSurfaceMetrics(context)
             legendWidth = legendWidth + itemWidth + Theme.Space.xxs
         end
         legendHeight = lineCount * 18
-        return {minContentWidth=310,naturalContentWidth=width+Theme.Space.xs*2,minContentHeight=122,naturalContentHeight=Theme.Space.xs+legendHeight+Theme.Space.xxs+Theme.Table.headerHeight+Theme.Space.xxs+rows*Theme.Table.previewRowHeight+Theme.Space.xs,fixedLeftWidth=fixed[1] and fixed[1].previewMinWidth or 0,fixedTopHeight=legendHeight+Theme.Space.xxs+Theme.Table.headerHeight,horizontalOverflow="paginate",verticalOverflow="content"}
+        local fixedHeight = Theme.Space.xs * 2 + legendHeight + Theme.Space.xxs * 2 + Theme.Table.headerHeight
+        return {minContentWidth=310,naturalContentWidth=width+Theme.Space.xs*2,minContentHeight=math.max(122, fixedHeight + Theme.Table.previewRowHeight),naturalContentHeight=fixedHeight+rows*Theme.Table.previewRowHeight,scrollContentHeight=rows*Theme.Table.previewRowHeight,scrollFixedHeight=fixedHeight,fixedLeftWidth=fixed[1] and fixed[1].previewMinWidth or 0,fixedTopHeight=legendHeight+Theme.Space.xxs+Theme.Table.headerHeight,horizontalOverflow="paginate",verticalOverflow="content"}
     end
     local targetBar = self:GetTargetBarLayout(context and context.surfaceAvailableWidth or 900)
     return {minContentWidth=720,naturalContentWidth=910,minContentHeight=270,naturalContentHeight=math.min(640,targetBar.height+126+rows*ROW_HEIGHT),horizontalOverflow="none",verticalOverflow="content"}

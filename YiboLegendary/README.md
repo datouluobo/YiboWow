@@ -1,6 +1,8 @@
 # YiboLegendary — 传说之路
 
-当前工作树版本为 **2.2.2**，最低依赖 **YiboCore API v13**，并要求 `localization:1`、`character-name-format:1`、`account-view:2` 与 `account-entry:2`。插件通过统一账号页追踪多角色的传说装备进度，使用 `/yle` 打开。
+当前工作树版本：**2.2.3**。统一矩阵预算已通过离线回归，用户于2026-10-16确认实机检查无问题；尚未打包发布。 请配套使用 **YiboCore 1.12.6 / API13**，启动时检查 `account-surface-budget:2` 及实际方法。
+
+当前工作树版本为 **2.2.3**，最低依赖 **YiboCore API v13**，并要求 `localization:1`、`character-name-format:1`、`account-view:2` 与 `account-entry:2`。插件通过统一账号页追踪多角色的传说装备进度，使用 `/yle` 打开。
 
 ## 功能范围
 
@@ -19,3 +21,5 @@
 ## 反馈与验证
 
 请报告客户端版本、角色、传说目标、插件/Core 版本及可复现步骤。自动化验证和当前客户端待验收项目记录在对应开发文档中。
+
+2026-10-16 未发布工作树：目标列悬停矩阵已接入Core统一滚动预算，要求API13／`account-surface-budget:2`及`AccountView:GetScrollSurfaceWidth`。Core决定滚动槽、自然窗口宽度和必要分页；版本／方法不足时提示升级并停止初始化。代码和离线回归通过，实机待验；本轮未更新版本或发布。见[统一接入与验收](../YiboCore/Docs/矩阵预算统一接入-实施与验收.md)。

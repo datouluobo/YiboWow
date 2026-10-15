@@ -24,7 +24,7 @@ local function Frame()
 end
 CreateFrame=Frame;GameTooltip=Frame();STANDARD_TEXT_FONT="fixture"
 local theme={Colors={},Font={body=16,assist=14,section=16},Table={rowHeight=28,cellInset=4,iconTextRasterTolerance=1},
-    Space={xs=4,sm=8,md=16},Size={standard=30}}
+    Space={xs=4,sm=8,md=16},Size={standard=30},Geometry={shellBorder=1,titleBar=46}}
 for _,key in ipairs({"text","muted","warning","panel","row","alternate","bg","accent","lineSoft","matrixLine","selected"})do theme.Colors[key]={0,0,0,1}end
 theme.CreateText=function()return Frame()end
 theme.CreateMatrixHeader=theme.CreateText;theme.SetCharacterHeader=function()end
@@ -39,6 +39,7 @@ YiboCore={UITheme=theme,ItemResolver={GetInfo=function()return{state="unloaded"}
     DataDomains={Get=function()return{state="known",data={professions={{id=333,name="附魔"}}}}end},
     Characters={GetCurrentID=function()return"A"end,FormatName=function(_,identity)return identity.name end},
     AccountView={RegisterPage=function(_,_,p)registered=p;return p end,
+        GetScrollSurfaceWidth=function(_,context,parent)return context.surfaceAvailableWidth or parent:GetWidth()end,
         FitRepeatedColumnWidth=function()return 110 end,
         GetColumnPage=function(_,_,_,characters)return characters,{}end,
         UpdateColumnPager=function()end,NotifyPageChanged=function()refreshes=refreshes+1 end},
@@ -63,8 +64,8 @@ local fields=registered.GetPreviewFields();fields["recipe-name"]=false
 assert(registered.GetPreviewFields()["recipe-name"]==true,"preview fields are returned as copies")
 registered.SetPreviewFieldVisible("recipe-name",false);assert(refreshes==1)
 registered.SetPreviewFieldVisible("recipe-name",true)
-local metrics=registered.GetHoverMetrics({characters=chars,surfaceAvailableHeight=300})
-assert(metrics.naturalContentHeight==300)
+local metrics=registered.GetHoverMetrics({characters=chars,preview=true,surfaceAvailableHeight=300})
+assert(metrics.preferredHeight==348 and type(metrics.scrollContentHeight)=="number" and type(metrics.scrollFixedHeight)=="number")
 YiboCore.Locale.previewLanguage="en"
 local parent=Frame();Page:Create(parent)
 assert(parent.crafting.search.SetValue,"uses Core basic-input rather than a local EditBox implementation")

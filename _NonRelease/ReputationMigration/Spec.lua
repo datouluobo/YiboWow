@@ -58,7 +58,7 @@ local pageDefinition
 core.AccountView = {
     NotifyPageChanged=function() notifications = notifications+1 end,
     RegisterPage=function(_, _, definition) pages=pages+1; pageDefinition=definition; return definition end,
-    GetColumnPage=function() end, UpdateColumnPager=function() end,
+    GetColumnPage=function() end, GetScrollSurfaceWidth=function() end, UpdateColumnPager=function() end,
 }
 core.Entry = { RegisterBusinessEntry=function(_, _, definition) entries=entries+1; return definition end }
 core.UITheme = { CreateInput=function() end }
@@ -91,6 +91,10 @@ local sourceBefore = Copy(db.characters.byID.Offline.domains.reputation)
 
 -- Stop on an old collector or insufficient release, before writing local data.
 core.DataDomains._definitions.reputation={id="reputation",owner="YiboCore"}
+local savedHasCapability = core.HasCapability
+core.HasCapability = function(_, name, version) return name ~= "account-surface-budget" or version <= 1 end
+Check(not addon.CoreIntegration:Initialize() and pages == 0, "old scroll budget rejected before registration")
+core.HasCapability = savedHasCapability
 local ok, err = addon.CoreIntegration:Initialize()
 Check(not ok and err:find("1.12.4",1,true), "old collector rejected")
 Check(YiboReputationDB.characters==nil and pages==0 and entries==0, "no partial initialization")

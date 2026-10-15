@@ -1,4 +1,5 @@
 local Addon, Core = _G.YiboCurrency, _G.YiboCore
+if not (Core and Core.UITheme and Core.UITheme.Table) then return end
 local Theme = Core.UITheme
 local PAGE_ID = "currency"
 local ROW_HEIGHT = Theme.Table.rowHeight
@@ -6,10 +7,8 @@ local ROW_HEIGHT = Theme.Table.rowHeight
 local function Text(parent, justify) return Theme:CreateText(parent, Theme.Font.body, Theme.Colors.text, justify or "LEFT") end
 -- Core already applied this page's GetEligibleCharacters rule in BuildContext.
 local function Eligible(characters) return characters or {} end
-local function DisplayName(character) return (character and character.name) or "未知角色" end
-local function DisplayIdentity(character, context)
-    local name = DisplayName(character)
-    return context and context.scope == "all" and character and character.id ~= "empty" and (name .. "-" .. tostring(character.realm or "未知服务器")) or name
+local function DisplayName(character)
+    return Core.Characters:FormatName(character, { nameMode = "short", realmMode = "full" }) or Addon:T("UI.UNKNOWN_CHARACTER")
 end
 local function IconText(entry, size)
     size = size or 16
@@ -17,24 +16,6 @@ local function IconText(entry, size)
 end
 local function EntryColumnWidth(entry, iconSize, fontSize)
     return math.max(52, Theme:MeasureText(fontSize or Theme.Font.assist, entry.title) + (iconSize or 18) + Theme.Space.md)
-end
-local function PreviewColumnWidth(entry, characters, projection)
-    -- The hover repeats a currency's icon beside every value, so it must not
-    -- also reserve the full display name in every narrow data column.  Short
-    -- names keep headers scannable; the full name remains available on hover.
-    -- Currency headers in the hover are dense labels, not controls: retain
-    -- exactly 2px on each side instead of the shared 8px table padding.
-    local headerWidth = Theme:MeasureText(Theme.Font.assist, entry.shortTitle or entry.title) + 4
-    local valueWidth = Theme:MeasureText(Theme.Font.body, "0")
-    for _, character in ipairs(characters or {}) do
-        local value, state = Addon:ProjectionValue(projection, character, entry)
-        local text = Addon:FormatLimitCell(value, state, entry, Addon.FormatFullCell)
-        valueWidth = math.max(valueWidth, Theme:MeasureText(Theme.Font.body, text))
-    end
-    local total = Addon:ProjectionTotal(projection, characters or {}, entry)
-    local totalText = Addon:FormatFull({ quantity = total.quantity }, entry) .. (total.complete and "" or (total.bankPending and "~" or "?"))
-    valueWidth = math.max(valueWidth, Theme:MeasureText(Theme.Font.body, totalText))
-    return math.max(headerWidth, 16 + valueWidth + Theme.Space.xxs * 3, 32)
 end
 local function CharacterColor(character)
     local color = RAID_CLASS_COLORS and character and RAID_CLASS_COLORS[character.class or ""]
@@ -53,13 +34,28 @@ local function CharacterColumnWidth(characters, context, entries, projection)
     end
     return width
 end
-local function CharacterLabelColumnWidth(characters, context)
-    return Theme:GetCharacterRowHeaderWidth(false, context, characters)
+local function MinimumCharacterWidth(characters, context, entries, projection)
+    local width = 52
+    for _, character in ipairs(characters) do
+        local name = Core.Characters:FormatName(character, { nameMode = "short", realmMode = "omit" })
+        width = math.max(width, Theme:MeasureText(Theme.Font.assist, name) + Theme.Space.sm)
+        if context.scope == "all" then width = math.max(width, Theme:MeasureText(Theme.Font.meta, character.realm or "") + Theme.Space.sm) end
+        for _, entry in ipairs(entries) do
+            local value, state = Addon:ProjectionValue(projection, character, entry)
+            width = math.max(width, Theme:MeasureText(Theme.Font.body, Addon:FormatLimitCell(value, state, entry, Addon.FormatCell)) + Theme.Space.sm)
+        end
+    end
+    return width
 end
-local function MainFixedWidths(entries)
-    local currencyWidth = Theme:MeasureText(Theme.Font.body, "货币") + Theme.Space.sm
+local function MainFixedWidths(entries, characters, projection)
+    local currencyWidth = Theme:MeasureText(Theme.Font.body, Addon:T("CURRENCY.CURRENCY_219994")) + Theme.Space.sm
     for _, entry in ipairs(entries or {}) do currencyWidth = math.max(currencyWidth, EntryColumnWidth(entry, 16, Theme.Font.body)) end
-    local totalWidth = math.max(Theme:MeasureText(Theme.Font.body, "总计") + Theme.Space.sm, Theme:MeasureText(Theme.Font.body, "29.4万") + Theme.Space.md)
+    local totalWidth = math.max(Theme:MeasureText(Theme.Font.body, Addon:T("CURRENCY.TOTAL_3AF1AC")) + Theme.Space.sm, Theme:MeasureText(Theme.Font.body, Addon:FormatCompact({ quantity = 294000 })) + Theme.Space.md)
+    for _, entry in ipairs(entries or {}) do
+        local total = Addon:ProjectionTotal(projection, characters or {}, entry)
+        local text = Addon:FormatCompact({ quantity = total.quantity }, entry) .. (total.complete and "" or (total.bankPending and "~" or "?"))
+        totalWidth = math.max(totalWidth, Theme:MeasureText(Theme.Font.body, text) + Theme.Space.sm)
+    end
     return currencyWidth, totalWidth
 end
 local function StateColor(kind)
@@ -77,9 +73,9 @@ local function ValueColor(value, state, entry)
 end
 local function SnapshotMeta(character, projection)
     local cached = projection and projection.snapshots[character.id]
-    local economy, items = cached and cached.economy, cached and cached["economy-items"]
-    if not cached then economy, items = Core.DataDomains:Get(character.id, "economy"), Core.DataDomains:Get(character.id, "economy-items") end
-    return math.max(tonumber(economy and economy.updatedAt) or 0, tonumber(items and items.updatedAt) or 0), (economy and economy.state) or (items and items.state) or "not-yet-scanned"
+    local economy, items = cached and cached.native, cached and cached.carriedTokens
+    if not cached then economy, items = Addon.Store:Get(character.id, "native"), Addon.Store:Get(character.id, "carriedTokens") end
+    return math.max(tonumber(economy and economy.observedAt) or 0, tonumber(items and items.observedAt) or 0), (economy and economy.state) or (items and items.state) or "not-yet-scanned"
 end
 
 function Addon:CreateCurrencyPage(parent)
@@ -94,87 +90,35 @@ end
 local function SetCell(cell, text, color, justify)
     cell:SetJustifyH(justify or "CENTER"); cell:SetWordWrap(false); cell:SetText(text); cell:SetTextColor(color[1], color[2], color[3])
 end
-local VAULT_SOURCE_ORDER = { "bags", "mail", "bank", "auction", "equipment", "guild-bank" }
-local VAULT_SOURCE_NAMES = {
-    bags = "背包", mail = "邮件", bank = "个人银行", auction = "拍卖",
-    equipment = "装备", ["guild-bank"] = "公会银行",
-}
-local function VaultSourceText(counts)
-    local parts = {}
-    for _, source in ipairs(VAULT_SOURCE_ORDER) do
-        local quantity = counts and counts[source]
-        if quantity and quantity > 0 then
-            parts[#parts + 1] = VAULT_SOURCE_NAMES[source] .. " " .. BreakUpLargeNumbers(quantity)
-        end
-    end
-    return table.concat(parts, " · ")
-end
-local function AddVaultItemTooltip(entry, characters)
-    local result = Addon:GetVaultItemDetail(entry, characters)
-    if not result then return end
-    GameTooltip:AddLine("Vault 已记录库存 · 独立来源快照", Theme.Colors.accent[1], Theme.Colors.accent[2], Theme.Colors.accent[3])
-    local totalText = VaultSourceText(result.totals.bySource)
-    if totalText == "" then
-        GameTooltip:AddLine("尚无匹配缓存；不代表库存为 0", Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3])
-        return
-    end
-    GameTooltip:AddLine(totalText, Theme.Colors.text[1], Theme.Colors.text[2], Theme.Colors.text[3], true)
-    local byCharacter, stale = {}, {}
-    for _, record in ipairs(result.records) do
-        if record.characterID then
-            local counts = byCharacter[record.characterID] or {}
-            byCharacter[record.characterID] = counts
-            counts[record.source] = (counts[record.source] or 0) + record.quantity
-            if record.state == "stale" then stale[record.characterID] = true end
-        end
-    end
-    local shown, remaining = 0, 0
-    for _, character in ipairs(characters) do
-        local counts = byCharacter[character.id]
-        if counts then
-            if shown < 8 then
-                GameTooltip:AddDoubleLine(DisplayName(character), VaultSourceText(counts) .. (stale[character.id] and " · 旧快照" or ""),
-                    Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3],
-                    Theme.Colors.text[1], Theme.Colors.text[2], Theme.Colors.text[3])
-                shown = shown + 1
-            else remaining = remaining + 1 end
-        end
-    end
-    if remaining > 0 then
-        GameTooltip:AddLine(string.format("其余 %d 名角色见物品仓库", remaining), Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3])
-    end
-end
-local function AddEntryTooltip(row)
+local function AddEntryTooltip(row, character)
     local entry, characters = row.entry, row.tooltipCharacters or {}
+    character = type(character) == "table" and character or row.tooltipCharacter
     if not entry then return end
     GameTooltip:SetOwner(row, "ANCHOR_CURSOR"); GameTooltip:ClearLines()
     GameTooltip:AddLine(entry.title, Theme.Colors.accent[1], Theme.Colors.accent[2], Theme.Colors.accent[3])
-    GameTooltip:AddLine((entry.sourceType or "货币") .. " · " .. entry.id, Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3])
-    GameTooltip:AddLine("状态：" .. (entry.status or "待核验"), Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3])
-    GameTooltip:AddLine("— 不适用  ·  ? 未同步/未知  ·  ~ 数量已确认，个人库存来源未完整扫描", Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3])
     local total = Addon:ProjectionTotal(row.projection, characters, entry)
-    local suffix = total.complete and "" or (total.bankPending and " ~ 个人库存来源未完整扫描" or " ? 有缺失数据")
-    GameTooltip:AddDoubleLine("当前范围总计", Addon:FormatCompact({ quantity = total.quantity }, entry) .. suffix, Theme.Colors.text[1], Theme.Colors.text[2], Theme.Colors.text[3], Theme.Colors.text[1], Theme.Colors.text[2], Theme.Colors.text[3])
-    GameTooltip:AddLine(string.format("已确认 %d 名；缺失 %d 名", total.confirmed, total.missing), Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3])
-    for _, character in ipairs(characters) do
-        local value, state = Addon:ProjectionValue(row.projection, character, entry); local valueText, kind = Addon:FormatLimitCell(value, state, entry, Addon.FormatCell)
-        local detail = Addon:StateDescription(value, state)
+    local suffix = total.complete and "" or (total.bankPending and Addon:T("CURRENCY.INCOMPLETE_PERSONAL_INVENTORY_87D2C2") or Addon:T("CURRENCY.MISSING_DATA_DBC7DE"))
+    GameTooltip:AddDoubleLine(Addon:T("CURRENCY.SCOPE_TOTAL_08CD4A"), Addon:FormatCompact({ quantity = total.quantity }, entry) .. suffix)
+    if character then
+        local value, state = Addon:ProjectionValue(row.projection, character, entry)
+        local text, kind = Addon:FormatLimitCell(value, state, entry, Addon.FormatCell)
+        if kind == "known" or kind == "bank" then text = Addon:FormatExact(value, entry) end
+        GameTooltip:AddDoubleLine(DisplayName(character), text)
         local weekly = Addon:FormatWeeklyProgress(value, entry)
-        local capState = Addon:GetLimitState(value, entry)
-        local capHint = capState == "capped" and "已达上限" or (capState == "near-cap" and "接近上限（≥80%）" or nil)
-        local exact = (kind == "known" or kind == "bank") and ("（" .. Addon:FormatExact(value, entry) .. "）") or ""
-        local valueColor = ValueColor(value, state, entry)
-        GameTooltip:AddDoubleLine(DisplayName(character), valueText .. exact .. (weekly and " · " .. weekly or "") .. (capHint and " · " .. capHint or "") .. (detail and " · " .. detail or ""), Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3], valueColor[1], valueColor[2], valueColor[3])
+        if weekly then GameTooltip:AddLine(weekly, Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3]) end
+        if state ~= "known" then
+            local detail = Addon:StateDescription(value, state)
+            if detail then GameTooltip:AddLine(detail, Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3]) end
+        end
     end
-    if entry.source == "item" then AddVaultItemTooltip(entry, characters) end
-    GameTooltip:AddLine("右键：切换悬停监控", Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3])
+    GameTooltip:AddLine(Addon:T("CURRENCY.RIGHT_CLICK_TOGGLE_HOVER_SELECTION_1603F1"), Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3])
     GameTooltip:Show()
 end
 
 local function ConfigureToolbar(parent, characters, shown, pageInfo)
     local toolbar = parent.currencyToolbar; toolbar:SetShown(true)
     local label = toolbar.label or Text(toolbar, "LEFT"); toolbar.label = label; label:ClearAllPoints(); label:SetPoint("LEFT", 0, 0)
-    label:SetText(string.format("%d 项货币 · %d 名角色", #Addon:GetCatalog(), #characters)); label:SetTextColor(Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3]); label:Show()
+    label:SetText(string.format(Addon:T("CURRENCY.D_CURRENCIES_D_CHARACTERS_6366E6"), #Addon:GetCatalog(), #characters)); label:SetTextColor(Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3]); label:Show()
     -- The page summary belongs to this toolbar, but all paging chrome belongs
     -- to Core at the matrix header. Hide any legacy controls retained by an
     -- already-created frame pool.
@@ -193,7 +137,7 @@ end
 
 local function Layout(parent, context, columns, rows, preview, projection)
     HideEmptyHover(parent)
-    local inset = Theme:GetMatrixInsets(preview); local headerHeight = preview and Theme.Table.headerHeight or Theme:GetCharacterHeaderHeight(context)
+    local inset = Theme:GetMatrixInsets(preview); local headerHeight = Theme:GetCharacterHeaderHeight(context)
     parent.currencyToolbar:ClearAllPoints()
     if preview then parent.currencyToolbar:Hide()
     else parent.currencyToolbar:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top); parent.currencyToolbar:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -inset.right, -inset.top); parent.currencyToolbar:SetHeight(Theme.Size.compact); parent.currencyToolbar:Show() end
@@ -206,8 +150,8 @@ local function Layout(parent, context, columns, rows, preview, projection)
     for index, column in ipairs(columns) do
         column.x = x; local header = parent.currencyHeaders[index] or Theme:CreateMatrixHeader(parent.currencyHeader); parent.currencyHeaders[index] = header
         header:ClearAllPoints(); header:SetPoint("TOPLEFT", parent.currencyHeader, "TOPLEFT", x, 0); header:SetSize(column.width, headerHeight)
-        if column.character then local updated, state = SnapshotMeta(column.character, projection); Theme:SetCharacterHeader(header, column.character, context, { name=DisplayName(column.character), color=CharacterColor(column.character), updatedAt=updated, state=state, recovery="登录该角色后同步货币与银行数据。" })
-        else Theme:SetMatrixHeader(header, column.title, { height=headerHeight, justify=column.justify or "LEFT", color=Theme.Colors.muted, inset=1 }); PinHeaderToDivider(header, 1); header:SetScript("OnEnter", nil); header:SetScript("OnLeave", nil) end
+        if column.character then local updated, state = SnapshotMeta(column.character, projection); Theme:SetCharacterHeader(header, column.character, context, { color=CharacterColor(column.character), updatedAt=updated, state=state, recovery=Addon:T("CURRENCY.LOG_IN_TO_SYNC_CURRENCY_AND_BANK_DATA_73D2FF") })
+        else Theme:SetMatrixHeader(header, column.entry and IconText(column.entry, 16) or column.title, { height=headerHeight, justify=column.justify or "LEFT", color=Theme.Colors.muted, inset=1 }); PinHeaderToDivider(header, 1); header:SetScript("OnEnter", nil); header:SetScript("OnLeave", nil) end
         if not preview and current and column.character and column.character.id == current.id then currentX, currentWidth = x, column.width end
         x = x + column.width
     end
@@ -220,40 +164,67 @@ local function Layout(parent, context, columns, rows, preview, projection)
         if row.currentOutline then Theme:SetCurrentCharacterOutline(row.currentOutline, false) end
         for ci, column in ipairs(columns) do
             local cell = row.cells[ci] or Text(row, column.justify or "CENTER"); row.cells[ci] = cell; cell:ClearAllPoints(); cell:SetPoint("LEFT", row, "LEFT", column.x + Theme.Space.xs, 0); cell:SetWidth(column.width - Theme.Space.sm)
-            if column.kind == "currency" then SetCell(cell, IconText(entry, 16), Theme.Colors.text, "LEFT")
+            if column.kind == "identity" then
+                SetCell(cell, entry.character and DisplayName(entry.character) or Addon:T("CURRENCY.TOTAL_3AF1AC"), entry.character and CharacterColor(entry.character) or Theme.Colors.muted, "LEFT")
+            elseif column.entry then
+                if entry.kind == "total" then
+                    local total = Addon:ProjectionTotal(projection, row.tooltipCharacters, column.entry)
+                    SetCell(cell, Addon:FormatCompact({ quantity = total.quantity }, column.entry) .. (total.complete and "" or (total.bankPending and "~" or "?")), total.complete and Theme.Colors.text or Theme.Colors.muted, "CENTER")
+                else
+                    local value, state = Addon:ProjectionValue(projection, entry.character, column.entry)
+                    SetCell(cell, Addon:FormatLimitCell(value, state, column.entry, Addon.FormatCell), ValueColor(value, state, column.entry), "CENTER")
+                end
+            elseif column.kind == "currency" then SetCell(cell, IconText(entry, 16), Theme.Colors.text, "LEFT")
             elseif column.kind == "total" then local total = Addon:ProjectionTotal(projection, row.tooltipCharacters or {}, entry); local text = Addon:FormatCompact({ quantity=total.quantity }, entry) .. (total.complete and "" or (total.bankPending and "~" or "?")); SetCell(cell, text, total.complete and Theme.Colors.text or Theme.Colors.muted, "CENTER")
             else local value, state = Addon:ProjectionValue(projection, column.character, entry); local text, kind = Addon:FormatLimitCell(value, state, entry, Addon.FormatCell); SetCell(cell, text, ValueColor(value, state, entry), "CENTER") end
             cell:Show()
         end
         for ci = #columns + 1, #row.cells do row.cells[ci]:Hide() end
         for _, icon in pairs(row.icons or {}) do icon:Hide() end
-        row:SetScript("OnEnter", AddEntryTooltip); row:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        row:SetScript("OnEnter", AddEntryTooltip); if entry.kind then row:SetScript("OnEnter", nil) end; row:SetScript("OnLeave", function() GameTooltip:Hide() end)
         -- Buttons only receive the left mouse button by default.  Monitoring
         -- is intentionally a secondary action so a right-click must be
         -- explicitly registered; otherwise the handler below is unreachable.
         row:RegisterForClicks("RightButtonUp")
         row:SetScript("OnClick", function(_, button)
-            if button ~= "RightButton" then return end
-            if rowEntry.isCustom then
-                Addon:ConfirmRemoveCustomItem(rowEntry.itemID, nil, parent)
-                return
-            end
+            if button ~= "RightButton" or rowEntry.kind then return end
             local enabling = not Addon:IsMonitored(rowEntry)
             local ok, err = Addon:SetMonitored(rowEntry, enabling)
             if not ok then Addon:Print(err); return end
-            Addon:Print((enabling and "已加入悬停监控：" or "已取消悬停监控：") .. rowEntry.title)
-            Addon:NotifyChanged()
+            Addon:Print(Addon:T(enabling and "UI.MONITOR_ADDED" or "UI.MONITOR_REMOVED", rowEntry.title))
         end)
         row.goalHits = row.goalHits or {}
         for _, hit in pairs(row.goalHits) do hit:Hide(); if Core.BusinessItemActions then Core.BusinessItemActions:Unbind(hit) end end
-        if Addon.GoalTargets and Addon.GoalTargets.ref and not preview and (entry.source == "currency" or entry.source == "money") then
+        if entry.kind then
+            for ci, column in ipairs(columns) do if column.entry then
+                local selectedEntry = column.entry
+                local hit = row.goalHits[ci] or CreateFrame("Button", nil, row); row.goalHits[ci] = hit
+                hit:ClearAllPoints(); hit:SetAllPoints(row.cells[ci]); hit:SetFrameLevel(row:GetFrameLevel() + 2)
+                hit.entry, hit.tooltipCharacters, hit.projection, hit.tooltipCharacter = selectedEntry, row.tooltipCharacters, projection, entry.character
+                hit:SetScript("OnEnter", AddEntryTooltip); hit:SetScript("OnLeave", function() GameTooltip:Hide() end)
+                hit:RegisterForClicks("RightButtonUp")
+                hit:SetScript("OnClick", function() Addon:SetMonitored(selectedEntry, not Addon:IsMonitored(selectedEntry)) end); hit:Show()
+            end end
+        end
+        if not entry.kind then
             for ci, column in ipairs(columns) do if column.character or column.kind == "currency" then
                 local hit = row.goalHits[ci] or CreateFrame("Button", nil, row); row.goalHits[ci] = hit
                 hit:ClearAllPoints(); hit:SetAllPoints(row.cells[ci]); hit:SetFrameLevel(row:GetFrameLevel() + 2)
-                Addon.GoalTargets:Bind(hit, entry.id, column.character and column.character.id, row:GetScript("OnClick"))
-                hit:SetScript("OnEnter", function() AddEntryTooltip(row); GameTooltip:AddLine(Core.BusinessItemActions:GestureLabel() .. "：添加到行动中心；＋：添加菜单"); GameTooltip:Show() end)
+                local target = column.character
+                hit.entry, hit.tooltipCharacters, hit.projection, hit.tooltipCharacter = nil, nil, nil, nil
+                hit:RegisterForClicks("RightButtonUp"); hit:SetScript("OnClick", row:GetScript("OnClick"))
+                local goals = Addon.GoalTargets and Addon.GoalTargets.ref and not preview and (entry.source == "currency" or entry.source == "money")
+                if goals then Addon.GoalTargets:Bind(hit, entry.id, target and target.id, row:GetScript("OnClick")) end
+                hit:SetScript("OnEnter", function()
+                    AddEntryTooltip(row, target)
+                    if goals then GameTooltip:AddLine(Addon:T("UI.GOAL_HINT", Core.BusinessItemActions:GestureLabel())); GameTooltip:Show() end
+                end)
                 hit:SetScript("OnLeave", function() GameTooltip:Hide() end); hit:Show()
             end end
+        end
+        if entry.character then
+            row.currentOutline = row.currentOutline or Theme:CreateCurrentCharacterOutline(row)
+            Theme:SetCurrentCharacterOutline(row.currentOutline, current and current.id == entry.character.id)
         end
         row:Show(); y = y + ROW_HEIGHT
     end
@@ -262,41 +233,62 @@ local function Layout(parent, context, columns, rows, preview, projection)
     Theme:UpdateCurrentCharacterColumnOutline(parent.currentColumnOutline, parent.currencyHeader, parent.currencyScroll, currentX, currentWidth, currentX ~= nil)
 end
 
+local function TransposedColumns(characters, entries, projection, context)
+    local columns = { { kind = "identity", title = Addon:T("CURRENCY.CHARACTERS_6B2669"),
+        width = Theme:GetCharacterRowHeaderWidth(false, context, characters), justify = "LEFT" } }
+    for _, entry in ipairs(entries) do
+        local width = EntryColumnWidth(entry, 16, Theme.Font.body)
+        local total = Addon:ProjectionTotal(projection, characters, entry)
+        width = math.max(width, Theme:MeasureText(Theme.Font.body, Addon:FormatCompact({ quantity = total.quantity }, entry) .. "~") + Theme.Space.sm)
+        for _, character in ipairs(characters) do
+            local value, state = Addon:ProjectionValue(projection, character, entry)
+            width = math.max(width, Theme:MeasureText(Theme.Font.body, Addon:FormatLimitCell(value, state, entry, Addon.FormatCell)) + Theme.Space.sm)
+        end
+        columns[#columns + 1] = { entry = entry, width = width, justify = "CENTER" }
+    end
+    return columns
+end
+
 function Addon:RefreshCurrencyPage(parent, context)
-    local preview = context.preview == true; local characters = Eligible(context.characters); local entries = preview and self:GetMonitoredCatalog() or {}
-    if not preview then for _, entry in ipairs(self:GetCatalog()) do if self:IsVisible(entry) then entries[#entries + 1] = entry end end end
+    local preview = context.preview == true
+    local characters = Eligible(context.characters)
+    local entries = self:GetDisplayCatalog(preview)
     local projection = self:GetCurrencyProjection(context, characters, entries)
-    if preview and #entries == 0 then
-        self:LayoutEmptyHover(parent, "尚未选择悬停监控货币", "在主矩阵中右键货币，或在“货币总览”设置中勾选“悬停监控”。")
+    if #entries == 0 then
+        self:LayoutEmptyHover(parent, Addon:T("CURRENCY.NO_CURRENCIES_SELECTED_A32524"), Addon:T("CURRENCY.CHOOSE_MAIN_VIEW_OR_HOVER_CURRENCIES_IN_CORE_SETTINGS_D_E1E09E"))
         return
     end
     local inset = Theme:GetMatrixInsets(preview)
-    -- The complete catalog is vertically scrollable in the main matrix.  Its
-    -- shared scrollbar lives in a 14px gutter beside the data viewport, so it
-    -- must participate in the character-column budget.  Otherwise the last
-    -- column is laid out underneath that gutter once the thumb appears.
-    local scrollbarGutter = 0
-    local available = math.max(1, (tonumber(context.surfaceAvailableWidth) or parent:GetWidth() or 1) - inset.left - inset.right - scrollbarGutter)
+    local available = math.max(1, (tonumber(context.surfaceAvailableWidth) or parent:GetWidth() or 1) - inset.left - inset.right)
+    local transposed = preview and self:GetSettings().hoverTranspose
+    local rowCount = transposed and (#characters + 1) or #entries
+    local fixedHeight = inset.top + inset.bottom + Theme:GetCharacterHeaderHeight(context)
+        + (preview and 0 or Theme.Size.compact + Theme.Space.sm)
+    available = math.max(1, Core.AccountView:GetScrollSurfaceWidth(context, parent, rowCount * ROW_HEIGHT, fixedHeight) - inset.left - inset.right)
     local columns, shown, pageInfo
-    if preview then
-        columns = { { kind="currency", title="角色", width=CharacterLabelColumnWidth(characters, context), justify="LEFT" } }
-        for _, entry in ipairs(entries) do columns[#columns + 1] = { kind="preview-entry", entry=entry, title=entry.shortTitle or entry.title, width=PreviewColumnWidth(entry, characters, projection), justify="CENTER" } end
-        -- The hover is transposed: construct character rows below, not currency rows.
-        local characterRows = {}; for _, character in ipairs(characters) do characterRows[#characterRows + 1] = character end
-        if #characterRows == 0 then characterRows[1] = { id="empty", name="暂无已同步角色" } end
-        parent.currencyToolbar:Hide()
-        -- A specialized row renderer keeps the preview semantically distinct from the main matrix.
-        self:LayoutHover(parent, context, columns, characterRows, entries, projection); return
+    if transposed then
+        columns = TransposedColumns(characters, entries, projection, context)
+        local fieldColumns = {}; for i = 2, #columns do fieldColumns[#fieldColumns + 1] = columns[i] end
+        local visible; visible, pageInfo = Core.AccountView:GetColumnPageByWidth(PAGE_ID, "hover-transpose", fieldColumns, available, columns[1].width, function(column) return column.width end)
+        local identity = columns[1]; columns = { identity }; for _, column in ipairs(visible) do columns[#columns + 1] = column end
+        local rows = { { kind = "total", tooltipCharacters = characters } }
+        for _, character in ipairs(characters) do rows[#rows + 1] = { kind = "character", character = character, tooltipCharacters = characters } end
+        Layout(parent, context, columns, rows, true, projection)
+        Core.AccountView:UpdateColumnPager(parent, PAGE_ID, "hover-transpose", pageInfo, parent.currencyHeader, Addon:T("CURRENCY.CURRENCY_219994"))
+        return
     end
-    local currencyWidth, totalWidth = MainFixedWidths(entries)
+    local currencyWidth, totalWidth = MainFixedWidths(entries, characters, projection)
     local characterWidth = CharacterColumnWidth(characters, context, entries, projection)
+    local minimum = MinimumCharacterWidth(characters, context, entries, projection)
+    currencyWidth = math.min(currencyWidth, math.max(160, available - totalWidth - #characters * minimum))
+    characterWidth = Core.AccountView:FitRepeatedColumnWidth(available, currencyWidth + totalWidth, #characters, characterWidth, minimum)
     shown, pageInfo = Core.AccountView:GetColumnPage(PAGE_ID, "matrix", characters, available, currencyWidth + totalWidth, characterWidth)
     ConfigureToolbar(parent, characters, shown, pageInfo)
-    columns = { { kind="currency", title="货币", width=currencyWidth, justify="LEFT" }, { kind="total", title="总计", width=totalWidth, justify="CENTER" } }
+    columns = { { kind="currency", title=Addon:T("CURRENCY.CURRENCY_219994"), width=currencyWidth, justify="LEFT" }, { kind="total", title=Addon:T("CURRENCY.TOTAL_3AF1AC"), width=totalWidth, justify="CENTER" } }
     for _, character in ipairs(shown) do columns[#columns + 1] = { kind="character", character=character, width=characterWidth, justify="CENTER" } end
     for _, entry in ipairs(entries) do entry.tooltipCharacters = characters end
-    Layout(parent, context, columns, entries, false, projection)
-    Core.AccountView:UpdateColumnPager(parent, PAGE_ID, "matrix", pageInfo, parent.currencyHeader, "角色")
+    Layout(parent, context, columns, entries, preview, projection)
+    Core.AccountView:UpdateColumnPager(parent, PAGE_ID, "matrix", pageInfo, parent.currencyHeader, Addon:T("CURRENCY.CHARACTERS_6B2669"))
 end
 
 function Addon:LayoutEmptyHover(parent, title, hint)
@@ -315,42 +307,33 @@ function Addon:LayoutEmptyHover(parent, title, hint)
     parent.currencyBody:SetSize(420, 68); parent.currencyScroll:SetContentHeight(68); parent.currencyScroll:RefreshScrollbar(); Theme:SetCurrentCharacterOutline(parent.currentColumnOutline, false)
 end
 
-function Addon:LayoutHover(parent, context, columns, characters, entries, projection)
-    HideEmptyHover(parent)
-    local inset, headerHeight = Theme:GetMatrixInsets(true), Theme.Table.headerHeight; parent.currencyHeader:ClearAllPoints(); parent.currencyHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top); parent.currencyHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -inset.right, -inset.top); parent.currencyHeader:SetHeight(headerHeight); parent.currencyHeader:Show()
-    parent.currencyScroll:ClearAllPoints(); parent.currencyScroll:SetPoint("TOPLEFT", parent.currencyHeader, "BOTTOMLEFT"); parent.currencyScroll:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset.right, inset.bottom)
-    local x = 0; for index, column in ipairs(columns) do local headerInset = index == 1 and 1 or 2; column.x=x; local header=parent.currencyHeaders[index] or Theme:CreateMatrixHeader(parent.currencyHeader); parent.currencyHeaders[index]=header; header:ClearAllPoints(); header:SetPoint("TOPLEFT", parent.currencyHeader,"TOPLEFT",x,0); header:SetSize(column.width,headerHeight); Theme:SetMatrixHeader(header,column.title,{height=headerHeight,justify=column.justify,color=Theme.Colors.muted,inset=headerInset}); PinHeaderToDivider(header, headerInset); if column.entry then Theme:BindTooltip(header,column.entry.title,{{kind="pair",label="来源",value=column.entry.sourceType or "货币"},{kind="pair",label="状态",value=column.entry.status or "待核验"},{kind="pair",label="稳定 ID",value=column.entry.id}}) else header:SetScript("OnEnter",nil); header:SetScript("OnLeave",nil) end; header:Show(); x=x+column.width end
-    for index=#columns+1,#parent.currencyHeaders do parent.currencyHeaders[index]:Hide() end
-    local current = Core.Characters:GetCurrent()
-    local function DrawRow(index, character, total)
-        local row=parent.currencyRows[index] or CreateFrame("Button",nil,parent.currencyBody,"BackdropTemplate"); parent.currencyRows[index]=row; row:ClearAllPoints(); row:SetPoint("TOPLEFT",parent.currencyBody,"TOPLEFT",0,-((index-1)*ROW_HEIGHT)); row:SetSize(x,ROW_HEIGHT); row:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8x8"}); local bg=Theme:GetDataRowColor(index); row:SetBackdropColor(bg[1],bg[2],bg[3],bg[4] or 1); row.cells=row.cells or {}; row.icons=row.icons or {}
-        row.currentOutline = row.currentOutline or Theme:CreateCurrentCharacterOutline(row)
-        Theme:SetCurrentCharacterOutline(row.currentOutline, not total and current and character and character.id == current.id)
-        for ci,column in ipairs(columns) do local cell=row.cells[ci] or Text(row,column.justify); row.cells[ci]=cell; cell:ClearAllPoints(); cell:SetPoint("LEFT",row,"LEFT",column.x+Theme.Space.xs,0); cell:SetWidth(column.width-Theme.Space.sm)
-            if column.kind == "currency" then SetCell(cell,total and "总计" or DisplayIdentity(character, context),total and Theme.Colors.accent or CharacterColor(character),"LEFT")
-            else local entry=column.entry; local icon=row.icons[ci] or row:CreateTexture(nil,"OVERLAY"); row.icons[ci]=icon; icon:ClearAllPoints(); icon:SetPoint("RIGHT",row,"LEFT",column.x+column.width-Theme.Space.xxs,0); icon:SetSize(16,16); icon:SetTexture(Addon:GetIcon(entry)); icon:Show(); cell:SetWidth(column.width-16-Theme.Space.xxs*3)
-                if entry.source == "empty" then SetCell(cell,"",Theme.Colors.muted,"RIGHT") elseif total then local summary=Addon:ProjectionTotal(projection,characters,entry); local value=Addon:FormatFull({quantity=summary.quantity},entry)..(summary.complete and "" or (summary.bankPending and "~" or "?")); SetCell(cell,value,summary.complete and Theme.Colors.text or Theme.Colors.muted,"RIGHT") else local value,state=Addon:ProjectionValue(projection,character,entry); local valueText,kind=Addon:FormatLimitCell(value,state,entry,Addon.FormatFullCell); SetCell(cell,valueText,ValueColor(value,state,entry),"RIGHT") end end; cell:Show()
-            if ci == 1 and row.icons[ci] then row.icons[ci]:Hide() end
-        end
-        for ci=#columns+1,#row.cells do row.cells[ci]:Hide() end; for ci,icon in pairs(row.icons) do if ci > #columns then icon:Hide() end end; row:Show()
-    end
-    for index,character in ipairs(characters) do DrawRow(index,character,false) end; DrawRow(#characters+1,nil,true)
-    for index=#characters+2,#parent.currencyRows do parent.currencyRows[index]:Hide() end
-    parent.currencyBody:SetSize(x, math.max(1,(#characters+1)*ROW_HEIGHT)); parent.currencyScroll:SetContentHeight(parent.currencyBody:GetHeight()); parent.currencyScroll:RefreshScrollbar(); Theme:SetCurrentCharacterOutline(parent.currentColumnOutline,false)
-end
-
 function Addon:GetCurrencySurfaceMetrics(context)
-    local preview=context and context.preview; local inset=Theme:GetMatrixInsets(preview); local characters=Eligible(context and context.characters or {}); local entries=preview and self:GetMonitoredCatalog() or self:GetCatalog()
+    local preview = context.preview == true
+    local inset = Theme:GetMatrixInsets(preview)
+    local characters, entries = Eligible(context.characters), self:GetDisplayCatalog(preview)
     local projection = self:GetCurrencyProjection(context, characters, entries)
-    if preview and #entries == 0 then return { minContentWidth=420+inset.left+inset.right, naturalContentWidth=420+inset.left+inset.right, minContentHeight=68+inset.top+inset.bottom, naturalContentHeight=68+inset.top+inset.bottom, horizontalOverflow="none",verticalOverflow="none" } end
-    if preview then
-        local width = CharacterLabelColumnWidth(characters, context)
-        for _, entry in ipairs(entries) do width = width + PreviewColumnWidth(entry, characters, projection) end
-        return { minContentWidth=width+inset.left+inset.right, naturalContentWidth=width+inset.left+inset.right, minContentHeight=inset.top+Theme.Table.headerHeight+ROW_HEIGHT+inset.bottom, naturalContentHeight=inset.top+Theme.Table.headerHeight+math.min(#characters+1,21)*ROW_HEIGHT+inset.bottom, fixedLeftWidth=CharacterLabelColumnWidth(characters, context),fixedTopHeight=Theme.Table.headerHeight,horizontalOverflow="content",verticalOverflow="content" }
+    if #entries == 0 then
+        return { minContentWidth = 420 + inset.left + inset.right, naturalContentWidth = 420 + inset.left + inset.right,
+            minContentHeight = 68 + inset.top + inset.bottom, naturalContentHeight = 68 + inset.top + inset.bottom,
+            horizontalOverflow = "none", verticalOverflow = "none" }
     end
-    local currencyWidth, totalWidth = MainFixedWidths(entries); local characterWidth = 0
+    if preview and self:GetSettings().hoverTranspose then
+        local columns = TransposedColumns(characters, entries, projection, context)
+        local width = inset.left + inset.right
+        for _, column in ipairs(columns) do width = width + column.width end
+        local fixedHeight = inset.top + Theme:GetCharacterHeaderHeight(context) + inset.bottom
+        return { minContentWidth = columns[1].width + (columns[2] and columns[2].width or 0) + inset.left + inset.right,
+            naturalContentWidth = width, scrollContentHeight = (#characters + 1) * ROW_HEIGHT, scrollFixedHeight = fixedHeight, minContentHeight = fixedHeight + ROW_HEIGHT,
+            naturalContentHeight = fixedHeight + (#characters + 1) * ROW_HEIGHT, horizontalOverflow = "paginate", verticalOverflow = "content" }
+    end
+    local currencyWidth, totalWidth = MainFixedWidths(entries, characters, projection)
     local columnWidth = CharacterColumnWidth(characters, context, entries, projection)
-    for _ = 1, #characters do characterWidth = characterWidth + columnWidth end
-    local width=currencyWidth+totalWidth+characterWidth
-    return { minContentWidth=currencyWidth+totalWidth+(characters[1] and columnWidth or Theme:GetCharacterMatrixColumnWidth(context))+inset.left+inset.right,naturalContentWidth=width+inset.left+inset.right,minContentHeight=inset.top+Theme.Size.compact+Theme.Space.sm+Theme.Table.headerHeight+ROW_HEIGHT+inset.bottom,naturalContentHeight=inset.top+Theme.Size.compact+Theme.Space.sm+Theme.Table.headerHeight+math.min(#entries,20)*ROW_HEIGHT+inset.bottom,fixedLeftWidth=currencyWidth+totalWidth,fixedTopHeight=Theme.Table.headerHeight,horizontalOverflow="paginate",verticalOverflow="content" }
+    local fixedHeight = inset.top + Theme:GetCharacterHeaderHeight(context) + inset.bottom
+        + (preview and 0 or Theme.Size.compact + Theme.Space.sm)
+    return { minContentWidth = currencyWidth + totalWidth + (#characters > 0 and columnWidth or 0) + inset.left + inset.right,
+        naturalContentWidth = currencyWidth + totalWidth + #characters * columnWidth + inset.left + inset.right,
+        scrollContentHeight = #entries * ROW_HEIGHT, scrollFixedHeight = fixedHeight,
+        minContentHeight = fixedHeight + ROW_HEIGHT, naturalContentHeight = fixedHeight + math.min(#entries, 20) * ROW_HEIGHT,
+        fixedLeftWidth = currencyWidth + totalWidth, fixedTopHeight = Theme:GetCharacterHeaderHeight(context),
+        horizontalOverflow = "paginate", verticalOverflow = "content" }
 end

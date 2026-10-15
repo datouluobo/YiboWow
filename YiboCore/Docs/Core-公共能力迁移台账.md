@@ -4,9 +4,9 @@
 
 2026-10-15 YiboReputation 数据归属改造已按[迁移方案](../../YiboReputation/Docs/声望数据归属迁移方案.md)实施：Core 1.12.4 停止声望采集，Reputation 1.7.1 接管采集、目录与新存储，旧快照通过公开接口一次性导入且冻结保留。87 项专项与独立悬停检查通过，真实客户端存档尚未迁移／验收；详见[实施记录](../../YiboReputation/Docs/声望数据归属迁移-实施与验收记录.md)。
 
-> 最近更新：2026-10-15。首次审查：2026-10-07。
+> 最近更新：2026-10-16。首次审查：2026-10-07。
 >
-> **当前工作树：Core 1.12.4 / API 13。** Crafting 集中接入基线为 Core 1.12.0 / Crafting 1.2.0；当前适用调用、版本检查及离线检查已完成，游戏内双语、入口与性能验收待完成。各能力与插件状态仍按各自验证边界记录。详见 [Crafting 完整接入清单](../../YiboCrafting/Docs/Core-API13-完整接入.md)。YiboReputation 1.7.1 API13 接入与数据归属迁移代码已完成，客户端待验收。
+> **当前工作树：Core 1.12.6 / API 13。** Crafting 集中接入基线为 Core 1.12.0 / Crafting 1.2.0；当前适用调用、版本检查及离线检查已完成，游戏内双语、入口与性能验收待完成。各能力与插件状态仍按各自验证边界记录。详见 [Crafting 完整接入清单](../../YiboCrafting/Docs/Core-API13-完整接入.md)。YiboReputation 1.7.1 API13 接入与数据归属迁移代码已完成，客户端待验收。
 >
 > 近期历史基线：2026-10-10 主动添加实施使用 Core 1.11.0 / API 12，TaskHub 0.5.0 / schema 4 接入九个来源；230 项目标检查、672 项既有集成及相关回归通过，客户端待验收，未发布。2026-10-09 O1 实施使用 Core 1.10.0 / API 11，提供 `business-providers:1` 与 List；ContractsSpec 90 项、RuntimePerformanceSpec、CharacterNamesSpec 77 项、MailProviderSpec、VaultIntegrationSpec、InboxReleaseSpec 及 Core TOC 45 个 Lua 5.1 文件语法检查通过。两项均为历史工作树记录，不代表当前发布状态。
 
@@ -27,6 +27,7 @@
 - [CAP-007：轻量角色身份投影](#cap-007轻量角色身份投影)
 - [CAP-008：业务项目主动添加](#cap-008业务项目主动添加)
 - [CAP-009：语言服务与账号语言偏好](#cap-009公共语言服务与账号语言偏好)
+- [CAP-010：角色缓存所有者与延后清理](#cap-010角色缓存所有者与延后清理)
 - [后续方向与实现状态](#后续方向与实现状态)
 - [其他现有能力索引](#其他现有能力索引)
 - [首次审查待处理项](#首次审查待处理项)
@@ -97,23 +98,25 @@ YiboMounts 1.0.0 已按 API13 接入 `localization:1` 和 API v6 独立设置注
 | CAP-005 | 通用跨业务能力连接 | 已提供（Service 与 Provider） | Service 最低 API v9 / business-services:1；Provider 工作树 Core 1.10.0 / API v11 / business-providers:1，未发布；文档见 API-v11 | Mail／Vault／Currency 已有 Service；Todo／Mail 输出三个 action.todo，TaskHub 通用消费 | ContractsSpec 90 项、TaskHub 集成与展示 327 项及邮件回归通过；主页面外观已确认，新来源和 O4 客户端待验收 |
 | CAP-006 | 页面首次打开提示 | 已提供 | Core 1.9.0 / API v10、account-view:2；v1.9.0-api10 上传中，包含 api9 | Core 概览及 Builds／Reputation／Todo 已写入 firstUseTip，业务检查 API v10 与能力；仅静态核对，记部分接入 | 与 api9 同批核对；自动化契约和低版本停止验证、游戏内一次性／预览／超时验收 |
 
+| CAP-010 | 角色缓存所有者与延后清理 | 已提供（工作树） | Core1.12.4工作树 / API13 / `character-cleanup:2`，v1调用兼容；[契约](API-v13-档案业务字段与清理所有者.md) | Currency显式检查2，离线通过、客户端待验；Reputation既有消费者126项通过；其它所有者待评估v2特性 | 禁用／重新启用后清理与真实存档验收 |
+
 ### 当前插件最低版本与依赖基线
 
 以下均于 2026-10-08 按工作树复核。数字表示初始化检查和 RegisterAddon 声明，不表示已接入该版本的全部能力；TOC 版本号没有随部分工作树修改提高，不能当作已发布接入版本。
 
 | 插件技术名 | 最低 Core API | TOC Core 依赖 | 已检查的新能力 / 主要缺口 |
 | --- | --- | --- | --- |
-| YiboAltoBoss | 13（基础与增强） | RequiredDeps | 工作树副本状态／悬停使用 localization:1；五人本 DBM 可选桥接使用 events:1，目标增强继续要求 business-services:1 / business-providers:1；旧设置库存见 AUD-005 |
+| YiboAltoBoss | 13（基础与增强） | RequiredDeps | 工作树副本状态／悬停使用 localization:1；五人本 DBM 可选桥接使用 events:1，目标增强继续要求 business-services:1 / business-providers:1；旧设置库存见 AUD-005 ；2026-10-16本轮矩阵接入另检查account-surface-budget:2及实际方法 |
 | YiboAutoOpen | 6（可选设置） | OptionalDeps | 独立基础队列保留；本地输入与解析待评估 |
 | YiboBeastPaths | 13（可选维护页；1.7.0 工作树） | OptionalDeps（各客户端 TOC） | 固定 Core 1.12.1 基线；检查 localization:1、basic-input:1、account-view:2、account-surface-budget:1；独立路线功能保留 / 2026-10-13 |
 | YiboBuilds | 13 | RequiredDeps | Core1.12.5；localization:1、character-name-format:1、character-identity:1、account-view:2、account-entry:2、character-cleanup:2、business-providers:1、business-item-actions:1；客户端待验 |
 | YiboCrafting | 8 | RequiredDeps | character-name-format:1、item-resolver:1；共享角色表头／FormatName 方法检查，搜索输入待迁移 |
-| YiboCurrency | 9 | RequiredDeps | business-services:1；检查物品控件方法；仍有 OptionalDeps: YiboVault，见 AUD-007 |
-| YiboLegendary | 13 | RequiredDeps | 工作树 2.2.0 检查 `localization:1`、`character-name-format:1`、`account-view:2`、`account-entry:2` 与所需方法；路线静态文案仍有大量未迁移项 |
+| YiboCurrency | 13 | RequiredDeps | 0.9.1工作树：Core1.12.4工作树、account-dynamic-fields:1、character-archive-providers:1、character-cleanup:2及实际接入能力；Vault仅经契约发现，无TOC业务依赖 |
+| YiboLegendary | 13 | RequiredDeps | 工作树 2.2.0 检查 `localization:1`、`character-name-format:1`、`account-view:2`、`account-entry:2` 与所需方法；路线静态文案仍有大量未迁移项 ；2026-10-16本轮矩阵接入另检查account-surface-budget:2及实际方法 |
 | YiboMail | 13；action.todo 提醒 11 | RequiredDeps | 1.2.9-api1 基础业务要求 localization:1、business-services:1、character-name-format:1、basic-input:1、item-resolver:1、item-picker:2、character-identity:1、characters:1、character-cleanup:1、account-view:2、account-character-admission:1、account-surface-budget:1、account-entry:2；邮件目标操作要求 business-item-actions:1；action.todo 新邮件提醒单独要求 business-providers:1，不足仅停止对应可选功能 |
 | YiboMounts | 13（可选 Core 设置／语言增强） | OptionalDeps | 1.0.0：Core v6 设置面板与 API13 localization:1；Core 缺失或不兼容时来源 Tooltip 独立运行，见 Core-API13-接入说明 |
-| YiboQuestBlocker | 13；localization:1、character-name-format:1、basic-input:1、account-view:2、account-entry:2 | RequiredDeps | 工作树 3.1.0；版本不足时提示升级并停止初始化 |
-| YiboReputation | 13（工作树 1.7.1；最低 Core1.12.4） | RequiredDeps | localization:1、account-view:2、account-surface-budget:1、data-domains:1、events:1、basic-input:1、character-name-format:1、character-identity:1、character-cleanup:1；迁移检查 GetDefinitions 与停采集状态；目标增强另检查 API12 / business-item-actions:1、business-providers:1、character-identity:1 |
+| YiboQuestBlocker | 13；localization:1、character-name-format:1、basic-input:1、account-view:2、account-entry:2 | RequiredDeps | 工作树 3.1.0；版本不足时提示升级并停止初始化 ；2026-10-16本轮矩阵接入另检查account-surface-budget:2及实际方法 |
+| YiboReputation | 13（工作树 1.7.1；最低 Core1.12.4） | RequiredDeps | localization:1、account-view:2、account-surface-budget:2、data-domains:1、events:1、basic-input:1、character-name-format:1、character-identity:1、character-cleanup:1；迁移检查 GetDefinitions 与停采集状态；目标增强另检查 API12 / business-item-actions:1、business-providers:1、character-identity:1 |
 | YiboTaskHub | 11 | RequiredDeps | 0.4.0 增加 Service 双向查询、basic-input:1 与 CreateBusinessTabs／CreateInput 检查；既有角色／高度／物品要求保留。672项自动化通过，客户端待验收 |
 | YiboTodo | 10 | RequiredDeps | account-view:2；名称与首次提示验证待完成 |
 | YiboVault | 13（1.12.0 工作树） | RequiredDeps | localization:1、business-services:1、character-name-format:1、basic-input:1、item-resolver:1、character-identity:1、account-entry:2；初始化逐项检查版本与所需方法 |
@@ -143,7 +146,7 @@ ameMode=original/short` 与 `realmMode=omit/sameRealm/full` 独立选择；同�
 | YiboBeastPaths | 不适用 | [加载清单](../../YiboBeastPaths/YiboBeastPaths.toc) 及路线维护适配器以路线、宠物和坐标为显示对象 | 新增角色／联系人显示时重审；宠物名称不属于本能力 |
 | YiboBuilds | 部分接入（代码／离线通过，客户端待验） | 主表角色行与预览CharacterLabel统一调用FormatName；短名／所有服务器策略复用Core | Core13Spec（1057项）验证单服／全服与短名策略；最低API13 / character-name-format:1；2026-10-15 |
 | YiboCrafting | 部分接入（代码完成／客户端待验收） | 1.2.0 / API13；FormatName、共享角色表头、真实身份悬停全部接入，最低能力检查 | CoreNameIntegration／CoreAdaptation；中英文、短名、职业色及全服显示待客户端 / 2026-10-12 |
-| YiboCurrency | 待迁移 | [AccountPage.lua](../../YiboCurrency/AccountPage.lua) 的 DisplayName / DisplayIdentity 本地格式化；调用共享表头时显式传入原名 | 表头、角色行、物品与货币 tooltip 标签及宽度测量；保留总计／空状态特殊行 |
+| YiboCurrency | 部分接入（适用代码完成／客户端待验收） | 0.9.1工作树 / API13，检查 character-name-format:1；主矩阵共享表头及货币／库存提示角色标签使用Core格式化，不再本地拼接名称 | API13Spec四组各52项、CharacterNames77项通过；短名／全服／完整身份实机待验 / 2026-10-15 |
 | YiboLegendary | 部分接入（API13 代码完成／客户端待验收） | 工作树 2.2.0 检查 API13 / `character-name-format:1` 与 FormatName；角色行、行动标题按账号范围格式化，人工确认使用 original/full 身份 | 悬停、列表与完整身份客户端核对待做；名称历史状态不可由自动化或共享表头推定 |
 | YiboMail | 部分接入 | 当前工作树 TOC 1.2.0-api1：AccountPage 总览／预览、ViewModel、CacheUI 等复用 FormatName；初始化检查 API v9、名称能力与方法；InboxReleaseSpec 本轮通过，其他已登记测试为历史证据 | Recipients:Label 仍自行按当前服务器组合联系人名称；保留备注优先、转义及邮寄地址解析。游戏内显示待验收 |
 | YiboMounts | 不适用 | [加载清单](../../YiboMounts/YiboMounts.toc) 与图鉴提示／Core 设置适配未发现角色或联系人身份显示 | 新增相应显示需求时重审；坐骑名称与来源格式继续归业务 |
@@ -173,7 +176,7 @@ ameMode=original/short` 与 `realmMode=omit/sameRealm/full` 独立选择；同�
 | YiboBeastPaths | 部分接入（适用调用代码完成／客户端待验收） | 1.7.0 Core 维护页多行导出迁移 CreateInput，最低 API13 / basic-input:1；不限长度、换行、IME／焦点生命周期；旧独立 DebugCalibrator 布局不由 Core 页面构建 | Core13IntegrationSpec 与双语 CoreDebugViewSmoke 通过，长文本复制与 IME 待客户端，见 [接入说明](../../YiboBeastPaths/Docs/Core-API13-接入说明.md) / 2026-10-13 |
 | YiboBuilds | 不适用 | 当前账号页面与设置接入代码未发现本地 EditBox | 新增输入时使用公共控件；无接入版本 |
 | YiboCrafting | 部分接入（代码完成／客户端待验收） | 1.2.0 搜索使用 CreateInput 的 OnChanged／OnSubmit／OnFocus 与共享清空，保留 Core IME／隐藏生命周期；API13 / basic-input:1 | 真实 Input 模块与 IME 合成回归通过，AUD-012 代码关闭；实际输入待客户端 / 2026-10-12 |
-| YiboCurrency | 已接入 | [Settings.lua](../../YiboCurrency/Settings.lua) 的自定义物品选择器间接使用公共输入；[CoreIntegration.lua](../../YiboCurrency/CoreIntegration.lua) 当前工作树要求 API v9、business-services:1 和所需控件方法 | 所列范围首批 Currency 0.9.1 / API v7；当前控件专项未重跑，v9 服务迁移见 CAP-005 |
+| YiboCurrency | 已接入（所列范围） | 0.9.1工作树 / API13；自定义选择器复用公共输入，检查basic-input:1及实际方法 | 中文／英文CoreItemControlsSpec通过；游戏内输入与布局待验 / 2026-10-15 |
 | YiboLegendary | 不适用 | 当前业务页与业务设置未发现本地 EditBox | 新增输入时使用公共控件；无接入版本 |
 | YiboMail | 部分接入 | 当前工作树 TOC 1.2.0-api1：CacheUI、SendRulesSettings 使用公共输入；最低 API v9；InboxReleaseSpec 本轮通过，WorkspaceSpec／RuleSendUISpec 为历史证据 | MailUI、NativeUI、RecipientUI 本地输入仍保留，随对应修改或经确认的集中迁移处理；游戏内待核对 |
 | YiboMounts | 不适用 | 图鉴及 Core 设置适配未发现本地 EditBox | 新增输入时使用公共控件；无接入版本 |
@@ -196,7 +199,7 @@ ameMode=original/short` 与 `realmMode=omit/sameRealm/full` 独立选择；同�
 | YiboBeastPaths | 不适用 | 路线维护以坐标和路线数据为输入 | 无物品录入迁移项 |
 | YiboBuilds | 不适用 | 当前构筑页面读取装备／配方数据，未发现可直接替换的物品输入选择器 | 业务动作与装备应用不自动纳入此项 |
 | YiboCrafting | 部分接入（适用展示代码完成） | 1.2.0 / API13 / item-resolver:1；资料经 GetInfo，搜索只读已缓存项，事件去重；无物品编辑／批量确认／图标选择需求 | SearchPerformance／Smoke 通过；Tooltip 与实际搜索性能待客户端 / 2026-10-12 |
-| YiboCurrency | 已接入 | Settings 的 CreateItemPicker、删除操作确认复用 Core；本轮最低 API 提高至 v9；CoreItemControlsSpec 通过 | 所列范围首批 Currency 0.9.1；游戏内待验收 |
+| YiboCurrency | 已接入（所列范围） | 0.9.1工作树 / API13；Settings复用CreateItemPicker、ItemResolver与ItemConfirmation，删除位于数据区末尾 | 中英文CoreItemControlsSpec通过；游戏内待验 / 2026-10-15 |
 | YiboLegendary | 不适用 | 人工目标确认不是物品身份选择 | 不为统一形式改造成物品确认器 |
 | YiboMail | 已接入 | 工作树 1.2.0-api1：NativeUI 附件加载复用 ItemResolver；指定规则使用 item-picker:2 的 multiple／retainInput；分类排除与全局黑名单复用单物品模式；初始化本轮检查 API v9、business-services:1 和 item-picker:2；使用公开配置 | 接口见 API-v8-批量物品确认；CoreItemControlsSpec、RuleSendUISpec、RuleSendSpec 和 InboxReleaseSpec 通过。游戏内待验收；新批量需求按契约扩展 |
 | YiboMounts | 不适用 | 当前图鉴读取坐骑／物品来源，未提供通用物品录入 | 展示与来源查询不自动替换成选择器 |
@@ -227,7 +230,7 @@ ameMode=original/short` 与 `realmMode=omit/sameRealm/full` 独立选择；同�
 | YiboBeastPaths | 部分接入（适用调用代码完成／客户端待验收） | Mists 可选维护页与统一业务设置最低 API13，检查 account-view:2 / account-surface-budget:1，使用公开可用高度；无账号入口，不需 account-entry／builtin-entry-bar | 494项集成检查含 Core 缺失／旧版／缺能力、晚就绪、重复注册、关闭重开和失败回滚；双语 UI smoke 通过；实际交互待客户端 / 2026-10-13 |
 | YiboBuilds | 部分接入（代码／离线通过，客户端待验） | API13统一页面与三通道入口；设置元数据双语，预览字段副本及ID校验；没有独立业务设置面板 | Core13Spec验证能力不足停止与重复注册；最低API13 / account-view:2 / account-entry:2；2026-10-15 |
 | YiboCrafting | 部分接入（代码完成／客户端待验收） | 1.2.0 / API13；统一账号页、共享矩阵视觉／滚动／分页、嵌入设置、三通道注册和同快照预览；按业务快照准入和高度预算投影 | CoreAdaptation 通过；实际入口／字段／安全边界待客户端 / 2026-10-12 |
-| YiboCurrency | 部分接入 | [CoreIntegration.lua](../../YiboCurrency/CoreIntegration.lua) 注册页面、入口与业务设置 | 核对入口与设置现行契约的实际行为；CAP-003 所列物品控件验证不代替此范围验收 |
+| YiboCurrency | 部分接入（适用代码完成／客户端待验收） | 0.9.1工作树 / Core1.12.4工作树 / API13，检查account-dynamic-fields:1、account-entry:2、account-preview-field-groups:1及表面／准入能力；自有目录动态字段注册、档案金币Provider、previewColumns、同源矩阵及可选悬停转置、统一工作台、三通道默认关闭 | 旧选择保留、动态增删、主表／悬停一致性：API13Spec四组各52项及EntryBar1133项通过；真实客户端待验 / 2026-10-15 |
 | YiboLegendary | 部分接入（API13 代码完成／客户端待验收） | 工作树 2.2.0 检查 `account-view:2`、`account-entry:2`，注册本地化页面与 Core 业务设置，三入口默认关闭 | 核对悬停角色范围、完整矩阵、设置与三入口开关；本轮最低版本升至 API13 |
 | YiboMail | 部分接入 | [AccountPage.lua](../../YiboMail/AccountPage.lua) 注册页面、入口与业务设置 | 当前工作树业务设置改造进行中；核对入口／账号快照与设置跳转，不能按旧文档直接认定完成 |
 | YiboMounts | 部分接入（可选设置增强） | 1.0.0 检查 Core API13、初始化状态与 `localization:1`，注册 Locale 资源和 v6 设置面板；TOC 使用 `OptionalDeps: YiboCore` 保证加载顺序，未转为硬依赖 | Core 缺失／低版本时保留独立来源 Tooltip，停用收藏状态与 Core 设置；游戏内注册、设置保存和 Core 缺失／旧版路径待验收 / 2026-10-12 |
@@ -236,6 +239,26 @@ ameMode=original/short` 与 `realmMode=omit/sameRealm/full` 独立选择；同�
 | YiboTaskHub | 部分接入 | 0.5.0 检查 API13 / account-entry:2、builtin-entry-bar:1，RegisterBusinessEntry 通过 defaultChannels 明确三个入口默认关闭；保留 Core 对用户选择的统一管理 | ActionIntegrationSpec 检查最低 API 与默认值；客户端验证三个通道切换、悬停与页面跳转待做；旧截图不替代新编辑器、窄窗口、IME 和完整登录流程验收 |
 | YiboTodo | 部分接入 | 工作树 1.3.0 整体最低 API13；检查 `account-view:2`、`character-identity:1`、`character-name-format:1`、`account-entry:2`、`localization:1`；入口显式默认关闭三个通道 | Core 注册、设置与低版本停止待验证；首次提示独立见 CAP-006；中英文与三个入口通道待客户端验收 / 2026-10-12 |
 | YiboVault | 部分接入（适用接口代码完成） | [AccountPage.lua](../../YiboVault/AccountPage.lua) 注册账号页、Core 业务设置及 `account-entry:2` 三通道入口；默认通道均关闭，最低 API13 | 账号页、入口通道与统一设置工作台行为待客户端验收；固定仓储页面由 Core 统一页面容器处理，不消费动态高度预算 / 2026-10-12 |
+
+### CAP-004 增量：统一滚动表面预算（2026-10-16）
+
+Core1.12.6 / API13未发布工作树提供account-surface-budget:2，[契约](API-v13-滚动表面预算.md)。Core按最终主窗口／入口悬停高度统一决定槽宽、向上取整及自然宽度优先，业务声明scrollContentHeight／scrollFixedHeight并通过GetScrollSurfaceWidth读取最终可用宽度。业务不再手工加减滚动槽；v1兼容。公共预算与账号页面本轮完成验证，不等于所有业务已迁移。
+
+| 插件／区域（技术名排序） | 本轮状态／剩余范围 | 证据与触发点 |
+| --- | --- | --- |
+| YiboAltoBoss账号矩阵／锁定矩阵 | 已接入（2.7.1工作树；本轮范围离线通过，用户实机确认）；要求预算2及实际方法，主表两方向声明，锁定矩阵使用Core滚动容器 | MatrixBudget四组各100项、InstanceKills56；用户已确认本轮实机检查无问题；2026-10-16 |
+| YiboCrafting账号／悬停矩阵 | 已接入（1.2.1工作树；本轮范围离线通过，用户实机确认）；预算2、分组／筛选计划与快照复用、显式悬停声明；专业多面板详情不套单矩阵预算 | MatrixBudget四组各100项，CoreAdaptation／CoreNameIntegration／Smoke／SearchPerformance／采集与目标回归；2026-10-16 |
+| YiboCurrency主表／两种悬停 | 已接入（0.9.2工作树；本轮范围离线通过，用户实机确认）；显式要求预算2，取消本地槽宽计算 | 四组API13各52、Core预算10项及完整迁移回归；2026-10-16 |
+| YiboLegendary目标列预览 | 已接入（2.2.3工作树；本轮范围离线通过，用户实机确认）；实际为角色行／目标列，预算2、图例固定高度、完整目标宽度及Core目标切片；升级检查已补 | MatrixBudget四组各100项含实际预览渲染、窄屏切片、字段隐藏与缺方法拒绝；2026-10-16 |
+| YiboQuestBlocker主表／悬停 | 已接入（3.1.1工作树；本轮范围离线通过，用户实机确认）；要求预算2，完整角色范围任务分组与空态高度、Core宽度及悬停声明；隐藏角色字段无空页 | MatrixBudget四组各100项含实际主表／悬停、分组与分页一致及旧预算拒绝；2026-10-16 |
+| YiboReputation主矩阵 | 已接入（1.7.2工作树；本轮范围离线通过，用户实机确认）；显式要求预算2，取消本地rows>20补槽，完整范围行发现后再切角色列 | 88+39迁移／清理、HoverSpec；用户已确认本轮实机检查无问题；2026-10-16 |
+| YiboReputation监控预览 | 本次滚动槽不适用：独立布局声明verticalOverflow=none，没有纵向ScrollFrame | 保留既有分页和悬停检查，不预留空槽 |
+
+Mail缓存／规则／原生界面的滚动槽调用属于独立内嵌列表，不是账号窗口自然宽度，不能直接套用窗口预算；后续触及这些独立容器时再评估适用的Core布局工具。Mail／Vault／Todo／TaskHub等页面本轮仅发现固定／行向或压缩布局，未做新预算的逐回调验收，保持待评估，不登记已接入。Core档案为字段列投影，不在本次角色列分页迁移范围。
+
+CoreScrollBudget10、EntryBar1133、Contracts90、CharacterNames77与84文件语法及三owner语言检查通过。TaskHub旧SurfacesSpec前置Todo语言夹具失败，记录在契约中，不宣称整体通过。此次无运行时版本更新、提交、推送或打包。业务数据归属没有变化。
+
+2026-10-16验收与版本补记：用户反馈“已实机看过没问题”，以上六插件本轮矩阵预算范围记为已接入；不扩展为其它功能或全部语言组合均已验收。配套工作树版本为Core1.12.6、AltoBoss2.7.1、Crafting1.2.1、Currency0.9.2、Legendary2.2.3、QuestBlocker3.1.1、Reputation1.7.2；API13及预算能力2不变，尚未提交、推送或打包发布。
 
 ## CAP-005：通用跨业务能力连接
 
@@ -262,7 +285,7 @@ ameMode=original/short` 与 `realmMode=omit/sameRealm/full` 独立选择；同�
 | YiboBeastPaths | 不适用（当前范围） | 路线工具无跨业务查询、聚合或操作；Core 就绪通知复用公开 CORE_READY | 1.7.0 源码审查无业务对象／SavedVariables 读取；真实协作出现时重审 / 2026-10-13 |
 | YiboBuilds | 部分接入（代码／离线通过，客户端待验） | action.targets Provider为构筑所有者提供具体装备强化目标，Core负责发现与操作绑定 | 既有实际应用判断保持；双语标题与错误；最低API13 / business-providers:1 / business-item-actions:1；安全点击待客户端验收；2026-10-15 |
 | YiboCrafting | 部分接入（当前连接代码完成） | 1.2.0 / API13；action.targets v1.2 注册／发现／公开库存调用，生命周期通知；制造规则与基线归来源，无业务私有访问 | GoalSourcesSpec72／GoalTargets 通过，尊重公开库存 validUntil；可选来源客户端待验收，配方只读 Service 是后续产品功能 / 2026-10-12 |
-| YiboCurrency | 已接入（本轮范围） | VaultIntegration 经 Core 发现 vault.items；缺失/不兼容保留 Core 基础快照；VaultIntegrationSpec、CoreItemControlsSpec 通过 | 最低接口 API v9 / business-services:1，渠道包需 v1.9.0-api10；业务接入未发布、游戏内待验收；追赶须另核对 api10 |
+| YiboCurrency | 已接入（本轮连接范围，客户端待验） | 0.9.1工作树 / API13 / business-services:1、business-providers:1、character-archive-providers:1；vault.items经Resolve／Call，TOC无业务依赖，缺失／注销／不兼容／错误回退确认来源，返回覆盖校验 | VaultIntegrationSpec原样通过（已补身份夹具及生命周期回归）；货币权威迁移代码完成，实机待验；整角色Vault单一来源或自有随身快照，无旧Core运行读 / 2026-10-15 |
 | YiboLegendary | 待评估 | 无该新连接接入证据 | 真实待办／目标接入时评估 |
 | YiboMail | 部分接入（Provider代码与自动化完成／客户端待验收） | 1.2.11-api1：既有mail.items v1.1 GetTransfers按全账号签名／时间证据索引匹配，纯状态复用缓存且公共revision保持最新；自动查看多封信合并通知。邮件与新邮件查看状态仍由Mail所有，Vault仅经Core Service消费 | 基础API13 / business-services:1；TransfersPerformanceSpec 20角色／3411历史约0.04秒（旧约0.73秒），100封确认1次通知；MailProviderSpec真实服务集成与缺失／不兼容／晚注册通过。客户端仍待复验；logistics／evidence仍未公开 / 2026-10-12 |
 | YiboMounts | 不适用 | 1.0.0 全面接入复核：Tooltip 图鉴只读取自身坐骑目录与 Core 账号级设置，无跨业务查询、提供或聚合需求 | 出现真实跨业务需求时按 Service／Provider 契约评估 / 2026-10-12 |
@@ -384,6 +407,7 @@ omi` 保留；新增 `activities` 输出其余 `monitoringProjects`，账号布�
 | YiboAltoBoss | 部分接入（适用代码完成，客户端待验收） | API13 / character-identity:1；身份读取统一 identityOnly，公开角色引用经Core唯一ID，旧数据存储键不变 | 多角色／改名／缺失身份实机待验 / 2026-10-14 |
 | YiboBeastPaths | 不适用：显示宠物／路线／坐标，不读取角色身份目录 | 1.7.0 Core 集中接入审查；新增跨角色功能时重审 | 2026-10-13 |
 | YiboCrafting | 部分接入（适用代码完成） | 1.2.0 目标角色目录／存在性使用 identityOnly；领域快照单独 DataDomains:Get，检查 character-identity:1 / API13 | GoalTargets／来源集成通过，客户端待验收 / 2026-10-12 |
+| YiboCurrency | 部分接入（适用代码完成） | 0.9.1工作树 / API13，目标角色校验使用Get(identityOnly=true)，检查character-identity:1与实际方法；API13Spec四组各52项通过，客户端待验 | 2026-10-15 |
 | YiboMail | 部分接入（高频身份路径代码完成／客户端待验收） | 1.2.11-api1 收件箱／账号视图、名称、状态、扫描、队列、行动投影及新建历史占位使用 identityOnly；联系人与寄送经公开只读目录补阵营；既有最低 API13 并检查 character-identity:1。未触及的设置页／诊断低频完整读取保留 | 真实 Core 10,000物品对照，100轮邮箱身份／名称／状态／联系人约180KB、0领域复制；相关7个Spec通过，另2个既有夹具失败已用HEAD复核。详见 `../../Docs/Mail-内存与首次打开性能修复.md` / 2026-10-12 |
 | YiboMounts | 不适用 | 本轮审查的 Tooltip、坐骑目录与独立设置不读取 Core 角色身份目录或领域快照 | 新增账号角色级坐骑页面时重审 / 2026-10-12 |
 | YiboTaskHub | 已接入：全部角色身份、目录、受益者、目标校验、主视图／预览／提醒；检查能力 | 无本次范围遗漏；Overview50项及依赖回归、专项219项通过 | 2026-10-10 |
@@ -414,7 +438,7 @@ Core 状态：已提供，工作树 1.11.0 / API v12 / business-item-actions:1�
 | YiboBeastPaths | 本轮对象不适用：路线说明 | 无角色驯服完成采集；后续收藏入口再评估 | 2026-10-10 |
 | YiboBuilds | 部分接入：宝石／附魔实际候选、具体装备与孔位；统一最低API13 / business-item-actions:1 | 原低版本基础功能兼容分支已收拢；客户端GUID／安全点击待验 | 2026-10-15 |
 | YiboCrafting | 部分接入（代码完成／客户端待验收） | 1.2.0 / API13 / business-item-actions:2；配方名称、产物及已学角色格均走 Core，无本地按钮 | 默认参数／多产物配置／键鼠回归通过；真实交互待客户端 / 2026-10-12 |
-| YiboCurrency | 部分接入：原生货币／金币角色格与标题；增强最低API12 | 客户端；账号货币合计未接入，物品数量归Vault | 2026-10-10 |
+| YiboCurrency | 部分接入：原生货币／金币角色格与标题 | 0.9.1工作树整体API13；目标增强检查business-item-actions:1／business-providers:1／character-identity:1与实际方法。API13Spec覆盖开启及stale未知；物品目标归Vault，账号合计不在范围；客户端待验 | 2026-10-15 |
 | YiboLegendary | 部分接入：角色最终目标；增强最低API12 | 客户端；任意中间节点与整链未接入 | 2026-10-10 |
 | YiboMail | 部分接入：角色明确查看邮件目标；增强最低API12 | 客户端；寄达／收取需求关联未接入 | 2026-10-10 |
 | YiboMounts | 当前入口不适用：Tooltip 来源说明 | 未来收藏管理入口与完成采集再评估 | 2026-10-12 |
@@ -472,7 +496,7 @@ Core 状态：**已提供（1.12.0 / API v13 工作树，未发布）**。能力
 | YiboBeastPaths | 部分接入（Core 维护区域代码完成／客户端待验收） | 1.7.0 可选维护增强最低 API13 / localization:1；维护页、统一设置、共享错误、地图按钮／悬停和命令提示注册 zh/en 资源，使用 Core 会话语言。独立地图模式解析同份资源的客户端语言，必要性／范围／移除条件见接入文档；路线资料、诊断与旧独立布局保留范围另列 | 真实 Core Locale 494项检查、双语维护页 smoke 与26文件语法通过；静态报告254候选，缺英文／未知键／格式差异0，检查器不识别 ns.Text 引用；游戏中英文／手动语言模式待验收 / 2026-10-13 |
 | YiboBuilds | 部分接入（主要区域代码完成，客户端待验） | 页面／字段／设置元数据／悬停／状态与确认／目标／命令／专业标签接入owner资源；历史占位在展示时翻译，原生API／DB2名称和识别别名保持 | Core13Spec双语资源与格式、旧快照无改写；词法报告55候选已分类，布局与真实客户端待验；最低API13 + localization:1；2026-10-15 |
 | YiboCrafting | 部分接入（适用区域代码完成） | 1.2.0 整体 API13 / localization:1；页面、设置、入口、Tooltip、状态／错误、目标和稳定分类 ID 均迁移，动态名称／历史来源原文保留 | CoreAdaptation 双语资源／页面与静态报告通过；真实中文／enUS／手动语言模式待客户端 / 2026-10-12 |
-| YiboCurrency | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+| YiboCurrency | 部分接入（适用代码与离线检查完成／客户端待验收） | 0.9.1工作树 / API13 / localization:1；页面、设置、悬停、状态、目录、目标、诊断与数字单位均使用owner中英文资源；原生名称和自定义历史文本保留 | YiboCurrency-Migration-Report.md：0硬编码、缺英文、未知key及格式差异；四种语言组合各52项通过；真实客户端待验 / 2026-10-15 |
 | YiboLegendary | 部分接入（适用区域未完成） | 工作树 2.2.0 / API13 注册自有 zh/en 资源，并迁移 Core 页面元数据、设置说明、摘要、部分状态、错误、清理提示与人工确认；Catalog、Data、Model 生成的路线／进度静态文本仍未迁移 | `_NonRelease/Localization/Legendary-API13-Report.md`：305 个硬编码候选、90 个 Core Locale 引用；缺英文、未知 key、格式差异均为 0。Bootstrap/UI 与 Catalog 路线目录、Data 行动文案部分迁移；Data 定义与 Model 快照状态仍有大量静态文案待迁移。继续迁移后再做中英文与手动语言客户端验收 / 2026-10-13 |
 | YiboMail | 部分接入（适用区域代码与布局模拟完成） | 工作树 1.2.9-api1，最低 Core 1.12.0 / API13；Mail 静态玩家文案、账号入口、邮件状态／错误、目标与目录使用 Mail 自有 zh/en 稳定 ASCII key 并由 Core.Locale 按账号会话语言解析；动态游戏名称、历史快照及存档值保持原文。可选 action.todo 继续单独要求 API11 / business-providers:1；邮件目标操作检查 business-item-actions:1 | `YiboMail-API13-Report.md`：0 硬编码候选、0 缺失英文、0 未知 key、0 格式参数差异；WorkspaceSpec／NativeInboxSpec／RuleSendUISpec 英文尺寸回归通过，详见 `Docs/Mail-英文布局与历史页性能修复.md`；客户端中文／enUS、手动语言模式和登录验收待完成 / 2026-10-12 |
 | YiboMounts | 部分接入（Core 增强） | 1.0.0 注册 `YiboMounts` zh/en 资源；Core 可用时设置面板、收藏状态 Tooltip 和固定文案使用账号会话语言。双语源目录保留其数据字段，独立模式保留本地 Locale 兼容文本以满足 Core 可选契约；Core 增强最低 API13 + `localization:1` | 静态检查到注册／查询路径；中文／英文会话、手动语言、设置保存、Core 缺失／旧版验收待完成 / 2026-10-12 |
@@ -552,6 +576,8 @@ Core 状态：**已提供（1.12.0 / API v13 工作树，未发布）**。能力
 
 2026-10-15 交付版本：Core1.12.4 / API13、Reputation1.7.1；提交推送并打包，保留126项迁移回归及客户端待验状态。
 
+2026-10-15 Currency0.10.0收尾：Core1.12.4工作树按真实动态目录需求新增account-dynamic-fields:1，契约见[动态账号字段](API-v13-动态账号字段.md)。CAP-001～005／007～009按上表更新；CAP-006保持不适用。Core和Currency容器计数、确认来源完整度及中英文控件／版本停止回归已完成；RuntimePerformanceSpec在既有AltoBoss第107行阻断，HEAD AccountView诊断同样失败，未宣称整体通过。客户端尚未验收；[接入记录](../../YiboCurrency/Docs/Core-API13-实施与验收.md)与[数据归属方案](../../YiboCurrency/Docs/货币数据归属迁移方案.md)区分已完成代码和待确认迁移。无玩家存档迁移或清理。
+
 ## CAP-010：角色缓存所有者与延后清理
 
 Core1.12.5 / API13发布character-cleanup:2：持久登记动态所有者，禁用后保持pending，不按软上限丢弃待处理记录；Delete新增时间与回放上下文，兼容旧回调。最低接口及失败行为见[清理v2契约](API-v13-角色清理v2.md)。
@@ -559,7 +585,19 @@ Core1.12.5 / API13发布character-cleanup:2：持久登记动态所有者，禁�
 | 插件 | 状态与覆盖／剩余 | 验证／日期 |
 | --- | --- | --- |
 | YiboBuilds | 1.5.0已接入；Inspect双语，角色ID与别名清理，延后回放保留有效新观察并清理过期装备；用户确认本次Core适配正常 | Core13Spec1057项及CharacterCleanupV2Spec43项；2026-10-16 |
+| YiboCurrency | 部分接入（代码与离线完成／客户端待验）；0.9.1工作树显式检查能力2，注册Inspect／Delete，阻止旧数据复活、旧墓碑保留有效新观察；偏好／目录及其它所有者不受影响 | CoreSpec23项、Retention共107项；2026-10-15 |
+| YiboReputation | 既有v1调用兼容已验证；没有改成依赖v2，也不推定v2特性客户端验收完成 | Retention126项；2026-10-15 |
 
-其他未审查消费者按原最低能力保持兼容，后续触及相应生命周期时评估。
+AltoBoss、Crafting、Legendary、Mail、QuestBlocker、Todo、Vault仅静态发现既有登记，本轮未改调用；v2特性均待评估，触及相关生命周期时迁移。
+
+2026-10-15 Currency货币归属实施：Core1.12.4工作树停止货币域和目录采集，旧数据冻结；Currency0.9.1工作树接管原生余额与最小随身观察，通过公开副本导入，不自动清理历史。CAP-004／005新增通用档案字段Provider，`character-archive-providers:1`；CAP-010补动态所有者留存。CoreSpec23、迁移55、额外保留29（共107）、TOC额外15、容器额外10、双语API13四组各37、Vault／控件、EntryBar1133、声望126及语法／语言检查通过。真实客户端验收与发版待用户测试后处理，详见[实施与验收记录](../../YiboCurrency/Docs/货币数据归属迁移-实施与验收记录.md)。历史AltoBoss性能阻断已由用户反馈实测无问题，不作为本次交付阻断；未宣称旧综合脚本整体通过。
+
+2026-10-15 Currency截图反馈：CAP-004接入现有autoFitWidth、FitRepeatedColumnWidth与GetColumnPageByWidth，主窗口优先完整角色列，悬停可在业务设置独立转置；实际方法检查齐全，未变更Core能力接口。CAP-009新增业务设置／转置开关中英文资源；四组API13各47项、设置控件及完整迁移回归通过，客户端待复测。版本保持原值，未提交、推送或打包。
+
+2026-10-16 Currency自定义物品设置反馈：CAP-004在现有Core托管业务设置内恢复已保存目录列表，复用公共按钮、文本、Tooltip、ItemPicker与确认流程，不新增通用字段选择或本地设置窗口；CAP-003确认边界保持，CAP-009新增5对列表／空状态／分页资源。中英文控件及完整迁移回归通过；客户端待复测。Core公开契约没有变化，未改运行时版本或提交发布。
+
+2026-10-16 Currency单项提示／分页复核：CAP-004继续复用Core矩阵、完整自然宽度、分页和Tooltip基础，补齐自然尺寸的滚动槽预算与向上取整，修复13角色末列被挤至第二页；单项提示共享Projection，不另查第二份库存或排全角色副本。CAP-009复用既有owner资源，无新硬编码。四组API13各51项及完整迁移回归通过，客户端待复测；无Core公共能力契约变化。
+
+2026-10-16 台账剩余矩阵统一接入：AltoBoss、Crafting、Legendary、QuestBlocker均要求account-surface-budget:2及实际GetScrollSurfaceWidth；取消子帧瞬时宽度和插件自算槽宽路径，主表／悬停声明滚动内容尺寸。新增MatrixBudget四组各100项实际业务渲染／Core预算回归，七插件128文件语法及相关回归通过。CAP-004上表由待迁移更新为代码及离线完成、客户端待验；CAP-009同步复用Legendary预览资源及升级提示。详细范围与实机清单见[统一接入记录](矩阵预算统一接入-实施与验收.md)。本轮无版本、提交推送或打包。
 
 2026-10-16：Builds1.5.0与Core1.12.5配套。用户确认Core适配正常，重载后一张附魔卷轴只显示对应的一个附魔；候选修复属于Builds业务，不新增Core契约。详见[接入与验收记录](../../YiboBuilds/Docs/Core-API13-接入说明.md)。

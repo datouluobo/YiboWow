@@ -596,11 +596,15 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
     -- character trigger pagination prematurely.
     local characterWidth = Theme:GetCharacterMatrixColumnWidth(context)
     local availableWidth = math.max(
-        fixedWidth + characterWidth,
-        (tonumber(context.surfaceAvailableWidth) or instance:GetWidth() or 1) - inset.left - inset.right
+        1,
+        _G.YiboCore.AccountView:GetScrollSurfaceWidth(context, instance, #bosses * ROW_H,
+            inset.top + YAB.GetBusinessTabHeight() + GetHeaderHeight(context) + Theme.Space.xs + inset.bottom) - inset.left - inset.right
     )
     instance.characterColumnWidth = characterWidth
-    local keys, pageInfo = _G.YiboCore.AccountView:GetColumnPage("alto-boss", "characters", allKeys, availableWidth, fixedWidth, instance.characterColumnWidth, YAB.GetCurrentCharKey and YAB.GetCurrentCharKey() or nil)
+    local keys, pageInfo = allKeys, nil
+    if showKills then
+        keys, pageInfo = _G.YiboCore.AccountView:GetColumnPage("alto-boss", "characters", allKeys, availableWidth, fixedWidth, instance.characterColumnWidth, YAB.GetCurrentCharKey and YAB.GetCurrentCharKey() or nil)
+    end
     _G.YiboCore.AccountView:UpdateColumnPager(instance, "alto-boss", "characters", pageInfo, instance.header, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTER"))
     RefreshHeaders(instance, context, keys, showAction, showPhase, showKills, bossNameWidth)
 
@@ -726,6 +730,14 @@ function YAB.RefreshAccountPage(instance, context)
     instance.header:SetPoint("TOPRIGHT", -inset.right, -inset.top - YAB.GetBusinessTabHeight())
     instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs)
     instance.scroll:SetPoint("BOTTOMRIGHT", -inset.right, inset.bottom)
+    local candidates = {}
+    if showBossColumns then for _, boss in ipairs(bosses) do candidates[#candidates + 1] = { id = boss.key, boss = boss } end end
+    local summaryRows = (showAction and 1 or 0) + (showPhase and 1 or 0)
+    local fixedHeight = inset.top + YAB.GetBusinessTabHeight() + Theme.Table.headerHeight + Theme.Space.xs + inset.bottom
+    local availableWidth = math.max(1, _G.YiboCore.AccountView:GetScrollSurfaceWidth(context, instance, (summaryRows + #keys) * ROW_H, fixedHeight) - inset.left - inset.right)
+    local visible, pageInfo = _G.YiboCore.AccountView:GetColumnPage("alto-boss", "bosses", candidates, availableWidth, characterWidth, BOSS_WIDTH)
+    bosses = {}; for _, column in ipairs(visible) do bosses[#bosses + 1] = column.boss end
+    _G.YiboCore.AccountView:UpdateColumnPager(instance, "alto-boss", "bosses", showBossColumns and pageInfo or nil, instance.businessTabs, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.BOSS_TARGET"))
     RefreshBossColumnHeaders(instance, bosses, showBossColumns, characterWidth)
 
     local fixedWidth = characterWidth
@@ -837,6 +849,8 @@ function YAB.GetAccountSurfaceMetrics(context)
         return {
             minContentWidth = math.max(360, fixedWidth + characterWidth + inset.left + inset.right),
             naturalContentWidth = matrixWidth + inset.left + inset.right,
+            scrollContentHeight = #bosses * ROW_H,
+            scrollFixedHeight = inset.top + YAB.GetBusinessTabHeight() + GetHeaderHeight(context) + Theme.Space.xs + inset.bottom,
             minContentHeight = inset.top + YAB.GetBusinessTabHeight() + GetHeaderHeight(context) + Theme.Space.xs + ROW_H + inset.bottom,
             naturalContentHeight = inset.top + YAB.GetBusinessTabHeight() + GetHeaderHeight(context) + Theme.Space.xs + math.max(1, #bosses) * ROW_H + inset.bottom,
             fixedLeftWidth = fixedWidth,
@@ -854,6 +868,8 @@ function YAB.GetAccountSurfaceMetrics(context)
     return {
         minContentWidth = math.max(360, fixedWidth + (showBossColumns and BOSS_WIDTH or 0) + inset.left + inset.right),
         naturalContentWidth = fixedWidth + bossWidth + inset.left + inset.right,
+        scrollContentHeight = (summaryRows + #keys) * ROW_H,
+        scrollFixedHeight = inset.top + YAB.GetBusinessTabHeight() + Theme.Table.headerHeight + Theme.Space.xs + inset.bottom,
         minContentHeight = inset.top + YAB.GetBusinessTabHeight() + Theme.Table.headerHeight + Theme.Space.xs + ROW_H + inset.bottom,
         naturalContentHeight = inset.top + YAB.GetBusinessTabHeight() + Theme.Table.headerHeight + Theme.Space.xs + math.max(1, summaryRows + #keys) * ROW_H + inset.bottom,
         fixedLeftWidth = fixedWidth,

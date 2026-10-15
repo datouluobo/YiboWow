@@ -9,7 +9,6 @@ local Page = {}
 YQB.AccountPage = Page
 
 local ROW_H, GROUP_H, CHARACTER_COL_W, COMPACT_CHARACTER_COL_W, GLOBAL_W, STATUS_HIT = Theme.Table.rowHeight, Theme.Table.groupHeight, Theme:GetCharacterMatrixColumnWidth(), Theme:GetCharacterMatrixColumnWidth(), 36, 20
-local PREVIEW_MARGIN, PREVIEW_SCROLLBAR_GUTTER, CORE_PREVIEW_BORDER = 16, 16, 2
 local COLORS = Theme.Colors
 
 local function Text(parent, template, color, size)
@@ -377,8 +376,12 @@ function Page.Refresh(instance, context)
     local showCharacters = context:GetFieldVisible("characters")
     instance.taskWidth = 250
     local fixedWidth = instance.taskWidth + (showGlobal and GLOBAL_W or 0)
-    local availableWidth = math.max(fixedWidth + COMPACT_CHARACTER_COL_W, (tonumber(context.surfaceAvailableWidth) or instance:GetWidth() or 1) - inset.left - inset.right)
-    local visibleCharacters, pageInfo = Core.AccountView:GetColumnPage("quest-blocker", "characters", allCharacters, availableWidth, fixedWidth, Theme:GetCharacterMatrixColumnWidth(context), YQB.GetCurrentCharacterID())
+    local metrics = Page.GetSurfaceMetrics(context)
+    local availableWidth = math.max(1, Core.AccountView:GetScrollSurfaceWidth(context, instance, metrics.scrollContentHeight, metrics.scrollFixedHeight) - inset.left - inset.right)
+    local visibleCharacters, pageInfo = allCharacters, nil
+    if showCharacters then
+        visibleCharacters, pageInfo = Core.AccountView:GetColumnPage("quest-blocker", "characters", allCharacters, availableWidth, fixedWidth, Theme:GetCharacterMatrixColumnWidth(context), YQB.GetCurrentCharacterID())
+    end
     Core.AccountView:UpdateColumnPager(instance, "quest-blocker", "characters", pageInfo, instance.header, YQB.T("PAGE.CHARACTER"))
     for _, character in ipairs(visibleCharacters) do characters[#characters + 1] = character.id end
     -- Character columns must remain directly comparable across every account
@@ -393,7 +396,7 @@ function Page.Refresh(instance, context)
     end
     local current = YQB.GetCurrentQuestList()
     local currentVisible = false
-    for _, key in ipairs(characters) do if key == YQB.GetCurrentCharacterID() then currentVisible = true; break end end
+    for _, character in ipairs(allCharacters) do if character.id == YQB.GetCurrentCharacterID() then currentVisible = true; break end end
     if currentVisible then
         local currentExpanded = RenderGroup(instance, YQB.T("PAGE.CURRENT_GROUP", CharacterDisplayName(YQB.GetCurrentCharacterID())), characters, showGlobal, showCharacters, "current")
         if currentExpanded then
@@ -468,6 +471,8 @@ function Page.GetSurfaceMetrics(context)
         naturalContentWidth = fixedWidth + characterColumns + sideInset.left + sideInset.right,
         minContentHeight = (context.preview and previewFixedHeight or mainFixedHeight) + ROW_H,
         naturalContentHeight = (context.preview and previewFixedHeight or mainFixedHeight) + rows * ROW_H,
+        scrollContentHeight = math.max(44, rows * ROW_H),
+        scrollFixedHeight = context.preview and previewFixedHeight or mainFixedHeight,
         fixedLeftWidth = 250 + globalColumn,
         fixedTopHeight = headerHeight,
         horizontalOverflow = "paginate",
@@ -499,6 +504,10 @@ function Page.GetLayoutMetrics(context)
 end
 
 function Page.GetHoverMetrics(context)
-    local width, height = Page.GetPreviewSize(context)
-    return { minWidth = 420, preferredWidth = width, minHeight = 150, preferredHeight = height, horizontalOverflow = "paginate", verticalOverflow = "content" }
+    local metrics = Page.GetSurfaceMetrics(context)
+    local shell = Theme.Geometry.shellBorder * 2
+    return { minWidth = 420, preferredWidth = metrics.naturalContentWidth + shell,
+        minHeight = metrics.minContentHeight + Theme.Geometry.titleBar + shell, preferredHeight = metrics.naturalContentHeight + Theme.Geometry.titleBar + shell,
+        scrollContentHeight = metrics.scrollContentHeight, scrollFixedHeight = metrics.scrollFixedHeight,
+        horizontalOverflow = "paginate", verticalOverflow = "content" }
 end

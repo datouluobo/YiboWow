@@ -1,5 +1,7 @@
 # YiboCore API v5 业务插件接入指南
 
+> Core1.12.4工作树 / API13起，economy／economy-items仅保留冻结旧快照读取，供Currency迁移；不再注册采集域或CurrencyCatalog。当前余额归Currency0.9.1工作树，档案通用消费见[新契约](API-v13-档案业务字段与清理所有者.md)。以下旧版数据示例保留历史语境。
+
 适用版本：YiboCore `1.x`，Public API v5。
 
 ## 1. 接入边界

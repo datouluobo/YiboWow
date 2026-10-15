@@ -1,3 +1,7 @@
+-- Retired in Core 1.12.4: kept for source history; not loaded by the TOC.
+-- Currency owns collection. Frozen Core records remain available via DataDomains:Get.
+do return end
+
 local Core = _G.YiboCore
 
 Core.Resources:Register("YiboCore", {

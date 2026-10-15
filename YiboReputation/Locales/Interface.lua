@@ -13,7 +13,7 @@ Core.Locale:Register("YiboReputation", "zh", {
     ["COMMAND.MIGRATED"] = "本次导入 %d 名角色；失败 %d 名。",
     ["COMMAND.STATUS"] = "声望快照 %d 名角色；历史导入失败 %d 名；最近采集状态：%s。",
 
-    ["ERROR.CORE_REQUIRED"] = "YiboReputation 需要 YiboCore 1.12.4 / API13，以及语言、账号视图、角色身份、角色缓存清理、事件与标准控件能力。请升级 YiboCore。",
+    ["ERROR.CORE_REQUIRED"] = "YiboReputation 需要 YiboCore 1.12.4 / API13，以及 account-surface-budget:2、语言、账号视图、角色身份、角色缓存清理、事件与标准控件能力。请升级 YiboCore。",
     ["ERROR.CORE_NOT_READY"] = "YiboCore 尚未就绪，声望总览已停止初始化。",
     ["ERROR.PAGE_REGISTER"] = "注册声望页面失败：%s",
     ["ERROR.ENTRY_REGISTER"] = "注册声望入口失败：%s",
@@ -108,7 +108,7 @@ Core.Locale:Register("YiboReputation", "en", {
     ["COMMAND.MIGRATED"] = "Imported %d characters; %d failed.",
     ["COMMAND.STATUS"] = "Reputation snapshots: %d characters; failed historical imports: %d; latest scan status: %s.",
 
-    ["ERROR.CORE_REQUIRED"] = "YiboReputation requires YiboCore 1.12.4 / API13 with localization, account views, character identity, character cleanup, events, and standard controls. Please update YiboCore.",
+    ["ERROR.CORE_REQUIRED"] = "YiboReputation requires YiboCore 1.12.4 / API13 with account-surface-budget:2, localization, account views, character identity, character cleanup, events, and standard controls. Please update YiboCore.",
     ["ERROR.CORE_NOT_READY"] = "YiboCore is not ready. YiboReputation initialization stopped.",
     ["ERROR.PAGE_REGISTER"] = "Could not register the Reputation page: %s",
     ["ERROR.ENTRY_REGISTER"] = "Could not register the Reputation entry: %s",

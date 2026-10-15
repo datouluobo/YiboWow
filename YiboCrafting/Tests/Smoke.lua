@@ -53,6 +53,7 @@ YiboCore = {
         SetCharacterHeader = function() end,
     },
     AccountView = {
+        GetScrollSurfaceWidth = function(_, context, parent) return context.surfaceAvailableWidth or parent:GetWidth() end,
         RegisterPage = function(_, owner, definition)
             assert(owner == "YiboCrafting" and definition.id == "crafting")
             return definition

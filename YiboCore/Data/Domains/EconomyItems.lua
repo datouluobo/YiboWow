@@ -1,3 +1,7 @@
+-- Retired in Core 1.12.4: kept for source history; not loaded by the TOC.
+-- Currency owns collection. Frozen Core records remain available via DataDomains:Get.
+do return end
+
 local Core = _G.YiboCore
 
 local bankKnown = false
@@ -27,7 +31,8 @@ local function ScanContainers(itemID, includeBank)
             end
         end
     end
-    carried = Scan(CARRIED_BAGS)
+    Scan(CARRIED_BAGS)
+    carried = total
     if includeBank then Scan(BANK_BAGS) end
     return includeBank and total or carried
 end
@@ -47,9 +52,13 @@ local function Collect()
     for _, definition in ipairs((Core.CurrencyCatalog and Core.CurrencyCatalog:GetItems()) or {}) do
         local itemID = tonumber(definition.itemID)
         if itemID and (C_Item and type(C_Item.GetItemCount) == "function" or type(GetItemCount) == "function" or type(GetContainerItemInfo) == "function" or C_Container and type(C_Container.GetContainerItemInfo) == "function") then
-            local carried = GetCount(itemID, false) or 0
-            local total = GetCount(itemID, true) or carried
-            items[itemID] = { itemID = itemID, carried = carried, total = total, bank = bankKnown and math.max(0, total - carried) or nil, bankKnown = bankKnown }
+            local carried = GetCount(itemID, false)
+            local total = GetCount(itemID, true)
+            if carried ~= nil then
+                local completeBank = bankKnown and total ~= nil
+                items[itemID] = { itemID = itemID, carried = carried, total = total or carried,
+                    bank = completeBank and math.max(0, total - carried) or nil, bankKnown = completeBank }
+            end
         end
     end
     return { items = items, bankKnown = bankKnown }, "known"

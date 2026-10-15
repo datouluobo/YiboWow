@@ -16,8 +16,8 @@ function Addon:GetCurrencyProjection(context, characters, entries)
     end
     for _, character in ipairs(characters) do
         projection.snapshots[character.id] = {
-            economy = Core.DataDomains:Get(character.id, "economy"),
-            ["economy-items"] = Core.DataDomains:Get(character.id, "economy-items"),
+            native = self.Store:Get(character.id, "native"),
+            carriedTokens = self.Store:Get(character.id, "carriedTokens"),
         }
     end
     projection.vault = self.GetVaultPersonalCounts and self:GetVaultPersonalCounts(characters, itemIDs)

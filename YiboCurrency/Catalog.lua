@@ -4,78 +4,78 @@ local Addon = _G.YiboCurrency
 -- data provenance, not a visibility rule: legacy balances remain readable.
 local function Currency(id, title, short, expansion, sourceType, status)
     return { id = "currency:" .. id, currencyID = id, title = title, shortTitle = short, icon = nil,
-        expansion = expansion, source = "currency", sourceType = sourceType or "标准货币",
-        status = status or "仅存量遗留", totalAllowed = true, verified = "pending-client" }
+        expansion = expansion, source = "currency", sourceType = sourceType or Addon:T("CURRENCY.STANDARD_CURRENCY_F0C941"),
+        status = status or Addon:T("CURRENCY.LEGACY_BALANCE_BEED3F"), totalAllowed = true, verified = "pending-client" }
 end
 
 local function Item(id, title, short, expansion, status)
     return { id = "item:" .. id, itemID = id, title = title, shortTitle = short, icon = nil,
-        expansion = expansion, source = "item", sourceType = "物品代币",
+        expansion = expansion, source = "item", sourceType = Addon:T("CURRENCY.ITEM_TOKEN_1605F4"),
         -- Curated item IDs are stable.  Their balance may be readable before
         -- the client caches an item tooltip, so that cache must not turn a
         -- valid zero into an unknown value in the account matrix.
-        status = status or "仅存量遗留", totalAllowed = true, verified = "implemented" }
+        status = status or Addon:T("CURRENCY.LEGACY_BALANCE_BEED3F"), totalAllowed = true, verified = "implemented" }
 end
 
-local CURRENT = "当前可获取"
-local LEGACY = "仅存量遗留"
-local EXPIRED = "过期"
+local CURRENT = Addon:T("CURRENCY.OBTAINABLE_2BF203")
+local LEGACY = Addon:T("CURRENCY.LEGACY_BALANCE_BEED3F")
+local EXPIRED = Addon:T("CURRENCY.EXPIRED_7CF7BF")
 
 Addon.Catalog = {
-    { id = "money", title = "金币", shortTitle = "金币", icon = "Interface\\MoneyFrame\\UI-GoldIcon", expansion = "通用", source = "money", sourceType = "金币", status = CURRENT, totalAllowed = true, verified = "implemented" },
+    { id = "money", title = Addon:T("CURRENCY.GOLD_61F608"), shortTitle = Addon:T("CURRENCY.GOLD_61F608"), icon = "Interface\\MoneyFrame\\UI-GoldIcon", expansion = Addon:T("CURRENCY.GENERAL_1A0FDC"), source = "money", sourceType = Addon:T("CURRENCY.GOLD_61F608"), status = CURRENT, totalAllowed = true, verified = "implemented" },
 
     -- PvP
-    Currency(392, "荣誉点数", "荣誉", "全版本通用", nil, CURRENT),
-    Currency(390, "征服点数", "征服", "大地的裂变/熊猫人之谜", nil, CURRENT),
-    Currency(1900, "竞技场点数", "竞技场", "巫妖王之怒", nil, EXPIRED),
-    Item(43589, "冬拥湖荣誉奖章", "冬拥章", "巫妖王之怒", LEGACY),
-    Item(43228, "岩石守卫者的碎片", "岩石碎片", "巫妖王之怒", LEGACY),
-    Item(20558, "战歌峡谷荣誉奖章", "战歌", "全版本通用", LEGACY),
-    Item(20559, "阿拉希盆地荣誉奖章", "阿拉希", "全版本通用", LEGACY),
-    Item(29024, "风暴之眼荣誉奖章", "风暴眼", "燃烧的远征/巫妖王之怒", LEGACY),
-    Item(47395, "征服之岛荣誉奖章", "征服之岛", "巫妖王之怒/大地的裂变", LEGACY),
-    Item(42425, "远古海滩荣誉奖章", "远古海滩", "巫妖王之怒/大地的裂变", LEGACY),
-    Currency(391, "托尔巴拉德奖章", "托巴奖章", "大地的裂变/熊猫人之谜", nil, LEGACY),
-    Currency(789, "染血铸币", "染血币", "熊猫人之谜", nil, CURRENT),
-    Item(20560, "奥特兰克山谷荣誉奖章", "奥山", "全版本通用", LEGACY),
+    Currency(392, Addon:T("CURRENCY.HONOR_POINTS_112BA6"), Addon:T("CURRENCY.HONOR_6ED44E"), Addon:T("CURRENCY.ALL_EXPANSIONS_54CAAA"), nil, CURRENT),
+    Currency(390, Addon:T("CURRENCY.CONQUEST_POINTS_EDF982"), Addon:T("CURRENCY.CONQUEST_FB2005"), Addon:T("CURRENCY.CATACLYSM_MISTS_OF_PANDARIA_AFE11B"), nil, CURRENT),
+    Currency(1900, Addon:T("CURRENCY.ARENA_POINTS_59A9B7"), Addon:T("CURRENCY.ARENA_0401EE"), Addon:T("CURRENCY.WRATH_OF_THE_LICH_KING_14637D"), nil, EXPIRED),
+    Item(43589, Addon:T("CURRENCY.WINTERGRASP_MARK_OF_HONOR_B661CF"), Addon:T("CURRENCY.WINTERGRASP_1A70D5"), Addon:T("CURRENCY.WRATH_OF_THE_LICH_KING_14637D"), LEGACY),
+    Item(43228, Addon:T("CURRENCY.STONE_KEEPER_S_SHARD_701503"), Addon:T("CURRENCY.STONE_SHARDS_DDD89D"), Addon:T("CURRENCY.WRATH_OF_THE_LICH_KING_14637D"), LEGACY),
+    Item(20558, Addon:T("CURRENCY.WARSONG_GULCH_MARK_OF_HONOR_E09B43"), Addon:T("CURRENCY.WARSONG_78C1E1"), Addon:T("CURRENCY.ALL_EXPANSIONS_54CAAA"), LEGACY),
+    Item(20559, Addon:T("CURRENCY.ARATHI_BASIN_MARK_OF_HONOR_7851A6"), Addon:T("CURRENCY.ARATHI_369A0C"), Addon:T("CURRENCY.ALL_EXPANSIONS_54CAAA"), LEGACY),
+    Item(29024, Addon:T("CURRENCY.EYE_OF_THE_STORM_MARK_OF_HONOR_B32996"), Addon:T("CURRENCY.EYE_OF_THE_STORM_B47F9A"), Addon:T("CURRENCY.THE_BURNING_CRUSADE_WRATH_264AFC"), LEGACY),
+    Item(47395, Addon:T("CURRENCY.ISLE_OF_CONQUEST_MARK_OF_HONOR_70E91A"), Addon:T("CURRENCY.ISLE_OF_CONQUEST_2BD1ED"), Addon:T("CURRENCY.WRATH_CATACLYSM_541899"), LEGACY),
+    Item(42425, Addon:T("CURRENCY.STRAND_OF_THE_ANCIENTS_MARK_OF_HONOR_398499"), Addon:T("CURRENCY.STRAND_DE8DC4"), Addon:T("CURRENCY.WRATH_CATACLYSM_541899"), LEGACY),
+    Currency(391, Addon:T("CURRENCY.TOL_BARAD_COMMENDATION_224F61"), Addon:T("CURRENCY.TOL_BARAD_233CB2"), Addon:T("CURRENCY.CATACLYSM_MISTS_OF_PANDARIA_AFE11B"), nil, LEGACY),
+    Currency(789, Addon:T("CURRENCY.BLOODY_COIN_50C4B7"), Addon:T("CURRENCY.BLOODY_COINS_22026D"), Addon:T("CURRENCY.MISTS_OF_PANDARIA_21D5E3"), nil, CURRENT),
+    Item(20560, Addon:T("CURRENCY.ALTERAC_VALLEY_MARK_OF_HONOR_8AD297"), Addon:T("CURRENCY.ALTERAC_613702"), Addon:T("CURRENCY.ALL_EXPANSIONS_54CAAA"), LEGACY),
 
     -- 地下城与团队
-    Item(29434, "公正徽章", "公正章", "燃烧的远征", LEGACY),
-    Item(40752, "英雄纹章", "英雄章", "巫妖王之怒", LEGACY),
-    Item(45624, "征服纹章", "征服章", "巫妖王之怒", LEGACY),
-    Item(40753, "勇气纹章", "勇气章", "巫妖王之怒", LEGACY),
-    Item(47241, "凯旋纹章", "凯旋章", "巫妖王之怒", LEGACY),
-    Item(49426, "寒冰纹章", "寒冰章", "巫妖王之怒", LEGACY),
-    Currency(2589, "赛德里尔精华", "赛德里尔", "巫妖王之怒（十字军试炼）", nil, LEGACY),
-    Currency(2711, "亵渎者的天灾石", "亵渎天灾石", "巫妖王之怒（冰冠堡垒）", nil, LEGACY),
-    Currency(395, "正义点数", "正义", "大地的裂变/熊猫人之谜", nil, LEGACY),
-    Currency(396, "勇气点数", "勇气", "大地的裂变/熊猫人之谜", nil, CURRENT),
-    Currency(614, "黑暗之尘", "黑暗尘", "大地的裂变（巨龙之魂）", nil, LEGACY),
-    Currency(615, "堕落死亡之翼精华", "死翼精华", "大地的裂变（巨龙之魂）", nil, LEGACY),
-    Currency(3350, "至尊石碎片", "至尊碎片", "熊猫人之谜", nil, CURRENT),
-    Currency(3414, "至尊石碎块", "至尊碎块", "熊猫人之谜", nil, CURRENT),
-    Currency(3416, "至尊石聚簇", "至尊聚簇", "熊猫人之谜", nil, CURRENT),
+    Item(29434, Addon:T("CURRENCY.BADGE_OF_JUSTICE_9AEBBB"), Addon:T("CURRENCY.BADGES_A96A0F"), Addon:T("CURRENCY.THE_BURNING_CRUSADE_6CEA26"), LEGACY),
+    Item(40752, Addon:T("CURRENCY.EMBLEM_OF_HEROISM_014428"), Addon:T("CURRENCY.HEROISM_AE3C89"), Addon:T("CURRENCY.WRATH_OF_THE_LICH_KING_14637D"), LEGACY),
+    Item(45624, Addon:T("CURRENCY.EMBLEM_OF_CONQUEST_E921CE"), Addon:T("CURRENCY.CONQUEST_EMBLEMS_B7D525"), Addon:T("CURRENCY.WRATH_OF_THE_LICH_KING_14637D"), LEGACY),
+    Item(40753, Addon:T("CURRENCY.EMBLEM_OF_VALOR_297FAD"), Addon:T("CURRENCY.VALOR_EMBLEMS_28F433"), Addon:T("CURRENCY.WRATH_OF_THE_LICH_KING_14637D"), LEGACY),
+    Item(47241, Addon:T("CURRENCY.EMBLEM_OF_TRIUMPH_6F6235"), Addon:T("CURRENCY.TRIUMPH_74FBF2"), Addon:T("CURRENCY.WRATH_OF_THE_LICH_KING_14637D"), LEGACY),
+    Item(49426, Addon:T("CURRENCY.EMBLEM_OF_FROST_AFAC7C"), Addon:T("CURRENCY.FROST_DA563A"), Addon:T("CURRENCY.WRATH_OF_THE_LICH_KING_14637D"), LEGACY),
+    Currency(2589, Addon:T("CURRENCY.SIDEREAL_ESSENCE_7D5117"), Addon:T("CURRENCY.SIDEREAL_70DBB4"), Addon:T("CURRENCY.WRATH_TRIAL_OF_THE_CRUSADER_CC24FC"), nil, LEGACY),
+    Currency(2711, Addon:T("CURRENCY.DEFILER_S_SCOURGESTONE_A41821"), Addon:T("CURRENCY.SCOURGESTONES_B00093"), Addon:T("CURRENCY.WRATH_ICECROWN_CITADEL_80A360"), nil, LEGACY),
+    Currency(395, Addon:T("CURRENCY.JUSTICE_POINTS_55EA8F"), Addon:T("CURRENCY.JUSTICE_838CE8"), Addon:T("CURRENCY.CATACLYSM_MISTS_OF_PANDARIA_AFE11B"), nil, LEGACY),
+    Currency(396, Addon:T("CURRENCY.VALOR_POINTS_5983A0"), Addon:T("CURRENCY.VALOR_5C5DBB"), Addon:T("CURRENCY.CATACLYSM_MISTS_OF_PANDARIA_AFE11B"), nil, CURRENT),
+    Currency(614, Addon:T("CURRENCY.MOTE_OF_DARKNESS_56A6A6"), Addon:T("CURRENCY.DARKNESS_0B9A38"), Addon:T("CURRENCY.CATACLYSM_DRAGON_SOUL_DBCD00"), nil, LEGACY),
+    Currency(615, Addon:T("CURRENCY.ESSENCE_OF_CORRUPTED_DEATHWING_3026C9"), Addon:T("CURRENCY.DEATHWING_ESSENCE_110D73"), Addon:T("CURRENCY.CATACLYSM_DRAGON_SOUL_DBCD00"), nil, LEGACY),
+    Currency(3350, Addon:T("CURRENCY.CELESTIAL_STONE_FRAGMENT_317581"), Addon:T("CURRENCY.STONE_FRAGMENTS_C6B724"), Addon:T("CURRENCY.MISTS_OF_PANDARIA_21D5E3"), nil, CURRENT),
+    Currency(3414, Addon:T("CURRENCY.CELESTIAL_STONE_CHUNK_1752F6"), Addon:T("CURRENCY.STONE_CHUNKS_187562"), Addon:T("CURRENCY.MISTS_OF_PANDARIA_21D5E3"), nil, CURRENT),
+    Currency(3416, Addon:T("CURRENCY.CELESTIAL_STONE_CLUSTER_7EF901"), Addon:T("CURRENCY.STONE_CLUSTERS_23419C"), Addon:T("CURRENCY.MISTS_OF_PANDARIA_21D5E3"), nil, CURRENT),
 
     -- 熊猫人之谜
-    Currency(776, "战火徽记", "战火章", "熊猫人之谜", nil, CURRENT),
-    Currency(738, "次级好运符", "次级符", "熊猫人之谜", nil, CURRENT),
-    Currency(777, "永恒铸币", "永恒币", "熊猫人之谜", nil, CURRENT),
-    Currency(697, "长者的好运符", "长者符", "大地的裂变/熊猫人之谜", nil, LEGACY),
-    Currency(752, "魔古命运符文", "魔古符", "熊猫人之谜", nil, CURRENT),
+    Currency(776, Addon:T("CURRENCY.WARFORGED_SEAL_5B96AD"), Addon:T("CURRENCY.WARFORGED_E45D39"), Addon:T("CURRENCY.MISTS_OF_PANDARIA_21D5E3"), nil, CURRENT),
+    Currency(738, Addon:T("CURRENCY.LESSER_CHARM_OF_GOOD_FORTUNE_5CF414"), Addon:T("CURRENCY.LESSER_CHARMS_5EBA4F"), Addon:T("CURRENCY.MISTS_OF_PANDARIA_21D5E3"), nil, CURRENT),
+    Currency(777, Addon:T("CURRENCY.TIMELESS_COIN_0DB0D0"), Addon:T("CURRENCY.TIMELESS_EF7F6A"), Addon:T("CURRENCY.MISTS_OF_PANDARIA_21D5E3"), nil, CURRENT),
+    Currency(697, Addon:T("CURRENCY.ELDER_CHARM_OF_GOOD_FORTUNE_7B516E"), Addon:T("CURRENCY.ELDER_CHARMS_9609CB"), Addon:T("CURRENCY.CATACLYSM_MISTS_OF_PANDARIA_AFE11B"), nil, LEGACY),
+    Currency(752, Addon:T("CURRENCY.MOGU_RUNE_OF_FATE_AA2708"), Addon:T("CURRENCY.MOGU_RUNES_A3EF1F"), Addon:T("CURRENCY.MISTS_OF_PANDARIA_21D5E3"), nil, CURRENT),
 
     -- 其它
-    Item(21100, "先祖硬币", "先祖币", "经典旧世/燃烧的远征/巫妖王之怒", CURRENT),
-    Item(23247, "燃烧之花", "燃烧之花", "经典旧世/燃烧的远征/巫妖王之怒", CURRENT),
-    Item(33226, "万圣节糖果", "万圣糖果", "巫妖王之怒/大地的裂变", CURRENT),
-    Item(44791, "复活节巧克力", "复活节巧克力", "巫妖王之怒/大地的裂变", CURRENT),
-    Item(49927, "爱情信物", "爱情信物", "巫妖王之怒/大地的裂变", CURRENT),
-    Currency(241, "冠军的徽记", "冠军章", "巫妖王之怒", nil, LEGACY),
-    Currency(515, "暗月奖券", "暗月券", "全版本通用", nil, CURRENT),
-    Item(37829, "美酒节奖币", "美酒节奖币", "燃烧的远征/巫妖王之怒", CURRENT),
-    Currency(81, "美食家奖励", "美食奖", "巫妖王之怒/大地的裂变", "专业货币", LEGACY),
-    Currency(402, "铁掌徽记", "铁掌章", "熊猫人之谜", "专业货币", CURRENT),
-    Currency(61, "达拉然珠宝匠硬币", "珠宝币", "巫妖王之怒", "专业货币", LEGACY),
-    Currency(361, "珠宝名匠的荣誉奖章", "名匠奖章", "大地的裂变", "专业货币", LEGACY),
-    Currency(416, "世界之树印记", "世树章", "大地的裂变", nil, LEGACY),
-    Currency(393, "化石考古碎片", "化石", "全版本通用", "考古货币", CURRENT),
+    Item(21100, Addon:T("CURRENCY.COIN_OF_ANCESTRY_042D96"), Addon:T("CURRENCY.ANCESTRY_18A814"), Addon:T("CURRENCY.CLASSIC_THE_BURNING_CRUSADE_WRATH_55360C"), CURRENT),
+    Item(23247, Addon:T("CURRENCY.BURNING_BLOSSOM_5C5660"), Addon:T("CURRENCY.BURNING_BLOSSOM_5C5660"), Addon:T("CURRENCY.CLASSIC_THE_BURNING_CRUSADE_WRATH_55360C"), CURRENT),
+    Item(33226, Addon:T("CURRENCY.TRICKY_TREAT_99A307"), Addon:T("CURRENCY.TRICKY_TREATS_5D3FBC"), Addon:T("CURRENCY.WRATH_CATACLYSM_541899"), CURRENT),
+    Item(44791, Addon:T("CURRENCY.NOBLEGARDEN_CHOCOLATE_5E6248"), Addon:T("CURRENCY.NOBLEGARDEN_CHOCOLATE_5E6248"), Addon:T("CURRENCY.WRATH_CATACLYSM_541899"), CURRENT),
+    Item(49927, Addon:T("CURRENCY.LOVE_TOKEN_B4CA40"), Addon:T("CURRENCY.LOVE_TOKEN_B4CA40"), Addon:T("CURRENCY.WRATH_CATACLYSM_541899"), CURRENT),
+    Currency(241, Addon:T("CURRENCY.CHAMPION_S_SEAL_A1FB19"), Addon:T("CURRENCY.CHAMPION_SEALS_C3F1F4"), Addon:T("CURRENCY.WRATH_OF_THE_LICH_KING_14637D"), nil, LEGACY),
+    Currency(515, Addon:T("CURRENCY.DARKMOON_PRIZE_TICKET_7C7C77"), Addon:T("CURRENCY.DARKMOON_TICKETS_A84E80"), Addon:T("CURRENCY.ALL_EXPANSIONS_54CAAA"), nil, CURRENT),
+    Item(37829, Addon:T("CURRENCY.BREWFEST_PRIZE_TOKEN_38942C"), Addon:T("CURRENCY.BREWFEST_PRIZE_TOKEN_38942C"), Addon:T("CURRENCY.THE_BURNING_CRUSADE_WRATH_264AFC"), CURRENT),
+    Currency(81, Addon:T("CURRENCY.EPICUREAN_S_AWARD_881478"), Addon:T("CURRENCY.EPICUREAN_4BA694"), Addon:T("CURRENCY.WRATH_CATACLYSM_541899"), Addon:T("CURRENCY.PROFESSION_CURRENCY_BFC731"), LEGACY),
+    Currency(402, Addon:T("CURRENCY.IRONPAW_TOKEN_AF96C6"), Addon:T("CURRENCY.IRONPAW_6358E5"), Addon:T("CURRENCY.MISTS_OF_PANDARIA_21D5E3"), Addon:T("CURRENCY.PROFESSION_CURRENCY_BFC731"), CURRENT),
+    Currency(61, Addon:T("CURRENCY.DALARAN_JEWELCRAFTER_S_TOKEN_531180"), Addon:T("CURRENCY.JEWELCRAFTER_407CB3"), Addon:T("CURRENCY.WRATH_OF_THE_LICH_KING_14637D"), Addon:T("CURRENCY.PROFESSION_CURRENCY_BFC731"), LEGACY),
+    Currency(361, Addon:T("CURRENCY.ILLUSTRIOUS_JEWELCRAFTER_S_TOKEN_BDC049"), Addon:T("CURRENCY.ILLUSTRIOUS_5D2311"), Addon:T("CURRENCY.CATACLYSM_04BAE3"), Addon:T("CURRENCY.PROFESSION_CURRENCY_BFC731"), LEGACY),
+    Currency(416, Addon:T("CURRENCY.MARK_OF_THE_WORLD_TREE_632AC8"), Addon:T("CURRENCY.WORLD_TREE_83CDB9"), Addon:T("CURRENCY.CATACLYSM_04BAE3"), nil, LEGACY),
+    Currency(393, Addon:T("CURRENCY.FOSSIL_ARCHAEOLOGY_FRAGMENT_6C2A4A"), Addon:T("CURRENCY.FOSSIL_1A7F62"), Addon:T("CURRENCY.ALL_EXPANSIONS_54CAAA"), Addon:T("CURRENCY.ARCHAEOLOGY_CURRENCY_42726A"), CURRENT),
 }

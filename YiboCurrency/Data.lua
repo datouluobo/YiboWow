@@ -1,52 +1,12 @@
 local Addon, Core = _G.YiboCurrency, _G.YiboCore
-local CARRIED_BAGS = { 0, 1, 2, 3, 4 }
-local BANK_BAGS = { -1, 5, 6, 7, 8, 9, 10, 11, 12 }
-
 local function Copy(entry) local result = {}; for key, value in pairs(entry) do result[key] = value end; return result end
-local function ScanContainers(itemID, includeBank)
-    local getSlots = C_Container and C_Container.GetContainerNumSlots or GetContainerNumSlots
-    local getInfo = C_Container and C_Container.GetContainerItemInfo or GetContainerItemInfo
-    if type(getSlots) ~= "function" or type(getInfo) ~= "function" then return nil end
-    local carried, total = 0, 0
-    local function Scan(bags)
-        for _, bagID in ipairs(bags) do
-            for slot = 1, (getSlots(bagID) or 0) do
-                local info = getInfo(bagID, slot)
-                local foundID, stack
-                if type(info) == "table" then
-                    foundID, stack = info.itemID, info.stackCount or info.quantity or info.count
-                else
-                    local _, oldStack, _, _, _, _, _, _, _, oldID = getInfo(bagID, slot)
-                    foundID, stack = oldID, oldStack
-                end
-                if tonumber(foundID) == itemID then
-                    stack = tonumber(stack) or 1
-                    total = total + stack
-                end
-            end
-        end
-    end
-    carried = Scan(CARRIED_BAGS)
-    if includeBank then Scan(BANK_BAGS) end
-    return includeBank and total or carried
-end
-
-local function ReadItemCount(itemID, includeBank)
-    if C_Item and type(C_Item.GetItemCount) == "function" then
-        return C_Item.GetItemCount(itemID, includeBank, false, false)
-    end
-    if type(GetItemCount) == "function" then
-        return GetItemCount(itemID, includeBank, false, false)
-    end
-    return ScanContainers(itemID, includeBank)
-end
 
 function Addon:GetCatalog()
     local list, known = {}, {}
     for _, entry in ipairs(self.Catalog) do list[#list + 1] = entry; known[entry.id] = true end
     for _, entry in ipairs(self:GetSettings().customItems or {}) do
-        local copy = Copy(entry); copy.id = "item:" .. tostring(copy.itemID); copy.source = "item"; copy.sourceType = "物品代币"
-        copy.shortTitle = copy.shortTitle or copy.title; copy.expansion = copy.expansion or "自定义货币"; copy.status = copy.status or "当前可获取"; copy.totalAllowed = true; copy.isCustom = true
+        local copy = Copy(entry); copy.id = "item:" .. tostring(copy.itemID); copy.source = "item"; copy.sourceType = Addon:T("CURRENCY.ITEM_TOKEN_1605F4")
+        copy.shortTitle = copy.shortTitle or copy.title; copy.expansion = copy.expansion or Addon:T("CURRENCY.CUSTOM_CURRENCY_72DBEB"); copy.status = Addon:T("CURRENCY.OBTAINABLE_2BF203"); copy.totalAllowed = true; copy.isCustom = true
         if not known[copy.id] then list[#list + 1] = copy; known[copy.id] = true end
     end
     return list
@@ -62,7 +22,7 @@ end
 
 function Addon:RemoveCustomItem(itemID)
     itemID = tonumber(itemID)
-    if not itemID or itemID <= 0 or itemID % 1 ~= 0 then return nil, "请输入有效的 itemID。" end
+    if not itemID or itemID <= 0 or itemID % 1 ~= 0 then return nil, Addon:T("CURRENCY.ENTER_A_VALID_ITEMID_0CEB2F") end
     local settings = self:GetSettings()
     local found
     for index = #settings.customItems, 1, -1 do
@@ -71,184 +31,170 @@ function Addon:RemoveCustomItem(itemID)
             break
         end
     end
-    if not found then return nil, "该 itemID 不在自定义货币目录中。" end
+    if not found then return nil, Addon:T("CURRENCY.THIS_ITEMID_IS_NOT_IN_THE_CUSTOM_CATALOG_8F16E6") end
 
     local id = "item:" .. itemID
     settings.visible[id], settings.monitored[id] = nil, nil
+    if settings.previewColumns then settings.previewColumns[id] = nil end
+    if Core.AccountView and Core.AccountView.SetFieldVisible then Core.AccountView:SetFieldVisible("currency", id, true) end
     if settings.hoverOrderOverride then
         for index = #settings.hoverOrderOverride, 1, -1 do
             if settings.hoverOrderOverride[index] == id then table.remove(settings.hoverOrderOverride, index) end
         end
     end
-    if Core.CurrencyCatalog and Core.CurrencyCatalog.UnregisterItem then
-        Core.CurrencyCatalog:UnregisterItem(self.NAME, itemID)
-    end
-    if Core.DataDomains then Core.DataDomains:Dispatch("YIBO_CURRENCY_CATALOG_REGISTERED") end
+    if self.Scanner and self.Scanner.frame then self.Scanner:Request("catalog") end
     return found
-end
-
-function Addon:RegisterCatalogWithCore()
-    if self._catalogRegistered or not Core.CurrencyCatalog then return end
-    for _, entry in ipairs(self:GetCatalog()) do
-        if entry.currencyID then Core.CurrencyCatalog:RegisterCurrency(self.NAME, entry)
-        elseif entry.itemID then Core.CurrencyCatalog:RegisterItem(self.NAME, entry) end
-    end
-    self._catalogRegistered = true
-    if Core.DataDomains then Core.DataDomains:Dispatch("YIBO_CURRENCY_CATALOG_REGISTERED") end
 end
 
 function Addon:AddCustomItem(itemID, expansion)
     itemID = tonumber(itemID)
-    if not itemID or itemID <= 0 or itemID % 1 ~= 0 then return nil, "itemID 必须是正整数。" end
+    if not itemID or itemID <= 0 or itemID % 1 ~= 0 then return nil, Addon:T("CURRENCY.ITEMID_MUST_BE_A_POSITIVE_INTEGER_4A1D60") end
     local id = "item:" .. itemID
-    for _, entry in ipairs(self:GetCatalog()) do if entry.id == id then return nil, "该 itemID 已在货币目录中。" end end
+    for _, entry in ipairs(self:GetCatalog()) do if entry.id == id then return nil, Addon:T("CURRENCY.THIS_ITEMID_IS_ALREADY_IN_THE_CURRENCY_CATALOG_5C497A") end end
     local name, _, _, _, _, _, _, _, _, icon = GetItemInfo(itemID)
-    if not name then return nil, "客户端尚未缓存该物品；请先在游戏内查看该物品后重试。" end
-    local entry = { itemID = itemID, title = name, shortTitle = name, icon = icon, expansion = expansion or "自定义货币", source = "item", sourceType = "物品代币", status = "当前可获取", totalAllowed = true, verified = "client" }
+    if not name then return nil, Addon:T("CURRENCY.ITEM_DATA_IS_NOT_CACHED_INSPECT_THE_ITEM_IN_GAME_AND_RE_CA951B") end
+    local entry = { itemID = itemID, title = name, shortTitle = name, icon = icon,
+        expansion = expansion, expansionID = not expansion and "custom" or nil,
+        source = "item", totalAllowed = true, verified = "client" }
     self:GetSettings().customItems[#self:GetSettings().customItems + 1] = entry
-    if Core.CurrencyCatalog then Core.CurrencyCatalog:RegisterItem(self.NAME, entry) end
+    entry.id = id
+    if self.Scanner and self.Scanner.frame then self.Scanner:Request("catalog") end
     return entry
 end
 
-function Addon:IsVisible(entry) return self:GetSettings().visible[entry.id] ~= false end
-function Addon:SetVisible(entry, value) self:GetSettings().visible[entry.id] = not not value end
-function Addon:IsMonitored(entry) return self:GetSettings().monitored[entry.id] == true end
-function Addon:GetMonitoredCount() local count = 0; for _, entry in ipairs(self:GetCatalog()) do if self:IsMonitored(entry) then count = count + 1 end end; return count end
-
-function Addon:SetMonitored(entry, value)
-    local settings = self:GetSettings()
-    settings.monitored[entry.id] = not not value
-    -- Selection alone must not silently convert the default global order into
-    -- a custom order.  An override is created only by the explicit ↑/↓ tools.
-    if not value and settings.hoverOrderOverride then
-        for index = #settings.hoverOrderOverride, 1, -1 do if settings.hoverOrderOverride[index] == entry.id then table.remove(settings.hoverOrderOverride, index) end end
+function Addon:GetFieldDefinitions()
+    local fields = {}
+    for _, entry in ipairs(self:GetCatalog()) do
+        fields[#fields + 1] = { id = entry.id, title = entry.title, group = entry.expansion,
+            defaultVisible = self:GetSettings().visible[entry.id] ~= false }
     end
+    return fields
+end
+function Addon:IsVisible(entry)
+    return Core.AccountView:GetFieldVisible("currency", entry.id)
+end
+function Addon:SetVisible(entry, value)
+    Core.AccountView:SetFieldVisible("currency", entry.id, value)
+end
+function Addon:IsMonitored(entry) return self:GetSettings().previewColumns[entry.id] == true end
+function Addon:GetMonitoredCount() return #self:GetMonitoredCatalog() end
+function Addon:SetMonitored(entry, value)
+    self:GetSettings().previewColumns[entry.id] = not not value
+    self:NotifyChanged()
     return true
 end
-
 function Addon:GetMonitoredCatalog()
-    local all, byID = self:GetCatalog(), {}; for _, entry in ipairs(all) do byID[entry.id] = entry end
-    local result, added, override = {}, {}, self:GetSettings().hoverOrderOverride
-    if type(override) == "table" then for _, id in ipairs(override) do local entry = byID[id]; if entry and self:IsMonitored(entry) then result[#result + 1] = entry; added[id] = true end end end
-    for _, entry in ipairs(all) do if self:IsMonitored(entry) and not added[entry.id] then result[#result + 1] = entry end end
+    local result = {}
+    for _, entry in ipairs(self:GetCatalog()) do if self:IsMonitored(entry) then result[#result + 1] = entry end end
     return result
 end
-
-function Addon:MoveMonitored(entryID, direction)
-    local list = self:GetMonitoredCatalog(); local index
-    for i, entry in ipairs(list) do if entry.id == entryID then index = i; break end end
-    if not index then return end
-    local target = index + direction; if target < 1 or target > #list then return end
-    list[index], list[target] = list[target], list[index]
-    local order = {}; for _, entry in ipairs(list) do order[#order + 1] = entry.id end
-    self:GetSettings().hoverOrderOverride = order
+function Addon:GetDisplayCatalog(preview)
+    if preview then return self:GetMonitoredCatalog() end
+    local result = {}
+    for _, entry in ipairs(self:GetCatalog()) do if self:IsVisible(entry) then result[#result + 1] = entry end end
+    return result
 end
-function Addon:ResetHoverOrder() self:GetSettings().hoverOrderOverride = nil end
 
 function Addon:GetIcon(entry)
     if entry.icon then return entry.icon end
     if entry.itemID and GetItemIcon then
-        local icon = GetItemIcon(entry.itemID)
-        if icon then return icon end
+        local ok, icon = pcall(GetItemIcon, entry.itemID)
+        if ok and icon then return icon end
     end
     if entry.currencyID then
-        local info = C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo and C_CurrencyInfo.GetCurrencyInfo(entry.currencyID)
-        if info and info.iconFileID then return info.iconFileID end
+        local ok, info
+        if C_CurrencyInfo and type(C_CurrencyInfo.GetCurrencyInfo) == "function" then ok, info = pcall(C_CurrencyInfo.GetCurrencyInfo, entry.currencyID) end
+        if ok and type(info) == "table" and info.iconFileID then return info.iconFileID end
         if GetCurrencyInfo then
-            local _, _, icon = GetCurrencyInfo(entry.currencyID)
-            if icon then return icon end
+            local worked, _, _, icon = pcall(GetCurrencyInfo, entry.currencyID)
+            if worked and icon then return icon end
         end
     end
-    if entry.currencyID and Core.DataDomains then
-        local current = Core.Characters:GetCurrent(); local snapshot = current and Core.DataDomains:Get(current.id, "economy")
-        local info = snapshot and snapshot.data and snapshot.data.currencies and snapshot.data.currencies[entry.currencyID]
+    if entry.currencyID and self.Store then
+        local current = Core.Characters:GetCurrent({ identityOnly = true })
+        local snapshot = current and self.Store:Get(current.id, "native")
+        local info = snapshot and snapshot.data.currencies[entry.currencyID]
         if info and info.iconFileID then return info.iconFileID end
     end
     return "Interface\\Icons\\INV_Misc_QuestionMark"
 end
 
 function Addon:GetValue(character, entry, projection)
-    local domainID = entry.source == "item" and "economy-items" or "economy"
+    if not character or not entry then return nil, "not-yet-scanned" end
     local cached = projection and projection.snapshots[character.id]
-    local snapshot = cached and cached[domainID] or (not projection and Core.DataDomains:Get(character.id, domainID))
-    -- GetItemCount returns 0 even for arbitrary, unverified item IDs.  A zero
-    -- must only become a balance after the item's client identity has been
-    -- confirmed; otherwise the matrix would turn a missing probe into `0~`.
     if entry.source == "item" then
         if entry.verified == "pending-client" and GetItemInfo and GetItemInfo(entry.itemID) then entry.verified = "client" end
         if entry.verified ~= "client" and entry.verified ~= "implemented" then return nil, "unverified" end
-        local itemValue = snapshot and snapshot.state == "known" and snapshot.data
-            and snapshot.data.items and snapshot.data.items[entry.itemID]
         local vault
         if projection then
             local row = projection.vault and projection.vault.characters[character.id]
-            local item = row and row.items[tonumber(entry.itemID)]
-            if item then
-                vault = { carried = item.bags, bank = item.bank, equipped = item.equipment,
-                    bagsKnown = row.coverage.bags.hasSnapshot, bankKnown = row.coverage.bank.hasSnapshot,
-                    equipmentKnown = row.coverage.equipment and row.coverage.equipment.hasSnapshot or false }
-            end
-        else
-            vault = self.GetVaultItemBalance and self:GetVaultItemBalance(character, entry.itemID)
-        end
-        if vault then
-            local carried = vault.bagsKnown and vault.carried or itemValue and itemValue.carried
-            local bank = vault.bankKnown and vault.bank or itemValue and tonumber(itemValue.bank)
-            local equipped = vault.equipmentKnown and vault.equipped or nil
+            local item = row and row.items[entry.itemID]
+            if item then vault = { carried = item.bags, bank = item.bank, equipped = item.equipment,
+                bagsKnown = row.coverage.bags.hasSnapshot, bankKnown = row.coverage.bank.hasSnapshot,
+                equipmentKnown = row.coverage.equipment and row.coverage.equipment.hasSnapshot or false } end
+        else vault = self:GetVaultItemBalance(character, entry.itemID) end
+        if vault and (vault.bagsKnown or vault.bankKnown or vault.equipmentKnown) then
+            local carried, bank, equipped = vault.bagsKnown and vault.carried or nil, vault.bankKnown and vault.bank or nil, vault.equipmentKnown and vault.equipped or nil
             if carried ~= nil or bank ~= nil or equipped ~= nil then
-                local complete = carried ~= nil and bank ~= nil and equipped ~= nil
                 return { itemID = entry.itemID, carried = carried, bank = bank, equipped = equipped,
-                    total = (carried or 0) + (bank or 0) + (equipped or 0), bankKnown = bank ~= nil,
-                    equipmentKnown = equipped ~= nil },
-                    complete and "known" or "bank"
+                    total = (carried or 0) + (bank or 0) + (equipped or 0), sourceID = "vault.items",
+                    bankKnown = bank ~= nil, equipmentKnown = equipped ~= nil },
+                    carried ~= nil and bank ~= nil and equipped ~= nil and "known" or "bank"
             end
         end
-        if itemValue then return itemValue, "known" end
-        -- A catalog update can happen after an older character snapshot was
-        -- saved.  Read the current character directly so a newly added token
-        -- is visible immediately instead of waiting for a future bag event.
-        local current = Core.Characters and Core.Characters:GetCurrent()
-        if current and current.id == character.id then
-            local carried = ReadItemCount(entry.itemID, false)
-            if carried ~= nil then
-                local total = ReadItemCount(entry.itemID, true) or carried
-                return { itemID = entry.itemID, carried = carried, total = total, bankKnown = false }, "known"
-            end
-        end
-        return nil, snapshot and snapshot.state or "not-yet-scanned"
+        local snapshot = cached and cached.carriedTokens or (not projection and self.Store:Get(character.id, "carriedTokens"))
+        local item = snapshot and snapshot.data.items[entry.itemID]
+        if not item then return nil, snapshot and snapshot.state ~= "partial" and snapshot.state ~= "known" and snapshot.state or "not-yet-scanned" end
+        if snapshot.state ~= "known" and snapshot.state ~= "partial" and snapshot.state ~= "stale" then return nil, snapshot.state end
+        return { itemID = entry.itemID, carried = item.carried, total = item.carried,
+            bankKnown = false, equipmentKnown = false, sourceID = "currency.carried", observedAt = snapshot.observedAt },
+            snapshot.state == "stale" and "historical" or "bank"
     end
-    if not snapshot or snapshot.state ~= "known" then return nil, snapshot and snapshot.state or "not-yet-scanned" end
-    if entry.source == "money" then return { quantity = snapshot.data and snapshot.data.money }, "known" end
-    if snapshot.data and snapshot.data.currencyState ~= "known" then return nil, snapshot.data.currencyState end
-    local value = snapshot.data and snapshot.data.currencies and snapshot.data.currencies[entry.currencyID]
-    -- A stable standard ID absent from an otherwise working currency API is
-    -- unsupported by this client, not "not applicable" to every character.
-    if not value then return nil, "unsupported" end
-    return value, "known"
+    local snapshot = cached and cached.native or (not projection and self.Store:Get(character.id, "native"))
+    if not snapshot then return nil, "not-yet-scanned" end
+    if snapshot.state ~= "known" and snapshot.state ~= "stale" then return nil, snapshot.state end
+    local state = snapshot.state == "stale" and "historical" or "known"
+    if entry.source == "money" then
+        if snapshot.data.moneyCopper == nil then return nil, "not-yet-scanned" end
+        if snapshot.data.moneyState ~= "known" and snapshot.data.moneyState ~= "stale" then return nil, snapshot.data.moneyState or "unavailable" end
+        return { quantity = snapshot.data.moneyCopper, observedAt = snapshot.observedAt, sourceID = "currency.native" }, state
+    end
+    local cell = snapshot.data.currencies[entry.currencyID]
+    if not cell then return nil, "not-yet-scanned" end
+    if cell.state ~= "known" and cell.state ~= "stale" then return nil, cell.state or "unavailable" end
+    if cell.quantity == nil then return nil, "unavailable" end
+    if cell.state == "stale" or (cell.observedAt and self.Store.Now() - cell.observedAt > self.Store.MAX_AGE) then state = "historical" end
+    return Copy(cell), state
 end
 
 function Addon:ValueState(value, state)
-    if state ~= "known" and state ~= "bank" then return "unknown" end
+    if state ~= "known" and state ~= "bank" and state ~= "historical" then return "unknown" end
     if not value then return "na" end
     if value.quantity == nil and value.total == nil and value.carried == nil then return "na" end
-    return state == "bank" and "bank" or "known"
+    return (state == "bank" or state == "historical") and "bank" or "known"
 end
 function Addon:StateDescription(value, state)
-    if state == "unverified" then return "目录尚未在目标客户端核验" end
-    if state == "unsupported" then return "此客户端无法读取该稳定 ID" end
-    if state == "not-yet-scanned" or state == "unsynced" then return "该角色尚未同步" end
-    if state == "unavailable" then return "货币 API 当前不可用" end
-    if state == "stale" then return "角色数据已过期" end
-    if state == "error" then return "读取货币时发生错误" end
-    if state == "bank" then return "个人库存来源尚未完整扫描" end
+    if state == "historical" then return self:T("MIGRATION.HISTORICAL") end
+    if state == "bank" and value and value.sourceID == "currency.carried" then return self:T("MIGRATION.CARRIED_ONLY") end
+    if state == "unverified" then return Addon:T("CURRENCY.CATALOG_ENTRY_HAS_NOT_BEEN_VERIFIED_ON_THIS_CLIENT_10B736") end
+    if state == "unsupported" then return Addon:T("CURRENCY.THIS_CLIENT_CANNOT_READ_THE_STABLE_ID_796174") end
+    if state == "not-yet-scanned" or state == "unsynced" then return Addon:T("CURRENCY.CHARACTER_HAS_NOT_BEEN_SYNCED_D90186") end
+    if state == "unavailable" then return Addon:T("CURRENCY.CURRENCY_API_IS_UNAVAILABLE_CC0295") end
+    if state == "stale" then return Addon:T("CURRENCY.CHARACTER_DATA_IS_STALE_D8D851") end
+    if state == "error" then return Addon:T("CURRENCY.CURRENCY_READ_FAILED_7E7AEA") end
+    if state == "bank" then return Addon:T("CURRENCY.PERSONAL_INVENTORY_SOURCES_ARE_INCOMPLETE_F4E8EE") end
     return nil
 end
 function Addon:FormatCompact(value, entry)
-    local quantity = entry and entry.source == "item" and (value.total or value.carried or value.quantity) or value and value.quantity
+    local quantity = value and (entry and entry.source == "item" and (value.total or value.carried or value.quantity) or value.quantity)
     quantity = tonumber(quantity); if quantity == nil then return "—" end
-    if entry and entry.source == "money" then quantity = math.floor(quantity / 10000); return quantity >= 10000 and (string.format("%.1f万", quantity / 10000):gsub("%.0万$", "万")) or quantity >= 1000 and (string.format("%.1fk", quantity / 1000):gsub("%.0k$", "k")) or quantity end
-    if quantity >= 10000 then return (string.format("%.1f万", quantity / 10000):gsub("%.0万$", "万")) end
-    if quantity >= 1000 then return string.format("%.1fk", quantity / 1000):gsub("%.0k$", "k") end
+    if entry and entry.source == "money" then quantity = math.floor(quantity / 10000) end
+    local language = Core.Locale:GetLanguage()
+    local divisor, suffix
+    if language == "zh" and quantity >= 10000 then divisor, suffix = 10000, Addon:T("FORMAT.TEN_THOUSAND")
+    elseif language == "en" and quantity >= 1000000 then divisor, suffix = 1000000, "m"
+    elseif quantity >= 1000 then divisor, suffix = 1000, "k" end
+    if divisor then return (string.format("%.1f", quantity / divisor):gsub("%.0$", "")) .. suffix end
     return BreakUpLargeNumbers(quantity)
 end
 function Addon:FormatCell(value, state, entry)
@@ -266,15 +212,16 @@ function Addon:FormatWeeklyProgress(value, entry)
     local parts = {}
     local weeklyCap = tonumber(value.maxWeeklyQuantity)
     if weeklyCap and weeklyCap > 0 then
-        local earned = tonumber(value.weeklyQuantity) or 0
-        parts[#parts + 1] = "本周 " .. BreakUpLargeNumbers(earned) .. " / " .. BreakUpLargeNumbers(weeklyCap)
+        local earned = tonumber(value.weeklyQuantity)
+        parts[#parts + 1] = Addon:T("FORMAT.WEEKLY", earned ~= nil and BreakUpLargeNumbers(earned) or "?", BreakUpLargeNumbers(weeklyCap))
     end
     -- Some MoP Classic currencies, including 战火徽记, expose their active
     -- cap through maxQuantity rather than maxWeeklyQuantity. Keep this
     -- separate from weekly progress; a currency can expose both fields.
     local holdingCap = tonumber(value.maxQuantity)
     if holdingCap and holdingCap > 0 then
-        parts[#parts + 1] = "当前 / 上限 " .. BreakUpLargeNumbers(tonumber(value.quantity) or 0) .. " / " .. BreakUpLargeNumbers(holdingCap)
+        local quantity = tonumber(value.quantity)
+        parts[#parts + 1] = Addon:T("FORMAT.HOLDING", quantity ~= nil and BreakUpLargeNumbers(quantity) or "?", BreakUpLargeNumbers(holdingCap))
     end
     return #parts > 0 and table.concat(parts, " · ") or nil
 end

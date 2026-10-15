@@ -521,6 +521,59 @@ function Page:Create(parent)
     ui.itemEvents:SetScript("OnEvent", ProductInfoReady)
 end
 
+local function ToolbarHeight(context, mode, width)
+    local function Field(label, minimum) return math.max(minimum, Theme:GetIconTextColumnWidth(16, Theme.Font.body, label, 1)) end
+    local modes = context.preview and 0 or math.max(66, Theme:GetIconTextColumnWidth(0, Theme.Font.body, L("PROFESSIONS"), 1)) * 2 + 4
+    local fields = Field(L("ALL_CHARACTERS"), 96) + (mode == "recipes" and Field(L("ALL_PROFESSIONS"), 88) or 0)
+        + Field(L("SELECT_PROFESSION"), 88) + Field(L("HAS_UNLEARNED"), 88) + modes + (mode == "recipes" and 34 or 28) + 12
+    return fields + 120 > width and 70 or 32
+end
+local function MatrixBodyHeight(entries)
+    local height, last = 0, nil
+    for _, entry in ipairs(entries) do
+        height = height + H + (entry.professionID ~= last and 26 or 0); last = entry.professionID
+    end
+    return height
+end
+local function MatrixFixedHeight(context, width, headerHeight)
+    local inset = Theme:GetMatrixInsets(false)
+    return inset.top + inset.bottom + ToolbarHeight(context, "recipes", width) + 5 + (headerHeight or 42) + 2 + 32
+end
+function Page:GetMatrixEntries(context, entries, state, toolbarHeight)
+    local characters = self:CharactersForProfession(context.characters, state.professionFilter)
+    local filtered = self:Filtered(entries, characters, { search = state.search, profession = state.professionFilter,
+        category = state.category, character = state.character, status = state.status })
+    if not context.preview then return filtered, #filtered, characters end
+    local subset, used, last = {}, 0, nil
+    local budget = math.max(H + 26, math.min(360, context.surfaceAvailableHeight or 360) - (toolbarHeight + 72 + 48))
+    for _, entry in ipairs(filtered) do
+        local cost = H + (last ~= entry.professionID and 26 or 0)
+        if used + cost > budget then break end
+        subset[#subset + 1], used, last = entry, used + cost, entry.professionID
+    end
+    return subset, #filtered, characters
+end
+function Page:GetMatrixSurfaceMetrics(context)
+    local state = self.filterState or { search = "" }
+    local characters = self:CharactersForProfession(context.characters, state.professionFilter)
+    local recipeWidth = math.max(225, Theme:GetIconTextColumnWidth(23, Theme.Font.body, L("RECIPE_NAME"), 8))
+    local inset = Theme:GetMatrixInsets(false)
+    local naturalWidth = math.max(760, recipeWidth + MatrixCharacterWidth() * #characters + inset.left + inset.right + 2)
+    local width = math.max(1, math.min(naturalWidth, context.surfaceAvailableWidth or naturalWidth) - inset.left - inset.right)
+    local snapshot = context.craftingSurfaceSnapshot
+    if not snapshot then
+        local entries, professions, names = self:Snapshot(context)
+        snapshot = { entries = entries, professions = professions, names = names }; context.craftingSurfaceSnapshot = snapshot
+    end
+    local entries = self:GetMatrixEntries(context, snapshot.entries, state, ToolbarHeight(context, "recipes", width))
+    local fixedHeight = MatrixFixedHeight(context, width)
+    return { minContentWidth = 760, naturalContentWidth = naturalWidth,
+        minContentHeight = context.preview and 180 or 470,
+        naturalContentHeight = context.preview and math.min(360, context.surfaceAvailableHeight or 360) or 640,
+        scrollContentHeight = MatrixBodyHeight(entries), scrollFixedHeight = fixedHeight,
+        horizontalOverflow = "paginate", verticalOverflow = "content" }
+end
+
 function Page:Layout(parent, context, mode)
     local ui = parent.crafting
     local inset = Theme:GetMatrixInsets(false)
@@ -556,7 +609,7 @@ function Page:Layout(parent, context, mode)
     if mode == "recipes" then ui.category:SetPoint("LEFT", ui.profession, "RIGHT", 4, 0)
     else ui.category:SetPoint("LEFT", ui.character, "RIGHT", 6, 0) end
     ui.status:ClearAllPoints(); ui.status:SetPoint("LEFT", ui.category, "RIGHT", 4, 0)
-    if fixedWidth + 120 > width then
+    if ToolbarHeight(context, mode, width) > 32 then
         ui.toolbar:SetHeight(70)
         ui.search:SetWidth(math.max(120, width - modeWidth - 24))
         ui.search:ClearAllPoints(); ui.search:SetPoint("TOPLEFT", ui.toolbar, "TOPLEFT", 6, -2)
@@ -679,13 +732,22 @@ function Page:RenderMatrix(parent, context, entries, names)
     local showNames = not context.GetFieldVisible or context:GetFieldVisible("recipe-name")
     local showStates = not context.GetFieldVisible or context:GetFieldVisible("recipe-state")
     PositionScroll(panel, 43)
-    local width = math.max(1, panel.scroll:GetWidth() or (ui.matrixWidth - 2))
+    local inset = Theme:GetMatrixInsets(false)
+    local fixedHeight = MatrixFixedHeight(context, ui.matrixWidth)
+    local width = math.max(1, Core.AccountView:GetScrollSurfaceWidth(context, parent, MatrixBodyHeight(entries), fixedHeight) - inset.left - inset.right - 2)
     local recipeWidth = math.max(225, Theme:GetIconTextColumnWidth(23, Theme.Font.body, L("RECIPE_NAME"), 8))
     local characterWidth = Core.AccountView:FitRepeatedColumnWidth(
         width, recipeWidth, #characters, MatrixCharacterWidth(), MatrixCharacterMinWidth())
     local shown, pageInfo = Core.AccountView:GetColumnPage(ID, "characters", characters, width, recipeWidth, characterWidth)
     local displayCharacters = #entries > 0 and showStates and shown or {}
     local headerHeight = pageInfo and pageInfo.pages and pageInfo.pages > 1 and 72 or 42
+    if headerHeight > 42 then
+        fixedHeight = MatrixFixedHeight(context, ui.matrixWidth, headerHeight)
+        width = math.max(1, Core.AccountView:GetScrollSurfaceWidth(context, parent, MatrixBodyHeight(entries), fixedHeight) - inset.left - inset.right - 2)
+        characterWidth = Core.AccountView:FitRepeatedColumnWidth(width, recipeWidth, #characters, MatrixCharacterWidth(), MatrixCharacterMinWidth())
+        shown, pageInfo = Core.AccountView:GetColumnPage(ID, "characters", characters, width, recipeWidth, characterWidth)
+        displayCharacters = #entries > 0 and showStates and shown or {}
+    end
     PositionScroll(panel, headerHeight + 1)
     panel.header:ClearAllPoints(); panel.header:SetPoint("TOPLEFT", panel, "TOPLEFT", 1, -1)
     panel.header:SetHeight(headerHeight); panel.header:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -1, -1)
@@ -965,23 +1027,17 @@ function Page:RenderResults(parent)
         scoped.characters = self:CharactersForProfession(context.characters, ui.state.professionFilter)
         context = scoped
     end
-    local filtered = self:Filtered(snapshot.entries, context.characters or {}, {
-        search = ui.state.search, profession = mode == "recipes" and ui.state.professionFilter or nil,
-        category = ui.state.category, character = ui.state.character, status = ui.state.status,
-    })
     if context.preview then
-        local total, subset, used, last = #filtered, {}, 0, nil
-        local budget = math.max(H + 26, math.min(360, context.surfaceAvailableHeight or 360) - (ui.toolbar:GetHeight() + 72 + 48))
-        for _, entry in ipairs(filtered) do
-            local cost = H + (last ~= entry.professionID and 26 or 0)
-            if used + cost > budget then break end
-            subset[#subset + 1], used, last = entry, used + cost, entry.professionID
-        end
+        local subset, total = self:GetMatrixEntries(context, snapshot.entries, ui.state, ui.toolbar:GetHeight())
         self:RenderMatrix(parent, context, subset, snapshot.names)
         ui.footer:SetText(L("PREVIEW_REMAINDER", #subset, total))
         ui.renderedSearch = ui.state.search
         return
     end
+    local filtered = self:Filtered(snapshot.entries, context.characters or {}, {
+        search = ui.state.search, profession = mode == "recipes" and ui.state.professionFilter or nil,
+        category = ui.state.category, character = ui.state.character, status = ui.state.status,
+    })
     if mode == "recipes" then self:RenderMatrix(parent, context, filtered, snapshot.names)
     else self:RenderProfessionMode(parent, snapshot.context, filtered, snapshot.professionList, snapshot.names) end
     ui.renderedSearch = ui.state.search
@@ -990,7 +1046,12 @@ end
 function Page:Refresh(parent, context)
     local ui = parent.crafting
     ui.searchGeneration = (ui.searchGeneration or 0) + 1
-    local entries, professionList, names = self:Snapshot(context)
+    local cached = context.craftingSurfaceSnapshot
+    local entries, professionList, names
+    if cached then
+        entries, professionList, names = cached.entries, cached.professions, cached.names
+        context.craftingSurfaceSnapshot = nil -- Consume only this measurement-to-render handoff.
+    else entries, professionList, names = self:Snapshot(context) end
     self.catalogItemIDs = {}
     for _, entry in ipairs(entries) do
         for _, itemID in ipairs(entry.outputItemIDs or {}) do self.catalogItemIDs[itemID] = true end
@@ -1123,19 +1184,21 @@ function Page:Register()
         },
         scope = { mode = "realms", allTitle = L("ALL_REALMS") },
         GetSurfaceMetrics = function(context)
-            local count = #Page:CharactersForProfession(context.characters,
-                Page.filterState and Page.filterState.professionFilter)
-            local matrixWidth = 235 + MatrixCharacterWidth() * count
-            return {
-                minContentWidth = 760, naturalContentWidth = math.max(760, matrixWidth),
-                minContentHeight = context.preview and 180 or 470,
-                naturalContentHeight = context.preview and math.min(360, context.surfaceAvailableHeight or 360) or 640,
-                horizontalOverflow = "paginate",
-            }
+            if not context.preview and Addon.Store.db.settings.viewMode == "professions" then
+                local count = #Page:CharactersForProfession(context.characters, Page.filterState and Page.filterState.professionFilter)
+                return { minContentWidth = 760, naturalContentWidth = math.max(760, 235 + MatrixCharacterWidth() * count), minContentHeight = 470,
+                    naturalContentHeight = 640, verticalOverflow = "content" }
+            end
+            return Page:GetMatrixSurfaceMetrics(context)
         end,
         GetHoverMetrics = function(context)
-            return { minContentWidth = 760, naturalContentWidth = math.max(760, 235 + MatrixCharacterWidth() * #context.characters),
-                minContentHeight = 180, naturalContentHeight = math.min(360, context.surfaceAvailableHeight or 360) }
+            local metrics = Page:GetMatrixSurfaceMetrics(context)
+            local shell = Theme.Geometry.shellBorder * 2
+            return { minWidth = metrics.minContentWidth + shell, preferredWidth = metrics.naturalContentWidth + shell,
+                minHeight = metrics.minContentHeight + Theme.Geometry.titleBar + shell,
+                preferredHeight = metrics.naturalContentHeight + Theme.Geometry.titleBar + shell,
+                scrollContentHeight = metrics.scrollContentHeight, scrollFixedHeight = metrics.scrollFixedHeight,
+                horizontalOverflow = "paginate", verticalOverflow = "content" }
         end,
         Create = function(parent) Page:Create(parent) end,
         Refresh = function(parent, context) Page:Refresh(parent, context) end,

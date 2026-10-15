@@ -14,6 +14,10 @@ YiboCore = {
     Characters = {
         GetCurrent = function() return characters[1] end,
         GetAll = function() return characters end,
+        GetAllCached = function() return characters end,
+        Get = function(_, id)
+            for _, character in ipairs(characters) do if character.id == id then return character end end
+        end,
     },
     AccountView = { GetVisibleCharacters = function() return characters end },
     DataDomains = { Get = function(_, id, domain)
@@ -22,17 +26,29 @@ YiboCore = {
 }
 YiboCurrency = {}
 YiboCurrency.NAME = 'YiboCurrency'
+dofile("YiboCurrency/_NonRelease/Tests/LoadLocale.lua")
 YiboCore.Defaults = { Copy = function(_, value) local function copy(v) if type(v) ~= 'table' then return v end local r = {}; for k,x in pairs(v) do r[k] = copy(x) end return r end return copy(value) end }
 YiboCore.Capabilities = { Register = function() end }
 YiboCore.Registry = { Get = function() return true end }
 YiboCore.Print = function() end
 dofile('YiboCore/Runtime/Events.lua')
 dofile('YiboCore/Runtime/Contracts.lua')
+local currencyDB = { version = 5, characters = {}, settings = {}, migration = {} }
+YiboCurrency.EnsureDB = function() return currencyDB end
+dofile("YiboCurrency/Store.lua")
+assert(YiboCurrency.Store:Initialize())
+for id, snapshot in pairs(snapshots) do
+    local items = {}
+    for itemID, item in pairs(snapshot.data.items) do items[itemID] = { carried = item.carried } end
+    currencyDB.characters[id] = { carriedTokens = { state = "partial", observedAt = GetServerTime(), revision = 1,
+        provenance = { kind = "client-carried" }, data = { items = items } } }
+end
 dofile("YiboCurrency/Data.lua")
 dofile("YiboCurrency/VaultIntegration.lua")
 local entry = { source = "item", itemID = 72988, verified = "implemented" }
 local balance = YiboCurrency:TotalFor(characters, entry)
-assert(balance.quantity == 9 and balance.complete, "Currency starts from Core item balances")
+assert(balance.quantity == 7 and balance.bankPending and not balance.complete,
+    "Currency fallback counts confirmed carried stock and marks missing personal sources")
 assert(YiboCurrency:GetVaultItemDetail(entry, characters) == nil,
     "without Vault the optional detail must be absent")
 
@@ -123,13 +139,15 @@ local entries = { { id = "item:72988", source = "item", itemID = 72988, verified
 newlyAdded.id = "item:888"
 local context = {}
 local domainReads, originalDomainGet = 0, YiboCore.DataDomains.Get
+local storeReads, originalStoreGet = 0, YiboCurrency.Store.Get
+YiboCurrency.Store.Get = function(self, ...) storeReads = storeReads + 1; return originalStoreGet(self, ...) end
 YiboCore.DataDomains.Get = function(self, ...)
     domainReads = domainReads + 1
     return originalDomainGet(self, ...)
 end
 local projection = YiboCurrency:GetCurrencyProjection(context, characters, entries)
 assert(projection == YiboCurrency:GetCurrencyProjection(context, characters, entries)
-    and countCalls == 1 and bulkQueries == 0 and domainReads == #characters * 2,
+    and countCalls == 1 and bulkQueries == 0 and domainReads == 0 and storeReads == #characters * 2,
     "one render context shares one batch request across sizing and drawing")
 for _, character in ipairs(characters) do
     for _, monitored in ipairs(entries) do
@@ -137,7 +155,7 @@ for _, character in ipairs(characters) do
         YiboCurrency:ProjectionTotal(projection, characters, monitored)
     end
 end
-assert(countCalls == 1 and domainReads == #characters * 2,
+assert(countCalls == 1 and domainReads == 0 and storeReads == #characters * 2,
     "cell and total reads reuse the projection without provider calls")
 assert(projection.totals["item:888"].quantity == 4,
     "projection totals include all four characters")
@@ -150,6 +168,33 @@ YiboVault.CAPABILITIES["items.personal-counts"] = nil
 YiboVault.CAPABILITIES["items.query"] = nil
 assert(YiboCurrency:GetVaultItemDetail(entry, characters) == nil,
     "an incompatible detail capability must keep the Currency flow usable")
-assert(YiboCurrency:TotalFor(characters, entry).quantity == 9,
-    "an incompatible Vault must use the original Core snapshots")
+assert(YiboCurrency:TotalFor(characters, entry).quantity == 7,
+    "an incompatible Vault must use confirmed Currency sources")
+YiboVault.CAPABILITIES["items.personal-counts"] = 1
+YiboVault.CAPABILITIES["items.query"] = 1
+assert(YiboCore.Contracts:Unregister("YiboVault", YiboVault.Items.serviceRef))
+assert(YiboCurrency:TotalFor(characters, entry).quantity == 7,
+    "unregistered provider returns to confirmed Currency sources")
+assert(YiboVault.Items:RegisterService())
+assert(YiboCurrency:TotalFor(characters, newlyAdded).quantity == 5,
+    "late re-registration restores provider counts without reloading Currency")
+assert(YiboCore.Contracts:Unregister("YiboVault", YiboVault.Items.serviceRef))
+local incompatible = { name = "vault.items", kind = "service", providerID = "YiboVault:inventory",
+    version = { major = 2, minor = 0 }, methods = { HasCapability = function() return true end } }
+local ref = assert(YiboCore.Contracts:Register("YiboVault", incompatible))
+assert(YiboCurrency:TotalFor(characters, entry).quantity == 7,
+    "incompatible contract major does not disable the base balance")
+assert(YiboCore.Contracts:Unregister("YiboVault", ref))
+local failing = { name = "vault.items", kind = "service", providerID = "YiboVault:inventory",
+    version = { major = 1, minor = 0 }, methods = { HasCapability = function() return true end,
+        Query = function() error("unavailable") end, GetPersonalCounts = function() error("unavailable") end } }
+ref = assert(YiboCore.Contracts:Register("YiboVault", failing))
+assert(YiboCurrency:GetVaultItemDetail(entry, characters) == nil
+    and YiboCurrency:TotalFor(characters, entry).quantity == 7,
+    "provider exceptions fail as missing enhancement")
+assert(YiboCore.Contracts:Unregister("YiboVault", ref))
+failing.methods.GetPersonalCounts = function() return { characters = { ["A-Realm"] = { items = {} } } } end
+assert(YiboCore.Contracts:Register("YiboVault", failing))
+assert(YiboCurrency:TotalFor(characters, entry).quantity == 7,
+    "malformed coverage does not crash the main or preview balance")
 print("YiboCurrency Vault integration spec passed")

@@ -6,7 +6,7 @@ Addon.runtime = Addon.runtime or { testProjectionByCharacter = {}, snapshotsByCh
 Addon.runtime.testProjectionByCharacter = {}
 Addon.runtime.snapshotsByCharacter = {}
 Addon.NAME = "YiboLegendary"
-Addon.VERSION = "2.2.2"
+Addon.VERSION = "2.2.3"
 Addon.REQUIRED_CORE_API = 13
 
 function Addon:T(key, ...)
@@ -141,9 +141,11 @@ function Addon:Initialize()
         and core:HasCapability("character-name-format", 1)
         and core:HasCapability("account-view", 2)
         and core:HasCapability("account-entry", 2)
+        and core:HasCapability("account-surface-budget", 2)
         and core.Locale and type(core.Locale.Get) == "function"
         and core.Characters and type(core.Characters.FormatName) == "function"
         and core.AccountView and type(core.AccountView.RegisterPage) == "function"
+        and type(core.AccountView.GetScrollSurfaceWidth) == "function"
         and core.Entry and type(core.Entry.RegisterBusinessEntry) == "function"
         and core.LevelFilter and type(core.LevelFilter.Validate) == "function"
         and type(core.IsInitialized) == "function") then

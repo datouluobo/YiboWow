@@ -2,7 +2,7 @@ local Addon = _G.YiboLegendary
 local Core = _G.YiboCore
 
 Core.Locale:Register("YiboLegendary", "zh", {
-    ["ERROR.CORE_REQUIRED"] = "YiboLegendary 需要 YiboCore API v13、localization:1 和 character-name-format:1。请升级 YiboCore。",
+    ["ERROR.CORE_REQUIRED"] = "YiboLegendary 需要 YiboCore API v13、localization:1 和 character-name-format:1。请升级 YiboCore。 (account-surface-budget:2)",
     ["ERROR.CORE_NOT_READY"] = "YiboCore 尚未就绪，传奇页面未启动（%s）。",
     ["ERROR.CORE_REGISTRATION"] = "Core 插件注册失败：%s",
     ["ERROR.CLEANUP"] = "角色缓存清理接入失败：%s",
@@ -23,6 +23,7 @@ Core.Locale:Register("YiboLegendary", "zh", {
     ["STATUS.COMPLETED"] = "已获得",
     ["STATUS.IN_PROGRESS"] = "进行中",
     ["STATUS.OBTAINABLE"] = "可刷",
+    ["STATUS.MATERIALS_READY"] = "材料齐",
     ["STATUS.PENDING_SYNC"] = "待同步",
     ["STATUS.UNAVAILABLE"] = "绝版",
     ["STATUS.INELIGIBLE"] = "不适用",
@@ -259,7 +260,8 @@ Core.Locale:Register("YiboLegendary", "zh", {
 })
 
 Core.Locale:Register("YiboLegendary", "en", {
-    ["ERROR.CORE_REQUIRED"] = "YiboLegendary requires YiboCore API v13, localization:1, and character-name-format:1. Please update YiboCore.",
+    ["STATUS.MATERIALS_READY"] = "Materials ready",
+    ["ERROR.CORE_REQUIRED"] = "YiboLegendary requires YiboCore API v13, localization:1, and character-name-format:1. Please update YiboCore. (account-surface-budget:2)",
     ["ERROR.CORE_NOT_READY"] = "YiboCore is not ready; the Legendary page was not started (%s).",
     ["ERROR.CORE_REGISTRATION"] = "Core addon registration failed: %s",
     ["ERROR.CLEANUP"] = "Character cache cleanup registration failed: %s",

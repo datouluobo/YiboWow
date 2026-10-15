@@ -392,13 +392,14 @@ local function RefreshSettings(parent)
             row.dropdown:Hide();row.entryLabel:ClearAllPoints();row.entryLabel:SetPoint("TOPLEFT",page.settingsOnly and DISPLAY_COLUMNS.visible.x or channelStart,0);row.entryLabel:SetWidth(page.settingsOnly and width-DISPLAY_COLUMNS.visible.x-4 or columns[6].x-channelStart-6);row.entryLabel:SetHeight(30);row.entryLabel:SetText(Core:Text(page.settingsOnly and "ENTRY.SETTINGS_ONLY" or "ENTRY.NO_SEPARATE_ENTRY"));row.entryLabel:Show()
             for _,control in ipairs(row.channels or {}) do control:Hide() end
         end
-        local hasMainFields = #page.fields > 0
+        local pageFields = AccountView:GetFieldDefinitions(page.id)
+        local hasMainFields = #pageFields > 0
         PlaceDisplayColumn(row.viewMode, "option")
         PlaceDisplayColumn(row.mainFields, "mainFields")
         PlaceDisplayColumn(row.previewFields, "previewFields")
         if hasMainFields then
             local mainOptions, previewOptions = {}, {}
-            for _, field in ipairs(page.fields) do
+            for _, field in ipairs(pageFields) do
                 local currentField = field
                 mainOptions[#mainOptions + 1] = {
                     title = currentField.title,

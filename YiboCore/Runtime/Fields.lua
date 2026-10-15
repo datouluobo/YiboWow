@@ -34,16 +34,21 @@ end
 function Fields:GetByConsumer(consumer)
     local result = {}
     for _, field in pairs(self._definitions) do if field.consumer == consumer then result[#result + 1] = field end end
+    if consumer == "character-archive" and Core.ArchiveFields then
+        for _, field in ipairs(Core.ArchiveFields:GetDefinitions(result)) do result[#result + 1] = field end
+    end
     table.sort(result, function(left, right) return left.order == right.order and left.id < right.id or left.order < right.order end)
     return result
 end
 
 function Fields:GetValue(character, field)
+    if field.archiveProvider then return Core.ArchiveFields:GetCell(character, field) end
     local domain = character and character.domains and character.domains[field.domain]
     return field.Read(character, domain and Copy(domain.data) or nil, domain and domain.state)
 end
 
-function Fields:FormatValue(character, field)
+function Fields:FormatValue(character, field, snapshot)
+    if field.archiveProvider then return Core.ArchiveFields:FormatValue(character, field, snapshot) end
     local value = self:GetValue(character, field)
     if field.Format then return field.Format(value, character), value end
     return value == nil and "—" or tostring(value), value

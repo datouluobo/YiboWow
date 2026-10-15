@@ -9,23 +9,24 @@ local function IsSupported()
         and Core:HasCapability("basic-input", 1)
         and Core:HasCapability("account-view", 2)
         and Core:HasCapability("account-entry", 2)
+        and Core:HasCapability("account-surface-budget", 2)
         and Core.Locale and Core.Locale.Register and Core.Locale.Get
         and Core.IsInitialized and Core:IsInitialized()
-        and Core.AccountView and Core.Entry and Core.Characters
+        and Core.AccountView and type(Core.AccountView.GetScrollSurfaceWidth) == "function" and Core.Entry and Core.Characters
         and Core.Characters.FormatName and Core.UITheme and Core.UITheme.CreateInput)
 end
 
 YQB.CoreCompatible = IsSupported() == true
 if not YQB.CoreCompatible then
     if Core and Core.Print then
-        Core:Print("YiboQuestBlocker requires YiboCore API 13 with localization:1, character-name-format:1, basic-input:1, account-view:2 and account-entry:2. Update YiboCore to enable QuestBlocker.")
+        Core:Print("YiboQuestBlocker requires YiboCore API 13 with localization:1, character-name-format:1, basic-input:1, account-view:2 and account-entry:2, account-surface-budget:2. Update YiboCore to enable QuestBlocker.")
     end
     return
 end
 
 Core.Locale:Register("YiboQuestBlocker", "zh", {
     ["CORE.UNAVAILABLE"] = "YiboCore 不可用。",
-    ["CORE.UPGRADE"] = "需要 YiboCore API v13 及语言服务、角色名格式化、基础输入、账号页面与入口能力。请更新 YiboCore 后再使用任务屏蔽。",
+    ["CORE.UPGRADE"] = "需要 YiboCore API v13 及语言服务、角色名格式化、基础输入、账号页面与入口能力。请更新 YiboCore 后再使用任务屏蔽。 (account-surface-budget:2)",
     ["CORE.INTEGRATION_FAILED"] = "QuestBlocker Core 集成失败：%s",
     ["PAGE.TITLE"] = "任务屏蔽",
     ["PAGE.GLOBAL_FIELD"] = "全局屏蔽",
@@ -94,7 +95,7 @@ Core.Locale:Register("YiboQuestBlocker", "zh", {
 
 Core.Locale:Register("YiboQuestBlocker", "en", {
     ["CORE.UNAVAILABLE"] = "YiboCore is unavailable.",
-    ["CORE.UPGRADE"] = "YiboQuestBlocker requires YiboCore API v13 with localization, character-name formatting, basic-input, account-view and account-entry capabilities. Update YiboCore to use QuestBlocker.",
+    ["CORE.UPGRADE"] = "YiboQuestBlocker requires YiboCore API v13 with localization, character-name formatting, basic-input, account-view and account-entry capabilities. Update YiboCore to use QuestBlocker. (account-surface-budget:2)",
     ["CORE.INTEGRATION_FAILED"] = "QuestBlocker Core integration failed: %s",
     ["PAGE.TITLE"] = "Quest Blocker",
     ["PAGE.GLOBAL_FIELD"] = "Global blocks",
