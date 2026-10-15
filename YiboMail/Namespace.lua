@@ -1,6 +1,6 @@
 local Addon = {}
 _G.YiboMail = Addon
-Addon.NAME, Addon.VERSION, Addon.API_VERSION = "YiboMail", "1.2.15-api1", 1
+Addon.NAME, Addon.VERSION, Addon.API_VERSION = "YiboMail", "1.2.16-api1", 1
 Addon.REQUIRED_CORE_API = 13
 Addon.FEATURES = { send = true, sendAssist = false, account = true, settings = true }
 Addon.CAPABILITIES = { ["mail-items.query"] = 1, ["mail-items.state"] = 1, ["mail-items.events"] = 1,

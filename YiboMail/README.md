@@ -2,7 +2,7 @@
 
 ![YiboMail 邮件助手](Media/YiboMailIcon-v1-128.png)
 
-当前版本 `1.2.15-api1` 提供原生邮箱增强，以及由 YiboCore 承载的收件箱、账号总览、历史记录三个标签页，可选 Broker/小地图入口、六列邮件悬停摘要和登录到期提醒。基础功能最低依赖 **YiboCore 1.12.1 / API v13**、`localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`item-picker:2`、`character-identity:1`、`characters:1`、`character-cleanup:1`、`account-view:2`、`account-preview-characters:1`、`account-character-admission:1`、`account-surface-budget:1` 和 `account-entry:2`；缺失时提示升级并停止基础初始化。Mail 的静态玩家文案使用稳定 ASCII 语言 key 和 Mail 自有中英文资源，语言由 Core 账号设置统一选择，并在重载后应用。打开游戏邮箱即可收取和发送；跨角色查看可从 Core 统一窗口访问。Mail 通过 Core 的 `mail.items` v1.1 服务向 Vault 提供当前收件附件及可解析的成功发件在途记录；收件记录匹配后不再报告为在途。契约见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
+当前版本 `1.2.16-api1` 提供原生邮箱增强，以及由 YiboCore 承载的收件箱、账号总览、历史记录三个标签页，可选 Broker/小地图入口、六列邮件悬停摘要和登录到期提醒。基础功能最低依赖 **YiboCore 1.12.1 / API v13**、`localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`item-picker:2`、`character-identity:1`、`characters:1`、`character-cleanup:1`、`account-view:2`、`account-preview-characters:1`、`account-character-admission:1`、`account-surface-budget:1` 和 `account-entry:2`；缺失时提示升级并停止基础初始化。Mail 的静态玩家文案使用稳定 ASCII 语言 key 和 Mail 自有中英文资源，语言由 Core 账号设置统一选择，并在重载后应用。打开游戏邮箱即可收取和发送；跨角色查看可从 Core 统一窗口访问。Mail 通过 Core 的 `mail.items` v1.1 服务向 Vault 提供当前收件附件及可解析的成功发件在途记录；收件记录匹配后不再报告为在途。契约见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
 
 按物品或分类为收件人建立规则后，规则寄件页会汇总命中物品、按角色整理并按单封附件容量拆分寄件批次。玩家集中核对后即可逐封确认发送；保存的分配规则能大幅减少重复查找物品、选择收件人和手工装填，是多角色物资转移的主要省时点。
 
