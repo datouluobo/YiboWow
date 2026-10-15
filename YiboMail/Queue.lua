@@ -18,11 +18,19 @@ function Queue:Notify()
 end
 function Queue:Discard()
     if self.pending then return nil, Addon:T("UI.TEXT_0530") end
-    self.state, self.actions, self.completed, self.message = "idle", {}, 0, nil; return true
+    self.state, self.actions, self.completed, self.message, self.pauseCode = "idle", {}, 0, nil, nil; return true
 end
-function Queue:Pause(reason)
+function Queue:Pause(reason, code)
     self.state, self.message = "paused", reason or Addon:T("UI.TEXT_0252")
+    self.pauseCode = code
     self:Notify()
+end
+local function HasRegularBagSpace()
+    local slots = C_Container and C_Container.GetContainerNumFreeSlots or GetContainerNumFreeSlots
+    if not slots then return nil end
+    local free = 0
+    for bag = 0, NUM_BAG_SLOTS or 4 do local count, family = slots(bag); if family == 0 then free = free + (count or 0) end end
+    return free > 0
 end
 local function CurrentInboxIndex(queue, originalIndex)
     local removedBefore = 0
@@ -116,7 +124,7 @@ function Queue:Start(actions)
             if not found then return nil, Addon:T("UI.TEXT_0633") end
         end
     end
-    self.actions, self.completed, self.index, self.state, self.message = CopyActions(actions), 0, 1, "running", Addon:T("UI.TEXT_0426")
+    self.actions, self.completed, self.index, self.state, self.message, self.pauseCode = CopyActions(actions), 0, 1, "running", Addon:T("UI.TEXT_0426"), nil
     self.verifiedMails, self.removedIndexes = mails, {}
     self:Next(); return true
 end
@@ -153,10 +161,9 @@ function Queue:Next()
             if item.attachmentIndex == action.slot and item.variantKey == action.item.variantKey and item.quantity == action.item.quantity then match = index end
         end
         if not match then self:Pause(Addon:T("UI.TEXT_0632")); return end
-        local free = 0; local slots = C_Container and C_Container.GetContainerNumFreeSlots or GetContainerNumFreeSlots
-        if not slots then self:Pause(Addon:T("UI.TEXT_0367")); return end
-        for bag = 0, NUM_BAG_SLOTS or 4 do local count, family = slots(bag); if family == 0 then free = free + (count or 0) end end
-        if free < 1 then self:Pause(Addon:T("UI.TEXT_0377")); return end
+        local hasSpace = HasRegularBagSpace()
+        if hasSpace == nil then self:Pause(Addon:T("UI.TEXT_0367"), "bag-space-unknown"); return end
+        if not hasSpace then self:Pause(Addon:T("UI.TEXT_0377"), "bag-full"); return end
         table.remove(expected.attachments, match)
     end
     expected.signature = Addon.Scanner:Signature(expected)
@@ -248,7 +255,18 @@ function Queue:OnEvent(event, ...)
                 money = action.slot == "money" and action.original.money or 0, observedAt = Addon:Now() })
             self.pending = nil
         end
-        if self.state == "running" then self:Pause(Addon:T("UI.TEXT_0603")) end
+        if self.state == "running" then self:Pause(Addon:T("UI.TEXT_0603"), "mailbox-closed") end
+    elseif event == "MAIL_SHOW" then
+        if self.state == "paused" and self.pauseCode == "mailbox-closed" and not self.pending then
+            self:Discard()
+            if Addon.NativeUI and Addon.NativeUI.inbox then Addon.NativeUI.inbox.notice = nil end
+            self:Notify()
+        end
+    elseif event == "BAG_UPDATE_DELAYED" then
+        if self.state == "paused" and self.pauseCode == "bag-full" and HasRegularBagSpace() then
+            self:Discard()
+            self:Notify()
+        end
     elseif self.pending then
         if event == "MAIL_SUCCESS" then self.pending.success = true
         elseif event == "MAIL_INBOX_UPDATE" then self.pending.updated = true
