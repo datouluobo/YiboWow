@@ -10,6 +10,7 @@ CharacterCleanup.EXPECTED_OWNERS = Core.Locale:Bind(function() return {
     YiboQuestBlocker = Core:Text("CORE.QUEST_BLOCKER_PERSONAL_SETTINGS"),
     YiboVault = Core:Text("CORE.ACCOUNT_INVENTORY_SNAPSHOTS"),
     YiboMail = Core:Text("CORE.MAIL_SNAPSHOTS_AND_BACKLOG_CACHE"),
+    YiboReputation = Core:Text("CORE.REPUTATION_CHARACTER_SNAPSHOTS"),
 } end)
 
 local function Copy(value)

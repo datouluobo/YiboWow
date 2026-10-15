@@ -29,7 +29,7 @@ function Addon:GetFactionData(snapshot, factionID)
         -- numbers, but an exact localized name can safely project an existing
         -- value onto a canonical catalog faction for this client locale.
         local canonicalName = self:GetFactionName(factionID)
-        if not canonicalName or string.find(canonicalName, "未知声望 ", 1, true) == 1 then return nil end
+        if not canonicalName or self:IsUnknownFactionName(canonicalName) then return nil end
         local matched
         for _, data in pairs(factions) do
             if type(data) == "table" and data.name == canonicalName then
@@ -79,7 +79,7 @@ function Addon:GetTreeNodes(snapshot)
     end
     for expansionIndex = #self.Catalog, 1, -1 do
         local expansion = self.Catalog[expansionIndex]
-        local expansionNode = { key = expansion.id, title = expansion.title, kind = "expansion", children = {} }
+        local expansionNode = { key = expansion.id, title = self:GetExpansionTitle(expansion), kind = "expansion", children = {} }
         for _, category in ipairs(expansion.categories) do
             if category.primaryFactionID then
                 local primaryID = category.primaryFactionID
@@ -101,7 +101,7 @@ function Addon:GetTreeNodes(snapshot)
                     if guild then expansionNode.children[#expansionNode.children + 1] = guild end
                 end
             else
-                local categoryNode = { key = expansion.id .. ":" .. category.id, title = category.title, kind = "category", children = {} }
+                local categoryNode = { key = expansion.id .. ":" .. category.id, title = self:GetCategoryTitle(expansion, category), kind = "category", children = {} }
                 for _, id in ipairs(category.factions) do
                     if not seen[id] then
                         seen[id] = true
@@ -134,10 +134,10 @@ function Addon:GetTreeNodes(snapshot)
         if not seen[stableID] then
             seen[stableID] = true
             local metadata = self:ResolveFactionMetadata(stableID, data)
-            local expansionNode = FindExpansion(metadata.expansionTitle or "其它")
-            local categoryNode = FindCategory(expansionNode, metadata.categoryTitle or "其它阵营")
+            local expansionNode = FindExpansion(metadata.expansionTitle or self:T("MATRIX.OTHER"))
+            local categoryNode = FindCategory(expansionNode, metadata.categoryTitle or self:T("MATRIX.OTHER_FACTIONS"))
             local node = FactionNode(self, stableID, data)
-            if not string.find(node.title, "未知声望 ", 1, true) then categoryNode.children[#categoryNode.children + 1] = node end
+            if not self:IsUnknownFactionName(node.title) then categoryNode.children[#categoryNode.children + 1] = node end
         end
     end
     for _, expansionNode in ipairs(nodes) do

@@ -1,10 +1,46 @@
 local Addon, Core = _G.YiboReputation, _G.YiboCore
 local Integration={}; Addon.CoreIntegration=Integration
 local PAGE_ID="reputation"
-local REQUIRED_CORE_API=10
+local REQUIRED_CORE_API=13
+local function HasCoreRequirements()
+ return Core and Core.CheckAPIVersion and Core:CheckAPIVersion(REQUIRED_CORE_API)
+  and Core.HasCapability and Core:HasCapability("localization",1)
+  and Core:HasCapability("account-view",2)
+  and Core:HasCapability("account-surface-budget",1)
+  and Core:HasCapability("data-domains",1)
+  and Core:HasCapability("events",1)
+  and Core:HasCapability("basic-input",1)
+  and Core:HasCapability("character-name-format",1)
+  and Core:HasCapability("character-identity",1)
+  and Core:HasCapability("character-cleanup",1)
+  and Core.Locale and type(Core.Locale.Get)=="function"
+  and type(Core.IsInitialized)=="function"
+  and type(Core.GetVersion)=="function"
+  and type(Core.RegisterAddon)=="function"
+  and Core.Events and type(Core.Events.Register)=="function"
+  and type(Core.Events.Unregister)=="function" and type(Core.Events.FireIsolated)=="function"
+  and Core.DataDomains and type(Core.DataDomains.Get)=="function"
+  and type(Core.DataDomains.GetDefinitions)=="function"
+  and Core.CharacterCleanup and type(Core.CharacterCleanup.RegisterOwner)=="function"
+  and type(Core.CharacterCleanup.IsLegacyImportBlocked)=="function"
+  and Core.Defaults and type(Core.Defaults.Copy)=="function"
+  and C_Timer and type(C_Timer.After)=="function"
+  and Core.LevelFilter and type(Core.LevelFilter.Validate)=="function"
+  and Core.AccountView and type(Core.AccountView.RegisterPage)=="function"
+  and type(Core.AccountView.GetColumnPage)=="function"
+  and type(Core.AccountView.UpdateColumnPager)=="function"
+  and type(Core.AccountView.NotifyPageChanged)=="function"
+  and Core.Entry and type(Core.Entry.RegisterBusinessEntry)=="function"
+  and Core.UITheme and type(Core.UITheme.CreateInput)=="function"
+  and Core.Characters and type(Core.Characters.FormatName)=="function"
+  and type(Core.Characters.Get)=="function" and type(Core.Characters.GetAll)=="function"
+  and type(Core.Characters.GetCurrent)=="function"
+  and type(Core.Characters.GetAliases)=="function" and type(Core.Characters.ResolveLegacyKey)=="function"
+end
 local function HasSnapshot(character)
- local snapshot=Core.DataDomains:Get(character.id,"reputation")
- return snapshot~=nil and snapshot.state~="unavailable"
+ local snapshot=Addon:GetSnapshot(character.id)
+ return snapshot~=nil and snapshot.state~="unavailable" and snapshot.data
+  and type(snapshot.data.factions)=="table" and next(snapshot.data.factions)~=nil
 end
 local function Eligible(characters)
  local output={}
@@ -41,9 +77,21 @@ function Addon:RefreshPage(parent,context)
 end
 function Integration:Initialize()
  if self.initialized then return true end
- if not Core or not Core.AccountView or not Core.CheckAPIVersion or not Core:CheckAPIVersion(REQUIRED_CORE_API) or not Core.HasCapability or not Core:HasCapability("account-view",2) then return nil,"YiboCore API v10 不可用。" end
- local compatible=Core:CheckAPIVersion(REQUIRED_CORE_API);if not compatible then return nil,"需要 YiboCore API v"..REQUIRED_CORE_API.."。" end
- Addon:EnsureDB();Core:RegisterAddon("YiboReputation",{version=Addon.VERSION,requiredAPI=REQUIRED_CORE_API})
+ if not HasCoreRequirements() then return nil,Addon:T("ERROR.CORE_REQUIRED") end
+ if not Core:IsInitialized() then return nil,Addon:T("ERROR.CORE_NOT_READY") end
+ local handedOff, handoffError=Addon.Migration:CheckCoreHandoff()
+ if not handedOff then return nil,handoffError end
+ Addon:EnsureDB()
+ local registered, registerError=Core:RegisterAddon("YiboReputation",{version=Addon.VERSION,requiredAPI=REQUIRED_CORE_API})
+ if not registered then return nil,registerError end
+ local stored, storeError=Addon.Store:Initialize()
+ if not stored then return nil,storeError end
+ local lifecycle, lifecycleError=Addon.Store:RegisterLifecycle()
+ if not lifecycle then return nil,lifecycleError end
+ Addon.Store:ReconcileLegacyIDs()
+ Addon:InitializeFactionRegistry()
+ local imported, importError=Addon:ImportLegacySnapshots()
+ if imported==nil then return nil,importError end
 local function GetSurfaceMetrics(context)
  if context and context.preview then return Addon:GetPreviewSurfaceMetrics(context) end
  local inset = Core.UITheme:GetMatrixInsets(false)
@@ -78,8 +126,12 @@ local function GetSurfaceMetrics(context)
   fixedLeftWidth=layout.nameWidth,fixedTopHeight=Core.UITheme.Size.standard+Core.UITheme:GetCharacterHeaderHeight(context),horizontalOverflow="paginate",verticalOverflow="content"
  }
 end
-local page,err=Core.AccountView:RegisterPage("YiboReputation",{id=PAGE_ID,title="声望总览",icon="Interface\\AddOns\\YiboReputation\\Media\\YiboReputationIcon-v1",order=40,previewEnabled=true,defaultEnabled=true,firstUseTip={title="声望监控",lines={"点击主矩阵中的星标可快速加入监控；设置页按当前顺序显示监控项，也可在此移除。"}},fields={},scope={mode="realms"},characterFilter={defaultExpression="",GetExpression=function()return Addon:GetSettings().matrixLevelExpr or "" end,SetExpression=function(expression)local valid,normalized,bad=Core.LevelFilter:Validate(expression or "");if not valid then return false,bad end;Addon:GetSettings().matrixLevelExpr=normalized;Addon:NotifyChanged();return true,normalized end},HasCharacterSnapshot=HasSnapshot,GetEligibleCharacters=Eligible,header={characterNameMode="short"},ShowScopeBar=function()return true end,settings={title="声望总览",description="页面、入口、角色范围和排序由 Core 统一管理；声望快照归 YiboCore。",CreateSettingsPanel=function(parent,ctx)return Addon:CreateSettingsPanel(parent,ctx)end},Create=function(parent)Addon:CreatePage(parent)end,Refresh=function(parent,ctx)Addon:RefreshPage(parent,ctx)end,GetSurfaceMetrics=GetSurfaceMetrics})
- if not page then return nil,err end
- local entry,entryErr=Core.Entry:RegisterBusinessEntry("YiboReputation",{id="yrp",brokerName="YiboReputation",pageID=PAGE_ID,text="[Yibo] 声望总览",icon="Interface\\AddOns\\YiboReputation\\Media\\YiboReputationIcon-v1",defaultMode="none"});if not entry then return nil,entryErr end
- Core.Events:Register("DATA_DOMAIN_UPDATED",Addon,function(_,payload)if payload.domainID=="reputation" then Addon._matrixDataRevision=(Addon._matrixDataRevision or 0)+1;Addon._matrixSnapshotCache=nil;Addon._matrixNodeCaches=nil;Addon:NotifyChanged()end end);if Addon.GoalTargets then Addon.GoalTargets:Initialize() end;self.initialized=true;return true
+local page,err=Core.AccountView:RegisterPage("YiboReputation",{id=PAGE_ID,title=Addon:T("PAGE.TITLE"),icon="Interface\\AddOns\\YiboReputation\\Media\\YiboReputationIcon",order=40,previewEnabled=true,defaultEnabled=true,firstUseTip={title=Addon:T("PAGE.TIP_TITLE"),lines={Addon:T("PAGE.TIP_BODY")}},fields={},scope={mode="realms"},characterFilter={defaultExpression="",GetExpression=function()return Addon:GetSettings().matrixLevelExpr or "" end,SetExpression=function(expression)local valid,normalized,bad=Core.LevelFilter:Validate(expression or "");if not valid then return false,bad end;Addon:GetSettings().matrixLevelExpr=normalized;Addon:NotifyChanged();return true,normalized end},HasCharacterSnapshot=HasSnapshot,GetEligibleCharacters=Eligible,header={characterNameMode="short"},ShowScopeBar=function()return true end,settings={title=Addon:T("PAGE.TITLE"),description=Addon:T("PAGE.DESCRIPTION"),CreateSettingsPanel=function(parent,ctx)return Addon:CreateSettingsPanel(parent,ctx)end},Create=function(parent)Addon:CreatePage(parent)end,Refresh=function(parent,ctx)Addon:RefreshPage(parent,ctx)end,GetSurfaceMetrics=GetSurfaceMetrics})
+ if not page then return nil,Addon:T("ERROR.PAGE_REGISTER",tostring(err)) end
+ self.pageRegistered=true
+ local entry,entryErr=Core.Entry:RegisterBusinessEntry("YiboReputation",{id="yrp",brokerName="YiboReputation",pageID=PAGE_ID,text=Addon:T("PAGE.ENTRY"),icon="Interface\\AddOns\\YiboReputation\\Media\\YiboReputationIcon",defaultMode="none"});if not entry then return nil,Addon:T("ERROR.ENTRY_REGISTER",tostring(entryErr)) end
+ if Addon.GoalTargets then Addon.GoalTargets:Initialize() end
+ self.initialized=true
+ Addon.Scanner:Initialize()
+ return true
 end

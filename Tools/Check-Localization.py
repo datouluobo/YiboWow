@@ -25,6 +25,10 @@ FORMAT = re.compile(r'%(?:[-+ #0]*\d*(?:\.\d+)?[cdiouxXeEfgGqs]|%)')
 EXCEPTIONS = {
     'YiboCore/Data/Domains/Professions.lua': 'Client-native profession aliases; stable skill-line IDs own identity.',
     'YiboMail/SendRules.lua': 'Native item-category markers used only to recognize obsolete client categories; never displayed.',
+    'YiboReputation/Bootstrap.lua': 'Bilingual upgrade prompt used only when Core.Locale is unavailable; the normal startup path uses owner resources.',
+    'YiboReputation/Friendship.lua': 'Native client friendship labels used only to recognize older snapshot values; rendered fallback labels use owner resources.',
+    'YiboReputation/ReputationCatalog.lua': 'Native client faction headers used only as metadata lookup keys; displayed catalog headings use stable localized IDs.',
+    'YiboReputation/ReputationFormat.lua': 'Native client friendship labels used only to recognize older snapshot values; rendered status labels use owner resources.',
 }
 MEASUREMENT = {'"字"', '"字字字字"', '"字字字字字字"'}
 INPUT_PUNCTUATION = {

@@ -1,6 +1,7 @@
 -- Core-owned resources. Keys are stable and independent of display text.
 local Core = _G.YiboCore
 Core.Locale:Register("YiboCore", "en", {
+    ["CORE.REPUTATION_CHARACTER_SNAPSHOTS"] = "Character reputation snapshots",
     ["CORE.CFF20E070_YIBO_R_CORE"] = "|cff20e070[Yibo]|r Core: ",
     ["CORE.BEAST_PATHS"] = "Beast Paths",
     ["CORE.BOSS_TRACKER"] = "Boss Tracker",

@@ -4,7 +4,7 @@ local Entry = {}
 Core.Entry = Entry
 Entry.businessEntries = Entry.businessEntries or {}
 local HidePreview
-local CORE_ICON = "Interface\\AddOns\\YiboCore\\Media\\YiboCoreIcon-v20"
+local CORE_ICON = "Interface\\AddOns\\YiboCore\\Media\\YiboCoreIcon"
 
 local ENTRY_MODES = { "none", "broker", "minimap", "both" }
 local ENTRY_MODE_LABELS = Core.Locale:Bind(function() return {
@@ -605,7 +605,7 @@ local function BarName(text)
 end
 function Entry:GetBuiltinBarEntries()
     local result = {}
-    if self:GetEntryChannels("YiboCore").builtinBar then result[1] = {id="YiboCore",addonName="",text=BarName(Core:Text("CORE.YIBO_ACCOUNT_OVERVIEW")),icon="Interface\\AddOns\\YiboCore\\Media\\YiboCoreIcon-v20"} end
+    if self:GetEntryChannels("YiboCore").builtinBar then result[1] = {id="YiboCore",addonName="",text=BarName(Core:Text("CORE.YIBO_ACCOUNT_OVERVIEW")),icon="Interface\\AddOns\\YiboCore\\Media\\YiboCoreIcon"} end
     for _, entry in pairs(self.businessEntries) do
         if self:GetEntryChannels(entry.id).builtinBar and self:GetEntryAvailability(entry.id) then result[#result+1] = {id=entry.id,addonName=entry.addonName,text=BarName((Core.AccountView._pages[ResolveBusinessPageID(entry)] or {}).title or entry.text),icon=entry.icon} end
     end

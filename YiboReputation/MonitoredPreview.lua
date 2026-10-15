@@ -6,7 +6,7 @@ local function Text(parent, size, color, justify)
 end
 
 local function Snapshot(character)
-    return Core.DataDomains:Get(character.id, "reputation")
+    return Addon:GetSnapshot(character.id)
 end
 
 local function ShowMonitoredTooltip(row)
@@ -22,6 +22,7 @@ local function ShowMonitoredTooltip(row)
     if row.monitoredTooltipColumn == column and GameTooltip.YiboMonitoredRow == row and GameTooltip:IsShown() then return end
     row.monitoredTooltipColumn = column
     local character = context.characters[column]
+    if character and Addon:FormatState(context.snapshots[character.id]) then GameTooltip:Hide(); return end
     local data = character and Addon:GetFactionData(context.snapshots[character.id], context.factionID)
     local compact, detail = data and Addon:FormatCompact(data), data and Addon:FormatReputation(data)
     if not detail or compact == detail or not detail:find("/", 1, true) then GameTooltip:Hide(); return end
@@ -69,7 +70,7 @@ function Addon:RefreshMonitoredPreview(parent, context)
             Theme:SetCharacterHeader(header, character, context)
             if current and character.id == current.id then currentHeader, currentColumnX = header, x end
         else
-            Theme:SetMatrixHeader(header, "声望", { height = headerHeight, justify = "LEFT", inset = Theme.Space.xxs })
+            Theme:SetMatrixHeader(header, self:T("MATRIX.REPUTATION"), { height = headerHeight, justify = "LEFT", inset = Theme.Space.xxs })
             header:SetScript("OnEnter", nil); header:SetScript("OnLeave", nil)
         end
         header:Show()
@@ -116,5 +117,5 @@ function Addon:RefreshMonitoredPreview(parent, context)
     for index = #factionIDs + 1, #parent.monitoredRows do parent.monitoredRows[index]:Hide() end
     Theme:UpdateCurrentCharacterColumnOutline(parent.monitoredCurrentOutline, currentHeader, parent, 0, cellWidth, currentHeader ~= nil, currentColumnX)
     parent.monitoredPagerAnchor:ClearAllPoints(); parent.monitoredPagerAnchor:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -inset.right, -inset.top); parent.monitoredPagerAnchor:SetSize(1, 1)
-    Core.AccountView:UpdateColumnPager(parent, "reputation", "monitored", pageInfo, parent.monitoredPagerAnchor, "角色")
+    Core.AccountView:UpdateColumnPager(parent, "reputation", "monitored", pageInfo, parent.monitoredPagerAnchor, self:T("MATRIX.CHARACTERS"))
 end

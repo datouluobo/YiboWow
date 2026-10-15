@@ -152,6 +152,8 @@ local tooltipDraws, domainReads, cursor = 0, 0, 160
 core.UITheme.Colors.text = { 1, 1, 1 }
 core.DataDomains.Get = function() domainReads = domainReads + 1; error('hover must use the render snapshot') end
 YiboReputation = {
+    GetSnapshot = function() domainReads = domainReads + 1; error('hover must use the render snapshot') end,
+    FormatState = function() return nil end,
     GetFactionData = function(_, snapshot) return snapshot end,
     FormatCompact = function() return '1K' end,
     FormatReputation = function(_, snapshot) return snapshot.detail end,

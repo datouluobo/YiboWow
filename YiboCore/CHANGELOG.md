@@ -1,5 +1,12 @@
 # YiboCore 更新日志
 
+## 1.12.4 / API v13（2026-10-15）
+
+- 停止加载声望业务数据域，不再采集声望或创建声望目录注册接口；采集与新权威存储转由 YiboReputation 1.7.1 负责。
+- 保留历史声望域记录及通用 DataDomains:Get 读取，供业务插件逐角色一次性导入；没有清空旧数据或双写新快照。
+- 角色缓存删除协调纳入 Reputation，支持插件未加载时的 pending 清理。通用 API13 能力不变。
+- Core 与 Reputation 需配套升级；旧版 Reputation 只能看到冻结的历史快照。迁移与静态检查证据见 YiboReputation/Docs/声望数据归属迁移-实施与验收记录.md，客户端待验收。
+
 ## 1.12.3 / API v13（2026-10-15）
 
 - 统一设置工作台传递预览字段分组，声明 `account-preview-field-groups:1`；未提供分组的页面行为保持。
@@ -68,7 +75,7 @@
 - `item-picker:2` 提供批量物品确认与保留输入配置；支持分隔输入、连续拖放、去重、整批加载及失效回调取消。
 - YiboMail 1.1.0 接入批量确认；单物品控件的默认行为与 API v7 调用保持兼容。公共 API 保持 v8。
 
-## 1.7.0
+## 1.7.1
 
 - 公共 API 升至 v8，新增 `character-name-format:1` 与 `Characters:FormatName(identity, options)`，支持原名／自定义短名、同服省略服务器及完整名称，也可格式化目录外联系人。
 - Core 的共享表头、完整身份提示、名称测量、角色档案与设置标签统一接入；旧 GetDisplayName、业务名称覆盖与服务器副标题行为保持兼容。

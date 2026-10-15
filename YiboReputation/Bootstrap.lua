@@ -1,7 +1,7 @@
 local ADDON_NAME = ...
 local Addon = _G.YiboReputation or {}
 _G.YiboReputation = Addon
-Addon.NAME, Addon.VERSION = "YiboReputation", "1.5.2"
+Addon.NAME, Addon.VERSION = "YiboReputation", "1.7.1"
 YiboReputationDB = YiboReputationDB or {}
 
 local function Defaults(target, values)
@@ -36,10 +36,42 @@ function Addon:EnsureDB()
     return YiboReputationDB
 end
 function Addon:GetSettings() return self:EnsureDB().settings end
-function Addon:Print(message) if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r 声望总览：" .. tostring(message)) end end
+function Addon:T(key, ...)
+    local core = _G.YiboCore
+    if core and core.Locale and type(core.Locale.Get) == "function" then
+        return core.Locale:Get("YiboReputation", key, ...)
+    end
+    if key == "ERROR.CORE_REQUIRED" then
+        local locale = GetLocale and GetLocale() or "enUS"
+        return (locale == "zhCN" or locale == "zhTW")
+            and "YiboReputation 需要 YiboCore 1.12.4 / API13，以及语言、账号视图、角色身份、角色缓存清理、事件与标准控件能力。请升级 YiboCore。"
+            or "YiboReputation requires YiboCore 1.12.4 / API13 with localization, account views, character identity, character cleanup, events, and standard controls. Please update YiboCore."
+    end
+    local value = "[YiboReputation:" .. tostring(key) .. "]"
+    if select("#", ...) > 0 then return string.format(value, ...) end
+    return value
+end
+function Addon:Print(message)
+    if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r " .. self:T("PAGE.TITLE") .. ": " .. tostring(message)) end
+end
+function Addon:PrintBootstrapRequirement()
+    if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r " .. self:T("ERROR.CORE_REQUIRED")) end
+end
+local function Initialize()
+    local core = _G.YiboCore
+    if core and core.IsInitialized and core:IsInitialized() then
+        local ok, err = Addon.CoreIntegration:Initialize()
+        if not ok then Addon:Print(Addon:T("ERROR.CORE_PREFIX", tostring(err))) end
+    else Addon:PrintBootstrapRequirement() end
+end
 local frame = CreateFrame("Frame")
-frame:RegisterEvent("ADDON_LOADED"); frame:RegisterEvent("PLAYER_LOGIN")
+frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(_, event, name)
-    if event == "ADDON_LOADED" and name == ADDON_NAME then Addon:EnsureDB()
-    elseif event == "PLAYER_LOGIN" and Addon.CoreIntegration then local ok, err = Addon.CoreIntegration:Initialize(); if not ok then Addon:Print("Core 接入失败：" .. tostring(err)) end end
+    if event ~= "ADDON_LOADED" or name ~= ADDON_NAME then return end
+    Addon:EnsureDB()
+    local core = _G.YiboCore
+    if core and core.IsInitialized and core:IsInitialized() then Initialize()
+    elseif core and core.Events and core.Events.Register then
+        core.Events:Register("CORE_READY", Addon.CoreIntegration, Initialize)
+    else Addon:PrintBootstrapRequirement() end
 end)

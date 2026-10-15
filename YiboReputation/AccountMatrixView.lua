@@ -13,13 +13,13 @@ function Addon:GetMatrixCharacterColumnWidth(context, availableWidth, fixedWidth
 end
 local function Text(parent, size, color, justify) return Theme:CreateText(parent, size, color, justify or "LEFT") end
 local function Snapshot(character)
-    -- DataDomains returns a defensive deep copy. A matrix refresh consults the
+    -- Store returns a defensive deep copy. A matrix refresh consults the
     -- same character many times while building nodes and cells, so retain that
     -- immutable-for-render copy until a reputation update invalidates it.
     Addon._matrixSnapshotCache = Addon._matrixSnapshotCache or {}
     local cached = Addon._matrixSnapshotCache[character.id]
     if cached ~= nil then return cached or nil end
-    local snapshot = Core.DataDomains:Get(character.id, "reputation")
+    local snapshot = Addon:GetSnapshot(character.id)
     Addon._matrixSnapshotCache[character.id] = snapshot or false
     return snapshot
 end
@@ -60,6 +60,7 @@ local function UpdateMatrixTooltip(row)
     if not columnIndex then HideMatrixTooltip(); return end
     local character = row.tooltipContext.characters[columnIndex - 1]
     local snapshot = Snapshot(character)
+    if Addon:FormatState(snapshot) then HideMatrixTooltip(); return end
     local data = NodeFaction(snapshot, row.tooltipNode, character)
     -- Tooltips are disclosure, not a second copy of the grid.  A compact
     -- numeric cell gains its standing and full progress here; labels such as
@@ -92,7 +93,7 @@ end
 function Addon:ToggleMonitored(factionID)
     local list = self:GetSettings().monitoredFactionIDs
     for index, id in ipairs(list) do if id == factionID then table.remove(list, index); self:NotifyChanged(); return true end end
-    if #list >= 10 then self:Print("快速监控最多只能添加 10 项声望，请先在声望设置中移除一项。"); return nil end
+    if #list >= 10 then self:Print(self:T("MATRIX.ADD_LIMIT")); return nil end
     list[#list + 1] = factionID; self:NotifyChanged(); return true
 end
 
@@ -139,12 +140,12 @@ function Addon:GetMatrixNodes(characters)
         end
         if not available then return nil end
         return { key = key or ("matrix:faction:" .. id), kind = "faction", factionID = id, guildName = guildName, guildRealm = guildRealm,
-            title = guildName and (guildName .. " · " .. tostring(guildRealm or "未知服务器")) or self:GetFactionName(id, data and data.name),
+            title = guildName and (guildName .. " · " .. tostring(guildRealm or self:T("MATRIX.UNKNOWN_REALM"))) or self:GetFactionName(id, data and data.name),
             icon = self:GetFactionIcon(id), children = {} }
     end
     for expansionIndex = #self.Catalog, 1, -1 do
         local expansion = self.Catalog[expansionIndex]
-        local node = { key = "matrix:" .. expansion.id, kind = "expansion", title = expansion.title, children = {} }
+        local node = { key = "matrix:" .. expansion.id, kind = "expansion", title = self:GetExpansionTitle(expansion), children = {} }
         for _, category in ipairs(expansion.categories) do
             if category.primaryFactionID then
                 local primary = MakeFaction(category.primaryFactionID, "matrix:group:" .. expansion.id .. ":" .. category.id); seen[category.primaryFactionID] = true
@@ -159,7 +160,7 @@ function Addon:GetMatrixNodes(characters)
                 for _, character in ipairs(characters) do
                     local data = Faction(Snapshot(character), 1168)
                     if data and data.name and data.name ~= "" then
-                        local realm = tostring(character.realm or "未知服务器")
+                        local realm = tostring(character.realm or self:T("MATRIX.UNKNOWN_REALM"))
                         local key = realm .. "\31" .. data.name
                         guilds[key] = { name = data.name, realm = realm }
                     end
@@ -171,7 +172,7 @@ function Addon:GetMatrixNodes(characters)
                     if guild then node.children[#node.children + 1] = guild end
                 end
             else
-                local container = { key = node.key .. ":" .. category.id, kind = "category", title = category.title, children = {} }
+                local container = { key = node.key .. ":" .. category.id, kind = "category", title = self:GetCategoryTitle(expansion, category), children = {} }
                 for _, id in ipairs(category.factions) do if not seen[id] then seen[id] = true; local faction=MakeFaction(id);if faction then container.children[#container.children + 1] = faction end end end
                 if category.flat then for _, faction in ipairs(container.children) do node.children[#node.children+1]=faction end elseif #container.children > 0 then node.children[#node.children + 1] = container end
             end
@@ -203,10 +204,10 @@ function Addon:GetMatrixNodes(characters)
         if not seen[stableID] then
             seen[stableID] = true
             local metadata = self:ResolveFactionMetadata(stableID, data)
-            local expansionNode = FindExpansion(metadata.expansionTitle or "其它")
-            local categoryNode = FindCategory(expansionNode, metadata.categoryTitle or "其它阵营")
+            local expansionNode = FindExpansion(metadata.expansionTitle or self:T("MATRIX.OTHER"))
+            local categoryNode = FindCategory(expansionNode, metadata.categoryTitle or self:T("MATRIX.OTHER_FACTIONS"))
             local title = self:GetFactionName(stableID,data.name)
-            if not string.find(title, "未知声望 ", 1, true) then categoryNode.children[#categoryNode.children + 1] = { key="matrix:faction:"..stableID, kind="faction", factionID=stableID, title=title, icon=self:GetFactionIcon(stableID), children={} } end
+            if not self:IsUnknownFactionName(title) then categoryNode.children[#categoryNode.children + 1] = { key="matrix:faction:"..stableID, kind="faction", factionID=stableID, title=title, icon=self:GetFactionIcon(stableID), children={} } end
         end
     end
     for _, expansionNode in ipairs(nodes) do
@@ -254,16 +255,21 @@ function Addon:RefreshMatrixView(parent, context)
     if settings.matrixFilter ~= "monitored" then settings.matrixFilter = "all" end
     local toolbar = parent.matrixToolbar; toolbar:ClearAllPoints(); toolbar:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top); toolbar:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -inset.right, -inset.top); toolbar:SetHeight(Theme.Size.compact)
     if not toolbar.search then
-        toolbar.search = CreateFrame("EditBox", nil, toolbar, "BackdropTemplate"); toolbar.search:SetSize(144, Theme.Size.compact); toolbar.search:SetAutoFocus(false); toolbar.search:SetFont(STANDARD_TEXT_FONT, Theme.Font.body, ""); toolbar.search:SetTextInsets(6, 6, 0, 0); toolbar.search:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 }); toolbar.search:SetBackdropColor(Theme.Colors.bg[1],Theme.Colors.bg[2],Theme.Colors.bg[3],1); toolbar.search:SetBackdropBorderColor(Theme.Colors.lineSoft[1],Theme.Colors.lineSoft[2],Theme.Colors.lineSoft[3],1)
-        toolbar.search:SetScript("OnTextChanged", function(box, user) if user then settings.matrixSearch = string.lower(box:GetText() or ""); Addon:NotifyChanged() end end)
-        Theme:AttachClearButton(toolbar.search, { OnClear = function()
-            settings.matrixSearch = ""
-            Addon:NotifyChanged()
-        end })
+        toolbar.search = Theme:CreateInput(toolbar, {
+            width = 144, size = "compact", value = settings.matrixSearch,
+            placeholder = self:T("MATRIX.SEARCH"), clearable = true,
+            OnChanged = function(text, userInput)
+                if userInput then settings.matrixSearch = string.lower(text or ""); Addon:NotifyChanged() end
+            end,
+            clearButtonOptions = { OnClear = function()
+                settings.matrixSearch = ""
+                Addon:NotifyChanged()
+            end },
+        })
     end
-    toolbar.search:ClearAllPoints(); toolbar.search:SetPoint("LEFT", toolbar, "LEFT"); if toolbar.search:GetText() ~= (settings.matrixSearch or "") then toolbar.search:SetText(settings.matrixSearch or "") end
+    toolbar.search:ClearAllPoints(); toolbar.search:SetPoint("LEFT", toolbar, "LEFT"); toolbar.search:SetValue(settings.matrixSearch or "")
     local x = 152
-    for index, choice in ipairs({ {"all", "全部"}, {"monitored", "已监控"} }) do
+    for index, choice in ipairs({ {"all", self:T("MATRIX.ALL")}, {"monitored", self:T("MATRIX.MONITORED")} }) do
         local button = toolbar.filterButtons[index] or Theme:CreateButton(toolbar, 68, choice[2], "secondary"); toolbar.filterButtons[index] = button; button:SetHeight(Theme.Size.compact); button:ClearAllPoints(); button:SetPoint("LEFT", toolbar, "LEFT", x, 0); button:SetText(choice[2]); button:SetState(settings.matrixFilter == choice[1] and "selected" or "default"); button:SetScript("OnClick", function() settings.matrixFilter = choice[1]; Addon:RefreshMatrixView(parent, context) end); x = x + 72
     end
     for index = 3, #toolbar.filterButtons do toolbar.filterButtons[index]:Hide() end
@@ -275,8 +281,8 @@ function Addon:RefreshMatrixView(parent, context)
         expanded.__all = value
         Addon:RefreshMatrixView(parent, context)
     end
-    toolbar.expand = toolbar.expand or Theme:CreateButton(toolbar, 72, "全部展开", "secondary"); toolbar.expand:SetHeight(Theme.Size.compact); toolbar.expand:ClearAllPoints(); toolbar.expand:SetPoint("LEFT", toolbar, "LEFT", x + Theme.Space.xxs, 0); toolbar.expand:SetScript("OnClick", function() SetAllExpanded(true) end)
-    toolbar.collapse = toolbar.collapse or Theme:CreateButton(toolbar, 72, "全部折叠", "secondary"); toolbar.collapse:SetHeight(Theme.Size.compact); toolbar.collapse:ClearAllPoints(); toolbar.collapse:SetPoint("LEFT", toolbar.expand, "RIGHT", Theme.Space.xxs, 0); toolbar.collapse:SetScript("OnClick", function() SetAllExpanded(false) end)
+    toolbar.expand = toolbar.expand or Theme:CreateButton(toolbar, 72, "", "secondary"); toolbar.expand:SetText(self:T("MATRIX.EXPAND")); toolbar.expand:SetHeight(Theme.Size.compact); toolbar.expand:ClearAllPoints(); toolbar.expand:SetPoint("LEFT", toolbar, "LEFT", x + Theme.Space.xxs, 0); toolbar.expand:SetScript("OnClick", function() SetAllExpanded(true) end)
+    toolbar.collapse = toolbar.collapse or Theme:CreateButton(toolbar, 72, "", "secondary"); toolbar.collapse:SetText(self:T("MATRIX.COLLAPSE")); toolbar.collapse:SetHeight(Theme.Size.compact); toolbar.collapse:ClearAllPoints(); toolbar.collapse:SetPoint("LEFT", toolbar.expand, "RIGHT", Theme.Space.xxs, 0); toolbar.collapse:SetScript("OnClick", function() SetAllExpanded(false) end)
     local headerHeight = Theme:GetCharacterHeaderHeight(context)
     parent.matrixHeader:ClearAllPoints(); parent.matrixHeader:SetPoint("TOPLEFT", toolbar, "BOTTOMLEFT", 0, -Theme.Space.xs); parent.matrixHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -inset.right, 0); parent.matrixHeader:SetHeight(headerHeight)
     parent.matrixScroll:ClearAllPoints(); parent.matrixScroll:SetPoint("TOPLEFT", parent.matrixHeader, "BOTTOMLEFT", 0, 0); parent.matrixScroll:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset.right, inset.bottom)
@@ -286,8 +292,8 @@ function Addon:RefreshMatrixView(parent, context)
     local availableWidth = math.max(1, (tonumber(context.surfaceAvailableWidth) or parent:GetWidth() or 1) - inset.left - inset.right)
     local characterWidth = self:GetMatrixCharacterColumnWidth(context, availableWidth, nameWidth, #allCharacters)
     local characters, pageInfo = Core.AccountView:GetColumnPage("reputation", "matrix", allCharacters, availableWidth, nameWidth, characterWidth)
-    Core.AccountView:UpdateColumnPager(parent, "reputation", "matrix", pageInfo, parent.matrixHeader, "角色")
-    local columns = { { title="声望", width=nameWidth } }
+    Core.AccountView:UpdateColumnPager(parent, "reputation", "matrix", pageInfo, parent.matrixHeader, self:T("MATRIX.CHARACTERS"))
+    local columns = { { title=self:T("MATRIX.REPUTATION"), width=nameWidth } }
     for _, character in ipairs(characters) do columns[#columns + 1] = { width=characterWidth, character=character } end
     local tableWidth, currentColumnX = 0, nil
     local currentCharacter = Core.Characters:GetCurrent()
@@ -298,7 +304,7 @@ function Addon:RefreshMatrixView(parent, context)
         header:ClearAllPoints(); header:SetPoint("TOPLEFT", parent.matrixHeader, "TOPLEFT", tableWidth, 0); header:SetSize(column.width, headerHeight)
         if column.character then
             local snapshot = Snapshot(column.character)
-            Theme:SetCharacterHeader(header, column.character, context, { updatedAt=snapshot and snapshot.updatedAt, state=snapshot and snapshot.state or "unsynced", recovery="登录该角色后同步声望数据。" })
+            Theme:SetCharacterHeader(header, column.character, context, { updatedAt=snapshot and snapshot.updatedAt, state=snapshot and snapshot.state or "unsynced", recovery=self:T("PAGE.SNAPSHOT_HINT") })
         else
             Theme:SetMatrixHeader(header, column.title, { height=headerHeight, justify="LEFT", color=Theme.Colors.muted, inset=Theme.Space.xxs+starWidth })
             header:SetScript("OnEnter", nil); header:SetScript("OnLeave", nil)
@@ -331,7 +337,7 @@ function Addon:RefreshMatrixView(parent, context)
             row.star = Theme:CreateButton(row, starWidth, "☆", "secondary"); row.star:SetHeight(20); row.star:EnableMouse(true); row.star:RegisterForClicks("LeftButtonUp"); row.star:SetFrameLevel(row:GetFrameLevel() + 5)
         end
         row.star:ClearAllPoints(); row.star:SetPoint("LEFT", row, "LEFT", 0, 0); row.star:SetShown(node.kind == "faction"); if node.kind == "faction" then local monitored=self:IsMonitored(node.factionID); row.star:SetText(monitored and "★" or "☆"); row.star:SetState(monitored and "selected" or "default"); row.star.factionID=node.factionID; row.star:SetScript("OnClick", function(control) self:ToggleMonitored(control.factionID); Addon:RefreshMatrixView(parent, context) end) end
-        local prefix = string.rep("　", entry.depth); local label = prefix .. ((grouped and (IsOpen(expanded,node) and "− " or "+ ")) or "") .. (node.icon and "   " or "") .. node.title; local values = { label }
+        local prefix = string.rep("  ", entry.depth); local label = prefix .. ((grouped and (IsOpen(expanded,node) and "− " or "+ ")) or "") .. (node.icon and "   " or "") .. node.title; local values = { label }
         if node.kind == "faction" then
             for _, character in ipairs(characters) do
                 local snapshot = Snapshot(character)

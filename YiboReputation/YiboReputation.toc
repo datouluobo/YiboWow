@@ -4,15 +4,19 @@
 ## Title-zhTW: |cff20e070[Yibo]|r YiboReputation - 声望之路
 ## Notes: 多角色声望浏览与比较
 ## Author: YiboSoft
-## Version: 1.5.2
-## IconTexture: Interface\AddOns\YiboReputation\Media\YiboReputationIcon-v1
+## Version: 1.7.1
+## IconTexture: Interface\AddOns\YiboReputation\Media\YiboReputationIcon-128
 ## SavedVariables: YiboReputationDB
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
 ## LoadOnDemand: 0
 
 Bootstrap.lua
+Locales/Interface.lua
 ReputationCatalog.lua
+Store.lua
+Migration.lua
+Scanner.lua
 ReputationHierarchy.lua
 ReputationFormat.lua
 Friendship.lua

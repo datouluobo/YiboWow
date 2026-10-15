@@ -4,7 +4,7 @@ local Core = _G.YiboCore or {}
 _G.YiboCore = Core
 
 Core.NAME = "YiboCore"
-Core.VERSION = "1.12.3"
+Core.VERSION = "1.12.4"
 Core.API_VERSION = 13
 Core._private = Core._private or {}
 Core._private.addonName = ADDON_NAME or Core.NAME
@@ -48,7 +48,6 @@ lifecycleFrame:RegisterEvent("SKILL_LINES_CHANGED")
 lifecycleFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 lifecycleFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 lifecycleFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-lifecycleFrame:RegisterEvent("UPDATE_FACTION")
 lifecycleFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 lifecycleFrame:RegisterEvent("DISPLAY_SIZE_CHANGED")
 lifecycleFrame:RegisterEvent("UI_SCALE_CHANGED")

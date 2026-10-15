@@ -30,7 +30,7 @@ function Addon:GetPreviewMetrics(context)
  return {minWidth=420,preferredWidth=math.min(1080,150+n*cellWidth),minHeight=132,preferredHeight=171+rows*Theme.Table.previewRowHeight,horizontalOverflow="matrix",verticalOverflow="none"}
  --[[ Legacy current-character metric path, retained for migration reference.
  local current = _G.YiboCore.Characters:GetCurrent()
- local snapshot = current and _G.YiboCore.DataDomains:Get(current.id, "reputation")
+ local snapshot = current and Addon:GetSnapshot(current.id)
  local selected = self:GetSettings().currentPreviewExpanded or self:GetSettings().defaultExpansion
  if selected == "auto" or not selected then selected = "mop" end
  local rows = 0
@@ -64,7 +64,7 @@ function Addon:GetPreviewSurfaceMetrics(context)
  }
  --[[ Legacy current-character surface metrics, retained for migration reference.
  local current = Core.Characters:GetCurrent()
- local snapshot = current and Core.DataDomains:Get(current.id, "reputation")
+ local snapshot = current and Addon:GetSnapshot(current.id)
  local selected = self:GetSettings().currentPreviewExpanded or self:GetSettings().defaultExpansion
  if selected == "auto" or not selected then selected = "mop" end
  local function Count(node)

@@ -1,5 +1,5 @@
 local Addon = _G.YiboReputation
--- Display metadata only. IDs, values and standings always originate in Core.
+-- Reputation owns the catalog and discovered faction metadata; Core owns character identity.
 Addon.Catalog = {
  { id="classic", title="经典旧世", categories={
   {id="cities",title="主城阵营",factions={47,54,68,69,72,76,81,530}},
@@ -48,44 +48,72 @@ Addon.NativeGroupExpansions = {
 -- known cross-faction entries so monitoring/settings remain readable even
 -- when the logged-in character cannot resolve the faction through the API.
 Addon.FactionNameFallbacks = {
- [1134] = { zhCN="蛮锤氏族", zhTW="蠻錘氏族", enUS="Wildhammer Clan" },
- [1353] = { zhCN="火金派熊猫人", zhTW="火金派熊貓人", enUS="Huojin Pandaren" },
+ [1134] = "FACTION.WILDHAMMER",
+ [1353] = "FACTION.HUOJIN",
 }
--- Register before PLAYER_LOGIN collection so collapsed Blizzard faction
--- headers cannot turn catalog entries into false “unscanned” states.
-do
- local entries, seen = {}, {}
- for _, expansion in ipairs(Addon.Catalog) do
+-- Build local collection metadata before the first scan. Imported faction IDs
+-- also remain queryable when they are absent from the current native list.
+function Addon:InitializeFactionRegistry()
+ self.FactionRegistry = self.FactionRegistry or {}
+ for _, expansion in ipairs(self.Catalog) do
   for _, category in ipairs(expansion.categories) do
-   for _, factionID in ipairs(category.factions) do
-    if not seen[factionID] then
-     seen[factionID] = true
-     -- Some client faction headers (notably 阡陌客) also carry a real
-     -- reputation value.  Mark only the catalog's declared primary faction
-     -- so Core can retain that header while continuing to ignore ordinary
-     -- non-data section headers.
-     entries[#entries + 1] = { factionID=factionID, expansionID=expansion.id, expansionTitle=expansion.title, categoryID=category.id, categoryTitle=category.title, isPrimaryFaction=category.primaryFactionID == factionID }
-    end
+   for _, id in ipairs(category.factions) do
+    self.FactionRegistry[id] = self.FactionRegistry[id] or {
+     factionID=id, expansionID=expansion.id, categoryID=category.id,
+     isPrimaryFaction=category.primaryFactionID == id,
+    }
    end
   end
  end
- if _G.YiboCore and _G.YiboCore.RegisterReputationFactions then _G.YiboCore:RegisterReputationFactions(entries)
- elseif _G.YiboCore and _G.YiboCore.RegisterReputationFactionIDs then local ids={};for _,entry in ipairs(entries) do ids[#ids+1]=entry.factionID end;_G.YiboCore:RegisterReputationFactionIDs(ids) end
+ for _, record in pairs(self.Store.db.characters) do
+  local snapshot=record.snapshot
+  if snapshot and (tonumber(snapshot.schemaVersion) or 0)>=3 then
+   for key, data in pairs(snapshot.data and snapshot.data.factions or {}) do
+    local id=tonumber(type(data)=="table" and data.factionID or key)
+    if id and id>0 then self.FactionRegistry[id]=self.FactionRegistry[id] or {factionID=id,discovered=true} end
+   end
+  end
+ end
 end
 function Addon:GetExpansion(id) for _, item in ipairs(self.Catalog) do if item.id == id then return item end end end
 function Addon:GetCategory(expansionID, categoryID) for _, item in ipairs((self:GetExpansion(expansionID) or {}).categories or {}) do if item.id == categoryID then return item end end end
+local EXPANSION_KEYS = { classic="CAT.EXPANSION.CLASSIC", tbc="CAT.EXPANSION.TBC", wotlk="CAT.EXPANSION.WOTLK", cata="CAT.EXPANSION.CATA", mop="CAT.EXPANSION.MOP", guild="CAT.EXPANSION.GUILD" }
+local CATEGORY_KEYS = {
+ ["classic:cities"]="CAT.GROUP.CITIES", ["tbc:cities"]="CAT.GROUP.CITIES", ["classic:steamwheedle"]="CAT.GROUP.STEAMWHEEDLE",
+ ["classic:forces"]="CAT.GROUP.FORCES", ["classic:major"]="CAT.GROUP.CLASSIC_MAJOR", ["tbc:shattrath"]="CAT.GROUP.SHATTRATH",
+ ["tbc:outland"]="CAT.GROUP.OUTLAND", ["wotlk:alliance"]="CAT.GROUP.ALLIANCE", ["wotlk:horde"]="CAT.GROUP.HORDE",
+ ["wotlk:basin"]="CAT.GROUP.BASIN", ["wotlk:major"]="CAT.GROUP.NORTHREND", ["cata:major"]="CAT.GROUP.MAJOR",
+ ["mop:academy"]="CAT.GROUP.PANDARIA", ["mop:black-prince"]="CAT.GROUP.BLACK_PRINCE", ["mop:tillers"]="CAT.GROUP.TILLERS",
+ ["mop:anglers"]="CAT.GROUP.ANGLERS", ["mop:major"]="CAT.GROUP.MAJOR", ["guild:guilds"]="CAT.GROUP.GUILD",
+}
+function Addon:GetExpansionTitle(expansion)
+ return self:T(EXPANSION_KEYS[type(expansion)=="table" and expansion.id or expansion] or "CAT.GROUP.UNCLASSIFIED")
+end
+function Addon:GetCategoryTitle(expansion, category)
+ local expansionID = type(expansion)=="table" and expansion.id or expansion
+ local categoryID = type(category)=="table" and category.id or category
+ local key = CATEGORY_KEYS[tostring(expansionID)..":"..tostring(categoryID)]
+ return key and self:T(key) or (type(category)=="table" and category.title or self:T("MATRIX.OTHER_FACTIONS"))
+end
 function Addon:GetFactionIDs(expansionID, categoryID)
  local ids, seen = {}, {}; for _, category in ipairs((self:GetExpansion(expansionID) or {}).categories or {}) do if categoryID == "all" or category.id == categoryID then for _, id in ipairs(category.factions) do if not seen[id] then seen[id]=true; ids[#ids+1]=id end end end end; return ids
 end
 function Addon:ResolveFactionMetadata(factionID, data)
- local metadata = _G.YiboCore and _G.YiboCore.GetReputationFactionMetadata and _G.YiboCore:GetReputationFactionMetadata(factionID)
- if metadata and metadata.expansionID then return metadata end
+ local original = self.FactionRegistry and self.FactionRegistry[tonumber(factionID)]
+ local metadata = original and self.Store.Copy(original)
+ if metadata and metadata.expansionID then
+  local expansion = self:GetExpansion(metadata.expansionID)
+  local category = self:GetCategory(metadata.expansionID, metadata.categoryID)
+  if expansion then metadata.expansionTitle = self:GetExpansionTitle(expansion) end
+  if category then metadata.categoryTitle = self:GetCategoryTitle(expansion, category) end
+  return metadata
+ end
  local id, nativeGroup = tonumber(factionID) or 0, data and data.nativeGroup
  local expansionID = nativeGroup and self.NativeGroupExpansions[nativeGroup]
  local expansion = self:GetExpansion(expansionID)
  local categoryTitle = nativeGroup
- if expansion and nativeGroup == expansion.title then categoryTitle = "主要阵营" end
- return {factionID=id,expansionID=expansionID or "unclassified",expansionTitle=expansion and expansion.title or "未归类",categoryID="detected:"..tostring(nativeGroup or "other"),categoryTitle=categoryTitle or "其它阵营",inferred=true}
+ if expansion and nativeGroup == ({classic="经典旧世",tbc="燃烧的远征",wotlk="巫妖王之怒",cata="大地的裂变",mop="熊猫人之谜"})[expansion.id] then categoryTitle = self:T("CAT.GROUP.MAJOR") end
+ return {factionID=id,expansionID=expansionID or "unclassified",expansionTitle=expansion and self:GetExpansionTitle(expansion) or self:T("CAT.GROUP.UNCLASSIFIED"),categoryID="detected:"..tostring(nativeGroup or "other"),categoryTitle=categoryTitle or self:T("MATRIX.OTHER_FACTIONS"),inferred=true}
 end
 function Addon:GetFactionName(factionID, fallback)
  if type(fallback) == "string" and fallback ~= "" then return fallback end
@@ -100,12 +128,13 @@ function Addon:GetFactionName(factionID, fallback)
   local name = type(result) == "table" and result.name or result
   if type(name) == "string" and name ~= "" then return name end
  end
- local names = self.FactionNameFallbacks[tonumber(factionID)]
- if names then
-  local locale = GetLocale and GetLocale() or "enUS"
-  return names[locale] or names.enUS
- end
- return "未知声望 " .. tostring(factionID)
+ local key = self.FactionNameFallbacks[tonumber(factionID)]
+ if key then return self:T(key) end
+ return self:T("MATRIX.UNKNOWN_REPUTATION", tonumber(factionID) or 0)
+end
+function Addon:IsUnknownFactionName(name)
+ local prefix = self:T("MATRIX.UNKNOWN_REPUTATION", 0):gsub("0$", "")
+ return type(name) == "string" and name:sub(1, #prefix) == prefix
 end
 function Addon:GetFactionIcon(factionID)
  if C_Reputation and C_Reputation.GetFactionDataByID then

@@ -1,0 +1,42 @@
+{
+  "archived_on": "2026-10-14",
+  "addon": "YiboCore",
+  "archive": "v2",
+  "files": [
+    {
+      "file": "YiboCoreIcon-v13-128.png",
+      "original_version": "13",
+      "original_path": "YiboCore/Media/YiboCoreIcon-v13-128.png"
+    },
+    {
+      "file": "YiboCoreIcon-v13-16.png",
+      "original_version": "13",
+      "original_path": "YiboCore/Media/YiboCoreIcon-v13-16.png"
+    },
+    {
+      "file": "YiboCoreIcon-v13-31.png",
+      "original_version": "13",
+      "original_path": "YiboCore/Media/YiboCoreIcon-v13-31.png"
+    },
+    {
+      "file": "YiboCoreIcon-v13-32.png",
+      "original_version": "13",
+      "original_path": "YiboCore/Media/YiboCoreIcon-v13-32.png"
+    },
+    {
+      "file": "YiboCoreIcon-v13-64.png",
+      "original_version": "13",
+      "original_path": "YiboCore/Media/YiboCoreIcon-v13-64.png"
+    },
+    {
+      "file": "YiboCoreIcon-v13.png",
+      "original_version": "13",
+      "original_path": "YiboCore/Media/YiboCoreIcon-v13.png"
+    },
+    {
+      "file": "YiboCoreIcon-v13.tga",
+      "original_version": "13",
+      "original_path": "YiboCore/Media/YiboCoreIcon-v13.tga"
+    }
+  ]
+}

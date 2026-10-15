@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [string]$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\.." )).Path,
-    [string]$OutputRoot = (Join-Path (Resolve-Path (Join-Path $PSScriptRoot "..\..\.." )).Path "Builds")
+    [string]$OutputRoot = (Join-Path (Resolve-Path (Join-Path $PSScriptRoot "..\..\.." )).Path "Builds"),
+    [switch]$KeepStaging
 )
 
 $ErrorActionPreference = "Stop"
@@ -19,14 +20,12 @@ $curseForgeTemp = Join-Path $tempRoot (Split-Path $curseForgeOutput -Leaf)
 $githubTemp = Join-Path $tempRoot (Split-Path $githubOutput -Leaf)
 
 function Move-PreviousPackagesToArchive {
-    $archiveRoot = Join-Path $outputRoot "Archive"
+    $archiveRoot = Join-Path (Join-Path $outputRoot "Archive") $addonName
     New-Item -ItemType Directory -Path $archiveRoot -Force | Out-Null
     $moved = 0
     Get-ChildItem -LiteralPath $outputRoot -File -Filter "$addonName-*.zip" | ForEach-Object {
         $destination = Join-Path $archiveRoot $_.Name
-        if (Test-Path -LiteralPath $destination) {
-            $destination = Join-Path $archiveRoot ("{0}-{1}{2}" -f $_.BaseName, (Get-Date -Format "yyyyMMdd-HHmmssfff"), $_.Extension)
-        }
+        if (Test-Path -LiteralPath $destination) { throw "Archive package already exists: $destination" }
         Move-Item -LiteralPath $_.FullName -Destination $destination
         $moved++
     }
@@ -45,7 +44,9 @@ try {
         Copy-Item -LiteralPath $source -Destination $target
     }
     $media = Join-Path $projectRoot "Media"
-    if (Test-Path -LiteralPath $media) { Copy-Item -LiteralPath $media -Destination $curseForgeStage -Recurse -Force }
+    if (Test-Path -LiteralPath $media) { $runtimeMedia = Join-Path $curseForgeStage "Media"
+        New-Item -ItemType Directory -Path $runtimeMedia -Force | Out-Null
+        Get-ChildItem -LiteralPath $media -File -Filter '*.tga' | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $runtimeMedia } }
     $robocopyArgs = @($projectRoot, $githubStage, "/E", "/R:1", "/W:1", "/NFL", "/NDL", "/NJH", "/NJS", "/NP", "/XD", ".git", "dist", "Builds", "tmp", "_NonRelease", "/XF", "AGENTS.md")
     & robocopy @robocopyArgs | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE" }
@@ -57,5 +58,5 @@ try {
     [pscustomobject]@{ Version = $version; CurseForge = $curseForgeOutput; GitHub = $githubOutput; Archived = $archived } | Format-List
 }
 finally {
-    if (Test-Path -LiteralPath $tempRoot) { Remove-Item -LiteralPath $tempRoot -Recurse -Force }
+    if (-not $KeepStaging -and (Test-Path -LiteralPath $tempRoot)) { Remove-Item -LiteralPath $tempRoot -Recurse -Force }
 }

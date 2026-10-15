@@ -16,77 +16,77 @@ local ABOUT_ADDONS = Core.Locale:Bind(function() return {
         title = Core:Text("CORE.BOSS_TRACKER"),
         version = "2.1",
         description = Core:Text("CORE.TRACK_WORLD_BOSSES_HOLIDAY_BOSSES_AND_CUSTOM"),
-        icon = "Interface\\AddOns\\YiboCore\\Media\\YAB_MinimapIcon",
+        icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YiboAltoBossIcon",
         url = "https://www.curseforge.com/wow/addons/yiboaltoboss",
     },
     {
         name = "YiboCurrency",
         version = "0.1",
         description = Core:Text("CORE.COMPARE_CURRENCY_BALANCES_ACROSS_CHARACTERS_INCLUDING_STANDARD"),
-        icon = "Interface\\AddOns\\YiboCurrency\\Media\\YiboCurrencyIcon-v1",
+        icon = "Interface\\AddOns\\YiboCurrency\\Media\\YiboCurrencyIcon",
         url = "https://www.curseforge.com/wow/addons/yibocurrency",
     },
     {
         name = "YiboCrafting",
         title = Core:Text("CORE.CRAFTING"),
         description = Core:Text("CORE.VIEW_CONFIRMED_LEARNED_PROFESSION_RECIPES_ACROSS_CHARACTERS"),
-        icon = "Interface\\AddOns\\YiboCrafting\\Media\\YiboCraftingIcon-v2",
+        icon = "Interface\\AddOns\\YiboCrafting\\Media\\YiboCraftingIcon",
         url = "https://www.curseforge.com/wow/addons/yibocrafting",
     },
     {
         name = "YiboBuilds",
         version = "1.0.0",
         description = Core:Text("CORE.VIEW_EQUIPMENT_TALENTS_AND_GLYPH_BUILDS_ACROSS"),
-        icon = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon-v1",
+        icon = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon",
         url = "https://www.curseforge.com/wow/addons/yibobuilds",
     },
     {
         name = "YiboLegendary",
         version = "1.0",
         description = Core:Text("CORE.TRACK_LEGENDARY_QUESTS_AND_EQUIPMENT_ACROSS_CHARACTERS"),
-        icon = "Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon-v1.tga",
+        icon = "Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon.tga",
         url = "https://www.curseforge.com/wow/addons/yibolegendary",
     },
     {
         name = "YiboMail",
         title = Core:Text("CORE.MAIL_ASSISTANT"),
         description = Core:Text("CORE.MAIL_SNAPSHOTS_BACKLOG_CACHES_AND_ATTACHMENT_SOURCES"),
-        icon = "Interface\\AddOns\\YiboMail\\Media\\YiboMailIcon-v1",
+        icon = "Interface\\AddOns\\YiboMail\\Media\\YiboMailIcon",
         url = "https://www.curseforge.com/wow/addons/yibomail",
     },
     {
         name = "YiboQuestBlocker",
         version = "2.1",
         description = Core:Text("CORE.IDENTIFY_QUEST_RESTRICTIONS_AND_RISKS_TO_AVOID"),
-        icon = "Interface\\AddOns\\YiboCore\\Media\\YQB_MinimapIcon",
+        icon = "Interface\\AddOns\\YiboQuestBlocker\\Media\\YiboQuestBlockerIcon",
         url = "https://www.curseforge.com/wow/addons/yiboquestblocker",
     },
     {
         name = "YiboTodo",
         version = "0.1",
         description = Core:Text("CORE.REVIEW_TASKS_AND_PROFESSION_COOLDOWNS_ACROSS_CHARACTERS"),
-        icon = "Interface\\AddOns\\YiboTodo\\Media\\YiboTodoIcon-v6",
+        icon = "Interface\\AddOns\\YiboTodo\\Media\\YiboTodoIcon",
         url = "https://www.curseforge.com/wow/addons/yibotodo",
     },
     {
         name = "YiboVault",
         title = Core:Text("CORE.ITEM_OVERVIEW"),
         description = Core:Text("CORE.FIND_ITEMS_IN_BAGS_EQUIPMENT_BANKS_MAIL"),
-        icon = "Interface\\AddOns\\YiboVault\\Media\\YiboVaultIcon-v2",
+        icon = "Interface\\AddOns\\YiboVault\\Media\\YiboVaultIcon",
         url = "https://www.curseforge.com/wow/addons/yibovault",
     },
     {
         name = "YiboReputation",
         version = "1.0",
         description = Core:Text("CORE.COMPARE_REPUTATION_STANDINGS_AND_ADVANCEMENT_ACROSS_CHARACTERS"),
-        icon = "Interface\\AddOns\\YiboReputation\\Media\\YiboReputationIcon-v1",
+        icon = "Interface\\AddOns\\YiboReputation\\Media\\YiboReputationIcon",
         url = "https://www.curseforge.com/wow/addons/yiboreputation",
     },
     {
         name = "YiboAutoOpen",
         version = "1.0",
         description = Core:Text("CORE.SAFELY_OPEN_CONTAINER_ITEMS_FROM_THE_ACCOUNT"),
-        icon = "Interface\\AddOns\\YiboAutoOpen\\Media\\YiboAutoOpenIcon-v2",
+        icon = "Interface\\AddOns\\YiboAutoOpen\\Media\\YiboAutoOpenIcon",
         relation = "optional-core",
         url = "https://www.curseforge.com/wow/addons/yiboautoopen",
     },
@@ -94,7 +94,7 @@ local ABOUT_ADDONS = Core.Locale:Bind(function() return {
         name = "YiboBeastPaths",
         version = "1.6",
         description = Core:Text("CORE.SHOW_RARE_HUNTER_PET_PATROL_ROUTES_ON"),
-        icon = "Interface\\AddOns\\YiboCore\\Media\\YBP_AddonIcon",
+        icon = "Interface\\AddOns\\YiboBeastPaths\\Media\\YiboBeastPathsIcon",
         url = "https://www.curseforge.com/wow/addons/yibobeastpaths",
         relation = "optional-core",
     },
@@ -102,7 +102,7 @@ local ABOUT_ADDONS = Core.Locale:Bind(function() return {
         name = "YiboMounts",
         version = "0.8.1",
         description = Core:Text("CORE.SHOW_MOUNT_SOURCES_IN_AURAS_CHAT_LINKS"),
-        icon = "Interface\\AddOns\\YiboMounts\\Media\\YiboMountsIcon-v1",
+        icon = "Interface\\AddOns\\YiboMounts\\Media\\YiboMountsIcon",
         relation = "optional-core",
         url = "https://www.curseforge.com/wow/addons/yibomounts",
     },
@@ -112,6 +112,12 @@ local ABOUT_ADDONS = Core.Locale:Bind(function() return {
 -- releases replace this legacy presentation list with the shared catalog so
 -- the UI never owns plugin versions.
 ABOUT_ADDONS = Core.AddonCatalog or ABOUT_ADDONS
+local getAddonInfo = C_AddOns and C_AddOns.GetAddOnInfo or GetAddOnInfo
+for _, addon in ipairs(ABOUT_ADDONS) do
+    if not getAddonInfo or not getAddonInfo(addon.name) then
+        addon.icon = "Interface\\AddOns\\YiboCore\\Media\\YiboCoreIcon"
+    end
+end
 
 local function SetAboutLinkOpen(parent, target)
     for _, row in ipairs(parent.addonRows) do
@@ -258,7 +264,7 @@ local function CreateAbout(parent)
     parent.hero.iconFrame:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.72)
     parent.hero.icon = parent.hero.iconFrame:CreateTexture(nil, "ARTWORK")
     parent.hero.icon:SetPoint("TOPLEFT", 3, -3); parent.hero.icon:SetPoint("BOTTOMRIGHT", -3, 3)
-    parent.hero.icon:SetTexture("Interface\\AddOns\\YiboCore\\Media\\YiboCoreLogo-v7")
+    parent.hero.icon:SetTexture("Interface\\AddOns\\YiboCore\\Media\\YiboCoreLogo")
     parent.hero.title = AddText(parent.hero, "GameFontNormalLarge", Theme.Font.title, COLORS.text)
     parent.hero.title:SetPoint("TOPLEFT", 110, -20); parent.hero.title:SetText("YiboCore")
     parent.hero.description = AddText(parent.hero, "GameFontNormalSmall", Theme.Font.assist, COLORS.text)

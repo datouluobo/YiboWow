@@ -1,0 +1,17 @@
+{
+  "archived_on": "2026-10-14",
+  "addon": "YiboCore",
+  "archive": "v3",
+  "files": [
+    {
+      "file": "YiboCoreIcon-v20-128.png",
+      "original_version": "20",
+      "original_path": "YiboCore/Media/YiboCoreIcon-v20-128.png"
+    },
+    {
+      "file": "YiboCoreIcon-v20.tga",
+      "original_version": "20",
+      "original_path": "YiboCore/Media/YiboCoreIcon-v20.tga"
+    }
+  ]
+}

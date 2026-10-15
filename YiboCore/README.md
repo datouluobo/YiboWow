@@ -1,4 +1,6 @@
 # YiboCore
+
+1.12.4 / API13 工作树已将声望采集和新快照存储交给 YiboReputation 1.7.1。旧 Core 声望快照冻结保留，通过现有公开读取接口供一次性导入；请配套升级 Reputation，旧版只会显示冻结数据。实施与待验收范围见 [声望迁移记录](../YiboReputation/Docs/声望数据归属迁移-实施与验收记录.md)。
 当前工作树 **1.12.1 / API13** 增加可声明的悬停角色范围，旧页面默认仍为前20名；Mail 1.2.13 按需保留全部有效角色。见 [悬停角色范围契约](Docs/API-v13-悬停角色范围.md)。
 
 工作树新增 **1.12.0 / API v13 / localization:1**：YiboCore 已支持中英文界面适配与语言切换。Core 常规设置 → 通用 → 插件语言，可选择跟随客户端、中文或 English；选择后重载界面生效，缺失英文资源会回退中文。该支持覆盖 Core 自身界面；业务插件正按区域渐进接入，尚未迁移的文字可能仍为中文。当前工作树尚未发布，客户端验收状态见 [实施记录](../Docs/Core系列中英文客户端适配-实施与验收记录.md)；语言服务契约见 [API v13 语言服务](Docs/API-v13-语言服务.md)。
@@ -92,9 +94,9 @@ API v6 保持 API v5 向后兼容。`RegisterSettingsPanel` 只向统一设置�
 
 ## 发布打包
 
-运行 `_NonRelease/Tools/Build-ReleasePackages.ps1` 会在仓库根目录 `Builds/` 生成两份带顶级 `YiboCore/` 目录的 zip：`*-curseforge.zip` 只包含 TOC、其加载的运行时代码与 `.tga` 纹理；`*-github.zip` 保留文档、截图和其它公开资源，但排除构建输出。`Builds/` 是 YiboWow 全仓库统一的安装包目录。
+运行仓库根目录 `Tools/Build-ReleasePackages.ps1 -Addon YiboCore -Target Mists`，或原 `_NonRelease/Tools/Build-ReleasePackages.ps1` 兼容入口，会在仓库根目录 `Builds/` 生成带顶级 `YiboCore/` 目录的 CF 目标安装包与一份全目标 GitHub 源码归档。CF 包保留目标 TOC、运行时代码、生成的目标插件版本索引、`.tga` 纹理与第三方通知；GitHub 归档保留公开源码、文档和资源，排除非发布与构建输出。当前仅配置 Mists；其它目标请求明确停止。
 
-包名包含插件版本与公开 API 版本，例如 `YiboCore-v1.12.0-api13-curseforge.zip` 和 `YiboCore-v1.12.0-api13-github.zip`。旧 Core 安装包自动移入 `Builds/Archive/`。本地化检查生成的 `.md` 人工报告与 `.json` 机器报告保存在仓库根目录 `_NonRelease/Localization/Build/`，不随安装包分发。
+CF 包名按目标、插件版本、公开 API 排列，例如 `YiboCore-mists-v1.12.1-api13-curseforge.zip`；GitHub 包为 `YiboCore-src.<源码及配置摘要>-github.zip`。包内 `YiboReleaseManifest.json` 记录源码标识、版本、目标与验证状态。`-Channel CurseForge` 或 `-Channel GitHub` 可单独构建渠道，`-ValidateOnly` 只校验并返回计划。旧包按对应产物流移入 `Builds/Archive/YiboCore/`，保留其它目标和渠道的最新包。本地化报告仍保存在 `_NonRelease/Localization/Build/`，不随包分发；实际构建生成报告，ValidateOnly 不生成。正式命名与当前支持边界见 [目标与发行标识规范](../Docs/多版本目标与发行标识规范.md)。
 
 公共 API v7 新增基础输入、物品解析与选择器，保持 v5/v6 兼容。见 [API v7 物品选择与基础输入](Docs/API-v7-物品选择与基础输入.md)。配套版本为 Core 1.6.1＋Currency 0.9.1。
 
@@ -105,6 +107,12 @@ API v6 保持 API v5 向后兼容。`RegisterSettingsPanel` 只向统一设置�
 内置信息条设置位于 Core 常规设置 → 信息条。“显示与入口”选择各入口；“信息条”开启总开关、调整外框、背景配色与透明度，并选择按钮前移／后移或恢复默认；也可直接拖动条上图标调序。按钮名称采用页面名称并移除作者前缀。关闭后保留选择、外观和顺序。解锁后通过左侧把手拖动。外部 Broker 停用后图标可能需在外部条隐藏或重载。工作树接口见 [API13 入口三通道与内置条](Docs/API-v13-入口三通道与内置条.md)，客户端验收状态见 [实施记录](Docs/Core-内置LDB与信息条-实施与验收记录.md)。
 
 点击 Core 常规设置：语言和通用悬停选项。显示与入口管理页面、入口和字段；信息条作为左侧独立页面管理外观、位置及排序；插件列表按技术名排序，每插件一行，完整展开并按需纵向滚动，仅有业务设置的插件也会列出并说明适用范围。
+
+## 图标资源（2026-10-14）
+
+当前图标为 `Media/YiboCoreIcon`：默认TGA为64px，插件列表使用128px TGA；PNG提供16/24/32/64/128/512/1024px，母版为312px透明位图。版本、统一缩放和验证范围见[系列资源记录](../Docs/Design/Yibo系列Logo-20261014/README.md)。
+
+![YiboCore 图标](Media/YiboCoreIcon-128.png)
 
 ## 1.12.2 / API13（2026-10-14）
 

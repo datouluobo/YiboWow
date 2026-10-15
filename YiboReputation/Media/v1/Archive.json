@@ -1,0 +1,17 @@
+{
+  "archived_on": "2026-10-14",
+  "addon": "YiboReputation",
+  "archive": "v1",
+  "files": [
+    {
+      "file": "YiboReputationIcon-v1.png",
+      "original_version": "1",
+      "original_path": "YiboReputation/Media/YiboReputationIcon-v1.png"
+    },
+    {
+      "file": "YiboReputationIcon-v1.tga",
+      "original_version": "1",
+      "original_path": "YiboReputation/Media/YiboReputationIcon-v1.tga"
+    }
+  ]
+}

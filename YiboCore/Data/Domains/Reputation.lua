@@ -1,3 +1,6 @@
+-- Retired source: not loaded by YiboCore.toc since 1.12.4.
+-- Live collection and ownership now belong to YiboReputation/Scanner.lua.
+-- Kept for migration review; historical SavedVariables remain readable via DataDomains:Get.
 local Core = _G.YiboCore
 Core.ReputationRegistry = Core.ReputationRegistry or {}
 
