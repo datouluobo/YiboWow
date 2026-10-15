@@ -17,7 +17,7 @@ YiboBuilds is a character-build viewer for MoP Classic. It stores and shows tale
 ## Requirements
 
 - MoP Classic
-- YiboCore 1.9.0 or later (API v10, account-view v2)
+- YiboCore 1.12.5 or later (API v13; required capabilities checked at startup)
 
 ## Chinese
 
@@ -38,13 +38,17 @@ YiboBuilds 是用于 MoP Classic 的账号角色构筑查看器，记录并展�
 ### 依赖
 
 - MoP Classic
-- YiboCore 1.9.0 或更新版本（API v10、account-view v2）
+- YiboCore 1.12.5 或更新版本（API v13；启动时检查所需能力）
 
 
 ## 行动中心主动添加（2026-10-10 工作树）
 
 支持实际宝石／附魔候选；目标绑定具体装备实例，实际应用才完成，换装暂停；无GUID保持待核实。
 
-新增强最低 Core API v12 / business-item-actions:1，不足提示升级并停止增强；原基础业务保留既有最低版本，作为旧 Core 兼容例外，无新交互本地回退。整体提高最低版本时收拢此例外。
+构筑与目标增强统一要求 Core API13 / business-item-actions:1，全部能力检查通过后才注册页面与采集；不足时明确提示升级并停止初始化。
 
 实际契约、自动化与客户端待验收范围见 [实施与验证](../Docs/行动中心-主动添加实施与验证.md)。
+
+## Core API13 适配（2026-10-15 工作树）
+
+页面、字段、悬停、装备操作、目标提示及 Slash 输出接入 Core 账号语言；公共角色名使用 FormatName。缓存所有者接入 character-cleanup:2。Builds 1.5.0：Core适配与附魔候选修复均已获得用户实测确认。离线验证与真实客户端待验范围见[接入记录](Docs/Core-API13-接入说明.md)。

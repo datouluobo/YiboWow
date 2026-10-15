@@ -1,3 +1,5 @@
+local Addon = _G.YiboBuilds
+if not Addon:HasCompatibleCore() then return end
 -- Generated from WoW client DB2 build 5.5.4.68042.
 -- IDs are SpellItemEnchantment records; itemID is the applying scroll/item when known.
 local catalog = {}
@@ -219,9 +221,9 @@ catalog[2792] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 70, displayNam
 catalog[2793] = { name = "+$k1 Dodge", minLevel = 0, maxLevel = 70, displayName = "+8 Dodge", itemID = 25651, spellID = 32398 }
 catalog[2794] = { name = "+$k1 Spirit", minLevel = 0, maxLevel = 70, displayName = "+8 Spirit", itemID = 25652, spellID = 32399 }
 catalog[2841] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 60, displayName = "+10 Stamina", itemID = 34330, spellID = 44968 }
-catalog[2928] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 70, professionID = 333, profession = "附魔", requiredSkill = 350, displayName = "+12 Intellect", itemID = 35445, spellID = 27924 }
-catalog[2929] = { name = "+$k1 Weapon Damage", minLevel = 0, maxLevel = 70, professionID = 333, profession = "附魔", requiredSkill = 350, displayName = "+2 Weapon Damage", itemID = 35447, spellID = 27920 }
-catalog[2931] = { name = "+$19988s1 All Stats", minLevel = 0, maxLevel = 70, professionID = 333, profession = "附魔", requiredSkill = 350, itemID = 35446, spellID = 27927 }
+catalog[2928] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 70, professionID = 333, profession = Addon:T("UI.ENCHANTING"), requiredSkill = 350, displayName = "+12 Intellect", itemID = 35445, spellID = 27924 }
+catalog[2929] = { name = "+$k1 Weapon Damage", minLevel = 0, maxLevel = 70, professionID = 333, profession = Addon:T("UI.ENCHANTING"), requiredSkill = 350, displayName = "+2 Weapon Damage", itemID = 35447, spellID = 27920 }
+catalog[2931] = { name = "+$19988s1 All Stats", minLevel = 0, maxLevel = 70, professionID = 333, profession = Addon:T("UI.ENCHANTING"), requiredSkill = 350, itemID = 35446, spellID = 27927 }
 catalog[2933] = { name = "+$k1 PvP Resilience", minLevel = 0, maxLevel = 70, displayName = "+15 PvP Resilience", itemID = 38930, spellID = 33992 }
 catalog[2934] = { name = "+$k1 Critical Strike", minLevel = 0, maxLevel = 70, displayName = "+10 Critical Strike", itemID = 38931, spellID = 33993 }
 catalog[2935] = { name = "+$k1 Hit", minLevel = 0, maxLevel = 70, displayName = "+15 Hit", itemID = 38932, spellID = 33994 }
@@ -301,7 +303,7 @@ catalog[3294] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 80, displayNam
 catalog[3296] = { name = "+$k2 Spirit and 2% Reduced Threat", minLevel = 0, maxLevel = 80, displayName = "+10 Spirit and 2% Reduced Threat", itemID = 39004, spellID = 47899 }
 catalog[3297] = { name = "+$k1 Health", minLevel = 0, maxLevel = 80, displayName = "+275 Health", itemID = 39005, spellID = 47900 }
 catalog[3315] = { name = "+3% Mount Speed", minLevel = 0, maxLevel = 0, itemID = 37312, spellID = 48401 }
-catalog[3320] = { name = "Test Skill Req Enchant", minLevel = 0, maxLevel = 0, professionID = 164, profession = "锻造", requiredSkill = 50, spellID = 50358 }
+catalog[3320] = { name = "Test Skill Req Enchant", minLevel = 0, maxLevel = 0, professionID = 164, profession = Addon:T("UI.BLACKSMITHING"), requiredSkill = 50, spellID = 50358 }
 catalog[3325] = { name = "+$k1 Stamina and +$k2 Agility", minLevel = 0, maxLevel = 80, displayName = "+45 Stamina and +15 Agility", itemID = 38371, spellID = 50901 }
 catalog[3326] = { name = "+$k2 Attack Power and +$k1 Critical Strike", minLevel = 0, maxLevel = 80, displayName = "+55 Attack Power and +15 Critical Strike", itemID = 38372, spellID = 50902 }
 catalog[3329] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 70, displayName = "+12 Stamina", itemID = 38375, spellID = 50906 }
@@ -321,22 +323,22 @@ catalog[3718] = { name = "+$k1 Spell Power and +$k2 Spirit", minLevel = 0, maxLe
 catalog[3719] = { name = "+$k1 Spell Power and +$k2 Spirit", minLevel = 0, maxLevel = 70, displayName = "+50 Spell Power and +20 Spirit", itemID = 41605, spellID = 55631 }
 catalog[3720] = { name = "+$k1 Spell Power and +$k2 Stamina", minLevel = 0, maxLevel = 70, displayName = "+35 Spell Power and +20 Stamina", itemID = 41603, spellID = 55632 }
 catalog[3721] = { name = "+$k1 Spell Power and +$k2 Stamina", minLevel = 0, maxLevel = 70, displayName = "+50 Spell Power and +30 Stamina", itemID = 41606, spellID = 55634 }
-catalog[3722] = { name = "Lightweave Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = "裁缝", requiredSkill = 420, spellID = 55642 }
-catalog[3728] = { name = "Darkglow Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = "裁缝", requiredSkill = 420, spellID = 55769 }
-catalog[3730] = { name = "Swordguard Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = "裁缝", requiredSkill = 420, spellID = 55777 }
+catalog[3722] = { name = "Lightweave Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = Addon:T("UI.TAILORING"), requiredSkill = 420, spellID = 55642 }
+catalog[3728] = { name = "Darkglow Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = Addon:T("UI.TAILORING"), requiredSkill = 420, spellID = 55769 }
+catalog[3730] = { name = "Swordguard Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = Addon:T("UI.TAILORING"), requiredSkill = 420, spellID = 55777 }
 catalog[3731] = { name = "Titanium Weapon Chain", minLevel = 0, maxLevel = 70, itemID = 41976, spellID = 55836 }
 catalog[3748] = { name = "Titanium Spike (45-67)", minLevel = 70, maxLevel = 0, itemID = 42500, spellID = 56353 }
 catalog[3754] = { name = "+$k1 Attack Power +$k2 Stamina +$k3 Hit", minLevel = 0, maxLevel = 60, displayName = "+24 Attack Power +10 Stamina +10 Hit", itemID = 19785, spellID = 24162 }
 catalog[3755] = { name = "+$k1 Attack Power +$k2 Dodge", minLevel = 0, maxLevel = 60, displayName = "+28 Attack Power +12 Dodge", itemID = 19784, spellID = 24161 }
-catalog[3757] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 80, professionID = 165, profession = "制皮", requiredSkill = 400, displayName = "+102 Stamina", spellID = 57690 }
-catalog[3758] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 80, professionID = 165, profession = "制皮", requiredSkill = 400, displayName = "+57 Intellect", spellID = 57691 }
+catalog[3757] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 80, professionID = 165, profession = Addon:T("UI.LEATHERWORKING"), requiredSkill = 400, displayName = "+102 Stamina", spellID = 57690 }
+catalog[3758] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 80, professionID = 165, profession = Addon:T("UI.LEATHERWORKING"), requiredSkill = 400, displayName = "+57 Intellect", spellID = 57691 }
 catalog[3775] = { name = "+$k1 Spell Power and +$k2 Critical Strike", minLevel = 0, maxLevel = 80, displayName = "+30 Spell Power and +15 Critical Strike", itemID = 43302, spellID = 58126 }
 catalog[3776] = { name = "+$k1 Attack Power and +$k2 Critical Strike", minLevel = 0, maxLevel = 80, displayName = "+45 Attack Power and +15 Critical Strike", itemID = 43303, spellID = 58128 }
 catalog[3777] = { name = "+$k2 Dodge and +$k1 Stamina", minLevel = 0, maxLevel = 80, displayName = "+20 Dodge and +22 Stamina", itemID = 43304, spellID = 58129 }
 catalog[3788] = { name = "+$k1 Hit and +$k2 Critical Strike", minLevel = 0, maxLevel = 80, displayName = "+25 Hit and +25 Critical Strike", itemID = 44497, spellID = 59619 }
 catalog[3789] = { name = "Berserking", minLevel = 0, maxLevel = 0, itemID = 44493, spellID = 59621 }
 catalog[3790] = { name = "Black Magic", minLevel = 0, maxLevel = 0, itemID = 43987, spellID = 59625 }
-catalog[3791] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 80, professionID = 333, profession = "附魔", requiredSkill = 400, displayName = "+24 Stamina", spellID = 59636 }
+catalog[3791] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 80, professionID = 333, profession = Addon:T("UI.ENCHANTING"), requiredSkill = 400, displayName = "+24 Stamina", spellID = 59636 }
 catalog[3793] = { name = "+$k1 Attack Power and +$k2 PvP Resilience", minLevel = 0, maxLevel = 80, displayName = "+40 Attack Power and +15 PvP Resilience", itemID = 44067, spellID = 59771 }
 catalog[3794] = { name = "+$k1 Spell Power and +$k2 PvP Resilience", minLevel = 0, maxLevel = 80, displayName = "+23 Spell Power and +15 PvP Resilience", itemID = 44068, spellID = 59773 }
 catalog[3795] = { name = "+$k1 Attack Power and +$k2 PvP Resilience", minLevel = 0, maxLevel = 80, displayName = "+50 Attack Power and +20 PvP Resilience", spellID = 59777 }
@@ -370,12 +372,12 @@ catalog[3831] = { name = "+$k1 Haste", minLevel = 0, maxLevel = 80, displayName 
 catalog[3832] = { name = "+$60694s1 All Stats", minLevel = 50, maxLevel = 0, itemID = 44465, spellID = 68274 }
 catalog[3833] = { name = "+$k1 Attack Power", minLevel = 0, maxLevel = 80, displayName = "+65 Attack Power", itemID = 44466, spellID = 60707 }
 catalog[3834] = { name = "+$k1 Spell Power", minLevel = 0, maxLevel = 80, displayName = "+63 Spell Power", itemID = 44467, spellID = 60714 }
-catalog[3835] = { name = "+$k1 Attack Power and +$k2 Critical Strike", minLevel = 0, maxLevel = 80, professionID = 773, profession = "铭文", requiredSkill = 400, displayName = "+120 Attack Power and +15 Critical Strike", spellID = 61117 }
-catalog[3836] = { name = "+$k1 Intellect and +$k2 Spirit", minLevel = 0, maxLevel = 80, professionID = 773, profession = "铭文", requiredSkill = 400, displayName = "+60 Intellect and +15 Spirit", spellID = 61118 }
-catalog[3837] = { name = "+$k1 Dodge and +$k2 Parry", minLevel = 0, maxLevel = 80, professionID = 773, profession = "铭文", requiredSkill = 400, displayName = "+60 Dodge and +15 Parry", spellID = 61119 }
-catalog[3838] = { name = "+$k1 Spell Power and +$k2 Critical Strike", minLevel = 0, maxLevel = 80, professionID = 773, profession = "铭文", requiredSkill = 400, displayName = "+70 Spell Power and +15 Critical Strike", spellID = 61120 }
-catalog[3839] = { name = "+$k1 Attack Power", minLevel = 0, maxLevel = 80, professionID = 333, profession = "附魔", requiredSkill = 400, displayName = "+32 Attack Power", spellID = 44645 }
-catalog[3840] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 80, professionID = 333, profession = "附魔", requiredSkill = 400, displayName = "+16 Intellect", spellID = 44636 }
+catalog[3835] = { name = "+$k1 Attack Power and +$k2 Critical Strike", minLevel = 0, maxLevel = 80, professionID = 773, profession = Addon:T("UI.INSCRIPTION"), requiredSkill = 400, displayName = "+120 Attack Power and +15 Critical Strike", spellID = 61117 }
+catalog[3836] = { name = "+$k1 Intellect and +$k2 Spirit", minLevel = 0, maxLevel = 80, professionID = 773, profession = Addon:T("UI.INSCRIPTION"), requiredSkill = 400, displayName = "+60 Intellect and +15 Spirit", spellID = 61118 }
+catalog[3837] = { name = "+$k1 Dodge and +$k2 Parry", minLevel = 0, maxLevel = 80, professionID = 773, profession = Addon:T("UI.INSCRIPTION"), requiredSkill = 400, displayName = "+60 Dodge and +15 Parry", spellID = 61119 }
+catalog[3838] = { name = "+$k1 Spell Power and +$k2 Critical Strike", minLevel = 0, maxLevel = 80, professionID = 773, profession = Addon:T("UI.INSCRIPTION"), requiredSkill = 400, displayName = "+70 Spell Power and +15 Critical Strike", spellID = 61120 }
+catalog[3839] = { name = "+$k1 Attack Power", minLevel = 0, maxLevel = 80, professionID = 333, profession = Addon:T("UI.ENCHANTING"), requiredSkill = 400, displayName = "+32 Attack Power", spellID = 44645 }
+catalog[3840] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 80, professionID = 333, profession = Addon:T("UI.ENCHANTING"), requiredSkill = 400, displayName = "+16 Intellect", spellID = 44636 }
 catalog[3842] = { name = "+$k1 Stamina and +$k2 PvP Resilience", minLevel = 0, maxLevel = 80, displayName = "+30 Stamina and +25 PvP Resilience", spellID = 61271 }
 catalog[3843] = { name = "Scope (+$k1 Damage)", minLevel = 0, maxLevel = 70, displayName = "Scope (+15 Damage)", itemID = 44739, spellID = 61468 }
 catalog[3844] = { name = "+$k1 Spirit", minLevel = 0, maxLevel = 80, displayName = "+45 Spirit", itemID = 38963, spellID = 44510 }
@@ -392,8 +394,8 @@ catalog[3855] = { name = "+$k1 Spell Power", minLevel = 0, maxLevel = 80, displa
 catalog[3858] = { name = "+$k1 Hit", minLevel = 0, maxLevel = 80, displayName = "+5 Hit", itemID = 45628, spellID = 63746 }
 catalog[3869] = { name = "Blade Ward", minLevel = 0, maxLevel = 0, itemID = 46026, spellID = 64441 }
 catalog[3870] = { name = "Blood Draining", minLevel = 0, maxLevel = 0, itemID = 46098, spellID = 64579 }
-catalog[3872] = { name = "+$k1 Spell Power and +$k2 Spirit", minLevel = 0, maxLevel = 80, professionID = 197, profession = "裁缝", requiredSkill = 405, displayName = "+50 Spell Power and +20 Spirit", spellID = 56039 }
-catalog[3873] = { name = "+$k1 Spell Power and +$k2 Stamina", minLevel = 0, maxLevel = 80, professionID = 197, profession = "裁缝", requiredSkill = 405, displayName = "+50 Spell Power and +30 Stamina", spellID = 56034 }
+catalog[3872] = { name = "+$k1 Spell Power and +$k2 Spirit", minLevel = 0, maxLevel = 80, professionID = 197, profession = Addon:T("UI.TAILORING"), requiredSkill = 405, displayName = "+50 Spell Power and +20 Spirit", spellID = 56039 }
+catalog[3873] = { name = "+$k1 Spell Power and +$k2 Stamina", minLevel = 0, maxLevel = 80, professionID = 197, profession = Addon:T("UI.TAILORING"), requiredSkill = 405, displayName = "+50 Spell Power and +30 Stamina", spellID = 56034 }
 catalog[3875] = { name = "+$k1 Attack Power and +$k2 Critical Strike", minLevel = 0, maxLevel = 80, displayName = "+30 Attack Power and +10 Critical Strike", itemID = 44131, spellID = 59929 }
 catalog[3876] = { name = "+$k1 Dodge and +$k2 Parry", minLevel = 0, maxLevel = 80, displayName = "+15 Dodge and +10 Parry", itemID = 44132, spellID = 59932 }
 catalog[3883] = { name = "Rune of the Nerubian Carapace", minLevel = 0, maxLevel = 0, spellID = 70164 }
@@ -414,10 +416,10 @@ catalog[4074] = { name = "Elemental Slayer", minLevel = 0, maxLevel = 0, itemID 
 catalog[4075] = { name = "+$k1 Strength", minLevel = 0, maxLevel = 85, displayName = "+35 Strength", itemID = 52756, spellID = 74212 }
 catalog[4076] = { name = "+$k1 Agility", minLevel = 0, maxLevel = 85, displayName = "+35 Agility", itemID = 52757, spellID = 74213 }
 catalog[4077] = { name = "+$k1 PvP Resilience", minLevel = 0, maxLevel = 85, displayName = "+40 PvP Resilience", itemID = 52758, spellID = 74214 }
-catalog[4078] = { name = "+$k1 Strength", minLevel = 0, maxLevel = 85, professionID = 333, profession = "附魔", requiredSkill = 475, displayName = "+40 Strength", spellID = 74215 }
-catalog[4079] = { name = "+$k1 Agility", minLevel = 0, maxLevel = 85, professionID = 333, profession = "附魔", requiredSkill = 475, displayName = "+40 Agility", spellID = 74216 }
-catalog[4080] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 85, professionID = 333, profession = "附魔", requiredSkill = 475, displayName = "+40 Intellect", spellID = 74217 }
-catalog[4081] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 85, professionID = 333, profession = "附魔", requiredSkill = 475, displayName = "+60 Stamina", spellID = 74218 }
+catalog[4078] = { name = "+$k1 Strength", minLevel = 0, maxLevel = 85, professionID = 333, profession = Addon:T("UI.ENCHANTING"), requiredSkill = 475, displayName = "+40 Strength", spellID = 74215 }
+catalog[4079] = { name = "+$k1 Agility", minLevel = 0, maxLevel = 85, professionID = 333, profession = Addon:T("UI.ENCHANTING"), requiredSkill = 475, displayName = "+40 Agility", spellID = 74216 }
+catalog[4080] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 85, professionID = 333, profession = Addon:T("UI.ENCHANTING"), requiredSkill = 475, displayName = "+40 Intellect", spellID = 74217 }
+catalog[4081] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 85, professionID = 333, profession = Addon:T("UI.ENCHANTING"), requiredSkill = 475, displayName = "+60 Stamina", spellID = 74218 }
 catalog[4082] = { name = "+$k1 Expertise", minLevel = 0, maxLevel = 85, displayName = "+50 Expertise", itemID = 52759, spellID = 74220 }
 catalog[4083] = { name = "Hurricane", minLevel = 0, maxLevel = 0, itemID = 52760, spellID = 74223 }
 catalog[4084] = { name = "Heartsong", minLevel = 0, maxLevel = 0, itemID = 52761, spellID = 74225 }
@@ -449,11 +451,11 @@ catalog[4109] = { name = "+$k1 Intellect and +$k2 Spirit", minLevel = 0, maxLeve
 catalog[4110] = { name = "+$k1 Intellect and +$k2 Spirit", minLevel = 0, maxLevel = 85, displayName = "+95 Intellect and +55 Spirit", itemID = 54450, spellID = 75150 }
 catalog[4111] = { name = "+$k1 Intellect and +$k2 Stamina", minLevel = 0, maxLevel = 85, displayName = "+55 Intellect and +65 Stamina", itemID = 54447, spellID = 75151 }
 catalog[4112] = { name = "+$k1 Intellect and +$k2 Stamina", minLevel = 0, maxLevel = 85, displayName = "+95 Intellect and +80 Stamina", itemID = 54448, spellID = 75152 }
-catalog[4113] = { name = "+$k1 Intellect and +$k2 Stamina", minLevel = 0, maxLevel = 85, professionID = 197, profession = "裁缝", requiredSkill = 500, displayName = "+95 Intellect and +80 Stamina", spellID = 75154 }
-catalog[4114] = { name = "+$k1 Intellect and +$k2 Spirit", minLevel = 0, maxLevel = 85, professionID = 197, profession = "裁缝", requiredSkill = 500, displayName = "+95 Intellect and +55 Spirit", spellID = 75155 }
-catalog[4115] = { name = "Lightweave Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = "裁缝", requiredSkill = 500, spellID = 75172 }
-catalog[4116] = { name = "Darkglow Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = "裁缝", requiredSkill = 500, spellID = 75175 }
-catalog[4118] = { name = "Swordguard Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = "裁缝", requiredSkill = 500, spellID = 75178 }
+catalog[4113] = { name = "+$k1 Intellect and +$k2 Stamina", minLevel = 0, maxLevel = 85, professionID = 197, profession = Addon:T("UI.TAILORING"), requiredSkill = 500, displayName = "+95 Intellect and +80 Stamina", spellID = 75154 }
+catalog[4114] = { name = "+$k1 Intellect and +$k2 Spirit", minLevel = 0, maxLevel = 85, professionID = 197, profession = Addon:T("UI.TAILORING"), requiredSkill = 500, displayName = "+95 Intellect and +55 Spirit", spellID = 75155 }
+catalog[4115] = { name = "Lightweave Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = Addon:T("UI.TAILORING"), requiredSkill = 500, spellID = 75172 }
+catalog[4116] = { name = "Darkglow Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = Addon:T("UI.TAILORING"), requiredSkill = 500, spellID = 75175 }
+catalog[4118] = { name = "Swordguard Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = Addon:T("UI.TAILORING"), requiredSkill = 500, spellID = 75178 }
 catalog[4120] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 85, displayName = "+36 Stamina", itemID = 56477, spellID = 78165 }
 catalog[4121] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 85, displayName = "+44 Stamina", itemID = 56517, spellID = 78166 }
 catalog[4122] = { name = "+$k2 Attack Power and +$k1 Critical Strike", minLevel = 0, maxLevel = 80, displayName = "+110 Attack Power and +45 Critical Strike", itemID = 56502, spellID = 78169 }
@@ -462,14 +464,14 @@ catalog[4126] = { name = "+$k2 Attack Power and +$k1 Critical Strike", minLevel 
 catalog[4127] = { name = "+$k1 Stamina and +$k2 Agility", minLevel = 0, maxLevel = 85, displayName = "+145 Stamina and +55 Agility", itemID = 56551, spellID = 78172 }
 catalog[4176] = { name = "+$k1 Ranged Hit", minLevel = 0, maxLevel = 80, displayName = "+88 Ranged Hit", itemID = 59595, spellID = 81933 }
 catalog[4177] = { name = "+$k1 Ranged Haste", minLevel = 0, maxLevel = 80, displayName = "+88 Ranged Haste", itemID = 59596, spellID = 81934 }
-catalog[4189] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 85, professionID = 165, profession = "制皮", requiredSkill = 400, displayName = "+195 Stamina", spellID = 85007 }
-catalog[4190] = { name = "+$k1 Agility", minLevel = 0, maxLevel = 85, professionID = 165, profession = "制皮", requiredSkill = 400, displayName = "+130 Agility", spellID = 85008 }
-catalog[4191] = { name = "+$k1 Strength", minLevel = 0, maxLevel = 85, professionID = 165, profession = "制皮", requiredSkill = 400, displayName = "+130 Strength", spellID = 85009 }
-catalog[4192] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 85, professionID = 165, profession = "制皮", requiredSkill = 400, displayName = "+130 Intellect", spellID = 85010 }
-catalog[4193] = { name = "+$k1 Agility and +$k2 Mastery", minLevel = 0, maxLevel = 85, professionID = 773, profession = "铭文", requiredSkill = 500, displayName = "+130 Agility and +25 Mastery", spellID = 86375 }
-catalog[4194] = { name = "+$k1 Strength and +$k2 Critical Strike", minLevel = 0, maxLevel = 85, professionID = 773, profession = "铭文", requiredSkill = 500, displayName = "+130 Strength and +25 Critical Strike", spellID = 86401 }
-catalog[4195] = { name = "+$k1 Stamina and +$k2 Dodge", minLevel = 0, maxLevel = 85, professionID = 773, profession = "铭文", requiredSkill = 500, displayName = "+195 Stamina and +25 Dodge", spellID = 86402 }
-catalog[4196] = { name = "+$k1 Intellect and +$k2 Haste", minLevel = 0, maxLevel = 85, professionID = 773, profession = "铭文", requiredSkill = 500, displayName = "+130 Intellect and +25 Haste", spellID = 86403 }
+catalog[4189] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 85, professionID = 165, profession = Addon:T("UI.LEATHERWORKING"), requiredSkill = 400, displayName = "+195 Stamina", spellID = 85007 }
+catalog[4190] = { name = "+$k1 Agility", minLevel = 0, maxLevel = 85, professionID = 165, profession = Addon:T("UI.LEATHERWORKING"), requiredSkill = 400, displayName = "+130 Agility", spellID = 85008 }
+catalog[4191] = { name = "+$k1 Strength", minLevel = 0, maxLevel = 85, professionID = 165, profession = Addon:T("UI.LEATHERWORKING"), requiredSkill = 400, displayName = "+130 Strength", spellID = 85009 }
+catalog[4192] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 85, professionID = 165, profession = Addon:T("UI.LEATHERWORKING"), requiredSkill = 400, displayName = "+130 Intellect", spellID = 85010 }
+catalog[4193] = { name = "+$k1 Agility and +$k2 Mastery", minLevel = 0, maxLevel = 85, professionID = 773, profession = Addon:T("UI.INSCRIPTION"), requiredSkill = 500, displayName = "+130 Agility and +25 Mastery", spellID = 86375 }
+catalog[4194] = { name = "+$k1 Strength and +$k2 Critical Strike", minLevel = 0, maxLevel = 85, professionID = 773, profession = Addon:T("UI.INSCRIPTION"), requiredSkill = 500, displayName = "+130 Strength and +25 Critical Strike", spellID = 86401 }
+catalog[4195] = { name = "+$k1 Stamina and +$k2 Dodge", minLevel = 0, maxLevel = 85, professionID = 773, profession = Addon:T("UI.INSCRIPTION"), requiredSkill = 500, displayName = "+195 Stamina and +25 Dodge", spellID = 86402 }
+catalog[4196] = { name = "+$k1 Intellect and +$k2 Haste", minLevel = 0, maxLevel = 85, professionID = 773, profession = Addon:T("UI.INSCRIPTION"), requiredSkill = 500, displayName = "+130 Intellect and +25 Haste", spellID = 86403 }
 catalog[4197] = { name = "+$k1 Stamina and +$k2 Dodge", minLevel = 0, maxLevel = 85, displayName = "+45 Stamina and +20 Dodge", itemID = 62321, spellID = 86847 }
 catalog[4198] = { name = "+$k1 Stamina and +$k2 Dodge", minLevel = 0, maxLevel = 85, displayName = "+75 Stamina and +25 Dodge", itemID = 226459, spellID = 86854 }
 catalog[4199] = { name = "+$k1 Intellect and +$k2 Haste", minLevel = 0, maxLevel = 85, displayName = "+30 Intellect and +20 Haste", itemID = 62342, spellID = 86898 }
@@ -499,9 +501,9 @@ catalog[4258] = { name = "+$k1 Agility", minLevel = 0, maxLevel = 85, displayNam
 catalog[4259] = { name = "+$96285s1 Fishing", minLevel = 0, maxLevel = 0, itemID = 68796, spellID = 96286 }
 catalog[4267] = { name = "Flintlocke's Woodchucker", minLevel = 0, maxLevel = 0, itemID = 70139, spellID = 99623 }
 catalog[4270] = { name = "+$k1 Stamina and +$k2 Dodge", minLevel = 0, maxLevel = 85, displayName = "+145 Stamina and +55 Dodge", itemID = 71720, spellID = 101598 }
-catalog[4359] = { name = "+$k1 Agility", minLevel = 0, maxLevel = 90, professionID = 333, profession = "附魔", requiredSkill = 550, displayName = "+160 Agility", spellID = 103461 }
-catalog[4360] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 90, professionID = 333, profession = "附魔", requiredSkill = 550, displayName = "+160 Intellect", spellID = 103462 }
-catalog[4361] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 90, professionID = 333, profession = "附魔", requiredSkill = 550, displayName = "+240 Stamina", spellID = 103463 }
+catalog[4359] = { name = "+$k1 Agility", minLevel = 0, maxLevel = 90, professionID = 333, profession = Addon:T("UI.ENCHANTING"), requiredSkill = 550, displayName = "+160 Agility", spellID = 103461 }
+catalog[4360] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 90, professionID = 333, profession = Addon:T("UI.ENCHANTING"), requiredSkill = 550, displayName = "+160 Intellect", spellID = 103462 }
+catalog[4361] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 90, professionID = 333, profession = Addon:T("UI.ENCHANTING"), requiredSkill = 550, displayName = "+240 Stamina", spellID = 103463 }
 catalog[4411] = { name = "+$k1 Mastery", minLevel = 0, maxLevel = 90, displayName = "+170 Mastery", itemID = 74700, spellID = 104338 }
 catalog[4412] = { name = "+$k1 Dodge", minLevel = 0, maxLevel = 90, displayName = "+170 Dodge", itemID = 74701, spellID = 104385 }
 catalog[4414] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 90, displayName = "+180 Intellect", itemID = 74703, spellID = 104389 }
@@ -533,7 +535,7 @@ catalog[4446] = { name = "River's Song", minLevel = 0, maxLevel = 0, itemID = 74
 catalog[4671] = { name = "+$k1 Strength +$k2 Parry +$13839s1 Critical Strike", minLevel = 0, maxLevel = 0, spellID = 116501 }
 catalog[4687] = { name = "+$k2 Agility", minLevel = 0, maxLevel = 0, displayName = "+160 Agility", itemID = 77276, spellID = 108115 }
 catalog[4717] = { name = "Pandamonium", minLevel = 0, maxLevel = 0, itemID = 79061, spellID = 110764 }
-catalog[4719] = { name = "Placeholder Shoulder Enchant", minLevel = 0, maxLevel = 90, professionID = 773, profession = "铭文", requiredSkill = 500, spellID = 113011 }
+catalog[4719] = { name = "Placeholder Shoulder Enchant", minLevel = 0, maxLevel = 90, professionID = 773, profession = Addon:T("UI.INSCRIPTION"), requiredSkill = 500, spellID = 113011 }
 catalog[4720] = { name = "+$k1 Health", minLevel = 0, maxLevel = 60, displayName = "+5 Health", itemID = 38679, spellID = 7418 }
 catalog[4721] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 60, displayName = "+1 Stamina", itemID = 38771, spellID = 7457 }
 catalog[4722] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 60, displayName = "+1 Stamina", itemID = 38787, spellID = 13378 }
@@ -567,7 +569,7 @@ catalog[4803] = { name = "+$k1 Strength and +$k2 Critical Strike", minLevel = 0,
 catalog[4804] = { name = "+$k1 Agility and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, displayName = "+200 Agility and +100 Critical Strike", itemID = 83007, spellID = 121193 }
 catalog[4805] = { name = "+$k1 Stamina and +$k2 Dodge", minLevel = 0, maxLevel = 90, displayName = "+300 Stamina and +100 Dodge", itemID = 87560, spellID = 121194 }
 catalog[4806] = { name = "+$k1 Intellect and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, displayName = "+200 Intellect and +100 Critical Strike", itemID = 87559, spellID = 121195 }
-catalog[4807] = { name = "+$k1 Strength", minLevel = 0, maxLevel = 90, professionID = 333, profession = "附魔", requiredSkill = 550, displayName = "+160 Strength", spellID = 103465 }
+catalog[4807] = { name = "+$k1 Strength", minLevel = 0, maxLevel = 90, professionID = 333, profession = Addon:T("UI.ENCHANTING"), requiredSkill = 550, displayName = "+160 Strength", spellID = 103465 }
 catalog[4822] = { name = "+$k1 Agility and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, displayName = "+285 Agility and +165 Critical Strike", itemID = 83764, spellID = 122387 }
 catalog[4823] = { name = "+$k1 Strength and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, displayName = "+285 Strength and +165 Critical Strike", itemID = 83765, spellID = 122388 }
 catalog[4824] = { name = "+$k1 Stamina and +$k2 Dodge", minLevel = 0, maxLevel = 90, displayName = "+430 Stamina and +165 Dodge", itemID = 83763, spellID = 122386 }
@@ -577,12 +579,12 @@ catalog[4869] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 90, displayNam
 catalog[4870] = { name = "+$k1 Stamina and +$k2 Dodge", minLevel = 0, maxLevel = 90, displayName = "+250 Stamina and +100 Dodge", itemID = 85570, spellID = 124116 }
 catalog[4871] = { name = "+$k1 Agility and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, displayName = "+170 Agility and +100 Critical Strike", itemID = 85569, spellID = 124118 }
 catalog[4872] = { name = "+$k1 Strength and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, displayName = "+170 Strength and +100 Critical Strike", itemID = 85568, spellID = 124119 }
-catalog[4873] = { name = "+$k1 Agility", minLevel = 0, maxLevel = 70, professionID = 165, profession = "制皮", requiredSkill = 400, displayName = "+57 Agility", itemID = 43097, spellID = 57683 }
-catalog[4874] = { name = "+$k1 Strength", minLevel = 0, maxLevel = 80, professionID = 165, profession = "制皮", requiredSkill = 400, displayName = "+57 Strength", spellID = 124549 }
-catalog[4875] = { name = "+$k1 Agility", minLevel = 0, maxLevel = 90, professionID = 165, profession = "制皮", requiredSkill = 400, displayName = "+500 Agility", spellID = 124551 }
-catalog[4877] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 90, professionID = 165, profession = "制皮", requiredSkill = 400, displayName = "+500 Intellect", spellID = 124552 }
-catalog[4878] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 90, professionID = 165, profession = "制皮", requiredSkill = 400, displayName = "+750 Stamina", spellID = 124553 }
-catalog[4879] = { name = "+$k1 Strength", minLevel = 0, maxLevel = 90, professionID = 165, profession = "制皮", requiredSkill = 400, displayName = "+500 Strength", spellID = 124554 }
+catalog[4873] = { name = "+$k1 Agility", minLevel = 0, maxLevel = 70, professionID = 165, profession = Addon:T("UI.LEATHERWORKING"), requiredSkill = 400, displayName = "+57 Agility", itemID = 43097, spellID = 57683 }
+catalog[4874] = { name = "+$k1 Strength", minLevel = 0, maxLevel = 80, professionID = 165, profession = Addon:T("UI.LEATHERWORKING"), requiredSkill = 400, displayName = "+57 Strength", spellID = 124549 }
+catalog[4875] = { name = "+$k1 Agility", minLevel = 0, maxLevel = 90, professionID = 165, profession = Addon:T("UI.LEATHERWORKING"), requiredSkill = 400, displayName = "+500 Agility", spellID = 124551 }
+catalog[4877] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 90, professionID = 165, profession = Addon:T("UI.LEATHERWORKING"), requiredSkill = 400, displayName = "+500 Intellect", spellID = 124552 }
+catalog[4878] = { name = "+$k1 Stamina", minLevel = 0, maxLevel = 90, professionID = 165, profession = Addon:T("UI.LEATHERWORKING"), requiredSkill = 400, displayName = "+750 Stamina", spellID = 124553 }
+catalog[4879] = { name = "+$k1 Strength", minLevel = 0, maxLevel = 90, professionID = 165, profession = Addon:T("UI.LEATHERWORKING"), requiredSkill = 400, displayName = "+500 Strength", spellID = 124554 }
 catalog[4880] = { name = "+$k1 Agility and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, displayName = "+285 Agility and +165 Critical Strike", spellID = 124559 }
 catalog[4881] = { name = "+$k1 Strength and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, displayName = "+285 Strength and +165 Critical Strike", spellID = 124561 }
 catalog[4882] = { name = "+$k1 Stamina and +$k2 Dodge", minLevel = 0, maxLevel = 90, displayName = "+430 Stamina and +165 Dodge", spellID = 124563 }
@@ -592,20 +594,20 @@ catalog[4885] = { name = "+$k1 Strength and +$k2 Critical Strike", minLevel = 0,
 catalog[4886] = { name = "+$k1 Agility and +$k2 Critical Strike", minLevel = 0, maxLevel = 80, displayName = "+37 Agility and +22 Critical Strike", spellID = 124567 }
 catalog[4887] = { name = "+$k1 Stamina and +$k2 Dodge", minLevel = 65, maxLevel = 70, displayName = "+55 Stamina and +22 Dodge", spellID = 124568 }
 catalog[4888] = { name = "+$k1 Strength and +$k2 Critical Strike", minLevel = 0, maxLevel = 80, displayName = "+37 Strength and +22 Critical Strike", spellID = 124569 }
-catalog[4892] = { name = "Lightweave Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = "裁缝", requiredSkill = 550, spellID = 125481 }
-catalog[4893] = { name = "Darkglow Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = "裁缝", requiredSkill = 550, spellID = 125482 }
-catalog[4894] = { name = "Swordguard Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = "裁缝", requiredSkill = 550, spellID = 125483 }
-catalog[4895] = { name = "+$k1 Intellect and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, professionID = 197, profession = "裁缝", requiredSkill = 550, displayName = "+285 Intellect and +165 Critical Strike", spellID = 125496 }
-catalog[4896] = { name = "+$k1 Intellect and +$k2 Spirit", minLevel = 0, maxLevel = 90, professionID = 197, profession = "裁缝", requiredSkill = 550, displayName = "+285 Intellect and +165 Spirit", spellID = 125497 }
+catalog[4892] = { name = "Lightweave Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = Addon:T("UI.TAILORING"), requiredSkill = 550, spellID = 125481 }
+catalog[4893] = { name = "Darkglow Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = Addon:T("UI.TAILORING"), requiredSkill = 550, spellID = 125482 }
+catalog[4894] = { name = "Swordguard Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = Addon:T("UI.TAILORING"), requiredSkill = 550, spellID = 125483 }
+catalog[4895] = { name = "+$k1 Intellect and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, professionID = 197, profession = Addon:T("UI.TAILORING"), requiredSkill = 550, displayName = "+285 Intellect and +165 Critical Strike", spellID = 125496 }
+catalog[4896] = { name = "+$k1 Intellect and +$k2 Spirit", minLevel = 0, maxLevel = 90, professionID = 197, profession = Addon:T("UI.TAILORING"), requiredSkill = 550, displayName = "+285 Intellect and +165 Spirit", spellID = 125497 }
 catalog[4907] = { name = "+$k1 Strength and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, displayName = "+120 Strength and +80 Critical Strike", itemID = 87580, spellID = 127015 }
 catalog[4908] = { name = "+$k1 Agility and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, displayName = "+120 Agility and +80 Critical Strike", itemID = 87579, spellID = 127014 }
 catalog[4909] = { name = "+$k1 Intellect and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, displayName = "+120 Intellect and +80 Critical Strike", itemID = 87578, spellID = 127013 }
 catalog[4910] = { name = "+$k1 Stamina and +$k2 Dodge", minLevel = 0, maxLevel = 90, displayName = "+180 Stamina and +80 Dodge", itemID = 87577, spellID = 127012 }
-catalog[4912] = { name = "+$k1 Stamina and +$k2 Dodge", minLevel = 0, maxLevel = 90, professionID = 773, profession = "铭文", requiredSkill = 575, displayName = "+780 Stamina and +100 Dodge", itemID = 87581, spellID = 113048 }
-catalog[4913] = { name = "+$k1 Strength and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, professionID = 773, profession = "铭文", requiredSkill = 575, displayName = "+520 Strength and +100 Critical Strike", itemID = 87585, spellID = 113047 }
-catalog[4914] = { name = "+$k1 Agility and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, professionID = 773, profession = "铭文", requiredSkill = 575, displayName = "+520 Agility and +100 Critical Strike", itemID = 87584, spellID = 113046 }
-catalog[4915] = { name = "+$k1 Intellect and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, professionID = 773, profession = "铭文", requiredSkill = 575, displayName = "+520 Intellect and +100 Critical Strike", itemID = 87582, spellID = 113045 }
-catalog[4916] = { name = "+$k1 Spirit and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, professionID = 773, profession = "铭文", requiredSkill = 575, displayName = "+520 Spirit and +100 Critical Strike", itemID = 87583, spellID = 113044 }
+catalog[4912] = { name = "+$k1 Stamina and +$k2 Dodge", minLevel = 0, maxLevel = 90, professionID = 773, profession = Addon:T("UI.INSCRIPTION"), requiredSkill = 575, displayName = "+780 Stamina and +100 Dodge", itemID = 87581, spellID = 113048 }
+catalog[4913] = { name = "+$k1 Strength and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, professionID = 773, profession = Addon:T("UI.INSCRIPTION"), requiredSkill = 575, displayName = "+520 Strength and +100 Critical Strike", itemID = 87585, spellID = 113047 }
+catalog[4914] = { name = "+$k1 Agility and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, professionID = 773, profession = Addon:T("UI.INSCRIPTION"), requiredSkill = 575, displayName = "+520 Agility and +100 Critical Strike", itemID = 87584, spellID = 113046 }
+catalog[4915] = { name = "+$k1 Intellect and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, professionID = 773, profession = Addon:T("UI.INSCRIPTION"), requiredSkill = 575, displayName = "+520 Intellect and +100 Critical Strike", itemID = 87582, spellID = 113045 }
+catalog[4916] = { name = "+$k1 Spirit and +$k2 Critical Strike", minLevel = 0, maxLevel = 90, professionID = 773, profession = Addon:T("UI.INSCRIPTION"), requiredSkill = 575, displayName = "+520 Spirit and +100 Critical Strike", itemID = 87583, spellID = 113044 }
 catalog[4918] = { name = "Living Steel Weapon Chain", minLevel = 0, maxLevel = 90, itemID = 86597, spellID = 128286 }
 catalog[4992] = { name = "+$k1 Strength (Scaling)", minLevel = 0, maxLevel = 90, itemID = 74704, spellID = 130749 }
 catalog[4993] = { name = "+$k1 Parry", minLevel = 0, maxLevel = 90, displayName = "+170 Parry", itemID = 89737, spellID = 130758 }
@@ -636,10 +638,10 @@ catalog[5098] = { name = "Jade Spirit", minLevel = 0, maxLevel = 0, itemID = 747
 catalog[5099] = { name = "+$k1 PvP Resilience", minLevel = 0, maxLevel = 0, displayName = "+8 PvP Resilience", itemID = 74706, spellID = 141982 }
 catalog[5100] = { name = "+$k1 Mastery", minLevel = 0, maxLevel = 0, displayName = "+7 Mastery", itemID = 74722, spellID = 141983 }
 catalog[5101] = { name = "+$k1 Mastery", minLevel = 0, maxLevel = 0, displayName = "+7 Mastery", itemID = 74700, spellID = 141984 }
-catalog[5110] = { name = "Lightweave Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = "裁缝", requiredSkill = 550, spellID = 142173 }
+catalog[5110] = { name = "Lightweave Embroidery", minLevel = 0, maxLevel = 0, professionID = 197, profession = Addon:T("UI.TAILORING"), requiredSkill = 550, spellID = 142173 }
 catalog[5111] = { name = "+$k1 All Stats", minLevel = 0, maxLevel = 0, displayName = "+3 All Stats", itemID = 74708, spellID = 142175 }
 catalog[5112] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 0, displayName = "+7 Intellect", itemID = 74703, spellID = 142177 }
-catalog[5113] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 0, professionID = 333, profession = "附魔", requiredSkill = 550, displayName = "+6 Intellect", spellID = 142178 }
+catalog[5113] = { name = "+$k1 Intellect", minLevel = 0, maxLevel = 0, professionID = 333, profession = Addon:T("UI.ENCHANTING"), requiredSkill = 550, displayName = "+6 Intellect", spellID = 142178 }
 catalog[5124] = { name = "Spirit of Conquest", minLevel = 0, maxLevel = 0, itemID = 98164, spellID = 142469 }
 catalog[5125] = { name = "Bloody Dancing Steel", minLevel = 0, maxLevel = 0, itemID = 74726, spellID = 142468 }
 catalog[5183] = { name = "+$k1 Spell Power", minLevel = 0, maxLevel = 70, displayName = "+15 Spell Power", itemID = 38900, spellID = 27911 }

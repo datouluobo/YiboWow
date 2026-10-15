@@ -1,3 +1,23 @@
+# YiboBuilds 1.5.0 — 2026-10-16
+
+Requires YiboCore 1.12.5 / API13 with character-cleanup:2.
+
+- Integrate account language, shared character name formatting and cache cleanup.
+- Fix one enchant scroll offering multiple scaled effects; resolve the actual item use spell.
+- Preserve distinct scrolls, stack counts, learned enchants and installed-effect recognition.
+- Validate Core capabilities before initialization; protect preview settings with copied reads and validated field IDs.
+
+## 中文更新说明
+
+需要配套升级 YiboCore 1.12.5 / API13（character-cleanup:2）。
+
+- 接入统一账号语言、公共角色名与缓存清理；缺失所需Core能力时提示升级并停止初始化。
+- 修复一张附魔卷轴出现多个不同数值候选：按实际使用法术显示对应附魔，保留不同卷轴、数量与已学附魔。
+- 预览设置读取返回副本并校验写入字段ID。
+- 用户已确认Core适配正常；2026-10-16确认重载后每张卷轴仅显示对应的一个附魔。
+
+---
+
 # YiboBuilds 1.4.2
 
 ## 1.4.2

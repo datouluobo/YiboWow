@@ -53,7 +53,9 @@ function Get-YiboReleaseProfile {
     $versionFile = if ($targetProfile.ContainsKey('VersionFile')) { $targetProfile.VersionFile } else { $addonProfile.VersionFile }
     $versionText = [IO.File]::ReadAllText((Resolve-YiboSourceFile $root $versionFile))
     $releaseVersion = Read-YiboRequiredValue $versionText $addonProfile.VersionPattern 'source version'
-    $apiVersion = [int](Read-YiboRequiredValue $versionText $addonProfile.APIPattern 'source API version')
+    $apiVersion = if ($addonProfile.ContainsKey('APIPattern')) {
+        [int](Read-YiboRequiredValue $versionText $addonProfile.APIPattern 'source API version')
+    } else { $null }
     $version = if ($addonProfile.VersionIncludesAPI) { "$releaseVersion-api$apiVersion" } else { $releaseVersion }
     $tocVersion = Read-YiboRequiredValue $tocText '^## Version:\s*([^\r\n]+)' 'TOC version'
     if ($tocVersion -ne $version) { throw "TOC version '$tocVersion' does not match source version '$version'." }

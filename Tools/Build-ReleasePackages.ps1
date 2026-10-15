@@ -85,7 +85,7 @@ $manifestName = 'YiboReleaseManifest.json'
 if ($manifestName -in $publicEntries.Relative -or $manifestName -in $runtimeEntries.Relative) { throw 'Generated release manifest already exists in source.' }
 $cfEntries = $runtimeEntries + [pscustomobject]@{ Relative = $manifestName; Source = $null; Content = ($cfManifest | ConvertTo-Json -Depth 12) }
 $ghEntries = $publicEntries + [pscustomobject]@{ Relative = $manifestName; Source = $null; Content = ($ghManifest | ConvertTo-Json -Depth 12) }
-$nameVersion = if ($profile.Definition.VersionIncludesAPI) { $profile.Version } else { "$($profile.Version)-api$($profile.APIVersion)" }
+$nameVersion = if ($null -eq $profile.APIVersion -or $profile.Definition.VersionIncludesAPI) { $profile.Version } else { "$($profile.Version)-api$($profile.APIVersion)" }
 $cfName = "$($profile.Addon)-$($profile.Slug)-v$nameVersion-curseforge.zip"
 # The hash distinguishes source snapshots even when target versions advance independently.
 $ghName = "$($profile.Addon)-src.$($sourceHash.Substring(0, 12))-github.zip"

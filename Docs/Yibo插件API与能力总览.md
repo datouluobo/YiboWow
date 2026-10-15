@@ -14,7 +14,7 @@ O5 当前语义：每角色一条新邮件查看提醒，用户查看但未取�
 | **YiboAltoBoss** | 2.6.0 副本锁定、首领追踪、Task 刷取目录／精确进度与自动展示 | 基础 API5；可选 API11，经 Core 提供 boss.target-catalog、action.todo / planned-targets，消费 task.boss-targets | action.targets v1 已提供精确Boss目标；原目录／配置兼容接口保留，增强API12，客户端待验收 |
 | **YiboAutoOpen** | 玩家配置的物品 ID 目录、背包扫描与受限自动开包队列 | 可选接入 Core API v6 设置页；Core 不可用时使用命令模式 | 未提供库存历史/跨角色库存 API；其 ID 目录仅供自身开包逻辑使用 |
 | **YiboBeastPaths** | 狩猎路线、路线渲染与地图/小地图导航；支持 Mists 与 Mainline 客户端 | 普通路线功能独立运行；Core v6 下可选注册维护/调试界面 | 路线资源和模块是插件内部实现；未声明通用路线消费者 API |
-| **YiboBuilds** | 角色天赋/专精构筑、装备与附魔/宝石/插槽效果快照和账号对比 | Core 账号页面、入口、设置、角色清理 | action.targets v1 宝石／附魔目标与实际应用评估；增强API12，客户端GUID待验收 |
+| **YiboBuilds** | 角色天赋/专精构筑、装备与附魔/宝石/插槽效果快照和账号对比 | Core API13 账号页面、入口、语言、名称格式化、角色清理v2 | action.targets v1.1 宝石／附魔目标与实际应用评估；统一API13，Core适配及卷轴修复已用户实测确认 |
 | **YiboCurrency** | 账号货币、货币上限/周常进度、可监控物品数量和角色对比 | Core 账号页面、入口、统一设置；向 Core 货币目录登记定义 | action.targets v1 指定角色原生货币／金币阈值；增强API12，客户端待验收 |
 | **YiboLegendary（传说之路）** | 角色阶段进度、任务/声望/货币等证据快照、账号路线对比、手动证据校正 | Core 页面、入口、悬停预览、统一设置、角色缓存清理；读取 Core 中性领域事实 | action.targets v1 最终获得目标，真实／明确人工证据；增强API12，客户端待验收 |
 | **YiboMounts** | 坐骑来源 Tooltip、收藏状态显示与诊断信息 | 当前 TOC 未声明 YiboCore 依赖；Core 可用时可选注册设置面板 | 未声明稳定消费者 API |
@@ -61,7 +61,7 @@ Core 是共享运行时与通用角色事实层，不是所有业务数据的集
 - `YiboCore.UITheme`：账号矩阵、表格、滚动区域和预览等共享 UI 原语；遵循 API 接入指南，不复制 Core 的窗口/入口实现。
 - API v7 提供 `basic-input:1`、`item-resolver:1` 与物品选择；Core 1.7.1 / API v8 的 `item-picker:2` 扩展批量确认与保留输入，业务校验／执行仍归业务插件。
 - API v9 的 `NotifyPageChanged(pageID)` 合并下一帧同页面通知，执行时复核可见性；`RefreshPage` 保留即时调用路径。
-- API v10 / `account-view:2` 的可选页面字段 `firstUseTip` 提供首次打开提示；Core 概览、Builds、Reputation、Todo 已写入。后三者最低 API v10，游戏内与低版本停止专项验证待完成。
+- API v10 / `account-view:2` 的可选页面字段 `firstUseTip` 提供首次打开提示；Core 概览、Builds、Reputation、Todo 已写入。Builds1.5.0最低Core1.12.5 / API13，离线验证通过且用户确认适配正常；其他插件要求以各自声明为准。
 
 - API v12 / business-item-actions:1：全局手势、项目绑定、可见添加菜单及解绑，见 [契约](../YiboCore/Docs/API-v12-业务项目主动添加.md)。来源原基础版本保留的兼容例外见实施记录。
 

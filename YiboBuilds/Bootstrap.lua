@@ -3,10 +3,33 @@ local Addon = _G.YiboBuilds or {}
 _G.YiboBuilds = Addon
 
 Addon.NAME = ADDON_NAME or "YiboBuilds"
-Addon.VERSION = "1.4.2"
-Addon.REQUIRED_CORE_API = 10
+Addon.VERSION = "1.5.0"
+Addon.REQUIRED_CORE_API = 13
 Addon.PAGE_ID = "builds"
-Addon.ICON = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon-v1"
+Addon.ICON = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon"
+
+-- A bilingual bootstrap error is needed when the language service is unavailable.
+Addon.STARTUP_REQUIREMENTS = "YiboBuilds: 请升级 YiboCore 至 1.12.5 / API13 并启用所需能力。 / Upgrade YiboCore to 1.12.5 / API13 with the required capabilities."
+Addon.REQUIRED_CAPABILITIES = {
+    ["localization"] = 1, ["character-name-format"] = 1, ["character-identity"] = 1,
+    ["account-view"] = 2, ["account-entry"] = 2,
+    ["character-cleanup"] = 2, ["business-providers"] = 1,
+    ["business-item-actions"] = 1, ["characters"] = 1,
+}
+function Addon:HasCompatibleCore()
+    local core = _G.YiboCore
+    if not (core and core.CheckAPIVersion and core:CheckAPIVersion(self.REQUIRED_CORE_API)
+        and core.HasCapability and core.Locale and core.IsInitialized and core:IsInitialized()) then return false end
+    for name, version in pairs(self.REQUIRED_CAPABILITIES) do
+        if not core:HasCapability(name, version) then return false end
+    end
+    return core.Characters and type(core.Characters.FormatName) == "function"
+        and core.AccountView and core.Entry and core.Contracts and core.CharacterCleanup
+        and core.BusinessItemActions and core.Defaults
+end
+function Addon:T(key, ...)
+    return _G.YiboCore.Locale:Get(self.NAME, key, ...)
+end
 
 local function Defaults(target, values)
     for key, value in pairs(values) do
@@ -61,7 +84,7 @@ end
 
 function Addon:Print(message)
     if DEFAULT_CHAT_FRAME then
-        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo] 构筑:|r " .. tostring(message))
+        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo] YiboBuilds:|r " .. tostring(message))
     end
 end
 
@@ -100,10 +123,11 @@ frame:SetScript("OnEvent", function(_, event, name)
         if name == ADDON_NAME then Addon:EnsureDB() end
         return
     end
+    if event ~= "PLAYER_LOGIN" and not (Addon.CoreIntegration and Addon.CoreIntegration.initialized) then return end
     if event == "PLAYER_LOGIN" then
         if Addon.CoreIntegration then
             local ok, err = Addon.CoreIntegration:Initialize()
-            if not ok then Addon:Print("Core 接入失败：" .. tostring(err)) end
+            if not ok then Addon:Print(err); return end
         end
         if Addon.Snapshot then Addon.Snapshot:ScheduleCapture("login", 0.3) end
     elseif event == "PLAYER_ENTERING_WORLD" then

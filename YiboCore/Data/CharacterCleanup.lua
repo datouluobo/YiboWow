@@ -27,6 +27,15 @@ local function History()
     return db.characterDeletionHistory
 end
 
+local function KnownOwners()
+    local db = Core.Database:GetDB()
+    db.characterDataOwners = type(db.characterDataOwners) == "table" and db.characterDataOwners or {}
+    local result = {}
+    for name, enabled in pairs(db.characterDataOwners) do if type(name) == "string" and name ~= "" and enabled == true then result[name] = true end end
+    for name in pairs(CharacterCleanup.EXPECTED_OWNERS) do result[name] = true end
+    return result
+end
+
 local function CompactCharacter(character)
     return {
         id = character.id,
@@ -58,7 +67,7 @@ local function PruneHistory()
     for _, record in ipairs(records) do
         if removeCount <= 0 then break end
         local safe = type(record.acknowledgedOwners) == "table"
-        for addonName in pairs(CharacterCleanup.EXPECTED_OWNERS) do
+        for addonName in pairs(KnownOwners()) do
             if not safe or record.acknowledgedOwners[addonName] ~= true then safe = false; break end
         end
         if safe and not next(record.failures or {}) then
@@ -84,13 +93,13 @@ function CharacterCleanup:GetOwners()
     return owners
 end
 
-function CharacterCleanup:ProcessOwnerRecord(addonName, record)
+function CharacterCleanup:ProcessOwnerRecord(addonName, record, replay)
     local owner = self._owners[addonName]
     if not owner or type(record) ~= "table" then return nil, Core:Text("CORE.DATA_OWNER_IS_CURRENTLY_UNAVAILABLE") end
     record.acknowledgedOwners = type(record.acknowledgedOwners) == "table" and record.acknowledgedOwners or {}
     record.failures = type(record.failures) == "table" and record.failures or {}
     if record.acknowledgedOwners[addonName] == true then return true end
-    local deleted, errorMessage = CallOwner(owner, "Delete", Copy(record.character), Copy(record.aliases or {}))
+    local deleted, errorMessage = CallOwner(owner, "Delete", Copy(record.character), Copy(record.aliases or {}), { deletedAt = record.deletedAt, deletionID = record.id, replay = replay == true })
     if deleted == true then
         record.acknowledgedOwners[addonName] = true
         record.failures[addonName] = nil
@@ -113,6 +122,8 @@ function CharacterCleanup:RegisterOwner(addonName, definition)
     end
     if self._owners[addonName] then return nil, Core:Text("CORE.CHARACTER_DATA_OWNER_ALREADY_REGISTERED") .. addonName end
     self._owners[addonName] = { addonName = addonName, Inspect = definition.Inspect, Delete = definition.Delete }
+    Core.Database:GetDB().characterDataOwners = type(Core.Database:GetDB().characterDataOwners) == "table" and Core.Database:GetDB().characterDataOwners or {}
+    Core.Database:GetDB().characterDataOwners[addonName] = true
     self:RetryPending(addonName)
     return true
 end
@@ -124,7 +135,7 @@ function CharacterCleanup:RetryPending(onlyAddonName)
             if not onlyAddonName or onlyAddonName == addonName then
                 record.acknowledgedOwners = record.acknowledgedOwners or {}
                 if record.acknowledgedOwners[addonName] ~= true then
-                    local ok = self:ProcessOwnerRecord(addonName, record)
+                    local ok = self:ProcessOwnerRecord(addonName, record, true)
                     if ok then processed = processed + 1 else failed = failed + 1 end
                 end
             end
@@ -146,9 +157,9 @@ function CharacterCleanup:GetImpact(characterID)
             impact.owners[addonName] = { hasData = nil, label = addonName, error = tostring(errorMessage or Core:Text("CORE.CANNOT_READ_CACHE_SUMMARY")) }
         end
     end
-    for addonName, label in pairs(self.EXPECTED_OWNERS) do
+    for addonName in pairs(KnownOwners()) do
         if not impact.owners[addonName] then
-            impact.owners[addonName] = { hasData = nil, label = label, detail = Core:Text("CORE.ADDON_NOT_LOADED_CLEAN_UP_WHEN_IT") }
+            impact.owners[addonName] = { hasData = nil, label = self.EXPECTED_OWNERS[addonName] or addonName, detail = Core:Text("CORE.ADDON_NOT_LOADED_CLEAN_UP_WHEN_IT") }
         end
     end
     return impact
@@ -184,7 +195,7 @@ function CharacterCleanup:Delete(characterID)
 
     local result = { complete = true, owners = {}, deletionID = deletionID }
     local resultOwners = {}
-    for addonName in pairs(self.EXPECTED_OWNERS) do resultOwners[addonName] = true end
+    for addonName in pairs(KnownOwners()) do resultOwners[addonName] = true end
     for addonName in pairs(self._owners) do resultOwners[addonName] = true end
     for addonName in pairs(resultOwners) do
         if self._owners[addonName] then
@@ -226,4 +237,4 @@ function CharacterCleanup:IsLegacyImportBlocked(sourceAddon, legacyKey, proposed
     return false
 end
 
-Core.Capabilities:Register("character-cleanup", 1)
+Core.Capabilities:Register("character-cleanup", 2)

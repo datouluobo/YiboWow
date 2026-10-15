@@ -1,4 +1,5 @@
 local Addon = _G.YiboBuilds
+if not Addon:HasCompatibleCore() then return end
 local Snapshot = {}
 Addon.Snapshot = Snapshot
 
@@ -167,11 +168,11 @@ local function ReadTalents(group)
             end
             if info and info.name then ready = true end
             if info and info.selected then
-                selected = { talentID = info.talentID or 0, spellID = info.spellID or 0, name = info.name or "未知天赋", icon = info.icon }
+                selected = { talentID = info.talentID or 0, spellID = info.spellID or 0, name = info.name, nameKey = not info.name and "SNAPSHOT.UNKNOWN_TALENT" or nil, icon = info.icon }
                 break
             end
         end
-        talents[tier] = selected or { name = "未选择", icon = "Interface\\Icons\\INV_Misc_QuestionMark" }
+        talents[tier] = selected or { nameKey = "UI.NOT_SELECTED", icon = "Interface\\Icons\\INV_Misc_QuestionMark" }
     end
     talents.ready = ready
     return talents
@@ -212,7 +213,7 @@ local function ReadGlyphs(group)
         if present then selectedCount = selectedCount + 1 end
         local item = {
             slot = index, glyphType = glyphType, spellID = spellID or 0, glyphID = glyphID or 0,
-            glyphLink = link, name = present and (name or "未知雕文") or "未选择",
+            glyphLink = link, name = present and name or nil, nameKey = not present and "UI.NOT_SELECTED" or (not name and "SNAPSHOT.UNKNOWN_GLYPH" or nil),
             icon = present and (icon or spellIcon or "Interface\\Icons\\INV_Misc_QuestionMark") or "Interface\\Icons\\INV_Misc_QuestionMark",
             specRequirement = present and GlyphSpecializationRequirement(glyphID, link, spellID) or nil,
         }
@@ -693,7 +694,7 @@ local function ReadEngineeringEnchantID(slotID, itemFields, itemLink)
 end
 
 local function ReadSpecialization(group)
-    local info = { group = group, name = group == 2 and "副天赋" or "主天赋", icon = "Interface\\Icons\\INV_Misc_QuestionMark" }
+    local info = { group = group, nameKey = group == 2 and "UI.SECONDARY_TALENTS" or "UI.PRIMARY_TALENTS", icon = "Interface\\Icons\\INV_Misc_QuestionMark" }
     local api = C_SpecializationInfo
     local getSpecialization = api and api.GetSpecialization
     local getInfo = api and api.GetSpecializationInfo
@@ -705,7 +706,7 @@ local function ReadSpecialization(group)
     end
     if ok and specIndex and specIndex > 0 and getInfo then
         local valid, specID, name, _, icon = pcall(getInfo, specIndex)
-        if valid and name then info.id, info.name, info.icon = specID or specIndex, name, icon or info.icon end
+        if valid and name then info.nameKey = nil; info.id, info.name, info.icon = specID or specIndex, name, icon or info.icon end
     end
     return info
 end
@@ -977,6 +978,19 @@ local function CurrentCharacter()
     return Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
 end
 
+-- Compatibility markers are presentation-only; native API names and saved records stay intact.
+function Snapshot:GetDisplayName(entry, kind)
+    if not entry then return Addon:T("UI.NOT_RECORDED") end
+    if entry.nameKey then return Addon:T(entry.nameKey) end
+    local keys = {
+        ["未知天赋"] = "SNAPSHOT.UNKNOWN_TALENT", ["未选择"] = "UI.NOT_SELECTED",
+        ["未知雕文"] = "SNAPSHOT.UNKNOWN_GLYPH", ["主天赋"] = "UI.PRIMARY_TALENTS",
+        ["副天赋"] = "UI.SECONDARY_TALENTS",
+    }
+    local key = keys[entry.name]
+    return key and Addon:T(key) or entry.name or Addon:T(kind == "spec" and "UI.UNKNOWN_SPECIALIZATION" or "UI.NOT_SELECTED")
+end
+
 function Snapshot:GetCharacter(characterID)
     return Addon:EnsureDB().characters[characterID]
 end
@@ -1168,13 +1182,13 @@ end
 
 function Snapshot:ConfirmEquipment(slot)
     local character = CurrentCharacter()
-    if not character then return nil, "当前角色不可用。" end
+    if not character then return nil, Addon:T("UI.CURRENT_CHARACTER_UNAVAILABLE") end
     local record = self:EnsureCharacter(character)
     local active = ActiveGroup()
-    if slot ~= active then return nil, "只能确认当前激活天赋槽位的当前穿戴。" end
+    if slot ~= active then return nil, Addon:T("UI.ONLY_THE_CURRENT_EQUIPMENT_OF_THE_ACTIVE_TALENT_SLOT_CAN_BE_CONFIRMED") end
     local data, equipmentAccepted = self:CaptureSlot(record, slot, "confirm", true)
     if not equipmentAccepted then
-        return nil, "客户端当前返回的装备数据明显不完整，已保留原快照；请稍等片刻再更新。"
+        return nil, Addon:T("UI.CLIENT_EQUIPMENT_DATA_IS_INCOMPLETE_THE_PREVIOUS_SNAPSHOT_WAS_PRESERVED_TRY")
     end
     data.confirmedEquipment = data.observedEquipment
     Addon:NotifyChanged()

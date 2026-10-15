@@ -13,13 +13,13 @@ local function FindUpvalue(fn, wanted, visited)
         end
     end
 end
-YiboBuilds = {}
-YiboCore = { UITheme = { Colors = {}, Font = {} } }
+local host = dofile("YiboBuilds/_NonRelease/Tests/Core13Host.lua")("zh")
 dofile("YiboBuilds/Data/EngineeringCatalog.lua")
 dofile("YiboBuilds/Data/EngineeringApply.lua")
 dofile("YiboBuilds/Data/ApplyTargets.lua")
 dofile("YiboBuilds/Snapshot.lua")
 dofile("YiboBuilds/AccountPage.lua")
+CreateFrame = nil
 local readEngineering = assert(FindUpvalue(YiboBuilds.Snapshot.CaptureSlot, "ReadEngineeringEnchantID"))
 local candidates = assert(FindUpvalue(YiboBuilds.AccountPage.Refresh, "AugmentCandidates"))
 local tooltipLines = {}
@@ -63,6 +63,69 @@ assert(#candidates(6, belt) == 0, "installed buckle must not offer another socke
 belt.beltBuckle.state = "base-missing"
 C_Container.GetContainerNumSlots = function() return 0 end
 assert(#candidates(6, belt) == 0, "absent bag buckle must not be offered")
+-- One physical scroll must not expose scaled catalog aliases as separate choices.
+dofile("YiboBuilds/Data/EnchantCatalog.lua")
+dofile("YiboBuilds/Data/ProfessionCatalog.lua")
+local scrollID, scrollSpell, inventoryType = 74719, 104416, "INVTYPE_HAND"
+GetItemInfo = function() return "Equipped item", nil, nil, nil, nil, nil, nil, nil, inventoryType, nil, nil, 4, 1 end
+C_Container.GetContainerNumSlots = function(bag) return bag == 0 and 1 or 0 end
+C_Container.GetContainerItemLink = function() return "item:" .. scrollID end
+C_Item = { GetItemSpell = function() return "Native enchant name", scrollSpell end }
+local glove = {itemLink="item:99100"}
+available = candidates(10, glove)
+assert(#available == 1 and available[1].enchantID == 4430 and available[1].bag.count == 1,
+    "one haste scroll must offer +170 only, not +14/+8 catalog aliases")
+scrollID, scrollSpell, inventoryType = 74700, 104338, "INVTYPE_WRIST"
+available = candidates(9, glove)
+assert(#available == 1 and available[1].enchantID == 4411, "wrist mastery must not offer scaled aliases")
+scrollID, scrollSpell = 74703, 104389
+available = candidates(9, glove)
+assert(#available == 1 and available[1].enchantID == 4414, "four intellect records must resolve to one scroll effect")
+-- A known use spell selects its actual effect rather than the highest number.
+scrollSpell = 141170
+available = candidates(9, glove)
+assert(#available == 1 and available[1].enchantID == 5057, "actual use spell must win over a numeric heuristic")
+scrollSpell = nil
+assert(#candidates(9, glove) == 0, "unknown use spell must not guess among ambiguous records")
+C_Item = nil
+GetItemSpell = function() return "Native name", 104389 end
+assert(#candidates(9, glove) == 1, "legacy item-spell API must also resolve scrolls")
+GetItemSpell = nil
+scrollID = 74701
+available = candidates(9, glove)
+assert(#available == 1 and available[1].enchantID == 4412, "unambiguous legacy catalog entry remains usable")
+-- Distinct real scrolls remain distinct choices, with their own stack counts.
+C_Container.GetContainerNumSlots = function(bag) return bag == 0 and 2 or 0 end
+C_Container.GetContainerItemLink = function(_, slot) return "item:" .. (slot == 1 and 74700 or 74703) end
+C_Container.GetContainerItemInfo = function(_, slot) return {stackCount = slot == 1 and 2 or 1} end
+C_Item = { GetItemSpell = function(id) return "Native name", id == 74700 and 104338 or 104389 end }
+available = candidates(9, glove)
+local byID = {}; for _, choice in ipairs(available) do byID[choice.enchantID] = choice end
+assert(#available == 2 and byID[4411].bag.count == 2 and byID[4414].bag.count == 1,
+    "different scrolls and stack counts must not be merged")
+-- Craftable scrolls have the same item-to-effect ambiguity even with empty bags.
+C_Container.GetContainerNumSlots = function() return 0 end
+scrollID, scrollSpell = 74719, 104416
+inventoryType = "INVTYPE_HAND"
+C_Item = { GetItemSpell = function() return "Native enchant name", scrollSpell end }
+YiboBuilds.CraftSources = { [74719] = { recipes = { 999123 }, skills = { [999123] = {333, 1} } } }
+GetProfessions = function() return 1 end
+GetProfessionInfo = function() return "Enchanting", nil, 600, nil, nil, nil, 333 end
+IsSpellKnown = function(id) return id == 999123 end
+YiboBuilds.AccountPage:InvalidateRecipeCache()
+available = candidates(10, glove)
+assert(#available == 1 and available[1].enchantID == 4430 and available[1].craftRecipe == 999123 and not available[1].bag,
+    "craftable scroll must resolve to the actual effect too")
+-- An independently learned direct enchant is not removed by scroll filtering.
+YiboBuilds.CraftSources = nil
+IsSpellKnown = function(id) return id == 104416 end
+YiboBuilds.AccountPage:InvalidateRecipeCache()
+C_Item = nil
+available = candidates(10, glove)
+assert(#available == 1 and available[1].enchantID == 4430 and available[1].learned, "learned direct enchant remains available")
+IsSpellKnown = nil
+GetProfessions, GetProfessionInfo = nil, nil
+YiboBuilds.AccountPage:InvalidateRecipeCache()
 -- Opening equipment details uses this production scheduler: preserve the
 -- settled rescan even if another event schedules a glyph-only capture.
 local pending, captures = {}, {}
@@ -76,23 +139,5 @@ assert(#captures == 1 and captures[1][2].equipment and captures[1][2].glyphs)
 pending[2][2]()
 pending[4][2]()
 assert(#captures == 2 and captures[2][2].equipment)
--- Release requirements must stop initialization before registering any UI.
-CreateFrame = function() return { RegisterEvent = function() end, SetScript = function() end } end
-dofile("YiboBuilds/Bootstrap.lua")
-dofile("YiboBuilds/CoreIntegration.lua")
-local apiVersion, capable, registrations, definition = 9, true, 0
-YiboCore.CheckAPIVersion = function(_, required) return apiVersion >= required end
-YiboCore.HasCapability = function(_, name, version) return capable and name == "account-view" and version == 2 end
-YiboCore.Characters = {}
-YiboCore.RegisterAddon = function() registrations = registrations + 1; return true end
-YiboCore.AccountView = { RegisterPage = function(_, _, value) definition = value; return {} end }
-YiboCore.Entry = { RegisterBusinessEntry = function() return {} end }
-YiboBuilds.AccountPage.GetFields = function() return {} end
-local ok, err = YiboBuilds.CoreIntegration:Initialize()
-assert(not ok and err:find("v10", 1, true) and registrations == 0)
-apiVersion, capable = 10, false
-assert(not YiboBuilds.CoreIntegration:Initialize() and registrations == 0)
-capable = true
-assert(YiboBuilds.CoreIntegration:Initialize() and registrations == 1 and definition.firstUseTip)
-assert(YiboBuilds.CoreIntegration:Initialize() and registrations == 1, "registration must be idempotent")
-print("EquipmentAugmentSpec passed: tooltip detection, bag buckle candidates, equipment rescan, Core requirements")
+-- API13 initialization and compatibility failures are exercised by Core13Spec.
+print("EquipmentAugmentSpec passed: tooltip detection, bag buckle candidates, scroll identity/craft/legacy filtering, equipment rescan")

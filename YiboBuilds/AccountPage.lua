@@ -1,4 +1,5 @@
 local Addon = _G.YiboBuilds
+if not Addon:HasCompatibleCore() then return end
 local Page = {}
 Addon.AccountPage = Page
 
@@ -22,7 +23,7 @@ local SOCKET_BORDER_COLORS = {
     prismatic = { 0.91, 0.96, 1.00 }, meta = { 0.78, 0.48, 1.00 }, sha = { 0.88, 0.20, 0.72 },
     unknown = { 0.72, 0.72, 0.72 },
 }
-local SOCKET_LABELS = { meta = "多彩", red = "红色", yellow = "黄色", blue = "蓝色", prismatic = "棱彩", sha = "染煞", unknown = "宝石" }
+local SOCKET_LABELS = { meta = Addon:T("UI.META"), red = Addon:T("UI.RED"), yellow = Addon:T("UI.YELLOW"), blue = Addon:T("UI.BLUE"), prismatic = Addon:T("UI.PRISMATIC"), sha = Addon:T("UI.SHA_TOUCHED"), unknown = Addon:T("UI.GEM") }
 local GEM_SUBCLASS_TYPES = {
     [0] = { red = true }, [1] = { blue = true }, [2] = { yellow = true },
     [3] = { red = true, blue = true }, [4] = { blue = true, yellow = true },
@@ -73,12 +74,12 @@ local function RefreshPixelBorder(border, frame)
     end
 end
 local SLOT_LABELS = {
-    [INVSLOT_HEAD or 1] = "头", [INVSLOT_NECK or 2] = "颈", [INVSLOT_SHOULDER or 3] = "肩",
-    [INVSLOT_SHIRT or 4] = "衬", [INVSLOT_CHEST or 5] = "胸", [INVSLOT_WAIST or 6] = "腰",
-    [INVSLOT_LEGS or 7] = "腿", [INVSLOT_FEET or 8] = "脚", [INVSLOT_WRIST or 9] = "腕",
-    [INVSLOT_HAND or 10] = "手", [INVSLOT_FINGER1 or 11] = "戒1", [INVSLOT_FINGER2 or 12] = "戒2",
-    [INVSLOT_TRINKET1 or 13] = "饰1", [INVSLOT_TRINKET2 or 14] = "饰2", [INVSLOT_BACK or 15] = "背",
-    [INVSLOT_MAINHAND or 16] = "主手", [INVSLOT_OFFHAND or 17] = "副手", [INVSLOT_TABARD or 19] = "袍",
+    [INVSLOT_HEAD or 1] = Addon:T("UI.HEAD"), [INVSLOT_NECK or 2] = Addon:T("UI.NECK"), [INVSLOT_SHOULDER or 3] = Addon:T("UI.SHOULDER"),
+    [INVSLOT_SHIRT or 4] = Addon:T("UI.SHIRT"), [INVSLOT_CHEST or 5] = Addon:T("UI.CHEST"), [INVSLOT_WAIST or 6] = Addon:T("UI.WAIST"),
+    [INVSLOT_LEGS or 7] = Addon:T("UI.LEGS"), [INVSLOT_FEET or 8] = Addon:T("UI.FEET"), [INVSLOT_WRIST or 9] = Addon:T("UI.WRIST"),
+    [INVSLOT_HAND or 10] = Addon:T("UI.HANDS"), [INVSLOT_FINGER1 or 11] = Addon:T("UI.RING_1"), [INVSLOT_FINGER2 or 12] = Addon:T("UI.RING_2"),
+    [INVSLOT_TRINKET1 or 13] = Addon:T("UI.TRINKET_1"), [INVSLOT_TRINKET2 or 14] = Addon:T("UI.TRINKET_2"), [INVSLOT_BACK or 15] = Addon:T("UI.BACK"),
+    [INVSLOT_MAINHAND or 16] = Addon:T("UI.MAIN_HAND"), [INVSLOT_OFFHAND or 17] = Addon:T("UI.OFF_HAND"), [INVSLOT_TABARD or 19] = Addon:T("UI.TABARD"),
 }
 
 -- MoP's paper doll has two weapon slots.  Bows, guns and wands are equipped
@@ -101,24 +102,24 @@ local function FoldedEquipmentWidth()
 end
 
 local EQUIPMENT_COLUMNS = {
-    { id = "equipment_head", slotID = INVSLOT_HEAD or 1, title = "头部" },
-    { id = "equipment_shoulder", slotID = INVSLOT_SHOULDER or 3, title = "肩部" },
-    { id = "equipment_chest", slotID = INVSLOT_CHEST or 5, title = "胸部" },
-    { id = "equipment_hands", slotID = INVSLOT_HAND or 10, title = "手套" },
-    { id = "equipment_legs", slotID = INVSLOT_LEGS or 7, title = "腿部", gapAfter = 6 },
-    { id = "equipment_wrist", slotID = INVSLOT_WRIST or 9, title = "护腕" },
-    { id = "equipment_waist", slotID = INVSLOT_WAIST or 6, title = "腰部" },
-    { id = "equipment_feet", slotID = INVSLOT_FEET or 8, title = "脚部", gapAfter = 6 },
-    { id = "equipment_neck", slotID = INVSLOT_NECK or 2, title = "颈部" },
-    { id = "equipment_back", slotID = INVSLOT_BACK or 15, title = "披风", gapAfter = 6 },
-    { id = "equipment_finger1", slotID = INVSLOT_FINGER1 or 11, title = "戒指1" },
-    { id = "equipment_finger2", slotID = INVSLOT_FINGER2 or 12, title = "戒指2" },
-    { id = "equipment_trinket1", slotID = INVSLOT_TRINKET1 or 13, title = "饰品1" },
-    { id = "equipment_trinket2", slotID = INVSLOT_TRINKET2 or 14, title = "饰品2", gapAfter = 6 },
-    { id = "equipment_mainhand", slotID = INVSLOT_MAINHAND or 16, title = "主手" },
-    { id = "equipment_offhand", slotID = INVSLOT_OFFHAND or 17, title = "副手", gapAfter = 6 },
-    { id = "equipment_shirt", slotID = INVSLOT_SHIRT or 4, title = "衬衣" },
-    { id = "equipment_tabard", slotID = INVSLOT_TABARD or 19, title = "战袍" },
+    { id = "equipment_head", slotID = INVSLOT_HEAD or 1, title = Addon:T("UI.HEAD_2") },
+    { id = "equipment_shoulder", slotID = INVSLOT_SHOULDER or 3, title = Addon:T("UI.SHOULDER_2") },
+    { id = "equipment_chest", slotID = INVSLOT_CHEST or 5, title = Addon:T("UI.CHEST_2") },
+    { id = "equipment_hands", slotID = INVSLOT_HAND or 10, title = Addon:T("UI.GLOVES") },
+    { id = "equipment_legs", slotID = INVSLOT_LEGS or 7, title = Addon:T("UI.LEGS_2"), gapAfter = 6 },
+    { id = "equipment_wrist", slotID = INVSLOT_WRIST or 9, title = Addon:T("UI.WRISTS") },
+    { id = "equipment_waist", slotID = INVSLOT_WAIST or 6, title = Addon:T("UI.WAIST_2") },
+    { id = "equipment_feet", slotID = INVSLOT_FEET or 8, title = Addon:T("UI.FEET_2"), gapAfter = 6 },
+    { id = "equipment_neck", slotID = INVSLOT_NECK or 2, title = Addon:T("UI.NECK_2") },
+    { id = "equipment_back", slotID = INVSLOT_BACK or 15, title = Addon:T("UI.CLOAK"), gapAfter = 6 },
+    { id = "equipment_finger1", slotID = INVSLOT_FINGER1 or 11, title = Addon:T("UI.RING_1_2") },
+    { id = "equipment_finger2", slotID = INVSLOT_FINGER2 or 12, title = Addon:T("UI.RING_2_2") },
+    { id = "equipment_trinket1", slotID = INVSLOT_TRINKET1 or 13, title = Addon:T("UI.TRINKET_1_2") },
+    { id = "equipment_trinket2", slotID = INVSLOT_TRINKET2 or 14, title = Addon:T("UI.TRINKET_2_2"), gapAfter = 6 },
+    { id = "equipment_mainhand", slotID = INVSLOT_MAINHAND or 16, title = Addon:T("UI.MAIN_HAND") },
+    { id = "equipment_offhand", slotID = INVSLOT_OFFHAND or 17, title = Addon:T("UI.OFF_HAND"), gapAfter = 6 },
+    { id = "equipment_shirt", slotID = INVSLOT_SHIRT or 4, title = Addon:T("UI.SHIRT_2") },
+    { id = "equipment_tabard", slotID = INVSLOT_TABARD or 19, title = Addon:T("UI.TABARD_2") },
 }
 
 local function Text(parent, size, color, justify)
@@ -138,6 +139,10 @@ local function Eligible(context)
     return result
 end
 
+local function SnapshotName(entry, kind)
+    return Addon.Snapshot:GetDisplayName(entry, kind)
+end
+
 local function IconText(icon, name, size)
     return "|T" .. tostring(icon or "Interface\\Icons\\INV_Misc_QuestionMark") .. ":" .. tostring(size or 16) .. ":" .. tostring(size or 16) .. ":0:0|t " .. tostring(name or "—")
 end
@@ -148,15 +153,9 @@ local function ClassColor(character)
 end
 
 local function CharacterLabel(character, context)
-    local name = Core.Characters and Core.Characters.GetDisplayName and Core.Characters:GetDisplayName(character, "short") or character and character.name
-    name = name or "未知角色"
-    -- In an all-realm projection, a short name alone is ambiguous.  Keep the
-    -- normal compact name in a single-realm range, and append the realm only
-    -- where it contributes identity.
-    if context and context.scope == "all" then
-        return name .. "-" .. tostring(character and character.realm or "未知服务器")
-    end
-    return name
+    return Core.Characters:FormatName(character, {
+        nameMode = "short", realmMode = context and context.scope == "all" and "full" or "omit",
+    }) or Addon:T("UI.UNKNOWN_CHARACTER")
 end
 
 local function PreviewCharacterLabel(character, context, slotData)
@@ -243,7 +242,7 @@ local function FullTooltipHyperlink(link, label)
     if type(link) ~= "string" then return link end
     local enchantID = link:match("^enchant:(%d+)")
     if not enchantID then return link end
-    return "|cffffd000|Henchant:" .. enchantID .. "|h[" .. (label or "附魔") .. "]|h|r"
+    return "|cffffd000|Henchant:" .. enchantID .. "|h[" .. (label or Addon:T("UI.ENCHANTING")) .. "]|h|r"
 end
 
 local function SetAugmentTooltip(button, title, link, detail, spellID)
@@ -287,7 +286,7 @@ local function SetAugmentTooltip(button, title, link, detail, spellID)
         end
         if not shown then
             GameTooltip:ClearLines()
-            GameTooltip:AddLine(title or "附魔")
+            GameTooltip:AddLine(title or Addon:T("UI.ENCHANTING"))
             if detail and detail ~= title then
                 GameTooltip:AddLine(detail, C.text[1], C.text[2], C.text[3], true)
             end
@@ -316,7 +315,7 @@ local function SetEnchantTooltip(button, item, enchantID, isEnchanted)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:ClearLines()
         if not isEnchanted then
-            GameTooltip:AddLine("未附魔", C.warning[1], C.warning[2], C.warning[3])
+            GameTooltip:AddLine(Addon:T("UI.NOT_ENCHANTED"), C.warning[1], C.warning[2], C.warning[3])
         else
             local source = enchantID and Addon.EnchantCatalog and Addon.EnchantCatalog[enchantID]
             if source and source.itemID and source.itemID > 0 then
@@ -333,8 +332,8 @@ local function SetEnchantTooltip(button, item, enchantID, isEnchanted)
             local savedInfo = item and item.enchant
             local detail = (liveInfo and liveInfo.detailText) or (savedInfo and savedInfo.tooltipText)
             local name = (liveInfo and liveInfo.name) or (savedInfo and savedInfo.name)
-            GameTooltip:AddLine("当前附魔", C.accent[1], C.accent[2], C.accent[3])
-            GameTooltip:AddLine(detail or name or (enchantID and ("附魔记录 #" .. tostring(enchantID))) or "附魔信息未记录", C.text[1], C.text[2], C.text[3], true)
+            GameTooltip:AddLine(Addon:T("UI.CURRENT_ENCHANT"), C.accent[1], C.accent[2], C.accent[3])
+            GameTooltip:AddLine(detail or name or (enchantID and (Addon:T("UI.ENCHANT_RECORD") .. tostring(enchantID))) or Addon:T("UI.ENCHANT_NOT_RECORDED"), C.text[1], C.text[2], C.text[3], true)
         end
         GameTooltip:Show()
     end)
@@ -355,7 +354,7 @@ local function SetEngineeringTooltip(button, title, engineering, item, isInstall
             GameTooltip:Show()
             return
         end
-        GameTooltip:AddLine(title or "工程强化", C.accent[1], C.accent[2], C.accent[3])
+        GameTooltip:AddLine(title or Addon:T("UI.ENGINEERING_ENHANCEMENT"), C.accent[1], C.accent[2], C.accent[3])
         local detail = engineering and engineering.tooltipText
         if detail and detail ~= "" and detail ~= engineering.name and detail ~= title then
             GameTooltip:AddLine(detail, C.text[1], C.text[2], C.text[3], true)
@@ -383,7 +382,7 @@ local function SetSpellTooltip(button, entry)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         if entry.glyphLink then GameTooltip:SetHyperlink(entry.glyphLink)
         elseif GameTooltip.SetSpellByID then GameTooltip:SetSpellByID(entry.spellID)
-        else GameTooltip:AddLine(entry.name or "未选择") end
+        else GameTooltip:AddLine(SnapshotName(entry)) end
         GameTooltip:Show()
     end)
     button:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -391,24 +390,24 @@ end
 
 local function GlyphRequirementText(entry)
     local requirement = entry and entry.specRequirement
-    return requirement and requirement ~= "通用" and requirement or nil
+    return requirement and requirement ~= "通用" and requirement ~= "General" and requirement or nil
 end
 
 function Page:GetFields()
     local fields = {
-        { id = "spec", title = "专精", defaultVisible = true },
+        { id = "spec", title = Addon:T("UI.SPECIALIZATION"), defaultVisible = true },
     }
-    for index = 1, 6 do fields[#fields + 1] = { id = "talent" .. index, title = "天赋" .. index .. "层", defaultVisible = true } end
-    for index = 1, 3 do fields[#fields + 1] = { id = "major" .. index, title = "雕文大" .. index, defaultVisible = true } end
-    for index = 1, 3 do fields[#fields + 1] = { id = "minor" .. index, title = "雕文小" .. index, defaultVisible = true } end
-    fields[#fields + 1] = { id = "equipment", title = "装备", defaultVisible = true }
+    for index = 1, 6 do fields[#fields + 1] = { id = "talent" .. index, title = Addon:T("FIELD.TALENT", index), defaultVisible = true } end
+    for index = 1, 3 do fields[#fields + 1] = { id = "major" .. index, title = Addon:T("FIELD.MAJOR", index), defaultVisible = true } end
+    for index = 1, 3 do fields[#fields + 1] = { id = "minor" .. index, title = Addon:T("FIELD.MINOR", index), defaultVisible = true } end
+    fields[#fields + 1] = { id = "equipment", title = Addon:T("UI.EQUIPMENT"), defaultVisible = true }
     return fields
 end
 
 function Page:GetPreviewFieldDefinitions()
     local fields = {}
     for _, column in ipairs(EQUIPMENT_COLUMNS) do
-        fields[#fields + 1] = { id = column.id, title = "装备·" .. column.title, defaultVisible = column.id ~= "equipment_shirt" and column.id ~= "equipment_tabard" }
+        fields[#fields + 1] = { id = column.id, title = Addon:T("UI.EQUIPMENT_2") .. column.title, defaultVisible = column.id ~= "equipment_shirt" and column.id ~= "equipment_tabard" }
     end
     return fields
 end
@@ -425,7 +424,7 @@ local function PreviewColumns(context, characters, matrixMode, mode)
         local slotData = Addon.Snapshot:GetProjectedSlot(record, mode)
         nameWidth = math.max(nameWidth, Theme:MeasureText(Theme.Font.assist, PreviewCharacterLabel(character, context, slotData)) + Theme.Table.cellPadding)
     end
-    local columns = { { id = "name", title = "角色", width = nameWidth } }
+    local columns = { { id = "name", title = Addon:T("UI.CHARACTER"), width = nameWidth } }
     local settings = Addon:GetSettings().previewColumns
     if matrixMode == "equipment" then
         local visibleEquipment = {}
@@ -463,11 +462,11 @@ local function PreviewColumns(context, characters, matrixMode, mode)
             columns[#columns + 1] = { id = id, title = title, width = Theme:GetIconTextColumnWidth(16, Theme.Font.assist, title, targetCharacters) }
         end
     end
-    Add("spec", "专精")
-    for i = 1, 6 do Add("talent" .. i, "天赋" .. i) end
-    for i = 1, 3 do Add("major" .. i, "大雕" .. i) end
-    for i = 1, 3 do Add("minor" .. i, "小雕" .. i) end
-    Add("equipment", "装备")
+    Add("spec", Addon:T("UI.SPECIALIZATION"))
+    for i = 1, 6 do Add("talent" .. i, Addon:T("UI.TALENT") .. i) end
+    for i = 1, 3 do Add("major" .. i, Addon:T("UI.MAJOR") .. i) end
+    for i = 1, 3 do Add("minor" .. i, Addon:T("UI.MINOR") .. i) end
+    Add("equipment", Addon:T("UI.EQUIPMENT"))
     return columns
 end
 
@@ -535,7 +534,7 @@ local function SetPreviewEquipmentTooltip(cell, equipment, confirmed)
     if not equipment then return end
     cell:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:AddLine(confirmed and "已确认装备快照" or "待确认装备观测", confirmed and C.success[1] or C.warning[1], confirmed and C.success[2] or C.warning[2], confirmed and C.success[3] or C.warning[3])
+        GameTooltip:AddLine(confirmed and Addon:T("UI.CONFIRMED_EQUIPMENT_SNAPSHOT") or Addon:T("UI.EQUIPMENT_OBSERVATION_AWAITING_CONFIRMATION"), confirmed and C.success[1] or C.warning[1], confirmed and C.success[2] or C.warning[2], confirmed and C.success[3] or C.warning[3])
         if equipment.capturedAt then GameTooltip:AddLine(date("%Y-%m-%d %H:%M", equipment.capturedAt), C.muted[1], C.muted[2], C.muted[3]) end
         GameTooltip:Show()
     end)
@@ -561,7 +560,7 @@ function Page.Create(parent)
     parent.buildsRoster:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     parent.buildsRoster:SetBackdropColor(C.nav[1], C.nav[2], C.nav[3], 0.95); parent.buildsRoster:SetBackdropBorderColor(C.lineSoft[1], C.lineSoft[2], C.lineSoft[3], C.lineSoft[4])
     parent.buildsRoster.title = Text(parent.buildsRoster, Theme.Font.section, C.text)
-    parent.buildsRoster.title:SetPoint("TOPLEFT", Theme.Space.sm, -Theme.Space.sm); parent.buildsRoster.title:SetText("角色列表")
+    parent.buildsRoster.title:SetPoint("TOPLEFT", Theme.Space.sm, -Theme.Space.sm); parent.buildsRoster.title:SetText(Addon:T("UI.CHARACTERS"))
     parent.buildsRoster.scroll = Theme:CreateScrollFrame(parent.buildsRoster)
     parent.buildsRoster.scroll:SetPoint("TOPLEFT", Theme.Space.xs, -38)
     parent.buildsRoster.scroll:SetPoint("BOTTOMRIGHT", -Theme.Space.xs, Theme.Space.xs)
@@ -575,10 +574,10 @@ function Page.Create(parent)
     parent.buildsMain:SetBackdropColor(C.panel[1], C.panel[2], C.panel[3], 0.96); parent.buildsMain:SetBackdropBorderColor(C.lineSoft[1], C.lineSoft[2], C.lineSoft[3], C.lineSoft[4])
 
     parent.buildsToolbar = CreateFrame("Frame", nil, parent.buildsMain)
-    parent.buildsToolbar.primary = Theme:CreateButton(parent.buildsToolbar, 94, "主天赋", "secondary")
-    parent.buildsToolbar.secondary = Theme:CreateButton(parent.buildsToolbar, 94, "副天赋", "secondary")
+    parent.buildsToolbar.primary = Theme:CreateButton(parent.buildsToolbar, 94, Addon:T("UI.PRIMARY_TALENTS"), "secondary")
+    parent.buildsToolbar.secondary = Theme:CreateButton(parent.buildsToolbar, 94, Addon:T("UI.SECONDARY_TALENTS"), "secondary")
     parent.buildsToolbar.status = Text(parent.buildsToolbar, Theme.Font.assist, C.accent)
-    parent.buildsToolbar.buildToggle = Theme:CreateButton(parent.buildsToolbar, 96, "收起构筑", "secondary")
+    parent.buildsToolbar.buildToggle = Theme:CreateButton(parent.buildsToolbar, 96, Addon:T("UI.COLLAPSE_BUILD"), "secondary")
     -- The toggle must sit above both content panes; keeping it under the
     -- toolbar allowed a pane backdrop to cover its hit target.
     parent.buildsToolbar.buildToggle:SetParent(parent.buildsMain)
@@ -629,9 +628,9 @@ function Page.Create(parent)
     parent.buildsEquipment.modelHint:SetPoint("BOTTOM", parent.buildsEquipment, "BOTTOM", 0, 90)
     parent.buildsEquipment.modelHint:Hide()
     parent.buildsEquipment.empty = Text(parent.buildsEquipment, Theme.Font.assist, C.muted, "CENTER")
-    parent.buildsEquipment.empty:SetAllPoints(); parent.buildsEquipment.empty:SetText("选择角色查看装备快照")
+    parent.buildsEquipment.empty:SetAllPoints(); parent.buildsEquipment.empty:SetText(Addon:T("UI.SELECT_A_CHARACTER_TO_VIEW_EQUIPMENT"))
     parent.buildsEquipment.items = {}
-    parent.buildsToolbar.appearance = Theme:CreateButton(parent.buildsEquipment, 120, "原型 / 幻化", "secondary")
+    parent.buildsToolbar.appearance = Theme:CreateButton(parent.buildsEquipment, 120, Addon:T("UI.ORIGINAL_TRANSMOG"), "secondary")
     parent.buildsToolbar.appearance:SetFrameLevel(parent.buildsEquipment.model:GetFrameLevel() + 2)
 
     parent.buildsBuild = CreateFrame("Frame", nil, parent.buildsMain, "BackdropTemplate")
@@ -659,11 +658,11 @@ function Page.Create(parent)
     detail.scroll = Theme:CreateScrollFrame(detail)
     detail.scroll:SetPoint("TOPLEFT", 8, -44)
     detail.scroll:SetPoint("BOTTOMRIGHT", -8, 8)
-    detail.apply = Theme:CreateButton(detail, 116, "应用宝石")
+    detail.apply = Theme:CreateButton(detail, 116, Addon:T("UI.APPLY_GEM"))
     detail.apply:SetSize(116, 30)
     detail.apply:SetState("selected")
     detail.apply:SetPoint("BOTTOMRIGHT", -8, 8)
-    detail.cancel = Theme:CreateButton(detail, 76, "取消", "secondary")
+    detail.cancel = Theme:CreateButton(detail, 76, Addon:T("UI.CANCEL"), "secondary")
     detail.cancel:SetSize(76, 30)
     detail.cancel:SetPoint("RIGHT", detail.apply, "LEFT", -6, 0)
     detail.pending = Text(detail, Theme.Font.meta, C.accent)
@@ -680,12 +679,12 @@ function Page.Create(parent)
         if parent.buildsPendingGem and ClearPendingGem then ClearPendingGem(parent, true) end
     end)
     detail:Hide()
-    parent.buildsBuild.talentTitle = Text(parent.buildsBuild, Theme.Font.section, C.text); parent.buildsBuild.talentTitle:SetText("天赋")
-    parent.buildsBuild.glyphTitle = Text(parent.buildsBuild, Theme.Font.section, C.text); parent.buildsBuild.glyphTitle:SetText("雕文")
-    parent.buildsBuild.majorGlyphTitle = Text(parent.buildsBuild, Theme.Font.assist, C.muted); parent.buildsBuild.majorGlyphTitle:SetText("大型雕文")
-    parent.buildsBuild.minorGlyphTitle = Text(parent.buildsBuild, Theme.Font.assist, C.muted); parent.buildsBuild.minorGlyphTitle:SetText("小型雕文")
-    parent.buildsBuild.currentGlyphs = Theme:CreateButton(parent.buildsBuild, 52, "当前", "secondary")
-    parent.buildsBuild.allGlyphs = Theme:CreateButton(parent.buildsBuild, 52, "所有", "secondary")
+    parent.buildsBuild.talentTitle = Text(parent.buildsBuild, Theme.Font.section, C.text); parent.buildsBuild.talentTitle:SetText(Addon:T("UI.TALENT"))
+    parent.buildsBuild.glyphTitle = Text(parent.buildsBuild, Theme.Font.section, C.text); parent.buildsBuild.glyphTitle:SetText(Addon:T("UI.GLYPHS"))
+    parent.buildsBuild.majorGlyphTitle = Text(parent.buildsBuild, Theme.Font.assist, C.muted); parent.buildsBuild.majorGlyphTitle:SetText(Addon:T("UI.MAJOR_GLYPHS"))
+    parent.buildsBuild.minorGlyphTitle = Text(parent.buildsBuild, Theme.Font.assist, C.muted); parent.buildsBuild.minorGlyphTitle:SetText(Addon:T("UI.MINOR_GLYPHS"))
+    parent.buildsBuild.currentGlyphs = Theme:CreateButton(parent.buildsBuild, 52, Addon:T("UI.CURRENT"), "secondary")
+    parent.buildsBuild.allGlyphs = Theme:CreateButton(parent.buildsBuild, 52, Addon:T("UI.ALL"), "secondary")
     parent.buildsBuild.currentGlyphs:SetHeight(28)
     parent.buildsBuild.allGlyphs:SetHeight(28)
     parent.buildsBuild.talents, parent.buildsBuild.glyphs = {}, {}
@@ -699,8 +698,8 @@ function Page.Create(parent)
     parent.buildsBuild.catalogRows = {}
     parent.buildsBuild.catalogEmpty = Text(parent.buildsBuild.catalogBody, Theme.Font.assist, C.muted, "CENTER")
     parent.buildsBuild.catalogEmpty:SetPoint("TOP", 0, -20)
-    parent.buildsBuild.catalogMajor = Theme:CreateButton(parent.buildsBuild, 1, "大型雕文", "secondary")
-    parent.buildsBuild.catalogMinor = Theme:CreateButton(parent.buildsBuild, 1, "小型雕文", "secondary")
+    parent.buildsBuild.catalogMajor = Theme:CreateButton(parent.buildsBuild, 1, Addon:T("UI.MAJOR_GLYPHS"), "secondary")
+    parent.buildsBuild.catalogMinor = Theme:CreateButton(parent.buildsBuild, 1, Addon:T("UI.MINOR_GLYPHS"), "secondary")
     for _, control in ipairs({ parent.buildsBuild.catalogMajor, parent.buildsBuild.catalogMinor }) do
         control.typeIcon = control:CreateTexture(nil, "ARTWORK")
         control.typeIcon:SetSize(16, 16); control.typeIcon:SetPoint("LEFT", 10, 0)
@@ -710,9 +709,9 @@ function Page.Create(parent)
     parent.buildsBuild.catalog:Hide()
     parent.buildsBuild.catalogMajor:Hide(); parent.buildsBuild.catalogMinor:Hide()
 
-    parent.buildsConfirm = Theme:CreateButton(parent.buildsMain, 160, "确认此构筑装备  >", "default")
+    parent.buildsConfirm = Theme:CreateButton(parent.buildsMain, 160, Addon:T("UI.CONFIRM_BUILD_EQUIPMENT"), "default")
     parent.buildsEmpty = Text(parent, Theme.Font.body, C.muted, "CENTER")
-    parent.buildsEmpty:SetAllPoints(); parent.buildsEmpty:SetText("尚无构筑快照。请登录角色后稍候同步。")
+    parent.buildsEmpty:SetAllPoints(); parent.buildsEmpty:SetText(Addon:T("UI.NO_BUILD_SNAPSHOTS_LOG_IN_TO_A_CHARACTER_AND_ALLOW_TIME_TO_SYNC"))
 end
 
 local function RosterRow(parent, index)
@@ -849,13 +848,13 @@ local CANDIDATE_SLOTS = {
     [15] = true, [16] = true, [17] = true,
 }
 local SOCKET_APPLICATIONS = {
-    { spellID = 55655, itemID = 41611, slotID = 6, name = "腰带扣" },
-    { spellID = 76168, itemID = 55054, slotID = 6, name = "腰带扣" },
-    { spellID = 131467, itemID = 90046, slotID = 6, name = "腰带扣" },
-    { spellID = 55628, slotID = 9, professionID = 164, requiredSkill = 400, name = "锻造护腕额外孔" },
-    { spellID = 113263, slotID = 9, professionID = 164, requiredSkill = 400, name = "锻造护腕额外孔" },
-    { spellID = 55641, slotID = 10, professionID = 164, requiredSkill = 400, name = "锻造手套额外孔" },
-    { spellID = 114112, slotID = 10, professionID = 164, requiredSkill = 400, name = "锻造手套额外孔" },
+    { spellID = 55655, itemID = 41611, slotID = 6, name = Addon:T("UI.BELT_BUCKLE") },
+    { spellID = 76168, itemID = 55054, slotID = 6, name = Addon:T("UI.BELT_BUCKLE") },
+    { spellID = 131467, itemID = 90046, slotID = 6, name = Addon:T("UI.BELT_BUCKLE") },
+    { spellID = 55628, slotID = 9, professionID = 164, requiredSkill = 400, name = Addon:T("UI.BLACKSMITH_WRIST_SOCKET") },
+    { spellID = 113263, slotID = 9, professionID = 164, requiredSkill = 400, name = Addon:T("UI.BLACKSMITH_WRIST_SOCKET") },
+    { spellID = 55641, slotID = 10, professionID = 164, requiredSkill = 400, name = Addon:T("UI.BLACKSMITH_GLOVE_SOCKET") },
+    { spellID = 114112, slotID = 10, professionID = 164, requiredSkill = 400, name = Addon:T("UI.BLACKSMITH_GLOVE_SOCKET") },
 }
 
 local function MaskHas(mask, index)
@@ -908,7 +907,7 @@ local function CraftGemCandidates(socketType)
                 local name = GetItemInfo and GetItemInfo(itemID)
                 if not name and GetSpellInfo then name = GetSpellInfo(recipeID) end
                 candidates[#candidates + 1] = {
-                    itemID = itemID, recipeID = recipeID, name = name or ("宝石 #" .. itemID),
+                    itemID = itemID, recipeID = recipeID, name = name or (Addon:T("UI.GEM_2") .. itemID),
                 }
             end
         end
@@ -964,10 +963,35 @@ local function BagApplyingItems()
     return items
 end
 
+-- SpellEffect can associate one scroll with several scaled enchant records.
+-- Resolve the physical/craftable item by its actual use spell, keeping the
+-- other records available for recognizing already-installed equipment effects.
+local function ScrollMatchesSource(source, scrollSources, useSpells)
+    local itemID = source.itemID
+    if not itemID then return false end
+    local spellID = useSpells[itemID]
+    if spellID == nil then
+        local getSpell = C_Item and C_Item.GetItemSpell or GetItemSpell
+        if getSpell then
+            local ok, _, value = pcall(getSpell, itemID)
+            spellID = ok and tonumber(value) or nil
+        end
+        useSpells[itemID] = spellID or false
+    end
+    if spellID then return spellID == source.spellID end
+    -- Old clients/cache misses can still use a single unambiguous mapping.
+    -- Multiple records require evidence; their numeric values are not a ranking.
+    return scrollSources[itemID] == 1
+end
+
 local function AugmentCandidates(slotID, item)
     local candidates = {}
     if not CANDIDATE_SLOTS[slotID] then return candidates end
     local bagItems = BagApplyingItems()
+    local scrollSources, useSpells = {}, {}
+    for _, source in pairs(Addon.EnchantCatalog or {}) do
+        if source.itemID then scrollSources[source.itemID] = (scrollSources[source.itemID] or 0) + 1 end
+    end
     local itemClassID, itemSubclassID
     if item and item.itemLink and GetItemInfo then itemClassID, itemSubclassID = select(12, GetItemInfo(item.itemLink)) end
     local isMoPRangedWeapon = slotID == (INVSLOT_MAINHAND or 16) and itemClassID == 2
@@ -982,11 +1006,14 @@ local function AugmentCandidates(slotID, item)
             local bag = source.itemID and bagItems[source.itemID]
             local craft = source.itemID and Addon.CraftSources and Addon.CraftSources[source.itemID]
             local craftRecipe = craft and LearnedCraftRecipe(craft)
+            if (bag or craftRecipe) and not ScrollMatchesSource(source, scrollSources, useSpells) then
+                bag, craftRecipe = nil, nil
+            end
             if slotID == 11 or slotID == 12 then bag, craftRecipe = nil, nil end
             if slotID == 6 then learned = false end
             if learned or bag or craftRecipe then
                 candidates[#candidates + 1] = {
-                    enchantID = enchantID, name = source.displayName or source.name or ("增强 #" .. enchantID),
+                    enchantID = enchantID, name = source.displayName or source.name or (Addon:T("UI.ENHANCEMENT") .. enchantID),
                     spellID = source.spellID, learned = learned, bag = bag, source = source,
                     craftRecipe = craftRecipe,
                 }
@@ -1031,7 +1058,7 @@ local function AugmentCandidates(slotID, item)
                         and RecipeLearned(source.spellID)
                     if (bag or learned) and TargetMatches(item, source, application) then
                         candidates[#candidates + 1] = {
-                            enchantID = enchantID, name = effect.name or ("工程强化 #" .. enchantID),
+                            enchantID = enchantID, name = effect.name or (Addon:T("UI.ENGINEERING_ENHANCEMENT_2") .. enchantID),
                             spellID = source.spellID, learned = learned, bag = bag, source = source,
                             engineering = true,
                         }
@@ -1067,7 +1094,7 @@ local function StageNativeGem(parent, slotID, socketIndex, candidate)
     if not (IsCurrent(selected) and activeSlot == parent.buildsSlot and item
         and item.itemLink == GetInventoryItemLink("player", slotID)
         and item.gems and item.gems[socketIndex]) then
-        Addon:Print("装备已变化，请重新选择当前穿戴的装备。")
+        Addon:Print(Addon:T("UI.EQUIPMENT_CHANGED_SELECT_THE_CURRENTLY_EQUIPPED_ITEM_AGAIN"))
         Addon.Snapshot:ScheduleEquipmentCapture()
         return
     end
@@ -1078,16 +1105,16 @@ local function StageNativeGem(parent, slotID, socketIndex, candidate)
     local closeSocket = C_ItemSocketInfo and C_ItemSocketInfo.CloseSocketInfo or CloseSocketInfo
     local getNumSockets = C_ItemSocketInfo and C_ItemSocketInfo.GetNumSockets or GetNumSockets
     if not (getLink and pickup and openSocket and clickSocket and getNumSockets) then
-        Addon:Print("当前客户端未提供完整的镶嵌接口。")
+        Addon:Print(Addon:T("UI.THIS_CLIENT_DOES_NOT_PROVIDE_ALL_REQUIRED_SOCKETING_APIS"))
         return
     end
     if getLink(candidate.bag, candidate.bagSlot) ~= candidate.link then
-        Addon:Print("宝石位置或数量已变化，请重新选择。")
+        Addon:Print(Addon:T("UI.GEM_LOCATION_OR_QUANTITY_CHANGED_SELECT_IT_AGAIN"))
         Addon.AccountPage.Refresh(parent, parent.buildsContext)
         return
     end
-    if InCombatLockdown and InCombatLockdown() then Addon:Print("战斗中无法开始镶嵌。") return end
-    if CursorHasItem and CursorHasItem() then Addon:Print("请先清空鼠标上的物品。") return end
+    if InCombatLockdown and InCombatLockdown() then Addon:Print(Addon:T("UI.CANNOT_START_SOCKETING_IN_COMBAT")) return end
+    if CursorHasItem and CursorHasItem() then Addon:Print(Addon:T("UI.CLEAR_THE_ITEM_ON_YOUR_CURSOR_FIRST")) return end
     ClearPendingGem(parent, true)
     if not ItemSocketingFrame and UIParentLoadAddOn then
         pcall(UIParentLoadAddOn, "Blizzard_ItemSocketingUI")
@@ -1096,7 +1123,7 @@ local function StageNativeGem(parent, slotID, socketIndex, candidate)
     local numSockets = getNumSockets and getNumSockets() or 0
     if not opened or numSockets < socketIndex then
         ClearPendingGem(parent, true)
-        Addon:Print("客户端未能打开目标装备的实际孔位。")
+        Addon:Print(Addon:T("UI.THE_CLIENT_COULD_NOT_OPEN_THE_TARGET_ITEM_S_SOCKETS"))
         return
     end
     pickup(candidate.bag, candidate.bagSlot)
@@ -1105,7 +1132,7 @@ local function StageNativeGem(parent, slotID, socketIndex, candidate)
     local getNew = C_ItemSocketInfo and C_ItemSocketInfo.GetNewSocketInfo or GetNewSocketInfo
     if getNew and not getNew(socketIndex) then
         ClearPendingGem(parent, true)
-        Addon:Print("宝石未能放入目标孔，请重新选择。")
+        Addon:Print(Addon:T("UI.COULD_NOT_PLACE_THE_GEM_IN_THE_TARGET_SOCKET_SELECT_IT_AGAIN"))
         return
     end
     parent.buildsPendingGem = { slotID = slotID, socketIndex = socketIndex, candidate = candidate, itemLink = item.itemLink }
@@ -1122,7 +1149,7 @@ local function ApplyPendingGem(parent)
     if parent.buildsSelectedEquipmentSlot ~= pending.slotID
         or GetInventoryItemLink("player", pending.slotID) ~= pending.itemLink then
         ClearPendingGem(parent, true)
-        Addon:Print("装备已变化，请重新选择宝石。")
+        Addon:Print(Addon:T("UI.EQUIPMENT_CHANGED_SELECT_THE_GEM_AGAIN"))
         Addon.AccountPage.Refresh(parent, parent.buildsContext)
         return
     end
@@ -1130,11 +1157,11 @@ local function ApplyPendingGem(parent)
     local accept = C_ItemSocketInfo and C_ItemSocketInfo.AcceptSockets or AcceptSockets
     if not (getNew and accept and getNew(pending.socketIndex)) then
         ClearPendingGem(parent, true)
-        Addon:Print("待镶嵌状态已失效，请重新选择宝石。")
+        Addon:Print(Addon:T("UI.PENDING_SOCKETING_EXPIRED_SELECT_THE_GEM_AGAIN"))
         Addon.AccountPage.Refresh(parent, parent.buildsContext)
         return
     end
-    if InCombatLockdown and InCombatLockdown() then Addon:Print("战斗中无法镶嵌。") return end
+    if InCombatLockdown and InCombatLockdown() then Addon:Print(Addon:T("UI.CANNOT_SOCKET_GEMS_IN_COMBAT")) return end
     accept()
 end
 
@@ -1199,7 +1226,7 @@ local function PrepareItemAugmentAction(anchor, slotID, item, candidate, viewpor
                 self:SetAttribute("type1", valid and "item" or nil)
             end
             RecordAugmentAction(valid and "secure-before" or "source-changed", self.source, self.targetSlot)
-            if not valid then Addon:Print("装备、背包或鼠标状态已变化，请重新选择。") end
+            if not valid then Addon:Print(Addon:T("UI.EQUIPMENT_BAGS_OR_CURSOR_CHANGED_SELECT_AGAIN")) end
         end)
         button:SetScript("PostClick", function(self, mouseButton, down)
             if down then return end
@@ -1246,7 +1273,7 @@ end
 local function PrepareItemAugmentConfirmation(popup, slotID, item, candidate)
     if not popup then return end
     if InCombatLockdown and InCombatLockdown() then
-        Addon:Print("请脱离战斗后重新确认施加。")
+        Addon:Print(Addon:T("UI.LEAVE_COMBAT_AND_CONFIRM_THE_ENHANCEMENT_AGAIN"))
         return
     end
     local button = popup.buildsSecureAugmentButton
@@ -1260,7 +1287,7 @@ local function PrepareItemAugmentConfirmation(popup, slotID, item, candidate)
         or (popup.GetName and _G[popup:GetName() .. "Button1"])
     if not (bag and accept and GetInventoryItemLink("player", slotID) == item.itemLink) then
         popup:Hide()
-        Addon:Print("装备或背包来源已变化，请重新选择。")
+        Addon:Print(Addon:T("UI.EQUIPMENT_OR_BAG_SOURCE_CHANGED_SELECT_AGAIN"))
         return
     end
     if not button then
@@ -1309,11 +1336,11 @@ local function BeginNativeAugment(parent, slotID, item, candidate)
     if not (IsCurrent(selected) and parent.buildsSlot == parent.buildsActiveSlot
         and GetInventoryItemLink and GetInventoryItemLink("player", slotID) == item.itemLink
         and TargetMatches(item, source, target)) then
-        Addon:Print("装备或候选条件已变化，请重新检查。")
+        Addon:Print(Addon:T("UI.EQUIPMENT_OR_CANDIDATE_REQUIREMENTS_CHANGED_CHECK_AGAIN"))
         return
     end
-    if InCombatLockdown and InCombatLockdown() then Addon:Print("战斗中无法开始装备提升。") return end
-    if CursorHasItem and CursorHasItem() then Addon:Print("请先清空鼠标上的物品。") return end
+    if InCombatLockdown and InCombatLockdown() then Addon:Print(Addon:T("UI.CANNOT_START_AN_EQUIPMENT_UPGRADE_IN_COMBAT")) return end
+    if CursorHasItem and CursorHasItem() then Addon:Print(Addon:T("UI.CLEAR_THE_ITEM_ON_YOUR_CURSOR_FIRST")) return end
     local bag = source.itemID and BagApplyingItems()[source.itemID]
     local useBag = C_Container and C_Container.UseContainerItem or UseContainerItem
     if bag and useBag then
@@ -1323,12 +1350,12 @@ local function BeginNativeAugment(parent, slotID, item, candidate)
         and CastSpellByID then
         local missing = MissingCraftReagents(source.spellID, source.itemID)
         if missing and #missing > 0 then
-            Addon:Print("材料不足：" .. table.concat(missing, "、"))
+            Addon:Print(Addon:T("UI.MISSING_REAGENTS") .. table.concat(missing, Addon:T("FORMAT.LIST_SEPARATOR")))
             return
         end
         CastSpellByID(source.spellID)
     else
-        Addon:Print("施加来源已变化，请重新检查背包或专业。")
+        Addon:Print(Addon:T("UI.ENHANCEMENT_SOURCE_CHANGED_CHECK_YOUR_BAGS_OR_PROFESSION"))
         return
     end
     if SpellIsTargeting and SpellIsTargeting() then
@@ -1336,7 +1363,7 @@ local function BeginNativeAugment(parent, slotID, item, candidate)
     elseif CursorHasItem and CursorHasItem() then
         PickupInventoryItem(slotID)
     else
-        Addon:Print("客户端没有进入目标选择状态；未施加到装备。")
+        Addon:Print(Addon:T("UI.THE_CLIENT_DID_NOT_ENTER_TARGETING_MODE_NOTHING_WAS_APPLIED"))
         return
     end
 end
@@ -1351,7 +1378,7 @@ MissingCraftReagents = function(recipeID, itemID)
             local deficit = required - held
             if deficit > 0 then
                 local name = GetItemInfo and GetItemInfo(reagentID)
-                missing[#missing + 1] = (name or ("物品 #" .. reagentID)) .. " ×" .. deficit
+                missing[#missing + 1] = (name or (Addon:T("UI.ITEM") .. reagentID)) .. " ×" .. deficit
             end
         end
         return missing
@@ -1377,28 +1404,28 @@ MissingCraftReagents = function(recipeID, itemID)
     for index = 1, (GetTradeSkillNumReagents(recipeIndex) or 0) do
         local name, _, required, held = GetTradeSkillReagentInfo(recipeIndex, index)
         local deficit = (tonumber(required) or 0) - (tonumber(held) or 0)
-        if deficit > 0 then missing[#missing + 1] = (name or "材料") .. " ×" .. deficit end
+        if deficit > 0 then missing[#missing + 1] = (name or Addon:T("UI.REAGENTS")) .. " ×" .. deficit end
     end
     return missing
 end
 
 local function BeginCraft(recipeID, itemID)
-    if InCombatLockdown and InCombatLockdown() then Addon:Print("战斗中无法制作。") return end
+    if InCombatLockdown and InCombatLockdown() then Addon:Print(Addon:T("UI.CANNOT_CRAFT_IN_COMBAT")) return end
     local craft = itemID and Addon.CraftSources and Addon.CraftSources[itemID]
     local skill = craft and craft.skills and craft.skills[recipeID]
     local currentSkill = skill and CurrentProfessionSkill(skill[1])
     if not (recipeID and skill and currentSkill and currentSkill >= skill[2]
         and RecipeLearned(recipeID) and CastSpellByID) then
-        Addon:Print("配方状态已变化，请重新打开专业界面。")
+        Addon:Print(Addon:T("UI.RECIPE_STATE_CHANGED_OPEN_THE_PROFESSION_WINDOW_AGAIN"))
         return
     end
     local missing = MissingCraftReagents(recipeID, itemID)
     if missing and #missing > 0 then
-        Addon:Print("材料不足：" .. table.concat(missing, "、"))
+        Addon:Print(Addon:T("UI.MISSING_REAGENTS") .. table.concat(missing, Addon:T("FORMAT.LIST_SEPARATOR")))
         return
     end
     CastSpellByID(recipeID)
-    Addon:Print("已启动制作；完成后背包候选会自动刷新。")
+    Addon:Print(Addon:T("UI.CRAFTING_STARTED_BAG_CANDIDATES_WILL_REFRESH_WHEN_IT_FINISHES"))
 end
 
 local function RenderEquipmentDetail(parent, snapshot)
@@ -1424,7 +1451,7 @@ local function RenderEquipmentDetail(parent, snapshot)
     detail.cancel:SetShown(pending ~= nil)
     detail.pending:SetShown(pending ~= nil)
     if pending then
-        detail.pending:SetText("待镶嵌 · " .. pending.socketIndex .. " 号孔")
+        detail.pending:SetText(Addon:T("UI.PENDING_GEM") .. pending.socketIndex .. Addon:T("UI.SOCKET"))
         detail.apply:SetScript("OnClick", function() ApplyPendingGem(parent) end)
         detail.cancel:SetScript("OnClick", function()
             ClearPendingGem(parent, true)
@@ -1436,7 +1463,7 @@ local function RenderEquipmentDetail(parent, snapshot)
         and GetInventoryItemLink and GetInventoryItemLink("player", slotID) == item.itemLink
     local liveName = GetItemInfo and GetItemInfo(item.itemLink)
     detail.itemIcon:SetTexture(item.icon)
-    detail.title:SetText(liveName or ((SLOT_LABELS[slotID] or "装备") .. " · 装备提升"))
+    detail.title:SetText(liveName or ((SLOT_LABELS[slotID] or Addon:T("UI.EQUIPMENT")) .. Addon:T("UI.EQUIPMENT_UPGRADES")))
     local bodyWidth = math.max(120, (detail.scroll:GetWidth() or detail:GetWidth() or 180) - 18)
     detail.body:SetWidth(bodyWidth)
     local y, used = -2, 0
@@ -1484,9 +1511,9 @@ local function RenderEquipmentDetail(parent, snapshot)
             row.subtitle:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 36, 6)
             row.subtitle:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -82, 6)
             row.subtitle:SetHeight(15)
-            row.subtitle:SetText(visual.subtitle or "可直接使用")
+            row.subtitle:SetText(visual.subtitle or Addon:T("UI.READY_TO_USE"))
             row.subtitle:Show()
-            row.action:SetText(visual.badge or "使用 ›")
+            row.action:SetText(visual.badge or Addon:T("UI.USE"))
             row.action:Show()
         else
             row:SetBackdrop(nil)
@@ -1544,18 +1571,18 @@ local function RenderEquipmentDetail(parent, snapshot)
         PrepareItemAugmentAction(row, slotID, item, nil)
         return row
     end
-    if not isLive then AddRow("仅查看快照；操作需切回当前穿戴装备。") end
+    if not isLive then AddRow(Addon:T("UI.VIEWING_A_SNAPSHOT_SWITCH_TO_CURRENT_EQUIPMENT_TO_PERFORM_ACTIONS")) end
     local gems = item.gems or {}
     for index, socket in ipairs(gems) do
-        local label = tostring(index) .. ". " .. (SOCKET_LABELS[socket.socketType] or "未知") .. "孔："
-            .. (socket.itemName or (socket.itemLink and "已镶嵌" or "空"))
+        local label = tostring(index) .. ". " .. (SOCKET_LABELS[socket.socketType] or Addon:T("UI.UNKNOWN")) .. Addon:T("UI.SOCKET_2")
+            .. (socket.itemName or (socket.itemLink and Addon:T("UI.SOCKETED") or Addon:T("UI.EMPTY")))
         AddRow(label, socket.itemLink)
         if isLive then
             local candidates = BagGemCandidates(socket.socketType)
             local craftable = CraftGemCandidates(socket.socketType)
             local pendingHere = pending and pending.socketIndex == index
             if #candidates == 0 and #craftable == 0 and not pendingHere then
-                AddRow("  背包与已学配方中无可确认匹配的宝石")
+                AddRow(Addon:T("UI.NO_CONFIRMED_MATCHING_GEMS_IN_BAGS_OR_LEARNED_RECIPES"))
             end
             local renderedPending = false
             for _, candidate in ipairs(candidates) do
@@ -1573,46 +1600,45 @@ local function RenderEquipmentDetail(parent, snapshot)
                                 button1 = ACCEPT, button2 = CANCEL, timeout = 0, whileDead = true, hideOnEscape = true,
                             }
                             StaticPopupDialogs.YIBO_BUILDS_REPLACE_GEM.OnAccept = Apply
-                            StaticPopup_Show("YIBO_BUILDS_REPLACE_GEM", "将「" .. (socket.itemName or "现有宝石")
-                                .. "」换成「" .. candidate.name .. "」？原宝石会被覆盖。")
+                            StaticPopup_Show("YIBO_BUILDS_REPLACE_GEM", Addon:T("CONFIRM.REPLACE_GEM", socket.itemName or Addon:T("UI.EXISTING_GEM"), candidate.name))
                         else Apply() end
                     end, nil, { icon = candidate.icon, selected = selected, actionable = true,
-                        subtitle = "背包 ×" .. tostring(candidate.count) .. " · 可直接镶嵌",
-                        badge = selected and "待应用" or "选择 ›" })
+                        subtitle = Addon:T("UI.IN_BAGS") .. tostring(candidate.count) .. Addon:T("UI.READY_TO_SOCKET"),
+                        badge = selected and Addon:T("UI.PENDING") or Addon:T("UI.SELECT") })
                 if Addon.GoalTargets then Addon.GoalTargets:Bind(goalRow, parent, item, slotID, "gem", tonumber(candidate.link:match("item:(%d+)")), currentIndex) end
             end
             if pendingHere and not renderedPending then
                 local chosen = pending.candidate
                 AddRow(chosen.name, chosen.link, nil, C.accent,
                     { icon = chosen.icon, selected = true, actionable = true,
-                        subtitle = "背包宝石 · 等待提交", badge = "待应用" })
+                        subtitle = Addon:T("UI.BAG_GEM_AWAITING_SUBMISSION"), badge = Addon:T("UI.PENDING") })
             end
             for _, candidate in ipairs(craftable) do
                 local craft = candidate
                 local craftIcon = GetItemIcon and GetItemIcon(craft.itemID)
-                AddRow("  " .. IconText(craftIcon, craft.name, 14) .. " · 可制作  ›",
+                AddRow("  " .. IconText(craftIcon, craft.name, 14) .. Addon:T("UI.CRAFTABLE"),
                     "spell:" .. craft.recipeID,
                     function() BeginCraft(craft.recipeID, craft.itemID) end)
             end
         end
     end
-    if #gems == 0 then AddRow("此装备没有已确认的实际孔位。") end
+    if #gems == 0 then AddRow(Addon:T("UI.THIS_ITEM_HAS_NO_CONFIRMED_SOCKETS")) end
     local enchant = item.enchant
-    if enchant and enchant.state == "installed" then AddRow("附魔：" .. (enchant.name or "已安装"), enchant.tooltipLink)
-    elseif enchant and enchant.state == "uninstalled" then AddRow("附魔：未安装") end
+    if enchant and enchant.state == "installed" then AddRow(Addon:T("UI.ENCHANT") .. (enchant.name or Addon:T("UI.INSTALLED")), enchant.tooltipLink)
+    elseif enchant and enchant.state == "uninstalled" then AddRow(Addon:T("UI.ENCHANT_NOT_INSTALLED")) end
     local engineering = item.engineering
-    if engineering and engineering.state == "installed" then AddRow("工程：" .. (engineering.name or "已安装"), engineering.tooltipLink)
-    elseif engineering and engineering.state == "base-missing" then AddRow("工程：尚未安装") end
-    if item.beltBuckle and item.beltBuckle.state == "base-missing" then AddRow("未打腰带扣") end
-    if item.blacksmithSockets and item.blacksmithSockets.state == "base-missing" then AddRow("未生成锻造额外孔") end
+    if engineering and engineering.state == "installed" then AddRow(Addon:T("UI.ENGINEERING") .. (engineering.name or Addon:T("UI.INSTALLED")), engineering.tooltipLink)
+    elseif engineering and engineering.state == "base-missing" then AddRow(Addon:T("UI.ENGINEERING_NOT_INSTALLED")) end
+    if item.beltBuckle and item.beltBuckle.state == "base-missing" then AddRow(Addon:T("UI.NO_BELT_BUCKLE")) end
+    if item.blacksmithSockets and item.blacksmithSockets.state == "base-missing" then AddRow(Addon:T("UI.NO_BLACKSMITH_SOCKET")) end
     if isLive then
         local augments = AugmentCandidates(slotID, item)
-        if #augments > 0 then AddRow("可用附魔与装备增强", nil, nil, C.accent) end
+        if #augments > 0 then AddRow(Addon:T("UI.AVAILABLE_ENCHANTS_AND_ENHANCEMENTS"), nil, nil, C.accent) end
         for _, candidate in ipairs(augments) do
             local selectedCandidate = candidate
             if candidate.bag or candidate.learned then
-                local sourceText = candidate.bag and ("背包 ×" .. tostring(candidate.bag.count)) or ""
-                if candidate.learned then sourceText = sourceText .. (sourceText ~= "" and " / " or "") .. "已学配方" end
+                local sourceText = candidate.bag and (Addon:T("UI.IN_BAGS") .. tostring(candidate.bag.count)) or ""
+                if candidate.learned then sourceText = sourceText .. (sourceText ~= "" and " / " or "") .. Addon:T("UI.LEARNED_RECIPES") end
                 local tooltipLink = candidate.bag and candidate.bag.link or "spell:" .. candidate.spellID
                 local candidateIcon = candidate.bag and candidate.source.itemID and GetItemIcon
                     and GetItemIcon(candidate.source.itemID)
@@ -1631,15 +1657,15 @@ local function RenderEquipmentDetail(parent, snapshot)
                             .. " level=" .. tostring(secure and secure:GetFrameLevel()) .. "/" .. tostring(row:GetFrameLevel()),
                             selectedCandidate.source, slotID)
                         if InCombatLockdown and InCombatLockdown() then
-                            Addon:Print("战斗中无法施加背包附魔。")
+                            Addon:Print(Addon:T("UI.CANNOT_APPLY_A_BAG_ENCHANT_IN_COMBAT"))
                         else
-                            Addon:Print("施加点击未进入安全按钮，请用 /ybb augment 查看记录。")
+                            Addon:Print(Addon:T("UI.THE_CLICK_DID_NOT_REACH_THE_SECURE_BUTTON_USE_YBB_AUGMENT_TO_INSPECT_THE_LO"))
                         end
                         return
                     end
                     BeginNativeAugment(parent, slotID, item, selectedCandidate)
                 end, nil, { icon = candidateIcon, actionable = true,
-                    subtitle = sourceText .. " · 可直接施加", badge = "施加 ›" })
+                    subtitle = sourceText .. Addon:T("UI.READY_TO_APPLY"), badge = Addon:T("UI.APPLY") })
                 PrepareItemAugmentAction(row, slotID, item, selectedCandidate, detail.scroll)
                 if Addon.GoalTargets and candidate.enchantID then Addon.GoalTargets:Bind(row, parent, item, slotID, "enchant", candidate.enchantID) end
             end
@@ -1649,7 +1675,7 @@ local function RenderEquipmentDetail(parent, snapshot)
             if recipeID then
                 local producedID = candidate.source.itemID
                 local producedIcon = GetItemIcon and GetItemIcon(producedID)
-                AddRow(IconText(producedIcon, candidate.name, 14) .. " · 可制作  ›",
+                AddRow(IconText(producedIcon, candidate.name, 14) .. Addon:T("UI.CRAFTABLE"),
                     "spell:" .. recipeID,
                     function() BeginCraft(recipeID, producedID) end)
             end
@@ -1755,8 +1781,8 @@ local function PlaceEquipment(parent, snapshot)
             gem:SetShown(socket and true or false)
             local socketTitle
             if socket then
-                socketTitle = socket.itemLink and (socket.itemName or ("宝石 #" .. tostring(socket.itemID or "?")))
-                    or ((SOCKET_LABELS[socket.socketType] or "宝石") .. "空孔")
+                socketTitle = socket.itemLink and (socket.itemName or (Addon:T("UI.GEM_2") .. tostring(socket.itemID or "?")))
+                    or ((SOCKET_LABELS[socket.socketType] or Addon:T("UI.GEM")) .. Addon:T("UI.EMPTY_SOCKET"))
             end
             SetAugmentTooltip(gem, socketTitle, socket and socket.itemLink)
         end
@@ -1795,15 +1821,15 @@ local function PlaceEquipment(parent, snapshot)
         local isHand = slotID == (INVSLOT_HAND or 10)
         local isHead = slotID == (INVSLOT_HEAD or 1)
         if isWaist then
-            engineeringTitle = isEngineeringInstalled and ("当前腰带工程强化：" .. (engineering.name or "工程强化")) or "未添加腰带工程强化"
+            engineeringTitle = isEngineeringInstalled and (Addon:T("UI.CURRENT_BELT_ENHANCEMENT") .. (engineering.name or Addon:T("UI.ENGINEERING_ENHANCEMENT"))) or Addon:T("UI.NO_BELT_ENHANCEMENT")
         elseif isBack then
-            engineeringTitle = isEngineeringInstalled and ("当前披风工程强化：" .. (engineering.name or "工程强化")) or "未添加披风工程强化"
+            engineeringTitle = isEngineeringInstalled and (Addon:T("UI.CURRENT_CLOAK_ENHANCEMENT") .. (engineering.name or Addon:T("UI.ENGINEERING_ENHANCEMENT"))) or Addon:T("UI.NO_CLOAK_ENHANCEMENT")
         elseif isHead then
-            engineeringTitle = isEngineeringInstalled and ("当前头部工程强化：" .. (engineering.name or "工程强化")) or "未添加头部工程强化"
+            engineeringTitle = isEngineeringInstalled and (Addon:T("UI.CURRENT_HEAD_ENHANCEMENT") .. (engineering.name or Addon:T("UI.ENGINEERING_ENHANCEMENT"))) or Addon:T("UI.NO_HEAD_ENHANCEMENT")
         elseif isHand then
-            engineeringTitle = isEngineeringInstalled and ("当前手套工程强化：" .. (engineering.name or "工程强化")) or "未添加手套工程强化"
+            engineeringTitle = isEngineeringInstalled and (Addon:T("UI.CURRENT_GLOVE_ENHANCEMENT") .. (engineering.name or Addon:T("UI.ENGINEERING_ENHANCEMENT"))) or Addon:T("UI.NO_GLOVE_ENHANCEMENT")
         else
-            engineeringTitle = isEngineeringInstalled and ("当前工程瞄准镜：" .. (engineering.name or "工程强化")) or "未安装工程瞄准镜"
+            engineeringTitle = isEngineeringInstalled and (Addon:T("UI.CURRENT_ENGINEERING_SCOPE") .. (engineering.name or Addon:T("UI.ENGINEERING_ENHANCEMENT"))) or Addon:T("UI.NO_ENGINEERING_SCOPE")
         end
         local beltBuckle = item and item.beltBuckle
         local buckleMissing = beltBuckle and beltBuckle.state == "base-missing"
@@ -1838,14 +1864,14 @@ local function PlaceEquipment(parent, snapshot)
         else button.base:SetPoint("BOTTOMRIGHT", button, "BOTTOMLEFT", -baseOffset, 2) end
         button.base:SetBackdropBorderColor(C.warning[1], C.warning[2], C.warning[3], 1)
         button.base:SetShown(isBlacksmithSlot and blacksmithMissing and true or false)
-        SetAugmentTooltip(button.base, "未生成锻造额外孔")
+        SetAugmentTooltip(button.base, Addon:T("UI.NO_BLACKSMITH_SOCKET"))
         button.buckle:ClearAllPoints()
         if side == "left" or side == "weapon-right" then button.buckle:SetPoint("BOTTOMLEFT", button, "BOTTOMRIGHT", 4, 2)
         else button.buckle:SetPoint("BOTTOMRIGHT", button, "BOTTOMLEFT", -4, 2) end
         button.buckle.icon:SetDesaturated(true)
         button.buckle:SetBackdropBorderColor(C.warning[1], C.warning[2], C.warning[3], 1)
         button.buckle:SetShown(isWaist and item and item.itemLink and buckleMissing or false)
-        SetAugmentTooltip(button.buckle, "未打腰带扣")
+        SetAugmentTooltip(button.buckle, Addon:T("UI.NO_BELT_BUCKLE"))
         SetNativeItemTooltip(button, item)
         button:SetScript("OnClick", function()
             if not (item and item.itemLink) then return end
@@ -1883,9 +1909,7 @@ local function PlaceEquipment(parent, snapshot)
                             timeout = 0, whileDead = true, hideOnEscape = true,
                         }
                         StaticPopupDialogs.YIBO_BUILDS_DROP_AUGMENT.OnAccept = Apply
-                        local popup = StaticPopup_Show("YIBO_BUILDS_DROP_AUGMENT", "对「"
-                            .. (GetItemInfo(item.itemLink) or SLOT_LABELS[slotID] or "装备")
-                            .. "」使用「" .. candidate.name .. "」？请在游戏原生流程中核对最终效果。")
+                        local popup = StaticPopup_Show("YIBO_BUILDS_DROP_AUGMENT", Addon:T("CONFIRM.APPLY", GetItemInfo(item.itemLink) or SLOT_LABELS[slotID] or Addon:T("UI.EQUIPMENT"), candidate.name))
                         PrepareItemAugmentConfirmation(popup, slotID, item, candidate)
                     else Apply() end
                     return
@@ -1941,13 +1965,13 @@ local function RenderCatalog(parent, slotData, record)
     for _, entry in ipairs((slotData and slotData.glyphs and slotData.glyphs.minor) or {}) do if entry.glyphID and entry.glyphID > 0 then current[entry.glyphID] = true end end
     for _, entry in ipairs(record and record.glyphCatalog or {}) do
         if entry.glyphType == glyphType then
-            local group = current[entry.glyphID] and "当前" or (entry.isKnown and "已学" or "未学")
+            local group = current[entry.glyphID] and Addon:T("UI.CURRENT") or (entry.isKnown and Addon:T("UI.LEARNED") or Addon:T("UI.NOT_LEARNED"))
             glyphs[#glyphs + 1] = { group = group, entry = entry }
         end
     end
     if #glyphs == 0 then
         for _, entry in ipairs((slotData and slotData.glyphs and slotData.glyphs[selectedType]) or {}) do
-            if (entry.glyphID and entry.glyphID > 0) or (entry.spellID and entry.spellID > 0) then glyphs[#glyphs + 1] = { group = "当前", entry = entry } end
+            if (entry.glyphID and entry.glyphID > 0) or (entry.spellID and entry.spellID > 0) then glyphs[#glyphs + 1] = { group = Addon:T("UI.CURRENT"), entry = entry } end
         end
     end
     local categoryWidth = math.floor((glyphColumnWidth - 4) / 2)
@@ -1958,10 +1982,10 @@ local function RenderCatalog(parent, slotData, record)
     if not build.catalogMajor.buildsTooltipBound then
         build.catalogMajor.buildsTooltipBound = true
         build.catalogMajor:HookScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT"); GameTooltip:AddLine("大型雕文"); GameTooltip:Show()
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT"); GameTooltip:AddLine(Addon:T("UI.MAJOR_GLYPHS")); GameTooltip:Show()
         end)
         build.catalogMinor:HookScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT"); GameTooltip:AddLine("小型雕文"); GameTooltip:Show()
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT"); GameTooltip:AddLine(Addon:T("UI.MINOR_GLYPHS")); GameTooltip:Show()
         end)
         build.catalogMajor:HookScript("OnLeave", function() GameTooltip:Hide() end)
         build.catalogMinor:HookScript("OnLeave", function() GameTooltip:Hide() end)
@@ -1984,11 +2008,11 @@ local function RenderCatalog(parent, slotData, record)
         local row = BuildCell(build.catalogBody, build.catalogRows, index)
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", build.catalogBody, "TOPLEFT", 0, -((index - 1) * CATALOG_ROW_HEIGHT)); row:SetPoint("RIGHT", build.catalogBody, "RIGHT", 0, 0); row:SetHeight(CATALOG_ROW_HEIGHT - 2)
         row.icon:SetSize(46, 46); row.iconBorder:SetSize(50, 50)
-        row.icon:SetTexture(pair.entry.icon); row.icon:SetDesaturated(pair.group == "未学"); row.rule:Show()
-        row.meta:SetShown(LayoutGlyphCellText(row, pair.entry.name, GlyphRequirementText(pair.entry), catalogWidth, ClassColor(parent.buildsSelectedCharacter)))
-        row.label:SetTextColor(pair.group == "未学" and C.muted[1] or C.text[1], pair.group == "未学" and C.muted[2] or C.text[2], pair.group == "未学" and C.muted[3] or C.text[3])
-        row.iconBorder:SetColorTexture(pair.group == "当前" and C.accent[1] or C.line[1], pair.group == "当前" and C.accent[2] or C.line[2], pair.group == "当前" and C.accent[3] or C.line[3], 1)
-        local fill = pair.group == "当前" and C.selected or C.row
+        row.icon:SetTexture(pair.entry.icon); row.icon:SetDesaturated(pair.group == Addon:T("UI.NOT_LEARNED")); row.rule:Show()
+        row.meta:SetShown(LayoutGlyphCellText(row, SnapshotName(pair.entry, "glyph"), GlyphRequirementText(pair.entry), catalogWidth, ClassColor(parent.buildsSelectedCharacter)))
+        row.label:SetTextColor(pair.group == Addon:T("UI.NOT_LEARNED") and C.muted[1] or C.text[1], pair.group == Addon:T("UI.NOT_LEARNED") and C.muted[2] or C.text[2], pair.group == Addon:T("UI.NOT_LEARNED") and C.muted[3] or C.text[3])
+        row.iconBorder:SetColorTexture(pair.group == Addon:T("UI.CURRENT") and C.accent[1] or C.line[1], pair.group == Addon:T("UI.CURRENT") and C.accent[2] or C.line[2], pair.group == Addon:T("UI.CURRENT") and C.accent[3] or C.line[3], 1)
+        local fill = pair.group == Addon:T("UI.CURRENT") and C.selected or C.row
         row:SetScript("OnEnter", function(self)
             self:SetBackdropColor(C.alternate[1], C.alternate[2], C.alternate[3], 1)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -1996,15 +2020,15 @@ local function RenderCatalog(parent, slotData, record)
             if pair.entry.glyphLink then shown = pcall(GameTooltip.SetHyperlink, GameTooltip, pair.entry.glyphLink) end
             if not shown and pair.entry.glyphID and pair.entry.glyphID > 0 and GameTooltip.SetGlyphByID then shown = pcall(GameTooltip.SetGlyphByID, GameTooltip, pair.entry.glyphID) end
             if not shown and pair.entry.spellID and pair.entry.spellID > 0 and GameTooltip.SetSpellByID then shown = pcall(GameTooltip.SetSpellByID, GameTooltip, pair.entry.spellID) end
-            if not shown then GameTooltip:AddLine(pair.entry.name or "雕文") end
-            if pair.group == "当前" then GameTooltip:AddLine("当前构筑已使用", C.accent[1], C.accent[2], C.accent[3]) end
+            if not shown then GameTooltip:AddLine(SnapshotName(pair.entry, "glyph")) end
+            if pair.group == Addon:T("UI.CURRENT") then GameTooltip:AddLine(Addon:T("UI.USED_BY_CURRENT_BUILD"), C.accent[1], C.accent[2], C.accent[3]) end
             GameTooltip:Show()
         end)
         row:SetScript("OnLeave", function(self) self:SetBackdropColor(fill[1], fill[2], fill[3], 1); GameTooltip:Hide() end)
         row:SetBackdropColor(fill[1], fill[2], fill[3], 1); row:Show()
     end
     for i = index + 1, #build.catalogRows do build.catalogRows[i]:Hide() end
-    build.catalogEmpty:SetText(selectedType == "major" and "暂无大型雕文快照" or "暂无小型雕文快照")
+    build.catalogEmpty:SetText(selectedType == "major" and Addon:T("UI.NO_MAJOR_GLYPH_SNAPSHOT") or Addon:T("UI.NO_MINOR_GLYPH_SNAPSHOT"))
     build.catalogEmpty:SetShown(index == 0)
     build.catalogBody:SetSize(catalogWidth, math.max(52, index * CATALOG_ROW_HEIGHT)); build.catalog:SetContentHeight(build.catalogBody:GetHeight())
 end
@@ -2018,21 +2042,21 @@ local function RenderBuildColumns(parent, slotData, record)
     local glyphRowHeight = rowHeight
     local talentColumnWidth, glyphColumnWidth, glyphLeft = BuildColumnLayout(buildWidth)
     for index = 1, 6 do
-        local talent = slotData and slotData.talents and slotData.talents[index] or { name = "未记录", icon = "Interface\\Icons\\INV_Misc_QuestionMark" }
+        local talent = slotData and slotData.talents and slotData.talents[index] or { name = Addon:T("UI.NOT_RECORDED"), icon = "Interface\\Icons\\INV_Misc_QuestionMark" }
         local glyphs = slotData and slotData.glyphs
         local glyph = glyphs and (index <= 3 and glyphs.major and glyphs.major[index] or index > 3 and glyphs.minor and glyphs.minor[index - 3])
-        glyph = glyph or { name = "未选择", icon = "Interface\\Icons\\INV_Misc_QuestionMark" }
+        glyph = glyph or { name = Addon:T("UI.NOT_SELECTED"), icon = "Interface\\Icons\\INV_Misc_QuestionMark" }
         local left = BuildCell(build, build.talents, index); left:ClearAllPoints(); left:SetPoint("TOPLEFT", build, "TOPLEFT", 8, -42 - (index - 1) * rowHeight); left:SetSize(talentColumnWidth, rowHeight - 3)
         left.icon:SetSize(56, 56); left.iconBorder:SetSize(60, 60)
         left.label:ClearAllPoints(); left.label:SetPoint("LEFT", left.icon, "RIGHT", 10, 0); left.label:SetPoint("RIGHT", left, "RIGHT", -8, 0)
-        left.icon:SetTexture(talent.icon); left.label:SetText(talent.name); left.meta:Hide(); left.rule:Hide(); left:SetBackdropColor(C.chrome[1], C.chrome[2], C.chrome[3], 0.5); SetSpellTooltip(left, talent); left:Show()
+        left.icon:SetTexture(talent.icon); left.label:SetText(SnapshotName(talent, "talent")); left.meta:Hide(); left.rule:Hide(); left:SetBackdropColor(C.chrome[1], C.chrome[2], C.chrome[3], 0.5); SetSpellTooltip(left, talent); left:Show()
         local glyphTop = 42 + (index - 1) * glyphRowHeight
         local right = BuildCell(build, build.glyphs, index); right:ClearAllPoints(); right:SetPoint("TOPLEFT", build, "TOPLEFT", glyphLeft, -glyphTop); right:SetSize(glyphColumnWidth, glyphRowHeight - 3)
         local isMajor = index <= 3
         local border = isMajor and C.warning or C.accent
         local glyphIconSize = isMajor and 56 or 40
         right.icon:SetSize(glyphIconSize, glyphIconSize); right.iconBorder:SetSize(glyphIconSize + 4, glyphIconSize + 4)
-        right.icon:SetTexture(glyph.icon); right.meta:SetShown(LayoutGlyphCellText(right, glyph.name, GlyphRequirementText(glyph), glyphColumnWidth, ClassColor(parent.buildsSelectedCharacter))); right.rule:Hide(); right.iconBorder:SetColorTexture(border[1], border[2], border[3], 1); right:SetBackdropColor(C.chrome[1], C.chrome[2], C.chrome[3], 0.5); SetSpellTooltip(right, glyph); right:Show()
+        right.icon:SetTexture(glyph.icon); right.meta:SetShown(LayoutGlyphCellText(right, SnapshotName(glyph, "glyph"), GlyphRequirementText(glyph), glyphColumnWidth, ClassColor(parent.buildsSelectedCharacter))); right.rule:Hide(); right.iconBorder:SetColorTexture(border[1], border[2], border[3], 1); right:SetBackdropColor(C.chrome[1], C.chrome[2], C.chrome[3], 0.5); SetSpellTooltip(right, glyph); right:Show()
     end
     build.talentTitle:ClearAllPoints(); build.talentTitle:SetPoint("TOPLEFT", 12, -10)
     build.glyphTitle:ClearAllPoints(); build.glyphTitle:SetPoint("TOPLEFT", glyphLeft, -10)
@@ -2064,7 +2088,7 @@ local function SetupMainButtons(parent)
     end)
     toolbar.buildToggle:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:AddLine(parent.buildsBuildCollapsed and "展开天赋与雕文" or "收起天赋与雕文")
+        GameTooltip:AddLine(parent.buildsBuildCollapsed and Addon:T("UI.EXPAND_TALENTS_AND_GLYPHS") or Addon:T("UI.COLLAPSE_TALENTS_AND_GLYPHS"))
         GameTooltip:Show()
     end)
     toolbar.buildToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -2085,7 +2109,7 @@ local function SetupMainButtons(parent)
     end)
     parent.buildsConfirm:SetScript("OnClick", function()
         local selected = parent.buildsSelectedCharacter
-        if not selected or not IsCurrent(selected) then Addon:Print("请在当前登录角色上确认装备。") return end
+        if not selected or not IsCurrent(selected) then Addon:Print(Addon:T("UI.CONFIRM_EQUIPMENT_ON_THE_LOGGED_IN_CHARACTER")) return end
         local record = Addon.Snapshot:GetCharacter(selected.id)
         local slot = parent.buildsSlot or (record and record.lastActiveSlot) or "primary"
         if not record or record.lastActiveSlot ~= slot then return end
@@ -2095,7 +2119,7 @@ local function SetupMainButtons(parent)
         local existing = slotData and slotData.confirmedEquipment
         if equipmentStatus == "changed" and existing and StaticPopup_Show then
             StaticPopupDialogs.YIBO_BUILDS_CONFIRM_OVERWRITE = StaticPopupDialogs.YIBO_BUILDS_CONFIRM_OVERWRITE or {
-                text = "将覆盖该天赋槽位已确认的构筑装备。是否继续？", button1 = ACCEPT, button2 = CANCEL, timeout = 0, whileDead = true, hideOnEscape = true,
+                text = Addon:T("UI.REPLACE_THE_CONFIRMED_EQUIPMENT_FOR_THIS_TALENT_SLOT"), button1 = ACCEPT, button2 = CANCEL, timeout = 0, whileDead = true, hideOnEscape = true,
                 OnAccept = function()
                     local ok, err = Addon.Snapshot:ConfirmEquipment(slot)
                     if not ok then Addon:Print(err) end
@@ -2183,7 +2207,7 @@ function Page.Refresh(parent, context)
         local row = RosterRow(parent, index); row:ClearAllPoints(); row:SetPoint("TOPLEFT", parent.buildsRoster.body, "TOPLEFT", 0, -((index - 1) * ROSTER_ROW_HEIGHT)); row:SetPoint("RIGHT", parent.buildsRoster.body, "RIGHT", 0, 0); row:SetHeight(ROSTER_ROW_HEIGHT - 2)
         local coords = CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[character.class]
         if coords then row.classIcon:SetTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES"); row.classIcon:SetTexCoord(unpack(coords)); row.classIcon:Show() else row.classIcon:Hide() end
-        row.name:SetText(character.name or "未知角色"); local color = ClassColor(character); row.name:SetTextColor(color.r, color.g, color.b)
+        row.name:SetText(CharacterLabel(character, context)); local color = ClassColor(character); row.name:SetTextColor(color.r, color.g, color.b)
         row.level:SetText(tostring(character.level or ""))
         row:SetState(character.id == parent.buildsSelectedID and "selected" or "default")
         row:SetScript("OnClick", function() parent.buildsSelectedID = character.id; Addon.AccountPage.Refresh(parent, parent.buildsContext) end); row:Show()
@@ -2218,27 +2242,27 @@ function Page.Refresh(parent, context)
     local spec = slotData and slotData.specialization
     parent.buildsToolbar.specIcon.texture:SetTexture(spec and spec.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
     local itemLevel = equipment and tonumber(equipment.itemLevel)
-    parent.buildsToolbar.specName:SetText((spec and spec.name or "未知专精") .. (itemLevel and (" " .. tostring(math.floor(itemLevel + 0.5))) or ""))
+    parent.buildsToolbar.specName:SetText((SnapshotName(spec, "spec")) .. (itemLevel and (" " .. tostring(math.floor(itemLevel + 0.5))) or ""))
     parent.buildsToolbar.specIcon:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:AddLine(spec and spec.name or "未知专精")
+        GameTooltip:AddLine(SnapshotName(spec, "spec"))
         GameTooltip:Show()
     end)
     parent.buildsToolbar.specIcon:SetScript("OnLeave", function() GameTooltip:Hide() end)
     local mode = Addon:GetSettings().appearanceMode
-    parent.buildsToolbar.appearance:SetText(not IsCurrent(selected) and "原型 / 幻化" or (mode == "transmog" and "原型 / |cff20e070幻化|r" or "|cff20e070原型|r / 幻化"))
+    parent.buildsToolbar.appearance:SetText(not IsCurrent(selected) and Addon:T("UI.ORIGINAL_TRANSMOG") or (mode == "transmog" and Addon:T("UI.ORIGINAL_CFF20E070TRANSMOG_R") or Addon:T("UI.CFF20E070ORIGINAL_R_TRANSMOG")))
     parent.buildsToolbar.appearance:SetState(IsCurrent(selected) and "default" or "disabled")
     parent.buildsToolbar.buildToggle:SetText(parent.buildsBuildCollapsed and ">>" or "<<")
     parent.buildsToolbar.buildToggle:SetState("default")
     local equipmentStatus = Addon.Snapshot:GetEquipmentStatus(slotData)
     local equipmentStatusText = ({
-        missing = "暂无装备快照", unsaved = "装备待自动保存", changed = "装备有更改 · 待自动保存", saved = "装备已保存",
-    })[equipmentStatus] or "暂无装备快照"
-    parent.buildsToolbar.status:SetText((record.lastActiveSlot == slot and "当前使用" or "备用构筑") .. " · " .. equipmentStatusText)
+        missing = Addon:T("UI.NO_EQUIPMENT_SNAPSHOT"), unsaved = Addon:T("UI.EQUIPMENT_AWAITING_AUTOMATIC_SAVE"), changed = Addon:T("UI.EQUIPMENT_CHANGED_AWAITING_AUTOMATIC_SAVE"), saved = Addon:T("UI.EQUIPMENT_SAVED"),
+    })[equipmentStatus] or Addon:T("UI.NO_EQUIPMENT_SNAPSHOT")
+    parent.buildsToolbar.status:SetText((record.lastActiveSlot == slot and Addon:T("UI.ACTIVE") or Addon:T("UI.BACKUP_BUILD")) .. " · " .. equipmentStatusText)
     PlaceEquipment(parent, equipment)
     parent.buildsEquipmentSnapshot = equipment
     RenderEquipmentDetail(parent, equipment)
-    parent.buildsEquipment.empty:SetText(not equipment and "尚无装备快照" or (not IsCurrent(selected) and "外观仅可预览当前角色" or ""))
+    parent.buildsEquipment.empty:SetText(not equipment and Addon:T("UI.NO_EQUIPMENT_SNAPSHOT_2") or (not IsCurrent(selected) and Addon:T("UI.APPEARANCE_PREVIEW_IS_AVAILABLE_ONLY_FOR_THE_CURRENT_CHARACTER") or ""))
     parent.buildsEquipment.empty:SetShown(not equipment or not IsCurrent(selected))
     RefreshModel(parent, selected, equipment)
     RenderBuildColumns(parent, slotData, record)
@@ -2260,18 +2284,18 @@ function Page.Refresh(parent, context)
     local canSave = IsCurrent(selected) and record.lastActiveSlot == slot and (equipmentStatus == "unsaved" or equipmentStatus == "changed")
     parent.buildsConfirm:SetState(canSave and "selected" or "disabled")
     parent.buildsConfirm:SetText(({
-        missing = "暂无装备快照",
-        unsaved = "立即保存此构筑装备  >",
-        changed = "立即更新此构筑装备  >",
-        saved = "此构筑装备已保存",
-    })[equipmentStatus] or "暂无装备快照")
+        missing = Addon:T("UI.NO_EQUIPMENT_SNAPSHOT"),
+        unsaved = Addon:T("UI.SAVE_BUILD_EQUIPMENT_NOW"),
+        changed = Addon:T("UI.UPDATE_BUILD_EQUIPMENT_NOW"),
+        saved = Addon:T("UI.BUILD_EQUIPMENT_SAVED"),
+    })[equipmentStatus] or Addon:T("UI.NO_EQUIPMENT_SNAPSHOT"))
     parent.buildsConfirm:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         local title = ({
-            missing = "尚未采集到当前穿戴。",
-            unsaved = "小退、重载或退出时自动保存当前专精装备；也可点击立即保存。",
-            changed = "小退、重载或退出时自动更新当前专精装备；也可点击立即更新。",
-            saved = "当前穿戴与已保存的构筑装备一致。",
+            missing = Addon:T("UI.CURRENT_EQUIPMENT_HAS_NOT_BEEN_CAPTURED_YET"),
+            unsaved = Addon:T("UI.EQUIPMENT_SAVES_ON_LOGOUT_RELOAD_OR_EXIT_CLICK_TO_SAVE_NOW"),
+            changed = Addon:T("UI.EQUIPMENT_UPDATES_ON_LOGOUT_RELOAD_OR_EXIT_CLICK_TO_UPDATE_NOW"),
+            saved = Addon:T("UI.CURRENT_EQUIPMENT_MATCHES_THE_SAVED_BUILD"),
         })[equipmentStatus] or ""
         GameTooltip:AddLine(title)
         GameTooltip:Show()
@@ -2291,7 +2315,7 @@ end
 function Page:OnSocketEvent(event)
     local parent = self._activeParent
     if not (parent and parent.buildsPendingGem) then return end
-    if event == "SOCKET_INFO_FAILURE" then Addon:Print("镶嵌未成功，请重新选择宝石。") end
+    if event == "SOCKET_INFO_FAILURE" then Addon:Print(Addon:T("UI.SOCKETING_FAILED_SELECT_THE_GEM_AGAIN")) end
     ClearPendingGem(parent, event ~= "SOCKET_INFO_CLOSE")
     self:RefreshOpenDetail()
 end
@@ -2309,10 +2333,10 @@ function Page.RefreshPreview(parent, context)
     parent.buildsPreviewToggle = parent.buildsPreviewToggle or CreateFrame("Frame", nil, parent)
     local buttons = parent.buildsPreviewToggle.buttons or {}
     local buttonDefinitions = {
-        { id = "currentEquipment", label = "当前装备", matrix = "equipment", mode = "current" },
-        { id = "backupEquipment", label = "备用装备", matrix = "equipment", mode = "backup" },
-        { id = "currentSpec", label = "当前专精", matrix = "spec", mode = "current" },
-        { id = "backupSpec", label = "备用专精", matrix = "spec", mode = "backup" },
+        { id = "currentEquipment", label = Addon:T("UI.CURRENT_EQUIPMENT"), matrix = "equipment", mode = "current" },
+        { id = "backupEquipment", label = Addon:T("UI.BACKUP_EQUIPMENT"), matrix = "equipment", mode = "backup" },
+        { id = "currentSpec", label = Addon:T("UI.CURRENT_SPECIALIZATION"), matrix = "spec", mode = "current" },
+        { id = "backupSpec", label = Addon:T("UI.BACKUP_SPECIALIZATION"), matrix = "spec", mode = "backup" },
     }
     parent.buildsPreviewToggle:SetSize(340, Theme.Size.compact)
     local selectedID = matrixMode == "equipment"
@@ -2371,20 +2395,20 @@ function Page.RefreshPreview(parent, context)
             cell.text:Show(); cell.itemFrame:Hide(); cell.itemLevel:Hide(); cell.itemChanged:Hide()
             local value = "—"
             if col.id == "name" then value = PreviewCharacterLabel(character, context, slotData)
-            elseif col.id == "slot" then value = slotData and (slot == "secondary" and "副专精" or "主专精") or (mode == "backup" and "无备用专精快照" or "无当前专精快照")
+            elseif col.id == "slot" then value = slotData and (slot == "secondary" and Addon:T("UI.SECONDARY_SPECIALIZATION") or Addon:T("UI.PRIMARY_SPECIALIZATION")) or (mode == "backup" and Addon:T("UI.NO_BACKUP_SPECIALIZATION_SNAPSHOT") or Addon:T("UI.NO_CURRENT_SPECIALIZATION_SNAPSHOT"))
             elseif col.id == "spec" then
                 local item = slotData and slotData.specialization
-                value = item and IconText(item.icon, item.name) or "—"
+                value = item and IconText(item.icon, SnapshotName(item)) or "—"
                 SetPreviewCellTooltip(cell, nil)
             elseif string.find(col.id, "talent") then
                 local n = tonumber(string.match(col.id, "%d+")); local item = slotData and slotData.talents and slotData.talents[n]
-                value = item and IconText(item.icon, item.name) or "—"; SetPreviewCellTooltip(cell, item)
+                value = item and IconText(item.icon, SnapshotName(item)) or "—"; SetPreviewCellTooltip(cell, item)
             elseif string.find(col.id, "major") then
                 local n = tonumber(string.match(col.id, "%d+")); local item = slotData and slotData.glyphs and slotData.glyphs.major[n]
-                value = item and IconText(item.icon, item.name) or "—"; SetPreviewCellTooltip(cell, item)
+                value = item and IconText(item.icon, SnapshotName(item)) or "—"; SetPreviewCellTooltip(cell, item)
             elseif string.find(col.id, "minor") then
                 local n = tonumber(string.match(col.id, "%d+")); local item = slotData and slotData.glyphs and slotData.glyphs.minor[n]
-                value = item and IconText(item.icon, item.name) or "—"; SetPreviewCellTooltip(cell, item)
+                value = item and IconText(item.icon, SnapshotName(item)) or "—"; SetPreviewCellTooltip(cell, item)
             elseif matrixMode == "equipment" and col.slotID then
                 -- Login and equipment events refresh the observation first;
                 -- confirmation is a separate user action or logout boundary.
@@ -2418,7 +2442,7 @@ function Page.RefreshPreview(parent, context)
                     SetPreviewItemTooltip(cell, nil)
                 end
             elseif col.id == "equipment" then
-                value = slotData and slotData.confirmedEquipment and "已确认" or slotData and slotData.observedEquipment and "待确认" or "—"
+                value = slotData and slotData.confirmedEquipment and Addon:T("UI.CONFIRMED") or slotData and slotData.observedEquipment and Addon:T("UI.PENDING_CONFIRMATION") or "—"
                 SetPreviewEquipmentTooltip(cell, slotData and (slotData.confirmedEquipment or slotData.observedEquipment), slotData and slotData.confirmedEquipment ~= nil)
             end
             if matrixMode ~= "equipment" and col.id ~= "equipment" and col.id ~= "spec" and not string.find(col.id, "talent") and not string.find(col.id, "major") and not string.find(col.id, "minor") then SetPreviewCellTooltip(cell, nil) end

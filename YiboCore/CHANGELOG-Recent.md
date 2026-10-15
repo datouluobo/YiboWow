@@ -1,5 +1,12 @@
 # YiboCore Changelog / 近期更新
 
+## 1.12.5 / API13 — 2026-10-16
+
+- 发布 character-cleanup:2，持久记录动态缓存所有者，保留禁用期间待清理历史。
+- Delete提供deletedAt／deletionID／replay上下文；旧两参数回调继续兼容。Builds1.5.0使用该能力处理延后回放与新观察保留。
+- 仅发布该项通用清理能力；API13及现有业务数据归属保持该提交基线。契约见 Docs/API-v13-角色清理v2.md。
+
+
 ## 1.12.2 · API13 · 2026-10-14
 
 - 新增兼容的 business-item-actions:3：Bind.compactTooltip 按全局操作模式提供简短双语提示，默认保留既有提示。AltoBoss 2.6.1 副本格已接入。

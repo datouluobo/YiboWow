@@ -2,16 +2,20 @@
 ## Title: |cff20e070[Yibo]|r YiboBuilds - Character Builds
 ## Title-zhCN: |cff20e070[Yibo]|r YiboBuilds - 角色构筑
 ## Title-zhTW: |cff20e070[Yibo]|r YiboBuilds - 角色构筑
-## Notes: 多角色构筑、装备、天赋与雕文总览
+## Notes: Account-wide equipment, talents and glyphs. Requires YiboCore API13.
+## Notes-zhCN: 多角色构筑、装备、天赋与雕文总览，需要 YiboCore API13。
+## Notes-zhTW: 多角色構築、裝備、天賦與雕文總覽，需要 YiboCore API13。
 ## Author: YiboSoft
-## Version: 1.4.2
-## IconTexture: Interface\AddOns\YiboBuilds\Media\YiboBuildsIcon-v1
+## Version: 1.5.0
+## IconTexture: Interface\AddOns\YiboBuilds\Media\YiboBuildsIcon-128
 ## SavedVariables: YiboBuildsDB
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
 ## LoadOnDemand: 0
 
 Bootstrap.lua
+Locales\zhCN.lua
+Locales\enUS.lua
 Data\EnchantCatalog.lua
 Data\ApplyTargets.lua
 Data\CraftSources.lua
