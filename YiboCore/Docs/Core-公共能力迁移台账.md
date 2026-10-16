@@ -107,7 +107,7 @@ YiboMounts 1.0.0 已按 API13 接入 `localization:1` 和 API v6 独立设置注
 | 插件技术名 | 最低 Core API | TOC Core 依赖 | 已检查的新能力 / 主要缺口 |
 | --- | --- | --- | --- |
 | YiboAltoBoss | 13（基础与增强） | RequiredDeps | 工作树副本状态／悬停使用 localization:1；五人本 DBM 可选桥接使用 events:1，目标增强继续要求 business-services:1 / business-providers:1；旧设置库存见 AUD-005 ；2026-10-16本轮矩阵接入另检查account-surface-budget:2及实际方法 |
-| YiboAutoOpen | 6（可选设置） | OptionalDeps | 独立基础队列保留；本地输入与解析待评估 |
+| YiboAutoOpen | 13 + `localization:1`（可选设置） | OptionalDeps | Core 缺失或版本不足时独立基础队列保留；本地输入与解析待评估 |
 | YiboBeastPaths | 13（可选维护页；1.7.0 工作树） | OptionalDeps（各客户端 TOC） | 固定 Core 1.12.1 基线；检查 localization:1、basic-input:1、account-view:2、account-surface-budget:1；独立路线功能保留 / 2026-10-13 |
 | YiboBuilds | 13 | RequiredDeps | Core1.12.5；localization:1、character-name-format:1、character-identity:1、account-view:2、account-entry:2、character-cleanup:2、business-providers:1、business-item-actions:1；客户端待验 |
 | YiboCrafting | 8 | RequiredDeps | character-name-format:1、item-resolver:1；共享角色表头／FormatName 方法检查，搜索输入待迁移 |
@@ -226,7 +226,7 @@ ameMode=original/short` 与 `realmMode=omit/sameRealm/full` 独立选择；同�
 | 插件 | 状态 | 已有接入与证据 | 剩余核对范围 |
 | --- | --- | --- | --- |
 | YiboAltoBoss | 部分接入（适用代码完成，客户端待验收） | API13 / account-view:2 / account-entry:2；仅Core设置／账号页／入口；固定副本选择接入account-preview-field-groups:1；独立设置壳、旧窗口及小地图接口已移除 | 旧SavedVariables字段保留而不读取；双语布局及入口组合待验 / 2026-10-14 |
-| YiboAutoOpen | 部分接入 | [CoreIntegration.lua](../../YiboAutoOpen/CoreIntegration.lua) 可选注册统一业务设置 | 验证 Core 可用／缺失时的设置路由；基础队列独立运行不自动纳入迁移 |
+| YiboAutoOpen | 部分接入 | [CoreIntegration.lua](../../YiboAutoOpen/CoreIntegration.lua) 检查 API13、`localization:1` 与设置 UI 后可选注册统一业务设置；基础队列独立运行 | 2026-10-16：针对 Core 1.12.6 / API13 更新可选设置门槛与升级提示；设置面板内现有中文文案尚未迁移，Core 缺失／不足时队列仍独立运行 |
 | YiboBeastPaths | 部分接入（适用调用代码完成／客户端待验收） | Mists 可选维护页与统一业务设置最低 API13，检查 account-view:2 / account-surface-budget:1，使用公开可用高度；无账号入口，不需 account-entry／builtin-entry-bar | 494项集成检查含 Core 缺失／旧版／缺能力、晚就绪、重复注册、关闭重开和失败回滚；双语 UI smoke 通过；实际交互待客户端 / 2026-10-13 |
 | YiboBuilds | 部分接入（代码／离线通过，客户端待验） | API13统一页面与三通道入口；设置元数据双语，预览字段副本及ID校验；没有独立业务设置面板 | Core13Spec验证能力不足停止与重复注册；最低API13 / account-view:2 / account-entry:2；2026-10-15 |
 | YiboCrafting | 部分接入（代码完成／客户端待验收） | 1.2.0 / API13；统一账号页、共享矩阵视觉／滚动／分页、嵌入设置、三通道注册和同快照预览；按业务快照准入和高度预算投影 | CoreAdaptation 通过；实际入口／字段／安全边界待客户端 / 2026-10-12 |
@@ -492,7 +492,7 @@ Core 状态：**已提供（1.12.0 / API v13 工作树，未发布）**。能力
 | 插件（技术名排序） | 接入状态 | 已覆盖 / 剩余范围与版本要求 | 验证证据 / 最近审查 |
 |---|---|---|---|
 | YiboAltoBoss | 部分接入（适用代码完成，客户端待验收） | API13 / localization:1；311对owner资源覆盖正式UI、设置、状态／错误、静态回退目录与目标／命令反馈，无独立语言开关 | 原生API名、历史、自定义文本与输入别名保留；中英文及手动语言模式待验 / 2026-10-14 |
-| YiboAutoOpen | 待迁移 | 本次未接入；页面/设置/悬停/状态/目录按区域审查，接入时最低 API13 + localization:1；原最低版本保持 | TOC 静态候选报告；未做语言客户端验收 / 2026-10-11 |
+| YiboAutoOpen | 部分接入 | `Locale.lua` 为 Core 升级提示注册中英文资源；设置面板控件、状态、确认框与目录文字仍为中文硬编码，需按设置页区域继续迁移；最低 Core API13 + `localization:1` | 2026-10-16：Core 1.12.6 / API13 兼容门槛更新；无中英文客户端验收 |
 | YiboBeastPaths | 部分接入（Core 维护区域代码完成／客户端待验收） | 1.7.0 可选维护增强最低 API13 / localization:1；维护页、统一设置、共享错误、地图按钮／悬停和命令提示注册 zh/en 资源，使用 Core 会话语言。独立地图模式解析同份资源的客户端语言，必要性／范围／移除条件见接入文档；路线资料、诊断与旧独立布局保留范围另列 | 真实 Core Locale 494项检查、双语维护页 smoke 与26文件语法通过；静态报告254候选，缺英文／未知键／格式差异0，检查器不识别 ns.Text 引用；游戏中英文／手动语言模式待验收 / 2026-10-13 |
 | YiboBuilds | 部分接入（主要区域代码完成，客户端待验） | 页面／字段／设置元数据／悬停／状态与确认／目标／命令／专业标签接入owner资源；历史占位在展示时翻译，原生API／DB2名称和识别别名保持 | Core13Spec双语资源与格式、旧快照无改写；词法报告55候选已分类，布局与真实客户端待验；最低API13 + localization:1；2026-10-15 |
 | YiboCrafting | 部分接入（适用区域代码完成） | 1.2.0 整体 API13 / localization:1；页面、设置、入口、Tooltip、状态／错误、目标和稳定分类 ID 均迁移，动态名称／历史来源原文保留 | CoreAdaptation 双语资源／页面与静态报告通过；真实中文／enUS／手动语言模式待客户端 / 2026-10-12 |
