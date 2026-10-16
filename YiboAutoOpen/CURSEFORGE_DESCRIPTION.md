@@ -21,16 +21,18 @@ It does not change Auto Loot, click confirmation dialogs, choose rewards, or dis
 
 ## Commands
 
-- `/yao add <item link, ID, or name>` — add an item to the catalog.
-- `/yao del <item link, ID, or name>` — remove an item from the catalog.
-- `/yao list [page]` — show catalogued items.
-- `/yao status` — show the current state, next eligible item, and session isolation status.
+- `/yao add <item link, ID, or name>` — add an item to the allowlist. Names must resolve uniquely; use a link or ID if a name is ambiguous. Matching items in your bags enter the opening queue.
+- `/yao del <item link, ID, or name>` — remove an item from the allowlist without removing it from your bags.
+- `/yao list [page]` — review the catalog, up to 20 items per page. Use `/yao list 2` to view page 2. Items marked manual-only cannot be opened automatically due to game restrictions.
+- `/yao status` — see whether the queue is running or paused and why, the next eligible item, items isolated for this login, and pending confirmation details.
+
+For example, use `/yao add 12345` or `/yao add <item link>` to add an item, `/yao list` to review the allowlist, and `/yao del 12345` to remove it. If nothing opens, `/yao status` shows whether combat, a sensitive interface, low free space, or no eligible item is holding the queue. In the Core settings workbench, you can also drag an item from your bags into the catalog.
 
 For example, when a whitelisted source such as Imperial Silk or Pandaria's Dark Soil triggers a Bind on Pickup prompt, the game's confirmation dialog appears under the cursor. The source must be enabled in the allowlist; you still decide whether to confirm or cancel.
 
 ## Optional YiboCore Integration
 
-YiboCore is optional and is not included in this download. Without it, all automatic opening and `/yao` commands remain available. With a compatible YiboCore installed, YiboAutoOpen appears in the shared settings workbench, where you can manage the catalog, safety threshold, login scan, and chat notifications.
+YiboCore is optional and is not included in this download. Without it, automatic opening and all four `/yao` commands work independently. Automatic opening is enabled by default, existing bags are scanned at login, at least 5 general bag slots are kept free, chat shows issues only, and eligible Bind on Pickup dialogs follow the cursor. These runtime options cannot be changed in game without Core. Install YiboCore API v13 with `localization:1` to manage them in the shared settings workbench, along with the catalog and confirmation-source allowlist.
 
 ---
 
@@ -56,13 +58,15 @@ Yibo 自动开包只会开启**你主动加入目录**的容器物品。它使�
 
 ## 命令
 
-- `/yao add <物品链接、ID 或名称>`：加入目录。
-- `/yao del <物品链接、ID 或名称>`：从目录移除。
-- `/yao list [页码]`：查看目录。
-- `/yao status`：查看当前状态、下一个可开启物品与本次登录隔离状态。
+- `/yao add <物品链接、ID 或名称>`：加入允许目录。名称必须能唯一匹配；有重名时请使用链接或 ID。背包中的对应物品会进入自动开启队列。
+- `/yao del <物品链接、ID 或名称>`：从允许目录移除，不会删除背包中的物品。
+- `/yao list [页码]`：查看目录，每页最多 20 项；输入 `/yao list 2` 查看第 2 页。标记为“仅手动开启”的物品受游戏限制，不会自动开启。
+- `/yao status`：查看队列是否运行或暂停及其原因、下一个可开启物品、本次登录隔离项目和待处理的确认框信息。
+
+例如，输入 `/yao add 12345` 或 `/yao add <物品链接>` 添加，输入 `/yao list` 查看目录，输入 `/yao del 12345` 移除。没有物品开启时，用 `/yao status` 检查是否因战斗、敏感界面、空位不足或没有可处理物品而暂停。也可以在 Core 设置工作台把背包物品拖到目录中。
 
 例如，帝王丝绸、潘达利亚的黑色泥土等白名单来源触发“拾取后绑定”提示时，游戏原生确认框会出现在鼠标下方。该来源必须已在白名单中启用；是否确定或取消仍由你决定。
 
 ## 可选接入 YiboCore
 
-YiboCore 不是必需依赖，也不包含在本下载包中。未安装 Core 时，自动开包与 `/yao` 命令仍完整可用；安装兼容的 YiboCore 后，可在统一设置工作台管理目录、安全阈值、登录扫描和聊天提示。
+YiboCore 不是必需依赖，也不包含在本下载包中。未安装 Core 时，自动开包和四条 `/yao` 命令均可独立运行。自动开包默认启用，登录时扫描已有背包物品，至少保留 5 个通用背包空位，聊天仅提示问题，符合条件的“拾取后绑定”确认框默认跟随鼠标。没有 Core 时无法在游戏内修改这些运行选项；安装 YiboCore API v13 且提供 `localization:1` 的版本后，可在统一设置工作台管理这些选项、目录和确认框来源白名单。

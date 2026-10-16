@@ -1,0 +1,52 @@
+{
+  "archived_on": "2026-10-14",
+  "addon": "YiboAutoOpen",
+  "archive": "v1",
+  "files": [
+    {
+      "file": "YiboAutoOpenIcon-v2-1024.png",
+      "original_version": "2",
+      "original_path": "YiboAutoOpen/Media/YiboAutoOpenIcon-v2-1024.png"
+    },
+    {
+      "file": "YiboAutoOpenIcon-v2-128.png",
+      "original_version": "2",
+      "original_path": "YiboAutoOpen/Media/YiboAutoOpenIcon-v2-128.png"
+    },
+    {
+      "file": "YiboAutoOpenIcon-v2-24.png",
+      "original_version": "2",
+      "original_path": "YiboAutoOpen/Media/YiboAutoOpenIcon-v2-24.png"
+    },
+    {
+      "file": "YiboAutoOpenIcon-v2-24.svg",
+      "original_version": "2",
+      "original_path": "YiboAutoOpen/Media/YiboAutoOpenIcon-v2-24.svg"
+    },
+    {
+      "file": "YiboAutoOpenIcon-v2-32.png",
+      "original_version": "2",
+      "original_path": "YiboAutoOpen/Media/YiboAutoOpenIcon-v2-32.png"
+    },
+    {
+      "file": "YiboAutoOpenIcon-v2-512.png",
+      "original_version": "2",
+      "original_path": "YiboAutoOpen/Media/YiboAutoOpenIcon-v2-512.png"
+    },
+    {
+      "file": "YiboAutoOpenIcon-v2-64.png",
+      "original_version": "2",
+      "original_path": "YiboAutoOpen/Media/YiboAutoOpenIcon-v2-64.png"
+    },
+    {
+      "file": "YiboAutoOpenIcon-v2-master.svg",
+      "original_version": "2",
+      "original_path": "YiboAutoOpen/Media/YiboAutoOpenIcon-v2-master.svg"
+    },
+    {
+      "file": "YiboAutoOpenIcon-v2.tga",
+      "original_version": "2",
+      "original_path": "YiboAutoOpen/Media/YiboAutoOpenIcon-v2.tga"
+    }
+  ]
+}

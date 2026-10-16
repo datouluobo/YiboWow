@@ -3,17 +3,26 @@ local Integration = {}; Addon.CoreIntegration = Integration
 function Integration:Initialize()
     if self.initialized then return true end
     local Core = _G.YiboCore
-    if not Core then return true end
-    local compatible = Core:CheckAPIVersion(6)
-    if not compatible then Addon:NotifyIssue("core-old", "Core 版本不兼容，已继续使用命令模式。"); return true end
-    local registered, errorMessage = Core:RegisterAddon(Addon.NAME, { version = Addon.VERSION, requiredAPI = 6 })
-    if not registered then Addon:NotifyIssue("core-register", "Core 注册失败，已继续使用命令模式：" .. tostring(errorMessage)); return true end
+    if not Core then
+        Addon:NotifyIssue("core-missing", Addon:T("CORE.MISSING"))
+        return true
+    end
+    local compatible = Core.CheckAPIVersion and Core:CheckAPIVersion(13)
+    local localized = Core.HasCapability and Core:HasCapability("localization", 1)
+    local localeAPI = Core.Locale and type(Core.Locale.Get) == "function" and type(Core.Locale.Register) == "function"
+    if not (compatible and localized and localeAPI and Core.RegisterAddon and Core.RegisterSettingsPanel and Core.UITheme) then
+        Addon:NotifyIssue("core-incompatible", Addon:T("CORE.UPGRADE_REQUIRED"))
+        return true
+    end
+    Addon.Core = Core
+    local registered, errorMessage = Core:RegisterAddon(Addon.NAME, { version = Addon.VERSION, requiredAPI = 13 })
+    if not registered then Addon:NotifyIssue("core-register", Addon:T("CORE.REGISTER_FAILED", tostring(errorMessage))); return true end
     local panel, panelError = Core:RegisterSettingsPanel(Addon.NAME, {
-        id = Addon.NAME, title = "自动开包", description = "管理自动开启目录、安全阈值与运行状态。",
-        icon = "Interface\\AddOns\\YiboAutoOpen\\Media\\YiboAutoOpenIcon-v2",
+        id = Addon.NAME, title = Addon:T("SETTINGS.TITLE"), description = Addon:T("SETTINGS.DESCRIPTION"),
+        icon = "Interface\\AddOns\\YiboAutoOpen\\Media\\YiboAutoOpenIcon",
         CreateSettingsPanel = function(parent, host) return Addon.Settings:CreatePanel(parent, host) end,
     })
-    if not panel then Addon:NotifyIssue("core-panel", "Core 设置注册失败，已继续使用命令模式：" .. tostring(panelError)) end
+    if not panel then Addon:NotifyIssue("core-panel", Addon:T("CORE.PANEL_FAILED", tostring(panelError))) end
     self.initialized = panel ~= nil
     if panel and Core.AccountView and Core.AccountView.activePageID == "settings" then
         Core.AccountView:RefreshNavigation()
