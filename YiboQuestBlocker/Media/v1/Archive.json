@@ -1,0 +1,17 @@
+{
+  "archived_on": "2026-10-14",
+  "addon": "YiboQuestBlocker",
+  "archive": "v1",
+  "files": [
+    {
+      "file": "YQB_MinimapIcon.png",
+      "original_version": "legacy",
+      "original_path": "YiboQuestBlocker/Media/YQB_MinimapIcon.png"
+    },
+    {
+      "file": "YQB_MinimapIcon.tga",
+      "original_version": "legacy",
+      "original_path": "YiboQuestBlocker/Media/YQB_MinimapIcon.tga"
+    }
+  ]
+}

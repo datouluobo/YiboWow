@@ -95,7 +95,7 @@ function Integration:Initialize()
         if not cleanupRegistered then return nil, cleanupError end
     end
     local page, pageError = Core.AccountView:RegisterPage("YiboQuestBlocker", {
-        id = PAGE_ID, title = YQB.T("PAGE.TITLE"), icon = "Interface\\AddOns\\YiboQuestBlocker\\Media\\YQB_MinimapIcon", order = 40, previewEnabled = true,
+        id = PAGE_ID, title = YQB.T("PAGE.TITLE"), icon = "Interface\\AddOns\\YiboQuestBlocker\\Media\\YiboQuestBlockerIcon", order = 40, previewEnabled = true,
         fields = {
             { id = "global", title = YQB.T("PAGE.GLOBAL_FIELD"), defaultVisible = true },
             { id = "characters", title = YQB.T("PAGE.CHARACTER_FIELD"), defaultVisible = true },
@@ -127,7 +127,7 @@ function Integration:Initialize()
     local entry, entryError = Core.Entry:RegisterBusinessEntry("YiboQuestBlocker", {
         id = "yqb", legacyIDs = { "YiboQuestBlocker" }, brokerName = "YiboQuestBlocker", pageID = PAGE_ID,
         defaultChannels = { broker = false, minimap = false, builtinBar = false },
-        text = YQB.T("PAGE.ENTRY"), icon = "Interface\\AddOns\\YiboQuestBlocker\\Media\\YQB_MinimapIcon",
+        text = YQB.T("PAGE.ENTRY"), icon = "Interface\\AddOns\\YiboQuestBlocker\\Media\\YiboQuestBlockerIcon",
     })
     if not entry then return nil, entryError end
     self.initialized = true
