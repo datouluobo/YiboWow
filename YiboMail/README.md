@@ -1,8 +1,10 @@
 # YiboMail - 邮件助手
 
-![YiboMail 邮件助手](Media/YiboMailIcon-v1-128.png)
+> 文档状态更新（2026-10-16）：现有功能已由用户确认实机验收收口。当前源码版本与发行证据见[状态总览](../Docs/仓库当前状态总览.md)，后续任务见[延期清单](../Docs/后续开发任务清单.md)。下文旧版本的开发／待验收描述按其原日期理解；当前版本渠道状态没有明确证据时保留待核对。
 
-当前版本 `1.2.16-api1` 提供原生邮箱增强，以及由 YiboCore 承载的收件箱、账号总览、历史记录三个标签页，可选 Broker/小地图入口、六列邮件悬停摘要和登录到期提醒。基础功能最低依赖 **YiboCore 1.12.1 / API v13**、`localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`item-picker:2`、`character-identity:1`、`characters:1`、`character-cleanup:1`、`account-view:2`、`account-preview-characters:1`、`account-character-admission:1`、`account-surface-budget:1` 和 `account-entry:2`；缺失时提示升级并停止基础初始化。Mail 的静态玩家文案使用稳定 ASCII 语言 key 和 Mail 自有中英文资源，语言由 Core 账号设置统一选择，并在重载后应用。打开游戏邮箱即可收取和发送；跨角色查看可从 Core 统一窗口访问。Mail 通过 Core 的 `mail.items` v1.1 服务向 Vault 提供当前收件附件及可解析的成功发件在途记录；收件记录匹配后不再报告为在途。契约见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
+![YiboMail 邮件助手](Media/YiboMailIcon-128.png)
+
+当前版本 `1.2.17-api1` 提供原生邮箱增强，以及由 YiboCore 承载的收件箱、账号总览、历史记录三个标签页，可选 Broker/小地图入口、六列邮件悬停摘要和登录到期提醒。基础功能最低依赖 **YiboCore 1.12.1 / API v13**、`localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`item-picker:2`、`character-identity:1`、`characters:1`、`character-cleanup:1`、`account-view:2`、`account-preview-characters:1`、`account-character-admission:1`、`account-surface-budget:1` 和 `account-entry:2`；缺失时提示升级并停止基础初始化。Mail 的静态玩家文案使用稳定 ASCII 语言 key 和 Mail 自有中英文资源，语言由 Core 账号设置统一选择，并在重载后应用。打开游戏邮箱即可收取和发送；跨角色查看可从 Core 统一窗口访问。Mail 通过 Core 的 `mail.items` v1.1 服务向 Vault 提供当前收件附件及可解析的成功发件在途记录；收件记录匹配后不再报告为在途。契约见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
 
 按物品或分类为收件人建立规则后，规则寄件页会汇总命中物品、按角色整理并按单封附件容量拆分寄件批次。玩家集中核对后即可逐封确认发送；保存的分配规则能大幅减少重复查找物品、选择收件人和手工装填，是多角色物资转移的主要省时点。
 
@@ -89,9 +91,9 @@ Bootstrap.lua
 
 ## 安装与验收
 
-插件列表显示名为 `|cff20e070[Yibo]|r YiboMail - 邮件助手`，使用本插件 `Media/YiboMailIcon-v1.tga`（128px、含 Alpha）作为游戏纹理。Core 插件目录与预留业务入口同步使用该资源。当前发布范围的业务入口开关维持既有配置。
+插件列表显示名为 `|cff20e070[Yibo]|r YiboMail - 邮件助手`，插件列表使用本插件 `Media/YiboMailIcon-128.tga`；Core 插件目录与业务入口使用 `Media/YiboMailIcon.tga`（64px、含 Alpha）。当前发布范围的业务入口开关维持既有配置。
 
-Logo v1 提供 `24/32/64/128/512/1024px` 的 PNG 与 TGA；`YiboMailIcon-v1.png` 对应 512px，`YiboMailLogo-v1.png` 对应 1024px，`YiboMailMinimapIcon-v1.png/.tga` 对应 32px。`YiboMailIcon-v1-master.svg` 是可编辑矢量骨架，手绘材质保存在同版本 PNG/TGA 中。
+Logo v2 提供 `16/24/32/64/128/512/1024px` PNG；TGA 提供其中的二次幂尺寸。`YiboMailIcon.png` 对应128px，默认 `.tga` 对应64px，`YiboMailLogo.png` 对应1024px。`YiboMailIcon-master.png` 保存312px透明位图母版。
 
 将本目录以同名目录联接或复制到目标客户端 `Interface/AddOns/YiboMail`，启用 YiboMail 与 YiboCore。TOC 加载清单变化后，完整退出并重新进入游戏。
 
@@ -132,7 +134,7 @@ lua YiboMail/_NonRelease/Tests/WorkspaceSpec.lua
 
 以下文档包含完整业务规划，当前加载范围以本 README 与 TOC 为准：
 
-- [联合实施计划](../Docs/YiboCore-Vault-Mail-实施计划.md)
+- [Vault／Mail 公共契约](../Docs/YiboVault-Mail-API-v1-契约.md)
 - [产品边界与开发路线图](../Docs/YiboMail-产品边界与开发路线图.md)
 - [Public API v1 契约](../Docs/YiboVault-Mail-API-v1-契约.md)
 - [阶段 0 客户端验证记录](_NonRelease/Docs/Stage0-客户端验证记录.md)
@@ -148,3 +150,7 @@ lua YiboMail/_NonRelease/Tests/WorkspaceSpec.lua
 新增强最低 Core API v12 / business-item-actions:1，不足提示升级并停止增强；原基础业务保留既有最低版本，作为旧 Core 兼容例外，无新交互本地回退。整体提高最低版本时收拢此例外。
 
 实际契约、自动化与客户端待验收范围见 [实施与验证](../Docs/行动中心-主动添加实施与验证.md)。
+
+## 图标资源（2026-10-14）
+
+当前图标为 `Media/YiboMailIcon`：默认TGA为64px，插件列表使用128px TGA；PNG提供16/24/32/64/128/512/1024px，母版为312px透明位图。版本、统一缩放和验证范围见[系列资源记录](../Docs/Design/Yibo系列Logo-20261014/README.md)。

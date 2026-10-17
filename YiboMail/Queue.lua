@@ -1,7 +1,16 @@
 local Addon = _G.YiboMail
 local Queue = { state = "idle", actions = {}, completed = 0 }; Addon.Queue = Queue
-local function Fingerprint(mails)
-    local parts = {}; for _, mail in ipairs(mails) do parts[#parts + 1] = mail.signature end; table.sort(parts); return Addon.Encode(parts)
+local REQUEST_INTERVAL, ACTION_TIMEOUT = 1, 30
+local function SignatureSequence(mails)
+    local result = {}; for _, mail in ipairs(mails) do result[#result + 1] = mail.signature end
+    return result
+end
+local function MatchesSequence(mails, signatures, allowAdditional)
+    if not signatures or #mails < #signatures or (not allowAdditional and #mails ~= #signatures) then return false end
+    for index, signature in ipairs(signatures) do
+        if mails[index].signature ~= signature then return false end
+    end
+    return true
 end
 function Queue:Notify()
     if Addon.publicationBatch then self.notifyPending = true; return end
@@ -18,7 +27,9 @@ function Queue:Notify()
 end
 function Queue:Discard()
     if self.pending then return nil, Addon:T("UI.TEXT_0530") end
-    self.state, self.actions, self.completed, self.message, self.pauseCode = "idle", {}, 0, nil, nil; return true
+    self.state, self.actions, self.completed, self.message, self.pauseCode = "idle", {}, 0, nil, nil
+    self.lastRequestAt, self.nextScheduled = nil, nil
+    return true
 end
 function Queue:Pause(reason, code)
     self.state, self.message = "paused", reason or Addon:T("UI.TEXT_0252")
@@ -125,6 +136,7 @@ function Queue:Start(actions)
         end
     end
     self.actions, self.completed, self.index, self.state, self.message, self.pauseCode = CopyActions(actions), 0, 1, "running", Addon:T("UI.TEXT_0426"), nil
+    self.lastRequestAt, self.nextScheduled = nil, nil
     self.verifiedMails, self.removedIndexes = mails, {}
     self:Next(); return true
 end
@@ -135,6 +147,17 @@ function Queue:Next()
         self.state, self.message = "complete", Addon:T("UI.TEXT_0404")
         if Addon:GetInboxPreferences().showSummary then Addon:Print(Addon:T("UI.TEXT_0405") .. self.completed .. "/" .. #self.actions .. Addon:T("UI.TEXT_0053")) end
         self:Notify(); return
+    end
+    local elapsed = self.lastRequestAt and (GetTime() - self.lastRequestAt) or REQUEST_INTERVAL
+    if elapsed < REQUEST_INTERVAL then
+        if not self.nextScheduled then
+            self.nextScheduled = true
+            C_Timer.After(REQUEST_INTERVAL - elapsed, function()
+                Queue.nextScheduled = nil
+                if Queue.state == "running" then Queue:Next() end
+            end)
+        end
+        return
     end
     local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     if not current or current.id ~= action.characterID then self:Pause(Addon:T("UI.TEXT_0278")); return end
@@ -170,10 +193,11 @@ function Queue:Next()
     local after = {}; for _, entry in ipairs(mails) do after[#after + 1] = entry.inboxIndex == mail.inboxIndex and expected or entry end
     local removed = {}; for _, entry in ipairs(mails) do if entry.inboxIndex ~= mail.inboxIndex then removed[#removed + 1] = entry end end
     self.pending = { action = action, expected = expected, mailCollected = #expected.attachments == 0 and expected.money == 0,
-        expectedFingerprint = Fingerprint(after),
-        removedFingerprint = #expected.attachments == 0 and expected.money == 0 and Fingerprint(removed) or nil,
+        expectedSignatures = SignatureSequence(after),
+        removedSignatures = #expected.attachments == 0 and expected.money == 0 and SignatureSequence(removed) or nil,
         originalIndex = originalIndex, targetIndex = index,
         startedAt = GetTime(), success = false, updated = false }
+    self.lastRequestAt = self.pending.startedAt
     self.invoking = true
     local fn = action.slot == "money" and TakeInboxMoney or TakeInboxItem
     local ok, errorMessage
@@ -187,8 +211,12 @@ end
 function Queue:OnScan(mails)
     local pending = self.pending
     if not pending or pending.interference or not pending.success or not pending.updated then return false end
-    local fingerprint = Fingerprint(mails)
-    if fingerprint ~= pending.expectedFingerprint and fingerprint ~= pending.removedFingerprint then
+    local expectedMatches = MatchesSequence(mails, pending.expectedSignatures, false)
+    -- GetInboxNumItems exposes at most the first 100 messages. When a complete
+    -- message is collected, the next unseen message can enter that visible
+    -- window immediately, so the old remaining messages must match its prefix.
+    local removedMatches = MatchesSequence(mails, pending.removedSignatures, true)
+    if not expectedMatches and not removedMatches then
         pending.mismatchScans = (pending.mismatchScans or 0) + 1
         if pending.mismatchScans == 1 and C_Timer and C_Timer.After then
             -- The client can emit MAIL_INBOX_UPDATE before the mailbox APIs
@@ -201,7 +229,7 @@ function Queue:OnScan(mails)
         self:Pause(Addon:T("UI.TEXT_0331")); return true
     end
     self.verifiedMails = mails
-    local targetRemoved = pending.removedFingerprint ~= nil and fingerprint == pending.removedFingerprint
+    local targetRemoved = removedMatches
     if targetRemoved and pending.originalIndex then self.removedIndexes[pending.originalIndex] = true end
     local action = pending.action; action.state = "success"; self.completed = self.completed + 1
     action.mailCollected = pending.mailCollected
@@ -278,7 +306,7 @@ function Queue:OnEvent(event, ...)
 end
 function Queue:Install()
     Addon.Frame:HookScript("OnUpdate", function()
-        if Queue.pending and GetTime() - Queue.pending.startedAt > 12 and Queue.state == "running" then Queue:Pause(Addon:T("UI.TEXT_0477")) end
+        if Queue.pending and GetTime() - Queue.pending.startedAt > ACTION_TIMEOUT and Queue.state == "running" then Queue:Pause(Addon:T("UI.TEXT_0477")) end
     end)
     if hooksecurefunc then
         for _, name in ipairs({ "TakeInboxItem", "TakeInboxMoney", "AutoLootMailItem", "ReturnInboxItem", "DeleteInboxItem" }) do

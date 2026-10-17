@@ -719,7 +719,7 @@ function Page:Register()
         brokerName = "YiboMail",
         pageID = self.ID,
         text = Addon:T("ENTRY.TITLE"),
-        icon = "Interface\\AddOns\\YiboMail\\Media\\YiboMailIcon-v1",
+        icon = "Interface\\AddOns\\YiboMail\\Media\\YiboMailIcon",
         defaultChannels = { minimap = false, broker = false, builtinBar = false },
     })
 end
