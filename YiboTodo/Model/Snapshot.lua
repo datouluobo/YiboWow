@@ -414,7 +414,15 @@ function Snapshot:Build()
                     character.monitoringProjects[monitoringGroupID] = projects
                 end
             end
-            for groupID, projects in pairs(specialProjects) do character.monitoringProjects[groupID] = projects end
+            for groupID, projects in pairs(specialProjects) do
+                character.monitoringProjects[groupID] = projects
+                for _, project in ipairs(projects) do
+                    if project.nextChangeAt and project.nextChangeAt > now
+                        and (not nextTransitionAt or project.nextChangeAt < nextTransitionAt) then
+                        nextTransitionAt = project.nextChangeAt
+                    end
+                end
+            end
             value.characters[characterID] = character
         end
     end

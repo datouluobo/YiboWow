@@ -9,25 +9,51 @@ local function NextReset(definition, now)
     return Addon.Model.Schedule:NextResetAt(now, definition.resetHour or 7)
 end
 
-local function EventKey(now)
-    if date then
-        local current = date("*t", now)
-        if current and current.year and current.month and current.day then
-            local monthStart = time({ year = current.year, month = current.month, day = 1, hour = 12 })
-            local first = date("*t", monthStart)
-            if first then
-                -- The Faire's weekly quest reset is Thursday, while %W changes
-                -- on Monday. Key both halves of the event by its month and
-                -- the Thursday reset so completed tasks become actionable
-                -- again at the actual in-game recovery point.
-                local firstSunday = 1 + ((8 - tonumber(first.wday or 1)) % 7)
-                local cycle = current.day >= firstSunday + 4 and 2 or 1
-                return string.format("%04d-%02d-%d", current.year, current.month, cycle)
+local function RealmDate(now)
+    if C_DateAndTime and type(C_DateAndTime.GetCurrentCalendarTime) == "function" then
+        local ok, current = pcall(C_DateAndTime.GetCurrentCalendarTime)
+        if ok and current and current.year and current.month and current.monthDay and current.weekday then
+            return { year = current.year, month = current.month, day = current.monthDay, wday = current.weekday }
+        end
+    end
+    return date and date("*t", now)
+end
+
+local function EventPeriod(now)
+    local current = RealmDate(now)
+    if type(current) == "table" and tonumber(current.wday) then
+        -- Calendar visibility determines whether the Faire is open. Its task
+        -- identity is the actual Sunday/Thursday boundary, so two openings in
+        -- one month cannot share completion records. Sunday opens at 00:00;
+        -- the second task cycle starts at Thursday 07:00, not at midnight.
+        local sunday = Addon.Model.Schedule:CurrentResetAt(now, 0) - (current.wday - 1) * 86400
+        local thursday = sunday + 4 * 86400 + 7 * 3600
+        local startAt = now < thursday and sunday or thursday
+        local resetAt = now < thursday and thursday or sunday + 7 * 86400
+        return "darkmoon:" .. tostring(startAt), startAt, resetAt
+    end
+    return tostring(math.floor(now / 604800)), nil, Addon.Model.Schedule:NextResetAt(now, 0)
+end
+
+local function EventObservation(record, definition, now)
+    local days = record and record.days and record.days[definition.id]
+    if not days then return nil end
+    local key, startAt = EventPeriod(now)
+    if days[key] then return days[key] end
+    -- Preserve current-cycle completions from the former YYYY-MM-1/2 keys,
+    -- but never infer validity from those keys alone. Historical data stays
+    -- intact; subsequent turn-ins are written under the new boundary key.
+    local latest
+    for legacyKey, day in pairs(days) do
+        if startAt and type(legacyKey) == "string" and string.match(legacyKey, "^%d%d%d%d%-%d%d%-[12]$") then
+            local completedAt = tonumber(day.completedAt) or tonumber(day.observedAt)
+            if day.state == "completed" and completedAt and completedAt >= startAt and completedAt <= now
+                and (not latest or completedAt > (tonumber(latest.completedAt) or tonumber(latest.observedAt) or 0)) then
+                latest = day
             end
         end
-        return date("%Y-%W", now)
     end
-    return tostring(math.floor(now / 604800))
+    return latest
 end
 
 local function QuestInLog(questID)
@@ -51,9 +77,9 @@ local function IsCompleted(questID)
     return ok and value == true
 end
 
-local function IsDarkmoonOpen()
-    local today = date and date("*t")
-    if not today then return nil end
+local function IsDarkmoonOpen(now)
+    local today = RealmDate(now)
+    if type(today) ~= "table" then return nil end
     local function ScheduledThisWeek()
         -- Darkmoon opens on the first Sunday of each month and closes at the
         -- end of the following Saturday. Calendar data is preferred, but some
@@ -172,10 +198,14 @@ function Provider:RecordTurnIn(characterID, questID)
             else
                 local record = Addon.Database:GetProvider(characterID, self.id, true)
                 record.days = record.days or {}
-                local key = definition.scheduleKind == "event-weekly" and EventKey(now) or ServerDay(definition, now)
+                local key, resetAt
+                if definition.scheduleKind == "event-weekly" then
+                    local startAt
+                    key, startAt, resetAt = EventPeriod(now)
+                else key, resetAt = ServerDay(definition, now), NextReset(definition, now) end
                 local days = record.days[id] or {}; record.days[id] = days
                 local day = days[key] or {}; days[key] = day
-                day.state, day.completedAt, day.observedAt, day.nextResetAt = "completed", now, now, NextReset(definition, now)
+                day.state, day.completedAt, day.observedAt, day.nextResetAt = "completed", now, now, resetAt
             end
             Addon:NotifyChanged()
             return true
@@ -201,13 +231,13 @@ function Provider:BuildProject(characterID, definition, now)
         return { groupID = definition.id, monitoringGroupID = definition.monitoringGroupID, label = ActivityLabel(definition), order = definition.order, state = completed and "completed" or "actionable", iconKind = iconKind, icon = icon, fallbackIcon = definition.icon, nextResetAt = NextReset(definition, now), questID = definition.questID, observedAt = day and day.observedAt, statusText = completed and Addon:T("STATUS.HOLIDAY_CLAIMED") or (day and day.observedAt and Addon:T("STATUS.HOLIDAY_NOT_CLAIMED") or Addon:T("STATUS.CLAIM_UNOBSERVED")) }
     end
     if definition.scheduleKind ~= "daily-07" then
-        local open = IsDarkmoonOpen()
+        local open = IsDarkmoonOpen(now)
         -- The fair is not a pending/unknown daily. Outside its confirmed
         -- window the whole monitoring group must disappear, rather than
         -- leaving a column of question-mark placeholders.
         if open ~= true then return nil end
         local record = Addon.Database:GetProvider(characterID, self.id, false)
-        local day = record and record.days and record.days[definition.id] and record.days[definition.id][EventKey(now)]
+        local day = EventObservation(record, definition, now)
         return { groupID = definition.id, monitoringGroupID = definition.monitoringGroupID, label = ActivityLabel(definition), order = definition.order, state = day and day.state == "completed" and "completed" or "actionable", iconKind = iconKind, icon = icon, fallbackIcon = definition.icon, dailyTaskLabel = ActivityTaskLabel(definition), statusText = day and day.state == "completed" and Addon:T("STATUS.DARKMOON_DONE") or Addon:T("STATUS.DARKMOON_OPEN") }
     end
     local record = Addon.Database:GetProvider(characterID, self.id, false)
@@ -221,11 +251,16 @@ function Provider:GetProject(characterID, definition, now)
     if not project then return nil end
     project.scope = definition.scope
     project.period = definition.scheduleKind == "event-weekly" and "weekly" or "daily"
-    project.cycleKey = definition.scheduleKind == "event-weekly" and EventKey(now) or ServerDay(definition, now)
+    if definition.scheduleKind == "event-weekly" then
+        local key, _, resetAt = EventPeriod(now)
+        project.cycleKey, project.nextResetAt = key, resetAt
+    else project.cycleKey = ServerDay(definition, now) end
     -- Re-evaluate calendar visibility at midnight as well as the source reset.
-    project.nextChangeAt = definition.scheduleKind == "event-weekly" and Addon.Model.Schedule:NextResetAt(now, 0) or project.nextResetAt
+    project.nextChangeAt = definition.scheduleKind == "event-weekly"
+        and math.min(Addon.Model.Schedule:NextResetAt(now, 0), project.nextResetAt) or project.nextResetAt
     local record = Addon.Database:GetProvider(characterID, self.id, false)
     local day = record and record.days and record.days[definition.id] and record.days[definition.id][project.cycleKey]
+    if definition.scheduleKind == "event-weekly" then day = EventObservation(record, definition, now) end
     local account = definition.scope == "account" and Addon.db.byAccount.specialActivities and Addon.db.byAccount.specialActivities[definition.id]
     project.observedAt = day and day.observedAt or (account and account.serverDay == project.cycleKey and account.completedAt) or nil
     return project
@@ -236,9 +271,9 @@ end
 function Provider:GetTargetProject(characterID, definition, now)
     local project = self:GetProject(characterID, definition, now)
     if project then return project end
-    if definition.scheduleKind == "event-weekly" and IsDarkmoonOpen() == false then
+    if definition.scheduleKind == "event-weekly" and IsDarkmoonOpen(now) == false then
         return { groupID = definition.id, label = ActivityLabel(definition), state = "not-applicable",
-            scope = definition.scope, period = "weekly", cycleKey = EventKey(now),
+            scope = definition.scope, period = "weekly", cycleKey = EventPeriod(now),
             nextChangeAt = Addon.Model.Schedule:NextResetAt(now, 0), statusText = Addon:T("STATUS.ACTIVITY_CLOSED") }
     end
 end
