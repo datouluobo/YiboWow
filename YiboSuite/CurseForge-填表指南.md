@@ -17,9 +17,11 @@
 | Issues（若启用此入口） | https://github.com/datouluobo/YiboWow/issues |
 | Project type | 普通项目，不勾 Experimental |
 | License | 沿用作者已确定的授权；当前 Suite 未声明开放源代码许可证。如采用保留权利的发行方式，选择 All Rights Reserved，不自行选择 MIT/GPL。此字段不替代随包第三方库通知。 |
-| Logo / Avatar | 使用已确认归属 Suite 的品牌图；当前任务未制作 Suite 专属 Logo。 |
+| Logo / Avatar | 使用 `Media/Mists/YiboSuite-Mists-Logo-512.png`，透明 PNG；原 Core 主体配右下对齐的翡翠绿 MoP 文字，已确认定稿。 |
 
 ## Description（可复制的英文正文）
+
+当前应复制同目录 `CURSEFORGE_DESCRIPTION.md`：英文在前、中文在后，插件名称均带 CF 站内链接。下文为早期英文草稿。
 
 YiboSuite is a modular collection of 15 Yibo addons for Mists of Pandaria Classic, combining account-wide tracking with everyday quality-of-life features.
 
@@ -47,7 +49,7 @@ This Suite targets MoP Classic only. The included BeastPaths maintenance package
 | Game Version / Flavor | MoP Classic / Mists of Pandaria Classic |
 | Supported Version | 5.5.4（与当前 14 个主组件构建配置对应；不勾选未验收版本） |
 | Changelog format | Markdown（若支持格式选择） |
-| Changelog | 粘贴 Releases/v1.0.0/CHANGELOG.md 的完整正文，不能用单体 Changelog 替代。 |
+| Changelog | 粘贴 Releases/v1.0.0/CURSEFORGE_CHANGELOG.md：仅列英文插件名与本包具体版本号。随包完整安装与依赖说明仍见 CHANGELOG.md 和 INSTALL.md。 |
 | Required Dependencies | 留空；本包已包含 Core 和组件运行文件，不要求 CF 再安装单体。 |
 | Optional Dependencies | 不把本包已含的单体列成可选下载。 |
 | Incompatible | 不因“同时管理未验证”就标记运行不兼容；通过项目正文与文件 Changelog 说明限制。 |

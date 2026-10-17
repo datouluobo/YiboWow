@@ -22,4 +22,4 @@ Suite 发布资料独立保存在 `YiboSuite/Releases/v<版本>/`，包括自动
 
 本次仅生成本地候选安装包，未上传。CF 多目录包审核、项目归属与客户端同时管理未验收；不能把本地打包成功视为 CF 或游戏内验收通过。现有工作区验收记录应按本次组件快照复核，尤其是中英文客户端与手动语言模式。
 
-完整安装与更新规则见 [INSTALL.md](INSTALL.md)，每次下载对应内容见 Releases 下该版本的 Changelog。CF 文件页发布时使用该文件的完整 Changelog，不引用单体滚动更新日志替代组件清单。
+完整安装与更新规则见 [INSTALL.md](INSTALL.md)，每次下载对应内容见 Releases 下该版本的 Changelog。CF 项目介绍使用 [CURSEFORGE_DESCRIPTION.md](CURSEFORGE_DESCRIPTION.md)，英文在前、中文在后，插件名包含 CF 站内链接；CF 文件页使用该版本 `CURSEFORGE_CHANGELOG.md`，仅列英文插件名与精确版本。随包完整 Changelog 保留依赖与安装规则，不引用单体滚动更新日志替代组件清单。

@@ -1,0 +1,17 @@
+| Addon | Version |
+| :--- | :--- |
+| YiboAltoBoss | 2.7.1 |
+| YiboAutoOpen | 1.2.3 |
+| YiboBeastPaths | v1.8 |
+| YiboBuilds | 1.5.0 |
+| YiboCore | 1.12.6 |
+| YiboCrafting | 1.2.1 |
+| YiboCurrency | 1.0.0 |
+| YiboLegendary | 2.2.3 |
+| YiboMail | 1.2.16-api1 |
+| YiboMounts | 1.0.0 |
+| YiboQuestBlocker | 3.1.1 |
+| YiboReputation | 1.7.2 |
+| YiboTaskHub | 0.6.0 |
+| YiboTodo | 1.2.1 |
+| YiboVault | 1.2.3-api1 |
