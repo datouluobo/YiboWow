@@ -593,7 +593,13 @@ end
 function Entry:HandleEntryClick(id, button)
     if not self:GetEntryAvailability(id) then return false end
     self:CloseEntryPreview()
-    if button == "RightButton" then Core.AccountView:ShowSettings("display")
+    if button == "RightButton" then
+        if id == "YiboCore" then
+            Core.AccountView:ShowSettings("display")
+        else
+            local entry = self.businessEntries[id]
+            Core.AccountView:ShowSettings(ResolveBusinessPageID(entry))
+        end
     else
         Core.AccountView:Toggle(id ~= "YiboCore" and ResolveBusinessPageID(self.businessEntries[id]) or nil)
     end

@@ -19,7 +19,7 @@ Core 独占入口配置、LDB 对象、内置条布局与共用预览生命周�
 | `SetBuiltinBarOption(key, value)` | locked/showNames 布尔值，iconSize 数值16–48，spacing 数值0–20；v2 增加 showBorder 布尔值、background 枚举 theme/black/charcoal/navy/forest、backgroundAlpha 数值0–1；即时生效，数值有界归一化，非法键／类型 false |
 | `SetBuiltinBarPosition(point, relativePoint, x, y)` | 保存锚点和偏移；异常值归一化；运行时限制在安全屏幕范围 |
 | `GetEntryAvailability(id)` | 已注册、未注销，且解析后的目标页面通过现有 PageEnabled 规则；返回布尔值。Core 依共享窗口可用性 |
-| `HandleEntryClick(id, mouseButton)` | 不可用 false；右键打开 display 设置，左键沿现有解析打开业务页面／Core 框架；有效 true |
+| `HandleEntryClick(id, mouseButton)` | 不可用 false；Core 入口右键打开 display 设置，业务入口右键打开其解析后的业务页面设置；左键沿现有解析打开业务页面／Core 框架；有效 true |
 | `ShowEntryPreview(id, anchor, source)` | source 使用 minimap/broker/builtinBar；不可用或当前不允许预览返回 false，否则沿原窗口预览路径；异步渲染仍由原 token 合并与取消机制管理 |
 | `CloseEntryPreview(id?, source?)` | 仅清理匹配的当前所有者；两者省略清理当前预览；关闭条不能误清理 Broker／小地图预览 |
 | `GetBuiltinBarEntries()` | 已选且可用列表；默认 Core 首位，之后按 addonName/id 排序；v2 优先应用用户保存的顺序，未排序的新入口按默认规则追加；不受总开关过滤，用于设置统计；仅返回 id/addonName/text/icon 元数据副本，不暴露按钮或 Broker 内部引用 |
@@ -28,7 +28,7 @@ Core 独占入口配置、LDB 对象、内置条布局与共用预览生命周�
 
 ## 生命周期和交互
 
-入口注册／注销、配置及页面注册／注销刷新展示；显示开关修改即时刷新且不改写通道。统一右键进入“显示与入口”，未增加入口定位参数。内置条不需要外部展示插件，总开关关闭不影响其它通道；总开关开启且无可用入口不显示空白条。
+入口注册／注销、配置及页面注册／注销刷新展示；显示开关修改即时刷新且不改写通道。Core 入口右键进入“显示与入口”，业务入口右键直接选中对应业务页面的设置项；左键行为不变。内置条不需要外部展示插件，总开关关闭不影响其它通道；总开关开启且无可用入口不显示空白条。
 
 外部 LDB 不支持通用注销：停用后立即撤销交互，下次重载不注册；外部图标隐藏由展示插件控制，不改写 LDB 私有表。Core 和业务 Broker 均支持初始关闭后即时创建、停用后恢复。同名非本 Core 对象不覆盖。LibStub 版本机制保留较新共享库。
 

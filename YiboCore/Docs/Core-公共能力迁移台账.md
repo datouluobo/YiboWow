@@ -211,6 +211,8 @@ ameMode=original/short` 与 `realmMode=omit/sameRealm/full` 独立选择；同�
 
 ## CAP-004：账号页面、入口与设置接入基线
 
+2026-10-18：Core 升至 1.12.7 / API 13，修正 `HandleEntryClick` 的业务入口右键路由，Core 入口仍打开“显示与入口”，业务 Broker／小地图／内置信息条直接打开对应业务页面设置；左键行为不变，无新增业务插件依赖。契约见 [三通道入口与内置条](API-v13-入口三通道与内置条.md)。
+
 2026-10-13：Core 1.12.1 / API13 工作树新增 `account-preview-characters:1`，公开页面字段 `previewCharacterLimit`，默认20名兼容、false保留全部准入角色。契约见 [悬停角色范围](API-v13-悬停角色范围.md)。消费者按技术名：YiboMail 1.2.13 已接入代码，显式检查能力；WorkspaceSpec 验证24角色跨服务器、末位仓库角色、旧默认与显式数量，中英文1／4／18／24行含提醒／无提醒完整尺寸与受限滚动、缺失能力停止。客户端仍待验收，记部分接入；其它业务插件新字段待评估，默认行为保持。CAP-001 本轮服务器名称继续复用 FormatName，以选中范围为参考；CAP-002 原生输入未改、CAP-003 附件解析未改、CAP-005 队列通知未改、CAP-006 无新增引导、CAP-007 既有 identityOnly 保持、CAP-008 既有目标绑定保持，无新增本地公共能力实现。
 
 2026-10-11：Core 工作树 API13 新增 [三通道入口与内置条契约](API-v13-入口三通道与内置条.md)，起始提供 account-entry:2 / builtin-entry-bar:2、schema11；后续 `builtin-entry-bar` 已向后兼容升至 v3，见 2026-10-12 更新。旧 RegisterBusinessEntry/defaultMode/legacyIDs 兼容，不提高未改业务插件最低版本。Core 的小地图／Broker／内置条及设置已统一接入，1156项入口／布局专项与相关回归通过；真实业务客户端验收待完成，各插件下表状态不因此变更。没有新增业务本地实现，后续主动消费新 API 时检查 API13 及所需能力。最近审查 2026-10-12；证据见实施记录。
