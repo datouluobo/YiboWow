@@ -76,7 +76,9 @@ function Plans:Observe()
             end
         end
     end
-    if YAB.Holiday and YAB.Holiday:ObservePlanned("holiday:coren-direbrew") then changed = true end
+    for _, boss in ipairs(YAB.Holiday and YAB.Holiday:GetBosses() or {}) do
+        if YAB.Holiday:ObservePlanned(boss.key) then changed = true end
+    end
     if changed then self:ScheduleChange() end
 end
 function Plans:Progress(characterID, target)
@@ -301,6 +303,10 @@ function Plans:Initialize()
             YAB.InvalidateInstanceCatalog()
             YAB.TargetCatalog:Invalidate()
             core.Contracts:NotifyChanged(Plans.OWNER, Plans.catalogRef, {})
+        end
+        if event == "CALENDAR_UPDATE_EVENT_LIST" then
+            if YAB.Holiday then YAB.Holiday:OnCalendarUpdated() end
+            Plans:ScheduleChange()
         end
         Plans:Observe()
     end)

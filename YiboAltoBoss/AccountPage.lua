@@ -452,18 +452,33 @@ local function PhaseTitle()
     return YAB.Holiday and YAB.Holiday:HasActiveBosses() and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.PHASE_ROLE") or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.PHASE_2")
 end
 
-local function SetHolidayAction(control, boss)
+local function GetHolidayActionDetails(boss)
     local queue = YAB.Holiday:GetQueueState(boss)
     local text, lines = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.QUEUE"), {}
     if queue.state == "queued" then
         text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.LEAVE_QUEUE"); lines[1] = { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.YOU_ARE_QUEUED_FOR_THIS_SEASONAL_DUNGEON_CLICK_TO_LEAVE"), color = C.accent }
+        local estimate, elapsed = YAB.Holiday:GetQueueWait(boss)
+        local value = estimate and FormatDuration(estimate) or _G.YiboCore.Locale:Get("YiboAltoBoss", "QUEUE.WAIT_UNAVAILABLE")
+        lines[#lines + 1] = { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "QUEUE.ESTIMATED_WAIT", value), color = C.text }
+        local elapsedValue = elapsed and FormatDuration(elapsed) or _G.YiboCore.Locale:Get("YiboAltoBoss", "QUEUE.WAIT_UNAVAILABLE")
+        lines[#lines + 1] = { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "QUEUE.ELAPSED_WAIT", elapsedValue), color = C.text }
     elseif queue.state == "ready" then
         lines[1] = { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.QUEUE_FOR_THE_SEASONAL_DUNGEON_USING_YOUR_SELECTED_ROLES"), color = C.text }
         lines[#lines + 1] = { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ROLES") .. table.concat(YAB.Holiday:GetRoleNames(), " / "), color = C.muted }
     else
         text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CANNOT_QUEUE"); lines[1] = { text = queue.reason or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THIS_CHARACTER_CANNOT_QUEUE_RIGHT_NOW"), color = C.muted }
     end
-    SetSemanticButton(control, text, queue.state == "ready" and C.successSurface or (queue.state == "queued" and C.timer or FIXED_CELL), boss.name .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ACTION"), lines)
+    return queue, text, lines
+end
+
+local function SetHolidayAction(control, boss)
+    local queue, text, lines = GetHolidayActionDetails(boss)
+    local title = boss.name .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ACTION")
+    SetSemanticButton(control, text, queue.state == "ready" and C.successSurface or (queue.state == "queued" and C.timer or FIXED_CELL), title, lines)
+    control:SetScript("OnEnter", function(self)
+        local _, _, currentLines = GetHolidayActionDetails(boss)
+        Theme:ShowTooltip(self, title, currentLines)
+    end)
     if queue.state == "ready" then
         -- Reuse Core's selected-state language for an actionable holiday
         -- button: the bright teal outline and label are visible in the dense

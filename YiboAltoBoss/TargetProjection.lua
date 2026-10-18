@@ -39,7 +39,12 @@ function YAB.GetBossList(context)
 end
 local Columns, Status, Tooltip = YAB.GetLockoutColumns, YAB.GetLockoutStatus, YAB.GetLockoutTooltip
 function YAB.GetLockoutColumns(context)
-    local columns, seen, planned = Columns(context), {}, {}
+    local columns, seen, planned, plannedMaps = Columns(context), {}, {}, {}
+    local byMap = {}
+    for _, column in ipairs(columns) do
+        local mapID = tonumber(column.mapID or column.instanceID)
+        if mapID then byMap[mapID] = column end
+    end
     local config = Plans:VisibleConfiguration(context)
     for _, goals in pairs(config and config.targets or {}) do for _, goal in ipairs(goals) do
         if goal.active and goal.kind == "instance" then
@@ -47,15 +52,30 @@ function YAB.GetLockoutColumns(context)
             if not seen[key] then
                 seen[key] = true
                 local definition = YAB.TargetCatalog:Get(goal.catalogID)
+                local mapID = definition and tonumber(definition.mapID)
+                local base = mapID and byMap[mapID]
+                local fallback
+                if base then
+                    fallback = {}
+                    for field, value in pairs(base) do fallback[field] = value end
+                    -- Match the projected difficulty rather than an arbitrary
+                    -- saved lockout for the same instance.
+                    fallback.key, fallback.difficultyID = key, goal.difficultyID
+                end
+                if mapID then plannedMaps[mapID] = true end
                 planned[#planned + 1] = { key = key, plannedCatalogID = goal.catalogID, plannedDifficultyID = goal.difficultyID,
                     name = goal.title .. " · " .. tostring(goal.difficultyName), shortName = goal.title,
                     abbreviation = ((definition and definition.aliases[1]) or goal.title) .. "·" .. tostring(goal.difficultyName),
-                    difficultyName = goal.difficultyName, instanceID = definition and definition.mapID, isRaid = definition and definition.isRaid }
+                    difficultyName = goal.difficultyName, difficultyID = goal.difficultyID,
+                    mapID = mapID, instanceID = mapID, isRaid = definition and definition.isRaid,
+                    fallbackColumn = fallback }
             end
         end
     end end
     table.sort(planned, function(a, b) return tostring(a.key) < tostring(b.key) end)
-    for _, column in ipairs(columns) do planned[#planned + 1] = column end
+    for _, column in ipairs(columns) do
+        if not plannedMaps[tonumber(column.mapID or column.instanceID)] then planned[#planned + 1] = column end
+    end
     return planned
 end
 local function Goal(legacyKey, column)
@@ -68,7 +88,10 @@ end
 function YAB.GetLockoutStatus(legacyKey, column)
     if not column.plannedCatalogID then return Status(legacyKey, column) end
     local id, target = Goal(legacyKey, column)
-    if not target then return "not-applicable", "—" end
+    if not target then
+        if column.fallbackColumn then return Status(legacyKey, column.fallbackColumn) end
+        return "not-applicable", "—"
+    end
     local p = Plans:Progress(id, target)
     return p.state == "completed" and "clear" or (p.state == "ready" and "open" or "unknown"),
         p.state == "unknown" and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNCONFIRMED") or p.reason, p.lockout
@@ -76,7 +99,10 @@ end
 function YAB.GetLockoutTooltip(legacyKey, column)
     if not column.plannedCatalogID then return Tooltip(legacyKey, column) end
     local id, target = Goal(legacyKey, column)
-    if not target then return { _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THIS_CHARACTER_HAS_NO_GOAL_FOR_THIS_DIFFICULTY") } end
+    if not target then
+        if column.fallbackColumn then return Tooltip(legacyKey, column.fallbackColumn) end
+        return { _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THIS_CHARACTER_HAS_NO_GOAL_FOR_THIS_DIFFICULTY") }
+    end
     local p = Plans:Progress(id, target)
     local lines = { _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SOURCE_ACTION_CENTER_GOAL"), _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.DIFFICULTY_2") .. tostring(target.difficultyName), _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.STATUS_2") .. p.reason }
     local definition = YAB.TargetCatalog:Get(target.catalogID)

@@ -485,6 +485,16 @@ CAP-008 设置与状态同步追加审查：Core 统一设置提供右上角按�
 
 ## CAP-009：公共语言服务与账号语言偏好
 
+2026-10-18 YiboAltoBoss 已排队时间Tooltip：CAP-009新增 `QUEUE.ELAPSED_WAIT` 一对中英文资源；CAP-004复用现有行动Tooltip，和预估时间相邻显示，同次系统查询计算已排队时长。API13与接口要求不变，无本地语言或计时回退。HolidayBossSpec261、语法及语言检查通过，客户端待确认。详见[排队状态同步修复](../../YiboAltoBoss/Docs/节日排队状态同步修复.md)。
+
+2026-10-18 YiboAltoBoss 排队预估Tooltip：CAP-009新增两对 owner 资源，CAP-004继续使用现有 Tooltip 显示／定位／关闭及行动单元格；API13要求不变，没有新增Core接口或本地语言回退。HolidayBossSpec252含中英文实际Tooltip渲染、最新估算与异常数据检查，BossGoals19及语法／语言检查通过；实机显示待验。详见[排队状态同步修复](../../YiboAltoBoss/Docs/节日排队状态同步修复.md)。
+
+2026-10-18 YiboAltoBoss 节日队列同步复核：实时状态与事件刷新复用 CAP-004 账号视图和 CAP-009 既有 owner 提示，API13要求不变，无新增Core契约或本地语言回退。HolidayBossSpec240、BossGoals19、InstanceKills56与语法检查通过，实际队列与系统图标状态仍待客户端核对。详见[同步修复](../../YiboAltoBoss/Docs/节日排队状态同步修复.md)。
+
+2026-10-18 YiboAltoBoss 四类节日副本核查：新增埃霍恩与皇冠药剂公司两对 owner 资源，四类日历／副本输入别名分别审查；仍要求 API13 / localization:1，无 Core 契约变化。复用 CAP-004 统一视图与 CAP-005／008 目标目录。HolidayBossSpec225（四类首领共12组语言场景）、既有 Boss 目标／副本回归、语法与语言静态检查通过；新增节日的排队和奖励仍待实机验证，既往范围的验收结论不扩大。详见[核查与验收](../../YiboAltoBoss/Docs/四类节日副本首领核查与验收.md)。
+
+2026-10-18 YiboAltoBoss 万圣节续接入：新增无头骑士显示名复用 API13 / localization:1 owner 资源，中英文各一项；节日目标继续经既有 CAP-005／008 契约枚举，无 Core 接口变化。HolidayBossSpec24、BossGoals19、CustomBossGoals25（含前置 BossGoals）、InstanceKills56、LockoutProjection16 与 Lua 语法通过；语言报告缺英文／格式差异为0，6个未知 key 位于未涉及的 AutoOpen。节日输入名称别名属识别数据。日历、排队、奖励及中英文客户端待验，不扩大此前实机验收结论。详见[接入与验收](../../YiboAltoBoss/Docs/万圣节首领接入与验收.md)。
+
 2026-10-13 Mail 1.2.13 截图修复：寄信发送／取消按钮和保留期确认直接使用 Mail owner 的 Core.Locale 资源，不再让客户端 CANCEL／ACCEPT 覆盖手动英文；中英文到期数值统一 d／h、估算保留~。NativeInboxSpec 验证中文原生标签在 Core 英文及中文的悬停／启禁刷新，WorkspaceSpec 验证两种语言的范围与高度。基础最低 Core 1.12.1 / API13，新增范围能力见 CAP-004；语言能力仍 localization:1。未修改游戏动态名称、历史快照或用户文本，客户端语言／布局验收仍待完成。
 
 Core 状态：**已提供（1.12.0 / API v13 工作树，未发布）**。能力 `localization:1`，最低 API13。契约见 [API v13 语言服务](API-v13-语言服务.md)；Core 当前 532 对资源已接入，175 项语言验证、206 项语言模拟布局及1133项入口专项与相关回归通过，真实客户端待验收。Core 保留旧 API，不推动无关业务整体提版本。

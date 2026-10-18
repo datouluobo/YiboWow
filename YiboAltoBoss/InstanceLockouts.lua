@@ -497,9 +497,11 @@ end
 function YAB.GetLockoutStatus(charKey, column)
     local record = EnsureCharacter(charKey)
     local lockout = record and record.instanceLockouts and record.instanceLockouts[column.key]
+    if lockout and column.difficultyID and lockout.difficultyID ~= column.difficultyID then lockout = nil end
     if not lockout and record and record.instanceLockouts then
         for _, candidate in pairs(record.instanceLockouts) do
-            if (column.instanceID and candidate.instanceID == column.instanceID) or (candidate.name == column.name) then
+            if ((column.instanceID and candidate.instanceID == column.instanceID) or (candidate.name == column.name))
+                and (not column.difficultyID or candidate.difficultyID == column.difficultyID) then
                 lockout = candidate
                 break
             end
@@ -523,7 +525,7 @@ function YAB.GetLockoutTooltip(charKey, column)
     local record = EnsureCharacter(charKey)
     local options = DB().settings.lockoutTooltip or {}
     local mapID = tonumber(column.mapID or column.instanceID)
-    local difficultyID = lockout and lockout.difficultyID or 1
+    local difficultyID = lockout and lockout.difficultyID or column.difficultyID or 1
     local function Text(key, ...) return Core.Locale:Get("YiboAltoBoss", key, ...) end
     local difficulty = lockout and lockout.difficultyName or (GetDifficultyInfo and GetDifficultyInfo(difficultyID))
     if column.isRaid and not lockout then difficulty = nil end

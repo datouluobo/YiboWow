@@ -11,19 +11,69 @@ local BOSSES = {
     {
         key = "holiday:coren-direbrew",
         name = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.BREWFEST_COREN_DIREBREW"),
+        englishName = "Coren Direbrew",
+        catalogAliases = { "Brewfest", "美酒节", "科林", "Coren" },
         reset = "holiday-daily",
         order = 80,
         group = "holiday",
         scheduleKind = "event-daily-07",
         resetHour = 7,
-        activeWindow = {
-            start = { month = 9, day = 20, hour = 10 },
-            finish = { month = 10, day = 6, hour = 10 },
-        },
-        eventTitleAliases = { "美酒节", "Brewfest" },
+        eventTitleAliases = { "美酒节", "啤酒節", "美酒節", "Brewfest" },
         questID = 25483,
         lfgDungeonID = 287,
-        lfgNameAliases = { "科林·烈酒", "Coren Direbrew" },
+        lfgNameAliases = { "科林·烈酒", "柯林·烈酒", "Coren Direbrew" },
+        hidePhaseTracking = true,
+        trackPhase = false,
+    },
+    {
+        key = "holiday:ahune",
+        name = _G.YiboCore.Locale:Get("YiboAltoBoss", "HOLIDAY.AHUNE"),
+        englishName = "Ahune",
+        catalogAliases = { "Midsummer Fire Festival", "仲夏火焰节", "埃霍恩", "Ahune" },
+        reset = "holiday-daily",
+        order = 82,
+        group = "holiday",
+        scheduleKind = "event-daily-07",
+        resetHour = 7,
+        eventTitleAliases = { "仲夏火焰节", "仲夏火焰節", "Midsummer Fire Festival" },
+        questID = 25484,
+        lfgDungeonID = 286,
+        lfgNameAliases = { "埃霍恩", "艾胡恩", "Ahune" },
+        hidePhaseTracking = true,
+        trackPhase = false,
+    },
+    {
+        key = "holiday:crown-chemical",
+        name = _G.YiboCore.Locale:Get("YiboAltoBoss", "HOLIDAY.CROWN_CHEMICAL"),
+        englishName = "The Crown Chemical Co.",
+        catalogAliases = { "Love is in the Air", "情人节", "皇冠药剂公司", "Apothecary Hummel", "Crown Chemical" },
+        reset = "holiday-daily",
+        order = 83,
+        group = "holiday",
+        scheduleKind = "event-daily-07",
+        resetHour = 7,
+        eventTitleAliases = { "情人节", "愛就在身邊", "情人節", "Love is in the Air" },
+        questID = 25485,
+        lfgDungeonID = 288,
+        lfgNameAliases = { "皇冠药剂公司", "皇冠藥劑公司", "Crown Chemical", "药剂师汉摩尔", "藥劑師胡默爾", "Apothecary Hummel" },
+        hidePhaseTracking = true,
+        trackPhase = false,
+    },
+    {
+        key = "holiday:headless-horseman",
+        name = _G.YiboCore.Locale:Get("YiboAltoBoss", "HOLIDAY.HEADLESS_HORSEMAN"),
+        englishName = "Headless Horseman",
+        catalogAliases = { "Hallow's End", "万圣节", "无头骑士", "Headless Horseman" },
+        reset = "holiday-daily",
+        order = 81,
+        group = "holiday",
+        scheduleKind = "event-daily-07",
+        resetHour = 7,
+        -- The client's calendar determines the event dates for this realm.
+        eventTitleAliases = { "万圣节", "萬聖節", "Hallow's End", "Hallow’s End" },
+        questID = 25482,
+        lfgDungeonID = 285,
+        lfgNameAliases = { "无头骑士", "無頭騎士", "Headless Horseman" },
         hidePhaseTracking = true,
         trackPhase = false,
     },
@@ -41,31 +91,6 @@ local function DayKey(boss, now)
     return date("%Y-%j", now - (tonumber(boss.resetHour) or 7) * 3600)
 end
 
-local function IsWithinActiveWindow(boss, now)
-    local window = boss and boss.activeWindow
-    if not window then return true end
-
-    now = now or Now()
-    local current = date("*t", now)
-    if not current then return false end
-
-    local function Timestamp(spec)
-        return time({
-            year = current.year,
-            month = tonumber(spec.month),
-            day = tonumber(spec.day),
-            hour = tonumber(spec.hour) or 0,
-            min = tonumber(spec.min) or 0,
-            sec = tonumber(spec.sec) or 0,
-            isdst = current.isdst,
-        })
-    end
-
-    local startsAt = Timestamp(window.start)
-    local endsAt = Timestamp(window.finish)
-    return startsAt and endsAt and now >= startsAt and now < endsAt
-end
-
 local function CurrentCharacter(create)
     local key = YAB.GetCurrentCharKey and YAB.GetCurrentCharKey()
     local characters = YiboAltoBossDB and YiboAltoBossDB.characters
@@ -75,36 +100,53 @@ local function CurrentCharacter(create)
 end
 
 local function IsCalendarOpen(boss)
-    if not IsWithinActiveWindow(boss) then return false end
     if not (C_Calendar and type(C_Calendar.GetNumDayEvents) == "function" and type(C_Calendar.GetDayEvent) == "function") then return false end
-    local today = date("*t")
+    local today = date("*t", Now())
     if not today then return false end
-    local ok, count = pcall(C_Calendar.GetNumDayEvents, 0, today.day)
+    local monthOffset = 0
+    -- Calendar queries are relative to the month the player is browsing.
+    if type(C_Calendar.GetMonthInfo) == "function" then
+        local ok, viewed = pcall(C_Calendar.GetMonthInfo, 0)
+        if ok and type(viewed) == "table" and viewed.year and viewed.month then
+            monthOffset = (today.year - viewed.year) * 12 + today.month - viewed.month
+        end
+    end
+    local ok, count = pcall(C_Calendar.GetNumDayEvents, monthOffset, today.day)
     if not ok then return false end
+    local complete = true
     for index = 1, tonumber(count) or 0 do
-        local eventOK, event = pcall(C_Calendar.GetDayEvent, 0, today.day, index)
+        local eventOK, event = pcall(C_Calendar.GetDayEvent, monthOffset, today.day, index)
+        if not eventOK or type(event) ~= "table" then complete = false end
         local title = eventOK and event and string.lower(tostring(event.title or "")) or ""
         for _, alias in ipairs(boss.eventTitleAliases or {}) do
             local normalizedAlias = string.lower(tostring(alias))
             if normalizedAlias ~= "" and string.find(title, normalizedAlias, 1, true) then
-                return true
+                return true, true
             end
         end
+    end
+    return false, complete and (Holiday.calendarReady or (tonumber(count) or 0) > 0)
+end
+
+function Holiday:RequestCalendar()
+    if C_Calendar and type(C_Calendar.OpenCalendar) == "function" then
+        return pcall(C_Calendar.OpenCalendar)
     end
     return false
 end
 
-local function QuestCompleted(questID)
-    local query = C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted or IsQuestFlaggedCompleted
-    if type(query) ~= "function" then return false end
-    local ok, completed = pcall(query, questID)
-    return ok and completed == true
+function Holiday:OnCalendarUpdated()
+    self.calendarReady = true
 end
 
-local function LFGDailyRewardCompleted(boss)
-    if not boss or type(GetLFGDungeonRewards) ~= "function" then return false end
-    local ok, doneToday = pcall(GetLFGDungeonRewards, boss.lfgDungeonID)
-    return ok and doneToday == true
+local function DailyState(boss)
+    local query = C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted or IsQuestFlaggedCompleted
+    local questOK, questDone, rewardOK, rewardDone = false, nil, false, nil
+    if type(query) == "function" then questOK, questDone = pcall(query, boss.questID) end
+    if type(GetLFGDungeonRewards) == "function" then rewardOK, rewardDone = pcall(GetLFGDungeonRewards, boss.lfgDungeonID) end
+    if questOK and questDone == true then return "completed", "quest" end
+    if rewardOK and rewardDone == true then return "completed", "lfg-reward" end
+    if questOK and questDone == false and rewardOK and rewardDone == false then return "available" end
 end
 
 local function GetRecord(charKey, boss, create)
@@ -145,6 +187,12 @@ function Holiday:GetBoss(ref)
     return byKey[tostring(ref or "")]
 end
 
+function Holiday:GetBosses()
+    local result = {}
+    for _, boss in ipairs(BOSSES) do result[#result + 1] = boss end
+    return result
+end
+
 function Holiday:IsBoss(ref)
     return self:GetBoss(ref) ~= nil
 end
@@ -177,24 +225,17 @@ function Holiday:GetTargetSnapshot(charKey, ref)
     day.hour, day.min, day.sec = boss.resetHour, 0, 0
     local boundary = time(day)
     if boundary <= now then day.day = day.day + 1; boundary = time(day) end
-    for _, spec in pairs(boss.activeWindow or {}) do
-        local eventAt = time({ year = date("*t", now).year, month = spec.month, day = spec.day, hour = spec.hour or 0, min = 0, sec = 0 })
-        if eventAt and eventAt > now then boundary = math.min(boundary, eventAt) end
-    end
-    local open = IsCalendarOpen(boss)
-    return { open = open, availability = not IsWithinActiveWindow(boss) and "closed" or (open and "open" or "unknown"), cycleKey = DayKey(boss), nextResetAt = boundary,
+    local open, known = IsCalendarOpen(boss)
+    return { open = open, availability = open and "open" or (known and "closed" or "unknown"), cycleKey = DayKey(boss), nextResetAt = boundary,
         record = GetRecord(charKey, boss, false) }
 end
 
 function Holiday:ObservePlanned(ref)
     local boss = self:GetBoss(ref)
     if not boss or not IsCalendarOpen(boss) then return end
-    local query = C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted or IsQuestFlaggedCompleted
-    if type(query) ~= "function" or type(GetLFGDungeonRewards) ~= "function" then return end
-    local questOK, questDone = pcall(query, boss.questID)
-    local rewardOK, rewardDone = pcall(GetLFGDungeonRewards, boss.lfgDungeonID)
-    if not questOK or not rewardOK then return end
-    if questDone or rewardDone then return WriteRecord(boss, questDone and "quest" or "lfg-reward") end
+    local state, source = DailyState(boss)
+    if state == "completed" then return WriteRecord(boss, source) end
+    if state ~= "available" then return false end
     local character = CurrentCharacter(true)
     if not character then return end
     character.holidayBosses = character.holidayBosses or {}
@@ -207,22 +248,7 @@ end
 function Holiday:ObserveCurrent()
     local changed = false
     for _, boss in ipairs(self:GetActiveBosses()) do
-        local record = GetRecord(YAB.GetCurrentCharKey(), boss, true)
-        local questCompleted = QuestCompleted(boss.questID)
-        local rewardCompleted = LFGDailyRewardCompleted(boss)
-        if questCompleted or rewardCompleted then
-            if not (record and record.completed) then
-                changed = WriteRecord(boss, questCompleted and "quest" or "lfg-reward") or changed
-            end
-        elseif record and not record.completed then
-            -- Re-observing the same daily state is not a business change.
-        else
-            local character = CurrentCharacter(true)
-            character.holidayBosses = character.holidayBosses or {}
-            local records = character.holidayBosses[boss.key] or {}; character.holidayBosses[boss.key] = records
-            records[DayKey(boss)] = { observedAt = Now() }
-            changed = true
-        end
+        changed = self:ObservePlanned(boss.key) or changed
     end
     return changed
 end
@@ -438,17 +464,15 @@ function Holiday:GetQueueState(ref)
     if not boss then return { state = "unavailable", reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SEASONAL_BOSS_UNAVAILABLE") } end
     if not IsExpectedDungeon(boss) then return { state = "unavailable", reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THE_CLIENT_HAS_NO_MATCHING_SEASONAL_DUNGEON") } end
     local category = LE_LFG_CATEGORY_LFD
-    if type(GetLFGQueuedList) == "function" then
-        local queued = GetLFGQueuedList(category)
-        if type(queued) == "table" and queued[boss.lfgDungeonID] then return { state = "queued" } end
+    -- The live mode owns queue state. A dungeon-list entry alone must never
+    -- override an idle mode or imply that this specific dungeon is queued.
+    if type(GetLFGMode) ~= "function" then
+        return { state = "unavailable", reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THE_CLIENT_DOES_NOT_SUPPORT_DUNGEON_FINDER_QUEUES") }
     end
-    -- The selected-dungeon list can lag behind the live LFD queue state.
-    -- Query this boss's dungeon ID so another LFD queue cannot be cancelled here.
-    if type(GetLFGMode) == "function" then
-        local mode = GetLFGMode(category, boss.lfgDungeonID)
-        if mode == "queued" or mode == "rolecheck" or mode == "suspended" then
-            return { state = "queued" }
-        end
+    local ok, mode = pcall(GetLFGMode, category, boss.lfgDungeonID)
+    if not ok then return { state = "unavailable", reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CANNOT_QUEUE_RIGHT_NOW") } end
+    if mode == "queued" or mode == "proposal" or mode == "rolecheck" or mode == "suspended" then
+        return { state = "queued", mode = mode }
     end
     local available, joinable = false, false
     if type(IsLFGDungeonJoinable) == "function" then available, joinable = IsLFGDungeonJoinable(boss.lfgDungeonID) end
@@ -463,6 +487,41 @@ function Holiday:GetQueueState(ref)
     local roles = self:GetRoles()
     if #roles == 0 then return { state = "no-roles", reason = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SELECT_ROLES_IN_THE_DUNGEON_FINDER_FIRST") } end
     return { state = "ready", roles = roles }
+end
+
+function Holiday:GetQueueWait(ref)
+    local boss = self:GetBoss(ref)
+    if not boss or self:GetQueueState(boss).mode ~= "queued" or type(GetLFGQueueStats) ~= "function" then return nil end
+    -- Match Blizzard's queue display: myWait is return 16, in seconds.
+    local result = { pcall(GetLFGQueueStats, LE_LFG_CATEGORY_LFD, boss.lfgDungeonID) }
+    if not result[1] or not result[2] then return nil end
+    local estimate, queuedAt, activeID = result[17], result[18], result[19]
+    if activeID and activeID ~= boss.lfgDungeonID then return nil end
+    local function Valid(value)
+        return type(value) == "number" and value == value and value >= 0 and value < math.huge
+    end
+    if not Valid(estimate) then estimate = nil end
+    local elapsed
+    if Valid(queuedAt) and type(GetTime) == "function" then
+        local now = GetTime()
+        if Valid(now) and queuedAt <= now then elapsed = now - queuedAt end
+    end
+    return estimate, elapsed
+end
+
+function Holiday:RefreshQueueState()
+    if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+    if self.queueRefreshPending or not (C_Timer and type(C_Timer.After) == "function") then return end
+    self.queueRefreshPending = true
+    -- Some LFG events arrive before GetLFGMode exposes the final state.
+    -- Coalesce a short follow-up pass instead of guessing from the event name.
+    C_Timer.After(0.1, function()
+        if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+    end)
+    C_Timer.After(0.5, function()
+        self.queueRefreshPending = nil
+        if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+    end)
 end
 
 local function ConfirmQueueChanges(boss, previous)

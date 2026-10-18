@@ -2439,6 +2439,7 @@ end
 local function HandleWorldEntry()
     EnsureDB()
     YAB.CheckForReset()
+    if YAB.Holiday and YAB.Holiday.RequestCalendar then YAB.Holiday:RequestCalendar() end
     if YAB.Holiday and YAB.Holiday.ObserveCurrent and YAB.Holiday:ObserveCurrent() then
         YAB.PersistDB()
     end
@@ -2464,9 +2465,13 @@ eventFrame:RegisterEvent("QUEST_LOG_UPDATE")
 eventFrame:RegisterEvent("LFG_COMPLETION_REWARD")
 eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 eventFrame:RegisterEvent("CALENDAR_UPDATE_EVENT_LIST")
-eventFrame:RegisterEvent("LFG_ROLE_UPDATE")
-eventFrame:RegisterEvent("LFG_UPDATE")
-eventFrame:RegisterEvent("LFG_QUEUE_STATUS_UPDATE")
+local holidayQueueEvents = {
+    LFG_ROLE_UPDATE = true, LFG_UPDATE = true, LFG_QUEUE_STATUS_UPDATE = true,
+    LFG_PROPOSAL_SHOW = true, LFG_PROPOSAL_UPDATE = true, LFG_PROPOSAL_DONE = true,
+    LFG_PROPOSAL_FAILED = true, LFG_PROPOSAL_SUCCEEDED = true,
+    LFG_ROLE_CHECK_SHOW = true, LFG_ROLE_CHECK_HIDE = true,
+}
+for event in pairs(holidayQueueEvents) do eventFrame:RegisterEvent(event) end
 eventFrame:SetScript("OnEvent", function(_, event, ...)
     local arg1 = ...
     if event == "ADDON_LOADED" and arg1 == ADDON_NAME then
@@ -2517,12 +2522,11 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
         -- The calendar is populated asynchronously after login.  Rebuild the
         -- account page once its event list is available so active holiday
         -- bosses are not omitted until the next reload.
+        if YAB.Holiday and YAB.Holiday.OnCalendarUpdated then YAB.Holiday:OnCalendarUpdated() end
         local changed = YAB.Holiday and YAB.Holiday.ObserveCurrent and YAB.Holiday:ObserveCurrent()
         if changed then YAB.PersistDB() end
         if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
-    elseif event == "LFG_ROLE_UPDATE" or event == "LFG_UPDATE" or event == "LFG_QUEUE_STATUS_UPDATE" then
-        -- Blizzard's Dungeon Finder role buttons changed; refresh the holiday
-        -- action and phase cells from the system-selected roles and queue state.
-        if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+    elseif holidayQueueEvents[event] then
+        if YAB.Holiday then YAB.Holiday:RefreshQueueState() end
     end
 end)

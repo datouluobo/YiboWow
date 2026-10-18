@@ -1,8 +1,8 @@
 # YiboAltoBoss
 
-当前工作树版本：**2.7.1**。统一矩阵预算已通过离线回归，用户于2026-10-16确认实机检查无问题；尚未打包发布。 请配套使用 **YiboCore 1.12.6 / API13**，启动时检查 `account-surface-budget:2` 及实际方法。
+当前源码版本：**2.8.0**（2026-10-18）。新增四类节日副本首领支持、排队时间提示，并修复重复副本列和排队状态同步。自动化检查通过；本次新增功能的实机验收状态见 Docs/四类节日副本首领核查与验收.md 和 Docs/节日排队状态同步修复.md。 请配套使用 **YiboCore 1.12.6 / API13**，启动时检查 `account-surface-budget:2` 及实际方法。
 
-Boss Tracker (YiboAltoBoss) tracks world-boss progress, seasonal encounters, custom targets, raid and dungeon lockouts, and dungeon entry history across a MoP Classic account. The current source version is 2.7.1. Basic tracking uses the YiboCore account page and requires Core 1.12.6 / API v13 and the documented UI and localization capabilities. The optional per-character goal integration requires Core 1.12.2 / API v13, `business-item-actions:3`, and a compatible YiboTaskHub installation. TaskHub is still an unpublished project, so goal integration is available only when that compatible build is installed; base Boss tracking remains available without TaskHub; YiboCore is always required.
+Boss Tracker (YiboAltoBoss) tracks world-boss progress, seasonal encounters, custom targets, raid and dungeon lockouts, and dungeon entry history across a MoP Classic account. The current source version is 2.8.0. Basic tracking uses the YiboCore account page and requires Core 1.12.6 / API v13 and the documented UI and localization capabilities. The optional per-character goal integration requires Core 1.12.2 / API v13, `business-item-actions:3`, and a compatible YiboTaskHub installation. TaskHub is still an unpublished project, so goal integration is available only when that compatible build is installed; base Boss tracking remains available without TaskHub; YiboCore is always required.
 
 Optional YiboTaskHub integration supports per-character world-boss, seasonal-boss, and instance goals. AltoBoss provides the encounter catalog and progress; TaskHub owns the goal configuration and its account-page presentation. Goals can target a whole instance or selected encounters at an exact supported difficulty. Automatic display can be disabled while retaining manual views and kill history. World-boss progress uses reward observations; instance completion requires a complete encounter catalog and exact lockout data. Unknown or stale data remains unconfirmed. Older instances need a complete scan to establish a stable catalog; automatic cycle tracking for repeatedly run normal dungeons is not supported. The current goal integration requires the compatible, currently unpublished TaskHub build. See [runtime contract and acceptance](../Docs/行动中心-AltoBoss-运行契约与验收.md).
 
@@ -14,7 +14,7 @@ Optional YiboTaskHub integration supports per-character world-boss, seasonal-bos
 - Per-character tracking for Sha of Anger, Galleon, Nalak, Oondasta, the combined Four Celestials encounter, and Ordos
 - The Four Celestials are a single weekly row; the recorded kill tooltip identifies the specific Celestial defeated
 - Warbringer observation tracking by zone and realm
-- Seasonal Boss tracking during confirmed holiday windows, starting with Brewfest Coren Direbrew
+- Seasonal dungeon Boss tracking for Love is in the Air (Crown Chemical Co.), Midsummer (Ahune), Brewfest (Coren Direbrew), and Hallow's End (Headless Horseman), using the client's calendar
 - Cross-character raid and dungeon lockout overview grouped by expansion
 - Configurable pinned instances for hover previews, with lockout and encounter details
 - Normal five-player dungeon entry tracking with a configurable hourly limit

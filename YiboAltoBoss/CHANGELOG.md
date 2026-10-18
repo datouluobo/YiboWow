@@ -1,5 +1,15 @@
 # YiboAltoBoss 更新日志 / Changelog
 
+## 2.8.0 — 节日副本与排队信息（2026-10-18）
+
+- 补齐情人节皇冠药剂公司、仲夏节埃霍恩、万圣节无头骑士，与美酒节科林统一支持自动显示、每日奖励及排队操作。
+- 按客户端日历识别活动，修复固定日期误拦、日历晚加载和浏览其它月份时的活动显示。
+- 排队按钮以系统实时状态为准，补齐确认弹窗和角色确认后的刷新；悬停同时显示系统预估等待与已排队时间，未知数据保留明确提示。
+- 合并行动中心目标与普通副本的重复显示列，保留不同难度和其它角色的锁定状态；已有业务记录不变。
+- 最低配套 Core 1.12.6 / API13 不变。HolidayBossSpec261、LockoutProjectionSpec16、InstanceKillsSpec56、BossGoalsSpec19及CustomBossGoalsSpec25通过；客户端验收按实施记录保留待验范围。
+
+English: Adds the four seasonal dungeon encounters, calendar-driven visibility, live queue status, estimated wait and elapsed queue time. Merges duplicate goal/instance columns while preserving difficulty and character progress. Requires YiboCore 1.12.6 / API13; new client scenarios remain pending verification.
+
 ## 2.7.1 — 统一矩阵预算（2026-10-16）
 
 - 首领矩阵两种方向及锁定矩阵接入 Core 统一预算与分页；锁定行使用 Core 滚动容器，隐藏角色列时不产生空分页。

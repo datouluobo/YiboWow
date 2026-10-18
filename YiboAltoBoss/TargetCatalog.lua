@@ -136,9 +136,10 @@ function Catalog:Build()
                 aliases = { tostring(boss.id) }, complete = true, available = true, reset = boss.reset })
         end
     end
-    local holiday = YAB.Holiday and YAB.Holiday:GetBoss("holiday:coren-direbrew")
-    if holiday then Add({ id = holiday.key, bossKey = holiday.key, kind = "holiday", name = holiday.name,
-        englishName = "Coren Direbrew", aliases = { "Brewfest", "美酒节", "科林", "Coren" }, complete = true, available = true, reset = "daily" }) end
+    for _, holiday in ipairs(YAB.Holiday and YAB.Holiday:GetBosses() or {}) do
+        Add({ id = holiday.key, bossKey = holiday.key, kind = "holiday", name = holiday.name,
+            englishName = holiday.englishName, aliases = holiday.catalogAliases, complete = true, available = true, reset = "daily" })
+    end
     local oldInstance = (EJ_GetCurrentInstance and EJ_GetCurrentInstance()) or (EncounterJournal and EncounterJournal.instanceID)
     local oldDifficulty = EJ_GetDifficulty and EJ_GetDifficulty()
     for _, item in pairs(YAB.GetInstanceCatalog()) do
