@@ -1,0 +1,37 @@
+{
+  "archived_on": "2026-10-14",
+  "addon": "YiboAltoBoss",
+  "archive": "v1",
+  "files": [
+    {
+      "file": "YAB_MinimapIcon_from_generated_original.png",
+      "original_version": "legacy",
+      "original_path": "YiboAltoBoss/Media/Source/YAB_MinimapIcon_from_generated_original.png"
+    },
+    {
+      "file": "YAB_MinimapIcon_master_256.png",
+      "original_version": "legacy",
+      "original_path": "YiboAltoBoss/Media/Source/YAB_MinimapIcon_master_256.png"
+    },
+    {
+      "file": "YAB_MinimapIcon_master_512.png",
+      "original_version": "legacy",
+      "original_path": "YiboAltoBoss/Media/Source/YAB_MinimapIcon_master_512.png"
+    },
+    {
+      "file": "YAB_MinimapIcon_raw_from_clipboard.png",
+      "original_version": "legacy",
+      "original_path": "YiboAltoBoss/Media/Source/YAB_MinimapIcon_raw_from_clipboard.png"
+    },
+    {
+      "file": "YAB_MinimapIcon.png",
+      "original_version": "legacy",
+      "original_path": "YiboAltoBoss/Media/YAB_MinimapIcon.png"
+    },
+    {
+      "file": "YAB_MinimapIcon.tga",
+      "original_version": "legacy",
+      "original_path": "YiboAltoBoss/Media/YAB_MinimapIcon.tga"
+    }
+  ]
+}

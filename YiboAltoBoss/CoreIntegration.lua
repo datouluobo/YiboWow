@@ -218,7 +218,7 @@ function Integration:Initialize()
     local page, errorMessage = Core.AccountView:RegisterPage("YiboAltoBoss", {
         id = PAGE_ID,
         title = addonTitle,
-        icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YAB_MinimapIcon",
+        icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YiboAltoBossIcon",
         order = 30,
         previewEnabled = true,
         fields = {
@@ -268,7 +268,7 @@ function Integration:Initialize()
     local lockoutPage, lockoutError = Core.AccountView:RegisterPage("YiboAltoBoss", {
         id = LOCKOUT_PAGE_ID,
         title = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.INSTANCES"),
-        icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YAB_MinimapIcon",
+        icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YiboAltoBossIcon",
         order = 31,
         previewEnabled = true,
         hideFromSettings = true,
@@ -308,7 +308,7 @@ function Integration:Initialize()
             return YAB.GetAccountBusinessPageID and YAB.GetAccountBusinessPageID() or PAGE_ID
         end,
         text = "[Yibo] " .. addonTitle,
-        icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YAB_MinimapIcon",
+        icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YiboAltoBossIcon",
     })
     if not entry and entryError then return nil, entryError end
     if YAB.PlannedTargets then

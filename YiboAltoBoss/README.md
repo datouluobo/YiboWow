@@ -1,8 +1,10 @@
 # YiboAltoBoss
 
-当前源码版本：**2.8.0**（2026-10-18）。新增四类节日副本首领支持、排队时间提示，并修复重复副本列和排队状态同步。自动化检查通过；本次新增功能的实机验收状态见 Docs/四类节日副本首领核查与验收.md 和 Docs/节日排队状态同步修复.md。 请配套使用 **YiboCore 1.12.6 / API13**，启动时检查 `account-surface-budget:2` 及实际方法。
+> 文档状态更新（2026-10-16）：现有功能已由用户确认实机验收收口。当前源码版本与发行证据见[状态总览](../Docs/仓库当前状态总览.md)，后续任务见[延期清单](../Docs/后续开发任务清单.md)。下文旧版本的开发／待验收描述按其原日期理解；当前版本渠道状态没有明确证据时保留待核对。
 
-Boss Tracker (YiboAltoBoss) tracks world-boss progress, seasonal encounters, custom targets, raid and dungeon lockouts, and dungeon entry history across a MoP Classic account. The current source version is 2.8.0. Basic tracking uses the YiboCore account page and requires Core 1.12.6 / API v13 and the documented UI and localization capabilities. The optional per-character goal integration requires Core 1.12.2 / API v13, `business-item-actions:3`, and a compatible YiboTaskHub installation. TaskHub is still an unpublished project, so goal integration is available only when that compatible build is installed; base Boss tracking remains available without TaskHub; YiboCore is always required.
+当前源码版本：**2.8.1**（2026-10-18）。修复行动中心目标状态在首领矩阵中被截断，并更新 AltoBoss 图标资源。四类节日副本首领、排队时间提示及重复副本列修复见 2.8.0 更新记录。请配套使用 **YiboCore 1.12.6 / API13**，启动时检查 `account-surface-budget:2` 及实际方法。
+
+Boss Tracker (YiboAltoBoss) tracks world-boss progress, seasonal encounters, custom targets, raid and dungeon lockouts, and dungeon entry history across a MoP Classic account. The current source version is 2.8.1. Basic tracking uses the YiboCore account page and requires Core 1.12.6 / API v13 and the documented UI and localization capabilities. The optional per-character goal integration requires Core 1.12.2 / API v13, `business-item-actions:3`, and a compatible YiboTaskHub installation. TaskHub is still an unpublished project, so goal integration is available only when that compatible build is installed; base Boss tracking remains available without TaskHub; YiboCore is always required.
 
 Optional YiboTaskHub integration supports per-character world-boss, seasonal-boss, and instance goals. AltoBoss provides the encounter catalog and progress; TaskHub owns the goal configuration and its account-page presentation. Goals can target a whole instance or selected encounters at an exact supported difficulty. Automatic display can be disabled while retaining manual views and kill history. World-boss progress uses reward observations; instance completion requires a complete encounter catalog and exact lockout data. Unknown or stale data remains unconfirmed. Older instances need a complete scan to establish a stable catalog; automatic cycle tracking for repeatedly run normal dungeons is not supported. The current goal integration requires the compatible, currently unpublished TaskHub build. See [runtime contract and acceptance](../Docs/行动中心-AltoBoss-运行契约与验收.md).
 
@@ -70,6 +72,12 @@ Five-player dungeon history also records verified single-boss deaths from the co
 五人本现在可选接收 DBM 完成通知补齐复杂遭遇；DBM 不可用时保留独立基础记录。三种来源按本轮副本统一去重。团本沿用既有原生记录路径。DBM 集成默认自动发现，无额外入口或业务依赖。
 
 Optional DBM completion callbacks supplement complex five-player encounters. Native completion and verified single-boss death tracking remain independent; all dungeon sources share per-run deduplication. Raid recording keeps its existing native path.
+
+## 图标资源（2026-10-14）
+
+当前图标为 `Media/YiboAltoBossIcon`：默认TGA为64px，插件列表使用128px TGA；PNG提供16/24/32/64/128/512/1024px，母版为312px透明位图。版本、统一缩放和验证范围见[系列资源记录](../Docs/Design/Yibo系列Logo-20261014/README.md)。
+
+![YiboAltoBoss 图标](Media/YiboAltoBossIcon-128.png)
 
 2.6.1：普通本显示本轮进度，历史 TP 字段默认隐藏，可在统一业务设置开启；离本30分钟进度待刷新，校对仅在有未过期进度时运行。中文实机已确认采集及进度展示；DBM、时效启停和英文客户端仍待验收。
 

@@ -1,5 +1,13 @@
 # YiboAltoBoss 更新日志 / Changelog
 
+## 2.8.1 — 目标状态显示修复（2026-10-18）
+
+- 缩短行动中心目标在首领矩阵中的中英文状态标签，避免状态文本被单元格裁切；来源与详细进度仍可悬停查看。
+- 更新 AltoBoss 图标资源，并同步页面、入口和插件列表图标引用。
+- 最低配套 Core 1.12.6 / API13 不变。
+
+English: Shortens Action Center goal status labels in the Boss matrix so they fit their cells; source and detailed progress remain available on hover. Updates the AltoBoss icon assets and references. Requires YiboCore 1.12.6 / API13.
+
 ## 2.8.0 — 节日副本与排队信息（2026-10-18）
 
 - 补齐情人节皇冠药剂公司、仲夏节埃霍恩、万圣节无头骑士，与美酒节科林统一支持自动显示、每日奖励及排队操作。

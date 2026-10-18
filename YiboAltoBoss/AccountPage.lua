@@ -377,10 +377,17 @@ local function SetStatus(cell, status, key, boss)
     if YAB.PlannedTargets then planned, characterID, target = YAB.PlannedTargets:IsPlanned(key, boss.key) end
     if planned then
         local progress = YAB.PlannedTargets:Progress(characterID, target)
-        local labels = { completed = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.COMPLETED"), ready = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.READY"), unknown = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNCONFIRMED"), dormant = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNAVAILABLE") }
+        -- Goal states are shown in the compact Boss matrix; use short labels
+        -- here and keep the full source and progress details in the tooltip.
+        local labels = {
+            completed = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.GOAL_STATE_COMPLETED"),
+            ready = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.GOAL_STATE_READY"),
+            unknown = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.GOAL_STATE_UNCONFIRMED"),
+            dormant = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.GOAL_STATE_UNAVAILABLE"),
+        }
         local color = progress.state == "completed" and C.success or (progress.state == "ready" and C.accent or C.muted)
         local fill = progress.state == "completed" and C.successSurface or C.chrome
-        cell:SetText((labels[progress.state] or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNCONFIRMED")) .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.GOAL")); cell:SetState("default")
+        cell:SetText(labels[progress.state] or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.GOAL_STATE_UNCONFIRMED")); cell:SetState("default")
         cell:SetBackdropColor(fill[1], fill[2], fill[3], fill[4] or 1)
         cell:SetBackdropBorderColor(color[1], color[2], color[3], color[4] or 1)
         cell.label:SetTextColor(color[1], color[2], color[3])
