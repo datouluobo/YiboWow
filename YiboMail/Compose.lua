@@ -44,6 +44,19 @@ end
 function Compose:HasSendMoney()
     return (tonumber(MoneyInputFrame_GetCopper and SendMailMoney and MoneyInputFrame_GetCopper(SendMailMoney)) or 0) > 0
 end
+function Compose:ClearDraft()
+    self.draft = { recipient = "", subject = "", body = "", copper = 0, cod = false }
+    if SendMailNameEditBox then SendMailNameEditBox:SetText("") end
+    if SendMailSubjectEditBox then SendMailSubjectEditBox:SetText("") end
+    local body = self:GetBodyEditBox()
+    if body then body:SetText("") end
+    if SendMailRadioButton_OnClick then pcall(SendMailRadioButton_OnClick, 1)
+    elseif SendMailCODButton and SendMailCODButton.SetChecked then SendMailCODButton:SetChecked(false) end
+    if SendMailMoney then
+        if MoneyInputFrame_ResetMoney then pcall(MoneyInputFrame_ResetMoney, SendMailMoney)
+        elseif MoneyInputFrame_SetCopper then pcall(MoneyInputFrame_SetCopper, SendMailMoney, 0) end
+    end
+end
 function Compose:OpenNative()
     if SendMailFrameLockSendMail and SendMailFrameLockSendMail:IsShown() then return nil, Addon:T("UI.TEXT_0522") end
     if Addon.Queue.state == "running" or Addon.Queue.pending then return nil, Addon:T("UI.TEXT_0528") end
@@ -153,10 +166,11 @@ function Compose:OnEvent(event)
         end
         if Addon.Recipients then Addon.Recipients:RecordRecent(self.pendingSend.recipient) end
         Addon:AddHistory(self.pendingSend.characterID, self.pendingSend)
-        self.pendingSend = nil; self.draft = { recipient = "", subject = "", body = "", copper = 0, cod = false }
+        self.pendingSend = nil; self:ClearDraft()
     elseif (event == "MAIL_FAILED" or event == "MAIL_CLOSED") and self.pendingSend then
         Addon:AddHistory(self.pendingSend.characterID, self.pendingSend); self.pendingSend = nil
     end
+    if event == "MAIL_CLOSED" then self:ClearDraft() end
     if Addon.FEATURES.account and (event == "MAIL_SEND_INFO_UPDATE" or event == "MAIL_SEND_SUCCESS" or event == "MAIL_FAILED" or event == "BAG_UPDATE_DELAYED") then
         Addon.Core.AccountView:NotifyPageChanged("mail-inbox")
     end
