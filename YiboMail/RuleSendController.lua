@@ -141,10 +141,7 @@ function C:Fill(advance)
         if not found then self.state, self.owned, self.packet = "invalid", nil, nil; return nil, Addon:T("UI.TEXT_0492") end
     end
     SendMailNameEditBox:SetText(recipient)
-    local distinct = {}
-    for _, item in ipairs(packet) do distinct[item.itemID] = true end
-    local kinds = 0; for _ in pairs(distinct) do kinds = kinds + 1 end
-    SendMailSubjectEditBox:SetText((packet[1].name or Addon:T("UI.TEXT_0457")) .. (kinds > 1 and (Addon:T("UI.TEXT_0474") .. kinds .. Addon:T("UI.TEXT_0044")) or ""))
+    SendMailSubjectEditBox:SetText(Addon.Compose:SubjectForAttachments(packet))
     body:SetText("")
     self.draftFields = { subject = Text(SendMailSubjectEditBox), body = Text(body) }
     self.fingerprint = self:Fingerprint()
@@ -169,6 +166,9 @@ function C:Send()
     local ok, err = self:Guard(); if not ok then return nil, err end
     local allowed, reason = Addon.Recipients:CanRuleSend(Text(SendMailNameEditBox))
     if not allowed then self:Invalidate(reason); self:Changed(); return nil, reason end
+    -- Recreate an untouched generated title if the player cleared it. The
+    -- resulting draft still has to match the exact prepared packet fingerprint.
+    if self.state == "ready" and self.packet then Addon.Compose:EnsureSubject(self.packet) end
     if self.state ~= "ready" or self.revision ~= Addon.db.sendRuleRevision or self:Fingerprint() ~= self.fingerprint then
         self:Invalidate(Addon:T("UI.TEXT_0597"))
         self:Changed(); return nil, self.notice
@@ -185,6 +185,7 @@ function C:Send()
     return true
 end
 function C:Primary()
+    if self.state == "ready" and self.packet then Addon.Compose:EnsureSubject(self.packet) end
     self:ReconcileDraft()
     if self.state == "ready" then return self:Send() end
     if self.state == "invalid" then

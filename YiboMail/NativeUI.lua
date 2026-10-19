@@ -1153,10 +1153,10 @@ function Native:CreateBasicSend()
             end
             if not SendMailNameEditBox then return end
             Native:SetMailRecipient(contact.address)
-            local hasText = (SendMailSubjectEditBox and SendMailSubjectEditBox:GetText() or ""):match("%S")
-                or (Addon.Compose:GetBodyEditBox() and Addon.Compose:GetBodyEditBox():GetText() or ""):match("%S")
             local hasAttachments = Addon.Compose and #Addon.Compose:GetAttachments() > 0
-            if hasText and hasAttachments then
+            local hasMoney = Addon.Compose and Addon.Compose.HasSendMoney and Addon.Compose:HasSendMoney()
+            if hasAttachments or hasMoney then
+                if Addon.Compose.EnsureSubject then Addon.Compose:EnsureSubject() end
                 local sendButton = _G.SendMailMailButton or _G.SendMailSendButton
                 if not sendButton then Addon:Print(Addon:T("UI.TEXT_0174")); return end
                 -- Recompute the native button state after changing the recipient, then

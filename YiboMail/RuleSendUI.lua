@@ -301,7 +301,8 @@ function U:Drop(contact)
         if not success or (CursorHasItem and CursorHasItem()) or #Addon.Compose:GetAttachments() ~= 1 then
             Addon:Print(Addon:T("UI.TEXT_0226")); return
         end
-        Addon.NativeUI:SetMailRecipient(address); SendMailSubjectEditBox:SetText(Addon:T("UI.TEXT_0457"))
+        Addon.NativeUI:SetMailRecipient(address)
+        if Addon.Compose.EnsureSubject then Addon.Compose:EnsureSubject() end
         local button = _G.SendMailMailButton or _G.SendMailSendButton
         if SendMailFrame_Update then SendMailFrame_Update() end
         local click = button and button:GetScript("OnClick")

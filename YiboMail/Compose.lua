@@ -19,6 +19,31 @@ function Compose:GetAttachments()
     end
     return result
 end
+function Compose:SubjectForAttachments(items)
+    if type(items) ~= "table" then items = {} end
+    if #items == 0 then
+        local copper = tonumber(MoneyInputFrame_GetCopper and SendMailMoney and MoneyInputFrame_GetCopper(SendMailMoney)) or 0
+        return copper > 0 and Addon:T("UI.TEXT_0617") or nil
+    end
+    local firstName = type(items[1].name) == "string" and items[1].name:match("%S") and items[1].name or Addon:T("UI.TEXT_0457")
+    local distinct, kinds = {}, 0
+    for _, item in ipairs(items) do
+        local key = item.itemID or item.name
+        if key ~= nil and not distinct[key] then distinct[key], kinds = true, kinds + 1 end
+    end
+    return firstName .. (kinds > 1 and (Addon:T("UI.TEXT_0474") .. kinds .. Addon:T("UI.TEXT_0044")) or "")
+end
+function Compose:EnsureSubject(items)
+    local box = _G.SendMailSubjectEditBox
+    if not box or (box:GetText() or ""):match("%S") then return false end
+    local subject = self:SubjectForAttachments(items or self:GetAttachments())
+    if not subject then return false end
+    box:SetText(subject)
+    return true, subject
+end
+function Compose:HasSendMoney()
+    return (tonumber(MoneyInputFrame_GetCopper and SendMailMoney and MoneyInputFrame_GetCopper(SendMailMoney)) or 0) > 0
+end
 function Compose:OpenNative()
     if SendMailFrameLockSendMail and SendMailFrameLockSendMail:IsShown() then return nil, Addon:T("UI.TEXT_0522") end
     if Addon.Queue.state == "running" or Addon.Queue.pending then return nil, Addon:T("UI.TEXT_0528") end
