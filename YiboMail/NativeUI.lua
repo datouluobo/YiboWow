@@ -151,6 +151,9 @@ function Native:MoneySendDraftMatches(expected)
     return current.copper > 0
 end
 function Native:ConfirmMoneySend(button, original, clickArgs)
+    if Addon.db and Addon.db.settings and Addon.db.settings.confirmGoldSend == false then
+        original(button, unpack(clickArgs)); return
+    end
     if not StaticPopupDialogs or not StaticPopup_Show then
         Addon:Print(Addon:T("UI.TEXT_0671")); return
     end

@@ -685,5 +685,8 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["UI.TEXT_0670"] = "Confirm sending gold to %s?\nAmount: %s\n\nReview the recipient and amount before continuing.",
         ["UI.TEXT_0671"] = "Gold confirmation is unavailable; the mail was not sent.",
         ["UI.TEXT_0672"] = "The mail changed during confirmation. Review it and try again.",
+        ["UI.TEXT_0673"] = "Sending safety",
+        ["UI.TEXT_0674"] = "Confirm before sending gold",
+        ["UI.TEXT_0675"] = "When enabled, review the recipient and amount before sending mail with gold.",
     })
 end

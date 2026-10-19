@@ -545,7 +545,7 @@ function Page:Register()
                 local width = math.max(280, parent:GetWidth() or 600)
                 local narrow = width < 600
                 local columnWidth = narrow and width - 24 or (width - 48) / 2
-                local businessHeight = narrow and 712 or 376
+                local businessHeight = narrow and 776 or 448
                 local section = parent.mailBusinessSettings or host.createSection(parent, Addon:T("UI.TEXT_0093"), width, businessHeight)
                 parent.mailBusinessSettings = section
                 section:SetSize(width, businessHeight); section:Show(); section:ClearAllPoints()
@@ -590,7 +590,16 @@ function Page:Register()
                     control:SetChecked(not control:GetChecked()); Addon.db.settings.loginReminderEnabled = control:GetChecked()
                 end)
                 Text("reminderNote", Addon:T("UI.TEXT_0321"), 12, 322, columnWidth, 42, true)
-                local gridX, gridY = narrow and 12 or 36 + columnWidth, narrow and 384 or 40
+                Text("goldConfirmationTitle", Addon:T("UI.TEXT_0673"), 12, 370, columnWidth)
+                local goldCheckbox = section.goldConfirmation or host.createCheckbox(section, Addon:T("UI.TEXT_0674"))
+                section.goldConfirmation = goldCheckbox; goldCheckbox:ClearAllPoints(); goldCheckbox:SetPoint("TOPLEFT", 12, -402)
+                goldCheckbox:SetWidth(columnWidth); goldCheckbox:SetChecked(Addon.db.settings.confirmGoldSend ~= false)
+                goldCheckbox.label:SetWordWrap(true); goldCheckbox.label:SetHeight(32)
+                goldCheckbox:SetScript("OnClick", function(control)
+                    control:SetChecked(not control:GetChecked()); Addon.db.settings.confirmGoldSend = control:GetChecked()
+                end)
+                Text("goldConfirmationNote", Addon:T("UI.TEXT_0675"), 12, 434, columnWidth, 36, true)
+                local gridX, gridY = narrow and 12 or 36 + columnWidth, narrow and 448 or 40
                 Text("gridTitle", Addon:T("UI.TEXT_0294"), gridX, gridY, columnWidth)
                 local rows, columns = Addon:GetShortcutLayout()
                 local function GridOption(key, title, x, maximum, current)
