@@ -73,14 +73,35 @@ end
 function Addon:IsVisible(entry)
     return Core.AccountView:GetFieldVisible("currency", entry.id)
 end
+function Addon:GetCatalogEntry(reference)
+    local id = type(reference) == "table" and reference.id or reference
+    for _, entry in ipairs(self:GetCatalog()) do if entry.id == id then return entry end end
+end
+function Addon:SetCurrencyDisplay(reference, surface, visible)
+    local entry = self:GetCatalogEntry(reference)
+    if not entry then return false end
+    if surface == "main" then
+        Core.AccountView:SetFieldVisible("currency", entry.id, visible == true)
+    elseif surface == "hover" then
+        self:GetSettings().previewColumns[entry.id] = visible == true
+        self:NotifyChanged()
+    else return false end
+    return true
+end
 function Addon:SetVisible(entry, value)
-    Core.AccountView:SetFieldVisible("currency", entry.id, value)
+    return self:SetCurrencyDisplay(entry, "main", value)
 end
 function Addon:IsMonitored(entry) return self:GetSettings().previewColumns[entry.id] == true end
 function Addon:GetMonitoredCount() return #self:GetMonitoredCatalog() end
 function Addon:SetMonitored(entry, value)
-    self:GetSettings().previewColumns[entry.id] = not not value
-    self:NotifyChanged()
+    return self:SetCurrencyDisplay(entry, "hover", value)
+end
+function Addon:ToggleHoverCurrency(reference)
+    local entry = self:GetCatalogEntry(reference)
+    if not entry then return false end
+    local enabled = not self:IsMonitored(entry)
+    if not self:SetCurrencyDisplay(entry.id, "hover", enabled) then return false end
+    self:Print(self:T(enabled and "UI.MONITOR_ADDED" or "UI.MONITOR_REMOVED", entry.title))
     return true
 end
 function Addon:GetMonitoredCatalog()

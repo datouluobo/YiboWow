@@ -1,7 +1,7 @@
 local Addon, Core = _G.YiboCurrency, _G.YiboCore
 local Integration = {}; Addon.CoreIntegration = Integration
 local PAGE_ID = "currency"
-local ICON = "Interface\\AddOns\\YiboCurrency\\Media\\YiboCurrencyIcon-v1"
+local ICON = "Interface\\AddOns\\YiboCurrency\\Media\\YiboCurrencyIcon"
 
 function Integration:Initialize()
     if self.initialized then return true end
@@ -28,7 +28,7 @@ function Integration:Initialize()
         { Core.Entry, "RegisterBusinessEntry" }, { Core.CharacterCleanup, "RegisterOwner", "IsLegacyImportBlocked" },
         { Core.DataDomains, "Get", "GetDefinitions" }, { Core.Events, "Register" },
         { Core.LevelFilter, "Validate" }, { Core.ItemConfirmation, "Show" },
-        { Core.UITheme, "CreateInput", "SetCharacterHeader", "GetCharacterMatrixColumnWidth", "GetCharacterRowHeaderWidth" },
+        { Core.UITheme, "CreateInput", "CreateCheckbox", "CreateButton", "CreateText", "BindTooltip", "GetDataRowColor", "MeasureText", "SetCharacterHeader", "GetCharacterMatrixColumnWidth", "GetCharacterRowHeaderWidth" },
         { Core.Defaults, "Copy" },
     }
     if not Core.ItemResolver then return nil, upgrade end
@@ -54,10 +54,7 @@ function Integration:Initialize()
         GetFieldDefinitions = function() return Addon:GetFieldDefinitions() end,
         GetPreviewFields = function() return Core.Defaults:Copy(Addon:GetSettings().previewColumns) end,
         SetPreviewFieldVisible = function(id, visible)
-            for _, entry in ipairs(Addon:GetCatalog()) do
-                if entry.id == id then return Addon:SetMonitored(entry, visible) end
-            end
-            return false
+            return Addon:SetCurrencyDisplay(id, "hover", visible)
         end,
         characterFilter = {
             defaultExpression = "",

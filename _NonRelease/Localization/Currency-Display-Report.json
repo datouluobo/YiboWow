@@ -1,0 +1,55 @@
+{
+  "resources": 541,
+  "missingEnglish": [],
+  "extraEnglish": [],
+  "duplicateKeys": [],
+  "formatMismatch": [],
+  "unknownKeys": [],
+  "hardcoded": [],
+  "layoutReview": [
+    {
+      "path": "YiboCurrency/AccountPage.lua",
+      "line": 38
+    },
+    {
+      "path": "YiboCurrency/AccountPage.lua",
+      "line": 193
+    },
+    {
+      "path": "YiboCurrency/AccountPage.lua",
+      "line": 316
+    },
+    {
+      "path": "YiboCurrency/AccountPage.lua",
+      "line": 318
+    },
+    {
+      "path": "YiboCurrency/AccountPage.lua",
+      "line": 321
+    },
+    {
+      "path": "YiboCurrency/ArchiveProvider.lua",
+      "line": 27
+    },
+    {
+      "path": "YiboCurrency/Settings.lua",
+      "line": 178
+    },
+    {
+      "path": "YiboCurrency/Settings.lua",
+      "line": 204
+    }
+  ],
+  "exceptions": [],
+  "addons": {
+    "YiboCurrency": {
+      "shippedFiles": 16,
+      "hardcodedCandidates": 0,
+      "localizedReferences": 260,
+      "regions": {}
+    }
+  },
+  "catalogReview": [
+    "YiboCurrency/Catalog.lua"
+  ]
+}

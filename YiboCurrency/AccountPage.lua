@@ -47,7 +47,10 @@ local function MinimumCharacterWidth(characters, context, entries, projection)
     end
     return width
 end
-local function MainFixedWidths(entries, characters, projection)
+local function HoverControlWidth()
+    return math.max(Theme.Size.standard, Theme:MeasureText(Theme.Font.assist, Addon:T("UI.DISPLAY_HOVER")) + Theme.Space.sm)
+end
+local function MainFixedWidths(entries, characters, projection, preview)
     local currencyWidth = Theme:MeasureText(Theme.Font.body, Addon:T("CURRENCY.CURRENCY_219994")) + Theme.Space.sm
     for _, entry in ipairs(entries or {}) do currencyWidth = math.max(currencyWidth, EntryColumnWidth(entry, 16, Theme.Font.body)) end
     local totalWidth = math.max(Theme:MeasureText(Theme.Font.body, Addon:T("CURRENCY.TOTAL_3AF1AC")) + Theme.Space.sm, Theme:MeasureText(Theme.Font.body, Addon:FormatCompact({ quantity = 294000 })) + Theme.Space.md)
@@ -56,7 +59,7 @@ local function MainFixedWidths(entries, characters, projection)
         local text = Addon:FormatCompact({ quantity = total.quantity }, entry) .. (total.complete and "" or (total.bankPending and "~" or "?"))
         totalWidth = math.max(totalWidth, Theme:MeasureText(Theme.Font.body, text) + Theme.Space.sm)
     end
-    return currencyWidth, totalWidth
+    return currencyWidth + (preview and 0 or HoverControlWidth()), totalWidth
 end
 local function StateColor(kind)
     if kind == "unknown" or kind == "na" or kind == "bank" then return Theme.Colors.muted end
@@ -111,14 +114,14 @@ local function AddEntryTooltip(row, character)
             if detail then GameTooltip:AddLine(detail, Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3]) end
         end
     end
-    GameTooltip:AddLine(Addon:T("CURRENCY.RIGHT_CLICK_TOGGLE_HOVER_SELECTION_1603F1"), Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3])
+    if not row.preview then GameTooltip:AddLine(Addon:T("CURRENCY.RIGHT_CLICK_TOGGLE_HOVER_SELECTION_1603F1"), Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3]) end
     GameTooltip:Show()
 end
 
 local function ConfigureToolbar(parent, characters, shown, pageInfo)
     local toolbar = parent.currencyToolbar; toolbar:SetShown(true)
     local label = toolbar.label or Text(toolbar, "LEFT"); toolbar.label = label; label:ClearAllPoints(); label:SetPoint("LEFT", 0, 0)
-    label:SetText(string.format(Addon:T("CURRENCY.D_CURRENCIES_D_CHARACTERS_6366E6"), #Addon:GetCatalog(), #characters)); label:SetTextColor(Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3]); label:Show()
+    label:SetText(Addon:T("UI.DISPLAY_SUMMARY", #Addon:GetDisplayCatalog(false), #Addon:GetCatalog(), Addon:GetMonitoredCount(), #characters)); label:SetTextColor(Theme.Colors.muted[1], Theme.Colors.muted[2], Theme.Colors.muted[3]); label:Show()
     -- The page summary belongs to this toolbar, but all paging chrome belongs
     -- to Core at the matrix header. Hide any legacy controls retained by an
     -- already-created frame pool.
@@ -152,6 +155,11 @@ local function Layout(parent, context, columns, rows, preview, projection)
         header:ClearAllPoints(); header:SetPoint("TOPLEFT", parent.currencyHeader, "TOPLEFT", x, 0); header:SetSize(column.width, headerHeight)
         if column.character then local updated, state = SnapshotMeta(column.character, projection); Theme:SetCharacterHeader(header, column.character, context, { color=CharacterColor(column.character), updatedAt=updated, state=state, recovery=Addon:T("CURRENCY.LOG_IN_TO_SYNC_CURRENCY_AND_BANK_DATA_73D2FF") })
         else Theme:SetMatrixHeader(header, column.entry and IconText(column.entry, 16) or column.title, { height=headerHeight, justify=column.justify or "LEFT", color=Theme.Colors.muted, inset=1 }); PinHeaderToDivider(header, 1); header:SetScript("OnEnter", nil); header:SetScript("OnLeave", nil) end
+        if column.kind == "currency" and not preview then
+            header.hoverLabel = header.hoverLabel or Theme:CreateText(header, Theme.Font.assist, Theme.Colors.muted, "CENTER")
+            header.hoverLabel:ClearAllPoints(); header.hoverLabel:SetPoint("RIGHT", header, "RIGHT", 0, 0); header.hoverLabel:SetWidth(HoverControlWidth())
+            header.hoverLabel:SetText(Addon:T("UI.DISPLAY_HOVER")); header.hoverLabel:Show()
+        elseif header.hoverLabel then header.hoverLabel:Hide() end
         if not preview and current and column.character and column.character.id == current.id then currentX, currentWidth = x, column.width end
         x = x + column.width
     end
@@ -160,6 +168,8 @@ local function Layout(parent, context, columns, rows, preview, projection)
     for index, entry in ipairs(rows) do
         local rowEntry = entry
         local row = parent.currencyRows[index] or CreateFrame("Button", nil, parent.currencyBody, "BackdropTemplate"); parent.currencyRows[index] = row
+        row.preview = preview
+        if row.hoverToggle then row.hoverToggle:Hide() end
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", parent.currencyBody, "TOPLEFT", 0, -y); row:SetSize(x, ROW_HEIGHT); row:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8" }); local color = Theme:GetDataRowColor(index); row:SetBackdropColor(color[1], color[2], color[3], color[4] or 1); row.cells = row.cells or {}; row.entry = entry; row.tooltipCharacters = entry.tooltipCharacters or {}; row.projection = projection
         if row.currentOutline then Theme:SetCurrentCharacterOutline(row.currentOutline, false) end
         for ci, column in ipairs(columns) do
@@ -174,7 +184,17 @@ local function Layout(parent, context, columns, rows, preview, projection)
                     local value, state = Addon:ProjectionValue(projection, entry.character, column.entry)
                     SetCell(cell, Addon:FormatLimitCell(value, state, column.entry, Addon.FormatCell), ValueColor(value, state, column.entry), "CENTER")
                 end
-            elseif column.kind == "currency" then SetCell(cell, IconText(entry, 16), Theme.Colors.text, "LEFT")
+            elseif column.kind == "currency" then
+                SetCell(cell, IconText(entry, 16), Theme.Colors.text, "LEFT")
+                if not preview then
+                    cell:SetWidth(math.max(1, column.width - Theme.Space.sm - HoverControlWidth()))
+                    row.hoverToggle = row.hoverToggle or Theme:CreateCheckbox(row, "")
+                    row.hoverToggle:ClearAllPoints(); row.hoverToggle:SetPoint("LEFT", row, "LEFT", column.x + column.width - HoverControlWidth() / 2 - 8, 0)
+                    row.hoverToggle:SetSize(24, ROW_HEIGHT); row.hoverToggle:SetFrameLevel(row:GetFrameLevel() + 3)
+                    row.hoverToggle:SetChecked(Addon:IsMonitored(entry)); row.hoverToggle:Show()
+                    row.hoverToggle:SetScript("OnClick", function() Addon:ToggleHoverCurrency(rowEntry.id) end)
+                    Theme:BindTooltip(row.hoverToggle, entry.title, { Addon:T("UI.DISPLAY_HOVER_HINT") })
+                end
             elseif column.kind == "total" then local total = Addon:ProjectionTotal(projection, row.tooltipCharacters or {}, entry); local text = Addon:FormatCompact({ quantity=total.quantity }, entry) .. (total.complete and "" or (total.bankPending and "~" or "?")); SetCell(cell, text, total.complete and Theme.Colors.text or Theme.Colors.muted, "CENTER")
             else local value, state = Addon:ProjectionValue(projection, column.character, entry); local text, kind = Addon:FormatLimitCell(value, state, entry, Addon.FormatCell); SetCell(cell, text, ValueColor(value, state, entry), "CENTER") end
             cell:Show()
@@ -182,16 +202,10 @@ local function Layout(parent, context, columns, rows, preview, projection)
         for ci = #columns + 1, #row.cells do row.cells[ci]:Hide() end
         for _, icon in pairs(row.icons or {}) do icon:Hide() end
         row:SetScript("OnEnter", AddEntryTooltip); if entry.kind then row:SetScript("OnEnter", nil) end; row:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        -- Buttons only receive the left mouse button by default.  Monitoring
-        -- is intentionally a secondary action so a right-click must be
-        -- explicitly registered; otherwise the handler below is unreachable.
         row:RegisterForClicks("RightButtonUp")
         row:SetScript("OnClick", function(_, button)
-            if button ~= "RightButton" or rowEntry.kind then return end
-            local enabling = not Addon:IsMonitored(rowEntry)
-            local ok, err = Addon:SetMonitored(rowEntry, enabling)
-            if not ok then Addon:Print(err); return end
-            Addon:Print(Addon:T(enabling and "UI.MONITOR_ADDED" or "UI.MONITOR_REMOVED", rowEntry.title))
+            if button ~= "RightButton" or rowEntry.kind or preview then return end
+            Addon:ToggleHoverCurrency(rowEntry.id)
         end)
         row.goalHits = row.goalHits or {}
         for _, hit in pairs(row.goalHits) do hit:Hide(); if Core.BusinessItemActions then Core.BusinessItemActions:Unbind(hit) end end
@@ -200,10 +214,10 @@ local function Layout(parent, context, columns, rows, preview, projection)
                 local selectedEntry = column.entry
                 local hit = row.goalHits[ci] or CreateFrame("Button", nil, row); row.goalHits[ci] = hit
                 hit:ClearAllPoints(); hit:SetAllPoints(row.cells[ci]); hit:SetFrameLevel(row:GetFrameLevel() + 2)
-                hit.entry, hit.tooltipCharacters, hit.projection, hit.tooltipCharacter = selectedEntry, row.tooltipCharacters, projection, entry.character
+                hit.entry, hit.tooltipCharacters, hit.projection, hit.tooltipCharacter, hit.preview = selectedEntry, row.tooltipCharacters, projection, entry.character, preview
                 hit:SetScript("OnEnter", AddEntryTooltip); hit:SetScript("OnLeave", function() GameTooltip:Hide() end)
                 hit:RegisterForClicks("RightButtonUp")
-                hit:SetScript("OnClick", function() Addon:SetMonitored(selectedEntry, not Addon:IsMonitored(selectedEntry)) end); hit:Show()
+                hit:SetScript("OnClick", nil); hit:Show()
             end end
         end
         if not entry.kind then
@@ -277,7 +291,7 @@ function Addon:RefreshCurrencyPage(parent, context)
         Core.AccountView:UpdateColumnPager(parent, PAGE_ID, "hover-transpose", pageInfo, parent.currencyHeader, Addon:T("CURRENCY.CURRENCY_219994"))
         return
     end
-    local currencyWidth, totalWidth = MainFixedWidths(entries, characters, projection)
+    local currencyWidth, totalWidth = MainFixedWidths(entries, characters, projection, preview)
     local characterWidth = CharacterColumnWidth(characters, context, entries, projection)
     local minimum = MinimumCharacterWidth(characters, context, entries, projection)
     currencyWidth = math.min(currencyWidth, math.max(160, available - totalWidth - #characters * minimum))
@@ -326,7 +340,7 @@ function Addon:GetCurrencySurfaceMetrics(context)
             naturalContentWidth = width, scrollContentHeight = (#characters + 1) * ROW_HEIGHT, scrollFixedHeight = fixedHeight, minContentHeight = fixedHeight + ROW_HEIGHT,
             naturalContentHeight = fixedHeight + (#characters + 1) * ROW_HEIGHT, horizontalOverflow = "paginate", verticalOverflow = "content" }
     end
-    local currencyWidth, totalWidth = MainFixedWidths(entries, characters, projection)
+    local currencyWidth, totalWidth = MainFixedWidths(entries, characters, projection, preview)
     local columnWidth = CharacterColumnWidth(characters, context, entries, projection)
     local fixedHeight = inset.top + Theme:GetCharacterHeaderHeight(context) + inset.bottom
         + (preview and 0 or Theme.Size.compact + Theme.Space.sm)

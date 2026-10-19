@@ -250,5 +250,112 @@ tooltipRow.scripts.OnEnter(tooltipRow)
 check(#GameTooltip.lines == 3 and GameTooltip.lines[1] == tooltipRow.entry.title, "row tooltip keeps name, total and action without a duplicate roster")
 tooltipRow.goalHits[3].scripts.OnEnter()
 check(#GameTooltip.lines <= 6 and GameTooltip.lines[3]:find("Short", 1, true), "cell tooltip adds only the hovered character")
+-- Exercise both display surfaces with the same built-in/custom row handlers.
+local function FindRow(host, id)
+    for _, row in ipairs(host.currencyRows) do if row:IsShown() and row.entry.id == id then return row end end
+end
+local function MainContext() return { characters = characters, scope = "all", preview = false, surfaceAvailableWidth = 1400 } end
+local function HoverContext() return { characters = characters, scope = "all", preview = true, surfaceAvailableWidth = 1400 } end
+check(Addon:AddCustomItem(123), "custom currency registers after frame pool was used by built-in currencies")
+check(Addon.Store:Commit(characters[1].id, "carriedTokens", { items = { [123] = { carried = 7 } } }, "known"), "custom balance snapshot is valid")
+Addon:RefreshCurrencyPage(parent, MainContext())
+local customRow = FindRow(parent, "item:123")
+check(customRow and customRow.hoverToggle:IsShown() and not customRow.hoverToggle:GetChecked(), "new custom currency has an explicit unchecked hover control")
+customRow.goalHits[1].scripts.OnClick(customRow.goalHits[1], "RightButton")
+check(Addon:IsMonitored(customRow.entry) and Addon:IsVisible(customRow.entry), "custom name-cell right-click changes hover only")
+Addon:RefreshCurrencyPage(parent, HoverContext())
+customRow = FindRow(parent, "item:123")
+check(customRow and customRow.cells[3]:GetText():find("7", 1, true) and not customRow.hoverToggle:IsShown(), "custom currency actually renders its source balance in read-only hover")
+Addon:RefreshCurrencyPage(parent, MainContext())
+customRow = FindRow(parent, "item:123")
+customRow.goalHits[3].scripts.OnClick(customRow.goalHits[3], "RightButton")
+check(not Addon:IsMonitored(customRow.entry) and Addon:IsVisible(customRow.entry), "custom value-cell right-click cancels hover without removing the catalog entry")
+customRow.hoverToggle.scripts.OnClick(customRow.hoverToggle)
+check(Addon:IsMonitored(customRow.entry), "explicit hover checkbox uses the same selection as right-click")
+check(Addon:SetCurrencyDisplay("item:123", "main", false), "custom main visibility can be disabled independently")
+Addon:RefreshCurrencyPage(parent, MainContext())
+check(not FindRow(parent, "item:123"), "main-hidden custom entry is absent from main rows")
+Addon:RefreshCurrencyPage(parent, HoverContext())
+check(FindRow(parent, "item:123"), "main-hidden custom entry remains in hover when selected")
+local hoverRow = FindRow(parent, "item:123")
+hoverRow.scripts.OnClick(hoverRow, "RightButton")
+check(Addon:IsMonitored(hoverRow.entry), "preview right-click cannot accidentally remove a selected entry")
+
+-- Real settings rows and callbacks against real Core field storage.
+local originalPicker = Core.CreateItemPicker
+Core.CreateItemPicker = function(_, owner, config)
+    local picker = Node(owner); picker.config = config; picker.input = Node(picker)
+    function picker:Layout(width) self.layoutContentWidth = width - Core.UITheme.Space.md; return Core.UITheme.Size.standard end
+    function picker:SetValue(value) self.input:SetText(value) end
+    return picker
+end
+dofile("YiboCurrency/Settings.lua")
+local host, settingsContext = Node(UIParent), { notifyPageChanged = function() end }
+host:SetWidth(1100)
+settingsContext.refreshPanel = function() Addon:CreateSettingsPanel(host, settingsContext) end
+settingsContext.refreshPage = settingsContext.refreshPanel
+settingsContext.refreshPanel()
+local panel = host.ycuSettings
+panel.catalogTabs.custom.scripts.OnClick()
+check(panel.catalogFilter == "custom" and panel.rows[1].entry.id == "item:123", "custom tab uses the same display editor as built-in currencies")
+check(not panel.rows[1].main:GetChecked() and panel.rows[1].hover:GetChecked(), "settings reads independent main and hover flags")
+panel.rows[1].main.scripts.OnClick(panel.rows[1].main)
+check(Addon:IsVisible(panel.rows[1].entry) and panel.rows[1].hover:GetChecked(), "settings main checkbox keeps existing hover selection")
+panel.rows[1].hover.scripts.OnClick(panel.rows[1].hover)
+check(not Addon:IsMonitored(panel.rows[1].entry) and panel.rows[1].main:GetChecked(), "settings hover checkbox keeps main visibility")
+check(page.SetPreviewFieldVisible("item:123", true), "Core display settings share the custom hover setter")
+settingsContext.refreshPanel()
+check(panel.rows[1].hover:GetChecked(), "Currency settings reflect Core preview-field changes")
+-- Sweep every real catalog ID, including gold, native currencies, curated
+-- item tokens and the custom token, across every main/hover combination.
+local function SettingsRow(entry)
+    local filter, index = entry.isCustom and "custom" or "builtin", 0
+    for _, item in ipairs(Addon:GetCatalog()) do
+        if (item.isCustom and "custom" or "builtin") == filter then index = index + 1 end
+        if item.id == entry.id then break end
+    end
+    panel.catalogFilter, panel.catalogPage = filter, math.floor((index - 1) / 24) + 1
+    settingsContext.refreshPanel()
+    for _, row in ipairs(panel.rows) do if row:IsShown() and row.entry.id == entry.id then return row end end
+    error("Settings omitted " .. entry.id)
+end
+local catalogUnderReview = Addon:GetCatalog()
+for _, entry in ipairs(catalogUnderReview) do
+    local originalMain, originalHover = Addon:IsVisible(entry), Addon:IsMonitored(entry)
+    for _, mainShown in ipairs({ false, true }) do
+        for _, hoverShown in ipairs({ false, true }) do
+            local edit = SettingsRow(entry)
+            if edit.main:GetChecked() ~= mainShown then edit.main.scripts.OnClick(edit.main); edit = SettingsRow(entry) end
+            if edit.hover:GetChecked() ~= hoverShown then edit.hover.scripts.OnClick(edit.hover); edit = SettingsRow(entry) end
+            check(edit.main:GetChecked() == mainShown and edit.hover:GetChecked() == hoverShown, entry.id .. " settings preserve both independent choices")
+            Addon:RefreshCurrencyPage(parent, MainContext())
+            check((FindRow(parent, entry.id) ~= nil) == mainShown, entry.id .. " main rendering matches settings")
+            Addon:RefreshCurrencyPage(parent, HoverContext())
+            check((FindRow(parent, entry.id) ~= nil) == hoverShown, entry.id .. " hover rendering matches settings")
+        end
+    end
+    Addon:SetCurrencyDisplay(entry.id, "main", true)
+    Addon:SetCurrencyDisplay(entry.id, "hover", false)
+    Addon:RefreshCurrencyPage(parent, MainContext())
+    local source = FindRow(parent, entry.id)
+    for _, target in ipairs({ source, source.goalHits[1], source.goalHits[3], source.hoverToggle }) do
+        local wasSelected = Addon:IsMonitored(entry)
+        target.scripts.OnClick(target, target == source.hoverToggle and "LeftButton" or "RightButton")
+        local edit = SettingsRow(entry)
+        check(edit.hover:GetChecked() ~= wasSelected and edit.main:GetChecked(), entry.id .. " right-click/checkbox synchronizes settings without changing main visibility")
+        Addon:RefreshCurrencyPage(parent, HoverContext())
+        check((FindRow(parent, entry.id) ~= nil) == edit.hover:GetChecked(), entry.id .. " hover reflects each main-window action")
+        Addon:RefreshCurrencyPage(parent, MainContext())
+        source = FindRow(parent, entry.id)
+    end
+    check(page.SetPreviewFieldVisible(entry.id, true) and SettingsRow(entry).hover:GetChecked(), entry.id .. " Core preview editor synchronizes Currency settings")
+    Addon:SetCurrencyDisplay(entry.id, "main", originalMain)
+    Addon:SetCurrencyDisplay(entry.id, "hover", originalHover)
+end
+check(not Addon:RemoveCustomItem(43589) and Addon:GetCatalogEntry("item:43589"), "curated built-in item cannot be removed as a custom currency")
+check(Addon:RemoveCustomItem(123) and not settings.previewColumns["item:123"], "catalog removal clears custom hover choice")
+check(Addon.Store:Get(characters[1].id, "carriedTokens").data.items[123].carried == 7, "catalog removal preserves recorded inventory data")
+check(not Addon:ToggleHoverCurrency("item:123") and not Addon:SetCurrencyDisplay("item:123", "main", true), "stale controls cannot recreate removed catalog selections")
+Core.CreateItemPicker = originalPicker
 view.UpdateColumnPager = updatePager
 print("API13Spec (" .. Core.Locale:GetLanguage() .. "): " .. checks .. " checks passed")
