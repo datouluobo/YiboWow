@@ -28,7 +28,8 @@ end
 function Queue:Discard()
     if self.pending then return nil, Addon:T("UI.TEXT_0530") end
     self.state, self.actions, self.completed, self.message, self.pauseCode = "idle", {}, 0, nil, nil
-    self.lastRequestAt, self.nextScheduled = nil, nil
+    self.index, self.lastRequestAt, self.nextScheduled = nil, nil, nil
+    self.verifiedMails, self.removedIndexes = nil, nil
     return true
 end
 function Queue:Pause(reason, code)
@@ -283,11 +284,21 @@ function Queue:OnEvent(event, ...)
                 money = action.slot == "money" and action.original.money or 0, observedAt = Addon:Now() })
             self.pending = nil
         end
-        if self.state == "running" then self:Pause(Addon:T("UI.TEXT_0603"), "mailbox-closed") end
+        self.verifiedMails, self.nextScheduled = nil, nil
+        if self.state == "running" then self:Pause(Addon:T("UI.TEXT_0603"), "mailbox-closed")
+        elseif self.state == "paused" then
+            -- A timeout may have paused the queue before the mailbox closes.
+            -- Preserve the unknown result until close, then release the stale
+            -- queue on the next open without asking the player to clear it.
+            self.pauseCode = "mailbox-closed"
+        end
     elseif event == "MAIL_SHOW" then
         if self.state == "paused" and self.pauseCode == "mailbox-closed" and not self.pending then
             self:Discard()
-            if Addon.NativeUI and Addon.NativeUI.inbox then Addon.NativeUI.inbox.notice = nil end
+            if Addon.NativeUI and Addon.NativeUI.inbox then
+                Addon.NativeUI.inbox.notice, Addon.NativeUI.inbox.selection = nil, {}
+                Addon.NativeUI.inbox.keepTilesDuringQueue = nil
+            end
             self:Notify()
         end
     elseif event == "BAG_UPDATE_DELAYED" then

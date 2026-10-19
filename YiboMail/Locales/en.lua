@@ -682,5 +682,8 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["UI.TEXT_0657"] = "; ",
         ["UI.TEXT_0658"] = "; skipped: ",
         ["UI.TEXT_0659"] = "?",
+        ["UI.TEXT_0670"] = "Confirm sending gold to %s?\nAmount: %s\n\nReview the recipient and amount before continuing.",
+        ["UI.TEXT_0671"] = "Gold confirmation is unavailable; the mail was not sent.",
+        ["UI.TEXT_0672"] = "The mail changed during confirmation. Review it and try again.",
     })
 end

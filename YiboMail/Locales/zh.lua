@@ -682,5 +682,8 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["UI.TEXT_0657"] = "；",
         ["UI.TEXT_0658"] = "；跳过：",
         ["UI.TEXT_0659"] = "？",
+        ["UI.TEXT_0670"] = "确认向 %s 寄送金币吗？\n金额：%s\n\n请核对收件人和金额后再继续。",
+        ["UI.TEXT_0671"] = "无法显示金币确认，已取消发送。",
+        ["UI.TEXT_0672"] = "确认期间邮件内容发生变化，请核对后重新发送。",
     })
 end
