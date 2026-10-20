@@ -1,6 +1,6 @@
 # YiboTodo — 账号待办
 
-当前工作树版本为 **1.2.2**，要求 **YiboCore API v13**，并检查 `localization:1`、`account-view:2`、`character-identity:1`、`character-name-format:1` 与 `account-entry:2`。它把已支持的专业冷却、农场操作、日常和特殊活动放进按角色组织的账号矩阵，可用 `/ytd` 打开。
+当前工作树版本为 **1.2.3**，要求 **YiboCore API v13**，并检查 `localization:1`、`account-view:2`、`character-identity:1`、`character-name-format:1` 与 `account-entry:2`。它把已支持的专业冷却、农场操作、日常和特殊活动放进按角色组织的账号矩阵，可用 `/ytd` 打开。
 
 ## 功能
 
@@ -19,4 +19,4 @@ Todo 通过 Core Provider 输出来源任务，供兼容版本的 YiboTaskHub �
 
 ## 状态与发布
 
-1.2.2 当前为工作树版本，尚未发布。新增来源与行动中心相关功能的发布状态详见[更新日志](CHANGELOG.md)。插件不把未知或过期来源推断为待办已完成。
+1.2.3 修复暗月完成记录因周期键分钟偏差而漏读的问题；2026-10-20 用户确认重载后钓鱼正确显示完成。离线回归已通过，完整退出恢复、周四重置及正式包干净／覆盖安装仍待对应实机或发行检查；尚未发布。详见[专项记录](../_NonRelease/YiboTodoDarkmoonCycle/README.md)。

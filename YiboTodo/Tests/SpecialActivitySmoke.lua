@@ -22,6 +22,7 @@ dofile("YiboTodo/Catalog/MonitoringGroupCatalog.lua")
 dofile("YiboTodo/Catalog/SpecialActivityCatalog_MoP.lua")
 dofile("YiboTodo/Model/Schedule.lua")
 dofile("YiboTodo/Providers/Registry.lua")
+dofile("YiboTodo/Mists/Darkmoon.lua")
 dofile("YiboTodo/Providers/SpecialActivity.lua")
 local Addon = _G.YiboTodo
 _G.YiboTodoDB = {}

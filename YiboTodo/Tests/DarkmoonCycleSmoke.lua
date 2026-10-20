@@ -22,6 +22,7 @@ dofile("YiboTodo/Catalog/MonitoringGroupCatalog.lua")
 dofile("YiboTodo/Catalog/SpecialActivityCatalog_MoP.lua")
 dofile("YiboTodo/Model/Schedule.lua")
 dofile("YiboTodo/Providers/Registry.lua")
+dofile("YiboTodo/Mists/Darkmoon.lua")
 dofile("YiboTodo/Providers/SpecialActivity.lua")
 local Addon = _G.YiboTodo
 _G.YiboTodoDB = {}
@@ -75,6 +76,43 @@ C_Calendar.GetNumDayEvents = function() return 1 end
 
 -- Upgrading preserves trustworthy legacy completions within the actual cycle.
 clock = At(2026, 10, 18, 2, 18)
+-- Saved client evidence: the turn-in exists, but GetGameTime and server time
+-- sampled across a minute boundary produced a cycle key offset by 60 seconds.
+local fishing = Addon.Catalog.specialActivities["mop.darkmoon-faire.29513"]
+local drifted = Addon.Database:GetProvider("drifted-fishing", "special-activity", true)
+local completedAt = At(2026, 10, 18, 1)
+drifted.days = { [fishing.id] = {
+    ["darkmoon:" .. tostring(At(2026, 10, 18, 0) + 60)] = {
+        state = "completed", completedAt = completedAt, observedAt = completedAt,
+    },
+} }
+assert(provider:GetProject("drifted-fishing", fishing, clock).state == "completed",
+    "a recorded fishing turn-in survives a minute-offset cycle key")
+assert(provider:GetTargetProject("drifted-fishing", fishing, clock).observedAt == completedAt,
+    "exact goals retain the original completion evidence")
+local openingStart = At(2026, 10, 18, 0)
+local delayed = Addon.Database:GetProvider("negative-drift", "special-activity", true)
+delayed.days = { [fishing.id] = {
+    ["darkmoon:" .. tostring(openingStart - 60)] = {
+        state = "completed", completedAt = completedAt, observedAt = completedAt,
+    },
+    ["darkmoon:" .. tostring(openingStart)] = { state = "actionable" },
+} }
+assert(provider:GetProject("negative-drift", fishing, clock).state == "completed",
+    "an empty exact-key observation cannot mask valid evidence under an earlier key")
+local invalid = Addon.Database:GetProvider("invalid-exact-key", "special-activity", true)
+invalid.days = { [fishing.id] = {
+    ["darkmoon:" .. tostring(openingStart)] = {
+        state = "completed", completedAt = openingStart - 1,
+    },
+} }
+assert(provider:GetProject("invalid-exact-key", fishing, clock).state == "actionable",
+    "even an exact key cannot make previous-cycle evidence current")
+invalid.days[fishing.id]["darkmoon:" .. tostring(openingStart)].completedAt = clock + 1
+assert(provider:GetProject("invalid-exact-key", fishing, clock).state == "actionable",
+    "even an exact key cannot make future evidence current")
+assert(drifted.days[fishing.id]["darkmoon:" .. tostring(openingStart + 60)].completedAt == completedAt,
+    "reading drifted evidence never rewrites saved history")
 Legacy("valid-legacy", At(2026, 10, 18, 1))
 assert(Project("valid-legacy").state == "completed", "valid legacy completion survives the key change")
 assert(Project("valid-legacy").observedAt == At(2026, 10, 18, 1), "legacy evidence keeps its observation time")
@@ -82,6 +120,8 @@ Legacy("future-legacy", At(2026, 10, 22, 8))
 assert(Project("future-legacy").state == "actionable", "future evidence cannot complete this cycle")
 clock = At(2026, 10, 22, 7)
 assert(Project("valid-legacy").state == "actionable", "legacy completion expires at the actual weekly reset")
+assert(provider:GetProject("drifted-fishing", fishing, clock).state == "actionable",
+    "recovered fishing completion still expires at Thursday reset")
 Legacy("valid-second-cycle", At(2026, 10, 22, 7))
 assert(Project("valid-second-cycle").state == "completed", "valid second-cycle legacy evidence is retained")
 

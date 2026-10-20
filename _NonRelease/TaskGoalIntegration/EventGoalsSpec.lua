@@ -9,6 +9,7 @@ local open = true
 C_Calendar = { GetNumDayEvents = function() return open and 1 or 0 end,
     GetDayEvent = function() return { title = "Darkmoon Faire" } end }
 dofile("YiboTodo/Catalog/SpecialActivityCatalog_MoP.lua")
+dofile("YiboTodo/Mists/Darkmoon.lua")
 dofile("YiboTodo/Providers/SpecialActivity.lua")
 dofile("YiboTaskHub/Presentation.lua")
 dofile("YiboTaskHub/Preview.lua")
