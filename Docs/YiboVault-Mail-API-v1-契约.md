@@ -126,6 +126,7 @@ scope = { mode = "account" }
 - 公会银行记录以 `guildKey` 与 `location.tabID` 标识共享页签，不设置角色库存归属；`visitorCharacterID` 仅记录最近一次改变该快照的访问角色，查询须按范围内角色的服务器与公会名匹配，并对同一 `guildKey` 只计一次。
 - Mail 提供者的记录可额外包含 `mailKey`、`attachmentIndex`、`expiresAtEstimate`、`daysLeftAtScan`、`sender`、`subject` 与 `mailType`；Vault 自有精简附件记录仅保证位置中的 `attachmentIndex`，不伪造邮件生命周期字段。
 - Vault 转移记录额外包含 `mailStatus = "in-transit"`、`senderCharacterID`、`senderName`，`characterID` 指向明确解析到的收件角色。收件匹配仅根据 Mail 当前拥有的扫描和历史数据；尚未扫描、无法唯一匹配或字段不足时保留在途状态，不推断已送达。
+- Mail Mists1.2.22将追踪功能启用前（2026-10-12 13:59:48北京时间）、无匹配收件／退回证据的可解析旧寄件标为待核实历史，不通过GetTransfers返回。原发送事实和原保留期限继续保存；此升级基线不表示已送达。追踪启用后的发送沿用上述匹配规则。详见[历史在途迁移](../YiboMail/Docs/Mists-历史在途记录迁移与验收.md)。
 - AH 记录额外包含可取得的 `auctionID`、`stackCount`、`unitPrice`、`buyoutAmount`、`timeLeft`；字段均待客户端验证并保持可空。
 
 ## 6. YiboMail.Items v1

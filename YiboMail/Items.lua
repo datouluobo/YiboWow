@@ -70,7 +70,7 @@ local function TransferIndex(characters)
                 local mail = history.mail or history
                 Evidence(owner, mail, history.observedAt or mail.observedAt,
                     "history:" .. owner.id .. ":" .. tostring(history.eventID or history.sourceMailKey or ""), history.state == "collected-archived")
-            elseif history.state == "in-transit" and type(history.recipient) == "string" then
+            elseif history.state == "in-transit" and history.transferReview ~= "legacy-unverified" and type(history.recipient) == "string" then
                 local recipient = Resolve(history.recipient, owner.realm)
                 local attachmentKey = recipient and AttachmentSignature(history.attachments)
                 if attachmentKey then

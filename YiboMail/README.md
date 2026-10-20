@@ -4,13 +4,15 @@
 
 ![YiboMail 邮件助手](Media/YiboMailIcon-128.png)
 
-当前版本 `1.2.21-api1` 提供原生邮箱增强，以及由 YiboCore 承载的收件箱、账号总览、历史记录三个标签页，可选 Broker/小地图入口、六列邮件悬停摘要和登录到期提醒。基础功能最低依赖 **YiboCore 1.12.1 / API v13**、`localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`item-picker:2`、`character-identity:1`、`characters:1`、`character-cleanup:1`、`account-view:2`、`account-preview-characters:1`、`account-character-admission:1`、`account-surface-budget:1` 和 `account-entry:2`；缺失时提示升级并停止基础初始化。Mail 的静态玩家文案使用稳定 ASCII 语言 key 和 Mail 自有中英文资源，语言由 Core 账号设置统一选择，并在重载后应用。打开游戏邮箱即可收取和发送；跨角色查看可从 Core 统一窗口访问。Mail 通过 Core 的 `mail.items` v1.1 服务向 Vault 提供当前收件附件及可解析的成功发件在途记录；收件记录匹配后不再报告为在途。契约见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
+当前版本 `1.2.22-api1` 提供原生邮箱增强，以及由 YiboCore 承载的收件箱、账号总览、历史记录三个标签页，可选 Broker/小地图入口、六列邮件悬停摘要和登录到期提醒。基础功能最低依赖 **YiboCore 1.12.1 / API v13**、`localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`item-picker:2`、`character-identity:1`、`characters:1`、`character-cleanup:1`、`account-view:2`、`account-preview-characters:1`、`account-character-admission:1`、`account-surface-budget:1` 和 `account-entry:2`；缺失时提示升级并停止基础初始化。Mail 的静态玩家文案使用稳定 ASCII 语言 key 和 Mail 自有中英文资源，语言由 Core 账号设置统一选择，并在重载后应用。打开游戏邮箱即可收取和发送；跨角色查看可从 Core 统一窗口访问。Mail 通过 Core 的 `mail.items` v1.1 服务向 Vault 提供当前收件附件及可解析的成功发件在途记录；收件记录匹配后不再报告为在途。契约见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
 
 按物品或分类为收件人建立规则后，规则寄件页会汇总命中物品、按角色整理并按单封附件容量拆分寄件批次。玩家集中核对后即可逐封确认发送；保存的分配规则能大幅减少重复查找物品、选择收件人和手工装填，是多角色物资转移的主要省时点。
 
 可选 `action.todo` / `YiboMail:inbox-collection` 当前显示为“新邮件”，经 Core 提供给行动中心，单独要求 API v11 / business-providers:1；不足时只停止此集成并提示升级。每角色最多一条查看提醒；收件箱当前筛选结果显示信件、或附件箱显示对应附件／金币图块时即自动读信并确认提醒；同步调用游戏原生读信接口，使小地图新邮件提示随原生状态更新。无需取走附件，关闭邮箱或重载不会重新催收。筛除、隐藏与未展示来源不确认；收取期间暂缓，身份校验或原生读信失败不确认。升级前缓存建立基线；邮箱外原生新邮件信号可提示查看，扫描后细化数量。原库存 API 仍包含已看未取附件。359 项集成／展示／总览检查及 Mail／Vault 回归通过，详见 [当前邮件契约与显示复核](../Docs/行动中心-新邮件语义与角色显示复核.md)。本轮可 `/reload`，未发布、客户端待验收。
 
 ## 当前功能
+
+1.2.22对在途追踪功能启用前、缺少收件／退回证据的旧发送历史执行一次性核对，保留为待核实记录并停止计入Vault当前在途量。已实机确认重载后打开邮箱，旧在途数量正确消失；详见[历史在途迁移与验收](Docs/Mists-历史在途记录迁移与验收.md)。
 
 - 接管原生收件箱内容区，顶部同一行放置搜索、类别筛选和关闭按钮；使用统一背景、紧凑邮件标题行、附件换行与自适应行高、独立勾选区域和列表外滚动条，保留原生收发标签与信件操作。
 - 标题行显示职业色发件人、主题与到期时间，同服省略服务器；金币、COD 和退回状态随主题显示，完整内容可悬停查看。多附件自动换行，各物品图标可悬停查看原生物品信息，条目随附件内容增高。左键点击条目展开／收起附件，右键打开／关闭同一封原生信件；中键直接排队收取该信的所有可收附件，不收金币。

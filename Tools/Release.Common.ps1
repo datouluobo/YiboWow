@@ -56,7 +56,10 @@ function Get-YiboReleaseProfile {
     $apiVersion = if ($addonProfile.ContainsKey('APIPattern')) {
         [int](Read-YiboRequiredValue $versionText $addonProfile.APIPattern 'source API version')
     } else { $null }
-    $version = if ($addonProfile.VersionIncludesAPI) { "$releaseVersion-api$apiVersion" } else { $releaseVersion }
+    $sourceIncludesAPI = $addonProfile.ContainsKey('SourceVersionIncludesAPI') -and $addonProfile.SourceVersionIncludesAPI
+    if ($addonProfile.VersionIncludesAPI -and $null -eq $apiVersion) { throw 'An API-bearing version requires an explicit public API declaration.' }
+    $version = if ($addonProfile.VersionIncludesAPI -and -not $sourceIncludesAPI) { "$releaseVersion-api$apiVersion" } else { $releaseVersion }
+    if ($addonProfile.VersionIncludesAPI -and $version -notmatch ("-api" + $apiVersion + '$')) { throw 'Source version and public API suffix differ.' }
     $tocVersion = Read-YiboRequiredValue $tocText '^## Version:\s*([^\r\n]+)' 'TOC version'
     if ($tocVersion -ne $version) { throw "TOC version '$tocVersion' does not match source version '$version'." }
     if ($version -notmatch '^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)*$') { throw "Unsafe package version: $version" }
@@ -71,6 +74,39 @@ function Get-YiboReleaseProfile {
         Definition = $addonProfile; Client = $targetProfile; Slug = $config.Targets[$targetID].Slug
         TocPath = $tocPath; TocText = $tocText; Version = $version; APIVersion = $apiVersion
         RequiredCoreAPI = $requiredCoreAPI; Interfaces = $interfaces
+    }
+}
+
+function Get-YiboSourceTargetLabel {
+    param([object[]]$SourceTargets)
+    if (-not $SourceTargets.Count) { throw 'Source package needs explicit game targets.' }
+    $labels = foreach ($target in $SourceTargets) {
+        $slug = [string]$target.slug
+        if ($slug -notmatch '^[a-z]+(?:-[a-z]+)*$') { throw 'Invalid source target slug.' }
+        $slug
+    }
+    return (@($labels | Sort-Object -Unique) -join '-')
+}
+
+function Get-YiboPackageNames {
+    param([string]$Addon, [string]$Slug, [string]$Version, $PublicAPI, [bool]$VersionIncludesAPI, [string]$SourceHash, [object[]]$SourceTargets)
+    if ($Addon -notmatch '^Yibo[A-Za-z]+$' -or $Slug -notmatch '^[a-z]+(?:-[a-z]+)*$' -or
+        $Version -notmatch '^\d+\.\d+(?:\.\d+)?(?:[-+][0-9A-Za-z.-]+)*$' -or $SourceHash -notmatch '^[0-9a-f]{64}$') {
+        throw 'Invalid package name inputs.'
+    }
+    $packageVersion = $Version
+    if ($null -ne $PublicAPI) {
+        if ([int]$PublicAPI -lt 1) { throw 'Public API version must be positive.' }
+        if ($VersionIncludesAPI) {
+            if ($Version -notmatch ("-api" + [int]$PublicAPI + '$')) { throw 'Version contains a different public API suffix.' }
+        } else { $packageVersion += "-api$PublicAPI" }
+    } elseif ($VersionIncludesAPI -or $Version -match '-api\d+') {
+        throw 'API suffix requires an explicit public API declaration.'
+    }
+    $sourceTargetLabel = Get-YiboSourceTargetLabel $SourceTargets
+    return [pscustomobject]@{
+        CurseForge = "$Addon-$Slug-v$packageVersion-curseforge.zip"
+        GitHub = "$Addon-$sourceTargetLabel-v$packageVersion-src.$($SourceHash.Substring(0, 12))-github.zip"
     }
 }
 

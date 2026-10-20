@@ -29,6 +29,7 @@ function History:Query(context, options)
             local displayName = query ~= "" and Addon.Core.Characters:FormatName(character, { nameMode = "short" }) or nil
             for _, candidate in ipairs(records) do
                 local record = candidate.record
+                local state = record.transferReview == "legacy-unverified" and "unverified" or record.state
                 local mail = record.mail or record
                 local stamp = tonumber(record.observedAt)
                 local retention = (record.state == "unverified" and Addon.db.settings.unverifiedDays or Addon.db.settings.historyDays) or 90
@@ -39,7 +40,7 @@ function History:Query(context, options)
                 local counterpart = record.recipient or mail.sender or Addon:T("UI.TEXT_0399")
                 local subject = record.subject or mail.subject or ""
                 local filtered = options.kind and options.kind ~= "all" and options.kind ~= direction and options.kind ~= kind
-                local filteredResult = options.result and options.result ~= "all" and options.result ~= record.state
+                local filteredResult = options.result and options.result ~= "all" and options.result ~= state
                 -- An unknown legacy timestamp can only appear in the explicit all-time view.
                 local validTime = (stamp and now - stamp < retention * 86400 and (not since or stamp >= since)) or (not stamp and not since)
                 local match = query == ""
@@ -52,8 +53,8 @@ function History:Query(context, options)
                     result[#result + 1] = { id = Addon.Encode({ character.id, candidate.id }),
                         character = character, record = record, mail = mail, time = stamp, kind = kind, direction = direction,
                         counterpart = counterpart, subject = subject, items = items, money = money,
-                        event = record.cacheProjection and Addon:T("UI.TEXT_0316") or (names[record.state] or Addon:T("UI.TEXT_0511")), state = record.state,
-                        result = record.state == "in-transit" and Addon:T("UI.TEXT_0247") or (names[record.state] or Addon:T("UI.TEXT_0399")),
+                        event = record.cacheProjection and Addon:T("UI.TEXT_0316") or (names[record.state] or Addon:T("UI.TEXT_0511")), state = state,
+                        result = state == "in-transit" and Addon:T("UI.TEXT_0247") or (names[state] or Addon:T("UI.TEXT_0399")),
                         sourceKey = record.sourceMailKey or mail.mailKey }
                 end
             end
@@ -78,7 +79,10 @@ function History:Content(entry, omitItems)
     end
     -- The result column already explains uncertainty. Keep the full evidence
     -- in the tooltip/details without inflating every attachment row.
-    if entry.state == "unverified" and not omitItems then parts[#parts + 1] = entry.record.cacheProjection and Addon:T("UI.TEXT_0387") or Addon:T("UI.TEXT_0145") end
+    if entry.state == "unverified" and not omitItems then
+        parts[#parts + 1] = entry.record.transferReview == "legacy-unverified" and Addon:T("HISTORY.LEGACY_TRANSFER_REVIEW")
+            or (entry.record.cacheProjection and Addon:T("UI.TEXT_0387") or Addon:T("UI.TEXT_0145"))
+    end
     return #parts > 0 and table.concat(parts, Addon:T("UI.TEXT_0652")) or (omitItems and "" or Addon:T("UI.TEXT_0368"))
 end
 function History:Outcome(entry)

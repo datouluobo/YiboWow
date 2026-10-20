@@ -57,7 +57,8 @@ Test-YiboLuaEntries $runtimeEntries $profile.Client.LuaVersion
 $targetStates = foreach ($id in ($profile.Definition.Targets.Keys | Sort-Object)) {
     $otherProfile = Get-YiboReleaseProfile $workspacePath $profile.Addon $id
     [ordered]@{
-        target = $otherProfile.Target; version = $otherProfile.Version; publicAPI = $otherProfile.APIVersion
+        target = $otherProfile.Target; slug = $otherProfile.Slug; gameVersionNames = @($otherProfile.Client.CurseForgeVersionNames)
+        version = $otherProfile.Version; publicAPI = $otherProfile.APIVersion
         minimumCoreAPI = $otherProfile.RequiredCoreAPI; sourceToc = $otherProfile.Client.SourceToc
         loadToc = $otherProfile.Client.LoadToc; interface = @($otherProfile.Interfaces)
         validationState = $otherProfile.Client.ValidationState
@@ -85,10 +86,8 @@ $manifestName = 'YiboReleaseManifest.json'
 if ($manifestName -in $publicEntries.Relative -or $manifestName -in $runtimeEntries.Relative) { throw 'Generated release manifest already exists in source.' }
 $cfEntries = $runtimeEntries + [pscustomobject]@{ Relative = $manifestName; Source = $null; Content = ($cfManifest | ConvertTo-Json -Depth 12) }
 $ghEntries = $publicEntries + [pscustomobject]@{ Relative = $manifestName; Source = $null; Content = ($ghManifest | ConvertTo-Json -Depth 12) }
-$nameVersion = if ($null -eq $profile.APIVersion -or $profile.Definition.VersionIncludesAPI) { $profile.Version } else { "$($profile.Version)-api$($profile.APIVersion)" }
-$cfName = "$($profile.Addon)-$($profile.Slug)-v$nameVersion-curseforge.zip"
-# The hash distinguishes source snapshots even when target versions advance independently.
-$ghName = "$($profile.Addon)-src.$($sourceHash.Substring(0, 12))-github.zip"
+$names = Get-YiboPackageNames -Addon $profile.Addon -Slug $profile.Slug -Version $profile.Version -PublicAPI $profile.APIVersion -VersionIncludesAPI $profile.Definition.VersionIncludesAPI -SourceHash $sourceHash -SourceTargets @($targetStates)
+$cfName, $ghName = $names.CurseForge, $names.GitHub
 $artifacts = @()
 if ($Channel -in @('Both', 'CurseForge')) { $artifacts += [pscustomobject]@{ Channel = 'CurseForge'; Final = (Join-Path $outputPath $cfName); Entries = $cfEntries } }
 if ($Channel -in @('Both', 'GitHub')) { $artifacts += [pscustomobject]@{ Channel = 'GitHub'; Final = (Join-Path $outputPath $ghName); Entries = $ghEntries } }

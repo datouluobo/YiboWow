@@ -1,6 +1,8 @@
 local Core = _G.YiboCore
 if Core and Core.Locale and type(Core.Locale.Register) == "function" then
     Core.Locale:Register("YiboMail", "zh", {
+        ["ERROR.TRANSFER_MIGRATION"] = "旧寄件记录核对未完成：%s。请重新登录后重试。",
+        ["HISTORY.LEGACY_TRANSFER_REVIEW"] = "此记录早于在途追踪功能，缺少收件或退回证据，待核实。",
         ["APP.PREFIX"] = "|cff20e070[Yibo]|r 邮件：",
         ["BOOTSTRAP.UPGRADE_CORE"] = "请升级至 YiboCore 1.12.1 / API13，并启用 YiboMail 所需的公共能力。",
         ["ENTRY.TITLE"] = "[Yibo] YiboMail - 邮件助手",

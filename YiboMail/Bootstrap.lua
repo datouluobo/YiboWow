@@ -65,6 +65,8 @@ function Addon:Initialize()
         ok, err = self.AccountPage:Register(); if not ok then self:Print(err or self:T("ERROR.PAGE_REGISTER")); return end
         self.Items.Events:Register(self.AccountPage, function() core.AccountView:NotifyPageChanged("mail-inbox") end)
     end
+    ok, err = self.Items:MigrateLegacyTransfers()
+    if not ok then self:Print(self:T("ERROR.TRANSFER_MIGRATION", tostring(err))); return end
     self.initialized = true
     ok, err = self.Items:RegisterService()
     if not ok then self.initialized = false; self:Print(err or self:T("ERROR.ITEMS_REGISTER")); return end

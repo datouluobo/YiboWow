@@ -1,6 +1,8 @@
 local Core = _G.YiboCore
 if Core and Core.Locale and type(Core.Locale.Register) == "function" then
     Core.Locale:Register("YiboMail", "en", {
+        ["ERROR.TRANSFER_MIGRATION"] = "Legacy send review could not finish: %s. Log in again to retry.",
+        ["HISTORY.LEGACY_TRANSFER_REVIEW"] = "This send predates transit tracking and has no receipt or return evidence. Verification is required.",
         ["APP.PREFIX"] = "|cff20e070[Yibo]|r Mail: ",
         ["BOOTSTRAP.UPGRADE_CORE"] = "Upgrade to YiboCore 1.12.1 / API 13 with the public capabilities required by YiboMail.",
         ["ENTRY.TITLE"] = "[Yibo] YiboMail - Mail Assistant",
