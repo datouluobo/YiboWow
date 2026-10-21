@@ -84,15 +84,52 @@ end
 function Scanner:ReadVisible()
     if not self:IsOpen() or not self.updated then return nil, Addon:T("UI.TEXT_0526") end
     local now, clock = Addon:Now()
-    local ok, result = pcall(function()
+    local ok, result, visible, total = pcall(function()
         local count, total = GetInboxNumItems(); local mails = {}
         for index = 1, count do mails[index] = ReadMail(index, now, clock) end
         local after, all = GetInboxNumItems()
         if after ~= count or total ~= all then error(Addon:T("UI.TEXT_0606")) end
-        return mails
+        return mails, count, total
     end)
     if not ok then return nil, tostring(result) end
-    return result
+    return result, visible, total
+end
+-- A collection reads only its target. A missing row is a valid observation
+-- after automatic removal; unreadable headers/attachments remain errors.
+function Scanner:ReadTarget(index)
+    if not self:IsOpen() or not self.updated then return nil, nil, nil, "mailbox-unavailable" end
+    local now, clock = Addon:Now()
+    local ok, mail, visible, total = pcall(function()
+        local count, all = GetInboxNumItems()
+        if type(count) ~= "number" or type(all) ~= "number" or count < 0 or all < count then error("counts-unavailable") end
+        local result = index <= count and ReadMail(index, now, clock) or nil
+        local after, afterAll = GetInboxNumItems()
+        if after ~= count or afterAll ~= all then error("inbox-changed") end
+        return result, count, all
+    end)
+    if not ok then return nil, nil, nil, tostring(mail) end
+    return mail, visible, total
+end
+function Scanner:BeginCollection()
+    self.refreshPending = self.validAt ~= nil or self.refreshPending
+    self.validAt, self.stable, self.scheduledScan = nil, nil, nil
+    self.generation = (self.generation or 0) + 1
+    local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
+    self:PublishStatus(current and current.id)
+end
+function Scanner:CommitCollection(mails, visible, total, fullRead)
+    local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
+    local snapshot = current and Addon.db.byCharacter[current.id]
+    if not snapshot then return end
+    self.validAt, self.refreshPending = nil, true
+    -- This is an observed action delta, not a fresh full-inbox sample. Keep
+    -- the last full scan time and public stale status until final reconciliation.
+    local coverage = Addon.Copy(snapshot.coverage)
+    if fullRead then coverage.observedAt, coverage.clockSource = Addon:Now() end
+    coverage.currentCount, coverage.totalCount, coverage.unscannedCount = visible, total, total - visible
+    coverage.status = visible < total and "partial" or (total == 0 and "known-empty" or "known")
+    Addon:CommitScan(current, mails, coverage)
+    self.publishedStatus[current.id] = "stale"
 end
 function Scanner:ReadEntry(entry)
     if not self:IsOpen() or not self.updated then return nil, Addon:T("UI.TEXT_0526") end
@@ -125,7 +162,7 @@ local function CommitScan(character, mails, visible, total, now, clock)
                 if now - stable.at >= 60 then Addon:CleanupBacklog(character.id) end
             else Scanner.stable = { characterID = character.id, fingerprint = fingerprint, count = total, at = now } end
         else Scanner.stable = nil end
-        queueRefreshed = Addon.Queue and Addon.Queue:OnScan(mails)
+        queueRefreshed = Addon.Queue and Addon.Queue:OnScan(mails, visible, total)
     end)
     if Addon.Queue and Addon.Queue.notifyPending then Addon.Queue:Notify() end
     if Addon.NativeUI then
@@ -183,7 +220,11 @@ function Scanner:ScanAsync(generation)
     ReadChunk()
     return true
 end
-function Scanner:Schedule()
+function Scanner:Schedule(force)
+    if not force and Addon.Queue and Addon.Queue:OwnsRefresh() then
+        Addon.Queue:ScheduleCheck()
+        return
+    end
     -- Retain presentation during a recheck of this open session's last valid
     -- snapshot. Public readiness and all collection checks still become stale.
     self.refreshPending = self.validAt ~= nil or self.refreshPending

@@ -4,7 +4,7 @@
 
 ![YiboMail 邮件助手](Media/YiboMailIcon-128.png)
 
-当前版本 `1.2.22-api1` 提供原生邮箱增强，以及由 YiboCore 承载的收件箱、账号总览、历史记录三个标签页，可选 Broker/小地图入口、六列邮件悬停摘要和登录到期提醒。基础功能最低依赖 **YiboCore 1.12.1 / API v13**、`localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`item-picker:2`、`character-identity:1`、`characters:1`、`character-cleanup:1`、`account-view:2`、`account-preview-characters:1`、`account-character-admission:1`、`account-surface-budget:1` 和 `account-entry:2`；缺失时提示升级并停止基础初始化。Mail 的静态玩家文案使用稳定 ASCII 语言 key 和 Mail 自有中英文资源，语言由 Core 账号设置统一选择，并在重载后应用。打开游戏邮箱即可收取和发送；跨角色查看可从 Core 统一窗口访问。Mail 通过 Core 的 `mail.items` v1.1 服务向 Vault 提供当前收件附件及可解析的成功发件在途记录；收件记录匹配后不再报告为在途。契约见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
+Mists当前开发版本 `1.2.24-api1` 提供原生邮箱增强，以及由 YiboCore 承载的收件箱、账号总览、历史记录三个标签页，可选 Broker/小地图入口、六列邮件悬停摘要和登录到期提醒。基础功能最低依赖 **YiboCore 1.12.1 / API v13**、`localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`item-picker:2`、`character-identity:1`、`characters:1`、`character-cleanup:1`、`account-view:2`、`account-preview-characters:1`、`account-character-admission:1`、`account-surface-budget:1` 和 `account-entry:2`；缺失时提示升级并停止基础初始化。Mail 的静态玩家文案使用稳定 ASCII 语言 key 和 Mail 自有中英文资源，语言由 Core 账号设置统一选择，并在重载后应用。打开游戏邮箱即可收取和发送；跨角色查看可从 Core 统一窗口访问。Mail 通过 Core 的 `mail.items` v1.1 服务向 Vault 提供当前收件附件及可解析的成功发件在途记录；收件记录匹配后不再报告为在途。契约见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
 
 按物品或分类为收件人建立规则后，规则寄件页会汇总命中物品、按角色整理并按单封附件容量拆分寄件批次。玩家集中核对后即可逐封确认发送；保存的分配规则能大幅减少重复查找物品、选择收件人和手工装填，是多角色物资转移的主要省时点。
 
@@ -21,7 +21,7 @@
 - 邮件与附件两种模式支持搜索、类别筛选和排序；“临期／邮箱”排序选择会独立持久化，不受筛选记忆开关影响。附件模式聚合为物品图标，并将所有可收金币集中为一个金币图块，悬停可查看发件人、邮件主题、金额与期限；点击排队收取，Alt+左键只收最早到期邮件中的金币。物品图块采用与 Vault 一致的细品质边框与图标裁边；物品信息未缓存时使用链接颜色，加载完成后刷新。点击直接收取该物品的可收附件。
 - 邮件模式点击“收取”直接执行已勾选项目，无额外预览确认。按钮默认显示“收取”，勾选后显示“收取（x）”；x 是所选附件槽数，不包含金币或堆叠件数。按钮不显示 tooltip。
 - “更多”提供全选当前可收项目、清空选择、暂停队列与切换排序。执行期间禁用重复操作；部分勾选显示短横线。
-- 收取队列按估算到期时间从早到晚执行；启动前整批核对，执行时逐项按当前邮箱序号重新核对邮件、附件和金额。相同签名邮件使用本轮邮箱序号区分；每次收取后重扫，并按已移除邮件修正后续序号。收空的邮件行立即从当前列表移除，剩余内容则就地更新。COD 和离线角色不进入队列；邮箱关闭、位置或内容变化、背包不足、并行操作或结果不明时暂停。
+- 收取队列按估算到期时间从早到晚执行；启动前整批核对，执行时逐项读取并核对目标邮件、附件和金额。普通移除通过数量与相邻邮件确认并修正后续索引；100 封可见窗口补入或布局异常时全量复核，整批结束完整重扫。每次请求等待成功事件及内容证据，短暂旧数据在 30 秒内继续等待；连续成功时逐步缩短间隔，延迟或错误反馈时退避。收空邮件行立即移除，剩余内容就地更新；COD、离线角色不进入队列，邮箱关闭、背包不足、并行操作或结果不明时暂停且不自动重发。完整策略、模拟对比与实机待验见 [收件队列优化记录](Docs/Mists-收件队列优化与验收.md)。
 - COD 邮件右键可打开原生信件；展开后的附件左键触发原生付款确认，右键打开／关闭信件。附件模式中的仅 COD 物品点击时逐封确认付款；金额不足沿用原生提示。
 - 保留邮箱扫描、历史记录、缓存生命周期及 `YiboMail.Items` API，供业务数据使用。规则、联系人和已有偏好数据继续保存。
 - Core 邮件页与可选业务入口共用各角色最近一次成功的邮箱扫描快照。悬停使用 Core 统一标题栏与服务器范围，默认按角色显示邮件数、附件格数（每个物品附件格计 1，不按堆叠数量累加）、可收金币、最早到期和最后更新时间；到期提示条与最早到期字段在 7 天内使用警示色、3 天内使用紧急色，过估算期限后提示待核实。
@@ -53,7 +53,7 @@ RuleSendController.lua
 SendRulesSettings.lua
 RuleSendUI.lua
 Items.lua
-Scanner.lua
+Mists/Scanner.lua
 ViewModel.lua
 ActionTodo.lua
 WorkspaceState.lua
@@ -63,7 +63,7 @@ HistoryModel.lua
 CacheUI.lua
 AccountPage.lua
 Inbox.lua
-Queue.lua
+Mists/Queue.lua
 Compose.lua
 NativeUI.lua
 Bootstrap.lua
@@ -116,6 +116,7 @@ Logo v2 提供 `16/24/32/64/128/512/1024px` PNG；TGA 提供其中的二次幂�
 lua YiboMail/_NonRelease/Tests/NativeInboxSpec.lua
 lua YiboMail/_NonRelease/Tests/InboxReleaseSpec.lua
 lua YiboMail/_NonRelease/Tests/MailRuntimeSpec.lua
+lua YiboMail/_NonRelease/Tests/CollectionQueueSpec.lua
 lua YiboMail/_NonRelease/Tests/MailAPIConsumerSpec.lua
 lua YiboMail/_NonRelease/Tests/RecipientsSpec.lua
 lua YiboMail/_NonRelease/Tests/RecipientUISpec.lua

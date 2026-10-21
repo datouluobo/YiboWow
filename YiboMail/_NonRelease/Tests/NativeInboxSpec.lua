@@ -92,8 +92,9 @@ Addon.ViewModel = {
     ExpiryColor = function() return 0.25, 0.9, 0.35 end,
 }
 Addon.Items = { GetState = function() return { currentCount = 1, totalCount = 1 } end }
-Addon.Scanner = { updated = true, ReadVisible = function() return { mail } end, Signature = function() return "after" end }
+Addon.Scanner = { updated = true, ReadVisible = function() return { mail }, 1, 1 end, ReadTarget = function() return mail, 1, 1 end, BeginCollection = function() end, Schedule = function() end, Signature = function() return "after" end }
 GetTime = function() return 0 end
+C_Timer = { After = function() end }
 local calls = 0
 TakeInboxMoney = function() calls = calls + 1 end
 local takenSlot
@@ -108,7 +109,7 @@ local realExpiry = Addon.ViewModel.Expiry
 stubView.ItemBorder, stubView.AttachmentBorder = Addon.ViewModel.ItemBorder, Addon.ViewModel.AttachmentBorder
 stubView.CharacterLabel, stubView.CounterpartLabel = Addon.ViewModel.CharacterLabel, Addon.ViewModel.CounterpartLabel
 Addon.ViewModel = stubView
-dofile("YiboMail/Inbox.lua"); dofile("YiboMail/Queue.lua"); dofile("YiboMail/NativeUI.lua")
+dofile("YiboMail/Inbox.lua"); dofile("YiboMail/Mists/Queue.lua"); dofile("YiboMail/NativeUI.lua")
 local native, queue = Addon.NativeUI, Addon.Queue
 native:CreateInbox(); native:RefreshInbox()
 local panel = native.inbox
@@ -170,7 +171,7 @@ panel.options.search = ""; Menu("select")
 local changed = Addon.Copy(mail); changed.attachments[1].attachmentIndex, changed.attachments[2].attachmentIndex = 2, 1
 Addon.Scanner.ReadVisible = function() return { changed } end
 Click(panel.collect); assert(panel.notice and calls == 0 and queue.state == "idle")
-Addon.Scanner.ReadVisible = function() return { mail } end
+Addon.Scanner.ReadVisible = function() return { mail }, 1, 1 end
 Menu("clear"); Click(panel.rows[2].check)
 assert(panel.collect.label:GetText() == "收取 1")
 Click(panel.collect); assert(queue.pending and calls == 1 and takenSlot == 1 and #queue.actions == 1)
@@ -208,7 +209,7 @@ Click(panel.tiles[1]); assert(confirmations == 4 and calls == 1)
 local staleCOD = Addon.Copy(mail); staleCOD.signature = "changed"
 Addon.Scanner.ReadVisible = function() return { staleCOD } end
 native:CollectCOD(entry, first); assert(confirmations == 4 and panel.notice)
-Addon.Scanner.ReadVisible = function() return { mail } end
+Addon.Scanner.ReadVisible = function() return { mail }, 1, 1 end
 queue.pending = {}; native:CollectCOD(entry, first); assert(confirmations == 4)
 queue.pending = nil; mail.cod, entry.actionable = 0, true
 print("PASS: COD expanded attachment opens native letter; native payment and insufficient-funds paths; repeated clicks; right-click toggle; COD grid; stale/pending guards; no direct charge")

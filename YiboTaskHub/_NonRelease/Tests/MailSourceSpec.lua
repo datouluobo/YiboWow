@@ -25,7 +25,7 @@ local current = Core.Characters:GetCurrent()
 local offlineID = current.id == "D" and "C" or "D"
 Equal(Hub.Snapshot:Build(characters).providerCount, 2, "two existing Todo sources")
 
-for _, file in ipairs({ "Namespace", "Store", "Items", "Scanner", "ViewModel", "ActionTodo" }) do dofile("YiboMail/" .. file .. ".lua") end
+for _, file in ipairs({ "Namespace", "Store", "Items", "Mists/Scanner", "ViewModel", "ActionTodo" }) do dofile("YiboMail/" .. file .. ".lua") end
 local Mail = YiboMail; Mail.Core = Core
 Mail:InitializeDatabase()
 assert(Core:RegisterAddon(Mail.NAME, { version = Mail.VERSION, requiredAPI = 9 }))

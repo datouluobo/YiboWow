@@ -5,7 +5,7 @@ function GetServerTime() return 1000 end
 local characters = {}
 for index = 1, 20 do characters[index] = { id = "c" .. index, name = "Name" .. index, realm = "Realm" } end
 YiboCore = { Characters = { GetAllCached = function() return characters end, GetCurrent = function() return characters[1] end } }
-for _, name in ipairs({ "Namespace", "Store", "Recipients", "Items", "Scanner" }) do dofile("YiboMail/" .. name .. ".lua") end
+for _, name in ipairs({ "Namespace", "Store", "Recipients", "Items", "Mists/Scanner" }) do dofile("YiboMail/" .. name .. ".lua") end
 local Addon = YiboMail; Addon.Core = YiboCore
 if arg[1] == "baseline" then
     local pipe = assert(io.popen("git show HEAD:YiboMail/Items.lua"))

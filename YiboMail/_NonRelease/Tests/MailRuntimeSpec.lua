@@ -7,15 +7,15 @@ local c = { id = "C", name = "Hidden", realm = "Realm" }
 function GetServerTime() return now end
 function GetTime() return now end
 MailFrame = { IsShown = function() return shown end, HookScript = function() end }
-C_Timer = { After = function(delay, callback) timers[#timers + 1] = { delay, callback } end }
+C_Timer = { After = function(delay, callback) timers[#timers + 1] = { delay, callback, at = now + delay } end }
 local function Flush(limit)
     for iteration = 1, limit or 80 do
         local found
         for index, timer in ipairs(timers) do
-            if timer[1] < 1 then found = index; break end
+            if timer[1] < 1 and (not found or timer.at < timers[found].at) then found = index end
         end
         if not found then return end
-        local timer = table.remove(timers, found); timer[2]()
+        local timer = table.remove(timers, found); now = math.max(now, timer.at); timer[2]()
     end
     error("Timer loop did not settle")
 end
@@ -37,7 +37,7 @@ end
 function GetContainerNumFreeSlots() return 10, 0 end
 local function Item(id, slot, quantity, variant) return { id = id, slot = slot, quantity = quantity, variant = variant } end
 local function Mail(subject, items, money, cod) return { sender = "Sender", subject = subject, items = items or {}, money = money or 0, cod = cod or 0 } end
-for _, file in ipairs({ "Namespace", "Store", "Items", "Scanner", "ViewModel", "Inbox", "Queue" }) do dofile("YiboMail/" .. file .. ".lua") end
+for _, file in ipairs({ "Namespace", "Store", "Items", "Mists/Scanner", "ViewModel", "Inbox", "Mists/Queue" }) do dofile("YiboMail/" .. file .. ".lua") end
 local addon, scanner, api, queue = YiboMail, YiboMail.Scanner, YiboMail.Items, YiboMail.Queue
 addon.Core = { Characters = { GetCurrent = function() return a end, GetAllCached = function() return { a, b, c } end },
     AccountView = { GetVisibleCharacters = function() return { a, b } end, NotifyPageChanged = function() end } }
@@ -162,13 +162,13 @@ for _, event in ipairs(addon.db.byCharacter.A.history) do
     elseif event.state == "discovered" then afterDiscoveries = afterDiscoveries + 1 end
 end
 assert(collected == 4 and afterDiscoveries == discoveries + 2, "Partial collection must not invent new discovery events")
-assert(queue:Discard())
+assert(queue:Discard()); Flush()
 Scan({ Mail("COD", { Item(100, 1, 1) }, 0, 500) })
 local cod = addon.ViewModel:GetMails({ characters = { a } }, {})[1]
 assert(not cod.actionable and not queue:Prepare({ [addon.ViewModel:ActionID("A", cod.key, 1)] = true }, { characters = { a } }))
 assert(taken == 4)
 print("PASS: real queue atomic start, money and sparse-slot multi-attachment collection, event ordering, index shifts, completion/history/API totals, COD batch exclusion")
-assert(queue:Discard())
+assert(queue:Discard()); Flush()
 Scan({ Mail("Paused", { Item(100, 1, 1) }) })
 local entry = addon.ViewModel:GetMails({ characters = { a } }, {})[1]
 local single = { [addon.ViewModel:ActionID("A", entry.key, 1)] = true }
@@ -176,23 +176,23 @@ GetContainerNumFreeSlots = function() return 0, 0 end
 assert(queue:Start(assert(queue:Prepare(single, { characters = { a } }))))
 assert(queue.state == "paused" and not queue.pending and taken == 4)
 GetContainerNumFreeSlots = function() return 10, 0 end
-assert(queue:Discard())
+assert(queue:Discard()); Flush()
 InCombatLockdown = function() return true end
 assert(queue:Start(assert(queue:Prepare(single, { characters = { a } }))))
 assert(queue.state == "paused" and not queue.pending and taken == 4)
 InCombatLockdown = function() return false end
-assert(queue:Discard())
+assert(queue:Discard()); Flush()
 local collectItem = TakeInboxItem
 TakeInboxItem = function() taken = taken + 1 end -- Client accepts, but no result arrives.
 assert(queue:Start(assert(queue:Prepare(single, { characters = { a } }))))
 assert(queue.pending and taken == 5)
-queue:Install(); now = now + 13; addon.Frame.hooks.OnUpdate()
+queue:Install(); now = now + 31; addon.Frame.hooks.OnUpdate()
 assert(queue.state == "paused" and queue.pending)
 local historyCount = #addon.db.byCharacter.A.history
 Fire("MAIL_CLOSED")
 assert(not queue.pending and #addon.db.byCharacter.A.history == historyCount + 1)
 assert(addon.db.byCharacter.A.history[historyCount + 1].state == "unverified" and taken == 5)
-assert(queue:Discard())
+assert(queue:Discard()); Flush()
 print("PASS: early inbox update; no-space/combat guards; timeout retains unknown result; mailbox close archives uncertainty without retry")
 local hundred = {}
 for index = 1, 100 do hundred[index] = Mail("Mail" .. index, { Item(100, 1, 1) }) end
@@ -265,7 +265,7 @@ print('PASS: server inbox request; delayed NPC gift display and action validatio
 
 -- Multi-mail collection publishes the committed scan and its archive together.
 -- Exercise real scanner chunks, queue confirmation, index shifts and copies.
-assert(queue:Discard()); timers = {}; scanner.lastError = nil
+assert(queue:Discard()); Flush(); timers = {}; scanner.lastError = nil
 local bulk = {}
 for index = 1, 30 do bulk[index] = Mail("Bulk" .. index, { Item(100, 1, 1), Item(200, 4, 2), Item(300, 8, 3) }) end
 Scan(bulk)
@@ -297,8 +297,8 @@ assert(queue.actions[1].original.subject ~= "Caller mutation" and queue.actions[
 Flush(5000)
 assert(queue.state == "complete" and queue.completed == 90 and taken - beforeTaken == 90)
 assert(api:Query().quantity == 0 and archives == 90)
-assert(publications == 180, "Each attachment publishes readiness plus one combined confirmation, without an intermediate archive refresh")
-assert(fullRefreshes == 1 and progressRefreshes >= 90, "Mounted batch only fully refreshes at completion")
+assert(publications == 92, "One batch invalidation, 90 atomic action confirmations and one final full reconciliation")
+assert(fullRefreshes == 2 and progressRefreshes >= 90, "Mounted batch refreshes at completion and final full reconciliation")
 assert(addon.publicationBatch == nil and not queue.notifyPending)
 api.Events:Unregister("bulk"); addon.NativeUI = oldNative
 print(string.format("PASS: 30-mail/90-attachment real queue %.3fs; %d publications, %d full refresh, isolated caller data, complete inventory/history", os.clock() - started, publications, fullRefreshes))

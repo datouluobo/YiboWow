@@ -119,7 +119,7 @@ assert(snapshot.records[key].wasRead == true and addon.db.revision > revision)
 print("PASS: client read state scanned and published without changing mail identity; Core account page and business entry are registered")
 -- Recents use the captured send recipient, even after native input reset.
 addon.Core.Characters.GetAllCached = function() return { addon.Core.Characters:GetCurrent() } end
-SendMailNameEditBox = { GetText = function() return "" end }
+SendMailNameEditBox = { GetText = function() return "" end, SetText = function() end }
 addon.Compose.pendingSend = { characterID = "test", recipient = "Success-Realm", subject = "subject", attachments = {}, observedAt = 1000 }
 addon.Compose:OnEvent("MAIL_SEND_SUCCESS")
 assert(addon.db.recentRecipients[1].address == "Success-Realm")

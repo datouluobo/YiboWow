@@ -29,7 +29,7 @@ end
 GetItemInfo = function(id) return 'Item' .. tostring(id), nil, 4 end
 HasNewMail, CheckInbox = function() return false end, function() end
 YiboMailDB = nil
-for _, file in ipairs({ 'Store', 'Items', 'Scanner', 'ViewModel', 'Inbox', 'Queue', 'NativeUI' }) do dofile('YiboMail/' .. file .. '.lua') end
+for _, file in ipairs({ 'Store', 'Items', 'Mists/Scanner', 'ViewModel', 'Inbox', 'Mists/Queue', 'NativeUI' }) do dofile('YiboMail/' .. file .. '.lua') end
 A.FEATURES.send, A.FEATURES.account = false, false
 A:InitializeDatabase()
 MailFrame:Show(); InboxFrame:Show()

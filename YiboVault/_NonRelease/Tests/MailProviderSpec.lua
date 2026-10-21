@@ -18,7 +18,7 @@ core.Registry = { Get = function(_, name) return name == 'YiboMail' or name == '
 core.Print = function() end
 dofile('YiboCore/Runtime/Events.lua')
 dofile('YiboCore/Runtime/Contracts.lua')
-for _, file in ipairs({ "Namespace", "Locales/zh", "Locales/en", "Store", "Recipients", "Items", "Scanner" }) do dofile("YiboMail/" .. file .. ".lua") end
+for _, file in ipairs({ "Namespace", "Locales/zh", "Locales/en", "Store", "Recipients", "Items", "Mists/Scanner" }) do dofile("YiboMail/" .. file .. ".lua") end
 YiboMail.Core = core; YiboMail:InitializeDatabase()
 local mail = YiboMail
 assert(mail.Items:RegisterService())

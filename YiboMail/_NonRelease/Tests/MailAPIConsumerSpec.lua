@@ -1,7 +1,7 @@
 -- Simulate an external consumer using only the public Items API.
 function CreateFrame() return {} end
 function GetServerTime() return 1234 end
-for _, name in ipairs({ "Namespace", "Store", "Items", "Scanner" }) do dofile("YiboMail/" .. name .. ".lua") end
+for _, name in ipairs({ "Namespace", "Store", "Items", "Mists/Scanner" }) do dofile("YiboMail/" .. name .. ".lua") end
 local addon, api = YiboMail, YiboMail.Items
 local current = { id = "Current", name = "Current", realm = "Realm" }
 local hidden = { id = "Hidden", name = "Hidden", realm = "Realm" }
