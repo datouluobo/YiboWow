@@ -372,6 +372,16 @@ local function SetEmptyButton(control)
     control:SetScript("OnClick", nil)
 end
 
+local function BindHolidayManualMark(cell, key, boss, lines)
+    local _, record = YAB.Holiday:GetStatus(key, boss)
+    if not (record and record.source and record.source ~= "manual") then
+        lines[#lines + 1] = { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CLICK_TO_ADD_OR_REMOVE_A_MANUAL_MARK"), color = C.muted }
+        cell:SetScript("OnClick", function() YAB.Holiday:ToggleManual(boss, key) end)
+    else
+        cell:SetScript("OnClick", nil)
+    end
+end
+
 local function SetStatus(cell, status, key, boss)
     local planned, characterID, target
     if YAB.PlannedTargets then planned, characterID, target = YAB.PlannedTargets:IsPlanned(key, boss.key) end
@@ -394,6 +404,7 @@ local function SetStatus(cell, status, key, boss)
         cell:SetScript("OnClick", nil)
         local lines = { _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SOURCE_ACTION_CENTER_GOAL"), _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.STATUS_2") .. progress.reason }
         if progress.observedAt then lines[#lines + 1] = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SNAPSHOT") .. date("%m-%d %H:%M", progress.observedAt) end
+        if YAB.Holiday and YAB.Holiday:IsBoss(boss) then BindHolidayManualMark(cell, key, boss, lines) end
         Theme:BindTooltip(cell, boss.name, lines)
         return
     end
@@ -412,12 +423,7 @@ local function SetStatus(cell, status, key, boss)
         local sourceLabels = { quest = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.DAILY_QUEST"), ["lfg-reward"] = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.DUNGEON_COMPLETION_REWARD"), manual = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.MANUAL_MARK") }
         local lines = { { text = completed and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SEASONAL_BOSS_COMPLETED") or (status == "unobserved" and _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.TODAY_S_STATUS_HAS_NOT_BEEN_OBSERVED") or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.OBSERVED_TODAY_NOT_COMPLETED_YET")), color = labelColor } }
         if record and record.source then lines[#lines + 1] = { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.SOURCE") .. (sourceLabels[record.source] or tostring(record.source)), color = C.muted } end
-        if not (record and record.source and record.source ~= "manual") then
-            lines[#lines + 1] = { text = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CLICK_TO_ADD_OR_REMOVE_A_MANUAL_MARK"), color = C.muted }
-            cell:SetScript("OnClick", function() YAB.Holiday:ToggleManual(boss, key) end)
-        else
-            cell:SetScript("OnClick", nil)
-        end
+        BindHolidayManualMark(cell, key, boss, lines)
         Theme:BindTooltip(cell, boss.name .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.DAILY_REWARD"), lines)
         return
     end

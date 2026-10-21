@@ -1,5 +1,14 @@
 # YiboAltoBoss 更新日志 / Changelog
 
+## 2.8.2 — Hub 目标手动完成（2026-10-21）
+
+- 已加入 Hub 的节日首领矩阵格恢复普通左键手动标记完成，并通过同一角色当日记录同步 Hub 进度。
+- 再次点击可撤销手动完成；系统任务或副本奖励确认的完成记录保持只读，Core 目标操作手势沿用原有行为。
+- 用户已确认法师角色可点击改为已完成，Hub 同步正常。HolidayBossSpec284及相关目标回归通过；其它验收范围见节日实施记录。
+- TOC 与 Core 注册版本统一为2.8.2，最低 Core 1.12.6 / API13 不变。
+
+English: Restores left-click manual completion for seasonal Boss matrix cells linked to Hub goals, with shared character progress updating Hub. Manual marks can be toggled off; automatic completion records remain protected. In-game marking and Hub synchronization were confirmed. Requires YiboCore 1.12.6 / API13.
+
 ## 2.8.1 — 目标状态显示修复（2026-10-18）
 
 - 缩短行动中心目标在首领矩阵中的中英文状态标签，避免状态文本被单元格裁切；来源与详细进度仍可悬停查看。

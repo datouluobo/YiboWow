@@ -10,6 +10,24 @@
         Forever = @{ Slug = 'forever'; Directory = 'Forever' }
     }
     Addons = @{
+        YiboAltoBoss = @{
+            VersionFile = 'YiboAltoBoss.toc'
+            VersionPattern = '^## Version:\s*([^\r\n]+)'
+            VersionIncludesAPI = $false
+            ResourceDirectories = @('Media')
+            ExtraFiles = @()
+            Targets = @{
+                Mists = @{
+                    SourceToc = 'YiboAltoBoss.toc'
+                    LoadToc = 'YiboAltoBoss.toc'
+                    Interfaces = @(50504)
+                    CurseForgeFlavor = 'mists'
+                    CurseForgeVersionNames = @('5.5.4')
+                    LuaVersion = '5.1'
+                    ValidationState = 'existing-mists-baseline'
+                }
+            }
+        }
         YiboMail = @{
             VersionFile = 'Namespace.lua'
             VersionPattern = '^Addon\.NAME, Addon\.VERSION, Addon\.API_VERSION\s*=\s*"YiboMail",\s*"([^"]+)"'

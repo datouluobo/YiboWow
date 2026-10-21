@@ -303,4 +303,73 @@ for _, lang in ipairs({ "zh", "en" }) do
     check(control.lines[3].text == YiboCore.Locale:Get("YiboAltoBoss", "QUEUE.ELAPSED_WAIT", "2" .. YiboCore.Locale:Get("YiboAltoBoss", "TIME.MINUTES_SUFFIX")),
         "next hover updates elapsed time independently of estimate")
 end
+-- Exercise the matrix's actual status renderer and business-action wrapper.
+for _, name in ipairs({ "chrome", "matrixLine", "success", "successSurface", "accent", "muted", "text" }) do
+    YiboCore.UITheme.Colors[name] = { 0.2, 0.5, 0.7, 1 }
+end
+control.SetBackdropBorderColor = function() end
+control.GetScript = function(self, event) return self.scripts[event] end
+control.RegisterForClicks = function() end
+local intercepted, saves, changes = false, 0, 0
+YiboCore.Characters = { ResolveLegacyKey = function(_, id) return id end }
+YiboCore.Defaults = { Copy = function(self, value)
+    if type(value) ~= "table" then return value end
+    local copy = {}; for k, v in pairs(value) do copy[k] = self:Copy(v) end
+    return copy
+end }
+YiboCore.BusinessItemActions = {
+    Unbind = function(self, cell) cell.binding = nil end,
+    Bind = function(self, cell, options) cell.binding = options end,
+    Handle = function() return intercepted end,
+    TooltipLines = function(_, lines) return lines end,
+}
+dofile("YiboAltoBoss/GoalTargets.lua")
+YAB.GoalTargets.ref = {}
+YAB.PersistDB = function() saves = saves + 1 end
+YAB.NotifyCorePageChanged = function() changes = changes + 1 end
+local plans, holidayKey = YAB.PlannedTargets, "holiday:ahune"
+plans.LegacyKey = function(_, id) return id end
+local planned = true
+plans.IsPlanned = function(_, id)
+    return planned, id, { catalogID = holidayKey }
+end
+YiboAltoBossDB = { settings = {}, characters = { A = {}, B = {} } }
+visited = {}
+local setStatus = assert(Find(YAB.RefreshAccountPage, "SetStatus"))
+for _, lang in ipairs({ "zh", "en" }) do
+    language = lang
+    local boss = Holiday:GetBoss(holidayKey)
+    setStatus(control, "unobserved", "B", boss)
+    check(control.binding and control.binding.reservedButtons.LeftButton, "Hub binding preserves ordinary left click")
+    check(control.lines[#control.lines].text == YiboCore.Locale:Get("YiboAltoBoss", "UI.CLICK_TO_ADD_OR_REMOVE_A_MANUAL_MARK"),
+        "planned holiday advertises localized manual mark")
+    local beforeSaves, beforeChanges = saves, changes
+    control.scripts.OnClick(control, "LeftButton")
+    check(Holiday:GetStatus("B", holidayKey) == "completed", "offline planned holiday can be marked completed")
+    check(plans:Progress("B", { catalogID = holidayKey }).state == "completed", "Hub progress reads owner's manual completion")
+    check(saves == beforeSaves + 1 and changes == beforeChanges + 1, "manual completion persists and notifies shared views")
+    check(Holiday:GetStatus("A", holidayKey) == "unobserved", "manual completion affects only clicked character")
+    setStatus(control, "completed", "B", boss)
+    intercepted = true
+    control.scripts.OnClick(control, "LeftButton")
+    check(Holiday:GetStatus("B", holidayKey) == "completed", "Core action gesture does not also toggle completion")
+    intercepted = false
+    control.scripts.OnClick(control, "RightButton")
+    check(Holiday:GetStatus("B", holidayKey) == "completed", "right click does not toggle completion")
+    control.scripts.OnClick(control, "LeftButton")
+    check(plans:Progress("B", { catalogID = holidayKey }).state == "ready", "manual completion can be removed in planned matrix")
+    planned = false
+    setStatus(control, "available", "B", boss)
+    control.scripts.OnClick(control, "LeftButton")
+    check(Holiday:GetStatus("B", holidayKey) == "completed", "ordinary holiday matrix retains manual toggle")
+    control.scripts.OnClick(control, "LeftButton")
+    planned = true
+end
+GetLFGDungeonRewards = function() return true end
+check(Holiday:ObservePlanned(holidayKey), "current role gets authoritative completion")
+setStatus(control, "completed", "A", Holiday:GetBoss(holidayKey))
+control.scripts.OnClick(control, "LeftButton")
+check(select(2, Holiday:GetStatus("A", holidayKey)).source == "lfg-reward", "planned matrix protects automatic completion")
+check(control.lines[#control.lines].text ~= YiboCore.Locale:Get("YiboAltoBoss", "UI.CLICK_TO_ADD_OR_REMOVE_A_MANUAL_MARK"),
+    "automatic completion does not advertise manual toggle")
 print("HolidayBossSpec: " .. checks .. " checks passed")
