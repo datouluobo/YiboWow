@@ -3,6 +3,8 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
     Core.Locale:Register("YiboMail", "en", {
         ["ERROR.TRANSFER_MIGRATION"] = "Legacy send review could not finish: %s. Log in again to retry.",
         ["HISTORY.LEGACY_TRANSFER_REVIEW"] = "This send predates transit tracking and has no receipt or return evidence. Verification is required.",
+        ["FOREVER.WRONG_CLIENT"] = "Mail did not start: install the matching client build.",
+
         ["APP.PREFIX"] = "|cff20e070[Yibo]|r Mail: ",
         ["BOOTSTRAP.UPGRADE_CORE"] = "Upgrade to YiboCore 1.12.1 / API 13 with the public capabilities required by YiboMail.",
         ["ENTRY.TITLE"] = "[Yibo] YiboMail - Mail Assistant",
@@ -690,5 +692,23 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["UI.TEXT_0673"] = "Sending safety",
         ["UI.TEXT_0674"] = "Confirm before sending gold",
         ["UI.TEXT_0675"] = "When enabled, review the recipient and amount before sending mail with gold.",
+        ["RETURN.BUTTON"] = "Return %d",
+        ["RETURN.TITLE"] = "Return selected mail",
+        ["RETURN.WHOLE_MAIL"] = "The entire letter and all remaining attachments and gold will be returned to the sender, even if only some attachments are selected. Returning COD mail does not pay its charge.",
+        ["RETURN.NOT_RETURNABLE"] = "The native mailbox does not allow returning this letter",
+        ["RETURN.AUCTION_EXCLUDED"] = "Auction house mail is excluded from returns; it can still be collected",
+        ["RETURN.SENDER_UNVERIFIED"] = "Only mail explicitly marked replyable by its native header can be returned; system or unverified mail can still be collected",
+        ["RETURN.PERMISSION_UNKNOWN"] = "Return permission is unknown; refresh the mailbox",
+        ["RETURN.API_UNAVAILABLE"] = "The mail return API is unavailable",
+        ["RETURN.CHANGED"] = "The selection or mailbox changed. Review the mail and select it again.",
+        ["RETURN.NONE"] = "None of the selected letters can be returned.",
+        ["RETURN.CONFIRM"] = "Confirm mail return: return %d letters and skip %d. Continue?",
+        ["RETURN.CONFIRM_UNAVAILABLE"] = "Mail return confirmation is unavailable. Upgrade or check YiboCore and try again.",
+        ["RETURN.SKIP_REASON"] = "Skip %d: %s",
+        ["RETURN.RUNNING"] = "Returning",
+        ["RETURN.PAUSED"] = "Mail return stopped: %d returned, %d unverified, %d not sent.",
+        ["RETURN.SUMMARY"] = "Mail return complete: %d returned, %d skipped",
+        ["RETURN.UNVERIFIED"] = "The return result is unverified. Further returns stopped; close and reopen the mailbox to review it.",
+        ["RETURN.ARCHIVED"] = "Returned to sender",
     })
 end

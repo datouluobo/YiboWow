@@ -100,6 +100,7 @@ function UI:Create(parent)
     root.historyCharacter = Dropdown({}, "character", 190)
     root.historyCharacter:SetMenuPageSize(8)
     root.result = Dropdown({ { value = "all", label = Addon:T("UI.TEXT_0488") }, { value = "collected-archived", label = Addon:T("UI.TEXT_0251") },
+        { value = "returned-archived", label = Addon:T("RETURN.ARCHIVED") },
         { value = "in-transit", label = Addon:T("UI.TEXT_0246") }, { value = "unverified", label = Addon:T("UI.TEXT_0289") },
         { value = "received-confirmed", label = Addon:T("UI.TEXT_0464") }, { value = "return-confirmed", label = Addon:T("UI.TEXT_0468") } }, "result", 154)
     root.summary = Text(root, Theme.Font.assist)

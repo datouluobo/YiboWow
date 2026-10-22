@@ -1,7 +1,8 @@
 local Addon = _G.YiboMail
 local History = {}; Addon.HistoryModel = History
 local names = { discovered = Addon:T("UI.TEXT_0640"), ["collected-archived"] = Addon:T("UI.TEXT_0220"), ["in-transit"] = Addon:T("UI.TEXT_0305"),
-    ["received-confirmed"] = Addon:T("UI.TEXT_0464"), ["return-confirmed"] = Addon:T("UI.TEXT_0468"), unverified = Addon:T("UI.TEXT_0289") }
+    ["received-confirmed"] = Addon:T("UI.TEXT_0464"), ["return-confirmed"] = Addon:T("UI.TEXT_0468"),
+    ["returned-archived"] = Addon:T("RETURN.ARCHIVED"), unverified = Addon:T("UI.TEXT_0289") }
 function History:HasHistory(character)
     local snapshot = Addon.db and Addon.db.byCharacter[character.id]
     if not snapshot then return false end

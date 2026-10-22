@@ -109,7 +109,7 @@ local realExpiry = Addon.ViewModel.Expiry
 stubView.ItemBorder, stubView.AttachmentBorder = Addon.ViewModel.ItemBorder, Addon.ViewModel.AttachmentBorder
 stubView.CharacterLabel, stubView.CounterpartLabel = Addon.ViewModel.CharacterLabel, Addon.ViewModel.CounterpartLabel
 Addon.ViewModel = stubView
-dofile("YiboMail/Inbox.lua"); dofile("YiboMail/Mists/Queue.lua"); dofile("YiboMail/NativeUI.lua")
+dofile("YiboMail/Inbox.lua"); dofile("YiboMail/Mists/Queue.lua"); dofile("YiboMail/Mists/Returns.lua"); dofile("YiboMail/NativeUI.lua"); dofile("YiboMail/Mists/InboxUI.lua"); dofile("YiboMail/Mists/ReturnUI.lua")
 local native, queue = Addon.NativeUI, Addon.Queue
 native:CreateInbox(); native:RefreshInbox()
 local panel = native.inbox

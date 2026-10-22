@@ -2,6 +2,7 @@
 dofile('YiboMail/_NonRelease/Tests/NativeInboxSpec.lua')
 local A = YiboMail
 local clock, timers, reads, takes = 1000, {}, 0, 0
+function A:Now() return math.floor(clock), "server" end
 local inbox = {
     { items = { { 72096, 20 }, { 72096, 20 }, { 72096, 20 }, { 72096, 20 }, { 72096, 20 }, { 72096, 10 } } },
     { items = {}, missingSender = true },
@@ -29,13 +30,13 @@ end
 GetItemInfo = function(id) return 'Item' .. tostring(id), nil, 4 end
 HasNewMail, CheckInbox = function() return false end, function() end
 YiboMailDB = nil
-for _, file in ipairs({ 'Store', 'Items', 'Mists/Scanner', 'ViewModel', 'Inbox', 'Mists/Queue', 'NativeUI' }) do dofile('YiboMail/' .. file .. '.lua') end
+for _, file in ipairs({ 'Store', 'Items', 'Mists/Scanner', 'ViewModel', 'Inbox', 'Mists/Queue', 'Mists/Returns', 'NativeUI', 'Mists/InboxUI', 'Mists/ReturnUI' }) do dofile('YiboMail/' .. file .. '.lua') end
 A.FEATURES.send, A.FEATURES.account = false, false
 A:InitializeDatabase()
 MailFrame:Show(); InboxFrame:Show()
 local N, S = A.NativeUI, A.Scanner
 N:CreateInbox(); N.inbox.mode = 'items'; N.installed = true
-A.Items.Events:Register(N, function() N:Refresh() end)
+A.Items.Events:Register(N, function() N:Refresh(true) end)
 local function Fire(event) S:OnEvent(event); A.Queue:OnEvent(event); N:OnEvent(event) end
 function GetInboxText(index)
     reads = reads + 1
@@ -81,6 +82,52 @@ assert(completedScans > 0, 'Continuous inbox updates must not starve the schedul
 Advance(0.3)
 for _, tile in ipairs(N.inbox.tiles) do assert(tile:IsEnabled()) end
 print('PASS: continuous mailbox updates coalesce without starving scan completion or leaving attachment tiles disabled')
+
+-- Background rechecks must not repaint mounted rows in the invalid window.
+local tileDraws, drawTile = 0, N.ItemTile
+function N:ItemTile(...) tileDraws = tileDraws + 1; return drawTile(self, ...) end
+Fire('MAIL_INBOX_UPDATE')
+assert(tileDraws == 0, 'Invalidation must retain mounted tiles until a scan commits')
+assert(not S.validAt and S.refreshPending, 'Retained display must not preserve actionable scan readiness')
+Advance(0.3)
+assert(tileDraws > 0, 'Committed observation must update the grid')
+N.ItemTile = drawTile
+
+-- Header rounding cannot reorder letters whose expiry estimates were stable.
+local characterID = A.Core.Characters:GetCurrent().id
+local snapshot = A.db.byCharacter[characterID]
+local priorExpiry = snapshot.records[snapshot.visibleKeys[1]].expiresAtEstimate
+clock = clock + 1
+assert(S:Scan())
+snapshot = A.db.byCharacter[characterID]
+assert(snapshot.records[snapshot.visibleKeys[1]].expiresAtEstimate == priorExpiry,
+    'Subsecond/whole-second expiry reconstruction jitter must retain the prior estimate')
+clock = clock + 10
+assert(S:Scan())
+snapshot = A.db.byCharacter[characterID]
+assert(snapshot.records[snapshot.visibleKeys[1]].expiresAtEstimate > priorExpiry + 2,
+    'A substantive expiry correction must remain observable')
+
+-- Reordering groups while stale must retain each surviving identity's color.
+local entries = A.ViewModel:GetMails(N:Context(), {})
+local groups = A.ViewModel:GetGroupsFromEntries(entries, N.inbox.options)
+local getGroups, getMails = A.ViewModel.GetGroupsFromEntries, A.ViewModel.GetMails
+S.refreshPending, S.validAt = true, nil
+A.ViewModel.GetMails = function() return entries end
+A.ViewModel.GetGroupsFromEntries = function() return { groups[2], groups[3], groups[4] } end
+for _, entry in ipairs(entries) do entry.actionable = false end
+N:RefreshInbox()
+for index = 1, 3 do
+    assert(N.inbox.tiles[index].displayAvailable == true,
+        'A surviving group shifted to an earlier pool slot must not flash gray')
+    assert(N.inbox.tiles[index].eligibleCount == 0, 'Visual continuity cannot bypass eligibility')
+end
+A.ViewModel.GetGroupsFromEntries, A.ViewModel.GetMails = getGroups, getMails
+assert(S:Scan())
+for _, tile in ipairs(N.inbox.tiles) do
+    if tile.mailGroup.item.itemID == 72096 then material = tile end
+end
+print('PASS: background invalidation retains mounted rows; expiry rounding is stable; shifted groups retain color without actionable eligibility')
 
 N:CollectItem(material.mailGroup); Advance(2)
 assert(takes == 6 and A.Queue.state == 'complete' and not next(inbox[1].items))

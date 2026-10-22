@@ -3,6 +3,8 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
     Core.Locale:Register("YiboMail", "zh", {
         ["ERROR.TRANSFER_MIGRATION"] = "旧寄件记录核对未完成：%s。请重新登录后重试。",
         ["HISTORY.LEGACY_TRANSFER_REVIEW"] = "此记录早于在途追踪功能，缺少收件或退回证据，待核实。",
+        ["FOREVER.WRONG_CLIENT"] = "邮件助手未启动，请安装对应客户端版本。",
+
         ["APP.PREFIX"] = "|cff20e070[Yibo]|r 邮件：",
         ["BOOTSTRAP.UPGRADE_CORE"] = "请升级至 YiboCore 1.12.1 / API13，并启用 YiboMail 所需的公共能力。",
         ["ENTRY.TITLE"] = "[Yibo] YiboMail - 邮件助手",
@@ -690,5 +692,23 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["UI.TEXT_0673"] = "寄送安全",
         ["UI.TEXT_0674"] = "寄送金币前确认",
         ["UI.TEXT_0675"] = "启用后，发送带金币的邮件前会显示收件人和金额供核对。",
+        ["RETURN.BUTTON"] = "退信 %d",
+        ["RETURN.TITLE"] = "退回所选邮件",
+        ["RETURN.WHOLE_MAIL"] = "整封邮件及其剩余附件、金币将退回原发件人；即使只勾选了部分附件，也会整封退回。付款取信退回时不会付款。",
+        ["RETURN.NOT_RETURNABLE"] = "原生邮箱不允许退回此邮件",
+        ["RETURN.AUCTION_EXCLUDED"] = "拍卖行邮件不参与退信，可正常收取",
+        ["RETURN.SENDER_UNVERIFIED"] = "仅允许退回原生邮件头明确可回复的邮件；系统或来源未确认的邮件可正常收取",
+        ["RETURN.PERMISSION_UNKNOWN"] = "尚未确认此邮件能否退回，请刷新邮箱",
+        ["RETURN.API_UNAVAILABLE"] = "退信接口不可用",
+        ["RETURN.CHANGED"] = "所选邮件或邮箱已变化，请重新核对并选择",
+        ["RETURN.NONE"] = "所选邮件中没有可退回的邮件",
+        ["RETURN.CONFIRM"] = "确认退信：退回 %d 封，跳过 %d 封。是否继续？",
+        ["RETURN.CONFIRM_UNAVAILABLE"] = "无法打开退信确认，请升级或检查 YiboCore 后重试",
+        ["RETURN.SKIP_REASON"] = "跳过 %d 封：%s",
+        ["RETURN.RUNNING"] = "退信中",
+        ["RETURN.PAUSED"] = "退信已停止：成功 %d 封，待核实 %d 封，未执行 %d 封。",
+        ["RETURN.SUMMARY"] = "退信完成：成功 %d 封，跳过 %d 封",
+        ["RETURN.UNVERIFIED"] = "退信结果待核实，已停止后续操作；请关闭并重新打开邮箱核对",
+        ["RETURN.ARCHIVED"] = "已主动退回",
     })
 end

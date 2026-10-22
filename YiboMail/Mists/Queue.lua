@@ -42,6 +42,7 @@ function Queue:Discard()
     self.verifiedMails, self.removedIndexes, self.preflight = nil, nil, nil
     self.positions, self.expectedMails, self.layoutDirty = nil, nil, nil
     self.mailOrder, self.nextExtra = nil, nil
+    self.operation, self.returnPlan = nil, nil
     return true
 end
 function Queue:Pause(reason, code)
@@ -279,6 +280,7 @@ function Queue:Start(actions)
             if not found then return nil, Addon:T("UI.TEXT_0633") end
         end
     end
+    self.operation, self.returnPlan = nil, nil
     self.actions, self.completed, self.index, self.state, self.message, self.pauseCode = CopyActions(actions), 0, 1, "running", Addon:T("UI.TEXT_0426"), nil
     self.lastRequestAt, self.nextScheduled = nil, nil
     self.verifiedMails, self.removedIndexes = mails, {}
@@ -308,6 +310,7 @@ function Queue:ScheduleCheck(delay)
 end
 function Queue:Next()
     if self.state ~= "running" or self.pending then return end
+    if self.operation == "return" then self:NextReturn(); return end
     local action = self.actions[self.index]
     if not action then
         self.state, self.message = "complete", Addon:T("UI.TEXT_0404")
@@ -429,6 +432,7 @@ end
 function Queue:CheckPending()
     local pending = self.pending
     if not pending or pending.interference then return end
+    if self.operation == "return" then self:CheckReturnPending(); return end
     local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     if not current or current.id ~= pending.action.characterID then
         pending.interference = true; self:Pause(Addon:T("UI.TEXT_0278")); return
@@ -480,6 +484,7 @@ end
 function Queue:OnScan(mails, visible, total, committed)
     local pending = self.pending
     if not pending or pending.interference or not pending.success then return false end
+    if self.operation == "return" then return self:OnReturnScan(mails, visible, total, committed) end
     local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     if not current or current.id ~= pending.action.characterID then
         pending.interference = true; self:Pause(Addon:T("UI.TEXT_0278")); return false
@@ -618,7 +623,9 @@ function Queue:OnEvent(event, ...)
         if self.pending then
             local action = self.pending.action; action.state = "unverified"
             Addon:AddHistory(action.characterID, { state = "unverified", mail = action.original, item = action.item,
-                money = action.slot == "money" and action.original.money or 0, observedAt = Addon:Now() })
+                attachments = action.slot == "return" and action.original.attachments or nil,
+                money = (action.slot == "money" or action.slot == "return") and action.original.money or 0,
+                codAmount = action.slot == "return" and action.original.cod or nil, observedAt = Addon:Now() })
             self.pending = nil
         end
         self.verifiedMails, self.nextScheduled = nil, nil
@@ -662,7 +669,7 @@ function Queue:OnEvent(event, ...)
 end
 function Queue:Install()
     Addon.Frame:HookScript("OnUpdate", function()
-        if Queue.pending and GetTime() - Queue.pending.startedAt > ACTION_TIMEOUT and Queue.state == "running" then Queue:Pause(Addon:T("UI.TEXT_0477"), "result-timeout") end
+        if Queue.pending and GetTime() - Queue.pending.startedAt > ACTION_TIMEOUT and Queue.state == "running" then Queue:Pause(Addon:T(Queue.operation == "return" and "RETURN.UNVERIFIED" or "UI.TEXT_0477"), "result-timeout") end
     end)
     if hooksecurefunc then
         for _, name in ipairs({ "TakeInboxItem", "TakeInboxMoney", "AutoLootMailItem", "ReturnInboxItem", "DeleteInboxItem" }) do

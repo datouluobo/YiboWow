@@ -20,10 +20,14 @@ if foreverFile then
     _, forever = Manifest("YiboMail/YiboMail_Forever.toc")
 end
 assert(mists["Mists/Scanner.lua"] and mists["Mists/Queue.lua"])
+assert(mists["Mists/InboxUI.lua"] and mists["Mists/Returns.lua"] and mists["Mists/ReturnUI.lua"])
 assert(not mists["Scanner.lua"] and not mists["Queue.lua"])
 if forever then
+    assert(not forever["Mists/InboxUI.lua"] and not forever["Mists/Returns.lua"] and not forever["Mists/ReturnUI.lua"])
     assert(forever["Forever/Scanner.lua"] and not forever["Mists/Scanner.lua"] and not forever["Mists/Queue.lua"])
 end
+local source = assert(io.open("YiboMail/NativeUI.lua", "r")):read("*a")
+assert(not source:find("function Native:CreateInbox()", 1, true), "The old root must not install a second inbox implementation")
 local realDofile, oldLoads = dofile, 0
 for _, overlay in ipairs({ false, true }) do
     -- Each simulated installation starts with the startup harness's unloaded

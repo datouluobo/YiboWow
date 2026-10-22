@@ -1,6 +1,7 @@
 local Addon = _G.YiboMail
 function Addon:Initialize()
     if self.initialized then return end
+    if self.CLIENT_SUPPORTED == false then self:Print(self:T("FOREVER.WRONG_CLIENT")); return end
     local core = _G.YiboCore
     if not (core and type(core.CheckAPIVersion) == "function" and core:CheckAPIVersion(self.REQUIRED_CORE_API)
         and type(core.HasCapability) == "function" and core:HasCapability("localization", 1)
@@ -35,6 +36,7 @@ function Addon:Initialize()
         and core.Entry and type(core.Entry.RegisterBusinessEntry) == "function"
         and core.UITheme and type(core.UITheme.CreateInput) == "function"
         and type(core.CreateItemPicker) == "function"
+        and core.ItemConfirmation and type(core.ItemConfirmation.Show) == "function"
         and type(core.ItemResolver.Request) == "function") then
         if core and type(core.Print) == "function" and not (core.Locale and type(core.Locale.Get) == "function") then
             core:Print("YiboMail requires YiboCore 1.12.1 / API 13 with localization:1 and account-preview-characters:1.")

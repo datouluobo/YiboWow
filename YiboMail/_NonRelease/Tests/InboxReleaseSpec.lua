@@ -68,7 +68,7 @@ YiboCore = {
         return definition
     end },
     UITheme = { CreateInput = Forbidden },
-    CreateItemPicker = Forbidden, ItemResolver = { Request = Forbidden },
+    ItemConfirmation = { Show = Forbidden }, CreateItemPicker = Forbidden, ItemResolver = { Request = Forbidden },
     Defaults = { Copy = function(_, value) return YiboMail.Copy(value) end },
 }
 dofile("YiboCore/_NonRelease/Tests/LoadLocale.lua")
@@ -188,7 +188,7 @@ local requiredMethods = {
     { YiboCore.AccountView, 'Toggle' }, { YiboCore.AccountView, 'BuildContext' },
     { YiboCore.AccountView, 'GetVisibleCharacters' }, { YiboCore.AccountView, 'GetEffectiveCharacterSort' },
     { YiboCore.AccountView, 'GetCustomCharacterOrder' }, { YiboCore.Entry, 'RegisterBusinessEntry' },
-    { YiboCore.UITheme, 'CreateInput' }, { YiboCore, 'CreateItemPicker' }, { YiboCore.ItemResolver, 'Request' },
+    { YiboCore.ItemConfirmation, 'Show' }, { YiboCore.UITheme, 'CreateInput' }, { YiboCore, 'CreateItemPicker' }, { YiboCore.ItemResolver, 'Request' },
 }
 for _, entry in ipairs(requiredMethods) do
     local target, method = entry[1], entry[2]

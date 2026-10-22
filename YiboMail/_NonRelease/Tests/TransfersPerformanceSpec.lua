@@ -83,7 +83,7 @@ print("PASS: shared linear history index; duplicate matching; read/status cache 
 
 -- Real native automatic acknowledgement publishes once per mailbox, not once
 -- per letter (each publication fans out to all account consumers).
-dofile("YiboMail/NativeUI.lua")
+dofile("YiboMail/NativeUI.lua"); dofile("YiboMail/Mists/InboxUI.lua")
 Addon.Queue = { state = "idle" }
 MailFrame = { IsShown = function() return true end }
 Addon.Scanner.open = true

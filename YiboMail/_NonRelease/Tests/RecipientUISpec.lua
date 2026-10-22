@@ -110,7 +110,7 @@ SendMailMailButton:SetScript('OnClick', function(_, button) assert(button == 'Le
 A.Print = function() end
 function SendMailFrame_Update() end
 function GetServerTime() return 1000 end
-dofile('YiboMail/Recipients.lua'); dofile('YiboMail/RecipientUI.lua'); dofile('YiboMail/NativeUI.lua')
+dofile('YiboMail/Recipients.lua'); dofile('YiboMail/RecipientUI.lua'); dofile('YiboMail/NativeUI.lua'); dofile("YiboMail/Mists/InboxUI.lua"); dofile("YiboMail/Mists/ReturnUI.lua")
 local R, U, N = A.Recipients, A.RecipientUI, A.NativeUI
 R:Initialize(); N:CreateBasicSend(); N:RefreshBasicSend()
 local function Click(control, mouse) assert(control:IsEnabled()); control:GetScript('OnClick')(control, mouse or 'LeftButton') end

@@ -41,8 +41,29 @@ function Scanner:InstallHooks()
         MailFrame:HookScript("OnHide", function() Scanner:Close() end); self.hooked = true
     end
 end
+local AUCTION_SUBJECT_KEYS = {
+    "AUCTION_SOLD_MAIL_SUBJECT", "AUCTION_EXPIRED_MAIL_SUBJECT", "AUCTION_REMOVED_MAIL_SUBJECT",
+    "AUCTION_WON_MAIL_SUBJECT", "AUCTION_OUTBID_MAIL_SUBJECT", "AUCTION_INVOICE_MAIL_SUBJECT",
+}
+function Scanner:IsAuctionMail(index, subject)
+    if type(GetInboxInvoiceInfo) == "function" then
+        local ok, kind = pcall(GetInboxInvoiceInfo, index)
+        if ok and (kind == "seller" or kind == "buyer" or kind == "seller_temp_invoice") then return true end
+    end
+    -- Expired/cancelled listings need not have an invoice. Use the client's
+    -- native localized subject templates, independent of Core's UI language.
+    for _, key in ipairs(AUCTION_SUBJECT_KEYS) do
+        local template = _G[key]
+        if type(template) == "string" and template ~= "" then
+            local pattern = template:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
+                :gsub("%%%%s", ".+")
+            if subject:match("^" .. pattern .. "$") then return true end
+        end
+    end
+    return false
+end
 local function ReadMail(index, now, clock)
-    local _, _, sender, subject, money, cod, days, expectedAttachments, wasRead, wasReturned = GetInboxHeaderInfo(index)
+    local _, _, sender, subject, money, cod, days, expectedAttachments, wasRead, wasReturned, _, canReply, isGM = GetInboxHeaderInfo(index)
     if (sender ~= nil and type(sender) ~= "string") or type(subject) ~= "string" or type(days) ~= "number" then
         error(string.format("header-unavailable:index=%d:sender=%s:subject=%s:days=%s",
             index, type(sender), type(subject), type(days)))
@@ -54,6 +75,18 @@ local function ReadMail(index, now, clock)
         cod = tonumber(cod) or 0, daysLeftAtScan = days, observedAt = now, clockSource = clock,
         expiresAtEstimate = now + days * 86400, wasRead = not not wasRead, wasReturned = not not wasReturned, attachments = {} }
     mail.mailType = mail.cod > 0 and "cod" or (mail.wasReturned and "returned" or "ordinary")
+    -- Return is a destructive operation: require positive sender evidence.
+    -- nil/false is never proof of player mail, even when invoice data is late.
+    mail.canReply = canReply == true or canReply == 1
+    mail.isGM = isGM == true or isGM == 1
+    mail.auctionMail = Scanner:IsAuctionMail(index, subject)
+    -- Match the native delete/return decision; missing permission is unknown.
+    if type(InboxItemCanDelete) == "function" then
+        local ok, deletable = pcall(InboxItemCanDelete, index)
+        if ok and (deletable == true or deletable == false or deletable == 0 or deletable == 1) then
+            mail.canReturn = deletable == false or deletable == 0
+        end
+    end
     local identities = {}
     for slot = 1, ATTACHMENTS_MAX_RECEIVE or 16 do
         local name, itemID, texture, quantity = GetInboxItem(index, slot)
@@ -149,6 +182,23 @@ function Scanner:ReadEntry(entry)
     return current
 end
 local function CommitScan(character, mails, visible, total, now, clock)
+    -- Header days are fractional while observation time is whole seconds.
+    -- Reconstructing the same expiry can jitter around adjacent letters and
+    -- reorder an untouched list. Retain only a matching envelope's estimate
+    -- within the clock rounding tolerance; larger corrections still apply.
+    local snapshot = Addon.db.byCharacter[character.id]
+    local previous = {}
+    for _, key in ipairs(snapshot and snapshot.visibleKeys or {}) do
+        local mail = snapshot.records[key]
+        if mail then previous[mail.inboxIndex] = mail end
+    end
+    for _, mail in ipairs(mails) do
+        local prior = previous[mail.inboxIndex]
+        if prior and prior.signature == mail.signature and type(prior.expiresAtEstimate) == "number"
+            and math.abs(prior.expiresAtEstimate - mail.expiresAtEstimate) <= 2 then
+            mail.expiresAtEstimate = prior.expiresAtEstimate
+        end
+    end
     local queueRefreshed
     Addon:WithPublicationBatch(function()
         local signatures = {}; for _, mail in ipairs(mails) do signatures[#signatures + 1] = mail.signature end; table.sort(signatures)
@@ -167,13 +217,13 @@ local function CommitScan(character, mails, visible, total, now, clock)
     if Addon.Queue and Addon.Queue.notifyPending then Addon.Queue:Notify() end
     if Addon.NativeUI then
         Addon.NativeUI.deleting = nil
-        if not queueRefreshed then Addon.NativeUI:Refresh() end
+        if not queueRefreshed then Addon.NativeUI:Refresh(true) end
     end
 end
 local function ScanError(character, err)
     Scanner.stable, Scanner.validAt, Scanner.lastError, Scanner.refreshPending = nil, nil, tostring(err), nil
     Scanner:PublishStatus(character.id)
-    if Addon.NativeUI then Addon.NativeUI:Refresh() end
+    if Addon.NativeUI then Addon.NativeUI:Refresh(true) end
     if Addon.FEATURES.account then Addon.Core.AccountView:NotifyPageChanged("mail-inbox") end
 end
 function Scanner:Scan()
