@@ -3,6 +3,7 @@ local YAB = _G.YAB or {}
 _G.YAB = YAB
 YAB.CoreReady = false
 local required = {
+    { "calendar-day-query", 1 },
     { "localization", 1 }, { "characters", 1 }, { "character-identity", 1 },
     { "character-name-format", 1 }, { "basic-input", 1 }, { "account-view", 2 },
     { "account-surface-budget", 2 }, { "account-preview-field-groups", 1 }, { "account-entry", 2 }, { "character-cleanup", 1 }, { "level-filter", 1 },
@@ -10,6 +11,7 @@ local required = {
 local ready = Core and Core.CheckAPIVersion and Core:CheckAPIVersion(13)
     and Core.HasCapability and Core.IsInitialized and Core:IsInitialized()
     and Core.ItemConfirmation and type(Core.ItemConfirmation.Show) == "function"
+    and Core.Calendar and type(Core.Calendar.ReadDay) == "function"
     and Core.Locale and type(Core.Locale.Register) == "function" and type(Core.Locale.Get) == "function"
     and Core.Characters and type(Core.Characters.Get) == "function"
     and type(Core.Characters.FormatName) == "function" and type(Core.Characters.ResolveLegacyKey) == "function"
@@ -26,7 +28,7 @@ if ready then
 end
 if not ready then
     if DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
-        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r YiboAltoBoss requires YiboCore API13 and current UI/locale capabilities and account-surface-budget:2. Please upgrade YiboCore. 请升级 YiboCore。")
+        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r YiboAltoBoss requires YiboCore API13, current UI/locale capabilities, account-surface-budget:2 and calendar-day-query:1. Please upgrade YiboCore. 请升级 YiboCore。")
     end
     return
 end

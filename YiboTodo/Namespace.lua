@@ -3,7 +3,7 @@ local ADDON_NAME = ...
 local Addon = _G.YiboTodo or {}
 _G.YiboTodo = Addon
 Addon.NAME = ADDON_NAME or "YiboTodo"
-Addon.VERSION = "1.2.3"
+Addon.VERSION = "1.2.4"
 Addon.REQUIRED_CORE_API = 13
 Addon.CATALOG_VERSION = 16
 Addon.RULESET_ID = "mop-classic-50504"
@@ -34,7 +34,7 @@ function Addon:T(key, ...)
     -- This fallback is limited to the bootstrap failure path: the older Core
     -- being reported cannot provide the required localization service.
     if key == "ERROR.CORE_REQUIRED" then
-        return "YiboTodo requires YiboCore API v13 with localization:1, character-identity:1, character-name-format:1, and account-entry:2. Please update YiboCore."
+        return "YiboTodo requires YiboCore API v13 with localization:1, character-identity:1, character-name-format:1, account-entry:2, and calendar-day-query:1. Please update YiboCore."
     elseif key == "ERROR.INTEGRATION" then
         return string.format("Core integration failed: %s", tostring((...)))
     elseif key == "CHAT.PREFIX" then

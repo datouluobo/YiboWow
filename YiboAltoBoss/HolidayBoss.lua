@@ -100,32 +100,7 @@ local function CurrentCharacter(create)
 end
 
 local function IsCalendarOpen(boss)
-    if not (C_Calendar and type(C_Calendar.GetNumDayEvents) == "function" and type(C_Calendar.GetDayEvent) == "function") then return false end
-    local today = date("*t", Now())
-    if not today then return false end
-    local monthOffset = 0
-    -- Calendar queries are relative to the month the player is browsing.
-    if type(C_Calendar.GetMonthInfo) == "function" then
-        local ok, viewed = pcall(C_Calendar.GetMonthInfo, 0)
-        if ok and type(viewed) == "table" and viewed.year and viewed.month then
-            monthOffset = (today.year - viewed.year) * 12 + today.month - viewed.month
-        end
-    end
-    local ok, count = pcall(C_Calendar.GetNumDayEvents, monthOffset, today.day)
-    if not ok then return false end
-    local complete = true
-    for index = 1, tonumber(count) or 0 do
-        local eventOK, event = pcall(C_Calendar.GetDayEvent, monthOffset, today.day, index)
-        if not eventOK or type(event) ~= "table" then complete = false end
-        local title = eventOK and event and string.lower(tostring(event.title or "")) or ""
-        for _, alias in ipairs(boss.eventTitleAliases or {}) do
-            local normalizedAlias = string.lower(tostring(alias))
-            if normalizedAlias ~= "" and string.find(title, normalizedAlias, 1, true) then
-                return true, true
-            end
-        end
-    end
-    return false, complete and (Holiday.calendarReady or (tonumber(count) or 0) > 0)
+    return YAB.Calendar:IsOpen(boss, Holiday.calendarReadyDay)
 end
 
 function Holiday:RequestCalendar()
@@ -136,7 +111,8 @@ function Holiday:RequestCalendar()
 end
 
 function Holiday:OnCalendarUpdated()
-    self.calendarReady = true
+    if _G.YiboCore.Calendar:IsReading() then return end
+    self.calendarReadyDay = YAB.Calendar:DayKey()
 end
 
 local function DailyState(boss)

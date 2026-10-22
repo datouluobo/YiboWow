@@ -1,9 +1,19 @@
+# YiboTodo 1.2.4
+
+- 暗月及节日活动统一使用Core日历当天查询，主动请求并在日历同步后刷新；异常多年基准先校正，未就绪或失败保持未知。
+- 需要Core1.12.8 / API13及 `calendar-day-query:1`，保留既有任务周期和完成记录。原始异常来源继续观察。
+- 专项与行动中心离线回归通过，完整结束边界及安装包客户端验收仍待完成。本地包未上传发布渠道。
+
+English: Uses Core calendar-day-query:1 for Darkmoon and holiday availability, including stale calendar anchor recovery and asynchronous refresh. Requires Core 1.12.8 / API13 with the new capability.
+
 # YiboTodo 1.2.3
 
 **暗月完成状态修复版，尚未上传发布渠道。**
 
 - 修复暗月钓鱼等专业任务已交付却仍显示可处理：周期键存在分钟偏差时，按原始交付时间识别本轮完成记录，保留历史数据并继续遵守周四重置。
 - 2026-10-20 用户确认：重载后暗月钓鱼已正确显示完成。其余场景的验证范围见专项记录。
+- 2026-10-22 工作树追加修复：主动请求日历并在同步后刷新账号快照，按服务器日期与当前浏览月份计算查询偏移；未同步、读取失败不再断言关闭，移除首个周日公式回退。客户端待验，未重新打包。
+- 同日复发追查：客户端日历基准落在2021年，相对查询返回空列表；暗月与节日统一接入Core `calendar-day-query:1`，由Core校正异常多年基准再查询。需要更新Core并完整退出重进，新增代码客户端待验。详见仓库 `_NonRelease/CalendarAnchor/README.md`。
 
 # YiboTodo 1.2.2
 

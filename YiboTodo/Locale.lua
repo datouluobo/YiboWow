@@ -3,7 +3,7 @@ local Core = _G.YiboCore
 if not (Core and Core.Locale and type(Core.Locale.Register) == "function") then return end
 
 Core.Locale:Register("YiboTodo", "zh", {
-    ["ERROR.CORE_REQUIRED"] = "账号待办需要 YiboCore API v13 与 localization:1、character-identity:1、account-entry:2，请升级 Core。",
+    ["ERROR.CORE_REQUIRED"] = "账号待办需要 YiboCore API v13 与 localization:1、character-identity:1、account-entry:2、calendar-day-query:1，请升级 Core。",
     ["ERROR.INTEGRATION"] = "Core 接入失败：%s",
     ["PAGE.TITLE"] = "账号待办",
     ["PAGE.ALL_REALMS"] = "所有服务器",
@@ -194,7 +194,7 @@ Core.Locale:Register("YiboTodo", "zh", {
 })
 
 Core.Locale:Register("YiboTodo", "en", {
-    ["ERROR.CORE_REQUIRED"] = "YiboTodo requires YiboCore API v13 with localization:1, character-identity:1, and account-entry:2. Please update YiboCore.",
+    ["ERROR.CORE_REQUIRED"] = "YiboTodo requires YiboCore API v13 with localization:1, character-identity:1, account-entry:2, and calendar-day-query:1. Please update YiboCore.",
     ["ERROR.INTEGRATION"] = "Core integration failed: %s",
     ["PAGE.TITLE"] = "Account Tasks",
     ["PAGE.ALL_REALMS"] = "All Realms",

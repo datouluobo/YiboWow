@@ -1,5 +1,13 @@
 # YiboCore 更新日志
 
+## 1.12.8 — 日历查询保护（2026-10-22）
+
+- API13新增 `calendar-day-query:1`，提供服务器当天日历快照与异常多年月份基准校正；无效日期、读取失败及部分数据保持未知。
+- Todo1.2.4和AltoBoss2.8.3配套接入；活动规则与完成存档继续由业务插件管理。
+- 离线回归通过；2021年异常来源仍待复现观察，完整结束边界及安装包客户端验收保留待验。包在本地生成，渠道发布另行记录。
+
+English: Adds calendar-day-query:1 on API13 to validate realm dates and repair stale multi-year calendar anchors. Used by Todo 1.2.4 and AltoBoss 2.8.3. The original source of the stale anchor remains under observation.
+
 ## 1.12.7 — 业务入口设置路由（2026-10-18）
 
 - 业务 Broker、小地图及内置信息条入口右键直接打开对应业务页面的设置项；Core 入口继续打开“显示与入口”。

@@ -6,9 +6,11 @@ local clock = Todo:Now()
 GetServerTime = function() return clock end
 GetGameTime = function() return 23, 59 end
 local open = true
-C_Calendar = { GetNumDayEvents = function() return open and 1 or 0 end,
-    GetDayEvent = function() return { title = "Darkmoon Faire" } end }
+C_Calendar = { GetMonthInfo = function() return os.date("*t", clock) end,
+    GetNumDayEvents = function() return 1 end,
+    GetDayEvent = function() return { title = open and "Darkmoon Faire" or "Other holiday" } end }
 dofile("YiboTodo/Catalog/SpecialActivityCatalog_MoP.lua")
+dofile("YiboCore/_NonRelease/Tests/LoadCalendar.lua")
 dofile("YiboTodo/Mists/Darkmoon.lua")
 dofile("YiboTodo/Providers/SpecialActivity.lua")
 dofile("YiboTaskHub/Presentation.lua")

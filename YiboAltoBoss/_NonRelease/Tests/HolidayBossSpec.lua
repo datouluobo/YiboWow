@@ -7,6 +7,7 @@ time = os.time
 date = function(format, stamp) return os.date(format, stamp or clock) end
 GetServerTime = function() return clock end
 C_Calendar = {
+    GetMonthInfo = function() return os.date("*t", clock) end,
     GetNumDayEvents = function() return title and 1 or 0 end,
     GetDayEvent = function() return { title = title } end,
 }
@@ -34,6 +35,7 @@ IsLFGDungeonJoinable = function() return true, true end
 GetAvailableRoles = function() return false, false, true end
 GetLFGRoles = function() return false, false, false, true end
 dofile("YiboAltoBoss/Locale.lua")
+dofile("YiboCore/_NonRelease/Tests/LoadCalendar.lua")
 dofile("YiboAltoBoss/HolidayBoss.lua")
 local Holiday, key = YAB.Holiday, "holiday:headless-horseman"
 check(Holiday:GetBoss(key).name == "万圣节·无头骑士", "Chinese player-visible name")

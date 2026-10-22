@@ -1,5 +1,7 @@
 # YiboTodo — 账号待办
 
+当前版本：**1.2.4**，需要Core1.12.8 / API13及 `calendar-day-query:1`。暗月及节日统一使用Core日历查询与同步刷新；任务周期和历史完成记录保持。异常来源、实际结束边界与正式包客户端验收继续观察。
+
 当前工作树版本为 **1.2.3**，要求 **YiboCore API v13**，并检查 `localization:1`、`account-view:2`、`character-identity:1`、`character-name-format:1` 与 `account-entry:2`。它把已支持的专业冷却、农场操作、日常和特殊活动放进按角色组织的账号矩阵，可用 `/ytd` 打开。
 
 ## 功能

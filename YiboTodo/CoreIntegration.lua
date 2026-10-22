@@ -8,6 +8,7 @@ function Integration:Initialize()
     local Core = _G.YiboCore
     if not (Core and Core.CheckAPIVersion and Core:CheckAPIVersion(Addon.REQUIRED_CORE_API)
         and Core.HasCapability and Core:HasCapability("localization", 1)
+        and Core:HasCapability("calendar-day-query", 1) and Core.Calendar and type(Core.Calendar.ReadDay) == "function"
         and Core:HasCapability("account-view", 2) and Core:HasCapability("character-identity", 1)
         and Core:HasCapability("character-name-format", 1) and Core:HasCapability("account-entry", 2)
         and Core.Locale and type(Core.Locale.Get) == "function" and Core.AccountView and Core.Entry and Core.Characters

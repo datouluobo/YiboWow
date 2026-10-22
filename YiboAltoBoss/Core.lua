@@ -2519,6 +2519,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
             if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
         end
     elseif event == "CALENDAR_UPDATE_EVENT_LIST" then
+        if _G.YiboCore.Calendar and _G.YiboCore.Calendar:IsReading() then return end
         -- The calendar is populated asynchronously after login.  Rebuild the
         -- account page once its event list is available so active holiday
         -- bosses are not omitted until the next reload.

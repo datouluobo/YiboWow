@@ -35,19 +35,7 @@ local function IsCompleted(questID)
 end
 
 local function IsHolidayOpen(definition)
-    if not (definition and C_Calendar and type(C_Calendar.GetNumDayEvents) == "function" and type(C_Calendar.GetDayEvent) == "function") then return false end
-    local today = date and date("*t")
-    if not today then return false end
-    local ok, count = pcall(C_Calendar.GetNumDayEvents, 0, today.day)
-    if not ok then return false end
-    for index = 1, tonumber(count) or 0 do
-        local eventOK, event = pcall(C_Calendar.GetDayEvent, 0, today.day, index)
-        local title = eventOK and event and string.lower(tostring(event.title or "")) or ""
-        for _, alias in ipairs(definition.eventTitleAliases or {}) do
-            if title == string.lower(tostring(alias)) then return true end
-        end
-    end
-    return false
+    return Addon.Darkmoon.IsHolidayOpen(definition)
 end
 
 local function IsRegistered(definition)

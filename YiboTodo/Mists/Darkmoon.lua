@@ -1,13 +1,21 @@
 local Addon = _G.YiboTodo
+local requestedDay, syncedDay
+local function DayKey(today)
+    return string.format("%04d-%02d-%02d", today.year, today.month, today.day)
+end
+
+local function RequestCalendar(today)
+    local key = today and DayKey(today)
+    if key and requestedDay ~= key and C_Calendar and type(C_Calendar.OpenCalendar) == "function" then
+        requestedDay = key
+        local ok = pcall(C_Calendar.OpenCalendar)
+        if not ok then requestedDay = nil end
+    end
+end
 
 local function RealmDate(now)
-    if C_DateAndTime and type(C_DateAndTime.GetCurrentCalendarTime) == "function" then
-        local ok, current = pcall(C_DateAndTime.GetCurrentCalendarTime)
-        if ok and current and current.year and current.month and current.monthDay and current.weekday then
-            return { year = current.year, month = current.month, day = current.monthDay, wday = current.weekday }
-        end
-    end
-    return date and date("*t", now)
+    local calendar = _G.YiboCore and _G.YiboCore.Calendar
+    return calendar and calendar:GetCurrentDate(now)
 end
 
 local function EventPeriod(now)
@@ -53,24 +61,53 @@ end
 local function IsDarkmoonOpen(now)
     local today = RealmDate(now)
     if type(today) ~= "table" then return nil end
-    local function ScheduledThisWeek()
-        -- Darkmoon opens on the first Sunday of each month and closes at the
-        -- end of the following Saturday. Calendar data is preferred, but some
-        -- clients do not populate C_Calendar until its UI is opened.
-        local first = date("*t", time({ year = today.year, month = today.month, day = 1, hour = 12 }))
-        if not first then return nil end
-        local firstSunday = 1 + ((8 - tonumber(first.wday or 1)) % 7)
-        return today.day >= firstSunday and today.day <= firstSunday + 6
-    end
-    if not (C_Calendar and type(C_Calendar.GetNumDayEvents) == "function" and type(C_Calendar.GetDayEvent) == "function") then return ScheduledThisWeek() end
-    local ok, count = pcall(C_Calendar.GetNumDayEvents, 0, today.day)
-    if not ok then return ScheduledThisWeek() end
-    for index = 1, tonumber(count) or 0 do
-        local eventOK, event = pcall(C_Calendar.GetDayEvent, 0, today.day, index)
-        local title = eventOK and event and string.lower(tostring(event.title or "")) or ""
+    RequestCalendar(today)
+    local calendar = _G.YiboCore and _G.YiboCore.Calendar
+    if not calendar then return nil end
+    local snapshot = calendar:ReadDay()
+    if snapshot.state ~= "ready" then return nil end
+    for _, event in ipairs(snapshot.events) do
+        local title = string.lower(event.title)
         if string.find(title, "暗月", 1, true) or string.find(title, "darkmoon", 1, true) then return true end
     end
-    return false
+    if #snapshot.events > 0 or syncedDay == DayKey(today) then return false end
+    return nil
 end
 
 Addon.Darkmoon = { EventPeriod = EventPeriod, EventObservation = EventObservation, IsOpen = IsDarkmoonOpen }
+
+function Addon.Darkmoon.IsHolidayOpen(definition)
+    local calendar = _G.YiboCore and _G.YiboCore.Calendar
+    if not definition or not calendar then return nil end
+    local snapshot = calendar:ReadDay()
+    if snapshot.state ~= "ready" then return nil end
+    for _, event in ipairs(snapshot.events) do
+        local title = string.lower(event.title)
+        for _, alias in ipairs(definition.eventTitleAliases or {}) do
+            if title == string.lower(tostring(alias)) then return true end
+        end
+    end
+    if #snapshot.events > 0 or syncedDay == DayKey(snapshot.date) then return false end
+end
+
+-- Keep target-specific calendar events and requests in the Mists adapter.
+function Addon.Darkmoon:Initialize()
+    if self.frame then return end
+    local frame = CreateFrame("Frame")
+    self.frame = frame
+    frame:RegisterEvent("CALENDAR_UPDATE_EVENT_LIST")
+    frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    frame:SetScript("OnEvent", function(_, event)
+        local today = RealmDate(Addon:Now())
+        if not today then return end
+        if event == "CALENDAR_UPDATE_EVENT_LIST" then
+            if _G.YiboCore.Calendar:IsReading() then return end
+            syncedDay = DayKey(today)
+        else
+            requestedDay, syncedDay = nil, nil
+            RequestCalendar(today)
+        end
+        Addon:NotifyChanged()
+    end)
+    RequestCalendar(RealmDate(Addon:Now()))
+end

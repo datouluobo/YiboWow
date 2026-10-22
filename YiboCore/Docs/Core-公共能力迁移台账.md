@@ -621,3 +621,29 @@ AltoBoss、Crafting、Legendary、Mail、QuestBlocker、Todo、Vault仅静态发
 2026-10-19 Currency显示管理复核：CAP-003／004补齐新增自定义项目的目录页定位，超过24项时加入后自动显示所在页。遍历48项内置与1项合成自定义目录，四种语言组合API13各1102项覆盖四种显隐组合、设置／主窗口操作／悬停投影同步；实际Picker补查取消加入、取消移出、确认移出、重新加入与内置项目保护。CAP-009本次未新增文案，本地化报告无缺英文／未知键／参数差异／硬编码候选。客户端复验仍待完成，详见货币目录与显示管理记录。
 
 2026-10-19 Currency设置分页面：CAP-004使用Core托管上下文的availableHeight，将内置目录独立为一页，自定义目录、悬停转置和目录管理集中于另一页；按高度调整目录分页容量，加入定位按实际页容量计算。模拟高度480／600、48项内置／6项自定义及长列表检查通过，Core契约与最低版本不变；CAP-009更新中英文页签。实际客户端布局待复验。
+
+## CAP-012：日历当天查询
+
+最近审查：2026-10-22。Core Mists 1.12.8／API13提供 `calendar-day-query:1`，目标适配位于 `Mists/Calendar.lua`；[接口、最低版本、保护范围与失败语义](API-v13-日历当天查询.md)。Core实现与离线验证已完成，新增代码实机与发行检查待验；Forever未提供。Core不拥有活动业务规则或存档。
+
+| 插件 | 接入状态与范围 | 剩余范围／证据 |
+| --- | --- | --- |
+| YiboAltoBoss | 部分接入；Mists节日日历通过目标适配层使用Core，启动检查新能力，无本地回退 | CalendarAnchor12、HolidayBoss284、BossGoals19、CustomBossGoals25；完整客户端与安装包待验 |
+| YiboAutoOpen | 待评估 | 未触及日历查询 |
+| YiboBeastPaths | 待评估 | 未触及日历查询 |
+| YiboBuilds | 待评估 | 未触及日历查询 |
+| YiboCrafting | 待评估 | 未触及日历查询 |
+| YiboCurrency | 待评估 | 未触及日历查询 |
+| YiboLegendary | 待评估 | 未触及日历查询 |
+| YiboMail | 待评估 | 未触及日历查询 |
+| YiboMounts | 待评估 | 未触及日历查询 |
+| YiboQuestBlocker | 待评估 | 未触及日历查询 |
+| YiboReputation | 待评估 | 未触及日历查询 |
+| YiboTaskHub | 待评估 | 本次仅验证来源消费，不直接读取日历 |
+| YiboTodo | 部分接入；Mists暗月及节日日历统一消费Core，启动检查新能力，无本地回退 | CalendarAnchor12、DarkmoonCalendar／Cycle与SpecialActivity通过、TodoSources177；完整客户端与安装包待验 |
+| YiboVault | 待评估 | 未触及日历查询 |
+
+Core CalendarDaySpec16项通过；三插件TOC语法107文件及Mists构建ValidateOnly通过。用户输出证实59个月相对查询返回0、绝对切至当前月后返回3；换角色恢复不算新增代码实机通过。BossTargetsSpec在既有前置ActionIntegrationSpec:188本地化夹具断言失败，未进入本轮断言；EventGoals既有前置provider-error仍未解除。
+
+
+2026-10-22 CAP-012启动就绪补证：首份客户端追踪显示加载阶段C_DateAndTime返回1999-00-00、日历浏览2004-11，登录前恢复2026-10，后续Questie／MountsJournal调用未造成异常；未复现此前2021-11，来源保持待定。Core Mists日期读取增加有效范围校验，接口存在但失败或返回无效日期时保持未知，不用本机日期回退或据此校正基准；calendar-day-query:1及既有接入不变。Core CalendarDaySpec新增3项后19项通过，联合12、Todo暗月两组及AltoBoss HolidayBoss284通过；新保护客户端待验，两业务插件保持部分接入。原始日志与分析见[首份日历调用日志分析](../../_NonRelease/CalendarAnchor/Trace-Analysis-20261022.md)。

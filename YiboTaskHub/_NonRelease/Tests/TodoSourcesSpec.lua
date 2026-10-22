@@ -100,8 +100,10 @@ Equal(#Core.Events._listeners.BUSINESS_CONTRACT_CHANGED, 1, "idempotent subscrip
 
 time = os.time
 clock, hour, minute = os.time({year=2024,month=9,day=1,hour=12}), 12, 0
-C_Calendar = { GetNumDayEvents = function() return 1 end, GetDayEvent = function() return {title="Darkmoon Faire"} end }
+C_Calendar = { GetMonthInfo = function() return os.date("*t", clock) end,
+    GetNumDayEvents = function() return 1 end, GetDayEvent = function() return {title="Darkmoon Faire"} end }
 dofile("YiboTodo/Namespace.lua")
+dofile("YiboCore/_NonRelease/Tests/LoadCalendar.lua")
 for _, file in ipairs({ "Database", "Catalog/MonitoringGroupCatalog", "Catalog/ActivityCatalog", "Catalog/CooldownGroupCatalog", "Catalog/CooldownCatalog_MoP", "Catalog/Ruleset_50504", "Catalog/FarmOperationCatalog", "Catalog/DailyActivityCatalog_MoP", "Catalog/DailyActivityCatalog_Legacy", "Catalog/SpecialActivityCatalog_MoP", "Catalog/Validator", "Model/Schedule", "Model/State", "Model/Snapshot", "ActionTodo", "ActionNomi", "ActionActivities", "ActionContracts", "Providers/Registry", "Providers/ProfessionCooldown", "Providers/FarmOperationObservation", "Providers/DailyQuest", "Mists/Darkmoon", "Providers/SpecialActivity" }) do dofile("YiboTodo/" .. file .. ".lua") end
 local Todo = YiboTodo
 Todo.Core = Core

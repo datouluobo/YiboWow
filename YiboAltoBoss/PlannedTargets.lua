@@ -305,6 +305,7 @@ function Plans:Initialize()
             core.Contracts:NotifyChanged(Plans.OWNER, Plans.catalogRef, {})
         end
         if event == "CALENDAR_UPDATE_EVENT_LIST" then
+            if _G.YiboCore.Calendar and _G.YiboCore.Calendar:IsReading() then return end
             if YAB.Holiday then YAB.Holiday:OnCalendarUpdated() end
             Plans:ScheduleChange()
         end

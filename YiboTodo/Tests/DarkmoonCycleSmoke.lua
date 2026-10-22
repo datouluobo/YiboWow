@@ -12,6 +12,7 @@ GetGameTime = function()
     return current.hour, current.min
 end
 C_Calendar = {
+    GetMonthInfo = function() return os.date("*t", clock) end,
     GetNumDayEvents = function() return 1 end,
     GetDayEvent = function() return { title = "Darkmoon Faire" } end,
 }
@@ -22,6 +23,7 @@ dofile("YiboTodo/Catalog/MonitoringGroupCatalog.lua")
 dofile("YiboTodo/Catalog/SpecialActivityCatalog_MoP.lua")
 dofile("YiboTodo/Model/Schedule.lua")
 dofile("YiboTodo/Providers/Registry.lua")
+dofile("YiboCore/_NonRelease/Tests/LoadCalendar.lua")
 dofile("YiboTodo/Mists/Darkmoon.lua")
 dofile("YiboTodo/Providers/SpecialActivity.lua")
 local Addon = _G.YiboTodo
@@ -68,11 +70,11 @@ assert(provider:RecordTurnIn("current", definition.questID))
 local secondKey = Project().cycleKey
 clock = At(2026, 10, 24, 23, 59, 59)
 assert(Project().state == "completed" and Project().cycleKey == secondKey, "Saturday retains the second-cycle completion")
-C_Calendar.GetNumDayEvents = function() return 0 end
+C_Calendar.GetDayEvent = function() return { title = "Other holiday" } end
 clock = At(2026, 10, 25, 0)
 assert(provider:GetProject("current", definition, clock) == nil, "closed events are hidden")
 assert(provider:GetTargetProject("current", definition, clock).state == "not-applicable", "explicit targets use the same closed-event rule")
-C_Calendar.GetNumDayEvents = function() return 1 end
+C_Calendar.GetDayEvent = function() return { title = "Darkmoon Faire" } end
 
 -- Upgrading preserves trustworthy legacy completions within the actual cycle.
 clock = At(2026, 10, 18, 2, 18)

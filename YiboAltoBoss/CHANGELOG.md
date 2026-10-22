@@ -1,5 +1,13 @@
 # YiboAltoBoss 更新日志 / Changelog
 
+## 2.8.3 — 节日日历查询保护（2026-10-22）
+
+- 节日开放判断通过Mists适配层使用Core公共日历查询，处理异常多年基准与未知数据；同步就绪按服务器日期记录。
+- 需要Core1.12.8 / API13及 `calendar-day-query:1`，缺能力提示升级并停止初始化。
+- 节日奖励、手动完成与目标回归通过；异常来源及完整活动结束边界继续观察，本地打包不代表渠道发布。
+
+English: Uses Core calendar-day-query:1 for seasonal availability and date-scoped synchronization. Requires Core 1.12.8 / API13 with the new capability.
+
 ## 2.8.2 — Hub 目标手动完成（2026-10-21）
 
 - 已加入 Hub 的节日首领矩阵格恢复普通左键手动标记完成，并通过同一角色当日记录同步 Hub 进度。

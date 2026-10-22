@@ -1,0 +1,12 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r Calendar Call Trace
+## Title-zhCN: |cff20e070[Yibo]|r 日历调用追踪
+## Title-zhTW: |cff20e070[Yibo]|r 日曆呼叫追蹤
+## Notes: Non-release diagnostic for calendar month changes.
+## Notes-zhCN: 非发布诊断：记录日历月份修改及调用来源。
+## Author: YiboSoft
+## Version: 0.1.1
+## SavedVariables: YiboCalendarTraceDB
+## DefaultState: enabled
+
+Trace.lua

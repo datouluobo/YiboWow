@@ -77,6 +77,7 @@ frame:SetScript("OnEvent", function(_, event, ...)
         local ok, err = Addon.CoreIntegration:Initialize()
         if not ok then Addon:Print(Addon:T("ERROR.INTEGRATION", tostring(err))) else
             Addon.initialized = true
+            Addon.Darkmoon:Initialize()
             local provider = Addon.Providers.Registry:Get("daily-quest")
             if provider then provider:QueueObserve() end
             local special = Addon.Providers.Registry:Get("special-activity")

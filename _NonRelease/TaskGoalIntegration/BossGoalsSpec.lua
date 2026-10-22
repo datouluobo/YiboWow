@@ -152,6 +152,7 @@ YAB = {
 YiboAltoBossDB = { settings = { lockoutColumns = {} }, knownChars = { ["星河-甲"] = {}, ["星河-乙"] = {}, ["暮光-甲"] = {}, ["新角色-甲"] = {} },
     characters = { ["星河-甲"] = {}, ["星河-乙"] = {}, ["暮光-甲"] = {}, ["新角色-甲"] = {} } }
 dofile("YiboAltoBoss/Locale.lua")
+dofile("YiboCore/_NonRelease/Tests/LoadCalendar.lua")
 dofile("YiboAltoBoss/HolidayBoss.lua")
 dofile("YiboAltoBoss/LockoutLocale.lua")
 dofile("YiboAltoBoss/DungeonBossCatalog.lua")
