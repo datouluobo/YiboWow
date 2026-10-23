@@ -1,5 +1,9 @@
 # YiboBuilds
 
+## Mists 1.5.1 — 2026-10-24
+
+排除未切割原石，普通彩色孔可选择背包内不同颜色的成品宝石；固定多孔装备孔索引，面板按装备提示顺序列出，人偶左右孔条从装备向中间展开。需要 YiboCore 1.12.5 / API13。安装与验收范围见 [1.5.1 更新说明](RELEASE_NOTES.md)。
+
 YiboBuilds is a character-build viewer for MoP Classic. It stores and shows talents, glyphs, equipment, gems, and enchants for every character on the account.
 
 ## Features

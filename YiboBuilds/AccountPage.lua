@@ -24,13 +24,6 @@ local SOCKET_BORDER_COLORS = {
     unknown = { 0.72, 0.72, 0.72 },
 }
 local SOCKET_LABELS = { meta = Addon:T("UI.META"), red = Addon:T("UI.RED"), yellow = Addon:T("UI.YELLOW"), blue = Addon:T("UI.BLUE"), prismatic = Addon:T("UI.PRISMATIC"), sha = Addon:T("UI.SHA_TOUCHED"), unknown = Addon:T("UI.GEM") }
-local GEM_SUBCLASS_TYPES = {
-    [0] = { red = true }, [1] = { blue = true }, [2] = { yellow = true },
-    [3] = { red = true, blue = true }, [4] = { blue = true, yellow = true },
-    [5] = { red = true, yellow = true }, [6] = { meta = true },
-    [8] = { red = true, yellow = true, blue = true, prismatic = true },
-    [9] = { sha = true },
-}
 local function PixelRound(value, frame)
     local scale = frame and frame.GetEffectiveScale and frame:GetEffectiveScale()
         or (UIParent and UIParent.GetEffectiveScale and UIParent:GetEffectiveScale()) or 1
@@ -804,35 +797,6 @@ local function EquipmentButton(parent, slotID)
     return button
 end
 
-local function BagGemCandidates(socketType)
-    local candidates = {}
-    if socketType == "unknown" then return candidates end
-    local getCount = C_Container and C_Container.GetContainerNumSlots or GetContainerNumSlots
-    local getLink = C_Container and C_Container.GetContainerItemLink or GetContainerItemLink
-    local getInfo = C_Container and C_Container.GetContainerItemInfo or GetContainerItemInfo
-    if not (getCount and getLink and getInfo and GetItemInfo) then return candidates end
-    for bag = 0, 4 do
-        for bagSlot = 1, (getCount(bag) or 0) do
-            local link = getLink(bag, bagSlot)
-            if link then
-                local name, _, _, _, _, _, _, _, _, icon, _, classID, subclassID = GetItemInfo(link)
-                local types = classID == 3 and GEM_SUBCLASS_TYPES[subclassID]
-                if types and (types[socketType] or (socketType == "prismatic" and subclassID ~= 6 and subclassID ~= 9)
-                    or (subclassID == 8 and (socketType == "red" or socketType == "yellow" or socketType == "blue"))) then
-                    local info, count = getInfo(bag, bagSlot)
-                    count = type(info) == "table" and info.stackCount or select(2, getInfo(bag, bagSlot))
-                    candidates[#candidates + 1] = {
-                        bag = bag, bagSlot = bagSlot, link = link, name = name or link,
-                        icon = icon, count = tonumber(count) or 1,
-                    }
-                end
-            end
-        end
-    end
-    table.sort(candidates, function(a, b) return (a.name or "") < (b.name or "") end)
-    return candidates
-end
-
 local INVENTORY_TYPE_IDS = {
     INVTYPE_HEAD = 1, INVTYPE_NECK = 2, INVTYPE_SHOULDER = 3, INVTYPE_BODY = 4,
     INVTYPE_CHEST = 5, INVTYPE_WAIST = 6, INVTYPE_LEGS = 7, INVTYPE_FEET = 8,
@@ -899,9 +863,7 @@ local function CraftGemCandidates(socketType)
     local candidates = {}
     for itemID, craft in pairs(Addon.CraftSources or {}) do
         local subclassID = craft.gemSubclass
-        local types = subclassID and GEM_SUBCLASS_TYPES[subclassID]
-        if types and (types[socketType] or (socketType == "prismatic" and subclassID ~= 6 and subclassID ~= 9)
-            or (subclassID == 8 and (socketType == "red" or socketType == "yellow" or socketType == "blue"))) then
+        if Addon.Gems:MatchesSocket(itemID, subclassID, socketType) then
             local recipeID = LearnedCraftRecipe(craft)
             if recipeID then
                 local name = GetItemInfo and GetItemInfo(itemID)
@@ -936,9 +898,7 @@ function Page:IsGoalTargetApplicable(item, conditions)
     local socket = item.gems and item.gems[conditions.socketIndex]
     if not socket or not GetItemInfo then return false end
     local classID, subclassID = select(12, GetItemInfo(conditions.enhancementID))
-    local types = classID == 3 and GEM_SUBCLASS_TYPES[subclassID]
-    return types and (types[socket.socketType] or (socket.socketType == "prismatic" and subclassID ~= 6 and subclassID ~= 9)
-        or (subclassID == 8 and (socket.socketType == "red" or socket.socketType == "yellow" or socket.socketType == "blue"))) or false
+    return classID == 3 and Addon.Gems:MatchesSocket(conditions.enhancementID, subclassID, socket.socketType) or false
 end
 
 local function BagApplyingItems()
@@ -1578,7 +1538,7 @@ local function RenderEquipmentDetail(parent, snapshot)
             .. (socket.itemName or (socket.itemLink and Addon:T("UI.SOCKETED") or Addon:T("UI.EMPTY")))
         AddRow(label, socket.itemLink)
         if isLive then
-            local candidates = BagGemCandidates(socket.socketType)
+            local candidates = Addon.Gems:BagCandidates(socket.socketType)
             local craftable = CraftGemCandidates(socket.socketType)
             local pendingHere = pending and pending.socketIndex == index
             if #candidates == 0 and #craftable == 0 and not pendingHere then
@@ -1762,6 +1722,7 @@ local function PlaceEquipment(parent, snapshot)
             local socket = item and item.gems and item.gems[gemIndex]
             gem:ClearAllPoints()
             gem:SetSize(gemSize, gemSize)
+            -- Socket indexes run from the equipment icon toward the model.
             if side == "left" or side == "weapon-right" then gem:SetPoint("TOPLEFT", button.socketRail, "TOPLEFT", (gemIndex - 1) * gemStep, 0)
             else gem:SetPoint("TOPRIGHT", button.socketRail, "TOPRIGHT", -(gemIndex - 1) * gemStep, 0) end
             RefreshPixelBorder(gem.border, gem)

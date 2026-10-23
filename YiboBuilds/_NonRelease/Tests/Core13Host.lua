@@ -28,6 +28,10 @@ local function Setup(language)
     dofile("YiboBuilds/Bootstrap.lua")
     dofile("YiboBuilds/Locales/zhCN.lua")
     dofile("YiboBuilds/Locales/enUS.lua")
+    dofile("YiboBuilds/Mists/Data/GemCatalog.lua")
+    dofile("YiboBuilds/Mists/Gems.lua")
+    dofile("YiboBuilds/Mists/Data/SocketCatalog.lua")
+    dofile("YiboBuilds/Mists/SocketReader.lua")
     return state
 end
 return Setup

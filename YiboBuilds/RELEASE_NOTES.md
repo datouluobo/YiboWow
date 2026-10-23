@@ -1,3 +1,22 @@
+# YiboBuilds 1.5.1 — 2026-10-24
+
+Mists only. Requires YiboCore 1.12.5 / API13 with character-cleanup:2.
+
+- Offer socketable cut gems and exclude uncut crafting materials.
+- Allow ordinary gems in any ordinary colored or prismatic socket; preserve meta and Sha-touched restrictions.
+- Keep native socket indexes stable for empty and filled sockets, with added sockets after native sockets.
+- List sockets in tooltip order in the gem panel; character equipment rails expand from each equipment icon toward the model.
+
+## 中文更新说明
+
+- 修复普通蓝色孔无法列出背包红色、橙色成品宝石，排除未切割原石；背包、可制作和目标检查使用同一规则。
+- 多孔装备孔位固定，待应用面板与装备提示孔序一致，人偶左右装备从装备向中间排列。
+- 本包用于 MoP Classic，安装目录和 SavedVariables 保持不变。GitHub 包为源码归档，玩家使用 mists 安装包。
+- 用户已确认孔顺序正确。候选匹配修复及干净／覆盖安装、完整退出恢复与中英文语言模式仍待客户端复测；离线测试与打包检查不代替实机验收。
+- 单体与整合包共用安装目录时请选择一个更新管理来源；交替或同时由更新工具管理的覆盖与卸载行为尚未验证。
+
+---
+
 # YiboBuilds 1.5.0 — 2026-10-16
 
 Requires YiboCore 1.12.5 / API13 with character-cleanup:2.

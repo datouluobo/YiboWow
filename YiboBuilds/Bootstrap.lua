@@ -3,7 +3,7 @@ local Addon = _G.YiboBuilds or {}
 _G.YiboBuilds = Addon
 
 Addon.NAME = ADDON_NAME or "YiboBuilds"
-Addon.VERSION = "1.5.0"
+Addon.VERSION = "1.5.1"
 Addon.REQUIRED_CORE_API = 13
 Addon.PAGE_ID = "builds"
 Addon.ICON = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon"
@@ -17,6 +17,7 @@ Addon.REQUIRED_CAPABILITIES = {
     ["business-item-actions"] = 1, ["characters"] = 1,
 }
 function Addon:HasCompatibleCore()
+    if type(WOW_PROJECT_CAMELOT)=="number" and WOW_PROJECT_ID==WOW_PROJECT_CAMELOT then return false end
     local core = _G.YiboCore
     if not (core and core.CheckAPIVersion and core:CheckAPIVersion(self.REQUIRED_CORE_API)
         and core.HasCapability and core.Locale and core.IsInitialized and core:IsInitialized()) then return false end
@@ -27,6 +28,7 @@ function Addon:HasCompatibleCore()
         and core.AccountView and core.Entry and core.Contracts and core.CharacterCleanup
         and core.BusinessItemActions and core.Defaults
 end
+if type(WOW_PROJECT_CAMELOT)=="number" and WOW_PROJECT_ID==WOW_PROJECT_CAMELOT then return end
 function Addon:T(key, ...)
     return _G.YiboCore.Locale:Get(self.NAME, key, ...)
 end
