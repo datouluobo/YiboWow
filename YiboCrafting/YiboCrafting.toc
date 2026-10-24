@@ -5,7 +5,7 @@
 ## Notes: Account profession recipe snapshots; catalog coverage remains unverified.
 ## Notes-zhCN: 账号级专业配方学习状态；目录覆盖仍待验证。
 ## Author: YiboSoft
-## Version: 1.2.1
+## Version: 1.2.2
 ## IconTexture: Interface\AddOns\YiboCrafting\Media\YiboCraftingIcon-v2
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
@@ -18,8 +18,8 @@ Locales/Targets.lua
 Store.lua
 Collector.lua
 CategoryCatalog.lua
-RecipeCatalog.lua
+Mists/RecipeCatalog.lua
 RecipeStateScanner.lua
-GoalTargets.lua
+Mists/GoalTargets.lua
 AccountPage.lua
 Bootstrap.lua

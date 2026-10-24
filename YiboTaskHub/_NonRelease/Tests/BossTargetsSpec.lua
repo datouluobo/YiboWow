@@ -44,7 +44,7 @@ CreateFrame = function(...)
 end
 dofile("YiboCore/UI/Input.lua")
 UIParent = CreateFrame("Frame"); UIParent:SetSize(1280, 720)
-dofile("YiboTaskHub/Goals.lua"); dofile("YiboTaskHub/GoalContracts.lua"); dofile("YiboTaskHub/GoalEditor.lua")
+dofile("YiboTaskHub/Common/Goals.lua"); dofile("YiboTaskHub/GoalContracts.lua"); dofile("YiboTaskHub/GoalEditor.lua")
 YiboTaskHubDB = { schemaVersion = 2, settings = { hudEnabled = false, sourceFilter = "kept" } }
 assert(Hub.Database:Initialize())
 Equal(Hub.db.schemaVersion, 4); Equal(Hub.db.settings.hudEnabled, false); Equal(Hub.db.settings.sourceFilter, "kept")

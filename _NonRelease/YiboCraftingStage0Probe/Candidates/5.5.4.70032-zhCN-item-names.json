@@ -1,0 +1,440 @@
+{
+  "source": "Wowhead zhCN item pages",
+  "retrieved": "2026-10-08",
+  "itemIDType": "createdItemID (产物物品 ID；不是配方 Spell ID)",
+  "items": {
+    "54491": {
+      "itemID": 54491,
+      "name_zhCN": "织焰长裤",
+      "recipeSpellIDs": [
+        1224218
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=54491"
+    },
+    "54493": {
+      "itemID": 54493,
+      "name_zhCN": "织焰兜帽",
+      "recipeSpellIDs": [
+        1224220
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=54493"
+    },
+    "54494": {
+      "itemID": 54494,
+      "name_zhCN": "织焰长袍",
+      "recipeSpellIDs": [
+        1224219
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=54494"
+    },
+    "54495": {
+      "itemID": 54495,
+      "name_zhCN": "余烬长袍",
+      "recipeSpellIDs": [
+        1224221
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=54495"
+    },
+    "54496": {
+      "itemID": 54496,
+      "name_zhCN": "余烬兜帽",
+      "recipeSpellIDs": [
+        1224222
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=54496"
+    },
+    "54498": {
+      "itemID": 54498,
+      "name_zhCN": "余烬护腿",
+      "recipeSpellIDs": [
+        1224223
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=54498"
+    },
+    "55071": {
+      "itemID": 55071,
+      "name_zhCN": "染血的燃钢护腕",
+      "recipeSpellIDs": [
+        1224224
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=55071"
+    },
+    "55072": {
+      "itemID": 55072,
+      "name_zhCN": "染血的燃钢护手",
+      "recipeSpellIDs": [
+        1224225
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=55072"
+    },
+    "55073": {
+      "itemID": 55073,
+      "name_zhCN": "染血的燃钢腰带",
+      "recipeSpellIDs": [
+        1224226
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=55073"
+    },
+    "55074": {
+      "itemID": 55074,
+      "name_zhCN": "染血的燃钢长靴",
+      "recipeSpellIDs": [
+        1224227
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=55074"
+    },
+    "55075": {
+      "itemID": 55075,
+      "name_zhCN": "染血的燃钢肩铠",
+      "recipeSpellIDs": [
+        1224228
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=55075"
+    },
+    "55076": {
+      "itemID": 55076,
+      "name_zhCN": "染血的燃钢腿铠",
+      "recipeSpellIDs": [
+        1224229
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=55076"
+    },
+    "55077": {
+      "itemID": 55077,
+      "name_zhCN": "染血的燃钢头盔",
+      "recipeSpellIDs": [
+        1224230
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=55077"
+    },
+    "55078": {
+      "itemID": 55078,
+      "name_zhCN": "染血的燃钢胸铠",
+      "recipeSpellIDs": [
+        1224231
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=55078"
+    },
+    "55079": {
+      "itemID": 55079,
+      "name_zhCN": "精制燃钢腕甲",
+      "recipeSpellIDs": [
+        1224232
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=55079"
+    },
+    "55080": {
+      "itemID": 55080,
+      "name_zhCN": "精制燃钢手铠",
+      "recipeSpellIDs": [
+        1224233
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=55080"
+    },
+    "55081": {
+      "itemID": 55081,
+      "name_zhCN": "精制燃钢腰带",
+      "recipeSpellIDs": [
+        1224234
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=55081"
+    },
+    "55082": {
+      "itemID": 55082,
+      "name_zhCN": "精制燃钢战靴",
+      "recipeSpellIDs": [
+        1224235
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=55082"
+    },
+    "55083": {
+      "itemID": 55083,
+      "name_zhCN": "精制燃钢肩铠",
+      "recipeSpellIDs": [
+        1224236
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=55083"
+    },
+    "55084": {
+      "itemID": 55084,
+      "name_zhCN": "精制燃钢腿铠",
+      "recipeSpellIDs": [
+        1224237
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=55084"
+    },
+    "55085": {
+      "itemID": 55085,
+      "name_zhCN": "精制燃钢战盔",
+      "recipeSpellIDs": [
+        1224238
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=55085"
+    },
+    "55086": {
+      "itemID": 55086,
+      "name_zhCN": "精制燃钢胸铠",
+      "recipeSpellIDs": [
+        1224239
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=55086"
+    },
+    "56520": {
+      "itemID": 56520,
+      "name_zhCN": "染血的蟒皮护腕",
+      "recipeSpellIDs": [
+        1224240
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56520"
+    },
+    "56521": {
+      "itemID": 56521,
+      "name_zhCN": "染血的蟒皮腰带",
+      "recipeSpellIDs": [
+        1224241
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56521"
+    },
+    "56522": {
+      "itemID": 56522,
+      "name_zhCN": "染血的皮质护腕",
+      "recipeSpellIDs": [
+        1224242
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56522"
+    },
+    "56523": {
+      "itemID": 56523,
+      "name_zhCN": "染血的皮质护手",
+      "recipeSpellIDs": [
+        1224243
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56523"
+    },
+    "56524": {
+      "itemID": 56524,
+      "name_zhCN": "染血的鳞片护腕",
+      "recipeSpellIDs": [
+        1224244
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56524"
+    },
+    "56525": {
+      "itemID": 56525,
+      "name_zhCN": "染血的鳞片护手",
+      "recipeSpellIDs": [
+        1224245
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56525"
+    },
+    "56526": {
+      "itemID": 56526,
+      "name_zhCN": "染血的龙鳞护腕",
+      "recipeSpellIDs": [
+        1224246
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56526"
+    },
+    "56527": {
+      "itemID": 56527,
+      "name_zhCN": "染血的龙鳞护肩",
+      "recipeSpellIDs": [
+        1224247
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56527"
+    },
+    "56528": {
+      "itemID": 56528,
+      "name_zhCN": "染血的蟒皮护手",
+      "recipeSpellIDs": [
+        1224248
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56528"
+    },
+    "56529": {
+      "itemID": 56529,
+      "name_zhCN": "染血的蟒皮长靴",
+      "recipeSpellIDs": [
+        1224249
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56529"
+    },
+    "56530": {
+      "itemID": 56530,
+      "name_zhCN": "染血的皮质长靴",
+      "recipeSpellIDs": [
+        1224250
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56530"
+    },
+    "56531": {
+      "itemID": 56531,
+      "name_zhCN": "染血的皮质护肩",
+      "recipeSpellIDs": [
+        1224251
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56531"
+    },
+    "56532": {
+      "itemID": 56532,
+      "name_zhCN": "染血的鳞片长靴",
+      "recipeSpellIDs": [
+        1224252
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56532"
+    },
+    "56533": {
+      "itemID": 56533,
+      "name_zhCN": "染血的鳞片腰带",
+      "recipeSpellIDs": [
+        1224253
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56533"
+    },
+    "56534": {
+      "itemID": 56534,
+      "name_zhCN": "染血的龙鳞长靴",
+      "recipeSpellIDs": [
+        1224254
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56534"
+    },
+    "56535": {
+      "itemID": 56535,
+      "name_zhCN": "染血的龙鳞护手",
+      "recipeSpellIDs": [
+        1224255
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56535"
+    },
+    "56540": {
+      "itemID": 56540,
+      "name_zhCN": "染血的蟒皮护肩",
+      "recipeSpellIDs": [
+        1224256
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56540"
+    },
+    "56541": {
+      "itemID": 56541,
+      "name_zhCN": "染血的蟒皮护胸",
+      "recipeSpellIDs": [
+        1224257
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56541"
+    },
+    "56542": {
+      "itemID": 56542,
+      "name_zhCN": "染血的皮质腰带",
+      "recipeSpellIDs": [
+        1224258
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56542"
+    },
+    "56543": {
+      "itemID": 56543,
+      "name_zhCN": "染血的皮质罩帽",
+      "recipeSpellIDs": [
+        1224259
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56543"
+    },
+    "56544": {
+      "itemID": 56544,
+      "name_zhCN": "染血的鳞片护肩",
+      "recipeSpellIDs": [
+        1224260
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56544"
+    },
+    "56545": {
+      "itemID": 56545,
+      "name_zhCN": "染血的鳞片护腿",
+      "recipeSpellIDs": [
+        1224261
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56545"
+    },
+    "56546": {
+      "itemID": 56546,
+      "name_zhCN": "染血的龙鳞腰带",
+      "recipeSpellIDs": [
+        1224262
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56546"
+    },
+    "56547": {
+      "itemID": 56547,
+      "name_zhCN": "染血的龙鳞罩帽",
+      "recipeSpellIDs": [
+        1224263
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56547"
+    },
+    "56552": {
+      "itemID": 56552,
+      "name_zhCN": "染血的蟒皮护腿",
+      "recipeSpellIDs": [
+        1224264
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56552"
+    },
+    "56553": {
+      "itemID": 56553,
+      "name_zhCN": "染血的蟒皮罩帽",
+      "recipeSpellIDs": [
+        1224265
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56553"
+    },
+    "56554": {
+      "itemID": 56554,
+      "name_zhCN": "染血的皮质护胸",
+      "recipeSpellIDs": [
+        1224266
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56554"
+    },
+    "56555": {
+      "itemID": 56555,
+      "name_zhCN": "染血的皮质护腿",
+      "recipeSpellIDs": [
+        1224267
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56555"
+    },
+    "56556": {
+      "itemID": 56556,
+      "name_zhCN": "染血的鳞片护胸",
+      "recipeSpellIDs": [
+        1224268
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56556"
+    },
+    "56557": {
+      "itemID": 56557,
+      "name_zhCN": "染血的鳞片罩帽",
+      "recipeSpellIDs": [
+        1224269
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56557"
+    },
+    "56558": {
+      "itemID": 56558,
+      "name_zhCN": "染血的龙鳞护腿",
+      "recipeSpellIDs": [
+        1224270
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56558"
+    },
+    "56559": {
+      "itemID": 56559,
+      "name_zhCN": "染血的龙鳞护胸",
+      "recipeSpellIDs": [
+        1224271
+      ],
+      "sourceURL": "https://www.wowhead.com/cn/item=56559"
+    }
+  },
+  "note": "recipeSpellIDs maps each output item to candidate crafting spell IDs. Recipe spells without an item output (for example enchants) do not appear here."
+}

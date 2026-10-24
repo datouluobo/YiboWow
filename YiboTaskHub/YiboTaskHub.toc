@@ -4,7 +4,7 @@
 ## Title-zhTW: |cff20e070[Yibo]|r YiboTaskHub - 行动中心
 ## Notes-zhCN: 汇总业务来源任务，查看当前角色行动与其他角色今日工作。
 ## Author: YiboSoft
-## Version: 0.6.0
+## Version: 0.6.1
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
 ## IconTexture: Interface\AddOns\YiboTaskHub\Media\YiboTaskHubIcon-v1
@@ -15,7 +15,7 @@ Locales\zh.lua
 Locales\en.lua
 Namespace.lua
 Database.lua
-Goals.lua
+Common/Goals.lua
 BossTargets.lua
 Snapshot.lua
 Contracts.lua

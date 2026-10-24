@@ -86,7 +86,7 @@ dofile("YiboTaskHub/Locales/zh.lua")
 dofile("YiboTaskHub/Locales/en.lua")
 assert(loadfile("YiboTaskHub/Namespace.lua"))("YiboTaskHub", {})
 local Hub = YiboTaskHub
-for _, name in ipairs({ "Database", "Goals", "BossTargets", "Snapshot", "Contracts", "GoalContracts" }) do dofile("YiboTaskHub/" .. name .. ".lua") end
+for _, name in ipairs({ "Database", "Common/Goals", "BossTargets", "Snapshot", "Contracts", "GoalContracts" }) do dofile("YiboTaskHub/" .. name .. ".lua") end
 Hub.Core = Core
 assert(Core:RegisterAddon(Hub.NAME, { version = "test", requiredAPI = 12 }))
 assert(Core:RegisterAddon("Spec", { version = "test", requiredAPI = 12 }))
@@ -180,7 +180,7 @@ for _, id in ipairs({ "C", "D" }) do domains[id].data.professions = { { id = 197
 YiboCrafting = { NAME = "YiboCrafting", RecipeCatalog = { professions = { [197] = { [100] = { outputItemIDs = { 123 } } } } },
  Store = { db = {}, GetRecipeState = function() return "learned" end } }
 dofile("YiboCrafting/Locales/Targets.lua")
-dofile("YiboCrafting/GoalTargets.lua"); local Craft = YiboCrafting.GoalTargets; assert(Craft:Initialize())
+dofile("YiboCrafting/Mists/GoalTargets.lua"); local Craft = YiboCrafting.GoalTargets; assert(Craft:Initialize())
 local ci = { providerID = Craft.PROVIDER, objectID = 100, scope = { characterID = "C" }, conditions = { professionID = 197, outputItemID = 123, mode = "craft-times", quantity = 2 } }
 local cg = assert(Hub.Goals:Add(ci))
 Equal(Task(cg.id).readiness, "preparation")
@@ -200,7 +200,7 @@ local copied = Hub.Goals:Lookup(copiedIntent)
 Equal(Hub.db.goals.byID[copied.id].intent.conditions.startCount, 0, "copy resets manufacturing baseline")
 -- Shared profession goals project to every eligible character, but never sum casts.
 local sharedIntent = Core.Defaults:Copy(ci)
-sharedIntent.scope = { mode = "account" }; sharedIntent.conditions.executorMode = "any"
+sharedIntent.scope = { mode = "account" }; sharedIntent.conditions.executorMode = "any"; sharedIntent.conditions.realmScope = "all"
 sharedIntent.conditions.quantity = 3
 local sharedNormalized = assert(Craft:Normalize({ intent = sharedIntent }))
 Equal(#sharedNormalized.intent.scope.characterIDs, 2, "only confirmed profession characters")

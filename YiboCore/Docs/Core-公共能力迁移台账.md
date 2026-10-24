@@ -2,6 +2,14 @@
 
 # Core 公共能力迁移台账
 
+2026-10-25 本轮验收与版本：用户确认附魔目标添加、制作后Hub完成清理及Crafting角标清理通过；Core1.12.9、Crafting1.2.2、Hub0.6.1更新，公开API与能力版本不变。服务器范围及完整语言／覆盖安装矩阵继续保留精确待验范围，打包与提交不等于渠道发布。
+
+2026-10-25 CAP-008完成状态标记补修：用户确认附魔制作后Hub任务清理实机通过，Crafting绿色来源标记仍保留。Core共享BusinessItemActions将角标／圆点条件改为active+paused>0，LookupItems完成历史、原契约及最低版本不变，无新业务分支；实际Core／Hub／Crafting集成覆盖配方和角色格清理、混合状态、重开与暂停，Core Contracts90、Forever69、三插件93文件语法及Mists构建校验通过。来源标记补修待实机，扩大性能回归有AltoBoss独立阻断，详见[完成后的来源标记](../../YiboCrafting/Docs/Mists-附魔制造目标修复与验收.md)。
+
+2026-10-24 Crafting／Hub服务器范围：CAP-001／004／007／009与公开Contracts继续接入；新增owner中英文范围字段，复用Core角色目录realm数据与统一下拉，不新增Core能力。Crafting来源在保存、施法与库存判定中约束服务器，Hub账号标记经公开Normalize获取当前候选，目标管理共享职责移入Common/Goals.lua；两插件最低API13及既有能力要求不变。用户确认添加目标操作实机通过，卷轴及服务器新行为仍待实机；新增范围／Snapshot／标记测试、原回归、两插件构建校验及Forever兼容模拟通过，细目见[附魔目标及服务器范围](../../YiboCrafting/Docs/Mists-附魔制造目标修复与验收.md)。
+
+2026-10-24 Crafting Mists附魔目标修复：按固定build 70032的附魔效果补齐319条卷轴映射；目标来源及配方目录归入Mists/。CAP-001／003／004／007／009沿用现有公开调用，API13／localization:1／business-item-actions:2要求不变。实际目录经Hub保存测试覆盖两种执行范围与制造／持有两种条件，卷轴查询复用ItemResolver与Contracts库存来源；5275条产物证据核对、原7组、新增目标测试、40文件语法、构建校验及Forever92项模拟通过。旧路径为空操作避免覆盖更新重复加载；无新增Core契约，客户端待验及扩展回归失败见[附魔目标验收](../../YiboCrafting/Docs/Mists-附魔制造目标修复与验收.md)。
+
 ## 当前基线
 
 2026-10-15 YiboReputation 数据归属改造已按[迁移方案](../../YiboReputation/Docs/声望数据归属迁移方案.md)实施：Core 1.12.4 停止声望采集，Reputation 1.7.1 接管采集、目录与新存储，旧快照通过公开接口一次性导入且冻结保留。87 项专项与独立悬停检查通过，真实客户端存档尚未迁移／验收；详见[实施记录](../../YiboReputation/Docs/声望数据归属迁移-实施与验收记录.md)。

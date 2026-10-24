@@ -47,11 +47,11 @@ YiboCrafting = {
     },
 }
 function GetServerTime() return 1 end
-dofile("YiboCrafting/GoalTargets.lua")
+dofile("YiboCrafting/Mists/GoalTargets.lua")
 
 local base = {
     providerID = "YiboCrafting:targets", objectID = 500, scope = { mode = "account" },
-    conditions = { professionID = 197, executorMode = "any", quantity = 1, mode = "craft-times", outputItemID = 600 },
+    conditions = { professionID = 197, executorMode = "any", realmScope = "all", quantity = 1, mode = "craft-times", outputItemID = 600 },
 }
 local normalized = assert(YiboCrafting.GoalTargets:Normalize({ intent = base }))
 assert(#normalized.intent.scope.characterIDs == 1 and normalized.intent.scope.characterIDs[1] == "Learned",

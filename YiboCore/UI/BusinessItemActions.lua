@@ -151,7 +151,9 @@ function Actions:SetMarker(control, status)
     local binding = self.bindings[control]
     if not binding then return end
     binding.itemStatus = status
-    local shown = status and status.count > 0 or false
+    -- Membership queries retain completion history for inspection. A persistent
+    -- marker represents unfinished goals, including intentionally paused ones.
+    local shown = status and ((status.active or 0) + (status.paused or 0)) > 0 or false
     if control.yiboGoalMarkerH then
         local dot = self:GetOptions().markerStyle == "dot"
         local h, v = control.yiboGoalMarkerH, control.yiboGoalMarkerV

@@ -87,7 +87,7 @@ Core.Database = { db = { settings = {} }, GetDB = function(self) return self.db 
 dofile("YiboCore/UI/BusinessItemActions.lua")
 assert(loadfile("YiboTaskHub/Namespace.lua"))("YiboTaskHub", {})
 local Hub = YiboTaskHub
-for _, name in ipairs({ "Database", "Goals", "BossTargets", "Snapshot", "Contracts", "GoalContracts" }) do dofile("YiboTaskHub/" .. name .. ".lua") end
+for _, name in ipairs({ "Database", "Common/Goals", "BossTargets", "Snapshot", "Contracts", "GoalContracts" }) do dofile("YiboTaskHub/" .. name .. ".lua") end
 Hub.Core = Core
 assert(Core:RegisterAddon(Hub.NAME, { version = "test", requiredAPI = 12 }))
 assert(Core:RegisterAddon("Spec", { version = "test", requiredAPI = 12 }))

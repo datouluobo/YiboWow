@@ -10,6 +10,43 @@
         Forever = @{ Slug = 'forever'; Directory = 'Forever' }
     }
     Addons = @{
+        YiboTaskHub = @{
+            VersionFile = 'Namespace.lua'
+            VersionPattern = '^Addon\.VERSION\s*=\s*"([^"]+)"'
+            RequiredCorePattern = '^Addon\.REQUIRED_CORE_API\s*=\s*(\d+)'
+            VersionIncludesAPI = $false
+            ResourceDirectories = @('Media')
+            ExtraFiles = @()
+            Targets = @{
+                Mists = @{
+                    SourceToc = 'YiboTaskHub.toc'
+                    LoadToc = 'YiboTaskHub.toc'
+                    Interfaces = @(50504)
+                    CurseForgeFlavor = 'mists'
+                    CurseForgeVersionNames = @('5.5.4')
+                    LuaVersion = '5.1'
+                    ValidationState = 'existing-mists-baseline'
+                }
+            }
+        }
+        YiboCrafting = @{
+            VersionFile = 'Namespace.lua'
+            VersionPattern = '^Addon\.VERSION\s*=\s*"([^"]+)"'
+            VersionIncludesAPI = $false
+            ResourceDirectories = @('Media')
+            ExtraFiles = @()
+            Targets = @{
+                Mists = @{
+                    SourceToc = 'YiboCrafting.toc'
+                    LoadToc = 'YiboCrafting.toc'
+                    Interfaces = @(50504)
+                    CurseForgeFlavor = 'mists'
+                    CurseForgeVersionNames = @('5.5.4')
+                    LuaVersion = '5.1'
+                    ValidationState = 'existing-mists-baseline'
+                }
+            }
+        }
         YiboAltoBoss = @{
             VersionFile = 'YiboAltoBoss.toc'
             VersionPattern = '^## Version:\s*([^\r\n]+)'
