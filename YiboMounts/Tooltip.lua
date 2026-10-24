@@ -165,37 +165,14 @@ function NS.Tooltip:ApplyHyperlink(tooltip, link)
     self:ApplySpellID(tooltip, spellID, "OnTooltipSetHyperlink", "hyperlink")
 end
 
-local function GetAuraSpellID(api, unit, index, filter)
-    if type(api) ~= "function" then return nil, false end
-    local values = { api(unit, index, filter) }
-    if type(values[11]) == "number" then return values[11], true end
-
-    -- Some MoP Classic builds expose a non-standard UnitAura return layout.
-    -- Resolve the localized aura name through the stable spell-info API first.
-    if type(GetSpellInfo) == "function" and type(values[1]) == "string" then
-        local _, _, _, _, _, _, spellID = GetSpellInfo(values[1])
-        if type(spellID) == "number" then return spellID, true end
-    end
-
-    -- Retain a final catalog-aware fallback for custom clients that keep the
-    -- spell ID at a different numeric return position.
-    for i = 1, 20 do
-        local value = values[i]
-        if type(value) == "number" and NS.Catalog:GetBySpellID(value) then
-            return value, true
-        end
-    end
-    return nil, values[1] ~= nil
-end
-
 -- Read-only helper for the mouseover-tooltip diagnostic.  It deliberately
 -- does not alter a tooltip or choose a fallback unit such as "target".
 function NS.Tooltip:FindMountAuras(unit)
     local matches, auraCount = {}, 0
-    if type(unit) ~= "string" or type(UnitBuff) ~= "function" then return matches, auraCount end
+    if type(unit) ~= "string" then return matches, auraCount end
 
     for index = 1, 40 do
-        local spellID, present = GetAuraSpellID(UnitBuff, unit, index)
+        local spellID, present = NS.AuraTooltip:ReadBuff(unit, index)
         if not present then break end
         auraCount = auraCount + 1
         local record = NS.Catalog:GetBySpellID(spellID)
@@ -214,21 +191,12 @@ function NS.Tooltip:ApplyHoveredUnit(tooltip)
     end
 end
 
-local function ApplyUnitAura(tooltip, unit, index, filter)
-    NS.Tooltip:Apply(tooltip, unit, GetAuraSpellID(UnitAura, unit, index, filter), "SetUnitAura")
-end
-
-local function ApplyUnitBuff(tooltip, unit, index, filter)
-    NS.Tooltip:Apply(tooltip, unit, GetAuraSpellID(UnitBuff, unit, index, filter), "SetUnitBuff")
-end
-
 function NS.Tooltip:Initialize()
     if self.initialized or not GameTooltip then return end
     self.initialized = true
 
-    GameTooltip:HookScript("OnTooltipSetSpell", function(tooltip)
-        NS.Tooltip:Apply(tooltip)
-    end)
+    -- Aura setters establish helpful/harmful context; a generic spell callback
+    -- cannot do so. Mount links and journal entries have their own hooks below.
     if type(GameTooltip.HasScript) == "function" and GameTooltip:HasScript("OnTooltipSetHyperlink") then
         GameTooltip:HookScript("OnTooltipSetHyperlink", function(tooltip, link)
             NS.Tooltip:ApplyHyperlink(tooltip, link)
@@ -248,14 +216,9 @@ function NS.Tooltip:Initialize()
         NS.Tooltip:ApplyHoveredUnit(tooltip)
     end)
 
-    -- MoP Classic's aura buttons can populate GameTooltip through these legacy
-    -- setters without firing OnTooltipSetSpell.
-    if type(GameTooltip.SetUnitAura) == "function" then
-        hooksecurefunc(GameTooltip, "SetUnitAura", ApplyUnitAura)
-    end
-    if type(GameTooltip.SetUnitBuff) == "function" then
-        hooksecurefunc(GameTooltip, "SetUnitBuff", ApplyUnitBuff)
-    end
+    NS.AuraTooltip:Initialize(GameTooltip, function(tooltip, unit, spellID, source)
+        NS.Tooltip:Apply(tooltip, unit, spellID, source)
+    end)
     GameTooltip:HookScript("OnTooltipCleared", ClearMarker)
     GameTooltip:HookScript("OnHide", ClearMarker)
 end
