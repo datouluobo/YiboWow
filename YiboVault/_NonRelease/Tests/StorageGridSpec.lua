@@ -1,5 +1,6 @@
 _G.YiboCore = { UITheme = { Colors = {} } }
 _G.YiboVault = {}
+dofile("YiboVault/_NonRelease/Tests/Fixture.lua").Install()
 dofile("YiboVault/StoragePage.lua")
 local page = YiboVault.StoragePage
 

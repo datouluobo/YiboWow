@@ -149,12 +149,12 @@ function Page:CreateSettingsPanel(parent, context)
     })
     panel.itemInput = itemInput
     itemInput:ClearAllPoints(); itemInput:SetPoint("TOPLEFT", business, "TOPLEFT", 14, -176)
-    local addButton = panel.addItemButton or CreateFrame("Button", nil, business, "UIPanelButtonTemplate")
+    local addButton = panel.addItemButton or context.createButton(business, 72, Addon:T("TEXT.FILTER_527086"), "secondary")
     panel.addItemButton = addButton
     addButton:ClearAllPoints(); addButton:SetPoint("LEFT", itemInput, "RIGHT", 8, 0); addButton:SetSize(72, 24); addButton:SetText(Addon:T("TEXT.FILTER_527086"))
-    local removeButton = panel.removeItemButton or CreateFrame("Button", nil, business, "UIPanelButtonTemplate")
+    local removeButton = panel.removeItemButton or context.createButton(business, 110, Addon:T("TEXT.REMOVE_FILTER_91AC42"), "secondary")
     panel.removeItemButton = removeButton
-    removeButton:ClearAllPoints(); removeButton:SetPoint("LEFT", addButton, "RIGHT", 6, 0); removeButton:SetSize(72, 24); removeButton:SetText(Addon:T("TEXT.REMOVE_FILTER_91AC42"))
+    removeButton:ClearAllPoints(); removeButton:SetPoint("LEFT", addButton, "RIGHT", 6, 0); removeButton:SetSize(110, 24); removeButton:SetText(Addon:T("TEXT.REMOVE_FILTER_91AC42"))
     local filterItems = panel.filterItems or context.createText(business, theme.Font.assist, theme.Colors.muted, "LEFT")
     panel.filterItems = filterItems
     filterItems:ClearAllPoints(); filterItems:SetPoint("TOPLEFT", business, "TOPLEFT", 14, -207)
@@ -277,7 +277,7 @@ function Page:CreateSettingsPanel(parent, context)
         elseif context.refreshPanel then context.refreshPanel() end
     end)
     nextPage:SetShown(panel.guildPage * GUILDS_PER_PAGE < #guilds)
-    return 176 + dataHeight
+    return 246 + dataHeight
 end
 
 function Page:Create(parent)
@@ -316,7 +316,7 @@ function Page:Register()
     if not registered then return nil, err end
     local entry, entryError = Core.Entry:RegisterBusinessEntry(Addon.NAME, {
         id = "yva", brokerName = "YiboVault", pageID = PAGE_ID,
-        text = Addon:T("TEXT.YIBO_ITEM_OVERVIEW_CBF21F"), icon = "Interface\\AddOns\\YiboVault\\Media\\YiboVaultIcon-v2",
+        text = Addon:T("TEXT.YIBO_ITEM_OVERVIEW_CBF21F"), icon = "Interface\\AddOns\\YiboVault\\Media\\YiboVaultIcon",
         defaultChannels = { minimap = false, broker = false, builtinBar = false },
     })
     if not entry then return nil, entryError end

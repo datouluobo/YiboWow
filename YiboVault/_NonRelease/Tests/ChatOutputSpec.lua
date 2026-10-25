@@ -12,6 +12,7 @@ _G.YiboVault = {
     Print = function(_, message) messages[#messages + 1] = message end,
 }
 _G.SlashCmdList = {}
+dofile("YiboVault/_NonRelease/Tests/Fixture.lua").Install()
 dofile("YiboVault/Commands.lua")
 SlashCmdList.YIBOVAULT("scan")
 SlashCmdList.YIBOVAULT("status")

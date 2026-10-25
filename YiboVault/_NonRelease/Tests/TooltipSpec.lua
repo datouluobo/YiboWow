@@ -95,6 +95,7 @@ function tooltip:GetItem() return "Test", self.link end
 function tooltip:AddLine(value) self.lines[#self.lines + 1] = value end
 function tooltip:AddDoubleLine(left, right) self.lines[#self.lines + 1] = left .. " / " .. right end
 function tooltip:Show() end
+dofile("YiboVault/_NonRelease/Tests/Fixture.lua").Install()
 dofile("YiboVault/Tooltip.lua")
 local vaultTooltip = _G.YiboVault.Tooltip
 vaultTooltip:Append(tooltip)

@@ -8,6 +8,17 @@ _G.YiboVault = {
     db = db,
     Now = function() return 1000 + now, "server" end,
     Print = function() end,
+    GetCachedCharacterRecords = function(_, characterID, source)
+        assert(characterID == currentCharacter.id and source == "auction")
+        return stored
+    end,
+    ExpireAuctions = function(_, timestamp)
+        assert(type(timestamp) == "number")
+        for _, record in ipairs(stored) do
+            assert(record.expiryAt == nil, "no expiry is inferred without time-left band bounds")
+        end
+        return false
+    end,
     ReplaceLocation = function(_, characterID, source, key, records, location)
         local same = #stored == #records
         if same then
@@ -65,6 +76,7 @@ end
 
 local frameShown = true
 AuctionHouseFrame = { IsShown = function() return frameShown end }
+dofile("YiboVault/_NonRelease/Tests/Fixture.lua").Install()
 dofile("YiboVault/AuctionHouse.lua")
 local auctionHouse = YiboVault.AuctionHouse
 

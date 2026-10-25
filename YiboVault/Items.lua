@@ -20,6 +20,18 @@ function Items:GetRevision()
 end
 
 local function ValidateScope(scope)
+    if Addon.Target and Addon.Target.currentOnly then
+        local current = Addon.Core and Addon.Core.Characters:GetCurrent({ identityOnly = true })
+        if not current then return nil, "current-character-unavailable" end
+        if scope ~= nil then
+            if type(scope) ~= "table" or scope.mode ~= "characters" or type(scope.characterIDs) ~= "table" then
+                return nil, "scope-not-supported"
+            end
+            for _, id in ipairs(scope.characterIDs) do
+                if id ~= current.id then return nil, "scope-not-supported" end
+            end
+        end
+    end
     if scope == nil then return true end
     if type(scope) ~= "table" then return nil, "invalid-scope" end
     if scope.mode == "account" then return true end
@@ -91,6 +103,7 @@ local function SourceCoverage(locations)
 end
 
 local function ResolveGuildKeys(characters, options)
+    if Addon.ResolveCurrentGuildBankKeys then return Addon:ResolveCurrentGuildBankKeys(characters, options) end
     if options and options.guildKey then
         return Addon.db.byGuild and Addon.db.byGuild[options.guildKey]
             and { options.guildKey } or {}
@@ -139,6 +152,7 @@ local function ValidateGuildOptions(options)
     if options.guildKey ~= nil and (type(options.guildKey) ~= "string" or options.guildKey == "") then
         return nil, "invalid-guild-key"
     end
+    if Addon.ValidateCurrentGuildBankOptions then return Addon:ValidateCurrentGuildBankOptions(options) end
     return true
 end
 
@@ -272,7 +286,7 @@ function Items:Query(options)
         totalQuantity = 0, physicalQuantity = 0, listedQuantity = 0, externalQuantity = 0,
         inTransitQuantity = 0, bySource = {},
     }
-    local characters = ResolveCharacters(options.scope, not selectedSources["guild-bank"])
+    local characters = ResolveCharacters(options.scope, not selectedSources["guild-bank"] or (Addon.Target and Addon.Target.currentOnly))
     for _, character in ipairs(characters) do
         for source in pairs(selectedSources) do
             if source ~= "guild-bank" then

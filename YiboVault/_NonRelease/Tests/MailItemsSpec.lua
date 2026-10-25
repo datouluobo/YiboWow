@@ -44,6 +44,7 @@ local function Flush()
     for _, callback in ipairs(pending) do callback() end
 end
 
+dofile("YiboVault/_NonRelease/Tests/Fixture.lua").Install()
 dofile("YiboVault/MailItems.lua")
 local scanner = YiboVault.MailItems
 scanner:OnEvent("MAIL_SHOW")

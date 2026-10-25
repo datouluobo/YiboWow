@@ -2,11 +2,13 @@ local Addon = _G.YiboVault or {}
 _G.YiboVault = Addon
 
 Addon.NAME = "YiboVault"
-Addon.RELEASE_VERSION = "1.2.3"
+Addon.RELEASE_VERSION = "1.2.4"
 Addon.REQUIRED_CORE_API = 13
 Addon.SCHEMA_VERSION = 1
 Addon.API_VERSION = 1
 Addon.VERSION = Addon.RELEASE_VERSION .. "-api" .. Addon.API_VERSION
+-- The default manifest is the existing Mists build; target manifests override this policy.
+Addon.CLIENT_SUPPORTED = not (type(WOW_PROJECT_CAMELOT) == "number" and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT)
 Addon.CAPABILITIES = {
     ["items.query"] = 1,
     ["items.personal-counts"] = 1,

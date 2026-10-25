@@ -79,6 +79,8 @@ _G.YiboVault = { Items = {
     GetSourceState = function() return {} end,
 }, IsGuildHidden = function() return false end }
 YiboVault.Core = YiboCore
+dofile("YiboVault/_NonRelease/Tests/Fixture.lua").Install()
+dofile("YiboVault/Mists/BagCapacity.lua")
 dofile("YiboVault/StoragePage.lua")
 local host = Widget()
 YiboVault.StoragePage:Create(host)
@@ -195,7 +197,7 @@ YiboVault.StoragePage:LayoutCells(page)
 assert(math.abs(page.itemCells[1].borderColor[1] - (0xa3 / 255)) < 0.001,
     "a saved colored item link must supply its quality border before item info loads")
 
-YiboCore.Characters.GetCurrent = function() return { id = "one" } end
+YiboCore.Characters.GetCurrent = function() return { id = "one", name = "One", realm = "Realm" } end
 _G.RAID_CLASS_COLORS = { MAGE = { r = 0.3, g = 0.8, b = 1 } }
 YiboVault.Items.GetStorageSummary = function()
     return { characters = {

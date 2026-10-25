@@ -1,6 +1,12 @@
 # YiboVault
 
-当前版本：`1.2.3-api1`。`1.2.3` 为插件版本，`api1` 为对外 `Items` API 版本。当前工作树要求 YiboCore 1.12.0 / API 13，并检查 `localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`character-identity:1` 与 `account-entry:2`；缺失或版本不足时停止 Vault 初始化并提示升级。Core 的语言、名称、输入、入口和物品显示能力只通过公开接口使用。YiboCurrency 是可选调用方。Vault 通过 Core 发现 `mail.items`，提供方兼容时消费邮件快照及可选在途投影；缺失或不兼容时独立采集。Vault 通过 `vault.items` 提供只读库存查询，Service 契约仍为 `business-services:1`，见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
+2026-10-25：[MoP 发布前检查](Docs/Mists-发布前检查-20261025.md)。MoP `1.2.4-api1` 已列离线、覆盖安装及干净代码目录实机测试通过，本次仅声明手动覆盖安装，尚未发布。正式包与受测运行文件一致性及可发布结论见该记录；CurseForge客户端自动更新未验证。
+
+2026-10-22：[双端采集加载拆分与覆盖更新验收](Docs/双端采集加载拆分与覆盖更新验收.md)。MoP 专用采集／初始化已迁入 `Mists/`，共用支持位于 `Common/`；离线及测试目录覆盖通过，客户端回归待验，功能与存档身份保持原基线。
+
+> 文档状态更新（2026-10-16）：现有功能已由用户确认实机验收收口。当前源码版本与发行证据见[状态总览](../Docs/仓库当前状态总览.md)，后续任务见[延期清单](../Docs/后续开发任务清单.md)。下文旧版本的开发／待验收描述按其原日期理解；当前版本渠道状态没有明确证据时保留待核对。
+
+当前 MoP 版本：`1.2.4-api1`（发布候选）。`1.2.4` 为插件版本，`api1` 为对外 `Items` API 版本。当前工作树要求 YiboCore 1.12.0 / API 13，并检查 `localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`character-identity:1` 与 `account-entry:2`；缺失或版本不足时停止 Vault 初始化并提示升级。Core 的语言、名称、输入、入口和物品显示能力只通过公开接口使用。YiboCurrency 是可选调用方。Vault 通过 Core 发现 `mail.items`，提供方兼容时消费邮件快照及可选在途投影；缺失或不兼容时独立采集。Vault 通过 `vault.items` 提供只读库存查询，Service 契约仍为 `business-services:1`，见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。YiboCore 不包含在本插件下载中，仅从其[官方 CurseForge 项目](https://www.curseforge.com/wow/addons/yibocore)获取。
 
 正式版变化见 [更新日志](CHANGELOG.md)。
 
@@ -16,11 +22,11 @@
 
 `0.2.0-test.14-api1` 扩展 `GetPersonalCounts`，按扫描状态返回个人装备来源的物品数量，供货币余额合并已装备代币；API 仍为 v1，既有调用方可忽略新增字段。
 
-运行 `_NonRelease/Tools/Build-ReleasePackages.ps1` 在仓库根目录 `Builds/` 生成 `YiboVault-v<功能版本>-api<API版本>.zip` 与同名前缀的 `-github.zip`。脚本会校验 TOC、Lua 常量和包名一致；普通包只含游戏加载文件及 TGA 图标，GitHub 包含公开文档与设计资源。
+运行仓库根目录 `Tools/Build-ReleasePackages.ps1 -Addon YiboVault -Target Mists`，或原 `_NonRelease/Tools/Build-ReleasePackages.ps1` 兼容入口，在 `Builds/` 生成 `YiboVault-mists-v<功能版本>-api<API版本>-curseforge.zip` 与一份 `YiboVault-mists-v<功能版本>-api<API版本>-src.<源码及配置摘要>-github.zip`。统一入口校验源 TOC、版本常量、Interface、静态 Lua 引用与语法；CF 包只含目标运行文件和 TGA 图标，GitHub 归档包含公开源码、各目标实现、文档与设计资源。包内 JSON 清单记录源码标识、目标版本和最低 Core API。当前仅配置 Mists；其它目标请求停止。可用 `-Channel CurseForge`、`-Channel GitHub` 单独构建渠道，或 `-ValidateOnly` 只校验计划。旧包按对应渠道/目标移入 `Builds/Archive/YiboVault/`，其它最新产物保留。正式命名与范围见 [目标与发行标识规范](../Docs/多版本目标与发行标识规范.md)。1.2.4候选的升级、依赖、渠道文案见[候选发布说明](Releases/v1.2.4/RELEASE.md)。
 
 YiboVault 是 Yibo 系列的账号物品缓存与查询服务。首轮实现顺序、职责边界及验收门见：
 
-- [联合实施计划](../Docs/YiboCore-Vault-Mail-实施计划.md)
+- [Vault／Mail 公共契约](../Docs/YiboVault-Mail-API-v1-契约.md)
 - [产品边界与开发路线图](../Docs/YiboVault-产品边界与开发路线图.md)
 - [Public API v1 契约](../Docs/YiboVault-Mail-API-v1-契约.md)
 - [阶段 0 客户端验证记录](_NonRelease/Docs/Stage0-客户端验证记录.md)
@@ -38,7 +44,7 @@ YiboVault 是 Yibo 系列的账号物品缓存与查询服务。首轮实现顺�
 - 登录/进入世界时初始化全量采集；背包在 `BAG_UPDATE_DELAYED` 后按脏 bag 更新；装备在装备变化事件后完整重扫 `1..19` 槽。
 - `YiboVault.Items` 提供 API v1 能力检查、范围查询、来源状态、revision 和变更事件；个人银行与 AH 能力仅在对应窗口打开并成功扫描后产生已知快照。
 - 查询调用规则已冻结：省略范围只查当前角色；账号和服务器范围排除 Core 隐藏角色；显式角色 ID 可查隐藏角色。覆盖状态统一放在持有者的 `locations` 中；非法参数返回 `nil, errorCode`，不伪装成空库存。详细结构见 API 契约。
-- `/yva scan` 重扫当前角色背包与装备，`/yva status` 仅在当前缓存有扫描错误时显示错误。正常扫描不在聊天窗口发送通告。Broker 与插件列表统一使用 `Media/YiboVaultIcon-v2.tga`，由游戏界面按实际控件尺寸缩放显示；完整 PNG 尺寸组与可编辑 SVG 母版也保存在 `Media/`。
+- `/yva scan` 重扫当前角色背包与装备，`/yva status` 仅在当前缓存有扫描错误时显示错误。正常扫描不在聊天窗口发送通告。Broker使用 `Media/YiboVaultIcon.tga`（64px），插件列表使用 `Media/YiboVaultIcon-128.tga`，由游戏界面按实际控件尺寸缩放显示；完整PNG尺寸组与312px透明位图母版也保存在 `Media/`。
 - Core 负责设置工作台壳、账号页面和角色缓存清理；Vault 使用单一仓储页，顶部按物品名称或 ID 搜索，左侧持有者列表与右侧物品格同步筛选。左栏每个公会只显示一行；角色固定显示五个来源标签，公会固定显示八个页签，未扫描标签置灰且不可点击。
 - 角色按背包、邮件、个人银行、拍卖、装备浏览；公会共享库存按公会页签单独列出。Vault 保存并提供已扫描容量、空位及可识别的包名称/大小组成摘要，Core 继续负责统一页面壳与角色范围。
 - 原生物品 Tooltip 追加 Vault 的缓存合计、角色来源图标与公会页签分布。所有角色与公会均保留成功保存过的数量：登录、重载、关闭窗口或刷新失败不隐藏历史快照；只有没有可用快照的来源以 `~` 表示未知，部分邮箱的数量保留并以 `+` 标识下限。主窗口仍展示快照状态，历史来源标为“上次缓存”。悬停复用只读物品查询，服务器范围可在 Vault 业务设置中选为当前或所有服务器，角色准入与排序沿用 Core。
@@ -67,3 +73,14 @@ YiboVault 是 Yibo 系列的账号物品缓存与查询服务。首轮实现顺�
 新增强最低 Core API v12 / business-item-actions:1，不足提示升级并停止增强；原基础业务保留既有最低版本，作为旧 Core 兼容例外，无新交互本地回退。整体提高最低版本时收拢此例外。
 
 实际契约、自动化与客户端待验收范围见 [实施与验证](../Docs/行动中心-主动添加实施与验证.md)。
+
+## 图标资源（2026-10-14）
+
+当前图标为 `Media/YiboVaultIcon`：默认TGA为64px，插件列表使用128px TGA；PNG提供16/24/32/64/128/512/1024px，母版为312px透明位图。版本、统一缩放和验证范围见[系列资源记录](../Docs/Design/Yibo系列Logo-20261014/README.md)。
+
+![YiboVault 图标](Media/YiboVaultIcon-128.png)
+## 无限服最小适配（2026-10-19）
+
+Forever开发清单现为0.6.0-api1，覆盖当前角色背包／装备／角色银行／邮件附件／本人上架物品及可查看公会银行采集、独立YiboVaultForeverDB、Core账号页面与同快照预览。背包／装备采集、展示与按钮已获实机确认；银行仅打开原生界面时读取，未访问保持未知，关闭后保留过期快照。MoP继续使用1.2.3-api1及原存档、完整来源和仓储页。银行、邮件附件、拍卖行、公会银行与保存恢复待客户端验收，详见[背包装备阶段](Docs/Forever-当前角色物品最小适配.md)、[角色银行阶段](Docs/Forever-当前角色银行最小适配.md)、[邮件附件阶段](Docs/Forever-当前角色邮件附件最小适配.md)、[拍卖行阶段](Docs/Forever-当前角色拍卖行最小适配.md)和[公会银行阶段](Docs/Forever-当前角色公会银行最小适配.md)。
+
+Forever0.6.0-api1新增Mail公开快照可选接入：兼容mail.items提供方存在时停止本地邮件采集，仅投影附件；未注册或不兼容时本地基础功能保留。旧本地缓存休眠保留，不复制Mail权威存档。69项Mail双端／联动检查通过，银行、邮件附件、拍卖行、公会银行均待实机，见[Mail目标记录](../YiboMail/Docs/Forever-最小适配与验收.md)。

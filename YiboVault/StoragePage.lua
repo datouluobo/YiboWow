@@ -52,7 +52,7 @@ local function CapacityText(area)
     if not area or not area.totalSlots then return "" end
     local prefix = area.completeCapacity and "" or Addon:T("TEXT.KNOWN_A96951")
     if area.freeSlots ~= nil then
-        return string.format(Addon:T("TEXT.S_FREE_SLOTS_D_D_46FDF4"), prefix, area.freeSlots, area.totalSlots)
+        return string.format(Addon:T("CAPACITY.TOTAL_FREE"), prefix, area.freeSlots, area.totalSlots)
     end
     return string.format(Addon:T("TEXT.S_TOTAL_SLOTS_D_E4410B"), prefix, area.totalSlots)
 end
@@ -346,7 +346,7 @@ function StoragePage:GetGridContentHeight(slotCount, columns)
     return math.max(1, 4 + math.ceil(slotCount / columns) * (CELL_SIZE + CELL_GAP))
 end
 
-function StoragePage:BuildSlots(records, areaID, freeSlots)
+function StoragePage:BuildSlots(records, areaID, freeSlots, freeGroups)
     local slots = {}
     if areaID == "equipment" then
         for slot = 1, 19 do slots[slot] = false end
@@ -356,7 +356,11 @@ function StoragePage:BuildSlots(records, areaID, freeSlots)
         end
     else
         for _, record in ipairs(records or {}) do slots[#slots + 1] = record end
-        if type(freeSlots) == "number" and freeSlots > 0 then
+        if type(freeGroups) == "table" then
+            for _, group in ipairs(freeGroups) do
+                slots[#slots + 1] = { emptySlots = group.emptySlots, emptyLabelKey = group.emptyLabelKey }
+            end
+        elseif type(freeSlots) == "number" and freeSlots > 0 then
             slots[#slots + 1] = { emptySlots = math.floor(freeSlots) }
         end
     end
@@ -381,6 +385,7 @@ function StoragePage:UpdateItemCell(page, cell, record, index)
         #quantity > 3 and Theme.Font.assist or Theme.Font.section, "OUTLINE")
     cell.count:SetText(quantity)
     cell.emptyLabel:SetShown(emptySlots ~= nil)
+    cell.emptyLabel:SetText(Addon:T(record and record.emptyLabelKey or "TEXT.EMPTY_A3EEF8"))
     cell.emptyCount:SetShown(emptySlots ~= nil)
     cell.emptyCount:SetText(emptySlots and tostring(emptySlots) or "")
     cell:SetBackdropColor(unpack(item and Theme:GetDataRowColor(index) or emptySlots and Colors.panel or Colors.bg))
@@ -669,7 +674,8 @@ function StoragePage:Refresh(host, context)
     local records = selected and selected.records[page.area] or {}
     table.sort(records, function(left, right) return tostring(left.sourceID) < tostring(right.sourceID) end)
     local freeSlots = not searching and area and tonumber(area.freeSlots) or nil
-    page.slots = selected and self:BuildSlots(records, searching and "search" or page.area, freeSlots) or {}
+    local freeGroups = not searching and Addon.BagCapacity:Group(area, page.area) or nil
+    page.slots = selected and self:BuildSlots(records, searching and "search" or page.area, freeSlots, freeGroups) or {}
     local emptyMessage = not selected and Addon:T("TEXT.NO_CHARACTERS_OR_SCANNED_GUILD_BANKS_ARE_I_F21456")
         or not page.area and Addon:T("TEXT.NO_VIEWABLE_SOURCE_HAS_BEEN_SCANNED_YET_63655B")
         or Addon:T("TEXT.NO_RECORDED_ITEMS_IN_THIS_STORAGE_AREA_34E6E1")

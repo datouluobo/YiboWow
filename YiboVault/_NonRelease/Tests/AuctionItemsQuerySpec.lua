@@ -7,6 +7,11 @@ YiboCore = {
     Characters = {
         GetCurrent = function() return character end,
         GetAll = function() return { character, hiddenCharacter } end,
+        GetAllCached = function() return { character, hiddenCharacter } end,
+        Get = function(_, id)
+            if id == character.id then return character end
+            if id == hiddenCharacter.id then return hiddenCharacter end
+        end,
     },
     AccountView = { GetVisibleCharacters = function() return { character } end },
 }

@@ -1,0 +1,31 @@
+## Interface: 16001
+## Title: |cff20e070[Yibo]|r YiboVault - Item Overview
+## Title-zhCN: |cff20e070[Yibo]|r YiboVault - 物品总览
+## Title-zhTW: |cff20e070[Yibo]|r YiboVault - 物品总览
+## Notes: Forever development build: current character items and viewable guild-bank snapshots. Client acceptance pending.
+## Notes-zhCN: 无限开发版：当前角色背包、装备、角色银行、邮件附件、本人拍卖与可查看公会银行快照，待客户端验收。
+## Author: YiboSoft
+## Version: 0.6.0-api1
+## RequiredDeps: YiboCore
+## Group: YiboCore
+## SavedVariables: YiboVaultForeverDB
+## IconTexture: Interface\AddOns\YiboVault\Media\YiboVaultIcon-128
+## LoadOnDemand: 0
+
+Namespace.lua
+Forever\Target.lua
+Locales\zh.lua
+Locales\en.lua
+Store.lua
+Items.lua
+Common\ItemRecords.lua
+Common\Collector.lua
+Common\CoreIntegration.lua
+Forever\Collector.lua
+Forever\Mail.lua
+Forever\MailProvider.lua
+Forever\Auction.lua
+Forever\GuildBank.lua
+Forever\AccountPage.lua
+Forever\Bootstrap.lua
+Forever\Commands.lua

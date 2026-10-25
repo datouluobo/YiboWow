@@ -1,0 +1,47 @@
+{
+  "archived_on": "2026-10-14",
+  "addon": "YiboVault",
+  "archive": "v1",
+  "files": [
+    {
+      "file": "YiboVaultIcon-v2-1024.png",
+      "original_version": "2",
+      "original_path": "YiboVault/Media/YiboVaultIcon-v2-1024.png"
+    },
+    {
+      "file": "YiboVaultIcon-v2-128.png",
+      "original_version": "2",
+      "original_path": "YiboVault/Media/YiboVaultIcon-v2-128.png"
+    },
+    {
+      "file": "YiboVaultIcon-v2-24.png",
+      "original_version": "2",
+      "original_path": "YiboVault/Media/YiboVaultIcon-v2-24.png"
+    },
+    {
+      "file": "YiboVaultIcon-v2-32.png",
+      "original_version": "2",
+      "original_path": "YiboVault/Media/YiboVaultIcon-v2-32.png"
+    },
+    {
+      "file": "YiboVaultIcon-v2-512.png",
+      "original_version": "2",
+      "original_path": "YiboVault/Media/YiboVaultIcon-v2-512.png"
+    },
+    {
+      "file": "YiboVaultIcon-v2-64.png",
+      "original_version": "2",
+      "original_path": "YiboVault/Media/YiboVaultIcon-v2-64.png"
+    },
+    {
+      "file": "YiboVaultIcon-v2-master.svg",
+      "original_version": "2",
+      "original_path": "YiboVault/Media/YiboVaultIcon-v2-master.svg"
+    },
+    {
+      "file": "YiboVaultIcon-v2.tga",
+      "original_version": "2",
+      "original_path": "YiboVault/Media/YiboVaultIcon-v2.tga"
+    }
+  ]
+}

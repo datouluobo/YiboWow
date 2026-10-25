@@ -12,7 +12,7 @@ addon.Core = { Characters = {
 addon.db = { byCharacter = {}, byGuild = {}, revision = 0 }
 dofile("YiboVault/Store.lua")
 dofile("YiboVault/Items.lua")
-dofile("YiboVault/Collector.lua")
+dofile("YiboVault/Common/Collector.lua")
 
 local events = {}
 addon.Items.Events:Register("revision-test", function(name, payload)

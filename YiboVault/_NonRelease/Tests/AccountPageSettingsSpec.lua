@@ -30,6 +30,12 @@ function theme:CreateDropdown()
     dropdown.SetOnValueChanged = function(self, callback) self.onValueChanged = callback end
     return dropdown
 end
+function theme:CreateInput()
+    local input = Widget()
+    input.GetText = function(self) return self.value or "" end
+    input.SetValue = function(self, value) self.value = value end
+    return input
+end
 local shownPage
 YiboCore = { UITheme = theme, AccountView = {
     ShowPage = function(_, pageID) shownPage = pageID end,
@@ -43,6 +49,7 @@ YiboVault = { db = { settings = { tooltipRealmScope = "current", tooltipEnabled 
     DeleteGuild = function(self, key) self.db.byGuild[key] = nil; return true end,
     Print = function() end,
 }
+dofile("YiboVault/_NonRelease/Tests/Fixture.lua").Install()
 dofile("YiboVault/AccountPage.lua")
 local host = Widget()
 local context = {
@@ -56,11 +63,12 @@ local context = {
 context.refreshPanel = function() YiboVault.AccountPage:CreateSettingsPanel(host, context) end
 local height = YiboVault.AccountPage:CreateSettingsPanel(host, context)
 local panel = host.yiboVaultSettings
-assert(height == 370 and panel.data.height == 194 and panel.enabled.checked,
+assert(height == 440 and height == panel.height and panel.data.height == 194 and panel.enabled.checked,
     "settings height must fit the visible guild rows")
 local narrowHost = Widget()
 narrowHost.width = 480
-assert(YiboVault.AccountPage:CreateSettingsPanel(narrowHost, context) == 420
+assert(YiboVault.AccountPage:CreateSettingsPanel(narrowHost, context) == 490
+    and narrowHost.yiboVaultSettings.height == 490
     and narrowHost.yiboVaultSettings.guildRows[1].height == 54,
     "a narrow settings area must stack each guild name above its actions")
 panel.enabled.scripts.OnClick(panel.enabled)

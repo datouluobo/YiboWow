@@ -10,6 +10,12 @@ dofile("YiboVault/Namespace.lua")
 local addon = _G.YiboVault
 addon.Core = { Characters = {
     GetAll = function() return characters end,
+    GetAllCached = function() return characters end,
+    Get = function(_, id)
+        for _, character in ipairs(characters) do
+            if character.id == id then return character end
+        end
+    end,
     GetCurrent = function() return characters[1] end,
 } }
 addon.db = { byCharacter = {}, byGuild = {}, revision = 0 }

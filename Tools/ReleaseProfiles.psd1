@@ -199,7 +199,7 @@
                     CurseForgeFlavor = 'mists'
                     CurseForgeVersionNames = @('5.5.4')
                     LuaVersion = '5.1'
-                    ValidationState = 'existing-mists-baseline'
+                    ValidationState = 'mists-1.2.4-manual-install-client-accepted'
                 }
             }
         }

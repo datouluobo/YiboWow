@@ -1,0 +1,218 @@
+local Addon = _G.YiboVault
+local BuildRecord = Addon.BuildItemRecord
+
+local function BagAPI()
+    if type(C_Container) == "table" then
+        return C_Container.GetContainerNumSlots, C_Container.GetContainerItemInfo,
+            C_Container.GetContainerItemLink, C_Container.GetContainerNumFreeSlots
+    end
+    return GetContainerNumSlots, GetContainerItemInfo, GetContainerItemLink, GetContainerNumFreeSlots
+end
+
+local function ScanContainer(source, bagID)
+    local getSlots, getInfo, getLink, getFreeSlots = BagAPI()
+    if type(getSlots) ~= "function" or type(getInfo) ~= "function" then return nil, "container-api-unavailable" end
+    local ok, slotCount = pcall(getSlots, bagID)
+    if not ok or type(slotCount) ~= "number" or slotCount < 0 then return nil, "container-slot-read-failed" end
+    local character = Addon.Core.Characters:GetCurrent({ identityOnly = true })
+    if not character then return nil, "current-character-unavailable" end
+    local records = {}
+    for slot = 1, slotCount do
+        local itemResults = { pcall(getInfo, bagID, slot) }
+        local itemOK, info, legacyCount, legacyLink = itemResults[1], itemResults[2], itemResults[3], itemResults[8]
+        if not itemOK then return nil, "container-item-read-failed" end
+        local itemID, count, link
+        if type(info) == "table" then
+            itemID, count, link = info.itemID, info.stackCount or info.count, info.hyperlink
+        else
+            count, link = legacyCount, legacyLink
+        end
+        if not link and type(getLink) == "function" then
+            local linkOK, value = pcall(getLink, bagID, slot)
+            if linkOK then link = value end
+        end
+        if itemID or (type(count) == "number" and count > 0) or link then
+            if not itemID then
+                local candidates = Addon.Core.ItemResolver:Parse(link, { allowID = false, allowLink = true, allowName = false })
+                itemID = candidates and candidates[1] and candidates[1].itemID
+            end
+            if not itemID then return nil, "occupied-slot-without-item-id" end
+            local record = BuildRecord(source, character, bagID, slot, itemID, count or 1, link)
+            if record then records[#records + 1] = record end
+        end
+    end
+    local capacity = { totalSlots = slotCount }
+    local reportedType
+    if slotCount > 0 and type(getFreeSlots) == "function" then
+        local freeOK, freeSlots, bagType = pcall(getFreeSlots, bagID)
+        if freeOK and type(freeSlots) == "number" and freeSlots >= 0 and freeSlots <= slotCount then
+            capacity.freeSlots = freeSlots
+        end
+        if freeOK and type(bagType) == "number" then reportedType = bagType end
+    end
+    if slotCount > 0 then capacity.bagType = Addon.BagCapacity:ResolveContainerType(bagID, reportedType, #records) end
+    if slotCount > 0 and type(GetBagName) == "function" then
+        local nameOK, bagName = pcall(GetBagName, bagID)
+        if nameOK and type(bagName) == "string" and bagName ~= "" then capacity.bagName = bagName end
+    end
+    return records, nil, character, capacity
+end
+
+function Addon:ScanBag(bagID)
+    local records, errorMessage, character, capacity = ScanContainer("bags", bagID)
+    if not records then self:MarkLocationError("bags", tostring(bagID), { bagID = bagID }, errorMessage); return nil, errorMessage end
+    local key = tostring(bagID)
+    local changed, coverage = self:ReplaceLocation(character.id, "bags", key, records, { bagID = bagID }, capacity)
+    return true, changed, coverage
+end
+
+function Addon:ScanBankContainer(bagID)
+    local records, errorMessage, character, capacity = ScanContainer("bank", bagID)
+    local key = tostring(bagID)
+    if not records then self:MarkLocationError("bank", key, { bagID = bagID }, errorMessage); return nil, errorMessage end
+    local changed, coverage = self:ReplaceLocation(character.id, "bank", key, records, { bagID = bagID }, capacity)
+    return true, changed, coverage
+end
+
+local function BankContainerIDs()
+    local firstBag = (tonumber(NUM_BAG_SLOTS) or 4) + 1
+    local lastBag = firstBag + (tonumber(NUM_BANKBAGSLOTS) or 7) - 1
+    local result = { tonumber(BANK_CONTAINER) or -1 }
+    for bagID = firstBag, lastBag do result[#result + 1] = bagID end
+    return result
+end
+
+function Addon:ScanBank()
+    if not self._bankOpen then return 0, 0 end
+    local success, failed = 0, 0
+    for _, bagID in ipairs(BankContainerIDs()) do
+        local ok = self:ScanBankContainer(bagID)
+        if ok then success = success + 1 else failed = failed + 1 end
+    end
+    wipe(self._dirtyBank)
+    if failed > 0 then
+        self:Print(string.format(Addon:T("TEXT.PERSONAL_BANK_SCAN_FAILED_D_OF_D_CONTAINER_0C2648"), failed, #BankContainerIDs()))
+    end
+    return success, failed
+end
+
+function Addon:ScanBags()
+    local maximum = tonumber(NUM_BAG_SLOTS) or 4
+    local success, failed = 0, 0
+    for bagID = 0, maximum do
+        local ok = self:ScanBag(bagID)
+        if ok then success = success + 1 else failed = failed + 1 end
+    end
+    return success, failed
+end
+
+local function ScanEquipment()
+    if type(GetInventoryItemID) ~= "function" then return nil, "inventory-api-unavailable" end
+    local character = Addon.Core.Characters:GetCurrent({ identityOnly = true })
+    if not character then return nil, "current-character-unavailable" end
+    local firstSlot, lastSlot = tonumber(INVSLOT_FIRST_EQUIPPED) or 1, tonumber(INVSLOT_LAST_EQUIPPED) or 19
+    local records = {}
+    for slot = firstSlot, lastSlot do
+        local ok, itemID = pcall(GetInventoryItemID, "player", slot)
+        if not ok then return nil, "equipment-slot-read-failed" end
+        local link
+        if type(GetInventoryItemLink) == "function" then
+            local linkOK, value = pcall(GetInventoryItemLink, "player", slot)
+            if not linkOK then return nil, "equipment-link-read-failed" end
+            link = value
+        end
+        if itemID then
+            local record = BuildRecord("equipment", character, "equipment", slot, itemID, 1, link)
+            if record then records[#records + 1] = record end
+        end
+    end
+    return records, nil, character
+end
+
+function Addon:ScanEquipment()
+    local records, errorMessage, character = ScanEquipment()
+    if not records then self:MarkLocationError("equipment", "equipment", { firstSlot = tonumber(INVSLOT_FIRST_EQUIPPED) or 1, lastSlot = tonumber(INVSLOT_LAST_EQUIPPED) or 19 }, errorMessage); return nil, errorMessage end
+    local changed, coverage = self:ReplaceLocation(character.id, "equipment", "equipment", records, { firstSlot = tonumber(INVSLOT_FIRST_EQUIPPED) or 1, lastSlot = tonumber(INVSLOT_LAST_EQUIPPED) or 19 })
+    return true, changed, coverage
+end
+
+function Addon:ScanInitial()
+    local _, failed = self:ScanBags()
+    local equipmentOK, equipmentError = self:ScanEquipment()
+    if failed > 0 then self:Print(Addon:T("TEXT.BAG_SCAN_FAILED_FABD98") .. failed .. Addon:T("TEXT.CONTAINERS_COULD_NOT_BE_READ_6271F9")) end
+    if not equipmentOK then self:Print(Addon:T("ERROR.EQUIPMENT_SCAN_FAILED", tostring(equipmentError))) end
+end
+
+local function FlushDirtyBank(self)
+    if not self._bankOpen then return end
+    for bagID in pairs(self._dirtyBank) do
+        self:ScanBankContainer(bagID)
+        self._dirtyBank[bagID] = nil
+    end
+end
+
+local function QueueBankUpdate(self)
+    if self._bankUpdateQueued then return end
+    local ticket = {}
+    self._bankUpdateQueued = ticket
+    local function Scan()
+        if self._bankUpdateQueued ~= ticket then return end
+        self._bankUpdateQueued = nil
+        FlushDirtyBank(self)
+    end
+    if C_Timer and C_Timer.After then C_Timer.After(0.1, Scan) else Scan() end
+end
+
+function Addon:OnEvent(event, arg1, arg2)
+    if event == "BAG_UPDATE" then
+        if type(arg1) == "number" then
+            if arg1 >= 0 and arg1 <= (tonumber(NUM_BAG_SLOTS) or 4) then self._dirtyBags[arg1] = true end
+            if self._bankOpen then
+                for _, bagID in ipairs(BankContainerIDs()) do
+                    if bagID == arg1 then self._dirtyBank[bagID] = true; break end
+                end
+            end
+        end
+    elseif event == "BAG_UPDATE_DELAYED" then
+        for bagID in pairs(self._dirtyBags) do self:ScanBag(bagID); self._dirtyBags[bagID] = nil end
+        FlushDirtyBank(self)
+    elseif event == "BANKFRAME_OPENED" then
+        self._bankOpen = true
+        self._bankScanToken = (self._bankScanToken or 0) + 1
+        local token = self._bankScanToken
+        local scan = function() if self._bankOpen and self._bankScanToken == token then self:ScanBank() end end
+        if C_Timer and C_Timer.After then C_Timer.After(0.1, scan) else scan() end
+    elseif event == "BANKFRAME_CLOSED" then
+        self._bankOpen = false
+        self._bankUpdateQueued = nil
+        for bagID in pairs(self._dirtyBank) do
+            local character = self.Core.Characters:GetCurrent({ identityOnly = true })
+            if character then self:MarkLocationStale(character.id, "bank", tostring(bagID)) end
+        end
+        wipe(self._dirtyBank)
+    elseif event == "PLAYERBANKSLOTS_CHANGED" then
+        if self._bankOpen then
+            -- This event also covers equipped bank bags, including empty bag
+            -- removal. It need not be followed by BAG_UPDATE for that container
+            -- or BAG_UPDATE_DELAYED, so queue one bounded, coalesced bank pass.
+            for _, bagID in ipairs(BankContainerIDs()) do self._dirtyBank[bagID] = true end
+            QueueBankUpdate(self)
+        end
+    elseif event == "UNIT_INVENTORY_CHANGED" and arg1 == "player" then
+        -- Client builds or UI replacements may wrap the unit token; the validated
+        -- payload is not a dependable slot identifier, so rescan the whole set.
+        self._equipmentDirty = true
+    elseif event == "PLAYER_EQUIPMENT_CHANGED" then
+        self._equipmentDirty = true
+    elseif event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_LOGIN" then
+        self:ScanInitial()
+    end
+    if self._equipmentDirty and not self._equipmentScanQueued then
+        self._equipmentScanQueued = true
+        local function Scan()
+            self._equipmentScanQueued, self._equipmentDirty = nil, false
+            self:ScanEquipment()
+        end
+        if C_Timer and C_Timer.After then C_Timer.After(0.1, Scan) else Scan() end
+    end
+end

@@ -24,6 +24,7 @@ end
 _G.GetGuildBankItemLink = function(tabID)
     if tabID == 1 then return "|Hitem:100:0|h[Item]|h" end
 end
+dofile("YiboVault/_NonRelease/Tests/Fixture.lua").Install()
 dofile("YiboVault/GuildBank.lua")
 local scanner = YiboVault.GuildBank
 scanner.open = true

@@ -5,11 +5,11 @@
 ## Notes: Account-wide item cache and read-only item query API.
 ## Notes-zhCN: Yibo 系列账号物品缓存与只读查询服务。
 ## Author: YiboSoft
-## Version: 1.2.3-api1
+## Version: 1.2.4-api1
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
 ## SavedVariables: YiboVaultDB
-## IconTexture: Interface\AddOns\YiboVault\Media\YiboVaultIcon-v2
+## IconTexture: Interface\AddOns\YiboVault\Media\YiboVaultIcon-128
 ## LoadOnDemand: 0
 
 Namespace.lua
@@ -19,7 +19,12 @@ Store.lua
 Items.lua
 PersonalCounts.lua
 GoalTargets.lua
-Collector.lua
+Common\ItemRecords.lua
+Common\Collector.lua
+Common\CoreIntegration.lua
+Mists\BagCapacity.lua
+Mists\Store.lua
+Mists\Collector.lua
 GuildBank.lua
 AuctionHouse.lua
 MailItems.lua

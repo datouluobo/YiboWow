@@ -2,6 +2,7 @@ _G.YiboCore = { UITheme = { Colors = {} } }
 _G.YiboVault = {}
 local names = { [101] = "Swift Potion", [202] = "Heavy Shield" }
 _G.GetItemInfo = function(item) return names[tonumber(item)] end
+dofile("YiboVault/_NonRelease/Tests/Fixture.lua").Install()
 dofile("YiboVault/StoragePage.lua")
 local page = YiboVault.StoragePage
 
