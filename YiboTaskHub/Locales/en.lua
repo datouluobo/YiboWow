@@ -1,6 +1,12 @@
 local Core = _G.YiboCore
 if Core and Core.Locale and type(Core.Locale.Register) == "function" then
     Core.Locale:Register("YiboTaskHub", "en", {
+        ["GOAL.BOSS_SOURCE"] = "Boss or instance",
+        ["GOAL.FINAL_HINT"] = "Track only the selected final boss. Other bosses do not affect this goal's completion.",
+        ["GOAL.FINAL_BOSS_NAME"] = "Final boss: %s",
+        ["GOAL.SELECT_DIFFICULTY"] = "Choose an instance difficulty.",
+
+        ["GOAL.OPTION_GROUP"] = "Boss group %d",
         ["CORE.UPGRADE_REQUIRED"] = "Upgrade YiboCore to 1.12.0 / API 13 and ensure localization:1 and the Action Hub capabilities are available.",
         ["CORE.BOSS_CAPABILITY_REQUIRED"] = "Boss targets require the YiboCore API 13 business service and tab capabilities.",
         ["ERROR.GOAL_SERVICE"] = "Could not register the goal service.",

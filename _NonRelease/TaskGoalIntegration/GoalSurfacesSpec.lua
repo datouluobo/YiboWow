@@ -124,7 +124,7 @@ assert(Hub.Settings:Set("showOtherCharacters", true))
 Equal(#Hub.Preview:Build({characters=characters}).rows,2,"restore other roles")
 Equal(calls,2,"display preference retains goal caches")
 -- Exercise the actual management controls, including the shared role preference.
-dofile("YiboTaskHub/GoalEditor.lua")
+dofile("YiboTaskHub/Common/GoalEditor.lua")
 local editor, management = Hub.GoalEditor, CreateFrame("Frame")
 editor.Create(management); editor.Refresh(management,{characters=characters})
 Equal(management.rows[2].shown,true,"management shows other role by default")

@@ -1,6 +1,26 @@
 if _G.YAB and _G.YAB.CoreReady == false then return end
 local Core = _G.YiboCore
 Core.Locale:Register("YiboAltoBoss", "zh", {
+    ["GOAL.MANUAL_COMPLETE"] = "本周期已完成（手动确认）",
+    ["GOAL.ENCOUNTER_COMPLETE"] = "本周期已击杀（现场采集）",
+    ["GOAL.CONFIRM_CYCLE"] = "手动确认本周期完成",
+    ["GOAL.REVOKE_CYCLE"] = "撤销本周期手动确认",
+    ["GOAL.CONFIRM_CYCLE_TEXT"] = "确认 %s 的“%s”已在本周期完成？\n\n记录来源将标为手动确认，有效至 %s；只确认该目标选中的首领。",
+    ["GOAL.REVOKE_CYCLE_TEXT"] = "撤销 %s 的“%s”在截至 %s 这个周期的手动确认？现场采集的击杀记录将保留。",
+    ["GOAL.CONFIRM_STALE"] = "目标、来源或周期已变化，请刷新后重试。",
+    ["GOAL.CONFIRM_SAVED"] = "已保存本周期的手动确认。",
+    ["GOAL.CONFIRM_REVOKED"] = "已撤销本周期的手动确认。",
+
+    ["GOAL.LOCKED_UNVERIFIED"] = "已读取副本锁定；目标首领状态待核实。",
+    ["GOAL.FINAL_UNAVAILABLE"] = "该副本尚未声明尾王，请选择指定首领。",
+    ["GOAL.SOURCE"] = "首领或副本",
+    ["GOAL.BOSS_SCOPE"] = "首领范围",
+    ["GOAL.WHOLE_INSTANCE"] = "整本全部首领",
+    ["GOAL.FINAL_BOSS"] = "仅尾王",
+    ["GOAL.FINAL_BOSS_NAME"] = "仅尾王：%s",
+    ["GOAL.SELECTED_BOSSES"] = "指定首领（可多选）",
+    ["GOAL.CATALOG_NOT_READY"] = "副本目录暂不可用，请稍后重试。添加目标不要求角色已有副本锁定。",
+
     ["SETTINGS.RULES"] = "业务规则",
     ["SETTINGS.PREVIOUS"] = "上一页",
     ["SETTINGS.NEXT"] = "下一页",
@@ -294,6 +314,26 @@ Core.Locale:Register("YiboAltoBoss", "zh", {
     ["DEBUG.PREFIX"] = "|cff20e070[Yibo]|r 首领追踪采样：",
 })
 Core.Locale:Register("YiboAltoBoss", "en", {
+    ["GOAL.MANUAL_COMPLETE"] = "Completed this cycle (manually confirmed)",
+    ["GOAL.ENCOUNTER_COMPLETE"] = "Defeated this cycle (captured in game)",
+    ["GOAL.CONFIRM_CYCLE"] = "Confirm completed this cycle",
+    ["GOAL.REVOKE_CYCLE"] = "Revoke manual confirmation",
+    ["GOAL.CONFIRM_CYCLE_TEXT"] = "Confirm that %s completed %s this cycle?\n\nThe record will be marked as manually confirmed until %s. Only the bosses selected in this goal are included.",
+    ["GOAL.REVOKE_CYCLE_TEXT"] = "Revoke the manual confirmation for %s and %s in the cycle ending %s? Captured encounter evidence will be retained.",
+    ["GOAL.CONFIRM_STALE"] = "The goal, source, or cycle has changed. Refresh and try again.",
+    ["GOAL.CONFIRM_SAVED"] = "Manual confirmation saved for this cycle.",
+    ["GOAL.CONFIRM_REVOKED"] = "Manual confirmation revoked for this cycle.",
+
+    ["GOAL.LOCKED_UNVERIFIED"] = "Instance lockout retrieved; target boss status is unverified.",
+    ["GOAL.FINAL_UNAVAILABLE"] = "The final boss is not defined for this instance. Select specific bosses.",
+    ["GOAL.SOURCE"] = "Boss or instance",
+    ["GOAL.BOSS_SCOPE"] = "Boss scope",
+    ["GOAL.WHOLE_INSTANCE"] = "All instance bosses",
+    ["GOAL.FINAL_BOSS"] = "Final boss only",
+    ["GOAL.FINAL_BOSS_NAME"] = "Final boss: %s",
+    ["GOAL.SELECTED_BOSSES"] = "Selected bosses (multiple allowed)",
+    ["GOAL.CATALOG_NOT_READY"] = "The instance catalog is temporarily unavailable. Try again shortly. An existing lockout is not required to add a goal.",
+
     ["SETTINGS.RULES"] = "Tracking rules",
     ["SETTINGS.PREVIOUS"] = "Previous",
     ["SETTINGS.NEXT"] = "Next",

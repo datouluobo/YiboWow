@@ -1,0 +1,1472 @@
+{
+  "580": [
+    {
+      "key": "kal",
+      "zh": "卡雷苟斯",
+      "en": "Kalecgos",
+      "tw": "卡雷苟斯",
+      "reference": "BC/Sunwell/Kalecgos.lua",
+      "nativeIDs": [
+        "724",
+        "2488"
+      ]
+    },
+    {
+      "key": "brutallus",
+      "zh": "布鲁塔卢斯",
+      "en": "Brutallus",
+      "tw": "布魯托魯斯",
+      "reference": "BC/Sunwell/Brutallus.lua",
+      "nativeIDs": [
+        "725",
+        "2489"
+      ]
+    },
+    {
+      "key": "felmyst",
+      "zh": "菲米丝",
+      "en": "Felmyst",
+      "tw": "魔龍謎霧",
+      "reference": "BC/Sunwell/Felmyst.lua",
+      "nativeIDs": [
+        "726",
+        "2490"
+      ]
+    },
+    {
+      "key": "twins",
+      "zh": "艾瑞达双子",
+      "en": "Eredar Twins",
+      "tw": "埃雷達爾雙子",
+      "reference": "BC/Sunwell/EredarTwins.lua",
+      "nativeIDs": [
+        "727",
+        "2491"
+      ]
+    },
+    {
+      "key": "muru",
+      "zh": "穆鲁",
+      "en": "M'uru",
+      "tw": "莫魯",
+      "reference": "BC/Sunwell/M'uru.lua",
+      "nativeIDs": [
+        "728",
+        "2492"
+      ]
+    },
+    {
+      "key": "kil",
+      "zh": "基尔加丹",
+      "en": "Kil'jaeden",
+      "tw": "基爾加丹",
+      "reference": "BC/Sunwell/Kil'jaeden.lua",
+      "nativeIDs": [
+        "729",
+        "2493"
+      ]
+    }
+  ],
+  "564": [
+    {
+      "key": "najentus",
+      "zh": "高阶督军纳因图斯",
+      "en": "High Warlord Naj'entus",
+      "tw": "高階督軍納珍塔斯",
+      "reference": "BC/BlackTemple/Najentus.lua",
+      "nativeIDs": [
+        "601",
+        "2473"
+      ]
+    },
+    {
+      "key": "supremus",
+      "zh": "苏普雷姆斯",
+      "en": "Supremus",
+      "tw": "瑟普莫斯",
+      "reference": "BC/BlackTemple/Supremus.lua",
+      "nativeIDs": [
+        "602",
+        "2474"
+      ]
+    },
+    {
+      "key": "akama",
+      "zh": "阿卡玛之影",
+      "en": "Shade of Akama",
+      "tw": "阿卡瑪的黑暗面",
+      "reference": "BC/BlackTemple/ShadeOfAkama.lua",
+      "nativeIDs": [
+        "603",
+        "2475"
+      ]
+    },
+    {
+      "key": "terongorefiend",
+      "zh": "塔隆·血魔",
+      "en": "Teron Gorefiend",
+      "tw": "泰朗·血魔",
+      "reference": "BC/BlackTemple/TeronGorefiend.lua",
+      "nativeIDs": [
+        "604",
+        "2476"
+      ]
+    },
+    {
+      "key": "bloodboil",
+      "zh": "古尔图格·血沸",
+      "en": "Gurtogg Bloodboil",
+      "tw": "葛塔格·血沸",
+      "reference": "BC/BlackTemple/Bloodboil.lua",
+      "nativeIDs": [
+        "605",
+        "2477"
+      ]
+    },
+    {
+      "key": "souls",
+      "zh": "灵魂之匣",
+      "en": "Essence of Souls",
+      "tw": "靈魂聖匣",
+      "reference": "BC/BlackTemple/EssenceOfSouls.lua",
+      "nativeIDs": [
+        "606",
+        "2478"
+      ]
+    },
+    {
+      "key": "shahraz",
+      "zh": "莎赫拉丝主母",
+      "en": "Mother Shahraz",
+      "tw": "薩拉茲女士",
+      "reference": "BC/BlackTemple/Shahraz.lua",
+      "nativeIDs": [
+        "607",
+        "2478"
+      ]
+    },
+    {
+      "key": "council",
+      "zh": "伊利达雷议会",
+      "en": "Illidari Council",
+      "tw": "伊利達瑞議會",
+      "reference": "BC/BlackTemple/IllidariCouncil.lua",
+      "nativeIDs": [
+        "608",
+        "2480"
+      ]
+    },
+    {
+      "key": "illidan",
+      "zh": "伊利丹·怒风",
+      "en": "Illidan Stormrage",
+      "tw": "伊利丹·怒風",
+      "reference": "BC/BlackTemple/Illidan.lua",
+      "nativeIDs": [
+        "609",
+        "2481"
+      ]
+    }
+  ],
+  "534": [
+    {
+      "key": "rage",
+      "zh": "雷基·冬寒",
+      "en": "Rage Winterchill",
+      "tw": "瑞齊·凜冬",
+      "reference": "BC/Hyjal/RageWinterchill.lua",
+      "nativeIDs": [
+        "618",
+        "2468"
+      ]
+    },
+    {
+      "key": "anetheron",
+      "zh": "安纳塞隆",
+      "en": "Anetheron",
+      "tw": "安納塞隆",
+      "reference": "BC/Hyjal/Anetheron.lua",
+      "nativeIDs": [
+        "619",
+        "2469"
+      ]
+    },
+    {
+      "key": "kazrogal",
+      "zh": "卡兹洛加",
+      "en": "Kaz'rogal",
+      "tw": "卡茲洛加",
+      "reference": "BC/Hyjal/Kazrogal.lua",
+      "nativeIDs": [
+        "620",
+        "2470"
+      ]
+    },
+    {
+      "key": "azgalor",
+      "zh": "阿兹加洛",
+      "en": "Azgalor",
+      "tw": "亞茲加洛",
+      "reference": "BC/Hyjal/Azgalor.lua",
+      "nativeIDs": [
+        "621",
+        "2471"
+      ]
+    },
+    {
+      "key": "archimonde",
+      "zh": "阿克蒙德",
+      "en": "Archimonde",
+      "tw": "阿克蒙德",
+      "reference": "BC/Hyjal/Archimonde.lua",
+      "nativeIDs": [
+        "622",
+        "2472"
+      ]
+    }
+  ],
+  "550": [
+    {
+      "key": "alar",
+      "zh": "奥",
+      "en": "Al'ar",
+      "tw": "歐爾",
+      "reference": "BC/TheEye/Alar.lua",
+      "nativeIDs": [
+        "730",
+        "2464"
+      ]
+    },
+    {
+      "key": "voidreaver",
+      "zh": "空灵机甲",
+      "en": "Void Reaver",
+      "tw": "虛無搶奪者",
+      "reference": "BC/TheEye/VoidReaver.lua",
+      "nativeIDs": [
+        "731",
+        "2465"
+      ]
+    },
+    {
+      "key": "solarian",
+      "zh": "大星术师索兰莉安",
+      "en": "High Astromancer Solarian",
+      "tw": "高階星術師索拉瑞恩",
+      "reference": "BC/TheEye/Solarian.lua",
+      "nativeIDs": [
+        "732",
+        "2466"
+      ]
+    },
+    {
+      "key": "kaelthas",
+      "zh": "凯尔萨斯·逐日者",
+      "en": "Kael'thas Sunstrider",
+      "tw": "凱爾薩斯·逐日者",
+      "reference": "BC/TheEye/KaelThas.lua",
+      "nativeIDs": [
+        "733",
+        "2467"
+      ]
+    }
+  ],
+  "548": [
+    {
+      "key": "hydross",
+      "zh": "不稳定的海度斯",
+      "en": "Hydross the Unstable",
+      "tw": "不穩定者海卓司",
+      "reference": "BC/Serpentshrine/Hydross.lua",
+      "nativeIDs": [
+        "623",
+        "2458"
+      ]
+    },
+    {
+      "key": "lurkerbelow",
+      "zh": "鱼斯拉",
+      "en": "The Lurker Below",
+      "tw": "海底潛伏者",
+      "reference": "BC/Serpentshrine/TheLurkerBelow.lua",
+      "nativeIDs": [
+        "624",
+        "2459"
+      ]
+    },
+    {
+      "key": "leotheras",
+      "zh": "盲眼者莱欧瑟拉斯",
+      "en": "Leotheras the Blind",
+      "tw": "『盲目者』李奧薩拉斯",
+      "reference": "BC/Serpentshrine/Leotheras.lua",
+      "nativeIDs": [
+        "625",
+        "2460"
+      ]
+    },
+    {
+      "key": "fathomlord",
+      "zh": "深水领主卡拉瑟雷斯",
+      "en": "Fathom-Lord Karathress",
+      "tw": "深淵之王卡拉薩瑞斯",
+      "reference": "BC/Serpentshrine/Fathomlord.lua",
+      "nativeIDs": [
+        "626",
+        "2461"
+      ]
+    },
+    {
+      "key": "tidewalker",
+      "zh": "莫洛格里·踏潮者",
+      "en": "Morogrim Tidewalker",
+      "tw": "莫洛葛利姆·潮行者",
+      "reference": "BC/Serpentshrine/Tidewalker.lua",
+      "nativeIDs": [
+        "627",
+        "2462"
+      ]
+    },
+    {
+      "key": "vashj",
+      "zh": "瓦丝琪",
+      "en": "Lady Vashj",
+      "tw": "瓦許女士",
+      "reference": "BC/Serpentshrine/Vashj.lua",
+      "nativeIDs": [
+        "628",
+        "2463"
+      ]
+    }
+  ],
+  "544": [
+    {
+      "key": "magtheridon",
+      "zh": "玛瑟里顿",
+      "en": "Magtheridon",
+      "tw": "瑪瑟里頓",
+      "reference": "BC/MagtheridonsLair/Magtheridon.lua",
+      "nativeIDs": [
+        "651",
+        "2457"
+      ]
+    }
+  ],
+  "565": [
+    {
+      "key": "maulgar",
+      "zh": "莫加尔大王",
+      "en": "High King Maulgar",
+      "tw": "大君王莫卡爾",
+      "reference": "BC/GruulsLair/Maulgar.lua",
+      "nativeIDs": [
+        "649",
+        "2455"
+      ]
+    },
+    {
+      "key": "gruul",
+      "zh": "屠龙者格鲁尔",
+      "en": "Gruul the Dragonkiller",
+      "tw": "弒龍者戈魯爾",
+      "reference": "BC/GruulsLair/Gruul.lua",
+      "nativeIDs": [
+        "650",
+        "2456"
+      ]
+    }
+  ],
+  "532": [
+    {
+      "key": "attumen",
+      "zh": "猎手阿图门",
+      "en": "Attumen the Huntsman",
+      "tw": "獵人阿圖曼",
+      "reference": "BC/Karazhan/Attumen.lua",
+      "nativeIDs": [
+        "652",
+        "2444"
+      ]
+    },
+    {
+      "key": "moroes",
+      "zh": "莫罗斯",
+      "en": "Moroes",
+      "tw": "摩洛",
+      "reference": "BC/Karazhan/Moroes.lua",
+      "nativeIDs": [
+        "653",
+        "2445"
+      ]
+    },
+    {
+      "key": "maiden",
+      "zh": "贞节圣女",
+      "en": "Maiden of Virtue",
+      "tw": "貞潔聖女",
+      "reference": "BC/Karazhan/MaidenOfVirtue.lua",
+      "nativeIDs": [
+        "654",
+        "2446"
+      ]
+    },
+    {
+      "key": "opera",
+      "zh": "歌剧院",
+      "en": "Opera Event",
+      "tw": "羅慕歐與茱麗葉",
+      "reference": "BC/Karazhan/RomuloAndJulianne.lua",
+      "nativeIDs": [
+        "655",
+        "2447"
+      ],
+      "aliases": [
+        "罗密欧与朱丽叶",
+        "Romulo and Julianne",
+        "大灰狼",
+        "The Big Bad Wolf",
+        "绿野仙踪",
+        "Wizard of Oz"
+      ]
+    },
+    {
+      "key": "oz",
+      "zh": "绿野仙踪",
+      "en": "Wizard of Oz",
+      "tw": "綠野仙蹤",
+      "reference": "BC/Karazhan/WizardOfOz.lua",
+      "nativeIDs": [
+        "655",
+        "2447"
+      ]
+    },
+    {
+      "key": "curator",
+      "zh": "馆长",
+      "en": "The Curator",
+      "tw": "館長",
+      "reference": "BC/Karazhan/Curator.lua",
+      "nativeIDs": [
+        "656",
+        "2448"
+      ]
+    },
+    {
+      "key": "terestianillhoof",
+      "zh": "特雷斯坦·邪蹄",
+      "en": "Terestian Illhoof",
+      "tw": "泰瑞斯提安·疫蹄",
+      "reference": "BC/Karazhan/TerestianIllhoof.lua",
+      "nativeIDs": [
+        "657",
+        "2449"
+      ]
+    },
+    {
+      "key": "aran",
+      "zh": "埃兰之影",
+      "en": "Shade of Aran",
+      "tw": "埃蘭之影",
+      "reference": "BC/Karazhan/ShadeOfAran.lua",
+      "nativeIDs": [
+        "658",
+        "2450"
+      ]
+    },
+    {
+      "key": "netherspite",
+      "zh": "虚空幽龙",
+      "en": "Netherspite",
+      "tw": "尼德斯",
+      "reference": "BC/Karazhan/Netherspite.lua",
+      "nativeIDs": [
+        "659",
+        "2451"
+      ]
+    },
+    {
+      "key": "chess",
+      "zh": "国际象棋",
+      "en": "Chess Event",
+      "tw": "西洋棋事件",
+      "reference": "BC/Karazhan/Chess.lua",
+      "nativeIDs": [
+        "660",
+        "2452"
+      ]
+    },
+    {
+      "key": "prince",
+      "zh": "玛克扎尔王子",
+      "en": "Prince Malchezaar",
+      "tw": "莫克札王子",
+      "reference": "BC/Karazhan/PrinceMalchezaar.lua",
+      "nativeIDs": [
+        "661",
+        "2453"
+      ]
+    },
+    {
+      "key": "nightbaneraid",
+      "zh": "夜之魇",
+      "en": "Nightbane (Raid)",
+      "tw": "夜禍",
+      "reference": "BC/Karazhan/Nightbane.lua",
+      "nativeIDs": [
+        "662",
+        "2454"
+      ]
+    }
+  ],
+  "724": [
+    {
+      "key": "baltharus",
+      "zh": "战争之子巴尔萨鲁斯",
+      "en": "Baltharus the Warborn",
+      "tw": null,
+      "reference": "WoTLK/RubySanctum/Baltharus.lua",
+      "nativeIDs": [
+        "890",
+        "1147"
+      ]
+    },
+    {
+      "key": "saviana",
+      "zh": "萨维安娜·怒火",
+      "en": "Saviana Ragefire",
+      "tw": null,
+      "reference": "WoTLK/RubySanctum/Saviana.lua",
+      "nativeIDs": [
+        "891",
+        "1149"
+      ]
+    },
+    {
+      "key": "zarithrian",
+      "zh": "将军扎里斯利安",
+      "en": "General Zarithrian",
+      "tw": null,
+      "reference": "WoTLK/RubySanctum/Zarithrian.lua",
+      "nativeIDs": [
+        "893",
+        "1148"
+      ]
+    },
+    {
+      "key": "halion",
+      "zh": "海里昂",
+      "en": "Halion",
+      "tw": null,
+      "reference": "WoTLK/RubySanctum/Halion.lua",
+      "nativeIDs": [
+        "887",
+        "1150"
+      ]
+    }
+  ],
+  "631": [
+    {
+      "key": "lordmarrowgar",
+      "zh": "玛洛加尔领主",
+      "en": "Lord Marrowgar",
+      "tw": "瑪洛嘉領主",
+      "reference": "WoTLK/Icecrown/TheLowerSpire/LordMarrowgar.lua",
+      "nativeIDs": [
+        "845",
+        "1101"
+      ]
+    },
+    {
+      "key": "deathwhisper",
+      "zh": "亡语者女士",
+      "en": "Lady Deathwhisper",
+      "tw": "亡語女士",
+      "reference": "WoTLK/Icecrown/TheLowerSpire/Deathwhisper.lua",
+      "nativeIDs": [
+        "846",
+        "1100"
+      ]
+    },
+    {
+      "key": "gunshipbattle",
+      "zh": "炮艇战",
+      "en": "Gunship Battle",
+      "tw": "砲艇戰",
+      "reference": "WoTLK/Icecrown/TheLowerSpire/GunshipBattle.lua",
+      "nativeIDs": [
+        "847",
+        "1099"
+      ]
+    },
+    {
+      "key": "deathbringer",
+      "zh": "死亡使者萨鲁法尔",
+      "en": "Deathbringer Saurfang",
+      "tw": "死亡使者薩魯法爾",
+      "reference": "WoTLK/Icecrown/TheLowerSpire/Deathbringer.lua",
+      "nativeIDs": [
+        "848",
+        "1096"
+      ]
+    },
+    {
+      "key": "festergut",
+      "zh": "烂肠",
+      "en": "Festergut",
+      "tw": "膿腸",
+      "reference": "WoTLK/Icecrown/ThePlagueworks/Festergut.lua",
+      "nativeIDs": [
+        "849",
+        "1097"
+      ]
+    },
+    {
+      "key": "rotface",
+      "zh": "腐面",
+      "en": "Rotface",
+      "tw": "腐臉",
+      "reference": "WoTLK/Icecrown/ThePlagueworks/Rotface.lua",
+      "nativeIDs": [
+        "850",
+        "1104"
+      ]
+    },
+    {
+      "key": "putricide",
+      "zh": "普崔塞德教授",
+      "en": "Professor Putricide",
+      "tw": "普崔希德教授",
+      "reference": "WoTLK/Icecrown/ThePlagueworks/Putricide.lua",
+      "nativeIDs": [
+        "851",
+        "1102"
+      ]
+    },
+    {
+      "key": "bpcouncil",
+      "zh": "血王子议会",
+      "en": "Blood Prince Council",
+      "tw": "血親王議會",
+      "reference": "WoTLK/Icecrown/TheCrimsonHall/BPCouncil.lua",
+      "nativeIDs": [
+        "852",
+        "1095"
+      ]
+    },
+    {
+      "key": "lanathel",
+      "zh": "鲜血女王兰娜瑟尔",
+      "en": "Blood-Queen Lana'thel",
+      "tw": "血腥女王菈娜薩爾",
+      "reference": "WoTLK/Icecrown/TheCrimsonHall/Lanathel.lua",
+      "nativeIDs": [
+        "853",
+        "1103"
+      ]
+    },
+    {
+      "key": "valithria",
+      "zh": "踏梦者瓦莉瑟瑞娅",
+      "en": "Valithria Dreamwalker",
+      "tw": "瓦莉絲瑞雅·夢行者",
+      "reference": "WoTLK/Icecrown/FrostwingHalls/Valithria.lua",
+      "nativeIDs": [
+        "854",
+        "1098"
+      ]
+    },
+    {
+      "key": "sindragosa",
+      "zh": "辛达苟萨",
+      "en": "Sindragosa",
+      "tw": "辛德拉苟莎",
+      "reference": "WoTLK/Icecrown/FrostwingHalls/Sindragosa.lua",
+      "nativeIDs": [
+        "855",
+        "1105"
+      ]
+    },
+    {
+      "key": "lichking",
+      "zh": "巫妖王",
+      "en": "The Lich King",
+      "tw": "巫妖王",
+      "reference": "WoTLK/Icecrown/TheFrozenThrone/LichKing.lua",
+      "nativeIDs": [
+        "856",
+        "1106"
+      ]
+    }
+  ],
+  "649": [
+    {
+      "key": "northrendbeasts",
+      "zh": "诺森德猛兽",
+      "en": "Northrend Beasts",
+      "tw": "北裂境巨獸",
+      "reference": "WoTLK/Coliseum/NorthrendBeasts.lua",
+      "nativeIDs": [
+        "629",
+        "1088"
+      ]
+    },
+    {
+      "key": "jaraxxus",
+      "zh": "加拉克苏斯大王",
+      "en": "Lord Jaraxxus",
+      "tw": "賈拉克瑟斯領主",
+      "reference": "WoTLK/Coliseum/Jaraxxus.lua",
+      "nativeIDs": [
+        "633",
+        "1087"
+      ]
+    },
+    {
+      "key": "champions",
+      "zh": "阵营冠军",
+      "en": "Faction Champions",
+      "tw": "陣營勇士",
+      "reference": "WoTLK/Coliseum/Champions.lua",
+      "nativeIDs": [
+        "637",
+        "1086"
+      ]
+    },
+    {
+      "key": "valktwins",
+      "zh": "瓦格里双子",
+      "en": "Val'kyr Twins",
+      "tw": "華爾琪雙子",
+      "reference": "WoTLK/Coliseum/Twins.lua",
+      "nativeIDs": [
+        "641",
+        "1089"
+      ]
+    },
+    {
+      "key": "anubarakcoliseum",
+      "zh": "阿努巴拉克",
+      "en": "Anub'arak",
+      "tw": "阿努巴拉克",
+      "reference": "WoTLK/Coliseum/Anubarak.lua",
+      "nativeIDs": [
+        "645",
+        "1085"
+      ]
+    }
+  ],
+  "249": [
+    {
+      "key": "onyxia",
+      "zh": "奥妮克希亚",
+      "en": "Onyxia",
+      "tw": "奧妮克希亞",
+      "reference": "WoTLK/Onyxia/Onyxia.lua",
+      "nativeIDs": [
+        "1084"
+      ]
+    }
+  ],
+  "603": [
+    {
+      "key": "flameleviathan",
+      "zh": "烈焰巨兽",
+      "en": "Flame Leviathan",
+      "tw": "烈焰戰輪",
+      "reference": "WoTLK/Ulduar/FlameLeviathan.lua",
+      "nativeIDs": [
+        "1132"
+      ]
+    },
+    {
+      "key": "ignis",
+      "zh": "掌炉者伊格尼斯",
+      "en": "Ignis the Furnace Master",
+      "tw": "『火爐之主』伊格尼司",
+      "reference": "WoTLK/Ulduar/Ignis.lua",
+      "nativeIDs": [
+        "1136"
+      ]
+    },
+    {
+      "key": "razorscale",
+      "zh": "锋鳞",
+      "en": "Razorscale",
+      "tw": "銳鱗",
+      "reference": "WoTLK/Ulduar/Razorscale.lua",
+      "nativeIDs": [
+        "1139"
+      ]
+    },
+    {
+      "key": "xt002",
+      "zh": "XT-002拆解者",
+      "en": "XT-002 Deconstructor",
+      "tw": "XT-002拆解者",
+      "reference": "WoTLK/Ulduar/XT002.lua",
+      "nativeIDs": [
+        "1142"
+      ]
+    },
+    {
+      "key": "ironcouncil",
+      "zh": "钢铁议会",
+      "en": "Iron Council",
+      "tw": "鐵之集會所",
+      "reference": "WoTLK/Ulduar/IronCouncil.lua",
+      "nativeIDs": [
+        "1140"
+      ]
+    },
+    {
+      "key": "kologarn",
+      "zh": "科隆加恩",
+      "en": "Kologarn",
+      "tw": "柯洛剛恩",
+      "reference": "WoTLK/Ulduar/Kologarn.lua",
+      "nativeIDs": [
+        "1137"
+      ]
+    },
+    {
+      "key": "auriaya",
+      "zh": "欧尔莉亚",
+      "en": "Auriaya",
+      "tw": "奧芮雅",
+      "reference": "WoTLK/Ulduar/Auriaya.lua",
+      "nativeIDs": [
+        "1131"
+      ]
+    },
+    {
+      "key": "mimiron",
+      "zh": "米米尔隆",
+      "en": "Mimiron",
+      "tw": "彌米倫",
+      "reference": "WoTLK/Ulduar/Mimiron.lua",
+      "nativeIDs": [
+        "1138"
+      ]
+    },
+    {
+      "key": "freya",
+      "zh": "弗蕾亚",
+      "en": "Freya",
+      "tw": "芙蕾雅",
+      "reference": "WoTLK/Ulduar/Freya.lua",
+      "nativeIDs": [
+        "1133"
+      ]
+    },
+    {
+      "key": "thorim",
+      "zh": "托里姆",
+      "en": "Thorim",
+      "tw": "索林姆",
+      "reference": "WoTLK/Ulduar/Thorim.lua",
+      "nativeIDs": [
+        "1141"
+      ]
+    },
+    {
+      "key": "hodir",
+      "zh": "霍迪尔",
+      "en": "Hodir",
+      "tw": "霍迪爾",
+      "reference": "WoTLK/Ulduar/Hodir.lua",
+      "nativeIDs": [
+        "1135"
+      ]
+    },
+    {
+      "key": "generalvezax",
+      "zh": "维扎克斯将军",
+      "en": "General Vezax",
+      "tw": "威札斯將軍",
+      "reference": "WoTLK/Ulduar/GeneralVezax.lua",
+      "nativeIDs": [
+        "1134"
+      ]
+    },
+    {
+      "key": "yoggsaron",
+      "zh": "尤格萨隆",
+      "en": "Yogg-Saron",
+      "tw": "尤格薩倫",
+      "reference": "WoTLK/Ulduar/YoggSaron.lua",
+      "nativeIDs": [
+        "1143"
+      ]
+    },
+    {
+      "key": "algalon",
+      "zh": "观察者奥尔加隆",
+      "en": "Algalon the Observer",
+      "tw": "『觀察者』艾爾加隆",
+      "reference": "WoTLK/Ulduar/Algalon.lua",
+      "nativeIDs": [
+        "1130"
+      ]
+    }
+  ],
+  "616": [
+    {
+      "key": "malygos",
+      "zh": "玛里苟斯",
+      "en": "Malygos",
+      "tw": null,
+      "reference": "WoTLK/EyeOfEternity/Malygos.lua",
+      "nativeIDs": [
+        "1094"
+      ]
+    }
+  ],
+  "615": [
+    {
+      "key": "sartharion",
+      "zh": "萨塔里奥",
+      "en": "Sartharion",
+      "tw": null,
+      "reference": "WoTLK/ObsidianSanctum/Sartharion.lua",
+      "nativeIDs": [
+        "1090"
+      ]
+    }
+  ],
+  "533": [
+    {
+      "key": "anubrekhan",
+      "zh": "阿努布雷坎",
+      "en": "阿努比瑞克漢",
+      "tw": null,
+      "reference": "WoTLK/Naxx/ArachnidQuarter/Anub'Rekhan.lua",
+      "nativeIDs": [
+        "1107"
+      ]
+    },
+    {
+      "key": "faerlina",
+      "zh": "黑女巫法琳娜",
+      "en": "大寡婦費琳娜",
+      "tw": null,
+      "reference": "WoTLK/Naxx/ArachnidQuarter/Faerlina.lua",
+      "nativeIDs": [
+        "1110"
+      ]
+    },
+    {
+      "key": "maexxna",
+      "zh": "迈克斯纳",
+      "en": "梅克絲娜",
+      "tw": null,
+      "reference": "WoTLK/Naxx/ArachnidQuarter/Maexxna.lua",
+      "nativeIDs": [
+        "1116"
+      ]
+    },
+    {
+      "key": "patchwerk",
+      "zh": "帕奇维克",
+      "en": "縫補者",
+      "tw": null,
+      "reference": "WoTLK/Naxx/ConstructQuarter/Patchwerk.lua",
+      "nativeIDs": [
+        "1118"
+      ]
+    },
+    {
+      "key": "grobbulus",
+      "zh": "格罗布鲁斯",
+      "en": "葛羅巴斯",
+      "tw": null,
+      "reference": "WoTLK/Naxx/ConstructQuarter/Grobbulus.lua",
+      "nativeIDs": [
+        "1111"
+      ]
+    },
+    {
+      "key": "gluth",
+      "zh": "格拉斯",
+      "en": "古魯斯",
+      "tw": null,
+      "reference": "WoTLK/Naxx/ConstructQuarter/Gluth.lua",
+      "nativeIDs": [
+        "1108"
+      ]
+    },
+    {
+      "key": "thaddius",
+      "zh": "塔迪乌斯",
+      "en": "泰迪斯",
+      "tw": null,
+      "reference": "WoTLK/Naxx/ConstructQuarter/Thaddius.lua",
+      "nativeIDs": [
+        "1120"
+      ]
+    },
+    {
+      "key": "noth",
+      "zh": "药剂师诺斯",
+      "en": "瘟疫者諾斯",
+      "tw": null,
+      "reference": "WoTLK/Naxx/PlagueQuarter/Noth.lua",
+      "nativeIDs": [
+        "1117"
+      ]
+    },
+    {
+      "key": "heigan",
+      "zh": "肮脏的希尔盖",
+      "en": "骯髒者海根",
+      "tw": null,
+      "reference": "WoTLK/Naxx/PlagueQuarter/Heigan.lua",
+      "nativeIDs": [
+        "1112"
+      ]
+    },
+    {
+      "key": "loatheb",
+      "zh": "洛欧塞布",
+      "en": "洛斯伯",
+      "tw": null,
+      "reference": "WoTLK/Naxx/PlagueQuarter/Loatheb.lua",
+      "nativeIDs": [
+        "1115"
+      ]
+    },
+    {
+      "key": "razuvious",
+      "zh": "教官拉苏维奥斯",
+      "en": "講師拉祖維斯",
+      "tw": null,
+      "reference": "WoTLK/Naxx/MilitaryQuarter/Razuvious.lua",
+      "nativeIDs": [
+        "1113"
+      ]
+    },
+    {
+      "key": "gothik",
+      "zh": "收割者戈提克",
+      "en": "收割者高希",
+      "tw": null,
+      "reference": "WoTLK/Naxx/MilitaryQuarter/Gothik.lua",
+      "nativeIDs": [
+        "1109"
+      ]
+    },
+    {
+      "key": "horsemen",
+      "zh": "天启四骑士",
+      "en": "四騎士",
+      "tw": null,
+      "reference": "WoTLK/Naxx/MilitaryQuarter/Horsemen.lua",
+      "nativeIDs": [
+        "1121"
+      ]
+    },
+    {
+      "key": "sapphiron",
+      "zh": "萨菲隆",
+      "en": "薩菲隆",
+      "tw": null,
+      "reference": "WoTLK/Naxx/FrostwyrmLair/Sapphiron.lua",
+      "nativeIDs": [
+        "1119"
+      ]
+    },
+    {
+      "key": "kelthuzad",
+      "zh": "克尔苏加德",
+      "en": "科爾蘇加德",
+      "tw": null,
+      "reference": "WoTLK/Naxx/FrostwyrmLair/Kel'Thuzad.lua",
+      "nativeIDs": [
+        "1114"
+      ]
+    }
+  ],
+  "624": [
+    {
+      "key": "archavon",
+      "zh": "岩石看守者阿尔卡冯",
+      "en": "Archavon the Stone Watcher",
+      "tw": null,
+      "reference": "WoTLK/VoA/Archavon.lua",
+      "nativeIDs": [
+        "772",
+        "1126"
+      ]
+    },
+    {
+      "key": "emalon",
+      "zh": "风暴看守者埃玛尔隆",
+      "en": "Emalon the Storm Watcher",
+      "tw": "『風暴看守者』艾瑪隆",
+      "reference": "WoTLK/VoA/Emalon.lua",
+      "nativeIDs": [
+        "774",
+        "1127"
+      ]
+    },
+    {
+      "key": "koralon",
+      "zh": "火焰看守者科拉隆",
+      "en": "Koralon the Flame Watcher",
+      "tw": "『烈焰看守者』寇拉隆",
+      "reference": "WoTLK/VoA/Koralon.lua",
+      "nativeIDs": [
+        "776",
+        "1128"
+      ]
+    },
+    {
+      "key": "toravon",
+      "zh": "寒冰看守者图拉旺",
+      "en": "Toravon the Ice Watcher",
+      "tw": "『寒冰看守者』拓拉梵",
+      "reference": "WoTLK/VoA/Toravon.lua",
+      "nativeIDs": [
+        "885",
+        "1129"
+      ]
+    }
+  ],
+  "531": [
+    {
+      "key": "skeram",
+      "zh": "预言者斯克拉姆",
+      "en": "The Prophet Skeram",
+      "tw": "預言者斯克拉姆",
+      "reference": "Vanilla/AQ40/Skeram.lua",
+      "nativeIDs": [
+        "709"
+      ]
+    },
+    {
+      "key": "threebugs",
+      "zh": "异种蝎皇族",
+      "en": "Silithid Royalty",
+      "tw": "異種蠍皇族",
+      "reference": "Vanilla/AQ40/ThreeBugs.lua",
+      "nativeIDs": [
+        "710"
+      ]
+    },
+    {
+      "key": "sartura",
+      "zh": "沙尔图拉",
+      "en": "Battleguard Sartura",
+      "tw": "沙爾圖拉",
+      "reference": "Vanilla/AQ40/Sartura.lua",
+      "nativeIDs": [
+        "711"
+      ]
+    },
+    {
+      "key": "fankriss",
+      "zh": "顽强的范克瑞斯",
+      "en": "Fankriss the Unyielding",
+      "tw": "頑強的范克里斯",
+      "reference": "Vanilla/AQ40/Fankriss.lua",
+      "nativeIDs": [
+        "712"
+      ]
+    },
+    {
+      "key": "viscidus",
+      "zh": "维希度斯",
+      "en": "Viscidus",
+      "tw": "維希度斯",
+      "reference": "Vanilla/AQ40/Viscidus.lua",
+      "nativeIDs": [
+        "713"
+      ]
+    },
+    {
+      "key": "huhuran",
+      "zh": "哈霍兰公主",
+      "en": "Princess Huhuran",
+      "tw": "哈霍蘭公主",
+      "reference": "Vanilla/AQ40/Huhuran.lua",
+      "nativeIDs": [
+        "714"
+      ]
+    },
+    {
+      "key": "twinempsaq",
+      "zh": "双子皇帝",
+      "en": "Twin Emperors",
+      "tw": "雙子帝王",
+      "reference": "Vanilla/AQ40/TwinEmps.lua",
+      "nativeIDs": [
+        "715"
+      ]
+    },
+    {
+      "key": "cthun",
+      "zh": "克苏恩",
+      "en": "C'Thun",
+      "tw": "克蘇恩",
+      "reference": "Vanilla/AQ40/CThun.lua",
+      "nativeIDs": [
+        "717"
+      ]
+    },
+    {
+      "key": "ouro",
+      "zh": "奥罗",
+      "en": "Ouro",
+      "tw": "奧羅",
+      "reference": "Vanilla/AQ40/Ouro.lua",
+      "nativeIDs": [
+        "716"
+      ]
+    }
+  ],
+  "509": [
+    {
+      "key": "kurinnaxx",
+      "zh": "库林纳克斯",
+      "en": "Kurinnaxx",
+      "tw": "庫林納克斯",
+      "reference": "Vanilla/AQ20/Kurinnaxx.lua",
+      "nativeIDs": [
+        "718"
+      ]
+    },
+    {
+      "key": "rajaxx",
+      "zh": "拉贾克斯将军",
+      "en": "General Rajaxx",
+      "tw": "拉賈克斯將軍",
+      "reference": "Vanilla/AQ20/Rajaxx.lua",
+      "nativeIDs": [
+        "719"
+      ]
+    },
+    {
+      "key": "moam",
+      "zh": "莫阿姆",
+      "en": "Moam",
+      "tw": "莫阿姆",
+      "reference": "Vanilla/AQ20/Moam.lua",
+      "nativeIDs": [
+        "720"
+      ]
+    },
+    {
+      "key": "buru",
+      "zh": "暴食者布鲁",
+      "en": "Buru the Gorger",
+      "tw": "吞咽者布魯",
+      "reference": "Vanilla/AQ20/Buru.lua",
+      "nativeIDs": [
+        "721"
+      ]
+    },
+    {
+      "key": "ayamiss",
+      "zh": "狩猎者阿亚米斯",
+      "en": "Ayamiss the Hunter",
+      "tw": "狩獵者阿亞米斯",
+      "reference": "Vanilla/AQ20/Ayamiss.lua",
+      "nativeIDs": [
+        "722"
+      ]
+    },
+    {
+      "key": "ossirian",
+      "zh": "无疤者奥斯里安",
+      "en": "Ossirian the Unscarred",
+      "tw": "無疤者奧斯里安",
+      "reference": "Vanilla/AQ20/Ossirian.lua",
+      "nativeIDs": [
+        "723"
+      ]
+    }
+  ],
+  "469": [
+    {
+      "key": "razorgore",
+      "zh": "狂野的拉佐格尔",
+      "en": "Razorgore the Untamed",
+      "tw": "狂野的拉佐格爾",
+      "reference": "Vanilla/BWL/Razorgore.lua",
+      "nativeIDs": [
+        "610"
+      ]
+    },
+    {
+      "key": "vaelastrasz",
+      "zh": "堕落的瓦拉斯塔茲",
+      "en": "Vaelastrasz the Corrupt",
+      "tw": "墮落的瓦拉斯塔茲",
+      "reference": "Vanilla/BWL/Vaelastrasz.lua",
+      "nativeIDs": [
+        "611"
+      ]
+    },
+    {
+      "key": "broodlord",
+      "zh": "勒什雷尔",
+      "en": "Broodlord Lashlayer",
+      "tw": "勒西雷爾",
+      "reference": "Vanilla/BWL/Broodlord.lua",
+      "nativeIDs": [
+        "612"
+      ]
+    },
+    {
+      "key": "firemaw",
+      "zh": "费尔默",
+      "en": "Firemaw",
+      "tw": "費爾默",
+      "reference": "Vanilla/BWL/Firemaw.lua",
+      "nativeIDs": [
+        "613"
+      ]
+    },
+    {
+      "key": "ebonroc",
+      "zh": "埃博诺克",
+      "en": "Ebonroc",
+      "tw": "埃博諾克",
+      "reference": "Vanilla/BWL/Ebonroc.lua",
+      "nativeIDs": [
+        "614"
+      ]
+    },
+    {
+      "key": "flamegor",
+      "zh": "弗莱格尔",
+      "en": "Flamegor",
+      "tw": "弗萊格爾",
+      "reference": "Vanilla/BWL/Flamegor.lua",
+      "nativeIDs": [
+        "615"
+      ]
+    },
+    {
+      "key": "chromaggus",
+      "zh": "克洛玛古斯",
+      "en": "Chromaggus",
+      "tw": "克洛瑪古斯",
+      "reference": "Vanilla/BWL/Chromaggus.lua",
+      "nativeIDs": [
+        "616"
+      ]
+    },
+    {
+      "key": "nefarianclassic",
+      "zh": "奈法利安",
+      "en": "Nefarian",
+      "tw": "奈法利安",
+      "reference": "Vanilla/BWL/Nefarian.lua",
+      "nativeIDs": [
+        "617"
+      ]
+    }
+  ],
+  "409": [
+    {
+      "key": "lucifron",
+      "zh": "鲁西弗隆",
+      "en": "Lucifron",
+      "tw": "魯西弗隆",
+      "reference": "Vanilla/MC/Lucifron.lua",
+      "nativeIDs": [
+        "663"
+      ]
+    },
+    {
+      "key": "magmadar",
+      "zh": "玛格曼达",
+      "en": "Magmadar",
+      "tw": "瑪格曼達",
+      "reference": "Vanilla/MC/Magmadar.lua",
+      "nativeIDs": [
+        "664"
+      ]
+    },
+    {
+      "key": "gehennas",
+      "zh": "基赫纳斯",
+      "en": "Gehennas",
+      "tw": "基赫納斯",
+      "reference": "Vanilla/MC/Gehennas.lua",
+      "nativeIDs": [
+        "665"
+      ]
+    },
+    {
+      "key": "garrclassic",
+      "zh": "加尔",
+      "en": "Garr",
+      "tw": "加爾",
+      "reference": "Vanilla/MC/Garr.lua",
+      "nativeIDs": [
+        "666"
+      ]
+    },
+    {
+      "key": "geddon",
+      "zh": "迦顿男爵",
+      "en": "Baron Geddon",
+      "tw": "迦頓男爵",
+      "reference": "Vanilla/MC/Geddon.lua",
+      "nativeIDs": [
+        "668"
+      ]
+    },
+    {
+      "key": "shazzrah",
+      "zh": "沙斯拉尔",
+      "en": "Shazzrah",
+      "tw": "沙斯拉爾",
+      "reference": "Vanilla/MC/Shazzrah.lua",
+      "nativeIDs": [
+        "667"
+      ]
+    },
+    {
+      "key": "sulfuron",
+      "zh": "萨弗隆先驱者",
+      "en": "Sulfuron Harbinger",
+      "tw": "薩弗隆先驅者",
+      "reference": "Vanilla/MC/Sulfuron.lua",
+      "nativeIDs": [
+        "669"
+      ]
+    },
+    {
+      "key": "golemagg",
+      "zh": "焚化者古雷曼格",
+      "en": "Golemagg the Incinerator",
+      "tw": "焚化者古雷曼格",
+      "reference": "Vanilla/MC/Golemagg.lua",
+      "nativeIDs": [
+        "670"
+      ]
+    },
+    {
+      "key": "majordomo",
+      "zh": "管理者埃克索图斯",
+      "en": "Majordomo Executus",
+      "tw": "管理者埃克索圖斯",
+      "reference": "Vanilla/MC/Majordomo.lua",
+      "nativeIDs": [
+        "671"
+      ]
+    },
+    {
+      "key": "ragnarosclassic",
+      "zh": "拉格纳罗斯",
+      "en": "Ragnaros",
+      "tw": "拉格納羅斯",
+      "reference": "Vanilla/MC/Ragnaros.lua",
+      "nativeIDs": [
+        "672"
+      ]
+    }
+  ]
+}

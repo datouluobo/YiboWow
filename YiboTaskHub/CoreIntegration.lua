@@ -22,6 +22,7 @@ function Integration:Initialize()
         and core.Characters and core.Characters.FormatName and core.UITheme and core.UITheme.ShowTooltip
         and type(core.UITheme.CreateMatrixHeader) == "function" and type(core.UITheme.SetCharacterHeader) == "function"
         and type(core.UITheme.GetDataRowColor) == "function"
+        and type(core.UITheme.CreateMultiSelectDropdown) == "function"
         and core.UITheme.CreateCheckbox and core.Entry and core.AccountView and core.AccountView.GetVisibleCharacters
         and type(core.AccountView.SetPageScope) == "function") then
         local message = "Upgrade YiboCore to 1.12.0 / API 13."

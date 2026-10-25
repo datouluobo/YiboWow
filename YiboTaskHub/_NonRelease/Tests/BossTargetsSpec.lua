@@ -44,7 +44,7 @@ CreateFrame = function(...)
 end
 dofile("YiboCore/UI/Input.lua")
 UIParent = CreateFrame("Frame"); UIParent:SetSize(1280, 720)
-dofile("YiboTaskHub/Common/Goals.lua"); dofile("YiboTaskHub/GoalContracts.lua"); dofile("YiboTaskHub/GoalEditor.lua")
+dofile("YiboTaskHub/Common/Goals.lua"); dofile("YiboTaskHub/GoalContracts.lua"); dofile("YiboTaskHub/Common/GoalEditor.lua")
 YiboTaskHubDB = { schemaVersion = 2, settings = { hudEnabled = false, sourceFilter = "kept" } }
 assert(Hub.Database:Initialize())
 Equal(Hub.db.schemaVersion, 4); Equal(Hub.db.settings.hudEnabled, false); Equal(Hub.db.settings.sourceFilter, "kept")
@@ -80,7 +80,7 @@ EJ_GetCurrentTier = function() return 1 end
 EJ_SelectTier = function() end
 EJ_GetTierInfo = function() return "巫妖王之怒" end
 EJ_GetInstanceByIndex = function(i, raid) if i == 1 and raid then return 123 end end
-EJ_GetInstanceInfo = function() return "冰冠堡垒", nil, nil, nil, nil, nil, 99999, nil, true, 631 end
+EJ_GetInstanceInfo = function() return "冰冠堡垒", nil, nil, nil, nil, nil, 99999, nil, true, 9631 end
 EJ_SelectInstance = function(id) selectedInstance = id end
 EJ_GetCurrentInstance = function() return selectedInstance end
 EJ_SetDifficulty = function(id) selectedDifficulty = id end
@@ -89,7 +89,7 @@ EJ_IsValidInstanceDifficulty = function(id) return id == 3 or id == 4 or id == 5
 EJ_GetEncounterInfoByIndex = function(i)
     if i <= 2 then return ({ "玛洛加尔领主", "巫妖王" })[i], "description", 10000 + i, 0, nil, 123, 900 + i end
 end
-GetRealZoneText = function(mapID) if mapID == 631 then return "冰冠堡垒" end end
+GetRealZoneText = function(mapID) if mapID == 9631 then return "冰冠堡垒" end end
 YAB = {
     GetCurrentCharKey = function() return "星河-甲" end,
     GetCurrentRealm = function() return "甲" end,
@@ -111,10 +111,12 @@ dofile("YiboAltoBoss/LockoutLocale.lua")
 dofile("YiboAltoBoss/DungeonBossCatalog.lua")
 dofile("YiboAltoBoss/DungeonRuns.lua")
 dofile("YiboAltoBoss/InstanceLockouts.lua")
-dofile("YiboAltoBoss/TargetCatalog.lua")
+dofile("YiboAltoBoss/Mists/RaidCatalog.lua")
+dofile("YiboAltoBoss/Mists/TargetCatalogRuntime.lua")
+dofile("YiboAltoBoss/Common/TargetCatalog.lua")
 dofile("YiboAltoBoss/PlannedTargets.lua")
-dofile("YiboAltoBoss/GoalTargets.lua")
-dofile("YiboAltoBoss/TargetProjection.lua")
+dofile("YiboAltoBoss/Common/GoalTargets.lua")
+dofile("YiboAltoBoss/Common/TargetProjection.lua")
 assert(Core:RegisterAddon("YiboAltoBoss", { requiredAPI = 13 }))
 local Plans = YAB.PlannedTargets
 local originalAPI = Core.API_VERSION
@@ -124,7 +126,7 @@ local catalog = assert(Targets:Catalog())
 local instance
 for _, entry in ipairs(catalog.targets) do if entry.id == "journal:123" then instance = entry end end
 assert(instance)
-Equal(instance.mapID, 631, "journal vs map identity"); Equal(instance.encounters[1].id, 901, "journal vs dungeon encounter identity")
+Equal(instance.mapID, 9631, "journal vs map identity"); Equal(instance.encounters[1].id, 901, "journal vs dungeon encounter identity")
 Equal(selectedInstance, 777, "journal selection restored"); Equal(selectedDifficulty, 4)
 Equal(Targets:Matches(instance, "Icecrown Citadel"), true); Equal(Targets:Matches(instance, "i c c"), true)
 Equal(Targets:Matches(instance, "冰冠"), true); Equal(Targets:Matches(instance, "巫妖王"), true)
@@ -205,7 +207,7 @@ Equal(Query({ "A" }).revision > revision, true, "cycle transition advances sourc
 flags[32098] = false; Plans:Observe(); Flush(); Equal(Plans:Progress("A", worldGoal).state, "ready")
 
 local dungeon = Targets:List("A")[2]
-saved = { { name = "冰冠堡垒", mapID = 631, difficultyID = 4, bosses = { { name = "玛洛加尔领主", id = 901, killed = true }, { name = "巫妖王", id = 902, killed = true } } } }
+saved = { { name = "冰冠堡垒", mapID = 9631, difficultyID = 4, bosses = { { name = "玛洛加尔领主", id = 901, killed = true }, { name = "巫妖王", id = 902, killed = true } } } }
 YAB.RefreshInstanceLockouts(); Flush()
 Equal(Plans:Progress("A", dungeon).state, "ready", "wrong difficulty cannot complete goal")
 saved[1].difficultyID = 3; saved[1].bosses[2].killed = false
@@ -232,7 +234,7 @@ Equal(Plans:IsPlanned("星河-甲", "galleon"), true)
 local kills = Core.Defaults:Copy(YiboAltoBossDB.characters["星河-甲"].instanceLockouts)
 assert(Targets:SetAutoDisplay(false)); Flush()
 Equal(AutoColumns(), 0); Equal(#Targets:List("A"), 2); Equal(#YAB.GetBossList(), 1, "manual world display retained")
-Equal(YiboAltoBossDB.characters["星河-甲"].instanceLockouts["631:3"].bosses[1].killed, kills["631:3"].bosses[1].killed, "kills preserved")
+Equal(YiboAltoBossDB.characters["星河-甲"].instanceLockouts["9631:3"].bosses[1].killed, kills["9631:3"].bosses[1].killed, "kills preserved")
 Equal(Plans:Progress("A", dungeon).state, "completed", "display setting does not affect tasks")
 assert(Targets:SetAutoDisplay(true)); Flush(); Equal(AutoColumns(), 1)
 local rolePlans = #Targets:List("C")
@@ -289,7 +291,7 @@ Equal(Targets:PutMany("B", { Boss("nalak"), { catalogID = "missing", scope = "al
 Equal(#Targets:List("B"), beforeBulk, "bulk add validation is atomic")
 assert(Targets:PutMany("B", { Boss("nalak"), Boss("oondasta") })); Equal(#Targets:List("B"), beforeBulk + 2)
 
-dofile("YiboTaskHub/TargetsPage.lua")
+dofile("YiboTaskHub/Common/TargetsPage.lua")
 dofile("YiboTaskHub/TargetTabs.lua")
 local frame = CreateFrame("Frame"); frame:SetSize(1040, 530)
 Hub.AccountPage.Create(frame)

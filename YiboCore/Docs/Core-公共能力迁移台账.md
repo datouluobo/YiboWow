@@ -1,3 +1,5 @@
+2026-10-26 AltoBoss／Hub SW进度：CAP-003复用Core.ItemConfirmation进行本周期确认及撤销；CAP-004复用Core托管目标编辑器按钮；CAP-008经Core.Contracts消费AltoBoss action.targets:1.2的actions、ConfirmCycle／RevokeCycle，状态仍由AltoBoss唯一拥有；CAP-009新增owner中英文状态／确认资源。无Core运行代码或最低API13变化；事件归Mists，周期合并及Hub操作归Common。RaidProgress40、目录编辑468、身份33项四语言组合及相关回归通过，新增客户端行为与覆盖安装待验，详见[SW取证与确认](../../Docs/行动中心-SW锁定取证与本周期确认.md)。
+
 ﻿2026-10-22 Mail MoP1.3.0：单封／批量退信、AH禁用与混选跳过、刷新闪烁修复的实机范围见[验收记录](../../YiboMail/Docs/Mists-单封与批量退信方案与验收.md)。本轮复用CAP-003 ItemConfirmation、CAP-007当前角色与CAP-009 owner语言，检查最低API13及确认方法，无新Core契约。用户已授权提交推送打包；其余专项和渠道状态分别保留。
 
 # Core 公共能力迁移台账

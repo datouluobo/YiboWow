@@ -42,7 +42,7 @@ YAB.PlannedTargets = {
     Progress = function() return { state = "ready", reason = "0/1 target" } end,
 }
 YAB.TargetCatalog = { Get = function() return { mapID = 580, isRaid = true, aliases = { "SWP" } } end }
-dofile("YiboAltoBoss/TargetProjection.lua")
+dofile("YiboAltoBoss/Common/TargetProjection.lua")
 -- Override the contract reader only; exercise actual projection/status/tooltip code.
 YAB.PlannedTargets.VisibleConfiguration = function() return config end
 for _, context in ipairs({ {}, { preview = true } }) do
@@ -70,4 +70,22 @@ ordinaryColumns = {}
 columns = YAB.GetLockoutColumns({ preview = true })
 check(#columns == 1 and YAB.GetLockoutStatus("B", columns[1]) == "not-applicable", "goal-only preview retains admission")
 check(baseColumn.difficultyID == nil and saved.difficultyID == 4, "projection does not mutate input or snapshot")
+-- Alias IDs and multiple catalog entry points still describe one map/difficulty.
+YAB.TargetCatalog.CanonicalDifficulty = function(_, _, difficulty) return difficulty == 4 and 176 or difficulty end
+ordinaryColumns = { baseColumn }
+config = { targets = { A = {
+    { active = true, kind = "instance", catalogID = "instance:580", difficultyID = 4, difficultyName = "Old 25",
+        title = "Sunwell Plateau", scope = "boss", encounterIDs = { "boss1" } },
+    { active = true, kind = "instance", catalogID = "journal:12", difficultyID = 176, difficultyName = "25 Player",
+        title = "Sunwell Plateau", scope = "boss", encounterIDs = { "boss2" } },
+}, B = {} } }
+columns = YAB.GetLockoutColumns({ preview = true })
+check(#columns == 1 and columns[1].plannedDifficultyID == 176, "catalog and difficulty aliases share one column")
+YAB.PlannedTargets.Progress = function(_, _, target)
+    check(target.difficultyID == 176 and #target.encounterIDs == 2, "same character goals aggregate all selected bosses")
+    return { state = "ready", reason = "0/2" }
+end
+check(YAB.GetLockoutStatus("A", columns[1]) == "open", "merged column uses owner progress")
+saved.difficultyID = 176
+check(YAB.GetLockoutStatus("B", columns[1]) == "clear", "native ordinary lockout remains visible for other characters")
 print("LockoutProjectionSpec: " .. checks .. " checks passed")

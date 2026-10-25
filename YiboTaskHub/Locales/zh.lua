@@ -1,6 +1,12 @@
 local Core = _G.YiboCore
 if Core and Core.Locale and type(Core.Locale.Register) == "function" then
     Core.Locale:Register("YiboTaskHub", "zh", {
+        ["GOAL.BOSS_SOURCE"] = "首领或副本",
+        ["GOAL.FINAL_HINT"] = "只追踪所选尾王的击杀，其它首领不影响这个目标完成。",
+        ["GOAL.FINAL_BOSS_NAME"] = "仅尾王：%s",
+        ["GOAL.SELECT_DIFFICULTY"] = "请选择副本难度。",
+
+        ["GOAL.OPTION_GROUP"] = "首领分组 %d",
         ["CORE.UPGRADE_REQUIRED"] = "请升级 YiboCore 至 1.12.0 / API 13，并确认 localization:1 及行动中心所需能力可用。",
         ["CORE.BOSS_CAPABILITY_REQUIRED"] = "刷取目标需要 YiboCore API 13 的业务 Service 与标签页能力。",
         ["ERROR.GOAL_SERVICE"] = "目标服务注册失败。",

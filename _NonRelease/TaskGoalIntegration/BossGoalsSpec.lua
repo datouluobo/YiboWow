@@ -127,7 +127,7 @@ EJ_GetCurrentTier = function() return 1 end
 EJ_SelectTier = function() end
 EJ_GetTierInfo = function() return "巫妖王之怒" end
 EJ_GetInstanceByIndex = function(i, raid) if i == 1 and raid then return 123 end end
-EJ_GetInstanceInfo = function() return "冰冠堡垒", nil, nil, nil, nil, nil, 99999, nil, true, 631 end
+EJ_GetInstanceInfo = function() return "冰冠堡垒", nil, nil, nil, nil, nil, 99999, nil, true, 9631 end
 EJ_SelectInstance = function(id) selectedInstance = id end
 EJ_GetCurrentInstance = function() return selectedInstance end
 EJ_SetDifficulty = function(id) selectedDifficulty = id end
@@ -136,7 +136,7 @@ EJ_IsValidInstanceDifficulty = function(id) return id == 3 or id == 4 or id == 5
 EJ_GetEncounterInfoByIndex = function(i)
     if i <= 2 then return ({ "玛洛加尔领主", "巫妖王" })[i], "description", 10000 + i, 0, nil, 123, 900 + i end
 end
-GetRealZoneText = function(mapID) if mapID == 631 then return "冰冠堡垒" end end
+GetRealZoneText = function(mapID) if mapID == 9631 then return "冰冠堡垒" end end
 YAB = {
     GetCurrentCharKey = function() return "星河-甲" end,
     GetCurrentRealm = function() return "甲" end,
@@ -158,10 +158,14 @@ dofile("YiboAltoBoss/LockoutLocale.lua")
 dofile("YiboAltoBoss/DungeonBossCatalog.lua")
 dofile("YiboAltoBoss/DungeonRuns.lua")
 dofile("YiboAltoBoss/InstanceLockouts.lua")
-dofile("YiboAltoBoss/TargetCatalog.lua")
+dofile("YiboAltoBoss/Mists/RaidCatalog.lua")
+dofile("YiboAltoBoss/Mists/TargetCatalogRuntime.lua")
+dofile("YiboAltoBoss/Common/TargetCatalog.lua")
 dofile("YiboAltoBoss/PlannedTargets.lua")
-dofile("YiboAltoBoss/GoalTargets.lua")
-dofile("YiboAltoBoss/TargetProjection.lua")
+dofile("YiboAltoBoss/Common/RaidProgress.lua")
+dofile("YiboAltoBoss/Mists/RaidEvents.lua")
+dofile("YiboAltoBoss/Common/GoalTargets.lua")
+dofile("YiboAltoBoss/Common/TargetProjection.lua")
 assert(Core:RegisterAddon("YiboAltoBoss", { requiredAPI = 13 }))
 local Plans = YAB.PlannedTargets
 local originalAPI = Core.API_VERSION
@@ -197,7 +201,7 @@ Equal(targetChanges > 0,true,"Boss observation notifies exact-goal source")
 Hub.Snapshot:Build(characters)
 local history=0; for _,g in ipairs(Hub.Goals:List()) do if g.intent.scope.characterID=="A" and g.intent.conditions.catalogID=="world:galleon" then history=#g.history end end
 Equal(history,1,"source completion recorded")
-dofile("YiboTaskHub/GoalEditor.lua")
+dofile("YiboTaskHub/Common/GoalEditor.lua")
 local management = CreateFrame("Frame"); Hub.GoalEditor.Create(management); Hub.GoalEditor.Refresh(management,{characters=characters})
 local cycleCompleted = false
 for _, row in ipairs(management.rows) do if row.goal and row.goal.intent.scope.characterID == "A"

@@ -2,7 +2,7 @@ local ADDON_NAME, Addon = ...
 
 _G.YiboTaskHub = Addon
 Addon.NAME = ADDON_NAME
-Addon.VERSION = "0.6.1"
+Addon.VERSION = "0.6.2"
 
 function Addon:T(key, ...)
     local Core = self.Core or _G.YiboCore

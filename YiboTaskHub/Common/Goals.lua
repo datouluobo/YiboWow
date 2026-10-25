@@ -3,6 +3,11 @@ local Goals = {}
 Addon.Goals = Goals
 local function Copy(v) return Addon.Core.Defaults:Copy(v) end
 local function Root() return Addon.db.goals end
+local function SameIdentity(identity, normalized)
+    if identity == normalized.identity then return true end
+    for _, alias in ipairs(normalized.identityAliases or {}) do if identity == alias then return true end end
+    return false
+end
 function Goals:Changed(providerID)
     if Addon.BossTargets then Addon.BossTargets.view = nil end
     local db = Root(); db.revision = db.revision + 1
@@ -37,6 +42,10 @@ function Goals:Normalize(intent, restart)
     if type(normalized.identity) ~= "string" or normalized.identity == "" or type(normalized.intent) ~= "table"
         or normalized.intent.providerID ~= intent.providerID or type(normalized.title) ~= "string"
         or not ({ once = true, recurring = true, maintain = true })[normalized.intent.repeatPolicy] then return nil, "invalid-target" end
+    if normalized.identityAliases ~= nil then
+        if type(normalized.identityAliases) ~= "table" then return nil, "invalid-target" end
+        for _, alias in ipairs(normalized.identityAliases) do if type(alias) ~= "string" or alias == "" then return nil, "invalid-target" end end
+    end
     local scope = normalized.intent.scope
     if type(scope) ~= "table" or (scope.mode ~= "character" and scope.mode ~= "account") then return nil, "invalid-scope" end
     if scope.mode == "character" then
@@ -55,7 +64,7 @@ function Goals:Lookup(intent)
         if goal.state ~= "removed" and goal.intent.providerID == clean.intent.providerID then
             local identity = goal.identity
             if not identity then local old = self:Normalize(goal.intent); identity = old and old.identity end
-            if identity == clean.identity then return { id = goal.id, state = goal.state, revision = goal.revision } end
+            if SameIdentity(identity, clean) then return { id = goal.id, state = goal.state, revision = goal.revision } end
         end
     end
 end
@@ -114,7 +123,7 @@ function Goals:Add(intent)
             local previous = self:Normalize(goal.intent)
             if previous and previous.identity then goal.identity = previous.identity end
         end
-        if goal.intent.providerID == clean.intent.providerID and goal.identity == clean.identity and goal.state ~= "removed" then return { id = goal.id, existing = true } end
+        if goal.intent.providerID == clean.intent.providerID and SameIdentity(goal.identity, clean) and goal.state ~= "removed" then return { id = goal.id, existing = true } end
     end
     db.nextID = db.nextID + 1
     local id, now = "goal:" .. db.nextID, Addon:Now()
@@ -132,7 +141,7 @@ function Goals:Update(id, revision, patch)
         local clean, err = self:Normalize(patch.intent)
         if not clean or clean.needsConfiguration then return nil, err or Addon:T("TEXT.COMPLETE_THE_REQUIRED_GOAL_OPTIONS.7F6EBD") end
         for otherID, other in pairs(Root().byID) do
-            if otherID ~= id and other.intent.providerID == clean.intent.providerID and other.identity == clean.identity and other.state ~= "removed" then return nil, Addon:T("TEXT.GOAL_ALREADY_EXISTS.4BE99B") end
+            if otherID ~= id and other.intent.providerID == clean.intent.providerID and SameIdentity(other.identity, clean) and other.state ~= "removed" then return nil, Addon:T("TEXT.GOAL_ALREADY_EXISTS.4BE99B") end
         end
         copy.intent, copy.identity, copy.title, copy.sourceEpoch = Copy(clean.intent), clean.identity, clean.title, nil
     end
@@ -176,7 +185,7 @@ function Goals:PreviewCopy(goalIDs, destinations)
                         if not identity and old.intent.providerID == intent.providerID then
                             local clean = self:Normalize(old.intent); identity = clean and clean.identity
                         end
-                        if old.state ~= "removed" and old.intent.providerID == normalized.intent.providerID and identity == normalized.identity then found = old.id; break end
+                        if old.state ~= "removed" and old.intent.providerID == normalized.intent.providerID and SameIdentity(identity, normalized) then found = old.id; break end
                     end
                     entries[#entries + 1] = { normalized = normalized, state = goal.state == "paused" and "paused" or "active", existingID = found }
                     if found then existing = existing + 1 else added = added + 1 end

@@ -80,7 +80,9 @@ YAB.PlannedTargets.Period = function() end
 YAB.PlannedTargets.ScheduleChange = function() end
 YAB.PlannedTargets:Observe()
 check(Holiday:GetStatus("A", key) == "available", "planned observation enumerates Horseman with manual display disabled")
-dofile("YiboAltoBoss/TargetCatalog.lua")
+dofile("YiboAltoBoss/Mists/RaidCatalog.lua")
+dofile("YiboAltoBoss/Mists/TargetCatalogRuntime.lua")
+dofile("YiboAltoBoss/Common/TargetCatalog.lua")
 YAB.TargetCatalog:Build()
 local definition = YAB.TargetCatalog:Get(key)
 check(definition and definition.kind == "holiday" and definition.reset == "daily", "Horseman exported in action-center catalog")
@@ -325,7 +327,7 @@ YiboCore.BusinessItemActions = {
     Handle = function() return intercepted end,
     TooltipLines = function(_, lines) return lines end,
 }
-dofile("YiboAltoBoss/GoalTargets.lua")
+dofile("YiboAltoBoss/Common/GoalTargets.lua")
 YAB.GoalTargets.ref = {}
 YAB.PersistDB = function() saves = saves + 1 end
 YAB.NotifyCorePageChanged = function() changes = changes + 1 end

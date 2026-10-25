@@ -1,5 +1,14 @@
 # YiboAltoBoss 更新日志 / Changelog
 
+## 2.8.4 — 副本目标与周期进度（2026-10-26）
+
+- 补齐旧团本首领目录、显式尾王与合法难度，统一TBC难度身份并合并重复目标列。
+- Hub内可选整本、尾王或多名首领；新增现场成功事件采集及可撤销的本周期手动确认。
+- 原生锁定缺少首领记录时保留待核实；手动确认已获实机反馈，现场采集、自然重置与覆盖恢复仍待验。
+- 沿用Core API13和既有能力要求；详见[本轮说明](Docs/Release-2.8.4.md)。
+
+English: Adds complete legacy raid target selection, canonical TBC difficulty identities, live encounter evidence and revocable cycle-scoped manual confirmation. Manual confirmation was verified in game; live capture, reset and upgrade recovery still require client validation.
+
 ## 2.8.3 — 节日日历查询保护（2026-10-22）
 
 - 节日开放判断通过Mists适配层使用Core公共日历查询，处理异常多年基准与未知数据；同步就绪按服务器日期记录。

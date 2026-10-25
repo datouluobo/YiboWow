@@ -7,7 +7,8 @@ local function Root()
     local metadata, goals = Addon.db.bossTargets, Addon.db.goals
     local view = { byCharacter = {}, revision = goals.revision, nextID = metadata.nextID, sourceEpoch = metadata.sourceEpoch }
     for _, goal in ipairs(Addon.Goals:List(false, { omitHistory = true })) do if goal.intent.targetType == "boss" then
-        local id, target = goal.intent.scope.characterID, Copy(goal.intent.conditions)
+        local normalized = Addon.Goals:Normalize(goal.intent)
+        local id, target = goal.intent.scope.characterID, Copy(normalized and normalized.intent and normalized.intent.conditions or goal.intent.conditions)
         target.id, target.active = goal.legacyBossID or goal.id, goal.state == "active"
         view.byCharacter[id] = view.byCharacter[id] or {}; table.insert(view.byCharacter[id], target)
     end end
