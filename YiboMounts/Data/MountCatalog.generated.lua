@@ -1736,8 +1736,8 @@ NS.Data = {
             {
               kind = "custom",
               labels = {
-                enUS = "第 9 赛季",
-                zhCN = "第 9 赛季"
+                enUS = "第 10 赛季",
+                zhCN = "第 10 赛季"
               },
               refID = nil
             },
@@ -1757,8 +1757,8 @@ NS.Data = {
             difficulties = {},
             eventKey = nil,
             notes = {
-              enUS = "PVP 竞技场 第 9 赛季角斗士奖励；赛季限定，非背包物品。",
-              zhCN = "PVP 竞技场 第 9 赛季角斗士奖励；赛季限定，非背包物品。"
+              enUS = "PVP 竞技场 第 10 赛季角斗士奖励；赛季限定，非背包物品。",
+              zhCN = "PVP 竞技场 第 10 赛季角斗士奖励；赛季限定，非背包物品。"
             },
             price = {
               enUS = nil,

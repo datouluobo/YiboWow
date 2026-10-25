@@ -1,5 +1,19 @@
 # YiboMounts Changelog / 更新日志
 
+## 1.0.2
+
+### 中文
+
+- 修正现代 Classic 增益光环的法术 ID 读取，兼容旧返回格式，恢复 PvP 赛季坐骑来源提示。
+- 将冷酷角斗士的暮光幼龙来源统一为第 10 赛季。
+- 离线覆盖 S1–S15 全部 15 只正式赛季坐骑；本轮实机复验仍待完成。
+
+### English
+
+- Fixed spell ID parsing for modern Classic buff auras while retaining support for older return formats, restoring PvP season mount source tooltips.
+- Corrected the Ruthless Gladiator's Twilight Drake source to Arena Season 10.
+- Offline regression checks cover all 15 supported S1–S15 reward mounts; client verification remains pending.
+
 ## 1.0.0
 
 ### 中文

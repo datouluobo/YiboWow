@@ -1,7 +1,7 @@
 local ADDON_NAME, NS = ...
 
 NS.NAME = ADDON_NAME
-NS.VERSION = "1.0.1"
+NS.VERSION = "1.0.2"
 NS.INTERFACE = 50504
 NS.Locale = NS.Locale or {}
 NS.DefaultSettings = {

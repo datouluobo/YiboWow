@@ -5,6 +5,11 @@ NS.AuraTooltip = {}
 local function ReadSpellID(api, unit, index, filter)
     if type(api) ~= "function" then return nil, false end
     local values = { api(unit, index, filter) }
+    -- Current Classic tuples omit rank: spellId is field 10 and
+    -- canApplyAura is field 11. Read the ID directly; localized mount names
+    -- need not be resolvable by GetSpellInfo (notably arena reward mounts).
+    if type(values[10]) == "number" then return values[10], true end
+    -- Older rank-bearing tuples expose spellId in field 11 instead.
     if type(values[11]) == "number" then return values[11], true end
 
     -- Some MoP Classic builds use a different aura tuple. Resolve the aura's

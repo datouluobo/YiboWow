@@ -25,6 +25,7 @@ Load("CoreIntegration.lua")
 Load("_NonRelease/Tests/FormatterSmoke.lua")
 Load("_NonRelease/Tests/TooltipStateSmoke.lua")
 Load("_NonRelease/Tests/AuraTooltipSmoke.lua")
+Load("_NonRelease/Tests/PvpSeasonTooltipSmoke.lua")
 Load("_NonRelease/Tests/InventoryProbeSmoke.lua")
 
 print("Lua smoke tests passed")
