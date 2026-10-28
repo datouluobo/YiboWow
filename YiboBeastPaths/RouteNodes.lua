@@ -117,16 +117,16 @@ ns.routeNodeTooltips = {
         npcID = 50859,
     },
     [66522] = {
-        title = "邦比",
+        title = "桑蚕",
         subtitle = "Bombyx",
-        titleSuffix = "（待验证）",
-        trackName = "被咬烂的丝草",
+        trackName = "啃过的柔丝草",
         trackNameEN = "Bombyx's tracks",
         colorName = "亮红色蚕虫",
         displayLabel = "蚕虫- 亮红",
         iconTexture = "Interface\\Icons\\Ability_Tracking",
         imageTexture = "Interface\\AddOns\\YiboBeastPaths\\Assets\\ReferencePets\\Textures\\67820_bombyx",
         tooltipTexture = "Interface\\AddOns\\YiboBeastPaths\\Assets\\ReferencePets\\TooltipTextures\\67820_bombyx",
+        trackTexture = "Interface\\AddOns\\YiboBeastPaths\\Assets\\ReferencePets\\TooltipTextures\\67820_silkweed",
         npcID = 67820,
     },
 }
@@ -162,6 +162,6 @@ ns.routeNodes = {
         { id = "start", role = "start", normalizedX = 0.3800, normalizedY = 0.7940, nodeScale = 1.0000, isPlaceholder = false },
     },
     [66522] = {
-        { id = "start", role = "start", normalizedX = 0.4550, normalizedY = 0.5100, nodeScale = 1.0000, isPlaceholder = false },
+        { id = "start", role = "start", normalizedX = 0.5550, normalizedY = 0.5700, nodeScale = 1.0000, isPlaceholder = false },
     },
 }

@@ -5,7 +5,7 @@
 ## Notes: World map route overlays for Pandaria hidden hunter pets.
 ## Notes-zhCN: 直接在世界地图显示潘达利亚隐藏猎人宠物路线图。
 ## Author: 天堂暴风
-## Version: v1.8
+## Version: v1.8.2
 ## IconTexture: Interface\AddOns\YiboBeastPaths\Media\YiboBeastPathsIcon-128
 ## SavedVariables: YiboBeastPathsDB, YiboBeastPathsDebugDB
 ## OptionalDeps: YiboCore

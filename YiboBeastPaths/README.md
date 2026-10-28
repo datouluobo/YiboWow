@@ -1,9 +1,11 @@
 # YiboBeastPaths
 
+> 文档状态更新（2026-10-16）：现有路线与维护功能已实机验收收口；后续宠物功能见DEV-002。当前源码版本与发行证据见[状态总览](../Docs/仓库当前状态总览.md)，后续任务见[延期清单](../Docs/后续开发任务清单.md)。下文旧版本的开发／待验收描述按其原日期理解；当前版本渠道状态没有明确证据时保留待核对。
+
 潘达利亚隐藏猎人宠物路线图插件。  
 作用是把部分稀有猎人宠物的巡逻/活动路线直接覆盖显示在世界地图上，方便在游戏内快速查看和蹲守。
 
-当前版本：`v1.8`（60Hz 小地图跟随已实机确认；Core 维护功能完整客户端验收待完成）
+当前版本：`v1.8.2`，优化桑蚕路线、名称及参考图片。1.9 离线兽栏处于开发准备阶段。现有路线、小地图与Core维护功能已由用户于2026-10-16确认实机验收收口；当前版本发行状态待核对。2026-10-27 已整理[DEV-002 离线兽栏实施与验收方案](Docs/DEV-002-离线兽栏实施与验收方案.md)，API 源码与旧证据已核对，当前两端完整采集边界待实机、业务代码未实施；路线“已拥有”与噩兆四色研究属于后续 DEV-005，见[版本任务清单](Docs/离线兽栏与拥有状态-版本任务清单.md)。
 
 ![Logo](Media/YiboBeastPathsLogo.png)
 
@@ -35,7 +37,7 @@
 - `50820` 洛克海德 `Rockhide the Immovable`
 - `50821` 萨维奇 `Savage`
 - `50822` 微光之蛾 `Glimmer`
-- `66522` 邦比 `Bombyx`
+- `66522` 桑蚕 `Bombyx`
 
 ## 功能说明
 
@@ -68,18 +70,18 @@
 
 ## 主要文件
 
-- [YiboBeastPaths.toc](E:/Program/YiboBeastPaths/YiboBeastPaths.toc)：插件入口与元数据
-- [YiboBeastPaths_Mainline.toc](E:/Program/YiboBeastPaths/YiboBeastPaths_Mainline.toc)：Retail / 正式服入口与元数据
-- [YiboBeastPaths_Mists.toc](E:/Program/YiboBeastPaths/YiboBeastPaths_Mists.toc)：MoP Classic 入口与元数据
-- [Flavor.lua](E:/Program/YiboBeastPaths/Flavor.lua)：运行时客户端 flavor 识别
-- [FlavorOverrides.lua](E:/Program/YiboBeastPaths/FlavorOverrides.lua)：Retail/Mists 数据覆盖入口
-- [Core.lua](E:/Program/YiboBeastPaths/Core.lua)：初始化、按钮与命令
-- [Renderer.lua](E:/Program/YiboBeastPaths/Renderer.lua)：世界地图路线绘制与节点显示
-- [Data.lua](E:/Program/YiboBeastPaths/Data.lua)：宠物基础数据
-- [RouteOverlays.lua](E:/Program/YiboBeastPaths/RouteOverlays.lua)：路线覆盖图资源映射
-- [RouteNodes.lua](E:/Program/YiboBeastPaths/RouteNodes.lua)：路线节点与提示数据
-- [RouteTransforms.lua](E:/Program/YiboBeastPaths/RouteTransforms.lua)：每条路线的定位参数
-- [Maintenance/DebugCalibrator.lua](E:/Program/YiboBeastPaths/Maintenance/DebugCalibrator.lua)：路线调试校准面板
+- [YiboBeastPaths.toc](YiboBeastPaths.toc)：插件入口与元数据
+- [YiboBeastPaths_Mainline.toc](YiboBeastPaths_Mainline.toc)：Retail / 正式服入口与元数据
+- [YiboBeastPaths_Mists.toc](YiboBeastPaths_Mists.toc)：MoP Classic 入口与元数据
+- [Flavor.lua](Flavor.lua)：运行时客户端 flavor 识别
+- [FlavorOverrides.lua](FlavorOverrides.lua)：Retail/Mists 数据覆盖入口
+- [Core.lua](Core.lua)：初始化、按钮与命令
+- [Renderer.lua](Renderer.lua)：世界地图路线绘制与节点显示
+- [Data.lua](Data.lua)：宠物基础数据
+- [RouteOverlays.lua](RouteOverlays.lua)：路线覆盖图资源映射
+- [RouteNodes.lua](RouteNodes.lua)：路线节点与提示数据
+- [RouteTransforms.lua](RouteTransforms.lua)：每条路线的定位参数
+- [Maintenance/DebugCalibrator.lua](Maintenance/DebugCalibrator.lua)：路线调试校准面板
 
 ## 更新日志
 

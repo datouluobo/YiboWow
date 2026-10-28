@@ -10,7 +10,7 @@ ns.pets = {
     [50812] = { name = "帕特兰纳克", nameEN = "Patrannache", zone = "四风谷", mapID = 376 },
     [50817] = { name = "血牙", nameEN = "Bloodtooth", zone = "卡桑琅丛林", mapID = 418 },
     [50820] = { name = "洛克海德", nameEN = "Rockhide", zone = "螳螂高原", mapID = 388 },
-    [66522] = { name = "邦比", nameEN = "Bombyx", zone = "卡桑琅丛林", mapID = 418 },
+    [66522] = { name = "桑蚕", nameEN = "Bombyx", zone = "卡桑琅丛林", mapID = 418 },
 }
 
 function ns.GetSortedPetIDs()

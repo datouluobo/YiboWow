@@ -10,5 +10,5 @@ ns.routeTransforms = {
     [50820] = { offsetX = 0.0090, offsetY = 0.1760, scale = 0.5200, scaleX = 1.0000, scaleY = 1.0150, thickness = 1.5000, opacity = 1.0000 },
     [50821] = { offsetX = 0.0250, offsetY = -0.0900, scale = 0.4200, scaleX = 0.9900, scaleY = 1.2400, thickness = 1.5000, opacity = 1.0000 },
     [50822] = { offsetX = -0.0600, offsetY = 0.0640, scale = 0.4400, scaleX = 0.9800, scaleY = 0.9150, thickness = 1.5000, opacity = 1.0000 },
-    [66522] = { offsetX = -0.1430, offsetY = -0.0900, scale = 0.3450, scaleX = 1.0000, scaleY = 1.0000, thickness = 1.0000, opacity = 1.0000 },
+    [66522] = { offsetX = -0.1930, offsetY = -0.0980, scale = 0.3450, scaleX = 1.0400, scaleY = 1.8600, thickness = 1.0000, opacity = 1.0000 },
 }

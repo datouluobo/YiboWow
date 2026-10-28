@@ -126,7 +126,7 @@ local function GetRouteTransformForPet(petID)
     return defaultTransform
 end
 
-local function InvertMapPointToRouteSpace(petID, point)
+local function InvertMapPointToRouteSpace(petID, point, route)
     if not point then
         return nil
     end
@@ -141,9 +141,15 @@ local function InvertMapPointToRouteSpace(petID, point)
         scaleY = 1
     end
 
+    local display = route and route.referenceDisplayTransform
+    local displayScaleX = display and display.scaleX or 1
+    local displayScaleY = display and display.scaleY or 1
+    if math.abs(displayScaleX) < 0.0001 or math.abs(displayScaleY) < 0.0001 then return nil end
+    local mapX = 0.5 + (((point.x or 0.5) - 0.5 - (display and display.offsetX or 0)) / displayScaleX)
+    local mapY = 0.5 + (((point.y or 0.5) - 0.5 - (display and display.offsetY or 0)) / displayScaleY)
     return {
-        x = 0.5 + (((point.x or 0.5) - 0.5 - (transform.offsetX or 0)) / scaleX),
-        y = 0.5 + (((point.y or 0.5) - 0.5 - (transform.offsetY or 0)) / scaleY),
+        x = 0.5 + ((mapX - 0.5 - (transform.offsetX or 0)) / scaleX),
+        y = 0.5 + ((mapY - 0.5 - (transform.offsetY or 0)) / scaleY),
     }
 end
 
@@ -691,7 +697,7 @@ local function BuildFootprintAnchors(route, footprints)
 
     for _, footprint in ipairs(footprints) do
         if footprint.enabled ~= false and footprint.mapID == route.mapID then
-            local routeSpace = InvertMapPointToRouteSpace(route.petID, footprint)
+            local routeSpace = InvertMapPointToRouteSpace(route.petID, footprint, route)
             if routeSpace and routeSpace.x and routeSpace.y then
                 local transformedFootprint = DeepCopy(footprint)
                 transformedFootprint.routeSpace = routeSpace

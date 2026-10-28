@@ -253,6 +253,7 @@ local function BuildTooltipData(petID, node)
         iconTexture = iconTexture,
         imageTexture = imageTexture,
         tooltipTexture = tooltipTexture,
+        trackTexture = tooltipData and tooltipData.trackTexture or nil,
         footTexture = footTexture,
         zoneName = zoneName,
         roleLabel = GetNodeRoleLabel(node and node.role),
@@ -301,6 +302,10 @@ local function GetOrCreateRouteNodeTooltip()
     frame.portrait:SetPoint("BOTTOMRIGHT", frame.portraitBg, "BOTTOMRIGHT", -3, 3)
     frame.portrait:SetTexCoord(0.02, 0.98, 0.02, 0.98)
 
+    frame.trackPortrait = frame:CreateTexture(nil, "ARTWORK")
+    frame.trackPortrait:SetSize(50, 50)
+    frame.trackPortrait:SetPoint("LEFT", frame.portraitBg, "RIGHT", 4, 0)
+
     frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     frame.title:SetJustifyH("LEFT")
     frame.title:SetTextColor(0.25, 0.85, 1.00)
@@ -336,6 +341,9 @@ local function ShowRouteNodeTooltip(button)
     tooltip.portraitBg:ClearAllPoints()
     tooltip.portraitBg:SetPoint("TOPLEFT", tooltip, "TOPLEFT", 10, -10)
     tooltip.portrait:SetTexture(data.tooltipTexture)
+    tooltip.trackPortrait:SetTexture(data.trackTexture)
+    tooltip.trackPortrait:SetShown(data.trackTexture ~= nil)
+    local textLeft = data.trackTexture and 128 or 74
 
     local combinedTitle = data.title or ""
     if data.subtitle and data.subtitle ~= "" then
@@ -367,7 +375,7 @@ local function ShowRouteNodeTooltip(button)
     tooltip.route:SetWidth(textWidth)
 
     tooltip.title:ClearAllPoints()
-    tooltip.title:SetPoint("TOPLEFT", tooltip, "TOPLEFT", 74, -12)
+    tooltip.title:SetPoint("TOPLEFT", tooltip, "TOPLEFT", textLeft, -12)
     tooltip.meta:ClearAllPoints()
     tooltip.meta:SetPoint("TOPLEFT", tooltip.title, "BOTTOMLEFT", 0, -6)
     tooltip.trackName:ClearAllPoints()
@@ -375,7 +383,7 @@ local function ShowRouteNodeTooltip(button)
     tooltip.route:ClearAllPoints()
     tooltip.route:SetPoint("TOPLEFT", tooltip.trackName, "BOTTOMLEFT", 0, -6)
 
-    local frameWidth = 74 + textWidth + 12
+    local frameWidth = textLeft + textWidth + 12
     local frameHeight = math.max(78, 12
         + (tooltip.title:GetStringHeight() or 0)
         + 6
@@ -810,7 +818,7 @@ local function ResolveDisplayPointForLayer(petID, point, route, layerKey)
     local shouldUseReferenceDisplayTransform = false
     if layerKey == "reference" and route then
         shouldUseReferenceDisplayTransform = true
-    elseif layerKey == "resolved" and route and route.derivedFrom and (route.derivedFrom.footprints or 0) == 0 then
+    elseif layerKey == "resolved" and route then
         shouldUseReferenceDisplayTransform = true
     end
 
@@ -1029,9 +1037,11 @@ local function RenderFootprintLayer(frame, petID, points, color, size)
             slot:ClearAllPoints()
             slot:SetPoint("CENTER", frame, "TOPLEFT", width * x, -(height * y))
             slot:SetSize(size, size)
+            slot.texture:ClearAllPoints()
+            slot.texture:SetAllPoints(slot)
             slot.texture:SetRotation(0)
-            slot.texture:SetTexture("Interface\\MINIMAP\\POIIcons")
-            slot.texture:SetTexCoord(0, 0.125, 0.625, 0.75)
+            slot.texture:SetTexture("Interface\\Buttons\\WHITE8X8")
+            slot.texture:SetTexCoord(0, 1, 0, 1)
             slot.texture:SetVertexColor(color[1] or 1, color[2] or 1, color[3] or 1, color[4] or 1)
             slot:Show()
         end
