@@ -13,6 +13,12 @@ param(
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Release.Common.ps1')
 $workspacePath = (Resolve-Path -LiteralPath $WorkspaceRoot).Path
+$configuration = Import-PowerShellDataFile -LiteralPath (Join-Path $PSScriptRoot 'ReleaseProfiles.psd1')
+if ($configuration.ContainsKey('LegacyBundles') -and $configuration.LegacyBundles.ContainsKey($Addon)) {
+    $bundleTarget = if ($PSBoundParameters.ContainsKey('Target')) { $Target } else { 'Universal' }
+    & (Join-Path $PSScriptRoot 'Build-LegacyBundle.ps1') -Addon $Addon -Target $bundleTarget -Channel $Channel -WorkspaceRoot $workspacePath -OutputRoot $OutputRoot -ValidateOnly:$ValidateOnly -KeepStaging:$KeepStaging
+    return
+}
 $profile = Get-YiboReleaseProfile $workspacePath $Addon $Target
 if (-not $OutputRoot) { $OutputRoot = Join-Path $workspacePath 'Builds' }
 $outputPath = [IO.Path]::GetFullPath($OutputRoot)
@@ -61,6 +67,7 @@ $targetStates = foreach ($id in ($profile.Definition.Targets.Keys | Sort-Object)
         version = $otherProfile.Version; publicAPI = $otherProfile.APIVersion
         minimumCoreAPI = $otherProfile.RequiredCoreAPI; sourceToc = $otherProfile.Client.SourceToc
         loadToc = $otherProfile.Client.LoadToc; interface = @($otherProfile.Interfaces)
+        developmentToc = $(if ($otherProfile.Client.ContainsKey('DevelopmentToc')) { $otherProfile.Client.DevelopmentToc } else { $otherProfile.Client.SourceToc })
         validationState = $otherProfile.Client.ValidationState
     }
 }
@@ -86,7 +93,7 @@ $manifestName = 'YiboReleaseManifest.json'
 if ($manifestName -in $publicEntries.Relative -or $manifestName -in $runtimeEntries.Relative) { throw 'Generated release manifest already exists in source.' }
 $cfEntries = $runtimeEntries + [pscustomobject]@{ Relative = $manifestName; Source = $null; Content = ($cfManifest | ConvertTo-Json -Depth 12) }
 $ghEntries = $publicEntries + [pscustomobject]@{ Relative = $manifestName; Source = $null; Content = ($ghManifest | ConvertTo-Json -Depth 12) }
-$names = Get-YiboPackageNames -Addon $profile.Addon -Slug $profile.Slug -Version $profile.Version -PublicAPI $profile.APIVersion -VersionIncludesAPI $profile.Definition.VersionIncludesAPI -SourceHash $sourceHash -SourceTargets @($targetStates)
+$names = Get-YiboPackageNames -Addon $profile.Addon -Slug $profile.Slug -Version $profile.Version -SourceVersion $profile.SourceVersion -PublicAPI $profile.APIVersion -VersionIncludesAPI $profile.Definition.VersionIncludesAPI -SourceHash $sourceHash -SourceTargets @($targetStates)
 $cfName, $ghName = $names.CurseForge, $names.GitHub
 $artifacts = @()
 if ($Channel -in @('Both', 'CurseForge')) { $artifacts += [pscustomobject]@{ Channel = 'CurseForge'; Final = (Join-Path $outputPath $cfName); Entries = $cfEntries } }

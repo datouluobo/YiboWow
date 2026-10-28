@@ -2,6 +2,7 @@ local ADDON_NAME = ...
 
 local Core = _G.YiboCore or {}
 _G.YiboCore = Core
+if Core._private and Core._private.bootstrapLoaded then return end
 
 Core.NAME = "YiboCore"
 Core.VERSION = "1.12.9"
@@ -9,6 +10,7 @@ Core.API_VERSION = 13
 Core._private = Core._private or {}
 Core._private.addonName = ADDON_NAME or Core.NAME
 Core._private.initialized = false
+Core._private.bootstrapLoaded = true
 
 function Core:GetAddonName()
     return self._private.addonName
@@ -32,48 +34,3 @@ function Core:Print(message)
         DEFAULT_CHAT_FRAME:AddMessage(Core:Text("CORE.CFF20E070_YIBO_R_CORE") .. tostring(message))
     end
 end
-
-local lifecycleFrame = CreateFrame("Frame")
-lifecycleFrame:RegisterEvent("ADDON_LOADED")
-lifecycleFrame:RegisterEvent("PLAYER_LOGIN")
-lifecycleFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-lifecycleFrame:RegisterEvent("PLAYER_LEVEL_UP")
-lifecycleFrame:RegisterEvent("PLAYER_GUILD_UPDATE")
-lifecycleFrame:RegisterEvent("BAG_UPDATE_DELAYED")
-lifecycleFrame:RegisterEvent("BANKFRAME_OPENED")
-lifecycleFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
-lifecycleFrame:RegisterEvent("SKILL_LINES_CHANGED")
-lifecycleFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
-lifecycleFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-lifecycleFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-lifecycleFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-lifecycleFrame:RegisterEvent("DISPLAY_SIZE_CHANGED")
-lifecycleFrame:RegisterEvent("UI_SCALE_CHANGED")
-
-lifecycleFrame:SetScript("OnEvent", function(_, event, arg1)
-    if event == "ADDON_LOADED" then
-        if arg1 ~= Core:GetAddonName() or Core:IsInitialized() then
-            return
-        end
-
-        Core:Initialize()
-        return
-    end
-
-    if not Core:IsInitialized() then
-        return
-    end
-
-    if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
-        if Core.Characters then
-            Core.Characters:RefreshCurrent()
-        end
-    end
-    if Core.Profile and event ~= "ADDON_LOADED" then
-        Core.Profile:RefreshCurrent(event)
-    end
-
-    if Core.Events then
-        Core.Events:Fire(event)
-    end
-end)

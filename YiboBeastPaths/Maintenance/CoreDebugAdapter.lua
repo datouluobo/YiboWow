@@ -2,7 +2,7 @@ local addonName, ns = ...
 local YBP = _G.YiboBeastPaths
 local T = ns.Text
 
--- Mists-only adapter.  BeastPaths stays independently loadable: this file
+-- Shared Retail/Mists adapter. BeastPaths stays independently loadable: this file
 -- merely registers optional Core UI when the required host is present.
 local ADDON_ID = "YiboBeastPaths"
 local PAGE_ID = "yibo-beastpaths-route-maintenance"
@@ -11,8 +11,8 @@ local registered, pageRegistered, unavailableReason = false, false, nil
 local notifiedReasons = {}
 local waitingCore, OnCoreReady
 
-local function IsMists()
-    return ns and ns.IS_MISTS == true
+local function IsSupportedClient()
+    return ns and (ns.IS_MISTS == true or ns.IS_RETAIL == true)
 end
 
 local function GetCore()
@@ -180,10 +180,13 @@ local function CreateSettingsPanel(row, host)
 end
 
 local function TryRegister()
-    if registered or not IsMists() then return registered end
+    if registered or not IsSupportedClient() then return registered end
     local core, reason = GetCore()
     if not core then unavailableReason = reason; return false end
-    local addon, err = core:RegisterAddon(ADDON_ID, { requiredAPI = 13, version = "1.8" })
+    -- Initialize defaults before the early ADDON_LOADED registration so a new
+    -- profile's visible page does not depend on PLAYER_LOGIN event ordering.
+    if YBP.InitDebugDB then YBP:InitDebugDB() end
+    local addon, err = core:RegisterAddon(ADDON_ID, { requiredAPI = 13, version = "1.8.3" })
     if not addon then unavailableReason = err; return false end
     local settings, settingsErr = core:RegisterSettingsPanel(ADDON_ID, {
         id = SETTINGS_ID,
@@ -221,7 +224,7 @@ OnCoreReady = function()
 end
 local function WaitForCore()
     local core = _G.YiboCore
-    if not IsMists() or registered or waitingCore == core then return end
+    if not IsSupportedClient() or registered or waitingCore == core then return end
     if core and core.Events and core.Events.Register and core.Events.Unregister then
         if waitingCore then waitingCore.Events:Unregister("CORE_READY", ADDON_ID, OnCoreReady) end
         waitingCore = core
@@ -234,7 +237,7 @@ init:SetScript("OnEvent", function(_, event, name)
     if event == "PLAYER_LOGIN" or name == addonName or name == "YiboCore" then
         if not TryRegister() then
             WaitForCore()
-            if event == "PLAYER_LOGIN" and IsMists() and _G.YiboCore then PrintUnavailable() end
+            if event == "PLAYER_LOGIN" and IsSupportedClient() and _G.YiboCore then PrintUnavailable() end
         end
     end
 end)

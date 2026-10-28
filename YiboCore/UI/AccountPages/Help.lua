@@ -5,29 +5,25 @@ local Theme = Core.UITheme
 local COLORS = Theme.Colors
 local AddText = AccountView._internal.AddText
 
-local OPERATIONS = Core.Locale:Bind(function() return {
-    { Core:Text("CORE.YIBOCORE_ACCOUNT_OVERVIEW"), Core:Text("CORE.BROKER_MINIMAP_LEFT_CLICK_TO_TOGGLE_THE") },
-    { Core:Text("CORE.YIBOALTOBOSS_BOSSES_LOCKOUTS"), Core:Text("CORE.CLICK_A_CHARACTER_TARGET_STATUS_CELL_TO") },
-    { Core:Text("CORE.YIBOLEGENDARY_LEGENDARY_PATHS"), Core:Text("CORE.CLICK_A_TARGET_COLUMN_OR_CHARACTER_PROGRESS") },
-    { Core:Text("CORE.YIBOQUESTBLOCKER_QUEST_BLOCKER"), Core:Text("CORE.CLICK_A_QUEST_ROW_S_EXPAND_ICON") },
-    { Core:Text("CORE.YIBOTODO_DAILY_ACTIONS"), Core:Text("CORE.CLICK_AN_AVAILABLE_ACTION_ICON_FOR_THE") },
-    { Core:Text("CORE.YIBOMAIL_MAIL"), Core:Text("CORE.RULE_BASED_MAIL_DROP_A_BAG_ITEM") },
-    { Core:Text("CORE.YIBOCURRENCY_CURRENCY_OVERVIEW"), Core:Text("CORE.RIGHT_CLICK_A_CURRENCY_ROW_TO_TOGGLE") },
-    { Core:Text("CORE.YIBOVAULT_ACCOUNT_STORAGE"), Core:Text("CORE.SELECT_A_CHARACTER_OR_GUILD_ON_THE") },
-    { Core:Text("CORE.YIBOCRAFTING_PROFESSION_RECIPES"), Core:Text("CORE.CLICK_A_RECIPE_ROW_NAME_OR_ITEM") },
-    { Core:Text("CORE.YIBOREPUTATION_REPUTATION_OVERVIEW"), Core:Text("CORE.CLICK_A_REPUTATION_NAME_TO_EXPAND_OR") },
-    { Core:Text("CORE.YIBOBUILDS_EQUIPMENT_APPEARANCE"), Core:Text("CORE.MODEL_PREVIEW_DRAG_TO_ROTATE_AND_USE") },
-    { Core:Text("CORE.YIBOAUTOOPEN_AUTO_OPEN"), Core:Text("CORE.IN_SETTINGS_DROP_A_BAG_ITEM_INTO") },
-    { Core:Text("CORE.YIBOBEASTPATHS_BEAST_PATHS"), Core:Text("CORE.CLICK_THE_ADDON_BUTTON_ON_THE_WORLD") },
-    { Core:Text("CORE.YIBOMOUNTS_MOUNT_JOURNAL"), Core:Text("CORE.USE_THE_COLLECTED_AND_NOT_COLLECTED_CHECKBOXES") },
-} end)
-
-local USAGE_NOTES = Core.Locale:Bind(function() return {
-    { Core:Text("CORE.ACCOUNT_OVERVIEW_355"), Core:Text("CORE.CHOOSE_A_BUSINESS_PAGE_ON_THE_LEFT") },
-    { Core:Text("CORE.CHARACTER_BUILDS"), Core:Text("CORE.DRAG_TO_ROTATE_MOUSE_WHEEL_TO_ZOOM") },
-    { Core:Text("CORE.ACCOUNT_TO_DO_SETTINGS"), Core:Text("CORE.EACH_SWITCH_CONTROLS_A_COLUMN_IN_THE") },
-    { Core:Text("CORE.REPUTATION_MONITORING_SETTINGS"), Core:Text("CORE.ADD_STARS_QUICKLY_IN_THE_MAIN_MATRIX") },
-} end)
+local function HelpRows(kind, coreTitle, coreBody)
+    local rows = { { Core:Text(coreTitle), Core:Text(coreBody), addonName = Core.NAME } }
+    local target = Core._private and Core._private.target
+    local policies = target and target.addons or {}
+    local names = {}
+    for name in pairs(policies) do names[#names + 1] = name end
+    table.sort(names)
+    for _, name in ipairs(names) do
+        local keys = policies[name][kind]
+        if keys then rows[#rows + 1] = { Core:Text(keys[1]), Core:Text(keys[2]), addonName = name } end
+    end
+    return rows
+end
+local OPERATIONS = Core.Locale:Bind(function()
+    return HelpRows("operation", "CORE.YIBOCORE_ACCOUNT_OVERVIEW", "CORE.BROKER_MINIMAP_LEFT_CLICK_TO_TOGGLE_THE")
+end)
+local USAGE_NOTES = Core.Locale:Bind(function()
+    return HelpRows("note", "CORE.ACCOUNT_OVERVIEW_355", "CORE.CHOOSE_A_BUSINESS_PAGE_ON_THE_LEFT")
+end)
 
 local function CreateHelp(parent)
     parent.scroll = Theme:CreateScrollFrame(parent)
@@ -52,6 +48,7 @@ local function CreateHelp(parent)
         card:SetBackdropColor(COLORS.panel[1], COLORS.panel[2], COLORS.panel[3], 0.72)
         card:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.58)
 
+        card.addonName = operation.addonName
         card.title = AddText(card, "GameFontNormal", Theme.Font.body, COLORS.text)
         card.title:SetPoint("TOPLEFT", 14, -11)
         card.title:SetText(operation[1])

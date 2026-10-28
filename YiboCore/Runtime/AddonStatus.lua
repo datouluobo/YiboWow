@@ -3,39 +3,16 @@ local Core = _G.YiboCore
 local AddonStatus = {}
 Core.AddonStatus = AddonStatus
 
-local function Installed(name)
-    if C_AddOns and C_AddOns.GetAddOnInfo then
-        local addonName = C_AddOns.GetAddOnInfo(name)
-        return addonName ~= nil
-    end
-    return GetAddOnInfo and GetAddOnInfo(name) ~= nil or false
-end
-
-local function Metadata(name, field)
-    if C_AddOns and C_AddOns.GetAddOnMetadata then
-        return C_AddOns.GetAddOnMetadata(name, field)
-    end
-    return GetAddOnMetadata and GetAddOnMetadata(name, field) or nil
-end
-
-local function Enabled(name)
-    local character = UnitName and UnitName("player") or nil
-    local value
-    if C_AddOns and C_AddOns.GetAddOnEnableState then
-        value = C_AddOns.GetAddOnEnableState(name, character)
-    elseif GetAddOnEnableState then
-        value = GetAddOnEnableState(character, name)
-    end
-    return value == true or (type(value) == "number" and value > 0)
-end
-
 function AddonStatus:Get(name)
-    local installed = Installed(name)
+    local native = Core.Client:ReadAddon(name)
+    local installed = native and native.installed or false
     local connected = Core.Registry and Core.Registry:Get(name) ~= nil or false
-    local enabled = installed and Enabled(name) or false
+    local enabled = installed and native.enabled or false
     local state
     if connected then
         state = "connected"
+    elseif not native or native.availability ~= "known" then
+        state = "unavailable"
     elseif enabled then
         state = "enabled-not-connected"
     elseif installed then
@@ -44,10 +21,11 @@ function AddonStatus:Get(name)
         state = "missing"
     end
     return {
+        availability = native and native.availability or "unavailable",
         installed = installed,
         enabled = enabled,
         connected = connected,
-        installedVersion = installed and Metadata(name, "Version") or nil,
+        installedVersion = native and native.installedVersion or nil,
         packagedVersion = Core.PackagedAddonVersions and Core.PackagedAddonVersions[name] or nil,
         state = state,
     }

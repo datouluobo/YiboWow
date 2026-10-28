@@ -1,0 +1,71 @@
+## Interface: 120105
+## Title: |cff20e070[Yibo]|r YiboCore - Account UI Framework
+## Title-zhCN: |cff20e070[Yibo]|r YiboCore
+## Title-zhTW: |cff20e070[Yibo]|r YiboCore
+## Notes: Retail development build: GUID directory, isolated saves and shared account UI. Client acceptance pending.
+## Notes-zhCN: 正式服开发版：GUID角色目录、独立存档与公共账号界面，待客户端验收。
+## Author: YiboSoft
+## Version: 0.1.0
+## IconTexture: Interface\AddOns\YiboCore\Media\YiboCoreIcon-128
+## SavedVariables: YiboCoreRetailDB
+## OptionalDeps: LibDataBroker-1.1
+## LoadOnDemand: 0
+
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Bootstrap.lua
+Retail\Target.lua
+Retail\Metadata.lua
+Util\Defaults.lua
+Runtime\Capabilities.lua
+Runtime\Locale.lua
+Locales\zhCN.lua
+Locales\enUS.lua
+Runtime\Registry.lua
+Runtime\SettingsRegistry.lua
+Runtime\Events.lua
+Runtime\Client.lua
+Common\ClientReaders.lua
+Retail\Client.lua
+Common\ClientSurface.lua
+Retail\Surface.lua
+Runtime\Contracts.lua
+Runtime\DataDomains.lua
+Runtime\Resources.lua
+Runtime\ItemResolver.lua
+Runtime\Fields.lua
+Runtime\ArchiveFields.lua
+Runtime\Commands.lua
+Runtime\EntryConfig.lua
+Data\Migrations.lua
+Data\Validation.lua
+Data\Database.lua
+Data\Characters.lua
+Data\CharacterCleanup.lua
+Data\DomainStore.lua
+Data\Domains\Identity.lua
+Retail\Fields.lua
+Data\Fields\CharacterArchive.lua
+Data\AddonCatalog.lua
+Runtime\AddonStatus.lua
+Data\Profile.lua
+Util\LevelFilter.lua
+Util\CharacterSort.lua
+UI\Theme.lua
+UI\Input.lua
+UI\ItemConfirmation.lua
+UI\ItemPicker.lua
+UI\IconPicker.lua
+UI\BusinessItemActions.lua
+UI\AccountView.lua
+UI\AccountPages\Overview.lua
+UI\AccountPages\CharacterArchive.lua
+UI\AccountPages\SettingsWorkbench.lua
+UI\AccountPages\Help.lua
+UI\AccountPages\About.lua
+UI\Entry.lua
+UI\EntryBar.lua
+Runtime\Lifecycle.lua
+
+## X-Yibo-Target: Retail

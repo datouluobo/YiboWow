@@ -80,6 +80,8 @@ view.frame.preview, view.previewPageID = true, 'A'; view:NotifyPageChanged('A');
 local loaded, loads, callbacks = {}, 0, 0
 GetItemInfo = function(id) return loaded[id] end
 C_Item = { RequestLoadItemDataByID = function() loads = loads + 1 end }
+InCombatLockdown = InCombatLockdown or function() return false end
+dofile("_NonRelease/CoreIdentityDomainsR1/LoadClient.lua")
 dofile('YiboCore/Runtime/ItemResolver.lua')
 local resolverFrame = frames[#frames]
 assert(not resolverFrame.scripts.OnUpdate)

@@ -126,7 +126,7 @@ local function ShowCharacterDeleteConfirmation(characterID)
     lines[#lines + 1] = ""
     lines[#lines + 1] = Core:Text("CORE.ACCOUNT_WIDE_SETTINGS_AND_THE_GAME_CHARACTER")
     lines[#lines + 1] = Core:Text("CORE.DELETION_CANNOT_BE_UNDONE")
-    StaticPopup_Show(DELETE_POPUP, table.concat(lines, "\n"), nil, characterID)
+    Core.Client:ShowPopup(DELETE_POPUP, table.concat(lines, "\n"), nil, characterID)
 end
 
 local function ArchiveFieldText(character, field, snapshot)

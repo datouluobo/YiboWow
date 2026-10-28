@@ -4,14 +4,13 @@ local CharacterCleanup = {}
 Core.CharacterCleanup = CharacterCleanup
 CharacterCleanup._owners = CharacterCleanup._owners or {}
 CharacterCleanup.MAX_HISTORY = 100
-CharacterCleanup.EXPECTED_OWNERS = Core.Locale:Bind(function() return {
-    YiboAltoBoss = Core:Text("CORE.BOSS_TRACKER_CHARACTER_RECORDS"),
-    YiboLegendary = Core:Text("CORE.LEGENDARY_PATHS_CHARACTER_PROGRESS"),
-    YiboQuestBlocker = Core:Text("CORE.QUEST_BLOCKER_PERSONAL_SETTINGS"),
-    YiboVault = Core:Text("CORE.ACCOUNT_INVENTORY_SNAPSHOTS"),
-    YiboMail = Core:Text("CORE.MAIL_SNAPSHOTS_AND_BACKLOG_CACHE"),
-    YiboReputation = Core:Text("CORE.REPUTATION_CHARACTER_SNAPSHOTS"),
-} end)
+CharacterCleanup.EXPECTED_OWNERS = Core.Locale:Bind(function()
+    local target, owners = Core._private and Core._private.target, {}
+    for name, policy in pairs(target and target.addons or {}) do
+        if policy.cleanupKey then owners[name] = Core:Text(policy.cleanupKey) end
+    end
+    return owners
+end)
 
 local function Copy(value)
     return Core.Defaults:Copy(value)
@@ -31,8 +30,21 @@ local function KnownOwners()
     local db = Core.Database:GetDB()
     db.characterDataOwners = type(db.characterDataOwners) == "table" and db.characterDataOwners or {}
     local result = {}
-    for name, enabled in pairs(db.characterDataOwners) do if type(name) == "string" and name ~= "" and enabled == true then result[name] = true end end
+    local function Add(name)
+        if type(name) == "string" and name ~= "" then result[name] = true end
+    end
+    for name, enabled in pairs(db.characterDataOwners) do if enabled == true then Add(name) end end
     for name in pairs(CharacterCleanup.EXPECTED_OWNERS) do result[name] = true end
+    for name in pairs(CharacterCleanup._owners) do Add(name) end
+    -- Older tombstones lack requiredOwners. Acknowledgements and failures are
+    -- still evidence of an owner, even if its current target policy changed.
+    for _, record in pairs(db.characterDeletionHistory or {}) do
+        if type(record) == "table" then
+            for _, field in ipairs({ "requiredOwners", "acknowledgedOwners", "failures" }) do
+                if type(record[field]) == "table" then for name in pairs(record[field]) do Add(name) end end
+            end
+        end
+    end
     return result
 end
 
@@ -63,11 +75,12 @@ end
 
 local function PruneHistory()
     local records = SortedHistory()
+    local owners = KnownOwners()
     local removeCount = math.max(0, #records - CharacterCleanup.MAX_HISTORY)
     for _, record in ipairs(records) do
         if removeCount <= 0 then break end
         local safe = type(record.acknowledgedOwners) == "table"
-        for addonName in pairs(KnownOwners()) do
+        for addonName in pairs(owners) do
             if not safe or record.acknowledgedOwners[addonName] ~= true then safe = false; break end
         end
         if safe and not next(record.failures or {}) then
@@ -190,6 +203,7 @@ function CharacterCleanup:Delete(characterID)
         deletedAt = now,
         acknowledgedOwners = {},
         failures = {},
+        requiredOwners = KnownOwners(),
     }
     History()[deletionID] = record
 

@@ -3,6 +3,8 @@
 首批版本：YiboCore **1.6.1**＋YiboCurrency **0.9.1**。Core API v7 保持 v5/v6 兼容。
 新业务插件须保留 `.toc` 的 `RequiredDeps: YiboCore`，并在注册页面或创建控件前检查 `CheckAPIVersion(7)` 和所需方法。能力版本为 `basic-input:1`、`item-resolver:1`、`item-picker:1`。
 
+2026-10-27收尾：上文版本为首发门槛，当前共享底座为API13。新增或本轮触及语言服务的消费方同时检查Core就绪、API13与localization:1；既有未触及插件不统一提版本。当前实现提供item-picker:2，单项保持v1兼容，批量multiple模式须检查v2。完整基线与失败行为见[共享底座契约](API-v13-R1共享底座兼容与失败契约.md)。
+
 ## 基础输入
 
 `Core.UITheme:CreateInput(parent, options)` 返回 EditBox，复用 Theme 字体、颜色、间距和尺寸。
@@ -24,11 +26,13 @@
 
 - `allowID`、`allowLink` 默认开启，`allowName` 默认关闭。
 - `candidates` 是物品 ID／`{ itemID, name/title }` 数组或返回数组的函数；不接受 NPC、任务等其它身份。
-- `includeBags` 显式启用当前随身背包 0–4，不扫描银行或其它插件私有目录。
+- `includeBags` 显式启用本目标支持的随身范围：Mists为0–4；Forever为0–4，仅原生Enum明确报告ReagentBag=5时包含5。不扫描银行或其它插件私有目录；读取中断返回nil及错误，不将部分候选宣称为完整搜索结果。
+- R1-09为背包读取失败使用专用本地化提示，和物品缓存加载失败分别展示；返回形状及能力版本不变，调用方不按消息文字判断业务状态。
 - `match` 默认精确匹配，`contains` 为子串匹配。按 ID 去重并排序，多个候选必须由调用方明确选择。
 - 目录名称可以用于匹配，但保存前仍须确认客户端真实信息。
 
 `GetInfo(itemID)` 返回当前信息，状态为 `ready/unloaded/loading/failed`。
+2026-10-27 R1-05／06补充：查询走目标原生边界，追加`availability=known/unloaded/error/unavailable`；异常、非法类型、秘密值不会成为ready缓存。该字段为兼容性追加，API／能力版本不变。原生事件不可订阅时仍有界轮询，原生请求抛错返回失败；无效或无限timeout采用8秒。具体目标策略与离线／实机边界见[实施验收](R1-05-06-公共物品与UI原生边界实施验收.md)。
 `Request(itemID, callback, { retry, timeout })` 返回带 `Cancel()` 的句柄，回调为 `(info, errorMessage)`。缓存就绪时同步回调；未缓存时同 ID 合并请求，默认 8 秒超时。失败后只有显式 `retry=true` 才再次请求，无自动循环。取消仅影响自己的回调。UI 调用方仍须用组件代次和可见状态检查过期结果。
 
 ## 可配置选择器

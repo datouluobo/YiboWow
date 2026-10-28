@@ -1,0 +1,74 @@
+## Interface: 16001
+## Title: |cff20e070[Yibo]|r YiboCore - Account UI Framework
+## Title-zhCN: |cff20e070[Yibo]|r YiboCore
+## Title-zhTW: |cff20e070[Yibo]|r YiboCore
+## Notes: Forever development build: GUID roster, profession profiles, isolated saves and account window. Client acceptance pending.
+## Notes-zhCN: 无限开发版：GUID角色目录、专业档案、独立存档与账号窗口，待客户端验收。
+## Author: YiboSoft
+## Version: 0.2.0
+## IconTexture: Interface\AddOns\YiboCore\Media\YiboCoreIcon-128
+## SavedVariables: YiboCoreForeverDB
+## OptionalDeps: LibDataBroker-1.1
+## LoadOnDemand: 0
+
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Bootstrap.lua
+Forever\Target.lua
+Forever\Metadata.lua
+Util\Defaults.lua
+Runtime\Capabilities.lua
+Runtime\Locale.lua
+Locales\zhCN.lua
+Locales\enUS.lua
+Runtime\Registry.lua
+Runtime\SettingsRegistry.lua
+Runtime\Events.lua
+Runtime\Client.lua
+Common\ClientReaders.lua
+Forever\Client.lua
+Common\ClientSurface.lua
+Forever\Surface.lua
+Runtime\Contracts.lua
+Runtime\DataDomains.lua
+Runtime\Resources.lua
+Runtime\ItemResolver.lua
+Runtime\Fields.lua
+Runtime\ArchiveFields.lua
+Runtime\Commands.lua
+Runtime\EntryConfig.lua
+Data\Migrations.lua
+Data\Validation.lua
+Data\Database.lua
+Data\Characters.lua
+Data\CharacterCleanup.lua
+Data\DomainStore.lua
+Common\ProfessionDomain.lua
+Data\Domains\Identity.lua
+Data\Domains\Location.lua
+Forever\Professions.lua
+Forever\Fields.lua
+Data\Fields\CharacterArchive.lua
+Data\AddonCatalog.lua
+Runtime\AddonStatus.lua
+Data\Profile.lua
+Util\LevelFilter.lua
+Util\CharacterSort.lua
+UI\Theme.lua
+UI\Input.lua
+UI\ItemConfirmation.lua
+UI\ItemPicker.lua
+UI\IconPicker.lua
+UI\BusinessItemActions.lua
+UI\AccountView.lua
+UI\AccountPages\Overview.lua
+UI\AccountPages\CharacterArchive.lua
+UI\AccountPages\SettingsWorkbench.lua
+UI\AccountPages\Help.lua
+UI\AccountPages\About.lua
+UI\Entry.lua
+UI\EntryBar.lua
+Runtime\Lifecycle.lua
+
+## X-Yibo-Target: Forever

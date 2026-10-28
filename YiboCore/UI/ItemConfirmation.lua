@@ -27,11 +27,11 @@ function Confirmation:Show(options)
     function data:Cancel()
         if self.finished then return end
         self.finished = true
-        if Confirmation.active == self then StaticPopup_Hide("YIBO_CORE_ITEM_CONFIRM"); Confirmation.active = nil end
+        if Confirmation.active == self then Core.Client:HidePopup("YIBO_CORE_ITEM_CONFIRM"); Confirmation.active = nil end
         if self.OnCancel then self.OnCancel() end
     end
     self.active = data
-    local popup = StaticPopup_Show("YIBO_CORE_ITEM_CONFIRM", options.text, nil, data)
+    local popup = Core.Client:ShowPopup("YIBO_CORE_ITEM_CONFIRM", options.text, nil, data)
     if not popup then data:Cancel(); return nil end
     return data
 end

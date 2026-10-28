@@ -11,16 +11,10 @@ local function LoadIcons()
         elseif type(icon) ~= "number" or icon <= 0 then return end
         if not known[icon] then known[icon] = true; icons[#icons + 1] = icon end
     end
-    for _, name in ipairs({ "GetLooseMacroIcons", "GetLooseMacroItemIcons", "GetMacroIcons", "GetMacroItemIcons" }) do
-        if type(_G[name]) == "function" then
-            local result = {}
-            if pcall(_G[name], result) then for _, icon in ipairs(result) do Add(icon) end end
-        end
-    end
-    if #icons == 0 and GetNumMacroIcons and GetMacroIconInfo then
-        local ok, count = pcall(GetNumMacroIcons)
-        if ok then for index = 1, count do local valid, icon = pcall(GetMacroIconInfo, index); if valid then Add(icon) end end end
-    end
+    local native, state = Core.Client:ReadBuiltinIcons()
+    for _, icon in ipairs(native or {}) do Add(icon) end
+    -- Do not retain a partial catalog after a native error.
+    if state ~= "known" then icons, known = nil, nil; return end
     if #icons == 0 then icons, known = nil, nil end -- Retry when client data becomes ready.
 end
 function Core:IsBuiltinIcon(icon)

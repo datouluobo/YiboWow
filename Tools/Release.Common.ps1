@@ -38,14 +38,28 @@ function Get-YiboReleaseProfile {
     $targetID = @($config.Targets.Keys | Where-Object { $_ -ieq $Target })[0]
     $addonID = @($config.Addons.Keys | Where-Object { $_ -ieq $Addon })[0]
     $root = [IO.Path]::GetFullPath((Join-Path $WorkspaceRoot $addonID))
-    $standardToc = "${addonID}_${targetID}.toc"
+    $standardToc = if ($targetID -eq 'Retail') { "${addonID}_Mainline.toc" } else { "${addonID}_${targetID}.toc" }
     if ($targetProfile.SourceToc -cne $standardToc -and
         -not ($targetID -eq 'Mists' -and $targetProfile.SourceToc -ceq "$addonID.toc")) {
         throw "Source TOC must follow the product naming standard: $standardToc"
     }
     $tocPath = Resolve-YiboSourceFile $root $targetProfile.SourceToc
+    if ($targetID -eq 'Retail') {
+        if (Test-Path -LiteralPath (Join-Path $root "${addonID}_Retail.toc")) {
+            throw 'Retail source must use only the measured Mainline TOC; remove the redundant Retail TOC after review.'
+        }
+        if ($targetProfile.ContainsKey('DevelopmentToc')) {
+            throw 'Retail must use one Mainline source TOC without a DevelopmentToc alias.'
+        }
+    }
     if ($targetProfile.LoadToc -cne "$addonID.toc") { throw 'Independent packages must use the default addon TOC name.' }
     $tocText = [IO.File]::ReadAllText($tocPath)
+    if ($targetProfile.ContainsKey('DevelopmentToc')) {
+        $developmentPath = Resolve-YiboSourceFile $root $targetProfile.DevelopmentToc
+        if ([IO.File]::ReadAllText($developmentPath) -cne $tocText) {
+            throw 'Native development TOC must exactly match its authoritative source TOC.'
+        }
+    }
     $interfaceText = Read-YiboRequiredValue $tocText '^## Interface:\s*([^\r\n]+)' 'TOC Interface'
     $interfaces = @($interfaceText.Split(',') | ForEach-Object { [int]$_.Trim() } | Sort-Object -Unique)
     $expected = @($targetProfile.Interfaces | Sort-Object -Unique)
@@ -53,12 +67,18 @@ function Get-YiboReleaseProfile {
     $versionFile = if ($targetProfile.ContainsKey('VersionFile')) { $targetProfile.VersionFile } else { $addonProfile.VersionFile }
     $versionText = [IO.File]::ReadAllText((Resolve-YiboSourceFile $root $versionFile))
     $releaseVersion = Read-YiboRequiredValue $versionText $addonProfile.VersionPattern 'source version'
+    $sourceVersionText = [IO.File]::ReadAllText((Resolve-YiboSourceFile $root $addonProfile.VersionFile))
+    $sourceVersion = Read-YiboRequiredValue $sourceVersionText $addonProfile.VersionPattern 'source archive version'
     $apiVersion = if ($addonProfile.ContainsKey('APIPattern')) {
-        [int](Read-YiboRequiredValue $versionText $addonProfile.APIPattern 'source API version')
+        $apiText = if ($addonProfile.ContainsKey('APIFile')) {
+            [IO.File]::ReadAllText((Resolve-YiboSourceFile $root $addonProfile.APIFile))
+        } else { $versionText }
+        [int](Read-YiboRequiredValue $apiText $addonProfile.APIPattern 'source API version')
     } else { $null }
     $sourceIncludesAPI = $addonProfile.ContainsKey('SourceVersionIncludesAPI') -and $addonProfile.SourceVersionIncludesAPI
     if ($addonProfile.VersionIncludesAPI -and $null -eq $apiVersion) { throw 'An API-bearing version requires an explicit public API declaration.' }
     $version = if ($addonProfile.VersionIncludesAPI -and -not $sourceIncludesAPI) { "$releaseVersion-api$apiVersion" } else { $releaseVersion }
+    if ($addonProfile.VersionIncludesAPI -and -not $sourceIncludesAPI) { $sourceVersion += "-api$apiVersion" }
     if ($addonProfile.VersionIncludesAPI -and $version -notmatch ("-api" + $apiVersion + '$')) { throw 'Source version and public API suffix differ.' }
     $tocVersion = Read-YiboRequiredValue $tocText '^## Version:\s*([^\r\n]+)' 'TOC version'
     if ($tocVersion -ne $version) { throw "TOC version '$tocVersion' does not match source version '$version'." }
@@ -72,7 +92,7 @@ function Get-YiboReleaseProfile {
     return [pscustomobject]@{
         Config = $config; Addon = $addonID; Target = $targetID; Root = $root
         Definition = $addonProfile; Client = $targetProfile; Slug = $config.Targets[$targetID].Slug
-        TocPath = $tocPath; TocText = $tocText; Version = $version; APIVersion = $apiVersion
+        TocPath = $tocPath; TocText = $tocText; Version = $version; SourceVersion = $sourceVersion; APIVersion = $apiVersion
         RequiredCoreAPI = $requiredCoreAPI; Interfaces = $interfaces
     }
 }
@@ -89,7 +109,7 @@ function Get-YiboSourceTargetLabel {
 }
 
 function Get-YiboPackageNames {
-    param([string]$Addon, [string]$Slug, [string]$Version, $PublicAPI, [bool]$VersionIncludesAPI, [string]$SourceHash, [object[]]$SourceTargets)
+    param([string]$Addon, [string]$Slug, [string]$Version, $PublicAPI, [bool]$VersionIncludesAPI, [string]$SourceHash, [object[]]$SourceTargets, [string]$SourceVersion)
     if ($Addon -notmatch '^Yibo[A-Za-z]+$' -or $Slug -notmatch '^[a-z]+(?:-[a-z]+)*$' -or
         $Version -notmatch '^\d+\.\d+(?:\.\d+)?(?:[-+][0-9A-Za-z.-]+)*$' -or $SourceHash -notmatch '^[0-9a-f]{64}$') {
         throw 'Invalid package name inputs.'
@@ -104,9 +124,13 @@ function Get-YiboPackageNames {
         throw 'API suffix requires an explicit public API declaration.'
     }
     $sourceTargetLabel = Get-YiboSourceTargetLabel $SourceTargets
+    if (-not $SourceVersion) { $SourceVersion = $Version }
+    if ($SourceVersion -notmatch '^\d+\.\d+(?:\.\d+)?(?:[-+][0-9A-Za-z.-]+)*$') { throw 'Invalid source archive version.' }
+    $sourcePackageVersion = $SourceVersion
+    if ($null -ne $PublicAPI -and -not $VersionIncludesAPI) { $sourcePackageVersion += "-api$PublicAPI" }
     return [pscustomobject]@{
         CurseForge = "$Addon-$Slug-v$packageVersion-curseforge.zip"
-        GitHub = "$Addon-$sourceTargetLabel-v$packageVersion-src.$($SourceHash.Substring(0, 12))-github.zip"
+        GitHub = "$Addon-$sourceTargetLabel-v$sourcePackageVersion-src.$($SourceHash.Substring(0, 12))-github.zip"
     }
 }
 
@@ -137,7 +161,7 @@ function Get-YiboPublicEntries {
     foreach ($file in (Get-ChildItem -LiteralPath $Root -Recurse -File | Sort-Object FullName)) {
         $relative = [IO.Path]::GetRelativePath($Root, $file.FullName).Replace('\', '/')
         if ($relative -match '(^|/)(?:_NonRelease|\.git|\.svn|\.hg|Builds|dist|tmp|__pycache__|\.pytest_cache)/' -or
-            $file.Name -eq 'AGENTS.md' -or $file.Extension -in @('.pyc', '.pyo') -or $file.Name -match '\.building(?:-|$)') { continue }
+            $file.Name -in @('AGENTS.md', '_audit_worklist.tsv') -or $file.Extension -in @('.pyc', '.pyo') -or $file.Name -match '\.building(?:-|$)') { continue }
         [pscustomobject]@{ Relative = $relative; Source = (Resolve-YiboSourceFile $Root $relative); Content = $null }
     }
 }
@@ -151,21 +175,53 @@ function Get-YiboSourceDigest {
     return [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
 }
 
+function Get-YiboLegacyIndexedVersion {
+    param([string]$Root, $Definition, [string]$Target)
+    if ($Target -notin $Definition.SupportedTargets) { return $null }
+    if ($Definition.SourceTocs.Count -ne $Definition.TocTargets.Count -or
+        $Definition.SourceTocs.Count -ne $Definition.Interfaces.Count -or
+        (@($Definition.TocTargets | Sort-Object -Unique) -join ',') -ne (@($Definition.SupportedTargets | Sort-Object -Unique) -join ',')) {
+        throw 'Legacy version index requires an exact declared target/TOC mapping.'
+    }
+    $versions = @()
+    for ($index = 0; $index -lt $Definition.SourceTocs.Count; $index++) {
+        $source = Resolve-YiboSourceFile $Root $Definition.SourceTocs[$index]
+        $text = [IO.File]::ReadAllText($source)
+        $interface = [int](Read-YiboRequiredValue $text '^## Interface:\s*(\d+)\s*$' 'indexed legacy Interface')
+        if ($interface -ne $Definition.Interfaces[$index]) { throw 'Legacy version index Interface differs from its declared bundle mapping.' }
+        $versions += (Read-YiboRequiredValue $text '^## Version:\s*([^\r\n]+)' 'indexed legacy version').TrimStart('v', 'V')
+    }
+    $unique = @($versions | Select-Object -Unique)
+    if ($unique.Count -ne 1) { throw 'Legacy version index TOC versions differ.' }
+    # This is the bundle's declared source version, not current-client runtime compatibility.
+    return $unique[0]
+}
+
 function Get-YiboPackagedAddonVersions {
     param([string]$WorkspaceRoot, $Profile)
     $versions = [ordered]@{}
     foreach ($directory in (Get-ChildItem -LiteralPath $WorkspaceRoot -Directory -Filter 'Yibo*' | Sort-Object Name)) {
         if ($directory.Name -eq 'YiboCore') { continue }
+        if ($Profile.Config.ContainsKey('LegacyBundles') -and $Profile.Config.LegacyBundles.ContainsKey($directory.Name)) {
+            $version = Get-YiboLegacyIndexedVersion $directory.FullName $Profile.Config.LegacyBundles[$directory.Name] $Profile.Target
+            if ($null -ne $version) { $versions[$directory.Name] = $version }
+            continue
+        }
         $toc = $null
         if ($Profile.Config.Addons.ContainsKey($directory.Name) -and $Profile.Config.Addons[$directory.Name].Targets.ContainsKey($Profile.Target)) {
             $toc = Join-Path $directory.FullName $Profile.Config.Addons[$directory.Name].Targets[$Profile.Target].SourceToc
-        } elseif ($Profile.Target -eq 'Mists') {
-            $toc = Join-Path $directory.FullName ($directory.Name + '_Mists.toc')
-            if (-not (Test-Path -LiteralPath $toc -PathType Leaf)) { $toc = Join-Path $directory.FullName ($directory.Name + '.toc') }
+        } else {
+            $toc = Join-Path $directory.FullName ($directory.Name + '_' + $Profile.Target + '.toc')
+            if (-not (Test-Path -LiteralPath $toc -PathType Leaf) -and $Profile.Target -eq 'Mists') { $toc = Join-Path $directory.FullName ($directory.Name + '.toc') }
         }
         if (-not $toc -or -not (Test-Path -LiteralPath $toc -PathType Leaf)) { continue }
         $text = [IO.File]::ReadAllText($toc)
         if ($Profile.Target -eq 'Mists' -and $text -notmatch '(?m)^## Interface:\s*5\d{4}(?:\s|,|$)') { continue }
+        if ($Profile.Target -ne 'Mists') {
+            $interfaceText = Read-YiboRequiredValue $text '^## Interface:\s*([^\r\n]+)' 'indexed addon interface'
+            $interfaces = @($interfaceText.Split(',') | ForEach-Object { [int]$_.Trim() })
+            if (-not @($interfaces | Where-Object { $_ -in $Profile.Interfaces }).Count) { continue }
+        }
         $versions[$directory.Name] = (Read-YiboRequiredValue $text '^## Version:\s*([^\r\n]+)' 'indexed addon version').TrimStart('v', 'V')
     }
     return $versions
@@ -234,8 +290,10 @@ function Publish-YiboPackages {
                 }
                 if ($file.Name.StartsWith($Profile.Addon + '-universal-v', [StringComparison]::OrdinalIgnoreCase) -or
                     $file.Name.EndsWith('-universal-curseforge.zip', [StringComparison]::OrdinalIgnoreCase)) { $fileTarget = 'Universal' }
-                $legacyPattern = '^' + [regex]::Escape($Profile.Addon) + '-v\d+\.\d+\.\d+(?:-(?:test|alpha|beta|rc)(?:[.-][0-9A-Za-z]+)*)?(?:-api\d+)?-curseforge\.zip$'
-                if ($null -eq $fileTarget -and $file.Name -match $legacyPattern) { $fileTarget = 'Mists' }
+                $legacyPattern = '^' + [regex]::Escape($Profile.Addon) + '-v\d+\.\d+(?:\.\d+)?(?:-(?:test|alpha|beta|rc)(?:[.-][0-9A-Za-z]+)*)?(?:-api\d+)?-curseforge\.zip$'
+                if ($null -eq $fileTarget -and $file.Name -match $legacyPattern) {
+                    $fileTarget = if ($Profile.Config.ContainsKey('LegacyBundles') -and $Profile.Config.LegacyBundles.ContainsKey($Profile.Addon)) { 'Universal' } else { 'Mists' }
+                }
                 if ($fileTarget -eq $Profile.Target) { $selected = $true }
             }
         }

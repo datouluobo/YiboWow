@@ -52,3 +52,7 @@ Currency在回放时保留墓碑之后、时间有效的本地重采快照，清
 ## 验证
 
 `_NonRelease/CurrencyMigration/CoreSpec.lua` 23项涵盖字段批量、副本、缺失、冲突、静态兼容、晚注册、注销、所有者持久化、冷启动及软上限留存。MigrationSpec55项、RetentionSpec29项覆盖实际Currency接入；声望迁移既有126项通过，说明该已验证旧消费者继续兼容。其它所有者仅静态发现，不推定已完成客户端或能力2特性验收。
+
+## R1兼容性复核（2026-10-27）
+
+API13、character-archive-providers:1与character-cleanup:2保持。目标期望owner与存档、历史owner合并，新历史可选requiredOwners而旧历史兼容；跨目标已知owner不丢弃，pending仍须重放确认。档案字段聚合、冲突与注销按原契约；页面注销后的实例和预览由Core清理。当前验证范围见[共享底座契约](API-v13-R1共享底座兼容与失败契约.md)及[R1-09验收](R1-09-文案与契约文档收尾验收.md)，不据此增加业务接入或已发布声明。

@@ -213,14 +213,14 @@ function Core:CreateItemPicker(parent, config)
     end
     function picker:ReadCursor()
         if self.busy or self.unbound then return end
-        local kind, itemID = GetCursorInfo()
-        if kind ~= "item" then self:Feedback(Core:Text("CORE.DRAG_AN_ITEM_HERE_FROM_YOUR_BAGS")); return end
+        local itemID = Core.Client:ReadCursorItem()
+        if not itemID then self:Feedback(Core:Text("CORE.DRAG_AN_ITEM_HERE_FROM_YOUR_BAGS")); return end
         local parsed = Core.ItemResolver:Parse(itemID, { allowName = false })
         if not parsed then self:Feedback(Core:Text("CORE.INVALID_ITEM_DROP")); return end
         local previous = self.input:GetText():match("^%s*(.-)%s*$")
         self:SetValue(self.config.multiple and previous ~= "" and (previous .. ";" .. itemID) or itemID)
         -- Cursor is cleared only after a valid item identity is captured. No item action is performed.
-        if ClearCursor then ClearCursor() end
+        Core.Client:ClearItemCursor(itemID)
         self:Resolve(self.config.dropMode)
     end
     function picker:Layout(width)

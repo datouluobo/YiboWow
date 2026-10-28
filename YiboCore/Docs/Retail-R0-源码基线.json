@@ -1,0 +1,1767 @@
+{
+  "schemaVersion": 1,
+  "auditDate": "2026-10-27",
+  "scope": "YiboCore R0 static audit; runtime code and build configuration unchanged",
+  "versions": {
+    "Mists": {
+      "version": "1.12.9",
+      "api": 13,
+      "interface": 50504,
+      "schema": 11,
+      "sourceToc": "YiboCore_Mists.toc",
+      "savedVariable": "YiboCoreDB"
+    },
+    "Forever": {
+      "version": "0.2.0",
+      "api": 13,
+      "interface": 16001,
+      "schema": 11,
+      "sourceToc": "YiboCore_Forever.toc",
+      "savedVariable": "YiboCoreForeverDB"
+    },
+    "Retail": {
+      "status": "no-core-target-implementation",
+      "version": null,
+      "api": null,
+      "interface": null,
+      "sourceToc": null,
+      "savedVariable": null
+    }
+  },
+  "counts": {
+    "auditedSourceFiles": 62,
+    "luaFiles": 59,
+    "tocFiles": 3,
+    "xmlFiles": 0,
+    "MistsLoadedLua": 51,
+    "ForeverLoadedLua": 49,
+    "loadedUnion": 53,
+    "sharedLoadedLua": 47,
+    "retiredLua": 5,
+    "hintLua": 1,
+    "activeCapabilityUnion": 34,
+    "eachExistingTargetCapabilities": 33
+  },
+  "targets": {
+    "Mists": [
+      "Libs/LibStub/LibStub.lua",
+      "Libs/CallbackHandler-1.0/CallbackHandler-1.0.lua",
+      "Libs/LibDataBroker-1.1/LibDataBroker-1.1.lua",
+      "Bootstrap.lua",
+      "Util/Defaults.lua",
+      "Runtime/Capabilities.lua",
+      "Runtime/Locale.lua",
+      "Locales/zhCN.lua",
+      "Locales/enUS.lua",
+      "Runtime/Registry.lua",
+      "Runtime/SettingsRegistry.lua",
+      "Runtime/Events.lua",
+      "Mists/Calendar.lua",
+      "Runtime/Contracts.lua",
+      "Runtime/DataDomains.lua",
+      "Runtime/Resources.lua",
+      "Runtime/ItemResolver.lua",
+      "Runtime/Fields.lua",
+      "Runtime/ArchiveFields.lua",
+      "Runtime/Commands.lua",
+      "Runtime/EntryConfig.lua",
+      "Data/Migrations.lua",
+      "Data/Database.lua",
+      "Data/Characters.lua",
+      "Data/CharacterCleanup.lua",
+      "Data/DomainStore.lua",
+      "Data/Domains/Identity.lua",
+      "Data/Domains/Professions.lua",
+      "Data/Domains/Equipment.lua",
+      "Data/Domains/Location.lua",
+      "Data/Domains/Specialization.lua",
+      "Data/Fields/CharacterArchive.lua",
+      "Data/AddonCatalog.lua",
+      "Runtime/AddonStatus.lua",
+      "Data/Profile.lua",
+      "Util/LevelFilter.lua",
+      "Util/CharacterSort.lua",
+      "UI/Theme.lua",
+      "UI/Input.lua",
+      "UI/ItemConfirmation.lua",
+      "UI/ItemPicker.lua",
+      "UI/IconPicker.lua",
+      "UI/BusinessItemActions.lua",
+      "UI/AccountView.lua",
+      "UI/AccountPages/Overview.lua",
+      "UI/AccountPages/CharacterArchive.lua",
+      "UI/AccountPages/SettingsWorkbench.lua",
+      "UI/AccountPages/Help.lua",
+      "UI/AccountPages/About.lua",
+      "UI/Entry.lua",
+      "UI/EntryBar.lua"
+    ],
+    "Forever": [
+      "Libs/LibStub/LibStub.lua",
+      "Libs/CallbackHandler-1.0/CallbackHandler-1.0.lua",
+      "Libs/LibDataBroker-1.1/LibDataBroker-1.1.lua",
+      "Bootstrap.lua",
+      "Forever/Target.lua",
+      "Util/Defaults.lua",
+      "Runtime/Capabilities.lua",
+      "Runtime/Locale.lua",
+      "Locales/zhCN.lua",
+      "Locales/enUS.lua",
+      "Runtime/Registry.lua",
+      "Runtime/SettingsRegistry.lua",
+      "Runtime/Events.lua",
+      "Runtime/Contracts.lua",
+      "Runtime/DataDomains.lua",
+      "Runtime/Resources.lua",
+      "Runtime/ItemResolver.lua",
+      "Runtime/Fields.lua",
+      "Runtime/ArchiveFields.lua",
+      "Runtime/Commands.lua",
+      "Runtime/EntryConfig.lua",
+      "Data/Migrations.lua",
+      "Data/Database.lua",
+      "Data/Characters.lua",
+      "Data/CharacterCleanup.lua",
+      "Data/DomainStore.lua",
+      "Data/Domains/Identity.lua",
+      "Data/Domains/Location.lua",
+      "Forever/Professions.lua",
+      "Data/Fields/CharacterArchive.lua",
+      "Data/AddonCatalog.lua",
+      "Runtime/AddonStatus.lua",
+      "Data/Profile.lua",
+      "Util/LevelFilter.lua",
+      "Util/CharacterSort.lua",
+      "UI/Theme.lua",
+      "UI/Input.lua",
+      "UI/ItemConfirmation.lua",
+      "UI/ItemPicker.lua",
+      "UI/IconPicker.lua",
+      "UI/BusinessItemActions.lua",
+      "UI/AccountView.lua",
+      "UI/AccountPages/Overview.lua",
+      "UI/AccountPages/CharacterArchive.lua",
+      "UI/AccountPages/SettingsWorkbench.lua",
+      "UI/AccountPages/Help.lua",
+      "UI/AccountPages/About.lua",
+      "UI/Entry.lua",
+      "UI/EntryBar.lua"
+    ]
+  },
+  "files": {
+    "Bootstrap.lua": {
+      "sha256": "81a037f391e91c9b3c1719c406417f4bc8fd237bd3bc576cc5503ffeba754926",
+      "lines": 73,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "Common/TocHint.lua": {
+      "sha256": "95dbc6893249589b62562aeeb08d1d71499c238ba95963f4289d49e28aeb713b",
+      "lines": 8,
+      "targets": [],
+      "capabilities": []
+    },
+    "Data/AddonCatalog.lua": {
+      "sha256": "1fdaebd2d72ad914b3d610c60fd83eac7e2305260f92cc70845f9a8fccdc7825",
+      "lines": 149,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "addon-catalog",
+          "1"
+        ]
+      ]
+    },
+    "Data/CharacterCleanup.lua": {
+      "sha256": "d754bcd4510a607dbdf23fb88ed5d0ab5ca231b6994a4f7768cdf5489e33f2fb",
+      "lines": 240,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "character-cleanup",
+          "2"
+        ]
+      ]
+    },
+    "Data/Characters.lua": {
+      "sha256": "ed3415bedf098bf37f19e11f5defc702b1963b1e3c42716315c69ff0760bf237",
+      "lines": 389,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "characters",
+          "1"
+        ],
+        [
+          "character-identity",
+          "1"
+        ],
+        [
+          "character-name-format",
+          "1"
+        ]
+      ]
+    },
+    "Data/Database.lua": {
+      "sha256": "4eb165fe82f4a1d7fca7bb76c76cc2512795beaba6f7f78bbb1d5cafc6c86000",
+      "lines": 125,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "database",
+          "1"
+        ]
+      ]
+    },
+    "Data/Domains/Economy.lua": {
+      "sha256": "0dbf0ea7d7eeba9153cd2774cc31b5cfb19b42f1732960c7bfa9d33f47a696d3",
+      "lines": 66,
+      "targets": [],
+      "capabilities": []
+    },
+    "Data/Domains/EconomyItems.lua": {
+      "sha256": "8d9a3ac24d98bc0d71053c438bc87a34fb783e58325fb3face999841d4014316",
+      "lines": 74,
+      "targets": [],
+      "capabilities": []
+    },
+    "Data/Domains/Equipment.lua": {
+      "sha256": "9f4cda17bbf0ca6e0a681fa962532351cfd7f19a2d46f4824f71139952906fae",
+      "lines": 20,
+      "targets": [
+        "Mists"
+      ],
+      "capabilities": []
+    },
+    "Data/Domains/Identity.lua": {
+      "sha256": "b44d2ebe4d56e71260dda4de0dd22def554ed4f0b4150b09df615bf6ba89bc8b",
+      "lines": 29,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "Data/Domains/Location.lua": {
+      "sha256": "b164741459cee1ff10120ff0316017c50d29339e6a522f62464ef04be7b638ae",
+      "lines": 18,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "Data/Domains/Professions.lua": {
+      "sha256": "242b6b4c2b7a7c1ec1cf3ebaea25780f2338269937dc62a6b387e0d54099a6f8",
+      "lines": 74,
+      "targets": [
+        "Mists"
+      ],
+      "capabilities": []
+    },
+    "Data/Domains/Reputation.lua": {
+      "sha256": "61a6277486e20080e64d81879f011024a5c001a645d835bc5e6ad1d71ed27805",
+      "lines": 123,
+      "targets": [],
+      "capabilities": []
+    },
+    "Data/Domains/Specialization.lua": {
+      "sha256": "e36c96f992f218848eb6462beaed73b4eb45a382605431907a6b937addff5688",
+      "lines": 17,
+      "targets": [
+        "Mists"
+      ],
+      "capabilities": []
+    },
+    "Data/DomainStore.lua": {
+      "sha256": "ead30ca9c41687c52d98998c82fa62eb2f86c992d741c97d8da2d98979a5aa40",
+      "lines": 66,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "domain-store",
+          "1"
+        ]
+      ]
+    },
+    "Data/Fields/CharacterArchive.lua": {
+      "sha256": "9f802f2f6f3f5d7caeeaf44fb485d282f7186e6303ba1f37b8f880fc5050b3af",
+      "lines": 45,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "Data/Migrations.lua": {
+      "sha256": "f43c2cc25531a4a79ee27cb0d72f2937b6f615df4fd762cc3201b099e44bac54",
+      "lines": 179,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "migrations",
+          "1"
+        ]
+      ]
+    },
+    "Data/Profile.lua": {
+      "sha256": "595fed8d2872183d6a653853695cf67f895ff81eb438048141480f2ac663c4a7",
+      "lines": 78,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "character-profile",
+          "1"
+        ]
+      ]
+    },
+    "Data/Resources/Economy.lua": {
+      "sha256": "b3de7422652d35075071c871f6600f901d72393f2dd608e86c61efaf35aa33a5",
+      "lines": 13,
+      "targets": [],
+      "capabilities": []
+    },
+    "Forever/Professions.lua": {
+      "sha256": "cf40432f114fd6a4f92c942aea2d14ef8ecd2cb8e79033985ce1c8729e393755",
+      "lines": 63,
+      "targets": [
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "profession-profile",
+          "1"
+        ]
+      ]
+    },
+    "Forever/Target.lua": {
+      "sha256": "30f5489fd0a6cf06bd580000eb3e48ea9b59ed8f39a2b07efe137285c54df8c7",
+      "lines": 13,
+      "targets": [
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "Libs/CallbackHandler-1.0/CallbackHandler-1.0.lua": {
+      "sha256": "24f7342068e0d1b8d38ee1b8c7ceeea625bea079a01f0222e341660c7b104432",
+      "lines": 202,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "Libs/LibDataBroker-1.1/LibDataBroker-1.1.lua": {
+      "sha256": "f3d4758f2060215492c9764b1d7dc2a336826d4cd253cd54ff9ff7c6d78f04e2",
+      "lines": 90,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "Libs/LibStub/LibStub.lua": {
+      "sha256": "26401bc42c26d1d1b6f7ad9410aa464edcbe4d32d74ebadeeecd8c0110236f7d",
+      "lines": 30,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "Locales/enUS.lua": {
+      "sha256": "8ac0518725ce3481ecc7f6c1c9323edc13c30d615180297d50127cf7230b9a89",
+      "lines": 568,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "Locales/zhCN.lua": {
+      "sha256": "22fb953371e8fe8afb5826cca82b4f6bba59bd67207ce2d72235e8262088a67e",
+      "lines": 568,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "Mists/Calendar.lua": {
+      "sha256": "337bd36e12931f184eeac489fa5a6212bc6cd9af16e3eee708cd2c6feee62a95",
+      "lines": 77,
+      "targets": [
+        "Mists"
+      ],
+      "capabilities": [
+        [
+          "calendar-day-query",
+          "1"
+        ]
+      ]
+    },
+    "Runtime/AddonStatus.lua": {
+      "sha256": "f45bc985a9735247d1ba90e0963f07241ad97e62f73b66d0fcea7af420069d5b",
+      "lines": 73,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "addon-status",
+          "1"
+        ]
+      ]
+    },
+    "Runtime/ArchiveFields.lua": {
+      "sha256": "d5e368d4c8dcad785fed9677448ccc42a992d0aacd07a20a48021eec7f031a1b",
+      "lines": 96,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "character-archive-providers",
+          "1"
+        ]
+      ]
+    },
+    "Runtime/Capabilities.lua": {
+      "sha256": "d57ca76c4d3b6cd97f0fbe684cf8d5ec67772ade46a3902fe5368b3cef1e5b2f",
+      "lines": 40,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "runtime",
+          "1"
+        ]
+      ]
+    },
+    "Runtime/Commands.lua": {
+      "sha256": "4442df8b8dcdff2cebbeb009f698913c92aa42a34f0808c44c1ca7edc6699c52",
+      "lines": 19,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "Runtime/Contracts.lua": {
+      "sha256": "02f9bf1324f54004890d22fda15eec98e7d50a91434a5b169bd899ab5f8203ef",
+      "lines": 155,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "business-services",
+          "1"
+        ],
+        [
+          "business-providers",
+          "1"
+        ]
+      ]
+    },
+    "Runtime/CurrencyCatalog.lua": {
+      "sha256": "2a893ec38b59cf4f26e62133b1de625924cea9dbc98c64053eac86f35e64bcb6",
+      "lines": 52,
+      "targets": [],
+      "capabilities": [
+        [
+          "currency-catalog",
+          "1"
+        ]
+      ]
+    },
+    "Runtime/DataDomains.lua": {
+      "sha256": "31af5fb438436a3a068aa493fe1d79cfb41d747d5901dafc8d74c1f4bab924de",
+      "lines": 106,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "data-domains",
+          "1"
+        ]
+      ]
+    },
+    "Runtime/EntryConfig.lua": {
+      "sha256": "d1ecaf0f436cb37a1fd7ded829dc63f87e725c29120484ac015c9d86dee7ee6e",
+      "lines": 54,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "Runtime/Events.lua": {
+      "sha256": "17f3392417cc4f141d8150403bf1d372e39bd6bce78152d7117c27320f4f0e27",
+      "lines": 67,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "events",
+          "1"
+        ]
+      ]
+    },
+    "Runtime/Fields.lua": {
+      "sha256": "5d0a9d1536984418c28ff53634595b0bf37992a86304fe6c2c76898f0d635ea0",
+      "lines": 57,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "fields",
+          "1"
+        ]
+      ]
+    },
+    "Runtime/ItemResolver.lua": {
+      "sha256": "f1d7678bf436eb5aed76d2aeefa763168b609b0714c90cd7681e3f2d0d461b0d",
+      "lines": 117,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "item-resolver",
+          "1"
+        ]
+      ]
+    },
+    "Runtime/Locale.lua": {
+      "sha256": "ebd99f55424b26c52598a933a3cf81f40fa6c020693f708893bd0d6bf7f1e6e3",
+      "lines": 135,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "localization",
+          "1"
+        ]
+      ]
+    },
+    "Runtime/Registry.lua": {
+      "sha256": "99117844d84969efffde4444f7e7802c8e2eb17809f2bc974613ead97ee5c91d",
+      "lines": 111,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "Runtime/Resources.lua": {
+      "sha256": "72fc4422d4b8e886716590e03b2a114dd29cd9bc26344f506dfbbf7dfb4c24c4",
+      "lines": 31,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "resources",
+          "1"
+        ]
+      ]
+    },
+    "Runtime/SettingsRegistry.lua": {
+      "sha256": "b2b5a710a041e92d602afddd317f8bb623cdda176280145a85e08685f74dd884",
+      "lines": 66,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "UI/AccountPages/About.lua": {
+      "sha256": "d95ccd38f80ddcfa2927b5a66487a44fc9ad89c012eb9edf273a9cad1df34f9a",
+      "lines": 291,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "UI/AccountPages/CharacterArchive.lua": {
+      "sha256": "24aecfd88c0f4d0c4636daf46f95cffc427a641311571ea465d0dbc1b2112938",
+      "lines": 310,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "UI/AccountPages/Help.lua": {
+      "sha256": "57157d47caaf338bf014fe4cbd46acae2a1197236b9c67792825a8a941df2272",
+      "lines": 117,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "UI/AccountPages/Overview.lua": {
+      "sha256": "4bce30d20a11835cc1b4652701ade8dcdb3b140de30add63d8f0f2cf64cb786f",
+      "lines": 118,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "UI/AccountPages/SettingsWorkbench.lua": {
+      "sha256": "f4f5fda0ddac7776d17ef843c99962c9f9ed18279482cb03a7f14896a5d437d4",
+      "lines": 933,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "account-preview-field-groups",
+          "1"
+        ]
+      ]
+    },
+    "UI/AccountView.lua": {
+      "sha256": "fee0a48385832561fff46288d0f5df1159afdcc9fec234b9e991cb318876af7a",
+      "lines": 1939,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "account-view",
+          "2"
+        ],
+        [
+          "account-dynamic-fields",
+          "1"
+        ],
+        [
+          "account-preview-characters",
+          "1"
+        ],
+        [
+          "account-character-admission",
+          "1"
+        ],
+        [
+          "account-surface-budget",
+          "2"
+        ]
+      ]
+    },
+    "UI/BusinessItemActions.lua": {
+      "sha256": "52fa8015004f0af761656392b08fc6b334494962a9a0371128e4dee82499a48f",
+      "lines": 338,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "business-item-actions",
+          "3"
+        ]
+      ]
+    },
+    "UI/Entry.lua": {
+      "sha256": "fec9b52d29fe1e3d9143d692b28d5e2313fe1b2de6540504e2a68e1523b24610",
+      "lines": 690,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "account-entry",
+          "2"
+        ],
+        [
+          "builtin-entry-bar",
+          "3"
+        ]
+      ]
+    },
+    "UI/EntryBar.lua": {
+      "sha256": "b8857dfe276266663773f97d942d529c3feeee819030ae3de78962c950fefc0a",
+      "lines": 135,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "UI/IconPicker.lua": {
+      "sha256": "2eb9c0e5f46b1aba4f61ff7755e970961f891efb77dfa2f79767b0657fe0028d",
+      "lines": 106,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "UI/Input.lua": {
+      "sha256": "4fc6c9bcde0a25143a4b0d0d9f60f59fc809693ee35803dc110b167719966ba7",
+      "lines": 133,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "basic-input",
+          "1"
+        ]
+      ]
+    },
+    "UI/ItemConfirmation.lua": {
+      "sha256": "05f59f52c4d6942eb45c4180b003a594f3b8f8f28f729ea2f780ed83ccd2cab5",
+      "lines": 37,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "UI/ItemPicker.lua": {
+      "sha256": "c1cdadf45edc39fe93fade8aacaa339971e3e67e46419db3897aac82bf849584",
+      "lines": 288,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "item-picker",
+          "2"
+        ]
+      ]
+    },
+    "UI/Theme.lua": {
+      "sha256": "440174a18ed9412e8b5138656d6ac75109611b65d33476be3c7fb9e6df41b7b2",
+      "lines": 1027,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "Util/CharacterSort.lua": {
+      "sha256": "3ba2af22bd37d6ab29cd7e9d74512c20d1da1358b6055e24b93759b50550e6e6",
+      "lines": 173,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "Util/Defaults.lua": {
+      "sha256": "7a888c8e1542131db5344725060ec6e70d1b6d716d91fcd10dfaf6978a76a409",
+      "lines": 35,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": []
+    },
+    "Util/LevelFilter.lua": {
+      "sha256": "7e0a57607de0e4379e627364467320ebcbc1361e11ee6a67d42cc023439f1b36",
+      "lines": 85,
+      "targets": [
+        "Mists",
+        "Forever"
+      ],
+      "capabilities": [
+        [
+          "level-filter",
+          "1"
+        ]
+      ]
+    },
+    "YiboCore.toc": {
+      "sha256": "8291cbaf944bb129c3f8fce7a3cf29c43fea1e32afccf50ed60ea50e23194679",
+      "lines": 5,
+      "targets": [],
+      "capabilities": []
+    },
+    "YiboCore_Forever.toc": {
+      "sha256": "ab0849c03f5efa86313c0d4cffb9f2e0a84304bedb22401ab4cb5bc871fbb045",
+      "lines": 64,
+      "targets": [],
+      "capabilities": []
+    },
+    "YiboCore_Mists.toc": {
+      "sha256": "62724fa39f4bf65d4f07436b1fb540a51ca1e8e1d3736ec5ffd04d170f1eb316",
+      "lines": 66,
+      "targets": [],
+      "capabilities": []
+    }
+  },
+  "buildHashes": {
+    "Tools/ReleaseProfiles.psd1": "38693211accc8026f462a820e3b4e5fe4fb52f70c20f9a7763d851666422e89f",
+    "Tools/Build-ReleasePackages.ps1": "f57ccdb30f122fcb7fdfe66d62c0dddcf82ac40cdc5e3e271460bbe5c7c1709d"
+  },
+  "additionalHashes": {
+    "Tools/Release.Common.ps1": "39a71f59c0f25d31dad6cd8c92ce6ca93e0e1e73201cd6f455d7e82827b752d4",
+    "YiboCore/_NonRelease/Tools/Build-ReleasePackages.ps1": "f4c79d708e84b6477205d2f9dba8616b409ab55df15d2e55fb78a8705315b9de",
+    "YiboCore/Libs/UPSTREAM.md": "7c5af719d62bffd75d81124f2a17c1489023095cffbf99c64b641b3f1e07b5b5",
+    "YiboCore/Libs/Ace3-LICENSE.txt": "afe050a430bafdbca7da69d95897751239f4fab415784a419a3cdc2519eee9b2",
+    "YiboCore/Libs/LDB-LICENSE.txt": "1006684f0953a13bfc9c77627904d7750a36cab64b6364116a27b0256c5ec10d",
+    "_NonRelease/CoreTocEntry-20261026/Verify.lua": "99b1df3c2bd03de93d82e363f0fe9e770a97a9f9fa548d43e463c6146d4cd547",
+    "_NonRelease/CoreForever/Smoke.lua": "9f7b3dffb65eb03001f45224301640186c4a562ecb624913dddc562ed5e3686c",
+    "YiboCore/_NonRelease/Tests/ContractsSpec.lua": "37ae35676673f033a68cb1b96c0091e93fc99afb2f8fbb4cc8c8524e76628f39",
+    "YiboCore/_NonRelease/Tests/CharacterNamesSpec.lua": "88b3ed34609521617d878481ad2ed89573e5f48bf3d278ee03b7cb1809a0965f",
+    "YiboCore/_NonRelease/Tests/CharacterCleanupV2Spec.lua": "293001cd8d57a3b97e98a5bf172a6ec608ab16ab11e91aafa6d05a587770e429",
+    "YiboCore/_NonRelease/Tests/RuntimePerformanceSpec.lua": "b4660364eb4b382b6c43214ff239736edfef3e45da99a55c4d136de5ec26745a",
+    "_NonRelease/Localization/LocaleSpec.lua": "0699108b5428036400cfd786537b897d84e172521f24e30191e4ced4219c0945",
+    "YiboCore/Media/1.2.0-1.png": "7481a5b1525425776d5e0c8d500c92b0bfc3f98664f22f1a0c3e8c42f6a32382",
+    "YiboCore/Media/1.2.0-2.png": "9eca2c1496ca93aa82d06d4baa39f4fd4214fd3d4f08fc3e8dd6dd9725c44286",
+    "YiboCore/Media/1.2.0-3.png": "222e415673331bf4b7a9ef8d5f0973c3e988352e8aec634924add619cdc90eb6",
+    "YiboCore/Media/v1/Archive.json": "fe053c57b2bd48409a8d8441ee2ab83833058c187aa9fd69b828f66c29fd8295",
+    "YiboCore/Media/v1/YiboCoreLogo-v7.png": "4a59dd887fb1517d80c8e0974da0fb3b2a8a9ae1fd4e8e5471e5021682156e8a",
+    "YiboCore/Media/v1/YiboCoreLogo-v7.tga": "ceda2594c0725bd8a19089a2d2337858e78e6ab5427f28278efe1bb768bbe241",
+    "YiboCore/Media/v2/Archive.json": "d827f9f72ec39df89c9f59682ab24947528abb4923262db8097dcfa4ce44dda5",
+    "YiboCore/Media/v2/YiboCoreIcon-v13-128.png": "cc888070ca82dd71e30c1bad58f87fdf42c301bdeb0b2d4e31ee895584af985a",
+    "YiboCore/Media/v2/YiboCoreIcon-v13-16.png": "056294bda45605788b4644e4bfc3d33cd105e6e85e732222da50ee3a74bc347e",
+    "YiboCore/Media/v2/YiboCoreIcon-v13-31.png": "37f16dd24e9223526f4eac65b33eafa0623fa69e2011c5b3a56ef9e9cd6205f9",
+    "YiboCore/Media/v2/YiboCoreIcon-v13-32.png": "00668ea4b0f02c56fc2b093db5cdafeb13b700b0b26a2a770e5599327215d61f",
+    "YiboCore/Media/v2/YiboCoreIcon-v13-64.png": "684d9a5e8136a5c5bbe654023656badba2757e5c193692004ea5146e473fe82b",
+    "YiboCore/Media/v2/YiboCoreIcon-v13.png": "9a442fe574140097ccd50f62097f4e0691f733f2a6d63539b5f87bcc63064e14",
+    "YiboCore/Media/v2/YiboCoreIcon-v13.tga": "35d17dddc2d46f5e634947f2ff687af5e012434541599a89da80830e67d51d8d",
+    "YiboCore/Media/v3/Archive.json": "bcb36b023ccd01192cc0b49cb714a834d663b9bbb28603aa9eb8e2a43d57ad28",
+    "YiboCore/Media/v3/YiboCoreIcon-v20-128.png": "b5fb3ae19b30639f81da53a8c34f242cd1c5b0e6d4ad61e0071256ec0f74cd50",
+    "YiboCore/Media/v3/YiboCoreIcon-v20.tga": "21d65ca80c42f8938b4e5cac09d2edaab85c0def1777c4065e8b2a2c0032a503",
+    "YiboCore/Media/YiboCoreIcon-1024.png": "a20e399d8ba082940660ceb3c088c75622c0d23d7602d345d2d15a7388dfc8a9",
+    "YiboCore/Media/YiboCoreIcon-1024.tga": "5219d56a7b9e34f00e4cc0ec9296bf7d3a4059d82f171214ae1d7d8c65b1e602",
+    "YiboCore/Media/YiboCoreIcon-128.png": "d90254ff99f78b83040ff2c11450c824b938bf24f184507b24b92e441cb654a5",
+    "YiboCore/Media/YiboCoreIcon-128.tga": "7b709b5bbda504291e236b93fa3e317732b6e631435fd6817dbdd5088ac1e551",
+    "YiboCore/Media/YiboCoreIcon-16.png": "4de10a6b4c56488b524f6b84b0fb34b0abfaeddb260b51a83c77ea517586c045",
+    "YiboCore/Media/YiboCoreIcon-16.tga": "ca328d01d47275a256e9174b3a79efc0949465c179324d1edc3174334dc21f45",
+    "YiboCore/Media/YiboCoreIcon-24.png": "e778c32add7fe11a2a6e8fd3fefb9bee2a99c38d3bf0eba2d2b41b75a5d4701f",
+    "YiboCore/Media/YiboCoreIcon-32.png": "47335cbf872d2b22e2b751a0f2fd32d3d608789a23544dd43d4c80a6307f6f12",
+    "YiboCore/Media/YiboCoreIcon-32.tga": "8512320e6da4b2ee4e982ecbb749624ac46387f275e52c1064e3ae5609b1c681",
+    "YiboCore/Media/YiboCoreIcon-512.png": "8bb02f497bf3a8fa72d291c8d44fa137ab216f4db67735aff88aad212766fec2",
+    "YiboCore/Media/YiboCoreIcon-512.tga": "a99c0b768145753b523f95f8fdccd55620eab0607a892352cd309cb7fb3fa5be",
+    "YiboCore/Media/YiboCoreIcon-64.png": "e17b783495fa72d8a21e378eddf0276624f4c2ca1e400d5128bba75a0342d8a3",
+    "YiboCore/Media/YiboCoreIcon-64.tga": "b149f81af54f1aeda3bf5e4c7c5ee1fd8a8d325814e9cc6f25efbd1f4b865c32",
+    "YiboCore/Media/YiboCoreIcon-master.png": "3f4369bceff08b3c83971417f9e4de44d9a1887a96d460ae6bfd0e8987849649",
+    "YiboCore/Media/YiboCoreIcon.png": "d90254ff99f78b83040ff2c11450c824b938bf24f184507b24b92e441cb654a5",
+    "YiboCore/Media/YiboCoreIcon.tga": "b149f81af54f1aeda3bf5e4c7c5ee1fd8a8d325814e9cc6f25efbd1f4b865c32",
+    "YiboCore/Media/YiboCoreLogo.png": "a20e399d8ba082940660ceb3c088c75622c0d23d7602d345d2d15a7388dfc8a9",
+    "YiboCore/Media/YiboCoreLogo.tga": "a99c0b768145753b523f95f8fdccd55620eab0607a892352cd309cb7fb3fa5be"
+  },
+  "consumerEvidenceKind": "quoted capability strings in non-test business Lua; not proof of actual calls, support or successful integration",
+  "consumerEvidence": {
+    "account-character-admission": {
+      "YiboBuilds": [
+        "YiboBuilds/Forever/Bootstrap.lua"
+      ],
+      "YiboCrafting": [
+        "YiboCrafting/Forever/Bootstrap.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua",
+        "YiboCurrency/Forever/Bootstrap.lua"
+      ],
+      "YiboMail": [
+        "YiboMail/Bootstrap.lua",
+        "YiboMail/Forever/Bootstrap.lua"
+      ],
+      "YiboReputation": [
+        "YiboReputation/Forever/Bootstrap.lua"
+      ],
+      "YiboTaskHub": [
+        "YiboTaskHub/CoreIntegration.lua"
+      ],
+      "YiboVault": [
+        "YiboVault/Forever/Bootstrap.lua"
+      ]
+    },
+    "account-dynamic-fields": {
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua"
+      ]
+    },
+    "account-entry": {
+      "YiboAltoBoss": [
+        "YiboAltoBoss/CoreRequirements.lua"
+      ],
+      "YiboBuilds": [
+        "YiboBuilds/Bootstrap.lua",
+        "YiboBuilds/Forever/Bootstrap.lua"
+      ],
+      "YiboCrafting": [
+        "YiboCrafting/Bootstrap.lua",
+        "YiboCrafting/Forever/Bootstrap.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua",
+        "YiboCurrency/Forever/Bootstrap.lua"
+      ],
+      "YiboLegendary": [
+        "YiboLegendary/Bootstrap.lua"
+      ],
+      "YiboMail": [
+        "YiboMail/Bootstrap.lua",
+        "YiboMail/Forever/Bootstrap.lua"
+      ],
+      "YiboQuestBlocker": [
+        "YiboQuestBlocker/CoreIntegration.lua",
+        "YiboQuestBlocker/Locale.lua"
+      ],
+      "YiboReputation": [
+        "YiboReputation/Forever/Bootstrap.lua"
+      ],
+      "YiboTaskHub": [
+        "YiboTaskHub/CoreIntegration.lua"
+      ],
+      "YiboTodo": [
+        "YiboTodo/CoreIntegration.lua"
+      ],
+      "YiboVault": [
+        "YiboVault/Common/CoreIntegration.lua"
+      ]
+    },
+    "account-preview-characters": {
+      "YiboBuilds": [
+        "YiboBuilds/Forever/Bootstrap.lua"
+      ],
+      "YiboCrafting": [
+        "YiboCrafting/Forever/Bootstrap.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/Forever/Bootstrap.lua"
+      ],
+      "YiboMail": [
+        "YiboMail/Bootstrap.lua",
+        "YiboMail/Forever/Bootstrap.lua"
+      ],
+      "YiboReputation": [
+        "YiboReputation/Forever/Bootstrap.lua"
+      ]
+    },
+    "account-preview-field-groups": {
+      "YiboAltoBoss": [
+        "YiboAltoBoss/CoreRequirements.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua"
+      ]
+    },
+    "account-surface-budget": {
+      "YiboAltoBoss": [
+        "YiboAltoBoss/CoreIntegration.lua",
+        "YiboAltoBoss/CoreRequirements.lua"
+      ],
+      "YiboBeastPaths": [
+        "YiboBeastPaths/Maintenance/CoreDebugAdapter.lua"
+      ],
+      "YiboBuilds": [
+        "YiboBuilds/Forever/Bootstrap.lua"
+      ],
+      "YiboCrafting": [
+        "YiboCrafting/Bootstrap.lua",
+        "YiboCrafting/Forever/Bootstrap.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua",
+        "YiboCurrency/Forever/Bootstrap.lua"
+      ],
+      "YiboLegendary": [
+        "YiboLegendary/Bootstrap.lua"
+      ],
+      "YiboMail": [
+        "YiboMail/Bootstrap.lua",
+        "YiboMail/Forever/Bootstrap.lua"
+      ],
+      "YiboQuestBlocker": [
+        "YiboQuestBlocker/CoreIntegration.lua",
+        "YiboQuestBlocker/Locale.lua"
+      ],
+      "YiboReputation": [
+        "YiboReputation/CoreIntegration.lua",
+        "YiboReputation/Forever/Bootstrap.lua"
+      ],
+      "YiboTaskHub": [
+        "YiboTaskHub/CoreIntegration.lua"
+      ],
+      "YiboVault": [
+        "YiboVault/Forever/Bootstrap.lua"
+      ]
+    },
+    "account-view": {
+      "YiboAltoBoss": [
+        "YiboAltoBoss/CoreRequirements.lua"
+      ],
+      "YiboBeastPaths": [
+        "YiboBeastPaths/Maintenance/CoreDebugAdapter.lua"
+      ],
+      "YiboBuilds": [
+        "YiboBuilds/Bootstrap.lua",
+        "YiboBuilds/Forever/Bootstrap.lua"
+      ],
+      "YiboCrafting": [
+        "YiboCrafting/Bootstrap.lua",
+        "YiboCrafting/Forever/Bootstrap.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua",
+        "YiboCurrency/Forever/Bootstrap.lua"
+      ],
+      "YiboLegendary": [
+        "YiboLegendary/Bootstrap.lua"
+      ],
+      "YiboMail": [
+        "YiboMail/Bootstrap.lua",
+        "YiboMail/Forever/Bootstrap.lua"
+      ],
+      "YiboQuestBlocker": [
+        "YiboQuestBlocker/CoreIntegration.lua",
+        "YiboQuestBlocker/Locale.lua"
+      ],
+      "YiboReputation": [
+        "YiboReputation/CoreIntegration.lua",
+        "YiboReputation/Forever/Bootstrap.lua"
+      ],
+      "YiboTaskHub": [
+        "YiboTaskHub/CoreIntegration.lua"
+      ],
+      "YiboTodo": [
+        "YiboTodo/CoreIntegration.lua"
+      ]
+    },
+    "addon-catalog": {},
+    "addon-status": {},
+    "basic-input": {
+      "YiboAltoBoss": [
+        "YiboAltoBoss/CoreRequirements.lua"
+      ],
+      "YiboBeastPaths": [
+        "YiboBeastPaths/Maintenance/CoreDebugAdapter.lua"
+      ],
+      "YiboCrafting": [
+        "YiboCrafting/Bootstrap.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua"
+      ],
+      "YiboMail": [
+        "YiboMail/Bootstrap.lua"
+      ],
+      "YiboQuestBlocker": [
+        "YiboQuestBlocker/CoreIntegration.lua",
+        "YiboQuestBlocker/Locale.lua"
+      ],
+      "YiboReputation": [
+        "YiboReputation/CoreIntegration.lua"
+      ],
+      "YiboTaskHub": [
+        "YiboTaskHub/CoreIntegration.lua"
+      ],
+      "YiboVault": [
+        "YiboVault/Common/CoreIntegration.lua"
+      ]
+    },
+    "builtin-entry-bar": {
+      "YiboTaskHub": [
+        "YiboTaskHub/CoreIntegration.lua"
+      ]
+    },
+    "business-item-actions": {
+      "YiboAltoBoss": [
+        "YiboAltoBoss/Common/GoalTargets.lua"
+      ],
+      "YiboBuilds": [
+        "YiboBuilds/Bootstrap.lua"
+      ],
+      "YiboCrafting": [
+        "YiboCrafting/Bootstrap.lua",
+        "YiboCrafting/Mists/GoalTargets.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/GoalTargets.lua"
+      ],
+      "YiboLegendary": [
+        "YiboLegendary/GoalTargets.lua"
+      ],
+      "YiboMail": [
+        "YiboMail/GoalTargets.lua"
+      ],
+      "YiboReputation": [
+        "YiboReputation/GoalTargets.lua"
+      ],
+      "YiboTaskHub": [
+        "YiboTaskHub/CoreIntegration.lua"
+      ],
+      "YiboTodo": [
+        "YiboTodo/GoalTargets.lua"
+      ],
+      "YiboVault": [
+        "YiboVault/GoalTargets.lua"
+      ]
+    },
+    "business-providers": {
+      "YiboAltoBoss": [
+        "YiboAltoBoss/PlannedTargets.lua"
+      ],
+      "YiboBuilds": [
+        "YiboBuilds/Bootstrap.lua"
+      ],
+      "YiboCrafting": [
+        "YiboCrafting/Bootstrap.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua",
+        "YiboCurrency/GoalTargets.lua"
+      ],
+      "YiboMail": [
+        "YiboMail/ActionTodo.lua"
+      ],
+      "YiboReputation": [
+        "YiboReputation/GoalTargets.lua"
+      ],
+      "YiboTaskHub": [
+        "YiboTaskHub/CoreIntegration.lua"
+      ],
+      "YiboTodo": [
+        "YiboTodo/ActionContracts.lua"
+      ]
+    },
+    "business-services": {
+      "YiboAltoBoss": [
+        "YiboAltoBoss/PlannedTargets.lua"
+      ],
+      "YiboCrafting": [
+        "YiboCrafting/Bootstrap.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua"
+      ],
+      "YiboMail": [
+        "YiboMail/Bootstrap.lua",
+        "YiboMail/Forever/Bootstrap.lua"
+      ],
+      "YiboTaskHub": [
+        "YiboTaskHub/CoreIntegration.lua"
+      ],
+      "YiboVault": [
+        "YiboVault/Common/CoreIntegration.lua"
+      ]
+    },
+    "calendar-day-query": {
+      "YiboAltoBoss": [
+        "YiboAltoBoss/CoreRequirements.lua"
+      ],
+      "YiboTodo": [
+        "YiboTodo/CoreIntegration.lua"
+      ]
+    },
+    "character-archive-providers": {
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua",
+        "YiboCurrency/Migration.lua"
+      ]
+    },
+    "character-cleanup": {
+      "YiboAltoBoss": [
+        "YiboAltoBoss/CoreRequirements.lua"
+      ],
+      "YiboBuilds": [
+        "YiboBuilds/Bootstrap.lua",
+        "YiboBuilds/Forever/Bootstrap.lua"
+      ],
+      "YiboCrafting": [
+        "YiboCrafting/Bootstrap.lua",
+        "YiboCrafting/Forever/Bootstrap.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua",
+        "YiboCurrency/Migration.lua",
+        "YiboCurrency/Forever/Bootstrap.lua"
+      ],
+      "YiboMail": [
+        "YiboMail/Bootstrap.lua",
+        "YiboMail/Forever/Bootstrap.lua"
+      ],
+      "YiboReputation": [
+        "YiboReputation/CoreIntegration.lua",
+        "YiboReputation/Forever/Bootstrap.lua"
+      ]
+    },
+    "character-identity": {
+      "YiboAltoBoss": [
+        "YiboAltoBoss/CoreRequirements.lua",
+        "YiboAltoBoss/DungeonDBM.lua",
+        "YiboAltoBoss/PlannedTargets.lua"
+      ],
+      "YiboBuilds": [
+        "YiboBuilds/Bootstrap.lua",
+        "YiboBuilds/Forever/Bootstrap.lua"
+      ],
+      "YiboCrafting": [
+        "YiboCrafting/Bootstrap.lua",
+        "YiboCrafting/Forever/Bootstrap.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua",
+        "YiboCurrency/GoalTargets.lua",
+        "YiboCurrency/Forever/Bootstrap.lua"
+      ],
+      "YiboMail": [
+        "YiboMail/Bootstrap.lua",
+        "YiboMail/Forever/Bootstrap.lua"
+      ],
+      "YiboReputation": [
+        "YiboReputation/CoreIntegration.lua",
+        "YiboReputation/GoalTargets.lua",
+        "YiboReputation/Forever/Bootstrap.lua"
+      ],
+      "YiboTaskHub": [
+        "YiboTaskHub/CoreIntegration.lua"
+      ],
+      "YiboTodo": [
+        "YiboTodo/CoreIntegration.lua"
+      ],
+      "YiboVault": [
+        "YiboVault/GoalTargets.lua",
+        "YiboVault/Common/CoreIntegration.lua"
+      ]
+    },
+    "character-name-format": {
+      "YiboAltoBoss": [
+        "YiboAltoBoss/CoreRequirements.lua",
+        "YiboAltoBoss/PlannedTargets.lua"
+      ],
+      "YiboBuilds": [
+        "YiboBuilds/Bootstrap.lua",
+        "YiboBuilds/Forever/Bootstrap.lua"
+      ],
+      "YiboCrafting": [
+        "YiboCrafting/Bootstrap.lua",
+        "YiboCrafting/Forever/Bootstrap.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua",
+        "YiboCurrency/Forever/Bootstrap.lua"
+      ],
+      "YiboLegendary": [
+        "YiboLegendary/Bootstrap.lua"
+      ],
+      "YiboMail": [
+        "YiboMail/Bootstrap.lua",
+        "YiboMail/Forever/Bootstrap.lua"
+      ],
+      "YiboQuestBlocker": [
+        "YiboQuestBlocker/CoreIntegration.lua",
+        "YiboQuestBlocker/Locale.lua"
+      ],
+      "YiboReputation": [
+        "YiboReputation/CoreIntegration.lua",
+        "YiboReputation/Forever/Bootstrap.lua"
+      ],
+      "YiboTaskHub": [
+        "YiboTaskHub/CoreIntegration.lua"
+      ],
+      "YiboTodo": [
+        "YiboTodo/CoreIntegration.lua"
+      ],
+      "YiboVault": [
+        "YiboVault/Common/CoreIntegration.lua"
+      ]
+    },
+    "character-profile": {},
+    "characters": {
+      "YiboAltoBoss": [
+        "YiboAltoBoss/AccountPage.lua",
+        "YiboAltoBoss/CoreRequirements.lua"
+      ],
+      "YiboBuilds": [
+        "YiboBuilds/Bootstrap.lua"
+      ],
+      "YiboCrafting": [
+        "YiboCrafting/AccountPage.lua",
+        "YiboCrafting/Bootstrap.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/Store.lua",
+        "YiboCurrency/VaultIntegration.lua"
+      ],
+      "YiboMail": [
+        "YiboMail/Bootstrap.lua",
+        "YiboMail/Items.lua",
+        "YiboMail/Recipients.lua"
+      ],
+      "YiboQuestBlocker": [
+        "YiboQuestBlocker/AccountPage.lua",
+        "YiboQuestBlocker/CoreIntegration.lua"
+      ],
+      "YiboVault": [
+        "YiboVault/AccountPage.lua",
+        "YiboVault/GoalTargets.lua",
+        "YiboVault/Items.lua",
+        "YiboVault/StoragePage.lua",
+        "YiboVault/Tooltip.lua",
+        "YiboVault/Forever/AccountPage.lua"
+      ]
+    },
+    "currency-catalog": {},
+    "data-domains": {
+      "YiboCrafting": [
+        "YiboCrafting/Bootstrap.lua",
+        "YiboCrafting/Forever/Bootstrap.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua"
+      ],
+      "YiboReputation": [
+        "YiboReputation/CoreIntegration.lua"
+      ]
+    },
+    "database": {},
+    "domain-store": {},
+    "events": {
+      "YiboAltoBoss": [
+        "YiboAltoBoss/DungeonDBM.lua"
+      ],
+      "YiboCrafting": [
+        "YiboCrafting/Bootstrap.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua"
+      ],
+      "YiboReputation": [
+        "YiboReputation/CoreIntegration.lua"
+      ]
+    },
+    "fields": {
+      "YiboCrafting": [
+        "YiboCrafting/Bootstrap.lua"
+      ]
+    },
+    "item-picker": {
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua"
+      ],
+      "YiboMail": [
+        "YiboMail/Bootstrap.lua"
+      ]
+    },
+    "item-resolver": {
+      "YiboBuilds": [
+        "YiboBuilds/Forever/Bootstrap.lua"
+      ],
+      "YiboCrafting": [
+        "YiboCrafting/Bootstrap.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua"
+      ],
+      "YiboMail": [
+        "YiboMail/Bootstrap.lua",
+        "YiboMail/Forever/Bootstrap.lua"
+      ],
+      "YiboTaskHub": [
+        "YiboTaskHub/CoreIntegration.lua"
+      ],
+      "YiboVault": [
+        "YiboVault/Common/CoreIntegration.lua"
+      ]
+    },
+    "level-filter": {
+      "YiboAltoBoss": [
+        "YiboAltoBoss/CoreRequirements.lua"
+      ]
+    },
+    "localization": {
+      "YiboAltoBoss": [
+        "YiboAltoBoss/CoreIntegration.lua",
+        "YiboAltoBoss/CoreRequirements.lua",
+        "YiboAltoBoss/LockoutLocale.lua"
+      ],
+      "YiboAutoOpen": [
+        "YiboAutoOpen/CoreIntegration.lua",
+        "YiboAutoOpen/Locale.lua"
+      ],
+      "YiboBeastPaths": [
+        "YiboBeastPaths/Locale.lua"
+      ],
+      "YiboBuilds": [
+        "YiboBuilds/Bootstrap.lua"
+      ],
+      "YiboCrafting": [
+        "YiboCrafting/Bootstrap.lua",
+        "YiboCrafting/Mists/GoalTargets.lua"
+      ],
+      "YiboCurrency": [
+        "YiboCurrency/CoreIntegration.lua"
+      ],
+      "YiboLegendary": [
+        "YiboLegendary/Bootstrap.lua"
+      ],
+      "YiboMail": [
+        "YiboMail/Bootstrap.lua",
+        "YiboMail/GoalTargets.lua"
+      ],
+      "YiboMounts": [
+        "YiboMounts/CoreIntegration.lua"
+      ],
+      "YiboQuestBlocker": [
+        "YiboQuestBlocker/CoreIntegration.lua",
+        "YiboQuestBlocker/Locale.lua"
+      ],
+      "YiboReputation": [
+        "YiboReputation/CoreIntegration.lua"
+      ],
+      "YiboTaskHub": [
+        "YiboTaskHub/CoreIntegration.lua"
+      ],
+      "YiboTodo": [
+        "YiboTodo/CoreIntegration.lua"
+      ],
+      "YiboVault": [
+        "YiboVault/Common/CoreIntegration.lua"
+      ]
+    },
+    "migrations": {},
+    "profession-profile": {
+      "YiboCrafting": [
+        "YiboCrafting/Forever/Bootstrap.lua"
+      ]
+    },
+    "resources": {},
+    "runtime": {}
+  },
+  "reviews": {
+    "Bootstrap.lua": [
+      "启动与原生事件",
+      "改造 R1-01：目标策略先于生命周期事件注册；只订阅目标所需事件，保留支持结果诊断。"
+    ],
+    "Common/TocHint.lua": [
+      "预启动诊断",
+      "保留最小双语提示；R2-01 仅更新真实 Interface 集合，不建立 Core／存档／事件。"
+    ],
+    "Data/AddonCatalog.lua": [
+      "目标目录元数据",
+      "改造 R1-07：消除无 target 默认 Mists 假设；登记 YBP 已有 Retail 路线支持，区分尚未接入的兽栏。"
+    ],
+    "Data/CharacterCleanup.lua": [
+      "清理所有者与删除历史",
+      "改造 R1-07：EXPECTED_OWNERS 六业务固定名单需按目标元数据限定，并保留当前存档已知 owner 与待重放记录。"
+    ],
+    "Data/Characters.lua": [
+      "角色目录与名称显示",
+      "改造 R1-03：共享 GUID／短名／复制／排序契约；原生身份读取与 legacy 策略归目标边界。"
+    ],
+    "Data/Database.lua": [
+      "存档与就绪协调",
+      "改造 R1-01／02：严格产品判定、异常结构预检、幂等初始化与成功后就绪；保留旧 Mists 无目标戳存档兼容。"
+    ],
+    "Data/Domains/Economy.lua": [
+      "退役货币采集",
+      "不加载；开头 return；历史读取保留，不能恢复业务所有权。"
+    ],
+    "Data/Domains/EconomyItems.lua": [
+      "退役物品货币采集",
+      "不加载；开头 return；不迁入 Retail。"
+    ],
+    "Data/Domains/Equipment.lua": [
+      "Mists 装等采集",
+      "迁移 R1-04 至 Mists/Equipment.lua，既有行为先保持；Retail 暂缓。"
+    ],
+    "Data/Domains/Identity.lua": [
+      "两端共用身份域定义与原生读取",
+      "拆分 R1-03／04：身份域投影共享，采集和缺数据语义落目标边界；核对种族／阵营多返回值。"
+    ],
+    "Data/Domains/Location.lua": [
+      "两端位置采集",
+      "拆分 R1-03／04：共享状态／投影保留，原生位置读取落现有目标适配层；Retail 首期不采位置。"
+    ],
+    "Data/Domains/Professions.lua": [
+      "Mists 专业目录与采集",
+      "迁移 R1-04 至 Mists/Professions.lua，保留六槽与原生别名回退；不附加 Forever 专业能力承诺。"
+    ],
+    "Data/Domains/Reputation.lua": [
+      "退役声望源码",
+      "不在 TOC；不像货币文件有顶层 return，须防止误重引；Core 不恢复声望业务。"
+    ],
+    "Data/Domains/Specialization.lua": [
+      "Mists 专精采集",
+      "迁移 R1-04 至 Mists/Specialization.lua；Retail 暂缓。"
+    ],
+    "Data/DomainStore.lua": [
+      "通用状态快照",
+      "保留复制／revision；R1-04 明确 nil 保留与空表替换语义，updatedAt 是变更时间，不能作为 YBP 采集时间。"
+    ],
+    "Data/Fields/CharacterArchive.lua": [
+      "档案字段与旧专业槽映射",
+      "拆分 R1-04：共享字段注册按实际域；SECONDARY_SLOTS 旧槽映射与目标字段集合归适配层。"
+    ],
+    "Data/Migrations.lua": [
+      "schema1～11 迁移",
+      "共享保留；R1-02 验证结构再迁移，保留旧设置／入口语义；不预定新 schema。"
+    ],
+    "Data/Profile.lua": [
+      "旧 v4 档案兼容门面",
+      "共享保留；R1-04 回归域投影／旧收集器通知，不把所有业务数据迁入 Core。"
+    ],
+    "Data/Resources/Economy.lua": [
+      "退役金币资源定义",
+      "不加载；开头 return；历史 money 字段测试不能作为恢复该资源的理由。"
+    ],
+    "Forever/Professions.lua": [
+      "Forever 专业采集",
+      "保留七槽、权威 skillLineID、双次读取及失败保留；回归 R1-04，不接入 Retail。"
+    ],
+    "Forever/Target.lua": [
+      "Forever 目标策略",
+      "R1-01／02 统一策略结构，保持版本0.2.0、GUID要求、禁导入及原存档身份；旧证据按字节复用。"
+    ],
+    "Libs/CallbackHandler-1.0/CallbackHandler-1.0.lua": [
+      "内嵌回调库",
+      "原样保留；securecallfunction 与可重复库初始化列实际目标验证。"
+    ],
+    "Libs/LibDataBroker-1.1/LibDataBroker-1.1.lua": [
+      "内嵌 Broker 库",
+      "原样保留；无业务 API；对象复用／不可可靠注销由 Core Entry 处理。"
+    ],
+    "Libs/LibStub/LibStub.lua": [
+      "内嵌库注册",
+      "原样保留；全局库版本复用，保持三库加载顺序。"
+    ],
+    "Locales/enUS.lua": [
+      "Core 英文资源",
+      "R1-09 按改造增加稳定 key／完整插值；旧资源不重译或改动态名称。"
+    ],
+    "Locales/zhCN.lua": [
+      "Core 中文资源",
+      "R1-09 与英文 key／格式一致；自动模式覆盖 zhCN／zhTW。"
+    ],
+    "Mists/Calendar.lua": [
+      "Mists 日历事实",
+      "目标边界已明确，保持原实现；Retail 不加载／不声明该能力。"
+    ],
+    "Runtime/AddonStatus.lua": [
+      "插件安装／启用／连接状态",
+      "R1-06：现代与旧 C_AddOns getter／签名集中适配验证；连接不代替业务就绪。"
+    ],
+    "Runtime/ArchiveFields.lua": [
+      "跨业务档案字段 Provider",
+      "共享保留；GetFields／Read／副本／冲突及失效回归，无提供者时空集合。"
+    ],
+    "Runtime/Capabilities.lua": [
+      "能力注册与版本检查",
+      "共享保留；R1-08 按目标实际加载集合核对，不把 capability true 当初始化成功。"
+    ],
+    "Runtime/Commands.lua": [
+      "/yco 玩家入口",
+      "共享保留；未就绪只提示，继续使用三字母命令，不新增别名。"
+    ],
+    "Runtime/Contracts.lua": [
+      "Service／Provider 契约连接",
+      "共享保留；owner、版本、冲突、晚注册／注销、参数与返回复制回归；不新建宠物契约。"
+    ],
+    "Runtime/CurrencyCatalog.lua": [
+      "退役货币目录",
+      "不加载且开头 return；残留 currency-catalog:1 不计有效能力。"
+    ],
+    "Runtime/DataDomains.lua": [
+      "域注册与事件分发",
+      "改造 R1-04：正常返回 nil 被 data or {} 吞掉，须保留失败旧值；定义事件参与目标生命周期订阅。"
+    ],
+    "Runtime/EntryConfig.lua": [
+      "三通道设置规范化",
+      "共享保留；迁移旧 mode、八组合及内置条总开关恢复回归。"
+    ],
+    "Runtime/Events.lua": [
+      "内部公开事件",
+      "共享保留；同 owner／callback 去重与清理、Fire／FireIsolated 不同语义不混改。"
+    ],
+    "Runtime/Fields.lua": [
+      "静态与业务档案字段",
+      "共享保留；按已注册域合法性检查，返回隔离、动态 Provider 合并与冲突回归。"
+    ],
+    "Runtime/ItemResolver.lua": [
+      "物品解析与异步请求",
+      "改造 R1-05：0～4 固定背包范围、getter/request/event 原生差异集中适配；保留取消／超时／显式重试。"
+    ],
+    "Runtime/Locale.lua": [
+      "语言会话与 owner 资源",
+      "共享保留；加载前可查资源、初始化后按设置生效；R1-09 回归重复初始化与绑定。"
+    ],
+    "Runtime/Registry.lua": [
+      "插件及资源 owner 注册",
+      "共享保留；依赖 API、同 owner 重入、冲突与释放语义；R1-01 检查 Core 自身注册结果。"
+    ],
+    "Runtime/Resources.lua": [
+      "中性资源定义",
+      "共享保留；不产生 currency／reputation／pet 值；无目标域不注册对应资源。"
+    ],
+    "Runtime/SettingsRegistry.lua": [
+      "独立设置注册",
+      "共享保留；同 owner 重入／冲突／注销回归；没有独立 settings 能力名，不虚构检查。"
+    ],
+    "UI/AccountPages/About.lua": [
+      "关于页与目标目录展示",
+      "共享布局保留；R1-07 核对目标过滤、安装／连接状态与版本索引，不把路线可用表述为兽栏已接入。"
+    ],
+    "UI/AccountPages/CharacterArchive.lua": [
+      "角色档案页及投影",
+      "共享保留；R1-04 按实际域显示字段、空集合与历史字段设置兼容；不恢复缺失专业栏。"
+    ],
+    "UI/AccountPages/Help.lua": [
+      "帮助页静态业务说明",
+      "改造 R1-07：OPERATIONS／USAGE_NOTES 无目标筛选，改为按明确目标元数据组织显示，保留已有说明。"
+    ],
+    "UI/AccountPages/Overview.lua": [
+      "业务摘要与行动聚合",
+      "共享保留；仅枚举已注册页、页面准入和同源摘要，无业务时正常空态。"
+    ],
+    "UI/AccountPages/SettingsWorkbench.lua": [
+      "统一设置工作台",
+      "共享保留并回归；技术名字母序、固定导航、字段／入口／角色集中管理；R1-07 清理影响说明按真实 owner。"
+    ],
+    "UI/AccountView.lua": [
+      "共享窗口与页面生命周期",
+      "R1-06／08 核对原生帧／secure 状态驱动；保持角色准入、跨服 all、预算与分页；重复页 ID 仍拒绝，调用方协调幂等。"
+    ],
+    "UI/BusinessItemActions.lua": [
+      "通用行动项目连接／交互",
+      "共享机制保留；R1-06 合并 GetMouseFoci／GetMouseFocus 选择；无 action Provider 时增强不可用，原 UI 正常。"
+    ],
+    "UI/Entry.lua": [
+      "Broker／小地图／预览／入口协调",
+      "改造 R1-06：ResolveAnchor 仅旧焦点入口，与项目操作重复；统一焦点查询，保留八组合／注销对象策略。"
+    ],
+    "UI/EntryBar.lua": [
+      "内置条布局与拖拽",
+      "共享保留；屏幕安全边界、分页、禁用选择保留与拖拽恢复回归，不新增默认入口。"
+    ],
+    "UI/IconPicker.lua": [
+      "公共图标选择",
+      "R1-06 将全局宏图标枚举／返回约定归原生边界，保留无数据重试和分页；不新增图标业务目录。"
+    ],
+    "UI/Input.lua": [
+      "公共输入与 IME",
+      "共享保留；目标帧方法差异核验，组合输入／隐藏清焦点／Esc／多行配置回归。"
+    ],
+    "UI/ItemConfirmation.lua": [
+      "公共确认请求",
+      "共享保留；原生 StaticPopup、取消、代次和隐藏清理回归；不增加业务窗口壳。"
+    ],
+    "UI/ItemPicker.lua": [
+      "物品选择与输入／光标交互",
+      "共享保留；R1-05／06 通过适配边界处理光标／物品读取，保持代次失效与确认语义。"
+    ],
+    "UI/Theme.lua": [
+      "公共样式、几何、控件与 Tooltip",
+      "共享保留；R1-06 核验字体、BackdropTemplate、Frame／GameTooltip 方法，保持布局／滚动预算；无视觉重设计。"
+    ],
+    "Util/CharacterSort.lua": [
+      "角色排序纯逻辑",
+      "共享保留；同名跨服与 GUID 稳定兜底、置顶／自定义顺序与替换回归。"
+    ],
+    "Util/Defaults.lua": [
+      "默认值与复制纯逻辑",
+      "共享保留；R1-02 在调用前验证存档结构，不能用默认值静默修复异常类型。"
+    ],
+    "Util/LevelFilter.lua": [
+      "等级表达式纯逻辑",
+      "共享保留；合法／非法输入及三端语言错误文本回归，无固定客户端等级上限。"
+    ],
+    "YiboCore.toc": [
+      "默认 Hint 清单",
+      "R2-01 保持无 SavedVariables／运行链，仅列已实测 Interface；玩家包不含 Hint。"
+    ],
+    "YiboCore_Forever.toc": [
+      "Forever 加载图",
+      "R1-01／04 与 R2-02 同步引用，保留存档／目标版本；只保留本端采集器。"
+    ],
+    "YiboCore_Mists.toc": [
+      "Mists 加载图",
+      "R1-01／04 增加显式 Mists 入口并替换迁移引用；存档身份保持。"
+    ]
+  },
+  "tests": [
+    {
+      "command": "lua _NonRelease/CoreTocEntry-20261026/Verify.lua YiboCore",
+      "exitCode": 0,
+      "output": "Core TOC candidate passed: 128 checks; client TOC selection remains a live test"
+    },
+    {
+      "command": "lua _NonRelease/CoreForever/Smoke.lua",
+      "exitCode": 0,
+      "output": "CoreForever Smoke passed: 69 checks (real Forever/Mists manifests; simulated client/UI)"
+    },
+    {
+      "command": "lua YiboCore/_NonRelease/Tests/ContractsSpec.lua",
+      "exitCode": 0,
+      "output": "ContractsSpec passed: 90 checks"
+    },
+    {
+      "command": "lua YiboCore/_NonRelease/Tests/CharacterNamesSpec.lua",
+      "exitCode": 0,
+      "output": "CharacterNamesSpec passed: 77 checks"
+    },
+    {
+      "command": "lua YiboCore/_NonRelease/Tests/CharacterCleanupV2Spec.lua",
+      "exitCode": 0,
+      "output": "CharacterCleanupV2Spec passed: 43 checks"
+    },
+    {
+      "command": "lua YiboCore/_NonRelease/Tests/RuntimePerformanceSpec.lua",
+      "exitCode": 1,
+      "output": "C:\\Program Files (x86)\\Lua\\5.1\\lua.exe: ...iboCore/_NonRelease/Tests/RuntimePerformanceSpec.lua:107: assertion failed!\r\nstack traceback:\r\n\t[C]: in function 'assert'\r\n\t...iboCore/_NonRelease/Tests/RuntimePerformanceSpec.lua:107: in main chunk\r\n\t[C]: ?"
+    },
+    {
+      "command": "lua _NonRelease/Localization/LocaleSpec.lua",
+      "exitCode": 1,
+      "output": "C:\\Program Files (x86)\\Lua\\5.1\\lua.exe: _NonRelease/Localization/LocaleSpec.lua:56: attempt to index a nil value\r\nstack traceback:\r\n\t_NonRelease/Localization/LocaleSpec.lua:56: in main chunk\r\n\t[C]: ?"
+    }
+  ],
+  "validationBoundary": "Existing offline baseline only. No new client acceptance, Retail implementation, deployment or publication."
+}

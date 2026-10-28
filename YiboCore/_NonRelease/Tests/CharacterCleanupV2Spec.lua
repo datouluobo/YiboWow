@@ -7,6 +7,7 @@ GetLocale = function() return "enUS" end
 for _, path in ipairs({ "Bootstrap.lua", "Util/Defaults.lua", "Runtime/Capabilities.lua", "Runtime/Locale.lua",
     "Locales/zhCN.lua", "Locales/enUS.lua", "Runtime/Events.lua", "Runtime/Registry.lua" }) do dofile("YiboCore/" .. path) end
 local Core = YiboCore
+dofile("_NonRelease/CoreIdentityDomainsR1/LoadClient.lua")
 local db = { settings = {}, characters = { byID = {}, aliases = {}, seenOrder = {} } }
 Core.Database = { GetDB = function() return db end }
 Core.Print = function() end

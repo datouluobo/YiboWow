@@ -6,6 +6,7 @@ Core.AddonCatalog = Core.Locale:Bind(function()
     local addons = {
     {
         name = "YiboAltoBoss",
+        supportedTargets = { Mists = true },
         title = Core:Text("CORE.BOSS_TRACKER"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YiboAltoBossIcon",
@@ -14,6 +15,7 @@ Core.AddonCatalog = Core.Locale:Bind(function()
     },
     {
         name = "YiboBuilds",
+        supportedTargets = { Mists = true, Forever = true },
         title = Core:Text("CORE.CHARACTER_BUILDS"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon",
@@ -22,6 +24,7 @@ Core.AddonCatalog = Core.Locale:Bind(function()
     },
     {
         name = "YiboCurrency",
+        supportedTargets = { Mists = true, Forever = true },
         title = Core:Text("CORE.CURRENCY_MANAGER"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboCurrency\\Media\\YiboCurrencyIcon",
@@ -30,6 +33,7 @@ Core.AddonCatalog = Core.Locale:Bind(function()
     },
     {
         name = "YiboCrafting",
+        supportedTargets = { Mists = true, Forever = true },
         title = Core:Text("CORE.CRAFTING"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboCrafting\\Media\\YiboCraftingIcon",
@@ -38,6 +42,7 @@ Core.AddonCatalog = Core.Locale:Bind(function()
     },
     {
         name = "YiboLegendary",
+        supportedTargets = { Mists = true },
         title = Core:Text("CORE.LEGENDARY_PATHS"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon",
@@ -46,6 +51,7 @@ Core.AddonCatalog = Core.Locale:Bind(function()
     },
     {
         name = "YiboQuestBlocker",
+        supportedTargets = { Mists = true },
         title = Core:Text("CORE.QUEST_BLOCKER"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboQuestBlocker\\Media\\YiboQuestBlockerIcon",
@@ -54,6 +60,7 @@ Core.AddonCatalog = Core.Locale:Bind(function()
     },
     {
         name = "YiboTodo",
+        supportedTargets = { Mists = true },
         title = Core:Text("CORE.ACCOUNT_TO_DO"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboTodo\\Media\\YiboTodoIcon",
@@ -62,6 +69,7 @@ Core.AddonCatalog = Core.Locale:Bind(function()
     },
     {
         name = "YiboVault",
+        supportedTargets = { Mists = true, Forever = true },
         title = Core:Text("CORE.ITEM_OVERVIEW"),
         relation = "core-child",
         description = Core:Text("CORE.FIND_ITEMS_IN_BAGS_EQUIPMENT_AND_OTHER"),
@@ -70,6 +78,7 @@ Core.AddonCatalog = Core.Locale:Bind(function()
     },
     {
         name = "YiboMail",
+        supportedTargets = { Mists = true, Forever = true },
         title = Core:Text("CORE.MAIL_ASSISTANT"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboMail\\Media\\YiboMailIcon",
@@ -78,6 +87,7 @@ Core.AddonCatalog = Core.Locale:Bind(function()
     },
     {
         name = "YiboReputation",
+        supportedTargets = { Mists = true, Forever = true },
         title = Core:Text("CORE.REPUTATION_PATHS"),
         relation = "core-child",
         icon = "Interface\\AddOns\\YiboReputation\\Media\\YiboReputationIcon",
@@ -86,6 +96,7 @@ Core.AddonCatalog = Core.Locale:Bind(function()
     },
     {
         name = "YiboAutoOpen",
+        supportedTargets = { Mists = true },
         title = Core:Text("CORE.AUTO_OPEN"),
         relation = "optional-core",
         icon = "Interface\\AddOns\\YiboAutoOpen\\Media\\YiboAutoOpenIcon",
@@ -94,14 +105,17 @@ Core.AddonCatalog = Core.Locale:Bind(function()
     },
     {
         name = "YiboBeastPaths",
+        -- Existing route support; this is not a Core Retail target or offline-stable capability.
+        supportedTargets = { Mists = true, Retail = true },
         title = Core:Text("CORE.BEAST_PATHS"),
         relation = "optional-core",
         icon = "Interface\\AddOns\\YiboBeastPaths\\Media\\YiboBeastPathsIcon",
-        description = Core:Text("CORE.HIDDEN_HUNTER_PET_ROUTES_IN_PANDARIA"),
+        description = Core:Text("CORE.BEAST_PATHS_ROUTES"),
         projectURL = "https://www.curseforge.com/wow/addons/yibobeastpaths",
     },
     {
         name = "YiboMounts",
+        supportedTargets = { Mists = true },
         title = Core:Text("CORE.MOUNT_JOURNAL"),
         relation = "optional-core",
         icon = "Interface\\AddOns\\YiboMounts\\Media\\YiboMountsIcon",
@@ -109,13 +123,29 @@ Core.AddonCatalog = Core.Locale:Bind(function()
         projectURL = "https://www.curseforge.com/wow/addons/yibomounts",
     },
     }
-    local getAddonInfo = C_AddOns and C_AddOns.GetAddOnInfo or GetAddOnInfo
+    addons[#addons + 1] = {
+        name = "YiboTaskHub", supportedTargets = { Mists = true },
+        title = Core:Text("CORE.ACTION_HUB"), relation = "core-child",
+        icon = "Interface\\AddOns\\YiboTaskHub\\Media\\YiboTaskHubIcon-128",
+        description = Core:Text("CORE.TASK_HUB_SOURCE_TARGETS"),
+    }
+    local target = Core._private and Core._private.target
+    local policies = target and target.addons
+    if type(policies) ~= "table" then return {} end
+    local applicable = {}
     for _, addon in ipairs(addons) do
-        if not getAddonInfo or not getAddonInfo(addon.name) then
-            addon.icon = "Interface\\AddOns\\YiboCore\\Media\\YiboCoreIcon"
+        -- Installed files and an enabled checkbox do not establish target support.
+        local policy = policies[addon.name]
+        if policy and addon.supportedTargets and addon.supportedTargets[target.id] then
+            if policy.descriptionKey then addon.description = Core:Text(policy.descriptionKey) end
+            if not Core.Client:ReadAddon(addon.name).installed then
+                addon.icon = "Interface\\AddOns\\YiboCore\\Media\\YiboCoreIcon"
+            end
+            applicable[#applicable + 1] = addon
         end
     end
-    return addons
+    table.sort(applicable, function(left, right) return left.name < right.name end)
+    return applicable
 end)
 
 Core.Capabilities:Register("addon-catalog", 1)

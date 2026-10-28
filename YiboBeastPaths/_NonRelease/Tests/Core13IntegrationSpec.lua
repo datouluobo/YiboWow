@@ -11,11 +11,16 @@ CreateFrame = function()
 end
 local checks = 0
 local function check(value, message) checks = checks + 1; assert(value, message) end
+for _, target in ipairs({ "Mists", "Retail" }) do
 local function scenario(options)
     options = options or {}
-    local ns, pages, settings, callbacks = { IS_MISTS = options.mists ~= false }, {}, {}, {}
+    local ns, pages, settings, callbacks = {}, {}, {}, {}
+    WOW_PROJECT_MAINLINE, WOW_PROJECT_MISTS_CLASSIC = 1, 19
+    WOW_PROJECT_CLASSIC = 2
+    WOW_PROJECT_ID = options.mists == false and 2 or (target == "Retail" and 1 or 19)
+    assert(loadfile("YiboBeastPaths/Flavor.lua"))("YiboBeastPaths", ns)
     local counts = { addons = 0, panels = 0, pages = 0, shown = 0, removed = 0 }
-    local ybp = { enabled = false }
+    local ybp = { enabled = options.enabled == true }
     _G.YiboBeastPaths = ybp
     function ybp:IsDebugEnabled() return self.enabled end
     function ybp:SetDebugEnabled(enabled) self.enabled = enabled end
@@ -33,6 +38,7 @@ local function scenario(options)
         end
         function core:RegisterAddon(_, metadata)
             check(metadata.requiredAPI == 13)
+            check(metadata.version == "1.8.3", "Registered YBP version must match the revision")
             counts.addons = counts.addons + 1; return {}
         end
         function core:RegisterSettingsPanel(_, definition)
@@ -71,6 +77,13 @@ for _, options in ipairs({ { absent = true }, { api = 6 }, { missing = "basic-in
     check(not ybp:OpenCoreRouteMaintenance())
     check(counts.addons == 0 and counts.panels == 0 and counts.pages == 0)
     check(type(ns.Text("TITLE")) == "string")
+end
+do
+    local ybp, _, _, counts, _, pages, _, init = scenario({ enabled = true })
+    check(counts.panels == 1 and counts.pages == 1, "Enabled default registers navigation immediately")
+    check(pages['yibo-beastpaths-route-maintenance'].defaultEnabled == true)
+    init.OnEvent(init, "PLAYER_LOGIN")
+    check(counts.pages == 1, "Login does not duplicate the default page")
 end
 local ybp, core, ns, counts, settings, pages, callbacks, init = scenario({ ready = false })
 check(counts.addons == 0)
@@ -130,5 +143,6 @@ for key, value in pairs(ns.LocaleResources.zh) do
     check(key:match('^[A-Z0-9_]+$'))
     check(ns.LocaleResources.en[key] ~= nil)
     check(formats(value) == formats(ns.LocaleResources.en[key]), key)
+end
 end
 io.write('Core13IntegrationSpec: ', checks, ' checks passed\n')

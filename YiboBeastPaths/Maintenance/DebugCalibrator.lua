@@ -3,7 +3,7 @@ local YBP = _G.YiboBeastPaths
 
 --- 默认调试数据库结构
 local debugDefaults = {
-    enabled = false,
+    enabled = true,
     selectedPetIDByMap = {},
     transforms = {},
     referenceDisplayTransforms = {},

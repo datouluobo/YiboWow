@@ -13,10 +13,9 @@ end
 function Resolver:GetInfo(itemID)
     itemID = ItemID(itemID)
     if not itemID then return nil end
-    local getter = GetItemInfo or (C_Item and C_Item.GetItemInfo)
-    local name, link, _, _, _, _, _, _, _, icon
-    if getter then name, link, _, _, _, _, _, _, _, icon = getter(itemID) end
-    return { itemID = itemID, name = name, link = link, icon = icon,
+    local native, availability = Core.Client:ReadItemInfo(itemID)
+    local name, link, icon = native and native.name, native and native.link, native and native.icon
+    return { itemID = itemID, name = name, link = link, icon = icon, availability = availability,
         state = name and "ready" or self.pending[itemID] and "loading" or self.failed[itemID] and "failed" or "unloaded" }
 end
 
@@ -46,11 +45,9 @@ function Resolver:Parse(input, options)
     local known = type(options.candidates) == "function" and options.candidates() or options.candidates
     for _, candidate in ipairs(known or {}) do Add(candidate) end
     if options.includeBags then
-        local slots = C_Container and C_Container.GetContainerNumSlots or GetContainerNumSlots
-        local getID = C_Container and C_Container.GetContainerItemID or GetContainerItemID
-        if slots and getID then
-            for bag = 0, 4 do for slot = 1, (slots(bag) or 0) do Add(getID(bag, slot)) end end
-        end
+        local items = Core.Client:ReadBagItemIDs()
+        if not items then return nil, Core:Text("CORE.ITEM_BAG_SEARCH_UNAVAILABLE") end
+        for _, bagItem in ipairs(items) do Add(bagItem) end
     end
     table.sort(candidates, function(a, b) return a.itemID < b.itemID end)
     if #candidates == 0 then return nil, Core:Text("CORE.NO_MATCHING_ITEM_IN_BAGS_OR_KNOWN") end
@@ -93,16 +90,17 @@ function Resolver:Request(itemID, callback, options)
     end
     self.failed[itemID] = nil
     if not next(self.pending) then pollElapsed = 0 end
-    self.pending[itemID] = { waiters = { waiter }, remaining = tonumber(options.timeout) or 8 }
+    local timeout = tonumber(options.timeout)
+    if not timeout or timeout ~= timeout or timeout <= 0 or timeout == math.huge then timeout = 8 end
+    self.pending[itemID] = { waiters = { waiter }, remaining = timeout }
     frame:SetScript("OnUpdate", Poll)
-    local request = C_Item and C_Item.RequestLoadItemDataByID
-    if request then request(itemID)
-    elseif GetItemInfo then GetItemInfo(itemID) end
+    local requested = Core.Client:RequestItemData(itemID)
+    if not requested then self:Finish(itemID, false) end
     return waiter
 end
 
-frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
-frame:SetScript("OnEvent", function(_, _, itemID, success) Resolver:Finish(tonumber(itemID), success) end)
+-- Polling remains bounded even if this target's event cannot be subscribed.
+Core.Client:BindItemEvents(frame, function(itemID, success) Resolver:Finish(itemID, success) end)
 Poll = function(_, elapsed)
     pollElapsed = pollElapsed + elapsed
     if pollElapsed < 0.1 then return end

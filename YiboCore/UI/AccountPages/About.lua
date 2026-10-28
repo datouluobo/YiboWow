@@ -10,114 +10,8 @@ local CreateChromeButton = Helpers.CreateChromeButton
 local PageEnabled = Helpers.PageEnabled
 
 
-local ABOUT_ADDONS = Core.Locale:Bind(function() return {
-    {
-        name = "YiboAltoBoss",
-        title = Core:Text("CORE.BOSS_TRACKER"),
-        version = "2.1",
-        description = Core:Text("CORE.TRACK_WORLD_BOSSES_HOLIDAY_BOSSES_AND_CUSTOM"),
-        icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YiboAltoBossIcon",
-        url = "https://www.curseforge.com/wow/addons/yiboaltoboss",
-    },
-    {
-        name = "YiboCurrency",
-        version = "0.1",
-        description = Core:Text("CORE.COMPARE_CURRENCY_BALANCES_ACROSS_CHARACTERS_INCLUDING_STANDARD"),
-        icon = "Interface\\AddOns\\YiboCurrency\\Media\\YiboCurrencyIcon",
-        url = "https://www.curseforge.com/wow/addons/yibocurrency",
-    },
-    {
-        name = "YiboCrafting",
-        title = Core:Text("CORE.CRAFTING"),
-        description = Core:Text("CORE.VIEW_CONFIRMED_LEARNED_PROFESSION_RECIPES_ACROSS_CHARACTERS"),
-        icon = "Interface\\AddOns\\YiboCrafting\\Media\\YiboCraftingIcon",
-        url = "https://www.curseforge.com/wow/addons/yibocrafting",
-    },
-    {
-        name = "YiboBuilds",
-        version = "1.0.0",
-        description = Core:Text("CORE.VIEW_EQUIPMENT_TALENTS_AND_GLYPH_BUILDS_ACROSS"),
-        icon = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon",
-        url = "https://www.curseforge.com/wow/addons/yibobuilds",
-    },
-    {
-        name = "YiboLegendary",
-        version = "1.0",
-        description = Core:Text("CORE.TRACK_LEGENDARY_QUESTS_AND_EQUIPMENT_ACROSS_CHARACTERS"),
-        icon = "Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon.tga",
-        url = "https://www.curseforge.com/wow/addons/yibolegendary",
-    },
-    {
-        name = "YiboMail",
-        title = Core:Text("CORE.MAIL_ASSISTANT"),
-        description = Core:Text("CORE.MAIL_SNAPSHOTS_BACKLOG_CACHES_AND_ATTACHMENT_SOURCES"),
-        icon = "Interface\\AddOns\\YiboMail\\Media\\YiboMailIcon",
-        url = "https://www.curseforge.com/wow/addons/yibomail",
-    },
-    {
-        name = "YiboQuestBlocker",
-        version = "2.1",
-        description = Core:Text("CORE.IDENTIFY_QUEST_RESTRICTIONS_AND_RISKS_TO_AVOID"),
-        icon = "Interface\\AddOns\\YiboQuestBlocker\\Media\\YiboQuestBlockerIcon",
-        url = "https://www.curseforge.com/wow/addons/yiboquestblocker",
-    },
-    {
-        name = "YiboTodo",
-        version = "0.1",
-        description = Core:Text("CORE.REVIEW_TASKS_AND_PROFESSION_COOLDOWNS_ACROSS_CHARACTERS"),
-        icon = "Interface\\AddOns\\YiboTodo\\Media\\YiboTodoIcon",
-        url = "https://www.curseforge.com/wow/addons/yibotodo",
-    },
-    {
-        name = "YiboVault",
-        title = Core:Text("CORE.ITEM_OVERVIEW"),
-        description = Core:Text("CORE.FIND_ITEMS_IN_BAGS_EQUIPMENT_BANKS_MAIL"),
-        icon = "Interface\\AddOns\\YiboVault\\Media\\YiboVaultIcon",
-        url = "https://www.curseforge.com/wow/addons/yibovault",
-    },
-    {
-        name = "YiboReputation",
-        version = "1.0",
-        description = Core:Text("CORE.COMPARE_REPUTATION_STANDINGS_AND_ADVANCEMENT_ACROSS_CHARACTERS"),
-        icon = "Interface\\AddOns\\YiboReputation\\Media\\YiboReputationIcon",
-        url = "https://www.curseforge.com/wow/addons/yiboreputation",
-    },
-    {
-        name = "YiboAutoOpen",
-        version = "1.0",
-        description = Core:Text("CORE.SAFELY_OPEN_CONTAINER_ITEMS_FROM_THE_ACCOUNT"),
-        icon = "Interface\\AddOns\\YiboAutoOpen\\Media\\YiboAutoOpenIcon",
-        relation = "optional-core",
-        url = "https://www.curseforge.com/wow/addons/yiboautoopen",
-    },
-    {
-        name = "YiboBeastPaths",
-        version = "1.6",
-        description = Core:Text("CORE.SHOW_RARE_HUNTER_PET_PATROL_ROUTES_ON"),
-        icon = "Interface\\AddOns\\YiboBeastPaths\\Media\\YiboBeastPathsIcon",
-        url = "https://www.curseforge.com/wow/addons/yibobeastpaths",
-        relation = "optional-core",
-    },
-    {
-        name = "YiboMounts",
-        version = "0.8.1",
-        description = Core:Text("CORE.SHOW_MOUNT_SOURCES_IN_AURAS_CHAT_LINKS"),
-        icon = "Interface\\AddOns\\YiboMounts\\Media\\YiboMountsIcon",
-        relation = "optional-core",
-        url = "https://www.curseforge.com/wow/addons/yibomounts",
-    },
-} end)
-
--- Compatibility fallback for an incomplete local checkout only.  Normal
--- releases replace this legacy presentation list with the shared catalog so
--- the UI never owns plugin versions.
-ABOUT_ADDONS = Core.AddonCatalog or ABOUT_ADDONS
-local getAddonInfo = C_AddOns and C_AddOns.GetAddOnInfo or GetAddOnInfo
-for _, addon in ipairs(ABOUT_ADDONS) do
-    if not getAddonInfo or not getAddonInfo(addon.name) then
-        addon.icon = "Interface\\AddOns\\YiboCore\\Media\\YiboCoreIcon"
-    end
-end
+-- The shared catalog is already filtered to the active client target.
+local ABOUT_ADDONS = Core.AddonCatalog or {}
 
 local function SetAboutLinkOpen(parent, target)
     for _, row in ipairs(parent.addonRows) do
@@ -325,37 +219,30 @@ local function CreateAbout(parent)
         end
         container.hero:SetHeight(math.max(112, container.hero.description:GetStringHeight() + 82) + (container.hero.linkOpen and 34 or 0))
         local y = (container.hero:GetHeight() or 112) + 28
-        container.childHeading:ClearAllPoints(); container.childHeading:SetPoint("TOPLEFT", 0, -y)
-        y = y + 26
-        for _, row in ipairs(container.addonRows) do
-            if not row.isIndependent and not row.isOptionalCore then
-                row:ClearAllPoints()
-                row:SetPoint("TOPLEFT", 0, -y); row:SetPoint("TOPRIGHT", 0, -y)
-                y = y + row:GetHeight() + 6
+        local groups = {
+            { heading = container.childHeading, Matches = function(row) return not row.isIndependent and not row.isOptionalCore end },
+            { heading = container.optionalHeading, line = container.optionalLine, Matches = function(row) return row.isOptionalCore end },
+            { heading = container.otherHeading, line = container.otherLine, Matches = function(row) return row.isIndependent end },
+        }
+        for _, group in ipairs(groups) do
+            local rows = {}
+            for _, row in ipairs(container.addonRows) do
+                if group.Matches(row) then rows[#rows + 1] = row end
             end
-        end
-        y = y + 14
-        container.optionalHeading:ClearAllPoints(); container.optionalHeading:SetPoint("TOPLEFT", 0, -y)
-        y = y + 22
-        container.optionalLine:ClearAllPoints(); container.optionalLine:SetPoint("TOPLEFT", 0, -y); container.optionalLine:SetPoint("TOPRIGHT", 0, -y)
-        y = y + 12
-        for _, row in ipairs(container.addonRows) do
-            if row.isOptionalCore then
-                row:ClearAllPoints()
-                row:SetPoint("TOPLEFT", 0, -y); row:SetPoint("TOPRIGHT", 0, -y)
-                y = y + row:GetHeight() + 6
-            end
-        end
-        y = y + 14
-        container.otherHeading:ClearAllPoints(); container.otherHeading:SetPoint("TOPLEFT", 0, -y)
-        y = y + 22
-        container.otherLine:ClearAllPoints(); container.otherLine:SetPoint("TOPLEFT", 0, -y); container.otherLine:SetPoint("TOPRIGHT", 0, -y)
-        y = y + 12
-        for _, row in ipairs(container.addonRows) do
-            if row.isIndependent then
-                row:ClearAllPoints()
-                row:SetPoint("TOPLEFT", 0, -y); row:SetPoint("TOPRIGHT", 0, -y)
-                y = y + row:GetHeight() + 6
+            group.heading:SetShown(#rows > 0)
+            if group.line then group.line:SetShown(#rows > 0) end
+            if #rows > 0 then
+                group.heading:ClearAllPoints(); group.heading:SetPoint("TOPLEFT", 0, -y)
+                y = y + 26
+                if group.line then
+                    group.line:ClearAllPoints(); group.line:SetPoint("TOPLEFT", 0, -y); group.line:SetPoint("TOPRIGHT", 0, -y)
+                    y = y + 12
+                end
+                for _, row in ipairs(rows) do
+                    row:ClearAllPoints(); row:SetPoint("TOPLEFT", 0, -y); row:SetPoint("TOPRIGHT", 0, -y)
+                    y = y + row:GetHeight() + 6
+                end
+                y = y + 14
             end
         end
         local contentHeight = y + 4
@@ -372,10 +259,11 @@ local function RefreshAbout(parent)
     parent.hero.title:SetText("YiboCore " .. (coreVersion ~= "" and coreVersion or "v?"))
     local connected = 0
     local stateLabels = {
-        connected = Core:Text("CORE.CONNECTED"),
+        connected = Core:Text("CORE.ADDON_REGISTERED"),
         ["enabled-not-connected"] = Core:Text("CORE.ENABLED_NOT_CONNECTED"),
         ["installed-disabled"] = Core:Text("CORE.INSTALLED_DISABLED"),
         missing = Core:Text("CORE.NOT_INSTALLED"),
+        unavailable = Core:Text("CORE.ADDON_STATUS_UNAVAILABLE"),
     }
     for _, addon in ipairs(ABOUT_ADDONS) do
         local status = Core.AddonStatus and Core.AddonStatus:Get(addon.name) or {}
@@ -383,9 +271,18 @@ local function RefreshAbout(parent)
         if row then
             local installedVersion = FormatVersion(status.installedVersion)
             local packagedVersion = FormatVersion(status.packagedVersion)
-            local installed = installedVersion ~= "" and (Core:Text("CORE.INSTALLED") .. installedVersion) or Core:Text("CORE.NOT_INSTALLED_LOCALLY")
-            local packaged = packagedVersion ~= "" and (Core:Text("CORE.PACKAGED") .. packagedVersion) or ""
-            row.version:SetText(installed .. packaged)
+            local installed
+            if status.availability and status.availability ~= "known" then
+                installed = Core:Text("CORE.ADDON_STATUS_UNAVAILABLE")
+            elseif installedVersion ~= "" then
+                installed = Core:Text("CORE.ADDON_INSTALLED_VERSION", installedVersion)
+            elseif status.installed then
+                installed = Core:Text("CORE.ADDON_VERSION_UNAVAILABLE")
+            else
+                installed = Core:Text("CORE.NOT_INSTALLED_LOCALLY")
+            end
+            local packaged = packagedVersion ~= "" and Core:Text("CORE.ADDON_PACKAGED_VERSION", packagedVersion) or nil
+            row.version:SetText(installed .. (packaged and (" · " .. packaged) or ""))
             row.description:SetText((stateLabels[status.state] or Core:Text("CORE.UNKNOWN_STATUS")) .. " · " .. tostring(addon.description or ""))
         end
         if row and not row.isIndependent and status.connected then

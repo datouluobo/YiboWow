@@ -1,7 +1,7 @@
 local Core = _G.YiboCore
 
 -- Data domains describe collection boundaries.  They deliberately contain no
--- window, entry, or SavedVariables ownership outside YiboCoreDB.
+-- window, entry, or SavedVariables ownership outside Core's target store.
 local DataDomains = {}
 Core.DataDomains = DataDomains
 DataDomains._definitions = DataDomains._definitions or {}
@@ -56,6 +56,7 @@ function DataDomains:Register(owner, definition)
         self._events[eventName][#self._events[eventName] + 1] = entry
         table.sort(self._events[eventName], function(left, right) return left.id < right.id end)
     end
+    if Core._private.RegisterDomainEvents then Core._private.RegisterDomainEvents(entry.events) end
     return entry
 end
 
@@ -74,8 +75,7 @@ function DataDomains:GetState(characterID, domainID)
     return Core.DomainStore and Core.DomainStore:GetState(characterID, domainID) or nil
 end
 
-function DataDomains:Dispatch(eventName)
-    local definitions = self._events[eventName]
+local function CollectDefinitions(definitions, eventName)
     if not definitions or not Core:IsInitialized() then return 0 end
     local character = Core.Characters and Core.Characters:GetCurrent()
     if not character then return 0 end
@@ -86,12 +86,15 @@ function DataDomains:Dispatch(eventName)
             return definition.Collect(context)
         end, function(message) return tostring(message) end)
         if ok then
-            state = state or "known"
-            if self:IsStateValid(state) then
-                context.changedKeys = changedKeys
-                Core.DomainStore:Commit(character.id, definition.id, data or {}, state, context)
+            if state == nil then state = "known" end
+            if DataDomains:IsStateValid(state) and (state ~= "known" or type(data) == "table") then
+                context.changedKeys = state == "known" and changedKeys or nil
+                -- Failure/partial results cannot replace the last good values.
+                -- A known empty table is an explicit, successful empty snapshot.
+                Core.DomainStore:Commit(character.id, definition.id, state == "known" and data or nil, state, context)
             else
-                Core:Print(Core:Text("CORE.DOMAIN") .. definition.id .. Core:Text("CORE.RETURNED_AN_INVALID_STATE") .. tostring(state))
+                if DataDomains:IsStateValid(state) then Core:Print(Core:Text("CORE.DOMAIN_INVALID_DATA", definition.id))
+                else Core:Print(Core:Text("CORE.DOMAIN") .. definition.id .. Core:Text("CORE.RETURNED_AN_INVALID_STATE") .. tostring(state)) end
                 Core.DomainStore:Commit(character.id, definition.id, nil, "error", context)
             end
         else
@@ -101,6 +104,20 @@ function DataDomains:Dispatch(eventName)
         count = count + 1
     end
     return count
+end
+
+function DataDomains:Dispatch(eventName)
+    return CollectDefinitions(self._events[eventName], eventName)
+end
+
+if Core._private then
+    Core._private.RefreshCharacterDomains = function(nativeEvent)
+        local missing = {}
+        for _, definition in ipairs(DataDomains:GetDefinitions()) do
+            if definition.owner == Core.NAME and not definition.events[nativeEvent] then missing[#missing + 1] = definition end
+        end
+        return CollectDefinitions(missing, "character-ready")
+    end
 end
 
 Core.Capabilities:Register("data-domains", 1)

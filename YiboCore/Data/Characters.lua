@@ -3,10 +3,6 @@ local Core = _G.YiboCore
 local Characters = {}
 Core.Characters = Characters
 
-local function GetTimestamp()
-    return (GetServerTime and GetServerTime()) or time()
-end
-
 local function Snapshot(record, options)
     if type(record) ~= "table" then
         return nil
@@ -166,6 +162,7 @@ local function EnsureSeenOrder(store, characterID)
 end
 
 function Characters:BuildLegacyAliases(name, realm)
+    if Core._private and Core._private.target and Core._private.target.requireGUID then return {} end
     if not name or not realm then
         return {}
     end
@@ -176,11 +173,13 @@ function Characters:BuildLegacyAliases(name, realm)
 end
 
 function Characters:GetCurrentID()
-    local guid = UnitGUID and UnitGUID("player")
-    if guid and guid ~= "" then
-        return guid
-    end
-    return BuildFallbackID(UnitName("player"), GetRealmName())
+    local guid, state = Core.Client:ReadGUID()
+    if guid then Core._private.hasPlayerGUID = true; return guid end
+    if state ~= "not-yet-scanned" then return nil end
+    if Core._private and Core._private.target and Core._private.target.requireGUID then return nil end
+    if Core._private.hasPlayerGUID then return nil end
+    local identity = Core.Client:ReadNameRealm()
+    return identity and BuildFallbackID(identity.name, identity.realm) or nil
 end
 
 function Characters:RefreshCurrent()
@@ -189,9 +188,14 @@ function Characters:RefreshCurrent()
         return nil
     end
 
-    local name = UnitName("player") or "Unknown"
-    local realm = GetRealmName() or "Unknown"
-    local characterID = self:GetCurrentID()
+    local identity = Core.Client:ReadCharacter()
+    if not identity then Core._private.characterPending = true; return nil end
+    local name, realm = identity.name, identity.realm
+    local characterID = identity.guid
+    if characterID then Core._private.hasPlayerGUID = true end
+    if not characterID and not Core._private.target.requireGUID and not Core._private.hasPlayerGUID then characterID = BuildFallbackID(name, realm) end
+    if not characterID then Core._private.characterPending = true; return nil end
+    if Core._private then Core._private.characterPending = nil end
     local aliases = self:BuildLegacyAliases(name, realm)
 
     -- ADDON_LOADED can run before UnitGUID is available.  When the player GUID
@@ -200,7 +204,7 @@ function Characters:RefreshCurrent()
     if string.sub(characterID, 1, 7) ~= "legacy:" and not store.byID[characterID] then
         for _, alias in ipairs(aliases) do
             local previousID = store.aliases[alias]
-            if previousID and previousID ~= characterID then
+            if previousID and previousID ~= characterID and string.sub(previousID, 1, 7) == "legacy:" then
                 ReplaceCharacterID(store, previousID, characterID)
                 break
             end
@@ -212,9 +216,9 @@ function Characters:RefreshCurrent()
     record.id = characterID
     record.name = name
     record.realm = realm
-    record.class = select(2, UnitClass("player")) or "UNKNOWN"
-    record.level = UnitLevel("player") or 1
-    record.lastSeenAt = GetTimestamp()
+    record.class = identity.class
+    record.level = identity.level
+    record.lastSeenAt = identity.observedAt
     record.seenOrder = EnsureSeenOrder(store, characterID)
     store.byID[characterID] = record
 
@@ -318,6 +322,9 @@ function Characters:ResolveLegacyKey(key)
 end
 
 function Characters:ImportLegacyCharacter(sourceAddon, legacyKey, data)
+    if Core._private and Core._private.target and Core._private.target.legacyImports == false then
+        return nil, Core:Text("CORE.CLIENT_LEGACY_IMPORT_UNAVAILABLE")
+    end
     local store = GetStore()
     if not store or type(data) ~= "table" then
         return nil, Core:Text("CORE.NO_VALID_CHARACTER_DATA")

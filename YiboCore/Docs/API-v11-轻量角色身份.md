@@ -19,3 +19,7 @@ Core.Characters:GetAll({ identityOnly = true })
 TaskHub 全部角色目录与身份读取、Todo 任务观察／主快照／行动投影、AltoBoss 目标投影与配置范围已接入。TaskHub / Todo 初始化检查新能力，缺少时提示升级并停止；AltoBoss 只停止目标增强，基础 API v5 跟踪继续工作。未触及的旧业务查询后续修改时按实际需求迁移，不改全局 Get 的默认含义。
 
 验证：`_NonRelease/TaskChainPerformance/PerformanceSpec.lua` 使用真实 Core Characters，包含 10,000 条无关物品数据的角色；400 次身份读取未调用 Defaults.Copy，默认完整读取保持数据完整与复制隔离。还覆盖消费者缺少能力时的停止行为。
+
+## R1兼容性复核（2026-10-27）
+
+当前Mists／Forever共享底座采用API13，character-identity:1保持。原生读取经Core内部Client绑定；业务继续使用本页公开投影，不绑定Client或用本地化显示名关联数据。另有GetAllCached只读共享快照，不能按GetAll的可修改副本使用；暂不可读与legacy边界见[共享底座契约](API-v13-R1共享底座兼容与失败契约.md)。新字节实机恢复仍待，原历史版本说明不代表当前渠道状态。

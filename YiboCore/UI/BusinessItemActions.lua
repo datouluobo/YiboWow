@@ -28,7 +28,7 @@ function Actions:GetOptions()
     return Core.Defaults:Copy(db.settings.businessItemActions)
 end
 function Actions:SetOptions(options)
-    if InCombatLockdown and InCombatLockdown() then return nil, Core:Text("CORE.LEAVE_COMBAT_BEFORE_CHANGING_HOW_TARGETS_ARE") end
+    if Core.Client:IsInCombat() then return nil, Core:Text("CORE.LEAVE_COMBAT_BEFORE_CHANGING_HOW_TARGETS_ARE") end
     local clean = self:GetOptions()
     if options.mode then
         if not ({ menu = true, middle = true, ctrlLeft = true, custom = true })[options.mode] then return nil, "invalid-mode" end
@@ -69,7 +69,7 @@ local function Conflicts(binding, g)
     return binding.reservedButtons and binding.reservedButtons[g.button] == true
 end
 function Actions:SetGesture(g)
-    if InCombatLockdown and InCombatLockdown() then return nil, Core:Text("CORE.LEAVE_COMBAT_BEFORE_CHANGING_HOW_TARGETS_ARE") end
+    if Core.Client:IsInCombat() then return nil, Core:Text("CORE.LEAVE_COMBAT_BEFORE_CHANGING_HOW_TARGETS_ARE") end
     if type(g) ~= "table" or not buttons[g.button] then return nil, Core:Text("CORE.CHOOSE_A_VALID_MOUSE_BUTTON") end
     local clean = { button = g.button, alt = g.alt == true, ctrl = g.ctrl == true, shift = g.shift == true }
     for _, binding in pairs(self.bindings) do
@@ -218,10 +218,15 @@ function Actions:ShowMenu(control)
     binding.menu:Show()
 end
 function Actions:RefreshHover()
-    local focus
-    if GetMouseFoci then local foci = GetMouseFoci(); focus = foci and foci[1]
-    elseif GetMouseFocus then focus = GetMouseFocus() end
-    if not GetMouseFoci and not GetMouseFocus then return end
+    local focus, state = Core.Client:ReadMouseFocus()
+    if state ~= "known" then
+        if self.hoverControl then
+            local binding = self.bindings[self.hoverControl]
+            if binding and binding.menu then binding.menu:Hide() end
+            self.hoverControl = nil
+        end
+        return
+    end
     local control
     for _ = 1, 20 do
         if not focus then break end
@@ -323,7 +328,7 @@ function Actions:Bind(control, options)
 end
 function Actions:Unbind(control)
     local binding = self.bindings[control]
-    if binding and binding.ConfigureCtrlLeft and not (InCombatLockdown and InCombatLockdown()) then binding.ConfigureCtrlLeft(false) end
+    if binding and binding.ConfigureCtrlLeft and not (Core.Client:IsInCombat()) then binding.ConfigureCtrlLeft(false) end
     if binding and binding.menu then binding.menu:Hide() end
     if control.yiboGoalMarkerH then control.yiboGoalMarkerH:Hide(); control.yiboGoalMarkerV:Hide() end
     self.bindings[control] = nil

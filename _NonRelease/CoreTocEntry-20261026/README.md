@@ -1,0 +1,21 @@
+# Core三TOC入口测试候选
+
+2026-10-26 X03正式Core三TOC独立候选已部署，待首次实机：用户确认两端退出并补充不要重复已验测试；进程复查无Wow/WowClassic后才部署。候选位于_NonRelease/CoreTocEntry-20261026/Candidate/YiboCore，共92文件；原53个运行Lua逐文件与仓库哈希一致，MoP原默认清单改名YiboCore_Mists.toc，Forever清单沿用，二者增加X-Yibo-Target元数据。默认YiboCore.toc仅引用Common/TocHint.lua，不声明SavedVariables，不创建Core/API、不注册事件；Interface声明50504,16001，两端通用值仍须实机选择核对。Hint为Core尚不可用时的最小预启动诊断，以稳定ASCII键及中英文表输出，不能调用尚未加载的Core:Text，此例外仅限默认TOC提示，不建立并行运行语言服务。目标版本仍MoP1.12.9与Forever0.2.0，存档仍YiboCoreDB／YiboCoreForeverDB，schema未改。
+
+离线仅验证本次新候选：Verify.lua128项通过，覆盖目标清单实际加载、每Lua一次、重复ADDON_LOADED不重复初始化、两端DB隔离、误用对端清单初始化前拒绝和四客户端语言Hint安全行为；不重复全部业务套件，亦不将离线选择等同客户端原生选择。多Interface格式参考打包器一手说明https://github.com/BigWigsMods/packager#multiple-interface-values；正式发行目标包及真实旧包覆盖验收未执行，此候选是开发双目标副本，不作为单目标玩家包。
+
+客户端两端原Core均已由Junction换成独立普通目录；原Junction精确保留于各自客户端_YiboCoreTocTest/20261026-X03/OriginalYiboCore，仍指向仓库YiboCore。切换前备份两端现有Yibo系列存档及bak（MoP85、Forever22，共107份）到各自SavedVariablesBackup，部署前后原WTF哈希一致；继续使用原客户端WTF路径，不称为隔离WTF测试。每端92文件与候选哈希一致，原联接、备份与清单记录在客户端Manifest.json，仓库部署摘要Deployment.json。Vault普通目录与其它插件未改；TOC旧独立探针及其原联接保持原状。
+
+下一步只补新加载链的首次客户端选择：X03A先启动MoP/yco，看1.12.9正常打开、无默认Hint、无新增Lua错误；X03B再核对Forever0.2.0。X01/X02旧加载链基线、已验探针A—D与Vault安装测试全部复用，不重跑。原设置／角色已有证据按范围复用，正式入口误装或缺文件等尚未覆盖边界单列，不扩大业务测试。
+
+恢复与后续：两端Core独立目录不跟随仓库后续修改自动更新。需要回到源码联接时必须先退出两端，逐端把当前Core测试普通目录移入本测试备份根保留，再将OriginalYiboCore移回原AddOns路径；不删除证据、不自动还原WTF。本次不是持久化迁移仓库正式Core加载链；核心源目录默认TOC及所有运行文件未改。公共能力无新增／接入变化，目标职责只为已有清单路由与预启动Hint，正式迁移和发行检查仍按后续范围落地，当前无发布操作。
+
+## Client acceptance complete for declared candidate scope
+
+2026-10-26 X06正式Core候选双端完整退出恢复：用户按正常退出两个客户端、分别重启/yco的指定步骤回复“均通过”。按明确检查范围登记MoP1.12.9、Forever0.2.0、原角色与排序保留、无新增错误反馈通过。复用既有截图与X03/X04证据，不重复安排启动／重载／业务操作。
+
+本轮独立三TOC候选入口验证收尾：X01/X02原源码双端基线；X03候选两端首次选择与可见目录隔离；X04两端reload；X06两端完整退出恢复均通过。X05真实旧MoP1.12.9／1.12.7包保留文件覆盖后的加载图与已验候选完全一致，属于离线结构通过；不冒称真实旧存档副本客户端覆盖、单目标发行包或CF工具验收通过。旧TOC机制探针A—D结果继续复用，本轮不再安排这些场景。
+
+后续落地工作而非本轮重复测试：仓库YiboCore.toc仍是原MoP加载链，实际候选改动仅在_NonRelease/CoreTocEntry-20261026；正式源入口迁移／构建引用／发布配置尚未提交到运行源码，不宣告已完成正式迁移或可发布。两端Core当前仍为独立普通候选目录，原Junction在各自_YiboCoreTocTest/20261026-X03/OriginalYiboCore保留；两端Vault及Forever旧TOC探针部署不变。只有正式源入口与构建接入后，才安排适用的未覆盖边界及最终包检查，文件／加载图未变化且同版本证据可复用时不重复要求实机。源码落地及联接恢复仍须核对客户端退出后精确执行，当前未修改运行文件或还原存档。
+
+无限业务／非TOC探针仍按用户要求暂停，天赋报告等已采证据保留，不继续采样。当前Core布局问题仍独立待修，不把本轮入口通过扩大为全部UI／业务验收完成。

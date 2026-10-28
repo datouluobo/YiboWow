@@ -24,6 +24,11 @@ local ns = {}
 assert(loadfile("YiboBeastPaths/Locale.lua"))("YiboBeastPaths", ns)
 chunk("YiboBeastPaths", ns)
 ybp:InitDebugDB()
+assert(ybp:IsDebugEnabled(), "New profiles show the Core maintenance page by default")
+_G.YiboBeastPathsDebugDB.enabled = false
+ybp:InitDebugDB()
+assert(not ybp:IsDebugEnabled(), "An existing explicit off preference is retained")
+_G.YiboBeastPathsDebugDB.enabled = true
 
 -- Opening the workbench with the world map closed chooses a route near the
 -- player, not an old map retained by the Blizzard frame.

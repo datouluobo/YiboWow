@@ -271,7 +271,7 @@ local function ClampWindowSize(width, height)
 end
 
 local function UpdateWindowClamp(frame, height)
-    if frame.SetClampRectInsets and not (InCombatLockdown and InCombatLockdown()) then
+    if frame.SetClampRectInsets and not (Core.Client:IsInCombat()) then
         -- Keep the title and close button reachable even for a tall settings
         -- window. Clamping the entire body can prevent all vertical dragging.
         frame:SetClampRectInsets(0, 0, 0, frame.preview and 0 or math.max(0, height - Theme.Geometry.titleBar))
@@ -288,19 +288,20 @@ local function FinishWindowDrag(frame)
 end
 
 local function BeginWindowDrag(frame)
-    if frame.preview or frame.windowDrag or (InCombatLockdown and InCombatLockdown()) then return end
+    if frame.preview or frame.windowDrag or (Core.Client:IsInCombat()) then return end
     local scale = frame:GetEffectiveScale()
-    local cursorX, cursorY = GetCursorPosition()
+    local cursorX, cursorY = Core.Client:ReadCursorPosition()
     local left, top = frame:GetLeft(), frame:GetTop()
-    if not left or not top then return end
+    if not left or not top or not cursorX or not cursorY or not scale or scale <= 0 then return end
     frame.windowDrag = { offsetX = cursorX / scale - left, offsetY = cursorY / scale - top,
         previousUpdate = frame:GetScript("OnUpdate") }
     frame:SetScript("OnUpdate", function(self, elapsed)
         local drag = self.windowDrag
         if not drag then return end
-        if InCombatLockdown and InCombatLockdown() then FinishWindowDrag(self); return end
-        local x, y = GetCursorPosition()
+        if Core.Client:IsInCombat() then FinishWindowDrag(self); return end
+        local x, y = Core.Client:ReadCursorPosition()
         local effectiveScale = self:GetEffectiveScale()
+        if not x or not y or not effectiveScale or effectiveScale <= 0 then FinishWindowDrag(self); return end
         x, y = x / effectiveScale - drag.offsetX, y / effectiveScale - drag.offsetY
         x = math.max(0, math.min(x, math.max(0, UIParent:GetWidth() - self:GetWidth())))
         y = math.max(Theme.Geometry.titleBar, math.min(y, UIParent:GetHeight()))
@@ -578,8 +579,14 @@ function AccountView:UnregisterPage(pageID)
     for index = #self._pageOrder, 1, -1 do
         if self._pageOrder[index].id == pageID then table.remove(self._pageOrder, index) end
     end
-    if self.frame and self.frame.instances[pageID] then self.frame.instances[pageID]:Hide() end
+    if self.frame and self.frame.instances[pageID] then
+        self.frame.instances[pageID]:Hide()
+        -- A new registration owns a new Create/Refresh lifecycle. Retaining
+        -- this slot would silently reuse the previous registration's controls.
+        self.frame.instances[pageID] = nil
+    end
     if self.activePageID == pageID then self.activePageID = "overview" end
+    if self.previewPageID == pageID then self:HidePreview() end
     self:RefreshPage()
     Core.Events:Fire("ACCOUNT_VIEW_PAGE_UNREGISTERED", pageID, page.addonName)
     return true
@@ -814,7 +821,8 @@ end
 local function GetScopeDefinition(page, characters)
     if type(page) == "table" and page.scope and page.scope.mode == "realms" then
         local current = Core.Characters:GetCurrent()
-        local currentRealm = (current and current.realm) or (GetRealmName and GetRealmName()) or "Unknown"
+        local native = not current and Core.Client and Core.Client:ReadNameRealm()
+        local currentRealm = (current and current.realm) or (native and native.realm) or "Unknown"
         local realms = {}
         for _, character in ipairs(characters or Core.Characters:GetAllCached()) do
             local admitted = true
@@ -1005,7 +1013,7 @@ end
 -- page.  A normal Lua Frame:Hide() is therefore blocked once combat starts.
 -- This state handler runs the visibility change in WoW's secure environment.
 function AccountView:EnsureCombatWindowHider()
-    if self.combatWindowHider or not self.frame or (InCombatLockdown and InCombatLockdown()) then return end
+    if self.combatWindowHider or not self.frame or (Core.Client:IsInCombat()) then return end
     local hider = CreateFrame("Frame", nil, UIParent, "SecureHandlerStateTemplate")
     hider:SetFrameRef("accountFrame", self.frame)
     hider:SetAttribute("_onstate-combat", [[
@@ -1021,7 +1029,7 @@ function AccountView:EnsureCombatWindowHider()
             accountFrame:Show()
         end
     ]])
-    RegisterStateDriver(hider, "combat", "[combat] 1; 0")
+    if not Core.Client:RegisterCombatDriver(hider) then return end
     self.combatWindowHider = hider
 end
 
@@ -1073,7 +1081,7 @@ function AccountView:CreateFrame()
             AccountView.previewPageID, AccountView.previewPageOptions, AccountView.previewAnchor = nil, nil, nil
             AccountView:ApplyNormalLayout()
         end
-        if not (InCombatLockdown and InCombatLockdown()) then
+        if not (Core.Client:IsInCombat()) then
             self:SetAttribute("isHoverPreview", nil)
             self:SetAttribute("restoreMainAfterPreview", nil)
         end
@@ -1448,7 +1456,7 @@ function AccountView:ShowPage(pageID, options, forceAutoFitWidth)
     -- Switching pages hides every inactive page instance, which WoW forbids
     -- while in combat when any of them is protected.  Keep the requested
     -- refresh and apply it immediately after combat instead.
-    if InCombatLockdown and InCombatLockdown() then
+    if Core.Client:IsInCombat() then
         self._pendingPageID = pageID
         self._pendingPageOptions = options
         self._refreshPendingAfterCombat = true
@@ -1466,7 +1474,7 @@ function AccountView:ShowPage(pageID, options, forceAutoFitWidth)
     local context = options.context or self:BuildContext(page, options)
     if not options.preview then
         self.frame = self.frame or self:CreateFrame()
-        if not (InCombatLockdown and InCombatLockdown()) then
+        if not (Core.Client:IsInCombat()) then
             self.frame:SetAttribute("isHoverPreview", nil)
             self.frame:SetAttribute("restoreMainAfterPreview", nil)
         end
@@ -1524,7 +1532,7 @@ end
 
 function AccountView:RefreshPage(forceAutoFitWidth)
     if not (self.frame and self.frame:IsShown()) then return end
-    if InCombatLockdown and InCombatLockdown() then
+    if Core.Client:IsInCombat() then
         self._refreshPendingAfterCombat = true
         return false
     end
@@ -1687,7 +1695,7 @@ function AccountView:TrackPreviewControls(root)
 end
 
 function AccountView:ShowPreview(pageID, anchor, forceRefresh)
-    if InCombatLockdown and InCombatLockdown() then return false end
+    if Core.Client:IsInCombat() then return false end
     local page = self._pages[pageID] or self:GetPreviewPage()
     local frame = self:CreateFrame()
     local rebuildingVisiblePreview = frame:IsShown() and frame.preview
@@ -1802,7 +1810,7 @@ function AccountView:HidePreview()
     if not frame or not frame.preview then return end
     local restoreNormalWindow = self.restoreNormalWindowAfterPreview == true
     frame:Hide()
-    if not (InCombatLockdown and InCombatLockdown()) then
+    if not (Core.Client:IsInCombat()) then
         frame:SetAttribute("isHoverPreview", nil)
         frame:SetAttribute("restoreMainAfterPreview", nil)
     end
@@ -1818,7 +1826,7 @@ function AccountView:HidePreview()
 end
 
 function AccountView:Toggle(pageID)
-    if InCombatLockdown and InCombatLockdown() then
+    if Core.Client:IsInCombat() then
         return false
     end
     local frame = self:CreateFrame()
@@ -1834,7 +1842,7 @@ function AccountView:Toggle(pageID)
 end
 
 function AccountView:ShowSettings(targetID)
-    if InCombatLockdown and InCombatLockdown() then
+    if Core.Client:IsInCombat() then
         Core:Print(Core:Text("CORE.CANNOT_OPEN_SETTINGS_IN_COMBAT_TRY_AGAIN"))
         return false
     end
@@ -1898,6 +1906,9 @@ local function GetOverviewSurfaceMetrics()
 end
 
 local function GetAboutSurfaceMetrics()
+    if Core.AddonCatalog and #Core.AddonCatalog == 0 then
+        return { minContentWidth = 582, naturalContentWidth = 764, minContentHeight = 180, naturalContentHeight = 180, verticalOverflow = "content" }
+    end
     return { minContentWidth = 582, naturalContentWidth = 764, minContentHeight = 693, naturalContentHeight = 713, verticalOverflow = "content" }
 end
 

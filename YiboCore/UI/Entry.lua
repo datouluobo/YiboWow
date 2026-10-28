@@ -100,7 +100,7 @@ local function AngleFromOffset(y, x)
 end
 
 local function ResolveAnchor(candidate)
-    local mouseFocus = GetMouseFocus and GetMouseFocus()
+    local mouseFocus = Core.Client:ReadMouseFocus()
     if mouseFocus and type(mouseFocus.GetLeft) == "function" then return mouseFocus end
     if candidate and type(candidate.GetLeft) == "function" then return candidate end
     return nil
@@ -378,10 +378,10 @@ function Entry:IsMouseOverFrame(frame)
     -- weekly has interactive matrix cells, so that made an invisible overflow
     -- cell keep the preview alive after the pointer had visibly left it.
     -- Cursor coordinates provide every business page the same close boundary.
-    if not (GetCursorPosition and UIParent and UIParent.GetEffectiveScale) then return false end
+    if not (UIParent and UIParent.GetEffectiveScale) then return false end
     local scale = UIParent:GetEffectiveScale()
     if not scale or scale <= 0 then return false end
-    local cursorX, cursorY = GetCursorPosition()
+    local cursorX, cursorY = Core.Client:ReadCursorPosition()
     local left, right, bottom, top = frame:GetLeft(), frame:GetRight(), frame:GetBottom(), frame:GetTop()
     if not (cursorX and cursorY and left and right and bottom and top) then return false end
     cursorX, cursorY = cursorX / scale, cursorY / scale

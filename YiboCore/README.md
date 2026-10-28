@@ -1,15 +1,28 @@
 # YiboCore
 
-当前版本：**1.12.8 / API13**。新增 `calendar-day-query:1`，供Todo1.2.4和AltoBoss2.8.3查询服务器当天事件，保护异常多年日历基准及启动未就绪日期。异常来源继续观察，完整客户端验收与渠道发布分别记录。
+2026-10-27 当前开发基线：**Mists1.12.9／Forever0.2.0／Retail0.1.0，API13／schema11**。R0～R3适用实施完成；R4的Retail／Mists本次干净安装、声明旧包覆盖和存档恢复范围已验，原联接已恢复。R5文档与台账收尾完成，Forever保留待测，扩展旧夹具、未验语言／UI、真实YBP接入及发行检查仍待；整体未判定可发布，未发布。
+
+- [R5收尾与验收边界](Docs/R5-文档与台账收尾验收.md)：区分两端已验、Forever待验及未完成发行门槛；[R4原始证据](../_NonRelease/CoreFinalR4/README.md)按冻结版本保留。
+
+- [Retail目标与构建验收](Docs/R2-01-02-Retail目标与构建实施验收.md)：实测Mainline加载、身份／存档保护、三目标回归和包证据。
+- [R3消费者契约验收](Docs/R3-YBP离线兽栏公共契约实施验收.md)及[API13支持基线](Docs/API-v13-YBP离线兽栏公共支持契约.md)：复用12项能力，2463项三目标合成消费者检查通过；YBP业务未接入。
+- [R1兼容与失败契约](Docs/API-v13-R1共享底座兼容与失败契约.md)：公共接口保持，Retail仅增加最小目录支持。
+- Retail源码与构建唯一清单为YiboCore_Mainline.toc（已实测识别）；玩家包仅默认YiboCore.toc。业务目录分别Mists14／Forever6／Retail1，Retail只有YBP已有路线元数据，离线兽栏与“已拥有”尚未实现。
+
+2026-10-26 源入口已迁移为三 TOC：`YiboCore_Mists.toc`（1.12.9／API13）、`YiboCore_Forever.toc`（0.2.0／API13）及仅预启动提示的默认 `YiboCore.toc`。单目标构建会把所选清单输出为玩家默认 TOC；开发源码目录采用双目标清单。入口实机证据及构建接入范围见[记录](Docs/多目标TOC入口-实施与验收.md)。下方旧版本说明按其日期理解。
+
+> 文档状态更新（2026-10-16）：现有功能已由用户确认实机验收收口。当前源码版本与发行证据见[状态总览](../Docs/仓库当前状态总览.md)，后续任务见[延期清单](../Docs/后续开发任务清单.md)。下文旧版本的开发／待验收描述按其原日期理解；当前版本渠道状态没有明确证据时保留待核对。
+
+历史增量：**1.12.8 / API13**。新增 `calendar-day-query:1`，供Todo1.2.4和AltoBoss2.8.3查询服务器当天事件，保护异常多年日历基准及启动未就绪日期。异常来源继续观察，完整客户端验收与渠道发布分别记录。
 
 1.12.5 / API13发布 `character-cleanup:2`，用于动态所有者留存与带时间上下文的延后清理；与Builds1.5.0配套，旧消费者保持兼容。见[清理v2契约](Docs/API-v13-角色清理v2.md)。
 
 1.12.4工作树 / API13工作树已停止货币业务采集，Currency0.9.1工作树通过公开接口导入旧快照并接管新存储。旧Core货币记录冻结保留，不自动清理；需配套升级，见[货币迁移记录](../YiboCurrency/Docs/货币数据归属迁移-实施与验收记录.md)。Core新增[通用档案字段与清理所有者能力](Docs/API-v13-档案业务字段与清理所有者.md)，不直接读取业务存档。
 
 1.12.4 / API13 工作树已将声望采集和新快照存储交给 YiboReputation 1.7.1。旧 Core 声望快照冻结保留，通过现有公开读取接口供一次性导入；请配套升级 Reputation，旧版只会显示冻结数据。实施与待验收范围见 [声望迁移记录](../YiboReputation/Docs/声望数据归属迁移-实施与验收记录.md)。
-当前工作树 **1.12.1 / API13** 增加可声明的悬停角色范围，旧页面默认仍为前20名；Mail 1.2.13 按需保留全部有效角色。见 [悬停角色范围契约](Docs/API-v13-悬停角色范围.md)。
+历史增量 **1.12.1 / API13** 增加可声明的悬停角色范围，旧页面默认仍为前20名；Mail 1.2.13 按需保留全部有效角色。见 [悬停角色范围契约](Docs/API-v13-悬停角色范围.md)。
 
-工作树新增 **1.12.0 / API v13 / localization:1**：YiboCore 已支持中英文界面适配与语言切换。Core 常规设置 → 通用 → 插件语言，可选择跟随客户端、中文或 English；选择后重载界面生效，缺失英文资源会回退中文。该支持覆盖 Core 自身界面；业务插件正按区域渐进接入，尚未迁移的文字可能仍为中文。当前工作树尚未发布，客户端验收状态见 [实施记录](../Docs/Core系列中英文客户端适配-实施与验收记录.md)；语言服务契约见 [API v13 语言服务](Docs/API-v13-语言服务.md)。
+历史增量 **1.12.0 / API v13 / localization:1**：YiboCore 已支持中英文界面适配与语言切换。Core 常规设置 → 通用 → 插件语言，可选择跟随客户端、中文或 English；选择后重载界面生效，缺失英文资源会回退中文。该支持覆盖 Core 自身界面；业务插件正按区域渐进接入，尚未迁移的文字可能仍为中文。当前工作树尚未发布，客户端验收状态见 [实施记录](../Docs/Core系列中英文客户端适配-实施与验收记录.md)；语言服务契约见 [API v13 语言服务](Docs/API-v13-语言服务.md)。
 
 ## Public overview / 对外说明
 
@@ -46,7 +59,7 @@ Core 的特点是让多个业务插件共用账号与角色管理，同时保留
 
 Yibo WoW 插件的共享运行时、角色档案与账号视图框架。
 
-当前已发布版本为 **1.11.0 / API v12**，提供 [业务项目主动添加](Docs/API-v12-业务项目主动添加.md) / business-item-actions:1；保留 API v11 能力，并提供 `business-providers:1`、多来源注册与 `Contracts:List`，契约见 [API v11 跨业务 Provider](Docs/API-v11-跨业务Provider.md)。O4 按真实展示需求补齐 [角色准入通知](Docs/API-v11-角色准入通知.md) / `account-character-admission:1`。Todo 1.1.4 两项来源与 TaskHub 0.3.1 四个展示面已接入；Mail 1.2.6-api1 输出新邮件查看提醒。359 项集成与展示及既有 Service 回归通过，详见[复核记录](../Docs/行动中心-新邮件语义与角色显示复核.md)。
+历史发行说明 **1.11.0 / API v12**，提供 [业务项目主动添加](Docs/API-v12-业务项目主动添加.md) / business-item-actions:1；保留 API v11 能力，并提供 `business-providers:1`、多来源注册与 `Contracts:List`，契约见 [API v11 跨业务 Provider](Docs/API-v11-跨业务Provider.md)。O4 按真实展示需求补齐 [角色准入通知](Docs/API-v11-角色准入通知.md) / `account-character-admission:1`。Todo 1.1.4 两项来源与 TaskHub 0.3.1 四个展示面已接入；Mail 1.2.6-api1 输出新邮件查看提醒。359 项集成与展示及既有 Service 回归通过，详见[复核记录](../Docs/行动中心-新邮件语义与角色显示复核.md)。
 
 2026-10-10 新增 [轻量角色身份](Docs/API-v11-轻量角色身份.md) / character-identity:1，TaskHub、Todo 与 AltoBoss 目标链路已接入，避免高频完整角色深复制。详见 [性能修复记录](../Docs/任务链-性能异常修复-2026-10-10.md)。
 
@@ -128,6 +141,10 @@ CF 包名按目标、插件版本、公开 API 排列，例如 `YiboCore-mists-v
 ## 工作树：动态账号字段（2026-10-15）
 
 Core1.12.4 / API13新增 `account-dynamic-fields:1`。业务可通过只读 `GetFieldDefinitions` 回调提供运行时变化的显示与悬停选项，Core统一读取、校验并保存主表选择；静态字段注册保持兼容。Currency0.10.0用于自定义代币目录，离线验证通过、客户端待验，见[公开契约](Docs/API-v13-动态账号字段.md)。
+
+## 无限服开发验证
+
+新增 `YiboCore_Forever.toc` 开发清单（0.1.0 / API13 / Interface16001），复用当前 Core 的启动、GUID角色目录、独立存档和统一窗口。MoP 默认清单仍为1.12.7 / API13 / Interface50504。实现边界、离线证据与两个客户端的实测步骤见[无限服最小适配与验收](Docs/Forever-最小适配与验收.md)。当前待客户端验收，尚未发布无限包。
 
 
 ## 2026-10-25 Mists 1.12.9

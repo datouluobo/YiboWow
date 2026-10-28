@@ -124,6 +124,8 @@ assert(matrixWidth > 0, "matrix measurement remains usable")
 
 local fields = {}
 Core.Fields = { Register = function(_, _, definition) fields[definition.id] = definition; return definition end }
+Core.DataDomains = { _definitions = { identity = true } }
+dofile("YiboCore/Mists/Fields.lua")
 dofile("YiboCore/Data/Fields/CharacterArchive.lua")
 Equal(fields["character.identity"].Format(character), "天堂猎手-Silver Moon", "archive identity remains original/full")
 Equal(fields["character.identity"].Format(nil), "—", "empty archive value")

@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-28",
+  "version": "1.8.3",
+  "package": "E:\\Development\\YiboWow\\Builds\\YiboBeastPaths-universal-v1.8.3-curseforge.zip",
+  "sha256": "0ac05667316b2797e1c1593899337c7f3dd68a142dc9cf1b1568b72f6a882879",
+  "coreIntegrationChecks": 992,
+  "viewSmoke": "zh/en, 4 tabs, 91 actions each",
+  "mapContextSmoke": "passed",
+  "syntax": "26 files, 3 TOCs",
+  "tocLoadingPoints": "single shared adapter per target",
+  "clientAcceptance": "pending",
+  "publication": "none"
+}

@@ -1,22 +1,38 @@
 local Core = _G.YiboCore
 
-local SECONDARY_SLOTS = { [3] = 794, [4] = 356, [5] = 185, [6] = 129 }
-
 local function Profile(character) return character and character.profile or {} end
-local function Profession(character, data, slot, skillLine)
+local function Profession(character, data, slot, skillLine, state)
     local profile = data or Profile(character)
-    if slot then return (profile.primaryProfessions and profile.primaryProfessions[slot]) or (profile.professions and profile.professions[slot]) end
+    if state ~= "known" and (not data or (data.professions == nil and data.primaryProfessions == nil)) then
+        profile = Profile(character)
+    end
+    if slot then
+        if profile.primaryProfessions then return profile.primaryProfessions[slot] end
+        if profile.skillLineIDsAuthoritative then return nil end
+        local hasSlots = false
+        for _, item in ipairs(profile.professions or {}) do
+            if item.slot ~= nil then
+                hasSlots = true
+                if tonumber(item.slot) == slot then return item end
+            end
+        end
+        if hasSlots then return nil end
+        return profile.professions and profile.professions[slot]
+    end
     for _, item in ipairs(profile.professions or {}) do
-        if item.id == skillLine or SECONDARY_SLOTS[tonumber(item.slot)] == skillLine then return item end
+        if item.id == skillLine or (not profile.skillLineIDsAuthoritative and (Core._private.professionSlotIDs or {})[tonumber(item.slot)] == skillLine) then return item end
     end
 end
 local function ProfessionValue(slot, skillLine)
-    return function(character, data) return Profession(character, data, slot, skillLine) end
+    return function(character, data, state) return Profession(character, data, slot, skillLine, state) end
 end
 local function ProfessionFormat(value) return value and tostring(value.skillLevel or "?") or "—" end
 local function ProfessionIcon(value) return value and value.icon end
 
 local function Register(definition)
+    -- Target manifests load only the domains whose collection is implemented.
+    local policy = Core._private.archiveFields or {}
+    if not policy[definition.id] or not Core.DataDomains._definitions[definition.domain] then return end
     definition.title = Core:Text(definition.titleKey)
     local entry = assert(Core.Fields:Register("YiboCore", definition))
     Core.Locale:BindText(entry, "title", definition.titleKey)

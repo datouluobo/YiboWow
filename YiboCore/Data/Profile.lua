@@ -31,8 +31,15 @@ end
 
 function Profile:RegisterCollector(name, callback, events)
     if type(name) ~= "string" or name == "" or type(callback) ~= "function" then return nil, Core:Text("CORE.CHARACTER_PROFILE_COLLECTORS_REQUIRE_A_NAME_AND") end
+    if events ~= nil then
+        if type(events) ~= "table" then return nil, Core:Text("CORE.DOMAIN_EVENTS_MUST_BE_A_SET_OF") end
+        for event, enabled in pairs(events) do
+            if type(event) ~= "string" or type(enabled) ~= "boolean" then return nil, Core:Text("CORE.DOMAIN_EVENTS_MAY_ONLY_CONTAIN_ENABLED_EVENT") end
+        end
+    end
     if self._collectors[name] then return nil, Core:Text("CORE.CHARACTER_PROFILE_COLLECTOR_ALREADY_EXISTS") .. name end
     self._collectors[name] = { callback = callback, events = events }
+    if Core._private.RegisterDomainEvents then Core._private.RegisterDomainEvents(events) end
     return true
 end
 

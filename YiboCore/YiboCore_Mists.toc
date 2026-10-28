@@ -1,0 +1,77 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r YiboCore - Account UI Framework
+## Title-zhCN: |cff20e070[Yibo]|r YiboCore
+## Title-zhTW: |cff20e070[Yibo]|r YiboCore
+## Notes: Shared runtime and account data foundation for Yibo WoW addons.
+## Notes-zhCN: Yibo 系列插件的运行时与账号数据基础框架。
+## Author: YiboSoft
+## Version: 1.12.9
+## IconTexture: Interface\AddOns\YiboCore\Media\YiboCoreIcon-128
+## SavedVariables: YiboCoreDB
+## OptionalDeps: LibDataBroker-1.1
+## LoadOnDemand: 0
+
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Bootstrap.lua
+Mists\Target.lua
+Mists\Metadata.lua
+Util\Defaults.lua
+Runtime\Capabilities.lua
+Runtime\Locale.lua
+Locales\zhCN.lua
+Locales\enUS.lua
+Runtime\Registry.lua
+Runtime\SettingsRegistry.lua
+Runtime\Events.lua
+Runtime\Client.lua
+Common\ClientReaders.lua
+Mists\Client.lua
+Common\ClientSurface.lua
+Mists\Surface.lua
+Mists\Calendar.lua
+Runtime\Contracts.lua
+Runtime\DataDomains.lua
+Runtime\Resources.lua
+Runtime\ItemResolver.lua
+Runtime\Fields.lua
+Runtime\ArchiveFields.lua
+Runtime\Commands.lua
+Runtime\EntryConfig.lua
+Data\Migrations.lua
+Data\Validation.lua
+Data\Database.lua
+Data\Characters.lua
+Data\CharacterCleanup.lua
+Data\DomainStore.lua
+Common\ProfessionDomain.lua
+Data\Domains\Identity.lua
+Mists\Professions.lua
+Mists\Equipment.lua
+Data\Domains\Location.lua
+Mists\Specialization.lua
+Mists\Fields.lua
+Data\Fields\CharacterArchive.lua
+Data\AddonCatalog.lua
+Runtime\AddonStatus.lua
+Data\Profile.lua
+Util\LevelFilter.lua
+Util\CharacterSort.lua
+UI\Theme.lua
+UI\Input.lua
+UI\ItemConfirmation.lua
+UI\ItemPicker.lua
+UI\IconPicker.lua
+UI\BusinessItemActions.lua
+UI\AccountView.lua
+UI\AccountPages\Overview.lua
+UI\AccountPages\CharacterArchive.lua
+UI\AccountPages\SettingsWorkbench.lua
+UI\AccountPages\Help.lua
+UI\AccountPages\About.lua
+UI\Entry.lua
+UI\EntryBar.lua
+Runtime\Lifecycle.lua
+
+## X-Yibo-Target: Mists
