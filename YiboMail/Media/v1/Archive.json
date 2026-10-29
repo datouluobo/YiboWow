@@ -1,0 +1,97 @@
+{
+  "archived_on": "2026-10-14",
+  "addon": "YiboMail",
+  "archive": "v1",
+  "files": [
+    {
+      "file": "YiboMailIcon-v1-1024.png",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailIcon-v1-1024.png"
+    },
+    {
+      "file": "YiboMailIcon-v1-1024.tga",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailIcon-v1-1024.tga"
+    },
+    {
+      "file": "YiboMailIcon-v1-128.png",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailIcon-v1-128.png"
+    },
+    {
+      "file": "YiboMailIcon-v1-128.tga",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailIcon-v1-128.tga"
+    },
+    {
+      "file": "YiboMailIcon-v1-24.png",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailIcon-v1-24.png"
+    },
+    {
+      "file": "YiboMailIcon-v1-24.tga",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailIcon-v1-24.tga"
+    },
+    {
+      "file": "YiboMailIcon-v1-32.png",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailIcon-v1-32.png"
+    },
+    {
+      "file": "YiboMailIcon-v1-32.tga",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailIcon-v1-32.tga"
+    },
+    {
+      "file": "YiboMailIcon-v1-512.png",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailIcon-v1-512.png"
+    },
+    {
+      "file": "YiboMailIcon-v1-512.tga",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailIcon-v1-512.tga"
+    },
+    {
+      "file": "YiboMailIcon-v1-64.png",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailIcon-v1-64.png"
+    },
+    {
+      "file": "YiboMailIcon-v1-64.tga",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailIcon-v1-64.tga"
+    },
+    {
+      "file": "YiboMailIcon-v1-master.svg",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailIcon-v1-master.svg"
+    },
+    {
+      "file": "YiboMailIcon-v1.png",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailIcon-v1.png"
+    },
+    {
+      "file": "YiboMailIcon-v1.tga",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailIcon-v1.tga"
+    },
+    {
+      "file": "YiboMailLogo-v1.png",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailLogo-v1.png"
+    },
+    {
+      "file": "YiboMailMinimapIcon-v1.png",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailMinimapIcon-v1.png"
+    },
+    {
+      "file": "YiboMailMinimapIcon-v1.tga",
+      "original_version": "1",
+      "original_path": "YiboMail/Media/YiboMailMinimapIcon-v1.tga"
+    }
+  ]
+}

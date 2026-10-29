@@ -33,11 +33,12 @@ function DomainStore:Get(characterID, domainID)
 end
 
 function DomainStore:GetState(characterID, domainID)
-    local domain = self:Get(characterID, domainID)
+    local record = GetRecord(characterID)
+    local domain = record and record.domains and record.domains[domainID]
     return domain and domain.state or nil
 end
 
-function DomainStore:Commit(characterID, domainID, data, state, context)
+local function Commit(characterID, domainID, data, state, context, returnSnapshot)
     local record = GetRecord(characterID)
     if not record then return nil, Core:Text("CORE.CHARACTER_NOT_FOUND") .. tostring(characterID) end
     if not (Core.DataDomains and Core.DataDomains:IsStateValid(state)) then return nil, Core:Text("CORE.INVALID_DOMAIN_STATE") .. tostring(state) end
@@ -46,12 +47,12 @@ function DomainStore:Commit(characterID, domainID, data, state, context)
     record.domains = record.domains or {}
     local previous = record.domains[domainID]
     local previousData = previous and previous.data or nil
-    local nextData = data == nil and Copy(previousData or {}) or Copy(data)
+    local nextData = data == nil and (previousData or {}) or data
     local changed = not previous or previous.state ~= state or previous.schemaVersion ~= definition.version or not Equal(previousData, nextData)
-    if not changed then return Copy(previous), false end
+    if not changed then return returnSnapshot and Copy(previous) or nil, false end
     local snapshot = {
         schemaVersion = definition.version, state = state, updatedAt = Timestamp(),
-        revision = (previous and tonumber(previous.revision) or 0) + 1, data = nextData,
+        revision = (previous and tonumber(previous.revision) or 0) + 1, data = Copy(nextData),
     }
     record.domains[domainID] = snapshot
     local changedKeys = context and context.changedKeys or ChangedKeys(previousData, nextData)
@@ -60,7 +61,17 @@ function DomainStore:Commit(characterID, domainID, data, state, context)
         changedKeys = Copy(changedKeys), reason = context and context.reason,
         updatedAt = snapshot.updatedAt, state = state,
     })
-    return Copy(snapshot), true
+    return returnSnapshot and Copy(snapshot) or nil, true
+end
+
+function DomainStore:Commit(characterID, domainID, data, state, context)
+    return Commit(characterID, domainID, data, state, context, true)
+end
+
+-- Collection only consumes update events. Avoid constructing a detached return
+-- snapshot that its caller immediately discards; storage still owns a copy.
+Core._private.CommitCollectedDomain = function(characterID, domainID, data, state, context)
+    return Commit(characterID, domainID, data, state, context, false)
 end
 
 Core.Capabilities:Register("domain-store", 1)

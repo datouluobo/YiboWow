@@ -2,9 +2,24 @@ local Core = _G.YiboCore
 local Config = {}
 Core.EntryConfig = Config
 local modes = { none = {}, broker = {broker=true}, minimap = {minimap=true}, both = {broker=true,minimap=true} }
+local channelKeys = { minimap = true, broker = true, builtinBar = true }
+local backgrounds = {theme=true,black=true,charcoal=true,navy=true,forest=true}
+local points = {TOP=true,TOPLEFT=true,TOPRIGHT=true,CENTER=true,LEFT=true,RIGHT=true,BOTTOM=true,BOTTOMLEFT=true,BOTTOMRIGHT=true}
 local function Channels(value, fallback)
     value = type(value) == "table" and value or fallback or {}
+    -- Settings getters validate repeatedly. Reuse canonical tables while still
+    -- checking every field, so direct edits and unknown keys are not cached away.
+    if getmetatable(value) == nil and type(value.minimap) == "boolean" and type(value.broker) == "boolean" and type(value.builtinBar) == "boolean" then
+        local valid = true
+        for key in pairs(value) do if not channelKeys[key] then valid = false; break end end
+        if valid then return value end
+    end
     return { minimap=value.minimap == true, broker=value.broker == true, builtinBar=value.builtinBar == true }
+end
+local function Number(value, default, low, high)
+    value = tonumber(value)
+    if not value or value ~= value then value = default end
+    return math.max(low, math.min(high, value))
 end
 function Config:FromMode(mode) return Channels(modes[mode]) end
 function Config:Normalize(entry)
@@ -28,22 +43,15 @@ function Config:Normalize(entry)
     bar.locked = bar.locked ~= false
     bar.showNames = bar.showNames == true
     bar.showBorder = bar.showBorder ~= false
-    local backgrounds = {theme=true,black=true,charcoal=true,navy=true,forest=true}
     bar.background = backgrounds[bar.background] and bar.background or "theme"
     local order,seen = {},{}
     for _,id in ipairs(type(bar.order) == "table" and bar.order or {}) do
         if type(id) == "string" and id ~= "" and not seen[id] then order[#order+1]=id;seen[id]=true end
     end
     bar.order = order
-    local function Number(value, default, low, high)
-        value = tonumber(value)
-        if not value or value ~= value then value = default end
-        return math.max(low, math.min(high, value))
-    end
     bar.backgroundAlpha = Number(bar.backgroundAlpha,0.95,0,1)
     bar.iconSize = Number(bar.iconSize,24,16,48)
     bar.spacing = Number(bar.spacing,6,0,20)
-    local points = {TOP=true,TOPLEFT=true,TOPRIGHT=true,CENTER=true,LEFT=true,RIGHT=true,BOTTOM=true,BOTTOMLEFT=true,BOTTOMRIGHT=true}
     bar.point = points[bar.point] and bar.point or "TOP"
     bar.relativePoint = points[bar.relativePoint] and bar.relativePoint or "TOP"
     bar.x = Number(bar.x,0,-10000,10000); bar.y = Number(bar.y,-16,-10000,10000)

@@ -32,6 +32,8 @@ Core:RegisterSettingsPanel("YiboExample", {
 
 设置面板按插件技术名字母序排列。业务设置页不得重复角色排序、页面/入口显示、主表字段或悬停字段；这些由 Core 的通用页面保存和渲染。
 
+2026-10-29 API13工作树生命周期补充：host.refreshPanel／refreshPage只刷新仍注册、当前可见且属于本目标的设置UI；离开、隐藏或注销后调用不重建旧面板，也不刷新其它目标。返回原目标后，仍由原控件持有的同所有者回调继续有效。notifyPageChanged是业务数据失效通知，不受这项UI可见性限制；显式selectSettingsTarget也保留导航语义。业务状态的保存／失效仍由业务所有者负责，不以UI刷新是否执行判断保存成功。方法签名和能力版本不变，证据与实机边界见[切页生命周期记录](../../Docs/Core-切页回调与预览生命周期-2026-10-29.md)。
+
 ## 2. 同一范围与角色顺序
 
 业务页面的 `Create` / `Refresh` 会收到 Core 构造的 context。插件必须以 `context.characters` 作为唯一的页面角色切片：

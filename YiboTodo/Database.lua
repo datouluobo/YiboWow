@@ -1,4 +1,43 @@
 local Addon = _G.YiboTodo
+local HISTORY_AGE = 90 * 86400
+local historyChecks = setmetatable({}, { __mode = "k" })
+local function Stamp(entry)
+    if type(entry) ~= "table" then return nil end
+    local latest
+    for _, field in ipairs({ "nextResetAt", "completedAt", "observedAt" }) do
+        local at = tonumber(entry[field])
+        if at and at > 0 and at < math.huge and (not latest or at > latest) then latest = at end
+    end
+    return latest
+end
+local function PruneDays(days, cutoff, depth)
+    if type(days) ~= "table" or depth > 1 then return 0 end
+    local newest, newestAt, removed = nil, nil, 0
+    for key, entry in pairs(days) do
+        local at = Stamp(entry)
+        if at and (not newestAt or at > newestAt) then newest, newestAt = key, at end
+    end
+    for key, entry in pairs(days) do
+        local at = Stamp(entry)
+        -- The latest observation remains a baseline for eligibility/estimates.
+        if at and at < cutoff and key ~= newest then days[key] = nil; removed = removed + 1
+        elseif not at and type(entry) == "table" then removed = removed + PruneDays(entry, cutoff, depth + 1) end
+    end
+    return removed
+end
+
+function Addon.Database:PruneProviderHistory(provider, now)
+    now = tonumber(now)
+    if not provider or not now or now ~= now or now <= 0 or now == math.huge then return 0 end
+    local last = historyChecks[provider]
+    if last and now >= last and now - last < 3600 then return 0 end
+    historyChecks[provider] = now
+    local removed = 0
+    for _, field in ipairs({ "days", "cookingDays", "activityDays" }) do
+        removed = removed + PruneDays(provider[field], now - HISTORY_AGE, 0)
+    end
+    return removed
+end
 
 local DEFAULTS = {
     schemaVersion = 10,
@@ -135,6 +174,7 @@ function Addon.Database:GetProvider(characterID, providerID, create)
         provider = { revision = 0, lastAttemptAt = 0, lastSuccessAt = 0, state = "not-yet-scanned", observations = {} }
         character.providers[providerID] = provider
     end
+    if provider and Addon.initialized then self:PruneProviderHistory(provider, Addon:Now()) end
     return provider
 end
 

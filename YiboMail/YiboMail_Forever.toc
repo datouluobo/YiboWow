@@ -1,0 +1,22 @@
+## Interface: 16001
+## Title: |cff20e070[Yibo]|r YiboMail - Mail Assistant
+## Title-zhCN: |cff20e070[Yibo]|r YiboMail - 邮件助手
+## Title-zhTW: |cff20e070[Yibo]|r YiboMail - 邮件助手
+## Notes: Forever development build: current character read-only inbox snapshots. Client acceptance pending.
+## Notes-zhCN: 无限开发版：当前角色收件箱只读快照，待实机验证。
+## Author: YiboSoft
+## Version: 0.1.0-api1
+## RequiredDeps: YiboCore
+## Group: YiboCore
+## SavedVariables: YiboMailForeverDB
+## IconTexture: Interface\AddOns\YiboMail\Media\YiboMailIcon-128
+
+Namespace.lua
+Forever\Target.lua
+Locales\zh.lua
+Locales\en.lua
+Store.lua
+Items.lua
+Forever\Scanner.lua
+Forever\AccountPage.lua
+Forever\Bootstrap.lua

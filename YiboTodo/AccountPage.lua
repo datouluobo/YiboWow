@@ -282,7 +282,7 @@ function Page:RefreshProjectIcon(target)
     local button = target and target.button
     local original = target and target.project
     if not (button and original and button:IsShown() and button.actionProject == original) then return false end
-    local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+    local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent({ identityOnly = true })
     if not current or current.id ~= target.characterID then return false end
     local snapshot = Addon.Snapshot and Addon.Snapshot:Build()
     local data = snapshot and snapshot.characters and snapshot.characters[target.characterID]
@@ -296,9 +296,9 @@ function Page:RefreshProjectIcon(target)
 end
 
 local function RenderProjects(cell, projects, isCurrentCharacter, groupIndex, characterID)
-    Release(cell.icons or {}, 1)
     cell:Show()
     if #projects == 0 or (#projects == 1 and projects[1].state == "not-applicable") then
+        Release(cell.icons or {}, 1)
         cell.empty:SetText("—"); cell.empty:Show()
         return
     end
@@ -313,6 +313,7 @@ local function RenderProjects(cell, projects, isCurrentCharacter, groupIndex, ch
         SetIcon(icon, project, isCurrentCharacter)
         x = x + ICON_SIZE + ICON_GAP
     end
+    Release(cell.icons or {}, #projects + 1)
 end
 
 local function Cell(row, index)
@@ -463,7 +464,6 @@ function Page.Refresh(frame, context)
     if hasCooking then cookingWidth = DailyColumnWidth(snapshot, context.characters, "cooking-daily", Addon:T("COLUMN.COOKING")) end
     local tableWidth = characterWidth + (showProfession and professionWidth or 0) + farmWidth + nomiWidth + jewelcraftingWidth + cookingWidth + fishingWidth + natWidth + darkmoonWidth + brilltronWidth + commonWidth
     local inset = Theme:GetMatrixInsets(context.preview)
-    for _, row in ipairs(frame.rows) do row:Hide() end
     frame.header:ClearAllPoints(); frame.header:SetPoint("TOPLEFT", frame, "TOPLEFT", inset.left, -inset.top); frame.header:SetSize(tableWidth, Theme.Table.headerHeight)
     local columns = { { Addon:T("COLUMN.CHARACTER"), characterWidth } }
     if showProfession then
@@ -508,7 +508,7 @@ function Page.Refresh(frame, context)
         top = frame.account
     end
     local y = 0
-    local current = Addon.Core.Characters:GetCurrent()
+    local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     for _, character in ipairs(context.characters or {}) do
         local data = snapshot.characters[character.id]
         if data then
@@ -523,12 +523,12 @@ function Page.Refresh(frame, context)
             if hasIcon then row.professionIcon:ClearAllPoints(); row.professionIcon:SetPoint("LEFT", Theme.Table.cellPadding, 0) end
             row.name:ClearAllPoints(); row.name:SetPoint("LEFT", Theme.Table.cellPadding + (hasIcon and (16 + Theme.Table.iconTextGap) or 0), 0); row.name:SetWidth(Theme:GetTableCellContentWidth(characterWidth) - (hasIcon and (16 + Theme.Table.iconTextGap) or 0))
             row.name:SetText(CharacterLabel(character, context and context.scope == "all")); ApplyCharacterColor(row.name, character)
-            Release(row.cells or {}, 1)
+            local nextCell = 1
             if showProfession or hasFarm or hasNomi or showJewelcrafting or hasCooking or showFishing or showNat or showDarkmoon or showBrilltron or hasCommon then
                 -- Headers begin after the first column's gutter.  Starting
                 -- data cells at the same coordinate keeps every column true
                 -- to its header, including when the profession column hides.
-                local offset, nextCell = characterWidth + COLUMN_GAP, 1
+                local offset = characterWidth + COLUMN_GAP
                 if showProfession then
                 local profession = Cell(row, 1)
                 profession:ClearAllPoints(); profession:SetPoint("LEFT", offset, 0); profession:SetSize(professionWidth, ROW_HEIGHT)
@@ -590,6 +590,7 @@ function Page.Refresh(frame, context)
                     local common = Cell(row, nextCell)
                     common:ClearAllPoints(); common:SetPoint("LEFT", offset, 0); common:SetSize(commonWidth, ROW_HEIGHT)
                     RenderProjects(common, data.commonProjects or {}, current and character.id == current.id, nextCell, character.id)
+                    nextCell = nextCell + 1
                 end
                 -- The catalog and Core's profession snapshot are enough to
                 -- decide whether a project belongs to this character.  An
@@ -599,10 +600,12 @@ function Page.Refresh(frame, context)
             else
                 row.status:Hide()
             end
+            Release(row.cells or {}, nextCell)
             row:Show()
             y = y + ROW_HEIGHT + ROW_GAP
         end
     end
+    Release(frame.rows, count + 1)
     frame.header:SetShown(count > 0)
     frame.scroll:SetShown(count > 0)
     if count > 0 then ConfigureScroll(frame, top, tableWidth, y, inset) end

@@ -137,10 +137,12 @@ end
 
 local function GetSummary(characters)
     local killed, total = 0, 0
+    local bosses
     for _, character in ipairs(characters or {}) do
         local legacyKey = GetLegacyKeyByCharacterID(character.id)
         if HasEligibleSnapshot(legacyKey) then
-            for _, boss in ipairs(YAB.GetBossList({ characters = characters })) do
+            bosses = bosses or YAB.GetBossList({ characters = characters })
+            for _, boss in ipairs(bosses) do
                 total = total + 1
                 local progress = YAB.PlannedTargets and YAB.PlannedTargets:GetBossProgress(legacyKey, boss.key)
                 if (progress and progress.state == "completed") or (not progress and YAB.IsBossKilled(legacyKey, boss.key)) then killed = killed + 1 end
@@ -152,10 +154,12 @@ end
 
 local function GetActions(characters)
     local actions = {}
+    local bosses
     for _, character in ipairs(characters or {}) do
         local legacyKey = GetLegacyKeyByCharacterID(character.id)
         if HasEligibleSnapshot(legacyKey) then
-            for _, boss in ipairs(YAB.GetBossList({ characters = characters })) do
+            bosses = bosses or YAB.GetBossList({ characters = characters })
+            for _, boss in ipairs(bosses) do
                 local status = YAB.GetBossKillStatus(legacyKey, boss.key)
                 local progress = YAB.PlannedTargets and YAB.PlannedTargets:GetBossProgress(legacyKey, boss.key)
                 if (progress and progress.state == "ready") or (not progress and status ~= "killed" and status ~= "loot_locked") then

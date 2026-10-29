@@ -5,8 +5,17 @@ local TRACKING_STARTED_AT = 1791784788 -- 2026-10-12 13:59:48 Asia/Shanghai
 
 function Addon.Items:MigrateLegacyTransfers()
     if Addon.db.transferTrackingMigrationVersion == 1 then return true end
+    local reviewNeeded = false
+    for _, snapshot in pairs(Addon.db.byCharacter) do
+        for _, history in ipairs(snapshot.history or {}) do
+            local sentAt = tonumber(history.observedAt or history.attemptedAt)
+            if history.state == "in-transit" and (not sentAt or sentAt < TRACKING_STARTED_AT) then reviewNeeded = true; break end
+        end
+        if reviewNeeded then break end
+    end
+    if not reviewNeeded then Addon.db.transferTrackingMigrationVersion = 1; return true end
     local pending = {}
-    for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do
+    for _, character in ipairs(Addon.Core.Characters:GetAllCached({ identityOnly = true })) do
         local result, err = self:GetTransfers(character.id)
         if not result then return nil, err end
         for _, record in ipairs(result.records) do pending[record.sourceID] = true end

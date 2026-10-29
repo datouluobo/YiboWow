@@ -130,7 +130,7 @@ function AccountView:GetColumnPage(pageID, stateKey, columns, availableWidth, fi
     local settings = Settings()
     settings.columnPageStructures[pageID] = settings.columnPageStructures[pageID] or {}
     local identities, currentIndex = {}, nil
-    local currentCharacter = Core.Characters and Core.Characters:GetCurrent()
+    local currentCharacter = Core.Characters and Core.Characters:GetCurrent({ identityOnly = true })
     local currentIdentity = currentID or (currentCharacter and currentCharacter.id)
     for index, column in ipairs(columns or {}) do
         local identity = type(column) == "table" and (column.id or column.characterID or (column.character and column.character.id)) or column
@@ -688,10 +688,11 @@ function AccountView:GetVisibleFields(pageID, overrides)
     return visible
 end
 
-function AccountView:GetVisibleCharacters()
+function AccountView:GetVisibleCharacters(options)
     local hidden = Settings().hiddenCharacters
     local visible = {}
-    for _, character in ipairs(Core.Characters:GetAllCached()) do
+    local roster = options and options.identityOnly and Core.Characters:GetAll({ identityOnly = true }) or Core.Characters:GetAllCached()
+    for _, character in ipairs(roster) do
         if not hidden[character.id] then visible[#visible + 1] = character end
     end
     return visible
@@ -740,7 +741,7 @@ end
 
 function AccountView:GetCustomCharacterOrder()
     local settings = Settings()
-    local characters, known, order, present = Core.Characters:GetAllCached(), {}, {}, {}
+    local characters, known, order, present = Core.Characters:GetAll({ identityOnly = true }), {}, {}, {}
     for _, character in ipairs(characters) do known[character.id] = true end
     for _, characterID in ipairs(Core.CharacterSort:NormalizeOrder(settings.customCharacterOrder)) do
         if known[characterID] then order[#order + 1] = characterID; present[characterID] = true end
@@ -761,7 +762,7 @@ function AccountView:MoveCustomCharacter(characterID, delta)
 end
 
 function AccountView:RebuildCustomCharacterOrder(mode)
-    local characters = Core.Characters:GetAllCached()
+    local characters = Core.Characters:GetAllCached({ identityOnly = true })
     if mode == "recent" then
         characters = Core.CharacterSort:Sort(characters, { mode = "recent", direction = "desc" })
         local order = {}
@@ -820,7 +821,7 @@ end
 
 local function GetScopeDefinition(page, characters)
     if type(page) == "table" and page.scope and page.scope.mode == "realms" then
-        local current = Core.Characters:GetCurrent()
+        local current = Core.Characters:GetCurrent({ identityOnly = true })
         local native = not current and Core.Client and Core.Client:ReadNameRealm()
         local currentRealm = (current and current.realm) or (native and native.realm) or "Unknown"
         local realms = {}
@@ -855,9 +856,9 @@ local function IsKnownScope(scopeDefinition, scopeID)
     return false
 end
 
-function AccountView:GetPageScope(pageID)
+function AccountView:GetPageScope(pageID, scopeDefinition)
     local page = self._pages[pageID]
-    local scopeDefinition = GetScopeDefinition(page, self:GetVisibleCharacters())
+    scopeDefinition = scopeDefinition or GetScopeDefinition(page, self:GetVisibleCharacters())
     if not scopeDefinition then return nil end
     local saved = scopeDefinition.mode == "realms" and Settings().selectedRealmScope or Settings().pageScopes[pageID]
     if IsKnownScope(scopeDefinition, saved) then return saved end
@@ -1018,7 +1019,7 @@ function AccountView:EnsureCombatWindowHider()
     hider:SetFrameRef("accountFrame", self.frame)
     hider:SetAttribute("_onstate-combat", [[
         local accountFrame = self:GetFrameRef("accountFrame")
-        if newstate == "1" then
+        if newstate == 1 or newstate == "1" then
             local restoreWindow = accountFrame:IsShown()
                 and (accountFrame:GetAttribute("isHoverPreview") ~= "1"
                     or accountFrame:GetAttribute("restoreMainAfterPreview") == "1")
@@ -1035,7 +1036,9 @@ end
 
 function AccountView:CreateFrame()
     if self.frame then return self.frame end
-    local frame = CreateFrame("Frame", "YiboCoreAccountView", UIParent, "BackdropTemplate")
+    -- The secure driver must be able to operate on the shell even when the
+    -- current page has no secure action buttons of its own.
+    local frame = CreateFrame("Frame", "YiboCoreAccountView", UIParent, "BackdropTemplate,SecureHandlerBaseTemplate")
     local settings = Settings()
     settings.width, settings.height = ClampWindowSize(settings.width, settings.height)
     frame:SetSize(settings.width, settings.height)
@@ -1079,7 +1082,11 @@ function AccountView:CreateFrame()
         if self.preview then
             self.preview = false
             AccountView.previewPageID, AccountView.previewPageOptions, AccountView.previewAnchor = nil, nil, nil
-            AccountView:ApplyNormalLayout()
+            if Core.Client:IsInCombat() then
+                AccountView._restoreLayoutAfterCombat = true
+            else
+                AccountView:ApplyNormalLayout()
+            end
         end
         if not (Core.Client:IsInCombat()) then
             self:SetAttribute("isHoverPreview", nil)
@@ -1321,8 +1328,6 @@ function AccountView:RefreshNavigation()
         local button = frame.navButtons[index]
         if not button then
             button = CreateFrame("Button", nil, frame.nav, "BackdropTemplate")
-            local navigationStep = Theme.Table.rowHeight + Theme.Space.xxs
-            button:SetHeight(Theme.Table.rowHeight); button:SetPoint("TOPLEFT", 8, -8 - ((index - 1) * navigationStep)); button:SetPoint("TOPRIGHT", -8, -8 - ((index - 1) * navigationStep))
             button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
             button.label = AddText(button, "GameFontNormalSmall", nil, COLORS.text); button.label:SetPoint("LEFT", 9, 0); button.label:SetPoint("RIGHT", -6, 0)
             button:SetScript("OnClick", function(self)
@@ -1331,9 +1336,14 @@ function AccountView:RefreshNavigation()
             frame.navButtons[index] = button
         end
         local coreChild=page.settingsTargetID=="core" or page.settingsTargetID=="sorting" or page.settingsTargetID=="display" or page.settingsTargetID=="bar"
-        button:ClearAllPoints();button:SetPoint("TOPLEFT",coreChild and 16 or 8,-8-(index-1)*(Theme.Table.rowHeight+Theme.Space.xxs));button:SetPoint("TOPRIGHT",-8,-8-(index-1)*(Theme.Table.rowHeight+Theme.Space.xxs))
-        button.label:ClearAllPoints();button.label:SetPoint("LEFT",9,0);button.label:SetPoint("RIGHT",-6,0)
-        button.pageID = page.id; button.settingsTargetID = page.settingsTargetID; button.section = page.section; button.label:SetText(page.title)
+        local inset, step = coreChild and 16 or 8, Theme.Table.rowHeight + Theme.Space.xxs
+        if button.navigationInset ~= inset or button.navigationStep ~= step or button.navigationHeight ~= Theme.Table.rowHeight then
+            button:ClearAllPoints();button:SetPoint("TOPLEFT",inset,-8-(index-1)*step);button:SetPoint("TOPRIGHT",-8,-8-(index-1)*step)
+            button:SetHeight(Theme.Table.rowHeight)
+            button.navigationInset, button.navigationStep, button.navigationHeight = inset, step, Theme.Table.rowHeight
+        end
+        button.pageID = page.id; button.settingsTargetID = page.settingsTargetID; button.section = page.section
+        if button.label:GetText() ~= page.title then button.label:SetText(page.title) end
         local selected = page.settingsTargetID and self.activePageID == "settings" and self.settingsTargetPageID == page.settingsTargetID or self.activePageID == page.id
         button:EnableMouse(not page.section)
         button.label:SetTextColor((page.section or page.coreHeading) and COLORS.accent[1] or COLORS.text[1], (page.section or page.coreHeading) and COLORS.accent[2] or COLORS.text[2], (page.section or page.coreHeading) and COLORS.accent[3] or COLORS.text[3])
@@ -1374,9 +1384,17 @@ function AccountView:BuildContext(page, options)
     local overrides = options.fieldOverrides
     -- Character archive owns its own inclusion filters.  Business pages keep
     -- the account-wide hidden-character admission rule.
-    local characters = page and page.id == "characters" and Core.Characters:GetAllCached() or self:GetVisibleCharacters()
+    local characters
+    if page == self._pages.settings then
+        -- The Core settings renderer consumes its own metadata queries, not
+        -- full business domains. Hosted addon panels receive a separate host
+        -- context; default business page contexts remain complete snapshots.
+        characters = self:GetVisibleCharacters({ identityOnly = true })
+    elseif page and page.id == "characters" then
+        characters = options.identityOnly and Core.Characters:GetAll({ identityOnly = true }) or Core.Characters:GetAllCached()
+    else characters = self:GetVisibleCharacters(options) end
     local scopeDefinition = GetScopeDefinition(page, characters)
-    local scope = scopeDefinition and self:GetPageScope(page.id) or nil
+    local scope = scopeDefinition and self:GetPageScope(page.id, scopeDefinition) or nil
     local baseContext = {
         page = page,
         scope = scope,
@@ -1698,6 +1716,7 @@ function AccountView:ShowPreview(pageID, anchor, forceRefresh)
     if Core.Client:IsInCombat() then return false end
     local page = self._pages[pageID] or self:GetPreviewPage()
     local frame = self:CreateFrame()
+    self:EnsureCombatWindowHider()
     local rebuildingVisiblePreview = frame:IsShown() and frame.preview
     local anchorFrame = anchor and type(anchor.GetLeft) == "function" and anchor or nil
     local previousAnchor = self.previewAnchor
@@ -1710,7 +1729,9 @@ function AccountView:ShowPreview(pageID, anchor, forceRefresh)
     -- The shared shell can temporarily become a preview when the player has
     -- opted in.  Remember that it was a normal window so it is restored when
     -- the pointer leaves the entry instead of remaining in preview layout.
-    self.restoreNormalWindowAfterPreview = frame:IsShown() and not frame.preview
+    if not rebuildingVisiblePreview then
+        self.restoreNormalWindowAfterPreview = frame:IsShown() and not frame.preview
+    end
     frame:SetAttribute("isHoverPreview", "1")
     frame:SetAttribute("restoreMainAfterPreview", self.restoreNormalWindowAfterPreview and "1" or nil)
 
@@ -1805,24 +1826,45 @@ function AccountView:ShowPreview(pageID, anchor, forceRefresh)
     return true
 end
 
-function AccountView:HidePreview()
-    local frame = self.frame
+local function ClosePreview(view, renderPreviousPage)
+    local frame = view.frame
     if not frame or not frame.preview then return end
-    local restoreNormalWindow = self.restoreNormalWindowAfterPreview == true
+    -- The secure combat driver owns visibility until combat ends.
+    if Core.Client:IsInCombat() then return end
+    local restoreNormalWindow = view.restoreNormalWindowAfterPreview == true
     frame:Hide()
+    -- Direct API navigation also owns the preview lifetime. Invalidate delayed
+    -- Broker retries so they cannot reopen a preview over the destination.
+    if Core.Entry then
+        if Core.Entry.CancelPreviewClose then Core.Entry:CancelPreviewClose() end
+        if Core.Entry.StopPreviewWatch then Core.Entry:StopPreviewWatch() end
+        Core.Entry.previewOwner = nil
+    end
     if not (Core.Client:IsInCombat()) then
         frame:SetAttribute("isHoverPreview", nil)
         frame:SetAttribute("restoreMainAfterPreview", nil)
     end
-    self:ApplyNormalLayout()
-    self.previewPageID = nil
-    self.previewPageOptions = nil
-    self.previewAnchor = nil
-    self.restoreNormalWindowAfterPreview = nil
+    -- OnHide restores the shell for both explicit close and UISpecialFrames.
+    -- Only do it here if the native hide did not run that handler.
+    if frame.preview then view:ApplyNormalLayout() end
+    view.previewPageID = nil
+    view.previewPageOptions = nil
+    view.previewAnchor = nil
+    view.restoreNormalWindowAfterPreview = nil
     if restoreNormalWindow then
         frame:Show()
-        self:ShowPage(self.activePageID or "overview", self.activePageOptions)
+        if renderPreviousPage then view:ShowPage(view.activePageID or "overview", view.activePageOptions) end
     end
+end
+
+function AccountView:HidePreview()
+    ClosePreview(self, true)
+end
+
+-- Entry clicks navigate immediately. Preserve the old window's visibility for
+-- toggle semantics, but let the destination render instead of the old page.
+if Core._private then
+    Core._private.HidePreviewForNavigation = function() ClosePreview(AccountView, false) end
 end
 
 function AccountView:Toggle(pageID)
@@ -1831,7 +1873,7 @@ function AccountView:Toggle(pageID)
     end
     local frame = self:CreateFrame()
     if frame.preview then
-        self:HidePreview()
+        ClosePreview(self, false)
         frame:Show()
         self:ShowPage(pageID or self.activePageID or "overview")
         return
@@ -1839,6 +1881,18 @@ function AccountView:Toggle(pageID)
     if frame:IsShown() and not pageID then frame:Hide(); return end
     local opening = not frame:IsShown()
     frame:Show(); self:ShowPage(pageID or self.activePageID or "overview", { autoFit = opening })
+end
+
+local function SetSettingsTarget(view, targetID)
+    local settingsOnlyID = type(targetID) == "string" and targetID:match("^addon%-settings:(.+)$")
+    if settingsOnlyID then
+        if not (Core.SettingsRegistry and Core.SettingsRegistry._panels[settingsOnlyID]) then return false end
+    elseif targetID ~= "bar" and targetID ~= "general" and targetID ~= "display" and targetID ~= "sorting" and targetID ~= "core" and targetID ~= "filters" then
+        local page = view._pages[targetID]
+        if not page or page.internal then return false end
+    end
+    view.settingsTargetPageID = targetID
+    return true
 end
 
 function AccountView:ShowSettings(targetID)
@@ -1852,7 +1906,9 @@ function AccountView:ShowSettings(targetID)
         -- Entry shortcuts provide the business page explicitly.  Validate it
         -- before changing state so a stale/unregistered entry falls back to
         -- the normal settings landing page instead of rendering a blank host.
-        if self:SelectSettingsTarget(targetID) == false then targetID = nil end
+        -- Toggle below renders the selected target. Do not render it once
+        -- through SelectSettingsTarget and then immediately a second time.
+        if SetSettingsTarget(self, targetID) == false then targetID = nil end
     end
     if not targetID and self.activePageID and self.activePageID ~= "settings" then
         local active = self._pages[self.activePageID]
@@ -1867,6 +1923,15 @@ end
 -- state driver installed above.
 Core.Events:Register("PLAYER_REGEN_ENABLED", AccountView, function(view)
     view:EnsureCombatWindowHider()
+    -- Recover a preview if a driver could not be installed or did not run.
+    if view.frame and view.frame.preview then ClosePreview(view, true) end
+    if view._restoreLayoutAfterCombat then
+        view._restoreLayoutAfterCombat = nil
+        view.restoreNormalWindowAfterPreview = nil
+        view.frame:SetAttribute("isHoverPreview", nil)
+        view.frame:SetAttribute("restoreMainAfterPreview", nil)
+        view:ApplyNormalLayout()
+    end
     if view._refreshPendingAfterCombat then
         local pageID = view._pendingPageID
         local options = view._pendingPageOptions
@@ -1882,14 +1947,7 @@ Core.Events:Register("PLAYER_REGEN_ENABLED", AccountView, function(view)
 end)
 
 function AccountView:SelectSettingsTarget(targetID)
-    local settingsOnlyID = type(targetID) == "string" and targetID:match("^addon%-settings:(.+)$")
-    if settingsOnlyID then
-        if not (Core.SettingsRegistry and Core.SettingsRegistry._panels[settingsOnlyID]) then return false end
-    elseif targetID ~= "bar" and targetID ~= "general" and targetID ~= "display" and targetID ~= "sorting" and targetID ~= "core" and targetID ~= "filters" then
-        local page = self._pages[targetID]
-        if not page or page.internal then return false end
-    end
-    self.settingsTargetPageID = targetID
+    if not SetSettingsTarget(self, targetID) then return false end
     if self.activePageID == "settings" then self:RefreshPage() end
     return true
 end
@@ -1945,3 +2003,5 @@ Core.Capabilities:Register("account-dynamic-fields", 1)
 Core.Capabilities:Register("account-preview-characters", 1)
 Core.Capabilities:Register("account-character-admission", 1)
 Core.Capabilities:Register("account-surface-budget", 2)
+
+Core.Capabilities:Register("account-identity-context", 1)

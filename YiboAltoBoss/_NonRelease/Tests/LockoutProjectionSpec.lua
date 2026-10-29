@@ -45,6 +45,11 @@ YAB.TargetCatalog = { Get = function() return { mapID = 580, isRaid = true, alia
 dofile("YiboAltoBoss/Common/TargetProjection.lua")
 -- Override the contract reader only; exercise actual projection/status/tooltip code.
 YAB.PlannedTargets.VisibleConfiguration = function() return config end
+local allBossCalls = 0
+YAB.GetAllBossList = function() allBossCalls = allBossCalls + 1; return {} end
+config = nil
+check(#YAB.GetBossList({}) == 0 and allBossCalls == 0, "missing configuration skips projection preparation")
+config = { targets = { A = { goal }, B = {} } }
 for _, context in ipairs({ {}, { preview = true } }) do
     local columns = YAB.GetLockoutColumns(context)
     check(#columns == 2, "goal and ordinary Sunwell columns merge in both surfaces")

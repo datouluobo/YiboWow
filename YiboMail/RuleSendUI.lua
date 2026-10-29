@@ -113,6 +113,24 @@ function U:SetActive(active)
     Addon.NativeUI:LayoutBasicSend()
     if Addon.NativeUI.readySend then Addon.NativeUI:RefreshFavoriteButtons() end
 end
+function U:ReleaseRows(first)
+    local root = self.root; if not root then return end
+    local function Release(control)
+        if not control then return end
+        control:SetScript("OnClick", nil)
+        Addon.Core.UITheme:ClearTooltip(control)
+    end
+    for index = first or 1, #root.rows do
+        local row = root.rows[index]
+        row:Hide(); row.entry = nil; Release(row.main); Release(row.skip)
+        if row.items then
+            Release(row.items)
+            for _, button in ipairs(row.items.itemButtons or {}) do
+                button:Hide(); Release(button); button.icon:SetTexture(nil); button.name:SetText(""); button.count:SetText("")
+            end
+        end
+    end
+end
 function U:Refresh()
     local c, root = Addon.RuleSendController, self.root
     if not root or not self.active or self.refreshing then return end
@@ -227,7 +245,7 @@ function U:Refresh()
         end
         top = top + row:GetHeight() + 2
     end
-    for index = #entries + 1, #root.rows do root.rows[index]:Hide() end
+    self:ReleaseRows(#entries + 1)
     root.content:SetHeight(top); root.scroll:SetContentHeight(top)
     local label, enabled = c:ButtonState()
     self.action:SetText(label == Addon:T("UI.TEXT_0209") and Addon:T("UI.TEXT_0496") or label == Addon:T("UI.TEXT_0208") and Addon:T("UI.TEXT_0089")

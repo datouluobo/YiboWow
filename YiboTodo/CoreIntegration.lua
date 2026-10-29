@@ -1,7 +1,7 @@
 local Addon = _G.YiboTodo
 local Integration = {}
 Addon.CoreIntegration = Integration
-local ICON = "Interface\\AddOns\\YiboTodo\\Media\\YiboTodoIcon-v6"
+local ICON = "Interface\\AddOns\\YiboTodo\\Media\\YiboTodoIcon"
 
 function Integration:Initialize()
     if self.initialized then return true end
@@ -24,7 +24,7 @@ function Integration:Initialize()
         Core.Events:Register("CHARACTER_ID_CHANGED", self, function(_, oldID, newID) MoveCharacterData(oldID, newID) end)
         self.characterIDListenerRegistered = true
     end
-    local current = Core.Characters:GetCurrent()
+    local current = Core.Characters:GetCurrent({ identityOnly = true })
     if current then
         local legacyID = "legacy:" .. tostring(current.realm or "Unknown") .. ":" .. tostring(current.name or "Unknown")
         MoveCharacterData(legacyID, current.id)

@@ -5,7 +5,7 @@
 ## Notes: Cross-character boss progress and phase observations.
 ## Notes-zhCN: 跨角色首领进度与位面观察总览
 ## Author: YiboSoft
-## Version: 2.8.4
+## Version: 2.8.5
 ## IconTexture: Interface\AddOns\YiboAltoBoss\Media\YiboAltoBossIcon-128
 ## SavedVariables: YiboAltoBossDB
 ## RequiredDeps: YiboCore

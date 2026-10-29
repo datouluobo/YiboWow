@@ -10,7 +10,7 @@ local function Snapshot(record, options)
     if options and options.identityOnly then
         -- Roster consumers do not need inventory/profession domain payloads.
         return { id = record.id, name = record.name, realm = record.realm,
-            class = record.class, level = record.level, lastSeenAt = record.lastSeenAt, seenOrder = record.seenOrder }
+            class = record.class, faction = record.faction, level = record.level, lastSeenAt = record.lastSeenAt, seenOrder = record.seenOrder }
     end
     return Core.Defaults:Copy(record)
 end
@@ -136,7 +136,7 @@ end
 
 function Characters:GetShortNameDuplicates()
     local duplicates, grouped = {}, {}
-    for _, character in ipairs(self:GetAll()) do
+    for _, character in ipairs(self:GetAll({ identityOnly = true })) do
         local display = GetDisplayStore()
         local shortName = display and display[character.id] and display[character.id].shortName
         if type(shortName) == "string" and shortName ~= "" then
@@ -144,7 +144,13 @@ function Characters:GetShortNameDuplicates()
             grouped[shortName][#grouped[shortName] + 1] = character
         end
     end
-    for shortName, characters in pairs(grouped) do if #characters > 1 then duplicates[shortName] = characters end end
+    for shortName, characters in pairs(grouped) do
+        if #characters > 1 then
+            local snapshots = {}
+            for _, character in ipairs(characters) do snapshots[#snapshots + 1] = self:Get(character.id) end
+            duplicates[shortName] = snapshots
+        end
+    end
     return duplicates
 end
 
@@ -264,10 +270,14 @@ end
 -- until the underlying character/domain data changes; callers must treat the
 -- returned records as read-only snapshots.
 function Characters:InvalidateAllCache()
-    self._allSnapshot = nil
+    self._allSnapshot, self._identitySnapshot = nil, nil
 end
 
-function Characters:GetAllCached()
+function Characters:GetAllCached(options)
+    if options and options.identityOnly then
+        if not self._identitySnapshot then self._identitySnapshot = self:GetAll({ identityOnly = true }) end
+        return self._identitySnapshot
+    end
     if not self._allSnapshot then
         self._allSnapshot = self:GetAll()
     end
@@ -385,5 +395,7 @@ if Core.Events then
 end
 
 Core.Capabilities:Register("characters", 1)
-Core.Capabilities:Register("character-identity", 1)
+Core.Capabilities:Register("character-identity", 2)
 Core.Capabilities:Register("character-name-format", 1)
+
+Core.Capabilities:Register("character-identity-cache", 1)

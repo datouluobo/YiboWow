@@ -8,6 +8,8 @@ Core 独占入口配置、LDB 对象、内置条布局与共用预览生命周�
 
 配置位于 `settings.accountView.entry`：`channelsVersion=1`、`coreChannels`、按入口 ID 索引的 `businessChannels`、`bar`。三个通道名为 `minimap / broker / builtinBar`，全部布尔值。Schema 11 将四种旧模式和未加载插件配置迁入；新表优先，显式 false 保留；旧字段只保留为迁移来源，不再作为运行时真值。角度、位置、悬停偏好保持。
 
+2026-10-29内部性能优化：重复设置读取继续校验全部通道值，对已经规范的纯数据表复用，避免逐入口重建；直接编辑后的非法值仍重新处理。公共GetEntryChannels仍返回独立副本，FromMode模板和既有API／能力版本保持。见[配置与控件专项](../../Docs/Core-配置规范化与下拉控件性能-2026-10-29.md)。
+
 ## Core.Entry 公共方法
 
 | 方法 | 输入／返回／失败 |

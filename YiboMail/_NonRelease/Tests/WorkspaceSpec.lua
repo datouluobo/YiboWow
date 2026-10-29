@@ -107,6 +107,7 @@ YiboCore.Characters = {
     GetCurrent = function() return a end,
     GetDisplayName = function(_, character) return character.name end,
     GetAllCached = function() return chars end,
+    GetAll = function(self) return self:GetAllCached() end,
 }
 YiboCore.Database = { GetDB = function() return nil end }
 local characterAPI = YiboCore.Characters
@@ -346,7 +347,12 @@ assert(business.previewSlots[8]:IsShown() and not business.previewSlots[9]:IsSho
 settingsHost:SetWidth(400); definition.settings.CreateSettingsPanel(settingsHost, helpers)
 assert(business:GetHeight() >= business.previewY + 2 * 26)
 settingsHost:SetWidth(1000); definition.settings.CreateSettingsPanel(settingsHost, helpers)
-assert(business.previewX > 12 and business:GetHeight() == 376)
+assert(business.previewX > 12, "wide settings use two columns")
+local goldNote = business.goldConfirmationNote
+assert(goldNote and goldNote:IsShown(), "gold confirmation explanation stays visible")
+local notePoint = goldNote.points[1]
+local noteY = notePoint[#notePoint]
+assert(business:GetHeight() >= -noteY + goldNote:GetHeight(), "section contains the final setting explanation")
 business.shortcutRows.onValueChanged(12); business.shortcutColumns.onValueChanged(6)
 assert(business.gridCount:GetText() == "当前显示：72 格" and business.previewSlots[72]:IsShown())
 local previewBottom = business.previewY + 11 * 17 + business.previewSlots[72]:GetHeight()
@@ -455,14 +461,14 @@ C_Timer = nil
 dofile("YiboCore/UI/AccountPages/SettingsWorkbench.lua")
 local workbench = Frame(UIParent)
 local settingsPage = YiboCore.AccountView._pages.settings
-settingsPage.Create(workbench); workbench.scroll:SetSize(1000, 600)
+settingsPage.Create(workbench); workbench.scroll:SetSize(1000, 800)
 YiboCore.AccountView.settingsTargetPageID = definition.id
 workbench.scroll.GetVerticalScrollRange = function() return 999 end
 settingsPage.Refresh(workbench)
-assert(workbench.scroll.contentHeight < 600 and not workbench.scroll.ScrollBar:IsShown())
+assert(workbench.scroll.contentHeight < 800 and not workbench.scroll.ScrollBar:IsShown())
 workbench.scroll:SetHeight(300); settingsPage.Refresh(workbench)
 assert(workbench.scroll.ScrollBar:IsShown() and workbench.scroll.scrollRange > 0)
-workbench.scroll:SetHeight(600); settingsPage.Refresh(workbench)
+workbench.scroll:SetHeight(800); settingsPage.Refresh(workbench)
 assert(not workbench.scroll.ScrollBar:IsShown() and workbench.scroll:GetVerticalScroll() == 0)
 print("PASS: workspace tabs, global scoped search, role navigation, runtime-only state, shared overview/hover, continuous scrolling, COD icon variants, factual history and Core grouped fields")
 
@@ -480,6 +486,7 @@ function GetCursorPosition() return cursorX, cursorY end
 local combat = false
 function InCombatLockdown() return combat end
 function RegisterStateDriver() end
+dofile("_NonRelease/CoreIdentityDomainsR1/LoadClient.lua")
 local shell = YiboCore.AccountView:CreateFrame()
 shell:Fire('OnSizeChanged', 960, 880)
 assert(shell.clampInsets[4] == 880 - YiboCore.UITheme.Geometry.titleBar)

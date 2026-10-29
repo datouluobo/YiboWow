@@ -235,7 +235,13 @@ assert(Q.state == "paused" and Q.completed == 0 and Q.pending.interference and #
 print("PASS: manual pause settles only the current request; external mailbox operations isolate unknown results")
 
 Reset({ Mail("Close", { Item(1, 1) }), Mail("Not sent", { Item(2, 1) }) })
-Start(); shown = false; Fire("MAIL_CLOSED"); Advance(2)
+Start()
+local closedReturn = setmetatable({ Q.actions, Q.returnPlan, Q.pending }, { __mode = "v" })
+shown = false; Fire("MAIL_CLOSED")
+collectgarbage("collect")
+assert(closedReturn[1] == nil and closedReturn[2] == nil and closedReturn[3] == nil,
+    "Close releases return actions, plan and pending request before timers expire")
+Advance(2)
 assert(Q.state == "paused" and #calls == 1 and Archives() == 0 and Archives("unverified") == 1)
 local unknown = A.db.byCharacter[character.id].history
 assert(#unknown[#unknown].attachments == 1)

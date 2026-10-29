@@ -44,10 +44,14 @@ function Page:HasSnapshot(character)
         and type(coverage.observedAt) == "number" and type(snapshot.visibleKeys) == "table"
 end
 
-local function Summary(character, context)
-    local snapshot = Addon.db.byCharacter[character.id]
+local summaryStats = setmetatable({}, { __mode = "k" })
+local function Statistics(character, snapshot, now)
     local coverage = snapshot.coverage
-    local now = Addon:Now()
+    local cached = summaryStats[snapshot]
+    local cacheable = type(coverage.revision) == "number" and coverage.revision == coverage.revision
+        and coverage.revision >= 0 and coverage.revision < math.huge
+    if cacheable and cached and cached.coverage == coverage and cached.revision == coverage.revision and cached.now == now
+        and cached.refs[1] == snapshot.records and cached.refs[2] == snapshot.visibleKeys then return cached end
     local counts = { expired = 0, urgent = 0, soon = 0, unknown = 0, within3Days = 0, within7Days = 0 }
     local nextExpiry, visibleCount, attachmentSlots, availableMoney, codCount, backlog = nil, 0, 0, 0, 0, 0
     local expiryColorSeverity = 0
@@ -84,6 +88,23 @@ local function Summary(character, context)
         end
     end
 
+    local stats = { coverage = coverage, revision = coverage.revision, now = now,
+        refs = setmetatable({ snapshot.records, snapshot.visibleKeys }, { __mode = "v" }),
+        counts = counts, nextExpiry = nextExpiry, visibleCount = visibleCount, attachmentSlots = attachmentSlots,
+        availableMoney = availableMoney, codCount = codCount, backlog = backlog, expiryColorSeverity = expiryColorSeverity }
+    -- Only versioned owner snapshots are cacheable. Legacy/unversioned views
+    -- keep their existing fresh-read behavior rather than guessing validity.
+    if cacheable then summaryStats[snapshot] = stats end
+    return stats
+end
+local function Summary(character, context)
+    local snapshot = Addon.db.byCharacter[character.id]
+    local coverage = snapshot.coverage
+    local stats = Statistics(character, snapshot, Addon:Now())
+    local counts = Addon.Copy(stats.counts)
+    local nextExpiry, visibleCount, attachmentSlots, availableMoney, codCount, backlog =
+        stats.nextExpiry, stats.visibleCount, stats.attachmentSlots, stats.availableMoney, stats.codCount, stats.backlog
+    local expiryColorSeverity = stats.expiryColorSeverity
     local mailCount
     if coverage.status == "partial" then
         mailCount = tostring(visibleCount) .. "/" .. tostring(coverage.totalCount or "?")
@@ -476,11 +497,14 @@ local function ReminderRows(context)
 end
 
 function Page:OnLogin()
-    if Addon.db.settings.loginReminderEnabled == false or not C_Timer or not C_Timer.After then return end
+    if self.loginReminderScheduled or self.loginReminderDone or Addon.db.settings.loginReminderEnabled == false or not C_Timer or not C_Timer.After then return end
+    self.loginReminderScheduled = true
     C_Timer.After(5, function()
+        self.loginReminderScheduled, self.loginReminderDone = nil, true
+        if Addon.db.settings.loginReminderEnabled == false then return end
         local page = Core.AccountView and Core.AccountView._pages[Page.ID]
         if not page then return end
-        local context = Core.AccountView:BuildContext(page, { preview = false })
+        local context = Core.AccountView:BuildContext(page, { preview = false, identityOnly = true })
         local rows = ReminderRows(context)
         if #rows == 0 then return end
 
@@ -545,7 +569,7 @@ function Page:Register()
                 local width = math.max(280, parent:GetWidth() or 600)
                 local narrow = width < 600
                 local columnWidth = narrow and width - 24 or (width - 48) / 2
-                local businessHeight = narrow and 776 or 448
+                local businessHeight = narrow and 776 or 484
                 local section = parent.mailBusinessSettings or host.createSection(parent, Addon:T("UI.TEXT_0093"), width, businessHeight)
                 parent.mailBusinessSettings = section
                 section:SetSize(width, businessHeight); section:Show(); section:ClearAllPoints()

@@ -61,7 +61,7 @@ function View:CounterpartLabel(address, owner)
     local name, realm = tostring(address or ""):match("^([^-]+)%-(.+)$")
     name, realm = name or tostring(address or Addon:T("UI.TEXT_0399")), realm or (owner and owner.realm)
     local function Key(value) return tostring(value or ""):gsub("%s+", ""):lower() end
-    for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do
+    for _, character in ipairs(Addon.Core.Characters:GetAllCached({ identityOnly = true })) do
         if Key(character.name) == Key(name) and Key(character.realm) == Key(realm) then return self:CharacterLabel(character) end
     end
     return self:CharacterLabel({ name = name, realm = realm })
@@ -109,10 +109,12 @@ function View:GetMails(context, options)
                 local mail = snapshot.records[key]
                 local hiddenAsCollected = not options.history and self:IsCollectedEmptyMail(character.id, mail, usedCollectedMarkers)
                 if mail and not hiddenAsCollected then
-                local parts = { mail.sender, mail.subject, character.name, tostring(mail.money), mail.mailType }
-                for _, item in ipairs(mail.attachments) do parts[#parts + 1] = item.name or ""; parts[#parts + 1] = tostring(item.itemID) end
-                local searchable = string.lower(table.concat(parts, " "))
-                local match = query == "" or searchable:find(query, 1, true)
+                local match = true
+                if query ~= "" then
+                    local parts = { mail.sender, mail.subject, character.name, tostring(mail.money), mail.mailType }
+                    for _, item in ipairs(mail.attachments) do parts[#parts + 1] = item.name or ""; parts[#parts + 1] = tostring(item.itemID) end
+                    match = string.lower(table.concat(parts, " ")):find(query, 1, true)
+                end
                 if options.kind and options.kind ~= "all" then
                     match = match and (options.kind == mail.mailType or (options.kind == "money" and mail.money > 0)
                         or (options.kind == "items" and #mail.attachments > 0) or (options.kind == "urgent" and mail.expiresAtEstimate - Addon:Now() < 3 * 86400))

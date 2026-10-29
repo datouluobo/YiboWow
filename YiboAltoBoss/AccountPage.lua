@@ -111,16 +111,28 @@ local function FormatClock(timestamp)
     return date and date("%H:%M", timestamp) or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.PENDING")
 end
 
-local function GetScopedPhaseStates(boss, scope)
+local function GetScopedPhaseStates(boss, scope, columns, phaseContext)
     local selectedRealm = ScopeRealm(scope)
     local result = {}
-    for _, column in ipairs(YAB.GetPhaseColumns("all")) do
+    for _, column in ipairs(columns or YAB.GetPhaseColumns("all")) do
         if not selectedRealm or column.realm == selectedRealm then
-            local state = YAB.GetBossPhaseState(boss.key, column)
+            local state = YAB.GetBossPhaseState(boss.key, column, phaseContext)
             if state then result[#result + 1] = { state = state, column = column } end
         end
     end
     return result
+end
+
+-- A refresh is synchronous; share its snapshot without retaining stale data
+-- across subsequent observations or timer-driven refreshes.
+local function CreatePhaseSnapshot(scope)
+    local columns, byBoss
+    local phaseContext = {}
+    return function(boss)
+        if not columns then columns, byBoss = YAB.GetPhaseColumns("all"), {} end
+        if not byBoss[boss] then byBoss[boss] = GetScopedPhaseStates(boss, scope, columns, phaseContext) end
+        return byBoss[boss]
+    end
 end
 
 local function BuildActionCandidate(state, column)
@@ -170,9 +182,9 @@ local function BuildActionCandidate(state, column)
     end
 end
 
-local function PickBestAction(boss, scope)
+local function PickBestAction(boss, scope, items)
     local best
-    for _, item in ipairs(GetScopedPhaseStates(boss, scope)) do
+    for _, item in ipairs(items or GetScopedPhaseStates(boss, scope)) do
         local candidate = BuildActionCandidate(item.state, item.column)
         if candidate and (not best
             or candidate.priority > best.priority
@@ -277,8 +289,8 @@ local function BuildActionTooltip(boss, candidate, scope)
     return lines
 end
 
-local function BuildPhaseSummary(boss, scope)
-    local items = GetScopedPhaseStates(boss, scope)
+local function BuildPhaseSummary(boss, scope, items)
+    items = items or GetScopedPhaseStates(boss, scope)
     local killed, observed = 0, 0
     local lines = {}
     table.sort(items, function(left, right)
@@ -455,8 +467,7 @@ SetStatus = function(cell, status, key, boss)
     if _G.YiboCore.BusinessItemActions then _G.YiboCore.BusinessItemActions:Unbind(cell) end
     SetBusinessStatus(cell, status, key, boss)
     if YAB.GoalTargets and YAB.GoalTargets.ref then
-        local definition
-        for _, entry in ipairs(YAB.TargetCatalog:Query().targets) do if entry.bossKey == boss.key then definition = entry; break end end
+        local definition = YAB.TargetCatalog:GetByBossKey(boss.key)
         if definition then YAB.GoalTargets:Bind(cell, key, { catalogID = definition.id, scope = "all", encounterIDs = {} }, cell:GetScript("OnClick")) end
     end
 end
@@ -592,6 +603,7 @@ end
 -- Transposed matrix: Bosses stay on rows while Core paginates character
 -- columns as one consistent header/data slice.
 local function RefreshAccountPageByCharacterColumns(instance, context)
+    local phaseSnapshot = CreatePhaseSnapshot(context.scope)
     local preview = context.preview == true
     local allKeys, bosses = YAB.GetAccountCharacterKeys(context), YAB.GetBossList(context)
     local showKills = context:GetFieldVisible("kills")
@@ -666,7 +678,7 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
             elseif boss.hideAction then
                 SetEmptyButton(row.action)
             else
-                local candidate = PickBestAction(boss, context.scope)
+                local candidate = PickBestAction(boss, context.scope, phaseSnapshot(boss))
                 local fills = { window = C.successSurface, soon = C.successSurface, scheduled = C.selected, weak = C.timer, observed = C.current, overdue = C.dangerSurface }
                 SetSemanticButton(row.action, candidate and candidate.text or "—", fills[candidate and candidate.kind or ""] or FIXED_CELL, boss.name .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ACTION"), BuildActionTooltip(boss, candidate, context.scope))
             end
@@ -680,7 +692,7 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
             elseif boss.hidePhase then
                 SetEmptyButton(row.phase)
             else
-                local summary, lines, hasKill, hasObserve = BuildPhaseSummary(boss, context.scope)
+                local summary, lines, hasKill, hasObserve = BuildPhaseSummary(boss, context.scope, phaseSnapshot(boss))
                 local fill = hasKill and C.timer or (hasObserve and C.current or FIXED_CELL)
                 SetSemanticButton(row.phase, summary, fill, boss.name .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.PHASE_3"), lines)
             end
@@ -742,6 +754,7 @@ function YAB.RefreshAccountPage(instance, context)
     if context.viewMode == "character-columns" then
         return RefreshAccountPageByCharacterColumns(instance, context)
     end
+    local phaseSnapshot = CreatePhaseSnapshot(context.scope)
     local preview = context.preview == true
     local keys, bosses = YAB.GetAccountCharacterKeys(context), YAB.GetBossList(context)
     local showKills = context:GetFieldVisible("kills")
@@ -792,7 +805,7 @@ function YAB.RefreshAccountPage(instance, context)
             local cell = GetCell(row, bossIndex); cell:SetWidth(BOSS_WIDTH - 2); cell:ClearAllPoints(); cell:SetPoint("LEFT", x + 1, 0); cell:Show()
             if YAB.Holiday and YAB.Holiday:IsBoss(boss) then SetHolidayAction(cell, boss)
             elseif boss.hideAction then SetEmptyButton(cell) else
-                local candidate = PickBestAction(boss, context.scope)
+                local candidate = PickBestAction(boss, context.scope, phaseSnapshot(boss))
                 SetSemanticButton(cell, candidate and candidate.text or "—", actionFills[candidate and candidate.kind or ""] or FIXED_CELL, boss.name .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ACTION"), BuildActionTooltip(boss, candidate, context.scope))
             end
             x = x + BOSS_WIDTH
@@ -808,7 +821,7 @@ function YAB.RefreshAccountPage(instance, context)
             local cell = GetCell(row, bossIndex); cell:SetWidth(BOSS_WIDTH - 2); cell:ClearAllPoints(); cell:SetPoint("LEFT", x + 1, 0); cell:Show()
             if YAB.Holiday and YAB.Holiday:IsBoss(boss) then SetHolidayPhase(cell, boss)
             elseif boss.hidePhase then SetEmptyButton(cell) else
-                local summary, lines, hasKill, hasObserve = BuildPhaseSummary(boss, context.scope)
+                local summary, lines, hasKill, hasObserve = BuildPhaseSummary(boss, context.scope, phaseSnapshot(boss))
                 SetSemanticButton(cell, summary, hasKill and C.timer or (hasObserve and C.current or FIXED_CELL), boss.name .. _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.PHASE_3"), lines)
             end
             x = x + BOSS_WIDTH

@@ -3,7 +3,7 @@ local ADDON_NAME = ...
 local Addon = _G.YiboTodo or {}
 _G.YiboTodo = Addon
 Addon.NAME = ADDON_NAME or "YiboTodo"
-Addon.VERSION = "1.2.4"
+Addon.VERSION = "1.2.5"
 Addon.REQUIRED_CORE_API = 13
 Addon.CATALOG_VERSION = 16
 Addon.RULESET_ID = "mop-classic-50504"
@@ -83,7 +83,7 @@ function Addon:GetCooldownGroupLabel(group)
     -- Shared-cooldown labels describe the group, not one member recipe.
     -- For a single-output group the result item is the stable display identity.
     if group.aggregation ~= "single-recipe" then return fallback end
-    for _, recipe in pairs(self.Catalog and self.Catalog.recipes or {}) do
+    for _, recipe in pairs(group.members or (self.Catalog and self.Catalog.recipes) or {}) do
         if recipe.cooldownGroupID == group.id and recipe.resultItemID then
             return self:GetLocalizedGameName("item", recipe.resultItemID, fallback)
         end
@@ -102,10 +102,10 @@ function Addon:NotifyChanged(immediate, refreshTarget)
     end
     local accountView = self.Core and self.Core.AccountView
     if not accountView then return end
-    if immediate and self.previewRefreshToken then
+    if immediate and self.previewRefreshPending then
         -- Cancel a previously queued hover refresh so the profession update
         -- is the single authoritative rebuild for the new button action.
-        self.previewRefreshToken = self.previewRefreshToken + 1
+        self.previewRefreshWanted = false
     end
     -- A visible hover preview is a dense account matrix.  Quest and reward
     -- plugins can emit a burst of state changes while their native panels
@@ -113,13 +113,22 @@ function Addon:NotifyChanged(immediate, refreshTarget)
     -- The normal account page and a hidden preview remain immediate.
     local frame = accountView.frame
     if not immediate and frame and frame.preview and accountView.previewPageID == "todo" and C_Timer and C_Timer.After then
-        self.previewRefreshToken = (self.previewRefreshToken or 0) + 1
-        local token = self.previewRefreshToken
-        C_Timer.After(2, function()
-            if Addon.previewRefreshToken ~= token then return end
-            Addon.previewRefreshToken = nil
-            accountView:NotifyPageChanged("todo")
-        end)
+        self.previewRefreshWanted = true
+        self.previewRefreshSequence = (self.previewRefreshSequence or 0) + 1
+        if not self.previewRefreshPending then
+            local function Queue()
+                Addon.previewRefreshPending = true
+                local sequence = Addon.previewRefreshSequence
+                C_Timer.After(2, function()
+                    Addon.previewRefreshPending = false
+                    if not Addon.previewRefreshWanted then return end
+                    if sequence ~= Addon.previewRefreshSequence then Queue(); return end
+                    Addon.previewRefreshWanted = false
+                    accountView:NotifyPageChanged("todo")
+                end)
+            end
+            Queue()
+        end
         return
     end
     accountView:NotifyPageChanged("todo")

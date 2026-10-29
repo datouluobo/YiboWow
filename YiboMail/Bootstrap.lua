@@ -14,15 +14,18 @@ function Addon:Initialize()
         and core:HasCapability("basic-input", 1)
         and core:HasCapability("item-resolver", 1)
         and core:HasCapability("item-picker", 2)
-        and core:HasCapability("character-identity", 1)
+        and core:HasCapability("character-identity", 2)
+        and core:HasCapability("character-identity-cache", 1)
         and core:HasCapability("characters", 1)
         and core:HasCapability("character-cleanup", 1)
         and core:HasCapability("account-view", 2)
+        and core:HasCapability("account-identity-context", 1)
         and core:HasCapability("account-preview-characters", 1)
         and core:HasCapability("account-character-admission", 1)
         and core:HasCapability("account-surface-budget", 1)
         and core:HasCapability("account-entry", 2)
         and core.Characters and type(core.Characters.FormatName) == "function"
+        and type(core.Characters.GetAll) == "function"
         and type(core.Characters.GetAllCached) == "function"
         and type(core.Characters.Get) == "function"
         and core.CharacterCleanup and type(core.CharacterCleanup.RegisterOwner) == "function"
@@ -65,7 +68,7 @@ function Addon:Initialize()
     if not ok then self:Print(err or self:T("ERROR.CLEANUP_REGISTER")); return end
     if self.FEATURES.account then
         ok, err = self.AccountPage:Register(); if not ok then self:Print(err or self:T("ERROR.PAGE_REGISTER")); return end
-        self.Items.Events:Register(self.AccountPage, function() core.AccountView:NotifyPageChanged("mail-inbox") end)
+        self.Items.Events:RegisterSignal(self.AccountPage, function() core.AccountView:NotifyPageChanged("mail-inbox") end)
     end
     ok, err = self.Items:MigrateLegacyTransfers()
     if not ok then self:Print(self:T("ERROR.TRANSFER_MIGRATION", tostring(err))); return end
@@ -80,7 +83,7 @@ function Addon:Initialize()
         local command = (message or ""):match("^%s*(%S*)")
         if command == "scan" then local success, errorMessage = Addon.Scanner:Scan(); Addon:Print(success and Addon:T("UI.TEXT_0604") or errorMessage)
         elseif command == "status" then
-            local character = core.Characters:GetCurrent(); local state = character and Addon.Items:GetState(character.id)
+            local character = core.Characters:GetCurrent({ identityOnly = true }); local state = character and Addon.Items:GetState(character.id)
             Addon:Print(state and (state.status .. " · " .. tostring(state.currentCount or 0) .. "/" .. tostring(state.totalCount or 0) .. " · revision " .. Addon.Items:GetRevision()) or Addon:T("UI.TEXT_0505"))
         elseif Addon.FEATURES.account then core.AccountView:Toggle("mail-inbox")
         else Addon:Print(Addon:T("UI.TEXT_0345")) end

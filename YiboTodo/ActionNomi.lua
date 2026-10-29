@@ -1,6 +1,6 @@
 local Addon = _G.YiboTodo
 local Action = { GROUP = "mop.nomi", PROVIDER = "YiboTodo:nomi",
-    METADATA_KEY = "actionNomi" }
+    METADATA_KEY = "actionNomi", SOURCE_TITLE_KEY = "PROVIDER.NOMI" }
 Addon.ActionNomi = Action
 
 -- Reuse only envelope/version/cache operations. Each adapter owns its own

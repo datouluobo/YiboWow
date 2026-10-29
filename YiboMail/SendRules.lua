@@ -81,7 +81,7 @@ end
 function Rules:Changed(rematch)
     Addon.db.sendRuleRevision = Addon.db.sendRuleRevision + 1
     if Addon.RuleSendController then Addon.RuleSendController:Invalidate(Addon:T("UI.TEXT_0501")) end
-    if rematch and Addon.RuleSendController and Addon.RuleSendController.state ~= "sending" and Addon.RuleSendController.state ~= "filling" then
+    if rematch and Addon.Scanner:IsOpen() and Addon.RuleSendController and Addon.RuleSendController.state ~= "sending" and Addon.RuleSendController.state ~= "filling" then
         Addon.RuleSendController:Scan()
     end
     if Addon.RuleSendUI then Addon.RuleSendUI:Refresh() end

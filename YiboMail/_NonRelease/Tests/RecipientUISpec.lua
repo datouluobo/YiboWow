@@ -94,6 +94,8 @@ end
 function GetMacroItemIcons(result)
     result[#result + 1] = 'INV_Letter_15'; result[#result + 1] = 'Interface\\AddOns\\Foreign\\Icon'
 end
+InCombatLockdown = InCombatLockdown or function() return false end
+dofile("_NonRelease/CoreIdentityDomainsR1/LoadClient.lua")
 dofile('YiboCore/UI/IconPicker.lua')
 function methods:SetTexture(value) self.texture = value end
 local A = YiboMail; A.Core = YiboCore
@@ -101,6 +103,7 @@ local current = { id = 'a', name = 'A', realm = 'Realm' }
 local other = { id = 'b', name = 'B', realm = 'Other' }
 A.Core.Characters = { GetCurrent = function() return current end, GetAllCached = function() return { current, other } end }
 A.Core.AccountView = { GetVisibleCharacters = function() return { current, other } end }
+dofile('_NonRelease/MailPerformance20261029/IdentityMock.lua')(A.Core.Characters)
 A.ViewModel = { Escape = function(_, s) return s end }
 A.db = { contacts = { { address = 'First-Realm' }, { address = 'Second-Other' } } }
 local attachments, sends = {}, 0

@@ -5,6 +5,18 @@ local Poll, pollElapsed = nil, 0
 Core.ItemResolver = Resolver
 Core.Capabilities:Register("item-resolver", 1)
 
+local function CancelWaiter(waiter)
+    waiter.cancelled, waiter.callback = true, nil
+    local request = waiter._request
+    waiter._request = nil
+    if not request then return end
+    for index, candidate in ipairs(request.waiters) do
+        if candidate == waiter then table.remove(request.waiters, index); break end
+    end
+    -- Keep the shared native request until its original event/timeout. Another
+    -- consumer can join it without issuing a duplicate request for the same ID.
+end
+
 local function ItemID(value)
     local number = tonumber(value)
     if number and number > 0 and number % 1 == 0 and number <= 2147483647 then return number end
@@ -64,9 +76,14 @@ function Resolver:Finish(itemID, success)
     self.failed[itemID] = not success or nil
     info.state = success and "ready" or "failed"
     local message = not success and Core:Text("CORE.ITEM_INFORMATION_COULD_NOT_LOAD_CHECK_THE") or nil
+    -- Detach first: one callback may cancel another waiter. It must suppress
+    -- that callback without shifting the array currently being dispatched.
+    for _, waiter in ipairs(request.waiters) do waiter._request = nil end
     for _, waiter in ipairs(request.waiters) do
+        local callback = waiter.callback
+        waiter.callback = nil
         if not waiter.cancelled then
-            local ok, err = pcall(waiter.callback, info, message)
+            local ok, err = pcall(callback, info, message)
             if not ok then Core:Print(Core:Text("CORE.ITEM_INFORMATION_CALLBACK_FAILED") .. tostring(err)) end
         end
     end
@@ -76,16 +93,17 @@ end
 -- Each ID has one bounded request; retry is explicit and never automatic.
 function Resolver:Request(itemID, callback, options)
     options = options or {}
-    local waiter = { callback = callback }
-    function waiter:Cancel() self.cancelled = true end
+    local waiter = { callback = callback, Cancel = CancelWaiter }
     local info = self:GetInfo(itemID)
-    if not info then callback(nil, Core:Text("CORE.INVALID_ITEM_ID")); return waiter end
+    if not info then waiter.callback = nil; callback(nil, Core:Text("CORE.INVALID_ITEM_ID")); return waiter end
     itemID = info.itemID
-    if info.state == "ready" then callback(info); return waiter end
+    if info.state == "ready" then waiter.callback = nil; callback(info); return waiter end
     if self.failed[itemID] and not options.retry then
+        waiter.callback = nil
         callback(info, Core:Text("CORE.ITEM_INFORMATION_COULD_NOT_LOAD_CHECK_THE")); return waiter
     end
     if self.pending[itemID] then
+        waiter._request = self.pending[itemID]
         table.insert(self.pending[itemID].waiters, waiter); return waiter
     end
     self.failed[itemID] = nil
@@ -93,6 +111,7 @@ function Resolver:Request(itemID, callback, options)
     local timeout = tonumber(options.timeout)
     if not timeout or timeout ~= timeout or timeout <= 0 or timeout == math.huge then timeout = 8 end
     self.pending[itemID] = { waiters = { waiter }, remaining = timeout }
+    waiter._request = self.pending[itemID]
     frame:SetScript("OnUpdate", Poll)
     local requested = Core.Client:RequestItemData(itemID)
     if not requested then self:Finish(itemID, false) end

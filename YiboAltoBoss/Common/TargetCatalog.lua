@@ -149,12 +149,19 @@ function Catalog:Build()
         Add(entry)
     end
     table.sort(targets, function(a, b) if a.kind ~= b.kind then return a.kind < b.kind end; return a.name < b.name end)
-    self.value, self.byID = { targets = targets }, byID
+    local byBossKey = {}
+    for _, entry in ipairs(targets) do
+        if entry.bossKey and not byBossKey[entry.bossKey] then byBossKey[entry.bossKey] = entry end
+    end
+    self.value, self.byID, self.byBossKey = { targets = targets }, byID, byBossKey
     return self.value
 end
 function Catalog:Query() return Copy(self.value or self:Build()) end
 function Catalog:Get(id) if not self.byID then self:Build() end; return self.byID[id] end
-function Catalog:Invalidate() self.value, self.byID = nil, nil end
+-- Owner-internal lookup: the matrix needs one immutable definition, not an
+-- isolated copy of every instance, difficulty and encounter for every cell.
+function Catalog:GetByBossKey(key) if not self.byBossKey then self:Build() end; return self.byBossKey[key] end
+function Catalog:Invalidate() self.value, self.byID, self.byBossKey, self.savedEncounterIndex = nil, nil, nil, nil end
 function Catalog:CanonicalDifficulty(catalogID, id)
     local definition = self:Get(catalogID)
     return YAB.TargetCatalogRuntime:CanonicalDifficulty(definition and definition.mapID, tonumber(id) or id)
@@ -166,6 +173,38 @@ function Catalog:ObserveLegacyLockout(lockout) return false end
 
 function Catalog:ResolveSavedEncounter(mapID, difficultyID, name)
     if not self.value then self:Build() end
+    if mapID ~= nil and difficultyID ~= nil and name ~= nil then
+        local root = self.savedEncounterIndex
+        if not root or root.catalog ~= self.value then
+            root = { catalog = self.value, maps = {} }
+            self.savedEncounterIndex = root
+        end
+        local map = root.maps[mapID]
+        if not map then map = {}; root.maps[mapID] = map end
+        local names = map[difficultyID]
+        if not names then
+            names = {}; map[difficultyID] = names
+            local function Add(label, id)
+                if label == nil or id == nil then return end
+                local previous = names[label]
+                if previous == nil then names[label] = id
+                elseif previous ~= id then names[label] = false end
+            end
+            for _, definition in ipairs(self.value.targets) do
+                if definition.kind == "instance" and definition.mapID == mapID then
+                    for _, difficulty in ipairs(definition.difficulties) do
+                        if difficulty.id == difficultyID and difficulty.complete then
+                            for _, encounter in ipairs(difficulty.encounters) do
+                                Add(encounter.name, encounter.id)
+                                for _, alias in ipairs(encounter.aliases or {}) do Add(alias, encounter.id) end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        return names[name] or nil
+    end
     local resolved
     for _, definition in ipairs(self.value.targets) do if definition.kind == "instance" and definition.mapID == mapID then
         for _, difficulty in ipairs(definition.difficulties) do if difficulty.id == difficultyID and difficulty.complete then

@@ -168,3 +168,7 @@ lua YiboMail/_NonRelease/Tests/WorkspaceSpec.lua
 ## 图标资源（2026-10-14）
 
 当前图标为 `Media/YiboMailIcon`：默认TGA为64px，插件列表使用128px TGA；PNG提供16/24/32/64/128/512/1024px，母版为312px透明位图。版本、统一缩放和验证范围见[系列资源记录](../Docs/Design/Yibo系列Logo-20261014/README.md)。
+
+## Forever 最小适配（2026-10-19）
+
+新增 `YiboMail_Forever.toc`，0.1.0-api1／Interface16001，独立YiboMailForeverDB，仅当前角色收件箱只读采集、保存及Core窗口／预览。未加载收取、发送、规则或原生增强模块。mail.items提供v1.0收件箱契约，不宣称在途能力；Vault Forever0.6.0-api1通过Core可选消费，独立使用Vault仍保留原采集。69项双端与联动模拟通过。2026-10-19用户截图已确认实机启动、空收件箱采集及中文主窗口；非空邮件／附件、变化刷新、保存恢复、Vault联动与MoP实机回归仍待验证，见[实施与验收](Docs/Forever-最小适配与验收.md)。

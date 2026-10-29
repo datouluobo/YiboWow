@@ -12,11 +12,6 @@ function R:Current()
     local characters = Addon.Core.Characters
     local current = characters:GetCurrent({ identityOnly = true })
     if not current then return nil end
-    -- Faction is outside the identity projection. Read the shared directory
-    -- without retaining or copying the current character's domain payloads.
-    for _, character in ipairs(characters:GetAllCached()) do
-        if character.id == current.id then current.faction = character.faction; break end
-    end
     return current
 end
 function R:Key(address) return Trim(address):gsub("%s+", ""):lower() end
@@ -24,7 +19,7 @@ function R:GetFaction(address)
     local normalized = self:Normalize(address)
     if not normalized then return end
     local key = self:Key(normalized)
-    for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do
+    for _, character in ipairs(Addon.Core.Characters:GetAllCached({ identityOnly = true })) do
         if self:Key(character.name .. "-" .. character.realm) == key then
             if character.faction == "Alliance" or character.faction == "Horde" then return character.faction, "core" end
             return nil, "core"
@@ -83,7 +78,7 @@ function R:Normalize(value, realm)
     -- Preserve a known realm's spelling; matching also ignores realm whitespace.
     if not self.realms then
         self.realms = {}
-        for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do
+        for _, character in ipairs(Addon.Core.Characters:GetAllCached({ identityOnly = true })) do
             if character.realm then self.realms[self:Key(character.realm)] = character.realm end
         end
     end
@@ -277,7 +272,7 @@ function R:ReadGuild()
     table.sort(self.guild, function(a, b) return self:Key(a.address) < self:Key(b.address) end)
 end
 function R:AccountAddresses()
-    local roster = Addon.Core.Characters:GetAllCached()
+    local roster = Addon.Core.Characters:GetAllCached({ identityOnly = true })
     local current = self:Current() or {}
     local currentAddress = current.name and current.realm and self:Normalize(current.name .. "-" .. current.realm)
     local cache = self.accountAddresses
@@ -310,7 +305,7 @@ function R:AccountFriends()
 end
 function R:FriendOwners(address)
     local owners = {}; local key = self:Key(address); local currentID = (self:Current() or {}).id
-    for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do
+    for _, character in ipairs(Addon.Core.Characters:GetAllCached({ identityOnly = true })) do
         local snapshot = Addon.db.friendsByCharacter[character.id]
         if character.id ~= currentID and snapshot and snapshot.addresses[key] then
             owners[#owners + 1] = character.name .. "-" .. character.realm .. " · " .. date("%m-%d %H:%M", snapshot.updatedAt or 0)
@@ -338,7 +333,7 @@ function R:Candidates(source)
         end
     elseif source == "characters" then
         local view = Addon.Core.AccountView
-        local characters = view and view.GetVisibleCharacters and view:GetVisibleCharacters() or Addon.Core.Characters:GetAllCached()
+        local characters = view and view.GetVisibleCharacters and view:GetVisibleCharacters({ identityOnly = true }) or Addon.Core.Characters:GetAllCached({ identityOnly = true })
         if Addon.Core.CharacterSort and view and view.GetDefaultCharacterSort then
             characters = Addon.Core.CharacterSort:Sort(characters, view:GetDefaultCharacterSort(), currentID, view.GetCustomCharacterOrder and view:GetCustomCharacterOrder())
         end

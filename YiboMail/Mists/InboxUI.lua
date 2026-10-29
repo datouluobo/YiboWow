@@ -2,6 +2,39 @@ local Addon = _G.YiboMail
 local Native, View = Addon.NativeUI, Addon.ViewModel
 local Text, InboxButton, Surface, Tooltip, BACKDROP = unpack(Native.inboxWidgets)
 
+-- WoW frames are pooled for the session. Release their business references
+-- when unmounted instead of leaving callbacks pointing at an old mailbox.
+local function ReleaseWidget(control)
+    if not control then return end
+    for _, event in ipairs({ "OnClick", "OnEnter", "OnLeave" }) do control:SetScript(event, nil) end
+    if GameTooltip and GameTooltip.IsOwned and GameTooltip:IsOwned(control) then GameTooltip:Hide() end
+end
+function Native:ReleaseInboxRow(row)
+    row:Hide(); ReleaseWidget(row); ReleaseWidget(row.check); ReleaseWidget(row.delete); ReleaseWidget(row.iconHover)
+    row.mailOriginalIndex, row.mailEntryKey, row.mailAttachmentSlot = nil, nil, nil
+    row.mailListTop, row.mailIndented = nil, nil
+    row.icon:SetTexture(nil)
+    for _, key in ipairs({ "title", "detail", "summary", "count", "expiry" }) do row[key]:SetText("") end
+    for _, button in ipairs(row.attachments and row.attachments.itemButtons or {}) do
+        button:Hide(); ReleaseWidget(button); button.icon:SetTexture(nil); button.name:SetText(""); button.count:SetText("")
+    end
+end
+function Native:ReleaseInboxTile(tile)
+    tile:Hide(); ReleaseWidget(tile)
+    tile.mailGroup, tile.eligibleCount = nil, nil
+    tile.displayTexture, tile.displayKey, tile.displayAvailable = nil, nil, nil
+    tile.icon:SetTexture(nil); tile.count:SetText("")
+end
+function Native:ReleaseInboxPresentation()
+    local panel = self.inbox; if not panel then return end
+    for _, row in ipairs(panel.rows or {}) do self:ReleaseInboxRow(row) end
+    for _, tile in ipairs(panel.tiles or {}) do self:ReleaseInboxTile(tile) end
+    panel.available, panel.selection, panel.expanded = {}, {}, {}
+    panel.previousTileAvailability, panel.keepTilesDuringQueue, panel.observationMounted = nil, nil, nil
+    self.pendingItemInfo = nil
+    self.itemRefreshTicket = nil
+end
+
 function Native:SelectInboxActions()
     local selection, count = {}, 0
     local skipped = { preference = 0 }
@@ -292,8 +325,15 @@ function Native:DeleteEmptyMail(entry)
     if type(InboxItemCanDelete) ~= "function" or not InboxItemCanDelete(index) or type(DeleteInboxItem) ~= "function" then
         self.inbox.notice = Addon:T("UI.TEXT_0283"); self:RefreshInbox(); return
     end
-    self.deleting = true
+    local ticket = {}
+    self.deleting = ticket
     self.deleteStartedAt = GetTime()
+    C_Timer.After(12.01, function()
+        if Native.deleting ~= ticket then return end
+        Native.deleting = nil
+        Native.inbox.notice = Addon:T("UI.TEXT_0154")
+        Native:RefreshInbox()
+    end)
     if OpenMailFrame and OpenMailFrame:IsShown() and InboxFrame.openMailID == index then
         InboxFrame.openMailID, self.openMailKey = nil, nil
         if HideUIPanel then HideUIPanel(OpenMailFrame) else OpenMailFrame:Hide() end
@@ -711,7 +751,7 @@ function Native:RefreshCollectedMailRow(action)
             if row:IsShown() and row.mailOriginalIndex == originalIndex then
                 firstTop = firstTop and math.min(firstTop, row.mailListTop or 0) or (row.mailListTop or 0)
                 removedHeight = removedHeight + row:GetHeight() + 2
-                row:Hide()
+                self:ReleaseInboxRow(row)
             end
         end
         if removedHeight > 0 then
@@ -813,6 +853,13 @@ function Native:RefreshInbox(observation)
     panel.used, panel.top, panel.available, panel.width = 0, 0, {}, math.max(1, panel.scroll:GetWidth())
     local usedTiles = 0
     local context = self:Context()
+    local character = context.characters[1]
+    local snapshot = character and Addon.db.byCharacter and Addon.db.byCharacter[character.id]
+    if snapshot then
+        local expanded = {}
+        for _, key in ipairs(snapshot.visibleKeys or {}) do if panel.expanded[key] then expanded[key] = true end end
+        panel.expanded = expanded
+    end
     local allMails = panel.mode == "mail" and View:GetMails(context, { sort = panel.options.sort }) or nil
     local visibleMails
     if panel.mode == "mail" and panel.options.search == "" and (panel.options.kind == nil or panel.options.kind == "all") then
@@ -848,8 +895,8 @@ function Native:RefreshInbox(observation)
         self:Row({ empty = true, title = failed and Addon:T("UI.TEXT_0600") or (pending and Addon:T("UI.TEXT_0423") or (panel.mode == "items" and Addon:T("UI.TEXT_0382") or Addon:T("UI.TEXT_0381"))),
             detail = failed and Addon:T("UI.TEXT_0561") or (pending and Addon:T("UI.TEXT_0476") or Addon:T("UI.TEXT_0198")) })
     end
-    for index = usedTiles + 1, #(panel.tiles or {}) do panel.tiles[index]:Hide() end
-    for index = panel.used + 1, #panel.rows do panel.rows[index]:Hide() end
+    for index = usedTiles + 1, #(panel.tiles or {}) do self:ReleaseInboxTile(panel.tiles[index]) end
+    for index = panel.used + 1, #panel.rows do self:ReleaseInboxRow(panel.rows[index]) end
     panel.content:SetSize(panel.width, math.max(1, panel.top)); panel.scroll:SetContentHeight(panel.top)
     local selected = self:UpdateReturnButton(allMails or {})
     local _, collectCount = self:GetCollectSelection(allMails or {})
@@ -947,11 +994,11 @@ function Native:OnCollected(id, action)
             group.quantity = math.max(0, group.quantity - (tonumber(collected.money or collected.item and collected.item.quantity) or 0))
             tile.eligibleCount = math.max(0, (tile.eligibleCount or 1) - 1)
             tile.count:SetText(group.money and tostring(math.floor(group.quantity / 10000)) or tostring(group.quantity))
-            -- Re-run the existing tooltip builder against the updated aggregate
-            -- while keeping the same owner and tile mounted under the cursor.
+            -- The removed source invalidates this hover. Dismiss it instead of
+            -- rebuilding the native hyperlink and every hooked tooltip consumer
+            -- after each confirmation. A fresh hover reads the updated group.
             if GameTooltip and GameTooltip.GetOwner and GameTooltip:GetOwner() == tile then
-                local onEnter = tile:GetScript("OnEnter")
-                if onEnter then onEnter(tile) end
+                GameTooltip:Hide()
             end
             return
         end

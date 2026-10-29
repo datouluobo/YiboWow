@@ -22,4 +22,17 @@ TaskHub 全部角色目录与身份读取、Todo 任务观察／主快照／行�
 
 ## R1兼容性复核（2026-10-27）
 
-当前Mists／Forever共享底座采用API13，character-identity:1保持。原生读取经Core内部Client绑定；业务继续使用本页公开投影，不绑定Client或用本地化显示名关联数据。另有GetAllCached只读共享快照，不能按GetAll的可修改副本使用；暂不可读与legacy边界见[共享底座契约](API-v13-R1共享底座兼容与失败契约.md)。新字节实机恢复仍待，原历史版本说明不代表当前渠道状态。
+2026-10-28 内部性能优化：Core 自有原生 DataDomains 采集使用身份投影，第三方注册的 Collect 仍收到完整隔离角色上下文；Get／GetCurrent／GetAll 的默认完整副本和 GetAllCached 的既有契约保持。没有新增公开能力或版本要求。见[修复与验证](../../Docs/性能修复-第二轮-2026-10-28.md)。
+
+当前Mists／Forever共享底座采用API13，character-identity:1契约继续兼容；当前工作树已提供下述能力2。原生读取经Core内部Client绑定；业务继续使用本页公开投影，不绑定Client或用本地化显示名关联数据。另有GetAllCached只读共享快照，不能按GetAll的可修改副本使用；暂不可读与legacy边界见[共享底座契约](API-v13-R1共享底座兼容与失败契约.md)。新字节实机恢复仍待，原历史版本说明不代表当前渠道状态。
+
+2026-10-29 character-identity:2（API13）：身份投影新增既有角色目录的 faction，未知时仍为 nil，不读取业务域。Mail 收件人需检查能力2，直接消费身份投影，取消为阵营而加载完整 GetAllCached。能力1消费者与默认完整查询契约不变。
+
+
+## 只读身份目录缓存（2026-10-29）
+
+Core API13 新增独立能力 `character-identity-cache:1`。检查后可用 `Core.Characters:GetAllCached({identityOnly=true})`：字段与能力2的身份投影相同，返回共享只读目录，同一代重复调用复用数组与身份表；不得修改。需要可修改副本时继续 GetAll(identityOnly)。默认 GetAllCached() 的完整只读契约不变。
+
+2026-10-29 Core内部设置读取优化：设置页上下文、短名与排序列表及重建顺序只读身份；业务页面默认完整上下文保持。GetShortNameDuplicates先按身份筛选，仅对真实重复组构造完整隔离副本，返回字段及组内顺序保持；不会因没有重复短名而复制所有业务域。公开API／能力版本与业务接入状态不变，详见[设置身份读取记录](../../Docs/Core-设置身份读取性能-2026-10-29.md)。
+
+目录刷新／导入／删除及现有 InvalidateAllCache（包括域更新）会先清掉身份缓存；新查询重建，消费者可用返回数组身份变化作自身派生缓存失效依据，不依赖事件广播顺序。缓存仅含身份，不存业务域，未就绪和空目录返回行为同 GetAll。Core 阶段验证后由 Mail 在途目录首先接入，Mists 消费方检查能力1，缺少则提示升级、在写库前停止；其它插件不强制改动。

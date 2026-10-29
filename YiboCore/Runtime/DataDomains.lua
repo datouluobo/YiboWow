@@ -77,10 +77,18 @@ end
 
 local function CollectDefinitions(definitions, eventName)
     if not definitions or not Core:IsInitialized() then return 0 end
-    local character = Core.Characters and Core.Characters:GetCurrent()
-    if not character then return 0 end
+    local identity = Core.Characters and Core.Characters:GetCurrent({ identityOnly = true })
+    if not identity then return 0 end
+    local fullCharacter
     local count = 0
     for _, definition in ipairs(definitions) do
+        -- Core collectors read native facts from identity. Third-party collectors
+        -- retain the complete, isolated context promised by the existing API.
+        local character = identity
+        if definition.owner ~= Core.NAME then
+            fullCharacter = fullCharacter or Core.Characters:GetCurrent()
+            character = fullCharacter
+        end
         local context = { characterID = character.id, character = character, reason = eventName, domainID = definition.id }
         local ok, data, state, changedKeys = xpcall(function()
             return definition.Collect(context)
@@ -91,15 +99,15 @@ local function CollectDefinitions(definitions, eventName)
                 context.changedKeys = state == "known" and changedKeys or nil
                 -- Failure/partial results cannot replace the last good values.
                 -- A known empty table is an explicit, successful empty snapshot.
-                Core.DomainStore:Commit(character.id, definition.id, state == "known" and data or nil, state, context)
+                Core._private.CommitCollectedDomain(character.id, definition.id, state == "known" and data or nil, state, context)
             else
                 if DataDomains:IsStateValid(state) then Core:Print(Core:Text("CORE.DOMAIN_INVALID_DATA", definition.id))
                 else Core:Print(Core:Text("CORE.DOMAIN") .. definition.id .. Core:Text("CORE.RETURNED_AN_INVALID_STATE") .. tostring(state)) end
-                Core.DomainStore:Commit(character.id, definition.id, nil, "error", context)
+                Core._private.CommitCollectedDomain(character.id, definition.id, nil, "error", context)
             end
         else
             Core:Print(Core:Text("CORE.DOMAIN") .. definition.id .. Core:Text("CORE.COLLECTION_FAILED") .. tostring(data))
-            Core.DomainStore:Commit(character.id, definition.id, nil, "error", context)
+            Core._private.CommitCollectedDomain(character.id, definition.id, nil, "error", context)
         end
         count = count + 1
     end

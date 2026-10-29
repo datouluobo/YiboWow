@@ -556,7 +556,6 @@ function Theme:CreateDropdown(parent, width, options)
         if self.menu:IsShown() then self.menu:Hide(); return end
         if self.menuPageSize then
             for index, option in ipairs(self.options) do if option.value == self.value then self.menuPage = math.floor((index - 1) / self.menuPageSize) + 1; break end end
-            self:SetOptions(self.options)
         end
         local menuWidth = self:GetWidth()
         for _, option in ipairs(self.options) do
@@ -564,10 +563,12 @@ function Theme:CreateDropdown(parent, width, options)
         end
         self.menu:ClearAllPoints(); self.menu:SetWidth(math.min(menuWidth, math.max(1, UIParent:GetWidth() - 32)))
         self.menu:SetClampedToScreen(true)
+        self.menu:SetFrameLevel(math.max((popupOwner:GetFrameLevel() or 0) + 30, (self:GetFrameLevel() or 0) + 10))
+        -- Render once with the final page, width and frame level. Positioning
+        -- then uses this page's actual height, including a partial final page.
+        self:SetOptions(self.options)
         local opensAbove = self.GetBottom and self:GetBottom() and (self:GetBottom() - 2 - self.menu:GetHeight()) < 16
         if opensAbove then self.menu:SetPoint("BOTTOMLEFT", self, "TOPLEFT", 0, 2) else self.menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2) end
-        self.menu:SetFrameLevel(math.max((popupOwner:GetFrameLevel() or 0) + 30, (self:GetFrameLevel() or 0) + 10))
-        self:SetOptions(self.options)
         self.menu:Show(); self.menu:Raise()
     end)
     dropdown:HookScript("OnHide", function(control) control.menu:Hide() end)
@@ -596,13 +597,21 @@ function Theme:CreateMultiSelectDropdown(parent, width, options)
     dropdown.menu:Hide(); dropdown.menu.checks = {}
     TrackDropdown(dropdown)
     function dropdown:SetSummary(prefix) self.summaryPrefix = prefix or Core:Text("CORE.FIELD") end
+    local function ReadSelection(control)
+        local selected, states = 0, {}
+        for _, option in ipairs(control.options) do
+            local checked = type(option.isSelected) == "function" and option.isSelected()
+            states[option] = checked
+            if checked then selected = selected + 1 end
+        end
+        return selected, states
+    end
     function dropdown:RefreshSummary()
-        local selected = 0
-        for _, option in ipairs(self.options) do if type(option.isSelected) == "function" and option.isSelected() then selected = selected + 1 end end
+        local selected, states = ReadSelection(self)
         self:SetText(self.summaryPrefix .. " " .. selected .. "/" .. #self.options)
         for index, check in ipairs(self.menu.checks) do
             local option = (self.displayedOptions or self.options)[index]
-            if option then check:SetChecked(type(option.isSelected) == "function" and option.isSelected()) end
+            if option then check:SetChecked(states[option]) end
         end
     end
     function dropdown:RenderOptions()
@@ -611,6 +620,7 @@ function Theme:CreateMultiSelectDropdown(parent, width, options)
             if #self.groups <= 1 or (option.group or Core:Text("CORE.GENERAL")) == self.activeGroup then self.displayedOptions[#self.displayedOptions + 1] = option end
         end
         local top = #self.groups > 1 and 40 or 5
+        local selected, states = ReadSelection(self)
         for _, check in ipairs(self.menu.checks) do check:Hide() end
         for index, option in ipairs(self.displayedOptions) do
             local check = self.menu.checks[index]
@@ -621,7 +631,7 @@ function Theme:CreateMultiSelectDropdown(parent, width, options)
             check:SetFrameLevel((self.menu:GetFrameLevel() or 0) + 1)
             check:ClearAllPoints(); check:SetPoint("TOPLEFT", 8, -top - (index - 1) * (Theme.Size.standard + 2)); check:SetPoint("RIGHT", -8, 0)
             check.label:SetText(option.title or "")
-            check:SetChecked(type(option.isSelected) == "function" and option.isSelected())
+            check:SetChecked(states[option])
             check:SetScript("OnClick", function(control)
                 local nextValue = not control:GetChecked()
                 control:SetChecked(nextValue)
@@ -632,7 +642,7 @@ function Theme:CreateMultiSelectDropdown(parent, width, options)
             check:Show()
         end
         self.menu:SetHeight(math.max(1, #self.displayedOptions) * (Theme.Size.standard + 2) + top + 5)
-        self:RefreshSummary()
+        self:SetText(self.summaryPrefix .. " " .. selected .. "/" .. #self.options)
     end
     function dropdown:SetOptions(nextOptions)
         self.options, self.groups = nextOptions or {}, {}

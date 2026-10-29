@@ -129,7 +129,7 @@ local function HeaderCell(parent, x, width, title, secondary)
     return header
 end
 
-local function StatusCell(parent, index, x, y, column, charKey)
+local function StatusCell(parent, index, x, y, column, charKey, definition)
     local cell = parent.cells[index] or CreateFrame("Button", nil, parent, "BackdropTemplate")
     parent.cells[index] = cell
     cell:Show()
@@ -146,10 +146,6 @@ local function StatusCell(parent, index, x, y, column, charKey)
     Theme:BindTooltip(cell, column.plannedCatalogID and column.name or nil, YAB.GetLockoutTooltip(charKey, column))
     if _G.YiboCore.BusinessItemActions then _G.YiboCore.BusinessItemActions:Unbind(cell) end
     if YAB.GoalTargets and YAB.GoalTargets.ref then
-        local definition
-        for _, d in ipairs(YAB.TargetCatalog:Query().targets) do
-            if d.kind == "instance" and (d.id == column.plannedCatalogID or d.mapID and d.mapID == column.instanceID) then definition = d; break end
-        end
         if definition then YAB.GoalTargets:Bind(cell, charKey, { catalogID = definition.id, difficultyID = column.plannedDifficultyID or column.difficultyID, scope = "all", encounterIDs = {} }, nil, true) end
     end
 end
@@ -187,6 +183,19 @@ function YAB.RefreshLockoutsPage(instance, context)
     local columns, pageInfo = Core.AccountView:GetColumnPage(
         "alto-lockouts", "instances", allColumns, availableWidth, charWidth, CELL_W
     )
+    local definitions = {}
+    if #keys > 0 and #columns > 0 and YAB.GoalTargets and YAB.GoalTargets.ref then
+        local targets = YAB.TargetCatalog:Query().targets
+        for index, column in ipairs(columns) do
+            for _, definition in ipairs(targets) do
+                if definition.kind == "instance" and (definition.id == column.plannedCatalogID
+                    or definition.mapID and definition.mapID == column.instanceID) then
+                    definitions[index] = definition
+                    break
+                end
+            end
+        end
+    end
     -- Pagination shares the tab row so no separate status strip interrupts
     -- the active tab's connection to the matrix header.
     Core.AccountView:UpdateColumnPager(instance, "alto-lockouts", "instances", pageInfo, instance.businessTabs, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.INSTANCES"))
@@ -223,7 +232,7 @@ function YAB.RefreshLockoutsPage(instance, context)
         row.label:SetText(name)
         local color = CharacterColor(charKey)
         row.label:SetTextColor(color.r or color[1], color.g or color[2], color.b or color[3])
-        for index, column in ipairs(columns) do StatusCell(row, index, charWidth + (index - 1) * CELL_W, 0, column, charKey) end
+        for index, column in ipairs(columns) do StatusCell(row, index, charWidth + (index - 1) * CELL_W, 0, column, charKey, definitions[index]) end
         Release(row.cells, #columns + 1)
         y = y + ROW_H + 2
     end

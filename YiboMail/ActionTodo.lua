@@ -23,7 +23,7 @@ function Action:Query(request)
         count = count + 1
     end
     local byID, characters, seen, coverage = {}, {}, {}, {}
-    for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do byID[character.id] = character end
+    for _, character in ipairs(Addon.Core.Characters:GetAllCached({ identityOnly = true })) do byID[character.id] = character end
     for index = 1, count do
         local id = ids[index]
         if not id then return nil, "invalid-scope" end
@@ -114,7 +114,7 @@ function Action:Initialize()
     end
     self:Metadata()
     self.callback = self.callback or function() Action:Changed() end
-    Addon.Items.Events:Register(self, self.callback)
+    Addon.Items.Events:RegisterSignal(self, self.callback)
     self.definition = self.definition or { name = "action.todo", kind = "provider", providerID = self.PROVIDER,
         version = { major = 1, minor = 0 }, methods = { Query = function(request) return Action:Query(request) end } }
     local ref, err = core.Contracts:Register(Addon.NAME, self.definition)

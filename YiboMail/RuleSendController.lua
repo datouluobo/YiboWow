@@ -40,6 +40,7 @@ end
 function C:Scan()
     self.match = Addon.SendRules:Match(Addon.Compose:BagItems(), self.skipped)
     self.revision = Addon.db.sendRuleRevision
+    self.scanDirty = nil
     return self.match
 end
 function C:Invalidate(message)
@@ -179,6 +180,11 @@ function C:Send()
     if SendMailFrame_Update then SendMailFrame_Update() end
     if not button:IsEnabled() then return nil, Addon:T("UI.TEXT_0172") end
     self.state, self.notice, self.startedAt = "sending", Addon:T("UI.TEXT_0421"), GetTime and GetTime() or 0
+    local ticket = {}
+    self.sendTicket = ticket
+    if C_Timer and C_Timer.After then C_Timer.After(15.01, function()
+        if C.sendTicket == ticket and C.state == "sending" then C:Tick() end
+    end) end
     self:Changed()
     ok, err = pcall(click, button, "LeftButton")
     if not ok then self.state, self.notice = "invalid", Addon:T("UI.TEXT_0191"); self:Changed(); return nil, tostring(err) end
@@ -206,27 +212,36 @@ function C:Skip(id, restore)
     self.scope, self.state = nil, "idle"; self:Scan(); self:Changed(); return true
 end
 function C:QueueScan()
+    self.scanDirty = true
+    if Addon.Queue and (Addon.Queue.state == "running" or Addon.Queue.pending) then return end
     if self.scanQueued then return end
     self.scanQueued = true
     local function Run()
         self.scanQueued = nil
+        if Addon.Queue and (Addon.Queue.state == "running" or Addon.Queue.pending) then return end
         if Addon.Scanner:IsOpen() and self.state ~= "sending" and self.state ~= "filling" then
             self:Scan(); self:Changed()
         end
     end
     if C_Timer and C_Timer.After then C_Timer.After(0.1, Run) else Run() end
 end
+function C:AfterCollection()
+    if self.scanDirty and Addon.Scanner:IsOpen() and not self.scanQueued then self:QueueScan() end
+end
 
 function C:OnEvent(event, itemID)
     if event == "MAIL_CLOSED" then
+        self.sendTicket = nil
         self.state, self.skipped, self.scope, self.owned, self.packet, self.fingerprint = "idle", {}, nil, nil, nil, nil
-        self.match, self.notice, self.dirty = nil, nil, nil
+        self.match, self.notice, self.dirty, self.scanDirty = nil, nil, nil, nil
         self.draftFields = nil
     elseif event == "MAIL_SEND_SUCCESS" and (self.state == "sending" or self.owned) then
+        self.sendTicket = nil
         self.state, self.owned, self.fingerprint, self.packet = "idle", nil, nil, nil
         self.draftFields = nil
         self.notice = Addon:T("UI.TEXT_0185"); self:Scan()
     elseif (event == "MAIL_FAILED" or event == "ADDON_ACTION_BLOCKED") and self.state == "sending" then
+        self.sendTicket = nil
         self.state, self.notice = "invalid", Addon:T("UI.TEXT_0189")
     elseif event == "BAG_UPDATE_DELAYED" or event == "GET_ITEM_INFO_RECEIVED" then
         -- Rule matching is a mailbox operation. Ordinary looting must not scan

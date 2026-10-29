@@ -1,6 +1,6 @@
 local Addon = {}
 _G.YiboMail = Addon
-Addon.NAME, Addon.VERSION, Addon.API_VERSION = "YiboMail", "1.3.0-api1", 1
+Addon.NAME, Addon.VERSION, Addon.API_VERSION = "YiboMail", "1.3.1-api1", 1
 Addon.REQUIRED_CORE_API = 13
 Addon.CLIENT_SUPPORTED = not (type(WOW_PROJECT_CAMELOT) == "number" and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT)
 Addon.FEATURES = { send = true, sendAssist = false, account = true, settings = true }
@@ -20,9 +20,13 @@ function Addon:GetShortcutLayout()
     end
     return Dimension(settings.shortcutRows, 8, 12), Dimension(settings.shortcutColumns, 2, 6)
 end
-function Addon.Copy(value)
+function Addon.Copy(value, copies)
     if type(value) ~= "table" then return value end
-    local result = {}; for key, entry in pairs(value) do result[key] = Addon.Copy(entry) end; return result
+    copies = copies or {}
+    if copies[value] then return copies[value] end
+    local result = {}; copies[value] = result
+    for key, entry in pairs(value) do result[key] = Addon.Copy(entry, copies) end
+    return result
 end
 function Addon:Now()
     if GetServerTime then return GetServerTime(), "server" end

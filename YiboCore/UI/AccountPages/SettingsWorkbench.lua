@@ -25,13 +25,19 @@ local function CreateSettings(parent)
     parent.scroll:SetPoint("TOPLEFT", 20, -76); parent.scroll:SetPoint("BOTTOMRIGHT", -Theme.Space.xs, 14)
     parent.content = CreateFrame("Frame", nil, parent.scroll); parent.content:SetWidth(620); parent.scroll:SetScrollChild(parent.content)
     parent.rows = {}
+    parent.rowPools = {}
     parent.displayTabs = {}
 
 end
 
 local function SettingsRow(parent, index, kind)
-    local row = parent.rows[index]
-    if row and row.controlType ~= kind then row:Hide(); row = nil end
+    -- A slot can alternate between several control kinds as pages change.
+    -- Keep each kind reachable for reuse instead of abandoning hidden frames.
+    local pool = parent.rowPools[index] or {}
+    parent.rowPools[index] = pool
+    local previous = parent.rows[index]
+    if previous and previous.controlType ~= kind then previous:Hide() end
+    local row = pool[kind]
     if not row then
         if kind == "check" then
             row = Theme:CreateCheckbox(parent.content, "")
@@ -123,8 +129,9 @@ local function SettingsRow(parent, index, kind)
         else
             row = CreateChromeButton(parent.content, 250, 22, "")
         end
-        parent.rows[index] = row
+        pool[kind] = row
     end
+    parent.rows[index] = row
     row.controlType = kind
     return row
 end
@@ -183,6 +190,12 @@ local function RefreshSettings(parent)
     parent.scroll:SetPoint("TOPLEFT",20,showHint and -math.max(76,57+parent.hint:GetStringHeight()) or -56)
 
     local index, y, gridColumn = 0, 0, 0
+    local function RefreshVisibleSettings()
+        -- Losing focus while a page is being hidden must still commit an edit,
+        -- but must not rebuild the page the user is in the middle of leaving.
+        if parent:IsShown() and AccountView.activePageID == "settings"
+            and (AccountView.settingsTargetPageID or "display") == targetID then AccountView:RefreshPage() end
+    end
     local gridGap, gridMinimum = 16, 230
     local gridColumns = math.max(1, math.floor((parent.content:GetWidth() + gridGap) / (gridMinimum + gridGap)))
     local compactForm = displayMode or generalMode or barMode or sortingMode
@@ -265,9 +278,14 @@ local function RefreshSettings(parent)
                 Core:Print(Core:Text("CORE.INVALID_LEVEL_FILTER") .. tostring(badToken))
                 return
             end
+            if normalized == (value or "") then
+                if control:GetText() ~= normalized then control:SetText(normalized) end
+                return
+            end
+            value = normalized
             callback(normalized)
             control:SetText(normalized)
-            AccountView:RefreshPage()
+            RefreshVisibleSettings()
         end
         row.input:SetScript("OnEnterPressed", function(control) Save(control); control:ClearFocus() end)
         row.input:SetScript("OnEditFocusLost",function(control) control:SetBackdropBorderColor(unpack(COLORS.lineSoft));Save(control) end)
@@ -290,6 +308,10 @@ local function RefreshSettings(parent)
                 Core:Print(page.title .. Core:Text("CORE.INVALID_LEVEL_FILTER") .. tostring(badToken))
                 return
             end
+            if normalized == (filter.GetExpression() or "") then
+                if control:GetText() ~= normalized then control:SetText(normalized) end
+                return
+            end
             local ok, errorMessage = filter.SetExpression(normalized)
             if ok == false then
                 control:SetText(filter.GetExpression() or "")
@@ -297,7 +319,7 @@ local function RefreshSettings(parent)
                 return
             end
             control:SetText(normalized)
-            AccountView:RefreshPage()
+            RefreshVisibleSettings()
         end
         row.input:SetScript("OnEnterPressed", function(control) Save(control); control:ClearFocus() end)
         row.input:SetScript("OnEditFocusLost",function(control) control:SetBackdropBorderColor(unpack(COLORS.lineSoft));Save(control) end)
@@ -526,18 +548,26 @@ local function RefreshSettings(parent)
             row.yiboHostedOwner = hostedOwner
         end
         row:Show()
+        local function IsCurrentPanel()
+            if not (parent:IsShown() and row:IsShown() and AccountView.activePageID == "settings"
+                and AccountView.settingsTargetPageID == targetID and row.yiboHostedOwner == hostedOwner) then return false end
+            if selected then return AccountView._pages[selected.id] == selected end
+            return settingsOnly and Core.SettingsRegistry and Core.SettingsRegistry._panels[settingsOnly.id] == settingsOnly
+        end
         local hostedContext
         hostedContext = {
             availableHeight = math.max(1, (parent.scroll:GetHeight() or 1) - y - 8),
-            refreshPage = function() AccountView:RefreshPage() end,
+            refreshPage = function() if IsCurrentPanel() then AccountView:RefreshPage() end end,
             notifyPageChanged = function() if selected then AccountView:NotifyPageChanged(selected.id) end end,
             -- Allow a business panel to repaint its own controls without
             -- rebuilding the whole settings workbench.
             refreshPanel = function()
+                if not IsCurrentPanel() then return end
                 local ok, heightOrError = xpcall(function()
                     return details.CreateSettingsPanel(row, hostedContext)
                 end, function(message) return tostring(message) end)
                 if ok then
+                    if not IsCurrentPanel() then return end
                     local previousHeight = row:GetHeight() or 1
                     row:SetHeight(math.max(1, tonumber(heightOrError) or previousHeight))
                     parent.settingsContentHeight = math.max(0, (parent.settingsContentHeight or 0) + row:GetHeight() - previousHeight)
@@ -629,7 +659,7 @@ local function RefreshSettings(parent)
         Button(Core:Text("CORE.REBUILD_BY_RECENT_LOGIN"), function() AccountView:RebuildCustomCharacterOrder("recent") end, 300, "secondary")
         Button(Core:Text("CORE.RESTORE_REGISTRATION_ORDER"), function() AccountView:RebuildCustomCharacterOrder("seen") end, 300, "secondary")
         local byID = {}
-        for _, character in ipairs(Core.Characters:GetAllCached()) do byID[character.id] = character end
+        for _, character in ipairs(Core.Characters:GetAllCached({ identityOnly = true })) do byID[character.id] = character end
         local order = AccountView:GetCustomCharacterOrder()
         local orderGap, orderMinimum = 16, 520
         local orderColumns = math.max(1, math.floor((parent.content:GetWidth() + orderGap) / (orderMinimum + orderGap)))
@@ -694,7 +724,7 @@ local function RefreshSettings(parent)
     end
 
     local function ShortNameRows()
-        local characters = Core.Characters:GetAllCached()
+        local characters = Core.Characters:GetAllCached({ identityOnly = true })
         local pageSize = 20
         local totalPages = math.max(1, math.ceil(#characters / pageSize))
         parent.shortNamePage = math.max(1, math.min(tonumber(parent.shortNamePage) or 1, totalPages))
@@ -711,12 +741,16 @@ local function RefreshSettings(parent)
             local displayName = Core.Characters:FormatName(character, { nameMode = "short" })
             local warning = duplicates[displayName] and Core:Text("CORE.DUPLICATE_SHORT_NAME") or ""
             row.label:SetText(Core.Characters:FormatName({ name = character.name or Core:Text("CORE.UNKNOWN_CHARACTER"), realm = character.realm or Core:Text("CORE.UNKNOWN_REALM") }, { realmMode = "full" }) .. warning)
-            row.input:SetText(displayName == character.name and "" or displayName)
+            local savedValue = displayName == character.name and "" or displayName
+            row.input:SetText(savedValue)
             local characterID = character.id
             local function Save(control)
+                if control:GetText() == savedValue then return end
                 local result, errorMessage = Core.Characters:SetShortName(characterID, control:GetText())
                 if result == nil then Core:Print(Core:Text("CORE.COULD_NOT_SAVE_SHORT_NAME") .. tostring(errorMessage)); return end
-                AccountView:RefreshPage()
+                savedValue = result
+                control:SetText(result)
+                RefreshVisibleSettings()
             end
             row.input:SetScript("OnEnterPressed", function(control) Save(control); control:ClearFocus() end)
             row.input:SetScript("OnEditFocusLost",function(control) control:SetBackdropBorderColor(unpack(COLORS.lineSoft));Save(control) end)

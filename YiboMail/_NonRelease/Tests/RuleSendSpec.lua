@@ -5,6 +5,7 @@ local A = YiboMail
 local current = { id = 'a', name = 'A', realm = 'Realm', faction = 'Alliance' }
 A.Core = { Characters = { GetCurrent = function() return current end, GetAllCached = function() return { current } end },
     AccountView = { NotifyPageChanged = function() end } }
+dofile('_NonRelease/MailPerformance20261029/IdentityMock.lua')(A.Core.Characters)
 A.db = { rules = { [9] = { recipient = 'Old-Realm' } }, sendRules = {}, sendRuleRevision = 0 }
 A.Queue = { state = 'idle' }; A.Scanner = { IsOpen = function() return true end }
 local bags, attached, cursor, sends, histories, hooks, clock = {}, {}, nil, 0, {}, {}, 1

@@ -881,3 +881,29 @@ do
     A.Compose.BagItems = savedBags
 end
 print('PASS: visible delete navigation; selected rule/recipient and risk; confirmation-only deletion; stale revision/selection/repeat protection; immediate match refresh; fresh editor and disabled deletion')
+
+
+do
+    local U=A.RuleSendUI
+    local function BindRetiredGroup()
+        local item={itemID=12345,quantity=1,name='Retired attachment'}
+        local group={recipient='Recipient-Realm',items={item}}
+        local row=U.root.rows[1]
+        row.entry=group
+        row.main:SetScript('OnClick',function() return group end)
+        A.Core.UITheme:BindTooltip(row.main,'Retired group',{group})
+        if not row.items then
+            row.items=CreateFrame('Button',nil,row.main)
+            row.items.cell=A.Core.UITheme:CreateText(row.items,12,{1,1,1},'LEFT')
+        end
+        A.CacheUI:ItemCell(row.items,row.items.cell,{itemList={item},items='Recipient'},0,300,32)
+        return setmetatable({group,item},{__mode='v'})
+    end
+    local retired=BindRetiredGroup()
+    A.NativeUI:OnEvent('MAIL_CLOSED'); collectgarbage('collect')
+    assert(retired[1]==nil and retired[2]==nil,'Closed rule rows release group entries, click closures and attachment tooltips')
+    assert(U.root.rows[1].entry==nil and U.root.rows[1].main.tooltipLines==nil)
+    U:SetActive(true); U:Refresh()
+    assert(U.root.rows[1]:IsShown(),'Rule rows rebuild after releasing old data')
+end
+print('PASS: mailbox close releases rule-row groups and tooltip graphs; visible rules rebuild')

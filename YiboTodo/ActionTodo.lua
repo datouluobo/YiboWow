@@ -154,7 +154,7 @@ function Action:Query(request)
     if count ~= #ids then return nil, "invalid-request" end
     local _, meta = self:Commit()
     local result = { providerID = self.PROVIDER, sourceEpoch = meta.sourceEpoch, revision = meta.revision,
-        generatedAt = Addon:Now(), sourceTitle = Addon:T("PROVIDER.TODO"), status = "ready", coverage = {}, data = { tasks = {} } }
+        generatedAt = Addon:Now(), sourceTitle = Addon:T(self.SOURCE_TITLE_KEY or "PROVIDER.TODO"), status = "ready", coverage = {}, data = { tasks = {} } }
     if self.DisplayGroups then result.displayGroups = self:DisplayGroups() end
     local seen = {}
     for _, id in ipairs(ids) do

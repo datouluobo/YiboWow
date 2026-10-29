@@ -193,7 +193,7 @@ YiboMounts 1.0.0 已按 API13 接入 `localization:1` 和 API v6 独立设置注
 | YiboCrafting | 13 | RequiredDeps | 当前源码1.2.1；API13、名称／输入／物品解析及账号视图等要求见 CAP-001～009；当前验收完成 |
 | YiboCurrency | 13 | RequiredDeps | 当前源码1.0.0：Core1.12.5 / API13、account-dynamic-fields:1、character-archive-providers:1、character-cleanup:2及实际接入能力；Vault仅经契约发现，无TOC业务依赖 |
 | YiboLegendary | 13 | RequiredDeps | 当前源码2.2.3检查 `localization:1`、`character-name-format:1`、`account-view:2`、`account-entry:2` 与所需方法；语言硬编码候选暂缓至原版英文客户端处理；2026-10-16 矩阵接入另检查account-surface-budget:2及实际方法 |
-| YiboMail | 13；action.todo 提醒 11 | RequiredDeps | 当前1.2.16-api1；API13初次接入时的基础业务要求 localization:1、business-services:1、character-name-format:1、basic-input:1、item-resolver:1、item-picker:2、character-identity:1、characters:1、character-cleanup:1、account-view:2、account-character-admission:1、account-surface-budget:1、account-entry:2；邮件目标操作要求 business-item-actions:1；action.todo 新邮件提醒单独要求 business-providers:1，不足仅停止对应可选功能 |
+| YiboMail | 13；action.todo 提醒 11 | RequiredDeps | 当前1.2.16-api1；API13初次接入时的基础业务要求 localization:1、business-services:1、character-name-format:1、basic-input:1、item-resolver:1、item-picker:2、character-identity:2、account-identity-context:1、characters:1、character-cleanup:1、account-view:2、account-character-admission:1、account-surface-budget:1、account-entry:2；邮件目标操作要求 business-item-actions:1；action.todo 新邮件提醒单独要求 business-providers:1，不足仅停止对应可选功能 |
 | YiboMounts | 13（可选 Core 设置／语言增强） | OptionalDeps | 1.0.0：Core v6 设置面板与 API13 localization:1；Core 缺失或不兼容时来源 Tooltip 独立运行，见 Core-API13-接入说明 |
 | YiboQuestBlocker | 13；localization:1、character-name-format:1、basic-input:1、account-view:2、account-entry:2 | RequiredDeps | 当前源码3.1.1；版本不足时提示升级并停止初始化 ；2026-10-16本轮矩阵接入另检查account-surface-budget:2及实际方法 |
 | YiboReputation | 13（最低 Core1.12.4） | RequiredDeps | 当前源码1.7.2；localization:1、account-view:2、account-surface-budget:2、data-domains:1、events:1、basic-input:1、character-name-format:1、character-identity:1、character-cleanup:1；迁移检查 GetDefinitions 与停采集状态；目标增强另检查 API12 / business-item-actions:1、business-providers:1、character-identity:1 |
@@ -293,6 +293,11 @@ R1-09（2026-10-27）：物品缓存失败与includeBags读取失败文案分开
 
 ## CAP-004：账号页面、入口与设置接入基线
 
+2026-10-29切页生命周期：Core共享设置host的refreshPanel／refreshPage限于当前可见、注册身份及托管所有者匹配的设置目标，隐藏或离开时不执行旧UI工作；返回原目标时保留旧控件回调可用，业务notifyPageChanged独立。预览导航省去旧主页面重绘、布局重复恢复，保留公开退出／入口开关及重复悬停的返回状态。API／能力不变，无新增业务接入，既有插件接入状态不升级；66项适用回归及三个目标构建校验通过，新字节实机待验。契约见[接入指南](API-v6-业务插件增量接入指南.md)，证据见[专项记录](../../Docs/Core-切页回调与预览生命周期-2026-10-29.md)。
+
+2026-10-29 轻量账号上下文：Core 已提供 account-identity-context:1 / API13，保留页面准入／范围／排序而不复制 domains；Mail 登录提醒首个接入，缺能力在业务初始化前停止。契约见 API-v13-轻量账号上下文.md，62 项离线回归通过，实机待验。
+
+
 R2 Retail（2026-10-27）：共享窗口／入口／设置代码已接入Retail0.1.0；用户确认/yco及各页正常，当前仅身份／等级两字段。真实宿主、战斗、边界与完整三通道验收待补；既有消费者未变，见[本阶段记录](R2-01-02-Retail目标与构建实施验收.md)。
 
 R1-09（2026-10-27）：About状态／版本区域以会话资源完整插值，明确未安装、状态不可读、版本未知和仅注册；布局／接口不变。新增双语路径离线通过、实机待验，见[收尾记录](R1-09-文案与契约文档收尾验收.md)。
@@ -351,6 +356,16 @@ CoreScrollBudget10、EntryBar1133、Contracts90、CharacterNames77与84文件语
 2026-10-16验收与版本补记：用户反馈“已实机看过没问题”，以上六插件本轮矩阵预算范围记为已接入；不扩展为其它功能或全部语言组合均已验收。配套工作树版本为Core1.12.6、AltoBoss2.7.1、Crafting1.2.1、Currency0.9.2、Legendary2.2.3、QuestBlocker3.1.1、Reputation1.7.2；API13及预算能力2不变，尚未提交、推送或打包发布。
 
 ## CAP-005：通用跨业务能力连接
+
+2026-10-29 Mail 在途服务：本地私有查询返回给已注册 Core.Contracts，由 Core 完成唯一边界隔离，直接 Mail API 仍复制，没有给业务消费方内部表引用。mail.items v1版本、缓存代次、失败和匹配语义不变；62项离线回归含双路径返回值修改隔离，实机待验，见[登录快照记录](../../Docs/Mail-登录提醒与账号快照-2026-10-29.md)。
+
+2026-10-29 Mail 登录占用审查：本次仅 Store 在既有就绪入口内共享值完全相同的附件观察，属于 Mail 私有数据管理；不新增 Core 公共能力或版本，不改 Contracts／角色目录／公开副本隔离。59 项离线回归通过，用户实数据只读重放保留全值，Mists／Forever 新字节实机待验。见[登录记录](../../Docs/Mail-登录常驻内存-2026-10-29.md)。
+
+2026-10-29 Mail 连续会话：复用既有 Contracts／角色身份／UITheme（规则提示清理使用 ClearTooltip），没有新增 Core 能力、最低版本或跨业务耦合。Mists 关闭释放批次、界面与派生缓存；mail.items v1 结果隔离与版本保持，后续查询可重建。58 项离线回归、14 批／5,040 附件及弱引用验证通过，完整历史保留，实机性能及恢复待验。见[会话记录](../../Docs/Mail-连续收件与关闭释放-2026-10-29.md)。
+
+2026-10-29 Mail 收件专项审查：仅 Mail 私有历史复制与 mail.items 实现优化，继续已有角色身份／目录和 Contracts 隔离，不新增 Core 公共能力、最低版本或跨业务耦合。无有效寄信时跳过收件证据解析，有寄信和重复／时间匹配契约保持；55 项当前离线回归通过，客户端待验。见[收件内存记录](../../Docs/Mail-批量收件内存修复-2026-10-29.md)。
+
+2026-10-29 Mail/Vault 缓存增量：mail.items v1 GetState 可选 transfersRevision，与角色 revision 区分纯状态和全账号在途证据变更。Vault 按数值提示、状态／观察时间、注册身份复用消费者私有快照，角色目录事件独立失效；缺提示的旧提供方沿用全局 revision。Core 契约隔离保持，Vault 去掉其后的二次复制；无直接业务对象／存档读取，最低 Core API13 与服务版本保持。52 项离线回归含真实集成、旧提示缺失、晚注册、目录和在途失效，客户端待验。见[契约](../../YiboMail/Docs/邮件状态与在途缓存版本.md)和[第三轮记录](../../Docs/性能修复-第三轮-2026-10-29.md)。
 
 R1-08复核（2026-10-27）：同方法引用重入、版本／方法变化拒绝、服务冲突、Provider聚合、晚发现和注销后的旧descriptor均按原契约验证；未新增Service或业务接入。见[本阶段记录](R1-07-08-目标元数据与通用契约实施验收.md)。
 
@@ -493,6 +508,14 @@ omi` 保留；新增 `activities` 输出其余 `monitoringProjects`，账号布�
 
 ## CAP-007：轻量角色身份投影
 
+2026-10-30 性能修复：Legendary、Vault、Builds、QuestBlocker、Reputation 的本次身份消费单元接入既有能力；Legendary/QuestBlocker增加能力不足停止，其他插件沿用既有门槛。Core默认完整副本、共享目录与领域契约未变；只对本轮调用登记，客户端新字节待验。详见[修复记录](../../Docs/其它插件-性能修复-2026-10-30.md)。
+
+2026-10-29：Core API13 提供 character-identity:2（身份增加已知 faction）与 account-identity-context:1；默认完整目录契约保持。Mail Mists 已在业务写库前检查两项能力，登录提醒／联系人／行动与邮件查询／迁移／名称读取接入轻量路径，缺能力提示升级停止，无本地回退；62 项离线回归含真实上下文、缺能力、启动与共享目标通过，客户端待验。Core 与 Mail 须一起更新，详见[本轮记录](../../Docs/Mail-登录提醒与账号快照-2026-10-29.md)。
+
+2026-10-29 Core 内部增量：AccountView 的角色列当前角色定位、服务器范围选择改为既有 identityOnly；第三方完整上下文和 GetAllCached 契约不变，无新 API／能力版本。业务已有门槛不变，相关窗口、范围、身份与集成离线回归包含于52项通过范围，新字节实机待验；见[第三轮记录](../../Docs/性能修复-第三轮-2026-10-29.md)。
+
+2026-10-28 性能修复增量（工作树，实机待验）：Mail Bootstrap 入口状态、Todo CoreIntegration／AccountPage、Vault Items 默认轻量范围及 PersonalCounts 显式角色范围补用已有 identityOnly；均沿用已有 API13／character-identity:1 检查，不增加回退实现或提高能力版本。Core 自有原生领域采集只取身份，第三方 Collect 完整隔离上下文保持；领域提交先比较后复制。44 项离线回归通过，含 1000 次原生派发无完整角色复制、第三方完整上下文隔离与个人计数回归。既有实机结论只覆盖原字节，新增范围待验；未触及完整查询仍为库存。CAP-005 本轮保留契约隔离与 Mail/Vault 数据所有权；CAP-009 诺米来源复用既有本地化标题。详见[性能第二轮记录](../../Docs/性能修复-第二轮-2026-10-28.md)。
+
 R2 Retail（2026-10-27）：API13／character-identity:1保持，真实GUID目录、跨服ID、等级事件和轻量副本接入，禁止legacy导入和名字fallback。用户诊断确认DRUID66、identity=known、一个角色及独立内存存档；115项专项含晚GUID、错端／错档和幂等。完整落盘恢复待验，见[本阶段记录](R2-01-02-Retail目标与构建实施验收.md)。
 
 2026-10-10；Core 状态：已提供（1.10.0 工作树，未发布）；API v11 / character-identity:1。职责、选项、返回字段、缺失及默认兼容语义见 [API 文档](API-v11-轻量角色身份.md)。不复制 domains，无新业务存储。
@@ -502,22 +525,23 @@ R2 Retail（2026-10-27）：API13／character-identity:1保持，真实GUID目�
 | YiboAltoBoss | 部分接入：API13 / character-identity:1；身份读取统一使用 identityOnly，公开角色引用经 Core 唯一 ID，旧数据存储键不变 | 多角色、改名与缺失身份场景已由用户验收 / 2026-10-16 | 2026-10-16 |
 | YiboAutoOpen | 不适用（现有功能无角色身份目录查询） | 物品队列为独立业务；无 CAP-007 迁移项 | 2026-10-16 |
 | YiboBeastPaths | 既有路线不适用；离线兽栏待接入 | 路线显示宠物、路线与坐标；R3已验证character-identity:1的GUID／跨服副本及猎人准入，YBP尚未调用新增范围 | 既有确认2026-10-16保留；跨角色兽栏按[R3契约](API-v13-YBP离线兽栏公共支持契约.md)实施；最近审查2026-10-27 |
-| YiboBuilds | 部分接入：目标角色校验使用 identityOnly，业务快照由 Builds 自有数据提供 | API13 / character-identity:1；Core13Spec 及目标范围用户验收完成 / 2026-10-16 | 2026-10-16 |
+| YiboBuilds | 部分接入：目标校验及当前角色 Capture 使用 identityOnly；已有 API13 / character-identity:1 门槛 | 本轮采样调度与身份回归通过，错峰执行与稳定采样保持；新字节客户端待验，既有 2026-10-16 验收保留历史范围 | 2026-10-30 |
 | YiboCrafting | 部分接入：1.2.0 的目标角色目录／存在性使用 identityOnly；领域快照仍经 DataDomains:Get | character-identity:1 / API13；GoalTargets 与来源集成已验证，用户验收完成 / 2026-10-16 | 2026-10-16 |
 | YiboCurrency | 部分接入：0.9.1 工作树 / API13，目标角色校验使用 Get(identityOnly=true)，检查能力与实际方法 | API13Spec 四组各 52 项通过；用户验收完成 / 2026-10-16 | 2026-10-16 |
-| YiboLegendary | 部分接入：目标角色校验使用 identityOnly | 当前适配验收结论见基线；语言候选延期见 CAP-009 | 2026-10-16；当前范围验收确认 2026-10-16，语言候选延期见 CAP-009 |
-| YiboMail | 部分接入：1.2.11-api1 收件箱／账号视图、名称、状态、扫描、队列、行动投影及新建历史占位使用 identityOnly；联系人与寄送经公开只读目录补阵营；未触及的设置页／诊断低频完整读取保留 | Core 10,000 物品对照；100 轮邮箱身份／名称／状态／联系人约 180KB、0 领域复制；相关 7 个 Spec 通过。详见 `../../Docs/Mail-内存与首次打开性能修复.md` | 2026-10-12 |
+| YiboLegendary | 部分接入：目标校验、GetCharacterStore、UI目录/当前角色均使用 identityOnly；初始化新检查 API13 / character-identity:1，无本地回退 | 100次货币事件完整复制101→0；真实增量、能力不足/未就绪/误目标停止及幂等通过；新字节实机待验，语言候选延期见CAP-009 | 2026-10-30 |
+| YiboMail | 部分接入：当前 Mists 检查 API13 / character-identity:2 / account-identity-context:1；原有身份读取及联系人阵营、登录提醒、全目录／在途／行动查询均使用轻量投影；缺能力提示升级并停止 | 62 项离线回归，真实上下文、启动消费方和原历史／收取隔离通过；实际登录内存、语言与保存恢复待验。见[登录快照记录](../../Docs/Mail-登录提醒与账号快照-2026-10-29.md) | 2026-10-29 |
 | YiboMounts | 不适用：当前图鉴、坐骑目录与独立设置不读取 Core 角色身份目录或领域快照 | 新增账号角色级坐骑页面时重审 | 2026-10-16 |
-| YiboQuestBlocker | 已评估：现有页面读取角色等级／任务状态所需角色资料，未登记 identityOnly 改造需求 | 当前范围用户验收完成 / 2026-10-16 | 2026-10-16；客户端验收完成：用户确认 2026-10-16 |
-| YiboReputation | 部分接入：1.7.1 采集、目标、迁移与目录校验使用 identityOnly；业务快照归 Reputation 自有 Store | Retention 126 项及数据归属迁移检查通过；用户验收完成 / 2026-10-16 | 2026-10-16 |
+| YiboQuestBlocker | 部分接入：页面名称/颜色/等级及相关旧身份迁移读取使用 identityOnly；Locale/集成检查 API13 / character-identity:1 | 真实Core/TOC验证误客户端/缺能力停止、旧规则/缓存保留、单次初始化与页面通知合并；新字节实机待验，不外推旧验收 | 2026-10-30 |
+| YiboReputation | 部分接入：采集、目标、迁移与目录校验及矩阵/预览当前角色定位使用 identityOnly；业务数据仍归本地Store | 迁移/保留/悬停及真实视图生命周期通过；API13 / character-identity:1已有要求满足，新字节客户端待验 | 2026-10-30 |
 | YiboTaskHub | 已接入：角色身份、目录、受益者、目标校验、主视图／预览／提醒均检查能力 | Overview 50 项、专项 219 项及依赖回归通过；用户验收完成 / 2026-10-16 | 2026-10-16 |
 | YiboTodo | 已接入：Bootstrap 任务事件、DailyQuest 观察、Snapshot 与行动投影使用身份接口，最低 API v11 并检查能力 | 九个 smoke、TodoSources 177 项及专项 219 项通过；语言候选延期见 CAP-009 | 2026-10-16；当前范围验收确认 2026-10-16，语言候选延期见 CAP-009 |
-| YiboVault | 部分接入：Tooltip 与仓储页使用 FormatName；业务目标显式范围使用 identityOnly；2026-10-22 Common/Collector与Mists/Collector的四处身份查询接入identityOnly；检查API13 / character-identity:1 | 本批双端、加载及覆盖模拟通过，新增路径客户端待验；未触及旧查询保留库存。角色显示、范围与目标交互用户2026-10-16确认范围保留 | 2026-10-22 |
+| YiboVault | 部分接入：既有采集/目标/个人计数/MailProvider轻量身份保持；本轮AccountPage范围与Tooltip当前角色接入identityOnly，沿用API13 / character-identity:1 | 100次悬停范围完整复制100→0，真实库存/Tooltip/服务/邮件回归通过；公会等未触及完整查询仍保留，新字节客户端待验 | 2026-10-30 |
 本表已补齐全部 14 个插件；未登记适用调用的插件明确说明不适用或当前无迁移需求。未来触及只需身份、存在性或等级的查询时迁移；需要完整领域快照的既有查询保持默认形式。
 
 CAP-005 本轮复核：TaskHub 仅按稳定 Provider 标识与范围缓存、精准失效；AltoBoss 目标配置仍经 Core Service，缓存随 registrationRef／变化事实失效，投影仍由来源生成。无跨业务对象或 SavedVariables 读取。CAP-001／CAP-004 已接入的名称、统一准入和窗口刷新继续复用，本轮未新增UI壳或业务来源分支。测试与客户端复测边界见 [性能记录](../../Docs/任务链-性能异常修复-2026-10-10.md)。
 
 2026-10-10 悬停／显隐设置复核：CAP-004 的 YiboTaskHub 本次业务设置继续复用统一工作台与共享控件，以 ShowSettings("sorting") 和 ShowSettings("todo") 跳转既有入口，不重复保存角色准入／来源监控。CAP-005 的 Todo 三个来源新增可选 displayGroups／task.displayGroup 展示元数据，TaskHub 经既有 Core Provider 获取完整冷却／活动目录，不直读来源业务对象或数据；缺少目录仅支持来源级显示开关。CAP-001／002／003／007 本次涉及调用保持现有接入与最低版本声明，无新增本地回退。46项显隐专项、既有集成回归和219项性能回归通过；客户端待验收。详情见 [显隐设置与契约](../../Docs/行动中心-显隐设置与悬停规则.md)。
+
 
 
 ## CAP-008：业务项目主动添加
@@ -581,6 +605,8 @@ CAP-008 设置与状态同步追加审查：Core 统一设置提供右上角按�
 
 
 ## CAP-009：公共语言服务与账号语言偏好
+
+2026-10-30：Legendary新增ERROR.CLIENT_REQUIRED并补充身份能力升级资源，QuestBlocker新增CORE.STARTUP_REQUIREMENTS，Mounts新增CLIENT_REQUIRED；均使用双语稳定key，Mounts沿用已记录的独立来源内置词条例外。18项自动/手动语言资源检查与静态缺英文/参数检查通过；客户端及其他既有语言延期范围未据此完成。详见[性能修复](../../Docs/其它插件-性能修复-2026-10-30.md)。
 
 R2 Retail（2026-10-27）：复用563个资源与localization:1，无新增硬编码或业务接入；正式服中文各页基础显示已确认，英文／手动语言、原生名称及IME仍待实际客户端验证。见[本阶段记录](R2-01-02-Retail目标与构建实施验收.md)。
 
@@ -785,3 +811,9 @@ Core CalendarDaySpec16项通过；三插件TOC语法107文件及Mists构建Valid
 
 
 2026-10-22 CAP-012启动就绪补证：首份客户端追踪显示加载阶段C_DateAndTime返回1999-00-00、日历浏览2004-11，登录前恢复2026-10，后续Questie／MountsJournal调用未造成异常；未复现此前2021-11，来源保持待定。Core Mists日期读取增加有效范围校验，接口存在但失败或返回无效日期时保持未知，不用本机日期回退或据此校正基准；calendar-day-query:1及既有接入不变。Core CalendarDaySpec新增3项后19项通过，联合12、Todo暗月两组及AltoBoss HolidayBoss284通过；新保护客户端待验，两业务插件保持部分接入。原始日志与分析见[首份日历调用日志分析](../../_NonRelease/CalendarAnchor/Trace-Analysis-20261022.md)。
+
+
+2026-10-29 Mail通知与初始占用复核：CAP-007 Core API13 新增 character-identity-cache:1（GetAllCached(identityOnly) 只读共享身份目录），Characters owner 变更先失效，默认完整缓存及可修改 GetAll 契约保持，见[身份API](API-v11-轻量角色身份.md)。Core Mists/Retail/Forever共享实现；Mail Mists/Forever启动检查新能力，缺少在写库前提示停止，无本地回退；Mail只读收件人、视图、待办、迁移和在途目录已接入，其它插件未触及范围不推定接入。CAP-004 摘要复用版本化原始统计，仍读实时状态／身份；CAP-005 在途证据按数据代次失效，Core隔离复制与公共订阅负载契约保持；Mail内部无负载信号不新增Core事件契约。CAP-009既有升级资源中英文同步，无新key。原有两个设置低频完整目录调用未在本轮迁移。离线验证与待实机边界见[本轮记录](../../Docs/Mail-通知刷新与初始占用-2026-10-29.md)。
+
+
+2026-10-29 CAP-007 Vault Mists邮件消费追加：MailProvider四处角色枚举接入API13 / character-identity-cache:1共享只读身份目录，避免Mail内容通知后因Core业务域失效而复制完整角色。可选邮件集成Connect/Install检查新能力，不足提示升级并停止该增强，已有本地邮件采集/存档不删除；无并行本地目录回退，能力恢复幂等重连。仅本次邮件消费单元完成接入，Vault其他完整查询仍为迁移库存，Forever独立提供者无变化。CAP-005业务服务版本、隔离与跨角色失效保持，CAP-004/009接口不变。79项回归（新增十封单附件真实Core→Mail→Vault链）与构建证据见[本轮报告](../../Docs/Mail-十封单附件与Vault通知链-2026-10-29.md)，客户端新增字节待验；不外推为Vault全部能力或性能已收口。

@@ -1,5 +1,5 @@
 local Core = _G.YiboCore
-local Actions = { bindings = setmetatable({}, { __mode = "k" }) }
+local Actions = { bindings = setmetatable({}, { __mode = "k" }), hoverBindingCount = 0 }
 Core.BusinessItemActions = Actions
 local buttons = Core.Locale:Bind(function() return { LeftButton = Core:Text("CORE.LEFT_CLICK"), RightButton = Core:Text("CORE.RIGHT_CLICK"), MiddleButton = Core:Text("CORE.MIDDLE_CLICK"), Button4 = Core:Text("CORE.MOUSE_4"), Button5 = Core:Text("CORE.MOUSE_5") } end)
 local function SetMenuAdded(binding, added)
@@ -281,6 +281,7 @@ end
 function Actions:Bind(control, options)
     if not control or type(options) ~= "table" or type(options.GetIntent) ~= "function" or type(options.owner) ~= "string" then return nil, "invalid-binding" end
     local previous = self.bindings[control]
+    if previous and previous.menu then self.hoverBindingCount = self.hoverBindingCount - 1 end
     local binding = { owner = options.owner, GetIntent = options.GetIntent, markerEnabled = options.menu ~= false, reservedButtons = options.reservedButtons or {}, menu = control.yiboItemMenu or (previous and previous.menu),
         ctrlLeftSafe = options.ctrlLeftSafe == true, ConfigureCtrlLeft = options.ConfigureCtrlLeft,
         compactTooltip = options.compactTooltip == true }
@@ -291,7 +292,13 @@ function Actions:Bind(control, options)
         control.yiboItemCleanup = true
     end
     if control.yiboGoalMarkerH then control.yiboGoalMarkerH:Hide(); control.yiboGoalMarkerV:Hide() end
-    if options.menu == false then if binding.menu then binding.menu:Hide() end; binding.menu = nil; return true end
+    if options.menu == false then
+        if binding.menu then binding.menu:Hide() end
+        binding.menu = nil
+        if self.hoverControl == control then self.hoverControl = nil end
+        if self.hoverBindingCount == 0 and self.hoverFrame then self.hoverFrame:Hide() end
+        return true
+    end
     if not control.yiboGoalMarkerH then
         local color = Core.UITheme.Colors.goalAdded
         control.yiboGoalMarkerH = control:CreateTexture(nil, "OVERLAY", nil, 7)
@@ -319,6 +326,7 @@ function Actions:Bind(control, options)
     if options.menuPlacement == "right" then binding.menu:SetPoint("TOPLEFT", control, "TOPRIGHT", 2, 0)
     else binding.menu:SetPoint("TOPRIGHT", control, "TOPRIGHT", 0, 0) end
     binding.menu:Hide()
+    self.hoverBindingCount = self.hoverBindingCount + 1
     self:WatchHover()
     self:RefreshHover()
     self:ScheduleMarkers()
@@ -328,12 +336,13 @@ function Actions:Bind(control, options)
 end
 function Actions:Unbind(control)
     local binding = self.bindings[control]
+    if binding and binding.menu then self.hoverBindingCount = self.hoverBindingCount - 1 end
     if binding and binding.ConfigureCtrlLeft and not (Core.Client:IsInCombat()) then binding.ConfigureCtrlLeft(false) end
     if binding and binding.menu then binding.menu:Hide() end
     if control.yiboGoalMarkerH then control.yiboGoalMarkerH:Hide(); control.yiboGoalMarkerV:Hide() end
     self.bindings[control] = nil
     if self.hoverControl == control then self.hoverControl = nil end
-    if not next(self.bindings) and self.hoverFrame then self.hoverFrame:Hide() end
+    if self.hoverBindingCount == 0 and self.hoverFrame then self.hoverFrame:Hide() end
 end
 for _, event in ipairs({ "BUSINESS_CONTRACT_REGISTERED", "BUSINESS_CONTRACT_UNREGISTERED", "BUSINESS_CONTRACT_CHANGED" }) do
     Core.Events:Register(event, Actions, function(_, descriptor)

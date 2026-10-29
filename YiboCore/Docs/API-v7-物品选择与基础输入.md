@@ -20,6 +20,8 @@
 
 `input:SetValue(value, notify)` 默认静默赋值；`SetInputEnabled(enabled)` 统一禁用状态。默认不抢焦点，Esc 和隐藏时清理焦点。
 
+2026-10-29 生命周期优化：仅在存在待提交的输入法组合文本时安装逐帧检查；提交、静默替换或隐藏取消待提交内容时卸载。保留客户端 IME 标志晚清除后的通知、userInput 标志、原生预编辑文本及光标语义。`basic-input:1` 与 API13 不变，真实输入法行为仍须客户端验证。
+
 ## 脱离 UI 的解析服务
 
 `Core.ItemResolver:Parse(input, options)` 返回候选数组，或 `nil, message`。每项为 `{ itemID, name, link, icon, state }`。ID 限制为正整数且不超过 2147483647；格式合法不表示物品存在，也不表示业务允许保存。
@@ -34,6 +36,8 @@
 `GetInfo(itemID)` 返回当前信息，状态为 `ready/unloaded/loading/failed`。
 2026-10-27 R1-05／06补充：查询走目标原生边界，追加`availability=known/unloaded/error/unavailable`；异常、非法类型、秘密值不会成为ready缓存。该字段为兼容性追加，API／能力版本不变。原生事件不可订阅时仍有界轮询，原生请求抛错返回失败；无效或无限timeout采用8秒。具体目标策略与离线／实机边界见[实施验收](R1-05-06-公共物品与UI原生边界实施验收.md)。
 `Request(itemID, callback, { retry, timeout })` 返回带 `Cancel()` 的句柄，回调为 `(info, errorMessage)`。缓存就绪时同步回调；未缓存时同 ID 合并请求，默认 8 秒超时。失败后只有显式 `retry=true` 才再次请求，无自动循环。取消仅影响自己的回调。UI 调用方仍须用组件代次和可见状态检查过期结果。
+
+2026-10-29 取消与完成会释放句柄保存的回调引用，取消者从等待列表移除。已经发出的共享原生请求继续按原事件／超时收敛，失败与显式重试策略不变；新消费者可继续加入同一请求，不因前一消费者取消而重复发起原生读取。一个完成回调取消同批另一句柄时，不执行被取消回调，也不跳过其它等待者。`item-resolver:1` 不变，不要求消费方为本次内部优化提升版本。
 
 ## 可配置选择器
 

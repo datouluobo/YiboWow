@@ -1,5 +1,5 @@
 ## Interface: 50504, 16001, 120105
 ## Title: |cff20e070[Yibo]|r YiboCore
-## Version: 1.12.9
+## Version: 1.12.10
 ## X-Yibo-Target: Hint
 Common\TocHint.lua

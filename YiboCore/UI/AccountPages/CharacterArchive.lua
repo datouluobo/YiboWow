@@ -11,8 +11,8 @@ local Settings = Helpers.Settings
 
 local ARCHIVE_COLUMN_GAP = 10
 
-local function HasCharacterProfile(character)
-    for _, field in ipairs(Core.Fields:GetByConsumer("character-archive")) do
+local function HasCharacterProfile(character, fields)
+    for _, field in ipairs(fields) do
         if Core.Fields:GetValue(character, field) ~= nil then return true end
     end
     return false
@@ -139,9 +139,12 @@ local function ArchiveCharacters(context)
     local filter = archive.filters[preview and "preview" or "page"]
     local levelFilter = Core.LevelFilter:Compile(filter.levelExpr)
     local characters, hidden = {}, Settings().hiddenCharacters
+    -- Provider field discovery can invoke business services. Resolve once for
+    -- this pass, and skip profile inspection when the filter admits both states.
+    local profileFields = filter.profile ~= "all" and Core.Fields:GetByConsumer("character-archive")
     for _, character in ipairs((context and context.characters) or Core.Characters:GetAllCached()) do
-        local profiled = HasCharacterProfile(character)
-        local profileMatches = filter.profile == "all" or (filter.profile == "profiled" and profiled) or (filter.profile == "missing" and not profiled)
+        local profiled = profileFields and HasCharacterProfile(character, profileFields)
+        local profileMatches = not profileFields or (filter.profile == "profiled" and profiled) or (filter.profile == "missing" and not profiled)
         if profileMatches and levelFilter:Matches(character.level) and (filter.includeHidden or not hidden[character.id]) then characters[#characters + 1] = character end
     end
     return Core.CharacterSort:Sort(characters, AccountView:GetDefaultCharacterSort(), Core.Characters:GetCurrentID(), AccountView:GetCustomCharacterOrder())
@@ -169,7 +172,7 @@ local function GetArchiveTableWidth(fields, widths)
 end
 
 local function RefreshCharacters(parent, context)
-    local current = Core.Characters:GetCurrent()
+    local currentID = Core.Characters:GetCurrentID()
     local preview = context and context.preview == true
     local inset = Theme:GetMatrixInsets(preview)
     local characters = (context and ArchiveCharacters(context)) or ArchiveCharacters({ preview = false })
@@ -257,7 +260,7 @@ local function RefreshCharacters(parent, context)
             cell:Show(); x = x + width + GetArchiveColumnGap(fields, fieldIndex)
         end
         for fieldIndex = #fields + 1, #row.dynamicCells do row.dynamicCells[fieldIndex]:Hide() end
-        local isCurrent = current and current.id == character.id
+        local isCurrent = currentID == character.id
         local rowTone = Theme:GetDataRowColor(index)
         row:SetBackdropColor(rowTone[1], rowTone[2], rowTone[3], rowTone[4] or 0.88)
         Theme:ApplyDataColumnTints(row, widths, rowHeight, 8, function(fieldIndex) return GetArchiveColumnGap(fields, fieldIndex) end)

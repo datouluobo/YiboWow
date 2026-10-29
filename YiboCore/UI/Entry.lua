@@ -348,12 +348,15 @@ function Entry:GetRegisteredBusinessEntries()
     return entries
 end
 
-HidePreview = function()
+HidePreview = function(navigating)
     Entry.previewToken = (Entry.previewToken or 0) + 1
     Entry:StopPreviewWatch()
     Entry.previewOwner = nil
     GameTooltip:Hide()
-    if Core.AccountView then Core.AccountView:HidePreview() end
+    if Core.AccountView then
+        local close = navigating and Core._private and Core._private.HidePreviewForNavigation
+        if close then close() else Core.AccountView:HidePreview() end
+    end
 end
 
 function Entry:CancelPreviewClose()
@@ -592,7 +595,7 @@ function Entry:GetEntryAvailability(id)
 end
 function Entry:HandleEntryClick(id, button)
     if not self:GetEntryAvailability(id) then return false end
-    self:CloseEntryPreview()
+    HidePreview(true)
     if button == "RightButton" then
         if id == "YiboCore" then
             Core.AccountView:ShowSettings("display")

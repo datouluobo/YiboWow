@@ -25,6 +25,8 @@ end
 function Queue:Notify()
     if Addon.publicationBatch then self.notifyPending = true; return end
     self.notifyPending = nil
+    if self.state ~= "running" and not self.pending and Addon.RuleSendController
+        and Addon.RuleSendController.AfterCollection then Addon.RuleSendController:AfterCollection() end
     -- Mail mutations already notify the account view. Intermediate queue
     -- progress only needs the mounted inbox footer; terminal states rebuild.
     local native = Addon.NativeUI
@@ -42,7 +44,7 @@ function Queue:Discard()
     self.verifiedMails, self.removedIndexes, self.preflight = nil, nil, nil
     self.positions, self.expectedMails, self.layoutDirty = nil, nil, nil
     self.mailOrder, self.nextExtra = nil, nil
-    self.operation, self.returnPlan = nil, nil
+    self.operation, self.returnPlan, self.historyCopies, self.batchToken = nil, nil, nil, nil
     return true
 end
 function Queue:Pause(reason, code)
@@ -280,7 +282,8 @@ function Queue:Start(actions)
             if not found then return nil, Addon:T("UI.TEXT_0633") end
         end
     end
-    self.operation, self.returnPlan = nil, nil
+    self.operation, self.returnPlan, self.historyCopies, self.batchToken = nil, nil, nil, nil
+    self.historyCopies, self.batchToken = {}, {}
     self.actions, self.completed, self.index, self.state, self.message, self.pauseCode = CopyActions(actions), 0, 1, "running", Addon:T("UI.TEXT_0426"), nil
     self.lastRequestAt, self.nextScheduled = nil, nil
     self.verifiedMails, self.removedIndexes = mails, {}
@@ -302,10 +305,13 @@ end
 function Queue:ScheduleCheck(delay)
     local pending = self.pending
     if not pending or pending.checkScheduled or pending.interference or self.pauseCode == "result-timeout" then return end
-    pending.checkScheduled = true
+    local ticket = {}; pending.checkScheduled = ticket
+    -- Timers retain only an identity, never the pending request's whole inbox.
     C_Timer.After(delay or 0.05, function()
-        pending.checkScheduled = nil
-        if Queue.pending == pending and not pending.interference and Queue.pauseCode ~= "result-timeout" then Queue:CheckPending() end
+        local current = Queue.pending
+        if not current or current.checkScheduled ~= ticket then return end
+        current.checkScheduled = nil
+        if not current.interference and Queue.pauseCode ~= "result-timeout" then Queue:CheckPending() end
     end)
 end
 function Queue:Next()
@@ -314,6 +320,7 @@ function Queue:Next()
     local action = self.actions[self.index]
     if not action then
         self.state, self.message = "complete", Addon:T("UI.TEXT_0404")
+        self.historyCopies = nil
         Addon.Scanner:Schedule(true)
         if Addon:GetInboxPreferences().showSummary then Addon:Print(Addon:T("UI.TEXT_0405") .. self.completed .. "/" .. #self.actions .. Addon:T("UI.TEXT_0053")) end
         self:Notify(); return
@@ -322,10 +329,10 @@ function Queue:Next()
     local waitFor = math.max(self.requestInterval - elapsed, (self.cooldownUntil or 0) - GetTime())
     if waitFor > 0.000001 then
         if not self.nextScheduled then
-            local batch = self.actions
+            local batch = self.batchToken
             self.nextScheduled = true
             C_Timer.After(waitFor, function()
-                if Queue.actions ~= batch then return end
+                if Queue.batchToken ~= batch then return end
                 Queue.nextScheduled = nil
                 if Queue.state == "running" then Queue:Next() end
             end)
@@ -339,7 +346,7 @@ function Queue:Next()
     local originalIndex = tonumber(action.original and action.original.inboxIndex)
     local index = originalIndex and CurrentInboxIndex(self, originalIndex)
     local mail, visible, total, readError
-    if index then mail, visible, total, readError = Addon.Scanner:ReadTarget(index)
+    if index then mail, visible, total, readError = Addon.Scanner:ReadTarget(index, mails and mails[index])
     else readError = "target-not-visible" end
     if readError or not mail or mail.signature ~= action.signature
         or visible ~= self.visibleCount or total ~= self.totalCount or self.layoutDirty then
@@ -373,10 +380,12 @@ function Queue:Next()
             local limit = layout and not index and ACTION_TIMEOUT or 3
             if age >= limit then self:Pause(Addon:T("UI.TEXT_0312")); return end
             if not wait.scheduled then
-                wait.scheduled = true
+                local ticket = {}; wait.scheduled = ticket
                 C_Timer.After(math.min(1, math.max(0.25, age / 4)), function()
-                    wait.scheduled = nil
-                    if Queue.preflight == wait and Queue.state == "running" then Queue:Next() end
+                    local current = Queue.preflight
+                    if not current or current.scheduled ~= ticket then return end
+                    current.scheduled = nil
+                    if Queue.state == "running" then Queue:Next() end
                 end)
             end
             return
@@ -384,7 +393,10 @@ function Queue:Next()
     end
     self.preflight = nil
     if mail.cod > 0 then self:Pause(Addon:T("UI.TEXT_0112")); return end
-    local expected = Addon.Copy(mail)
+    -- Only money and the attachment array change. Item observations remain
+    -- immutable, so copying their full payload again serves no isolation need.
+    local expected = {}; for key, value in pairs(mail) do expected[key] = value end
+    expected.attachments = {}; for index, item in ipairs(mail.attachments) do expected.attachments[index] = item end
     if action.slot == "money" then
         if mail.money <= 0 or mail.money ~= action.original.money then self:Pause(Addon:T("UI.TEXT_0619")); return end
         expected.money = 0
@@ -422,7 +434,10 @@ local function Project(pending, target, removed)
     for index, mail in ipairs(pending.beforeMails) do
         if index ~= pending.targetIndex then
             if removed and index > pending.targetIndex then
-                mail = Addon.Copy(mail); mail.inboxIndex = index - 1
+                -- Only the envelope position changes. Attachment arrays are immutable
+                -- scan evidence; copying them for every shifted row is quadratic.
+                local shifted = {}; for key, value in pairs(mail) do shifted[key] = value end
+                mail = shifted; mail.inboxIndex = index - 1
             end
             mails[#mails + 1] = mail
         elseif not removed then mails[#mails + 1] = target end
@@ -446,7 +461,8 @@ function Queue:CheckPending()
     -- Success is necessary, but a second event is only a wake-up hint. Some
     -- clients deliver the cache change without another MAIL_INBOX_UPDATE.
     if pending.success then
-        local mail, visible, total, err = Addon.Scanner:ReadTarget(pending.targetIndex)
+        local hint = pending.mailCollected and pending.beforeMails[pending.targetIndex + 1] or pending.expected
+        local mail, visible, total, err = Addon.Scanner:ReadTarget(pending.targetIndex, hint)
         if not err then
             if not self.layoutDirty and mail and mail.signature == pending.expected.signature
                 and visible == pending.beforeCount and total == pending.beforeTotal then
@@ -598,7 +614,7 @@ function Queue:Accept(mails, targetRemoved, visible, total, layout)
         if found then Addon:MarkMailOpened(found) end
     end
     Addon:AddHistory(action.characterID, { state = "collected-archived", mail = action.original,
-        item = action.item, money = action.slot == "money" and action.original.money or 0, observedAt = Addon:Now() })
+        item = action.item, money = action.slot == "money" and action.original.money or 0, observedAt = Addon:Now() }, self.historyCopies)
     for index = self.index + 1, #self.actions do
         local nextAction = self.actions[index]
         if nextAction.characterID == action.characterID
@@ -611,8 +627,8 @@ function Queue:Accept(mails, targetRemoved, visible, total, layout)
     if Addon.NativeUI then Addon.NativeUI:OnCollected(action.id, action) end
     self:Notify()
     if self.state == "running" then
-        local batch = self.actions
-        C_Timer.After(0, function() if Queue.actions == batch then Queue:Next() end end)
+        local batch = self.batchToken
+        C_Timer.After(0, function() if Queue.batchToken == batch then Queue:Next() end end)
     end
 end
 function Queue:OnEvent(event, ...)
@@ -628,13 +644,12 @@ function Queue:OnEvent(event, ...)
                 codAmount = action.slot == "return" and action.original.cod or nil, observedAt = Addon:Now() })
             self.pending = nil
         end
-        self.verifiedMails, self.nextScheduled = nil, nil
-        if self.state == "running" then self:Pause(Addon:T("UI.TEXT_0603"), "mailbox-closed")
-        elseif self.state == "paused" then
-            -- A timeout may have paused the queue before the mailbox closes.
-            -- Preserve the unknown result until close, then release the stale
-            -- queue on the next open without asking the player to clear it.
-            self.pauseCode = "mailbox-closed"
+        local interrupted = self.state == "running" or self.state == "paused"
+        -- The uncertain request is archived above. Closed mailboxes cannot
+        -- resume an old batch, so release its snapshots and invalidate timers.
+        self:Discard()
+        if interrupted then
+            self.state, self.pauseCode, self.message = "paused", "mailbox-closed", Addon:T("UI.TEXT_0603")
         end
     elseif event == "MAIL_SHOW" then
         if self.state == "paused" and self.pauseCode == "mailbox-closed" and not self.pending then
@@ -668,9 +683,10 @@ function Queue:OnEvent(event, ...)
     end
 end
 function Queue:Install()
-    Addon.Frame:HookScript("OnUpdate", function()
-        if Queue.pending and GetTime() - Queue.pending.startedAt > ACTION_TIMEOUT and Queue.state == "running" then Queue:Pause(Addon:T(Queue.operation == "return" and "RETURN.UNVERIFIED" or "UI.TEXT_0477"), "result-timeout") end
-    end)
+    if self.installed then return end
+    self.installed = true
+    -- Pending collection/return requests already schedule bounded checks and
+    -- enforce their timeout there. An idle queue needs no per-frame callback.
     if hooksecurefunc then
         for _, name in ipairs({ "TakeInboxItem", "TakeInboxMoney", "AutoLootMailItem", "ReturnInboxItem", "DeleteInboxItem" }) do
             if type(_G[name]) == "function" then hooksecurefunc(name, function()

@@ -6,8 +6,17 @@ function Items:HasCapability(name, minimumVersion)
     local version = Addon.CAPABILITIES[name]; return version ~= nil and version >= (tonumber(minimumVersion) or 1), version
 end
 function Items:GetRevision() return Addon.db and Addon.db.revision or 0 end
-function Items:OnPublish(revision, transfersUnchanged)
-    if not transfersUnchanged or self.transferDataRevision == nil then self.transferDataRevision = revision end
+function Items:ReleaseCaches(clearDirectory, preserveEvidence)
+    self.transferIndex, self.transferIndexKey, self.transfersCache, self.transferKey = nil, nil, {}, nil
+    if not preserveEvidence then self.transferEvidence = nil end
+    if clearDirectory then self.transferDirectory = nil end
+end
+function Items:OnPublish(revision, transfersUnchanged, characterID)
+    if not transfersUnchanged or self.transferDataRevision == nil then
+        self.transferDataRevision = revision
+        if self.transferEvidence and characterID then self.transferEvidence.byID[characterID] = nil end
+        self:ReleaseCaches(nil, type(characterID) == "string")
+    end
 end
 local function ItemVariantKey(item)
     if type(item) ~= "table" then return nil end
@@ -30,56 +39,107 @@ local function AttachmentSignature(items)
     table.sort(identities)
     return Addon.Encode(identities)
 end
-local function TransferIndex(characters)
-    local addresses, seen, index = {}, {}, { sends = {}, received = {}, returned = {} }
+local function TransferIndex(characters, directorySignature)
+    local addresses, resolved, signatures, index = {}, {}, {}, { sends = {}, received = {}, returned = {} }
+    local cache = Items.transferEvidence
+    -- Core may replace its lightweight array for an unrelated domain update.
+    -- Evidence depends on id/name/realm values, not the array's allocation.
+    if not cache or cache.directorySignature ~= directorySignature then
+        cache = { directorySignature = directorySignature, byID = {} }; Items.transferEvidence = cache
+    end
     for _, character in ipairs(characters) do
         if character.name and character.realm then
             addresses[Addon.Recipients:Key(character.name .. "-" .. character.realm)] = character
         end
     end
     local function Resolve(address, realm)
+        if type(address) ~= "string" then return end
+        local key = realm or false
+        local bucket = resolved[key]
+        if not bucket then bucket = {}; resolved[key] = bucket end
+        local result = bucket[address]
+        if result ~= nil then return result or nil end
         local normalized = Addon.Recipients:Normalize(address, realm)
-        return normalized and addresses[Addon.Recipients:Key(normalized)]
+        result = normalized and addresses[Addon.Recipients:Key(normalized)]
+        bucket[address] = result or false
+        return result
     end
-    local function Evidence(owner, mail, stamp, identity, allowReturn)
-        if not mail or type(stamp) ~= "number" or (mail.wasReturned and not allowReturn) then return end
-        local other = Resolve(mail.sender, owner.realm)
-        local attachmentKey = other and AttachmentSignature(mail.attachments)
-        if not attachmentKey then return end
-        -- Subjects are user-editable and can summarize only one attachment,
-        -- so they must never participate in send/receipt correlation.
-        local key = Addon.Encode({ owner.id, other.id, attachmentKey })
-        local bucket = mail.wasReturned and index.returned or index.received
-        bucket[key] = bucket[key] or {}
-        local identityKey = Addon.Encode({ mail.wasReturned == true, key, identity })
-        if seen[identityKey] then return end
-        seen[identityKey] = true
-        bucket[key][#bucket[key] + 1] = { at = stamp, id = identity }
+    local function Signature(items)
+        if type(items) ~= "table" then return end
+        local value = signatures[items]
+        if value == nil then value = AttachmentSignature(items) or false; signatures[items] = value end
+        return value or nil
     end
-    -- Visit each mailbox/history once for the whole account, rather than
-    -- rescanning every sender's history for each send and each recipient.
-    for _, owner in ipairs(characters) do
-        local snapshot = Addon.db.byCharacter[owner.id]
-        for key, mail in pairs(snapshot and snapshot.records or {}) do
-            if mail.state == "observed" or mail.wasReturned then
-                Evidence(owner, mail, mail.observedAt, "inbox:" .. owner.id .. ":" .. key, true)
-            end
+    local function Append(target, source)
+        for key, values in pairs(source) do
+            local bucket = target[key]
+            if not bucket then bucket = {}; target[key] = bucket end
+            for _, value in ipairs(values) do bucket[#bucket + 1] = value end
         end
-        for _, history in ipairs(snapshot and snapshot.history or {}) do
-            if history.state == "discovered" or history.state == "collected-archived" then
-                local mail = history.mail or history
-                Evidence(owner, mail, history.observedAt or mail.observedAt,
-                    "history:" .. owner.id .. ":" .. tostring(history.eventID or history.sourceMailKey or ""), history.state == "collected-archived")
-            elseif history.state == "in-transit" and history.transferReview ~= "legacy-unverified" and type(history.recipient) == "string" then
-                local recipient = Resolve(history.recipient, owner.realm)
-                local attachmentKey = recipient and AttachmentSignature(history.attachments)
-                if attachmentKey then
-                    index.sends[recipient.id] = index.sends[recipient.id] or {}
-                    local sends = index.sends[recipient.id]
-                    sends[#sends + 1] = { history = history, sender = owner, attachmentKey = attachmentKey }
+    end
+    local pieces, present, hasSends = {}, {}, false
+    for _, owner in ipairs(characters) do
+        present[owner.id] = true
+        local snapshot = Addon.db.byCharacter[owner.id]
+        local coverage = snapshot and snapshot.coverage
+        local revision = coverage and coverage.revision
+        local versioned = type(revision) == "number" and revision == revision and revision >= 0 and revision < math.huge
+        local piece = versioned and cache.byID[owner.id]
+        if not piece or piece.snapshot ~= snapshot or piece.coverage ~= coverage or piece.revision ~= revision
+            or piece.records ~= snapshot.records or piece.history ~= snapshot.history or piece.historyCount ~= #(snapshot.history or {}) then
+            piece = { snapshot = snapshot, coverage = coverage, revision = revision,
+                records = snapshot and snapshot.records, history = snapshot and snapshot.history,
+                historyCount = #(snapshot and snapshot.history or {}), sends = {} }
+            for _, history in ipairs(piece.history or {}) do
+                if history.state == "in-transit" and history.transferReview ~= "legacy-unverified" and type(history.recipient) == "string" then
+                    local recipient = Resolve(history.recipient, owner.realm)
+                    local attachmentKey = recipient and Signature(history.attachments)
+                    if attachmentKey then
+                        local sends = piece.sends[recipient.id]
+                        if not sends then sends = {}; piece.sends[recipient.id] = sends end
+                        sends[#sends + 1] = { history = history, sender = owner, attachmentKey = attachmentKey }
+                    end
                 end
             end
+            cache.byID[owner.id] = versioned and piece or nil
         end
+        pieces[owner.id] = piece
+        if next(piece.sends) then hasSends = true; Append(index.sends, piece.sends) end
+    end
+    for id in pairs(cache.byID) do if not present[id] then cache.byID[id] = nil end end
+    if not hasSends then return index end
+    for _, owner in ipairs(characters) do
+        local piece = pieces[owner.id]
+        if not piece.received then
+            local received, returned, seen = {}, {}, {}
+            local function Evidence(mail, stamp, identity, allowReturn)
+                if not mail or type(stamp) ~= "number" or (mail.wasReturned and not allowReturn) then return end
+                local other = Resolve(mail.sender, owner.realm)
+                local attachmentKey = other and Signature(mail.attachments)
+                if not attachmentKey then return end
+                local key = Addon.Encode({ owner.id, other.id, attachmentKey })
+                local bucket = mail.wasReturned and returned or received
+                local identityKey = Addon.Encode({ mail.wasReturned == true, key, identity })
+                if seen[identityKey] then return end
+                seen[identityKey] = true
+                bucket[key] = bucket[key] or {}
+                bucket[key][#bucket[key] + 1] = { at = stamp, id = identity }
+            end
+            for key, mail in pairs(piece.records or {}) do
+                if mail.state == "observed" or mail.wasReturned then
+                    Evidence(mail, mail.observedAt, "inbox:" .. owner.id .. ":" .. key, true)
+                end
+            end
+            for _, history in ipairs(piece.history or {}) do
+                if history.state == "discovered" or history.state == "collected-archived" then
+                    local mail = history.mail or history
+                    Evidence(mail, history.observedAt or mail.observedAt,
+                        "history:" .. owner.id .. ":" .. tostring(history.eventID or history.sourceMailKey or ""), history.state == "collected-archived")
+                end
+            end
+            piece.received, piece.returned = received, returned
+        end
+        Append(index.received, piece.received); Append(index.returned, piece.returned)
     end
     for _, buckets in ipairs({ index.received, index.returned }) do
         for _, evidence in pairs(buckets) do
@@ -110,32 +170,46 @@ local function ConsumeEvidence(evidence, at, consumed)
     parents[slot] = Next(slot + 1)
     return true
 end
-function Items:GetTransfers(characterID)
+local function TransferDirectory()
+    local characters = Addon.Core and Addon.Core.Characters:GetAllCached({ identityOnly = true }) or {}
+    local prior = Items.transferDirectory
+    if prior and prior.characters == characters then return prior end
+    local parts, byID = {}, {}
+    for _, character in ipairs(characters) do
+        parts[#parts + 1] = Addon.Encode({ character.id, character.name or "", character.realm or "" })
+        byID[character.id] = character
+    end
+    table.sort(parts)
+    local directory = { characters = characters, signature = table.concat(parts), byID = byID }
+    Items.transferDirectory = directory
+    return directory
+end
+local function GetTransferResult(characterID)
+    local self = Items
     if type(characterID) ~= "string" or characterID == "" then return nil, "invalid-character-id" end
     local revision = self:GetRevision()
-    local characters = Addon.Core and Addon.Core.Characters:GetAllCached() or {}
-    local directory = {}
-    for _, character in ipairs(characters) do
-        directory[#directory + 1] = Addon.Encode({ character.id, character.name or "", character.realm or "" })
+    local directory = TransferDirectory()
+    local characters = directory.characters
+    local dataRevision = self.transferDataRevision or revision
+    local key = self.transferKey
+    if not key or key.directory ~= directory or key.revision ~= dataRevision then
+        key = { directory = directory, revision = dataRevision, value = Addon.Encode({ dataRevision, directory.signature }) }
+        self.transferKey = key
     end
-    table.sort(directory)
-    local cacheKey = Addon.Encode({ self.transferDataRevision or revision, table.concat(directory) })
+    local cacheKey = key.value
     local cached = self.transfersCache[characterID]
     if cached and cached.cacheKey == cacheKey then
-        local result = Addon.Copy(cached.result); result.revision = revision; return result
+        cached.result.revision = revision; return cached.result
     end
-    local target
-    for _, character in ipairs(characters) do
-        if character.id == characterID then target = character end
-    end
+    local target = directory.byID[characterID]
     if not target then
         local empty = { apiVersion = 1, revision = revision, characterID = characterID, records = {} }
         self.transfersCache[characterID] = { cacheKey = cacheKey, result = empty }
-        return Addon.Copy(empty)
+        return empty
     end
 
     if self.transferIndexKey ~= cacheKey then
-        self.transferIndex = TransferIndex(characters)
+        self.transferIndex = TransferIndex(characters, directory.signature)
         self.transferIndexKey = cacheKey
         self.transfersCache = {}
     end
@@ -169,29 +243,46 @@ function Items:GetTransfers(characterID)
     table.sort(records, function(a, b) return a.sourceID < b.sourceID end)
     local result = { apiVersion = 1, revision = revision, characterID = characterID, records = records }
     self.transfersCache[characterID] = { cacheKey = cacheKey, result = result }
+    return result
+end
+-- Direct Mail API callers keep independent mutable results. Registered
+-- service callbacks return privately to Core, which isolates the contract once.
+function Items:GetTransfers(characterID)
+    local result, err = GetTransferResult(characterID)
+    if not result then return nil, err end
     return Addon.Copy(result)
 end
 function Items:RegisterService()
     local contracts = Addon.Core.Contracts
     self.serviceDefinition = self.serviceDefinition or {
-        name = "mail.items", kind = "service", providerID = Addon.NAME .. ":inbox", version = { major = 1, minor = 1 },
+        name = "mail.items", kind = "service", providerID = Addon.NAME .. ":inbox", version = { major = 1, minor = Addon.Target and 0 or 1 },
         methods = {
             GetState = function(request) return Items:GetState(request and request.characterID) end,
             GetByCharacter = function(request) return Items:GetByCharacter(request and request.characterID, request and request.options) end,
-            GetTransfers = function(request) return Items:GetTransfers(request and request.characterID) end,
+            GetTransfers = function(request) return GetTransferResult(request and request.characterID) end,
             GetRevision = function() return Items:GetRevision() end,
         },
     }
+    if Addon.Target then self.serviceDefinition.methods.GetTransfers = nil end
     local ref, err = contracts:Register(Addon.NAME, self.serviceDefinition)
     if not ref then return nil, err end
     self.serviceRef = ref
     return true
 end
-function Items.Events:Register(owner, callback)
+local function RegisterListener(events, owner, callback, signalOnly)
     if owner == nil or type(callback) ~= "function" then return nil, "invalid-listener" end
-    for _, listener in ipairs(self.listeners) do if listener.owner == owner and listener.callback == callback then return true end end
-    self.listeners[#self.listeners + 1] = { owner = owner, callback = callback }; return true
+    for _, listener in ipairs(events.listeners) do
+        if listener.owner == owner and listener.callback == callback then
+            if listener.signalOnly ~= signalOnly then return nil, "listener-mode-conflict" end
+            return true
+        end
+    end
+    events.listeners[#events.listeners + 1] = { owner = owner, callback = callback, signalOnly = signalOnly }
+    return true
 end
+function Items.Events:Register(owner, callback) return RegisterListener(self, owner, callback, false) end
+-- Mail-owned invalidation subscribers explicitly opt out of unused payloads.
+function Items.Events:RegisterSignal(owner, callback) return RegisterListener(self, owner, callback, true) end
 function Items.Events:Unregister(owner, callback)
     for index = #self.listeners, 1, -1 do
         local listener = self.listeners[index]
@@ -202,12 +293,18 @@ function Items.Events:Emit(payload)
     if Items.serviceRef then Addon.Core.Contracts:NotifyChanged(Addon.NAME, Items.serviceRef, payload) end
     local listeners = {}; for index, listener in ipairs(self.listeners) do listeners[index] = listener end
     for _, listener in ipairs(listeners) do
-        local ok, err = pcall(listener.callback, "MAIL_ITEMS_CHANGED", Addon.Copy(payload))
+        local ok, err
+        if listener.signalOnly then ok, err = pcall(listener.callback, "MAIL_ITEMS_CHANGED")
+        else ok, err = pcall(listener.callback, "MAIL_ITEMS_CHANGED", Addon.Copy(payload)) end
         if not ok and geterrorhandler then geterrorhandler()(err) end
     end
 end
 function Items:GetState(characterID)
     if type(characterID) ~= "string" or characterID == "" then return nil, "invalid-character-id" end
+    if Addon.Target then
+        local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
+        if not current or current.id ~= characterID then return nil, "scope-not-supported" end
+    end
     local snapshot = Addon.db and Addon.db.byCharacter[characterID]
     local result = snapshot and Addon.Copy(snapshot.coverage) or { status = "not-yet-scanned", revision = self:GetRevision() }
     -- Closed mailbox state is stale without consulting a full Core snapshot.
@@ -225,11 +322,20 @@ function Items:GetState(characterID)
     if current and current.id == characterID and Addon.Scanner.lastError then
         result.lastScanStatus, result.status = snapshot and snapshot.coverage.status or "not-yet-scanned", "error"
     end
+    -- Optional cache stamp: inbox revision is character-local, whereas transit
+    -- evidence can change when any sender/recipient changes real mail data.
+    result.transfersRevision = self.transferDataRevision or self:GetRevision()
     return result
 end
 local function Resolve(scope)
     local core = Addon.Core
     if not core then return {} end
+    if Addon.Target and scope ~= nil then
+        local current = core.Characters:GetCurrent({ identityOnly = true })
+        if not current then return nil, "current-character-unavailable" end
+        if type(scope) ~= "table" or scope.mode ~= "characters" or type(scope.characterIDs) ~= "table" then return nil, "scope-not-supported" end
+        for _, id in pairs(scope.characterIDs) do if id ~= current.id then return nil, "scope-not-supported" end end
+    end
     if scope == nil then local current = core.Characters:GetCurrent({ identityOnly = true }); return current and { current } or {} end
     if type(scope) ~= "table" then return nil, "invalid-scope" end
     if scope.mode == "characters" then
@@ -241,14 +347,14 @@ local function Resolve(scope)
         end
         for index = 1, count do if scope.characterIDs[index] == nil then return nil, "invalid-scope" end end
         local byID, result, seen = {}, {}, {}
-        for _, character in ipairs(core.Characters:GetAllCached()) do byID[character.id] = character end
+        for _, character in ipairs(core.Characters:GetAllCached({ identityOnly = true })) do byID[character.id] = character end
         for _, id in ipairs(scope.characterIDs) do if byID[id] and not seen[id] then result[#result + 1] = byID[id]; seen[id] = true end end
         return result
     end
     if scope.mode ~= "account" and scope.mode ~= "realm" then return nil, "invalid-scope" end
     if scope.mode == "realm" and (type(scope.realm) ~= "string" or scope.realm == "") then return nil, "invalid-scope" end
     local result = {}
-    for _, character in ipairs(core.AccountView:GetVisibleCharacters()) do
+    for _, character in ipairs(core.AccountView:GetVisibleCharacters({ identityOnly = true })) do
         if scope.mode == "account" or character.realm == scope.realm then result[#result + 1] = character end
     end
     return result

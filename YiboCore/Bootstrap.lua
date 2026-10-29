@@ -5,7 +5,7 @@ _G.YiboCore = Core
 if Core._private and Core._private.bootstrapLoaded then return end
 
 Core.NAME = "YiboCore"
-Core.VERSION = "1.12.9"
+Core.VERSION = "1.12.10"
 Core.API_VERSION = 13
 Core._private = Core._private or {}
 Core._private.addonName = ADDON_NAME or Core.NAME

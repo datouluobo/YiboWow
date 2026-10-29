@@ -45,13 +45,16 @@ end
 
 local function RunLegacyCollectors(reason)
     if not next(Profile._collectors) then return end
-    local character = Core.Characters:GetCurrent()
-    local record = character and GetMutableRecord(character.id)
-    if not record then return end
-    record.observedAt, record.availability = record.observedAt or {}, record.availability or {}
-    local now = Timestamp()
+    local record, now
     for name, collector in pairs(Profile._collectors) do
         if not collector.events or collector.events[reason] then
+            if not record then
+                local character = Core.Characters:GetCurrent({ identityOnly = true })
+                record = character and GetMutableRecord(character.id)
+                if not record then return end
+                record.observedAt, record.availability = record.observedAt or {}, record.availability or {}
+                now = Timestamp()
+            end
             local ok, errorMessage = xpcall(function() collector.callback(record, reason, now) end, function(message) return tostring(message) end)
             if ok then
                 record.observedAt.collectors = record.observedAt.collectors or {}; record.observedAt.collectors[name] = now
@@ -77,8 +80,10 @@ end
 
 Core.Events:Register("DATA_DOMAIN_UPDATED", Profile, function(_, payload)
     local definition = Core.DataDomains._definitions[payload.domainID]
-    local domain, record = Core.DomainStore:Get(payload.characterID, payload.domainID), GetMutableRecord(payload.characterID)
-    if definition and definition.ProjectLegacy and domain and record then definition.ProjectLegacy(record, domain.data or {}, domain) end
+    if definition and definition.ProjectLegacy then
+        local domain, record = Core.DomainStore:Get(payload.characterID, payload.domainID), GetMutableRecord(payload.characterID)
+        if domain and record then definition.ProjectLegacy(record, domain.data or {}, domain) end
+    end
     QueueLegacyUpdate(payload.characterID, payload.reason)
 end)
 

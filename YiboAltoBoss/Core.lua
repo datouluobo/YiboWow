@@ -18,6 +18,8 @@ local bossByKey = {}
 local npcTargets = {}
 local customTargetCache = {}
 local recentPersonalCombatTargets = {}
+local personalCombatTargetCount, nextPersonalCombatSweep = 0, 0
+local PERSONAL_COMBAT_TARGET_LIMIT = 512
 local EnsureWorldTables
 
 local function GetServerTimestamp()
@@ -1847,11 +1849,27 @@ function YAB.GetPhaseColumns(viewMode)
     return items
 end
 
-function YAB.GetBossPhaseState(bossId, column)
+-- The optional context belongs to one synchronous view calculation only.
+local function GetPhaseEstimate(bossKey, context)
+    if context then
+        context.estimates = context.estimates or {}
+        local cached = context.estimates[bossKey]
+        if cached ~= nil then return cached or nil end
+        local estimate = YAB.GetBossRespawnEstimate and YAB.GetBossRespawnEstimate(bossKey, context) or nil
+        context.estimates[bossKey] = estimate or false
+        return estimate
+    end
+    return YAB.GetBossRespawnEstimate and YAB.GetBossRespawnEstimate(bossKey) or nil
+end
+
+function YAB.GetBossPhaseState(bossId, column, context)
     if not column then
         return nil
     end
-    CleanupExpiredWorldState()
+    if not context or not context.cleaned then
+        CleanupExpiredWorldState()
+        if context then context.cleaned = true end
+    end
     local boss = GetBossDefinition(bossId)
     if not boss then
         return nil
@@ -1860,7 +1878,7 @@ function YAB.GetBossPhaseState(bossId, column)
     if YAB.TrackingV3 then
         local state = YAB.TrackingV3:GetPhaseState(column.realm, bossKey, column.phaseKey)
         if not state then return nil end
-        local estimate = YAB.GetBossRespawnEstimate and YAB.GetBossRespawnEstimate(bossKey) or nil
+        local estimate = GetPhaseEstimate(bossKey, context)
         state.respawnEstimateMode = estimate and estimate.mode or nil
         state.respawnEstimateSeconds = estimate and estimate.estimateSeconds or nil
         state.respawnEstimateSamples = estimate and estimate.sampleCount or 0
@@ -1885,7 +1903,7 @@ function YAB.GetBossPhaseState(bossId, column)
     if not phaseState then
         return nil
     end
-    local estimate = YAB.GetBossRespawnEstimate and YAB.GetBossRespawnEstimate(bossKey) or nil
+    local estimate = GetPhaseEstimate(bossKey, context)
     return {
         realm = column.realm,
         phaseKey = column.phaseKey,
@@ -1921,9 +1939,10 @@ function YAB.GetBossPhaseSummary(viewMode)
     local bosses = YAB.GetBossList()
     local activeKills = 0
     local tracked = 0
+    local context = {}
     for _, boss in ipairs(bosses) do
         for _, column in ipairs(columns) do
-            local state = YAB.GetBossPhaseState(boss.key, column)
+            local state = YAB.GetBossPhaseState(boss.key, column, context)
             if state then
                 tracked = tracked + 1
                 if state.lastKilledAt then
@@ -2048,8 +2067,11 @@ function YAB.FormatRespawnConfidence(value)
     return key and _G.YiboCore.Locale:Get("YiboAltoBoss", key) or tostring(value or "")
 end
 
-function YAB.GetBossRespawnEstimate(bossId)
-    EnsureDB()
+function YAB.GetBossRespawnEstimate(bossId, context)
+    if not context or not context.databaseReady then
+        EnsureDB()
+        if context then context.databaseReady = true end
+    end
     local boss = GetBossDefinition(bossId)
     local bossKey = boss and GetTargetKey(boss) or tostring(bossId)
     local samples = {}
@@ -2099,6 +2121,7 @@ function YAB.GetRespawnPredictionEntries(viewMode, limit, activeOnly)
     local realms = EnsureWorldTables()
     viewMode = NormalizeViewMode(viewMode)
     local items = {}
+    local context = {}
     for realm, realmState in pairs(realms) do
         if IsRealmVisibleForView(realm, viewMode) then
             for bossId, bossState in pairs(realmState.bosses or {}) do
@@ -2110,7 +2133,7 @@ function YAB.GetRespawnPredictionEntries(viewMode, limit, activeOnly)
                     end
                 end
                 if (not activeOnly) or hasActivePhase then
-                    local estimate = YAB.GetBossRespawnEstimate(bossId)
+                    local estimate = YAB.GetBossRespawnEstimate(bossId, context)
                     if estimate then
                         local boss = GetBossDefinition(bossId)
                         items[#items + 1] = {
@@ -2247,7 +2270,8 @@ local function RecordObservedWorldDeath(guid)
     return changed
 end
 
-local function RememberLiveBossFromCombat(guid)
+local function RememberLiveBossFromCombat(guid, npcID)
+    if not npcID or not npcTargets[npcID] then return false end
     local changed = YAB.TrackingV3 and YAB.TrackingV3:ApplyGUID(guid, "ALIVE_EVIDENCE", "combat_log") or false
     local diagnosticChanged = YAB.TrackingV3 and YAB.TrackingV3:ConsumeDiagnosticsDirty() or false
     if changed or diagnosticChanged then YAB.PersistDB() end
@@ -2307,10 +2331,34 @@ local function IsCurrentPlayerCombatSource(guid)
         or guid == UnitGUID("vehicle")
 end
 
-local function RememberPersonalCombatTarget(guid)
-    if ExtractNpcIDFromGUID(guid) then
-        recentPersonalCombatTargets[guid] = GetServerTimestamp()
+local function ForgetPersonalCombatTarget(guid)
+    if recentPersonalCombatTargets[guid] then
+        recentPersonalCombatTargets[guid] = nil
+        personalCombatTargetCount = personalCombatTargetCount - 1
     end
+end
+
+local function RememberPersonalCombatTarget(guid, npcID)
+    -- Only registered targets can produce a kill; ordinary mobs need no cache.
+    if not npcID or not npcTargets[npcID] then return end
+    local now = GetServerTimestamp()
+    if now >= nextPersonalCombatSweep then
+        for key, at in pairs(recentPersonalCombatTargets) do
+            if now - at > PERSONAL_COMBAT_EVIDENCE_TTL_SECONDS then ForgetPersonalCombatTarget(key) end
+        end
+        nextPersonalCombatSweep = now + 1
+    end
+    if not recentPersonalCombatTargets[guid] then
+        if personalCombatTargetCount >= PERSONAL_COMBAT_TARGET_LIMIT then
+            local oldestGUID, oldestAt
+            for key, at in pairs(recentPersonalCombatTargets) do
+                if not oldestAt or at < oldestAt then oldestGUID, oldestAt = key, at end
+            end
+            if oldestGUID then ForgetPersonalCombatTarget(oldestGUID) end
+        end
+        personalCombatTargetCount = personalCombatTargetCount + 1
+    end
+    recentPersonalCombatTargets[guid] = now
 end
 
 local function HasRecentPersonalCombatEvidence(guid)
@@ -2319,7 +2367,7 @@ local function HasRecentPersonalCombatEvidence(guid)
         return false
     end
     if GetServerTimestamp() - observedAt > PERSONAL_COMBAT_EVIDENCE_TTL_SECONDS then
-        recentPersonalCombatTargets[guid] = nil
+        ForgetPersonalCombatTarget(guid)
         return false
     end
     return true
@@ -2400,7 +2448,7 @@ local function HandleCombatLogEvent()
             if npcId then
                 YAB.RecordKillByNpcID(npcId, "combat_personal", curCharKey, ExtractPhaseIDFromGUID(destGUID))
             end
-            recentPersonalCombatTargets[destGUID] = nil
+            ForgetPersonalCombatTarget(destGUID)
         end
         return
     end
@@ -2408,11 +2456,13 @@ local function HandleCombatLogEvent()
     -- Remember either side so raid combat is enough to collect its death timer,
     -- even when this client never targets or mouses over the boss directly.
     if IsLiveCombatEvidence(subEvent) then
-        if IsCurrentPlayerCombatSource(sourceGUID) then
-            RememberPersonalCombatTarget(destGUID)
+        local sourceID = ExtractNpcIDFromGUID(sourceGUID)
+        local destID = ExtractNpcIDFromGUID(destGUID)
+        if destID and npcTargets[destID] and IsCurrentPlayerCombatSource(sourceGUID) then
+            RememberPersonalCombatTarget(destGUID, destID)
         end
-        local changed = RememberLiveBossFromCombat(sourceGUID)
-        changed = RememberLiveBossFromCombat(destGUID) or changed
+        local changed = RememberLiveBossFromCombat(sourceGUID, sourceID)
+        changed = RememberLiveBossFromCombat(destGUID, destID) or changed
         if changed and YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
     end
     if subEvent ~= "PARTY_KILL" then

@@ -1,7 +1,84 @@
 local Addon = _G.YiboMail
+local function SameValue(left, right)
+    if left == right then return true end
+    if type(left) ~= "table" or type(right) ~= "table" then return false end
+    for key, value in pairs(left) do if not SameValue(value, right[key]) then return false end end
+    for key in pairs(right) do if left[key] == nil then return false end end
+    return true
+end
+-- SavedVariables writes shared tables by value. Restore equal immutable item
+-- observations without dropping any event, field, mail or attachment occurrence.
+function Addon:ShareStoredAttachments()
+    local groups, arrays, reused, reusedArrays = {}, {}, 0, 0
+    local function Item(item)
+        if type(item) ~= "table" then return item end
+        local key = item.variantKey or item.itemKey or item.itemID
+        if type(key) ~= "string" and type(key) ~= "number" then return item end
+        local quantity, slot = item.quantity or false, item.attachmentIndex or false
+        if key ~= key or quantity ~= quantity or slot ~= slot then return item end
+        local group = groups[key]; if not group then group = {}; groups[key] = group end
+        local quantities = group[quantity]; if not quantities then quantities = {}; group[quantity] = quantities end
+        local candidates = quantities[slot]; if not candidates then candidates = {}; quantities[slot] = candidates end
+        for _, prior in ipairs(candidates) do
+            if SameValue(prior, item) then
+                if prior ~= item then reused = reused + 1 end
+                return prior
+            end
+        end
+        candidates[#candidates + 1] = item
+        return item
+    end
+    local EMPTY = {}
+    local function Attachments(items)
+        if type(items) ~= "table" then return items end
+        for index, item in ipairs(items) do items[index] = Item(item) end
+        local first, size = items[1] or EMPTY, #items
+        if first ~= first then return items end
+        local group = arrays[first]; if not group then group = {}; arrays[first] = group end
+        local candidates = group[size]; if not candidates then candidates = {}; group[size] = candidates end
+        for _, prior in ipairs(candidates) do
+            if SameValue(prior, items) then
+                if prior ~= items then reusedArrays = reusedArrays + 1 end
+                return prior
+            end
+        end
+        candidates[#candidates + 1] = items
+        return items
+    end
+    for _, snapshot in pairs(self.db.byCharacter or {}) do
+        for _, mail in pairs(snapshot.records or {}) do
+            if mail.attachments ~= nil then mail.attachments = Attachments(mail.attachments) end
+        end
+        for _, record in ipairs(snapshot.history or {}) do
+            if record.mail and record.mail.attachments ~= nil then record.mail.attachments = Attachments(record.mail.attachments) end
+            -- Assigning a missing key to nil can still grow Lua 5.1 hash parts.
+            if record.attachments ~= nil then record.attachments = Attachments(record.attachments) end
+            if record.item then record.item = Item(record.item) end
+        end
+    end
+    -- The index is local to initialization, not another long-lived cache.
+    return reused, reusedArrays
+end
 function Addon:InitializeDatabase()
-    YiboMailDB = type(YiboMailDB) == "table" and YiboMailDB or {}
-    self.db = YiboMailDB
+    local name = self.Target and self.Target.savedVariable or "YiboMailDB"
+    local saved = _G[name]
+    if self.Target then
+        if saved ~= nil and type(saved) ~= "table" then return nil, "store-mismatch" end
+        if saved then
+            if saved.schemaVersion ~= nil and saved.schemaVersion ~= 1 then return nil, "store-mismatch" end
+            local scope = saved.clientScope
+            if scope and (type(scope) ~= "table" or scope.target ~= "Forever" or scope.projectID ~= WOW_PROJECT_ID or scope.scope ~= "current-character") then return nil, "store-mismatch" end
+            for _, key in ipairs({ "byCharacter", "settings", "contacts", "rules", "collectedMailMarkers", "mailArrivalSignals", "mailNoticeBatches" }) do
+                if saved[key] ~= nil and type(saved[key]) ~= "table" then return nil, "store-mismatch" end
+            end
+            for _, snapshot in pairs(saved.byCharacter or {}) do
+                if type(snapshot) ~= "table" or type(snapshot.records) ~= "table" or type(snapshot.visibleKeys) ~= "table" or type(snapshot.coverage) ~= "table" then return nil, "store-mismatch" end
+            end
+        end
+    end
+    _G[name] = type(saved) == "table" and saved or {}
+    self.db = _G[name]
+    if self.Target then self.db.clientScope = { target = "Forever", projectID = WOW_PROJECT_ID, scope = "current-character", rulesetState = "unknown" } end
     self.db.schemaVersion = 1
     self.db.revision = tonumber(self.db.revision) or 0
     self.db.nextMailKey = tonumber(self.db.nextMailKey) or 0
@@ -46,13 +123,32 @@ function Addon:InitializeDatabase()
         end
     end
     for _, snapshot in pairs(self.db.byCharacter) do
+        local originals = {}
         for _, record in ipairs(snapshot.history or {}) do
+            -- Reloaded attachment operations may have separate equal originals.
+            -- Intern only exact copies with the same source identity; differing
+            -- historical observations remain independent evidence.
+            local mail = record.state == "collected-archived" and record.mail
+            local key = mail and (record.sourceMailKey or mail.mailKey)
+            if key then
+                local prior = originals[key]
+                if prior and SameValue(prior, mail) then record.mail = prior
+                elseif not prior then originals[key] = mail end
+            end
+            -- SavedVariables may deserialize equal attachment arrays separately.
+            -- Reuse the mail's array only when every value agrees; no history is lost.
+            if record.mail and record.attachments and record.mail.attachments
+                and SameValue(record.attachments, record.mail.attachments) then
+                record.attachments = record.mail.attachments
+            end
             if not record.eventID then
                 self.db.nextHistoryID = self.db.nextHistoryID + 1; record.eventID = "h" .. self.db.nextHistoryID
                 record.sourceMailKey = record.sourceMailKey or (record.mail and record.mail.mailKey)
             end
         end
     end
+    self:ShareStoredAttachments()
+    return true
 end
 function Addon:UpdateMailNoticeBatch(characterID)
     local signal = self.db.mailArrivalSignals[characterID]
@@ -67,23 +163,25 @@ function Addon:UpdateMailNoticeBatch(characterID)
         self.db.mailNoticeBatches[characterID] = "n" .. self.db.nextMailNoticeID
     elseif not pending then self.db.mailNoticeBatches[characterID] = nil end
 end
-function Addon:AppendHistory(snapshot, record)
+function Addon:AppendHistory(snapshot, record, copies)
     self.db.nextHistoryID = self.db.nextHistoryID + 1
-    local stored = self.Copy(record)
+    -- A queue batch may supply its private copy map so attachment operations
+    -- share one isolated original letter instead of copying it per attachment.
+    local stored = self.Copy(record, copies)
     stored.eventID = "h" .. self.db.nextHistoryID
     stored.sourceMailKey = stored.sourceMailKey or (stored.mail and stored.mail.mailKey)
     stored.timeBasis = stored.timeBasis or (stored.recipient and "send-result" or "operation-result")
     snapshot.history = snapshot.history or {}
     snapshot.history[#snapshot.history + 1] = stored
 end
-function Addon:AddHistory(characterID, record)
+function Addon:AddHistory(characterID, record, copies)
     local snapshot = self.db.byCharacter[characterID]
     if not snapshot then
         local character = self.Core.Characters:GetCurrent({ identityOnly = true })
         snapshot = { records = {}, visibleKeys = {}, coverage = { status = "not-yet-scanned" }, character = self.Copy(character or {}) }
         self.db.byCharacter[characterID] = snapshot
     end
-    self:AppendHistory(snapshot, record)
+    self:AppendHistory(snapshot, record, copies)
     local keys, ids = {}, {}
     if record.mail and record.mail.mailKey then keys[1] = record.mail.mailKey end
     if record.item then ids[1] = record.item.itemID end
@@ -107,16 +205,26 @@ function Addon:PruneHistory()
         if changed then self:Publish(characterID, keys, ids, "cleanup") end
     end
 end
-local function Groups(mails)
+local function Groups(mails, records)
     local groups = {}
-    for _, mail in ipairs(mails) do
-        groups[mail.signature] = groups[mail.signature] or {}; table.insert(groups[mail.signature], mail)
+    for _, value in ipairs(mails) do
+        local mail = value
+        if records then mail = records[value] end
+        if mail then
+            local prior = groups[mail.signature]
+            if not prior then groups[mail.signature] = mail
+            elseif prior.signature then groups[mail.signature] = { prior, mail }
+            else prior[#prior + 1] = mail end
+        end
     end
     return groups
 end
+local function GroupCount(group)
+    return not group and 0 or (group.signature and 1 or #group)
+end
 function Addon:Publish(characterID, keys, itemIDs, reason, transfersUnchanged)
     self.db.revision = self.db.revision + 1
-    if self.Items.OnPublish then self.Items:OnPublish(self.db.revision, transfersUnchanged) end
+    if self.Items.OnPublish then self.Items:OnPublish(self.db.revision, transfersUnchanged, characterID) end
     local snapshot = self.db.byCharacter[characterID]
     if snapshot then snapshot.coverage.revision = self.db.revision end
     table.sort(keys); table.sort(itemIDs)
@@ -161,22 +269,34 @@ end
 function Addon:CommitScan(character, mails, coverage)
     local now = coverage.observedAt
     local old = self.db.byCharacter[character.id] or { records = {}, visibleKeys = {}, coverage = {} }
-    local previous = {}; for _, key in ipairs(old.visibleKeys) do if old.records[key] then previous[#previous + 1] = old.records[key] end end
-    local before, after = Groups(previous), Groups(mails)
-    local knownSignatures = {}
-    for _, mail in pairs(old.records) do knownSignatures[mail.signature] = true end
+    local previous = old.visibleKeys
+    local before, after = Groups(previous, old.records), Groups(mails)
+    local knownSignatures
+    local function Known(signature)
+        if before[signature] then return true end
+        -- Confirmed collection deltas already identify their changed letter.
+        -- Materialize the historical signature set only for a genuinely new
+        -- or ambiguous observed group, not once per collected attachment.
+        if not knownSignatures then
+            knownSignatures = {}
+            for _, mail in pairs(old.records) do knownSignatures[mail.signature] = true end
+        end
+        return knownSignatures[signature] == true
+    end
     local keys, changed, itemIDs, itemSet, keySet = {}, {}, {}, {}, {}
     local function Mark(mail)
         if not keySet[mail.mailKey] then changed[#changed + 1] = mail.mailKey; keySet[mail.mailKey] = true end
         for _, item in ipairs(mail.attachments) do if not itemSet[item.itemID] then itemSet[item.itemID] = true; itemIDs[#itemIDs + 1] = item.itemID end end
     end
     for signature, group in pairs(after) do
-        local candidates = before[signature] or {}
+        local candidates = before[signature]
+        local count, priorCount = GroupCount(group), GroupCount(candidates)
         -- Stable duplicate multiplicity keeps its keys. A changed duplicate
         -- group cannot identify which copy survived, so allocate fresh keys.
-        local reusable = #candidates == #group
-        for index, mail in ipairs(group) do
-            local candidate = reusable and candidates[index]
+        local reusable = priorCount == count
+        for index = 1, count do
+            local mail = count == 1 and group or group[index]
+            local candidate = reusable and (priorCount == 1 and candidates or candidates[index])
             if candidate then
                 mail.mailKey = candidate.mailKey
                 mail.openedByUser = candidate.openedByUser == true
@@ -198,7 +318,7 @@ function Addon:CommitScan(character, mails, coverage)
                     mail.firstSeenAt = pending.action.original.firstSeenAt
                     mail.discoveryUncertain = pending.action.original.discoveryUncertain
                     mail.noticeHandled = true
-                elseif not knownSignatures[signature] then
+                elseif not Known(signature) then
                     mail.firstSeenAt = now
                     self:AppendHistory(old, { state = "discovered", mail = mail, attachments = mail.attachments,
                         money = mail.money, codAmount = mail.cod, observedAt = now, timeBasis = "first-seen" })
@@ -213,9 +333,13 @@ function Addon:CommitScan(character, mails, coverage)
         end
     end
     table.sort(keys, function(a, b) return old.records[a].inboxIndex < old.records[b].inboxIndex end)
-    local current = {}; for _, key in ipairs(keys) do current[key] = true end
-    for _, mail in ipairs(previous) do
-        if not current[mail.mailKey] then mail.state, mail.stateEnteredAt = "unverified", now; Mark(mail) end
+    for _, key in ipairs(previous) do
+        local mail = old.records[key]
+        -- A previous key survives exactly when its signature group retained
+        -- its multiplicity. Reuse that decision instead of allocating a key set.
+        if mail and GroupCount(before[mail.signature]) ~= GroupCount(after[mail.signature]) then
+            mail.state, mail.stateEnteredAt = "unverified", now; Mark(mail)
+        end
     end
     local stateChanged = old.coverage.status ~= coverage.status or old.coverage.currentCount ~= coverage.currentCount or old.coverage.totalCount ~= coverage.totalCount
     if self.Scanner and self.Scanner.publishedStatus then

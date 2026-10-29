@@ -1,0 +1,42 @@
+{
+  "archived_on": "2026-10-14",
+  "addon": "YiboTodo",
+  "archive": "v1",
+  "files": [
+    {
+      "file": "YiboTodoIcon-v6-128.png",
+      "original_version": "6",
+      "original_path": "YiboTodo/Media/YiboTodoIcon-v6-128.png"
+    },
+    {
+      "file": "YiboTodoIcon-v6-16.png",
+      "original_version": "6",
+      "original_path": "YiboTodo/Media/YiboTodoIcon-v6-16.png"
+    },
+    {
+      "file": "YiboTodoIcon-v6-31.png",
+      "original_version": "6",
+      "original_path": "YiboTodo/Media/YiboTodoIcon-v6-31.png"
+    },
+    {
+      "file": "YiboTodoIcon-v6-32.png",
+      "original_version": "6",
+      "original_path": "YiboTodo/Media/YiboTodoIcon-v6-32.png"
+    },
+    {
+      "file": "YiboTodoIcon-v6-64.png",
+      "original_version": "6",
+      "original_path": "YiboTodo/Media/YiboTodoIcon-v6-64.png"
+    },
+    {
+      "file": "YiboTodoIcon-v6.png",
+      "original_version": "6",
+      "original_path": "YiboTodo/Media/YiboTodoIcon-v6.png"
+    },
+    {
+      "file": "YiboTodoIcon-v6.tga",
+      "original_version": "6",
+      "original_path": "YiboTodo/Media/YiboTodoIcon-v6.tga"
+    }
+  ]
+}

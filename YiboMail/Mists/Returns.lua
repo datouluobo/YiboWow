@@ -108,6 +108,8 @@ function Queue:StartReturn(plan)
         if action.characterID ~= current.id or not mail or mail.signature ~= action.signature
             or not Returns:CanReturn(mail) then return nil, Addon:T("RETURN.CHANGED") end
     end
+    self:Discard()
+    self.batchToken = {}
     self.actions, self.completed, self.index = Addon.Copy(plan.actions), 0, 1
     self.operation, self.returnPlan = "return", { mails = mails, visible = visible, total = total, skipped = plan.skipped,
         selectedMails = Addon.Copy(plan.selectedMails) }
@@ -124,13 +126,13 @@ function Queue:NextReturn()
         if Addon:GetInboxPreferences().showSummary then Addon:Print(self.message) end
         self:Notify(); return
     end
-    local batch = self.actions
+    local batch = self.batchToken
     local wait = self.lastRequestAt and self.lastRequestAt + math.max(0.25, self.requestInterval) - GetTime() or 0
     if wait > 0 then
         if not self.nextScheduled then
             self.nextScheduled = true
             C_Timer.After(wait, function()
-                if Queue.actions ~= batch then return end
+                if Queue.batchToken ~= batch then return end
                 Queue.nextScheduled = nil
                 if Queue.state == "running" then Queue:Next() end
             end)
@@ -236,8 +238,8 @@ function Queue:OnReturnScan(mails, visible, total, committed)
     end)
     if self.notifyPending then self:Notify() end
     if self.state == "running" then
-        local batch = self.actions
-        C_Timer.After(0, function() if Queue.actions == batch then Queue:Next() end end)
+        local batch = self.batchToken
+        C_Timer.After(0, function() if Queue.batchToken == batch then Queue:Next() end end)
     else Addon.Scanner:Schedule(true) end
     return true
 end

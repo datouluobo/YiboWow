@@ -1,6 +1,7 @@
 if _G.YAB and _G.YAB.CoreReady == false then return end
 local YAB = _G.YAB
 local Plans = YAB.PlannedTargets
+local plannedIndexes = setmetatable({}, { __mode = "k" })
 local function Core() return _G.YiboCore end
 local function Difficulty(catalogID, id)
     if YAB.TargetCatalog.CanonicalDifficulty then return YAB.TargetCatalog:CanonicalDifficulty(catalogID, id) end
@@ -23,10 +24,27 @@ function Plans:IsPlanned(legacyKey, bossKey)
     local id = Core().Characters:ResolveLegacyKey(legacyKey)
     if not id then return false end
     local config = self:VisibleConfiguration({ characters = { { id = id } } })
-    for _, target in ipairs(config and config.targets[id] or {}) do
-        local definition = target.active and YAB.TargetCatalog:Get(target.catalogID)
-        if definition and definition.bossKey == bossKey then return true, id, target end
+    if not config then return false end
+    local catalog = YAB.TargetCatalog
+    local cached = plannedIndexes[config]
+    if not cached or not catalog.value or cached.catalog ~= catalog.value then
+        cached = { catalog = catalog.value, characters = {} }
+        plannedIndexes[config] = cached
     end
+    local index = cached.characters[id]
+    if not index then
+        index = {}
+        for _, target in ipairs(config.targets[id] or {}) do
+        local definition = target.active and YAB.TargetCatalog:Get(target.catalogID)
+            if definition and definition.bossKey and not index[definition.bossKey] then
+                index[definition.bossKey] = target
+            end
+        end
+        cached.catalog = catalog.value
+        cached.characters[id] = index
+    end
+    local target = index[bossKey]
+    if target then return true, id, target end
     return false
 end
 function Plans:GetBossProgress(legacyKey, bossKey)
@@ -36,8 +54,9 @@ end
 local BossList = YAB.GetBossList
 function YAB.GetBossList(context)
     local list, seen = BossList(), {}
-    for _, boss in ipairs(list) do seen[boss.key] = true end
     local config = Plans:VisibleConfiguration(context)
+    if not config then return list end
+    for _, boss in ipairs(list) do seen[boss.key] = true end
     local all = {}; for _, b in ipairs(YAB.GetAllBossList()) do all[b.key] = b end
     for _, goals in pairs(config and config.targets or {}) do for _, target in ipairs(goals) do if target.active then
         local definition = YAB.TargetCatalog:Get(target.catalogID)

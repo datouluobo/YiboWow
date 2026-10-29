@@ -26,7 +26,11 @@ function Scanner:PublishStatus(characterID)
         Addon:Publish(characterID, {}, {}, "scan", true)
     end
 end
+function Scanner:CancelRead()
+    if self.scanJob then self.scanJob.mails, self.scanJob.hints = nil, nil; self.scanJob = nil end
+end
 function Scanner:Close()
+    self:CancelRead()
     if Addon.Queue then Addon.Queue:OnEvent("MAIL_CLOSED") end
     if Addon.Compose then Addon.Compose:OnEvent("MAIL_CLOSED") end
     self.open, self.updated, self.stable, self.validAt, self.lastError, self.refreshPending = false, false, nil, nil, nil, nil
@@ -35,6 +39,9 @@ function Scanner:Close()
     local character = Addon.Core and Addon.Core.Characters:GetCurrent({ identityOnly = true })
     self:PublishStatus(character and character.id)
     if Addon.FEATURES.account and Addon.Core and Addon.Core.AccountView then Addon.Core.AccountView:NotifyPageChanged("mail-inbox") end
+    -- Subscribers may query while the stale notification is delivered. Drop
+    -- their newly derived index too; later public queries rebuild it on demand.
+    Addon.Items:ReleaseCaches(true)
 end
 function Scanner:InstallHooks()
     if MailFrame and not self.hooked then
@@ -62,7 +69,35 @@ function Scanner:IsAuctionMail(index, subject)
     end
     return false
 end
-local function ReadMail(index, now, clock)
+local ITEM_FIELDS = { attachmentIndex = true, itemID = true, name = true, texture = true, quantity = true,
+    itemLink = true, itemKey = true, variantKey = true, identityQuality = true }
+local function ReuseItem(prior, slot, itemID, name, texture, quantity, link, itemKey, variantKey, quality)
+    if type(prior) ~= "table" or prior.attachmentIndex ~= slot or prior.itemID ~= itemID or prior.name ~= name
+        or prior.texture ~= texture or prior.quantity ~= quantity or prior.itemLink ~= link or prior.itemKey ~= itemKey
+        or prior.variantKey ~= variantKey or prior.identityQuality ~= quality then return nil end
+    for key in pairs(prior) do if not ITEM_FIELDS[key] then return nil end end
+    return prior
+end
+local function EncodePair(left, right)
+    left, right = tostring(left), tostring(right)
+    return #left .. ":" .. left .. #right .. ":" .. right
+end
+local function EnvelopeSignature(mail, attachments)
+    if mail.sender == nil or mail.subject == nil or mail.money == nil or mail.cod == nil or mail.wasReturned == nil then
+        return Addon.Encode({ mail.sender, mail.subject, mail.money, mail.cod, mail.wasReturned, attachments })
+    end
+    return EncodePair(mail.sender, mail.subject) .. EncodePair(mail.money, mail.cod) .. EncodePair(mail.wasReturned, attachments)
+end
+local function ObservationHints(characterID)
+    local snapshot = Addon.db and Addon.db.byCharacter[characterID]
+    local hints = {}
+    for _, key in ipairs(snapshot and snapshot.visibleKeys or {}) do
+        local mail = snapshot.records[key]
+        if mail and type(mail.inboxIndex) == "number" then hints[mail.inboxIndex] = mail end
+    end
+    return hints
+end
+local function ReadMail(index, now, clock, hint)
     local _, _, sender, subject, money, cod, days, expectedAttachments, wasRead, wasReturned, _, canReply, isGM = GetInboxHeaderInfo(index)
     if (sender ~= nil and type(sender) ~= "string") or type(subject) ~= "string" or type(days) ~= "number" then
         error(string.format("header-unavailable:index=%d:sender=%s:subject=%s:days=%s",
@@ -88,6 +123,8 @@ local function ReadMail(index, now, clock)
         end
     end
     local identities = {}
+    local hints = type(hint) == "table" and type(hint.attachments) == "table" and hint.attachments
+    local hintIndex = 1
     for slot = 1, ATTACHMENTS_MAX_RECEIVE or 16 do
         local name, itemID, texture, quantity = GetInboxItem(index, slot)
         if name or itemID then
@@ -96,30 +133,39 @@ local function ReadMail(index, now, clock)
             if not itemID or type(quantity) ~= "number" or quantity <= 0 then error("attachment-unavailable") end
             local payload = link and link:match("|H([^|]+)|h")
             local itemKey = "item:" .. itemID
-            local item = { attachmentIndex = slot, itemID = itemID, name = name, texture = texture, quantity = quantity,
-                itemLink = link, itemKey = itemKey, variantKey = payload and ("link:" .. payload) or itemKey,
-                identityQuality = payload and "full-link" or "item-id-only" }
+            local variantKey, quality = payload and ("link:" .. payload) or itemKey, payload and "full-link" or "item-id-only"
+            local prior = hints and hints[hintIndex]
+            while type(prior) == "table" and type(prior.attachmentIndex) == "number" and prior.attachmentIndex < slot do
+                hintIndex = hintIndex + 1; prior = hints[hintIndex]
+            end
+            -- Still read every native value. Reuse only an exactly matching
+            -- immutable observation; the hint never proves readiness or success.
+            local item = ReuseItem(prior, slot, itemID, name, texture, quantity, link, itemKey, variantKey, quality)
+                or { attachmentIndex = slot, itemID = itemID, name = name, texture = texture, quantity = quantity,
+                    itemLink = link, itemKey = itemKey, variantKey = variantKey, identityQuality = quality }
             mail.attachments[#mail.attachments + 1] = item
-            identities[#identities + 1] = Addon.Encode({ item.variantKey, quantity })
+            identities[#identities + 1] = EncodePair(item.variantKey, quantity)
         end
     end
     if expectedAttachments ~= nil and (type(expectedAttachments) ~= "number" or expectedAttachments ~= #mail.attachments) then error("attachments-pending") end
     table.sort(identities)
-    mail.signature = Addon.Encode({ sender, subject, mail.money, mail.cod, mail.wasReturned, table.concat(identities) })
+    mail.signature = EnvelopeSignature(mail, table.concat(identities))
     return mail
 end
 function Scanner:Signature(mail)
     local identities = {}
-    for _, item in ipairs(mail.attachments) do identities[#identities + 1] = Addon.Encode({ item.variantKey, item.quantity }) end
+    for _, item in ipairs(mail.attachments) do identities[#identities + 1] = EncodePair(item.variantKey, item.quantity) end
     table.sort(identities)
-    return Addon.Encode({ mail.sender, mail.subject, mail.money, mail.cod, mail.wasReturned, table.concat(identities) })
+    return EnvelopeSignature(mail, table.concat(identities))
 end
 function Scanner:ReadVisible()
     if not self:IsOpen() or not self.updated then return nil, Addon:T("UI.TEXT_0526") end
     local now, clock = Addon:Now()
+    local character = Addon.Core.Characters:GetCurrent({ identityOnly = true })
+    local hints = ObservationHints(character and character.id)
     local ok, result, visible, total = pcall(function()
         local count, total = GetInboxNumItems(); local mails = {}
-        for index = 1, count do mails[index] = ReadMail(index, now, clock) end
+        for index = 1, count do mails[index] = ReadMail(index, now, clock, hints[index]) end
         local after, all = GetInboxNumItems()
         if after ~= count or total ~= all then error(Addon:T("UI.TEXT_0606")) end
         return mails, count, total
@@ -129,13 +175,13 @@ function Scanner:ReadVisible()
 end
 -- A collection reads only its target. A missing row is a valid observation
 -- after automatic removal; unreadable headers/attachments remain errors.
-function Scanner:ReadTarget(index)
+function Scanner:ReadTarget(index, hint)
     if not self:IsOpen() or not self.updated then return nil, nil, nil, "mailbox-unavailable" end
     local now, clock = Addon:Now()
     local ok, mail, visible, total = pcall(function()
         local count, all = GetInboxNumItems()
         if type(count) ~= "number" or type(all) ~= "number" or count < 0 or all < count then error("counts-unavailable") end
-        local result = index <= count and ReadMail(index, now, clock) or nil
+        local result = index <= count and ReadMail(index, now, clock, hint) or nil
         local after, afterAll = GetInboxNumItems()
         if after ~= count or afterAll ~= all then error("inbox-changed") end
         return result, count, all
@@ -144,6 +190,7 @@ function Scanner:ReadTarget(index)
     return mail, visible, total
 end
 function Scanner:BeginCollection()
+    self:CancelRead()
     self.refreshPending = self.validAt ~= nil or self.refreshPending
     self.validAt, self.stable, self.scheduledScan = nil, nil, nil
     self.generation = (self.generation or 0) + 1
@@ -172,7 +219,7 @@ function Scanner:ReadEntry(entry)
     local ok, current, count = pcall(function()
         local visible, total = GetInboxNumItems()
         if type(visible) ~= "number" or type(total) ~= "number" or visible < index or total < visible then error(Addon:T("UI.TEXT_0590")) end
-        local mail = ReadMail(index, now, clock)
+        local mail = ReadMail(index, now, clock, entry.mail)
         local afterVisible, afterTotal = GetInboxNumItems()
         if afterVisible ~= visible or afterTotal ~= total then error(Addon:T("UI.TEXT_0606")) end
         return mail, visible
@@ -200,7 +247,11 @@ local function CommitScan(character, mails, visible, total, now, clock)
         end
     end
     local queueRefreshed
-    Addon:WithPublicationBatch(function()
+    -- Publication callbacks invalidate consumers, while this scan owns the
+    -- native presentation refresh immediately after its complete commit.
+    local previousCommit = Scanner.committingObservation
+    Scanner.committingObservation = true
+    local committed, commitError = pcall(Addon.WithPublicationBatch, Addon, function()
         local signatures = {}; for _, mail in ipairs(mails) do signatures[#signatures + 1] = mail.signature end; table.sort(signatures)
         local fingerprint = Addon.Encode(signatures)
         Scanner.lastError, Scanner.validAt, Scanner.refreshPending = nil, now, nil
@@ -214,6 +265,8 @@ local function CommitScan(character, mails, visible, total, now, clock)
         else Scanner.stable = nil end
         queueRefreshed = Addon.Queue and Addon.Queue:OnScan(mails, visible, total)
     end)
+    Scanner.committingObservation = previousCommit
+    if not committed then error(commitError, 0) end
     if Addon.Queue and Addon.Queue.notifyPending then Addon.Queue:Notify() end
     if Addon.NativeUI then
         Addon.NativeUI.deleting = nil
@@ -222,18 +275,24 @@ local function CommitScan(character, mails, visible, total, now, clock)
 end
 local function ScanError(character, err)
     Scanner.stable, Scanner.validAt, Scanner.lastError, Scanner.refreshPending = nil, nil, tostring(err), nil
-    Scanner:PublishStatus(character.id)
+    local previousCommit = Scanner.committingObservation
+    Scanner.committingObservation = true
+    local published, publishError = pcall(Scanner.PublishStatus, Scanner, character.id)
+    Scanner.committingObservation = previousCommit
+    if not published then error(publishError, 0) end
     if Addon.NativeUI then Addon.NativeUI:Refresh(true) end
     if Addon.FEATURES.account then Addon.Core.AccountView:NotifyPageChanged("mail-inbox") end
 end
 function Scanner:Scan()
+    self:CancelRead()
     if not self:IsOpen() or not self.updated then self.stable = nil; return nil, "mailbox-unavailable" end
     local character = Addon.Core.Characters:GetCurrent({ identityOnly = true }); if not character then return nil, "character-unavailable" end
     local now, clock = Addon:Now()
+    local hints = ObservationHints(character.id)
     local ok, mails, visible, total = pcall(function()
         local count, all = GetInboxNumItems()
         if type(count) ~= "number" or type(all) ~= "number" or count < 0 or all < count then error("counts-unavailable") end
-        local result = {}; for index = 1, count do result[index] = ReadMail(index, now, clock) end
+        local result = {}; for index = 1, count do result[index] = ReadMail(index, now, clock, hints[index]) end
         local countAfter, allAfter = GetInboxNumItems()
         if countAfter ~= count or allAfter ~= all then error("inbox-changed") end
         return result, count, all
@@ -246,6 +305,7 @@ function Scanner:Scan()
     return true
 end
 function Scanner:ScanAsync(generation)
+    self:CancelRead()
     if not self:IsOpen() or not self.updated then self.stable = nil; return nil, "mailbox-unavailable" end
     local character = Addon.Core.Characters:GetCurrent({ identityOnly = true }); if not character then return nil, "character-unavailable" end
     local now, clock = Addon:Now()
@@ -253,16 +313,21 @@ function Scanner:ScanAsync(generation)
     if not ok or type(count) ~= "number" or type(total) ~= "number" or count < 0 or total < count then
         ScanError(character, ok and "counts-unavailable" or count); return nil, self.lastError
     end
-    local mails, index = {}, 1
+    local job = { mails = {}, hints = ObservationHints(character.id), index = 1 }; self.scanJob = job
     local function ReadChunk()
-        if generation ~= self.generation or not self:IsOpen() then return end
+        if self.scanJob ~= job then return end
+        if generation ~= self.generation or not self:IsOpen() then self:CancelRead(); return end
+        local mails, index, hints = job.mails, job.index, job.hints
         local last = math.min(count, index + 4)
         local readOK, err = pcall(function()
-            for current = index, last do mails[current] = ReadMail(current, now, clock) end
+            for current = index, last do mails[current] = ReadMail(current, now, clock, hints[current]) end
         end)
-        if not readOK then ScanError(character, err); return end
-        index = last + 1
-        if index <= count then C_Timer.After(0, ReadChunk); return end
+        if self.scanJob ~= job then return end
+        if generation ~= self.generation or not self:IsOpen() then self:CancelRead(); return end
+        if not readOK then self:CancelRead(); ScanError(character, err); return end
+        job.index = last + 1
+        if job.index <= count then C_Timer.After(0, ReadChunk); return end
+        self:CancelRead()
         local stableOK, afterCount, afterTotal = pcall(GetInboxNumItems)
         if not stableOK or afterCount ~= count or afterTotal ~= total then ScanError(character, "inbox-changed"); return end
         CommitScan(character, mails, count, total, now, clock)
@@ -275,6 +340,7 @@ function Scanner:Schedule(force)
         Addon.Queue:ScheduleCheck()
         return
     end
+    self:CancelRead()
     -- Retain presentation during a recheck of this open session's last valid
     -- snapshot. Public readiness and all collection checks still become stale.
     self.refreshPending = self.validAt ~= nil or self.refreshPending

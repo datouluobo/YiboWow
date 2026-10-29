@@ -62,6 +62,8 @@ end
 function ShowUIPanel(control) control:Show() end
 function HideUIPanel(control) control:Hide() end
 YiboCore = { Capabilities = { Register = function() end } }; dofile("YiboCore/_NonRelease/Tests/LoadLocale.lua"); dofile("YiboCore/UI/Theme.lua"); dofile("YiboCore/UI/Input.lua")
+InCombatLockdown = InCombatLockdown or function() return false end
+dofile("_NonRelease/CoreIdentityDomainsR1/LoadClient.lua")
 dofile('YiboCore/Runtime/ItemResolver.lua')
 -- Keep the real dropdown/buttons; scroll geometry is outside this regression.
 function YiboCore.UITheme:CreateScrollFrame(parent) return Frame(parent) end
@@ -74,6 +76,7 @@ Addon.Core.Database = { GetDB = function() return nil end }
 dofile("YiboCore/Data/Characters.lua")
 local formatName = Addon.Core.Characters.FormatName
 Addon.Core.Characters = { GetCurrent = function() return current end, GetAllCached = function() return { current } end, FormatName = formatName }
+dofile('_NonRelease/MailPerformance20261029/IdentityMock.lua')(Addon.Core.Characters)
 local opened
 Addon.Core.AccountView = { NotifyPageChanged = function() end, Toggle = function(_, page) opened = page end }
 Addon.GetInboxPreferences = function() return { rememberFilters = false, selectItems = true, selectMoney = true } end
@@ -227,7 +230,7 @@ canDelete = true; mail.money = 1; native:DeleteEmptyMail(entry); assert(deleted 
 mail.money, mail.attachments = savedMoney, savedAttachments; native:RefreshInbox()
 assert(not panel.rows[1].delete:IsShown() and panel.rows[1].check:IsShown())
 print("PASS: empty-mail X; native deletion permission; repeat-click guard; recheck contents; pooled row restores checkbox")
-Addon.Items.Events = { Register = function() end }
+Addon.Items.Events = { Register = function() end, RegisterSignal = function() end }
 SendMailFrame = Frame(MailFrame)
 Addon.FEATURES.send = false -- This spec stubs only the inbox-side native widgets.
 local originalHeight = MailFrame:GetHeight()
@@ -248,7 +251,13 @@ local refreshed = 0
 local refreshInbox = native.RefreshInbox
 native.RefreshInbox = function() refreshed = refreshed + 1 end
 native:OnEvent("GET_ITEM_INFO_RECEIVED", 999, true); assert(refreshed == 0)
-native:OnEvent("GET_ITEM_INFO_RECEIVED", 123, true); assert(refreshed == 1 and not native.pendingItemInfo[123])
+local itemTimers, previousTimers = {}, C_Timer
+C_Timer = { After = function(_, callback) itemTimers[#itemTimers + 1] = callback end }
+Addon.Scanner.IsOpen = function() return true end
+native:OnEvent("GET_ITEM_INFO_RECEIVED", 123, true)
+assert(refreshed == 0 and #itemTimers == 1 and not native.pendingItemInfo[123])
+table.remove(itemTimers, 1)(); assert(refreshed == 1)
+C_Timer = previousTimers
 GetItemInfo = function() return 'Name without quality' end
 native:ItemTile(group, 1, 6)
 assert(refreshed == 1 and requested == 1, 'cached name without quality must not recursively refresh the inbox')

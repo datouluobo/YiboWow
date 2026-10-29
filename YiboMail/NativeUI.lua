@@ -585,7 +585,7 @@ end
 function Native:RefreshFavoriteButtons()
     local panel = self.send
     if not panel or not panel.favoriteButtons then return end
-    local roster, byAddress = Addon.Core.Characters:GetAllCached(), {}
+    local roster, byAddress = Addon.Core.Characters:GetAllCached({ identityOnly = true }), {}
     for _, character in ipairs(roster) do
         local address = character.name .. "-" .. character.realm
         byAddress[ContactAddressKey(address)] = character
@@ -1067,31 +1067,49 @@ function Native:Install()
         Native:RememberInboxFilters()
         Native.inbox.selection = {}
         Native.inbox.search:ClearFocus(); Native.inbox.filter.menu:Hide(); Native.inbox.menu.menu:Hide()
+        if Native.ReleaseInboxPresentation then Native:ReleaseInboxPresentation() end
+        if Addon.RuleSendUI and Addon.RuleSendUI.ReleaseRows then Addon.RuleSendUI:ReleaseRows() end
         if Native.send then
             Native.send.notice = nil; Native.send.contacts.menu:Hide()
         end
     end)
-    Addon.Items.Events:Register(self, function() Native.deleting = nil; Native:Refresh(true) end)
-    Addon.Frame:HookScript("OnUpdate", function()
-        if Addon.RuleSendController then Addon.RuleSendController:Tick() end
-        if Native.deleting and GetTime() - Native.deleteStartedAt > 12 then
-            Native.deleting = nil; Native.inbox.notice = Addon:T("UI.TEXT_0154"); Native:RefreshInbox()
-        end
+    Addon.Items.Events:RegisterSignal(self, function()
+        Native.deleting = nil
+        -- A scan owns its final presentation; Confirm can also have queued
+        -- an authoritative progress refresh. Neither needs a second redraw.
+        if Addon.Scanner.committingObservation or (Addon.Queue.state == "running" and Addon.Queue.notifyPending) then return end
+        Native:Refresh(true)
     end)
     self:RestoreBrowsePageWhenShown()
 end
 function Native:Refresh(observation)
     self:RefreshInbox(observation); if Addon.FEATURES.send then self:RefreshSend() end
 end
+function Native:QueueInboxItemRefresh()
+    if self.itemRefreshTicket then return end
+    if not (C_Timer and C_Timer.After) then self:RefreshInbox(); return end
+    local ticket = {}; self.itemRefreshTicket = ticket
+    C_Timer.After(0, function()
+        if Native.itemRefreshTicket ~= ticket then return end
+        Native.itemRefreshTicket = nil
+        local panel = Native.inbox
+        if panel and panel:IsShown() and Addon.Scanner:IsOpen() then Native:RefreshInbox() end
+    end)
+end
 function Native:OnEvent(event, itemID, success)
-    if event == "MAIL_CLOSED" then self:CancelReturnConfirmation() end
+    if event == "MAIL_CLOSED" then
+        self.itemRefreshTicket = nil
+        self:CancelReturnConfirmation()
+        if self.ReleaseInboxPresentation then self:ReleaseInboxPresentation() end
+        if Addon.RuleSendUI and Addon.RuleSendUI.ReleaseRows then Addon.RuleSendUI:ReleaseRows() end
+    end
     if event == "MAIL_FAILED" and self.deleting then
         self.deleting = nil; self.inbox.notice = Addon:T("UI.TEXT_0153")
     end
     if event == "GET_ITEM_INFO_RECEIVED" then
         if self.pendingItemInfo and self.pendingItemInfo[itemID] then
             self.pendingItemInfo[itemID] = nil
-            if success then self:RefreshInbox() end
+            if success then self:QueueInboxItemRefresh() end
         end
         return
     end

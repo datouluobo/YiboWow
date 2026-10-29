@@ -377,9 +377,11 @@ function YAB.RefreshInstanceLockouts()
                     item.bosses[#item.bosses + 1] = { name = bossName, killed = isKilled, encounterID = encounterID }
                 end
                 item.bossCount = tonumber(numEncounters) or bossCount
-                if YAB.TargetCatalog and YAB.TargetCatalog:ObserveLegacyLockout(item) then directoryChanged = true end
-                for _, boss in ipairs(item.bosses) do
-                    boss.encounterID = YAB.TargetCatalog and YAB.TargetCatalog:ResolveSavedEncounter(instanceID, difficultyID, boss.name)
+                if YAB.TargetCatalog and YAB.TargetCatalog:ObserveLegacyLockout(item) then
+                    directoryChanged = true
+                    for _, boss in ipairs(item.bosses) do
+                        boss.encounterID = YAB.TargetCatalog:ResolveSavedEncounter(instanceID, difficultyID, boss.name)
+                    end
                 end
             end
             lockouts[lockKey] = item

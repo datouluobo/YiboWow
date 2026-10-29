@@ -62,10 +62,25 @@ function Theme:CreateInput(parent, options)
     input.placeholder:SetPoint("RIGHT", -self.Space.xs, 0)
     input.placeholder:SetWordWrap(false)
     input.placeholder:SetText(options.placeholder or "")
-    local function Changed(control, userInput)
+    local function ClearPending(control)
         control.imePending = nil
+        control:SetScript("OnUpdate", nil)
+    end
+    local function Changed(control, userInput)
+        ClearPending(control)
         control.placeholder:SetShown(control:GetText() == "")
         if options.OnChanged then options.OnChanged(control:GetText(), userInput == true, control) end
+    end
+    -- Some clients clear the IME flag after the final text event. Only watch
+    -- frames while that deferred change exists, then return the input to idle.
+    local function FlushComposition(control)
+        local pending = control.imePending
+        if not pending then ClearPending(control)
+        elseif not IsComposing(control) then Changed(control, pending.userInput) end
+    end
+    local function QueueComposition(control, userInput)
+        control.imePending = { userInput = userInput }
+        control:SetScript("OnUpdate", FlushComposition)
     end
     input:SetScript("OnTextChanged", function(control, userInput)
         control.placeholder:SetShown(control:GetText() == "")
@@ -74,14 +89,8 @@ function Theme:CreateInput(parent, options)
         local composing = IsComposing(control)
         if not (userInput or control.notifyProgrammatic or pending or composing) then return end
         userInput = userInput == true or (pending and pending.userInput) or (composing and not control.notifyProgrammatic) or false
-        if composing then control.imePending = { userInput = userInput }; return end
+        if composing then QueueComposition(control, userInput); return end
         Changed(control, userInput)
-    end)
-    -- Some clients deliver the final text event before clearing the IME flag.
-    -- Flush that pending change on the first frame after composition ends.
-    input:SetScript("OnUpdate", function(control)
-        local pending = control.imePending
-        if pending and not IsComposing(control) then Changed(control, pending.userInput) end
     end)
     function input:SetValue(value, notify)
         value = tostring(value or "")
@@ -89,12 +98,12 @@ function Theme:CreateInput(parent, options)
         if self:GetText() == value then
             self.placeholder:SetShown(value == "")
             if notify then
-                if IsComposing(self) then self.imePending = self.imePending or { userInput = false }
+                if IsComposing(self) then QueueComposition(self, self.imePending and self.imePending.userInput or false)
                 else Changed(self, false) end
-            elseif not IsComposing(self) then self.imePending = nil end
+            elseif not IsComposing(self) then ClearPending(self) end
             return
         end
-        self.imePending = nil
+        ClearPending(self)
         self.silent, self.notifyProgrammatic = not notify, notify
         self:SetText(value)
         self.silent, self.notifyProgrammatic = nil, nil
@@ -126,7 +135,7 @@ function Theme:CreateInput(parent, options)
         if options.restoreOnEscape then control:SetValue(control.originalValue, true) end
         control:ClearFocus()
     end)
-    input:SetScript("OnHide", function(control) control.imePending = nil; control:ClearFocus() end)
+    input:SetScript("OnHide", function(control) ClearPending(control); control:ClearFocus() end)
     input:SetValue(options.value)
     if options.clearable then self:AttachClearButton(input, options.clearButtonOptions) end
     return input

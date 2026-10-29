@@ -11,6 +11,7 @@ if arg[1] == "baseline" then
     local pipe = assert(io.popen("git show HEAD:YiboMail/Items.lua"))
     local source = pipe:read("*a"); pipe:close(); assert(loadstring(source))()
 end
+dofile('_NonRelease/MailPerformance20261029/IdentityMock.lua')(Addon.Core.Characters)
 Addon:InitializeDatabase()
 local function Snapshot()
     return { records = {}, visibleKeys = {}, history = {}, coverage = { status = "known", observedAt = 1000 } }
@@ -78,7 +79,10 @@ Addon.Scanner.open, Addon.Scanner.updated = true, true
 Addon.Scanner.publishedStatus.c1 = "known"
 count = normalizations
 Addon.Scanner:Close()
-assert(#Addon.Items:GetTransfers("c2").records == 0 and normalizations == count, "Actual close publication must reuse matching")
+assert(Addon.Items.transferIndex == nil and next(Addon.Items.transfersCache) == nil, "Close releases derived matching caches")
+assert(#Addon.Items:GetTransfers("c2").records == 0 and normalizations > count, "A query after close safely rebuilds matching without changing results")
+count = normalizations
+assert(#Addon.Items:GetTransfers("c2").records == 0 and normalizations == count, "Repeated closed-mailbox queries reuse the rebuilt result")
 print("PASS: shared linear history index; duplicate matching; read/status cache reuse; current revision; isolated results; content and directory invalidation; timestamp eligibility")
 
 -- Real native automatic acknowledgement publishes once per mailbox, not once

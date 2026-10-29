@@ -5,6 +5,7 @@ function GetServerTime() return 1000 end
 MailFrame = { IsShown = function() return true end }
 YiboCore = { Capabilities = { Register = function() end } }
 local Core = YiboCore
+dofile("_NonRelease/CoreIdentityDomainsR1/LoadClient.lua")
 dofile("YiboCore/Util/Defaults.lua")
 local character = { id = UnitGUID(), name = "Mailer", realm = "Realm", class = "MAGE", faction = "Alliance", domains = { inventory = {} } }
 for index = 1, 10000 do character.domains.inventory[index] = { itemID = index, quantity = 20 } end

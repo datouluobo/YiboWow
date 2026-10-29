@@ -2,18 +2,27 @@ local Addon = _G.YiboTodo
 local Snapshot = { dirty = true }
 Addon.Snapshot = Snapshot
 
-function Snapshot:Invalidate() self.dirty = true end
+function Snapshot:Invalidate() self.dirty = true; self.groupMembers = nil end
 
 function Snapshot:ScheduleTransitionRefresh(at)
+    if self.transitionAt == at and self.transitionPending then return end
+    if self.transitionTimer then self.transitionTimer:Cancel(); self.transitionTimer = nil end
+    self.transitionGeneration = (self.transitionGeneration or 0) + 1
+    local generation = self.transitionGeneration
     self.transitionAt = at
+    self.transitionPending = nil
     if not (C_Timer and C_Timer.After and at and at > Addon:Now()) then return end
     local delay = math.max(0.1, at - Addon:Now() + 0.1)
-    C_Timer.After(delay, function()
-        if self.transitionAt == at and Addon:Now() >= at then
+    self.transitionPending = true
+    local function Refresh()
+        if self.transitionGeneration == generation and self.transitionAt == at and Addon:Now() >= at then
+            self.transitionTimer, self.transitionPending = nil, nil
             self.dirty = true
             Addon:NotifyChanged()
         end
-    end)
+    end
+    if C_Timer.NewTimer then self.transitionTimer = C_Timer.NewTimer(delay, Refresh)
+    else C_Timer.After(delay, Refresh) end
 end
 
 -- Keep the model usable by older SavedVariables and the isolated smoke-test
@@ -27,35 +36,43 @@ end
 
 local function BuildGroup(groupID)
     local group = Addon.Catalog.groups[groupID]
-    group.members = {}
-    for _, recipe in pairs(Addon.Catalog.recipes) do
-        if recipe.catalogEnabled and recipe.cooldownGroupID == groupID then
-            group.members[#group.members + 1] = recipe
+    if not Snapshot.groupMembers then
+        local members = {}
+        for _, recipe in pairs(Addon.Catalog.recipes) do
+            if recipe.catalogEnabled and recipe.cooldownGroupID then
+                local id = recipe.cooldownGroupID
+                members[id] = members[id] or {}
+                members[id][#members[id] + 1] = recipe
+            end
         end
+        for _, list in pairs(members) do
+            table.sort(list, function(left, right)
+                if (left.order or 999) ~= (right.order or 999) then return (left.order or 999) < (right.order or 999) end
+                return tostring(left.id) < tostring(right.id)
+            end)
+        end
+        Snapshot.groupMembers = members
     end
-    table.sort(group.members, function(left, right)
-        if (left.order or 999) ~= (right.order or 999) then return (left.order or 999) < (right.order or 999) end
-        return tostring(left.id) < tostring(right.id)
-    end)
+    group.members = Snapshot.groupMembers[groupID] or {}
     return group
 end
 
 local function ProfessionSlots(characterID)
     local core = Addon.Core
     local domain = core and core.DataDomains and core.DataDomains:Get(characterID, "professions")
-    if not (domain and domain.state == "known" and domain.data) then return nil end
+    if not (domain and domain.state == "known" and domain.data) then return nil, domain end
     local slots = {}
     for slot = 1, 2 do
         local profession = domain.data.primaryProfessions and domain.data.primaryProfessions[slot]
         local professionID = profession and tonumber(profession.id)
         slots[slot] = professionID and { id = professionID, name = profession.name, icon = profession.icon, skillLevel = tonumber(profession.skillLevel) } or false
     end
-    return slots
+    return slots, domain
 end
 
-local function CharacterProfessionInfo(characterID, slots)
+local function CharacterProfessionInfo(characterID, slots, domain)
     local core = Addon.Core
-    local domain = core and core.DataDomains and core.DataDomains:Get(characterID, "professions")
+    if domain == nil then domain = core and core.DataDomains and core.DataDomains:Get(characterID, "professions") end
     local professions = {}
     for _, profession in ipairs(domain and domain.data and domain.data.professions or {}) do
         if profession.id then professions[tonumber(profession.id)] = profession end
@@ -268,10 +285,10 @@ local function BuildLegacyDailyProject(characterID, definition, monitoringGroupI
     }
 end
 
-local function BuildSpecialProjects(characterID, slots, now)
+local function BuildSpecialProjects(characterID, slots, now, professionDomain)
     local provider = Addon.Providers.Registry:Get("special-activity")
     local grouped, enabled = {}, false
-    local professions = CharacterProfessionInfo(characterID, slots)
+    local professions = CharacterProfessionInfo(characterID, slots, professionDomain)
     for groupID, group in pairs(Addon.Catalog.monitoringGroups or {}) do
         if group.memberKind == "special-activity" and Addon.Settings:IsMonitoringGroupEnabled(groupID) then
             enabled = true
@@ -315,12 +332,13 @@ function Snapshot:Build()
     local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent({ identityOnly = true })
     local currentCharacterID = current and current.id
     for _, coreCharacter in ipairs(characters) do
-        local characterID, slots = coreCharacter.id, ProfessionSlots(coreCharacter.id)
+        local characterID = coreCharacter.id
+        local slots, professionDomain = ProfessionSlots(characterID)
         local stored = (Addon.db.byCharacter or {})[characterID] or {}
         local farmProject, farmEnabled = BuildFarmProject(characterID, now)
         local nomiProject, nomiEnabled = BuildNomiProject(characterID, now)
         local cookingProject, cookingEnabled = BuildCookingProject(characterID, coreCharacter.level, now, currentCharacterID)
-        local specialProjects, specialEnabled = BuildSpecialProjects(characterID, slots, now)
+        local specialProjects, specialEnabled = BuildSpecialProjects(characterID, slots, now, professionDomain or false)
         if farmProject and farmProject.nextResetAt and farmProject.nextResetAt > now
             and (not nextTransitionAt or farmProject.nextResetAt < nextTransitionAt) then
             nextTransitionAt = farmProject.nextResetAt

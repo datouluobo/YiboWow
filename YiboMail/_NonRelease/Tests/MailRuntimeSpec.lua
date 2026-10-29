@@ -41,6 +41,7 @@ for _, file in ipairs({ "Namespace", "Store", "Items", "Mists/Scanner", "ViewMod
 local addon, scanner, api, queue = YiboMail, YiboMail.Scanner, YiboMail.Items, YiboMail.Queue
 addon.Core = { Characters = { GetCurrent = function() return a end, GetAllCached = function() return { a, b, c } end },
     AccountView = { GetVisibleCharacters = function() return { a, b } end, NotifyPageChanged = function() end } }
+dofile('_NonRelease/MailPerformance20261029/IdentityMock.lua')(addon.Core.Characters)
 addon:InitializeDatabase()
 local refreshes = 0
 addon.NativeUI = { Refresh = function() refreshes = refreshes + 1 end, OnCollected = function() end }
@@ -186,7 +187,8 @@ local collectItem = TakeInboxItem
 TakeInboxItem = function() taken = taken + 1 end -- Client accepts, but no result arrives.
 assert(queue:Start(assert(queue:Prepare(single, { characters = { a } }))))
 assert(queue.pending and taken == 5)
-queue:Install(); now = now + 31; addon.Frame.hooks.OnUpdate()
+queue:Install(); queue:Install(); assert(not addon.Frame.hooks.OnUpdate)
+now = now + 31; Flush()
 assert(queue.state == "paused" and queue.pending)
 local historyCount = #addon.db.byCharacter.A.history
 Fire("MAIL_CLOSED")

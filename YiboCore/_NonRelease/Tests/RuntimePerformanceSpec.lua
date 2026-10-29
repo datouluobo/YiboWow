@@ -7,7 +7,7 @@ local function Flush()
     for _, timer in ipairs(pending) do timer[2]() end
 end
 function CreateFrame()
-    local frame = { scripts = {}, RegisterEvent = function() end,
+    local frame = { scripts = {}, RegisterEvent = function() end, UnregisterEvent = function() end,
         SetScript = function(self, name, callback) self.scripts[name] = callback end }
     frames[#frames + 1] = frame; return frame
 end
@@ -66,6 +66,41 @@ assert(core.Profile:RefreshCurrent('BAG_UPDATE_DELAYED') and currentReads == 0)
 
 core.UITheme = { Colors = {} }
 dofile('YiboCore/UI/AccountView.lua')
+-- StateDriver converts numeric conditional results to numbers. Exercise the
+-- actual secure snippet with both preview and ordinary window lifecycles.
+do
+    local view = core.AccountView
+    local oldCreateFrame = CreateFrame
+    local hider
+    CreateFrame = function()
+        hider = { attributes = {}, refs = {} }
+        function hider:SetFrameRef(key, value) self.refs[key] = value end
+        function hider:GetFrameRef(key) return self.refs[key] end
+        function hider:SetAttribute(key, value) self.attributes[key] = value end
+        function hider:GetAttribute(key) return self.attributes[key] end
+        return hider
+    end
+    core.Client = { IsInCombat = function() return false end,
+        RegisterCombatDriver = function() return true end }
+    local frame = { shown = true, attributes = { isHoverPreview = '1' } }
+    function frame:IsShown() return self.shown end
+    function frame:GetAttribute(key) return self.attributes[key] end
+    function frame:Hide() self.shown = false end
+    function frame:Show() self.shown = true end
+    view.frame = frame
+    view:EnsureCombatWindowHider()
+    local run = assert(loadstring('local self, newstate = ...\n' .. hider.attributes['_onstate-combat']))
+    run(hider, 1); assert(not frame.shown)
+    run(hider, 0); assert(not frame.shown)
+    frame.shown = true; frame.attributes.isHoverPreview = nil
+    run(hider, 1); assert(not frame.shown)
+    run(hider, 0); assert(frame.shown)
+    frame.attributes.isHoverPreview = '1'; frame.attributes.restoreMainAfterPreview = '1'
+    run(hider, '1'); assert(not frame.shown)
+    run(hider, '0'); assert(frame.shown)
+    view.combatWindowHider = nil
+    CreateFrame = oldCreateFrame
+end
 local view, shown, refreshes = core.AccountView, true, 0
 view.frame = { IsShown = function() return shown end }
 view.activePageID = 'A'
@@ -97,7 +132,8 @@ core.ItemResolver:Request(124, function(info) assert(info.state == 'failed'); fa
 resolverFrame.scripts.OnUpdate(resolverFrame, 0.2)
 assert(failed == 1 and not resolverFrame.scripts.OnUpdate)
 
-YAB = {}
+YAB = { LockoutLocaleReady = true }
+GetInstanceInfo = function() return "", "none", 0, "", 0, 0, false, 0 end
 dofile('YiboAltoBoss/InstanceLockouts.lua')
 local bossFrame, requests, scans = frames[#frames], 0, 0
 YAB.RecordNormalInstanceEntry = function() end
@@ -107,6 +143,8 @@ INSTANCE_RESET_SUCCESS = '%s reset.'
 bossFrame.scripts.OnEvent(nil, 'PLAYER_LOGIN')
 bossFrame.scripts.OnEvent(nil, 'ZONE_CHANGED_NEW_AREA')
 assert(#timers == 1); Flush(); assert(requests == 1)
+-- The request has a bounded fallback timeout until the native response arrives.
+assert(#timers == 1)
 bossFrame.scripts.OnEvent(nil, 'UPDATE_INSTANCE_INFO'); Flush()
 assert(requests == 1 and scans == 1 and #timers == 0)
 bossFrame.scripts.OnEvent(nil, 'CHAT_MSG_SYSTEM', 'Unrelated system message')
@@ -132,17 +170,31 @@ assert(#timers == 1 and total == 5 and builds == 0)
 Flush(); assert(builds == 1 and draws == 1 and legendary.db.byCharacter.A.snapshot.progress == 5)
 legendary:QueueRefresh('QUEST_LOG_UPDATE'); Flush(); assert(builds == 2 and draws == 1)
 
-YiboBuilds = {}
+YiboBuilds = { HasCompatibleCore = function() return true end }
 dofile('YiboBuilds/Snapshot.lua')
 local captured = {}
 YiboBuilds.Snapshot.Capture = function(_, reason, _, parts) captured[#captured + 1] = { reason, parts } end
+local originalTimers, originalClock = C_Timer, GetTime
+local captureTimers, captureClock = {}, 100
+GetTime = function() return captureClock end
+C_Timer = { After = function(delay, callback) captureTimers[#captureTimers + 1] = { at = captureClock + delay, callback = callback } end }
+local function AdvanceCapture(at)
+    while true do
+        table.sort(captureTimers, function(a,b) return a.at < b.at end)
+        if not captureTimers[1] or captureTimers[1].at > at + 0.000001 then captureClock = at; return end
+        local timer = table.remove(captureTimers, 1); captureClock = timer.at; timer.callback()
+    end
+end
 YiboBuilds.Snapshot:ScheduleEquipmentCapture()
 YiboBuilds.Snapshot:ScheduleCapture('glyphs', 0.1, { glyphs = true })
-Flush()
+AdvanceCapture(100.1)
 assert(#captured == 1 and captured[1][2].equipment and captured[1][2].glyphs)
-Flush(); assert(#captured == 2 and captured[2][2].equipment and not captured[2][2].glyphs)
+AdvanceCapture(100.3); assert(#captured == 2 and captured[2][2].equipment and not captured[2][2].glyphs)
+C_Timer, GetTime = originalTimers, originalClock
 dofile('YiboVault/Namespace.lua')
 dofile('YiboVault/Collector.lua')
+dofile('YiboVault/Common/Collector.lua')
+dofile('YiboVault/Mists/Collector.lua')
 local equipmentScans = 0
 YiboVault.ScanEquipment = function() equipmentScans = equipmentScans + 1 end
 YiboVault:OnEvent('UNIT_INVENTORY_CHANGED', 'target'); assert(#timers == 0)
