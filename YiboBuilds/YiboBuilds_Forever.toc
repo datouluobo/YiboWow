@@ -1,0 +1,20 @@
+## Interface: 16001
+## Title: |cff20e070[Yibo]|r YiboBuilds - Character Builds
+## Title-zhCN: |cff20e070[Yibo]|r YiboBuilds - 角色构筑
+## Title-zhTW: |cff20e070[Yibo]|r YiboBuilds - 角色构筑
+## Notes: Current character equipment snapshot. Requires YiboCore API13.
+## Notes-zhCN: 当前角色装备只读快照，需要 YiboCore API13。
+## Author: YiboSoft
+## Version: 0.1.0
+## IconTexture: Interface\AddOns\YiboBuilds\Media\YiboBuildsIcon-128
+## SavedVariables: YiboBuildsForeverDB
+## RequiredDeps: YiboCore
+## Group: YiboCore
+## LoadOnDemand: 0
+
+Forever/Namespace.lua
+Forever/Locale.lua
+Forever/Store.lua
+Forever/Scanner.lua
+Forever/AccountPage.lua
+Forever/Bootstrap.lua

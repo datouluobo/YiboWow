@@ -5,8 +5,8 @@
 ## Notes: Account profession recipe snapshots; catalog coverage remains unverified.
 ## Notes-zhCN: 账号级专业配方学习状态；目录覆盖仍待验证。
 ## Author: YiboSoft
-## Version: 1.2.2
-## IconTexture: Interface\AddOns\YiboCrafting\Media\YiboCraftingIcon-v2
+## Version: 1.2.3
+## IconTexture: Interface\AddOns\YiboCrafting\Media\YiboCraftingIcon-128
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
 ## SavedVariables: YiboCraftingDB

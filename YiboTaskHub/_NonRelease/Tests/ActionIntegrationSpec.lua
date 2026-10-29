@@ -46,6 +46,8 @@ dofile("YiboCore/Runtime/Events.lua")
 dofile("YiboCore/Runtime/Registry.lua")
 dofile("YiboCore/Runtime/Contracts.lua")
 dofile("YiboCore/UI/Theme.lua")
+InCombatLockdown = InCombatLockdown or function() return false end
+dofile("_NonRelease/CoreIdentityDomainsR1/LoadClient.lua")
 dofile("YiboCore/Runtime/ItemResolver.lua")
 local Core = YiboCore
 Core.IsInitialized = function() return true end
@@ -112,6 +114,7 @@ assert(Hub.CoreIntegration:Initialize())
 Equal(#Core.Events._listeners.BUSINESS_CONTRACT_CHANGED, baselineSubscriptions + 1, "idempotent subscriptions")
 
 dofile("YiboTodo/Namespace.lua")
+dofile("YiboTodo/Locale.lua")
 for _, file in ipairs({ "Database", "Catalog/ActivityCatalog", "Catalog/CooldownGroupCatalog", "Catalog/CooldownCatalog_MoP",
     "Catalog/Ruleset_50504", "Catalog/DailyActivityCatalog_MoP", "Catalog/Validator", "Model/Schedule", "Model/State", "Providers/Registry", "Providers/DailyQuest", "Model/Snapshot", "ActionTodo", "ActionNomi", "ActionContracts" }) do
     dofile("YiboTodo/" .. file .. ".lua")

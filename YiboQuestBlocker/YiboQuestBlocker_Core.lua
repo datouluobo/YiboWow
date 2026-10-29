@@ -46,7 +46,7 @@ end
 
 local function BuildV1RealmSet()
     local realms, firstPartCounts = {}, {}
-    for _, character in ipairs(Core.Characters:GetAll()) do
+    for _, character in ipairs(Core.Characters:GetAll({ identityOnly = true })) do
         if character.realm and character.realm ~= "" then realms[character.realm] = true end
     end
     for oldKey in pairs(YiboQuestBlockerDB.knownChars or {}) do
@@ -73,7 +73,7 @@ local function BuildV1Identity(oldKey, identity, assumeRealmFirst, knownRealms)
     elseif realms[right] and not realms[left] then
         name, realm = left, right
     else
-        local current = Core.Characters:GetCurrent()
+        local current = Core.Characters:GetCurrent({ identityOnly = true })
         if current and ((left == current.realm and right == current.name) or (left == current.name and right == current.realm)) then
             name, realm = current.name, current.realm
         elseif assumeRealmFirst then
@@ -563,7 +563,7 @@ end
 
 -- 获取角色等级
 function YQB.GetCharLevel(characterID)
-    local character = Core.Characters:Get(characterID)
+    local character = Core.Characters:Get(characterID, { identityOnly = true })
     return character and character.level or 0
 end
 
@@ -1473,7 +1473,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
         if YQB.IsAutoAbandonEnabled() then
             SyncRejectedQuestsToQueue()
         end
-        if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged() end
+        if YQB.NotifyCorePageChanged then YQB.NotifyCorePageChanged(true) end
 
     elseif event == "QUEST_GREETING" or event == "GOSSIP_SHOW" then
         -- A new natural list is a new client interaction boundary.  We never

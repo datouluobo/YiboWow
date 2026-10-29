@@ -6,7 +6,7 @@ Addon.runtime = Addon.runtime or { testProjectionByCharacter = {}, snapshotsByCh
 Addon.runtime.testProjectionByCharacter = {}
 Addon.runtime.snapshotsByCharacter = {}
 Addon.NAME = "YiboLegendary"
-Addon.VERSION = "2.2.3"
+Addon.VERSION = "2.2.4"
 Addon.REQUIRED_CORE_API = 13
 
 function Addon:T(key, ...)
@@ -65,7 +65,7 @@ function Addon:GetTimestamp()
 end
 
 function Addon:GetCharacterStore()
-    local character = self.Core and self.Core.Characters:GetCurrent()
+    local character = self.Core and self.Core.Characters:GetCurrent({ identityOnly = true })
     if not character then
         return nil
     end
@@ -139,6 +139,7 @@ function Addon:Initialize()
     if not (core and core.CheckAPIVersion and core:CheckAPIVersion(self.REQUIRED_CORE_API)
         and core.HasCapability and core:HasCapability("localization", 1)
         and core:HasCapability("character-name-format", 1)
+        and core:HasCapability("character-identity", 1)
         and core:HasCapability("account-view", 2)
         and core:HasCapability("account-entry", 2)
         and core:HasCapability("account-surface-budget", 2)
@@ -157,6 +158,10 @@ function Addon:Initialize()
     local initialized = core:IsInitialized()
     if not initialized then
         self:Print(self:T("ERROR.CORE_NOT_READY", "not-ready"))
+        return
+    end
+    if type(WOW_PROJECT_MISTS_CLASSIC) ~= "number" or WOW_PROJECT_ID ~= WOW_PROJECT_MISTS_CLASSIC then
+        self:Print(self:T("ERROR.CLIENT_REQUIRED"))
         return
     end
     -- 将尚未发布的开发版存档迁移到正式名称，随后不再保存旧变量。

@@ -36,6 +36,7 @@ NS.Locale.zhCN = {
     SETTINGS_COLLECTION_STATUS = "收藏状态提示",
     SETTINGS_TITLE = "坐骑图鉴",
     CORE_REQUIRED = "YiboMounts 的 Core 设置和收藏状态功能需要 YiboCore 1.12.0 或更新版本（API 13 / localization:1）。独立来源提示仍可使用。",
+    CLIENT_REQUIRED = "此版本坐骑图鉴仅支持熊猫人之谜经典服，已停止初始化并保留存档。",
     SETTINGS_COLLECTION_STATUS_DESCRIPTION = "在坐骑收藏面板之外的坐骑提示中显示账号级收藏状态。无法可靠判定时不显示。",
     SETTINGS_COLLECTION_STATUS_COLLECTED = "显示已拥有",
     SETTINGS_COLLECTION_STATUS_UNCOLLECTED = "显示未拥有",

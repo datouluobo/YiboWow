@@ -70,6 +70,7 @@ end
 function theme:GetDataRowColor() return { 0.2, 0.3, 0.4, 1 } end
 _G.YiboCore = { UITheme = theme, Characters = { GetCurrent = function() return nil end },
     Capabilities = { Register = function() end } }
+dofile("_NonRelease/CoreIdentityDomainsR1/LoadClient.lua")
 dofile('YiboCore/Runtime/ItemResolver.lua')
 local dataRevision = 1
 _G.YiboVault = { Items = {

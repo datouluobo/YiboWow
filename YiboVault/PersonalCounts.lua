@@ -94,7 +94,7 @@ function Items:GetPersonalCounts(options)
         if not index then return nil, "index-pending" end
     end
     local result = { apiVersion = 1, revision = index.revision, characters = {} }
-    for _, character in ipairs(self._ResolveCharacters(options.scope)) do
+    for _, character in ipairs(self._ResolveCharacters(options.scope, true)) do
         local cached = index.characters[character.id] or {}
         local bags, bank, equipment = cached.bags, cached.bank, cached.equipment
         local row = {

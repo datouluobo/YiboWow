@@ -1,6 +1,8 @@
 # YiboTaskHub — 行动中心
 
-当前工作树 **0.6.0 / schema4，最低 YiboCore 1.12.0 / API 13 / localization:1 / account-entry:2 / builtin-entry-bar:1**，本地打包、尚未发布，客户端待验收。TaskHub 自有的页面、设置、悬停、HUD、状态、目标编辑与 Boss 目录静态文案均使用 Core 中英文资源；语言由 Core 账号偏好统一管理，保存偏好后重载生效。动态业务名称仍由对应来源插件提供。静态检查为 0 条未处理候选；实际英语客户端的换行、宽度与完整登录流程仍待验收。
+> 文档状态更新（2026-10-16）：当前主动添加目标与展示功能已实机验收收口；复杂任务链见DEV-003。当前源码版本与发行证据见[状态总览](../Docs/仓库当前状态总览.md)，后续任务见[延期清单](../Docs/后续开发任务清单.md)。下文旧版本的开发／待验收描述按其原日期理解；当前版本渠道状态没有明确证据时保留待核对。
+
+当前工作树 **0.6.0 / schema4，最低 YiboCore 1.12.0 / API 13 / localization:1 / account-entry:2 / builtin-entry-bar:1**。当前主动添加目标、来源与展示功能已由用户于2026-10-16确认实机验收收口；复杂任务链见[DEV-003](../Docs/后续开发任务清单.md)。最近发行记录为2026-10-12本地打包、尚未发布，当前渠道状态待核对。TaskHub 自有页面、设置、悬停、HUD、状态、目标编辑与 Boss 目录静态文案使用 Core 中英文资源；语言由 Core 账号偏好统一管理，重载后生效。动态业务名称由来源插件提供，静态报告保留当时的检查证据。
 
 清单默认空。在业务项目中键或点击 ＋ 添加，缺必要条件时补选；Core 常规设置 → 窗口可配置手势。目标管理支持编辑、暂停／恢复、确认移除、重新执行及复制预览；完成历史保留。主列表、悬停、HUD 和登录提醒共享已添加目标投影。
 
@@ -19,7 +21,7 @@
 
 当时的主动添加方案已由本文开头的0.6.0实现接替；以下版本和聚合行为仅作历史记录。
 
-![YiboTaskHub Logo](Media/YiboTaskHubIcon-v1-128.png)
+![YiboTaskHub Logo](Media/YiboTaskHubIcon-128.png)
 
 当前状态：**0.4.0 逐角色刷取目标、双向复制与 AltoBoss 联动已完成代码和自动化，客户端待核对**。最低 Core API v11 / business-services:1、business-providers:1、basic-input:1、account-view:2、character-name-format:1、account-character-admission:1、account-surface-budget:1、item-resolver:1，并检查共享角色控件、输入与业务标签页方法。Todo 1.2.0 输出全部适用待办，Mail 1.2.6-api1 输出新邮件查看提醒，AltoBoss 2.6.0 按计划输出首领／副本工作。672 项不重复检查通过；未发布，游戏内验收待执行。
 
@@ -67,9 +69,9 @@ O5 当前来源为“新邮件”，每角色最多一条查看提醒；查看�
 
 ## 品牌资源
 
-v1 图标为微斜任务卷轴、青绿推进箭头与深色六边形金属框，外围透明。`Media/` 提供 24/32/64/128/512/1024px 的 PNG 与 32 位带 Alpha TGA；无尺寸后缀的 `YiboTaskHubIcon-v1.png` / `.tga` 对应 128px。`YiboTaskHubIcon-v1-master.svg` 保存可编辑结构，手绘材质保存在位图中。
+v2 图标为青绿色六边形外框内的行动罗盘，金色指针指向右上，罗盘与外框间保留透明间隙。`Media/` 提供16/24/32/64/128/512/1024px PNG及二次幂尺寸的32位Alpha TGA；无尺寸后缀的 `YiboTaskHubIcon.png` 对应128px，`.tga` 对应64px。`YiboTaskHubIcon-master.png` 保存312px透明位图母版。
 
-TOC、账号页面与入口复用默认图标 TGA，README 使用 128px PNG。设计、像素检查和导出记录见 [Logo 设计记录](../Docs/Design/YiboTaskHub-Logo/设计记录.md)。TOC 更改须完整退出并重新进入游戏后核对插件列表。
+TOC使用128px TGA，账号页面与入口使用默认64px TGA，README使用128px PNG。统一导出与接入记录见 [系列 Logo 资源记录](../Docs/Design/Yibo系列Logo-20261014/README.md)。TOC更改须完整退出并重新进入游戏后核对插件列表。
 
 已暂定的紧凑页面参考保存在 Media：[主窗口概念](Media/TaskHub-MainWindow-Concept-v2.png)、[悬停概念](Media/TaskHub-Hover-Concept-v2.png)。概念包含示例来源任务，当前真实输出为 Todo 全部已监控且适用的专业冷却、日常与活动，以及新邮件查看提醒；相邻区域共用一条线。原审阅图留存在设计文档目录。
 
@@ -99,6 +101,10 @@ TOC、账号页面与入口复用默认图标 TGA，README 使用 128px PNG。�
 
 
 2026-10-09 Todo 1.2.0 扩展：保留专业冷却与诺米来源，新增日常与活动 Provider；全部通过现有通用消费路径接入，无中心技术名分支。布林顿账号任务聚合一次，候选角色按查询范围生成。新增 TodoSourcesSpec 177 项，连同原 359 项共 536 项通过；客户端待验收。范围、契约与操作见 [Todo 全量接入](../Docs/行动中心-Todo全量接入.md)。
+
+## 图标资源（2026-10-14）
+
+当前图标为 `Media/YiboTaskHubIcon`：默认TGA为64px，插件列表使用128px TGA；PNG提供16/24/32/64/128/512/1024px，母版为312px透明位图。版本、统一缩放和验证范围见[系列资源记录](../Docs/Design/Yibo系列Logo-20261014/README.md)。
 
 
 ## 2026-10-25 Mists 0.6.1

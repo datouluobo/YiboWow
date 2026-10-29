@@ -3,6 +3,33 @@ local Goals = {}
 Addon.Goals = Goals
 local function Copy(v) return Addon.Core.Defaults:Copy(v) end
 local function Root() return Addon.db.goals end
+function Goals:PruneHistory(now)
+    now = tonumber(now) or Addon:Now()
+    if not now or now ~= now or now <= 0 or now == math.huge then return 0 end
+    if self.historyCheckedAt and now >= self.historyCheckedAt and now - self.historyCheckedAt < 3600 then return 0 end
+    self.historyCheckedAt = now
+    local removed, cutoff = 0, now - 90 * 86400
+    for _, goal in pairs(Root().byID) do
+        local history, keep = goal.history, 0
+        if type(history) == "table" then
+            local count, length, dense = 0, #history, true
+            for key in pairs(history) do
+                count = count + 1
+                if type(key) ~= "number" or key % 1 ~= 0 or key < 1 or key > length then dense = false end
+            end
+            if dense and count == length then
+                for index, event in ipairs(history) do
+                    local at = type(event) == "table" and tonumber(event.at)
+                    if at and at >= 0 and at < cutoff then removed = removed + 1
+                    else keep = keep + 1; history[keep] = event end
+                end
+                for index = #history, keep + 1, -1 do history[index] = nil end
+            end
+        end
+    end
+    if removed > 0 then Root().revision = (Root().revision or 0) + 1 end
+    return removed
+end
 local function SameIdentity(identity, normalized)
     if identity == normalized.identity then return true end
     for _, alias in ipairs(normalized.identityAliases or {}) do if identity == alias then return true end end
@@ -18,6 +45,7 @@ function Goals:Changed(providerID)
     Addon.Contracts:Invalidate(providerID)
 end
 function Goals:List(includeRemoved, options)
+    if self.ref then self:PruneHistory() end
     local result = {}
     for _, goal in pairs(Root().byID) do if includeRemoved or goal.state ~= "removed" then
         if options and options.omitHistory then

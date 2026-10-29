@@ -1,6 +1,7 @@
 -- Actual Core contracts, target persistence, source collector and both views.
 dofile("YiboTaskHub/_NonRelease/Tests/ActionIntegrationSpec.lua")
 local Hub, Core = YiboTaskHub, YiboCore
+GetInstanceInfo = function() return "", "none", 0, "", 0, 0, false, 0 end
 local checks, now, timers = 0, 1791504000, {}
 local function Equal(a, b, label)
     checks = checks + 1; assert(a == b, (label or "value") .. ": " .. tostring(a) .. " ~= " .. tostring(b))
@@ -229,7 +230,9 @@ Equal(AutoColumns(), 1, "planned exact-difficulty union")
 local projection
 for _, col in ipairs(YAB.GetLockoutColumns(context)) do if col.plannedCatalogID then projection = col end end
 Equal(YAB.GetLockoutStatus("星河-甲", projection), "clear")
-Equal(YAB.GetLockoutStatus("星河-乙", projection), "not-applicable", "paused destination not forced into matrix")
+Equal(YAB.GetLockoutStatus("星河-乙", projection), "unknown", "observed-lockout union keeps missing character evidence unknown")
+local plannedOnly = Core.Defaults:Copy(projection); plannedOnly.fallbackColumn = nil
+Equal(YAB.GetLockoutStatus("星河-乙", plannedOnly), "not-applicable", "paused destination not forced into planned-only matrix")
 Equal(Plans:IsPlanned("星河-甲", "galleon"), true)
 local kills = Core.Defaults:Copy(YiboAltoBossDB.characters["星河-甲"].instanceLockouts)
 assert(Targets:SetAutoDisplay(false)); Flush()
@@ -248,17 +251,23 @@ local incompatible = assert(Core.Contracts:Register(Hub.NAME, { kind = "service"
 Equal(Query().coverage.A.state, "unavailable", "incompatible major ignored")
 Core.Contracts:Unregister(Hub.NAME, incompatible); assert(Targets:Initialize()); Flush(); Equal(AutoColumns(), 1)
 
--- Old raids bootstrap a complete directory from an actual complete scan.
+-- Static legacy-raid IDs resolve the current localized API label.
 saved = { { name = "红玉圣殿", mapID = 724, difficultyID = 3, bosses = {
-    { name = "哈里昂", killed = true }, { name = "测试守卫", killed = false } } } }
+    { name = "海里昂", killed = true }, { name = "测试守卫", killed = false } } } }
 YAB.RefreshInstanceLockouts(); Flush()
 local legacy = YAB.TargetCatalog:Get("instance:724")
 Equal(legacy.complete, true, "complete legacy scan opens directory")
 Equal(type(legacy.encounters[1].id), "string", "legacy business key distinct from native IDs")
-local stableLegacyID = legacy.encounters[1].id
+local stableLegacyID
+for _, boss in ipairs(legacy.encounters) do if boss.id == "raid:724:halion" then stableLegacyID = boss.id end end
+assert(stableLegacyID, "select the observed killed boss by identity, independent of catalog sort")
 assert(Targets:Put("A", { catalogID = "instance:724", difficultyID = 3, scope = "boss", encounterIDs = { stableLegacyID } }))
-Equal(Plans:Progress("A", Targets:List("A")[3]).state, "completed")
-YAB.RefreshInstanceLockouts(); Flush(); Equal(YAB.TargetCatalog:Get("instance:724").encounters[1].id, stableLegacyID)
+local legacyGoal
+for _, goal in ipairs(Targets:List("A")) do if goal.catalogID == "instance:724" then legacyGoal = goal end end
+local legacyProgress = Plans:Progress("A", assert(legacyGoal))
+Equal(legacyProgress.state, "completed", "legacy progress: " .. tostring(legacyProgress.reason))
+YAB.RefreshInstanceLockouts(); Flush()
+Equal(YAB.TargetCatalog:ResolveSavedEncounter(724, 3, "海里昂"), stableLegacyID)
 local epoch = Hub.db.bossTargets.sourceEpoch
 assert(Hub.Database:Initialize()); Equal(Hub.db.bossTargets.sourceEpoch, epoch, "reload preserves epoch and plans")
 Equal(#Targets:List("A"), 3)
@@ -270,9 +279,15 @@ local previousNow, previousWeekly, previousDaily = now, weekly, daily
 now = os.time({ year = 2026, month = 9, day = 25, hour = 12 })
 weekly, daily = now + 5000, now + 3000
 assert(Targets:Put("A", { catalogID = "holiday:coren-direbrew", scope = "all" }))
-local holiday = Targets:List("A")[4]
+local holiday
+for _, goal in ipairs(Targets:List("A")) do if goal.catalogID == "holiday:coren-direbrew" then holiday = goal end end
+assert(holiday)
 Equal(Plans:Progress("A", holiday).state, "unknown", "calendar missing is unknown")
-C_Calendar = { GetNumDayEvents = function() return 1 end, GetDayEvent = function() return { title = "Brewfest" } end }
+C_Calendar = {
+    GetMonthInfo = function() local d=os.date('*t',now); return {year=d.year,month=d.month} end,
+    GetNumDayEvents = function() return 1 end,
+    GetDayEvent = function() return { title = os.date('*t',now).month==9 and "Brewfest" or "Other holiday" } end,
+}
 GetLFGDungeonRewards = function() return false end
 YiboAltoBossDB.settings.showHolidayBosses = false
 Plans:Observe(); Flush(); Equal(Plans:Progress("A", holiday).state, "ready", "manual holiday visibility independent")
@@ -336,14 +351,14 @@ local cell = Core.UITheme:CreateButton(CreateFrame("Frame"), 88, "")
 local galleon = { key = "galleon", name = "炮舰" }
 flags[32098] = true; Plans:Observe(); Flush()
 render(cell, "available", "星河-甲", galleon)
-Equal(cell.label:GetText(), "已完成·目标", "matrix and action source share completion even when manual tracking was off")
+Equal(cell.label:GetText(), Core.Locale:Get("YiboAltoBoss", "UI.GOAL_STATE_COMPLETED"), "matrix and action source share completion even when manual tracking was off")
 Equal(type(cell.scripts.OnClick), "function", "verified status supports the additive goal gesture")
 flags[32098] = false; Plans:Observe(); Flush()
 render(cell, "killed", "星河-甲", galleon)
-Equal(cell.label:GetText(), "待刷取·目标", "manual kill label does not replace reward evidence")
+Equal(cell.label:GetText(), Core.Locale:Get("YiboAltoBoss", "UI.GOAL_STATE_READY"), "manual kill label does not replace reward evidence")
 YiboAltoBossDB.characters["星河-甲"].targetObservations.galleon = nil
 render(cell, "available", "星河-甲", galleon)
-Equal(cell.label:GetText(), "待核实·目标", "unknown remains unknown in source matrix")
+Equal(cell.label:GetText(), Core.Locale:Get("YiboAltoBoss", "UI.GOAL_STATE_UNCONFIRMED"), "unknown remains unknown in source matrix")
 assert(Targets:SetAutoDisplay(false)); Flush()
 render(cell, "killed", "星河-甲", galleon)
 Equal(cell.label:GetText(), "已击杀", "display off restores manual status")

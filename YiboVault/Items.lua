@@ -59,7 +59,7 @@ end
 local function ResolveCharacters(scope, identityOnly)
     local core = Addon.Core
     if scope == nil then
-        local current = core.Characters:GetCurrent()
+        local current = core.Characters:GetCurrent(identityOnly and { identityOnly = true } or nil)
         return current and { current } or {}
     end
     -- Explicit character scopes only need public identity, never unrelated domains.

@@ -5,6 +5,10 @@ function GetLocale()
 end
 
 local namespace = {}
+WOW_PROJECT_MISTS_CLASSIC, WOW_PROJECT_ID = 19, 19
+CreateFrame = CreateFrame or function()
+    return { RegisterEvent = function() end, SetScript = function(self, name, fn) self[name] = fn end }
+end
 
 local function Load(relativePath)
     local chunk = assert(loadfile(root .. "/" .. relativePath))
@@ -20,6 +24,7 @@ Load("SourceFormatter.lua")
 Load("Probe.lua")
 Load("InventoryProbe.lua")
 Load("Mists/AuraTooltip.lua")
+Load("Mists/CollectionState.lua")
 Load("Tooltip.lua")
 Load("CoreIntegration.lua")
 Load("_NonRelease/Tests/FormatterSmoke.lua")

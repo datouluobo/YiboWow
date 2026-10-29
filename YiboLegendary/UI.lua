@@ -72,7 +72,7 @@ local function TargetIcon(target)
         local icon = GetItemIcon(itemID)
         if icon then return icon end
     end
-    return "Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon-v1"
+    return "Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon"
 end
 local function PreviewTargetWidths(target, roster)
     -- Keep the natural width required by both the header and the values shown
@@ -97,7 +97,7 @@ end
 function UI:GetEligibleCharacters(characters)
     local result = {}
     self._eligibleCharacterIDs = self._eligibleCharacterIDs or {}
-    for _, character in ipairs(characters or Addon.Core.Characters:GetAll()) do
+    for _, character in ipairs(characters or Addon.Core.Characters:GetAll({ identityOnly = true })) do
         local store = Addon.db.byCharacter[character.id]
         local snapshot = Addon.runtime.snapshotsByCharacter[character.id] or (store and store.snapshot)
         if (character.level or 0) >= 90 and (snapshot or self._eligibleCharacterIDs[character.id]) then
@@ -130,7 +130,7 @@ function UI:GetMainRoster(context, previousRoster)
     if #roster > 0 then return roster end
     if previousRoster and #previousRoster > 0 then return previousRoster end
     if Addon.Core.Characters and Addon.Core.Characters.GetAll then
-        for _, character in ipairs(Addon.Core.Characters:GetAll()) do
+        for _, character in ipairs(Addon.Core.Characters:GetAll({ identityOnly = true })) do
             if (character.level or 0) >= 90 then
                 local store = Addon.db.byCharacter[character.id]
                 roster[#roster + 1] = { character = character, snapshot = Addon.runtime.snapshotsByCharacter[character.id] or (store and store.snapshot) }
@@ -465,7 +465,7 @@ function UI:RefreshMain(context)
     if target.id == "CLOAK" then lines = { Addon:T("ROUTE.CLOAK_1"), Addon:T("ROUTE.CLOAK_2") } else for _, node in ipairs(target.nodes or {}) do lines[#lines + 1] = node.title .. " · " .. (node.boss or Addon:T("ROUTE.QUEST_MATERIALS")) end end
     if #lines == 0 then lines = { target.routeDescription or Addon:T("ROUTE.FALLBACK") } end
     page.detail.route:SetText(table.concat(lines, "\n"))
-    local currentCharacter = Addon.Core.Characters:GetCurrent()
+    local currentCharacter = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     for index, item in ipairs(roster) do
         local row = page.detail.rows[index] or self:CreateMainRow(page, index); local state = DisplayState(item.snapshot, target); local meta = StateMeta(state)
         local bg = Theme:GetDataRowColor(index); row.bg:SetColorTexture(bg[1], bg[2], bg[3], bg[4]); Theme:SetCurrentCharacterOutline(row.outline, currentCharacter and item.character.id == currentCharacter.id)
@@ -545,7 +545,7 @@ function UI:RefreshPreview(context)
         cell:ClearAllPoints(); cell:SetPoint("LEFT", offset, 0); cell:SetSize(Theme:GetTableCellContentWidth(field.previewMinWidth), Theme.Table.headerHeight); cell:Show(); field.yiboOffset=offset; rendered[field.id]=true; offset=offset+field.previewMinWidth
     end
     for id, cell in pairs(page.header.cells) do if not rendered[id] then cell:Hide() end end
-    local currentCharacter = Addon.Core.Characters:GetCurrent()
+    local currentCharacter = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     for index,item in ipairs(roster) do
         local row = page.rows[index] or self:CreatePreviewRow(index); local bg = Theme:GetDataRowColor(index); row.bg:SetColorTexture(bg[1],bg[2],bg[3],bg[4]); Theme:SetCurrentCharacterOutline(row.outline,currentCharacter and item.character.id==currentCharacter.id)
         -- Cells and column tints share Core's left inset. The row itself is
@@ -627,7 +627,7 @@ end
 
 function UI:Initialize()
     local page, pageError = Addon.Core.AccountView:RegisterPage(Addon.NAME, {
-        id="legendary", title=Addon:T("PAGE.TITLE"), icon="Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon-v1",
+        id="legendary", title=Addon:T("PAGE.TITLE"), icon="Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon",
         order=20, defaultEnabled=true, previewEnabled=true, scope={mode="realms",allTitle=Addon:T("PAGE.ALL_REALMS")},
         characterFilter={
             defaultExpression="", GetExpression=function() return Addon.db.settings.levelExpr or "" end,
@@ -668,7 +668,7 @@ function UI:Initialize()
     if not page then Addon:Print(Addon:T("ERROR.CORE_REGISTRATION",tostring(pageError))); return end
     local entry, entryError = Addon.Core.Entry:RegisterBusinessEntry(Addon.NAME, {
         id="YiboLegendary", brokerName="YiboLegendary", pageID="legendary", text=Addon:T("ENTRY.TEXT"),
-        icon="Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon-v1",
+        icon="Interface\\AddOns\\YiboLegendary\\Media\\YiboLegendaryIcon",
         defaultChannels={minimap=false,broker=false,builtinBar=false},
     })
     if not entry then Addon:Print(Addon:T("ERROR.CORE_REGISTRATION",tostring(entryError))); return end

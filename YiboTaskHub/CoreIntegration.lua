@@ -1,7 +1,7 @@
 local Addon = _G.YiboTaskHub
 local Integration = {}
 Addon.CoreIntegration = Integration
-local ICON = "Interface\\AddOns\\YiboTaskHub\\Media\\YiboTaskHubIcon-v1"
+local ICON = "Interface\\AddOns\\YiboTaskHub\\Media\\YiboTaskHubIcon"
 
 function Integration:Initialize()
     if self.initialized then return true end

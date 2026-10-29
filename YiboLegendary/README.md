@@ -1,8 +1,12 @@
 # YiboLegendary — 传说之路
 
+2026-10-30：[性能修复](../Docs/其它插件-性能修复-2026-10-30.md)改用轻量角色身份，启动新增检查 `character-identity:1` 与实际 Mists 身份；货币累计和原存档保持。新字节离线通过，实机待验。
+
+> 文档状态更新（2026-10-16）：现有功能已实机验收收口；任务文本完整英文适配见DEV-001。当前源码版本与发行证据见[状态总览](../Docs/仓库当前状态总览.md)，后续任务见[延期清单](../Docs/后续开发任务清单.md)。下文旧版本的开发／待验收描述按其原日期理解；当前版本渠道状态没有明确证据时保留待核对。
+
 当前工作树版本：**2.2.3**。统一矩阵预算已通过离线回归，用户于2026-10-16确认实机检查无问题；尚未打包发布。 请配套使用 **YiboCore 1.12.6 / API13**，启动时检查 `account-surface-budget:2` 及实际方法。
 
-当前工作树版本为 **2.2.3**，最低依赖 **YiboCore API v13**，并要求 `localization:1`、`character-name-format:1`、`account-view:2` 与 `account-entry:2`。插件通过统一账号页追踪多角色的传说装备进度，使用 `/yle` 打开。
+当前工作树版本为 **2.2.3**，最低依赖 **YiboCore API v13**，并要求 `localization:1`、`character-name-format:1`、`character-identity:1`、`account-view:2` 与 `account-entry:2`。插件通过统一账号页追踪多角色的传说装备进度，使用 `/yle` 打开。
 
 ## 功能范围
 
@@ -21,5 +25,11 @@
 ## 反馈与验证
 
 请报告客户端版本、角色、传说目标、插件/Core 版本及可复现步骤。自动化验证和当前客户端待验收项目记录在对应开发文档中。
+
+## 图标资源（2026-10-14）
+
+当前图标为 `Media/YiboLegendaryIcon`：默认TGA为64px，插件列表使用128px TGA；PNG提供16/24/32/64/128/512/1024px，母版为312px透明位图。版本、统一缩放和验证范围见[系列资源记录](../Docs/Design/Yibo系列Logo-20261014/README.md)。
+
+![YiboLegendary 图标](Media/YiboLegendaryIcon-128.png)
 
 2026-10-16 未发布工作树：目标列悬停矩阵已接入Core统一滚动预算，要求API13／`account-surface-budget:2`及`AccountView:GetScrollSurfaceWidth`。Core决定滚动槽、自然窗口宽度和必要分页；版本／方法不足时提示升级并停止初始化。代码和离线回归通过，实机待验；本轮未更新版本或发布。见[统一接入与验收](../YiboCore/Docs/矩阵预算统一接入-实施与验收.md)。

@@ -94,31 +94,26 @@ local function HideAllMinimapSegments()
 end
 
 local function ResetDebugStats()
-    minimapState.debugStats = {
-        initialized = minimapState.initialized or false,
-        visible = YBP and YBP.db and YBP.db.visible or false,
-        cacheBuilt = minimapState.cacheBuilt or false,
-        hasHBD = HBD ~= nil,
-        hasMinimap = Minimap ~= nil,
-        refreshes = (minimapState.debugStats and minimapState.debugStats.refreshes or 0) + 1,
-        contextOK = false,
-        activeRouteMapID = nil,
-        routeCount = 0,
-        totalSegments = 0,
-        drawnSegments = 0,
-        footprintCandidates = 0,
-        drawnFootprints = 0,
-        clippedSegments = 0,
-        skippedInstanceMismatch = 0,
-        currentMapID = nil,
-        instanceID = nil,
-        radius = nil,
-        overlayWidth = minimapState.overlay and minimapState.overlay:GetWidth() or nil,
-        overlayHeight = minimapState.overlay and minimapState.overlay:GetHeight() or nil,
-        reason = nil,
-    }
-    return minimapState.debugStats
+    local stats = minimapState.debugStats
+    local refreshes = (stats.refreshes or 0) + 1
+    wipe(stats)
+    stats.initialized = minimapState.initialized or false
+    stats.visible = YBP and YBP.db and YBP.db.visible or false
+    stats.cacheBuilt = minimapState.cacheBuilt or false
+    stats.hasHBD = HBD ~= nil
+    stats.hasMinimap = Minimap ~= nil
+    stats.refreshes = refreshes
+    stats.contextOK = false
+    stats.routeCount, stats.totalSegments, stats.drawnSegments = 0, 0, 0
+    stats.footprintCandidates, stats.drawnFootprints, stats.clippedSegments = 0, 0, 0
+    stats.skippedInstanceMismatch = 0
+    stats.overlayWidth = minimapState.overlay and minimapState.overlay:GetWidth() or nil
+    stats.overlayHeight = minimapState.overlay and minimapState.overlay:GetHeight() or nil
+    return stats
 end
+
+-- Reused only inside the synchronous minimap pass; never exposed to consumers.
+local transformContext = {}
 
 local function GetMinimapRadius()
     if C_Minimap and C_Minimap.GetViewRadius then
@@ -355,6 +350,9 @@ local function TrimUnusedSegmentSlots()
 end
 
 local function ClipLineToCircle(x1, y1, x2, y2, radius)
+    -- Reject wholly off-screen segments before quadratic clipping work.
+    if (x1 > radius and x2 > radius) or (x1 < -radius and x2 < -radius)
+        or (y1 > radius and y2 > radius) or (y1 < -radius and y2 < -radius) then return nil end
     local r2 = radius * radius
     local inside1 = (x1 * x1 + y1 * y1) <= r2
     local inside2 = (x2 * x2 + y2 * y2) <= r2
@@ -419,19 +417,12 @@ local function GetRouteTransformContext()
     local mapSin = rotate and sin(facing) or 0
     local mapCos = rotate and cos(facing) or 1
 
-    return {
-        currentMapID = currentMapID,
-        playerWorldX = playerX,
-        playerWorldY = playerY,
-        instanceID = instanceID,
-        radius = radius,
-        halfWidth = halfWidth,
-        halfHeight = halfHeight,
-        rotate = rotate,
-        facing = facing or 0,
-        mapSin = mapSin,
-        mapCos = mapCos,
-    }
+    local context = transformContext
+    context.currentMapID, context.playerWorldX, context.playerWorldY = currentMapID, playerX, playerY
+    context.instanceID, context.radius = instanceID, radius
+    context.halfWidth, context.halfHeight = halfWidth, halfHeight
+    context.rotate, context.facing, context.mapSin, context.mapCos = rotate, facing or 0, mapSin, mapCos
+    return context
 end
 
 local function ToMinimapNormalizedFromWorldPoint(point, context)
@@ -545,6 +536,36 @@ local function BuildScreenSmoothedPoints(points)
     return smoothed
 end
 
+-- Translation commutes with projection and smoothing. Keep the expensive
+-- normalized geometry at world origin and only translate it while moving.
+local function ProjectedGroups(route, context)
+    local cached = route.projection
+    if cached and cached.radius == context.radius and cached.instanceID == context.instanceID then
+        return cached.groups
+    end
+    local origin = {
+        playerWorldX = 0, playerWorldY = 0, instanceID = context.instanceID,
+        radius = context.radius, rotate = false, mapSin = 0, mapCos = 1,
+    }
+    local groups, points, segmentIndex, color, skipped = {}, {}, nil, route.color or {}, 0
+    local function Flush()
+        if #points >= 2 then groups[#groups + 1] = { points = BuildScreenSmoothedPoints(points), color = color } end
+        points = {}
+    end
+    for _, segment in ipairs(route.segments) do
+        if segmentIndex and segmentIndex ~= segment.segmentIndex then Flush() end
+        segmentIndex, color = segment.segmentIndex, segment.color or route.color or {}
+        local first = AppendProjectedPoint(points, segment.startPoint, origin)
+        local last = AppendProjectedPoint(points, segment.endPoint, origin)
+        if not first or not last then skipped = skipped + 1; Flush(); segmentIndex = nil end
+    end
+    Flush()
+    route.projection = { radius = context.radius, facing = context.facing, rotate = context.rotate,
+        instanceID = context.instanceID, groups = groups }
+    route.skippedInstanceMismatch = skipped
+    return groups
+end
+
 local function DrawMinimapScreenLine(self, stats, route, color, lineThickness, nx1, ny1, nx2, ny2, context)
     local cx1, cy1, cx2, cy2 = ClipLineToCircle(nx1, ny1, nx2, ny2, MINIMAP_ROUTE_CLIP_RADIUS)
     if not cx1 or not cy1 or not cx2 or not cy2 then
@@ -584,16 +605,10 @@ end
 
 local function BuildRefreshSignature(context)
     local facingBucket = context.rotate and math.floor(((context.facing or 0) * 180 / math.pi) + 0.5) or 0
-    return table.concat({
-        tostring(context.currentMapID),
-        tostring(context.instanceID),
-        string.format("%.1f", context.playerWorldX),
-        string.format("%.1f", context.playerWorldY),
-        tostring(Minimap:GetZoom() or 0),
-        tostring(facingBucket),
-        tostring(GetCVar("rotateMinimap") or "0"),
-        string.format("%.1f", context.radius),
-    }, ":")
+    return string.format("%s:%s:%.1f:%.1f:%s:%s:%s:%.1f",
+        tostring(context.currentMapID), tostring(context.instanceID),
+        context.playerWorldX, context.playerWorldY, tostring(Minimap:GetZoom() or 0),
+        tostring(facingBucket), tostring(GetCVar("rotateMinimap") or "0"), context.radius)
 end
 
 local function ResolveActiveRouteMapID(currentMapID)
@@ -613,29 +628,41 @@ local function ResolveActiveRouteMapID(currentMapID)
 end
 
 local function CollectVisibleFootprints(routes, context)
-    local candidates = {}
+    local candidateCount, visible = 0, {}
     local limit = (YBP and YBP.GetMinimapNearbyPointLimit and YBP:GetMinimapNearbyPointLimit()) or 6
 
     for _, route in ipairs(routes or {}) do
-        local points = YBP and YBP.GetFootprintsForPet and YBP:GetFootprintsForPet(route.petID, false) or nil
+        local points = route.footprints
+        if not points then
+            points = {}
+            local complete = true
+            local source = YBP and YBP.GetFootprintsForPet and YBP:GetFootprintsForPet(route.petID, false) or {}
+            for _, point in ipairs(source) do
+                if point.mapID == route.mapID then
+                    local x, y, instanceID = HBD:GetWorldCoordinatesFromZone(point.x, point.y, point.mapID)
+                    if x and y and instanceID then
+                        points[#points + 1] = { worldX = x, worldY = y, instanceID = instanceID }
+                    else complete = false end
+                end
+            end
+            if complete then route.footprints = points end
+        end
         local color = YBP and YBP.GetRouteLayerColor and YBP:GetRouteLayerColor(route.petID, "footprint") or { 1.00, 0.84, 0.10, 0.95 }
         for _, point in ipairs(points or {}) do
-            if point.mapID == route.mapID then
-                local worldX, worldY, instanceID = HBD:GetWorldCoordinatesFromZone(point.x, point.y, point.mapID)
+            do
+                local worldX, worldY, instanceID = point.worldX, point.worldY, point.instanceID
                 if worldX and worldY and instanceID == context.instanceID then
-                    local nx, ny = ToMinimapNormalizedFromWorldPoint({
-                        worldX = worldX,
-                        worldY = worldY,
-                    }, context)
+                    local nx, ny = ToMinimapNormalizedFromWorldPoint(point, context)
                     if nx and ny then
                         local distance = sqrt((nx * nx) + (ny * ny))
                         if distance <= MINIMAP_ROUTE_CLIP_RADIUS then
-                            candidates[#candidates + 1] = {
-                                nx = nx,
-                                ny = ny,
-                                distance = distance,
-                                color = color,
-                            }
+                            candidateCount = candidateCount + 1
+                            if limit > 0 and (#visible < limit or distance < visible[#visible].distance) then
+                                local index = #visible + 1
+                                while index > 1 and visible[index - 1].distance > distance do index = index - 1 end
+                                table.insert(visible, index, { nx = nx, ny = ny, distance = distance, color = color })
+                                if #visible > limit then visible[#visible] = nil end
+                            end
                         end
                     end
                 end
@@ -643,16 +670,7 @@ local function CollectVisibleFootprints(routes, context)
         end
     end
 
-    table.sort(candidates, function(a, b)
-        return a.distance < b.distance
-    end)
-
-    local visible = {}
-    for index = 1, min(#candidates, limit) do
-        visible[index] = candidates[index]
-    end
-
-    return candidates, visible
+    return candidateCount, visible
 end
 
 function YBP:InitializeMinimapRenderer()
@@ -759,55 +777,36 @@ function YBP:RefreshMinimapLayer(force)
     stats.routeCount = #routes
 
     minimapState.activeCount = 0
+    minimapState.activeFootprintCount = 0
 
+    local offsetX, offsetY = context.playerWorldX, context.playerWorldY
+    if context.rotate then
+        offsetX, offsetY = offsetX * context.mapCos - offsetY * context.mapSin,
+            offsetX * context.mapSin + offsetY * context.mapCos
+    end
+    offsetX, offsetY = offsetX / context.radius, offsetY / context.radius
     for _, route in ipairs(routes) do
         stats.totalSegments = stats.totalSegments + #route.segments
         local minimapTransform = self.GetResolvedMinimapTransform and self:GetResolvedMinimapTransform(route.petID) or nil
         local lineThickness = minimapTransform and minimapTransform.minimapLineThickness or 1.0
-        local currentSegmentIndex
-        local currentPoints = {}
-        local currentColor = route.color or {}
-
-        local function FlushCurrentPoints()
-            if #currentPoints < 2 then
-                currentPoints = {}
-                return
-            end
-
-            local smoothedPoints = BuildScreenSmoothedPoints(currentPoints)
-            for pointIndex = 1, (#smoothedPoints - 1) do
-                local startPoint = smoothedPoints[pointIndex]
-                local endPoint = smoothedPoints[pointIndex + 1]
-                DrawMinimapScreenLine(self, stats, route, currentColor, lineThickness, startPoint.nx, startPoint.ny, endPoint.nx, endPoint.ny, context)
-            end
-            currentPoints = {}
-        end
-
-        for _, segment in ipairs(route.segments) do
-            local sameRouteSegment = currentSegmentIndex == segment.segmentIndex
-            if currentSegmentIndex and not sameRouteSegment then
-                FlushCurrentPoints()
-            end
-
-            currentSegmentIndex = segment.segmentIndex
-            currentColor = segment.color or route.color or {}
-
-            local appendedStart = AppendProjectedPoint(currentPoints, segment.startPoint, context)
-            local appendedEnd = AppendProjectedPoint(currentPoints, segment.endPoint, context)
-            if not appendedStart or not appendedEnd then
-                stats.skippedInstanceMismatch = stats.skippedInstanceMismatch + 1
-                FlushCurrentPoints()
-                currentSegmentIndex = nil
-            else
-                currentSegmentIndex = segment.segmentIndex
+        if force then route.footprints = nil end
+        for _, group in ipairs(ProjectedGroups(route, context)) do
+            for index = 1, #group.points - 1 do
+                local a, b = group.points[index], group.points[index + 1]
+                local ax, ay, bx, by = a.nx, a.ny, b.nx, b.ny
+                if context.rotate then
+                    ax, ay = ax * context.mapCos - ay * context.mapSin, ax * context.mapSin + ay * context.mapCos
+                    bx, by = bx * context.mapCos - by * context.mapSin, bx * context.mapSin + by * context.mapCos
+                end
+                DrawMinimapScreenLine(self, stats, route, group.color, lineThickness,
+                    ax + offsetX, ay + offsetY, bx + offsetX, by + offsetY, context)
             end
         end
-
-        FlushCurrentPoints()
+        stats.skippedInstanceMismatch = stats.skippedInstanceMismatch + (route.skippedInstanceMismatch or 0)
     end
 
     local footprintCandidates, visibleFootprints = CollectVisibleFootprints(routes, context)
-    stats.footprintCandidates = #footprintCandidates
+    stats.footprintCandidates = footprintCandidates
     for _, footprint in ipairs(visibleFootprints) do
         local slot = AcquireFootprintSlot()
         slot:ClearAllPoints()

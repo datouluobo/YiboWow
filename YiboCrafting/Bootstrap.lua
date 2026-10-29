@@ -7,6 +7,7 @@ end
 
 function Addon:Initialize()
     if self.initialized then return true end
+    if self.CLIENT_SUPPORTED==false then return nil,Core.Locale:Get(self.NAME,"FOREVER.WRONG_MANIFEST") end
     if not (Core and Core.CheckAPIVersion and Core:CheckAPIVersion(13) and Core.HasCapability and Core.Locale) then
         return nil, self.STARTUP_REQUIREMENTS
     end
@@ -75,23 +76,39 @@ frame:RegisterEvent("SPELLS_CHANGED")
 -- probe treats it as optional, so registration must not prevent addon startup.
 pcall(frame.RegisterEvent, frame, "TRADE_SKILL_LIST_UPDATE")
 
-local scanSequence = 0
-local pendingStateReason
+local pendingStateReason, pendingScanReason, scanDue, scanQueued, scanWakeAt, scanTicket, scanTimer
+local function ScanClock() return GetTime and GetTime() or GetServerTime and GetServerTime() or 0 end
+local function ArmScan(delay, callback)
+    if C_Timer.NewTimer then return C_Timer.NewTimer(delay, callback) end
+    C_Timer.After(delay, callback)
+end
 local function ScheduleRecipeScan(reason, delay)
     if reason == "PLAYER_LOGIN" or reason == "TRADE_SKILL_SHOW"
         or reason == "NEW_RECIPE_LEARNED" or reason == "SPELLS_CHANGED" then
         pendingStateReason = reason
     end
-    scanSequence = scanSequence + 1
-    local scheduledSequence = scanSequence
+    pendingScanReason, scanDue = reason, ScanClock() + delay
+    if scanQueued and scanWakeAt <= scanDue then return end
+    if scanTimer then scanTimer:Cancel() end
+    local ticket = {}
+    scanTicket, scanWakeAt = ticket, scanDue
+    scanQueued = true
     local function Run()
-        if scheduledSequence ~= scanSequence or not Addon.initialized then return end
-        Addon.Collector:Scan(reason)
-        local stateReason = pendingStateReason or reason
-        pendingStateReason = nil
+        if scanTicket ~= ticket then return end
+        if not Addon.initialized then scanQueued = nil; return end
+        local remaining = scanDue - ScanClock()
+        if remaining > 0.000001 and C_Timer and C_Timer.After then
+            scanWakeAt = scanDue
+            scanTimer = ArmScan(remaining, Run)
+            return
+        end
+        local latestReason, stateReason = pendingScanReason, pendingStateReason or pendingScanReason
+        scanQueued, pendingScanReason, pendingStateReason, scanDue = nil, nil, nil, nil
+        scanTicket, scanTimer, scanWakeAt = nil, nil, nil
+        Addon.Collector:Scan(latestReason)
         if Addon.RecipeStateScanner then Addon.RecipeStateScanner:Start(stateReason) end
     end
-    if C_Timer and C_Timer.After then C_Timer.After(delay, Run) else Run() end
+    if C_Timer and C_Timer.After then scanTimer = ArmScan(delay, Run) else Run() end
 end
 
 frame:SetScript("OnEvent", function(_, event)

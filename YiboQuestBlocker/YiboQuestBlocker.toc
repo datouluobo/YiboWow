@@ -6,7 +6,7 @@
 ## Notes-zhCN: 任务屏蔽管理器 - 自动拒绝指定任务
 ## Notes-zhTW: 任務封鎖管理器 - 自動拒絕指定任務
 ## Author: Reasonix
-## Version: 3.1.1
+## Version: 3.1.2
 ## IconTexture: Interface\AddOns\YiboQuestBlocker\Media\YiboQuestBlockerIcon-128
 ## SavedVariables: YiboQuestBlockerDB
 ## RequiredDeps: YiboCore

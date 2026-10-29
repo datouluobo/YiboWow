@@ -1,0 +1,42 @@
+{
+  "archived_on": "2026-10-14",
+  "addon": "YiboMounts",
+  "archive": "v1",
+  "files": [
+    {
+      "file": "YiboMountsIcon-v1-128.png",
+      "original_version": "1",
+      "original_path": "YiboMounts/Media/YiboMountsIcon-v1-128.png"
+    },
+    {
+      "file": "YiboMountsIcon-v1-16.png",
+      "original_version": "1",
+      "original_path": "YiboMounts/Media/YiboMountsIcon-v1-16.png"
+    },
+    {
+      "file": "YiboMountsIcon-v1-31.png",
+      "original_version": "1",
+      "original_path": "YiboMounts/Media/YiboMountsIcon-v1-31.png"
+    },
+    {
+      "file": "YiboMountsIcon-v1-32.png",
+      "original_version": "1",
+      "original_path": "YiboMounts/Media/YiboMountsIcon-v1-32.png"
+    },
+    {
+      "file": "YiboMountsIcon-v1-64.png",
+      "original_version": "1",
+      "original_path": "YiboMounts/Media/YiboMountsIcon-v1-64.png"
+    },
+    {
+      "file": "YiboMountsIcon-v1.png",
+      "original_version": "1",
+      "original_path": "YiboMounts/Media/YiboMountsIcon-v1.png"
+    },
+    {
+      "file": "YiboMountsIcon-v1.tga",
+      "original_version": "1",
+      "original_path": "YiboMounts/Media/YiboMountsIcon-v1.tga"
+    }
+  ]
+}

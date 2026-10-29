@@ -44,6 +44,7 @@ dofile("YiboCore/Runtime/Events.lua")
 dofile("YiboCore/Runtime/Registry.lua")
 dofile("YiboCore/Runtime/Contracts.lua")
 dofile("YiboCore/UI/Theme.lua")
+dofile("_NonRelease/CoreIdentityDomainsR1/LoadClient.lua")
 dofile("YiboCore/Runtime/ItemResolver.lua")
 local Core = YiboCore
 Core.IsInitialized = function() return true end

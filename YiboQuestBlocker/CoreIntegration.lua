@@ -53,6 +53,7 @@ function Integration:Initialize()
     if not compatible then return nil, YQB.T("CORE.UPGRADE") end
     if not (Core.HasCapability and Core:HasCapability("localization", 1)
         and Core:HasCapability("character-name-format", 1)
+        and Core:HasCapability("character-identity", 1)
         and Core:HasCapability("basic-input", 1)
         and Core:HasCapability("account-view", 2)
         and Core:HasCapability("account-entry", 2)
@@ -134,7 +135,20 @@ function Integration:Initialize()
     return true
 end
 
-function YQB.NotifyCorePageChanged()
+local pageNotification
+function YQB.NotifyCorePageChanged(coalesce)
+    if coalesce and C_Timer and C_Timer.After then
+        if pageNotification then return end
+        local ticket = {}
+        pageNotification = ticket
+        C_Timer.After(0, function()
+            if pageNotification ~= ticket then return end
+            pageNotification = nil
+            if Core.AccountView then Core.AccountView:NotifyPageChanged(PAGE_ID) end
+        end)
+        return
+    end
+    pageNotification = nil
     if Core.AccountView then Core.AccountView:NotifyPageChanged(PAGE_ID) end
 end
 

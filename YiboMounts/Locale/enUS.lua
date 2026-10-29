@@ -36,6 +36,7 @@ NS.Locale.enUS = {
     SETTINGS_COLLECTION_STATUS = "Collection status tooltips",
     SETTINGS_TITLE = "Mount Collection",
     CORE_REQUIRED = "YiboMounts Core settings and collection status require YiboCore 1.12.0 or newer (API 13 / localization:1). Standalone source tooltips remain available.",
+    CLIENT_REQUIRED = "This YiboMounts build requires Mists Classic. Initialization stopped; saved data was retained.",
     SETTINGS_COLLECTION_STATUS_DESCRIPTION = "Show account-wide collection status on mount tooltips outside the Mount Journal. Unknown states remain hidden.",
     SETTINGS_COLLECTION_STATUS_COLLECTED = "Show collected",
     SETTINGS_COLLECTION_STATUS_UNCOLLECTED = "Show not collected",

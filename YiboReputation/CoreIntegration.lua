@@ -78,6 +78,7 @@ function Addon:RefreshPage(parent,context)
 end
 function Integration:Initialize()
  if self.initialized then return true end
+ if Addon.CLIENT_SUPPORTED == false then return nil,Addon:T("FOREVER.WRONG_MANIFEST") end
  if not HasCoreRequirements() then return nil,Addon:T("ERROR.CORE_REQUIRED") end
  if not Core:IsInitialized() then return nil,Addon:T("ERROR.CORE_NOT_READY") end
  local handedOff, handoffError=Addon.Migration:CheckCoreHandoff()

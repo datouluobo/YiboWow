@@ -41,7 +41,7 @@ local function StatusCheck(parent)
 end
 
 local function CharacterDisplayName(characterID)
-    local character = Core.Characters:Get(characterID)
+    local character = Core.Characters:Get(characterID, { identityOnly = true })
     if not character then return "?" end
     return Core.Characters:FormatName(character, { nameMode = "short" }) or character.name or "?"
 end
@@ -79,7 +79,7 @@ local function SetGroupExpanded(instance, groupKey, expanded)
 end
 
 local function ClassColor(characterID)
-    local character = _G.YiboCore.Characters:Get(characterID)
+    local character = _G.YiboCore.Characters:Get(characterID, { identityOnly = true })
     local class = character and character.class
     return class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class] or COLORS.text
 end

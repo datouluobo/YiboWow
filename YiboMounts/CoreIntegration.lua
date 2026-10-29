@@ -96,7 +96,7 @@ function Integration:Initialize()
     local panel, panelError = Core:RegisterSettingsPanel(NS.NAME, {
         id = SETTINGS_ID,
         title = NS:L("SETTINGS_TITLE"),
-        icon = "Interface\\AddOns\\YiboMounts\\Media\\YiboMountsIcon-v1",
+        icon = "Interface\\AddOns\\YiboMounts\\Media\\YiboMountsIcon",
         CreateSettingsPanel = function(parent, context) return self:CreateSettingsPanel(parent, context) end,
     })
     if not panel then

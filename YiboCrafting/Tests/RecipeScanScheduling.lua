@@ -1,8 +1,10 @@
 local handler, queue, reasons = nil, {}, {}
+local clock = 0
+GetTime = function() return clock end
 function CreateFrame()
     return { RegisterEvent = function() end, SetScript = function(_, _, callback) handler = callback end }
 end
-C_Timer = { After = function(_, callback) queue[#queue + 1] = callback end }
+C_Timer = { After = function(delay, callback) queue[#queue + 1] = { at = clock + delay, callback = callback } end }
 YiboCore = {}
 YiboCrafting = {
     initialized = true,
@@ -10,7 +12,12 @@ YiboCrafting = {
     RecipeStateScanner = { Start = function(_, reason) reasons[#reasons + 1] = reason end },
 }
 dofile("YiboCrafting/Bootstrap.lua")
-local function Drain() while #queue > 0 do table.remove(queue, 1)() end end
+local function Drain()
+    while #queue > 0 do
+        table.sort(queue, function(a,b) return a.at < b.at end)
+        local timer = table.remove(queue, 1); clock = timer.at; timer.callback()
+    end
+end
 handler(nil, "NEW_RECIPE_LEARNED")
 handler(nil, "TRADE_SKILL_UPDATE")
 handler(nil, "TRADE_SKILL_LIST_UPDATE")

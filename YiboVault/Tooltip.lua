@@ -165,7 +165,7 @@ function Tooltip:Append(tooltip, knownItemID)
         and not (hiddenResult and #hiddenResult.records > 0) then return end
 
     local byCharacter, guilds = {}, {}
-    local current = Addon.Core and Addon.Core.Characters:GetCurrent()
+    local current = Addon.Core and Addon.Core.Characters:GetCurrent({ identityOnly = true })
     for _, record in ipairs(result.records) do
         if record.source == "guild-bank" then
             local key = record.guildKey or "guild"

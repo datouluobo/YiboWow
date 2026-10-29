@@ -1207,7 +1207,7 @@ function Page:Register()
     local entry, entryError = Core.Entry:RegisterBusinessEntry(Addon.NAME, {
         id = "ycr", brokerName = "YiboCrafting", pageID = ID,
         text = L("ENTRY_TITLE"),
-        icon = "Interface\\AddOns\\YiboCrafting\\Media\\YiboCraftingIcon-v2",
+        icon = "Interface\\AddOns\\YiboCrafting\\Media\\YiboCraftingIcon",
         defaultChannels = { minimap = false, broker = false, builtinBar = false },
     })
     if not entry then return nil, entryError end

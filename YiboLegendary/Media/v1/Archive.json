@@ -1,0 +1,42 @@
+{
+  "archived_on": "2026-10-14",
+  "addon": "YiboLegendary",
+  "archive": "v1",
+  "files": [
+    {
+      "file": "YiboLegendaryIcon-v1-128.png",
+      "original_version": "1",
+      "original_path": "YiboLegendary/Media/YiboLegendaryIcon-v1-128.png"
+    },
+    {
+      "file": "YiboLegendaryIcon-v1-16.png",
+      "original_version": "1",
+      "original_path": "YiboLegendary/Media/YiboLegendaryIcon-v1-16.png"
+    },
+    {
+      "file": "YiboLegendaryIcon-v1-31.png",
+      "original_version": "1",
+      "original_path": "YiboLegendary/Media/YiboLegendaryIcon-v1-31.png"
+    },
+    {
+      "file": "YiboLegendaryIcon-v1-32.png",
+      "original_version": "1",
+      "original_path": "YiboLegendary/Media/YiboLegendaryIcon-v1-32.png"
+    },
+    {
+      "file": "YiboLegendaryIcon-v1-64.png",
+      "original_version": "1",
+      "original_path": "YiboLegendary/Media/YiboLegendaryIcon-v1-64.png"
+    },
+    {
+      "file": "YiboLegendaryIcon-v1.png",
+      "original_version": "1",
+      "original_path": "YiboLegendary/Media/YiboLegendaryIcon-v1.png"
+    },
+    {
+      "file": "YiboLegendaryIcon-v1.tga",
+      "original_version": "1",
+      "original_path": "YiboLegendary/Media/YiboLegendaryIcon-v1.tga"
+    }
+  ]
+}

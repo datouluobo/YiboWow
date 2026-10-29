@@ -128,16 +128,23 @@ GetProfessions, GetProfessionInfo = nil, nil
 YiboBuilds.AccountPage:InvalidateRecipeCache()
 -- Opening equipment details uses this production scheduler: preserve the
 -- settled rescan even if another event schedules a glyph-only capture.
-local pending, captures = {}, {}
-C_Timer = { After = function(delay, callback) pending[#pending + 1] = { delay, callback } end }
+local pending, captures, clock = {}, {}, 0
+GetTime = function() return clock end
+C_Timer = { After = function(delay, callback) pending[#pending + 1] = { at = clock + delay, callback = callback } end }
+local function Advance(at)
+    while true do
+        table.sort(pending, function(a,b) return a.at < b.at end)
+        if not pending[1] or pending[1].at > at then clock = at; return end
+        local timer = table.remove(pending, 1); clock = timer.at; timer.callback()
+    end
+end
 YiboBuilds.Snapshot.Capture = function(_, reason, _, parts) captures[#captures + 1] = { reason, parts } end
 YiboBuilds.Snapshot:ScheduleEquipmentCapture()
 YiboBuilds.Snapshot:ScheduleCapture("glyph-update", 0.1, { glyphs = true })
-pending[1][2]()
-pending[3][2]()
+assert(#pending == 2, "capture and settle each retain one worker")
+Advance(0.1)
 assert(#captures == 1 and captures[1][2].equipment and captures[1][2].glyphs)
-pending[2][2]()
-pending[4][2]()
+Advance(0.3)
 assert(#captures == 2 and captures[2][2].equipment)
 -- API13 initialization and compatibility failures are exercised by Core13Spec.
 print("EquipmentAugmentSpec passed: tooltip detection, bag buckle candidates, scroll identity/craft/legacy filtering, equipment rescan")

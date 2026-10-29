@@ -3,7 +3,8 @@ local queued = {}
 C_Timer = { After = function(_, callback) queued[#queued + 1] = callback end }
 YiboCore = {
     Characters = { GetAllCached = function() return { { id = "A" }, { id = "B" } } end,
-        GetCurrent = function() return { id = "A" } end },
+        GetCurrent = function(_, options) assert(options.identityOnly); return { id = "A" } end,
+        Get = function(_, id, options) assert(options.identityOnly); return (id=="A" or id=="B") and {id=id} or nil end },
     AccountView = { GetVisibleCharacters = function() return { { id = "A" }, { id = "B" } } end },
 }
 dofile("YiboVault/Namespace.lua")

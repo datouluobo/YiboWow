@@ -1,0 +1,82 @@
+{
+  "archived_on": "2026-10-14",
+  "addon": "YiboTaskHub",
+  "archive": "v1",
+  "files": [
+    {
+      "file": "YiboTaskHubIcon-v1-1024.png",
+      "original_version": "1",
+      "original_path": "YiboTaskHub/Media/YiboTaskHubIcon-v1-1024.png"
+    },
+    {
+      "file": "YiboTaskHubIcon-v1-1024.tga",
+      "original_version": "1",
+      "original_path": "YiboTaskHub/Media/YiboTaskHubIcon-v1-1024.tga"
+    },
+    {
+      "file": "YiboTaskHubIcon-v1-128.png",
+      "original_version": "1",
+      "original_path": "YiboTaskHub/Media/YiboTaskHubIcon-v1-128.png"
+    },
+    {
+      "file": "YiboTaskHubIcon-v1-128.tga",
+      "original_version": "1",
+      "original_path": "YiboTaskHub/Media/YiboTaskHubIcon-v1-128.tga"
+    },
+    {
+      "file": "YiboTaskHubIcon-v1-24.png",
+      "original_version": "1",
+      "original_path": "YiboTaskHub/Media/YiboTaskHubIcon-v1-24.png"
+    },
+    {
+      "file": "YiboTaskHubIcon-v1-24.tga",
+      "original_version": "1",
+      "original_path": "YiboTaskHub/Media/YiboTaskHubIcon-v1-24.tga"
+    },
+    {
+      "file": "YiboTaskHubIcon-v1-32.png",
+      "original_version": "1",
+      "original_path": "YiboTaskHub/Media/YiboTaskHubIcon-v1-32.png"
+    },
+    {
+      "file": "YiboTaskHubIcon-v1-32.tga",
+      "original_version": "1",
+      "original_path": "YiboTaskHub/Media/YiboTaskHubIcon-v1-32.tga"
+    },
+    {
+      "file": "YiboTaskHubIcon-v1-512.png",
+      "original_version": "1",
+      "original_path": "YiboTaskHub/Media/YiboTaskHubIcon-v1-512.png"
+    },
+    {
+      "file": "YiboTaskHubIcon-v1-512.tga",
+      "original_version": "1",
+      "original_path": "YiboTaskHub/Media/YiboTaskHubIcon-v1-512.tga"
+    },
+    {
+      "file": "YiboTaskHubIcon-v1-64.png",
+      "original_version": "1",
+      "original_path": "YiboTaskHub/Media/YiboTaskHubIcon-v1-64.png"
+    },
+    {
+      "file": "YiboTaskHubIcon-v1-64.tga",
+      "original_version": "1",
+      "original_path": "YiboTaskHub/Media/YiboTaskHubIcon-v1-64.tga"
+    },
+    {
+      "file": "YiboTaskHubIcon-v1-master.svg",
+      "original_version": "1",
+      "original_path": "YiboTaskHub/Media/YiboTaskHubIcon-v1-master.svg"
+    },
+    {
+      "file": "YiboTaskHubIcon-v1.png",
+      "original_version": "1",
+      "original_path": "YiboTaskHub/Media/YiboTaskHubIcon-v1.png"
+    },
+    {
+      "file": "YiboTaskHubIcon-v1.tga",
+      "original_version": "1",
+      "original_path": "YiboTaskHub/Media/YiboTaskHubIcon-v1.tga"
+    }
+  ]
+}

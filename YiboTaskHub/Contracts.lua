@@ -3,11 +3,40 @@ local Connections = { providers = {}, cache = {}, listeners = {} }
 Addon.Contracts = Connections
 local NAME = "action.todo"
 
+-- Keep an earlier wake when a source postpones expiry. Repeated invalidations
+-- then share a timer; an earlier new deadline replaces it without delaying data.
+function Connections:ScheduleExpiry(kind, deadline)
+    self.expiryTimers = self.expiryTimers or {}
+    local existing = self.expiryTimers[kind]
+    if not deadline then
+        if existing and existing.handle then existing.handle:Cancel() end
+        self.expiryTimers[kind] = nil
+        return
+    end
+    if existing and existing.at <= deadline then return end
+    if not (C_Timer and C_Timer.After) then return end
+    if existing and existing.handle then existing.handle:Cancel() end
+    local ticket = { at = deadline }
+    self.expiryTimers[kind] = ticket
+    local function Wake()
+        if Connections.expiryTimers[kind] ~= ticket then return end
+        Connections.expiryTimers[kind] = nil
+        if kind == "goals" then Connections.goalNextAt = nil else Connections.nextChange = nil end
+        local now = Addon:Now()
+        local buckets = kind == "goals" and Connections.goalCache or Connections.cache
+        for _, bucket in pairs(buckets or {}) do for key, entry in pairs(bucket) do
+            if entry.expiresAt and now >= entry.expiresAt then bucket[key] = nil end
+        end end
+        Addon.Core.AccountView:NotifyPageChanged(Addon.PAGE_ID)
+        if Addon.Displays then Addon.Displays:ScheduleRefresh() end
+    end
+    local delay = math.max(0.1, deadline - Addon:Now() + 0.1)
+    if C_Timer.NewTimer then ticket.handle = C_Timer.NewTimer(delay, Wake) else C_Timer.After(delay, Wake) end
+end
+
 function Connections:Invalidate(providerID)
     if self.goalCache then self.goalCache[providerID or ""] = nil; if not providerID then self.goalCache = {} end end
     if providerID then self.cache[providerID] = nil else self.cache = {} end
-    self.nextChange = nil
-    self.timerToken = (self.timerToken or 0) + 1
     if Addon.Core then Addon.Core.AccountView:NotifyPageChanged(Addon.PAGE_ID) end
     if Addon.Displays then Addon.Displays:ScheduleRefresh() end
 end
@@ -96,27 +125,14 @@ function Connections:GetResults(characters)
     for _, scopes in pairs(self.cache) do for _, entry in pairs(scopes) do
         if entry.expiresAt and (not nextChange or entry.expiresAt < nextChange) then nextChange = entry.expiresAt end
     end end
-    -- One timer for all retained scopes, never postponed by switching scopes.
-    if self.nextChange ~= nextChange then
-        self.timerToken, self.nextChange = (self.timerToken or 0) + 1, nextChange
-        local token = self.timerToken
-        if nextChange and C_Timer and C_Timer.After then
-            C_Timer.After(math.max(0.1, nextChange - now + 0.1), function()
-                if Connections.timerToken ~= token then return end
-                Connections.nextChange = nil
-                local expiredAt = Addon:Now()
-                for _, scopes in pairs(Connections.cache) do for key, entry in pairs(scopes) do
-                    if entry.expiresAt and expiredAt >= entry.expiresAt then scopes[key] = nil end
-                end end
-                Addon.Core.AccountView:NotifyPageChanged(Addon.PAGE_ID)
-                if Addon.Displays then Addon.Displays:ScheduleRefresh() end
-            end)
-        end
-    end
+    self.nextChange = nextChange
+    self:ScheduleExpiry("tasks", nextChange)
     return results
 end
 
 function Connections:Shutdown()
+    for _, timer in pairs(self.expiryTimers or {}) do if timer.handle then timer.handle:Cancel() end end
+    self.expiryTimers = {}
     self.goalCache, self.goalNextAt = {}, nil
     self.goalTimer = (self.goalTimer or 0) + 1
     if Addon.Core then for event, callback in pairs(self.listeners) do Addon.Core.Events:Unregister(event, self, callback) end end

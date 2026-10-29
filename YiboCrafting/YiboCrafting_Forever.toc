@@ -1,0 +1,19 @@
+## Interface: 16001
+## Title: |cff20e070[Yibo]|r YiboCrafting - Profession Crafting
+## Title-zhCN: |cff20e070[Yibo]|r YiboCrafting - 专业制造
+## Title-zhTW: |cff20e070[Yibo]|r YiboCrafting - 专业制造
+## Notes: Current character observed profession recipes. Requires Core Forever 0.2.0 / API13.
+## Notes-zhCN: 当前角色已观察专业配方，需要 Core 无限服0.2.0 / API13。
+## Author: YiboSoft
+## Version: 0.1.2
+## RequiredDeps: YiboCore
+## SavedVariables: YiboCraftingForeverDB
+## IconTexture: Interface\AddOns\YiboCrafting\Media\YiboCraftingIcon-128
+
+Forever/Namespace.lua
+Locales/Interface.lua
+Forever/Locale.lua
+Forever/Store.lua
+Forever/Scanner.lua
+Forever/AccountPage.lua
+Forever/Bootstrap.lua

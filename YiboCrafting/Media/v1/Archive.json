@@ -1,0 +1,52 @@
+{
+  "archived_on": "2026-10-14",
+  "addon": "YiboCrafting",
+  "archive": "v1",
+  "files": [
+    {
+      "file": "YiboCraftingIcon-v2-1024.png",
+      "original_version": "2",
+      "original_path": "YiboCrafting/Media/YiboCraftingIcon-v2-1024.png"
+    },
+    {
+      "file": "YiboCraftingIcon-v2-128.png",
+      "original_version": "2",
+      "original_path": "YiboCrafting/Media/YiboCraftingIcon-v2-128.png"
+    },
+    {
+      "file": "YiboCraftingIcon-v2-24.png",
+      "original_version": "2",
+      "original_path": "YiboCrafting/Media/YiboCraftingIcon-v2-24.png"
+    },
+    {
+      "file": "YiboCraftingIcon-v2-32.png",
+      "original_version": "2",
+      "original_path": "YiboCrafting/Media/YiboCraftingIcon-v2-32.png"
+    },
+    {
+      "file": "YiboCraftingIcon-v2-512.png",
+      "original_version": "2",
+      "original_path": "YiboCrafting/Media/YiboCraftingIcon-v2-512.png"
+    },
+    {
+      "file": "YiboCraftingIcon-v2-64.png",
+      "original_version": "2",
+      "original_path": "YiboCrafting/Media/YiboCraftingIcon-v2-64.png"
+    },
+    {
+      "file": "YiboCraftingIcon-v2-master.svg",
+      "original_version": "2",
+      "original_path": "YiboCrafting/Media/YiboCraftingIcon-v2-master.svg"
+    },
+    {
+      "file": "YiboCraftingIcon-v2-small-master.svg",
+      "original_version": "2",
+      "original_path": "YiboCrafting/Media/YiboCraftingIcon-v2-small-master.svg"
+    },
+    {
+      "file": "YiboCraftingIcon-v2.tga",
+      "original_version": "2",
+      "original_path": "YiboCrafting/Media/YiboCraftingIcon-v2.tga"
+    }
+  ]
+}

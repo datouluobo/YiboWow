@@ -1,8 +1,9 @@
 local ADDON_NAME = ...
 local Addon = _G.YiboReputation or {}
 _G.YiboReputation = Addon
-Addon.NAME, Addon.VERSION = "YiboReputation", "1.7.2"
-YiboReputationDB = YiboReputationDB or {}
+Addon.NAME, Addon.VERSION = "YiboReputation", "1.7.3"
+Addon.CLIENT_SUPPORTED = not (type(WOW_PROJECT_CAMELOT) == "number" and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT)
+if Addon.CLIENT_SUPPORTED then YiboReputationDB = YiboReputationDB or {} end
 
 local function Defaults(target, values)
     for key, value in pairs(values) do
@@ -68,6 +69,7 @@ local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(_, event, name)
     if event ~= "ADDON_LOADED" or name ~= ADDON_NAME then return end
+    if not Addon.CLIENT_SUPPORTED then Addon:Print(Addon:T("FOREVER.WRONG_MANIFEST")); return end
     Addon:EnsureDB()
     local core = _G.YiboCore
     if core and core.IsInitialized and core:IsInitialized() then Initialize()

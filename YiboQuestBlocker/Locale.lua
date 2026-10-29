@@ -2,10 +2,21 @@ local Core = _G.YiboCore
 local YQB = _G.YQB or {}
 _G.YQB = YQB
 
+if Core and Core.Locale and Core.Locale.Register and Core.Locale.Get then
+    Core.Locale:Register("YiboQuestBlocker", "zh", {
+        ["CORE.STARTUP_REQUIREMENTS"] = "任务屏蔽需要熊猫人之谜经典服及 YiboCore API 13、character-identity:1 和所需公共能力。请使用对应客户端并升级 Core；已保留存档。",
+    })
+    Core.Locale:Register("YiboQuestBlocker", "en", {
+        ["CORE.STARTUP_REQUIREMENTS"] = "QuestBlocker requires Mists Classic and YiboCore API 13 with character-identity:1 and the declared capabilities. Use the matching client and upgrade Core. Saved data was retained.",
+    })
+end
+
 local function IsSupported()
-    return not not (Core and Core.CheckAPIVersion and Core:CheckAPIVersion(13)
+    return not not (type(WOW_PROJECT_MISTS_CLASSIC) == "number" and WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC
+        and Core and Core.CheckAPIVersion and Core:CheckAPIVersion(13)
         and Core.HasCapability and Core:HasCapability("localization", 1)
         and Core:HasCapability("character-name-format", 1)
+        and Core:HasCapability("character-identity", 1)
         and Core:HasCapability("basic-input", 1)
         and Core:HasCapability("account-view", 2)
         and Core:HasCapability("account-entry", 2)
@@ -19,7 +30,11 @@ end
 YQB.CoreCompatible = IsSupported() == true
 if not YQB.CoreCompatible then
     if Core and Core.Print then
-        Core:Print("YiboQuestBlocker requires YiboCore API 13 with localization:1, character-name-format:1, basic-input:1, account-view:2 and account-entry:2, account-surface-budget:2. Update YiboCore to enable QuestBlocker.")
+        if Core.Locale and Core.Locale.Get then
+            Core:Print(Core.Locale:Get("YiboQuestBlocker", "CORE.STARTUP_REQUIREMENTS"))
+        else
+            Core:Print("YiboQuestBlocker requires YiboCore API 13 with localization:1, character-name-format:1, basic-input:1, account-view:2 and account-entry:2, account-surface-budget:2. Update YiboCore to enable QuestBlocker.")
+        end
     end
     return
 end

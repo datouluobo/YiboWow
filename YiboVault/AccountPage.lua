@@ -31,7 +31,7 @@ function Page:GetScope()
             return BuildScope(context)
         end
     end
-    local current = Core.Characters:GetCurrent()
+    local current = Core.Characters:GetCurrent({ identityOnly = true })
     if current then return { mode = "characters", characterIDs = { current.id } }, { current } end
     return { mode = "characters", characterIDs = {} }, {}
 end
@@ -41,7 +41,7 @@ function Page:GetTooltipScope()
     local visible = view:GetVisibleCharacters()
     local characters = Core.CharacterSort:Sort(visible, view:GetEffectiveCharacterSort(PAGE_ID),
         Core.Characters:GetCurrentID(), view:GetCustomCharacterOrder())
-    local current = Core.Characters:GetCurrent()
+    local current = Core.Characters:GetCurrent({ identityOnly = true })
     local realm = current and current.realm
     local allRealms = Addon.db and Addon.db.settings and Addon.db.settings.tooltipRealmScope == "all"
     local ids, included = {}, {}

@@ -5,10 +5,12 @@ local other = { id = "B", name = "Beta", realm = "Realm" }
 local core = { Characters = { GetCurrent = function() return character end, GetAllCached = function() return { character, other } end },
     AccountView = { GetVisibleCharacters = function() return { character, other } end, NotifyPageChanged = function() end } }
 core.Characters.Get = function(_, id) if id == character.id then return character elseif id == other.id then return other end end
+dofile('_NonRelease/MailPerformance20261029/IdentityMock.lua')(core.Characters)
 MailFrame = { IsShown = function() return true end }
 YiboCore = core
 core.Defaults = { Copy = function(_, value) local function copy(v) if type(v) ~= 'table' then return v end local r = {}; for k,x in pairs(v) do r[k] = copy(x) end return r end return copy(value) end }
 core.Capabilities = { Register = function() end }
+core.HasCapability = function(_,name,minimum) return name == 'character-identity-cache' and minimum <= 1 end
 core.Database = { GetDB = function() return nil end }
 dofile('YiboCore/_NonRelease/Tests/LoadLocale.lua')
 local characterFixture = core.Characters

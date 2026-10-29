@@ -4,6 +4,8 @@
 
 排除未切割原石，普通彩色孔可选择背包内不同颜色的成品宝石；固定多孔装备孔索引，面板按装备提示顺序列出，人偶左右孔条从装备向中间展开。需要 YiboCore 1.12.5 / API13。安装与验收范围见 [1.5.1 更新说明](RELEASE_NOTES.md)。
 
+> 文档状态更新（2026-10-16）：现有功能已由用户确认实机验收收口。当前源码版本与发行证据见[状态总览](../Docs/仓库当前状态总览.md)，后续任务见[延期清单](../Docs/后续开发任务清单.md)。下文旧版本的开发／待验收描述按其原日期理解；当前版本渠道状态没有明确证据时保留待核对。
+
 YiboBuilds is a character-build viewer for MoP Classic. It stores and shows talents, glyphs, equipment, gems, and enchants for every character on the account.
 
 ## Features
@@ -53,6 +55,16 @@ YiboBuilds 是用于 MoP Classic 的账号角色构筑查看器，记录并展�
 
 实际契约、自动化与客户端待验收范围见 [实施与验证](../Docs/行动中心-主动添加实施与验证.md)。
 
+## 图标资源（2026-10-14）
+
+当前图标为 `Media/YiboBuildsIcon`：默认TGA为64px，插件列表使用128px TGA；PNG提供16/24/32/64/128/512/1024px，母版为312px透明位图。版本、统一缩放和验证范围见[系列资源记录](../Docs/Design/Yibo系列Logo-20261014/README.md)。
+
+![YiboBuilds 图标](Media/YiboBuildsIcon-128.png)
+
 ## Core API13 适配（2026-10-15 工作树）
 
 页面、字段、悬停、装备操作、目标提示及 Slash 输出接入 Core 账号语言；公共角色名使用 FormatName。缓存所有者接入 character-cleanup:2。Builds 1.5.0：Core适配与附魔候选修复均已获得用户实测确认。离线验证与真实客户端待验范围见[接入记录](Docs/Core-API13-接入说明.md)。
+
+## Forever 装备最小版 0.1.0
+
+当前角色已穿戴装备只读采集、独立YiboBuildsForeverDB、Core主窗口与同源预览已实现，全部待实机验证，尚不可发布。完整重启客户端后 `/ybb` 打开，`/ybb scan` 刷新。天赋、增强、宝石与传承后续单独取证；MoP为1.5.1。详见[无限服实施与验收](Docs/Forever-当前角色装备最小适配与验收.md)。

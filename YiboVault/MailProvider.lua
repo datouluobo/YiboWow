@@ -20,6 +20,10 @@ function Provider:LocalSnapshot(characterID)
 end
 function Provider:Connect()
     local core = Addon.Core
+    if not (core and type(core.HasCapability) == "function" and core:HasCapability("character-identity-cache", 1)) then
+        self.api, self.descriptor, self.cache = nil, nil, {}
+        return false
+    end
     local descriptor = core and core.Contracts and core.Contracts:Resolve("mail.items", { major = 1, minMinor = 0 })
     if descriptor and self.descriptor and descriptor.registrationRef == self.descriptor.registrationRef then return true end
     self.api, self.cache = nil, {}
@@ -45,8 +49,13 @@ function Provider:GetSnapshot(characterID, force)
         local ok, state = pcall(self.api.GetState, self.api, characterID)
         local revisionOK, revision = pcall(self.api.GetRevision, self.api)
         local cached = self.cache[characterID]
+        local stamped = type(state) == "table" and type(state.revision) == "number"
+            and type(state.transfersRevision) == "number" and state.revision >= 0 and state.transfersRevision >= 0
+            and state.revision < math.huge and state.transfersRevision < math.huge
+        local sameVersion = cached and (stamped and cached.stateRevision == state.revision
+            and cached.transfersRevision == state.transfersRevision or not stamped and cached.revision == revision)
         if not force and ok and revisionOK and type(state) == "table" and cached
-            and cached.snapshot and cached.revision == revision and cached.status == state.status and cached.observedAt == state.observedAt then
+            and cached.snapshot and sameVersion and cached.status == state.status and cached.observedAt == state.observedAt then
             snapshot = cached.snapshot
         elseif ok and revisionOK and type(state) == "table" and state.observedAt
             and (state.status == "known" or state.status == "known-empty" or state.status == "partial" or state.status == "stale" or state.status == "error") then
@@ -61,10 +70,11 @@ function Provider:GetSnapshot(characterID, force)
                         or (record.state ~= "observed" and record.state ~= "stale" and record.state ~= "in-transit") then valid = false; break end
                 end
                 if valid then
-                    local inbox = Addon.Copy(coverage)
+                    -- Contracts:Call has already returned consumer-owned copies.
+                    local inbox = coverage
                     inbox.providerRevision, inbox.revision = coverage.revision, Addon.Items:GetRevision()
                     inbox.completedScan, inbox.location, inbox.recordCount = true, { container = "inbox" }, #result.records
-                    local records = Addon.Copy(result.records)
+                    local records = result.records
                     local transitCoverage
                     if self.api.GetTransfers then
                         local transfersOK, transfers = pcall(self.api.GetTransfers, self.api, characterID)
@@ -80,7 +90,7 @@ function Provider:GetSnapshot(characterID, force)
                                 end
                             end
                             if validTransfers then
-                                for _, record in ipairs(transfers.records) do records[#records + 1] = Addon.Copy(record) end
+                                for _, record in ipairs(transfers.records) do records[#records + 1] = record end
                                 transitCoverage = { status = "known", completedScan = true, revision = inbox.revision,
                                     recordCount = #transfers.records, location = { container = "in-transit" } }
                             end
@@ -105,7 +115,7 @@ function Provider:GetSnapshot(characterID, force)
                     end
                 end
                 if valid then
-                    local records = Addon.Copy(transfers.records)
+                    local records = transfers.records
                     local transitCoverage = { status = "known", completedScan = true,
                         revision = Addon.Items:GetRevision(), recordCount = #records,
                         location = { container = "in-transit" } }
@@ -120,7 +130,8 @@ function Provider:GetSnapshot(characterID, force)
             table.sort(snapshot.records, function(a, b) return a.sourceID < b.sourceID end)
         end
         if ok and revisionOK and type(state) == "table" then
-            self.cache[characterID] = { revision = revision, status = state.status, observedAt = state.observedAt, snapshot = snapshot }
+            self.cache[characterID] = { revision = revision, status = state.status, observedAt = state.observedAt, snapshot = snapshot,
+                stateRevision = stamped and state.revision or nil, transfersRevision = stamped and state.transfersRevision or nil }
         end
     end
     if not self.views[characterID] then self.views[characterID] = snapshot or self:LocalSnapshot(characterID) end
@@ -128,8 +139,9 @@ function Provider:GetSnapshot(characterID, force)
 end
 function Provider:Refresh(characterID)
     local before = self.views[characterID] or self:LocalSnapshot(characterID)
-    local after = self:GetSnapshot(characterID, true) or self:LocalSnapshot(characterID)
+    local after = self:GetSnapshot(characterID) or self:LocalSnapshot(characterID)
     self.views[characterID] = after
+    if before == after then return end
     if Fingerprint(before) == Fingerprint(after) then return end
     local ids, seen = {}, {}
     for _, snapshot in ipairs({ before, after }) do
@@ -144,6 +156,26 @@ function Provider:Refresh(characterID)
     Addon:NotifyMailProviderChanged(characterID, ids)
 end
 function Provider:Install()
+    if not (Addon.Core and type(Addon.Core.HasCapability) == "function" and Addon.Core:HasCapability("character-identity-cache", 1)) then
+        self:Connect()
+        if not self.identityUpgradeShown then
+            self.identityUpgradeShown = true
+            Addon:Print(Addon:T("BOOT.CORE_REQUIRED"))
+        end
+        return
+    end
+    if not self.directoryListenersInstalled and Addon.Core.Events then
+        -- Transfer matching also depends on the public character directory.
+        -- Its changes are independent of Mail's own data revision.
+        local function DirectoryChanged()
+            Provider.cache = {}
+            for _, character in ipairs(Addon.Core.Characters:GetAllCached({ identityOnly = true })) do Provider:Refresh(character.id) end
+        end
+        for _, event in ipairs({ "CHARACTER_UPDATED", "CHARACTER_IMPORTED", "CHARACTER_ID_CHANGED", "CHARACTER_DELETED" }) do
+            Addon.Core.Events:Register(event, self, DirectoryChanged)
+        end
+        self.directoryListenersInstalled = true
+    end
     if not self.listenersInstalled and Addon.Core.Events then
         local function Lifecycle(_, descriptor, change)
             if descriptor.name ~= "mail.items" then return end
@@ -153,9 +185,9 @@ function Provider:Install()
                 -- A send recorded by one character can change the transit view
                 -- of any other character in the account.
                 if change.transfersUnchanged == true then Provider:Refresh(change.characterID)
-                else for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do Provider:Refresh(character.id) end end
+                else for _, character in ipairs(Addon.Core.Characters:GetAllCached({ identityOnly = true })) do Provider:Refresh(character.id) end end
             else
-                for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do Provider:Refresh(character.id) end
+                for _, character in ipairs(Addon.Core.Characters:GetAllCached({ identityOnly = true })) do Provider:Refresh(character.id) end
                 if not Provider.api and Addon.MailItems and Addon.MailItems:IsOpen() then
                     Addon.MailItems.open = true; Addon.MailItems:ScheduleScan("provider-unregistered", 0.2, 3)
                 end
@@ -167,5 +199,5 @@ function Provider:Install()
         self.listenersInstalled = true
     end
     self:Connect()
-    for _, character in ipairs(Addon.Core.Characters:GetAllCached()) do self:Refresh(character.id) end
+    for _, character in ipairs(Addon.Core.Characters:GetAllCached({ identityOnly = true })) do self:Refresh(character.id) end
 end

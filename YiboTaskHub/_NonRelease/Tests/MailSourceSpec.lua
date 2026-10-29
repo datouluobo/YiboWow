@@ -27,6 +27,8 @@ Equal(Hub.Snapshot:Build(characters).providerCount, 2, "two existing Todo source
 
 for _, file in ipairs({ "Namespace", "Store", "Items", "Mists/Scanner", "ViewModel", "ActionTodo" }) do dofile("YiboMail/" .. file .. ".lua") end
 local Mail = YiboMail; Mail.Core = Core
+dofile("YiboMail/Locales/zh.lua")
+dofile("YiboMail/Locales/en.lua")
 Mail:InitializeDatabase()
 assert(Core:RegisterAddon(Mail.NAME, { version = Mail.VERSION, requiredAPI = 9 }))
 assert(Mail.Items:RegisterService())

@@ -1,0 +1,21 @@
+## Interface: 16001
+## Title: |cff20e070[Yibo]|r YiboReputation - Reputation Tracker
+## Title-zhCN: |cff20e070[Yibo]|r YiboReputation - 声望之路
+## Title-zhTW: |cff20e070[Yibo]|r YiboReputation - 声望之路
+## Notes: Current character observed reputation snapshots. Requires YiboCore API13.
+## Notes-zhCN: 当前角色已观察声望快照，需要 YiboCore API13。
+## Author: YiboSoft
+## Version: 0.1.1
+## IconTexture: Interface\AddOns\YiboReputation\Media\YiboReputationIcon-128
+## SavedVariables: YiboReputationForeverDB
+## RequiredDeps: YiboCore
+## Group: YiboCore
+## LoadOnDemand: 0
+
+Forever/Namespace.lua
+Locales/Interface.lua
+Forever/Store.lua
+Forever/Scanner.lua
+Forever/Format.lua
+Forever/AccountPage.lua
+Forever/Bootstrap.lua

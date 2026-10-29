@@ -89,19 +89,7 @@ function Connections:GetGoalResults(characters)
     for _, bucket in pairs(self.goalCache or {}) do for _, entry in pairs(bucket) do
         if not nextAt or entry.expiresAt < nextAt then nextAt = entry.expiresAt end
     end end
-    if self.goalNextAt ~= nextAt then
-        self.goalNextAt, self.goalTimer = nextAt, (self.goalTimer or 0) + 1
-        local token = self.goalTimer
-        if nextAt and C_Timer and C_Timer.After then C_Timer.After(math.max(0.1, nextAt - now + 0.1), function()
-            if token ~= Connections.goalTimer then return end
-            Connections.goalNextAt = nil
-            local expiredAt = Addon:Now()
-            for _, bucket in pairs(Connections.goalCache or {}) do for key, entry in pairs(bucket) do
-                if expiredAt >= entry.expiresAt then bucket[key] = nil end
-            end end
-            Addon.Core.AccountView:NotifyPageChanged(Addon.PAGE_ID)
-            if Addon.Displays then Addon.Displays:ScheduleRefresh() end
-        end) end
-    end
+    self.goalNextAt = nextAt
+    self:ScheduleExpiry("goals", nextAt)
     return results
 end

@@ -807,7 +807,7 @@ local function IsSuspiciousEquipmentDrop(previousObserved, previousConfirmed, cu
 end
 
 local function CurrentCharacter()
-    return Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent()
+    return Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent({ identityOnly = true })
 end
 
 -- Compatibility markers are presentation-only; native API names and saved records stay intact.
@@ -960,19 +960,37 @@ function Snapshot:Capture(reason, logout, parts)
     return record
 end
 
+local function CaptureClock() return GetTime and GetTime() or Addon:Now() end
+local function ArmCapture(delay, callback)
+    if C_Timer.NewTimer then return C_Timer.NewTimer(delay, callback) end
+    C_Timer.After(delay, callback)
+end
+
 function Snapshot:ScheduleCapture(reason, delay, parts)
     self.pendingParts = self.pendingParts or {}
     for key, enabled in pairs(parts or { all = true }) do if enabled then self.pendingParts[key] = true end end
-    self.captureToken = (self.captureToken or 0) + 1
-    local token = self.captureToken
-    local Run = function()
-        if token == self.captureToken then
-            local requested = self.pendingParts
-            self.pendingParts = nil
-            self:Capture(reason, nil, requested)
+    delay = delay or 0
+    self.captureDue, self.captureReason = CaptureClock() + delay, reason
+    if self.captureQueued and self.captureWakeAt <= self.captureDue then return end
+    if self.captureTimer then self.captureTimer:Cancel() end
+    local ticket = {}
+    self.captureTicket = ticket
+    self.captureQueued = true
+    local function Run()
+        if self.captureTicket ~= ticket then return end
+        local remaining = self.captureDue - CaptureClock()
+        if remaining > 0.000001 and C_Timer and C_Timer.After then
+            self.captureWakeAt = self.captureDue
+            self.captureTimer = ArmCapture(remaining, Run)
+            return
         end
+        local requested, latestReason = self.pendingParts, self.captureReason
+        self.captureQueued, self.pendingParts, self.captureDue, self.captureReason = nil, nil, nil, nil
+        self.captureTimer, self.captureTicket, self.captureWakeAt = nil, nil, nil
+        self:Capture(latestReason, nil, requested)
     end
-    if C_Timer and C_Timer.After then C_Timer.After(delay or 0, Run) else Run() end
+    self.captureWakeAt = self.captureDue
+    if C_Timer and C_Timer.After then self.captureTimer = ArmCapture(delay, Run) else Run() end
 end
 
 function Snapshot:HandleSpecChanged()
@@ -995,12 +1013,17 @@ end
 function Snapshot:ScheduleEquipmentCapture()
     self:MarkEquipmentDirty()
     self:ScheduleCapture("equipment-change", 0.05, { equipment = true })
-    self.equipmentSettleToken = (self.equipmentSettleToken or 0) + 1
-    local token = self.equipmentSettleToken
+    self.equipmentSettleDue = CaptureClock() + 0.3
+    if self.equipmentSettleQueued then return end
     if C_Timer and C_Timer.After then
-        C_Timer.After(0.3, function()
-            if token == self.equipmentSettleToken then self:ScheduleCapture("equipment-change-settled", 0, { equipment = true }) end
-        end)
+        self.equipmentSettleQueued = true
+        local function Settle()
+            local remaining = self.equipmentSettleDue - CaptureClock()
+            if remaining > 0.000001 then C_Timer.After(remaining, Settle); return end
+            self.equipmentSettleQueued, self.equipmentSettleDue = nil, nil
+            self:ScheduleCapture("equipment-change-settled", 0, { equipment = true })
+        end
+        C_Timer.After(0.3, Settle)
     end
 end
 

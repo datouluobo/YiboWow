@@ -311,7 +311,7 @@ function Addon:RefreshMatrixView(parent, context)
     local columns = { { title=self:T("MATRIX.REPUTATION"), width=nameWidth } }
     for _, character in ipairs(characters) do columns[#columns + 1] = { width=characterWidth, character=character } end
     local tableWidth, currentColumnX = 0, nil
-    local currentCharacter = Core.Characters:GetCurrent()
+    local currentCharacter = Core.Characters:GetCurrent({ identityOnly = true })
     local currentColumnHeader
     for index, column in ipairs(columns) do
         local header = parent.matrixHeaders[index] or Theme:CreateMatrixHeader(parent.matrixHeader)
@@ -356,18 +356,23 @@ function Addon:RefreshMatrixView(parent, context)
         row:SetScript("OnEnter",function(control)
             control.tooltipTracking=true
             control.tooltipColumn=nil
+            control:SetScript("OnUpdate", UpdateMatrixTooltip)
             UpdateMatrixTooltip(control)
         end)
         -- A matrix row is one hit target.  Refresh while the cursor moves
         -- inside it so the tooltip follows the character column instead
         -- of retaining the value from the column first entered.
-        row:SetScript("OnUpdate",function(control)
-            if control.tooltipTracking then UpdateMatrixTooltip(control) end
-        end)
+        row:SetScript("OnUpdate", row.tooltipTracking and UpdateMatrixTooltip or nil)
         row:SetScript("OnLeave",function(control)
             control.tooltipTracking=false
+            control:SetScript("OnUpdate", nil)
             control.tooltipColumn=nil
             HideMatrixTooltip()
+        end)
+        row:SetScript("OnHide", function(control)
+            control.tooltipTracking, control.tooltipColumn = false, nil
+            control:SetScript("OnUpdate", nil)
+            if GameTooltip.YiboReputationMatrixRow == control then HideMatrixTooltip() end
         end)
         for ci=#columns+1,#row.cells do row.cells[ci]:Hide() end; row:Show()
     end

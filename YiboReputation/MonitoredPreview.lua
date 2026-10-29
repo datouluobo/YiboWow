@@ -51,7 +51,7 @@ function Addon:RefreshMonitoredPreview(parent, context)
     local inset, nameWidth = Theme:GetMatrixInsets(true), 150
     local availableWidth = math.max(1, (tonumber(context.surfaceAvailableWidth) or parent:GetWidth() or 1) - inset.left - inset.right)
     local cellWidth = Theme:GetCharacterMatrixColumnWidth(context)
-    local current = Core.Characters:GetCurrent()
+    local current = Core.Characters:GetCurrent({ identityOnly = true })
     local shown, pageInfo = Core.AccountView:GetColumnPage("reputation", "monitored", context.characters, availableWidth, nameWidth, cellWidth, current and current.id)
     local snapshots = {}
     for _, character in ipairs(shown) do snapshots[character.id] = Snapshot(character) end
@@ -109,9 +109,14 @@ function Addon:RefreshMonitoredPreview(parent, context)
         for index = #values + 1, #row.cells do row.cells[index]:Hide() end
         row.monitoredTooltipColumn = nil
         row.monitoredTooltip = { characters = shown, snapshots = snapshots, nameWidth = nameWidth, cellWidth = cellWidth, factionID = factionID }
-        row:SetScript("OnEnter", function(control) control.monitoredTooltipTracking = true; ShowMonitoredTooltip(control) end)
-        row:SetScript("OnUpdate", function(control) if control.monitoredTooltipTracking then ShowMonitoredTooltip(control) end end)
-        row:SetScript("OnLeave", function(control) control.monitoredTooltipTracking = false; control.monitoredTooltipColumn = nil; GameTooltip.YiboMonitoredRow = nil; GameTooltip:Hide() end)
+        row:SetScript("OnEnter", function(control) control.monitoredTooltipTracking = true; control:SetScript("OnUpdate", ShowMonitoredTooltip); ShowMonitoredTooltip(control) end)
+        row:SetScript("OnUpdate", row.monitoredTooltipTracking and ShowMonitoredTooltip or nil)
+        row:SetScript("OnLeave", function(control) control.monitoredTooltipTracking = false; control:SetScript("OnUpdate", nil); control.monitoredTooltipColumn = nil; GameTooltip.YiboMonitoredRow = nil; GameTooltip:Hide() end)
+        row:SetScript("OnHide", function(control)
+            control.monitoredTooltipTracking, control.monitoredTooltipColumn = false, nil
+            control:SetScript("OnUpdate", nil)
+            if GameTooltip.YiboMonitoredRow == control then GameTooltip.YiboMonitoredRow = nil; GameTooltip:Hide() end
+        end)
         row:Show(); y = y + Theme.Table.previewRowHeight
     end
     for index = #factionIDs + 1, #parent.monitoredRows do parent.monitoredRows[index]:Hide() end

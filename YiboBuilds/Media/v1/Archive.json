@@ -1,0 +1,47 @@
+{
+  "archived_on": "2026-10-14",
+  "addon": "YiboBuilds",
+  "archive": "v1",
+  "files": [
+    {
+      "file": "YiboBuildsIcon-v1-1024.png",
+      "original_version": "1",
+      "original_path": "YiboBuilds/Media/YiboBuildsIcon-v1-1024.png"
+    },
+    {
+      "file": "YiboBuildsIcon-v1-128.png",
+      "original_version": "1",
+      "original_path": "YiboBuilds/Media/YiboBuildsIcon-v1-128.png"
+    },
+    {
+      "file": "YiboBuildsIcon-v1-24.png",
+      "original_version": "1",
+      "original_path": "YiboBuilds/Media/YiboBuildsIcon-v1-24.png"
+    },
+    {
+      "file": "YiboBuildsIcon-v1-32.png",
+      "original_version": "1",
+      "original_path": "YiboBuilds/Media/YiboBuildsIcon-v1-32.png"
+    },
+    {
+      "file": "YiboBuildsIcon-v1-512.png",
+      "original_version": "1",
+      "original_path": "YiboBuilds/Media/YiboBuildsIcon-v1-512.png"
+    },
+    {
+      "file": "YiboBuildsIcon-v1-64.png",
+      "original_version": "1",
+      "original_path": "YiboBuilds/Media/YiboBuildsIcon-v1-64.png"
+    },
+    {
+      "file": "YiboBuildsIcon-v1-master.svg",
+      "original_version": "1",
+      "original_path": "YiboBuilds/Media/YiboBuildsIcon-v1-master.svg"
+    },
+    {
+      "file": "YiboBuildsIcon-v1.tga",
+      "original_version": "1",
+      "original_path": "YiboBuilds/Media/YiboBuildsIcon-v1.tga"
+    }
+  ]
+}
