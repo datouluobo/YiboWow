@@ -446,6 +446,14 @@ function Page:RefreshSummary(parent, context)
 end
 
 function Page:Create(parent)
+    if type(Addon.CacheUI) ~= "table" or type(Addon.CacheUI.Create) ~= "function" then
+        parent.mailWorkspace = CreateFrame("Frame", nil, parent); parent.mailWorkspace:SetAllPoints()
+        local notice = Theme:CreateText(parent.mailWorkspace, Theme.Font.body, Theme.Colors.limitReached, "LEFT")
+        notice:SetPoint("TOPLEFT", 12, -12); notice:SetPoint("TOPRIGHT", -12, 0); notice:SetHeight(48); notice:SetWordWrap(true)
+        notice:SetText(Addon:T("ERROR.CACHE_UI_MISSING")); parent.mailWorkspace.notice = notice
+        parent.mailPreview = CreateFrame("Frame", nil, parent); parent.mailPreview:SetAllPoints(); self:CreateSummary(parent.mailPreview)
+        return
+    end
     parent.mailPreview = CreateFrame("Frame", nil, parent)
     parent.mailPreview:SetAllPoints()
     self:CreateSummary(parent.mailPreview)
@@ -453,6 +461,9 @@ function Page:Create(parent)
 end
 
 function Page:Refresh(parent, context)
+    if not parent.mailWorkspace or type(Addon.CacheUI) ~= "table" or type(Addon.CacheUI.Refresh) ~= "function" then
+        return nil, Addon:T("ERROR.CACHE_UI_MISSING")
+    end
     parent.mailPreview:SetShown(context.preview)
     parent.mailWorkspace:SetShown(not context.preview)
     if context.preview then

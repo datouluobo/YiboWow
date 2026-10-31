@@ -36,17 +36,15 @@ function Model:GetMails(context, options)
         order[character.id] = index
         if query ~= "" or not options.character or options.character == character.id then
             local snapshot, keys, markers = Addon.db.byCharacter[character.id], {}, {}
-            if options.scope == "unverified" then
-                for key, mail in pairs(snapshot.records or {}) do if mail.state == "unverified" then keys[#keys + 1] = key end end
-            else
-                for _, key in ipairs(snapshot.visibleKeys) do keys[#keys + 1] = key end
-            end
+            for _, key in ipairs(snapshot.visibleKeys) do keys[#keys + 1] = key end
             local state = Addon.Items:GetState(character.id)
             for _, key in ipairs(keys) do
                 local mail = snapshot.records[key]
-                local hidden = mail and options.scope ~= "unverified" and View:IsCollectedEmptyMail(character.id, mail, markers)
+                local hidden = mail and View:IsCollectedEmptyMail(character.id, mail, markers)
                 if mail and not hidden then
-                    local kind, risk = options.kind or "all", self:Risk(mail)
+                    local kind, risk, source = options.kind or "all", self:Risk(mail), options.source or "all"
+                    local sourceMatch = source == "all" or (source == "auction" and mail.auctionMail == true)
+                        or (source == "player" and mail.auctionMail ~= true)
                     local kindMatch = kind == "all" or (kind == "items" and #(mail.attachments or {}) > 0)
                         or (kind == "money" and (mail.money or 0) > 0 and (mail.cod or 0) == 0)
                         or (kind == "cod" and (mail.cod or 0) > 0) or (kind == "returned" and (mail.wasReturned or mail.returned))
@@ -56,7 +54,7 @@ function Model:GetMails(context, options)
                         or (wanted == "attention" and (risk == "expired" or risk == "urgent" or risk == "soon"))
                         or (wanted == "threeDays" and (risk == "urgent" or risk == "soon"))
                         or (wanted == "sevenDays" and tonumber(mail.expiresAtEstimate) and mail.expiresAtEstimate > Addon:Now() and mail.expiresAtEstimate - Addon:Now() <= 604800)
-                    if kindMatch and riskMatch and self:Matches(character, mail, query) then
+                    if sourceMatch and kindMatch and riskMatch and self:Matches(character, mail, query) then
                         result[#result + 1] = { character = character, key = key, mail = mail, risk = risk,
                             id = Addon.Encode({ character.id, key }), state = state }
                     end

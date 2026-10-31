@@ -5,9 +5,9 @@ function State:Get()
     if not self.current then
         self.current = {
             tab = "inbox",
-            inbox = { scroll = 0, mode = "mail", scope = "latest", search = "", kind = "all", risk = "all", sort = "expiry" },
+            inbox = { scroll = 0, mode = "mail", scope = "latest", search = "", source = "all", kind = "all", risk = "all", sort = "expiry" },
             overview = { page = 1 },
-            history = { scroll = 0, search = "", days = 30, kind = "all", result = "all" },
+            history = { scroll = 0, search = "", days = 30, kind = "all", content = "all", participant = "all", direction = "either", result = "all" },
         }
     end
     return self.current

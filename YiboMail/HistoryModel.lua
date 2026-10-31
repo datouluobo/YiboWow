@@ -1,8 +1,13 @@
 local Addon = _G.YiboMail
 local History = {}; Addon.HistoryModel = History
-local names = { discovered = Addon:T("UI.TEXT_0640"), ["collected-archived"] = Addon:T("UI.TEXT_0220"), ["in-transit"] = Addon:T("UI.TEXT_0305"),
+local names = { ["collected-archived"] = Addon:T("UI.TEXT_0220"), ["in-transit"] = Addon:T("UI.TEXT_0305"),
     ["received-confirmed"] = Addon:T("UI.TEXT_0464"), ["return-confirmed"] = Addon:T("UI.TEXT_0468"),
-    ["returned-archived"] = Addon:T("RETURN.ARCHIVED"), unverified = Addon:T("UI.TEXT_0289") }
+    ["returned-archived"] = Addon:T("RETURN.ARCHIVED") }
+local function MatchesTemplate(subject, template)
+    if type(subject) ~= "string" or type(template) ~= "string" or template == "" then return false end
+    local pattern = template:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1"):gsub("%%%%s", ".+")
+    return subject:match("^" .. pattern .. "$") ~= nil
+end
 function History:HasHistory(character)
     local snapshot = Addon.db and Addon.db.byCharacter[character.id]
     if not snapshot then return false end
@@ -20,13 +25,6 @@ function History:Query(context, options)
         if snapshot and (not options.character or options.character == character.id) then
             local records = {}
             for index, record in ipairs(snapshot.history or {}) do records[#records + 1] = { record = record, id = record.eventID or ("legacy:" .. index) } end
-            for key, mail in pairs(snapshot.records or {}) do
-                if mail.state == "unverified" then
-                    records[#records + 1] = { id = "cache:" .. key, record = { state = "unverified", cacheProjection = true,
-                        mail = mail, sourceMailKey = key, attachments = mail.attachments, money = mail.money,
-                        codAmount = mail.cod, observedAt = mail.stateEnteredAt, timeBasis = "scan-unverified" } }
-                end
-            end
             local displayName = query ~= "" and Addon.Core.Characters:FormatName(character, { nameMode = "short" }) or nil
             for _, candidate in ipairs(records) do
                 local record = candidate.record
@@ -40,17 +38,37 @@ function History:Query(context, options)
                 local money = tonumber(record.money or record.copper) or 0
                 local counterpart = record.recipient or mail.sender or Addon:T("UI.TEXT_0399")
                 local subject = record.subject or mail.subject or ""
-                local filtered = options.kind and options.kind ~= "all" and options.kind ~= direction and options.kind ~= kind
-                local filteredResult = options.result and options.result ~= "all" and options.result ~= state
+                local auction = mail.auctionMail == true
+                local hasItems, hasMoney = #items > 0, money > 0 or (tonumber(record.codAmount or mail.cod) or 0) > 0
+                local filtered = options.kind and options.kind ~= "all" and ((options.kind == "auction" and not auction) or (options.kind == "player" and auction))
+                local contentFiltered = options.content and options.content ~= "all" and ((options.content == "text" and (hasItems or hasMoney)) or (options.content == "items" and not hasItems) or (options.content == "money" and not hasMoney))
+                local auctionSuccess = auction and MatchesTemplate(subject, _G.AUCTION_SOLD_MAIL_SUBJECT)
+                local filteredResult = options.result and options.result ~= "all" and
+                    (options.result == "auction-success" and not auctionSuccess or options.result ~= "auction-success" and options.result ~= state)
+                local participant = options.participant or "all"
+                local participantMatch = participant == "all"
+                if participant == "auction" then participantMatch = auction
+                elseif participant ~= "all" then
+                    local wanted
+                    for _, role in ipairs(context.characters or {}) do if role.id == participant then wanted = role; break end end
+                    if wanted then
+                        local address = record.recipient or mail.sender
+                        local sameRole = type(address) == "string" and (address == wanted.name or address == (wanted.name .. "-" .. (wanted.realm or "")))
+                        participantMatch = sameRole and (options.direction == "either"
+                            or (options.direction == "to" and record.recipient ~= nil)
+                            or (options.direction == "from" and record.recipient == nil))
+                    end
+                end
                 -- An unknown legacy timestamp can only appear in the explicit all-time view.
                 local validTime = (stamp and now - stamp < retention * 86400 and (not since or stamp >= since)) or (not stamp and not since)
+                if state == "discovered" or state == "unverified" then validTime = false end
                 local match = query == ""
-                if not match and not filtered and not filteredResult and validTime then
+                if not match and not filtered and not contentFiltered and not filteredResult and participantMatch and validTime then
                     local parts = { character.name or "", character.realm or "", counterpart, subject, displayName or "" }
                     for _, item in ipairs(items) do parts[#parts + 1] = item.name or ""; parts[#parts + 1] = tostring(item.itemID or "") end
                     match = string.lower(table.concat(parts, " ")):find(query, 1, true) ~= nil
                 end
-                if match and not filtered and not filteredResult and validTime then
+                if match and not filtered and not contentFiltered and not filteredResult and participantMatch and validTime then
                     result[#result + 1] = { id = Addon.Encode({ character.id, candidate.id }),
                         character = character, record = record, mail = mail, time = stamp, kind = kind, direction = direction,
                         counterpart = counterpart, subject = subject, items = items, money = money,

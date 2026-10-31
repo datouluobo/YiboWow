@@ -335,11 +335,16 @@ function Addon:CommitScan(character, mails, coverage)
     table.sort(keys, function(a, b) return old.records[a].inboxIndex < old.records[b].inboxIndex end)
     for _, key in ipairs(previous) do
         local mail = old.records[key]
-        -- A previous key survives exactly when its signature group retained
-        -- its multiplicity. Reuse that decision instead of allocating a key set.
+        -- A completed scan is the current inbox snapshot. Mail that vanished
+        -- while the add-on was offline is treated as gone; its disposition
+        -- cannot be inferred reliably from the next scan.
         if mail and GroupCount(before[mail.signature]) ~= GroupCount(after[mail.signature]) then
-            mail.state, mail.stateEnteredAt = "unverified", now; Mark(mail)
+            Mark(mail); old.records[key] = nil
         end
+    end
+    local visibleSet = {}; for _, key in ipairs(keys) do visibleSet[key] = true end
+    for key, mail in pairs(old.records) do
+        if not visibleSet[key] then Mark(mail); old.records[key] = nil end
     end
     local stateChanged = old.coverage.status ~= coverage.status or old.coverage.currentCount ~= coverage.currentCount or old.coverage.totalCount ~= coverage.totalCount
     if self.Scanner and self.Scanner.publishedStatus then

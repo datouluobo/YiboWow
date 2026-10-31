@@ -69,6 +69,11 @@ function Scanner:IsAuctionMail(index, subject)
     end
     return false
 end
+local function AuctionPlayer(index)
+    if type(GetInboxInvoiceInfo) ~= "function" then return nil end
+    local ok, kind, _, playerName = pcall(GetInboxInvoiceInfo, index)
+    if ok and (kind == "seller" or kind == "seller_temp_invoice") and type(playerName) == "string" and playerName ~= "" then return playerName end
+end
 local ITEM_FIELDS = { attachmentIndex = true, itemID = true, name = true, texture = true, quantity = true,
     itemLink = true, itemKey = true, variantKey = true, identityQuality = true }
 local function ReuseItem(prior, slot, itemID, name, texture, quantity, link, itemKey, variantKey, quality)
@@ -115,6 +120,7 @@ local function ReadMail(index, now, clock, hint)
     mail.canReply = canReply == true or canReply == 1
     mail.isGM = isGM == true or isGM == 1
     mail.auctionMail = Scanner:IsAuctionMail(index, subject)
+    mail.auctionPlayer = AuctionPlayer(index)
     -- Match the native delete/return decision; missing permission is unknown.
     if type(InboxItemCanDelete) == "function" then
         local ok, deletable = pcall(InboxItemCanDelete, index)

@@ -69,10 +69,10 @@ function UI:Create(parent)
         local workspace = Addon.WorkspaceState:Get()
         if workspace.tab == "inbox" then
             Addon.WorkspaceState:Search("")
-            workspace.inbox.kind, workspace.inbox.risk, workspace.inbox.scope = "all", "all", "latest"
+            workspace.inbox.source, workspace.inbox.kind, workspace.inbox.risk, workspace.inbox.scope = "all", "all", "all", "latest"
         else
-            workspace.history.search, workspace.history.kind, workspace.history.result = "", "all", "all"
-            workspace.history.character, workspace.history.days, workspace.history.scroll, workspace.history.detail = nil, 30, 0, nil
+            workspace.history.search, workspace.history.kind, workspace.history.content, workspace.history.result = "", "all", "all", "all"
+            workspace.history.character, workspace.history.participant, workspace.history.direction, workspace.history.days, workspace.history.scroll, workspace.history.detail = nil, "all", "either", 30, 0, nil
         end
         local state = workspace[workspace.tab]; state.scroll, state.anchor, state.anchorOffset = 0, nil, nil
         Refresh()
@@ -89,20 +89,26 @@ function UI:Create(parent)
         end)
         return control
     end
-    root.scope = Dropdown({ { value = "latest", label = Addon:T("UI.TEXT_0390") }, { value = "unverified", label = Addon:T("UI.TEXT_0290") } }, "scope", 148)
+    root.scope = Dropdown({ { value = "latest", label = Addon:T("UI.TEXT_0390") } }, "scope", 148)
+    root.source = Dropdown({ { value = "all", label = Addon:T("HISTORY.SOURCE_ALL") }, { value = "auction", label = Addon:T("HISTORY.SOURCE_AUCTION") },
+        { value = "player", label = Addon:T("HISTORY.SOURCE_PLAYER") } }, "source", 132)
     root.kind = Dropdown({}, "kind", 134)
     root.risk = Dropdown({ { value = "all", label = Addon:T("UI.TEXT_0638") }, { value = "urgent", label = Addon:T("UI.TEXT_0062") },
         { value = "soon", label = Addon:T("UI.TEXT_0061") }, { value = "threeDays", label = Addon:T("UI.TEXT_0084") },
         { value = "sevenDays", label = Addon:T("UI.TEXT_0083") }, { value = "attention", label = Addon:T("UI.TEXT_0133") },
         { value = "expired", label = Addon:T("UI.TEXT_0159") }, { value = "unknown", label = Addon:T("UI.TEXT_0398") } }, "risk", 150)
     root.sort = Dropdown({ { value = "expiry", label = Addon:T("UI.TEXT_0098") }, { value = "character", label = Addon:T("UI.TEXT_0508") } }, "sort", 154)
-    root.days = Dropdown({ { value = 7, label = Addon:T("UI.TEXT_0573") }, { value = 30, label = Addon:T("UI.TEXT_0572") }, { value = 90, label = Addon:T("UI.TEXT_0574") }, { value = 0, label = Addon:T("UI.TEXT_0124") } }, "days", 160)
-    root.historyCharacter = Dropdown({}, "character", 190)
+    root.days = Dropdown({ { value = 7, label = Addon:T("UI.TEXT_0573") }, { value = 30, label = Addon:T("UI.TEXT_0572") }, { value = 90, label = Addon:T("UI.TEXT_0574") }, { value = 0, label = Addon:T("UI.TEXT_0124") } }, "days", 100)
+    root.historyCharacter = Dropdown({}, "participant", 140)
     root.historyCharacter:SetMenuPageSize(8)
-    root.result = Dropdown({ { value = "all", label = Addon:T("UI.TEXT_0488") }, { value = "collected-archived", label = Addon:T("UI.TEXT_0251") },
+    root.content = Dropdown({ { value = "all", label = Addon:T("HISTORY.CONTENT_ALL") }, { value = "text", label = Addon:T("HISTORY.CONTENT_TEXT") },
+        { value = "items", label = Addon:T("HISTORY.CONTENT_ITEMS") }, { value = "money", label = Addon:T("HISTORY.CONTENT_MONEY") } }, "content", 110)
+    root.direction = Dropdown({ { value = "either", label = Addon:T("HISTORY.DIRECTION_EITHER") }, { value = "to", label = Addon:T("HISTORY.DIRECTION_TO") },
+        { value = "from", label = Addon:T("HISTORY.DIRECTION_FROM") } }, "direction", 110)
+    root.result = Dropdown({ { value = "all", label = Addon:T("UI.TEXT_0488") }, { value = "auction-success", label = Addon:T("HISTORY.AUCTION_SUCCESS") }, { value = "collected-archived", label = Addon:T("UI.TEXT_0251") },
         { value = "returned-archived", label = Addon:T("RETURN.ARCHIVED") },
-        { value = "in-transit", label = Addon:T("UI.TEXT_0246") }, { value = "unverified", label = Addon:T("UI.TEXT_0289") },
-        { value = "received-confirmed", label = Addon:T("UI.TEXT_0464") }, { value = "return-confirmed", label = Addon:T("UI.TEXT_0468") } }, "result", 154)
+        { value = "in-transit", label = Addon:T("UI.TEXT_0246") },
+        { value = "received-confirmed", label = Addon:T("UI.TEXT_0464") }, { value = "return-confirmed", label = Addon:T("UI.TEXT_0468") } }, "result", 115)
     root.summary = Text(root, Theme.Font.assist)
     root.tableHeader = CreateFrame("Frame", nil, root); root.tableHeader.cells = {}
     root.tableHeader.background = root.tableHeader:CreateTexture(nil, "BACKGROUND"); root.tableHeader.background:SetAllPoints()
@@ -148,7 +154,7 @@ function UI:Create(parent)
     end, 72)
     root:HookScript("OnHide", function()
         root.search:ClearFocus()
-        for _, control in ipairs({ root.scope, root.kind, root.risk, root.sort, root.days, root.historyCharacter, root.result }) do control.menu:Hide() end
+        for _, control in ipairs({ root.scope, root.source, root.kind, root.risk, root.sort, root.days, root.historyCharacter, root.content, root.direction, root.result }) do control.menu:Hide() end
     end)
     root:SetScript("OnUpdate", function(_, elapsed)
         root.elapsed = (root.elapsed or 0) + elapsed
@@ -329,7 +335,9 @@ function UI:Owners(root, characters, entries, state, x, top, width, height)
     local matches = {}
     for _, entry in ipairs(entries) do matches[entry.character.id] = (matches[entry.character.id] or 0) + 1 end
     local list = { { name = Addon:T("UI.TEXT_0136"), count = #entries } }
-    for _, character in ipairs(characters) do list[#list + 1] = character end
+    for _, character in ipairs(characters) do
+        if root.renderedTab ~= "history" or Addon.HistoryModel:HasHistory(character) then list[#list + 1] = character end
+    end
     local current = Core.Characters:GetCurrent({ identityOnly = true })
     for index, character in ipairs(list) do
         local row = root.ownerRows[index]
@@ -353,18 +361,22 @@ function UI:Owners(root, characters, entries, state, x, top, width, height)
         if coords then row.icon:SetTexCoord(unpack(coords)) else row.icon:SetTexCoord(0, 1, 0, 1) end
         Place(row.name, 36, 1, rowWidth - 54, 20)
         Place(row.meta, 36, 22, 70, 14); Place(row.risk, 112, 22, rowWidth - 132, 14)
-        local summary = character.id and Addon.AccountPage:GetSummary(character)
+        local summary = character.id and root.renderedTab ~= "history" and Addon.AccountPage:GetSummary(character)
         row.name:SetText(character.id and Identity(character) or Addon:T("UI.TEXT_0136"))
         local color = character.class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[character.class]
         if color then row.name:SetTextColor(color.r, color.g, color.b) else row.name:SetTextColor(unpack(Theme.Colors.text)) end
         row.current:SetShown(character.id and current and current.id == character.id or false)
-        row.meta:SetText(searching and tostring(matches[character.id] or (#entries * (not character.id and 1 or 0))) .. Addon:T("UI.TEXT_0239")
-            or (character.id and summary.count .. Addon:T("UI.TEXT_0239") or #entries .. Addon:T("UI.TEXT_0239")))
+        local rowCount = root.renderedTab == "history" and (character.id and (matches[character.id] or 0) or #entries) or nil
+        row.meta:SetText(rowCount and (rowCount .. Addon:T("UI.TEXT_0239")) or (searching and tostring(matches[character.id] or (#entries * (not character.id and 1 or 0))) .. Addon:T("UI.TEXT_0239")
+            or (character.id and summary.count .. Addon:T("UI.TEXT_0239") or #entries .. Addon:T("UI.TEXT_0239"))))
         local counts = summary and summary._counts
         row.risk:SetText(counts and (counts.expired > 0 and Addon:T("UI.TEXT_0418") or (counts.urgent > 0 and Addon:T("UI.TEXT_0301") or (counts.soon > 0 and Addon:T("UI.TEXT_0096") or ""))) or "")
         row.risk:SetTextColor(unpack(counts and (counts.expired + counts.urgent) > 0 and Theme.Colors.limitReached or Theme.Colors.warning))
         row:SetScript("OnClick", function()
-            Addon.WorkspaceState:SelectCharacter(character.id, characters, root.data, root.capacity)
+            if root.renderedTab == "history" then
+                state.character = character.id
+                state.scroll, state.anchor, state.anchorOffset, state.detail = 0, nil, nil, nil
+            else Addon.WorkspaceState:SelectCharacter(character.id, characters, root.data, root.capacity) end
             root.refresh()
         end)
         local lines = { character.id and Identity(character, true) or Addon:T("UI.TEXT_0136"), summary and summary.alert or Addon:T("UI.TEXT_0207") }
@@ -508,9 +520,13 @@ function UI:RenderList(root, offset)
             if workspace.tab == "history" then
                 values = self:HistoryValues(value)
                 lines = { value.event .. " · " .. Identity(value.character, true), Escape(value.subject), Escape(value.counterpart), values.content, Stamp(value.time) .. " · " .. value.result }
+                local auctionPlayer = value.mail.auctionMail and value.mail.auctionPlayer
+                if auctionPlayer and auctionPlayer ~= "" then table.insert(lines, 4, Addon:T("HISTORY.AUCTION_PLAYER", Escape(auctionPlayer))) end
             else
                 values = self:MailValues(value, true)
                 lines = { Addon:T("UI.TEXT_0608") .. Identity(value.character, true) .. Addon:T("UI.TEXT_0005") .. Escape(value.mail.sender), values.subject, values.items, values.amount .. " · " .. values.expiry, values.coverage }
+                local auctionPlayer = value.mail.auctionMail and value.mail.auctionPlayer
+                if auctionPlayer and auctionPlayer ~= "" then table.insert(lines, 3, Addon:T("HISTORY.AUCTION_PLAYER", Escape(auctionPlayer))) end
             end
             local rowTop, rowHeight = layout.offsets and layout.offsets[index] or (index - 1) * layout.pitch, (layout.heights and layout.heights[index] or layout.pitch) - 2
             Place(row, 0, rowTop, layout.width, rowHeight)
@@ -534,15 +550,15 @@ function UI:Refresh(parent, context)
     local changedTab = root.renderedTab ~= workspace.tab
     if changedTab then
         root.search:ClearFocus()
-        for _, control in ipairs({ root.scope, root.kind, root.risk, root.sort, root.days, root.historyCharacter, root.result }) do control.menu:Hide() end
+        for _, control in ipairs({ root.scope, root.source, root.kind, root.risk, root.sort, root.days, root.historyCharacter, root.content, root.direction, root.result }) do control.menu:Hide() end
         root.renderedTab = workspace.tab
     end
     local state = workspace[workspace.tab]
     local width, height = math.max(1, parent:GetWidth() - 16), math.max(1, parent:GetHeight())
     -- Keep the shared input visible while typing: its OnHide releases focus.
     if workspace.tab == "overview" then root.search:Hide() end
-    for _, control in ipairs({ root.clear, root.mail, root.items, root.scope, root.kind, root.risk, root.sort, root.days,
-        root.historyCharacter, root.result, root.owners, root.overview, root.tableHeader, root.list, root.detail, root.empty, root.back }) do control:Hide() end
+    for _, control in ipairs({ root.clear, root.mail, root.items, root.scope, root.source, root.kind, root.risk, root.sort, root.days,
+        root.historyCharacter, root.content, root.direction, root.result, root.owners, root.overview, root.tableHeader, root.list, root.detail, root.empty, root.back }) do control:Hide() end
     for _, row in ipairs(root.rows) do row:Hide() end
     for _, tile in ipairs(root.tiles) do tile:Hide() end
     root.tabs:SetActive(workspace.tab)
@@ -587,38 +603,42 @@ function UI:Refresh(parent, context)
         top = math.max(top, 72 + noteHeight + 10)
         local searchWidth = math.max(160, contentWidth - 108)
         top = Flow({ { root.search, searchWidth }, { root.clear, 100 } }, left, top, contentWidth)
-        root.scope:SetValue(state.scope); root.sort:SetValue(state.sort); root.risk:SetValue(state.risk)
-        root.kind:SetOptions({ { value = "all", label = Addon:T("UI.TEXT_0482") }, { value = "items", label = Addon:T("UI.TEXT_0203") }, { value = "money", label = Addon:T("UI.TEXT_0204") },
+        root.source:SetValue(state.source or "all"); root.sort:SetValue(state.sort); root.risk:SetValue(state.risk)
+        root.kind:SetOptions({ { value = "all", label = Addon:T("HISTORY.CONTENT_ALL") }, { value = "items", label = Addon:T("UI.TEXT_0203") }, { value = "money", label = Addon:T("UI.TEXT_0204") },
             { value = "cod", label = Addon:T("UI.TEXT_0110") }, { value = "returned", label = Addon:T("UI.TEXT_0578") }, { value = "empty", label = Addon:T("UI.TEXT_0370") } }); root.kind:SetValue(state.kind)
-        top = Flow({ { root.scope, 126 }, { root.kind, 128 }, { root.risk, 130 }, { root.sort, 114 }, { root.mail, 78 }, { root.items, 96 } }, left, top, contentWidth)
+        top = Flow({ { root.source, 132 }, { root.kind, 128 }, { root.risk, 130 }, { root.sort, 114 }, { root.mail, 78 }, { root.items, 96 } }, left, top, contentWidth)
         root.mail:SetState(state.mode == "mail" and "selected" or "default"); root.items:SetState(state.mode == "items" and "selected" or "default")
         local totals = Model:Totals(entries)
-        root.summary:SetText((state.scope == "unverified" and (Addon:T("UI.TEXT_0388") .. " · ") or "")
-            .. Addon:T("INBOX.SUMMARY", totals.count, totals.attachmentMails, View:Money(totals.money), totals.cod, totals.urgent, totals.soon, totals.expired))
+        root.summary:SetText(Addon:T("INBOX.SUMMARY", totals.count, totals.attachmentMails, View:Money(totals.money), totals.cod, totals.urgent, totals.soon, totals.expired))
         if state.mode == "items" then root.summary:SetText(root.summary:GetText() .. " · " .. #data .. Addon:T("UI.TEXT_0095")) end
         fields = self:Columns(root, "inbox", global or not state.character)
         if state.mode == "mail" then fields = self:FitColumns(fields, contentWidth, "inbox") end
     else
+        local identityWidth = 230
+        for _, character in ipairs(characters) do identityWidth = math.max(identityWidth, Theme:MeasureText(Theme.Font.body, Name(character)) + 132) end
+        left = math.min(284, identityWidth + 24); contentWidth = width - left + 8
         root.heading:SetText(Addon:T("UI.TEXT_0170"))
-        root.note:SetText(Addon:T("HISTORY.RETENTION_NOTE", Addon.db.settings.historyDays, Addon.db.settings.unverifiedDays))
+        root.note:SetText(Addon:T("HISTORY.RETENTION_NOTE", Addon.db.settings.historyDays))
         root.note:SetWordWrap(true); root.note:SetHeight(0)
         local noteHeight = math.max(22, root.note:GetStringHeight()); root.note:SetHeight(noteHeight)
         top = math.max(top, 72 + noteHeight + 10)
-        local options, valid = { { value = "all", label = Addon:T("UI.TEXT_0136") } }, not state.character
+        local options, valid = { { value = "auction", label = Addon:T("HISTORY.SOURCE_AUCTION") }, { value = "all", label = Addon:T("HISTORY.PARTICIPANT_ALL") } }, state.participant == nil or state.participant == "all"
         for _, character in ipairs(context.characters) do
             if Addon.HistoryModel:HasHistory(character) then
                 options[#options + 1] = { value = character.id, label = Identity(character) }
-                if state.character == character.id then valid = true end
+                if state.participant == character.id then valid = true end
             end
         end
-        if not valid then state.character, state.scroll, state.anchor = nil, 0, nil end
-        root.historyCharacter:SetOptions(options); root.historyCharacter:SetValue(state.character or "all")
-        root.days:SetValue(state.days); root.result:SetValue(state.result)
-        root.kind:SetOptions({ { value = "all", label = Addon:T("UI.TEXT_0104") }, { value = "inbox", label = Addon:T("UI.TEXT_0343") }, { value = "send", label = Addon:T("UI.TEXT_0178") },
-            { value = "discovered", label = Addon:T("UI.TEXT_0640") }, { value = "collected", label = Addon:T("UI.TEXT_0220") } }); root.kind:SetValue(state.kind)
+        if not valid then state.participant, state.scroll, state.anchor = "all", 0, nil end
+        root.historyCharacter:SetOptions(options); root.historyCharacter:SetValue(state.participant or "all")
+        root.days:SetValue(state.days); root.result:SetValue(state.result); root.content:SetValue(state.content or "all")
+        root.direction:SetValue(state.direction or "either")
+        root.kind:SetOptions({ { value = "all", label = Addon:T("HISTORY.SOURCE_ALL") }, { value = "auction", label = Addon:T("HISTORY.SOURCE_AUCTION") },
+            { value = "player", label = Addon:T("HISTORY.SOURCE_PLAYER") } }); root.kind:SetValue(state.kind)
         top = Flow({ { root.search, math.max(200, contentWidth - 108) }, { root.clear, 100 } }, left, top, contentWidth)
-        top = Flow({ { root.days, 160 }, { root.historyCharacter, 190 }, { root.kind, 134 }, { root.result, 154 } }, left, top, contentWidth)
+        top = Flow({ { root.days, 100 }, { root.historyCharacter, 140 }, { root.direction, 110 }, { root.kind, 125 }, { root.content, 110 }, { root.result, 115 } }, left, top, contentWidth)
         data = Addon.HistoryModel:Query(context, state); fields = self:Columns(root, "history", true); rowHeight = 38
+        Place(root.heading, left, 44, contentWidth, 24); Place(root.note, left, 72, contentWidth, 22)
         root.summary:SetText(Addon:T("HISTORY.RESULT_COUNT", #data))
     end
     if workspace.tab ~= "overview" then
@@ -626,7 +646,7 @@ function UI:Refresh(parent, context)
         local summaryHeight = math.max(26, root.summary:GetStringHeight())
         root.summary:SetHeight(summaryHeight); top = top + summaryHeight + 8
         root.data, root.capacity = data, math.max(1, math.floor((height - top - 76) / rowHeight))
-        if workspace.tab == "inbox" then self:Owners(root, characters, entries, state, 8, 44, left - 24, height - 94) end
+        if workspace.tab == "inbox" or workspace.tab == "history" then self:Owners(root, characters, workspace.tab == "history" and data or entries, state, 8, 44, left - 24, height - 94) end
         root.total = #data
         if state.detail then
             self:Detail(root, state, data, left, top, contentWidth, math.max(1, height - top - 48))
@@ -669,7 +689,7 @@ function UI:Refresh(parent, context)
             root.empty:SetText(workspace.tab == "history" and Addon:T("UI.TEXT_0267")
                 or ((state.search or ""):find("%S") and Addon:T("UI.TEXT_0127")
                 or (#characters == 0 and Addon:T("UI.TEXT_0543")
-                or (state.scope == "unverified" and Addon:T("UI.TEXT_0430") or (state.mode == "items" and Addon:T("UI.TEXT_0431") or Addon:T("UI.TEXT_0429"))))))
+                or (state.mode == "items" and Addon:T("UI.TEXT_0431") or Addon:T("UI.TEXT_0429")))))
         end
     end
     Place(root.back, width - 64, height - 38, 72, 30)
