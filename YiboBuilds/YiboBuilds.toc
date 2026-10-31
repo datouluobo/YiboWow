@@ -6,7 +6,7 @@
 ## Notes-zhCN: 多角色构筑、装备、天赋与雕文总览，需要 YiboCore API13。
 ## Notes-zhTW: 多角色構築、裝備、天賦與雕文總覽，需要 YiboCore API13。
 ## Author: YiboSoft
-## Version: 1.5.2
+## Version: 1.5.3
 ## IconTexture: Interface\AddOns\YiboBuilds\Media\YiboBuildsIcon-128
 ## SavedVariables: YiboBuildsDB
 ## RequiredDeps: YiboCore

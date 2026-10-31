@@ -3,7 +3,7 @@ local Addon = _G.YiboBuilds or {}
 _G.YiboBuilds = Addon
 
 Addon.NAME = ADDON_NAME or "YiboBuilds"
-Addon.VERSION = "1.5.2"
+Addon.VERSION = "1.5.3"
 Addon.REQUIRED_CORE_API = 13
 Addon.PAGE_ID = "builds"
 Addon.ICON = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon"
@@ -120,7 +120,8 @@ frame:RegisterEvent("SOCKET_INFO_SUCCESS")
 frame:RegisterEvent("SOCKET_INFO_FAILURE")
 frame:RegisterEvent("SOCKET_INFO_CLOSE")
 frame:RegisterEvent("PLAYER_LOGOUT")
-frame:SetScript("OnEvent", function(_, event, name)
+pcall(frame.RegisterEvent, frame, "GET_ITEM_INFO_RECEIVED")
+frame:SetScript("OnEvent", function(_, event, name, success)
     if event == "ADDON_LOADED" then
         if name == ADDON_NAME then Addon:EnsureDB() end
         return
@@ -140,6 +141,7 @@ frame:SetScript("OnEvent", function(_, event, name)
                 local record = current and Addon.Snapshot and Addon.Snapshot:GetCharacter(current.id)
                 local slot = record and record.slots and record.slots[record.lastActiveSlot or "primary"]
                 if slot and slot.glyphs and not slot.glyphs.ready then Addon.Snapshot:Capture("glyphs-ready") end
+                if Addon.Snapshot then Addon.Snapshot:ScheduleCapture("login-settled", 0, { equipment = true }) end
             end)
         end
     elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then
@@ -172,6 +174,8 @@ frame:SetScript("OnEvent", function(_, event, name)
         if Addon.AccountPage and Addon.AccountPage.RefreshOpenDetail then
             Addon.AccountPage:RefreshOpenDetail()
         end
+    elseif event == "GET_ITEM_INFO_RECEIVED" then
+        if Addon.AccountPage then Addon.AccountPage:OnItemInfoReceived(name, success) end
     elseif event == "PLAYER_LOGOUT" then
         if Addon.Snapshot then Addon.Snapshot:Capture("logout", true) end
     end

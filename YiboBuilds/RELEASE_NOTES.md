@@ -1,3 +1,8 @@
+# YiboBuilds 1.5.3 — 2026-10-31
+
+- Refresh equipment hover borders when cached item quality becomes available, so the first preview does not remain gray until Builds is reopened.
+- Re-scan the active equipment after entering the world to capture settled item links.
+
 # YiboBuilds 1.5.1 — 2026-10-24
 
 Mists only. Requires YiboCore 1.12.5 / API13 with character-cleanup:2.

@@ -1,8 +1,8 @@
 # YiboBuilds
 
-## Mists 1.5.1 — 2026-10-24
+## Mists 1.5.3 — 2026-10-31
 
-排除未切割原石，普通彩色孔可选择背包内不同颜色的成品宝石；固定多孔装备孔索引，面板按装备提示顺序列出，人偶左右孔条从装备向中间展开。需要 YiboCore 1.12.5 / API13。安装与验收范围见 [1.5.1 更新说明](RELEASE_NOTES.md)。
+装备悬停边框会在客户端品质信息就绪后自动刷新。此前宝石候选和多孔装备孔序调整见 [1.5.1 更新说明](RELEASE_NOTES.md)。需要 YiboCore 1.12.5 / API13。
 
 > 文档状态更新（2026-10-16）：现有功能已由用户确认实机验收收口。当前源码版本与发行证据见[状态总览](../Docs/仓库当前状态总览.md)，后续任务见[延期清单](../Docs/后续开发任务清单.md)。下文旧版本的开发／待验收描述按其原日期理解；当前版本渠道状态没有明确证据时保留待核对。
 
@@ -17,6 +17,7 @@ YiboBuilds is a character-build viewer for MoP Classic. It stores and shows tale
 - Direct gem socketing and equipment-targeted enhancement actions
 - Separate equipment snapshots for each talent slot
 - Automatically save active equipment on logout, reload, or exit; preserve the outgoing specialization's last observation when switching
+- Equipment hover borders refresh when the client finishes loading cached item quality
 - Click equipment to open its upgrade panel; click the same item again to close it
 - Equipment icons show item levels, excluding shirts and tabards
 
@@ -38,6 +39,7 @@ YiboBuilds 是用于 MoP Classic 的账号角色构筑查看器，记录并展�
 - 在面板内镶嵌宝石，并直接对当前装备施加增强
 - 每个天赋槽位独立保存装备快照
 - 小退、重载或退出时自动保存当前专精装备；切换专精时保存上一专精最近一次观测的装备
+- 装备品质信息到达后自动刷新悬停边框，避免首次预览保留灰色边框
 - 点击装备打开提升面板，再次点击同一装备关闭；点击其它装备切换提升目标
 - 装备图标按物品仓库样式在右下角显示淡紫色描边装等，衬衣和战袍除外；空栏位或装等未知时不显示数值
 

@@ -171,7 +171,46 @@ local function ItemBorderColor(item)
         local red, green, blue = string.match(link, "|c%x%x(%x%x)(%x%x)(%x%x)")
         if red and green and blue then return tonumber(red, 16) / 255, tonumber(green, 16) / 255, tonumber(blue, 16) / 255 end
     end
+    -- Older equipment snapshots can retain an item ID/link without the
+    -- hyperlink color prefix. Ask the client for the cached item quality
+    -- before falling back to the neutral frame color.
+    if item then
+        local itemRef = link or item.itemID
+        if itemRef then
+            local quality
+            if C_Item and C_Item.GetItemInfo then
+                local ok, _, _, value = pcall(C_Item.GetItemInfo, itemRef)
+                if ok then quality = value end
+            end
+            if quality == nil and GetItemInfo then
+                local ok, _, _, value = pcall(GetItemInfo, itemRef)
+                if ok then quality = value end
+            end
+            local color = quality ~= nil and ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[quality]
+            if color then
+                return color.r or color[1], color.g or color[2], color.b or color[3]
+            end
+            if quality ~= nil and GetItemQualityColor then
+                local red, green, blue = GetItemQualityColor(quality)
+                if red and green and blue then return red, green, blue end
+            end
+        end
+    end
+    local itemID = tonumber(item and item.itemID) or (type(link) == "string" and tonumber(link:match("item:(%d+)")))
+    if itemID then
+        Page.pendingBorderItemInfo = Page.pendingBorderItemInfo or {}
+        Page.pendingBorderItemInfo[itemID] = true
+    end
     return C.line[1], C.line[2], C.line[3]
+end
+
+function Page:OnItemInfoReceived(itemID, success)
+    itemID = tonumber(itemID)
+    if not (success and itemID and self.pendingBorderItemInfo and self.pendingBorderItemInfo[itemID]) then return end
+    self.pendingBorderItemInfo[itemID] = nil
+    -- The first paint can run before the client has cached item quality and
+    -- uses a neutral rim. Repaint the visible page when that data arrives.
+    Addon:NotifyChanged()
 end
 
 local function CreateIconButton(parent)
