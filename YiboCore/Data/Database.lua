@@ -22,6 +22,7 @@ local DEFAULTS = {
             width = 1120,
             height = 650,
             pages = {},
+            pageCharacterFilters = {},
             fields = {},
             firstUseHints = {},
             hiddenCharacters = {},

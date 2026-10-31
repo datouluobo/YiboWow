@@ -1,6 +1,20 @@
 local Core = _G.YiboCore
 local Actions = { bindings = setmetatable({}, { __mode = "k" }), hoverBindingCount = 0 }
 Core.BusinessItemActions = Actions
+local function StableValue(value)
+    if type(value) ~= "table" then return type(value) .. ":" .. tostring(value) end
+    local keys = {}
+    for key in pairs(value) do keys[#keys + 1] = key end
+    table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
+    local parts = {}
+    for _, key in ipairs(keys) do parts[#parts + 1] = StableValue(key) .. "=" .. StableValue(value[key]) end
+    return "{" .. table.concat(parts, ";") .. "}"
+end
+local function IntentKey(intent)
+    if type(intent) ~= "table" or type(intent.scope) ~= "table" then return nil end
+    return StableValue({ providerID = intent.providerID, targetType = intent.targetType, objectID = intent.objectID,
+        scope = intent.scope, conditions = intent.conditions, repeatPolicy = intent.repeatPolicy })
+end
 local buttons = Core.Locale:Bind(function() return { LeftButton = Core:Text("CORE.LEFT_CLICK"), RightButton = Core:Text("CORE.RIGHT_CLICK"), MiddleButton = Core:Text("CORE.MIDDLE_CLICK"), Button4 = Core:Text("CORE.MOUSE_4"), Button5 = Core:Text("CORE.MOUSE_5") } end)
 local function SetMenuAdded(binding, added)
     if not binding.menu then return end
@@ -281,9 +295,12 @@ end
 function Actions:Bind(control, options)
     if not control or type(options) ~= "table" or type(options.GetIntent) ~= "function" or type(options.owner) ~= "string" then return nil, "invalid-binding" end
     local previous = self.bindings[control]
+    local intent = options.GetIntent()
+    local intentKey = IntentKey(intent)
+    local itemStatus = intentKey and previous and previous.intentKey == intentKey and previous.itemStatus or nil
     if previous and previous.menu then self.hoverBindingCount = self.hoverBindingCount - 1 end
     local binding = { owner = options.owner, GetIntent = options.GetIntent, markerEnabled = options.menu ~= false, reservedButtons = options.reservedButtons or {}, menu = control.yiboItemMenu or (previous and previous.menu),
-        ctrlLeftSafe = options.ctrlLeftSafe == true, ConfigureCtrlLeft = options.ConfigureCtrlLeft,
+        intentKey = intentKey, itemStatus = itemStatus, ctrlLeftSafe = options.ctrlLeftSafe == true, ConfigureCtrlLeft = options.ConfigureCtrlLeft,
         compactTooltip = options.compactTooltip == true }
     if binding.ConfigureCtrlLeft then binding.ctrlLeftSafe = binding.ConfigureCtrlLeft(self:GetOptions().mode == "ctrlLeft") == true end
     self.bindings[control] = binding
@@ -291,8 +308,8 @@ function Actions:Bind(control, options)
         control:HookScript("OnHide", function() Actions:Unbind(control) end)
         control.yiboItemCleanup = true
     end
-    if control.yiboGoalMarkerH then control.yiboGoalMarkerH:Hide(); control.yiboGoalMarkerV:Hide() end
     if options.menu == false then
+        if control.yiboGoalMarkerH then control.yiboGoalMarkerH:Hide(); control.yiboGoalMarkerV:Hide() end
         if binding.menu then binding.menu:Hide() end
         binding.menu = nil
         if self.hoverControl == control then self.hoverControl = nil end
@@ -327,6 +344,8 @@ function Actions:Bind(control, options)
     else binding.menu:SetPoint("TOPRIGHT", control, "TOPRIGHT", 0, 0) end
     binding.menu:Hide()
     self.hoverBindingCount = self.hoverBindingCount + 1
+    if binding.itemStatus then self:SetMarker(control, binding.itemStatus)
+    elseif control.yiboGoalMarkerH then control.yiboGoalMarkerH:Hide(); control.yiboGoalMarkerV:Hide() end
     self:WatchHover()
     self:RefreshHover()
     self:ScheduleMarkers()

@@ -21,15 +21,15 @@ end
 local function ArchiveSettings()
     local settings = Settings()
     settings.characterArchive = type(settings.characterArchive) == "table" and settings.characterArchive or {}
-    local archive = settings.characterArchive
-    archive.fields = type(archive.fields) == "table" and archive.fields or {}
-    archive.previewFields = type(archive.previewFields) == "table" and archive.previewFields or {}
+    local stored = settings.characterArchive
+    stored.fields = type(stored.fields) == "table" and stored.fields or {}
+    stored.previewFields = type(stored.previewFields) == "table" and stored.previewFields or {}
+    local archive = { fields = stored.fields, previewFields = stored.previewFields, filters = AccountView._sessionArchiveFilters }
     local legacyIDs = { identity = "character.identity", level = "character.level", itemLevel = "character.item-level", zone = "character.zone", primary = "character.profession-primary", secondary = "character.profession-secondary", archaeology = "character.archaeology", fishing = "character.fishing", cooking = "character.cooking", firstAid = "character.first-aid" }
     for oldID, newID in pairs(legacyIDs) do
         if archive.fields[newID] == nil and archive.fields[oldID] ~= nil then archive.fields[newID] = archive.fields[oldID] end
         if archive.previewFields[newID] == nil and archive.previewFields[oldID] ~= nil then archive.previewFields[newID] = archive.previewFields[oldID] end
     end
-    archive.filters = type(archive.filters) == "table" and archive.filters or {}
     for _, mode in ipairs({ "page", "preview" }) do
         archive.filters[mode] = type(archive.filters[mode]) == "table" and archive.filters[mode] or {}
         local filter = archive.filters[mode]
@@ -210,7 +210,7 @@ local function RefreshCharacters(parent, context)
         local row = parent.rows[index]
         if not row then
             row = CreateFrame("Button", nil, parent.listContent, "BackdropTemplate"); row:SetHeight(Theme.Table.rowHeight); row:SetPoint("TOPLEFT", 0, -((index - 1) * Theme.Table.rowHeight)); row:SetWidth(tableWidth)
-            row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 }); row.currentOutline = Theme:CreateCurrentCharacterOutline(row); row.name = AddText(row, "GameFontNormalSmall", Theme.Font.body, COLORS.text); row.name:SetPoint("LEFT", 9, 0); row.name:SetWidth(246)
+            row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 }); row.name = AddText(row, "GameFontNormalSmall", Theme.Font.body, COLORS.text); row.name:SetPoint("LEFT", 9, 0); row.name:SetWidth(246)
             row.level = AddText(row, "GameFontNormalSmall", Theme.Font.body, COLORS.text); row.level:SetPoint("LEFT", row.name, "RIGHT", 6, 0); row.level:SetWidth(32)
             row.zone = AddText(row, "GameFontNormalSmall", nil, COLORS.muted); row.zone:SetPoint("LEFT", row.level, "RIGHT", 6, 0); row.zone:SetWidth(78)
             row.itemLevel = AddText(row, "GameFontNormalSmall", nil, COLORS.muted); row.itemLevel:SetPoint("LEFT", row.zone, "RIGHT", 6, 0); row.itemLevel:SetWidth(42)
@@ -265,7 +265,7 @@ local function RefreshCharacters(parent, context)
         row:SetBackdropColor(rowTone[1], rowTone[2], rowTone[3], rowTone[4] or 0.88)
         Theme:ApplyDataColumnTints(row, widths, rowHeight, 8, function(fieldIndex) return GetArchiveColumnGap(fields, fieldIndex) end)
         row:SetBackdropBorderColor(COLORS.matrixLine[1], COLORS.matrixLine[2], COLORS.matrixLine[3], COLORS.matrixLine[4])
-        Theme:SetCurrentCharacterOutline(row.currentOutline, isCurrent)
+        Theme:UpdateCurrentCharacterRowOutline(row, isCurrent)
         row:Show()
     end
     for index = #characters + 1, #parent.rows do parent.rows[index]:Hide() end

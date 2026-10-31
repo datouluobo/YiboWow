@@ -351,31 +351,92 @@ function Theme:SetCharacterHeader(header, character, context, options)
     return header
 end
 
--- A current character is a navigation aid, not a data state. Account pages
--- therefore keep the semantic fill untouched and use one shared 1px outline.
+-- Current-character outlines are a shared account-view affordance. Pages report
+-- which row/column is current and their layout bounds; Core owns the overlay,
+-- styling, insets, anchoring, visibility, and reuse.
+local function GetCurrentCharacterOutline(self, owner)
+    if not owner then return nil end
+    local outline = owner.__yiboCurrentCharacterOutline
+    if outline then return outline end
+    outline = CreateFrame("Frame", nil, owner, "BackdropTemplate")
+    local lineWidth = math.max(1, tonumber(self.Table.lineWidth) or 1)
+    outline:SetPoint("TOPLEFT", owner, "TOPLEFT", lineWidth, -lineWidth)
+    outline:SetPoint("BOTTOMRIGHT", owner, "BOTTOMRIGHT", -lineWidth, lineWidth)
+    outline:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = lineWidth })
+    outline:SetBackdropBorderColor(self.Colors.accent[1], self.Colors.accent[2], self.Colors.accent[3], 0.96)
+    outline:SetFrameLevel((owner:GetFrameLevel() or 0) + 10)
+    outline:EnableMouse(false)
+    outline:Hide()
+    owner.__yiboCurrentCharacterOutline = outline
+    return outline
+end
+
+-- Keep the original outline handles usable while installed business addons
+-- transition to the owner-based shared lifecycle.
 function Theme:CreateCurrentCharacterOutline(parent)
     local outline = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     local lineWidth = math.max(1, tonumber(self.Table.lineWidth) or 1)
-    -- Backdrop edges paint outward from their frame bounds. Keep this shared
-    -- navigation outline inside the data row so it cannot cross the matrix's
-    -- right edge (or the scrollbar safety gutter).
     outline:SetPoint("TOPLEFT", parent, "TOPLEFT", lineWidth, -lineWidth)
     outline:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -lineWidth, lineWidth)
     outline:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = lineWidth })
     outline:SetBackdropBorderColor(self.Colors.accent[1], self.Colors.accent[2], self.Colors.accent[3], 0.96)
     outline:SetFrameLevel((parent:GetFrameLevel() or 0) + 10)
     outline:EnableMouse(false)
+    outline.__yiboLegacyCurrentOutline = true
     outline:Hide()
     return outline
 end
 
--- Character-column pages report their visible column bounds only. Core owns
--- the inset, viewport clipping and all anchor arithmetic so an outline cannot
--- escape into a scrollbar gutter or the hidden scroll child.
-function Theme:UpdateCurrentCharacterColumnOutline(outline, header, viewport, x, width, shown, viewportX)
+function Theme:SetCurrentCharacterOutline(outline, shown)
+    if outline then outline:SetShown(shown == true) end
+end
+
+function Theme:UpdateCurrentCharacterRowOutline(row, isCurrent)
+    local outline = GetCurrentCharacterOutline(self, row)
+    if outline then
+        local lineWidth = math.max(1, tonumber(self.Table.lineWidth) or 1)
+        outline:ClearAllPoints()
+        outline:SetPoint("TOPLEFT", row, "TOPLEFT", lineWidth, -lineWidth)
+        outline:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -lineWidth, lineWidth)
+        outline:SetShown(isCurrent == true)
+    end
+end
+
+function Theme:HideCurrentCharacterOutline(owner)
+    local outline = owner and owner.__yiboCurrentCharacterOutline
+    if outline then outline:Hide(); outline:ClearAllPoints() end
+end
+
+-- Character-column pages report visible column bounds only. Core owns the
+-- overlay lifecycle and all anchor arithmetic, including viewport alignment.
+function Theme:UpdateCurrentCharacterColumnOutline(owner, header, viewport, x, width, shown, viewportX)
+    if owner and owner.__yiboLegacyCurrentOutline then
+        local outline = owner
+        if not shown or not header or not viewport or not x or not width then
+            self:SetCurrentCharacterOutline(outline, false)
+            return
+        end
+        local lineWidth = math.max(1, tonumber(self.Table.lineWidth) or 1)
+        local frameTop = header:GetTop() or 0
+        local viewportTop = viewport:GetTop() or frameTop
+        local viewportBottom = viewport:GetBottom() or 0
+        local headerBottom = header:GetBottom() or frameTop
+        local top = math.min(frameTop, viewportTop)
+        local bottom = math.max(viewportBottom, headerBottom)
+        local topX = x
+        local bottomX = viewportX == nil and x or viewportX
+        outline:ClearAllPoints()
+        outline:SetPoint("TOPLEFT", header, "TOPLEFT", topX + lineWidth, -(frameTop - top) - lineWidth)
+        outline:SetPoint("TOPRIGHT", header, "TOPLEFT", topX + width - lineWidth, -(frameTop - top) - lineWidth)
+        outline:SetPoint("BOTTOMLEFT", viewport, "BOTTOMLEFT", bottomX + lineWidth, lineWidth)
+        outline:SetPoint("BOTTOMRIGHT", viewport, "BOTTOMLEFT", bottomX + width - lineWidth, lineWidth)
+        self:SetCurrentCharacterOutline(outline, true)
+        return
+    end
+    local outline = GetCurrentCharacterOutline(self, owner)
     if not outline then return end
     if not shown or not header or not viewport or not x or not width then
-        self:SetCurrentCharacterOutline(outline, false)
+        outline:Hide()
         return
     end
     local lineWidth = math.max(1, tonumber(self.Table.lineWidth) or 1)
@@ -385,11 +446,7 @@ function Theme:UpdateCurrentCharacterColumnOutline(outline, header, viewport, x,
     local bottomX = viewportX == nil and x or viewportX
     outline:SetPoint("BOTTOMLEFT", viewport, "BOTTOMLEFT", bottomX + lineWidth, lineWidth)
     outline:SetPoint("BOTTOMRIGHT", viewport, "BOTTOMLEFT", bottomX + width - lineWidth, lineWidth)
-    self:SetCurrentCharacterOutline(outline, true)
-end
-
-function Theme:SetCurrentCharacterOutline(outline, shown)
-    if outline then outline:SetShown(shown == true) end
+    outline:Show()
 end
 
 function Theme:CreateButton(parent, width, label, kind)

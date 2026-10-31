@@ -5,6 +5,11 @@ local AccountView = {}
 Core.AccountView = AccountView
 AccountView._pages = AccountView._pages or {}
 AccountView._pageOrder = AccountView._pageOrder or {}
+AccountView._navigationHistory = AccountView._navigationHistory or {}
+AccountView._sessionPageCharacterFilters = AccountView._sessionPageCharacterFilters or {}
+AccountView._sessionPageScopes = AccountView._sessionPageScopes or {}
+AccountView._sessionArchiveFilters = AccountView._sessionArchiveFilters or {}
+AccountView._sessionRealmScope = AccountView._sessionRealmScope or "all"
 
 local Theme = Core.UITheme
 local COLORS = Theme.Colors
@@ -23,12 +28,10 @@ Settings = function()
     db.settings.accountView = db.settings.accountView or {}
     local settings = db.settings.accountView
     settings.pages = settings.pages or {}
+    settings.pageCharacterFilters = type(settings.pageCharacterFilters) == "table" and settings.pageCharacterFilters or {}
     settings.fields = settings.fields or {}
     settings.firstUseHints = type(settings.firstUseHints) == "table" and settings.firstUseHints or {}
-    settings.pageCharacterFilters = type(settings.pageCharacterFilters) == "table" and settings.pageCharacterFilters or {}
     settings.pageViewModes = type(settings.pageViewModes) == "table" and settings.pageViewModes or {}
-    settings.pageScopes = settings.pageScopes or {}
-    settings.selectedRealmScope = type(settings.selectedRealmScope) == "string" and settings.selectedRealmScope or "all"
     settings.hiddenCharacters = settings.hiddenCharacters or {}
     settings.characterSort = Core.CharacterSort:NormalizeSettings(settings.characterSort)
     settings.pageCharacterSorts = type(settings.pageCharacterSorts) == "table" and settings.pageCharacterSorts or {}
@@ -554,8 +557,9 @@ function AccountView:RegisterPage(addonName, definition)
             SetExpression = function(expression)
                 local valid, normalized, badToken = Core.LevelFilter:Validate(expression or "")
                 if not valid then return false, Core:Text("CORE.INVALID_LEVEL_RULE") .. tostring(badToken) end
-                local changed = (Settings().pageCharacterFilters[page.id] or "") ~= normalized
-                Settings().pageCharacterFilters[page.id] = normalized
+                local filters = Settings().pageCharacterFilters
+                local changed = (filters[page.id] or "") ~= normalized
+                filters[page.id] = normalized
                 AccountView:NotifyPageChanged(page.id)
                 if changed then Core.Events:FireIsolated("ACCOUNT_VIEW_CHARACTERS_CHANGED", { reason = "page-filter", pageID = page.id }) end
                 return true, normalized
@@ -860,7 +864,7 @@ function AccountView:GetPageScope(pageID, scopeDefinition)
     local page = self._pages[pageID]
     scopeDefinition = scopeDefinition or GetScopeDefinition(page, self:GetVisibleCharacters())
     if not scopeDefinition then return nil end
-    local saved = scopeDefinition.mode == "realms" and Settings().selectedRealmScope or Settings().pageScopes[pageID]
+    local saved = scopeDefinition.mode == "realms" and self._sessionRealmScope or self._sessionPageScopes[pageID]
     if IsKnownScope(scopeDefinition, saved) then return saved end
     return scopeDefinition.default
 end
@@ -869,7 +873,7 @@ function AccountView:SetPageScope(pageID, scopeID)
     local page = self._pages[pageID]
     local scopeDefinition = GetScopeDefinition(page, self:GetVisibleCharacters())
     if not scopeDefinition or not IsKnownScope(scopeDefinition, scopeID) then return false end
-    if scopeDefinition.mode == "realms" then Settings().selectedRealmScope = scopeID else Settings().pageScopes[pageID] = scopeID end
+    if scopeDefinition.mode == "realms" then self._sessionRealmScope = scopeID else self._sessionPageScopes[pageID] = scopeID end
     if self.frame and self.frame.preview and self.previewPageID == pageID then
         -- Scope can materially change the number of matrix columns.  Reopen
         -- the same preview against its original anchor so both dimensions and
@@ -1087,6 +1091,19 @@ function AccountView:CreateFrame()
             else
                 AccountView:ApplyNormalLayout()
             end
+        elseif not Core.Client:IsInCombat() then
+            -- A real close ends this browsing session.  Keep durable display
+            -- preferences in SavedVariables, but discard navigation and the
+            -- shared, window-only role filters/scopes.
+            wipe(AccountView._navigationHistory)
+            wipe(AccountView._sessionPageCharacterFilters)
+            wipe(AccountView._sessionPageScopes)
+            wipe(AccountView._sessionArchiveFilters)
+            AccountView._sessionRealmScope = "all"
+            AccountView.activePageID = nil
+            AccountView.settingsTargetPageID = nil
+            AccountView.activePageOptions = nil
+            AccountView._activeNavigationState = nil
         end
         if not (Core.Client:IsInCombat()) then
             self:SetAttribute("isHoverPreview", nil)
@@ -1182,11 +1199,11 @@ end
 local function NavigationRequiredHeight(page)
     local count
     if page and page.id == "settings" then
-        count = 5
+        count = 6
         for _, registered in ipairs(AccountView._pageOrder) do if not registered.internal then count = count + 1 end end
         for _ in ipairs(Core:GetRegisteredSettingsPanels()) do count = count + 1 end
     else
-        count = 3 -- 概览、角色档案、关于
+        count = 4 -- 返回、概览、角色档案、关于
         for _, registered in ipairs(AccountView._pageOrder) do if PageEnabled(registered) then count = count + 1 end end
     end
     local navigationHeight = Theme.Space.xs * 2 + count * Theme.Table.rowHeight + math.max(0, count - 1) * Theme.Space.xxs
@@ -1291,10 +1308,8 @@ function AccountView:RefreshNavigation()
     local frame = self:CreateFrame()
     if frame.preview then return end
     local pages = {}
+    pages[#pages + 1] = { id = "account-view-back", title = Core:Text("CORE.BACK"), back = true }
     if self.activePageID == "settings" then
-        local target = self._pages[self.settingsTargetPageID or ""]
-        local returnPage = target and not target.internal and target or self._pages.overview
-        pages[#pages + 1] = { id = returnPage.id, title = Core:Text("CORE.BACK") .. returnPage.title }
         pages[#pages + 1] = { id = "settings-core-heading", title = Core:Text("CORE.CORE_SETTINGS"), settingsTargetID = "general", coreHeading = true }
         pages[#pages + 1] = { id = "settings-core", title = Core:Text("CORE.WINDOW"), settingsTargetID = "core" }
         pages[#pages + 1] = { id = "settings-sorting", title = Core:Text("CORE.CHARACTERS_SORTING"), settingsTargetID = "sorting" }
@@ -1310,7 +1325,7 @@ function AccountView:RefreshNavigation()
         table.sort(businessSettings, function(left, right) return left.addonName < right.addonName end)
         for _, item in ipairs(businessSettings) do pages[#pages + 1] = item end
     else
-        pages = { self._pages.overview }
+        pages = { pages[1], self._pages.overview }
         -- The interval between overview (-20) and character archive (-10) is
         -- reserved for a page explicitly promoted directly below overview.
         -- All ordinary business pages retain their catalog's alphabetical order.
@@ -1331,7 +1346,9 @@ function AccountView:RefreshNavigation()
             button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
             button.label = AddText(button, "GameFontNormalSmall", nil, COLORS.text); button.label:SetPoint("LEFT", 9, 0); button.label:SetPoint("RIGHT", -6, 0)
             button:SetScript("OnClick", function(self)
-                if self.settingsTargetID then AccountView:SelectSettingsTarget(self.settingsTargetID) else AccountView:ShowPage(self.pageID) end
+                if self.back then AccountView:GoBack()
+                elseif self.settingsTargetID then AccountView:SelectSettingsTarget(self.settingsTargetID)
+                else AccountView:ShowPage(self.pageID) end
             end)
             frame.navButtons[index] = button
         end
@@ -1344,9 +1361,12 @@ function AccountView:RefreshNavigation()
         end
         button.pageID = page.id; button.settingsTargetID = page.settingsTargetID; button.section = page.section
         if button.label:GetText() ~= page.title then button.label:SetText(page.title) end
-        local selected = page.settingsTargetID and self.activePageID == "settings" and self.settingsTargetPageID == page.settingsTargetID or self.activePageID == page.id
-        button:EnableMouse(not page.section)
-        button.label:SetTextColor((page.section or page.coreHeading) and COLORS.accent[1] or COLORS.text[1], (page.section or page.coreHeading) and COLORS.accent[2] or COLORS.text[2], (page.section or page.coreHeading) and COLORS.accent[3] or COLORS.text[3])
+        local selected = not page.back and (page.settingsTargetID and self.activePageID == "settings" and self.settingsTargetPageID == page.settingsTargetID or self.activePageID == page.id)
+        local canGoBack = page.back and #self._navigationHistory > 0
+        button.back = page.back == true
+        button:EnableMouse(not page.section and (not page.back or canGoBack))
+        button.label:SetTextColor(page.back and not canGoBack and COLORS.muted[1] or (page.section or page.coreHeading) and COLORS.accent[1] or COLORS.text[1], page.back and not canGoBack and COLORS.muted[2] or (page.section or page.coreHeading) and COLORS.accent[2] or COLORS.text[2], page.back and not canGoBack and COLORS.muted[3] or (page.section or page.coreHeading) and COLORS.accent[3] or COLORS.text[3])
+        button:SetAlpha(page.back and not canGoBack and 0.62 or 1)
         button:SetBackdropColor(selected and not page.section and COLORS.selected[1] or 0, selected and not page.section and COLORS.selected[2] or 0, selected and not page.section and COLORS.selected[3] or 0, selected and not page.section and 1 or 0)
         button:Show()
     end
@@ -1468,6 +1488,57 @@ function AccountView:BuildContext(page, options)
     }
 end
 
+local function CopyStringMap(source)
+    local result = {}
+    for key, value in pairs(source or {}) do if type(key) == "string" and type(value) == "string" then result[key] = value end end
+    return result
+end
+
+local function NavigationState(view, pageID, settingsTargetID)
+    return {
+        pageID = pageID,
+        settingsTargetID = pageID == "settings" and settingsTargetID or nil,
+        pageCharacterFilters = CopyStringMap(view._sessionPageCharacterFilters),
+        pageScopes = CopyStringMap(view._sessionPageScopes),
+        archiveFilters = Copy(view._sessionArchiveFilters),
+        realmScope = view._sessionRealmScope,
+    }
+end
+
+local function SameNavigationState(left, right)
+    return left and right and left.pageID == right.pageID and left.settingsTargetID == right.settingsTargetID
+end
+
+local function ValidNavigationState(view, state)
+    if type(state) ~= "table" or type(state.pageID) ~= "string" then return false end
+    if state.pageID == "settings" then
+        local target = state.settingsTargetID
+        if type(target) ~= "string" then return false end
+        if target:match("^addon%-settings:(.+)$") then return Core.SettingsRegistry and Core.SettingsRegistry._panels[target:match("^addon%-settings:(.+)$")] ~= nil end
+        return target == "bar" or target == "general" or target == "display" or target == "sorting" or target == "core" or target == "filters" or (view._pages[target] and not view._pages[target].internal)
+    end
+    local page = view._pages[state.pageID]
+    return page ~= nil and (page.internal or PageEnabled(page))
+end
+
+function AccountView:GoBack()
+    if Core.Client:IsInCombat() then return false end
+    while #self._navigationHistory > 0 do
+        local state = table.remove(self._navigationHistory)
+        if ValidNavigationState(self, state) then
+            self._sessionPageCharacterFilters = CopyStringMap(state.pageCharacterFilters)
+            self._sessionPageScopes = CopyStringMap(state.pageScopes)
+            self._sessionArchiveFilters = Copy(state.archiveFilters or {})
+            self._sessionRealmScope = state.realmScope or "all"
+            if state.pageID == "settings" then self.settingsTargetPageID = state.settingsTargetID end
+            self:ShowPage(state.pageID, { noHistory = true })
+            return true
+        end
+    end
+    self:RefreshNavigation()
+    return false
+end
+
 function AccountView:ShowPage(pageID, options, forceAutoFitWidth)
     options = options or {}
     -- Some hosted pages (for example YiboTodo) contain secure action buttons.
@@ -1488,6 +1559,14 @@ function AccountView:ShowPage(pageID, options, forceAutoFitWidth)
     end
     local page = self._pages[pageID] or self._pages.overview
     if not page or (not page.internal and not PageEnabled(page)) then page = self._pages.overview end
+    if not options.preview then
+        local nextState = NavigationState(self, page.id, self.settingsTargetPageID)
+        local previousState = self._activeNavigationState or (self.activePageID and NavigationState(self, self.activePageID, self.settingsTargetPageID))
+        if not options.noHistory and previousState and not SameNavigationState(previousState, nextState) then
+            self._navigationHistory[#self._navigationHistory + 1] = previousState
+        end
+        options.noHistory = nil
+    end
     self:CreateFrame()
     local context = options.context or self:BuildContext(page, options)
     if not options.preview then
@@ -1530,6 +1609,7 @@ function AccountView:ShowPage(pageID, options, forceAutoFitWidth)
         self.activePageID = page.id
         options.autoFit = nil
         self.activePageOptions = options
+        self._activeNavigationState = NavigationState(self, page.id, self.settingsTargetPageID)
     end
     -- The refreshing page may opt back in through context.SetTitleBarControl.
     -- Hide the previous page's control first so page switches never leave
