@@ -87,7 +87,6 @@ function Addon:CreateCurrencyPage(parent)
     parent.currencyScroll = Theme:CreateScrollFrame(parent); parent.currencyScroll:BindScrollbarGutter(parent.currencyHeader)
     parent.currencyBody = CreateFrame("Frame", nil, parent.currencyScroll); parent.currencyScroll:SetScrollChild(parent.currencyBody)
     parent.currencyRows, parent.currencyHeaders = {}, {}
-    parent.currentColumnOutline = Theme:CreateCurrentCharacterOutline(parent)
 end
 
 local function SetCell(cell, text, color, justify)
@@ -160,7 +159,7 @@ local function Layout(parent, context, columns, rows, preview, projection)
             header.hoverLabel:ClearAllPoints(); header.hoverLabel:SetPoint("RIGHT", header, "RIGHT", 0, 0); header.hoverLabel:SetWidth(HoverControlWidth())
             header.hoverLabel:SetText(Addon:T("UI.DISPLAY_HOVER")); header.hoverLabel:Show()
         elseif header.hoverLabel then header.hoverLabel:Hide() end
-        if not preview and current and column.character and column.character.id == current.id then currentX, currentWidth = x, column.width end
+        if current and column.character and column.character.id == current.id then currentX, currentWidth = x, column.width end
         x = x + column.width
     end
     for index = #columns + 1, #parent.currencyHeaders do parent.currencyHeaders[index]:Hide() end
@@ -171,7 +170,6 @@ local function Layout(parent, context, columns, rows, preview, projection)
         row.preview = preview
         if row.hoverToggle then row.hoverToggle:Hide() end
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", parent.currencyBody, "TOPLEFT", 0, -y); row:SetSize(x, ROW_HEIGHT); row:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8" }); local color = Theme:GetDataRowColor(index); row:SetBackdropColor(color[1], color[2], color[3], color[4] or 1); row.cells = row.cells or {}; row.entry = entry; row.tooltipCharacters = entry.tooltipCharacters or {}; row.projection = projection
-        if row.currentOutline then Theme:SetCurrentCharacterOutline(row.currentOutline, false) end
         for ci, column in ipairs(columns) do
             local cell = row.cells[ci] or Text(row, column.justify or "CENTER"); row.cells[ci] = cell; cell:ClearAllPoints(); cell:SetPoint("LEFT", row, "LEFT", column.x + Theme.Space.xs, 0); cell:SetWidth(column.width - Theme.Space.sm)
             if column.kind == "identity" then
@@ -236,15 +234,12 @@ local function Layout(parent, context, columns, rows, preview, projection)
                 hit:SetScript("OnLeave", function() GameTooltip:Hide() end); hit:Show()
             end end
         end
-        if entry.character then
-            row.currentOutline = row.currentOutline or Theme:CreateCurrentCharacterOutline(row)
-            Theme:SetCurrentCharacterOutline(row.currentOutline, current and current.id == entry.character.id)
-        end
+        Theme:UpdateCurrentCharacterRowOutline(row, entry.character and current and current.id == entry.character.id)
         row:Show(); y = y + ROW_HEIGHT
     end
     for index = #rows + 1, #parent.currencyRows do parent.currencyRows[index]:Hide() end
     parent.currencyBody:SetSize(x, math.max(1, y)); parent.currencyScroll:SetContentHeight(parent.currencyBody:GetHeight()); parent.currencyScroll:RefreshScrollbar()
-    Theme:UpdateCurrentCharacterColumnOutline(parent.currentColumnOutline, parent.currencyHeader, parent.currencyScroll, currentX, currentWidth, currentX ~= nil)
+    Theme:UpdateCurrentCharacterColumnOutline(parent, parent.currencyHeader, parent.currencyScroll, currentX, currentWidth, currentX ~= nil)
 end
 
 local function TransposedColumns(characters, entries, projection, context)
@@ -318,7 +313,7 @@ function Addon:LayoutEmptyHover(parent, title, hint)
     empty.hint = empty.hint or Theme:CreateText(empty, Theme.Font.assist, Theme.Colors.muted, "LEFT"); empty.hint:ClearAllPoints(); empty.hint:SetPoint("TOPLEFT", empty.title, "BOTTOMLEFT", 0, -8); empty.hint:SetWidth(400); empty.hint:SetWordWrap(true); empty.hint:SetText(hint); empty.hint:Show(); empty:Show()
     for index = 1, #parent.currencyRows do parent.currencyRows[index]:Hide() end
     for index = 1, #parent.currencyHeaders do parent.currencyHeaders[index]:Hide() end
-    parent.currencyBody:SetSize(420, 68); parent.currencyScroll:SetContentHeight(68); parent.currencyScroll:RefreshScrollbar(); Theme:SetCurrentCharacterOutline(parent.currentColumnOutline, false)
+    parent.currencyBody:SetSize(420, 68); parent.currencyScroll:SetContentHeight(68); parent.currencyScroll:RefreshScrollbar(); Theme:HideCurrentCharacterOutline(parent)
 end
 
 function Addon:GetCurrencySurfaceMetrics(context)

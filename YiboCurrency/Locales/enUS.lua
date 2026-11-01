@@ -1,6 +1,20 @@
 local Core = _G.YiboCore
 if not (Core and Core.Locale and type(Core.Locale.Register) == "function") then return end
 Core.Locale:Register("YiboCurrency", "en", {
+    ["FOREVER.TITLE"] = "Currency overview",
+    ["FOREVER.BALANCE"] = "Current character money",
+    ["FOREVER.CURRENT"] = "Current character",
+    ["FOREVER.AMOUNT"] = "%s gold %s silver %s copper",
+    ["FOREVER.REFRESH"] = "Refresh",
+    ["FOREVER.KNOWN"] = "Money snapshot collected.",
+    ["FOREVER.STALE"] = "Showing the previous money snapshot; refresh in the world.",
+    ["FOREVER.ERROR"] = "Money could not be read consistently; the previous snapshot is kept.",
+    ["FOREVER.UNKNOWN"] = "Money has not been confirmed; wait for an update or refresh in the world.",
+    ["FOREVER.NO_BALANCE"] = "Not yet collected",
+    ["FOREVER.CORE_REQUIRED"] = "Upgrade YiboCore to API13 with current-character, account view and cleanup capabilities, then reload.",
+    ["FOREVER.STORE_MISMATCH"] = "The Forever save schema or client scope is incompatible. Data was kept; initialization stopped.",
+    ["FOREVER.WRONG_CLIENT"] = "This manifest requires the Forever client.",
+    ["FOREVER.WRONG_MANIFEST"] = "Use the YiboCurrency Forever manifest on this client, then restart the client.",
     ["UI.CUSTOM_ITEM_COUNT"] = "Saved custom items (%d)",
     ["UI.CUSTOM_ITEM_ID"] = "ID: %s",
     ["UI.CUSTOM_ITEM_SELECT_HINT"] = "Click to select in the controls below. Removal requires confirmation.",

@@ -1,6 +1,20 @@
 local Core = _G.YiboCore
 if not (Core and Core.Locale and type(Core.Locale.Register) == "function") then return end
 Core.Locale:Register("YiboCurrency", "zh", {
+    ["FOREVER.TITLE"] = "货币总览",
+    ["FOREVER.BALANCE"] = "当前角色金币",
+    ["FOREVER.CURRENT"] = "当前角色",
+    ["FOREVER.AMOUNT"] = "%s金 %s银 %s铜",
+    ["FOREVER.REFRESH"] = "刷新",
+    ["FOREVER.KNOWN"] = "金币快照已采集。",
+    ["FOREVER.STALE"] = "显示上次金币快照；进入世界后刷新。",
+    ["FOREVER.ERROR"] = "金币读取失败或结果变化，已保留上次快照。",
+    ["FOREVER.UNKNOWN"] = "金币尚未确认；等待更新或进入世界后刷新。",
+    ["FOREVER.NO_BALANCE"] = "尚未采集",
+    ["FOREVER.CORE_REQUIRED"] = "请升级 YiboCore 至 API13，并启用当前角色、账号窗口及缓存清理能力后重载。",
+    ["FOREVER.STORE_MISMATCH"] = "无限服存档结构或客户端范围不兼容，已保留数据并停止初始化。",
+    ["FOREVER.WRONG_CLIENT"] = "此清单需要无限服客户端。",
+    ["FOREVER.WRONG_MANIFEST"] = "请在此客户端使用 YiboCurrency 无限服清单，然后重启客户端。",
     ["UI.CUSTOM_ITEM_COUNT"] = "已添加的自定义物品（%d）",
     ["UI.CUSTOM_ITEM_ID"] = "ID：%s",
     ["UI.CUSTOM_ITEM_SELECT_HINT"] = "点击选入下方管理控件；删除需再次确认。",
