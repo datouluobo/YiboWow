@@ -56,11 +56,10 @@ local function Statistics(character, snapshot, now)
     local nextExpiry, visibleCount, attachmentSlots, availableMoney, codCount, backlog = nil, 0, 0, 0, 0, 0
     local expiryColorSeverity = 0
 
-    local usedMarkers = {}
     for _, mail in pairs(snapshot.records or {}) do if mail.state == "unverified" then backlog = backlog + 1 end end
     for _, key in ipairs(snapshot.visibleKeys or {}) do
         local mail = snapshot.records[key]
-        if mail and not Addon.ViewModel:IsCollectedEmptyMail(character.id, mail, usedMarkers) then
+        if mail then
             visibleCount = visibleCount + 1
             attachmentSlots = attachmentSlots + #(mail.attachments or {})
             if (tonumber(mail.cod) or 0) <= 0 then

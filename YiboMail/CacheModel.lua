@@ -35,13 +35,12 @@ function Model:GetMails(context, options)
     for index, character in ipairs(self:Characters(context)) do
         order[character.id] = index
         if query ~= "" or not options.character or options.character == character.id then
-            local snapshot, keys, markers = Addon.db.byCharacter[character.id], {}, {}
+            local snapshot, keys = Addon.db.byCharacter[character.id], {}
             for _, key in ipairs(snapshot.visibleKeys) do keys[#keys + 1] = key end
             local state = Addon.Items:GetState(character.id)
             for _, key in ipairs(keys) do
                 local mail = snapshot.records[key]
-                local hidden = mail and View:IsCollectedEmptyMail(character.id, mail, markers)
-                if mail and not hidden then
+                if mail then
                     local kind, risk, source = options.kind or "all", self:Risk(mail), options.source or "all"
                     local sourceMatch = source == "all" or (source == "auction" and mail.auctionMail == true)
                         or (source == "player" and mail.auctionMail ~= true)
