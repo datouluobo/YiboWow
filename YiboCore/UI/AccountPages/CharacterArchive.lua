@@ -24,6 +24,7 @@ local function ArchiveSettings()
     local stored = settings.characterArchive
     stored.fields = type(stored.fields) == "table" and stored.fields or {}
     stored.previewFields = type(stored.previewFields) == "table" and stored.previewFields or {}
+    stored.filters = type(stored.filters) == "table" and stored.filters or {}
     local archive = { fields = stored.fields, previewFields = stored.previewFields, filters = AccountView._sessionArchiveFilters }
     local legacyIDs = { identity = "character.identity", level = "character.level", itemLevel = "character.item-level", zone = "character.zone", primary = "character.profession-primary", secondary = "character.profession-secondary", archaeology = "character.archaeology", fishing = "character.fishing", cooking = "character.cooking", firstAid = "character.first-aid" }
     for oldID, newID in pairs(legacyIDs) do
@@ -35,10 +36,23 @@ local function ArchiveSettings()
         local filter = archive.filters[mode]
         if filter.profile ~= "profiled" and filter.profile ~= "missing" then filter.profile = "all" end
         if filter.includeHidden == nil then filter.includeHidden = mode == "page" end
-        local valid, normalized = Core.LevelFilter:Validate(filter.levelExpr or "")
+        stored.filters[mode] = type(stored.filters[mode]) == "table" and stored.filters[mode] or {}
+        -- Level expressions are account preferences. Navigation snapshots and
+        -- closing the window may reset session filters, but not these values.
+        local valid, normalized = Core.LevelFilter:Validate(stored.filters[mode].levelExpr or "")
         filter.levelExpr = valid and normalized or ""
     end
     return archive
+end
+
+local function SetArchiveLevelFilter(mode, expression)
+    if mode ~= "page" and mode ~= "preview" then return false end
+    local valid, normalized = Core.LevelFilter:Validate(expression)
+    if not valid then return false end
+    ArchiveSettings()
+    Settings().characterArchive.filters[mode].levelExpr = normalized
+    AccountView._sessionArchiveFilters[mode].levelExpr = normalized
+    return true
 end
 
 local function ArchiveFieldVisible(field, preview)
@@ -309,5 +323,6 @@ AccountView._pages.characters = Core.Locale:Bind(function() return {
 } end)
 
 Helpers.ArchiveSettings = ArchiveSettings
+Helpers.SetArchiveLevelFilter = SetArchiveLevelFilter
 Helpers.ArchiveFieldVisible = ArchiveFieldVisible
 Helpers.GetArchiveFields = GetArchiveFields

@@ -815,11 +815,11 @@ local function RefreshSettings(parent)
         Heading(Core:Text("CORE.CHARACTER_ARCHIVE_FILTERS"))
         Button(Core:Text("CORE.TABLE_FILTER") .. (PROFILE_FILTER_LABELS[archive.filters.page.profile] or PROFILE_FILTER_LABELS.all), function() CycleArchiveProfile("page") end, 300)
         Check(Core:Text("CORE.INCLUDE_HIDDEN_CHARACTERS_IN_TABLE_FILTER"), archive.filters.page.includeHidden == true, function(checked) archive.filters.page.includeHidden = checked end)
-        Input(Core:Text("CORE.TABLE_LEVEL_FILTER"), archive.filters.page.levelExpr, function(value) archive.filters.page.levelExpr = value end)
+        Input(Core:Text("CORE.TABLE_LEVEL_FILTER"), archive.filters.page.levelExpr, function(value) Helpers.SetArchiveLevelFilter("page", value) end)
         Heading(Core:Text("CORE.CHARACTER_ARCHIVE_HOVER_FILTERS"))
         Button(Core:Text("CORE.HOVER_FILTER") .. (PROFILE_FILTER_LABELS[archive.filters.preview.profile] or PROFILE_FILTER_LABELS.all), function() CycleArchiveProfile("preview") end, 300)
         Check(Core:Text("CORE.INCLUDE_HIDDEN_CHARACTERS_IN_HOVER_FILTER"), archive.filters.preview.includeHidden == true, function(checked) archive.filters.preview.includeHidden = checked end)
-        Input(Core:Text("CORE.HOVER_LEVEL_FILTER"), archive.filters.preview.levelExpr, function(value) archive.filters.preview.levelExpr = value end)
+        Input(Core:Text("CORE.HOVER_LEVEL_FILTER"), archive.filters.preview.levelExpr, function(value) Helpers.SetArchiveLevelFilter("preview", value) end)
     elseif coreMode then
         Heading(Core:Text("CORE.ADD_TO_ACTION_CENTER"))
         local actions = Core.BusinessItemActions
