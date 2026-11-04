@@ -302,6 +302,7 @@ function Settings:CreatePanel(parent, host)
         local manualOnly = Addon.Catalog and Addon.Catalog:IsManualOnly(id)
         if ok then
             panel.add:SetText(""); panel.message:SetText(manualOnly and "已加入目录，但受游戏限制不会自动开启，请手动右键。" or (fromDrop and "已通过拖放加入目录。" or "已加入目录。")); Addon:Refresh()
+        elseif result == "manual_only" then panel.message:SetText(Addon:T("CATALOG.MANUAL_ONLY_REJECTED", GetItemInfo(id) or tostring(id)))
         elseif result == "already_exists" and manualOnly then panel.message:SetText("该物品已在目录中，但受游戏限制不会自动开启，请手动右键。")
         else panel.message:SetText(result == "already_exists" and "该物品已在目录中。" or "无法添加物品。") end
         Refresh()

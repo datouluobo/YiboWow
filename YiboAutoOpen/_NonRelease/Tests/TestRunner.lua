@@ -12,6 +12,7 @@ local specs = {
     "QueueScanIsolationSpec.lua",
     "QueueFairnessSpec.lua",
     "RetryBackoffSpec.lua",
+    "ProtectedActionSpec.lua",
     "QueueSpec.lua",
     "StartupLifecycleSpec.lua",
     "SensitiveReconcileSpec.lua",

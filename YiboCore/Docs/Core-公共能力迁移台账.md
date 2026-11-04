@@ -819,3 +819,7 @@ Core CalendarDaySpec16项通过；三插件TOC语法107文件及Mists构建Valid
 
 
 2026-10-29 CAP-007 Vault Mists邮件消费追加：MailProvider四处角色枚举接入API13 / character-identity-cache:1共享只读身份目录，避免Mail内容通知后因Core业务域失效而复制完整角色。可选邮件集成Connect/Install检查新能力，不足提示升级并停止该增强，已有本地邮件采集/存档不删除；无并行本地目录回退，能力恢复幂等重连。仅本次邮件消费单元完成接入，Vault其他完整查询仍为迁移库存，Forever独立提供者无变化。CAP-005业务服务版本、隔离与跨角色失效保持，CAP-004/009接口不变。79项回归（新增十封单附件真实Core→Mail→Vault链）与构建证据见[本轮报告](../../Docs/Mail-十封单附件与Vault通知链-2026-10-29.md)，客户端新增字节待验；不外推为Vault全部能力或性能已收口。
+
+2026-11-04 AutoOpen CAP-009 局部复核：当前 1.2.4 工作树的保护拦截提示新增 QUEUE.MANUAL_REQUIRED 中英文资源，沿用既有 Addon:T／Core owner Locale:Get 及独立运行边界，Core 可选设置要求 API13／localization:1 保持。队列保护事件与手动提示的离线回归通过；新增客户端及语言验收待完成，不沿用旧版实机收口结论覆盖本次变化，详见 [保护拦截修复记录](../../YiboAutoOpen/Docs/Mists-保护拦截与手动开启.md)。
+
+2026-11-04 AutoOpen CAP-009 补充：24476 添加拦截的命令与设置反馈新增 CATALOG.MANUAL_ONLY_REJECTED 中英文资源，复用既有可选 Core 的 Addon:T／owner Locale:Get；API13／localization:1 门槛保持。离线回归通过，客户端语言与操作验证待完成，详见 [手动专用与添加拦截](../../YiboAutoOpen/Docs/Mists-保护拦截与手动开启.md)。

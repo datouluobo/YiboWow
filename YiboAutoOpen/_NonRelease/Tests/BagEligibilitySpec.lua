@@ -8,7 +8,8 @@ C_Container = {
     GetContainerItemInfo = function() return { itemID = itemID, isLocked = locked, stackCount = 1 } end,
     GetContainerItemCooldown = function() return cooldownStart, cooldownDuration, 1 end,
 }
-YiboAutoOpen = { Catalog = { manualOnly = { [52340] = true } } }
+YiboAutoOpen = {}
+dofile("YiboAutoOpen/Catalog.lua")
 
 dofile("YiboAutoOpen/BagAdapter.lua")
 
@@ -29,5 +30,9 @@ itemID = 52340
 entries[52340] = true
 bag, slot, item, retryAfter = YiboAutoOpen.BagAdapter:FindNextEligible(entries, quarantined)
 assert(not item and retryAfter == nil, "Abyssal Clam must be skipped because its use action is protected")
+itemID = 24476
+entries[24476] = true
+bag, slot, item, retryAfter = YiboAutoOpen.BagAdapter:FindNextEligible(entries, quarantined)
+assert(not item and retryAfter == nil, "Jaggal Clam must never enter the queue even with a stale catalog entry")
 
 print("Bag eligibility spec passed")

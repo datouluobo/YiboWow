@@ -1,5 +1,5 @@
 YiboAutoOpenDB = {
-    catalogVersion = 1, catalogSeeded = true, catalog = { order = { 39883 } },
+    catalogVersion = 1, catalogSeeded = true, catalog = { order = { 24476, 39883, 24476, 52340 }, entries = { [24476] = true } },
     confirmSourceOrder = { "auto-open-catalog", "object:210565" },
     confirmSourceEntries = {
         ["auto-open-catalog"] = { kind = "catalog", label = "YAO 打开的目录箱子" },
@@ -17,6 +17,14 @@ dofile("YiboAutoOpen/Database.lua")
 YiboAutoOpen.Database:Initialize()
 
 assert(YiboAutoOpenDB.catalogVersion == 2, "the catalog migration should complete")
+assert(not YiboAutoOpenDB.catalog.entries[24476], "existing Jaggal Clam entries must be removed on initialization")
+assert(YiboAutoOpenDB.catalog.entries[39883] and YiboAutoOpenDB.catalog.entries[52340], "other saved catalog items must remain")
+local before = #YiboAutoOpen.Database:GetOrderedItems()
+local added, reason = YiboAutoOpen.Database:AddItem("24476")
+assert(not added and reason == "manual_only", "all add callers must reject Jaggal Clam")
+assert(#YiboAutoOpen.Database:GetOrderedItems() == before and not YiboAutoOpenDB.catalog.entries[24476])
+YiboAutoOpen.Database:Initialize()
+assert(not YiboAutoOpenDB.catalog.entries[24476], "normalization must be idempotent")
 assert(YiboAutoOpenDB.catalog.entries[90735], "the migrated item should be added without recursive initialization")
 assert(YiboAutoOpenDB.bindConfirmFollowCursor == true, "existing profiles should enable bind-confirm cursor placement by default")
 assert(#YiboAutoOpenDB.confirmSourceOrder == 1, "existing profiles should receive only the catalog confirmation source")

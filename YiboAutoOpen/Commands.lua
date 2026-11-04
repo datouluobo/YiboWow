@@ -20,6 +20,7 @@ SlashCmdList.YIBOAUTOOPEN = function(message)
             if command == "add" and IsManualOnly(id) then Addon:Print(ManualOnlyText(id))
             else Addon:Print(command == "add" and ("已加入目录并进入自动开启队列：" .. ItemText(id)) or ("已从目录删除：" .. ItemText(id))) end
             Addon:Refresh()
+        elseif result == "manual_only" then Addon:Print(Addon:T("CATALOG.MANUAL_ONLY_REJECTED", ItemText(id)))
         elseif result == "already_exists" and command == "add" and IsManualOnly(id) then Addon:Print(ManualOnlyText(id))
         else Addon:Print(result == "already_exists" and "该物品已在目录中。" or "该物品不在目录中。") end
     elseif command == "list" then

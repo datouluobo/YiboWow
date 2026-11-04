@@ -1,6 +1,8 @@
 local Addon = _G.YiboAutoOpen
 local FALLBACK = {
     zh = {
+        ["CATALOG.MANUAL_ONLY_REJECTED"] = "%s 仅支持手动开启，未加入自动开包目录，请在背包中右键开启。",
+        ["QUEUE.MANUAL_REQUIRED"] = "物品 #%d 被客户端保护机制拦截，已停止本次会话的自动重试，请手动开启。",
         ["CORE.MISSING"] = "完整设置功能需要 YiboCore API v13；未安装 Core 不影响自动开包与 /yao 命令使用。",
         ["CORE.UPGRADE_REQUIRED"] = "YiboAutoOpen 设置页需要 YiboCore API v13 与 localization:1，请升级 Core。",
         ["SETTINGS.TITLE"] = "自动开包",
@@ -9,6 +11,8 @@ local FALLBACK = {
         ["CORE.PANEL_FAILED"] = "Core 设置注册失败，已继续使用命令模式：%s",
     },
     en = {
+        ["CATALOG.MANUAL_ONLY_REJECTED"] = "%s must be opened manually and was not added to the auto-open catalog. Right-click it in your bags to open it.",
+        ["QUEUE.MANUAL_REQUIRED"] = "Item #%d was blocked by client protection. Automatic retries are stopped for this session; please open it manually.",
         ["CORE.MISSING"] = "Full settings require YiboCore API v13. Without Core, automatic opening and /yao commands remain available.",
         ["CORE.UPGRADE_REQUIRED"] = "The YiboAutoOpen settings page requires YiboCore API v13 and localization:1. Please update YiboCore.",
         ["SETTINGS.TITLE"] = "Auto Open",

@@ -217,7 +217,16 @@ function Queue:ProcessNext()
     local pending = { itemID = item.itemID, bag = bag, slot = slot, slotItemID = item.itemID, slotCount = item.count, beforeTotal = Addon.BagAdapter:GetTotalItemCount(item.itemID), retries = Addon.runtime.failures[item.itemID] or 0, startedAt = GetTime and GetTime() or 0, token = Addon.runtime.generation }
     Addon.runtime.pending = pending
     if Addon.BindConfirmAssist then Addon.BindConfirmAssist:Arm(pending) end
+    pending.usingItem = true
     local useOK, useError = pcall(function() Addon.BagAdapter:UseItem(bag, slot) end)
+    pending.usingItem = nil
+    if pending.protectionBlocked then
+        self:QuarantineItem(pending.itemID, "protected-action")
+        self:CancelItem(pending.itemID)
+        Addon:NotifyIssue("quarantine:" .. pending.itemID, Addon:T("QUEUE.MANUAL_REQUIRED", pending.itemID))
+        self:RequestScan()
+        return
+    end
     pending.useCallFailed = not useOK
     Addon.runtime.queueState = "WAITING_RESULT"
     if not useOK then Addon:NotifyIssue("use-call:" .. item.itemID, "调用容器开启接口失败，稍后会按失败重试：" .. tostring(useError)) end
@@ -314,7 +323,15 @@ function Queue:ScheduleBagRefresh()
     end)
 end
 function Queue:OnEvent(event, ...)
-    if event == "BAG_UPDATE" or event == "BAG_UPDATE_DELAYED" then self:ScheduleBagRefresh()
+    if event == "ADDON_ACTION_FORBIDDEN" or event == "ADDON_ACTION_BLOCKED" then
+        local addonName = ...
+        local pending = Addon.runtime.pending
+        -- Protection events are synchronous. Attribute UNKNOWN() only while
+        -- our item-use call is on the stack, never during later UI activity.
+        if addonName == Addon.NAME and pending and pending.usingItem then
+            pending.protectionBlocked = true
+        end
+    elseif event == "BAG_UPDATE" or event == "BAG_UPDATE_DELAYED" then self:ScheduleBagRefresh()
     elseif event == "ITEM_PUSH" then
         -- ITEM_PUSH identifies a newly received item more precisely than a
         -- generic bag update.  A previous transient failure for the same ID
@@ -394,6 +411,8 @@ end)
 -- isolation so one unsupported optional event cannot prevent PLAYER_LOGIN,
 -- PLAYER_ENTERING_WORLD and bag events from receiving an OnEvent handler.
 local events = { "ADDON_LOADED", "PLAYER_LOGIN", "PLAYER_ENTERING_WORLD", "LOADING_SCREEN_ENABLED", "LOADING_SCREEN_DISABLED", "INSTANCE_CHANGED", "ZONE_CHANGED", "ZONE_CHANGED_INDOORS", "ZONE_CHANGED_NEW_AREA", "BAG_UPDATE", "BAG_UPDATE_DELAYED", "ITEM_PUSH", "PLAYER_REGEN_ENABLED", "PLAYER_DEAD", "PLAYER_ALIVE", "PLAYER_UNGHOST", "LOOT_OPENED", "LOOT_CLOSED", "LOOT_BIND_CONFIRM", "MERCHANT_SHOW", "MERCHANT_CLOSED", "BANKFRAME_OPENED", "BANKFRAME_CLOSED", "MAIL_SHOW", "MAIL_CLOSED", "TRADE_SHOW", "TRADE_CLOSED", "GUILDBANKFRAME_OPENED", "GUILDBANKFRAME_CLOSED", "VOID_STORAGE_OPEN", "VOID_STORAGE_CLOSE", "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_STOP", "UNIT_SPELLCAST_SUCCEEDED", "UNIT_SPELLCAST_FAILED", "UNIT_SPELLCAST_INTERRUPTED" }
+events[#events + 1] = "ADDON_ACTION_FORBIDDEN"
+events[#events + 1] = "ADDON_ACTION_BLOCKED"
 for _, event in ipairs(events) do
     pcall(frame.RegisterEvent, frame, event)
 end
