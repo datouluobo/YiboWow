@@ -1196,16 +1196,44 @@ function AccountView:CreateFrame()
     return frame
 end
 
-local function NavigationRequiredHeight(page)
-    local count
-    if page and page.id == "settings" then
-        count = 6
-        for _, registered in ipairs(AccountView._pageOrder) do if not registered.internal then count = count + 1 end end
-        for _ in ipairs(Core:GetRegisteredSettingsPanels()) do count = count + 1 end
+local function NavigationPages(activePageID)
+    local pages = {}
+    pages[#pages + 1] = { id = "account-view-back", title = Core:Text("CORE.BACK"), back = true }
+    if activePageID == "settings" then
+        pages[#pages + 1] = { id = "settings-core-heading", title = Core:Text("CORE.CORE_SETTINGS"), settingsTargetID = "general", coreHeading = true }
+        pages[#pages + 1] = { id = "settings-core", title = Core:Text("CORE.WINDOW"), settingsTargetID = "core" }
+        pages[#pages + 1] = { id = "settings-sorting", title = Core:Text("CORE.CHARACTERS_SORTING"), settingsTargetID = "sorting" }
+        pages[#pages + 1] = { id = "settings-bar", title = Core:Text("ENTRY.TAB_BAR"), settingsTargetID = "bar" }
+        pages[#pages + 1] = { id = "settings-display", title = Core:Text("CORE.DISPLAY_ENTRIES"), settingsTargetID = "display" }
+        local businessSettings = {}
+        for _, page in ipairs(AccountView._pageOrder) do
+            if not page.internal and not page.hideFromSettings then businessSettings[#businessSettings + 1] = { id = "settings-" .. page.id, title = page.title, settingsTargetID = page.id, addonName = page.addonName or page.id } end
+        end
+        for _, panel in ipairs(Core:GetRegisteredSettingsPanels()) do
+            businessSettings[#businessSettings + 1] = { id = "addon-settings:" .. panel.id, title = panel.title, settingsTargetID = "addon-settings:" .. panel.id, addonName = panel.addonName }
+        end
+        table.sort(businessSettings, function(left, right) return left.addonName < right.addonName end)
+        for _, item in ipairs(businessSettings) do pages[#pages + 1] = item end
     else
-        count = 4 -- 返回、概览、角色档案、关于
-        for _, registered in ipairs(AccountView._pageOrder) do if PageEnabled(registered) then count = count + 1 end end
+        pages = { pages[1], AccountView._pages.overview }
+        -- The interval between overview (-20) and character archive (-10) is
+        -- reserved for a page explicitly promoted directly below overview.
+        -- All ordinary business pages retain their catalog's alphabetical order.
+        for _, page in ipairs(AccountView._pageOrder) do
+            if not page.internal and PageEnabled(page) and (page.order or 100) < -10 then pages[#pages + 1] = page end
+        end
+        pages[#pages + 1] = AccountView._pages.characters
+        for _, page in ipairs(AccountView._pageOrder) do
+            if not page.internal and PageEnabled(page) and (page.order or 100) >= -10 then pages[#pages + 1] = page end
+        end
+        pages[#pages + 1] = AccountView._pages.help
+        pages[#pages + 1] = AccountView._pages.about
     end
+    return pages
+end
+
+local function NavigationRequiredHeight(page)
+    local count = #NavigationPages(page and page.id)
     local navigationHeight = Theme.Space.xs * 2 + count * Theme.Table.rowHeight + math.max(0, count - 1) * Theme.Space.xxs
     return Theme.Geometry.titleBar + Theme.Geometry.shellBorder * 2 + navigationHeight
 end
@@ -1307,38 +1335,7 @@ end
 function AccountView:RefreshNavigation()
     local frame = self:CreateFrame()
     if frame.preview then return end
-    local pages = {}
-    pages[#pages + 1] = { id = "account-view-back", title = Core:Text("CORE.BACK"), back = true }
-    if self.activePageID == "settings" then
-        pages[#pages + 1] = { id = "settings-core-heading", title = Core:Text("CORE.CORE_SETTINGS"), settingsTargetID = "general", coreHeading = true }
-        pages[#pages + 1] = { id = "settings-core", title = Core:Text("CORE.WINDOW"), settingsTargetID = "core" }
-        pages[#pages + 1] = { id = "settings-sorting", title = Core:Text("CORE.CHARACTERS_SORTING"), settingsTargetID = "sorting" }
-        pages[#pages + 1] = { id = "settings-bar", title = Core:Text("ENTRY.TAB_BAR"), settingsTargetID = "bar" }
-        pages[#pages + 1] = { id = "settings-display", title = Core:Text("CORE.DISPLAY_ENTRIES"), settingsTargetID = "display" }
-        local businessSettings = {}
-        for _, page in ipairs(self._pageOrder) do
-            if not page.internal and not page.hideFromSettings then businessSettings[#businessSettings + 1] = { id = "settings-" .. page.id, title = page.title, settingsTargetID = page.id, addonName = page.addonName or page.id } end
-        end
-        for _, panel in ipairs(Core:GetRegisteredSettingsPanels()) do
-            businessSettings[#businessSettings + 1] = { id = "addon-settings:" .. panel.id, title = panel.title, settingsTargetID = "addon-settings:" .. panel.id, addonName = panel.addonName }
-        end
-        table.sort(businessSettings, function(left, right) return left.addonName < right.addonName end)
-        for _, item in ipairs(businessSettings) do pages[#pages + 1] = item end
-    else
-        pages = { pages[1], self._pages.overview }
-        -- The interval between overview (-20) and character archive (-10) is
-        -- reserved for a page explicitly promoted directly below overview.
-        -- All ordinary business pages retain their catalog's alphabetical order.
-        for _, page in ipairs(self._pageOrder) do
-            if not page.internal and PageEnabled(page) and (page.order or 100) < -10 then pages[#pages + 1] = page end
-        end
-        pages[#pages + 1] = self._pages.characters
-        for _, page in ipairs(self._pageOrder) do
-            if not page.internal and PageEnabled(page) and (page.order or 100) >= -10 then pages[#pages + 1] = page end
-        end
-        pages[#pages + 1] = self._pages.help
-        pages[#pages + 1] = self._pages.about
-    end
+    local pages = NavigationPages(self.activePageID)
     for index, page in ipairs(pages) do
         local button = frame.navButtons[index]
         if not button then

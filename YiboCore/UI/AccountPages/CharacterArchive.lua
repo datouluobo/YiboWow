@@ -297,7 +297,8 @@ local function GetCharacterSurfaceMetrics(context)
     local fields = GetArchiveFields(false)
     local tableWidth = GetArchiveTableWidth(fields, GetArchiveColumnWidths(fields))
     local inset = Theme:GetMatrixInsets(context and context.preview)
-    return { minContentWidth = 582, naturalContentWidth = tableWidth + inset.left + inset.right, minContentHeight = 150, naturalContentHeight = inset.top + Theme.Table.headerHeight + Theme.Space.xs + math.min(count, 20) * Theme.Table.rowHeight + inset.bottom, verticalOverflow = "content" }
+    local contentWidth = math.max(582, tableWidth + inset.left + inset.right)
+    return { minContentWidth = contentWidth, naturalContentWidth = contentWidth, minContentHeight = 150, naturalContentHeight = inset.top + Theme.Table.headerHeight + Theme.Space.xs + math.min(count, 20) * Theme.Table.rowHeight + inset.bottom, verticalOverflow = "content" }
 end
 
 local function GetCharacterHoverMetrics(context)
