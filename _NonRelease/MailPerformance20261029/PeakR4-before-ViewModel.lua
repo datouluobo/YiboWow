@@ -1,0 +1,203 @@
+local Addon = _G.YiboMail
+local View = {}; Addon.ViewModel = View
+function View:ItemBorder(item)
+    local name, link, quality
+    if type(GetItemInfo) == "function" then name, link, quality = GetItemInfo(item.itemLink or item.itemID) end
+    local color = quality and ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[quality]
+    if color then return { color.r, color.g, color.b, 1 }, not name end
+    if type(item.itemLink) == "string" then
+        local red, green, blue = item.itemLink:match("^|c[fF][fF](%x%x)(%x%x)(%x%x)|H")
+        if red then return { tonumber(red, 16) / 255, tonumber(green, 16) / 255, tonumber(blue, 16) / 255, 1 }, not name end
+    end
+    return { 0.55, 0.6, 0.58, 1 }, not name
+end
+function View:AttachmentBorder(group)
+    local color, needsItemInfo = self:ItemBorder(group.item)
+    local remaining = group.expiresAtEstimate and group.expiresAtEstimate - Addon:Now() or math.huge
+    if remaining <= 3 * 86400 then
+        color = remaining <= 86400 and { 1, 0.22, 0.16, 1 } or { 1, 0.68, 0.12, 1 }
+    end
+    return color, needsItemInfo
+end
+local MAX_FAVORITE_CONTACTS = 16
+local function Trim(value) return tostring(value or ""):match("^%s*(.-)%s*$") end
+local function NormalizeContactAddress(value)
+    if Addon.Recipients then return Addon.Recipients:Normalize(value) end
+    local address = Trim(value)
+    if address == "" or address:find("[|\n\r]") then return nil, Addon:T("UI.TEXT_0540") end
+    local name, realm = address:match("^([^-]+)%-(.+)$")
+    if not name then
+        if address:find("-", 1, true) then return nil, Addon:T("UI.TEXT_0538") end
+        local character = Addon.Core.Characters:GetCurrent({ identityOnly = true })
+        name, realm = address, character and character.realm
+    end
+    name, realm = Trim(name), Trim(realm)
+    if name == "" or realm == "" or name:find("%s") then return nil, Addon:T("UI.TEXT_0269") end
+    return name .. "-" .. realm
+end
+local function ContactAddressKey(value)
+    if Addon.Recipients then return Addon.Recipients:Key(value) end
+    return string.lower((tostring(value or "")):gsub("%s", ""))
+end
+function View:Escape(value) return tostring(value or ""):gsub("|", "||") end
+function View:CharacterLabel(character, full)
+    local characters = Addon.Core.Characters
+    local current = characters:GetCurrent({ identityOnly = true })
+    local reference = current and current.realm
+    local mode = full and "full" or (reference and reference:find("%S") and "sameRealm" or "full")
+    if not character.realm or character.realm == "" then mode = "omit" end
+    local options = { nameMode = full and "original" or "short", realmMode = mode, referenceRealm = reference }
+    local label = characters:FormatName(character, options) or Addon:T("UI.TEXT_0400")
+    local name = characters:FormatName(character, { nameMode = options.nameMode }) or Addon:T("UI.TEXT_0400")
+    local color = character.class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[character.class]
+    local displayName = self:Escape(name)
+    if color then displayName = string.format("|cff%02x%02x%02x%s|r", math.floor(color.r * 255 + 0.5), math.floor(color.g * 255 + 0.5), math.floor(color.b * 255 + 0.5), displayName) end
+    return displayName .. self:Escape(label:sub(#name + 1))
+end
+function View:CounterpartLabel(address, owner)
+    if not address or address == "" then return Addon:T("UI.TEXT_0399") end
+    -- Unqualified senders belong to the mailbox owner's realm, including
+    -- offline mailboxes. Formatting never changes a saved business address.
+    local name, realm = tostring(address or ""):match("^([^-]+)%-(.+)$")
+    name, realm = name or tostring(address or Addon:T("UI.TEXT_0399")), realm or (owner and owner.realm)
+    local function Key(value) return tostring(value or ""):gsub("%s+", ""):lower() end
+    for _, character in ipairs(Addon.Core.Characters:GetAllCached({ identityOnly = true })) do
+        if Key(character.name) == Key(name) and Key(character.realm) == Key(realm) then return self:CharacterLabel(character) end
+    end
+    return self:CharacterLabel({ name = name, realm = realm })
+end
+function View:Money(value) return string.format(Addon:T("UI.TEXT_0059"), (tonumber(value) or 0) / 10000) end
+function View:Expiry(mail)
+    local expiry = tonumber(mail and mail.expiresAtEstimate)
+    if not expiry or expiry <= 0 then return Addon:T("UI.TEXT_0398") end
+    local seconds = expiry - Addon:Now()
+    return seconds <= 0 and Addon:T("UI.TEXT_0159") or (seconds < 86400 and string.format(Addon:T("UI.TEXT_0057"), seconds / 3600) or string.format(Addon:T("UI.TEXT_0056"), seconds / 86400))
+end
+function View:ExpiryColor(mail)
+    local seconds = (tonumber(mail and mail.expiresAtEstimate) or 0) - Addon:Now()
+    if seconds <= 86400 then return 1, 0.35, 0.35 end
+    if seconds <= 3 * 86400 then return 1, 0.82, 0.2 end
+    return 0.25, 0.9, 0.35
+end
+function View:IsCollectedEmptyMail(characterID, mail, usedMarkers)
+    if not mail or #((mail.attachments) or {}) > 0 or (tonumber(mail.money) or 0) > 0 or (tonumber(mail.cod) or 0) > 0 then return false end
+    local markers = Addon.db.collectedMailMarkers[characterID]
+    if not markers then return false end
+    usedMarkers = usedMarkers or {}
+    for markerIndex, marker in ipairs(markers) do
+        if not usedMarkers[markerIndex] and marker.signature == mail.signature
+            and math.abs((tonumber(marker.expiresAtEstimate) or 0) - (tonumber(mail.expiresAtEstimate) or 0)) <= 86400 then
+            usedMarkers[markerIndex] = true
+            return true
+        end
+    end
+    return false
+end
+function View:ActionID(characterID, mailKey, slot) return Addon.Encode({ characterID, mailKey, slot }) end
+function View:GetMails(context, options)
+    options = options or {}; local result = {}
+    local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
+    local query = string.lower(options.search or "")
+    local liveStates = {}
+    for _, character in ipairs(context.characters or {}) do
+        local snapshot = Addon.db.byCharacter[character.id]
+        if snapshot then
+            local usedCollectedMarkers = not options.history and {} or nil
+            local keys = options.history and {} or snapshot.visibleKeys
+            if options.history then for key, mail in pairs(snapshot.records) do if mail.state ~= "observed" then keys[#keys + 1] = key end end end
+            for _, key in ipairs(keys) do
+                local mail = snapshot.records[key]
+                local hiddenAsCollected = not options.history and self:IsCollectedEmptyMail(character.id, mail, usedCollectedMarkers)
+                if mail and not hiddenAsCollected then
+                local parts = { mail.sender, mail.subject, character.name, tostring(mail.money), mail.mailType }
+                for _, item in ipairs(mail.attachments) do parts[#parts + 1] = item.name or ""; parts[#parts + 1] = tostring(item.itemID) end
+                local searchable = string.lower(table.concat(parts, " "))
+                local match = query == "" or searchable:find(query, 1, true)
+                if options.kind and options.kind ~= "all" then
+                    match = match and (options.kind == mail.mailType or (options.kind == "money" and mail.money > 0)
+                        or (options.kind == "items" and #mail.attachments > 0) or (options.kind == "urgent" and mail.expiresAtEstimate - Addon:Now() < 3 * 86400))
+                end
+                if match then
+                    local live = liveStates[character.id]
+                    if not live then live = Addon.Items:GetState(character.id); liveStates[character.id] = live end
+                    local actionable = current and current.id == character.id and (live.status == "known" or live.status == "partial")
+                        and mail.state == "observed" and mail.cod == 0
+                    local restriction
+                    if mail.cod > 0 then restriction = Addon:T("UI.TEXT_0111")
+                    elseif not current or current.id ~= character.id then restriction = Addon:T("UI.TEXT_0195")
+                    elseif mail.state ~= "observed" then restriction = Addon:T("UI.TEXT_0595")
+                    elseif live.status == "error" then restriction = Addon:T("UI.TEXT_0605")
+                    elseif live.status == "stale" then restriction = Addon:T("UI.TEXT_0601")
+                    elseif live.status == "not-yet-scanned" then restriction = Addon:T("UI.TEXT_0602")
+                    elseif live.status ~= "known" and live.status ~= "partial" then restriction = Addon:T("UI.TEXT_0607")
+                    else restriction = Addon:T("UI.TEXT_0284") end
+                    result[#result + 1] = { character = character, mail = mail, key = key,
+                        actionable = actionable, restriction = restriction }
+                end
+                end
+            end
+        end
+    end
+    local order = {}; for i, c in ipairs(context.characters or {}) do order[c.id] = i end
+    table.sort(result, function(a, b)
+        if options.history then return a.mail.stateEnteredAt > b.mail.stateEnteredAt end
+        if options.sort == "expiry" and a.mail.expiresAtEstimate ~= b.mail.expiresAtEstimate then return a.mail.expiresAtEstimate < b.mail.expiresAtEstimate end
+        -- The outer character order is supplied by Core and remains authoritative.
+        if a.character.id ~= b.character.id then return order[a.character.id] < order[b.character.id] end
+        return a.mail.inboxIndex < b.mail.inboxIndex
+    end)
+    return result
+end
+function View:GetGroupsFromEntries(entries, options)
+    local groups, result = {}, {}
+    for _, entry in ipairs(entries or {}) do
+        if (tonumber(entry.mail.money) or 0) > 0 and (tonumber(entry.mail.cod) or 0) == 0 then
+            local group = groups.money
+            if not group then
+                group = { id = "money", money = true, item = { name = Addon:T("UI.TEXT_0617"), texture = "Interface\\Icons\\INV_Misc_Coin_01" },
+                    quantity = 0, sources = {}, expiresAtEstimate = entry.mail.expiresAtEstimate }
+                groups.money = group; result[#result + 1] = group
+            end
+            group.quantity = group.quantity + entry.mail.money
+            group.expiresAtEstimate = math.min(group.expiresAtEstimate or math.huge, entry.mail.expiresAtEstimate or math.huge)
+            group.sources[#group.sources + 1] = { entry = entry, money = entry.mail.money }
+        end
+        for _, item in ipairs(entry.mail.attachments) do
+            local identity = item.variantKey
+            if not groups[identity] then
+                groups[identity] = { id = identity, item = item, quantity = 0, sources = {}, expiresAtEstimate = entry.mail.expiresAtEstimate }
+                result[#result + 1] = groups[identity]
+            end
+            local group = groups[identity]; group.quantity = group.quantity + item.quantity
+            group.expiresAtEstimate = math.min(group.expiresAtEstimate, entry.mail.expiresAtEstimate)
+            group.sources[#group.sources + 1] = { entry = entry, item = item }
+        end
+    end
+    if not options or options.sort ~= "inbox" then
+        table.sort(result, function(a, b)
+            if a.expiresAtEstimate ~= b.expiresAtEstimate then return a.expiresAtEstimate < b.expiresAtEstimate end
+            return tostring(a.id) < tostring(b.id)
+        end)
+    end
+    return result
+end
+function View:GetGroups(context, options)
+    return self:GetGroupsFromEntries(self:GetMails(context, options), options)
+end
+function View:GetContacts()
+    return Addon.Recipients and Addon.Recipients:Candidates("contacts") or {}
+end
+function View:SaveContact(address, label, oldAddress)
+    if Addon.Recipients then return Addon.Recipients:SaveContact(address, label, oldAddress) end
+    local normalized, err = NormalizeContactAddress(address)
+    if not normalized then return nil, err end
+    address = normalized
+    local key = ContactAddressKey(address)
+    for _, contact in ipairs(Addon.db.contacts) do
+        local priorAddress = NormalizeContactAddress(contact.address) or contact.address
+        if contact.address ~= oldAddress and ContactAddressKey(priorAddress) == key then return nil, Addon:T("UI.TEXT_0491") end
+    end
+    if oldAddress then for _, contact in ipairs(Addon.db.contacts) do if contact.address == oldAddress then contact.address, contact.label = address, label ~= "" and label or address; return true end end end
+    if #Addon.db.contacts >= MAX_FAVORITE_CONTACTS then return nil, Addon:T("UI.TEXT_0259") end
+    Addon.db.contacts[#Addon.db.contacts + 1] = { address = address, label = label ~= "" and label or address }; return true
+end
