@@ -1,0 +1,10 @@
+## Interface: 16001
+## Title: |cff20e070[Yibo]|r YiboProgressForeverProbe
+## Notes: Non-release read-only mount and profession evidence. Build 70374 baseline.
+## Notes-zhCN: 非发布只读坐骑与专业取证；目标识别基线为构建 70374。
+## Author: YiboSoft
+## Version: 0.1.0
+## SavedVariables: YiboProgressForeverProbeDB
+
+Locale.lua
+Probe.lua

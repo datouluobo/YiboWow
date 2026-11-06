@@ -43,8 +43,16 @@ dofile("YiboCore/Runtime/Events.lua")
 dofile("YiboCore/Runtime/Registry.lua")
 dofile("YiboCore/Runtime/Contracts.lua")
 dofile("YiboCore/UI/Theme.lua")
+InCombatLockdown = InCombatLockdown or function() return false end
+dofile("_NonRelease/CoreIdentityDomainsR1/LoadClient.lua")
 dofile("YiboCore/Runtime/ItemResolver.lua")
 local Core = YiboCore
+local function Localize(owner, files)
+    local addon = assert(_G[owner])
+    if owner == "YiboBuilds" then addon.HasCompatibleCore = function() return true end end
+    addon.T = function(_, key, ...) return Core.Locale:Get(owner, key, ...) end
+    for _, file in ipairs(files) do dofile(owner .. "/Locales/" .. file .. ".lua") end
+end
 local notices = 0
 Core.Print = function() end
 local characters = { { id = "C", name = "星河", realm = "测试" }, { id = "D", name = "暮光", realm = "测试" },
@@ -140,6 +148,10 @@ Equal(Todo.GoalTargets:Initialize(), nil, "old Core stops new enhancement"); Cor
 Register("YiboVault")
 local quantity, covered = 3, true
 YiboVault = { NAME = "YiboVault", Core = Core, db = {}, Copy = function(v) return Core.Defaults:Copy(v) end, Now = function() return clock end, Print = function() end }
+-- Match the real namespace's localization facade; service errors must stay visible.
+YiboVault.T = function(_, key, ...) return Core.Locale:Get("YiboVault", key, ...) end
+dofile("YiboVault/Locales/zh.lua")
+dofile("YiboVault/Locales/en.lua")
 YiboVault.Items = { GetRevision = function() return 1 end, Query = function(_, options)
     local coverage = {}; for _, source in ipairs(options.sources) do coverage[source] = {}; for _, id in ipairs(options.scope.characterIDs) do local locations = {}
         if covered then
@@ -168,6 +180,8 @@ YiboReputation = { db = {}, EnsureDB = function(self) return self.db end, GetFac
 local repRank, repState = 6, "known"
 local domainGet = Core.DataDomains.Get
 Core.DataDomains.Get = function(_, id, domain) if domain == "reputation" then return { schemaVersion = 5, state = repState, updatedAt = clock, data = { contractVersion = 1, factions = { [1] = { standingID = repRank } } } } end; return domainGet(nil,id,domain) end
+Localize("YiboReputation", { "Interface" })
+YiboReputation.GetSnapshot = function(_, id) return Core.DataDomains:Get(id, "reputation") end
 dofile("YiboReputation/GoalTargets.lua"); local Rep = YiboReputation.GoalTargets; assert(Rep:Initialize())
 local rg = assert(Hub.Goals:Add({ providerID = Rep.PROVIDER, objectID = 1, scope = { characterID = "C" }, conditions = { rank = 8 } }))
 Equal(Task(rg.id).readiness, "actionable")
@@ -256,14 +270,18 @@ Equal(Core.BusinessItemActions.bindings[cell].GetIntent().conditions.mode, "hold
 Equal(Core.BusinessItemActions.bindings[cell].GetIntent().conditions.executorMode, "any", "product defaults to shared profession scope")
 Equal(Core.BusinessItemActions.bindings[cell].GetIntent().conditions.quantity, 1, "product defaults to one item")
 local defaultIntent = Core.Defaults:Copy(Core.BusinessItemActions.bindings[cell].GetIntent())
-local defaultNormalized = assert(Craft:Normalize({ intent = defaultIntent }))
-Equal(defaultNormalized.needsConfiguration, nil, "single-output product can be added immediately")
+local defaultNormalized = assert(Craft:Normalize({ intent = defaultIntent, isNewGoal = true }))
+Equal(defaultNormalized.needsConfiguration, nil, "new shared product defaults to all servers")
+Equal(defaultNormalized.intent.conditions.realmScope, "all", "new shared product persists all-server scope")
+defaultIntent.conditions.realmScope = "realm:" .. characters[1].realm
+defaultNormalized = assert(Craft:Normalize({ intent = defaultIntent }))
+Equal(defaultNormalized.needsConfiguration, nil, "single-output product keeps an explicit server scope")
 Core.BusinessItemActions:SetOptions({mode="middle"})
 YiboCrafting.RecipeCatalog.professions[197][101] = {outputItemIDs={123}}
 Craft:Bind(cell, { id = 101, professionID = 197, name = "测试配方", outputItemID = 123 }, nil, nil, true, true)
 local goalsBefore = #Hub.Goals:List()
 cell.scripts.OnClick(cell, "MiddleButton")
-Equal(#Hub.Goals:List(), goalsBefore + 1, "middle click saves one default product goal without editor")
+Equal(#Hub.Goals:List(), goalsBefore + 1, "middle click directly saves a shared product for all servers")
 Craft:Bind(cell, { id = 100, professionID = 197, name = "测试配方", outputItemID = 123 }, "C")
 local castDefault = assert(Craft:Normalize({intent=Core.BusinessItemActions.bindings[cell].GetIntent()}))
 Equal(castDefault.intent.conditions.quantity, 1, "learned cell defaults to one craft")
@@ -294,6 +312,7 @@ local equip = { itemID = 555, instanceKey = "instance:A", gems = { { itemID = 12
 YiboBuilds = { NAME = "YiboBuilds", Core = Core, db = {}, Now = function() return clock end, Print = function() end,
  EnsureDB = function(self) return self.db end, EnchantCatalog = {}, AccountPage = { IsGoalTargetApplicable = function() return true end },
  Snapshot = { GetCharacter = function() return { slots = { primary = { observedEquipment = { capturedAt = clock, slots = { ["1"] = equip } } } } } end } }
+Localize("YiboBuilds", { "zhCN", "enUS" })
 dofile("YiboBuilds/GoalTargets.lua"); local Builds = YiboBuilds.GoalTargets; assert(Builds:Initialize())
 local bi = { providerID = Builds.PROVIDER, scope = { characterID = "C" }, conditions = { buildSlot = "primary", slotID = 1, itemID = 555, instanceKey = "instance:A", kind = "gem", enhancementID = 123, socketIndex = 1 } }
 local bg = assert(Hub.Goals:Add(bi)); Equal(Task(bg.id).readiness, "actionable", "owned gem not applied")
@@ -308,6 +327,7 @@ local balance, balanceState = 3, "known"
 YiboCurrency = { NAME="YiboCurrency", Core=Core, db={}, EnsureDB=function(self)return self.db end,
  GetCatalog=function()return {{id="money",title="金币",source="money"}}end,
  GetValue=function()return {quantity=balance},balanceState end }
+Localize("YiboCurrency", { "zhCN", "enUS" })
 dofile("YiboCurrency/GoalTargets.lua"); local Currency=YiboCurrency.GoalTargets;assert(Currency:Initialize())
 local money=assert(Hub.Goals:Add({providerID=Currency.PROVIDER,objectID="money",scope={characterID="C"},conditions={quantity=5,mode="maintain"}}))
 Equal(Task(money.id).readiness,"actionable"); balanceState="stale";balance=10;Hub.Contracts:Invalidate(Currency.PROVIDER)
@@ -318,6 +338,7 @@ Register("YiboLegendary")
 local legendaryState={status="completed",acquired=true,evidence={source="projection",updatedAt=clock}}
 YiboLegendary={NAME="YiboLegendary",Core=Core,db={byCharacter={C={snapshot={targets={cloak=legendaryState}}}}},
  GetTimestamp=function()return clock end,Catalog={GetTarget=function(_,id)if id=="cloak" then return{id=id,title="披风"}end end}}
+Localize("YiboLegendary", { "Interface" })
 dofile("YiboLegendary/GoalTargets.lua");local Legendary=YiboLegendary.GoalTargets;assert(Legendary:Initialize())
 local lg=assert(Hub.Goals:Add({providerID=Legendary.PROVIDER,objectID="cloak",scope={characterID="C"}}))
 Equal(Task(lg.id).readiness,"unknown","projection is not completion evidence")
@@ -326,6 +347,7 @@ Register("YiboMail")
 local mailKnown=false
 YiboMail={NAME="YiboMail",Core=Core,db={},Now=function()return clock end,ActionTodo={
  Metadata=function()return{revision=1}end,Query=function()return{coverage={C={state=mailKnown and "known-empty" or "not-yet-scanned"}},data={tasks={}}}end}}
+Localize("YiboMail", { "zh", "en" })
 dofile("YiboMail/GoalTargets.lua");local Mail=YiboMail.GoalTargets;assert(Mail:Initialize())
 local mg=assert(Hub.Goals:Add({providerID=Mail.PROVIDER,objectID="view-mailbox",scope={characterID="C"}}))
 Equal(Task(mg.id).readiness,"unknown","unobserved mailbox is not empty")

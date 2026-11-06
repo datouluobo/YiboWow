@@ -1,0 +1,136 @@
+{
+  "status": "temporary-client-validation",
+  "source_sha256": "df73062edaf1e08e529bfc6c7872099f1b446605d9e56400a38f3732c15c88d2",
+  "sizes": [
+    16,
+    24,
+    32,
+    64
+  ],
+  "game_textures": [
+    32,
+    64
+  ],
+  "icons": [
+    {
+      "addon": "YiboCore",
+      "center": [
+        162,
+        254
+      ],
+      "texture": "Media/YiboCore-64.tga"
+    },
+    {
+      "addon": "YiboMail",
+      "center": [
+        435,
+        254
+      ],
+      "texture": "Media/YiboMail-64.tga"
+    },
+    {
+      "addon": "YiboVault",
+      "center": [
+        708,
+        254
+      ],
+      "texture": "Media/YiboVault-64.tga"
+    },
+    {
+      "addon": "YiboBuilds",
+      "center": [
+        980,
+        254
+      ],
+      "texture": "Media/YiboBuilds-64.tga"
+    },
+    {
+      "addon": "YiboAutoOpen",
+      "center": [
+        1254,
+        254
+      ],
+      "texture": "Media/YiboAutoOpen-64.tga"
+    },
+    {
+      "addon": "YiboCurrency",
+      "center": [
+        162,
+        558
+      ],
+      "texture": "Media/YiboCurrency-64.tga"
+    },
+    {
+      "addon": "YiboCrafting",
+      "center": [
+        435,
+        558
+      ],
+      "texture": "Media/YiboCrafting-64.tga"
+    },
+    {
+      "addon": "YiboTodo",
+      "center": [
+        708,
+        558
+      ],
+      "texture": "Media/YiboTodo-64.tga"
+    },
+    {
+      "addon": "YiboReputation",
+      "center": [
+        980,
+        558
+      ],
+      "texture": "Media/YiboReputation-64.tga"
+    },
+    {
+      "addon": "YiboAltoBoss",
+      "center": [
+        1254,
+        558
+      ],
+      "texture": "Media/YiboAltoBoss-64.tga"
+    },
+    {
+      "addon": "YiboLegendary",
+      "center": [
+        162,
+        860
+      ],
+      "texture": "Media/YiboLegendary-64.tga"
+    },
+    {
+      "addon": "YiboMounts",
+      "center": [
+        435,
+        860
+      ],
+      "texture": "Media/YiboMounts-64.tga"
+    },
+    {
+      "addon": "YiboBeastPaths",
+      "center": [
+        708,
+        860
+      ],
+      "texture": "Media/YiboBeastPaths-64.tga"
+    },
+    {
+      "addon": "YiboQuestBlocker",
+      "center": [
+        980,
+        860
+      ],
+      "texture": "Media/YiboQuestBlocker-64.tga"
+    },
+    {
+      "addon": "YiboTaskHub",
+      "center": [
+        1254,
+        860
+      ],
+      "texture": "Media/YiboTaskHub-64.tga"
+    }
+  ]
+}

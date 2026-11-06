@@ -76,6 +76,8 @@ function Native:InboxMenuAction(value)
         end
     elseif value == "pause" then
         if queue.state == "running" then queue:Pause(Addon:T("UI.TEXT_0461")) else panel.notice = Addon:T("UI.TEXT_0271") end
+    elseif value == "delete-empty" and panel.mode == "mail" then
+        self:ReturnSelectedMail(true)
     elseif value == "sort" then
         panel.options.sort = panel.options.sort == "expiry" and "inbox" or "expiry"
         self:RememberInboxSort()
@@ -715,7 +717,7 @@ function Native:RefreshInboxProgress()
     -- A mounted list skips the normal refresh, so refresh its menu availability
     -- here too: pause must become available as soon as a batch starts.
     for index, option in ipairs(panel.menu.options or {}) do
-        local enabled = option.value ~= "select" and option.value ~= "clear"
+        local enabled = option.value ~= "select" and option.value ~= "clear" and option.value ~= "delete-empty"
         if option.value == "pause" then enabled = queue.state == "running" end
         local button = panel.menu.menu.buttons[index]
         button:SetEnabled(enabled); button:SetState(enabled and "default" or "disabled")
@@ -910,7 +912,12 @@ function Native:RefreshInbox(observation)
     local character = context.characters[1]; local coverage = character and Addon.Items:GetState(character.id)
     local progress = Addon.Queue.state == "running" or Addon.Queue.state == "paused"
     local returnSummary
-    if Addon.Queue.operation == "return" then
+    if Addon.Queue.operation == "delete-empty" then
+        if Addon.Queue.state == "complete" then returnSummary = Addon.Queue.message
+        elseif Addon.Queue.state == "paused" then
+            returnSummary = Addon:T("EMPTY_MAIL.SUMMARY", Addon.Queue.completed) .. " " .. Addon.Queue.message
+        end
+    elseif Addon.Queue.operation == "return" then
         if Addon.Queue.state == "complete" then returnSummary = Addon.Queue.message
         elseif Addon.Queue.state == "paused" then
             local unknown = Addon.Queue.pending and 1 or 0
@@ -947,7 +954,10 @@ function Native:RefreshInbox(observation)
     panel.collect:SetState(panel.collect:IsEnabled() and "default" or "disabled")
     self:RefreshMailboxTabs()
     local options = {}
-    if panel.mode == "mail" then options[#options + 1] = { value = "select", label = Addon:T("UI.TEXT_0131") } end
+    if panel.mode == "mail" then
+        options[#options + 1] = { value = "select", label = Addon:T("UI.TEXT_0131") }
+        options[#options + 1] = { value = "delete-empty", label = Addon:T("EMPTY_MAIL.MENU") }
+    end
     options[#options + 1] = { value = "clear", label = panel.mode == "mail" and Addon:T("UI.TEXT_0443") or Addon:T("UI.TEXT_0444") }
     options[#options + 1] = { value = "pause", label = Addon:T("UI.TEXT_0379") }
     options[#options + 1] = { value = "sort", label = Addon:T("UI.TEXT_0151") }
@@ -957,6 +967,8 @@ function Native:RefreshInbox(observation)
     for index, option in ipairs(options) do
         local enabled = true
         if option.value == "select" or option.value == "clear" then enabled = Addon.Queue.state ~= "running" and not Addon.Queue.pending
+        elseif option.value == "delete-empty" then
+            enabled = Addon.Queue.state ~= "running" and not Addon.Queue.pending and not self.deleting and not self.returnConfirmation
         elseif option.value == "pause" then enabled = Addon.Queue.state == "running" end
         local button = panel.menu.menu.buttons[index]
         button:SetEnabled(enabled); button:SetState(enabled and "default" or "disabled")

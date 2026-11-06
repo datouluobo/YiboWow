@@ -14,8 +14,8 @@ O5 当前语义：每角色一条新邮件查看提醒，用户查看但未取�
 | **YiboAltoBoss** | 2.6.0 副本锁定、首领追踪、Task 刷取目录／精确进度与自动展示 | 基础 API5；可选 API11，经 Core 提供 boss.target-catalog、action.todo / planned-targets，消费 task.boss-targets | action.targets v1 已提供精确Boss目标；原目录／配置兼容接口保留，增强API12，客户端待验收 |
 | **YiboAutoOpen** | 玩家配置的物品 ID 目录、背包扫描与受限自动开包队列 | 可选接入 Core API v6 设置页；Core 不可用时使用命令模式 | 未提供库存历史/跨角色库存 API；其 ID 目录仅供自身开包逻辑使用 |
 | **YiboBeastPaths** | 狩猎路线、路线渲染与地图/小地图导航；支持 Mists 与 Mainline 客户端 | 普通路线功能独立运行；Core v6 下可选注册维护/调试界面 | 路线资源和模块是插件内部实现；未声明通用路线消费者 API |
-| **YiboBuilds** | 角色天赋/专精构筑、装备与附魔/宝石/插槽效果快照和账号对比 | Core API13 账号页面、入口、语言、名称格式化、角色清理v2 | action.targets v1.1 宝石／附魔目标与实际应用评估；统一API13，Core适配及卷轴修复已用户实测确认 |
-| **YiboCurrency** | 账号货币、货币上限/周常进度、可监控物品数量和角色对比 | Core 账号页面、入口、统一设置；向 Core 货币目录登记定义 | action.targets v1 指定角色原生货币／金币阈值；增强API12，客户端待验收 |
+| **YiboBuilds** | 角色天赋/专精构筑、装备与附魔/宝石/插槽效果快照和账号对比 | Core API13 账号页面、入口、语言、名称格式化、角色清理v2 | action.targets v1.1 宝石／附魔目标与实际应用评估；统一API13，客户端GUID及交互待验收 |
+| **YiboCurrency** | 账号货币、货币上限/周常进度、物品代币和角色对比 | 0.9.1工作树最低Core1.12.4工作树 / API13；动态字段、统一主表／悬停设置、双语、名称及入口 | action.targets v1 指定角色原生货币／金币阈值；目标能力v1；数量与API13离线验证完成，客户端待验，货币自有存储／旧Core只读导入代码已完成，客户端待验 |
 | **YiboLegendary（传说之路）** | 角色阶段进度、任务/声望/货币等证据快照、账号路线对比、手动证据校正 | Core 页面、入口、悬停预览、统一设置、角色缓存清理；读取 Core 中性领域事实 | action.targets v1 最终获得目标，真实／明确人工证据；增强API12，客户端待验收 |
 | **YiboMounts** | 坐骑来源 Tooltip、收藏状态显示与诊断信息 | 当前 TOC 未声明 YiboCore 依赖；Core 可用时可选注册设置面板 | 未声明稳定消费者 API |
 | **YiboQuestBlocker** | 阻止或筛选任务接受流程，提供任务/规则配置及诊断 | Core 页面、入口、设置、角色缓存清理；另含兼容入口组件 | 阻止任务接受是副作用型能力，不能当作通用任务数据 API；未声明稳定消费者 API |
@@ -47,7 +47,9 @@ Core 是共享运行时与通用角色事实层，不是所有业务数据的集
 - `YiboCore.DataDomains:Get(characterID, domainID)` / `GetState(...)`：读取 Core 管理的领域快照及状态。
 - 当前领域由 Core 自己采集和拥有，包括身份、经济、经济物品、装备、地点、专业、声望和专精等。`known`、`stale`、`unavailable`、`not-yet-scanned`、`error` 等状态不可互相当作零值。
 - `DATA_DOMAIN_UPDATED`：领域变化通知，payload 按 `domainID` 过滤。业务插件不能直接修改领域快照。
-- `YiboCore.CurrencyCatalog:RegisterCurrency/RegisterItem`：登记货币和相关物品的目录定义；目录登记不等于跨角色业务库存查询 API。
+- Core1.12.4工作树已撤下CurrencyCatalog及货币采集域；货币目录与原生余额由Currency拥有，旧域仅供公开只读导入。
+- `character-archive.fields` v1.0：通过Core Contracts枚举档案业务字段；Core提供 `character-archive-providers:1` 通用适配，不读取业务SavedVariables。
+- `character-cleanup:2`：持久登记动态数据所有者及延后删除，兼容v1；详见[档案字段与清理契约](../YiboCore/Docs/API-v13-档案业务字段与清理所有者.md)。
 
 ### 2.3 账号视图、入口、设置和清理
 
@@ -61,7 +63,7 @@ Core 是共享运行时与通用角色事实层，不是所有业务数据的集
 - `YiboCore.UITheme`：账号矩阵、表格、滚动区域和预览等共享 UI 原语；遵循 API 接入指南，不复制 Core 的窗口/入口实现。
 - API v7 提供 `basic-input:1`、`item-resolver:1` 与物品选择；Core 1.7.1 / API v8 的 `item-picker:2` 扩展批量确认与保留输入，业务校验／执行仍归业务插件。
 - API v9 的 `NotifyPageChanged(pageID)` 合并下一帧同页面通知，执行时复核可见性；`RefreshPage` 保留即时调用路径。
-- API v10 / `account-view:2` 的可选页面字段 `firstUseTip` 提供首次打开提示；Core 概览、Builds、Reputation、Todo 已写入。Builds1.5.0最低Core1.12.5 / API13，离线验证通过且用户确认适配正常；其他插件要求以各自声明为准。
+- API v10 / `account-view:2` 的可选页面字段 `firstUseTip` 提供首次打开提示；Core 概览、Builds、Reputation、Todo 已写入。Builds 工作树最低 API13，1057项离线检查通过；各插件游戏内首开提示仍待验收，其他插件最低版本以各自声明为准。
 
 - API v12 / business-item-actions:1：全局手势、项目绑定、可见添加菜单及解绑，见 [契约](../YiboCore/Docs/API-v12-业务项目主动添加.md)。来源原基础版本保留的兼容例外见实施记录。
 
@@ -92,11 +94,11 @@ YiboVault（来源适配、各容器缓存与查询 API）
        └─ Reputation / Todo / TaskHub 等后续真实需求再接入
 ```
 
-Core 为这些插件提供角色范围、页面、入口、设置和服务连接，不复制邮件或库存快照。Vault 经 Core 发现 Mail 的邮件来源，Mail 缺失／注销／主版本不兼容时保留独立基础扫描；提供方已注册但未就绪时等待采集，不开启第二轮扫描或当作空邮箱。当前状态语义与迁移验证见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)，此前阶段安排见 [联合实施计划](YiboCore-Vault-Mail-实施计划.md)。
+Core 为这些插件提供角色范围、页面、入口、设置和服务连接，不复制邮件或库存快照。Vault 经 Core 发现 Mail 的邮件来源，Mail 缺失／注销／主版本不兼容时保留独立基础扫描；提供方已注册但未就绪时等待采集，不开启第二轮扫描或当作空邮箱。当前状态语义与迁移验证见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)，业务接口边界另见 [Vault／Mail 公共契约](YiboVault-Mail-API-v1-契约.md)。
 
 ### 4.1 Vault 物品查询 API v1
 
-Vault 的 `Items:Query`、`GetSourceState`、`GetStorageSummary`、`GetPersonalCounts`、能力检查、revision 和事件已有运行时；调用范围、参数错误、覆盖状态及事件提交顺序见 [YiboVault / YiboMail Public API v1 契约](YiboVault-Mail-API-v1-契约.md)。返回数据为副本；空结果只表示当前查询缓存无匹配记录，不能推断所有角色和容器都已采集。YiboCurrency 的物品代币矩阵按来源选用 Vault 已扫描的个人背包、银行和装备数量或 Core 有依据的旧值，不重复累计；邮件、拍卖和公会共享库存只作为来源明细。
+Vault 的 `Items:Query`、`GetSourceState`、`GetStorageSummary`、`GetPersonalCounts`、能力检查、revision 和事件已有运行时；调用范围、参数错误、覆盖状态及事件提交顺序见 [YiboVault / YiboMail Public API v1 契约](YiboVault-Mail-API-v1-契约.md)。返回数据为副本；空结果只表示当前查询缓存无匹配记录，不能推断所有角色和容器都已采集。YiboCurrency0.9.1工作树 的物品代币矩阵每角色选择Vault个人来源或自有随身快照；不跨来源补齐银行／装备，不运行读取旧Core货币域。未知、历史和不完整继续区分；邮件、拍卖和公会共享库存只作为来源明细。
 
 ### 4.2 已实现与待实现边界
 
@@ -115,3 +117,6 @@ Vault 的 `Items:Query`、`GetSourceState`、`GetStorageSummary`、`GetPersonalC
 - 数据归属、状态语义和依赖关系。
 
 不要从函数名推断 API 稳定性，也不要把产品目标写成已发布能力。
+
+2026-10-15 Currency0.9.1工作树 / Core1.12.4工作树：保留API13动态字段、统一设置、名称及双语接入；货币归属迁移代码完成，自有存储保存原生余额／最小随身观察，旧Core数据只读导入且冻结保留，不自动清理。Core通过通用Provider展示档案金币，Currency接入清理所有者能力2。离线验证通过，实机验收及正式发版待用户测试后处理，详见[实施与验收记录](../YiboCurrency/Docs/货币数据归属迁移-实施与验收记录.md)。
+2026-10-29 Core 当前工作树 API13 新增 account-identity-context:1，character-identity 提升至2（增加 faction）；Mail Mists 在写库前检查两项能力并接入轻量登录／目录查询。渠道旧版本不按相同版本号推定具备新能力；双方源码应一起更新。契约见[轻量账号上下文](../YiboCore/Docs/API-v13-轻量账号上下文.md)，62项离线通过、客户端待验。

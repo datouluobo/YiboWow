@@ -133,6 +133,13 @@ function GetTime() return 100 end
 function InCombatLockdown() return false end
 function UnitGUID() return TEST_GUID end
 function UnitName() return "ProbeCharacter" end
+-- Synthetic native name utility; target tests can replace UnitName and separator.
+Constants = { CharacterNameSeparatorConsts = { CHARACTERNAME_SURNAME_SEPARATOR = " " } }
+NameUtil = { FormatUnitNameForDisplay = function(unit)
+    local name, surname = UnitName(unit)
+    if surname then return name .. Constants.CharacterNameSeparatorConsts.CHARACTERNAME_SURNAME_SEPARATOR .. surname end
+    return name
+end }
 function UnitFullName() return "ProbeCharacter", "ProbeRealm" end
 function GetRealmName() return "ProbeRealm" end
 function GetNormalizedRealmName() return "ProbeRealm" end

@@ -2261,6 +2261,10 @@ function YAB.RecordKillByNpcID(npcId, source, charKey, phaseId)
 end
 
 local function RecordObservedWorldDeath(guid)
+    local npcID = ExtractNpcIDFromGUID(guid)
+    -- The tracker only owns registered targets. Ignore ordinary creature
+    -- deaths before building a phase/spawn event for the combat-log stream.
+    if not npcID or not npcTargets[npcID] then return false end
     local changed = YAB.TrackingV3 and YAB.TrackingV3:ApplyGUID(guid, "DEATH_EVIDENCE", "unit_died") or false
     local diagnosticChanged = YAB.TrackingV3 and YAB.TrackingV3:ConsumeDiagnosticsDirty() or false
     if changed or diagnosticChanged then
@@ -2271,6 +2275,9 @@ local function RecordObservedWorldDeath(guid)
 end
 
 local function RememberLiveBossFromCombat(guid, npcID)
+    -- Combat logging is global. Most creature GUIDs are unrelated to this
+    -- addon's catalog; don't parse their phase/spawn data or allocate tracker
+    -- event tables for them.
     if not npcID or not npcTargets[npcID] then return false end
     local changed = YAB.TrackingV3 and YAB.TrackingV3:ApplyGUID(guid, "ALIVE_EVIDENCE", "combat_log") or false
     local diagnosticChanged = YAB.TrackingV3 and YAB.TrackingV3:ConsumeDiagnosticsDirty() or false
@@ -2522,6 +2529,28 @@ local holidayQueueEvents = {
     LFG_ROLE_CHECK_SHOW = true, LFG_ROLE_CHECK_HIDE = true,
 }
 for event in pairs(holidayQueueEvents) do eventFrame:RegisterEvent(event) end
+local questLogUpdateQueued, questLogUpdateGeneration = false, 0
+local function ProcessQuestLogUpdate()
+    questLogUpdateQueued = false
+    questLogUpdateGeneration = questLogUpdateGeneration + 1
+    YAB.SyncWorldBossQuestKillsIfNeeded()
+    if YAB.Holiday and YAB.Holiday.ObserveCurrent and YAB.Holiday:ObserveCurrent() then
+        YAB.PersistDB()
+        if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
+    end
+end
+local function QueueQuestLogUpdate()
+    if questLogUpdateQueued then return end
+    questLogUpdateQueued = true
+    local generation = questLogUpdateGeneration
+    if C_Timer and C_Timer.After then
+        C_Timer.After(0.2, function()
+            if questLogUpdateQueued and generation == questLogUpdateGeneration then ProcessQuestLogUpdate() end
+        end)
+    else
+        ProcessQuestLogUpdate()
+    end
+end
 eventFrame:SetScript("OnEvent", function(_, event, ...)
     local arg1 = ...
     if event == "ADDON_LOADED" and arg1 == ADDON_NAME then
@@ -2562,12 +2591,10 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
             YAB.PersistDB()
             if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
         end
-    elseif event == "QUEST_LOG_UPDATE" or event == "PLAYER_REGEN_ENABLED" then
-        YAB.SyncWorldBossQuestKillsIfNeeded()
-        if event == "QUEST_LOG_UPDATE" and YAB.Holiday and YAB.Holiday.ObserveCurrent and YAB.Holiday:ObserveCurrent() then
-            YAB.PersistDB()
-            if YAB.NotifyCorePageChanged then YAB.NotifyCorePageChanged() end
-        end
+    elseif event == "QUEST_LOG_UPDATE" then
+        QueueQuestLogUpdate()
+    elseif event == "PLAYER_REGEN_ENABLED" then
+        ProcessQuestLogUpdate()
     elseif event == "CALENDAR_UPDATE_EVENT_LIST" then
         if _G.YiboCore.Calendar and _G.YiboCore.Calendar:IsReading() then return end
         -- The calendar is populated asynchronously after login.  Rebuild the

@@ -114,8 +114,12 @@ function Theme:GetMatrixInsets(preview)
     return self.Geometry.matrixInsets[preview and "preview" or "main"]
 end
 
+local function ShowCharacterRealm(context)
+    return context and context.scope == "all" and not (Core._private and Core._private.target and Core._private.target.displayRealm == false)
+end
+
 function Theme:GetCharacterHeaderHeight(context)
-    return context and context.scope == "all" and self.Table.characterHeaderHeight or self.Table.headerHeight
+    return ShowCharacterRealm(context) and self.Table.characterHeaderHeight or self.Table.headerHeight
 end
 
 function Theme:GetCharacterMatrixColumnWidth(context, characters)
@@ -132,7 +136,7 @@ function Theme:GetCharacterMatrixColumnWidth(context, characters)
         -- In the cross-realm projection the realm is rendered on the second
         -- line. Reserve enough of the same 4–6 glyph budget for that smaller
         -- label, so it cannot paint into the adjacent character column.
-        if context and context.scope == "all" then
+        if ShowCharacterRealm(context) then
             local realm = tostring(character and character.realm or Core:Text("CORE.UNKNOWN_REALM"))
             identity = math.max(identity, math.min(maximum, self:MeasureText(self.Font.meta, realm)))
         end
@@ -150,7 +154,7 @@ function Theme:GetCharacterRowHeaderWidth(withProfessionIcon, context, character
     for _, character in ipairs(characters or (context and context.characters) or {}) do
         local name = Core.Characters:FormatName({ name = tostring(character and character.name or Core:Text("CORE.UNKNOWN_CHARACTER")) })
         identity = math.max(identity, math.min(maximum, self:MeasureText(self.Font.body, name)))
-        if context and context.scope == "all" then
+        if ShowCharacterRealm(context) then
             local realm = tostring(character and character.realm or Core:Text("CORE.UNKNOWN_REALM"))
             local fullName = Core.Characters:FormatName({ name = name, realm = realm }, { realmMode = "full" })
             identity = math.max(identity, self:MeasureText(self.Font.body, fullName))
@@ -328,7 +332,7 @@ function Theme:SetCharacterHeader(header, character, context, options)
     local realm = options.realm or (character and character.realm) or Core:Text("CORE.UNKNOWN_REALM")
     local class = options.class or (character and character.class)
     local color = options.color or (class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class]) or self.Colors.text
-    local showRealm = context and context.scope == "all"
+    local showRealm = ShowCharacterRealm(context)
     options.height = self:GetCharacterHeaderHeight(context)
     options.color = color
     -- The second line is already visually separated from the character name;

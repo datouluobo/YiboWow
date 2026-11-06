@@ -44,6 +44,8 @@ dofile("YiboCore/Runtime/Events.lua")
 dofile("YiboCore/Runtime/Registry.lua")
 dofile("YiboCore/Runtime/Contracts.lua")
 dofile("YiboCore/UI/Theme.lua")
+InCombatLockdown = InCombatLockdown or function() return false end
+dofile("_NonRelease/CoreIdentityDomainsR1/LoadClient.lua")
 dofile("YiboCore/Runtime/ItemResolver.lua")
 local Core = YiboCore
 local notices = 0

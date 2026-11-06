@@ -152,17 +152,18 @@
 仅在最终批准后导出并接入资源。最少输出：
 
 ```text
-<Addon>Icon-v<版本>-24.png
-<Addon>Icon-v<版本>-32.png
-<Addon>Icon-v<版本>-64.png
-<Addon>Icon-v<版本>-128.png
-<Addon>Icon-v<版本>-512.png
-<Addon>Icon-v<版本>-1024.png
-<Addon>Icon-v<版本>.tga
-<Addon>Icon-v<版本>-master.svg
+<Addon>/Media/<Addon>Icon-24.png
+<Addon>/Media/<Addon>Icon-32.png
+<Addon>/Media/<Addon>Icon-64.png
+<Addon>/Media/<Addon>Icon-128.png
+<Addon>/Media/<Addon>Icon-512.png
+<Addon>/Media/<Addon>Icon-1024.png
+<Addon>/Media/<Addon>Icon.tga
+<Addon>/Media/<Addon>Icon-master.png
 ```
 
-- PNG/TGA 保留 Alpha；TGA 供 WoW 纹理使用。SVG 是可编辑骨架，不替代实际像素验收。
+- 当前资源使用稳定文件名；实际使用过的旧资源按顺序归档到各插件 `Media/v1/`、`v2/` 等目录，具体遵循 `Logo设计约定.md`。
+- PNG/TGA 保留 Alpha；TGA 供 WoW 纹理使用。已有可编辑 SVG 骨架可随对应版本保存，不替代实际像素验收。
 - 若现有插件已有命名约定，兼容该约定并记录尺寸映射；不要无确认覆盖旧的正式资源。
 - 导出后重新检查 `24/32/64` PNG、TGA Alpha 与游戏内/模拟 UI；展示图不能作为小图验收凭据。
 

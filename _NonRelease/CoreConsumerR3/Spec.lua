@@ -68,7 +68,7 @@ for _, target in ipairs({ "Retail", "Mists", "Forever" }) do
         local function Observe(id, realm, class, level, name)
             e.TEST_GUID = id
             e.GetRealmName = function() return realm end
-            e.UnitName = function() return name or "SameName" end
+            e.UnitName = function() return name or "SameName", target == "Forever" and id or nil end
             e.UnitClass = function() return class, class, 3 end
             e.UnitLevel = function() return level or 60 end
             fire("PLAYER_ENTERING_WORLD"); flush()
@@ -90,7 +90,7 @@ for _, target in ipairs({ "Retail", "Mists", "Forever" }) do
         local context = c.AccountView:BuildContext(consumer.page)
         local rows = consumer:Project(context)
         Check(#rows == 2 and Has(rows, "Player-R3-1") and Has(rows, "Player-R3-2"), "cross-realm same-name GUIDs remain separate")
-        Check(rows[1].name ~= rows[2].name, "full realm display disambiguates same-name characters")
+        Check(rows[1].name ~= rows[2].name, "full identity display disambiguates same first names")
         Check(not Has(rows, "Player-R3-NoData") and not Has(rows, "Player-R3-Druid")
             and not Has(rows, "Player-R3-CarriedOnly"), "business admission excludes no stable observation and non-hunter")
         local scopeIDs = {}; for _, scope in ipairs(context.scopeDefinition.values) do scopeIDs[scope.id] = true end
@@ -99,7 +99,7 @@ for _, target in ipairs({ "Retail", "Mists", "Forever" }) do
         local identities = c.Characters:GetAll({ identityOnly = true })
         local identity = c.Characters:Get("Player-R3-1", { identityOnly = true })
         identity.name = "tampered"
-        Check(c.Characters:Get("Player-R3-1", { identityOnly = true }).name == "SameName"
+        Check(c.Characters:Get("Player-R3-1", { identityOnly = true }).name == (target == "Forever" and "SameName Player-R3-1" or "SameName")
             and #identities >= 5 and c.Characters:GetCurrent({ identityOnly = true }).class == "DRUID", "identity projection copies; Core directory is not hunter-only")
         Check(c.Characters:Get("unknown", { identityOnly = true }) == nil, "unknown identity remains nil")
         for _, item in ipairs(identities) do Check(item.domains == nil, "identity projection excludes domain state") end
@@ -131,7 +131,7 @@ for _, target in ipairs({ "Retail", "Mists", "Forever" }) do
         c.AccountView:SetPageCharacterSort(consumer.pageID, { mode = "level", direction = "desc", pinCurrent = false })
         Check(c.AccountView:BuildContext(consumer.page).characters[1].id == "Player-R3-2", "shared level sort descending")
         c.Characters:SetShortName("Player-R3-1", "Short")
-        Check(c.Characters:FormatName(c.Characters:Get("Player-R3-1", { identityOnly = true }), { nameMode = "short", realmMode = "full" }) == "Short-RealmA",
+        Check(c.Characters:FormatName(c.Characters:Get("Player-R3-1", { identityOnly = true }), { nameMode = "short", realmMode = "full" }) == (target == "Forever" and "Short" or "Short-RealmA"),
             "short display uses Core formatter without changing GUID")
         Check(Equal(saved, consumer:ReadSnapshot("Player-R3-1")), "hide/filter/sort/short name never rewrites business history")
 

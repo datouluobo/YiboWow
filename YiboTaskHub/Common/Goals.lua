@@ -57,14 +57,14 @@ function Goals:List(includeRemoved, options)
     table.sort(result, function(a, b) if a.priority ~= b.priority then return a.priority > b.priority end; return a.id < b.id end)
     return result
 end
-function Goals:Normalize(intent, restart)
+function Goals:Normalize(intent, restart, isNewGoal)
     if type(intent) ~= "table" or type(intent.providerID) ~= "string" then return nil, "invalid-intent" end
     local descriptor
     for _, ref in ipairs(Addon.Core.Contracts:List("action.targets", { major = 1 })) do
         if ref.providerID == intent.providerID then descriptor = ref; break end
     end
     if not descriptor then return nil, Addon:T("TEXT.GOAL_SOURCE_IS_NOT_READY_ENABLE_A_CO.6C513C") end
-    local normalized, err = Addon.Core.Contracts:Call(Addon.NAME, descriptor, "Normalize", { intent = intent, restart = restart == true })
+    local normalized, err = Addon.Core.Contracts:Call(Addon.NAME, descriptor, "Normalize", { intent = intent, restart = restart == true, isNewGoal = isNewGoal == true })
     if type(normalized) ~= "table" then return nil, err or "invalid-target" end
     if normalized.needsConfiguration then return normalized end
     if type(normalized.identity) ~= "string" or normalized.identity == "" or type(normalized.intent) ~= "table"
@@ -79,7 +79,7 @@ function Goals:Normalize(intent, restart)
     if scope.mode == "character" then
         if type(scope.characterID) ~= "string" or scope.characterID == "" then return nil, "invalid-scope" end
     else
-        if type(scope.characterIDs) ~= "table" or #scope.characterIDs == 0 then return nil, "invalid-scope" end
+        if type(scope.characterIDs) ~= "table" or (#scope.characterIDs == 0 and normalized.allowEmptyAccountScope ~= true) then return nil, "invalid-scope" end
         for _, id in ipairs(scope.characterIDs) do if type(id) ~= "string" or id == "" then return nil, "invalid-scope" end end
     end
     return normalized
@@ -142,7 +142,7 @@ function Goals:LookupItems(intents)
     return { items = items, revision = db.revision }
 end
 function Goals:Add(intent)
-    local clean, err = self:Normalize(intent)
+    local clean, err = self:Normalize(intent, false, true)
     if not clean then return nil, err end
     if clean.needsConfiguration then return clean end
     local db = Root()

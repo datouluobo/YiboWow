@@ -15,9 +15,12 @@ end
 function Actions:Bind(band, workOffset, task)
     if InCombatLockdown and InCombatLockdown() then return end
     if band.executeIcon then band.executeIcon:Hide(); band.executeIcon.ref = nil; for _, key in ipairs(keys) do band.executeIcon:SetAttribute(key, nil) end end
-    if type(workOffset) ~= "number" or not task then return end
+    if type(workOffset) ~= "number" or not task then
+        Addon.Core.BusinessItemActions:Unbind(band)
+        return
+    end
     local descriptor, ref, intent = self:Resolve(task)
-    if not descriptor then return end
+    if not descriptor then Addon.Core.BusinessItemActions:Unbind(band); return end
     local button = band.executeIcon
     if not button then
         button = CreateFrame("Button", nil, band, "SecureActionButtonTemplate")

@@ -19,7 +19,7 @@ for _, alias in ipairs({ false, true }) do
         Check(c:IsInitialized() and c:GetVersion() == "0.1.0" and c.API_VERSION == 13, "Retail starts via source/native alias")
         Check(e.YiboCoreRetailDB == c.Database:GetDB() and e.YiboCoreDB.sentinel == "mists" and e.YiboCoreForeverDB.sentinel == "forever", "independent store, other targets untouched")
         Check(e.YiboCoreRetailDB.clientScope.target == "Retail" and e.YiboCoreRetailDB.clientScope.projectID == 1, "Retail scope stamped")
-        Check(Count(c.Capabilities._items) == 32 and not c:HasCapability("profession-profile") and not c:HasCapability("calendar-day-query"), "only implemented infrastructure declared")
+        Check(Count(c.Capabilities._items) == 34 and c:HasCapability("character-identity-cache", 1) and c:HasCapability("account-identity-context", 1) and c:HasCapability("character-identity", 2) and not c:HasCapability("profession-profile") and not c:HasCapability("calendar-day-query"), "only implemented infrastructure declared")
         Check(#c.DataDomains:GetDefinitions() == 1 and c.DataDomains._definitions.identity ~= nil, "directory identity is the only Core domain")
         local row = c.Characters:GetCurrent()
         Check(row.id == e.TEST_GUID and row.class == "HUNTER" and row.domains.identity.state == "known", "real native GUID and class retained")

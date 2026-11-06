@@ -44,6 +44,45 @@ local function SameInbox(mails, baseline, visible, total, count, all)
     end
     return true
 end
+local function CanDeleteEmpty(mail)
+    if #mail.attachments ~= 0 or mail.money ~= 0 or mail.cod ~= 0 or mail.isGM or mail.auctionMail
+        or type(GetInboxText) ~= "function" or type(DeleteInboxItem) ~= "function"
+        or type(InboxItemCanDelete) ~= "function" then return false end
+    local ok, permitted = pcall(InboxItemCanDelete, mail.inboxIndex)
+    if not ok or (permitted ~= true and permitted ~= 1) then return false end
+    local read, body, _, _, _, invoice = pcall(GetInboxText, mail.inboxIndex)
+    if not read or type(body) ~= "string" or (invoice ~= nil and invoice ~= false and invoice ~= 0) then
+        return false
+    end
+    if body == "" then return true end
+    -- Match the observed system template, allowing only whitespace differences.
+    return type(GetLocale) == "function" and GetLocale() == "zhCN"
+        and mail.canReply == false and mail.sender == "邮政长" and mail.subject == "失而复得"
+        and body:gsub("%s+", "") == "我们在虚空中找到了一件物品，应该是你丢掉的吧？随信附上，请查收。"
+end
+
+function Returns:PrepareEmptyDeletion()
+    local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
+    local mails, visible, total = Addon.Scanner:ReadVisible()
+    if not current or not mails then return nil, Addon:T("RETURN.CHANGED") end
+    local plan = { actions = {}, mails = mails, visible = visible, total = total, skipped = 0,
+        generation = Addon.Scanner.generation, selection = {}, deleteEmpty = true }
+    for index = #mails, 1, -1 do
+        local mail = mails[index]
+        if CanDeleteEmpty(mail) then
+            plan.actions[#plan.actions + 1] = { characterID = current.id, signature = mail.signature,
+                original = mail, slot = "delete-empty", state = "pending" }
+        end
+    end
+    if #plan.actions == 0 then return nil, Addon:T("EMPTY_MAIL.NONE") end
+    return plan
+end
+
+local function CanProcess(plan, mail)
+    if plan.deleteEmpty then return CanDeleteEmpty(mail) end
+    return Returns:CanReturn(mail)
+end
+
 function Returns:Prepare(selection, context)
     if Queue.state == "running" or Queue.pending then return nil, Addon:T("UI.TEXT_0552") end
     local entries = Addon.ViewModel:GetMails(context, {})
@@ -106,14 +145,15 @@ function Queue:StartReturn(plan)
     for _, action in ipairs(plan.actions) do
         local mail = mails[action.original.inboxIndex]
         if action.characterID ~= current.id or not mail or mail.signature ~= action.signature
-            or not Returns:CanReturn(mail) then return nil, Addon:T("RETURN.CHANGED") end
+            or not CanProcess(plan, mail) then return nil, Addon:T("RETURN.CHANGED") end
     end
     self:Discard()
     self.batchToken = {}
     self.actions, self.completed, self.index = Addon.Copy(plan.actions), 0, 1
-    self.operation, self.returnPlan = "return", { mails = mails, visible = visible, total = total, skipped = plan.skipped,
+    self.operation, self.returnPlan = plan.deleteEmpty and "delete-empty" or "return",
+        { mails = mails, visible = visible, total = total, skipped = plan.skipped, deleteEmpty = plan.deleteEmpty,
         selectedMails = Addon.Copy(plan.selectedMails) }
-    self.state, self.pauseCode, self.message = "running", nil, Addon:T("RETURN.RUNNING")
+    self.state, self.pauseCode, self.message = "running", nil, Addon:T(plan.deleteEmpty and "EMPTY_MAIL.RUNNING" or "RETURN.RUNNING")
     self.nextScheduled, self.lastRequestAt, self.cooldownUntil, self.preflight = nil, nil, nil, nil
     Addon.Scanner:BeginCollection()
     self:Next(); return true
@@ -121,7 +161,7 @@ end
 function Queue:NextReturn()
     local action, plan = self.actions[self.index], self.returnPlan
     if not action then
-        self.state, self.message = "complete", Addon:T("RETURN.SUMMARY", self.completed, plan.skipped)
+        self.state, self.message = "complete", Addon:T(plan.deleteEmpty and "EMPTY_MAIL.SUMMARY" or "RETURN.SUMMARY", self.completed, plan.skipped)
         Addon.Scanner:Schedule(true)
         if Addon:GetInboxPreferences().showSummary then Addon:Print(self.message) end
         self:Notify(); return
@@ -147,7 +187,7 @@ function Queue:NextReturn()
         self:Pause(Addon:T("RETURN.CHANGED")); return
     end
     local mail = mails[action.original.inboxIndex]
-    if not mail or mail.signature ~= action.signature or not Returns:CanReturn(mail) then
+    if not mail or mail.signature ~= action.signature or not CanProcess(plan, mail) then
         self:Pause(Addon:T("RETURN.CHANGED")); return
     end
     -- No loot path is used: returning a COD letter never pays its amount.
@@ -155,7 +195,7 @@ function Queue:NextReturn()
         targetIndex = mail.inboxIndex, originalIndex = action.original.inboxIndex, startedAt = GetTime(),
         success = false, updated = false }
     self.lastRequestAt, self.invoking = GetTime(), true
-    local ok, err = pcall(ReturnInboxItem, mail.inboxIndex)
+    local ok, err = pcall(plan.deleteEmpty and DeleteInboxItem or ReturnInboxItem, mail.inboxIndex)
     self.invoking = false
     if not ok then
         -- A wrapped API can raise after submitting its request. Keep the
@@ -200,40 +240,42 @@ function Queue:OnReturnScan(mails, visible, total, committed)
     local action = pending.action
     Addon:WithPublicationBatch(function()
         if not committed then Addon.Scanner:CommitCollection(mails, visible, total, true) end
-        local snapshot = Addon.db.byCharacter[action.characterID]
-        local source = snapshot and snapshot.records[action.mailKey]
-        if source and source.state == "unverified" and source.signature == action.signature then
-            source.state = "returned-archived"
+        if not self.returnPlan.deleteEmpty then
+            local snapshot = Addon.db.byCharacter[action.characterID]
+            local source = snapshot and snapshot.records[action.mailKey]
+            if source and source.state == "unverified" and source.signature == action.signature then
+                source.state = "returned-archived"
+            end
+            Addon:AddHistory(action.characterID, { state = "returned-archived", mail = action.original,
+                sourceMailKey = action.mailKey, attachments = action.original.attachments,
+                money = action.original.money, codAmount = action.original.cod, observedAt = Addon:Now() })
+            -- Store deliberately replaces keys when duplicate multiplicity changes.
+            -- Rebind only from the now-proven positions, never a first-signature hit.
+            local keysAt = {}
+            for _, key in ipairs(snapshot and snapshot.visibleKeys or {}) do
+                local mail = snapshot.records[key]
+                keysAt[mail.inboxIndex] = key
+            end
+            for _, selected in ipairs(self.returnPlan.selectedMails) do
+                if not selected.returned then
+                    if selected.index == pending.targetIndex then selected.returned = true
+                    elseif selected.index > pending.targetIndex then selected.index = selected.index - 1 end
+                    if not selected.returned then selected.mailKey = keysAt[selected.index] or selected.mailKey end
+                end
+            end
+            for index = self.index + 1, #self.actions do
+                local nextAction = self.actions[index]
+                local key = keysAt[nextAction.original.inboxIndex]
+                if key then
+                    nextAction.mailKey = key
+                    nextAction.id = Addon.ViewModel:ActionID(nextAction.characterID, key, "mail")
+                end
+            end
         end
-        Addon:AddHistory(action.characterID, { state = "returned-archived", mail = action.original,
-            sourceMailKey = action.mailKey, attachments = action.original.attachments,
-            money = action.original.money, codAmount = action.original.cod, observedAt = Addon:Now() })
         action.state, self.completed = "success", self.completed + 1
-        -- Store deliberately replaces keys when duplicate multiplicity changes.
-        -- Rebind only from the now-proven positions, never a first-signature hit.
-        local keysAt = {}
-        for _, key in ipairs(snapshot and snapshot.visibleKeys or {}) do
-            local mail = snapshot.records[key]
-            keysAt[mail.inboxIndex] = key
-        end
-        for _, selected in ipairs(self.returnPlan.selectedMails) do
-            if not selected.returned then
-                if selected.index == pending.targetIndex then selected.returned = true
-                elseif selected.index > pending.targetIndex then selected.index = selected.index - 1 end
-                if not selected.returned then selected.mailKey = keysAt[selected.index] or selected.mailKey end
-            end
-        end
-        for index = self.index + 1, #self.actions do
-            local nextAction = self.actions[index]
-            local key = keysAt[nextAction.original.inboxIndex]
-            if key then
-                nextAction.mailKey = key
-                nextAction.id = Addon.ViewModel:ActionID(nextAction.characterID, key, "mail")
-            end
-        end
         self.returnPlan.mails, self.returnPlan.visible, self.returnPlan.total = Addon.Copy(mails), visible, total
         self.layoutDirty, self.pending, self.index = nil, nil, self.index + 1
-        if Addon.NativeUI and Addon.NativeUI.OnReturned then Addon.NativeUI:OnReturned(action) end
+        if not self.returnPlan.deleteEmpty and Addon.NativeUI and Addon.NativeUI.OnReturned then Addon.NativeUI:OnReturned(action) end
         self:Notify()
     end)
     if self.notifyPending then self:Notify() end

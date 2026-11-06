@@ -15,6 +15,7 @@ dofile("YiboCore/Runtime/Events.lua")
 dofile("YiboCore/Runtime/Registry.lua")
 dofile("YiboCore/Runtime/Contracts.lua")
 local Core = YiboCore
+dofile("_NonRelease/CoreIdentityDomainsR1/LoadClient.lua")
 local db = { settings = {}, characters = { byID = {}, aliases = {}, seenOrder = {} } }
 Core.Database = { GetDB = function() return db end }
 Core.Print = function() end

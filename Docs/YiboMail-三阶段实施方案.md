@@ -108,7 +108,7 @@ Core 主页面分为“当前邮箱”和“历史／待核实”视图。当前
 
 `YiboMail.Items` 沿用 [Public API v1 契约](YiboVault-Mail-API-v1-契约.md) 中的 `GetAPIVersion`、能力检查、`Query`、`GetByCharacter`、`GetState`、`GetRevision` 和事件。收件、归档或清理导致来源变化时，先提交 DB 与查询投影，再增加 revision 并通知；消费者收到事件后可立即读到对应状态。API 的当前附件数量只包含最新有效扫描中可见且仍待取的内容，不混入旧积压缓存或已确认历史。
 
-Vault 可选接入 Mail 公共接口；两插件共存时每个角色只选择一份邮件附件来源，Mail 兼容且状态可用时优先使用 Mail，否则回退 Vault 自有精简快照。Mail 本身不依赖 Vault，Core 不保存邮件业务数据。联合集成按 [Core、Vault、Mail 实施计划](YiboCore-Vault-Mail-实施计划.md) 单独验收。
+Vault 可选接入 Mail 公共接口；两插件共存时每个角色只选择一份邮件附件来源，Mail 兼容且状态可用时优先使用 Mail，否则回退 Vault 自有精简快照。Mail 本身不依赖 Vault，Core 不保存邮件业务数据。联合集成按 [Vault／Mail 公共契约](YiboVault-Mail-API-v1-契约.md)及实际目标版本的实施记录核对。
 
 ## 8. Core 页面、悬停与设置
 
@@ -130,5 +130,5 @@ Vault 可选接入 Mail 公共接口；两插件共存时每个角色只选择�
 - [YiboMail 产品边界与开发路线图](YiboMail-产品边界与开发路线图.md)
 - [YiboMail 阶段 0 客户端验证记录](../YiboMail/_NonRelease/Docs/Stage0-客户端验证记录.md)
 - [YiboVault / YiboMail Public API v1 契约](YiboVault-Mail-API-v1-契约.md)
-- [YiboCore、YiboVault、YiboMail 联合实施计划](YiboCore-Vault-Mail-实施计划.md)
+- [Vault／Mail 公共契约](YiboVault-Mail-API-v1-契约.md)
 - [Core API v6 业务插件增量接入指南](../YiboCore/Docs/API-v6-业务插件增量接入指南.md)

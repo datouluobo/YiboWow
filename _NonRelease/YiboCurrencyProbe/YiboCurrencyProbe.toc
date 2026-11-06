@@ -1,0 +1,12 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r YiboCurrency Probe
+## Title-zhCN: |cff20e070[Yibo]|r YiboCurrency 探针
+## Title-zhTW: |cff20e070[Yibo]|r YiboCurrency 探針
+## Notes: Non-release native money and currency-list API probe.
+## Notes-zhCN: 仅采样客户端原生金币与货币列表 API 的非发布探针。
+## Author: YiboSoft
+## Version: 0.1.0
+## SavedVariables: YiboCurrencyProbeDB
+
+Locale.lua
+Probe.lua

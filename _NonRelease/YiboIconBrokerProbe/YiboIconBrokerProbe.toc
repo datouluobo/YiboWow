@@ -1,0 +1,9 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r Broker Icon Preview Probe
+## Notes: Temporary icon preview. Disable this addon to restore normal Broker icons.
+## Author: YiboSoft
+## Version: 0.1.0
+## RequiredDeps: YiboCore
+## LoadOnDemand: 0
+
+Probe.lua

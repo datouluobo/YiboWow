@@ -12,8 +12,8 @@ product
 - Interface：`50504`
 - 版本边界（唯一准入规则）：本插件面向的是从经典旧世、燃烧的远征、巫妖王之怒、大地的裂变连续更新到熊猫人之谜 5.5.4 的完整怀旧服分支。凡曾在该分支任一阶段出现、可由该分支角色使用或收藏的坐骑，均属于本插件目录；不得因为坐骑不是 MoP 新增、来源来自更早资料片、活动已结束或当前不可新获取而排除。只有从未进入该怀旧服 5.5.4 分支的正式服/其他分支/未来内容才属于目录外记录。
 - Core 仍为可选依赖；Core API 13 可用时，插件接入统一设置工作台与账号语言服务。
-- V1 SavedVariables：无游戏状态；Alpha 的 `/ymt inventory` 可选写入一次性诊断快照 `YiboMountsDiagnostics`，仅用于生成全量目录基线。
-- V1 正式设置命令：无；Alpha 诊断命令：`/ymt`
+- V1 SavedVariables：`YiboMountsDB` 保存业务设置；保留 `YiboMountsDiagnostics` 声明以读取既有数据，不再写入探针结果。
+- V1 正式设置命令：无；`/ymt` 提示原生 API 采样位于独立探针 `/ymp`。
 
 插件列表显示名遵循 Yibo 系列的“技术名 - 中文功能名”格式，不提供本地化 Title。英文与简体中文客户端仅对说明、来源路径和获取条件进行本地化。
 
@@ -133,10 +133,10 @@ Alpha 是公开技术验证版本，不承诺完整坐骑覆盖、全部来源�
 
 ## Alpha Diagnostics
 
-`/ymt` 只用于 Alpha 技术验证，不保存开关，也不改变玩家看到的 Tooltip 内容：
+旧版 Alpha 曾由 `/ymt` 承担技术验证；当前技术采样由独立 `/ymp` 完成，不读取业务目录，不改变玩家看到的 Tooltip 内容：
 
-- `/ymt debug`：输出后续 Aura Tooltip 回调中实际取得的 `unit`、`spellID` 和目录命中状态。
-- `/ymt probe`：检查当前 Tooltip 的相同信息。
+- `/ymp tooltip`：读取当前 GameTooltip 的原生单位、法术与光环 API，并匹配客户端坐骑日志中的 spellID。
+- `/ymp inventory`、`/ymp sources`：读取原生坐骑日志及冻结源 ID 输入；结果写入独立探针存档。
 
 正式 V1 是否保留该诊断入口，由实机回调核验完成后决定；它不是设置界面或常规交互入口。
 

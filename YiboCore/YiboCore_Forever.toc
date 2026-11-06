@@ -2,10 +2,10 @@
 ## Title: |cff20e070[Yibo]|r YiboCore - Account UI Framework
 ## Title-zhCN: |cff20e070[Yibo]|r YiboCore
 ## Title-zhTW: |cff20e070[Yibo]|r YiboCore
-## Notes: Forever development build: GUID roster, profession profiles, isolated saves and account window. Client acceptance pending.
-## Notes-zhCN: 无限开发版：GUID角色目录、专业档案、独立存档与账号窗口，待客户端验收。
+## Notes: Forever account framework: full character names, profession profiles, isolated saves and shared windows/settings.
+## Notes-zhCN: 无限服账号框架：完整角色姓名、专业档案、独立存档与统一窗口和设置。
 ## Author: YiboSoft
-## Version: 0.2.0
+## Version: 0.2.1
 ## IconTexture: Interface\AddOns\YiboCore\Media\YiboCoreIcon-128
 ## SavedVariables: YiboCoreForeverDB
 ## OptionalDeps: LibDataBroker-1.1

@@ -14,7 +14,7 @@ YiboLegendary 是面向 **MoP Classic 5.5.4** 的账号级传说物品获取进�
 - 萨弗拉斯、埃辛诺斯战刃、瓦兰奈尔、影之哀伤、巨龙之怒与龙父之牙：职业适用性、物品检测及路线进度
 - 索利达尔：自动检测当前物品，并支持标注玩家确认的历史获得
 - YiboCore 管理的 Broker、小地图入口、角色范围与设置
-- `/yle` 打开传说之路；`/yle probe` 检查客户端兼容性
+- `/yle` 打开传说之路；独立非发布客户端采样工具为 `/yep capture`
 
 ### 依赖与版本
 
@@ -40,7 +40,7 @@ Version 2.1.0 tracks the Legendary Cloak, Thunderfury, Thori'dal, and additional
 - Sulfuras, Warglaives of Azzinoth, Val'anyr, Shadowmourne, Dragonwrath, and Fangs of the Father: class eligibility, item detection, and route progress
 - Thori'dal: automatic current-item detection and clearly labeled player-confirmed historical ownership
 - YiboCore-managed Broker/minimap entries, character scope, and settings
-- `/yle` opens the page; `/yle probe` checks client compatibility
+- `/yle` opens the page; the separate non-release client sampler is `/yep capture`
 
 ### Dependency and supported client
 

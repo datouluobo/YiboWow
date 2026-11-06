@@ -1,0 +1,13 @@
+## Interface: 16001
+## Title: |cff20e070[Yibo]|r Builds Evidence Probe
+## Title-zhCN: |cff20e070[Yibo]|r 构筑取证探针
+## Title-zhTW: |cff20e070[Yibo]|r 構築取證探針
+## Notes: Non-release read-only talent and selected container evidence.
+## Version: 0.1.0
+## SavedVariables: YiboBuildsForeverProbeDB
+
+Locale.lua
+Evidence.lua
+Talents.lua
+Containers.lua
+Bootstrap.lua

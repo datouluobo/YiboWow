@@ -1,0 +1,12 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r YiboTodo Probe
+## Title-zhCN: |cff20e070[Yibo]|r YiboTodo 探针
+## Title-zhTW: |cff20e070[Yibo]|r YiboTodo 探針
+## Notes: Non-release native quest, map, and event probe.
+## Notes-zhCN: 仅采样客户端原生任务、地图与事件的非发布探针。
+## Author: YiboSoft
+## Version: 0.1.0
+## SavedVariables: YiboTodoProbeDB
+
+Locale.lua
+Probe.lua

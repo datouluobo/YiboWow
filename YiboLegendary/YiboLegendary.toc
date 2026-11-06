@@ -19,5 +19,4 @@ Data.lua
 Catalog.lua
 Model.lua
 GoalTargets.lua
-Probe.lua
 UI.lua

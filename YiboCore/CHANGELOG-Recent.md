@@ -1,5 +1,18 @@
 # YiboCore Changelog / 近期更新
 
+## Forever 0.2.1 / API13 — 2026-11-05
+
+无限服首批正式版本，适用于客户端1.60.1（Interface16001）。
+
+- 提供GUID角色目录、身份/位置与专业档案、统一账号窗口和设置工作台。
+- 按无限服原生规则显示完整双名，保留角色短名、排序与角色过滤。
+- 提供Core小地图/Broker入口、可选内置信息条和同源账号悬停预览。
+- 保存主表/悬停等级过滤、语言和窗口偏好，支持重载与完整退出后恢复。
+- 修复英文档案列宽和导航边界；支持跟随客户端、手动中文与English。
+- 使用独立YiboCoreForeverDB；保留现有存档与角色GUID。业务插件按各自Forever版本安装。
+
+English: First Forever release for client 1.60.1 / Interface16001. Provides the GUID character directory, full two-part names, identity/location and profession profiles, shared account window/settings, managed entries and preview tooltips. Keeps character preferences, level filters, language and window settings across UI reloads and client restarts. Includes English archive width and navigation fixes. Uses the isolated YiboCoreForeverDB store. Public API remains 13.
+
 ## 1.12.8 — 日历查询保护（2026-10-22）
 
 - API13新增 `calendar-day-query:1`，提供服务器当天日历快照与异常多年月份基准校正；无效日期、读取失败及部分数据保持未知。

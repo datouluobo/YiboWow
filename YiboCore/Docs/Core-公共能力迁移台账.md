@@ -823,3 +823,12 @@ Core CalendarDaySpec16项通过；三插件TOC语法107文件及Mists构建Valid
 2026-11-04 AutoOpen CAP-009 局部复核：当前 1.2.4 工作树的保护拦截提示新增 QUEUE.MANUAL_REQUIRED 中英文资源，沿用既有 Addon:T／Core owner Locale:Get 及独立运行边界，Core 可选设置要求 API13／localization:1 保持。队列保护事件与手动提示的离线回归通过；新增客户端及语言验收待完成，不沿用旧版实机收口结论覆盖本次变化，详见 [保护拦截修复记录](../../YiboAutoOpen/Docs/Mists-保护拦截与手动开启.md)。
 
 2026-11-04 AutoOpen CAP-009 补充：24476 添加拦截的命令与设置反馈新增 CATALOG.MANUAL_ONLY_REJECTED 中英文资源，复用既有可选 Core 的 Addon:T／owner Locale:Get；API13／localization:1 门槛保持。离线回归通过，客户端语言与操作验证待完成，详见 [手动专用与添加拦截](../../YiboAutoOpen/Docs/Mists-保护拦截与手动开启.md)。
+
+2026-11-05 CAP-001/007 Core Forever名称修复：name采集原生完整双名，GUID身份与realm元数据保持，FormatName和共用表头消费目标displayRealm策略。API13、character-name-format:1、character-identity:1不变；Core内部档案/设置/确认/表头沿用公开名称接口，业务代码无新增接入。12组离线及三目标构建通过，原生姓名实机待reload确认。接口语义见[名称API](API-v8-公共名称格式化.md)，范围与证据见[姓名适配](Forever-完整角色姓名适配-2026-11-05.md)。
+
+2026-11-05 CAP-004：Core共享档案尺寸契约按本语言可见列计算最低内容宽度，导航高度和渲染复用实际导航条目。Mists/Forever/Retail适用，API13与能力版本保持，无业务插件新增接入；13组离线、三目标构建/语法通过，当前游戏英文档案/导航待复验。见[布局修复](英文角色档案宽度与导航边界修复-2026-11-05.md)。
+
+2026-11-05 Core Forever0.2.1/API13首批收尾：CAP-001/007完整双名、CAP-004窗口/导航/入口/预览、CAP-009手动English/中文/auto切换及档案英文布局，按用户确认范围完成当前客户端验证；等级过滤reload/完整退出恢复通过。已有API/能力版本和业务接入状态保持。复用MoP正常且未反馈异常的共用行为，不追加重复测试；版本标识调整不改变已验行为。正式包与渠道上传证据分别记录，见[发行说明](Forever-v0.2.1-发布说明.md)。
+
+
+2026-11-06 YiboMail Mists 批量清理邮件：复用 Core ItemConfirmation、Characters:GetCurrent(identityOnly) 和 CAP-009 owner 中英文资源；现有 API13 及能力门槛保持。队列模拟及构建校验通过，客户端语言和删除行为待验。详见 [Mail 收件队列验收](../../YiboMail/Docs/Mists-收件队列优化与验收.md)。

@@ -73,6 +73,19 @@
                     LuaVersion = '5.1'
                     ValidationState = 'existing-mists-baseline'
                 }
+                Forever = @{
+                    SourceToc = 'YiboBuilds_Forever.toc'
+                    LoadToc = 'YiboBuilds.toc'
+                    VersionFile = 'Forever/Namespace.lua'
+                    VersionPattern = '^local Addon = \{ NAME = "YiboBuilds", VERSION = "([^"]+)"'
+                    RequiredCoreFile = 'Forever/Bootstrap.lua'
+                    RequiredCorePattern = 'core:CheckAPIVersion\((\d+)\)'
+                    Interfaces = @(16001)
+                    CurseForgeFlavor = 'forever'
+                    CurseForgeVersionNames = @('1.60.1')
+                    LuaVersion = '5.1'
+                    ValidationState = 'forever-0.1.0-equipment-scope-accepted-20261106'
+                }
             }
         }
         YiboCore = @{
@@ -111,7 +124,7 @@
                     CurseForgeFlavor = 'forever'
                     CurseForgeVersionNames = @('1.60.1')
                     LuaVersion = '5.1'
-                    ValidationState = 'development-entry-verified-not-release-ready'
+                    ValidationState = 'forever-0.2.1-release-ready-user-accepted-scope-20261105'
                 }
             }
         }
@@ -150,6 +163,19 @@
                     CurseForgeVersionNames = @('5.5.4')
                     LuaVersion = '5.1'
                     ValidationState = 'existing-mists-baseline'
+                }
+                Forever = @{
+                    SourceToc = 'YiboCurrency_Forever.toc'
+                    LoadToc = 'YiboCurrency.toc'
+                    VersionFile = 'Forever/Namespace.lua'
+                    VersionPattern = '^local Addon = \{ NAME = "YiboCurrency", VERSION = "([^"]+)"'
+                    RequiredCoreFile = 'Forever/Bootstrap.lua'
+                    RequiredCorePattern = 'core:CheckAPIVersion\((\d+)\)'
+                    Interfaces = @(16001)
+                    CurseForgeFlavor = 'forever'
+                    CurseForgeVersionNames = @('1.60.1')
+                    LuaVersion = '5.1'
+                    ValidationState = 'forever-0.1.0-money-scope-accepted-20261106'
                 }
             }
         }
@@ -248,6 +274,19 @@
                     CurseForgeVersionNames = @('5.5.4')
                     LuaVersion = '5.1'
                     ValidationState = 'existing-mists-baseline'
+                }
+                Forever = @{
+                    SourceToc = 'YiboReputation_Forever.toc'
+                    LoadToc = 'YiboReputation.toc'
+                    VersionFile = 'Forever/Namespace.lua'
+                    VersionPattern = '^local Addon = \{ NAME = "YiboReputation", VERSION = "([^"]+)"'
+                    RequiredCoreFile = 'Forever/Bootstrap.lua'
+                    RequiredCorePattern = 'core:CheckAPIVersion\((\d+)\)'
+                    Interfaces = @(16001)
+                    CurseForgeFlavor = 'forever'
+                    CurseForgeVersionNames = @('1.60.1')
+                    LuaVersion = '5.1'
+                    ValidationState = 'forever-0.1.1-reputation-scope-accepted-20261106'
                 }
             }
         }

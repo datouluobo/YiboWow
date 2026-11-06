@@ -49,7 +49,7 @@
 
 ### MoP 非正式候选与实机记录
 
-三项候选均通过 `/ytd probe <活动>-start|snapshot|finish` 采集，结果只写入 `YiboTodoDB.diagnostics`。每项记录必须填写目标客户端构建、测试角色、稳定身份、前置条件、任务日志、交付事件、完成标记、重载、跨角色与跨周期行为。
+历史三项候选曾通过 `/ytd probe <活动>-start|snapshot|finish` 采集并写入 `YiboTodoDB.diagnostics`。该业务内探针已于 2026-11-02 从正式加载链移除；新的 `/ytp` 仅采样客户端原生 API 与事件，写入 `YiboTodoProbeDB`，不读取业务状态。下表既有证据仅代表采集当时的范围，不表示新探针仍覆盖原业务状态。
 
 | 候选 | 专项验收记录 |
 |---|---|

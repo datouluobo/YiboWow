@@ -1,5 +1,7 @@
 # YiboCore
 
+2026-11-05 当前无限服正式版本：**Forever0.2.1 / API13 / Interface16001**，首批支持范围已完成用户确认的验证。提供完整双名、GUID角色目录、身份/位置与专业档案、统一窗口/设置及入口预览，使用独立YiboCoreForeverDB。安装与更新见[Forever发行说明](Docs/Forever-v0.2.1-发布说明.md)。Mists和Retail沿用各自目标版本；下文按日期保留历史开发记录。
+
 2026-10-27 当前开发基线：**Mists1.12.9／Forever0.2.0／Retail0.1.0，API13／schema11**。R0～R3适用实施完成；R4的Retail／Mists本次干净安装、声明旧包覆盖和存档恢复范围已验，原联接已恢复。R5文档与台账收尾完成，Forever保留待测，扩展旧夹具、未验语言／UI、真实YBP接入及发行检查仍待；整体未判定可发布，未发布。
 
 - [R5收尾与验收边界](Docs/R5-文档与台账收尾验收.md)：区分两端已验、Forever待验及未完成发行门槛；[R4原始证据](../_NonRelease/CoreFinalR4/README.md)按冻结版本保留。

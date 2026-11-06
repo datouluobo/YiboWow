@@ -1,0 +1,8 @@
+## Interface: 120105
+## Title: |cff20e070[Yibo]|r Core Retail R4 Acceptance
+## Version: 0.1.0
+## RequiredDeps: YiboCore
+## SavedVariables: YiboCoreRetailR4DB
+## LoadOnDemand: 0
+Target.lua
+Probe.lua

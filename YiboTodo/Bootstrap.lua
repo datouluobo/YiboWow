@@ -69,7 +69,6 @@ end
 
 frame:SetScript("OnEvent", function(_, event, ...)
     local name = ...
-    if Addon.Probe and Addon.initialized then Addon.Probe:CaptureEvent(event, ...) end
     if event == "ADDON_LOADED" and name == Addon.NAME then
         Addon.Database:Initialize()
         Addon:ValidateCatalog()

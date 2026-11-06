@@ -66,7 +66,8 @@ function Get-YiboReleaseProfile {
     if (($interfaces -join ',') -ne ($expected -join ',')) { throw "TOC Interface does not match profile: $Addon / $targetID" }
     $versionFile = if ($targetProfile.ContainsKey('VersionFile')) { $targetProfile.VersionFile } else { $addonProfile.VersionFile }
     $versionText = [IO.File]::ReadAllText((Resolve-YiboSourceFile $root $versionFile))
-    $releaseVersion = Read-YiboRequiredValue $versionText $addonProfile.VersionPattern 'source version'
+    $versionPattern = if ($targetProfile.ContainsKey('VersionPattern')) { $targetProfile.VersionPattern } else { $addonProfile.VersionPattern }
+    $releaseVersion = Read-YiboRequiredValue $versionText $versionPattern 'source version'
     $sourceVersionText = [IO.File]::ReadAllText((Resolve-YiboSourceFile $root $addonProfile.VersionFile))
     $sourceVersion = Read-YiboRequiredValue $sourceVersionText $addonProfile.VersionPattern 'source archive version'
     $apiVersion = if ($addonProfile.ContainsKey('APIPattern')) {
@@ -83,11 +84,11 @@ function Get-YiboReleaseProfile {
     $tocVersion = Read-YiboRequiredValue $tocText '^## Version:\s*([^\r\n]+)' 'TOC version'
     if ($tocVersion -ne $version) { throw "TOC version '$tocVersion' does not match source version '$version'." }
     if ($version -notmatch '^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)*$') { throw "Unsafe package version: $version" }
-    $requiredCoreAPI = if ($addonProfile.ContainsKey('RequiredCorePattern')) {
-        $requiredText = if ($addonProfile.ContainsKey('RequiredCoreFile')) {
-            [IO.File]::ReadAllText((Resolve-YiboSourceFile $root $addonProfile.RequiredCoreFile))
-        } else { $versionText }
-        [int](Read-YiboRequiredValue $requiredText $addonProfile.RequiredCorePattern 'required Core API')
+    $requiredPattern = if ($targetProfile.ContainsKey('RequiredCorePattern')) { $targetProfile.RequiredCorePattern } else { $addonProfile['RequiredCorePattern'] }
+    $requiredFile = if ($targetProfile.ContainsKey('RequiredCoreFile')) { $targetProfile.RequiredCoreFile } else { $addonProfile['RequiredCoreFile'] }
+    $requiredCoreAPI = if ($requiredPattern) {
+        $requiredText = if ($requiredFile) { [IO.File]::ReadAllText((Resolve-YiboSourceFile $root $requiredFile)) } else { $versionText }
+        [int](Read-YiboRequiredValue $requiredText $requiredPattern 'required Core API')
     } else { $null }
     return [pscustomobject]@{
         Config = $config; Addon = $addonID; Target = $targetID; Root = $root

@@ -695,7 +695,7 @@ end
 function AccountView:GetVisibleCharacters(options)
     local hidden = Settings().hiddenCharacters
     local visible = {}
-    local roster = options and options.identityOnly and Core.Characters:GetAll({ identityOnly = true }) or Core.Characters:GetAllCached()
+    local roster = options and options.identityOnly and Core.Characters:GetAllCached({ identityOnly = true }) or Core.Characters:GetAllCached()
     for _, character in ipairs(roster) do
         if not hidden[character.id] then visible[#visible + 1] = character end
     end
@@ -745,7 +745,8 @@ end
 
 function AccountView:GetCustomCharacterOrder()
     local settings = Settings()
-    local characters, known, order, present = Core.Characters:GetAll({ identityOnly = true }), {}, {}, {}
+    local characters = Core.Characters:GetAllCached({ identityOnly = true })
+    local known, order, present = {}, {}, {}
     for _, character in ipairs(characters) do known[character.id] = true end
     for _, characterID in ipairs(Core.CharacterSort:NormalizeOrder(settings.customCharacterOrder)) do
         if known[characterID] then order[#order + 1] = characterID; present[characterID] = true end
@@ -1408,7 +1409,7 @@ function AccountView:BuildContext(page, options)
         -- context; default business page contexts remain complete snapshots.
         characters = self:GetVisibleCharacters({ identityOnly = true })
     elseif page and page.id == "characters" then
-        characters = options.identityOnly and Core.Characters:GetAll({ identityOnly = true }) or Core.Characters:GetAllCached()
+        characters = options.identityOnly and Core.Characters:GetAllCached({ identityOnly = true }) or Core.Characters:GetAllCached()
     else characters = self:GetVisibleCharacters(options) end
     local scopeDefinition = GetScopeDefinition(page, characters)
     local scope = scopeDefinition and self:GetPageScope(page.id, scopeDefinition) or nil

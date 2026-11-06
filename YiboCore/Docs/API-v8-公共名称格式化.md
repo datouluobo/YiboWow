@@ -94,3 +94,7 @@ lua YiboCurrency/_NonRelease/Tests/CoreItemControlsSpec.lua
 名称契约测试覆盖原名／短名及服务器策略组合、目录外联系人、未初始化与缺失数据、错误返回、输入和偏好无写入、短名更新事件、旧 API 版本检查及 GetDisplayName 语义；共享表头集成覆盖业务名称／服务器覆盖、独立副标题、真实身份 tooltip、状态提示、名称测量与档案字段。现有 Currency 测试作为旧 API v7 控件回归。
 
 游戏内尚未验收：核对多个旧业务插件的主窗口与悬停表头、所有服务器／单服切换、短名修改即时刷新，以及 Core 档案、设置标签和删除确认中的真实完整身份。
+
+## 2026-11-05 Forever完整姓名
+
+Forever身份name为原生完整双名；GUID继续作为身份键。该目标使用大区姓名显示策略，FormatName的full/sameRealm策略完成原有参数校验后返回姓名（或明确设置的短名），不附加内部realm元数据；Mists/Retail输出保持。业务方传入的name须为完整观察值，Core不会将realm当作第二名字或解析地址。共用表头同样省略服务器副标题。能力仍character-name-format:1/API13，修复为当前Forever0.2.0工作树；原生采集失败保留旧记录，待客户端复验，见[姓名适配与验证](Forever-完整角色姓名适配-2026-11-05.md)。

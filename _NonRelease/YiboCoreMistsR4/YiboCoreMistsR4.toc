@@ -1,0 +1,8 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r Core Mists R4 Acceptance
+## Version: 0.1.0
+## RequiredDeps: YiboCore
+## SavedVariables: YiboCoreMistsR4DB
+## LoadOnDemand: 0
+Target.lua
+Probe.lua

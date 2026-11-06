@@ -20,9 +20,10 @@ StaticPopupDialogs = {}
 SlashCmdList = {}
 local function Load(clientLocale, preference)
     client = clientLocale
+    WOW_PROJECT_ID, WOW_PROJECT_MISTS_CLASSIC = 19, 19
     _G.YiboCore, _G.YiboCoreDB = nil, nil
     StaticPopupDialogs = {}
-    for line in io.lines("YiboCore/YiboCore.toc") do
+    for line in io.lines("YiboCore/YiboCore_Mists.toc") do
         local path = line:match("^([^#].*%.lua)%s*$")
         if path then dofile("YiboCore/" .. path:gsub("\\", "/")) end
     end

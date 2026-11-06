@@ -1,12 +1,13 @@
 local Core = _G.YiboCore
 
 -- Loaded only by the Forever manifest. Shared code consumes policy, not product IDs.
-Core.VERSION = "0.2.0"
+Core.VERSION = "0.2.1"
 Core._private.target = {
     id = "Forever",
     savedVariable = "YiboCoreForeverDB",
     requireGUID = true,
     legacyImports = false,
+    displayRealm = false,
     supported = type(WOW_PROJECT_CAMELOT) == "number" and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT,
     projectID = WOW_PROJECT_ID,
     rulesetState = "unknown",

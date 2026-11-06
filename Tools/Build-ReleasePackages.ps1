@@ -3,7 +3,7 @@
 param(
     [Parameter(Mandatory = $true)][string]$Addon,
     [string]$Target = 'Mists',
-    [ValidateSet('Both', 'CurseForge', 'GitHub')][string]$Channel = 'Both',
+    [ValidateSet('Both', 'CurseForge', 'GitHub')][string]$Channel = 'CurseForge',
     [string]$WorkspaceRoot = (Split-Path $PSScriptRoot -Parent),
     [string]$OutputRoot,
     [switch]$ValidateOnly,

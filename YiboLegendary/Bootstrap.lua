@@ -38,7 +38,6 @@ local DEFAULTS = {
         },
     },
     byCharacter = {},
-        probes = {},
 }
 
 local function CopyDefaults(target, defaults)
@@ -211,7 +210,6 @@ function Addon:Initialize()
     end
     if self.GoalTargets then self.GoalTargets:Initialize() end
     self.initialized = true
-    self.Probe:Run()
     self:Refresh("initialize")
     self.UI:Initialize()
 end
@@ -249,9 +247,6 @@ SlashCmdList.YIBOLEGENDARY = function(command)
         Addon.UI:SetMatrixDebug(false)
     elseif command == "debug dump" then
         Addon.UI:DebugMatrix("dump")
-    elseif command == "probe" then
-        Addon.Probe:Run(true)
-        Addon:Print(self:T("CHAT.PROBE_REFRESHED"))
     elseif command == "status" then
         Addon.UI:PrintStatus()
     elseif command:match("^test%s+") then

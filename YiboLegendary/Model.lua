@@ -83,7 +83,7 @@ local function Objective(entry, faction)
 end
 
 local function CloakSnapshot(character, legacy)
-    if legacy.readable == false then return Snapshot("CLOAK", "unknown", false, "无法读取任务状态", "执行 /yle probe", "确认任务 API 兼容性。", nil, Evidence("real", Addon:GetTimestamp(), { readable=false })) end
+    if legacy.readable == false then return Snapshot("CLOAK", "unknown", false, "无法读取任务状态", "执行 /yep capture", "确认客户端任务 API 可读性。", nil, Evidence("real", Addon:GetTimestamp(), { readable=false })) end
     if legacy.completed then return Snapshot("CLOAK", "completed", true, "传说披风任务线", "已完成", "—", nil, Evidence("real", Addon:GetTimestamp(), { kind="quest" })) end
     local current = legacy.current
     if not current then return Snapshot("CLOAK", "pending_sync", false, "尚无可确定的下一任务", "等待任务同步", "登录并打开任务日志后重新同步。", nil, Evidence("real", Addon:GetTimestamp())) end

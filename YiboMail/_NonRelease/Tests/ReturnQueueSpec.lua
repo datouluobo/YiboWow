@@ -47,7 +47,16 @@ function GetInboxItemLink(index, slot)
 end
 function GetContainerNumFreeSlots() return 20, 0 end
 function InCombatLockdown() return false end
-function DeleteInboxItem() end
+function GetInboxText(index)
+    local mail = inbox[index]
+    if mail.bodyUnavailable then error("body unavailable") end
+    return mail.body
+end
+function DeleteInboxItem(index)
+    if not inbox[index] or inbox[index].body == nil then return end
+    calls[#calls + 1] = { index = index, subject = inbox[index].subject, at = clock }
+    behaviour(index, "delete")
+end
 function InboxItemCanDelete(index) return inbox[index].returnable == false end
 function ReturnInboxItem(index)
  calls[#calls + 1] = { index = index, subject = inbox[index].subject, at = clock }
@@ -333,3 +342,54 @@ end
 assert(Q:StartReturn(plan)); Advance(3)
 assert(Q.completed == 1 and #calls == 1 and Q.state == "paused" and inbox[1].money == 35000)
 print("PASS: positive sender permission is re-read at acceptance and before each queued request")
+
+local function EmptyCandidate(subject, body, items, money, cod)
+    local mail = Mail(subject, items, money, cod)
+    mail.body, mail.returnable = body, false
+    return mail
+end
+local unreadable = EmptyCandidate("Unreadable", "")
+unreadable.bodyUnavailable = true
+Reset({ EmptyCandidate("First", ""), EmptyCandidate("Letter", "Hello"),
+    EmptyCandidate("Whitespace", " "), EmptyCandidate("Unknown", nil), unreadable,
+    EmptyCandidate("Item", "", { Item(1, 1) }), EmptyCandidate("Money", "", {}, 10),
+    EmptyCandidate("COD", "", {}, 0, 20), EmptyCandidate("Last", "") })
+behaviour = ReturnNormal
+local deletion = assert(A.Returns:PrepareEmptyDeletion())
+assert(#deletion.actions == 2 and Q:StartReturn(deletion))
+Advance(2)
+assert(Q.state == "complete" and Q.completed == 2 and #calls == 2 and #inbox == 7)
+assert(calls[1].subject == "Last" and calls[2].subject == "First" and Archives() == 0)
+assert(not A.Returns:PrepareEmptyDeletion())
+
+Reset({ EmptyCandidate("Changed", ""), EmptyCandidate("Last", "") })
+behaviour = ReturnNormal
+deletion = assert(A.Returns:PrepareEmptyDeletion())
+assert(Q:StartReturn(deletion))
+inbox[1].body = "Keep this"
+Advance(2)
+assert(Q.state == "paused" and Q.completed == 1 and #calls == 1 and inbox[1].body == "Keep this")
+print("PASS: bulk empty deletion preserves text, unknown bodies, items, money, COD and rechecks each message")
+
+local function Postmaster(body, items, canReply)
+    local mail = EmptyCandidate("失而复得", body, items)
+    mail.sender, mail.unreplyable = "邮政长", not canReply
+    return mail
+end
+local clientLocale = "zhCN"
+function GetLocale() return clientLocale end
+local recovery = "我们在虚空中找到了一件物品，应该是你丢掉的吧？\n\n随信附上，请查收。"
+Reset({ Postmaster(recovery), Postmaster(recovery, { Item(1, 1) }),
+    Postmaster("普通正文"), Postmaster(recovery, nil, true) })
+behaviour = ReturnNormal
+deletion = assert(A.Returns:PrepareEmptyDeletion())
+assert(#deletion.actions == 1 and deletion.actions[1].original.inboxIndex == 1 and Q:StartReturn(deletion))
+Advance(2)
+assert(Q.state == "complete" and #calls == 1 and #inbox == 3)
+assert(#inbox[1].items == 1 and inbox[2].body == "普通正文" and not inbox[3].unreplyable)
+print("PASS: Postmaster recovery mail is eligible only after looting and with the exact system template")
+clientLocale = "enUS"
+Reset({ Postmaster(recovery), EmptyCandidate("Empty", ""), EmptyCandidate("Letter", "Hello") })
+deletion = assert(A.Returns:PrepareEmptyDeletion())
+assert(#deletion.actions == 1 and deletion.actions[1].original.subject == "Empty")
+print("PASS: English client excludes the Postmaster exception and still recognizes empty mail")

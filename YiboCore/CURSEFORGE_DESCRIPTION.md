@@ -21,7 +21,7 @@ YiboCore does not track boss kills, quests, or other addon-specific progress by 
 | [YiboTodo - Account To-Do](https://www.curseforge.com/wow/addons/yibotodo) | Shows profession cooldowns and the next available craft across characters. |
 | [YiboReputation - Reputation Journey](https://www.curseforge.com/wow/addons/yibo-reputation) | Browses, compares, and tracks reputation progress across characters. |
 
-Supported client: Mists of Pandaria Classic / China 5.5.4.
+Supported clients: Mists of Pandaria Classic 5.5.4 and Forever 1.60.1, using their separate target packages. Forever 0.2.1 / API13 provides the character directory, full two-part names, profession profiles, shared window/settings and entry previews. Install business addons using their own supported Forever releases.
 
 ---
 
@@ -48,4 +48,4 @@ YiboCore 本身不追踪首领击杀、任务或其它业务进度。请按需�
 | [YiboTodo - 账号待办](https://www.curseforge.com/wow/addons/yibotodo) | 跨角色查看专业冷却状态及下一次可制作时间。 |
 | [YiboReputation - 声望之路](https://www.curseforge.com/wow/addons/yibo-reputation) | 跨角色浏览、比较和追踪声望进度。 |
 
-支持客户端：Mists of Pandaria Classic / 国服 5.5.4。
+支持客户端：熊猫人怀旧服5.5.4与无限服1.60.1，分别使用对应目标包。无限服0.2.1 / API13提供完整双名、角色目录、专业档案、统一窗口/设置及入口预览；业务插件按各自支持的Forever发行版安装。

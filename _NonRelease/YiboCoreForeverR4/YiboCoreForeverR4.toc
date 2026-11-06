@@ -1,0 +1,8 @@
+## Interface: 16001
+## Title: |cff20e070[Yibo]|r Core Forever R4 Acceptance
+## Version: 0.1.0
+## RequiredDeps: YiboCore
+## SavedVariables: YiboCoreForeverR4DB
+## LoadOnDemand: 0
+Target.lua
+Probe.lua

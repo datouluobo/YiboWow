@@ -123,7 +123,7 @@ function Action:Commit()
         and (not self.transitionAt or now < self.transitionAt) then return false, meta end
     local value = { tasks = {}, coverage = {} }
     local transitionAt
-    for _, character in ipairs(Addon.Core.Characters:GetAll({ identityOnly = true })) do
+    for _, character in ipairs(Addon.Core.Characters:GetAllCached({ identityOnly = true })) do
         local tasks, coverage
         if self.ProjectAll then
             tasks, coverage = self:ProjectAll(character.id, source.characters[character.id], now, meta.sourceEpoch)

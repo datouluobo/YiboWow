@@ -19,7 +19,7 @@ CJK = re.compile(r'[\u3400-\u9fff\u3000-\u303f\uff00-\uffef\u201c\u201d]')
 ENTRY = re.compile(r'\["([^"\n]+)"\]\s*=\s*("(?:\\.|[^"\\])*")')
 REFERENCE = re.compile(r'Core:Text\(\s*"([^"\n]+)"|titleKey\s*=\s*"([^"\n]+)"')
 OWNER_REFERENCE = re.compile(r'Core\.Locale:Get\(\s*"([^"\n]+)"\s*,\s*"([^"\n]+)"')
-ADDON_REFERENCE = re.compile(r'Addon:T\(\s*"([^"\n]+)"')
+ADDON_REFERENCE = re.compile(r'(?:Addon:T|YQB\.T)\(\s*"([^"\n]+)"')
 REGISTER = re.compile(r'Core\.Locale:Register\(\s*"([^"\n]+)"\s*,\s*"(zh|en)"\s*,\s*\{')
 FORMAT = re.compile(r'%(?:[-+ #0]*\d*(?:\.\d+)?[cdiouxXeEfgGqs]|%)')
 EXCEPTIONS = {
@@ -35,6 +35,14 @@ INPUT_PUNCTUATION = {
     'YiboCore/UI/ItemPicker.lua': {'"；"', '"，"'},
     'YiboCore/Util/LevelFilter.lua': {'"，"'},
     'YiboTaskHub/BossTargets.lua': {'"："', '"·"', '"（"', '"）"'},
+}
+PERSISTED_TOKENS = {
+    'YiboQuestBlocker/YiboQuestBlocker_Core.lua': {
+        '"以上"': 'Legacy levelOp value read only while migrating saved settings; preserve the stored token.',
+        '"以下"': 'Legacy levelOp value read only while migrating saved settings; preserve the stored token.',
+        '"等于"': 'Legacy levelOp value read only while migrating saved settings; preserve the stored token.',
+        '"至"': 'Legacy levelOp value read only while migrating saved settings; preserve the stored token.',
+    },
 }
 
 
@@ -150,9 +158,9 @@ def audit(addons: list[str]) -> dict:
                 if any(start <= token.start() < end for start, end in resource_ranges):
                     continue
                 line = source.count('\n', 0, token.start()) + 1
-                if relative in EXCEPTIONS or (relative.endswith('/UI/Theme.lua') and literal in MEASUREMENT) or literal in INPUT_PUNCTUATION.get(relative, set()):
+                if relative in EXCEPTIONS or (relative.endswith('/UI/Theme.lua') and literal in MEASUREMENT) or literal in INPUT_PUNCTUATION.get(relative, set()) or literal in PERSISTED_TOKENS.get(relative, {}):
                     result['exceptions'].append({'path': relative, 'line': line, 'text': literal,
-                                                 'reason': EXCEPTIONS.get(relative, 'Input normalization punctuation; not displayed.' if relative in INPUT_PUNCTUATION else 'Font measurement specimen; not displayed.')})
+                                                 'reason': EXCEPTIONS.get(relative, PERSISTED_TOKENS.get(relative, {}).get(literal, 'Input normalization punctuation; not displayed.' if relative in INPUT_PUNCTUATION else 'Font measurement specimen; not displayed.'))})
                     continue
                 count += 1
                 regions[relative] += 1

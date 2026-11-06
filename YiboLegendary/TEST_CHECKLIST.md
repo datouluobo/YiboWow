@@ -4,7 +4,7 @@
 
 1. 同时启用 `YiboCore` 与 `YiboLegendary`，登录 MoP Classic 5.5.4。
 2. 输入 `/yco addons`，确认 `YiboLegendary` 的版本为 `2.2.2` 且需要 Core API v13。
-3. 输入 `/yle probe`，确认任务完成、任务日志索引、任务目标、声望和物品数量 API 均按客户端实际情况报告；不可用项不得被渲染为零进度。
+3. 单独启用 `YiboLegendaryProbe` 后输入 `/yep capture`，确认原生任务、声望、物品数量和装备 API 的可用性按客户端实际情况记录；该采样不读取 `YiboLegendary` 业务状态。
 4. 输入 `/yle`，确认进入 Core 的“传说之路”页，而非独立窗口。
 
 ## 完整页面

@@ -50,10 +50,12 @@ function Native:CancelReturnConfirmation()
     self.returnConfirmation = nil
     if request then request:Cancel() end
 end
-function Native:ReturnSelectedMail()
+function Native:ReturnSelectedMail(deleteEmpty)
     local panel, queue = self.inbox, Addon.Queue
     if self.returnConfirmation or self.deleting or queue.state == "running" or queue.pending then return end
-    local plan, err = Returns:Prepare(panel.selection, self:Context())
+    local plan, err
+    if deleteEmpty then plan, err = Returns:PrepareEmptyDeletion()
+    else plan, err = Returns:Prepare(panel.selection, self:Context()) end
     if not plan then panel.notice = err; self:RefreshInbox(); return end
     if not (Addon.Core.ItemConfirmation and type(Addon.Core.ItemConfirmation.Show) == "function") then
         panel.notice = Addon:T("RETURN.CONFIRM_UNAVAILABLE"); self:RefreshInbox(); return
@@ -61,6 +63,7 @@ function Native:ReturnSelectedMail()
     local detail = { Addon:T("RETURN.CONFIRM", #plan.actions, plan.skipped), Addon:T("RETURN.WHOLE_MAIL") }
     local sorted = {}; for reason in pairs(plan.reasons) do sorted[#sorted + 1] = reason end; table.sort(sorted)
     for _, reason in ipairs(sorted) do detail[#detail + 1] = Addon:T("RETURN.SKIP_REASON", plan.reasons[reason], reason) end
+    if deleteEmpty then detail = { Addon:T("EMPTY_MAIL.CONFIRM", #plan.actions) } end
     local request
     request = Addon.Core.ItemConfirmation:Show({ text = table.concat(detail, "\n\n"),
         OnAccept = function()
@@ -69,7 +72,7 @@ function Native:ReturnSelectedMail()
             if Native.deleting or queue.state == "running" or queue.pending then
                 panel.notice = Addon:T("UI.TEXT_0552"); Native:RefreshInbox(); return
             end
-            if not panel:IsShown() or panel.mode ~= "mail" or not Returns:Matches(plan, panel.selection) then
+            if not panel:IsShown() or panel.mode ~= "mail" or not Returns:Matches(plan, deleteEmpty and {} or panel.selection) then
                 panel.notice = Addon:T("RETURN.CHANGED"); Native:RefreshInbox(); return
             end
             -- Close an open letter without its native on-close deletion path.

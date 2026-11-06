@@ -38,7 +38,6 @@ Providers\FarmOperationObservation.lua
 Providers\DailyQuest.lua
 Mists\Darkmoon.lua
 Providers\SpecialActivity.lua
-Probe.lua
 Settings.lua
 Actions.lua
 AccountPage.lua

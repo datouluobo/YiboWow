@@ -409,3 +409,6 @@ YiboVault.Items.Events:Unregister(owner, callback)
 - 需要删除字段、改变默认范围、改变 item/variant key 含义或复用来源 ID 时，提升业务 API 主版本。
 - 尚未通过阶段验收的 capability 只出现在文档的“规划”部分，运行时不得声明。
 - Core v6 是接入前置条件，但 Core 不代理、缓存或改写两套业务 API 的结果。
+
+
+2026-10-29 Mists消费实现增量：Vault MailProvider只读角色枚举使用Core API13 / character-identity-cache:1；该可选集成缺能力时提示升级并停止连接，保留Vault本地采集基础行为和已有历史。Mail/Vault服务major/minor、来源归属、事件内容/频率、公开快照隔离与实时校验不变；目录变化与提供者重连均继续失效，恢复能力不重复订阅。Forever独立消费实现不变。见[十封单附件回归](Mail-十封单附件与Vault通知链-2026-10-29.md)。

@@ -1,5 +1,7 @@
 # YiboAutoOpen 1.2.5
 
+> 文档状态更新（2026-10-16）：现有功能已由用户确认实机验收收口。当前源码版本与发行证据见[状态总览](../Docs/仓库当前状态总览.md)，后续任务见[延期清单](../Docs/后续开发任务清单.md)。下文旧版本的开发／待验收描述按其原日期理解；当前版本渠道状态没有明确证据时保留待核对。
+
 Safely opens containers from an explicit account-wide allowlist, one at a time. By default, the addon scans items already in your bags after login.
 
 Jaggal Clam (24476) is manual-only on MoP Classic. Adding it shows a manual-opening notice without adding it to the catalog. Existing catalog entries for this item are removed when the addon initializes; right-click the clam in your bags to open it.

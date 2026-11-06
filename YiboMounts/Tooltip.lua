@@ -41,8 +41,6 @@ end
 
 local function AppendSource(tooltip, spellID, source, identity)
     local record = NS.Catalog:GetBySpellID(spellID)
-    if NS.Probe then NS.Probe:Report(source or "OnTooltipSetSpell", identity, spellID, record ~= nil) end
-
     if type(spellID) ~= "number" then return end
     if not record then return end
 

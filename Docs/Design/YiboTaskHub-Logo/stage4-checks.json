@@ -1,0 +1,55 @@
+{
+  "status": "待确认",
+  "source_svg": "stage3-F-skeleton-draft.svg",
+  "source_sha256": "1ac972191d2c3508e404e1c14f9ea20d6e3f8bfd3bdbcad2d297db2b23d2963f",
+  "renders": [
+    {
+      "size": 24,
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ],
+      "edge_alpha_max": 0,
+      "bbox": [
+        1,
+        1,
+        23,
+        23
+      ],
+      "matches_approved_stage3_pixels": true
+    },
+    {
+      "size": 32,
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ],
+      "edge_alpha_max": 0,
+      "bbox": [
+        2,
+        1,
+        30,
+        31
+      ],
+      "matches_approved_stage3_pixels": true
+    },
+    {
+      "size": 64,
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ],
+      "edge_alpha_max": 0,
+      "bbox": [
+        4,
+        3,
+        60,
+        61
+      ]
+    }
+  ],
+  "simulation": "schematic, no in-game verification"
+}

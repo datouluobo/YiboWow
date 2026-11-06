@@ -1,0 +1,1 @@
+-- Compatibility path retained for overlay updates. The current TOC loads Mists/Probe.lua.

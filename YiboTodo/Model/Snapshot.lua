@@ -326,7 +326,7 @@ function Snapshot:Build()
     if Addon.Settings and type(Addon.Settings.IsMonitoringGroupEnabled) == "function" and Addon.Settings:IsMonitoringGroupEnabled("darkmoon-faire") then
         nextTransitionAt = Addon.Model.Schedule:NextResetAt(now, 0)
     end
-    local characters = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetAll({ identityOnly = true }) or {}
+    local characters = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetAllCached({ identityOnly = true }) or {}
     -- Identity is constant for this build; do not deep-copy the current Core
     -- record once per character and daily activity.
     local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent({ identityOnly = true })

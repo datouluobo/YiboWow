@@ -349,7 +349,6 @@ local function GetRow(instance, index)
     row.groupGap:SetColorTexture(C.bg[1], C.bg[2], C.bg[3], 1)
     row.name = Text(row, Theme.Font.body, "LEFT", C.text); row.name:SetWidth(BOSS_WIDTH - 12)
     row.professionIcon = row:CreateTexture(nil, "ARTWORK"); row.professionIcon:SetSize(16, 16)
-    row.currentOutline = Theme:CreateCurrentCharacterOutline(row)
     row.action = Button(row, ACTION_WIDTH - 2, "—"); row.action:SetHeight(CELL_H)
     row.phase = Button(row, PHASE_WIDTH - 2, "—"); row.phase:SetHeight(CELL_H)
     row.cells = {}
@@ -587,17 +586,15 @@ function YAB.CreateAccountPage(parent)
     parent.scroll = Theme:CreateScrollFrame(parent)
     parent.scroll:BindScrollbarGutter(parent.header)
     parent.body = CreateFrame("Frame", nil, parent.scroll); parent.scroll:SetScrollChild(parent.body)
-    parent.currentColumnOutline = Theme:CreateCurrentCharacterOutline(parent)
     parent.headers, parent.rows = {}, {}
 end
 
 local function RefreshCurrentColumnOutline(instance, bosses, showKills)
-    local outline = instance.currentColumnOutline
     if not showKills or not instance.currentColumnX then
-        Theme:SetCurrentCharacterOutline(outline, false)
+        Theme:HideCurrentCharacterOutline(instance)
         return
     end
-    Theme:UpdateCurrentCharacterColumnOutline(outline, instance.header, instance.scroll, instance.currentColumnX, instance.currentColumnWidth or CHARACTER_MIN_WIDTH, true)
+    Theme:UpdateCurrentCharacterColumnOutline(instance, instance.header, instance.scroll, instance.currentColumnX, instance.currentColumnWidth or CHARACTER_MIN_WIDTH, true)
 end
 
 -- Transposed matrix: Bosses stay on rows while Core paginates character
@@ -810,7 +807,7 @@ function YAB.RefreshAccountPage(instance, context)
             end
             x = x + BOSS_WIDTH
         end
-        Release(row.cells, showBossColumns and (#bosses + 1) or 1); Theme:SetCurrentCharacterOutline(row.currentOutline, false); row:Show()
+        Release(row.cells, showBossColumns and (#bosses + 1) or 1); Theme:UpdateCurrentCharacterRowOutline(row, false); row:Show()
     end
     if showPhase then
         rowIndex = rowIndex + 1
@@ -826,13 +823,13 @@ function YAB.RefreshAccountPage(instance, context)
             end
             x = x + BOSS_WIDTH
         end
-        Release(row.cells, showBossColumns and (#bosses + 1) or 1); Theme:SetCurrentCharacterOutline(row.currentOutline, false); row:Show()
+        Release(row.cells, showBossColumns and (#bosses + 1) or 1); Theme:UpdateCurrentCharacterRowOutline(row, false); row:Show()
     end
     for _, key in ipairs(keys) do
         rowIndex = rowIndex + 1
         local row = GetRow(instance, rowIndex)
         PrepareRow(row, rowIndex)
-        Theme:SetCurrentCharacterOutline(row.currentOutline, key == currentKey)
+        Theme:UpdateCurrentCharacterRowOutline(row, key == currentKey)
 
         local name, realm = CharacterInfo(key)
         local color = CharacterColor(key)
@@ -856,7 +853,7 @@ function YAB.RefreshAccountPage(instance, context)
     instance.scroll:SetContentHeight(instance.body:GetHeight())
     if preview then instance.scroll:SetVerticalScroll(0) end
     instance.scroll:RefreshScrollbar()
-    Theme:SetCurrentCharacterOutline(instance.currentColumnOutline, false)
+    Theme:HideCurrentCharacterOutline(instance)
 end
 
 local function GetMatrixSize(context)

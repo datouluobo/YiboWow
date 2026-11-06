@@ -2,7 +2,7 @@ dofile("_NonRelease/CurrencyMigration/Spec.lua")
 local checks = 0
 local function Check(value, message) checks = checks + 1; assert(value, message) end
 local function Read(path) local f = assert(io.open(path, "r")); local text = f:read("*a"); f:close(); return text end
-local coreTOC = Read("YiboCore/YiboCore.toc")
+local coreTOC = Read("YiboCore/YiboCore_Mists.toc")
 for _, path in ipairs({ "Runtime\\CurrencyCatalog.lua", "Data\\Domains\\Economy.lua", "Data\\Domains\\EconomyItems.lua", "Data\\Resources\\Economy.lua" }) do
     Check(not coreTOC:find(path, 1, true), "retired business module is not in Core TOC: " .. path)
     dofile("YiboCore/" .. path:gsub("\\", "/"))

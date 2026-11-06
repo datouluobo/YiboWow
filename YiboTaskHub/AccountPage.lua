@@ -264,7 +264,6 @@ function Page.Refresh(frame, context)
     frame.summary:SetText(Addon.Presentation:CountText(Addon.Presentation:Counts(countRows), Page:Stats(rawRows), true))
     frame.header:ClearAllPoints(); frame.header:SetPoint("TOPLEFT", 4, -(h + 8)); frame.header:SetSize(width, theme.Table.headerHeight)
     for i, field in ipairs(PlaceCells(frame.header, width, context)) do frame.header.cells[i]:SetText(field.title) end
-    for _, row in ipairs(frame.rows) do row:Hide() end
     for _, bar in ipairs(frame.bars) do bar:Hide() end
     local y, rowIndex, barIndex, section = h + 8 + theme.Table.headerHeight, 0, 0, nil
     local function Section(title, key, character)
@@ -355,6 +354,7 @@ function Page.Refresh(frame, context)
         elseif task.nextAction then band.action:SetText(task.nextAction.title or Addon:T("TEXT.VIEW.F7ACEF")) end
         band:Show(); y = y + h
     end
+    for index = rowIndex + 1, #frame.rows do frame.rows[index]:Hide() end
     if #rows == 0 then
         local message
         if value.providerCount == 0 then message = Addon:T("TEXT.NO_GOALS_YET_ADD_ONE_FROM_A_SPECIFIC.1F2D59")

@@ -376,7 +376,7 @@ end
 function UI:CreateMainRow(page, index)
     local parent = page.detail
     local row = CreateFrame("Button", nil, parent.content); row:SetHeight(ROW_HEIGHT); row:SetPoint("TOPLEFT", 0, -((index - 1) * ROW_HEIGHT)); row:SetPoint("TOPRIGHT", 0, -((index - 1) * ROW_HEIGHT))
-    row.bg = row:CreateTexture(nil, "BACKGROUND"); row.bg:SetAllPoints(row); row.outline = Theme:CreateCurrentCharacterOutline(row); row.cells = {}
+    row.bg = row:CreateTexture(nil, "BACKGROUND"); row.bg:SetAllPoints(row); row.cells = {}
     row.professionIcon = row:CreateTexture(nil, "ARTWORK"); row.professionIcon:SetSize(16, 16)
     for _, key in ipairs({ "character", "stage", "progress", "action" }) do row.cells[key] = self:Text(row, Theme.Font.body) end
     row:SetScript("OnMouseUp", function(control, button)
@@ -394,7 +394,7 @@ end
 function UI:CreatePreviewRow(index)
     local parent = self.details.preview
     local row = CreateFrame("Button", nil, parent.content); row:SetHeight(Theme.Table.previewRowHeight); row:SetPoint("TOPLEFT", 0, -((index - 1) * Theme.Table.previewRowHeight)); row:SetPoint("TOPRIGHT", 0, -((index - 1) * Theme.Table.previewRowHeight))
-    row.bg = row:CreateTexture(nil, "BACKGROUND"); row.bg:SetAllPoints(row); row.outline = Theme:CreateCurrentCharacterOutline(row); row.cells = {}
+    row.bg = row:CreateTexture(nil, "BACKGROUND"); row.bg:SetAllPoints(row); row.cells = {}
     Theme:BindTooltip(row, nil, row.tooltipLines or {}); parent.rows[index] = row; return row
 end
 
@@ -468,7 +468,7 @@ function UI:RefreshMain(context)
     local currentCharacter = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     for index, item in ipairs(roster) do
         local row = page.detail.rows[index] or self:CreateMainRow(page, index); local state = DisplayState(item.snapshot, target); local meta = StateMeta(state)
-        local bg = Theme:GetDataRowColor(index); row.bg:SetColorTexture(bg[1], bg[2], bg[3], bg[4]); Theme:SetCurrentCharacterOutline(row.outline, currentCharacter and item.character.id == currentCharacter.id)
+        local bg = Theme:GetDataRowColor(index); row.bg:SetColorTexture(bg[1], bg[2], bg[3], bg[4]); Theme:UpdateCurrentCharacterRowOutline(row, currentCharacter and item.character.id == currentCharacter.id)
         Theme:ApplyDataColumnTints(row, { tracks.character, tracks.stage, tracks.progress, tracks.action }, ROW_HEIGHT)
         local red, green, blue = ClassColor(item.character); local coords = CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[item.character.class]
         if coords then row.professionIcon:SetTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES"); row.professionIcon:SetTexCoord(unpack(coords)); row.professionIcon:ClearAllPoints(); row.professionIcon:SetPoint("LEFT", CELL_INSET, 0); row.professionIcon:Show() else row.professionIcon:Hide() end
@@ -547,7 +547,7 @@ function UI:RefreshPreview(context)
     for id, cell in pairs(page.header.cells) do if not rendered[id] then cell:Hide() end end
     local currentCharacter = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     for index,item in ipairs(roster) do
-        local row = page.rows[index] or self:CreatePreviewRow(index); local bg = Theme:GetDataRowColor(index); row.bg:SetColorTexture(bg[1],bg[2],bg[3],bg[4]); Theme:SetCurrentCharacterOutline(row.outline,currentCharacter and item.character.id==currentCharacter.id)
+        local row = page.rows[index] or self:CreatePreviewRow(index); local bg = Theme:GetDataRowColor(index); row.bg:SetColorTexture(bg[1],bg[2],bg[3],bg[4]); Theme:UpdateCurrentCharacterRowOutline(row,currentCharacter and item.character.id==currentCharacter.id)
         -- Cells and column tints share Core's left inset. The row itself is
         -- widened below to the scroll viewport so its zebra background and
         -- right-side safety margin never stop at the final target column.

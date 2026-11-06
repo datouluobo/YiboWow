@@ -1,0 +1,11 @@
+## Interface: 120105
+## Title: |cff20e070[Yibo]|r BeastPaths Retail Pet Probe
+## Title-zhCN: |cff20e070[Yibo]|r BeastPaths 正式服宠物探针
+## Title-zhTW: |cff20e070[Yibo]|r BeastPaths 正式服寵物探針
+## Notes: Non-release read-only Retail hunter pet and stable API probe.
+## Author: YiboSoft
+## Version: 0.1.0
+## RequiredDeps: YiboCore
+## SavedVariables: YiboBeastPathsRetailPetProbeDB
+
+Probe.lua

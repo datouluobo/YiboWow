@@ -1,0 +1,71 @@
+{
+  "status": "awaiting approval",
+  "source_size": [
+    1254,
+    1254
+  ],
+  "source_mode": "RGBA",
+  "previews": [
+    {
+      "size": 24,
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ],
+      "edge_alpha_max": 101,
+      "bbox": [
+        0,
+        0,
+        24,
+        24
+      ]
+    },
+    {
+      "size": 32,
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ],
+      "edge_alpha_max": 77,
+      "bbox": [
+        1,
+        0,
+        32,
+        32
+      ]
+    },
+    {
+      "size": 64,
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ],
+      "edge_alpha_max": 3,
+      "bbox": [
+        1,
+        0,
+        63,
+        64
+      ]
+    },
+    {
+      "size": 128,
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ],
+      "edge_alpha_max": 3,
+      "bbox": [
+        5,
+        2,
+        125,
+        128
+      ]
+    }
+  ],
+  "note": "Material concept previews; no pixel cleanup performed."
+}

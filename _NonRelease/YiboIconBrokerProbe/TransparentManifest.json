@@ -1,0 +1,76 @@
+{
+  "status": "temporary-client-validation",
+  "source_sha256": "be98acf95398ec87edac473fd17439ec4b7718d5dcb0dd8f22923082e60827ce",
+  "sizes": [
+    16,
+    24,
+    32,
+    64
+  ],
+  "game_textures": [
+    32,
+    64
+  ],
+  "icons": [
+    {
+      "addon": "YiboCore",
+      "texture": "MediaTransparent/YiboCore-64.tga"
+    },
+    {
+      "addon": "YiboMail",
+      "texture": "MediaTransparent/YiboMail-64.tga"
+    },
+    {
+      "addon": "YiboVault",
+      "texture": "MediaTransparent/YiboVault-64.tga"
+    },
+    {
+      "addon": "YiboBuilds",
+      "texture": "MediaTransparent/YiboBuilds-64.tga"
+    },
+    {
+      "addon": "YiboAutoOpen",
+      "texture": "MediaTransparent/YiboAutoOpen-64.tga"
+    },
+    {
+      "addon": "YiboCurrency",
+      "texture": "MediaTransparent/YiboCurrency-64.tga"
+    },
+    {
+      "addon": "YiboCrafting",
+      "texture": "MediaTransparent/YiboCrafting-64.tga"
+    },
+    {
+      "addon": "YiboTodo",
+      "texture": "MediaTransparent/YiboTodo-64.tga"
+    },
+    {
+      "addon": "YiboReputation",
+      "texture": "MediaTransparent/YiboReputation-64.tga"
+    },
+    {
+      "addon": "YiboAltoBoss",
+      "texture": "MediaTransparent/YiboAltoBoss-64.tga"
+    },
+    {
+      "addon": "YiboLegendary",
+      "texture": "MediaTransparent/YiboLegendary-64.tga"
+    },
+    {
+      "addon": "YiboMounts",
+      "texture": "MediaTransparent/YiboMounts-64.tga"
+    },
+    {
+      "addon": "YiboBeastPaths",
+      "texture": "MediaTransparent/YiboBeastPaths-64.tga"
+    },
+    {
+      "addon": "YiboQuestBlocker",
+      "texture": "MediaTransparent/YiboQuestBlocker-64.tga"
+    },
+    {
+      "addon": "YiboTaskHub",
+      "texture": "MediaTransparent/YiboTaskHub-64.tga"
+    }
+  ]
+}

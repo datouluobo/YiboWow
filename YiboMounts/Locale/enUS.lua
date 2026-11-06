@@ -1,6 +1,7 @@
 local _, NS = ...
 
 NS.Locale.enUS = {
+    PROBE_MOVED = "Mount API sampling moved to the separate non-release probe /ymp.",
     SOURCE_BOSS_DROP = "Drop",
     SOURCE_RARE_DROP = "Rare Drop",
     SOURCE_ACHIEVEMENT = "Achievement",

@@ -1,0 +1,12 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r YiboLegendary Probe
+## Title-zhCN: |cff20e070[Yibo]|r YiboLegendary 探针
+## Title-zhTW: |cff20e070[Yibo]|r YiboLegendary 探針
+## Notes: Non-release native client API probe for quest and item reads.
+## Notes-zhCN: 仅采样客户端原生任务与物品 API 的非发布探针。
+## Author: YiboSoft
+## Version: 0.1.0
+## SavedVariables: YiboLegendaryProbeDB
+
+Locale.lua
+Probe.lua

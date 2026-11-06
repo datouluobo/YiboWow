@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """审计辅助：join mounts.json / mount-inventory.json / catalog md，输出工作清单。"""
 import json, re, csv, sys, io
+from pathlib import Path
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-ROOT = r'E:\Development\YiboWow\YiboMounts\_NonRelease\Data'
-cat = json.load(open(ROOT + r'\mounts.json', encoding='utf-8'))
-inv = json.load(open(ROOT + r'\mount-inventory.json', encoding='utf-8'))
+WORKSPACE = Path(__file__).resolve().parents[3]
+ROOT = WORKSPACE / 'YiboMounts' / '_NonRelease' / 'Data'
+cat = json.load(open(ROOT / 'mounts.json', encoding='utf-8'))
+inv = json.load(open(WORKSPACE / '_NonRelease' / 'YiboMountsProbe' / 'Samples' / 'mount-inventory.json', encoding='utf-8'))
 
 inv_by_spell = {}
 for m in inv['mounts']:

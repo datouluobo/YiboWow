@@ -128,7 +128,6 @@ function Preview:Refresh(frame, context)
     frame.header:ClearAllPoints(); frame.header:SetPoint("TOPLEFT", 4, -(h + 6)); frame.header:SetSize(width, theme.Table.headerHeight)
     frame.header.fill:SetColorTexture(unpack(theme.Colors.toolbar)); Place(frame.header)
     for i, field in ipairs(fields) do frame.header.cells[i]:SetText((compact and i == 1 and Addon:T("TEXT.CHARACTER.E8190C") or "") .. field.title) end
-    for _, band in ipairs(frame.rows) do band:Hide() end
     local y = h + 6 + theme.Table.headerHeight
     for index, token in ipairs(tokens) do
         local band = frame.rows[index]
@@ -195,6 +194,7 @@ function Preview:Refresh(frame, context)
         end
         band:Show(); y = y + h
     end
+    for index = #tokens + 1, #frame.rows do frame.rows[index]:Hide() end
     local footer = #view.groups .. Addon:T("TEXT.CHARACTERS_CLICK_THE_ENTRY_TO_OPEN_T.1613D4")
     if remaining > 0 then footer = Addon:T("TEXT.PLUS.202859") .. remaining .. Addon:T("TEXT.MORE_CHARACTERS_VIEW_THEM_IN_THE_MAI.8E2CBC") end
     if currentRemaining > 0 then footer = footer .. Addon:T("TEXT.CURRENT_CHARACTER_HAS.924181") .. currentRemaining .. Addon:T("TEXT.MORE_VIEW_THEM_IN_THE_MAIN_WINDOW.097A25") end

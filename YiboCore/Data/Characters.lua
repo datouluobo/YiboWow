@@ -115,6 +115,7 @@ function Characters:FormatName(identity, options)
         -- the realm spelling used in the resulting display text.
         showRealm = realm:gsub("%s+", ""):lower() ~= referenceRealm:gsub("%s+", ""):lower()
     end
+    if Core._private and Core._private.target and Core._private.target.displayRealm == false then showRealm = false end
     return showRealm and (name .. "-" .. realm) or name
 end
 

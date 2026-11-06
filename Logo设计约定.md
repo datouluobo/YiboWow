@@ -152,35 +152,30 @@ YiboCore 统一品牌结构
 - 业务符号应尽量使用一个主意象，不把多个独立图标堆叠成信息清单。
 - 大图可使用立体高光和纹理；小图应减少渐变层数、细线数量和微小镂空。
 
-## 7. 现有资源的归档与迁移方向
+## 7. 当前资源与历史版本
 
-当前项目中的资源可按以下方式理解：
+所有系列 Logo 归属各插件自己的 `Media/`。根目录存放当前已确认资源；实际使用过的历史资源按顺序归档到 `Media/v1/`、`Media/v2/` 等目录，归档中的 `Archive.json` 记录原始文件名、版本与路径。
 
-- `YiboCore/Media/YiboCoreLogo-v7.png`：YiboCore 大 Logo，作为母品牌复杂版本的参考。
-- `YiboCore/Media/YiboCoreIcon-v13.png`：YiboCore 小图标，作为系列统一结构的主要参考。
-- `YiboBeastPaths/Assets/Brand/logo-main.png`：保留为 BeastPaths 的业务/项目主视觉，不再默认视为整个 Yibo 系列母品牌。
-- `YiboBeastPaths/Assets/Brand/icon-addon.png`：保留为 BeastPaths 业务图标的简化参考。
-- `YiboAltoBoss`、`YiboLegendary`、`YiboQuestBlocker` 的现有图标：可继续使用，但后续重绘或新增版本时应逐步补入统一外框/结构。
-
-迁移期间不要求一次性替换所有现有资源。旧资源可以继续用于兼容和已发布页面；新增 Logo、重绘 Logo 和新的宣传素材必须遵守本文。
+设计过渡图像不混入当前资源或历史使用版本；删除遵循仓库确认清单。业务图标、UI 截图、参考图和发布包按各自用途保留。
 
 ## 8. 文件命名与存放
 
-推荐使用以下命名：
-
 ```text
-<Addon>Logo-v<版本>.png       # 主 Logo
-<Addon>Icon-v<版本>.png       # 插件列表/窗口图标
-<Addon>MinimapIcon-v<版本>.png # 小地图入口
+<Addon>/Media/<Addon>Icon-master.png  # 已确认位图母版
+<Addon>/Media/<Addon>Icon-32.tga      # 指定尺寸，PNG 同名
+<Addon>/Media/<Addon>Icon.tga         # 默认游戏纹理，64px
+<Addon>/Media/<Addon>Icon.png         # 默认预览，128px
+<Addon>/Media/<Addon>Logo.png         # 展示图，1024px
+<Addon>/Media/<Addon>Logo.tga         # 展示纹理，512px
+<Addon>/Media/v1/                    # 第一组实际使用过的历史资源
 ```
 
-规则：
-
-- 版本号用于表示视觉资产变化，不因复制或改名随意递增。
-- 同一视觉版本的不同尺寸使用同一个版本号。
-- 资源放在对应插件的 `Media/` 或现有品牌资源目录中。
-- 业务插件不得直接引用另一个业务插件目录中的 Logo；共享的 YiboCore 资源应由 YiboCore 提供。
-- README 中使用的主 Logo 必须引用本插件明确归属的品牌资源，避免把业务 Logo 误标为母品牌 Logo。
+- 当前文件名保持稳定；版本通过归档目录与记录区分，不在当前文件名中追加 `-vN`。
+- PNG 尺寸为 16/24/32/64/128/512/1024，TGA 尺寸为 16/32/64/128/512/1024。外围透明一直延伸到画布边缘。
+- `.toc` 使用本插件的 128px 图标；Broker 和窗口使用适合用途的本插件纹理。
+- Core 的插件目录读取各插件自有图标；未安装时使用 Core 图标，避免复制业务插件资源。
+- README 引用本插件当前资源。客户端安装包只携带当前纹理，历史版本保留在源代码包。
+- `Tools/Export-YiboIcons.py` 从各插件母版导出当前资源，不修改历史目录；`Tools/Check-YiboIconAssets.py` 校验透明边界、尺寸和运行引用。
 
 ## 9. 发布前检查
 

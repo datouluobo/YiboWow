@@ -1,6 +1,7 @@
 local _, NS = ...
 
 NS.Locale.zhCN = {
+    PROBE_MOVED = "坐骑 API 采样已移至独立非发布探针 /ymp。",
     SOURCE_BOSS_DROP = "掉落",
     SOURCE_RARE_DROP = "稀有掉落",
     SOURCE_ACHIEVEMENT = "成就",

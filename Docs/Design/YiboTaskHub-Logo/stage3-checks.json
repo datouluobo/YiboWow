@@ -1,0 +1,30 @@
+[
+  {
+    "size": 32,
+    "alpha_range": [
+      0,
+      255
+    ],
+    "edge_alpha_max": 0,
+    "bbox": [
+      2,
+      1,
+      30,
+      31
+    ]
+  },
+  {
+    "size": 24,
+    "alpha_range": [
+      0,
+      255
+    ],
+    "edge_alpha_max": 0,
+    "bbox": [
+      1,
+      1,
+      23,
+      23
+    ]
+  }
+]

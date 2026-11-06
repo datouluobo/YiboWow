@@ -17,10 +17,9 @@ Locale\zhCN.lua
 Data\MountCatalog.generated.lua
 Catalog.lua
 SourceFormatter.lua
-Probe.lua
-InventoryProbe.lua
 Mists\AuraTooltip.lua
 Mists\CollectionState.lua
 Tooltip.lua
 CoreIntegration.lua
 Bootstrap.lua
+Commands.lua

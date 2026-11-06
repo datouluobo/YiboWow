@@ -48,7 +48,7 @@ DEV-002仍为下一版YBP离线查看，真实Retail／Mists宠物API采证、�
 - 源码默认YiboCore.toc只作Hint；每个目标玩家包仅默认YiboCore.toc及本目标文件，均实际加载生成版本索引。不能向源码Junction解压，源码归档不能当玩家旧包升级起点。
 - 产品身份和存档预检在业务写库前执行，误目标／异常／超前存档保护离线验证通过；当前两端实际正常路径及重复初始化不重发就绪已验。真实YBP仍须自行校验目标、Core就绪、最低API及能力。
 - 稳定SavedVariables分别为YiboCoreDB、YiboCoreForeverDB、YiboCoreRetailDB；此次未跨目标导入或重置。纯文档收尾不触发运行代码迁移。
-- R4实际ZIP／保留旧文件检查1724项、7个解包场景238项通过；三目标构建已按当时输入校验。冻结源码及配置摘要为 `a638f694e5bd92c252a969dd3dc0cb0809bc8e4806ce562babfb74569b2906ae`，产物位于Builds/CoreR4-20261027-3a578f2a，详见[包清单](../_NonRelease/CoreFinalR4/Package-Builds.json)及[实际包检查](../_NonRelease/CoreFinalR4/Package-Checks.json)。本轮不重打包，文档更新不改写旧ZIP摘要或实机证据。
+- R4实际ZIP／保留旧文件检查1724项、7个解包场景238项通过；三目标构建已按当时输入校验。冻结源码及配置摘要为 `a638f694e5bd92c252a969dd3dc0cb0809bc8e4806ce562babfb74569b2906ae`，原产物及历史检查见[包清单](../_NonRelease/CoreFinalR4/Package-Builds.json)与[实际包检查](../_NonRelease/CoreFinalR4/Package-Checks.json)。2026-10-30按用户要求将Forever安装包及当前源码包保留在Builds根目录；R4旧源码包 `YiboCore-forever-mists-retail-v1.12.9-api13-src.a638f694e5bd-github.zip` 已归档至 `Builds/Archive/YiboCore/`，Mists与Retail旧二进制已清理。清单中的历史SHA和当时检查结果保留；原构建路径只作为历史记录。
 
 ## Forever待验及继续条件
 

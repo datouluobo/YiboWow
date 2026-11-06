@@ -316,7 +316,7 @@ function Queue:ScheduleCheck(delay)
 end
 function Queue:Next()
     if self.state ~= "running" or self.pending then return end
-    if self.operation == "return" then self:NextReturn(); return end
+    if (self.operation == "return" or self.operation == "delete-empty") then self:NextReturn(); return end
     local action = self.actions[self.index]
     if not action then
         self.state, self.message = "complete", Addon:T("UI.TEXT_0404")
@@ -447,7 +447,7 @@ end
 function Queue:CheckPending()
     local pending = self.pending
     if not pending or pending.interference then return end
-    if self.operation == "return" then self:CheckReturnPending(); return end
+    if (self.operation == "return" or self.operation == "delete-empty") then self:CheckReturnPending(); return end
     local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     if not current or current.id ~= pending.action.characterID then
         pending.interference = true; self:Pause(Addon:T("UI.TEXT_0278")); return
@@ -500,7 +500,7 @@ end
 function Queue:OnScan(mails, visible, total, committed)
     local pending = self.pending
     if not pending or pending.interference or not pending.success then return false end
-    if self.operation == "return" then return self:OnReturnScan(mails, visible, total, committed) end
+    if (self.operation == "return" or self.operation == "delete-empty") then return self:OnReturnScan(mails, visible, total, committed) end
     local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     if not current or current.id ~= pending.action.characterID then
         pending.interference = true; self:Pause(Addon:T("UI.TEXT_0278")); return false

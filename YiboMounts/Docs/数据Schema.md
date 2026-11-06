@@ -23,17 +23,17 @@ YiboMounts/
 ├─ Data/
 │  └─ MountCatalog.generated.lua       # 发布运行时生成物
 └─ _NonRelease/
-   ├─ Data/
+   ├─ _NonRelease/Data/
    │  ├─ mounts.schema.json            # 机器可读 JSON Schema
    │  ├─ mounts.json                   # 规范化源数据
    │  ├─ mount-source-catalog.md       # 可手工编辑的双向维护表
-   │  ├─ mount-inventory.json          # 目标客户端导出的完整 spellID 基线（非发布）
    │  ├─ coverage-report.json          # 基线与正式目录之间的生成覆盖报告（非发布）
    │  ├─ att-mop-category-reference.json # ATT 转换的来源大类研究队列（非发布）
-   │  ├─ source-fact-extract.json       # 本机资料提取的纯数字游戏事实（非发布）
    │  └─ source-evidence.csv           # 来源证据与核验状态
    └─ Tools/
       └─ generate_mount_catalog.py     # 校验并生成 Lua
+
+仓库根 `_NonRelease/YiboMountsProbe/` 保存原生 API 探针、`SourceFacts.generated.lua`、`Samples/mount-inventory.json`、`Samples/source-fact-extract.json` 和对应导入工具。所有下列命令从仓库根目录执行。
 ```
 
 `mounts.json` 是唯一人工维护的正式目录源。`MountCatalog.generated.lua` 不允许手工编辑。`source-evidence.csv` 只保存研究证据，不进入发布包。
@@ -42,17 +42,17 @@ YiboMounts/
 
 ```powershell
 # 将当前 YMS 数据导出为全量人工维护表
-python _NonRelease/Tools/sync_mount_catalog_md.py export --catalog _NonRelease/Data/mounts.json --inventory _NonRelease/Data/mount-inventory.json --document _NonRelease/Data/mount-source-catalog.md
+python YiboMounts/_NonRelease/Tools/sync_mount_catalog_md.py export --catalog YiboMounts/_NonRelease/Data/mounts.json --inventory _NonRelease/YiboMountsProbe/Samples/mount-inventory.json --document YiboMounts/_NonRelease/Data/mount-source-catalog.md
 
 # 导入人工编辑，生成游戏目录后再 export 一次以规范化表格
-python _NonRelease/Tools/sync_mount_catalog_md.py import --catalog _NonRelease/Data/mounts.json --inventory _NonRelease/Data/mount-inventory.json --document _NonRelease/Data/mount-source-catalog.md
-python _NonRelease/Tools/generate_mount_catalog.py --input _NonRelease/Data/mounts.json --output Data/MountCatalog.generated.lua --channel alpha
+python YiboMounts/_NonRelease/Tools/sync_mount_catalog_md.py import --catalog YiboMounts/_NonRelease/Data/mounts.json --inventory _NonRelease/YiboMountsProbe/Samples/mount-inventory.json --document YiboMounts/_NonRelease/Data/mount-source-catalog.md
+python YiboMounts/_NonRelease/Tools/generate_mount_catalog.py --input YiboMounts/_NonRelease/Data/mounts.json --output YiboMounts/Data/MountCatalog.generated.lua --channel alpha
 ```
 
 维护目录优先于自动整理结果。每次准备写入该 Markdown 前，必须先运行 `check`：
 
 ```powershell
-python _NonRelease/Tools/sync_mount_catalog_md.py check --catalog _NonRelease/Data/mounts.json --inventory _NonRelease/Data/mount-inventory.json --document _NonRelease/Data/mount-source-catalog.md
+python YiboMounts/_NonRelease/Tools/sync_mount_catalog_md.py check --catalog YiboMounts/_NonRelease/Data/mounts.json --inventory _NonRelease/YiboMountsProbe/Samples/mount-inventory.json --document YiboMounts/_NonRelease/Data/mount-source-catalog.md
 ```
 
 若结果为 `modified` 或 `untracked`，不得执行 `export` 覆盖文件；先核对手工内容与新资料，无法判定时询问维护者。确认手工内容后，先运行 `import`，再生成运行时目录并执行 `export`。同步状态文件只用于检测未导入编辑，不是可编辑的来源数据。
@@ -63,23 +63,23 @@ python _NonRelease/Tools/sync_mount_catalog_md.py check --catalog _NonRelease/Da
 
 当前实机快照包含 526 个唯一 spellID，其中 335 个对采样角色可见；这两个数字都是快照事实，不是手工维护的常量。`coverage-report.json` 在每次数据变更后重新生成。`att-mop-category-reference.json` 只保存转换后的 `spellID`、`itemID` 与来源大类。Alpha 可将其与本地 API 快照的交集导入为明确标记的 `candidate`：只显示来源类别和“详细地点待核实”，不复制 ATT 路径、文案或数据库；它不能代替逐条来源核验，也不能进入正式 V1。
 
-Alpha 阶段可用 `/ymt inventory` 将目标客户端 API 返回的 `mountJournalID`、spellID、图标、名称、来源文本及可见性/收藏标记写入 `YiboMountsDiagnostics.mountInventory`。来源文本只来自目标客户端的坐骑日志，用于离线把所有来源类别归档为 Yibo 的规范化记录；它不参与运行时加载，也不记录角色收藏状态。
+Alpha 阶段使用独立非发布探针 `/ymp inventory` 将目标客户端原生 API 返回的 `mountJournalID`、spellID、图标、名称、来源文本及可见性/收藏标记写入独立 `YiboMountsProbeDB.inventory`。该数据只用于离线核对，不参与业务插件运行，也不写 `YiboMountsDiagnostics`。
 
 转换命令：
 
 ```powershell
-python _NonRelease/Tools/import_mount_inventory.py `
-  --saved-variables "<WoW>/_classic_/WTF/Account/<账号>/SavedVariables/YiboMounts.lua" `
-  --output _NonRelease/Data/mount-inventory.json
+python _NonRelease/YiboMountsProbe/Tools/import_mount_inventory.py `
+  --saved-variables "<WoW>/_classic_/WTF/Account/<账号>/SavedVariables/YiboMountsProbe.lua" `
+  --output _NonRelease/YiboMountsProbe/Samples/mount-inventory.json
 ```
 
 将本次快照中的游戏内来源文本写回候选目录：
 
 ```powershell
-python _NonRelease/Tools/import_client_source_facts.py `
-  --catalog _NonRelease/Data/mounts.json `
-  --inventory _NonRelease/Data/mount-inventory.json `
-  --reference _NonRelease/Data/att-mop-category-reference.json `
+python YiboMounts/_NonRelease/Tools/import_client_source_facts.py `
+  --catalog YiboMounts/_NonRelease/Data/mounts.json `
+  --inventory _NonRelease/YiboMountsProbe/Samples/mount-inventory.json `
+  --reference YiboMounts/_NonRelease/Data/att-mop-category-reference.json `
   --apply
 ```
 
@@ -88,10 +88,10 @@ python _NonRelease/Tools/import_client_source_facts.py `
 当目标客户端未为旧坐骑提供坐骑日志来源文本时，可离线提取本机资料中的纯数字游戏事实：
 
 ```powershell
-python _NonRelease/Tools/extract_local_mount_facts.py `
-  --inventory _NonRelease/Data/mount-inventory.json `
+python YiboMounts/_NonRelease/Tools/extract_local_mount_facts.py `
+  --inventory _NonRelease/YiboMountsProbe/Samples/mount-inventory.json `
   --source-root "<WoW>/Interface/AddOns/AllTheThings/db" `
-  --output _NonRelease/Data/source-fact-extract.json
+  --output _NonRelease/YiboMountsProbe/Samples/source-fact-extract.json
 ```
 
 该提取器不执行 Lua，也不输出名称、文案、注释、代码、图标或原始数据库结构；输出仅用作 Yibo 自有目录的来源 ID 核验队列，不能直接作为发布数据。

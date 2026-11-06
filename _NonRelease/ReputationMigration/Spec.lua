@@ -52,6 +52,7 @@ dofile("YiboCore/Runtime/Events.lua")
 dofile("YiboCore/Runtime/DataDomains.lua")
 dofile("YiboCore/Data/DomainStore.lua")
 dofile("YiboCore/Data/Characters.lua")
+dofile("_NonRelease/CoreIdentityDomainsR1/LoadClient.lua")
 dofile("YiboCore/Data/CharacterCleanup.lua")
 local notifications, pages, entries = 0, 0, 0
 local pageDefinition
@@ -268,7 +269,7 @@ local before=addon:GetSnapshot("Player-A")
 Check(not addon:CommitSnapshot("Player-A",bad.data,"known"),"invalid numeric payload rejected")
 Check(addon:GetSnapshot("Player-A").revision==before.revision,"rejected commit atomic")
 for _,locale in ipairs({"zh","en"}) do language=locale;Check(addon:T("ERROR.CORE_COLLECTOR"):find("1.12.4",1,true));Check(#addon:T("COMMAND.STATUS",1,0,addon:T("COMMAND.SCAN_OK"))>0) end
-local toc=assert(io.open("YiboCore/YiboCore.toc")):read("*a")
+local toc=assert(io.open("YiboCore/YiboCore_Mists.toc")):read("*a")
 Check(not toc:find("Data\\Domains\\Reputation.lua",1,true),"retired domain absent from runtime TOC")
 Check(core.RegisterReputationFactions==nil and core.ReputationRegistry==nil,"no Core business registry")
 print("PASS: "..checks.." reputation migration, scanner, goal, identity, cleanup and initialization checks")

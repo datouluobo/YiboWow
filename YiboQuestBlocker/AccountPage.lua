@@ -290,7 +290,6 @@ function Page.Create(instance)
     instance.headerGlobal = Text(instance.header, "GameFontNormalSmall", COLORS.muted); instance.headerGlobal:SetWidth(GLOBAL_W); instance.headerGlobal:SetJustifyH("CENTER"); instance.headerGlobal:SetText(YQB.T("PAGE.GLOBAL"))
     instance.scroll = Theme:CreateScrollFrame(instance); instance.scroll:BindScrollbarGutter(instance.header); instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs)
     instance.content = CreateFrame("Frame", nil, instance.scroll); instance.content:SetWidth(700); instance.scroll:SetScrollChild(instance.content)
-    instance.currentCharacterOutline = Theme:CreateCurrentCharacterOutline(instance)
     instance.rows, instance.headerCharacters, instance.rowCount = {}, {}, 0
     instance.scopeButtons = {}
     instance.addPanel = CreateFrame("Frame", nil, instance, "BackdropTemplate"); instance.addPanel:SetPoint("BOTTOMLEFT", mainInset.left, mainInset.bottom); instance.addPanel:SetPoint("BOTTOMRIGHT", -mainInset.right, mainInset.bottom); instance.addPanel:SetHeight(29)
@@ -424,7 +423,7 @@ function Page.Refresh(instance, context)
     end
     instance.content:SetWidth(contentWidth); instance.content:SetHeight(math.max(44, instance.rowCount * ROW_H))
     instance.scroll:SetContentHeight(instance.content:GetHeight())
-    Theme:UpdateCurrentCharacterColumnOutline(instance.currentCharacterOutline, instance.header, instance.scroll, instance.currentCharacterX, instance.currentCharacterWidth, showCharacters and instance.currentCharacterX ~= nil)
+    Theme:UpdateCurrentCharacterColumnOutline(instance, instance.header, instance.scroll, instance.currentCharacterX, instance.currentCharacterWidth, showCharacters and instance.currentCharacterX ~= nil)
     if preview then instance.scroll:SetVerticalScroll(0) end
     instance.scroll:RefreshScrollbar()
 end

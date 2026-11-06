@@ -1,0 +1,12 @@
+## Interface: 16001
+## Title: |cff20e070[Yibo]|r AltoBoss Forever Evidence Probe
+## Title-zhCN: |cff20e070[Yibo]|r 无限副本取证探针
+## Title-zhTW: |cff20e070[Yibo]|r 无限副本取证探针
+## Notes: Non-release, read-only instance and lockout evidence collection.
+## Author: YiboSoft
+## Version: 0.1.0
+## SavedVariables: YiboAltoBossForeverProbeDB
+## LoadOnDemand: 0
+
+Locale.lua
+Probe.lua

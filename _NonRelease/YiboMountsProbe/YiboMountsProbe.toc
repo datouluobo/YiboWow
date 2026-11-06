@@ -1,0 +1,13 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r YiboMounts Probe
+## Title-zhCN: |cff20e070[Yibo]|r YiboMounts 探针
+## Title-zhTW: |cff20e070[Yibo]|r YiboMounts 探針
+## Notes: Non-release native mount journal and source-name probe.
+## Notes-zhCN: 仅采样客户端原生坐骑日志与来源名称 API 的非发布探针。
+## Author: YiboSoft
+## Version: 0.1.0
+## SavedVariables: YiboMountsProbeDB
+
+Locale.lua
+Data/SourceFacts.generated.lua
+Probe.lua

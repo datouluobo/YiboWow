@@ -1,0 +1,11 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r BeastPaths Mists Pet Probe
+## Title-zhCN: |cff20e070[Yibo]|r BeastPaths 熊猫人宠物探针
+## Title-zhTW: |cff20e070[Yibo]|r BeastPaths 潘達利亞寵物探針
+## Notes: Non-release read-only Mists hunter pet and stable API probe.
+## Author: YiboSoft
+## Version: 0.1.0
+## RequiredDeps: YiboCore
+## SavedVariables: YiboBeastPathsMistsPetProbeDB
+
+Probe.lua

@@ -33,6 +33,8 @@
 
 ## 分阶段实施
 
+> 2026-11-02 维护状态：下述阶段 2 的 `YiboTodo/Probe.lua` 与 `/ytd probe` 设计已退役。探针改为根 `_NonRelease/YiboTodoProbe/` 中的独立 Mists 插件 `/ytp`，只使用客户端原生 API/事件，并只写 `YiboTodoProbeDB`；不采集 YiboTodo 内部模型、目录或业务存档。旧客户端证据作为历史材料保留，不外推为新探针能力。
+
 ### 阶段 1：更新产品与候选基线
 
 | 文件 | 操作 | 具体内容 |
