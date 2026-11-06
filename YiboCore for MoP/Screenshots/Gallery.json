@@ -1,0 +1,38 @@
+[
+  {
+    "file": "01-Character-Directory.png",
+    "source": "YiboCore/Media/1.2.0-2.png",
+    "title": "Character Directory",
+    "description": "Review character levels, equipment and professions across the account. Existing in-game capture; layout may vary by addon version."
+  },
+  {
+    "file": "02-Character-Builds.png",
+    "source": "YiboBuilds/Media/1.3.0-1.png",
+    "title": "Character Builds",
+    "description": "Browse character equipment, gems and enchants in the shared account window. Existing in-game capture; layout may vary by addon version."
+  },
+  {
+    "file": "03-Account-Inventory.png",
+    "source": "YiboVault/Media/1.0.0-1.png",
+    "title": "Account Inventory",
+    "description": "Browse a character inventory and switch between bags, mail, bank, auctions and equipment. Existing in-game capture; layout may vary by addon version."
+  },
+  {
+    "file": "04-Mail-Inbox.png",
+    "source": "YiboMail/Media/1.12.14-1.png",
+    "title": "Mail Inbox",
+    "description": "Search and filter messages, inspect attachments and collect selected mail. Existing in-game capture; layout may vary by addon version."
+  },
+  {
+    "file": "05-Profession-Crafting.png",
+    "source": "YiboCrafting/Media/1.0.0-1.png",
+    "title": "Profession Crafting",
+    "description": "Browse recipes by profession and check which characters know them. Existing in-game capture; layout may vary by addon version."
+  },
+  {
+    "file": "06-Account-Currencies.png",
+    "source": "YiboCurrency/Media/0.7.0.png",
+    "title": "Account Currencies",
+    "description": "Compare currencies and tokens across multiple characters. Existing in-game capture; layout may vary by addon version."
+  }
+]
