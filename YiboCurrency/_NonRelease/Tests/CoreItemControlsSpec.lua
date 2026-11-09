@@ -328,6 +328,8 @@ print("PASS: unified catalog, dual display choices, confirmed removal, 24-entry 
 Core.CheckAPIVersion = function() return false end
 Core.AccountView, Core.Entry, Core.CurrencyCatalog = {}, {}, {}
 Core.RegisterAddon = function() error("old Core must not register") end
+WOW_PROJECT_ID, WOW_PROJECT_MISTS_CLASSIC = 19, 19
+dofile("YiboCurrency/Mists/Bootstrap.lua")
 dofile("YiboCurrency/CoreIntegration.lua")
 local ok, err = YiboCurrency.CoreIntegration:Initialize()
 assert(not ok and err:find("1.12.4", 1, true) and err:find("API13", 1, true))

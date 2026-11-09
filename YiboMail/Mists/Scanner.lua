@@ -118,6 +118,7 @@ local function ReadMail(index, now, clock, hint)
     -- Return is a destructive operation: require positive sender evidence.
     -- nil/false is never proof of player mail, even when invoice data is late.
     mail.canReply = canReply == true or canReply == 1
+    mail.replyExplicitlyDisabled = canReply == false
     mail.isGM = isGM == true or isGM == 1
     mail.auctionMail = Scanner:IsAuctionMail(index, subject)
     mail.auctionPlayer = AuctionPlayer(index)

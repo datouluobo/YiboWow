@@ -60,10 +60,14 @@ function Native:ReturnSelectedMail(deleteEmpty)
     if not (Addon.Core.ItemConfirmation and type(Addon.Core.ItemConfirmation.Show) == "function") then
         panel.notice = Addon:T("RETURN.CONFIRM_UNAVAILABLE"); self:RefreshInbox(); return
     end
-    local detail = { Addon:T("RETURN.CONFIRM", #plan.actions, plan.skipped), Addon:T("RETURN.WHOLE_MAIL") }
-    local sorted = {}; for reason in pairs(plan.reasons) do sorted[#sorted + 1] = reason end; table.sort(sorted)
-    for _, reason in ipairs(sorted) do detail[#detail + 1] = Addon:T("RETURN.SKIP_REASON", plan.reasons[reason], reason) end
-    if deleteEmpty then detail = { Addon:T("EMPTY_MAIL.CONFIRM", #plan.actions) } end
+    local detail
+    if deleteEmpty then
+        detail = { Addon:T("EMPTY_MAIL.CONFIRM", #plan.actions) }
+    else
+        detail = { Addon:T("RETURN.CONFIRM", #plan.actions, plan.skipped), Addon:T("RETURN.WHOLE_MAIL") }
+        local sorted = {}; for reason in pairs(plan.reasons) do sorted[#sorted + 1] = reason end; table.sort(sorted)
+        for _, reason in ipairs(sorted) do detail[#detail + 1] = Addon:T("RETURN.SKIP_REASON", plan.reasons[reason], reason) end
+    end
     local request
     request = Addon.Core.ItemConfirmation:Show({ text = table.concat(detail, "\n\n"),
         OnAccept = function()

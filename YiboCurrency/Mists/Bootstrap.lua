@@ -1,7 +1,10 @@
-local ADDON_NAME = ...
 local Addon = _G.YiboCurrency or {}
 _G.YiboCurrency = Addon
-Addon.NAME, Addon.VERSION = "YiboCurrency", "1.1.1"
+Addon.NAME, Addon.VERSION = "YiboCurrency", "1.1.2"
+
+function Addon:IsMistsClient()
+    return type(WOW_PROJECT_MISTS_CLASSIC) == "number" and WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC
+end
 
 local function Defaults(target, values)
     for key, value in pairs(values) do
@@ -48,15 +51,12 @@ function Addon:Print(message)
     end
 end
 
+if not Addon:IsMistsClient() or Addon.loginFrame then return end
 local frame = CreateFrame("Frame")
-frame:RegisterEvent("ADDON_LOADED"); frame:RegisterEvent("PLAYER_LOGIN")
-frame:SetScript("OnEvent", function(_, event, name)
-    if type(WOW_PROJECT_CAMELOT) == "number" and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT then
-        if event == "ADDON_LOADED" and name == ADDON_NAME then Addon:Print(Addon:T("FOREVER.WRONG_MANIFEST")) end
-        return
-    end
-    if event == "ADDON_LOADED" and name == ADDON_NAME then Addon:EnsureDB()
-    elseif event == "PLAYER_LOGIN" and Addon.CoreIntegration then
-        local ok, err = Addon.CoreIntegration:Initialize(); if not ok then Addon:Print(tostring(err)) end
-    end
+Addon.loginFrame = frame
+frame:RegisterEvent("PLAYER_LOGIN")
+frame:SetScript("OnEvent", function()
+    frame:UnregisterEvent("PLAYER_LOGIN")
+    local ok, err = Addon.CoreIntegration:Initialize()
+    if not ok then Addon:Print(tostring(err)) end
 end)

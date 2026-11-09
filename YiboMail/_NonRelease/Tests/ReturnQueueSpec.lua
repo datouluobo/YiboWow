@@ -31,7 +31,7 @@ function GetInboxHeaderInfo(index)
     local reply = true
     if mail.unreplyable then reply = false elseif mail.replyUnknown then reply = nil end
     if mail.replyOverride ~= nil then reply = mail.replyOverride end
-    return nil, nil, mail.sender, mail.subject, mail.money, mail.cod, mail.days or 20, #mail.items, false, false,
+    return nil, nil, mail.sender, mail.subject, mail.money, mail.cod, mail.days or 20, #mail.items, false, mail.wasReturned or false,
         nil, reply, mail.isGM
 end
 function GetInboxInvoiceInfo(index) return inbox[index].invoiceType end
@@ -371,25 +371,45 @@ Advance(2)
 assert(Q.state == "paused" and Q.completed == 1 and #calls == 1 and inbox[1].body == "Keep this")
 print("PASS: bulk empty deletion preserves text, unknown bodies, items, money, COD and rechecks each message")
 
-local function Postmaster(body, items, canReply)
-    local mail = EmptyCandidate("失而复得", body, items)
-    mail.sender, mail.unreplyable = "邮政长", not canReply
+local function SystemCandidate(subject, items)
+    local mail = EmptyCandidate(subject, "Body", items)
+    mail.unreplyable, mail.canComplain = true, false
     return mail
 end
 local clientLocale = "zhCN"
 function GetLocale() return clientLocale end
-local recovery = "我们在虚空中找到了一件物品，应该是你丢掉的吧？\n\n随信附上，请查收。"
-Reset({ Postmaster(recovery), Postmaster(recovery, { Item(1, 1) }),
-    Postmaster("普通正文"), Postmaster(recovery, nil, true) })
+function CanComplainInboxItem(index) return inbox[index].canComplain end
+local replyUnknown = SystemCandidate("Unknown reply")
+replyUnknown.unreplyable, replyUnknown.replyUnknown = nil, true
+local complaintUnknown = SystemCandidate("Unknown complaint")
+complaintUnknown.canComplain = nil
+local reportable = SystemCandidate("Reportable")
+reportable.canComplain = true
+local returned = SystemCandidate("Returned")
+returned.wasReturned = true
+local replyable = SystemCandidate("Replyable")
+replyable.unreplyable = false
+Reset({ SystemCandidate("Festival"), SystemCandidate("Quest"),
+    SystemCandidate("Unclaimed", { Item(1, 1) }), replyUnknown, complaintUnknown,
+    reportable, returned, replyable })
 behaviour = ReturnNormal
 deletion = assert(A.Returns:PrepareEmptyDeletion())
-assert(#deletion.actions == 1 and deletion.actions[1].original.inboxIndex == 1 and Q:StartReturn(deletion))
+assert(#deletion.actions == 2 and Q:StartReturn(deletion))
 Advance(2)
-assert(Q.state == "complete" and #calls == 1 and #inbox == 3)
-assert(#inbox[1].items == 1 and inbox[2].body == "普通正文" and not inbox[3].unreplyable)
-print("PASS: Postmaster recovery mail is eligible only after looting and with the exact system template")
+assert(Q.state == "complete" and #calls == 2 and #inbox == 6)
+assert(calls[1].subject == "Quest" and calls[2].subject == "Festival")
+
+Reset({ SystemCandidate("Changes before request"), SystemCandidate("First request") })
+behaviour = ReturnNormal
+deletion = assert(A.Returns:PrepareEmptyDeletion())
+assert(Q:StartReturn(deletion))
+inbox[1].canComplain = true
+Advance(2)
+assert(Q.state == "paused" and #calls == 1 and #inbox == 1)
+print("PASS: zhCN cleanup requires explicit false permissions and rechecks them before deletion")
+
 clientLocale = "enUS"
-Reset({ Postmaster(recovery), EmptyCandidate("Empty", ""), EmptyCandidate("Letter", "Hello") })
+Reset({ SystemCandidate("Festival"), EmptyCandidate("Empty", ""), EmptyCandidate("Letter", "Hello") })
 deletion = assert(A.Returns:PrepareEmptyDeletion())
 assert(#deletion.actions == 1 and deletion.actions[1].original.subject == "Empty")
-print("PASS: English client excludes the Postmaster exception and still recognizes empty mail")
+print("PASS: English client keeps system mail with a body and still recognizes empty mail")

@@ -122,5 +122,15 @@ for _, language in ipairs({ "en", "zh" }) do
 end
 P.mode = "items"; N:RefreshInbox(); assert(not P.returnMail:IsShown())
 P.mode, P.selection = "mail", {}; N:RefreshInbox(); assert(not P.returnMail:IsShown())
+local emptyPlan = { actions = { {} }, deleteEmpty = true, selection = {}, generation = S.generation }
+A.Returns.PrepareEmptyDeletion = function() return emptyPlan end
+N:InboxMenuAction("delete-empty")
+assert(N.returnConfirmation and shown.text == A:T("EMPTY_MAIL.CONFIRM", 1))
+assert(startCount == 2)
+Cancel()
+N:InboxMenuAction("delete-empty")
+Accept()
+assert(startCount == 3 and lastPlan == emptyPlan)
+print("PASS: bulk cleanup menu confirms a plan without return skip reasons")
 Q.StartReturn = start
 print("PASS: running/pending queues disable return; Chinese/English text and button widths verified; attachment tab and cleared selection hide the button")

@@ -91,7 +91,8 @@ Core.DataDomains = { Get = function(_, id, domain) return domain == "economy" an
 for name, version in pairs({ localization = 1, ["account-entry"] = 2, ["account-preview-field-groups"] = 1,
     ["data-domains"] = 1, ["basic-input"] = 1, ["item-resolver"] = 1, ["item-picker"] = 1 }) do Core.Capabilities:Register(name, version) end
 YiboCurrencyDB = { version = 3, settings = { visible = { ["currency:392"] = false }, monitored = { money = true, ["currency:392"] = false }, customItems = {} } }
-dofile("YiboCurrency/Bootstrap.lua")
+WOW_PROJECT_ID, WOW_PROJECT_MISTS_CLASSIC = 19, 19
+dofile("YiboCurrency/Mists/Bootstrap.lua")
 dofile("YiboCurrency/Locales/zhCN.lua")
 dofile("YiboCurrency/Locales/enUS.lua")
 dofile("YiboCurrency/Catalog.lua")

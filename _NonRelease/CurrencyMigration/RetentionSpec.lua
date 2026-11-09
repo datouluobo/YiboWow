@@ -113,7 +113,7 @@ strtrim = function(text) return (text:gsub("^%s+", ""):gsub("%s+$", "")) end
 Addon.CoreIntegration = { initialized = true }
 local messages = {}
 Addon.Print = function(_, message) messages[#messages + 1] = message end
-dofile("YiboCurrency/Commands.lua")
+dofile("YiboCurrency/Mists/Commands.lua")
 SlashCmdList.YCU("status")
 Check(#messages == 1 and not messages[1]:find("%%d"), "status diagnostic formats actual migration state")
 Check(pcall(SlashCmdList.YCU, "probe") and #messages > 1, "probe remains usable while native APIs fail")

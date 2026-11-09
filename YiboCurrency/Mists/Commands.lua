@@ -1,4 +1,5 @@
 local Addon = _G.YiboCurrency
+if not Addon:IsMistsClient() then return end
 local function Read(callback, ...)
     if type(callback) ~= "function" then return nil end
     local ok, value = pcall(callback, ...)

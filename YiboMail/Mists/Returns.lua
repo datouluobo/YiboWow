@@ -55,10 +55,10 @@ local function CanDeleteEmpty(mail)
         return false
     end
     if body == "" then return true end
-    -- Match the observed system template, allowing only whitespace differences.
-    return type(GetLocale) == "function" and GetLocale() == "zhCN"
-        and mail.canReply == false and mail.sender == "邮政长" and mail.subject == "失而复得"
-        and body:gsub("%s+", "") == "我们在虚空中找到了一件物品，应该是你丢掉的吧？随信附上，请查收。"
+    if type(GetLocale) ~= "function" or GetLocale() ~= "zhCN" or mail.wasReturned
+        or not mail.replyExplicitlyDisabled or type(CanComplainInboxItem) ~= "function" then return false end
+    local complaintOK, canComplain = pcall(CanComplainInboxItem, mail.inboxIndex)
+    return complaintOK and canComplain == false
 end
 
 function Returns:PrepareEmptyDeletion()

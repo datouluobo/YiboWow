@@ -1,7 +1,7 @@
 local BootCore = dofile("_NonRelease/CoreForever/Harness.lua")
 local checks = 0
 local function Check(value, label) checks = checks + 1; assert(value, label) end
-local function Boot(saved, configure, defaultManifest, localeCase)
+local function Boot(saved, configure, manifest, localeCase)
     local e, core, fire, _, load = BootCore(true, localeCase and localeCase.savedCore)
     if localeCase then e.GetLocale = function() return localeCase.client end end
     e.TEST_GUID = "Player-Test-1"
@@ -18,7 +18,7 @@ local function Boot(saved, configure, defaultManifest, localeCase)
     e.issecretvalue = function(v) return data.secret and v == data.money end
     e.YiboCurrencyDB = { sentinel = "mists" }; e.YiboCurrencyForeverDB = saved
     if configure then configure(e, core, data) end
-    for line in io.lines("YiboCurrency/" .. (defaultManifest and "YiboCurrency.toc" or "YiboCurrency_Forever.toc")) do
+    for line in io.lines("YiboCurrency/" .. (manifest or "YiboCurrency_Forever.toc")) do
         line = line:gsub("\r", "")
         if line:match("%.lua$") then load("YiboCurrency/" .. line:gsub("\\", "/"), "YiboCurrency") end
     end
@@ -34,7 +34,7 @@ local function Boot(saved, configure, defaultManifest, localeCase)
     return e, core, e.YiboCurrency, fire, Flush, data
 end
 local e,c,a,fire,flush,d = Boot()
-Check(a.initialized and a.VERSION == "0.1.0", "Forever manifest starts")
+Check(a.initialized and a.VERSION == "0.1.1", "Forever manifest starts")
 Check(e.YiboCurrencyDB.sentinel == "mists" and not e.YiboCurrencyDB.settings, "Mists store untouched")
 Check(not a.Migration and not a.VaultIntegration and not a.GoalTargets and not a.Catalog, "only money target modules loaded")
 Check(not a.Store:Get(e.TEST_GUID) and not a.Scanner:Scan(true) and d.reads == 0, "no scans before world entry")
@@ -44,7 +44,9 @@ Check(c.AccountView.activePageID == "currency" and panel.balance:GetText() == a:
 fire("PLAYER_ENTERING_WORLD"); flush()
 local row,state = a.Store:Get(e.TEST_GUID)
 Check(row.moneyCopper == 123456 and state == "known", "positive money read and committed")
-Check(panel.balance:GetText() == a.AccountPage:Format(123456), "exact gold silver copper displayed")
+local balanceText=panel.balance:GetText()
+Check(balanceText:match("12 .*UI%-GoldIcon") and balanceText:match("34 .*UI%-SilverIcon")
+    and balanceText:match("56 .*UI%-CopperIcon"), "exact gold silver copper with coin icons")
 a.AccountPage:Refresh(panel,{characters={},fields=a.AccountPage:Fields()})
 Check(not panel.renderedSnapshot and panel.balance:GetText() == a:T("FOREVER.NO_BALANCE"), "Core character exclusion respected")
 c.AccountView:NotifyPageChanged("currency"); flush()
@@ -85,7 +87,7 @@ local e2,c2,a2,f2,fl2,d2 = Boot(saved)
 row,state = a2.Store:Get(e2.TEST_GUID)
 Check(row.moneyCopper == 0 and state == "stale", "save restored as stale until new observation")
 e2.SlashCmdList.YCU(""); fl2()
-Check(c2.AccountView.frame.instances.currency.balance:GetText() == a2.AccountPage:Format(0), "restored balance displayed")
+Check(c2.AccountView.frame.instances.currency.balance:GetText():match("^0 .*UI%-GoldIcon"), "restored zero balance displayed")
 e2.TEST_GUID = nil; f2("PLAYER_ENTERING_WORLD"); fl2()
 Check(d2.reads == 0, "missing GUID prevents save")
 e2.TEST_GUID = "Player-Test-1"; f2("BAG_UPDATE_DELAYED"); fl2()
@@ -116,7 +118,7 @@ for _, cap in ipairs({ "localization", "character-name-format", "account-surface
     Check(not addon.initialized and env.YiboCurrencyForeverDB == nil, "missing Core capability stops before DB: " .. cap)
 end
 local badEnv,_,bad = Boot(nil, function(env) env.WOW_PROJECT_ID = 19 end)
-Check(not bad.initialized and badEnv.YiboCurrencyForeverDB == nil, "wrong client rejected")
+Check(not bad.initialized and badEnv.YiboCurrencyForeverDB == nil and not badEnv.SlashCmdList.YCU, "wrong client rejected before storage and slash registration")
 local le,lc,la,lf,lflush = Boot(nil,function(_,core) core._currencyTestInitialized = core.IsInitialized; core.IsInitialized = function() return false end end)
 Check(not la.initialized and le.YiboCurrencyForeverDB == nil, "Core not ready stops before save")
 lc.IsInitialized = lc._currencyTestInitialized
@@ -125,15 +127,18 @@ local saveDB, entry = la.Store.db, lc.Entry
 Check(la:Initialize() and la.Store.db == saveDB and lc.Entry == entry, "initialization idempotent")
 local ne,_,na = Boot(nil,function(_,core) core.Locale = nil end)
 Check(not na.initialized and ne.YiboCurrencyForeverDB == nil, "missing Locale gives bootstrap diagnostic without writing")
-local de,dc,da,df = Boot(nil,nil,true)
+local de,dc,da,df = Boot(nil,nil,"YiboCurrency_Mists.toc")
 df("PLAYER_LOGIN")
-Check(de.YiboCurrencyDB.sentinel == "mists" and not de.YiboCurrencyDB.settings and not da.CoreIntegration.initialized, "forced Mists manifest cannot write on Forever")
+Check(de.YiboCurrencyDB.sentinel == "mists" and not de.YiboCurrencyDB.settings and not da.CoreIntegration.initialized and not de.SlashCmdList.YCU, "forced Mists manifest cannot write or register on Forever")
+local he,_,ha = Boot(nil,nil,"YiboCurrency.toc")
+Check(ha == nil and he.YiboCurrencyForeverDB == nil and not he.YiboCurrencyDB.settings and not he.SlashCmdList.YCU, "default manifest is diagnostic only")
 for _, case in ipairs({ {"zhCN","auto","zh"}, {"enUS","auto","en"}, {"zhCN","en","en"}, {"enUS","zh","zh"} }) do
     local coreSave = c.Defaults:Copy(c.Database:GetDB()); coreSave.settings.language = case[2]
     local env, core, addon, native, drain = Boot(nil,nil,nil,{client=case[1],savedCore=coreSave})
     native("PLAYER_ENTERING_WORLD"); drain(); env.SlashCmdList.YCU(""); drain()
     local page = core.AccountView.frame.instances.currency
-    Check(core.Locale:GetLanguage() == case[3] and page.balance:GetText() == addon.AccountPage:Format(123456), "language mode " .. case[1] .. "/" .. case[2])
+    Check(core.Locale:GetLanguage() == case[3] and page.balanceTitle:GetText() == addon:T("FOREVER.BALANCE")
+        and page.balance:GetText() == balanceText, "language mode " .. case[1] .. "/" .. case[2])
     Check(#core.Locale:GetMissingEnglish("YiboCurrency") == 0 and not page.status:GetText():match("%[YiboCurrency:"), "target resources complete")
 end
 local me,_,ma,mf,mflush,md = Boot()

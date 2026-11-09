@@ -5,7 +5,7 @@ local ICON = "Interface\\AddOns\\YiboCurrency\\Media\\YiboCurrencyIcon"
 
 function Integration:Initialize()
     if self.initialized then return true end
-    if type(WOW_PROJECT_CAMELOT) == "number" and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT then return nil, Addon:T("FOREVER.WRONG_MANIFEST") end
+    if not Addon:IsMistsClient() then return nil, Addon:T("MISTS.WRONG_CLIENT") end
     local upgrade = Addon:UpgradeMessage()
     if not (Core and type(Core.CheckAPIVersion) == "function" and Core:CheckAPIVersion(13)
         and type(Core.HasCapability) == "function" and type(Core.IsInitialized) == "function" and Core:IsInitialized()) then

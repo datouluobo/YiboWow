@@ -1,0 +1,22 @@
+## Interface: 16001
+## Title: |cff20e070[Yibo]|r YiboCurrency - Currency Manager
+## Title-zhCN: |cff20e070[Yibo]|r YiboCurrency - 货币管家
+## Title-zhTW: |cff20e070[Yibo]|r YiboCurrency - 货币管家
+## Notes: Current character money snapshot. Requires YiboCore API13.
+## Notes-zhCN: 当前角色金币只读快照，需要 YiboCore API13。
+## Author: YiboSoft
+## Version: 0.1.1
+## IconTexture: Interface\AddOns\YiboCurrency\Media\YiboCurrencyIcon-128
+## SavedVariables: YiboCurrencyForeverDB
+## RequiredDeps: YiboCore
+## Group: YiboCore
+## LoadOnDemand: 0
+## X-Yibo-Target: Forever
+
+Forever/Namespace.lua
+Locales/zhCN.lua
+Locales/enUS.lua
+Forever/Store.lua
+Forever/Scanner.lua
+Forever/AccountPage.lua
+Forever/Bootstrap.lua

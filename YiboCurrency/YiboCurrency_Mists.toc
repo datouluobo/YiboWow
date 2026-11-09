@@ -1,0 +1,32 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r YiboCurrency - Account Currency Tracker
+## Title-zhCN: |cff20e070[Yibo]|r YiboCurrency - 货币管家
+## Title-zhTW: |cff20e070[Yibo]|r YiboCurrency - 货币管家
+## Notes: Account-wide currency balances and item tokens.
+## Notes-zhCN: 多角色货币余额总览
+## Notes-zhTW: 多角色貨幣餘額總覽
+## Author: YiboSoft
+## Version: 1.1.2
+## IconTexture: Interface\AddOns\YiboCurrency\Media\YiboCurrencyIcon-128
+## SavedVariables: YiboCurrencyDB
+## RequiredDeps: YiboCore
+## Group: YiboCore
+## LoadOnDemand: 0
+## X-Yibo-Target: Mists
+
+Mists/Bootstrap.lua
+Locales/zhCN.lua
+Locales/enUS.lua
+Catalog.lua
+Store.lua
+Migration.lua
+Scanner.lua
+Data.lua
+VaultIntegration.lua
+Projection.lua
+AccountPage.lua
+Settings.lua
+ArchiveProvider.lua
+CoreIntegration.lua
+GoalTargets.lua
+Mists/Commands.lua

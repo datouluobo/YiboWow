@@ -147,7 +147,7 @@
             }
         }
         YiboCurrency = @{
-            VersionFile = 'Bootstrap.lua'
+            VersionFile = 'Mists/Bootstrap.lua'
             VersionPattern = '^Addon\.NAME, Addon\.VERSION\s*=\s*"YiboCurrency",\s*"([^"]+)"'
             RequiredCoreFile = 'CoreIntegration.lua'
             RequiredCorePattern = 'Core:CheckAPIVersion\((\d+)\)'
@@ -156,7 +156,7 @@
             ExtraFiles = @()
             Targets = @{
                 Mists = @{
-                    SourceToc = 'YiboCurrency.toc'
+                    SourceToc = 'YiboCurrency_Mists.toc'
                     LoadToc = 'YiboCurrency.toc'
                     Interfaces = @(50504)
                     CurseForgeFlavor = 'mists'

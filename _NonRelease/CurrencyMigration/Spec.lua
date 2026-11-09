@@ -18,7 +18,8 @@ end
 Role("Current"); Role("Offline", Legacy())
 dofile("YiboCore/Data/DomainStore.lua")
 YiboCurrencyDB = { version = 4, settings = { customItems = {}, previewColumns = {} } }
-dofile("YiboCurrency/Bootstrap.lua")
+WOW_PROJECT_ID, WOW_PROJECT_MISTS_CLASSIC = 19, 19
+dofile("YiboCurrency/Mists/Bootstrap.lua")
 dofile("YiboCurrency/Locales/zhCN.lua")
 dofile("YiboCurrency/Locales/enUS.lua")
 dofile("YiboCurrency/Store.lua")
