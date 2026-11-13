@@ -72,7 +72,7 @@ function ybp:GetDebugExportText() return "export-text" end
 function ybp:GetDebugMinimapTransform() return nil end
 function ybp:GetFootprintStore() return { points = {} } end
 function ybp:GetRouteDisplaySettings() return { showResolved = true } end
-local ns = { pets = { [376] = { name = "测试宠物", zone = "测试地图" } },
+local ns = { YBP_TARGET_OK = true, pets = { [376] = { name = "测试宠物", zone = "测试地图" } },
     routeNodeTooltips = { [376] = { imageTexture = "test-pet-texture" } } }
 assert(loadfile("YiboBeastPaths/Locale.lua"))("YiboBeastPaths", ns)
 local chunk = assert(loadfile("YiboBeastPaths/Maintenance/CoreDebugView.lua"))

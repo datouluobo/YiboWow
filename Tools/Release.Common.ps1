@@ -188,6 +188,12 @@ function Get-YiboLegacyIndexedVersion {
     for ($index = 0; $index -lt $Definition.SourceTocs.Count; $index++) {
         $source = Resolve-YiboSourceFile $Root $Definition.SourceTocs[$index]
         $text = [IO.File]::ReadAllText($source)
+        if ($Definition.HintToc -and $Definition.SourceTocs[$index] -eq $Definition.HintToc) {
+            $hintInterfaces = (Read-YiboRequiredValue $text '^## Interface:\s*([^\r\n]+)' 'indexed hint Interface').Split(',') | ForEach-Object { [int]$_.Trim() }
+            if ((@($hintInterfaces | Sort-Object -Unique) -join ',') -ne (@($Definition.HintInterfaces | Sort-Object -Unique) -join ',')) { throw 'Indexed hint Interface differs from the declared targets.' }
+            $versions += (Read-YiboRequiredValue $text '^## Version:\s*([^\r\n]+)' 'indexed hint version').TrimStart('v', 'V')
+            continue
+        }
         $interface = [int](Read-YiboRequiredValue $text '^## Interface:\s*(\d+)\s*$' 'indexed legacy Interface')
         if ($interface -ne $Definition.Interfaces[$index]) { throw 'Legacy version index Interface differs from its declared bundle mapping.' }
         $versions += (Read-YiboRequiredValue $text '^## Version:\s*([^\r\n]+)' 'indexed legacy version').TrimStart('v', 'V')

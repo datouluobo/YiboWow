@@ -20,14 +20,14 @@ function ybp:GetCurrentWorldMapID() return visibleMapID end
 function ybp:GetVisiblePetIDsForMap(mapID) return routes[mapID] or {} end
 function ybp:RefreshMapLayer() end
 local chunk = assert(loadfile("YiboBeastPaths/Maintenance/DebugCalibrator.lua"))
-local ns = {}
+local ns = { YBP_TARGET_OK = true }
 assert(loadfile("YiboBeastPaths/Locale.lua"))("YiboBeastPaths", ns)
 chunk("YiboBeastPaths", ns)
 ybp:InitDebugDB()
 assert(ybp:IsDebugEnabled(), "New profiles show the Core maintenance page by default")
 _G.YiboBeastPathsDebugDB.enabled = false
 ybp:InitDebugDB()
-assert(not ybp:IsDebugEnabled(), "An existing explicit off preference is retained")
+assert(ybp:IsDebugEnabled(), "An old disabled preference does not disable maintenance")
 _G.YiboBeastPathsDebugDB.enabled = true
 
 -- Opening the workbench with the world map closed chooses a route near the

@@ -18,6 +18,7 @@ local function scenario(options)
     WOW_PROJECT_MAINLINE, WOW_PROJECT_MISTS_CLASSIC = 1, 19
     WOW_PROJECT_CLASSIC = 2
     WOW_PROJECT_ID = options.mists == false and 2 or (target == "Retail" and 1 or 19)
+    assert(loadfile("YiboBeastPaths/" .. target .. "/Target.lua"))("YiboBeastPaths", ns)
     assert(loadfile("YiboBeastPaths/Flavor.lua"))("YiboBeastPaths", ns)
     local counts = { addons = 0, panels = 0, pages = 0, shown = 0, removed = 0 }
     local ybp = { enabled = options.enabled == true }
@@ -38,7 +39,7 @@ local function scenario(options)
         end
         function core:RegisterAddon(_, metadata)
             check(metadata.requiredAPI == 13)
-            check(metadata.version == "1.8.3", "Registered YBP version must match the revision")
+            check(metadata.version == "1.9.0", "Registered YBP version must match the revision")
             counts.addons = counts.addons + 1; return {}
         end
         function core:RegisterSettingsPanel(_, definition)
@@ -53,6 +54,7 @@ local function scenario(options)
             counts.removed = counts.removed + 1; pages[id] = nil
         end
         function core.AccountView:ShowPage() counts.shown = counts.shown + 1 end
+        function core.AccountView:Toggle() counts.shown = counts.shown + 1 end
         function core.AccountView:ShowSettings() counts.shown = counts.shown + 1 end
         function core.AccountView:RefreshPage() end
         function core.AccountView:NotifyPageChanged() end
@@ -66,6 +68,7 @@ local function scenario(options)
     end
     assert(loadfile("YiboBeastPaths/Locale.lua"))("YiboBeastPaths", ns)
     assert(loadfile("YiboBeastPaths/Maintenance/CoreDebugAdapter.lua"))("YiboBeastPaths", ns)
+    if not ns.YBP_TARGET_OK then return ybp, core, ns, counts, settings, pages, callbacks end
     local init = frames[#frames]
     init.OnEvent(init, "ADDON_LOADED", "YiboBeastPaths")
     return ybp, core, ns, counts, settings, pages, callbacks, init
@@ -74,9 +77,13 @@ for _, options in ipairs({ { absent = true }, { api = 6 }, { missing = "basic-in
     { missing = "account-view" }, { missing = "localization" }, { missing = "account-surface-budget" },
     { mists = false } }) do
     local ybp, _, ns, counts = scenario(options)
-    check(not ybp:OpenCoreRouteMaintenance())
+    if options.mists == false then
+        check(ybp.OpenCoreRouteMaintenance == nil)
+    else
+        check(not ybp:OpenCoreRouteMaintenance())
+        check(type(ns.Text("TITLE")) == "string")
+    end
     check(counts.addons == 0 and counts.panels == 0 and counts.pages == 0)
-    check(type(ns.Text("TITLE")) == "string")
 end
 do
     local ybp, _, _, counts, _, pages, _, init = scenario({ enabled = true })
@@ -91,12 +98,12 @@ check(callbacks.CORE_READY ~= nil)
 core.ready = true
 callbacks.CORE_READY()
 check(callbacks.CORE_READY == nil)
-check(counts.addons == 1 and counts.panels == 1 and counts.pages == 0)
+check(counts.addons == 1 and counts.panels == 1 and counts.pages == 1)
 check(ns.Text("TITLE") == "Beast Paths", "Core session language must win over client locale")
 check(ybp:OpenCoreRouteMaintenance())
 for i = 1, 3 do init.OnEvent(init, "PLAYER_LOGIN") end
 check(counts.addons == 1 and counts.panels == 1)
--- Use settings callbacks to exercise enable/disable, exactly as the player does.
+-- The old disabled preference cannot suppress the automatically registered page.
 local buttons = {}
 core.UITheme.Font, core.UITheme.Colors = { assist = 12 }, { muted = {} }
 local widget = { SetPoint = function() end, SetWordWrap = function() end, SetText = function() end }
@@ -110,18 +117,15 @@ end
 local row = { GetWidth = function() return 560 end, SetHeight = function() end }
 local host = { createSection = function() return widget end }
 settings['yibo-beastpaths'].CreateSettingsPanel(row, host)
-buttons[1].click()
-check(ybp.enabled and counts.pages == 1)
+check(#buttons == 1 and not ybp.enabled and counts.pages == 1)
 local page = pages['yibo-beastpaths-route-maintenance']
 check(page.title == "Beast Paths")
 check(page.GetSurfaceMetrics({ surfaceAvailableHeight = 280 }).naturalContentHeight == 280)
 check(page.GetSurfaceMetrics({ surfaceAvailableHeight = 900 }).naturalContentHeight == 720)
 check(ybp:OpenCoreRouteMaintenance() and counts.pages == 1)
 buttons[1].click()
-check(not ybp.enabled and counts.removed == 1)
-buttons[1].click()
-check(ybp.enabled and counts.pages == 2)
--- Registration failure must restore the safe disabled state.
+check(counts.removed == 0 and counts.pages == 1)
+-- Registration failure remains retryable without changing the old preference.
 ybp, core, ns, counts, settings = scenario({ rejectPage = true })
 buttons = {}
 core.UITheme.Font, core.UITheme.Colors = { assist = 12 }, { muted = {} }
@@ -132,8 +136,8 @@ function core.UITheme:CreateButton()
     buttons[#buttons + 1] = button; return button
 end
 settings['yibo-beastpaths'].CreateSettingsPanel({ GetWidth = row.GetWidth, SetHeight = row.SetHeight }, host)
-buttons[1].click()
 check(not ybp.enabled and counts.shown == 0)
+check(not ybp:OpenCoreRouteMaintenance() and counts.pages == 2)
 -- All catalog keys have matching formats and no missing English resources.
 local function formats(text)
     local result = {}; for value in text:gmatch('%%[-+ #0%d%.]*[cdiouxXeEfgGqs]') do result[#result + 1] = value end

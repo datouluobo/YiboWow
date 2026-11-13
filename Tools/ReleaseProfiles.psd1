@@ -16,7 +16,9 @@
             SourceTocs = @('YiboBeastPaths.toc', 'YiboBeastPaths_Mainline.toc', 'YiboBeastPaths_Mists.toc')
             TocTargets = @('Retail', 'Retail', 'Mists')
             Interfaces = @(120105, 120105, 50504)
-            ValidationState = 'existing-maintenance-multi-toc-baseline'
+            HintToc = 'YiboBeastPaths.toc'
+            HintInterfaces = @(120105, 50504)
+            ValidationState = '1.9-approved-retail-mists-bundle-client-pending'
         }
     }
     Addons = @{

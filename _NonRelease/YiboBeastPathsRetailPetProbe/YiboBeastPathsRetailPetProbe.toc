@@ -4,7 +4,7 @@
 ## Title-zhTW: |cff20e070[Yibo]|r BeastPaths 正式服寵物探針
 ## Notes: Non-release read-only Retail hunter pet and stable API probe.
 ## Author: YiboSoft
-## Version: 0.1.0
+## Version: 0.1.1
 ## RequiredDeps: YiboCore
 ## SavedVariables: YiboBeastPathsRetailPetProbeDB
 

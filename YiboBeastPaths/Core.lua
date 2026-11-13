@@ -1,4 +1,5 @@
 local addonName, ns = ...
+if not ns.YBP_TARGET_OK then return end
 local T = ns.Text
 
 local defaults = {
@@ -176,6 +177,11 @@ SlashCmdList.YIBOBEASTPATHS = function(msg)
         else
             print(T("CORE_REQUIRED"))
         end
+        return
+    end
+
+    if msg == "stable" then
+        if YBP.OpenOfflinePets then YBP:OpenOfflinePets() end
         return
     end
 

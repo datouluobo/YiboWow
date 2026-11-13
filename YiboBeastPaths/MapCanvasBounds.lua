@@ -1,4 +1,5 @@
 local addonName, ns = ...
+if not ns.YBP_TARGET_OK then return end
 
 ns.mapCanvasBounds = {
     [371] = { left = 0.0, top = 0.0, right = 1.0, bottom = 1.0 },

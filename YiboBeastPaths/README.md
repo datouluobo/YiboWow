@@ -5,7 +5,7 @@
 潘达利亚隐藏猎人宠物路线图插件。  
 作用是把部分稀有猎人宠物的巡逻/活动路线直接覆盖显示在世界地图上，方便在游戏内快速查看和蹲守。
 
-当前开发版本：`v1.8.3`，开放Retail的Core维护设置与现有四页签；[本轮接入与验收](Docs/Retail-Core维护接入-1.8.3.md)记录已验／待验范围，尚未发布。沿用v1.8.2桑蚕路线、名称及参考图片优化。历史Mists验收不代替新增Retail交互验收。1.9离线兽栏取样已保存并暂停，路线“已拥有”与噩兆四色研究属于后续DEV-005，见[版本任务清单](Docs/离线兽栏与拥有状态-版本任务清单.md)。
+当前开发版本：`1.9.0`，Retail／Mists 的 Core 双标签页面和目标清单已接入；兽栏正向观察会保存采集时间并标注完整性未确认，不推断空栏或未拥有。两端已验证采集及完整退出重登恢复，完整验收和发行检查尚未完成，不能发布。路线“已拥有”与噩兆四色属于后续 DEV-005，详见[版本任务清单](Docs/离线兽栏与拥有状态-版本任务清单.md)。
 
 ![Logo](Media/YiboBeastPathsLogo.png)
 
@@ -21,7 +21,7 @@
 - 已提供插件列表图标资源。
 - 已为每条路线提供起点标记与悬浮信息。
 - 已移除按钮切换时的聊天框刷屏提示。
-- 已提供随插件发行的 `Maintenance/` 路线维护模块；仅 Mists Classic 且具备 YiboCore API13 所需能力时通过 Core 使用，当前适配基线为 Core 1.12.1。
+- 已提供 `Maintenance/` 路线维护模块；Retail 与 MoP 可通过具备 API13 和所需能力的 YiboCore 使用，维护页面默认接入。
 - Core 维护页、统一设置、地图开关与命令提示接入 Core 会话语言；独立运行模式按客户端语言显示这部分中英文文案。详见 [Core 接入与验收](Docs/Core-API13-接入说明.md)。
 
 ## 当前收录宠物
@@ -50,7 +50,8 @@
   - `/ybp`
   - `/ybp show`
   - `/ybp hide`
-  - `/ybp debug`（仅 Mists Classic；需要 YiboCore API13）
+  - `/ybp stable`（打开 Core 离线兽栏页面）
+  - `/ybp debug`（Retail／MoP；需要兼容的 YiboCore API13）
   - `/ybp mmdebug`
 
 ## 安装方式
@@ -62,15 +63,17 @@
    `Interface/AddOns/YiboBeastPaths/`
 3. 进入游戏后启用插件。
 
-发布包包含多客户端 TOC：
+1.9 继续使用仅支持 Retail／Mists 的双端共用包，三个 TOC 均与 1.8.3 的同名路径对应。旧包保留文件覆盖后的实际客户端加载和存档恢复尚未验证；1.9 仍在开发，不是可发布包。进行安装或升级验证时应保留 `WTF` 中的设置和存档。
 
-- `YiboBeastPaths.toc`：Retail / 正式服默认入口
+源码包含目标清单；各玩家包仅包含所选目标并加载默认 TOC：
+
+- `YiboBeastPaths.toc`：源码缺目标提示；玩家包中的同名文件是所选目标入口
 - `YiboBeastPaths_Mainline.toc`：Retail / 正式服
 - `YiboBeastPaths_Mists.toc`：MoP Classic 专用入口，供支持 `_Mists` suffix 的客户端识别
 
 ## 主要文件
 
-- [YiboBeastPaths.toc](YiboBeastPaths.toc)：插件入口与元数据
+- [YiboBeastPaths.toc](YiboBeastPaths.toc)：源码缺目标提示入口
 - [YiboBeastPaths_Mainline.toc](YiboBeastPaths_Mainline.toc)：Retail / 正式服入口与元数据
 - [YiboBeastPaths_Mists.toc](YiboBeastPaths_Mists.toc)：MoP Classic 入口与元数据
 - [Flavor.lua](Flavor.lua)：运行时客户端 flavor 识别
@@ -90,7 +93,7 @@
 ## 说明
 
 - 当前路线效果依赖覆盖图资源与定位参数。
-- 如果某条路线位置仍需微调，可在 Mists Classic 安装 YiboCore 后使用 `/ybp debug` 打开路线维护设置；显式开启“路线维护模式”后，工作台会显示在 Core 窗口内。
+- 如果某条路线位置仍需微调，可在 Retail 或 Mists 安装兼容的 YiboCore；Core 就绪后维护页面自动注册，使用 `/ybp debug` 打开工作台。
 
 
 ## 行动中心主动添加（2026-10-10 工作树）

@@ -10,7 +10,7 @@ Probe `/ymx` is unique in this workspace. It records build/project/interface, `G
 
 ## Install when asked
 
-The new same-name junction is present at `C:\Program Files (x86)\World of Warcraft\_classic_\Interface\AddOns\YiboBeastPathsMistsPetProbe` and points to this source folder. It was created after Mists was fully closed. Existing Core, YiboBeastPaths, and older pet-probe junctions are intact.
+On the current laptop, the same-name junction at `D:\Program\World of Warcraft\_classic_\Interface\AddOns\YiboBeastPathsMistsPetProbe` points to `D:\Development\YiboWow\_NonRelease\YiboBeastPathsMistsPetProbe`. It was created on 2026-11-12 while Mists was running; the client must be fully restarted to discover it. The former C: path was recorded on the previous computer and must not be assumed valid here.
 
 Enable YiboCore and **YiboBeastPathsMistsPetProbe**. Start Mists fully, log in to a Hunter, and use `/ymx report` or `/ymx scan`. One login sample is automatic. `/ymx scan` records a new observation and `/ymx report` shows it.
 

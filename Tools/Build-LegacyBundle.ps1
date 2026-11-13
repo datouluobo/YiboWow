@@ -20,20 +20,43 @@ if ($definition.SourceTocs.Count -ne $definition.TocTargets.Count -or $definitio
     throw 'Legacy TOC mapping must exactly cover the declared supported targets.'
 }
 $root=(Resolve-Path -LiteralPath (Join-Path $WorkspaceRoot $Addon)).Path
+if ('Retail' -in $definition.SupportedTargets) {
+    if (($Addon + '_Mainline.toc') -notin $definition.SourceTocs -or
+        (Test-Path -LiteralPath (Join-Path $root ($Addon + '_Retail.toc')))) {
+        throw 'Retail requires the unique _Mainline.toc; _Retail.toc is not allowed.'
+    }
+}
+if ($definition.HintToc) {
+    if ($definition.HintToc -notin $definition.SourceTocs) { throw 'Hint TOC must be included in the bundle.' }
+    $hint=[IO.File]::ReadAllText((Resolve-YiboSourceFile $root $definition.HintToc))
+    $hintInterfaces=(Read-YiboRequiredValue $hint '^## Interface:\s*([^\r\n]+)' 'hint Interface').Split(',') | ForEach-Object { [int]$_.Trim() }
+    if ((@($hintInterfaces | Sort-Object -Unique) -join ',') -ne (@($definition.HintInterfaces | Sort-Object -Unique) -join ',')) { throw 'Hint TOC Interface set differs from the declared targets.' }
+    if ($hint -match '(?m)^##\s*(?:SavedVariables|SavedVariablesPerCharacter)\s*:') { throw 'Hint TOC must not declare business SavedVariables.' }
+}
 $bundleVersions=@()
 $targetStates=@()
 for ($i=0;$i -lt $definition.SourceTocs.Count;$i++) {
     $relative=$definition.SourceTocs[$i]
     $text=[IO.File]::ReadAllText((Resolve-YiboSourceFile $root $relative))
-    foreach($line in ($text -split '\r?\n')) {
-        $reference=$line.Trim()
-        if(-not $reference -or $reference.StartsWith('#') -or $reference -match '^_NonRelease[\\/]') {continue}
-        [void](Resolve-YiboSourceFile $root $reference)
+    if ($definition.HintToc) {
+        $tocProfile=[pscustomobject]@{TocText=$text;Root=$root;Target=$definition.TocTargets[$i];Config=$config}
+        [void]@(Get-YiboTocEntries $tocProfile)
+    } else {
+        foreach($line in ($text -split '\r?\n')) {
+            $reference=$line.Trim()
+            if(-not $reference -or $reference.StartsWith('#') -or $reference -match '^_NonRelease[\\/]') {continue}
+            [void](Resolve-YiboSourceFile $root $reference)
+        }
     }
     $bundleVersions+=(Read-YiboRequiredValue $text '^## Version:\s*([^\r\n]+)' 'TOC version').TrimStart('v','V')
     $interface=[int](Read-YiboRequiredValue $text '^## Interface:\s*(\d+)' 'TOC Interface')
     if ($interface -ne $definition.Interfaces[$i]) { throw "Legacy bundle Interface changed: $relative" }
-    $targetStates+=@{target=$definition.TocTargets[$i];slug=$config.Targets[$definition.TocTargets[$i]].Slug;gameVersionNames=@();sourceToc=$relative;interface=$interface;validationState=$definition.ValidationState}
+    if (-not $definition.HintToc -or $relative -ne $definition.HintToc) {
+        $targetStates+=@{target=$definition.TocTargets[$i];slug=$config.Targets[$definition.TocTargets[$i]].Slug;gameVersionNames=@();sourceToc=$relative;interface=$interface;validationState=$definition.ValidationState}
+    }
+}
+if ((@($targetStates | ForEach-Object { $_.target } | Sort-Object -Unique) -join ',') -ne (@($definition.SupportedTargets | Sort-Object -Unique) -join ',')) {
+    throw 'Non-hint TOCs must cover every declared target.'
 }
 $versions=@($bundleVersions | Select-Object -Unique)
 if ($versions.Count -ne 1) { throw 'Legacy bundle TOC versions differ.' }

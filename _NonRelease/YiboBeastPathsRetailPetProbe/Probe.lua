@@ -51,6 +51,12 @@ local function BuildSnapshot(trigger)
     local constants = _G.Constants and Constants.PetConsts_PostCata or {}
     local maxSlots = constants.NUM_PET_SLOTS_HUNTER
     local activeMax = constants.MAX_SUMMONABLE_HUNTER_PETS
+    local extraIndex = type(constants.EXTRA_PET_STABLE_SLOT) == "number"
+        and constants.EXTRA_PET_STABLE_SLOT + 1 or nil
+    local spec = Protected(_G.GetSpecialization)
+    local specIndex = spec.status == "ok" and spec.values[1] or nil
+    local specInfo = type(specIndex) == "number" and Protected(_G.GetSpecializationInfo, specIndex)
+        or { status = "missing" }
     local snapshot = {
         at = type(_G.time) == "function" and time() or 0, trigger = trigger,
         version = { GetBuildInfo() }, project = _G.WOW_PROJECT_ID, mainline = _G.WOW_PROJECT_MAINLINE,
@@ -60,7 +66,23 @@ local function BuildSnapshot(trigger)
         active = CallList(api.GetActivePetList), stabled = CallList(api.GetStabledPetList),
         activeCount = Protected(api.GetNumActivePets), stableCount = Protected(api.GetNumStablePets),
         slotProbe = { maxSlots = maxSlots, activeMax = activeMax, status = "unavailable" },
+        extraProbe = { index = extraIndex, bonusAvailable = Protected(api.IsBonusPetSlotAvailable),
+            specializationID = specInfo.status == "ok" and specInfo.values[1] or nil },
     }
+    if type(extraIndex) == "number" and extraIndex >= 1 and extraIndex <= 300 and extraIndex % 1 == 0 then
+        local extra = Protected(api.GetStablePetInfo, extraIndex)
+        snapshot.extraProbe.status = extra.status
+        if extra.status == "ok" then
+            local pet = extra.values[1]
+            snapshot.extraProbe.present = type(pet) == "table"
+            if type(pet) == "table" then
+                snapshot.extraProbe.slotID = pet.slotID
+                snapshot.extraProbe.petNumber = pet.petNumber
+            end
+        end
+    else
+        snapshot.extraProbe.status = "missing-constant"
+    end
     if type(maxSlots) == "number" and maxSlots > 0 and maxSlots <= 300 then
         local slots, occupied, errors, nils = {}, {}, 0, 0
         snapshot.slotProbe.status = "ok"

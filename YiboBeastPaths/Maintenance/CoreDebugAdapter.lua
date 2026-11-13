@@ -1,4 +1,5 @@
 local addonName, ns = ...
+if not ns.YBP_TARGET_OK then return end
 local YBP = _G.YiboBeastPaths
 local T = ns.Text
 
@@ -6,6 +7,9 @@ local T = ns.Text
 -- merely registers optional Core UI when the required host is present.
 local ADDON_ID = "YiboBeastPaths"
 local PAGE_ID = "yibo-beastpaths-route-maintenance"
+local function ActivePageID()
+    return ns.OfflinePetPage and "yibo-beastpaths-offline-pets" or PAGE_ID
+end
 local SETTINGS_ID = "yibo-beastpaths"
 local registered, pageRegistered, unavailableReason = false, false, nil
 local notifiedReasons = {}
@@ -28,7 +32,7 @@ local function GetCore()
         and core.RegisterAddon and core.RegisterSettingsPanel and core.Events
         and core.Events.Register and core.Events.Unregister
         and core.AccountView.RegisterPage and core.AccountView.UnregisterPage
-        and core.AccountView.ShowPage and core.AccountView.ShowSettings
+        and core.AccountView.ShowPage and core.AccountView.Toggle and core.AccountView.ShowSettings
         and core.AccountView.RefreshPage and core.AccountView.NotifyPageChanged
         and core.UITheme and core.UITheme.CreateInput and core.UITheme.CreateScrollFrame
         and core.UITheme.CreateButton and core.UITheme.CreateText
@@ -46,7 +50,7 @@ end
 local function RefreshCorePage()
     local core = _G.YiboCore
     if core and core.AccountView and core.AccountView.NotifyPageChanged then
-        core.AccountView:NotifyPageChanged(PAGE_ID)
+        core.AccountView:NotifyPageChanged(ActivePageID())
     end
 end
 
@@ -91,7 +95,6 @@ local function CreateDebugPage(parent)
 end
 
 local function RefreshDebugPage(parent, context)
-    if not YBP:IsDebugEnabled() then return end
     local viewportWidth = parent.scroll:GetWidth() or 0
     local width = GetStableDebugWidth(parent, viewportWidth,
         (context and context.surfaceAvailableWidth) or parent:GetWidth() or 620)
@@ -106,8 +109,13 @@ local function RefreshDebugPage(parent, context)
     end
 end
 
+ns.CreateMaintenancePage = CreateDebugPage
+ns.RefreshMaintenancePage = RefreshDebugPage
+
 local function RegisterPage(core)
-    if pageRegistered or not YBP:IsDebugEnabled() then return true end
+    if pageRegistered then return true end
+    -- The 1.9 offline page owns the shared Core page and hosts this view.
+    if ns.OfflinePetPage then return true end
     local page, err = core.AccountView:RegisterPage(ADDON_ID, {
         id = PAGE_ID,
         title = T("TITLE"),
@@ -131,26 +139,6 @@ local function RegisterPage(core)
     return true
 end
 
-local function SetMaintenanceMode(enabled)
-    if not registered then
-        PrintUnavailable()
-        return false
-    end
-    local core = _G.YiboCore
-    if enabled then
-        YBP:SetDebugEnabled(true)
-        if not RegisterPage(core) then YBP:SetDebugEnabled(false); return false end
-        core.AccountView:ShowPage(PAGE_ID)
-    else
-        YBP:SetDebugEnabled(false)
-        if pageRegistered then
-            core.AccountView:UnregisterPage(PAGE_ID)
-            pageRegistered = false
-        end
-    end
-    return true
-end
-
 local function CreateSettingsPanel(row, host)
     local core, theme = _G.YiboCore, _G.YiboCore.UITheme
     if row.yiboBeastPathsSettings then row.yiboBeastPathsSettings:Hide() end
@@ -161,56 +149,56 @@ local function CreateSettingsPanel(row, host)
     status:SetPoint("TOPLEFT", section, "TOPLEFT", 12, -42)
     status:SetPoint("TOPRIGHT", section, "TOPRIGHT", -12, -42)
     status:SetWordWrap(true)
-    local toggle = theme:CreateButton(section, 240, YBP:IsDebugEnabled() and T("MAINTENANCE_DISABLE") or T("MAINTENANCE_ENABLE"), "default")
-    toggle:SetPoint("TOPLEFT", section, "TOPLEFT", 12, -92)
-    toggle:SetScript("OnClick", function()
-        SetMaintenanceMode(not YBP:IsDebugEnabled())
-        core.AccountView:RefreshPage()
-    end)
     local open = theme:CreateButton(section, 190, T("MAINTENANCE_OPEN"), "secondary")
-    open:SetPoint("LEFT", toggle, "RIGHT", 12, 0)
-    open:SetEnabled(YBP:IsDebugEnabled() and pageRegistered)
+    open:SetPoint("TOPLEFT", section, "TOPLEFT", 12, -92)
+    local ready = ns.OfflinePetPage and type(ns.IsUnifiedPageReady) == "function"
+        and ns.IsUnifiedPageReady() or pageRegistered
+    open:SetEnabled(ready or ns.OfflinePetPage ~= nil)
     open:SetScript("OnClick", function()
-        if pageRegistered then core.AccountView:ShowPage(PAGE_ID) end
+        YBP:OpenCoreRouteMaintenance()
     end)
-    local pageState = YBP:IsDebugEnabled() and pageRegistered and T("ON") or T("OFF")
+    local pageState = ready and T("ON") or T("OFF")
     status:SetText(T("MAINTENANCE_STATUS", pageState))
     row:SetHeight(178)
     return 178
 end
+ns.CreateMaintenanceSettingsPanel = CreateSettingsPanel
 
 local function TryRegister()
-    if registered or not IsSupportedClient() then return registered end
+    if not IsSupportedClient() then return false end
+    if registered then return RegisterPage(_G.YiboCore) end
     local core, reason = GetCore()
     if not core then unavailableReason = reason; return false end
     -- Initialize defaults before the early ADDON_LOADED registration so a new
     -- profile's visible page does not depend on PLAYER_LOGIN event ordering.
     if YBP.InitDebugDB then YBP:InitDebugDB() end
-    local addon, err = core:RegisterAddon(ADDON_ID, { requiredAPI = 13, version = "1.8.3" })
+    local addon, err = core:RegisterAddon(ADDON_ID, { requiredAPI = 13, version = "1.9.0" })
     if not addon then unavailableReason = err; return false end
-    local settings, settingsErr = core:RegisterSettingsPanel(ADDON_ID, {
-        id = SETTINGS_ID,
-        title = T("TITLE"),
-        CreateSettingsPanel = CreateSettingsPanel,
-    })
-    if not settings then unavailableReason = settingsErr; return false end
+    if not ns.OfflinePetPage then
+        local settings, settingsErr = core:RegisterSettingsPanel(ADDON_ID, {
+            id = SETTINGS_ID,
+            title = T("TITLE"),
+            CreateSettingsPanel = CreateSettingsPanel,
+        })
+        if not settings then unavailableReason = settingsErr; return false end
+    end
     registered = true
     if waitingCore then waitingCore.Events:Unregister("CORE_READY", ADDON_ID, OnCoreReady) end
     waitingCore = nil
     unavailableReason = nil
-    if not RegisterPage(core) then YBP:SetDebugEnabled(false) end
+    local pageReady = RegisterPage(core)
     YBP:RefreshWorldMapButton()
-    return registered
+    return pageReady
 end
 
 function YBP:OpenCoreRouteMaintenance()
     if not TryRegister() then PrintUnavailable(); return false end
-    if not self:IsDebugEnabled() then
-        _G.YiboCore.AccountView:ShowSettings("addon-settings:" .. SETTINGS_ID)
-        return true
+    if ns.OfflinePetPage then
+        if type(self.OpenOfflinePets) == "function" then return self:OpenOfflinePets("maintenance") end
+        PrintUnavailable(); return false
     end
     if RegisterPage(_G.YiboCore) then
-        _G.YiboCore.AccountView:ShowPage(PAGE_ID)
+        if _G.YiboCore.AccountView:Toggle(PAGE_ID) == false then return false end
         return true
     end
     return false

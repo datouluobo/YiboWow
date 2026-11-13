@@ -1,41 +1,5 @@
-## Interface: 120105
-## Title: |cff20e070[Yibo]|r YiboBeastPaths - Hunter Pet Routes
-## Title-zhTW: |cff20e070[Yibo]|r YiboBeastPaths
-## Title-zhCN: |cff20e070[Yibo]|r YiboBeastPaths - 隐兽寻踪
-## Notes: World map route overlays for Pandaria hidden hunter pets.
-## Notes-zhCN: 直接在世界地图显示潘达利亚隐藏猎人宠物路线图。
-## Author: 天堂暴风
-## Version: v1.8.3
-## IconTexture: Interface\AddOns\YiboBeastPaths\Media\YiboBeastPathsIcon-128
-## SavedVariables: YiboBeastPathsDB, YiboBeastPathsDebugDB
-## OptionalDeps: YiboCore
-## X-GameFlavor: Mainline
-
-Libs\LibStub\LibStub.lua
-Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
-Libs\HereBeDragons\HereBeDragons-2.0.lua
-Libs\HereBeDragons\HereBeDragons-Pins-2.0.lua
-
-Flavor.lua
-Locale.lua
-Data.lua
-CuratedRoutes.lua
-FootprintAnchors.lua
-ReferenceRoutes.lua
-ResolvedRoutes.lua
-ReferenceRoutePoints.lua
-ReferenceRouteSources.lua
-RouteDisplayMeta.lua
-RouteOverlays.lua
-RouteNodes.lua
-MapCanvasBounds.lua
-RouteTransforms.lua
-MinimapTransforms.lua
-FlavorOverrides.lua
-Core.lua
-RouteResolver.lua
-Renderer.lua
-MinimapRenderer.lua
-Maintenance\DebugCalibrator.lua
-Maintenance\CoreDebugView.lua
-Maintenance\CoreDebugAdapter.lua
+## Interface: 120105, 50504
+## Title: |cff20e070[Yibo]|r YiboBeastPaths
+## Version: 1.9.0
+## X-Yibo-Target: Hint
+Common\TocHint.lua

@@ -1,4 +1,5 @@
 local addonName, ns = ...
+if not ns.YBP_TARGET_OK then return end
 local YBP = _G.YiboBeastPaths
 
 local function DeepCopy(value)

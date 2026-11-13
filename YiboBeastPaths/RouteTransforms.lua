@@ -1,4 +1,5 @@
 local addonName, ns = ...
+if not ns.YBP_TARGET_OK then return end
 
 ns.routeTransforms = {
     [50811] = { offsetX = -0.0100, offsetY = -0.0410, scale = 0.5900, scaleX = 0.9950, scaleY = 0.7950, thickness = 1.8000, opacity = 1.0000 },

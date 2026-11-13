@@ -1,4 +1,5 @@
 local addonName, ns = ...
+if not ns.YBP_TARGET_OK then return end
 
 ns.minimapTransforms = {
     [50811] = { offsetX = 0.0210, offsetY = -0.1270, scale = 0.6200, scaleX = 0.9400, scaleY = 0.7150, lineThickness = 1.0000 },

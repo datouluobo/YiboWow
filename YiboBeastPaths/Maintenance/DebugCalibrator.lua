@@ -1,4 +1,5 @@
 local addonName, ns = ...
+if not ns.YBP_TARGET_OK then return end
 local YBP = _G.YiboBeastPaths
 
 --- 默认调试数据库结构
@@ -166,24 +167,7 @@ function YBP:InitDebugDB()
 end
 
 function YBP:IsDebugEnabled()
-    local db = _G.YiboBeastPathsDebugDB
-    return db and db.enabled or false
-end
-
-function YBP:SetDebugEnabled(enabled)
-    local db = _G.YiboBeastPathsDebugDB
-    if not db then
-        return
-    end
-    db.enabled = not not enabled
-    self:RefreshMapLayer()
-    if self.RefreshMinimapLayer then
-        self:RefreshMinimapLayer(true)
-    end
-    self:RefreshDebugPanel()
-    if self.NotifyCoreDebugPage then
-        self:NotifyCoreDebugPage()
-    end
+    return type(_G.YiboBeastPathsDebugDB) == "table"
 end
 
 function YBP:GetDebugContextMapID()

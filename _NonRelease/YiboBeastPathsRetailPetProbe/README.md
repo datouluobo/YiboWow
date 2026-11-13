@@ -1,6 +1,6 @@
 # YBP Retail 宠物 API 只读探针
 
-P0-02 diagnostic, version 0.1.0. It is not part of YiboBeastPaths and must not be packaged or published.
+P0-02 diagnostic, version 0.1.1. It is not part of YiboBeastPaths and must not be packaged or published. The 0.1.1 sample adds the native extra-slot constant, bonus availability and specialization ID; missing or nil extra-slot data remains unknown, not a verified empty slot.
 
 ## Safety and scope
 
@@ -10,7 +10,7 @@ Probe `/yrx` is unique in this workspace. Target guard requires project 1 and Ma
 
 ## Install when asked
 
-The new same-name junction is already present at `C:\Program Files (x86)\World of Warcraft\_retail_\Interface\AddOns\YiboBeastPathsRetailPetProbe` and points to this source folder. It was created while Retail was closed; existing YiboBeastPaths/Core junctions were left intact. Enable YiboCore and **YiboBeastPathsRetailPetProbe**. Start Retail fully, log in to a Hunter, and check `/yrx report` has the expected project and Core readiness. Use `/yrx scan` to record each named sampling point; `/yrx detail` prints slot IDs only. The probe performs one login sample automatically.
+On the current laptop, the same-name junction at `D:\Program\World of Warcraft\_retail_\Interface\AddOns\YiboBeastPathsRetailPetProbe` points to `D:\Development\YiboWow\_NonRelease\YiboBeastPathsRetailPetProbe`. It was created on 2026-11-12 while the Retail client was closed; loading remains unverified. The former C: path belongs to the previous computer. Enable YiboCore and **YiboBeastPathsRetailPetProbe**. Start Retail fully, log in to a Hunter, and check `/yrx report` has the expected project and Core readiness. Use `/yrx scan` to record each named sampling point; `/yrx detail` prints slot IDs only. The probe performs one login sample automatically.
 
 The link was checked to target the workspace probe directory. Do not delete or replace it during sampling.
 

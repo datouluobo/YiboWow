@@ -4,6 +4,8 @@
 
 R5复核：本页API13及12项能力／方法门槛保持，R4只补充Retail／Mists指定包的基本页面、覆盖和恢复证据，不证明真实兽栏接口集成或全部公共UI路径。Forever实机保留待测，整体未判定可发布；最新边界见[R5收尾](R5-文档与台账收尾验收.md)。
 
+2026-11-13 YBP 1.9 工作树更新：在上述历史基线上新增检查 `basic-input:1`，并使用 Core 下拉框选择角色；双标签页和输入控件同时检查实际公开方法。Core 仍为 API13，YBP 接入及客户端验证以[加载与接入记录](../../YiboBeastPaths/Docs/1.9-离线兽栏加载与接入记录.md)为准，真实快照保存仍关闭。
+
 ## 职责、目标与最低要求
 
 提供方为 YiboCore；预期消费方为后续 YiboBeastPaths 离线兽栏。Core 拥有角色目录、通用偏好、窗口壳、统一设置、入口生命周期和清理调度；YBP 拥有宠物采集、快照、schema、时效、准入与拥有判断。无其它业务消费需求，本次不创建宠物 Service／Provider，不让 Core 读取 YBP 的实现或 SavedVariables。
@@ -22,8 +24,9 @@ Core 当前开发版本为 Retail0.1.0、Mists1.12.9、Forever0.2.0，API13／sc
 | account-entry | 2 | 业务入口创建、绑定和注销 |
 | builtin-entry-bar | 3 | 三通道独立选择及总开关语义 |
 | localization | 1 | owner 中英文资源和 Core 会话语言 |
+| basic-input | 1 | 角色选择下拉及维护输入控件 |
 
-预览沿用默认最多20名，不使用不限数量字段，故不把 `account-preview-characters:1` 列为必需。首期查看夹具无业务输入，不要求 `basic-input`；没有物品操作或跨业务消费，不要求物品选择／操作或 Service／Provider 能力。后续真实布局新增需求时再补相应最低检查。
+预览沿用默认最多20名，不使用不限数量字段，故不把 `account-preview-characters:1` 列为必需。当前角色选择及维护视图要求 `basic-input:1`；没有物品操作或跨业务消费，不要求物品选择／操作或 Service／Provider 能力。
 
 消费方初始化前顺序检查：实际客户端目标 → Core 存在及公开门面 → `CheckAPIVersion(13)` → `IsInitialized()` → 上表能力 → 本页所用方法。Core 目标写库保护不替代 YBP 自己的业务目标保护。TOC OptionalDeps 或“已加载”都不能代替就绪检查。按已确认范围，原有路线保持独立；离线兽栏是可选增强，继续沿用[既有依赖边界](../../YiboBeastPaths/Docs/Core-API13-接入说明.md)，不把整个 YBP 改为强依赖。
 
