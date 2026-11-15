@@ -397,7 +397,7 @@ local function layoutGroup(group, width, y, isFootprintList, isPage)
 end
 
 local function layout(panel)
-    local width = math.max(580, panel:GetWidth() or 580)
+    local width = math.max(420, panel:GetWidth() or 580)
     local hasIcon = panel.petIconFrame and panel.petIconFrame:IsShown()
     -- Share the content cards' x=16 and right=width-24 guide lines.
     local headerLeft, headerRight, headerTop, headerBottom = 16, 24, 8, 12
@@ -449,7 +449,7 @@ local function layout(panel)
     local content = panel:GetParent()
     local scroll = content and content:GetParent()
     local page = scroll and scroll:GetParent()
-    if page and page.GetWidth then
+    if panel.hostedSettings ~= true and page and page.GetWidth then
         local stableViewportWidth = (page:GetWidth() or 0) - 32
         if stableViewportWidth > 0 then tabBandWidth = math.min(width, stableViewportWidth) end
     end
@@ -596,8 +596,12 @@ local function update(panel)
     local content = panel:GetParent()
     if content then
         content:SetHeight(panel:GetHeight())
-        local scroll = content:GetParent()
-        if scroll and scroll.SetContentHeight then scroll:SetContentHeight(panel:GetHeight()) end
+        if panel.onLayout then
+            panel.onLayout(panel:GetHeight())
+        else
+            local scroll = content:GetParent()
+            if scroll and scroll.SetContentHeight then scroll:SetContentHeight(panel:GetHeight()) end
+        end
     end
 end
 
@@ -607,6 +611,8 @@ function YBP:CreateCoreDebugPanel(parent)
     local theme = core and core.UITheme
     if not theme then return nil end
     local panel = CreateFrame("Frame", nil, parent)
+    panel.onLayout = false
+    panel.hostedSettings = false
     panel:SetPoint("TOPLEFT", parent, "TOPLEFT")
     panel:SetWidth(math.max(580, parent:GetWidth() or 580))
     panel.petIconFrame = CreateFrame("Frame", nil, panel, "BackdropTemplate")
@@ -631,6 +637,7 @@ function YBP:CreateCoreDebugPanel(parent)
     buildFusion(theme, panel.tabs.fusion)
     buildFootprints(theme, panel.tabs.footprints)
     buildExport(theme, panel.tabs.export)
+    panel.exportBox = panel.tabs.export.box
     view = panel
     layout(panel)
     update(panel)

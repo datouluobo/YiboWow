@@ -43,7 +43,9 @@ local function scenario(options)
             counts.addons = counts.addons + 1; return {}
         end
         function core:RegisterSettingsPanel(_, definition)
-            counts.panels = counts.panels + 1; settings[definition.id] = definition; return definition
+            counts.panels = counts.panels + 1
+            if options.rejectSettings then return nil, "settings-rejected" end
+            settings[definition.id] = definition; return definition
         end
         function core.AccountView:RegisterPage(_, definition)
             counts.pages = counts.pages + 1
@@ -55,7 +57,10 @@ local function scenario(options)
         end
         function core.AccountView:ShowPage() counts.shown = counts.shown + 1 end
         function core.AccountView:Toggle() counts.shown = counts.shown + 1 end
-        function core.AccountView:ShowSettings() counts.shown = counts.shown + 1 end
+        function core.AccountView:ShowSettings(id)
+            check(id == "addon-settings:yibo-beastpaths")
+            counts.shown = counts.shown + 1
+        end
         function core.AccountView:RefreshPage() end
         function core.AccountView:NotifyPageChanged() end
         function core.Events:Register(event, owner, callback) callbacks[event] = callback end
@@ -87,10 +92,10 @@ for _, options in ipairs({ { absent = true }, { api = 6 }, { missing = "basic-in
 end
 do
     local ybp, _, _, counts, _, pages, _, init = scenario({ enabled = true })
-    check(counts.panels == 1 and counts.pages == 1, "Enabled default registers navigation immediately")
-    check(pages['yibo-beastpaths-route-maintenance'].defaultEnabled == true)
+    check(counts.panels == 1 and counts.pages == 0, "Maintenance registers settings only")
+    check(pages['yibo-beastpaths-route-maintenance'] == nil)
     init.OnEvent(init, "PLAYER_LOGIN")
-    check(counts.pages == 1, "Login does not duplicate the default page")
+    check(counts.pages == 0 and counts.panels == 1, "Login does not duplicate settings")
 end
 local ybp, core, ns, counts, settings, pages, callbacks, init = scenario({ ready = false })
 check(counts.addons == 0)
@@ -98,46 +103,19 @@ check(callbacks.CORE_READY ~= nil)
 core.ready = true
 callbacks.CORE_READY()
 check(callbacks.CORE_READY == nil)
-check(counts.addons == 1 and counts.panels == 1 and counts.pages == 1)
+check(counts.addons == 1 and counts.panels == 1 and counts.pages == 0)
 check(ns.Text("TITLE") == "Beast Paths", "Core session language must win over client locale")
 check(ybp:OpenCoreRouteMaintenance())
 for i = 1, 3 do init.OnEvent(init, "PLAYER_LOGIN") end
 check(counts.addons == 1 and counts.panels == 1)
--- The old disabled preference cannot suppress the automatically registered page.
-local buttons = {}
-core.UITheme.Font, core.UITheme.Colors = { assist = 12 }, { muted = {} }
-local widget = { SetPoint = function() end, SetWordWrap = function() end, SetText = function() end }
-function core.UITheme:CreateText() return widget end
-function core.UITheme:CreateButton()
-    local button = { SetPoint = function() end, SetEnabled = function() end }
-    function button:SetScript(_, callback) self.click = callback end
-    buttons[#buttons + 1] = button
-    return button
-end
-local row = { GetWidth = function() return 560 end, SetHeight = function() end }
-local host = { createSection = function() return widget end }
-settings['yibo-beastpaths'].CreateSettingsPanel(row, host)
-check(#buttons == 1 and not ybp.enabled and counts.pages == 1)
-local page = pages['yibo-beastpaths-route-maintenance']
-check(page.title == "Beast Paths")
-check(page.GetSurfaceMetrics({ surfaceAvailableHeight = 280 }).naturalContentHeight == 280)
-check(page.GetSurfaceMetrics({ surfaceAvailableHeight = 900 }).naturalContentHeight == 720)
-check(ybp:OpenCoreRouteMaintenance() and counts.pages == 1)
-buttons[1].click()
-check(counts.removed == 0 and counts.pages == 1)
+check(type(settings['yibo-beastpaths'].CreateSettingsPanel) == "function")
+check(not ybp.enabled and counts.pages == 0)
+check(ybp:OpenCoreRouteMaintenance() and counts.pages == 0)
+check(counts.removed == 0)
 -- Registration failure remains retryable without changing the old preference.
-ybp, core, ns, counts, settings = scenario({ rejectPage = true })
-buttons = {}
-core.UITheme.Font, core.UITheme.Colors = { assist = 12 }, { muted = {} }
-function core.UITheme:CreateText() return widget end
-function core.UITheme:CreateButton()
-    local button = { SetPoint = function() end, SetEnabled = function() end }
-    function button:SetScript(_, callback) self.click = callback end
-    buttons[#buttons + 1] = button; return button
-end
-settings['yibo-beastpaths'].CreateSettingsPanel({ GetWidth = row.GetWidth, SetHeight = row.SetHeight }, host)
+ybp, core, ns, counts, settings = scenario({ rejectSettings = true })
 check(not ybp.enabled and counts.shown == 0)
-check(not ybp:OpenCoreRouteMaintenance() and counts.pages == 2)
+check(not ybp:OpenCoreRouteMaintenance() and counts.panels == 2 and counts.pages == 0)
 -- All catalog keys have matching formats and no missing English resources.
 local function formats(text)
     local result = {}; for value in text:gmatch('%%[-+ #0%d%.]*[cdiouxXeEfgGqs]') do result[#result + 1] = value end

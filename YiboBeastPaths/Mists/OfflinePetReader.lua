@@ -32,7 +32,15 @@ ns.ReadOfflinePets = function()
             if (type(icon) ~= "number" and type(icon) ~= "string") or type(name) ~= "string"
                 or type(level) ~= "number" or type(family) ~= "string" then return nil, "unavailable" end
             local group = i <= a and result.active or result.stable
-            group[#group + 1] = { slotID = i, icon = icon, name = name, level = level, family = family }
+            local displayID
+            local getDisplay = _G.C_PlayerInfo and _G.C_PlayerInfo.GetPetStableCreatureDisplayInfoID
+            if type(getDisplay) == "function" then
+                local okDisplay, value = pcall(getDisplay, i)
+                if okDisplay and type(value) == "number" and value > 0 and value < math.huge
+                    and value % 1 == 0 then displayID = value end
+            end
+            group[#group + 1] = { slotID = i, icon = icon, name = name, level = level, family = family,
+                displayID = displayID }
         end
     end
     local okAfterA, afterA = pcall(api.GetNumActivePets)

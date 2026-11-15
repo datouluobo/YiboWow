@@ -15,8 +15,14 @@ local function normalize(list)
             or (type(pet.icon) ~= "number" and type(pet.icon) ~= "string")
             or type(pet.level) ~= "number" or type(pet.familyName) ~= "string" then return nil end
         seen[pet.slotID] = true
+        local displayID = pet.displayID
+        if type(displayID) ~= "number" or displayID <= 0 or displayID >= math.huge
+            or displayID % 1 ~= 0 then displayID = nil end
+        local creatureID = pet.creatureID
+        if type(creatureID) ~= "number" or creatureID <= 0 or creatureID >= math.huge
+            or creatureID % 1 ~= 0 then creatureID = nil end
         rows[#rows + 1] = { slotID = pet.slotID, name = pet.name, icon = pet.icon,
-            level = pet.level, family = pet.familyName }
+            level = pet.level, family = pet.familyName, displayID = displayID, creatureID = creatureID }
     end
     table.sort(rows, function(a, b) return a.slotID < b.slotID end)
     return rows

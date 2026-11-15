@@ -1,0 +1,22 @@
+[
+  {
+    "Path": "D:\\Development\\YiboWow\\YiboBeastPaths\\Common\\OfflinePetCoreGate.lua",
+    "Hash": "7223AA7136A067ACE265B9EF20C28085BAEC43E8D02504EFAC80284F7E4B7706"
+  },
+  {
+    "Path": "D:\\Development\\YiboWow\\YiboBeastPaths\\Common\\OfflinePetPage.lua",
+    "Hash": "F6BAB9F3F40DD8538A6FCC034D1E00F7CC56F3C032305AC8642DE6A36D9AA7FF"
+  },
+  {
+    "Path": "D:\\Development\\YiboWow\\YiboBeastPaths\\Common\\OfflinePetRuntime.lua",
+    "Hash": "C17964A9B34799141ACC94E366B42F6F2961DF347AD2F13284AD6B76E78A8B5C"
+  },
+  {
+    "Path": "D:\\Development\\YiboWow\\YiboBeastPaths\\Maintenance\\CoreDebugAdapter.lua",
+    "Hash": "0B991BBB5EB9E9CDC9F7A935B564745ADC31D84B7A23344182EE2AD4995A7866"
+  },
+  {
+    "Path": "D:\\Development\\YiboWow\\YiboBeastPaths\\Maintenance\\CoreDebugView.lua",
+    "Hash": "EFD888901DA21F0D45BD7ED41A37A6B03939E7A777F88700FD63BE1D8896097F"
+  }
+]

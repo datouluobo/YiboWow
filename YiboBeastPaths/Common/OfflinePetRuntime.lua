@@ -95,7 +95,9 @@ end
 
 function _G.YiboBeastPaths:OpenOfflinePets(tab)
     if Start() then
-        integration:SelectTab(tab == "maintenance" and "maintenance" or "stable")
+        if tab == "maintenance" then
+            return integrationCore.AccountView:ShowSettings("yibo-beastpaths-offline-pets") ~= false
+        end
         if integrationCore.AccountView:Toggle("yibo-beastpaths-offline-pets") == false then return false end
         return true
     end

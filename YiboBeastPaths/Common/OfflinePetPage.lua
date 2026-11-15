@@ -43,12 +43,7 @@ end
 function Page.New(core, root, target, renderer, text, invalidateCapture)
     local self = { active = false, cleanupRegistered = false, pageRegistered = false, entryRegistered = false }
     local owner, pageID = "YiboBeastPaths", "yibo-beastpaths-offline-pets"
-    local unified = type(ns.CreateMaintenancePage) == "function" and type(ns.RefreshMaintenancePage) == "function"
-    self.selectedTab = "stable"
-    function self:SelectTab(tab)
-        self.selectedTab = tab == "maintenance" and "maintenance" or "stable"
-        if self.active then core.AccountView:NotifyPageChanged(pageID) end
-    end
+    local settingsPanel = ns.CreateMaintenanceSettingsPanel
     local function admitted(character)
         return #Page.Eligible(root, target, { character }) == 1
     end
@@ -80,8 +75,8 @@ function Page.New(core, root, target, renderer, text, invalidateCapture)
         end
         if not self.pageRegistered then
             local page, err = core.AccountView:RegisterPage(owner, {
-                id = pageID, title = text(unified and "TITLE" or "OFFLINE_TITLE"), defaultEnabled = true,
-                settings = unified and { CreateSettingsPanel = ns.CreateMaintenanceSettingsPanel } or nil,
+                id = pageID, title = text(settingsPanel and "TITLE" or "OFFLINE_TITLE"), defaultEnabled = true,
+                settings = settingsPanel and { CreateSettingsPanel = settingsPanel } or nil,
                 previewEnabled = true, scope = { mode = "realms" },
                 HasCharacterSnapshot = admitted,
                 GetEligibleCharacters = function(characters) return Page.Eligible(root, target, characters) end,
@@ -98,33 +93,9 @@ function Page.New(core, root, target, renderer, text, invalidateCapture)
                     return true
                 end,
                 Create = function(parent, context)
-                    if not unified or context.preview then return renderer.Create(parent, context) end
-                    parent.businessTabs = core.UITheme:CreateBusinessTabs(parent, {
-                        { id = "stable", title = text("OFFLINE_TITLE") },
-                        { id = "maintenance", title = text("OFFLINE_MAINTENANCE_TAB") },
-                    }, function(id) self:SelectTab(id) end)
-                    parent.stableView = CreateFrame("Frame", nil, parent)
-                    parent.stableView:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -38)
-                    parent.stableView:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-                    renderer.Create(parent.stableView, context)
-                    parent.maintenanceView = CreateFrame("Frame", nil, parent)
-                    parent.maintenanceView:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -38)
-                    parent.maintenanceView:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-                    ns.CreateMaintenancePage(parent.maintenanceView)
+                    return renderer.Create(parent, context)
                 end,
                 Refresh = function(parent, context)
-                    if unified and not context.preview then
-                        parent.businessTabs:SetActive(self.selectedTab)
-                        if self.selectedTab == "maintenance" then
-                            parent.stableView:Hide()
-                            parent.maintenanceView:Show()
-                            ns.RefreshMaintenancePage(parent.maintenanceView, context)
-                            return
-                        end
-                        parent.maintenanceView:Hide()
-                        parent.stableView:Show()
-                        parent = parent.stableView
-                    end
                     local rows = Page.Project(root, target, context.characters or {}, function(character)
                         return core.Characters:FormatName(character)
                     end)
@@ -139,11 +110,6 @@ function Page.New(core, root, target, renderer, text, invalidateCapture)
                     renderer.Refresh(parent, context, rows, visible, storeReason == "invalid-store")
                 end,
                 GetSurfaceMetrics = function(context)
-                    if unified and not context.preview and self.selectedTab == "maintenance" then
-                        local budget = context.surfaceAvailableHeight or 720
-                        return { minContentWidth = 620, naturalContentWidth = 760,
-                            minContentHeight = math.min(460, budget), naturalContentHeight = math.min(720, budget) }
-                    end
                     return renderer.GetSurfaceMetrics(context)
                 end,
             })

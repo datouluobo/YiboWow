@@ -26,6 +26,10 @@ GetStablePetInfo = function(index)
     local values = slot.info.values or {}
     return values[1], values[2], values[3], values[4]
 end
+C_PlayerInfo = { GetPetStableCreatureDisplayInfoID = function(index)
+    local slot = sample.slots[index]
+    return slot and slot.display and slot.display.values and slot.display.values[1]
+end }
 local ns = { YBP_TARGET_OK = true }
 assert(loadfile("YiboBeastPaths/Mists/OfflinePetReader.lua"))("YiboBeastPaths", ns)
 local candidate, state = ns.ReadOfflinePets()
@@ -50,4 +54,8 @@ if not candidate then
 end
 assert(candidate and state == "unverified")
 assert(#candidate.active == 4 and #candidate.stable == 65)
-print("MoP stored sample replay: active=4 stable=65, status=unverified")
+local appearances = 0
+for _, group in ipairs({ candidate.active, candidate.stable }) do
+    for _, pet in ipairs(group) do if pet.displayID then appearances = appearances + 1 end end
+end
+print("MoP stored sample replay: active=4 stable=65, displayIDs=" .. appearances .. ", status=unverified")

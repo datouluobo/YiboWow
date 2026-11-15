@@ -157,7 +157,7 @@ for _, target in ipairs({ "Retail", "Mists" }) do
         WOW_PROJECT_ID = 1
         GetBuildInfo = function() return "12.1.5", "70783" end
         C_StableInfo = { IsAtStableMaster = function() return true end,
-            GetActivePetList = function() return { { slotID = 1, name = "pet", icon = 123, level = 1, familyName = "family" } } end,
+            GetActivePetList = function() return { { slotID = 1, name = "pet", icon = 123, level = 1, familyName = "family", displayID = 456, creatureID = 50998 } } end,
             GetStabledPetList = function() return {} end,
             GetNumActivePets = function() return 1 end, GetNumStablePets = function() return 0 end }
     else
@@ -165,10 +165,28 @@ for _, target in ipairs({ "Retail", "Mists" }) do
         GetBuildInfo = function() return "5.5.4", "70631" end
         NUM_PET_ACTIVE_SLOTS, NUM_PET_STABLE_SLOTS, NUM_PET_STABLE_PAGES = 1, 1, 1
         GetStablePetInfo = function(i) if i == 1 then return 123, "pet", 1, "family" end end
+        C_PlayerInfo = { GetPetStableCreatureDisplayInfoID = function(i) assert(i == 1); return 456 end }
         C_StableInfo = { GetNumActivePets = function() return 1 end, GetNumStablePets = function() return 0 end }
     end
     value, reason = ns.ReadOfflinePets()
     assert(reason == "unverified" and value.completeness == "unverified")
+    assert(value.active[1].displayID == 456)
+    if target == "Retail" then assert(value.active[1].creatureID == 50998) end
+    local observationStore = {}
+    assert(ns.OfflinePetSnapshot.SaveObservation(observationStore, target, "id", value, 123))
+    assert(observationStore.offlinePets.characters.id.observation.active[1].displayID == 456)
+    if target == "Retail" then
+        local getActive = C_StableInfo.GetActivePetList
+        C_StableInfo.GetActivePetList = function() return { { slotID = 1, name = "pet", icon = 123, level = 1,
+            familyName = "family", displayID = math.huge, creatureID = -1 } } end
+        local missing = assert(ns.ReadOfflinePets())
+        assert(missing.active[1].displayID == nil and missing.active[1].creatureID == nil)
+        C_StableInfo.GetActivePetList = getActive
+    else
+        C_PlayerInfo.GetPetStableCreatureDisplayInfoID = function() error("unavailable") end
+        local missing = assert(ns.ReadOfflinePets())
+        assert(missing.active[1].displayID == nil and missing.active[1].name == "pet")
+    end
     local untouched = {}
     assert(not ns.OfflinePetSnapshot.Commit(untouched, target, "id", value))
     assert(untouched.offlinePets == nil)

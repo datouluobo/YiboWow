@@ -68,7 +68,8 @@ function ybp:GetPetIndexInCurrentMap() return 1 end
 function ybp:GetResolvedTransform() return { offsetX = 0, offsetY = 0, scale = 1, opacity = 1 } end
 function ybp:GetDebugRouteThickness() return 1.5 end
 function ybp:GetDebugExportView() return _G.YiboBeastPathsDebugDB.ui.exportView end
-function ybp:GetDebugExportText() return "export-text" end
+function ybp:GetDebugExportText(key) return "export-text:" .. (key or "current") end
+function ybp:SetDebugExportView(key) _G.YiboBeastPathsDebugDB.ui.exportView = key end
 function ybp:GetDebugMinimapTransform() return nil end
 function ybp:GetFootprintStore() return { points = {} } end
 function ybp:GetRouteDisplaySettings() return { showResolved = true } end
@@ -94,6 +95,11 @@ assert(#panel.tabs.fusion.groups == 5)
 assert(#panel.tabs.footprints.rows == 6)
 assert(panel.tabs.export.box)
 assert(panel.tabs.export.box.sharedInput)
+assert(panel.exportBox == panel.tabs.export.box)
+panel.tabs.export.groups[1].buttons[2].OnClick()
+assert(panel.exportBox.text == "export-text:footprints")
+assert(ybp:GetDebugExportView() == "footprints")
+ybp:SetDebugExportView("current")
 assert(not panel.petIconFrame:IsShown())
 local actionCount = 0
 for _, tab in pairs(panel.tabs) do

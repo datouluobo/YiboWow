@@ -13,12 +13,12 @@ local methods = {
     { "Characters", "GetAll" }, { "Characters", "FormatName" },
     { "CharacterCleanup", "RegisterOwner" }, { "AccountView", "RegisterPage" },
     { "AccountView", "UnregisterPage" }, { "AccountView", "NotifyPageChanged" },
-    { "AccountView", "ShowPage" }, { "AccountView", "Toggle" },
+    { "AccountView", "ShowPage" }, { "AccountView", "Toggle" }, { "AccountView", "ShowSettings" },
     { "AccountView", "GetScrollSurfaceWidth" }, { "Entry", "RegisterBusinessEntry" },
     { "Locale", "Register" }, { "Locale", "Get" },
     { "Events", "Register" }, { "Events", "Unregister" },
     { "UITheme", "CreateText" }, { "UITheme", "CreateScrollFrame" },
-    { "UITheme", "CreateBusinessTabs" }, { "UITheme", "CreateInput" }, { "UITheme", "CreateButton" },
+    { "UITheme", "CreateInput" }, { "UITheme", "CreateButton" },
     { "UITheme", "CreateDropdown" },
 }
 

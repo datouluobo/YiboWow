@@ -8,6 +8,7 @@ for _, target in ipairs({ "Retail", "Mists" }) do
         return setmetatable({}, { __index = function(t, key)
             if key == "SetScript" then return function(self, _, cb) self.callback = cb end end
             if key == "GetWidth" then return function() return 500 end end
+            if key == "CreateTexture" then return function() return widget() end end
             return function() end
         end })
     end
@@ -16,7 +17,8 @@ for _, target in ipairs({ "Retail", "Mists" }) do
     local db = { visible = true }
     YiboBeastPaths = { db = db }
     local core = { ready = false, Characters = {}, CharacterCleanup = {}, AccountView = {},
-        Entry = {}, Locale = {}, Events = {}, UITheme = { Font = { body = 12 }, Colors = { text = {} } } }
+        Entry = {}, Locale = {}, Events = {}, UITheme = { Font = { body = 12, assist = 10 },
+            Colors = { text = {}, muted = {}, panel = {}, lineSoft = {} } } }
     YiboCore = core
     function core:CheckAPIVersion(v) return v == 13 end
     function core:IsInitialized() return self.ready end
@@ -33,6 +35,7 @@ for _, target in ipairs({ "Retail", "Mists" }) do
     function core.AccountView:GetScrollSurfaceWidth() return 500 end
     function core.AccountView:ShowPage() counts.shown = true end
     function core.AccountView:Toggle() counts.shown = true end
+    function core.AccountView:ShowSettings(id) counts.settings = id end
     function core.Entry:RegisterBusinessEntry(_, def) counts.entry = counts.entry + 1; return def end
     function core.Locale:Register() end
     function core.Locale:Get(_, key) return key end
@@ -46,9 +49,7 @@ for _, target in ipairs({ "Retail", "Mists" }) do
     function core.UITheme:CreateDropdown() return widget() end
     ns.RegisterLocale = function() return true end
     ns.Text = function(key) return key end
-    local maintenanceRefreshes = 0
-    ns.CreateMaintenancePage = function(parent) parent.maintenanceCreated = true end
-    ns.RefreshMaintenancePage = function() maintenanceRefreshes = maintenanceRefreshes + 1 end
+    ns.CreateMaintenanceSettingsPanel = function() return 1 end
     assert(loadfile("YiboBeastPaths/" .. target .. "/Target.lua"))("YiboBeastPaths", ns)
     for _, file in ipairs({ "OfflinePetSnapshot", "OfflinePetCapture", "OfflinePetCoreGate", "OfflinePetPage", "OfflinePetRenderer" }) do
         assert(loadfile("YiboBeastPaths/Common/" .. file .. ".lua"))("YiboBeastPaths", ns)
@@ -127,10 +128,8 @@ for _, target in ipairs({ "Retail", "Mists" }) do
     local parent = widget()
     counts.definition.Create(parent, { preview = false })
     counts.definition.Refresh(parent, { characters = {} })
-    check(parent.stableView.lines and #parent.stableView.lines == 1 and parent.maintenanceView.maintenanceCreated)
-    parent.businessTabs.onSelect("maintenance")
-    counts.definition.Refresh(parent, { characters = {} })
-    check(maintenanceRefreshes == 1)
+    check(parent.headers and #parent.headers == 1 and rawget(parent, "maintenanceView") == nil)
+    check(rawget(parent, "businessTabs") == nil)
     local preview = widget()
     counts.definition.Create(preview, { preview = true })
     counts.definition.Refresh(preview, { characters = {}, preview = true })
@@ -138,6 +137,6 @@ for _, target in ipairs({ "Retail", "Mists" }) do
     db.offlinePets = "unknown future store"
     check(YiboBeastPaths:OpenOfflinePets("maintenance") and db.offlinePets == "unknown future store")
     counts.definition.Refresh(parent, { characters = {} })
-    check(maintenanceRefreshes == 2)
+    check(counts.settings == "yibo-beastpaths-offline-pets")
 end
 print("OfflinePetRuntimeSpec: " .. checks .. " checks passed")
