@@ -25,7 +25,7 @@ local function Start()
     local root = _G.YiboBeastPaths.db
     local valid, err = ns.OfflinePetSnapshot.CheckStore(root, ns.YBP_TARGET)
     if not valid and err ~= "invalid-store" then lastReason = err; return false end
-    if not core:RegisterAddon(owner, { requiredAPI = 13, version = "1.9.0" }) then
+    if not core:RegisterAddon(owner, { requiredAPI = 13, version = "1.9.1" }) then
         lastReason = "upgrade"; return false
     end
     if not integration or integrationCore ~= core then

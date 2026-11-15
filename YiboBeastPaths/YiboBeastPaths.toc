@@ -1,5 +1,5 @@
 ## Interface: 120105, 50504
 ## Title: |cff20e070[Yibo]|r YiboBeastPaths
-## Version: 1.9.0
+## Version: 1.9.1
 ## X-Yibo-Target: Hint
 Common\TocHint.lua

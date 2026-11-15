@@ -39,7 +39,7 @@ local function scenario(options)
         end
         function core:RegisterAddon(_, metadata)
             check(metadata.requiredAPI == 13)
-            check(metadata.version == "1.9.0", "Registered YBP version must match the revision")
+            check(metadata.version == "1.9.1", "Registered YBP version must match the revision")
             counts.addons = counts.addons + 1; return {}
         end
         function core:RegisterSettingsPanel(_, definition)

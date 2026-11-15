@@ -100,7 +100,7 @@ local function TryRegister()
     -- Initialize defaults before the early ADDON_LOADED registration so a new
     -- profile's visible page does not depend on PLAYER_LOGIN event ordering.
     if YBP.InitDebugDB then YBP:InitDebugDB() end
-    local addon, err = core:RegisterAddon(ADDON_ID, { requiredAPI = 13, version = "1.9.0" })
+    local addon, err = core:RegisterAddon(ADDON_ID, { requiredAPI = 13, version = "1.9.1" })
     if not addon then unavailableReason = err; return false end
     if not ns.OfflinePetPage then
         local settings, settingsErr = core:RegisterSettingsPanel(ADDON_ID, {
