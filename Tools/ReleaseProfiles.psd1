@@ -18,7 +18,7 @@
             Interfaces = @(120105, 120105, 50504)
             HintToc = 'YiboBeastPaths.toc'
             HintInterfaces = @(120105, 50504)
-            ValidationState = '1.9-approved-retail-mists-bundle-client-pending'
+            ValidationState = '1.9.1-retail-mists-bundle-user-accepted-20261115'
         }
     }
     Addons = @{
