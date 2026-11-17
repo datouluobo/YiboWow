@@ -84,7 +84,21 @@ end
 function Archive:FormatValue(character, field, snapshot)
     local value, state = self:GetCell(character, field, snapshot)
     if value == nil then return "?", nil end
-    local text = tostring(math.floor(value / 10000)) .. Core:Text("CORE.G")
+    local text
+    local gold = math.floor(value / 10000)
+    if gold > 0 or value == 0 then
+        text = tostring(gold) .. Core:Text("CORE.G")
+    else
+        local silver = math.floor(value / 100)
+        local copper = value % 100
+        if silver > 0 and copper > 0 then
+            text = string.format("%d%s%d%s", silver, Core:Text("CORE.SILVER_SHORT"), copper, Core:Text("CORE.COPPER_SHORT"))
+        elseif silver > 0 then
+            text = string.format("%d%s", silver, Core:Text("CORE.SILVER_SHORT"))
+        else
+            text = string.format("%d%s", copper, Core:Text("CORE.COPPER_SHORT"))
+        end
+    end
     return text .. (state == "stale" and "~" or ""), value
 end
 

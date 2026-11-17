@@ -824,8 +824,9 @@ function AccountView:UpdateSortButton()
     frame.sortButton.sortDescription = (sort.inherited and Core:Text("CORE.USES_SHARED_SETTINGS") or Core:Text("CORE.USES_PAGE_SPECIFIC_SETTINGS")) .. Core:Text("CORE.LEFT_CLICK_TO_CHANGE_SORT_SHIFT_CLICK")
 end
 
-local function GetScopeDefinition(page, characters)
+local function GetScopeDefinition(page, characters, preview)
     if type(page) == "table" and page.scope and page.scope.mode == "realms" then
+        if (page.scope.previewOnly and not preview) or (page.scope.mainOnly and preview) then return nil end
         local current = Core.Characters:GetCurrent({ identityOnly = true })
         local native = not current and Core.Client and Core.Client:ReadNameRealm()
         local currentRealm = (current and current.realm) or (native and native.realm) or "Unknown"
@@ -849,7 +850,7 @@ local function GetScopeDefinition(page, characters)
         if currentAdmitted then values[#values + 1] = { id = "realm:" .. currentRealm, title = currentRealm } end
         for _, realm in ipairs(others) do values[#values + 1] = { id = "realm:" .. realm, title = realm } end
         values[#values + 1] = { id = "all", title = page.scope.allTitle or Core:Text("CORE.ALL_REALMS") }
-        return { default = "realm:" .. currentRealm, values = values, mode = "realms" }
+        return { default = currentAdmitted and ("realm:" .. currentRealm) or "all", values = values, mode = "realms" }
     end
     return type(page) == "table" and type(page.scope) == "table" and page.scope or nil
 end
@@ -863,7 +864,8 @@ end
 
 function AccountView:GetPageScope(pageID, scopeDefinition)
     local page = self._pages[pageID]
-    scopeDefinition = scopeDefinition or GetScopeDefinition(page, self:GetVisibleCharacters())
+    local preview = self.frame and self.frame.preview and self.previewPageID == pageID
+    scopeDefinition = scopeDefinition or GetScopeDefinition(page, self:GetVisibleCharacters(), preview)
     if not scopeDefinition then return nil end
     local saved = scopeDefinition.mode == "realms" and self._sessionRealmScope or self._sessionPageScopes[pageID]
     if IsKnownScope(scopeDefinition, saved) then return saved end
@@ -872,7 +874,8 @@ end
 
 function AccountView:SetPageScope(pageID, scopeID)
     local page = self._pages[pageID]
-    local scopeDefinition = GetScopeDefinition(page, self:GetVisibleCharacters())
+    local preview = self.frame and self.frame.preview and self.previewPageID == pageID
+    local scopeDefinition = GetScopeDefinition(page, self:GetVisibleCharacters(), preview)
     if not scopeDefinition or not IsKnownScope(scopeDefinition, scopeID) then return false end
     if scopeDefinition.mode == "realms" then self._sessionRealmScope = scopeID else self._sessionPageScopes[pageID] = scopeID end
     if self.frame and self.frame.preview and self.previewPageID == pageID then
@@ -1411,7 +1414,7 @@ function AccountView:BuildContext(page, options)
     elseif page and page.id == "characters" then
         characters = options.identityOnly and Core.Characters:GetAllCached({ identityOnly = true }) or Core.Characters:GetAllCached()
     else characters = self:GetVisibleCharacters(options) end
-    local scopeDefinition = GetScopeDefinition(page, characters)
+    local scopeDefinition = GetScopeDefinition(page, characters, options.preview == true)
     local scope = scopeDefinition and self:GetPageScope(page.id, scopeDefinition) or nil
     local baseContext = {
         page = page,
@@ -2080,6 +2083,7 @@ Core.Capabilities:Register("account-view", 2)
 Core.Capabilities:Register("account-dynamic-fields", 1)
 Core.Capabilities:Register("account-preview-characters", 1)
 Core.Capabilities:Register("account-character-admission", 1)
+Core.Capabilities:Register("account-surface-realm-scope", 1)
 Core.Capabilities:Register("account-surface-budget", 2)
 
 Core.Capabilities:Register("account-identity-context", 1)

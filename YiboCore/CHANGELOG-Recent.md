@@ -1,5 +1,11 @@
 # YiboCore Changelog / 近期更新
 
+## Forever 0.2.4 / API13 — 2026-11-17
+
+- 角色档案碎银铜币展示：适配不足 1 金（不足 10000 铜）时的精确格式化，支持 `35银35铜`、`50银`、`45铜`（英文为 `35s35c`、`50s`、`45c`），零余额保持 `0金` / `0g`，整金保持纯金币呈现。
+- 角色档案装等跟进：Forever 加载链接入 `Forever/Equipment.lua`，注册 `equipment` 域并开启 `character.item-level` 档案列，优先读取原生装等 API，降级遍历穿戴 16 槽位物品链接装等均值，无装备优雅呈现 `—`。
+- 新增 `ForeverItemLevelAndMoneySpec.lua`，71 项断言全量通过，既有 245 项断言回归通过。
+
 ## Forever 0.2.1 / API13 — 2026-11-05
 
 无限服首批正式版本，适用于客户端1.60.1（Interface16001）。

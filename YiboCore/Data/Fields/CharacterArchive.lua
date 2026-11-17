@@ -44,7 +44,7 @@ Register({ id = "character.identity", consumer = "character-archive", domain = "
 Register({ id = "character.level", consumer = "character-archive", domain = "identity", titleKey = "CORE.LEVEL", order = 20, width = 42, gapAfter = 12, defaultVisible = true, defaultPreviewVisible = true,
     Read = function(character) return character and character.level end })
 Register({ id = "character.item-level", consumer = "character-archive", domain = "equipment", titleKey = "CORE.ITEM_LEVEL", order = 30, width = 50, gapAfter = 12, defaultVisible = true, defaultPreviewVisible = true,
-    Read = function(character, data) return data and data.itemLevel or Profile(character).itemLevel end, Format = function(value) return value and string.format("%.0f", value) or "—" end })
+    Read = function(character, data) return data and data.itemLevel or Profile(character).itemLevel end, Format = function(value) return (value and value > 0) and string.format("%.0f", value) or "—" end })
 Register({ id = "character.zone", consumer = "character-archive", domain = "location", titleKey = "CORE.LOCATION", order = 40, width = 110, maxWidth = 140, defaultVisible = true, defaultPreviewVisible = true,
     Read = function(character, data) return data and data.zone or Profile(character).zone end, Format = function(value) return value or Core:Text("CORE.UNKNOWN_LOCATION") end })
 Register({ id = "character.profession-primary", consumer = "character-archive", domain = "professions", titleKey = "CORE.PRIMARY_PROFESSION", order = 50, width = 92, defaultVisible = true, defaultPreviewVisible = true, Read = ProfessionValue(1), Format = ProfessionFormat, GetIcon = ProfessionIcon })

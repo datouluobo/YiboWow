@@ -539,12 +539,13 @@ local function RefreshSettings(parent)
         local row = SettingsRow(parent, index, "addon-panel")
         row:SetWidth(parent.content:GetWidth() or 600)
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", 2, -y)
-        -- The same host row is reused when switching business settings.  Hide
-        -- the previous addon's child frame first; otherwise its controls can
-        -- remain above the newly selected page.
+        -- The same host row is reused when switching business settings. Hide
+        -- the previous addon's frames and directly attached regions; addon
+        -- descriptions can be FontStrings, which GetChildren() does not return.
         local hostedOwner = (selected and selected.id) or (settingsOnly and ("addon-settings:" .. settingsOnly.id))
         if row.yiboHostedOwner ~= hostedOwner then
             for _, child in ipairs({ row:GetChildren() }) do child:Hide() end
+            for _, region in ipairs({ row:GetRegions() }) do region:Hide() end
             row.yiboHostedOwner = hostedOwner
         end
         row:Show()

@@ -1,5 +1,19 @@
 2026-11-13 YiboBeastPaths 1.9.0：离线兽栏 CAP-001／002／004／007／009／010 按 API13 和所需能力接入角色格式、Core 输入下拉、托管页面／预览／入口、身份、owner 双语及清理 owner；角色选择检查 `basic-input:1` 和公开下拉方法。仍为**部分接入**：两端正向观察及退出重登恢复已实机验证，完整性仍未确认；真实旧档升级、部分客户端路径和双语验收待做。两目标真实 Core 合成数据页面及幂等／错目标离线检查通过；见[采集判据审查](../../YiboBeastPaths/Docs/1.9-采集判据审查-20261113.md)。下列旧版“待接入”行按历史范围理解。
 
+2026-11-11 CAP-004 新增 `account-surface-realm-scope:1`。Forever Builds、Crafting、Currency、Mail、Reputation 声明范围只作用于入口悬停，Vault 声明只作用于仓储主窗。六个消费者在写库前检查能力，Core API13 保持。共享 Core 界面适用于 Mists、Forever、Retail。各目标既有清单及默认包清单、写库保护、Core 就绪、一次初始化、SavedVariables 身份、引用和旧文件覆盖路径保持。Forever 更新版本，其他目标通过回归和构建预检。292 项合批模拟及单角色真实存档回放通过，覆盖实机与切角色待验。见[范围契约](API-v5-业务插件接入指南.md)。
+
+2026-11-11 Vault Forever 0.6.3-api1 主窗复用 CAP-002 输入、CAP-003 物品解析、CAP-004 托管页和下拉、CAP-007 GUID、CAP-009 双语资源。API13 和能力版本沿用，启动补查公开下拉方法。3145 项 Forever 模拟和双目标构建通过，实机待验。
+
+2026-11-11 Crafting Forever 0.1.4 配方悬停矩阵复用 CAP-002 输入、CAP-004 服务器范围和列分页、CAP-007 GUID、CAP-009 语言、CAP-011 专业档案。API13 和能力版本沿用，增加公开方法门槛。108 项 Forever 模拟和双目标构建通过，实机待验。
+
+2026-11-11 Currency Forever 0.1.8 复用 CAP-004 范围、列分页及悬停字段设置、CAP-007 GUID 和 CAP-009 语言。通过现有 `character-archive.fields` Provider 接入档案金币，初始化查 `character-archive-providers:1`、`business-providers:1` 与实际方法。Core API13 保持，未增加公共契约。118 项 Forever 模拟、档案和 MoP 余额回归通过，实机待验。
+
+2026-11-11 Mail Forever 0.1.3-api1 和 Reputation Forever 0.1.8 复用 CAP-004 托管预览和服务器范围。Mail 注册摘要字段，Reputation 使用 Core 列分页并检查公开方法。两者继续复用 CAP-007 GUID 和 CAP-009 语言，API13 与能力版本沿用。Forever 90／138 项模拟和双目标构建通过，实机待验。
+
+2026-11-11 Builds Forever 0.1.19 在 CAP-004 既有托管预览和字段设置上注册装备槽列，继续用 CAP-003 物品解析、CAP-007 GUID、CAP-009 语言。API13 与能力门槛沿用。136 项 Forever 模拟和 1057 项 MoP Core13 回归通过，实机待验。
+
+2026-11-10 Builds Forever 0.1.18 移除装备对照调用及其专用 `item-picker:1` 要求。CAP-003 继续用于物品解析，CAP-002／004／009／010 继续用于树内输入、托管窗口和入口、双语资源及缓存清理。Reputation Forever 0.1.7 通过既有 CAP-004 预览投影显示关注项，无新 Core 契约。API13 不变，双端离线通过，新客户端交互待验。
+
 2026-10-28 YBP1.8.3：CAP-002／004／009既有共享输入、设置／维护页与owner语言调用开放Retail；最低API13及能力版本不变，Core无运行代码变化。两目标真实Flavor入口988项、中英文四页签91动作模拟及26文件语法通过，Retail新增交互与Mists简短回归待验，记为部分接入；离线兽栏仍待接入。见[本轮记录](../../YiboBeastPaths/Docs/Retail-Core维护接入-1.8.3.md)。
 
 2026-10-27 Core R5：文档与台账收尾完成，见[R5验收](R5-文档与台账收尾验收.md)。CAP-001／004／007／009／010公开实现及最低API13／能力版本不变；R4仅新增Retail／Mists指定包的基本页面、声明覆盖、reload／完整退出恢复和原环境恢复证据，不把全部能力路径、英文／手动语言、宿主／战斗／IME等未验范围记为通过。Forever实机保留待测，整体未判定可发布；YBP离线兽栏仍待接入。按追加授权恢复误删源文件后15插件语法及适用回归通过，原5组失败和1条诊断保留，未发布。
@@ -41,6 +55,16 @@
 2026-10-22 Vault双端采集拆分：迁移范围内MoP原生链接缺itemID时接入CAP-003 ItemResolver:Parse，并显式检查Parse方法；CAP-007共用错误状态与MoP采集的四处身份查询改用identityOnly。最低API13／item-resolver:1／character-identity:1不变，无新增Core契约。2874项双端模拟、加载专项106项、Mail联动69项及测试目录覆盖回放通过；旧专项11处失败与前态一致，客户端待验，沿用部分接入。未触及的旧调用不推定完成，见[拆分验收](../../YiboVault/Docs/双端采集加载拆分与覆盖更新验收.md)。
 
 2026-10-22 Mail MoP1.2.26安全补修：紫翠玉39705铜邮件经用户确认，重载历史为已收取，实际钱包到账缺少独立余额证据；1.2.26单封拍卖成功邮件退信禁用、普通邮件与拍卖所得混选退信已实机通过（成功1封、跳过1封，拍卖邮件保留）。业务层新增原生canReply明确许可与非GM检查，复用既有CAP-003确认、CAP-007当前角色及CAP-009 owner中英文提示，最低API13和Core契约不变。10组离线入口、50文件语法与MoP构建ValidateOnly通过；其余补修实机及发行检查待完成，原1.2.25已验范围不外推到本次安全门槛，详见[退信事件与验收](../../YiboMail/Docs/Mists-单封与批量退信方案与验收.md)。
+
+2026-11-10 Builds Forever 0.1.11 装备对照复用 CAP-004 统一页面及 Core Theme 下拉，CAP-009 新增中英文字段。API13 及能力门槛沿用，补查公开下拉方法。137 项目标模拟含缺方法停写，Core13Spec 和 Mists 构建预检通过，新界面待实机。详见[装备验收](../../YiboBuilds/Docs/Forever-当前角色装备最小适配与验收.md)。
+
+2026-11-10 Builds Forever 0.1.12 天赋视图复用 CAP-002 输入、CAP-004 托管页与下拉、CAP-009 双语资源及 CAP-010 既有清理。API13、能力和调用方法门槛保持。146 项目标模拟通过，新界面待实机。详见[天赋验收](../../YiboBuilds/Docs/Forever-天赋取证与适配准备.md)。
+
+2026-11-10 Builds Forever 0.1.13 装备名称回退复用 CAP-003 ItemResolver，窄窗和入口列表沿用 CAP-004 托管页与同源悬停。API13、能力与方法门槛保持。150 项模拟通过，实际原生提示待验。见[装备验收](../../YiboBuilds/Docs/Forever-当前角色装备最小适配与验收.md)。
+
+2026-11-10 Builds Forever 0.1.14 按槽查看附魔复用 CAP-004 托管页、同源悬停及 Core 分页下拉，CAP-009 新增中英文标签。API13、能力与方法门槛沿用。157 项模拟通过，新增交互待实机。见[装备验收](../../YiboBuilds/Docs/Forever-当前角色装备最小适配与验收.md)。
+
+2026-11-10 Builds Forever 0.1.15 装备基准替换接入 CAP-003 Core ItemConfirmation，复用 CAP-004 页面生命周期及 CAP-009 双语文案。最低 API13 加查 `item-picker:1` 和公开方法，能力不足停写。166 项离线模拟通过，原生确认框待实机。见[装备验收](../../YiboBuilds/Docs/Forever-当前角色装备最小适配与验收.md)。
 
 2026-10-20 Builds Forever0.1.0装备最小版：CAP-001公共角色名、CAP-003 ItemResolver:Parse／GetInfo、CAP-004统一页面／滚动／字段／同源预览与三通道入口、CAP-007当前GUID、CAP-009 owner语言、CAP-010清理v2在本目标已调用；最低API13与item-resolver:1等能力及方法显式检查。没有新Core契约，未新增业务输入或跨业务能力；CAP-002／005／008本目标不适用，CAP-011未消费仍待评估。67项目标模拟、MoP Core13Spec1057及增强回归、Core69与其它五个Forever目标回归通过；原Mists接入记录保留。新目标全部待实机，记部分接入，详见[实施与验收](../../YiboBuilds/Docs/Forever-当前角色装备最小适配与验收.md)。
 
@@ -834,3 +858,47 @@ Core CalendarDaySpec16项通过；三插件TOC语法107文件及Mists构建Valid
 
 
 2026-11-06 YiboMail Mists 批量清理邮件：复用 Core ItemConfirmation、Characters:GetCurrent(identityOnly) 和 CAP-009 owner 中英文资源；现有 API13 及能力门槛保持。队列模拟及构建校验通过，客户端语言和删除行为待验。详见 [Mail 收件队列验收](../../YiboMail/Docs/Mists-收件队列优化与验收.md)。
+
+2026-11-09 YiboVault Forever 0.6.1-api1 银行复核：CAP-009 通过既有 Core owner locale 接入银行待确认中英文状态。主窗口与悬停复用同一 CAP-004 页面状态，采集沿用 Core 角色身份。现有 API13 与能力门槛保持。离线回归和候选包检查通过，客户端事件、状态与语言待复验。详见[本批验收](../../Docs/无限服-银行与收件离线开发-2026-11-09.md)。
+
+2026-11-09 YiboCrafting Forever 0.1.3：配方搜索接入 CAP-002 `basic-input:1`，启动时核对能力及控件方法。CAP-004 复用下拉和托管页面，CAP-009 复用中英文资源，API13 保持。102 项离线模拟与候选包核对通过；输入法和客户端布局待验，Forever 新输入接入记为部分接入。见[专业与配方验收](../../YiboCrafting/Docs/Forever-专业与配方最小适配与验收.md)。
+
+2026-11-09 Mail Forever 0.1.1-api1 与 Vault Forever 0.6.2-api1：新增搜索区域复用 CAP-002 `basic-input:1`、CAP-003 ItemResolver、CAP-004 托管页及 CAP-009 owner 双语资源。Mail 新增输入能力检查，Vault 沿用已有检查，最低均为 API13。离线及构建验证通过，输入法和布局待实机，新增区域记部分接入。见[本批验收](../../Docs/无限服-仓储搜索与收件筛选-2026-11-09.md)。
+
+2026-11-09 Builds 与 Currency Forever 0.1.1 界面复核。两者沿用 CAP-004 托管页及 CAP-009 owner 语言，Builds 新装备格复用 CAP-003 ItemResolver。既有 API13 和能力门槛保持。离线验证与候选包检查通过，新增界面待实机。见[界面补齐与验收](../../YiboBuilds/Docs/Forever-当前角色装备最小适配与验收.md)。
+
+2026-11-09 Reputation Forever 0.1.2 的搜索与等级筛选复用 CAP-002 `basic-input:1`、CAP-004 托管页与下拉及 CAP-009 owner 双语资源。新增输入能力检查，最低 API13。离线验证通过，输入法与客户端布局待验，新增区域记部分接入。见[声望验收记录](../../YiboReputation/Docs/Forever-当前角色声望最小适配与验收.md)。
+
+2026-11-10 Builds Forever 0.1.2 天赋页复用 CAP-004 托管窗口、按钮及表格滚动，CAP-007 当前角色身份，CAP-009 owner 双语资源，并通过既有 Core 缓存清理入口删除天赋快照。原生天赋采集归 Builds Forever 所有。API13 与现有能力门槛保持，离线通过，新增区域实机及语言待验。见[天赋实施与验收](../../YiboBuilds/Docs/Forever-天赋取证与适配准备.md)。
+
+2026-11-10 Builds Forever 0.1.3 树图继续使用 CAP-004 托管页、共用配色与滚动，CAP-007 当前角色身份及 CAP-009 owner 双语资源。几何和节点提示属于 Builds，快照沿用原清理所有者。Core API13 与能力要求保持，离线通过，客户端布局和语言待验。见[树图实施与验收](../../YiboBuilds/Docs/Forever-天赋取证与适配准备.md)。
+
+2026-11-10 Builds Forever 0.1.4 装备增强页复用 CAP-003 物品名称、CAP-004 托管页与滚动、CAP-007 当前角色准入和 CAP-009 owner 双语资源。装备增强字段归 Builds，沿用同一快照、Core API13 与现有能力要求。离线通过，客户端布局和带增强装备待验。见[装备增强验收](../../YiboBuilds/Docs/Forever-当前角色装备最小适配与验收.md)。
+
+2026-11-10 Builds Forever 0.1.6 天赋节点提示复用 CAP-004 托管视图和配色与 CAP-009 owner 双语资源。节点等级和原生说明归 Builds，Core API13 与现有能力门槛保持。新增提示离线通过，实际客户端显示待验。见[天赋实施与验收](../../YiboBuilds/Docs/Forever-天赋取证与适配准备.md)。
+
+2026-11-10 Builds Forever 0.1.8 天赋搜索接入 CAP-002 `basic-input:1`，检查能力与创建方法，缺失在写库前停止。继续复用 CAP-004 托管视图、滚动与 CAP-009 owner 双语资源。API13 保持。离线通过，客户端布局和中文输入法待验。见[天赋实施与验收](../../YiboBuilds/Docs/Forever-天赋取证与适配准备.md)。
+
+2026-11-10 Builds Forever 0.1.9 装备对照复用 CAP-003 物品解析、CAP-004 托管页面、CAP-007 角色身份、CAP-009 双语资源及现有角色清理 owner。基准和普通附魔效果属于 Builds。Core API13 与现有能力门槛保持。离线通过，实机显示与恢复待验。见[装备验收](../../YiboBuilds/Docs/Forever-当前角色装备最小适配与验收.md)。
+
+2026-11-10 Currency Forever 0.1.2 会话金币净变化复用 CAP-004 托管页面和配色、CAP-007 当前角色身份、CAP-009 双语资源及现有角色清理 owner。会话起点由 Currency 管理。Core API13 与既有能力门槛保持，离线通过，真实界面与自然收支待验。见[Currency 验收](../../YiboCurrency/Docs/多目标TOC修复与CF包核对-20261109.md)。
+
+2026-11-10 Currency Forever 0.1.3 自定义 ID 接入 CAP-003 ItemPicker／ItemResolver／确认、CAP-004 动态字段与统一设置、CAP-007 角色身份及 CAP-009 双语资源。API13 加查 `item-picker:1` 与 `item-resolver:1`，未满足时写库前停止。沿用 Core 清理 owner，目录与数量由 Currency 管理。离线通过，实际客户端待验。见[Currency 验收](../../YiboCurrency/Docs/多目标TOC修复与CF包核对-20261109.md)。
+
+2026-11-10 Currency Forever 0.1.4 复用 CAP-003 ItemPicker、确认和 CAP-004 托管设置、下拉及悬停投影，CAP-009 补齐双语标签。API13 及能力版本保持，初始化补查公开下拉方法。90 项离线模拟通过，布局和设置交互待实机。见[Currency 验收](../../YiboCurrency/Docs/多目标TOC修复与CF包核对-20261109.md)。
+
+2026-11-10 Currency Forever 0.1.5 随身自定义物品净变化沿用 CAP-004 托管页面、CAP-009 双语标签与 CAP-010 角色清理。会话基准归 Currency，不新增 Core 公开能力。101 项 Forever 模拟通过，实际数量和布局待实机。见[Currency 验收](../../YiboCurrency/Docs/多目标TOC修复与CF包核对-20261109.md)。
+
+2026-11-10 Currency Forever 0.1.6 物品明细可选接入 CAP-005 Core.Contracts／`business-services:1`，通过 Vault `vault.items` v1.1 按当前角色及物品查询装备／银行，并复用 CAP-004 托管界面及 CAP-009 双语标签。来源不可用时沿用 Currency 自有随身数量。API13 和强依赖保持。109 项模拟覆盖晚注册、移除及不兼容，实际提示待验。见[契约与验收](../../YiboCurrency/Docs/多目标TOC修复与CF包核对-20261109.md)。
+
+2026-11-10 Currency Forever 0.1.7 自定义物品搜索接入 CAP-002 `basic-input:1`，复用 CAP-004 托管页面与 CAP-009 双语标签。最低 API13 并检查 `CreateInput` 方法。115 项离线模拟通过，布局和输入法待客户端验证。见[Currency 验收](../../YiboCurrency/Docs/多目标TOC修复与CF包核对-20261109.md)。
+
+2026-11-10 Reputation Forever 0.1.3 关注阵营复用 CAP-004 托管页、CAP-007 角色身份、CAP-009 双语资源及现有清理 owner。关注记录由 Reputation 管理。API13 和能力要求保持，离线通过，实际客户端待验。见[声望验收](../../YiboReputation/Docs/Forever-当前角色声望最小适配与验收.md)。
+
+2026-11-10 Reputation Forever 0.1.4 会话净变化沿用 CAP-004 托管字段及悬停配置、CAP-007 当前角色身份、CAP-009 双语资源和 CAP-010 清理。会话基准由 Reputation 持有。API13 及所需能力保持，118 项离线模拟通过，客户端待验。见[声望验收](../../YiboReputation/Docs/Forever-当前角色声望最小适配与验收.md)。
+
+2026-11-10 Reputation Forever 0.1.5 阵营排序复用 CAP-004 托管页面、下拉与悬停投影，以及 CAP-009 中英文资源。业务排序保持在 Reputation，API13 和能力门槛沿用。127 项 Forever 模拟通过，实际界面待验。见[声望验收](../../YiboReputation/Docs/Forever-当前角色声望最小适配与验收.md)。
+
+2026-11-10 Reputation Forever 0.1.6 复用 CAP-004 托管页面及 Core 滚动控件，业务只按视口投影声望行。API13 和能力门槛沿用。134 项模拟覆盖行控件重用、提示及尺寸变化，实际界面待验。见[声望验收](../../YiboReputation/Docs/Forever-当前角色声望最小适配与验收.md)。
+
+2026-11-14 YiboBeastPaths 1.9.0（Retail／Mists）维护面板迁入 CAP-004 统一设置宿主：沿用唯一业务页面 `settings.CreateSettingsPanel`，使用 `createSection`／`refreshPanel` 回报动态高度，移除主页面维护子视图及整页内层滚动；复用 CAP-002 输入／按钮与 CAP-009 owner 中英文资源。Core API13、所需能力版本不变，关联入口增加 `AccountView:ShowSettings` 方法检查；不新增业务窗口壳或语言回退。两端真实 Core 离线注册／设置高度／控件复用及中英文视图检查通过，Retail 70783 与 Mists 70631 自动登录实机验证四页签、滚动和迁移入口；Mists 补重载。CAP-001／007／010 原有身份、快照与清理调用保持，整插件未验范围与部分接入状态不扩大。详见[维护设置迁移](../../YiboBeastPaths/Docs/1.9-维护面板迁入设置页-20261114.md)。

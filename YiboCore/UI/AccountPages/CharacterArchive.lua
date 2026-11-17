@@ -72,10 +72,9 @@ local function GetArchiveFields(preview)
     return fields
 end
 local function CreateCharacters(parent)
-    -- The title bar and its sort control already communicate page identity
-    -- and ordering; a second count/sort sentence only delays the table.
-    parent.heading = AddText(parent, "GameFontNormalLarge", nil, COLORS.text); parent.heading:Hide()
-    parent.hint = AddText(parent, "GameFontNormalSmall", nil, COLORS.muted); parent.hint:Hide()
+    parent.emptyMessage = AddText(parent, "GameFontNormalSmall", Theme.Font.body, COLORS.text)
+    parent.emptyMessage:SetWordWrap(true)
+    parent.emptyMessage:Hide()
     parent.listHeader = CreateFrame("Frame", nil, parent)
     parent.listHeader:SetPoint("TOPLEFT", 20, -82); parent.listHeader:SetWidth(850); parent.listHeader:SetHeight(Theme.Table.headerHeight)
     parent.listHeader.bg = parent.listHeader:CreateTexture(nil, "BACKGROUND"); parent.listHeader.bg:SetAllPoints(); parent.listHeader.bg:SetColorTexture(COLORS.chrome[1], COLORS.chrome[2], COLORS.chrome[3], 0.95)
@@ -156,12 +155,28 @@ local function ArchiveCharacters(context)
     -- Provider field discovery can invoke business services. Resolve once for
     -- this pass, and skip profile inspection when the filter admits both states.
     local profileFields = filter.profile ~= "all" and Core.Fields:GetByConsumer("character-archive")
-    for _, character in ipairs((context and context.characters) or Core.Characters:GetAllCached()) do
-        local profiled = profileFields and HasCharacterProfile(character, profileFields)
-        local profileMatches = not profileFields or (filter.profile == "profiled" and profiled) or (filter.profile == "missing" and not profiled)
-        if profileMatches and levelFilter:Matches(character.level) and (filter.includeHidden or not hidden[character.id]) then characters[#characters + 1] = character end
+    local roster = (context and context.characters) or Core.Characters:GetAllCached()
+    local anyLevelMatches = false
+    for _, character in ipairs(roster) do
+        if levelFilter:Matches(character.level) then
+            anyLevelMatches = true
+            if filter.includeHidden or not hidden[character.id] then
+                local profiled = profileFields and HasCharacterProfile(character, profileFields)
+                local profileMatches = not profileFields or (filter.profile == "profiled" and profiled) or (filter.profile == "missing" and not profiled)
+                if profileMatches then characters[#characters + 1] = character end
+            end
+        end
     end
-    return Core.CharacterSort:Sort(characters, AccountView:GetDefaultCharacterSort(), Core.Characters:GetCurrentID(), AccountView:GetCustomCharacterOrder())
+    if #roster == 0 then return characters, Core:Text("CORE.ARCHIVE_EMPTY_NO_DATA") end
+    if not anyLevelMatches and filter.levelExpr ~= "" then
+        local label = Core:Text(preview and "CORE.HOVER_LEVEL_FILTER" or "CORE.TABLE_LEVEL_FILTER")
+        return characters, Core:Text("CORE.ARCHIVE_EMPTY_LEVEL", label, filter.levelExpr, Core:Text("CORE.CHARACTERS_SORTING"))
+    end
+    if #characters == 0 then
+        return characters, Core:Text("CORE.ARCHIVE_EMPTY_FILTERED", Core:Text("CORE.CHARACTERS_SORTING"))
+    end
+    local sorted = Core.CharacterSort:Sort(characters, AccountView:GetDefaultCharacterSort(), Core.Characters:GetCurrentID(), AccountView:GetCustomCharacterOrder())
+    return sorted
 end
 
 local function GetArchiveColumnWidths(fields)
@@ -189,11 +204,24 @@ local function RefreshCharacters(parent, context)
     local currentID = Core.Characters:GetCurrentID()
     local preview = context and context.preview == true
     local inset = Theme:GetMatrixInsets(preview)
-    local characters = (context and ArchiveCharacters(context)) or ArchiveCharacters({ preview = false })
-    -- The matrix begins at the normal content inset; count and sorting remain
-    -- available through the actual rows and the title-bar sort control.
-    parent.heading:Hide()
-    parent.hint:Hide()
+    local characters, emptyMessage = ArchiveCharacters(context)
+    if emptyMessage then
+        parent.emptyMessage:ClearAllPoints()
+        parent.emptyMessage:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top)
+        parent.emptyMessage:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -inset.right, -inset.top)
+        parent.emptyMessage:SetText(emptyMessage)
+        parent.emptyMessage:Show()
+        parent.listHeader:Hide()
+        parent.scroll:SetContentHeight(0)
+        parent.scroll:SetVerticalScroll(0)
+        parent.scroll:Hide()
+        for _, row in ipairs(parent.rows) do row:Hide() end
+        parent.resetScroll = nil
+        return
+    end
+    parent.emptyMessage:Hide()
+    parent.listHeader:Show()
+    parent.scroll:Show()
     parent.listHeader:ClearAllPoints(); parent.listHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top)
     parent.scroll:ClearAllPoints(); parent.scroll:SetPoint("TOPLEFT", parent.listHeader, "BOTTOMLEFT", 0, -Theme.Space.xs); parent.scroll:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset.right, inset.bottom)
     local previousScroll = parent.resetScroll and 0 or parent.scroll:GetVerticalScroll()
