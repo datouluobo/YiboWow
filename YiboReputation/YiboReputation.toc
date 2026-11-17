@@ -1,31 +1,4 @@
-## Interface: 50504
-## Title: |cff20e070[Yibo]|r YiboReputation - Reputation Tracker
-## Title-zhCN: |cff20e070[Yibo]|r YiboReputation - 声望之路
-## Title-zhTW: |cff20e070[Yibo]|r YiboReputation - 声望之路
-## Notes: 多角色声望浏览与比较
-## Author: YiboSoft
-## Version: 1.7.3
-## IconTexture: Interface\AddOns\YiboReputation\Media\YiboReputationIcon-128
-## SavedVariables: YiboReputationDB
-## RequiredDeps: YiboCore
-## Group: YiboCore
-## LoadOnDemand: 0
-
-Bootstrap.lua
-Locales/Interface.lua
-ReputationCatalog.lua
-Store.lua
-Migration.lua
-Scanner.lua
-ReputationHierarchy.lua
-ReputationFormat.lua
-Friendship.lua
-Nomi.lua
-AccountMatrixView.lua
-CurrentCharacterPreview.lua
-MonitoredPreview.lua
-PreviewController.lua
-Settings.lua
-GoalTargets.lua
-CoreIntegration.lua
-Commands.lua
+## Interface: 50504, 16001
+## Title: |cff20e070[Yibo]|r YiboReputation
+## X-Yibo-Target: Hint
+Common/TocHint.lua

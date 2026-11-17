@@ -2,6 +2,8 @@ local Addon = _G.YiboAutoOpen
 local Integration = {}; Addon.CoreIntegration = Integration
 function Integration:Initialize()
     if self.initialized then return true end
+    if Addon.Target and not Addon.Target.supported then return false end
+    if Addon.Target and Addon.Target.requireCore and not Addon.runtime.initialized then return false end
     local Core = _G.YiboCore
     if not Core then
         Addon:NotifyIssue("core-missing", Addon:T("CORE.MISSING"))
@@ -10,7 +12,8 @@ function Integration:Initialize()
     local compatible = Core.CheckAPIVersion and Core:CheckAPIVersion(13)
     local localized = Core.HasCapability and Core:HasCapability("localization", 1)
     local localeAPI = Core.Locale and type(Core.Locale.Get) == "function" and type(Core.Locale.Register) == "function"
-    if not (compatible and localized and localeAPI and Core.RegisterAddon and Core.RegisterSettingsPanel and Core.UITheme) then
+    if not (compatible and localized and localeAPI and Core.RegisterAddon and Core.RegisterSettingsPanel and Core.UITheme and Core.UITheme.CreateInput and Core.IsInitialized and Core:IsInitialized()
+        and Core:HasCapability("basic-input", 1) and Core:HasCapability("item-resolver", 1) and Core.ItemResolver) then
         Addon:NotifyIssue("core-incompatible", Addon:T("CORE.UPGRADE_REQUIRED"))
         return true
     end
@@ -35,3 +38,10 @@ end
 -- the Core navigation is ready before the player opens the settings window;
 -- PLAYER_LOGIN repeats this safely when the runtime starts.
 Integration:Initialize()
+
+local core = _G.YiboCore
+if core and core.Events then
+    core.Events:Register("CORE_READY", Addon, function()
+        if Addon:Initialize() then Integration:Initialize() end
+    end)
+end

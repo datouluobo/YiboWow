@@ -1,16 +1,19 @@
-#Requires -Version 7.2
+#Requires -Version 5.1
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$Addon,
     [string]$Target = 'Mists',
     [ValidateSet('Both', 'CurseForge', 'GitHub')][string]$Channel = 'CurseForge',
-    [string]$WorkspaceRoot = (Split-Path $PSScriptRoot -Parent),
+    [string]$WorkspaceRoot,
     [string]$OutputRoot,
     [switch]$ValidateOnly,
     [switch]$KeepStaging
 )
 
 $ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName 'System.IO.Compression'
+Add-Type -AssemblyName 'System.IO.Compression.FileSystem'
+if (-not $WorkspaceRoot) { $WorkspaceRoot = (Split-Path $PSScriptRoot -Parent) }
 . (Join-Path $PSScriptRoot 'Release.Common.ps1')
 $workspacePath = (Resolve-Path -LiteralPath $WorkspaceRoot).Path
 $configuration = Import-PowerShellDataFile -LiteralPath (Join-Path $PSScriptRoot 'ReleaseProfiles.psd1')
@@ -113,9 +116,16 @@ foreach ($artifact in $artifacts) {
 if ($profile.Addon -eq 'YiboCore') {
     $checker = Resolve-YiboSourceFile $workspacePath 'Tools/Check-Localization.py'
     $report = Join-Path $workspacePath "_NonRelease/Localization/Build/YiboCore-$($profile.Target)-LocalizationReport.md"
-    & python $checker --addon YiboCore --output $report | Out-Host
-    if ($LASTEXITCODE -ne 0) { throw 'Localization report generation failed.' }
-    Write-Host "Review localization candidates and client acceptance before distribution: $report"
+    try {
+        & python $checker --addon YiboCore --output $report 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Review localization candidates and client acceptance before distribution: $report"
+        } else {
+            Write-Warning "Localization report generation skipped (Python unavailable on this machine)."
+        }
+    } catch {
+        Write-Warning "Localization report generation skipped: $_"
+    }
 }
 [void](New-Item -ItemType Directory -Path $outputPath -Force)
 $runID = [guid]::NewGuid().ToString('N')

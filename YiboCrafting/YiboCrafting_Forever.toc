@@ -5,7 +5,7 @@
 ## Notes: Current character observed profession recipes. Requires Core Forever 0.2.0 / API13.
 ## Notes-zhCN: 当前角色已观察专业配方，需要 Core 无限服0.2.0 / API13。
 ## Author: YiboSoft
-## Version: 0.1.2
+## Version: 0.1.5
 ## RequiredDeps: YiboCore
 ## SavedVariables: YiboCraftingForeverDB
 ## IconTexture: Interface\AddOns\YiboCrafting\Media\YiboCraftingIcon-128

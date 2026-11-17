@@ -5,6 +5,7 @@ for _, target in ipairs({ 'Mists', 'Forever', 'Retail' }) do
     for _, language in ipairs({ 'zhCN', 'enUS' }) do
         local env, core, fire, flush = Boot(target, nil, nil, function(e)
             e.GetLocale = function() return language end
+            e.UnitLevel = function() return 9 end
         end)
         fire('ADDON_LOADED'); fire('PLAYER_LOGIN'); flush()
         local view = core.AccountView
@@ -55,6 +56,33 @@ for _, target in ipairs({ 'Mists', 'Forever', 'Retail' }) do
         Input('CORE.HOVER_LEVEL_FILTER'):SetText('0')
         Input('CORE.HOVER_LEVEL_FILTER'):Fire('OnEnterPressed')
         view.frame:Hide(); Open(); Expect('', '0')
+        assert(helpers.SetArchiveLevelFilter('preview', '>=60'))
+        view.frame:Hide()
+        assert(view:ShowPreview('characters', env.Minimap))
+        local archive = view.frame.instances.characters
+        local settingsLabel = core:Text('CORE.CHARACTERS_SORTING')
+        assert(archive.emptyMessage:IsShown() and not archive.listHeader:IsShown() and not archive.scroll:IsShown())
+        assert(archive.emptyMessage:GetText() == core:Text('CORE.ARCHIVE_EMPTY_LEVEL',
+            core:Text('CORE.HOVER_LEVEL_FILTER'), '>=60', settingsLabel))
+        Expect('', '>=60')
+        view:HidePreview()
+        view:Toggle('characters')
+        assert(not view._pages.characters.lastError, view._pages.characters.lastError)
+        assert(not archive.emptyMessage:IsShown() and archive.listHeader:IsShown() and archive.rows[1]:IsShown())
+        assert(helpers.SetArchiveLevelFilter('page', '>=60'))
+        view:RefreshPage(); flush()
+        assert(archive.emptyMessage:GetText() == core:Text('CORE.ARCHIVE_EMPTY_LEVEL',
+            core:Text('CORE.TABLE_LEVEL_FILTER'), '>=60', settingsLabel))
+        assert(not archive.rows[1]:IsShown())
+        assert(helpers.SetArchiveLevelFilter('preview', ''))
+        view.frame:Hide()
+        assert(view:ShowPreview('characters', env.Minimap))
+        assert(not archive.emptyMessage:IsShown() and archive.scroll:IsShown() and archive.rows[1]:IsShown())
+        helpers.Settings().hiddenCharacters[env.TEST_GUID] = true
+        assert(view:ShowPreview('characters', env.Minimap, true))
+        assert(archive.emptyMessage:GetText() == core:Text('CORE.ARCHIVE_EMPTY_FILTERED', settingsLabel))
+        view._pages.characters.Refresh(archive, { characters = {}, preview = true })
+        assert(archive.emptyMessage:GetText() == core:Text('CORE.ARCHIVE_EMPTY_NO_DATA'))
         print('PASS archive level settings: ' .. target .. '/' .. language)
     end
 end

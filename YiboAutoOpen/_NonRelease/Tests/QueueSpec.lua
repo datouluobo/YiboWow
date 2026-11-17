@@ -1,4 +1,5 @@
 YiboAutoOpen = {}
+dofile("YiboAutoOpen/Locale.lua")
 dofile("YiboAutoOpen/Defaults.lua")
 
 assert(YiboAutoOpen.LIMITS.maxRetries == 2)

@@ -5,7 +5,7 @@
 ## Notes: Current character observed reputation snapshots. Requires YiboCore API13.
 ## Notes-zhCN: 当前角色已观察声望快照，需要 YiboCore API13。
 ## Author: YiboSoft
-## Version: 0.1.1
+## Version: 0.1.9
 ## IconTexture: Interface\AddOns\YiboReputation\Media\YiboReputationIcon-128
 ## SavedVariables: YiboReputationForeverDB
 ## RequiredDeps: YiboCore

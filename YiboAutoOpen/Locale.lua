@@ -1,44 +1,226 @@
 local Addon = _G.YiboAutoOpen
-local FALLBACK = {
-    zh = {
+local resources = {}
+local function Register(Core)
+    Core.Locale:Register("YiboAutoOpen", "zh", {
+        ["TARGET.WRONG"] = "客户端目标不匹配，已停止自动开包且未写入存档，请安装对应版本。",
+        ["ACTION.ADD"] = "添加",
+        ["ACTION.CANCEL"] = "取消",
+        ["ACTION.DELETE"] = "删除",
+        ["ACTION.DROP"] = "拖放背包物品到这里",
+        ["ACTION.EDIT"] = "改",
+        ["ACTION.REFRESH"] = "刷新",
+        ["ACTION.RETRY"] = "重新尝试",
+        ["ACTION.SAVE"] = "保存",
+        ["BIND.CANCELLED"] = "已取消拾取后绑定确认；物品 #%d 将在本次登录跳过。",
+        ["CATALOG.COUNT"] = "目录物品：%d 项 · %d 列（按列排列）",
         ["CATALOG.MANUAL_ONLY_REJECTED"] = "%s 仅支持手动开启，未加入自动开包目录，请在背包中右键开启。",
-        ["QUEUE.MANUAL_REQUIRED"] = "物品 #%d 被客户端保护机制拦截，已停止本次会话的自动重试，请手动开启。",
+        ["COMMAND.ADD"] = "用法：/yao add <物品链接、ID 或名称>",
+        ["COMMAND.DELETE"] = "用法：/yao del <物品链接、ID 或名称>",
+        ["COMMAND.LIST"] = "用法：/yao list [页码]",
+        ["COMMAND.MORE"] = "更多项目：输入 /yao list %d 查看第 %d 页",
+        ["COMMAND.PAGE"] = "开包目录（%d/%d）：",
+        ["COMMAND.RANGE"] = "页码范围：1–%d",
+        ["COMMAND.STATE"] = "状态：%s",
+        ["COMMAND.STATUS"] = "用法：/yao status（查看自动开启状态）",
+        ["CONFIRM.DELETE_ITEM"] = "确定从自动开包目录删除“%s”吗？\n这不会删除背包中的物品。",
+        ["CONFIRM.DELETE_SOURCE"] = "确定从确认框来源白名单删除“%s”吗？\n删除后该来源的确认框将保留游戏原生位置。",
         ["CORE.MISSING"] = "完整设置功能需要 YiboCore API v13；未安装 Core 不影响自动开包与 /yao 命令使用。",
-        ["CORE.UPGRADE_REQUIRED"] = "YiboAutoOpen 设置页需要 YiboCore API v13 与 localization:1，请升级 Core。",
-        ["SETTINGS.TITLE"] = "自动开包",
-        ["SETTINGS.DESCRIPTION"] = "管理自动开启目录、安全阈值与运行状态。",
-        ["CORE.REGISTER_FAILED"] = "Core 注册失败，已继续使用命令模式：%s",
         ["CORE.PANEL_FAILED"] = "Core 设置注册失败，已继续使用命令模式：%s",
-    },
-    en = {
+        ["CORE.REGISTER_FAILED"] = "Core 注册失败，已继续使用命令模式：%s",
+        ["CORE.RUNTIME_REQUIRED"] = "需要已就绪的 YiboCore API13、localization:1、basic-input:1 和 item-resolver:1，请升级或启用 Core。",
+        ["CORE.UPGRADE_REQUIRED"] = "YiboAutoOpen 设置页需要就绪的 Core API13、localization:1、basic-input:1 和 item-resolver:1，请升级或启用 Core。",
+        ["ITEM.ABSENT"] = "该物品不在目录中。",
+        ["ITEM.ADDED"] = "已加入目录。",
+        ["ITEM.ADDED_DROP"] = "已通过拖放加入目录。",
+        ["ITEM.ADDED_MANUAL"] = "已加入目录，但受游戏限制不会自动开启，请手动右键。",
+        ["ITEM.ADDED_QUEUE"] = "已加入目录并进入自动开启队列：",
+        ["ITEM.ADD_FAILED"] = "无法添加物品。",
+        ["ITEM.AMBIGUOUS"] = "名称不唯一，请使用链接或 ID。",
+        ["ITEM.AMBIGUOUS_IDS"] = "名称不唯一，请使用链接或 ID：",
+        ["ITEM.DROP_REQUIRED"] = "请从背包拖动物品到这里。",
+        ["ITEM.EXISTS"] = "该物品已在目录中。",
+        ["ITEM.EXISTS_MANUAL"] = "该物品已在目录中，但受游戏限制不会自动开启，请手动右键。",
+        ["ITEM.MANUAL"] = " · 仅手动开启（不会自动开启）",
+        ["ITEM.MANUAL_SUFFIX"] = "：已在目录中，但受游戏限制不会自动开启，请手动右键。",
+        ["ITEM.NOT_FOUND"] = "未找到物品，请使用物品链接或 ID。",
+        ["ITEM.REMOVED"] = "已从目录删除：",
+        ["ITEM.UNKNOWN"] = "物品 #%d",
+        ["MODE.CHAT_ISSUES"] = "聊天提示：仅问题",
+        ["MODE.CHAT_SILENT"] = "聊天提示：静默",
+        ["MODE.CHAT_VERBOSE"] = "聊天提示：详细",
+        ["MODE.ISSUES"] = "仅问题",
+        ["MODE.SILENT"] = "静默",
+        ["MODE.VERBOSE"] = "详细",
+        ["PRINT.PREFIX"] = "|cff20e070[Yibo]|r 自动开包：",
+        ["QUEUE.CALL_FAILED"] = "调用容器开启接口失败，稍后会按失败重试：",
+        ["QUEUE.MANUAL_REQUIRED"] = "物品 #%d 被客户端保护机制拦截，已停止本次会话的自动重试，请手动开启。",
+        ["QUEUE.RETRY"] = "物品 #%d 连续失败，将在 %d 秒后重试。",
+        ["QUEUE.SPACE"] = "通用背包空位不足，已暂停自动开包。",
+        ["REASON.BAG_DATA_PENDING"] = "等待背包数据",
+        ["REASON.CASTING"] = "施法中",
+        ["REASON.DISABLED"] = "已禁用",
+        ["REASON.INSUFFICIENT_SPACE"] = "背包空位不足",
+        ["REASON.IN_COMBAT"] = "战斗中",
+        ["REASON.LOOT_OPEN"] = "拾取界面打开",
+        ["REASON.PLAYER_UNAVAILABLE"] = "角色不可用",
+        ["REASON.RETRY_BACKOFF"] = "等待重试",
+        ["REASON.SENSITIVE_UI"] = "敏感界面打开",
+        ["REASON.WORLD_LOADING"] = "世界加载中",
+        ["SETTING.CONFIRM"] = "确认框位置",
+        ["SETTING.CURSOR"] = "允许白名单确认框跟随鼠标",
+        ["SETTING.ENABLED"] = "启用自动开包",
+        ["SETTING.LOGIN"] = "登录时扫描已有包裹",
+        ["SETTING.SPACE"] = "最低通用背包空位（1–20）",
+        ["SETTINGS.DESCRIPTION"] = "管理自动开启目录、安全阈值与运行状态。",
+        ["SETTINGS.TITLE"] = "自动开包",
+        ["SOURCE.ALREADY"] = "已在名单",
+        ["SOURCE.CATALOG"] = "YAO 打开的目录箱子",
+        ["SOURCE.COUNT"] = "确认框来源白名单：%d 项 · 输入对象 ID 添加",
+        ["SOURCE.EXISTS"] = "该对象已在确认框来源白名单中。",
+        ["SOURCE.EXISTS_ID"] = "该对象 ID 已在确认框来源白名单中。",
+        ["SOURCE.INVALID"] = "请输入有效的对象 ID，例如 210565。",
+        ["SOURCE.RECENT"] = "最近可添加对象：%d 项 · 本次登录",
+        ["SOURCE.UNKNOWN"] = "拾取来源对象 #%d",
+        ["STATE.IDLE"] = "空闲",
+        ["STATE.PAUSED"] = "暂停",
+        ["STATE.READY"] = "就绪",
+        ["STATE.USING"] = "正在开启",
+        ["STATE.WAITING_READY"] = "等待就绪",
+        ["STATE.WAITING_RESULT"] = "等待结果",
+        ["STATUS.BIND"] = "最近 BOP 定位：来源 %s · API 鼠标 %.0f,%.0f · UI 缩放 %.3f · 屏幕 %.0f×%.0f · UI %.0f×%.0f · 目标弹窗 %.0f,%.0f · 最终 %.0f,%.0f",
+        ["STATUS.CHECKING"] = "正在检查自动开包状态…",
+        ["STATUS.COOLDOWN"] = "目录容器暂时锁定或冷却，预计 %.1f 秒后重试。",
+        ["STATUS.EMPTY"] = "背包中未找到可开启的目录容器。",
+        ["STATUS.ERROR"] = "状态检查失败：",
+        ["STATUS.NEXT"] = "下一个目录容器：",
+        ["STATUS.PENDING"] = "等待开启结果：%s · 已等待 %.1f 秒 · 第 %d 次尝试",
+        ["STATUS.QUARANTINE"] = "本次登录已隔离：",
+        ["STATUS.REFRESHED"] = "已刷新目录名称与运行状态，并重新扫描背包。若敏感界面仍处于打开状态，自动开包会继续暂停。",
+        ["STATUS.SUMMARY"] = "当前状态：%s · 背包目录物品 %d 项 · 本次登录隔离 %d 项",
+        ["TOOLTIP.NAMES"] = "重新请求目录物品名称。",
+        ["TOOLTIP.REFRESH"] = "刷新目录",
+        ["TOOLTIP.RETRY"] = "同时清除本次登录的失败隔离并重新扫描背包。",
+    })
+    Core.Locale:Register("YiboAutoOpen", "en", {
+        ["TARGET.WRONG"] = "Client target mismatch. Opening stopped before saving data. Install the matching package.",
+        ["ACTION.ADD"] = "Add",
+        ["ACTION.CANCEL"] = "Cancel",
+        ["ACTION.DELETE"] = "Delete",
+        ["ACTION.DROP"] = "Drop a bag item here",
+        ["ACTION.EDIT"] = "Edit",
+        ["ACTION.REFRESH"] = "Refresh",
+        ["ACTION.RETRY"] = "Retry",
+        ["ACTION.SAVE"] = "Save",
+        ["BIND.CANCELLED"] = "Binding confirmation cancelled; item #%d is skipped for this session.",
+        ["CATALOG.COUNT"] = "Catalog: %d items · %d columns (column order)",
         ["CATALOG.MANUAL_ONLY_REJECTED"] = "%s must be opened manually and was not added to the auto-open catalog. Right-click it in your bags to open it.",
-        ["QUEUE.MANUAL_REQUIRED"] = "Item #%d was blocked by client protection. Automatic retries are stopped for this session; please open it manually.",
+        ["COMMAND.ADD"] = "Usage: /yao add <item link, ID or name>",
+        ["COMMAND.DELETE"] = "Usage: /yao del <item link, ID or name>",
+        ["COMMAND.LIST"] = "Usage: /yao list [page]",
+        ["COMMAND.MORE"] = "More items: /yao list %d for page %d",
+        ["COMMAND.PAGE"] = "Opening catalog (%d/%d):",
+        ["COMMAND.RANGE"] = "Page range: 1–%d",
+        ["COMMAND.STATE"] = "Status: %s",
+        ["COMMAND.STATUS"] = "Usage: /yao status (opening status)",
+        ["CONFIRM.DELETE_ITEM"] = "Remove “%s” from the opening catalog?\nThis does not delete the item from your bags.",
+        ["CONFIRM.DELETE_SOURCE"] = "Remove “%s” from confirmation sources?\nIts confirmation dialog will use the native position.",
         ["CORE.MISSING"] = "Full settings require YiboCore API v13. Without Core, automatic opening and /yao commands remain available.",
-        ["CORE.UPGRADE_REQUIRED"] = "The YiboAutoOpen settings page requires YiboCore API v13 and localization:1. Please update YiboCore.",
-        ["SETTINGS.TITLE"] = "Auto Open",
-        ["SETTINGS.DESCRIPTION"] = "Manage the opening catalog, safety threshold, and runtime status.",
-        ["CORE.REGISTER_FAILED"] = "Core registration failed. Command mode remains available: %s",
         ["CORE.PANEL_FAILED"] = "Core settings registration failed. Command mode remains available: %s",
-    },
-}
-
+        ["CORE.REGISTER_FAILED"] = "Core registration failed. Command mode remains available: %s",
+        ["CORE.RUNTIME_REQUIRED"] = "Ready YiboCore API13 with localization:1, basic-input:1 and item-resolver:1 is required. Update or enable Core.",
+        ["CORE.UPGRADE_REQUIRED"] = "The settings page requires ready Core API13 with localization:1, basic-input:1 and item-resolver:1. Update or enable Core.",
+        ["ITEM.ABSENT"] = "This item is not in the catalog.",
+        ["ITEM.ADDED"] = "Added to the catalog.",
+        ["ITEM.ADDED_DROP"] = "Dropped item added.",
+        ["ITEM.ADDED_MANUAL"] = "Added, but game restrictions require manual opening.",
+        ["ITEM.ADDED_QUEUE"] = "Added to the catalog and opening queue: ",
+        ["ITEM.ADD_FAILED"] = "Unable to add item.",
+        ["ITEM.AMBIGUOUS"] = "Multiple matches. Use a link or ID.",
+        ["ITEM.AMBIGUOUS_IDS"] = "Multiple matches; use a link or ID: ",
+        ["ITEM.DROP_REQUIRED"] = "Drag an item here from your bags.",
+        ["ITEM.EXISTS"] = "This item is already in the catalog.",
+        ["ITEM.EXISTS_MANUAL"] = "Already in the catalog; game restrictions require manual opening.",
+        ["ITEM.MANUAL"] = " · Manual opening only",
+        ["ITEM.MANUAL_SUFFIX"] = ": in the catalog; game restrictions require manual opening.",
+        ["ITEM.NOT_FOUND"] = "Item not found. Use an item link or ID.",
+        ["ITEM.REMOVED"] = "Removed from the catalog: ",
+        ["ITEM.UNKNOWN"] = "Item #%d",
+        ["MODE.CHAT_ISSUES"] = "Chat: issues only",
+        ["MODE.CHAT_SILENT"] = "Chat: silent",
+        ["MODE.CHAT_VERBOSE"] = "Chat: verbose",
+        ["MODE.ISSUES"] = "Issues only",
+        ["MODE.SILENT"] = "Silent",
+        ["MODE.VERBOSE"] = "Verbose",
+        ["PRINT.PREFIX"] = "|cff20e070[Yibo]|r Auto Open: ",
+        ["QUEUE.CALL_FAILED"] = "Container use failed; retrying later: ",
+        ["QUEUE.MANUAL_REQUIRED"] = "Item #%d was blocked by client protection. Automatic retries are stopped for this session; please open it manually.",
+        ["QUEUE.RETRY"] = "Item #%d failed repeatedly; retrying in %d seconds.",
+        ["QUEUE.SPACE"] = "Not enough general bag space. Automatic opening is paused.",
+        ["REASON.BAG_DATA_PENDING"] = "Waiting for bag data",
+        ["REASON.CASTING"] = "Casting",
+        ["REASON.DISABLED"] = "Disabled",
+        ["REASON.INSUFFICIENT_SPACE"] = "Insufficient bag space",
+        ["REASON.IN_COMBAT"] = "In combat",
+        ["REASON.LOOT_OPEN"] = "Loot window open",
+        ["REASON.PLAYER_UNAVAILABLE"] = "Player unavailable",
+        ["REASON.RETRY_BACKOFF"] = "Retry backoff",
+        ["REASON.SENSITIVE_UI"] = "Sensitive window open",
+        ["REASON.WORLD_LOADING"] = "World loading",
+        ["SETTING.CONFIRM"] = "Confirmation position",
+        ["SETTING.CURSOR"] = "Move allowed confirmations to cursor",
+        ["SETTING.ENABLED"] = "Enable automatic opening",
+        ["SETTING.LOGIN"] = "Scan existing items on login",
+        ["SETTING.SPACE"] = "Minimum general bag slots (1–20)",
+        ["SETTINGS.DESCRIPTION"] = "Manage the opening catalog, safety threshold, and runtime status.",
+        ["SETTINGS.TITLE"] = "Auto Open",
+        ["SOURCE.ALREADY"] = "Already added",
+        ["SOURCE.CATALOG"] = "Containers opened from the YAO catalog",
+        ["SOURCE.COUNT"] = "Confirmation sources: %d · Enter an object ID to add",
+        ["SOURCE.EXISTS"] = "This object is already allowed.",
+        ["SOURCE.EXISTS_ID"] = "This object ID is already allowed.",
+        ["SOURCE.INVALID"] = "Enter a valid positive object ID.",
+        ["SOURCE.RECENT"] = "Recent objects: %d · This session",
+        ["SOURCE.UNKNOWN"] = "Loot object #%d",
+        ["STATE.IDLE"] = "Idle",
+        ["STATE.PAUSED"] = "Paused",
+        ["STATE.READY"] = "Ready",
+        ["STATE.USING"] = "Opening",
+        ["STATE.WAITING_READY"] = "Waiting for readiness",
+        ["STATE.WAITING_RESULT"] = "Waiting for result",
+        ["STATUS.BIND"] = "Last BOP position: %s · Cursor %.0f,%.0f · Scale %.3f · Screen %.0f×%.0f · UI %.0f×%.0f · Target %.0f,%.0f · Final %.0f,%.0f",
+        ["STATUS.CHECKING"] = "Checking opening status…",
+        ["STATUS.COOLDOWN"] = "A catalog item is locked or cooling down; retry in %.1f seconds.",
+        ["STATUS.EMPTY"] = "No eligible catalog containers in bags.",
+        ["STATUS.ERROR"] = "Status check failed: ",
+        ["STATUS.NEXT"] = "Next catalog container: ",
+        ["STATUS.PENDING"] = "Waiting for %s · %.1f seconds · Attempt %d",
+        ["STATUS.QUARANTINE"] = "Quarantined this session: ",
+        ["STATUS.REFRESHED"] = "Catalog and status refreshed; bags rescanned. Opening remains paused while a sensitive window is open.",
+        ["STATUS.SUMMARY"] = "Status: %s · %d catalog items in bags · %d quarantined this session",
+        ["TOOLTIP.NAMES"] = "Request catalog item names again.",
+        ["TOOLTIP.REFRESH"] = "Refresh catalog",
+        ["TOOLTIP.RETRY"] = "Clear session failure quarantine and rescan bags.",
+    })
+end
+Register({ Locale = { Register = function(_, _, language, values) resources[language] = values end } })
+function Addon:RegisterLocales()
+    local core = self.Core or _G.YiboCore
+    if core and core.Locale and core.Locale.Register then Register(core) end
+end
 function Addon:T(key, ...)
-    local Core = self.Core or _G.YiboCore
-    if Core and Core.HasCapability and Core:HasCapability("localization", 1)
-        and Core.Locale and type(Core.Locale.Get) == "function" and type(Core.Locale.Register) == "function" then
-        return Core.Locale:Get(self.NAME, key, ...)
+    local core = self.Core or _G.YiboCore
+    if core and core.Locale and core.Locale.Get and core.Locale.Register and core.HasCapability and core:HasCapability("localization", 1) then
+        return core.Locale:Get(self.NAME, key, ...)
     end
-    local language = (GetLocale and GetLocale() or "enUS"):match("^zh") and "zh" or "en"
-    local value = FALLBACK[language][key] or FALLBACK.en[key] or key
-    if select("#", ...) > 0 then
-        local ok, formatted = pcall(string.format, value, ...)
-        if ok then return formatted end
+    -- Only bootstrap diagnostics run before the required Core becomes available.
+    if self.Target and self.Target.requireCore then
+        if key == "CORE.RUNTIME_REQUIRED" or key == "TARGET.WRONG" then return resources.en[key] end
+        if key == "PRINT.PREFIX" then return "|cff20e070[Yibo]|r YiboAutoOpen: " end
+        return key
     end
-    return value
+    -- Recorded Mists independent-runtime compatibility boundary.
+    local lang = (GetLocale and GetLocale() or "enUS"):match("^zh") and "zh" or "en"
+    local value = resources[lang][key] or key
+    return select("#", ...) > 0 and string.format(value, ...) or value
 end
-
-local Core = _G.YiboCore
-if Core and Core.Locale and type(Core.Locale.Register) == "function" then
-    Core.Locale:Register(Addon.NAME, "zh", FALLBACK.zh)
-    Core.Locale:Register(Addon.NAME, "en", FALLBACK.en)
-end
+Addon:RegisterLocales()

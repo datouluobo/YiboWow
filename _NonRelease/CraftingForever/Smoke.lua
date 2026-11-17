@@ -43,7 +43,7 @@ local function Boot(saved,configure,defaultManifest,language)
     return e,c,e.YiboCrafting,fire,Flush,d
 end
 local e,c,a,fire,flush,d=Boot()
-Check(a.initialized and a.VERSION=="0.1.2" and c.VERSION=="0.2.0","Crafting and Core target manifests start")
+Check(a.initialized and a.VERSION=="0.1.5" and c:IsInitialized() and c:CheckAPIVersion(13),"Crafting and compatible Core target manifests start")
 Check(e.YiboCraftingDB.sentinel=="mists" and not e.YiboCraftingDB.characters,"Mists store untouched")
 Check(not a.RecipeCatalog and not a.GoalTargets and not a.RecipeStateScanner,"MoP catalog and spell assumptions excluded")
 fire("PLAYER_ENTERING_WORLD"); flush()
@@ -64,6 +64,55 @@ local saved=a.Store:Get(e.TEST_GUID)
 Check(saved.professions[197].recipes[1001].learned and not saved.professions[197].recipes[1002].learned,"explicit learned and unlearned facts committed")
 Check(#panel.renderedRecipes==2 and panel.rows[1].labels.recipe:GetText()=="Linen Tunic","recipe names rendered")
 Check(panel.rows[2].labels.learned:GetText()==a:T("FOREVER.NOT_LEARNED"),"unlearned UI text")
+local filterReads=d.reads
+panel.search:SetValue("  WOOL  ",true); flush()
+Check(#panel.renderedRecipes==1 and panel.renderedRecipes[1].recipe.recipeID==1002
+    and panel.matchCount:GetText()==a:T("FOREVER.MATCH_COUNT",1,2),"search matches trimmed, case-insensitive recipe names")
+panel.learningFilter.menu.buttons[2].scripts.OnClick(); flush()
+Check(#panel.renderedRecipes==0 and panel.matchCount:GetText()==a:T("FOREVER.NO_MATCH"),"learning and text filters intersect")
+panel.search.clearButton.scripts.OnClick(); flush()
+Check(panel.search:GetText()=="" and #panel.renderedRecipes==1 and panel.renderedRecipes[1].recipe.recipeID==1001,"clear restores results within selected learning state")
+panel.learningFilter.menu.buttons[1].scripts.OnClick(); flush()
+panel.search:SetValue("1002",true); flush()
+Check(#panel.renderedRecipes==1 and panel.renderedRecipes[1].recipe.recipeID==1002,"search matches recipe ID")
+panel.professionFilter.menu.buttons[3].scripts.OnClick(); flush()
+Check(panel.professionFilter.value==129 and #panel.renderedRecipes==0 and d.reads==filterReads,"profession dropdown uses observed profession IDs without rescanning")
+c.AccountView.frame:Hide(); Check(c.AccountView:ShowPreview("crafting",e.Minimap),"filtered page opens Core preview")
+Check(panel.matrix.recipeCount==2 and panel.matrix.toolbar:IsShown() and not panel.toolbar:IsShown(),"preview has independent filters")
+Check(panel.matrix.rows[2].labels[e.TEST_GUID]:GetText()==a:T("UI.LEARNED")
+    and panel.matrix.rows[3].labels[e.TEST_GUID]:GetText()=="?","matrix distinguishes observed learned from unknown")
+panel.matrix.search:SetValue("1001",true); flush()
+Check(panel.matrix.recipeCount==1 and panel.matrix.footer:GetText()==a:T("UI.PREVIEW_REMAINDER",1,2),
+    "matrix search and preview count use the filtered recipe")
+panel.matrix.search:SetValue("",true); flush()
+panel.matrix.learning.menu.buttons[3].scripts.OnClick(); flush()
+Check(panel.matrix.recipeCount==1 and panel.matrix.rows[2].labels.recipe:GetText()=="Wool Tunic",
+    "unknown filter retains only recipes without a confirmed learned observation")
+panel.matrix.learning.menu.buttons[1].scripts.OnClick(); flush()
+local alt = {id="CraftingMatrixAlt",name="Alt",realm="Realm"}
+a.Store.db.characters[alt.id] = {professions={[197]={observedAt=1,recipes={
+    [1002]={recipeID=1002,name="Wool Tunic",learned=true,observedAt=1}
+}}}}
+a.AccountPage:Refresh(panel,{preview=true,surfaceAvailableWidth=650,characters={c.Characters:GetCurrent(),alt}})
+Check(panel.matrix.rows[2].labels[alt.id]:GetText()=="?"
+    and panel.matrix.rows[3].labels[alt.id]:GetText()==a:T("UI.LEARNED"),"character columns read independent observations")
+panel.matrix.character:SetValue(alt.id)
+a.AccountPage:Refresh(panel,{preview=true,surfaceAvailableWidth=650,characters={c.Characters:GetCurrent(),alt}})
+Check(panel.matrix.recipeCount==1 and not panel.matrix.labels[e.TEST_GUID]:IsShown()
+    and panel.matrix.rows[2].labels[alt.id]:GetText()==a:T("UI.LEARNED"),"character filter narrows both rows and columns")
+panel.matrix.character:SetValue("all")
+local altRecipes = a.Store.db.characters[alt.id].professions[197].recipes
+for id=2001,2007 do altRecipes[id]={recipeID=id,name="Recipe "..id,learned=true,observedAt=1} end
+a.AccountPage:Refresh(panel,{preview=true,surfaceAvailableWidth=650,characters={c.Characters:GetCurrent(),alt}})
+Check(panel.matrix.recipeCount==6 and panel.matrix.footer:GetText()==a:T("UI.PREVIEW_REMAINDER",6,9),
+    "matrix reports capped recipe rows without counting the group header")
+a.Store.db.characters[alt.id] = nil
+c.AccountView:HidePreview(); c.AccountView:Toggle("crafting"); flush()
+Check(panel.toolbar:IsShown() and panel.professionFilter.value==129 and #panel.renderedRecipes==0,"returning to full page retains session filters")
+d.profileFailure=true; fire("SKILL_LINES_CHANGED"); flush()
+Check(panel.professionFilter.value==129,"temporarily unavailable profession profile retains session selection")
+d.profileFailure=nil; fire("SKILL_LINES_CHANGED"); flush()
+panel.professionFilter.menu.buttons[1].scripts.OnClick(); panel.search.clearButton.scripts.OnClick(); flush()
 saved.professions[197].recipes[1001].name="tampered"
 Check(a.Store:Get(e.TEST_GUID).professions[197].recipes[1001].name=="Linen Tunic","Crafting snapshot detached")
 Check(not a.Store:Get("Other"),"current GUID scope only")
@@ -83,7 +132,7 @@ d.rows={1001,1001}; a.Scanner:Scan(); Check(a.Scanner.state=="error","duplicate 
 d.rows={1001}; d.info[1001].learned=nil; a.Scanner:Scan(); Check(a.Scanner.state=="error","unknown learning state not treated as false"); d.info[1001].learned=true
 d.professionID=171; before=d.reads; a.Scanner:Scan(); Check(d.reads==before and a.Scanner.state=="profile","unowned profession rejected"); d.professionID=197
 a.Scanner:Scan(); c.AccountView.frame:Hide(); Check(c.AccountView:ShowPreview("crafting",e.Minimap),"Core owns preview")
-Check(#panel.renderedRecipes==2 and not panel.refresh:IsShown(),"preview reuses saved recipe rows")
+Check(panel.matrix.recipeCount==2 and not panel.refresh:IsShown(),"preview reuses saved recipes")
 c.AccountView:HidePreview(); c.AccountView:Toggle("crafting")
 d.shown=false; fire("TRADE_SKILL_CLOSE"); flush()
 Check(not a.Store:IsFresh(e.TEST_GUID,197,1001) and #panel.renderedRecipes==2,"close retains stale snapshot")
@@ -103,7 +152,7 @@ d2.emptyProfile=true; f2("SKILL_LINES_CHANGED"); fl2()
 Check(#c2.DataDomains:Get(e2.TEST_GUID,"professions").data.professions==0,"explicit skill event can confirm no professions")
 e2.SlashCmdList.YIBOCRAFTING(""); fl2()
 Check(not a2:OwnsProfession(197),"removed profession cannot authorize recipe scan")
-for _,cap in ipairs({"profession-profile","data-domains","localization","account-surface-budget","character-cleanup"}) do
+for _,cap in ipairs({"profession-profile","data-domains","localization","account-surface-budget","character-cleanup","basic-input"}) do
     local env,_,addon=Boot(nil,function(_,core) local old=core.HasCapability; core.HasCapability=function(self,name,version) return name~=cap and old(self,name,version) end end)
     Check(not addon.initialized and env.YiboCraftingForeverDB==nil,"required capability checked before DB: "..cap)
 end
@@ -117,7 +166,8 @@ for _,case in ipairs({{"zhCN","auto","zh"},{"enUS","auto","en"},{"zhCN","en","en
     local env,core,addon,native,drain,data=Boot(nil,nil,nil,{client=case[1],savedCore=coreSave})
     native("PLAYER_ENTERING_WORLD"); data.shown=true; native("TRADE_SKILL_SHOW"); drain(); env.SlashCmdList.YIBOCRAFTING(""); drain()
     local page=core.AccountView.frame.instances.crafting
-    Check(core.Locale:GetLanguage()==case[3] and page.rows[1].labels.learned:GetText()==addon:T("UI.LEARNED"),"four session language modes")
+    Check(core.Locale:GetLanguage()==case[3] and page.rows[1].labels.learned:GetText()==addon:T("UI.LEARNED")
+        and page.search.placeholder:GetText()==addon:T("FOREVER.SEARCH"),"four session language modes")
     Check(#core.Locale:GetMissingEnglish("YiboCrafting")==0,"Crafting target resources complete")
 end
 Check(#e.TEST_MESSAGES==0,"no hidden callbacks: "..table.concat(e.TEST_MESSAGES," | "))

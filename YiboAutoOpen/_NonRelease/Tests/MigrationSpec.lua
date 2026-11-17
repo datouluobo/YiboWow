@@ -8,7 +8,11 @@ YiboAutoOpenDB = {
 }
 
 dofile("YiboAutoOpen/Bootstrap.lua")
+dofile("YiboAutoOpen/Locale.lua")
+dofile("YiboAutoOpen/Locale.lua")
 dofile("YiboAutoOpen/Defaults.lua")
+dofile("YiboAutoOpen/Mists/Target.lua")
+YiboAutoOpen.Target.supported = true
 dofile("YiboAutoOpen/Catalog.lua")
 YiboAutoOpen.Catalog.version = 2
 YiboAutoOpen.Catalog.migrations = { { toVersion = 2, addedIDs = { 90735 } } }

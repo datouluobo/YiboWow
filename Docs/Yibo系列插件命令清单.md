@@ -42,7 +42,7 @@
 | `YiboLegendaryProbe` | `/yep` | 已占用；Mists 原生 API 采样 |
 | `YiboMountsProbe` | `/ymp` | 已占用；Mists 原生 API 采样 |
 | `YiboTodoProbe` | `/ytp` | 已占用；Mists 原生 API/事件采样 |
-| `YiboCurrencyProbe` | `/ycp` | 已占用；Mists 原生金币与货币列表采样 |
+| `YiboCurrencyProbe` | `/ycp` | 已占用；Mists／Forever 原生金币与货币列表采样，双目标客户端待验 |
 
 探针命令具体用途及链接状态以各探针 README 和客户端 Junction 实查为准；本表记录命令占用，历史探针未登记或没有 Slash 命令不推定可复用。
 

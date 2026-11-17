@@ -1,0 +1,2405 @@
+{
+  "schemaVersion": 1,
+  "package": "Yibo-Addon-Suite-for-MoP",
+  "title": "Yibo Addon Suite for MoP - Account QoL Addons",
+  "version": "1.1.0",
+  "target": "Mists",
+  "supportedTargets": [
+    "Mists"
+  ],
+  "sourceSHA256": "0dcd838f58ec50ae7aaba8bab960d797b086950ae5a2bf39f397062ee2167815",
+  "buildTimeUTC": "2026-11-10T01:11:06.7242038Z",
+  "uploadState": "not-uploaded",
+  "clientAcceptance": "not-established-by-packaging",
+  "curseForgeConcurrentManagement": "unverified-not-supported",
+  "components": [
+    {
+      "addon": "YiboAltoBoss",
+      "version": "2.8.6",
+      "sourceToc": "YiboAltoBoss.toc",
+      "interface": "50504",
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": null,
+      "sourceSHA256": "b3ed19d467c10fd003b157466a95043be81f3417015f8e50b6b4d0f9bff8c6cd",
+      "componentPackage": "YiboAltoBoss-mists-v2.8.6-curseforge.zip",
+      "componentPackageSHA256": "8a56995b454f9d9a48acebb1018e11cd836161e67f9256458675bff5d5a7e92f"
+    },
+    {
+      "addon": "YiboAutoOpen",
+      "version": "1.2.5",
+      "sourceToc": "YiboAutoOpen.toc",
+      "interface": "50504",
+      "requiredDependencies": [],
+      "optionalDependencies": [
+        "YiboCore"
+      ],
+      "minimumCoreAPI": null,
+      "sourceSHA256": "120843b24eb8b3a4f51c46511025e50a4cf3f47c4098fc346d503a2cc85d60f7",
+      "componentPackage": "YiboAutoOpen-mists-v1.2.5-curseforge.zip",
+      "componentPackageSHA256": "1c12e6cdf9be5d32532ccc4eb0b7ce688cbc2aa98c7a886961265c679b59df4d"
+    },
+    {
+      "addon": "YiboBeastPaths",
+      "version": "v1.8.3",
+      "sourceToc": "YiboBeastPaths_Mists.toc",
+      "interface": "50504",
+      "requiredDependencies": [],
+      "optionalDependencies": [
+        "YiboCore"
+      ],
+      "minimumCoreAPI": null,
+      "sourceSHA256": "439c995bb63b90affec89d373a23c0305325e69dbb3b96bfab0b8c5cf5dd69b0",
+      "componentPackage": "YiboBeastPaths-universal-v1.8.3-curseforge.zip",
+      "componentPackageSHA256": "a6a4535eac90a1fd94810d22f3e6fef3de47eb0818807a57c80b1919e020b86b"
+    },
+    {
+      "addon": "YiboBuilds",
+      "version": "1.5.3",
+      "sourceToc": "YiboBuilds.toc",
+      "interface": "50504",
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": 13,
+      "sourceSHA256": "f5d9fad35f3e57aa1507454924964c17926f2a1858664b43c9f5520be4c9c85b",
+      "componentPackage": "YiboBuilds-mists-v1.5.3-curseforge.zip",
+      "componentPackageSHA256": "ce2b4641b298d3417d82d6cc9a851156019a33a6251f2b4f1f8062df30d78d9a"
+    },
+    {
+      "addon": "YiboCore",
+      "version": "1.12.14",
+      "sourceToc": "YiboCore.toc",
+      "interface": "50504",
+      "requiredDependencies": [],
+      "optionalDependencies": [
+        "LibDataBroker-1.1"
+      ],
+      "minimumCoreAPI": null,
+      "sourceSHA256": "75993bdadb1ae4f37fd691c9f0180bfd11a6c5b2af50f6e8a896aed522608d52",
+      "componentPackage": "YiboCore-mists-v1.12.14-api13-curseforge.zip",
+      "componentPackageSHA256": "fd247b0c7a9c983268b31bd9146fda8796430e873f063378dbd9a686605204bc"
+    },
+    {
+      "addon": "YiboCrafting",
+      "version": "1.2.4",
+      "sourceToc": "YiboCrafting.toc",
+      "interface": "50504",
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": null,
+      "sourceSHA256": "cdd331aa449206f4ed96e312cdb5b0af5ae4cdf42a20c5955fa1f0318a87c686",
+      "componentPackage": "YiboCrafting-mists-v1.2.4-curseforge.zip",
+      "componentPackageSHA256": "276f98f342b19a9d5fb58c4cff33a5a688e7784bd0ba22e8f2512a4613dfb931"
+    },
+    {
+      "addon": "YiboCurrency",
+      "version": "1.1.2",
+      "sourceToc": "YiboCurrency.toc",
+      "interface": "50504",
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": 13,
+      "sourceSHA256": "7a6eacdeebe721681ffbea35d9bb477755b097329fbd15052838747848c77fea",
+      "componentPackage": "YiboCurrency-mists-v1.1.2-curseforge.zip",
+      "componentPackageSHA256": "2b05ab69b590ca802d279dab947f0d36b7ad75ce147484d2772e4b5e3aac1bca"
+    },
+    {
+      "addon": "YiboLegendary",
+      "version": "2.2.5",
+      "sourceToc": "YiboLegendary.toc",
+      "interface": "50504",
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": 13,
+      "sourceSHA256": "df3b3ca9baaa30a60591b1f4e9bbbbd519a9de41010b68f72920742ffbd047c4",
+      "componentPackage": "YiboLegendary-mists-v2.2.5-curseforge.zip",
+      "componentPackageSHA256": "e7992a8c8b748a45657ebbfb105d5a66b22d93cb86576b8014aa54e08c43afea"
+    },
+    {
+      "addon": "YiboMail",
+      "version": "1.3.4-api1",
+      "sourceToc": "YiboMail.toc",
+      "interface": "50504",
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": 13,
+      "sourceSHA256": "a5eca9d1a206421603b4b94202f83683d440f743c64a77629c53e638a33d8ab2",
+      "componentPackage": "YiboMail-mists-v1.3.4-api1-curseforge.zip",
+      "componentPackageSHA256": "1f3254a4c6bfe493d98e751060f55f7a8d1cee726c45fcc01bc7f7b9b61dbb2b"
+    },
+    {
+      "addon": "YiboMounts",
+      "version": "1.0.3",
+      "sourceToc": "YiboMounts.toc",
+      "interface": "50504",
+      "requiredDependencies": [],
+      "optionalDependencies": [
+        "YiboCore"
+      ],
+      "minimumCoreAPI": null,
+      "sourceSHA256": "0926fae0ba5fbe6afb79d019a33a7a6523d710de6c8021b3c8c37c991160d0cc",
+      "componentPackage": "YiboMounts-mists-v1.0.3-curseforge.zip",
+      "componentPackageSHA256": "ecf194ca3badc6cd4fbb3150601e06d4c0bda58c2a37ac2a91ba35b797a0d9d2"
+    },
+    {
+      "addon": "YiboQuestBlocker",
+      "version": "3.1.3",
+      "sourceToc": "YiboQuestBlocker.toc",
+      "interface": "50504",
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": 13,
+      "sourceSHA256": "052ab29b044f4801cf9f434b1f975e3a6bc2b30e26c575d14ee4f5f2fbd6d53a",
+      "componentPackage": "YiboQuestBlocker-mists-v3.1.3-curseforge.zip",
+      "componentPackageSHA256": "042a0b3477cdd6818fb64c5aa4e3110f9ef348585bb3e32e0357111a29b6ee14"
+    },
+    {
+      "addon": "YiboReputation",
+      "version": "1.7.3",
+      "sourceToc": "YiboReputation.toc",
+      "interface": "50504",
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": 13,
+      "sourceSHA256": "98e23bd34804e0c007b3165873ec630ac6eace26d8b0a1e819a6f1d63f17b1ae",
+      "componentPackage": "YiboReputation-mists-v1.7.3-curseforge.zip",
+      "componentPackageSHA256": "46354550ac61019900b1946fd2646b65ea5fbc78d66a81ca154434f6b7dc41b4"
+    },
+    {
+      "addon": "YiboTaskHub",
+      "version": "0.6.4",
+      "sourceToc": "YiboTaskHub.toc",
+      "interface": "50504",
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": 13,
+      "sourceSHA256": "9136dba7a9120fe401a3e973720151415c6d0db9809240bce88309bec96104b7",
+      "componentPackage": "YiboTaskHub-mists-v0.6.4-curseforge.zip",
+      "componentPackageSHA256": "93d5f83521dffbaf7570623455b2cdc76078da5de5eabee38a657e073f296de2"
+    },
+    {
+      "addon": "YiboTodo",
+      "version": "1.2.6",
+      "sourceToc": "YiboTodo.toc",
+      "interface": "50504",
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": 13,
+      "sourceSHA256": "4ed72d05bc1410e7f1b1fb7b13a3dbb6feed080e1e581b25ca962119c47cc6f5",
+      "componentPackage": "YiboTodo-mists-v1.2.6-curseforge.zip",
+      "componentPackageSHA256": "9f409a400c5320e6758c3291c2e0d503642f76b7c154f1d69b15e318b3cf911d"
+    },
+    {
+      "addon": "YiboVault",
+      "version": "1.2.5-api1",
+      "sourceToc": "YiboVault.toc",
+      "interface": "50504",
+      "requiredDependencies": [
+        "YiboCore"
+      ],
+      "optionalDependencies": [],
+      "minimumCoreAPI": 13,
+      "sourceSHA256": "78179ca8b1e0c597985a19ac98dc6d2556886ad43518f6489b6f45bde005113d",
+      "componentPackage": "YiboVault-mists-v1.2.5-api1-curseforge.zip",
+      "componentPackageSHA256": "9790c259459d0cb38e22ee7b1b6b257b261c3d6434154047a5090f98e1b48969"
+    }
+  ],
+  "componentFiles": [
+    {
+      "path": "YiboAltoBoss/AccountPage.lua",
+      "sha256": "cc7130cfcf3ea421c0ff455ca8df79da82608e949ed39470980329c4052b966e"
+    },
+    {
+      "path": "YiboAltoBoss/Commands.lua",
+      "sha256": "3bd5dce34bc0734b18c084f73e6c468a88d3263a4a952729c7ff5533e720a177"
+    },
+    {
+      "path": "YiboAltoBoss/Common/GoalTargets.lua",
+      "sha256": "059090187af3498eb475eb1746f8a84a3135f42d137e3c46589fec44f8762a83"
+    },
+    {
+      "path": "YiboAltoBoss/Common/RaidProgress.lua",
+      "sha256": "866b51f6fa72ba385925a865e983294a472f83bae83d58b28fedc6beb3e1c971"
+    },
+    {
+      "path": "YiboAltoBoss/Common/TargetCatalog.lua",
+      "sha256": "e85940eff25f1add7076459b6b344840b6273c348c246e7edaad9f7f4d301f39"
+    },
+    {
+      "path": "YiboAltoBoss/Common/TargetProjection.lua",
+      "sha256": "998d1de884fa746d61aae7e0988600bf43a5796e86a00b9b428163dd5a38e4d6"
+    },
+    {
+      "path": "YiboAltoBoss/Core.lua",
+      "sha256": "bd4f9f25ba735cd0c0c1a7bb060857987c96dc9c14b2098aeb23eca69a267e45"
+    },
+    {
+      "path": "YiboAltoBoss/CoreIntegration.lua",
+      "sha256": "9470f5f14850ea28d3d06fd787f7c3312087eb8a3506ad160aec42bf1dac3883"
+    },
+    {
+      "path": "YiboAltoBoss/CoreRequirements.lua",
+      "sha256": "3f2325184fd2f342b828c310720a17533277477d68a2805334611b5e93d0d2a7"
+    },
+    {
+      "path": "YiboAltoBoss/DungeonBossCatalog.lua",
+      "sha256": "be19f8d0f1ef5c20571f2d6dba2b5f7a3d5937d57ec7834bdb6c9731fa3bf3b6"
+    },
+    {
+      "path": "YiboAltoBoss/DungeonDBM.lua",
+      "sha256": "2a66de66ac37c4231ab5f04ec1ade57b10e33d633599c576c931cabf374e3689"
+    },
+    {
+      "path": "YiboAltoBoss/DungeonRuns.lua",
+      "sha256": "c01bdd1ebc1a40884ea24ec4e405d83df8ee26a5f3b64137e73b1c2542c35889"
+    },
+    {
+      "path": "YiboAltoBoss/HolidayBoss.lua",
+      "sha256": "d541f41faad85e304eb5267eda1836e13a99a4d6062f0e2e091c755a65e72bac"
+    },
+    {
+      "path": "YiboAltoBoss/InstanceLockouts.lua",
+      "sha256": "3f0de9650e8158b3e1688f725c6a0b259a5291ce344451d089c31d885459380a"
+    },
+    {
+      "path": "YiboAltoBoss/Locale.lua",
+      "sha256": "af1e1413c094aed9fbb5726ceafaf9d30dd229407dbaf3c8732b4477a7d19272"
+    },
+    {
+      "path": "YiboAltoBoss/LockoutLocale.lua",
+      "sha256": "8f02008ac80030d0e7dba0f02da954a5379b1da1d8c7c0786eab523d3cd1237c"
+    },
+    {
+      "path": "YiboAltoBoss/LockoutsPage.lua",
+      "sha256": "44e159d6e4427528c2092194e8a8b8293fc6afa10196d32d66bce8e46552fc23"
+    },
+    {
+      "path": "YiboAltoBoss/Media/YiboAltoBossIcon-1024.tga",
+      "sha256": "5695b424f8ce9e782e0a7d3495f2d7b531a2bba96a0bedc7b906948a43bb0d3a"
+    },
+    {
+      "path": "YiboAltoBoss/Media/YiboAltoBossIcon-128.tga",
+      "sha256": "eb31abed44196b10cf14297f4b6f667403f7889716a23278922876b946e47025"
+    },
+    {
+      "path": "YiboAltoBoss/Media/YiboAltoBossIcon-16.tga",
+      "sha256": "791056578ea9d720688113090946d95ef7c48db1cd3400b2912018fcc680b2de"
+    },
+    {
+      "path": "YiboAltoBoss/Media/YiboAltoBossIcon-32.tga",
+      "sha256": "c52c9edcd8a7d8998a2bf5602db6e443c059a3ab2f2a9de6bac19f121d82af97"
+    },
+    {
+      "path": "YiboAltoBoss/Media/YiboAltoBossIcon-512.tga",
+      "sha256": "0f5255f1b484cde9060186fcbe1bbe6f8cd94b932ab57e0e66abbcfb2ed1fec6"
+    },
+    {
+      "path": "YiboAltoBoss/Media/YiboAltoBossIcon-64.tga",
+      "sha256": "d2ef40a1200965abdbc172541d49753fdd115295705db7a936a7c3b97a071d4d"
+    },
+    {
+      "path": "YiboAltoBoss/Media/YiboAltoBossIcon.tga",
+      "sha256": "d2ef40a1200965abdbc172541d49753fdd115295705db7a936a7c3b97a071d4d"
+    },
+    {
+      "path": "YiboAltoBoss/Media/YiboAltoBossLogo.tga",
+      "sha256": "0f5255f1b484cde9060186fcbe1bbe6f8cd94b932ab57e0e66abbcfb2ed1fec6"
+    },
+    {
+      "path": "YiboAltoBoss/Mists/Calendar.lua",
+      "sha256": "fdb4082e79b8118257d899b262b7c40428c39b0606d2b48cdbb77c3894fc0289"
+    },
+    {
+      "path": "YiboAltoBoss/Mists/RaidCatalog.lua",
+      "sha256": "a872157afb4ddf8c7669565b859beb79984bb6ea3ace71ee2a2bca70918cfb79"
+    },
+    {
+      "path": "YiboAltoBoss/Mists/RaidEvents.lua",
+      "sha256": "e099fefd251d7b18b04538fa22e4c17b8eb77f9b317f14a9ed296115c0728d45"
+    },
+    {
+      "path": "YiboAltoBoss/Mists/TargetCatalogRuntime.lua",
+      "sha256": "00f0b1c48b033bfb68f1af4a30955c74654bb20266576d6bc6ba3a5cca8c101d"
+    },
+    {
+      "path": "YiboAltoBoss/PlannedTargets.lua",
+      "sha256": "dfcc50386e162049d03b123117cb97e1cef0c422f7261974783bbe7173c1ed36"
+    },
+    {
+      "path": "YiboAltoBoss/Settings.lua",
+      "sha256": "26cd8a241d2e479535bfbc720ce0b34c392a5c19c44fbef1c24806ccc85c4e67"
+    },
+    {
+      "path": "YiboAltoBoss/TrackingV3.lua",
+      "sha256": "c3a3373c1c65d9baf2c10b0f3d06f424b95094fb6ed09829e1040ecf18765b5d"
+    },
+    {
+      "path": "YiboAltoBoss/YiboAltoBoss.toc",
+      "sha256": "44a09845488c90c05308fa4984422e004c5ad5e40c79e17f9334c68b593a0ce2"
+    },
+    {
+      "path": "YiboAltoBoss/YiboReleaseManifest.json",
+      "sha256": "1d945256e09b5be3e23c46136d0726156752ed35d25754885c97d633f6ee9407"
+    },
+    {
+      "path": "YiboAutoOpen/BagAdapter.lua",
+      "sha256": "a5e0f663ce0476946ca337ca29419166ef8989cfe081c8471cd0248bdca3c85c"
+    },
+    {
+      "path": "YiboAutoOpen/BindConfirmAssist.lua",
+      "sha256": "14a1a1ed67b4e1016f0a61717858cfc1f13ba5b8697461180fe03f6488538d11"
+    },
+    {
+      "path": "YiboAutoOpen/Bootstrap.lua",
+      "sha256": "47949e301b23c74912fa5d6d7747a510974ab0832321a96be4541f7ae6297a58"
+    },
+    {
+      "path": "YiboAutoOpen/Catalog.lua",
+      "sha256": "1540661d45c236c39576ac33ca1af9473ce00bf532a62f8ab55d33593619d55d"
+    },
+    {
+      "path": "YiboAutoOpen/Commands.lua",
+      "sha256": "7d01beeedbf042b7353d9535b5c7da78e1f339b277b03753bf0d264d9a38e992"
+    },
+    {
+      "path": "YiboAutoOpen/CoreIntegration.lua",
+      "sha256": "fd33f1750ea4d63e51fc8ed427f212a79d2905def8bafc2615149e88009c24fd"
+    },
+    {
+      "path": "YiboAutoOpen/Database.lua",
+      "sha256": "90ae4c463b0db35bae2bb61ff7bec42aea953e790fb8b2788653b93d32d8b0f9"
+    },
+    {
+      "path": "YiboAutoOpen/Defaults.lua",
+      "sha256": "823dde015574e0f2ef8de1c7753a2ecb58eadcf3eb6a0cb9014e85fea3c48164"
+    },
+    {
+      "path": "YiboAutoOpen/ItemResolver.lua",
+      "sha256": "31bc5d7bae8cd3499011fc79f005fbe3013fb0bc6e3b3d3768029daa2598af47"
+    },
+    {
+      "path": "YiboAutoOpen/Locale.lua",
+      "sha256": "10b0381134147b7090a4406d0c1879e1d796060e81be608d22409d750357cc4d"
+    },
+    {
+      "path": "YiboAutoOpen/Media/YiboAutoOpenIcon-1024.tga",
+      "sha256": "ea29f95043091b581a925f0d3fdae8918cefdfaa411dad450e80fb2951ea0682"
+    },
+    {
+      "path": "YiboAutoOpen/Media/YiboAutoOpenIcon-128.tga",
+      "sha256": "e3bf83220b0431235e322ae617cc5e60cf6083dbdbb19b09cc830152b1820f92"
+    },
+    {
+      "path": "YiboAutoOpen/Media/YiboAutoOpenIcon-16.tga",
+      "sha256": "5da1b545c35387656eed85ae3be8e9bede6ebe1d7c605cd483e52216c3d639b6"
+    },
+    {
+      "path": "YiboAutoOpen/Media/YiboAutoOpenIcon-32.tga",
+      "sha256": "d05e8aa4944fd6944d8c3ac52d0ca08bcd688fa826abb517f0c751b5a60613e2"
+    },
+    {
+      "path": "YiboAutoOpen/Media/YiboAutoOpenIcon-512.tga",
+      "sha256": "ec9481750a4185370b6bd6fc1e70ee5e71d43e294895a3605adc3d5810014072"
+    },
+    {
+      "path": "YiboAutoOpen/Media/YiboAutoOpenIcon-64.tga",
+      "sha256": "f892340b71bb15d20945c6cd51988653defa6f1e11e8395ff66d19e16c47ca14"
+    },
+    {
+      "path": "YiboAutoOpen/Media/YiboAutoOpenIcon.tga",
+      "sha256": "f892340b71bb15d20945c6cd51988653defa6f1e11e8395ff66d19e16c47ca14"
+    },
+    {
+      "path": "YiboAutoOpen/Media/YiboAutoOpenLogo.tga",
+      "sha256": "ec9481750a4185370b6bd6fc1e70ee5e71d43e294895a3605adc3d5810014072"
+    },
+    {
+      "path": "YiboAutoOpen/Queue.lua",
+      "sha256": "46257479c5ec057c9f86e3566bd2ee2f6cb0a68977e6bd96edf7260ef54e5ae0"
+    },
+    {
+      "path": "YiboAutoOpen/Safety.lua",
+      "sha256": "22ecf7e01dabb616d17afb8ea9ac7bab0fc509658d46faf92b09662fb5818fa0"
+    },
+    {
+      "path": "YiboAutoOpen/Settings.lua",
+      "sha256": "e4001c496a318533be9e17127e2313088c7c9eba99575f6c3c1e4b9b78a4bace"
+    },
+    {
+      "path": "YiboAutoOpen/YiboAutoOpen.toc",
+      "sha256": "19c44d84d326a92e781e9f025e6844bdbcdd375cfae871e02a2b03ef99dd2ec5"
+    },
+    {
+      "path": "YiboAutoOpen/YiboReleaseManifest.json",
+      "sha256": "cf46c1639c57b26aec7e91e7e8c331e0bd50002218daf9949b34ad91a1bee707"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ExtractedRoutes/Overlays/50811_stompy.tga",
+      "sha256": "94b07d4082a0e735077e6ae45eb54fac271ff4f0dbf754e41002695094c98f7f"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ExtractedRoutes/Overlays/50812_patrannache.tga",
+      "sha256": "99d76c2d299f18e5b7342eb65d37a5688f180ca7ec7c5d881d4b73ac96d8d651"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ExtractedRoutes/Overlays/50813_portent.tga",
+      "sha256": "247cb1e5d83f4e74f439e4dd8e1a83d3a3b0c1df85d5104c87edf9649aecd334"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ExtractedRoutes/Overlays/50816_bristlespine.tga",
+      "sha256": "55187cc86adc9d29dd182225699fc940e123d3e7e222f277c1f7b05c1253b019"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ExtractedRoutes/Overlays/50817_bloodtooth.tga",
+      "sha256": "5d1066e257badaff231104e2e60ecad64866403104a2e7cfc94de14556fdaea3"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ExtractedRoutes/Overlays/50818_hexapos.tga",
+      "sha256": "30383a7ae284b54d4279bac3193d42ca89273f1a387b43aa2d320732deca6740"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ExtractedRoutes/Overlays/50820_rockhide.tga",
+      "sha256": "b8bc28877a43dc2c75df669bf55b0e10119649dcb887c96bcd0c4fd36ecf33b7"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ExtractedRoutes/Overlays/50821_savage.tga",
+      "sha256": "f7fac11f357e660ebbeabb1fd997cccd62b5a6c642e9908b897494d53f1acedd"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ExtractedRoutes/Overlays/50822_glimmer.tga",
+      "sha256": "7fa2a0b4afdfa9dd11e8c85c01040a9dcc48221565f0c5d8ed5026d583f4109f"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ExtractedRoutes/Overlays/66522_bombyx.tga",
+      "sha256": "a0668277388ca894da5a6e431eb47f713ea910d5b3dd72416a31cdbcad9c6e10"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/Textures/50843_portent_amethyst.tga",
+      "sha256": "5c17ccf38b1d4a8a9452720a5bab00d4db4f4c5dfca36d53debd17c1c985e812"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/Textures/50843_portent_cobalt.tga",
+      "sha256": "7b166bf8f91bca94445c5913851f3f7bc65b06b319daee5fdf738d03ed8bbae1"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/Textures/50843_portent_jade.tga",
+      "sha256": "40973ded2098f2ff2f663c7322530fff65b29b0b19584cecc10d6d95e1c0aab8"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/Textures/50843_portent_jasper.tga",
+      "sha256": "fbb37b7cf75de8fae02b0a3f1248b0f63beddfa5ab32a697a9d85a9a2553e682"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/Textures/50850_savage.tga",
+      "sha256": "44e817a86b6961d3b42a0973a94848132baaae27ca152a07964eb5aa9be98ba3"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/Textures/50854_bloodtooth.tga",
+      "sha256": "8cc6071de278c13dece0d5991850e82af45bcc0290e21ed783a6568ec41e521f"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/Textures/50859_glimmer.tga",
+      "sha256": "dcd8196c2bb572e154ba7d2401e1f59a492a990e3f9db4b786650459273932a5"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/Textures/50885_patrannache.tga",
+      "sha256": "1cb668863946bc2420bf28df4957201f4eabca3bea07613f428cf151097e5fa8"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/Textures/50944_bristlespine.tga",
+      "sha256": "a29e28a554db07d2c4f0f6f0f65d29b4bbadc5667ca3bfddbd77c43c56ddd1d1"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/Textures/50960_hexapos.tga",
+      "sha256": "9d6364f8df889b3584933f86b16ed8ad6cb08d02dea3a89c323b7c015a5c653a"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/Textures/50998_stompy.tga",
+      "sha256": "d3e69641bc4be2f485f424270d93bfad37b0143b07054135f332207bf6051418"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/Textures/51013_rockhide_the_immovable.tga",
+      "sha256": "b9aacc5c39c50d1d7d90cc3b1733e90ecdff61ca402234b4eda7e0d066819c6a"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/Textures/67820_bombyx.tga",
+      "sha256": "be9744ac2ca02b4d087c872eb8f27e4275b7b8a6fb66f379deb87640b5898f5f"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/TooltipTextures/50843_portent_amethyst.tga",
+      "sha256": "dea9ec2227f63fa907b2b81bf402935fe962430cf19fc72e0ed8ac3d78210fbe"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/TooltipTextures/50843_portent_cobalt.tga",
+      "sha256": "b0cbc84772af7a29712d6ee90d26da6f945f8be534185a1e0b7ea1068c8b59cd"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/TooltipTextures/50843_portent_jade.tga",
+      "sha256": "f34b4ad52225ad7dac63d50ca7d3bb3ae5ebef1ff61b7c4c3bcfef8d934fd4bc"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/TooltipTextures/50843_portent_jasper.tga",
+      "sha256": "0b4b6ca22fdfb167ddf7b1e4366cbba7cee5867e6a4aa704556019743bb04aac"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/TooltipTextures/50850_savage.tga",
+      "sha256": "6f8cb31c515856dcb378ee8c496b9a35be860e757a7312a938b280ca9e8fee5b"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/TooltipTextures/50854_bloodtooth.tga",
+      "sha256": "451255402f3b08eae12a665172623e513fe56ee7460c9c53dda8c733a462a889"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/TooltipTextures/50859_glimmer.tga",
+      "sha256": "4466fb04cca6c24c67f439ea40277fb70ba22d11929bc679b4e43dfba6403045"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/TooltipTextures/50885_patrannache.tga",
+      "sha256": "27b6fdfab81cb8c24daac423ed0448861f1c305a3d454a12a7fc395e83f59889"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/TooltipTextures/50944_bristlespine.tga",
+      "sha256": "4c3a935d63b7f70baa98ae7d9e6a9098020ffd9c67d7b9373eaa4a1456fc144b"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/TooltipTextures/50960_hexapos.tga",
+      "sha256": "6e61af6a5e6da1188f5bab7fac38cc1f4c0287aea49af67f50b3be960a7542ec"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/TooltipTextures/50998_stompy.tga",
+      "sha256": "d596f1024e713abf62ada323fcb596e40cd4efb7d5d1bd31a3c5ffac35579b61"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/TooltipTextures/51013_rockhide_the_immovable.tga",
+      "sha256": "e1831aaf1a1d9270106643e2248f9d505361503f5e4df9fa49f20c75ff5c7bb6"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/TooltipTextures/67820_bombyx.tga",
+      "sha256": "be9744ac2ca02b4d087c872eb8f27e4275b7b8a6fb66f379deb87640b5898f5f"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/ReferencePets/TooltipTextures/67820_silkweed.tga",
+      "sha256": "c6b342e05fbaf2d724d6ab14d8913132c93e06a38580b9cfb6b9a8bec72ac77a"
+    },
+    {
+      "path": "YiboBeastPaths/Assets/Screenshots/github-homepage-preview.jpg",
+      "sha256": "9e04c00bf9d15f80bca59d05465583f9caefdc80bd8d96d6b37b2f29e2f15af0"
+    },
+    {
+      "path": "YiboBeastPaths/CHANGELOG.md",
+      "sha256": "cc4ddad244b6b20714faf1d80be40cf69b3f9fa9e8a358476d095ee61c0c21bb"
+    },
+    {
+      "path": "YiboBeastPaths/Core.lua",
+      "sha256": "06d454454ab558ba1999f7e16ff1ab7f61b1f5a447c1fa9a8193db05c804c4b8"
+    },
+    {
+      "path": "YiboBeastPaths/CuratedRoutes.lua",
+      "sha256": "ffcde2b1ef64ade2c5d98436ac6cf77d1f62c2fbfb34370a64c18a6dad9128e6"
+    },
+    {
+      "path": "YiboBeastPaths/Data.lua",
+      "sha256": "dab2335f28e4de25cd0fb6912826f0fda815f9ef78d562cd028b32d9949685c8"
+    },
+    {
+      "path": "YiboBeastPaths/Docs/离线兽栏与拥有状态-版本任务清单.md",
+      "sha256": "18a63e1e612e64be9685a470964282f31e275bc1754d5604753db08acd15a915"
+    },
+    {
+      "path": "YiboBeastPaths/Docs/桑蚕脚印融合修复记录.md",
+      "sha256": "e129aff32f02c73961e503375ac8f615fd6162817a1ae8127ffbd6b081485e25"
+    },
+    {
+      "path": "YiboBeastPaths/Docs/桑蚕路线数据固化记录.md",
+      "sha256": "c1a706844ff75fc30c0a8f0ec89f26033485a0c6847ced21dba6451c64a7b2a3"
+    },
+    {
+      "path": "YiboBeastPaths/Docs/野生宠物外观拥有提示-后续方向.md",
+      "sha256": "000117d1394e1256cb585da1a2f23051f83dcc249e584cbaab6aaf4f100fde6a"
+    },
+    {
+      "path": "YiboBeastPaths/Docs/Core-API13-接入说明.md",
+      "sha256": "fa85ef186fba62982ae372477c7f0c0539fabc4cb0312c6a1eda5502f90603f9"
+    },
+    {
+      "path": "YiboBeastPaths/Docs/DEV-002-离线兽栏实施与验收方案.md",
+      "sha256": "31e7490723d6cff6acbb88acea137ef058808c4149eea87297699054b4804180"
+    },
+    {
+      "path": "YiboBeastPaths/Docs/Retail-Core维护接入-1.8.3.md",
+      "sha256": "8217cbe8a8291ad2205dc475d9dae9bf11c4a7665af990d41bd37f521bd91005"
+    },
+    {
+      "path": "YiboBeastPaths/Flavor.lua",
+      "sha256": "6744f2fe979c2dee860f4753bf2a49c44061d717e280d2019a19058285fd2326"
+    },
+    {
+      "path": "YiboBeastPaths/FlavorOverrides.lua",
+      "sha256": "188412751887b707496b32010d7ec518b04ad4fd143816cc6b28da700e4a6528"
+    },
+    {
+      "path": "YiboBeastPaths/FootprintAnchors.lua",
+      "sha256": "93e26bfe162f22a90c06d7ea5c8030b5b30f5f8488964bcc025f3817d00a1ba1"
+    },
+    {
+      "path": "YiboBeastPaths/Libs/CallbackHandler-1.0/CallbackHandler-1.0.lua",
+      "sha256": "d8a175f5823a999d8a188ee5e8e1133c393fd8c25b71931ab929d4691eff750b"
+    },
+    {
+      "path": "YiboBeastPaths/Libs/CallbackHandler-1.0/CallbackHandler-1.0.xml",
+      "sha256": "5fc06440452a82be9554fc9650fa7de0b6df786c6d188d05d7d0ec4aa3e002fd"
+    },
+    {
+      "path": "YiboBeastPaths/Libs/HereBeDragons/HereBeDragons-2.0.lua",
+      "sha256": "98b6fd59b5adae1e3207948d8e346a5fd2135a8ba94316531d68eabc719f4873"
+    },
+    {
+      "path": "YiboBeastPaths/Libs/HereBeDragons/HereBeDragons-Pins-2.0.lua",
+      "sha256": "7b234d9488bbd108822264b13e692c25fe8fb08c68705c7d5da5600ca69f7b33"
+    },
+    {
+      "path": "YiboBeastPaths/Libs/LibStub/LibStub.lua",
+      "sha256": "d34235c85f869505fdd9ef321d2420f69db7d2eb873d2b3bbf57584a314060fa"
+    },
+    {
+      "path": "YiboBeastPaths/Locale.lua",
+      "sha256": "b89f30b7a0eb8eb5d9b3745dad81c609a50325dfaaf0ac70de68c00780efd7a2"
+    },
+    {
+      "path": "YiboBeastPaths/Maintenance/CoreDebugAdapter.lua",
+      "sha256": "c4eba5a9e144f1f49f41bffb7f97480c20a8f898be33be9301f53265bd507a2a"
+    },
+    {
+      "path": "YiboBeastPaths/Maintenance/CoreDebugView.lua",
+      "sha256": "5cabea01c0aeaedd2d1084af086a07063434f1faa6672a30b0b49b6cf3e93a28"
+    },
+    {
+      "path": "YiboBeastPaths/Maintenance/DebugCalibrator.lua",
+      "sha256": "28fdd0bb1d84a8dcd8292a1310830b419824776bbfa683c3ee762bafb244ba3e"
+    },
+    {
+      "path": "YiboBeastPaths/MapCanvasBounds.lua",
+      "sha256": "5a2194ea968cae6d9cd6bc9bd675f181b69d598f292d6971ba969f3e2044d600"
+    },
+    {
+      "path": "YiboBeastPaths/Media/1.6-1.png",
+      "sha256": "ad4bf95dd76f0ac5bc8d44ca412d4ec20c6249070720e77eadf6cfccc07961cc"
+    },
+    {
+      "path": "YiboBeastPaths/Media/1.6-2.png",
+      "sha256": "a00ec8431e3335f06fd027c5a7f977f6e5ef41a139cf106d481bf16e04747109"
+    },
+    {
+      "path": "YiboBeastPaths/Media/1.6-3.png",
+      "sha256": "109184f6ec88790c827205b991d605af3c3a94b03df0192d0f387d58226923de"
+    },
+    {
+      "path": "YiboBeastPaths/Media/1.6-4.png",
+      "sha256": "dd71a5901aa723b1559799f7b76efa6d46ba2cd1b515a64dcd814c746caaf005"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsIcon-1024.png",
+      "sha256": "0a3060edea152eaa978bc556fce4563714681b3b7433dc9556bd1207270590ba"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsIcon-1024.tga",
+      "sha256": "6fb851a0fd643f73a66b4adc2addd95fff8958548a298a10aecd2961c91dc509"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsIcon-128.png",
+      "sha256": "40774f7f9672547ebd8716cf50dd20f67efd826fb644ac5782e67c0bd5b12792"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsIcon-128.tga",
+      "sha256": "ceb74450fa47d1ad21487863dc52a2a0600612f635e1bd181152e452ea63034c"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsIcon-16.png",
+      "sha256": "525c5b752628a14de59bc9f925eb69f25f27673fb4d5f59290e77532375f99ff"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsIcon-16.tga",
+      "sha256": "36874ac1821a759c769800e7719c77df6cccab0e8a178a4d445658568b07c332"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsIcon-24.png",
+      "sha256": "65924dafb7c72f05153b8c79a1cb1718abe5a9c76c12bf6e5d27869fd2050886"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsIcon-32.png",
+      "sha256": "53bc00b043828bc32d66b12a7e0745f907c1abbb6b49e8f3ee6a4efcd243b392"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsIcon-32.tga",
+      "sha256": "93e36efa9b0392746c80c0bf802920d9c3b29514bf7b89f0b39ce0f2be20da11"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsIcon-512.png",
+      "sha256": "da2e7a79f371a141847307b51e510c5456f9c04388557427605322f2151b4067"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsIcon-512.tga",
+      "sha256": "57bd4008c062992f949f7a76faaf6db046e18666cacd312e47ae9b71e7976aa4"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsIcon-64.png",
+      "sha256": "01fc30f033eb6b9ae0f850b99b58f88c2affb63f3f1b6e3e82a63ea7dde5a7ec"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsIcon-64.tga",
+      "sha256": "350a2bfe8130b8215f9c9d765187f746f2de37baa9e5cc3b4e22b83460a6e4c5"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsIcon-master.png",
+      "sha256": "d8e5bdcdbd0ea423e133be3fbdcf6638ae196055f73ab41615c2a33cb992e1d5"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsIcon.png",
+      "sha256": "40774f7f9672547ebd8716cf50dd20f67efd826fb644ac5782e67c0bd5b12792"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsIcon.tga",
+      "sha256": "350a2bfe8130b8215f9c9d765187f746f2de37baa9e5cc3b4e22b83460a6e4c5"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsLogo.png",
+      "sha256": "0a3060edea152eaa978bc556fce4563714681b3b7433dc9556bd1207270590ba"
+    },
+    {
+      "path": "YiboBeastPaths/Media/YiboBeastPathsLogo.tga",
+      "sha256": "57bd4008c062992f949f7a76faaf6db046e18666cacd312e47ae9b71e7976aa4"
+    },
+    {
+      "path": "YiboBeastPaths/MinimapRenderer.lua",
+      "sha256": "e4824d72e14e1b43b9a0e8d39d78df736846ae606f33a2899b0e682e8d1c7232"
+    },
+    {
+      "path": "YiboBeastPaths/MinimapTransforms.lua",
+      "sha256": "4371cbe8d297e0bac2a2ec86ee4fec3b37c63bee2d6a3f943fe8ba40f69d7cd3"
+    },
+    {
+      "path": "YiboBeastPaths/README.md",
+      "sha256": "c88adeff0ac199820109ac118c0e19c964028bb6efe1d5a45a729dca903656b5"
+    },
+    {
+      "path": "YiboBeastPaths/ReferenceRoutePoints.lua",
+      "sha256": "7a5e192345259640e88c5a1aab4856e9bc8b4896a4907920ab97304f447ef772"
+    },
+    {
+      "path": "YiboBeastPaths/ReferenceRoutes.lua",
+      "sha256": "2c2db41db6a9a79137fc739cb28248e1ae8933f41e5e98ff8182ab0c66932208"
+    },
+    {
+      "path": "YiboBeastPaths/ReferenceRouteSources.lua",
+      "sha256": "7ef3e6d2955b152af3979251bcaa10966ccd7e809caab8adecebb29397ca3281"
+    },
+    {
+      "path": "YiboBeastPaths/Renderer.lua",
+      "sha256": "af4749bd32f6bcef5b9d29d50b141ec38f24f56d04bed10b89d386e9bfb28b7e"
+    },
+    {
+      "path": "YiboBeastPaths/ResolvedRoutes.lua",
+      "sha256": "2d490fb4a134559d4b6cb6a776902346ca17dad10762b951a76a4a577a0a9845"
+    },
+    {
+      "path": "YiboBeastPaths/RouteDisplayMeta.lua",
+      "sha256": "4d81b3d240cb999e0335414436f8a2af2bd134089868b0e6e2ddcd43109008d7"
+    },
+    {
+      "path": "YiboBeastPaths/RouteNodes.lua",
+      "sha256": "01a2f7235693e27a720a2fdf8e282bc8f0b022ec48d6190ca8ff1cc02fb09265"
+    },
+    {
+      "path": "YiboBeastPaths/RouteOverlays.lua",
+      "sha256": "99eb6c061d4506c2b63e53d6e703d7dfda3aa2a11d0899fbaaaccc24acca8806"
+    },
+    {
+      "path": "YiboBeastPaths/RouteResolver.lua",
+      "sha256": "557374e40e46f9857d04d3722fd3f60d7df99829baf2b45b40def759980780bf"
+    },
+    {
+      "path": "YiboBeastPaths/RouteTransforms.lua",
+      "sha256": "f017c0b44097501ce4a08323da1b01a39533348a563d31b138c69f3208bafa2f"
+    },
+    {
+      "path": "YiboBeastPaths/YiboBeastPaths_Mainline.toc",
+      "sha256": "de599af94e4dcc386954dd53b3ba65fbcc55ad40a08f5a03cb92c29ba55d18fd"
+    },
+    {
+      "path": "YiboBeastPaths/YiboBeastPaths_Mists.toc",
+      "sha256": "d3847b403d72e7127d0d60d5dddf9da8ed6b093e068dd5bf1e43962298219127"
+    },
+    {
+      "path": "YiboBeastPaths/YiboBeastPaths.toc",
+      "sha256": "de599af94e4dcc386954dd53b3ba65fbcc55ad40a08f5a03cb92c29ba55d18fd"
+    },
+    {
+      "path": "YiboBeastPaths/YiboReleaseManifest.json",
+      "sha256": "087781e273f22ae9ad04b99e3ae604a82d16d05f85ff0cb9e138a6fda81b06ce"
+    },
+    {
+      "path": "YiboBuilds/AccountPage.lua",
+      "sha256": "d00df255be2777c5d0a31a1afc7613f34541271bf3cda2b913a67e157f8cd79a"
+    },
+    {
+      "path": "YiboBuilds/Bootstrap.lua",
+      "sha256": "bb3011eeb2257d03c16498ae5e210a083456b2fb5e2b974747f44f34cd51d80c"
+    },
+    {
+      "path": "YiboBuilds/Commands.lua",
+      "sha256": "5f165ff67e539f7a9efe5dbcf91e661611694df7df74b8689b41ca7c01bcadf7"
+    },
+    {
+      "path": "YiboBuilds/CoreIntegration.lua",
+      "sha256": "03e504d2741903abb4700896c5ff5d5c7a391d6b3443d43c56ef2b552fe7aced"
+    },
+    {
+      "path": "YiboBuilds/Data/ApplyTargets.lua",
+      "sha256": "43f857b29246e0e8bc5ac9f9e1bf97d49cf59a154c257426c3b499baababe78d"
+    },
+    {
+      "path": "YiboBuilds/Data/CraftSources.lua",
+      "sha256": "de6b0f5d9ecf51a68064690498cf7887e67e004d844c2e85d4ec5a160bc9b0df"
+    },
+    {
+      "path": "YiboBuilds/Data/EnchantCatalog.lua",
+      "sha256": "f6e697fade653e51721cae85846ed77e5594cf8f69802f34eec0ccdb093ed9d0"
+    },
+    {
+      "path": "YiboBuilds/Data/EngineeringApply.lua",
+      "sha256": "66a6a043f3718db8bbb85a70359ed6651635b882f38c381b32f21d174cd7a0d2"
+    },
+    {
+      "path": "YiboBuilds/Data/EngineeringCatalog.lua",
+      "sha256": "39e4f73f16141ce0fdd19525bae1b647edf5a296aa465e185cd6df500752f515"
+    },
+    {
+      "path": "YiboBuilds/Data/ProfessionCatalog.lua",
+      "sha256": "6cacef65fe287f57f3d9348d9f0bfff95c5f635d964471531e397c12488641b4"
+    },
+    {
+      "path": "YiboBuilds/Data/RecipeReagents.lua",
+      "sha256": "bffe88bd35f21b8865e0ba0541f6e475e73b1cf19a619dac42f65b3ef5f14288"
+    },
+    {
+      "path": "YiboBuilds/Data/SocketEffectCatalog.lua",
+      "sha256": "351c58751cc225971dbab3dd85e1aebf726bd1cb3ed34cf1ffe35b48d960c73a"
+    },
+    {
+      "path": "YiboBuilds/GoalTargets.lua",
+      "sha256": "dfebf3f47bfe3c88f7fdf90be75e65423f3779a9b1e6e559102ed5dcb330e71d"
+    },
+    {
+      "path": "YiboBuilds/Locales/enUS.lua",
+      "sha256": "056b998d293623e686ef6722969425c42214f0f76c52b2ee7b0df3209892205e"
+    },
+    {
+      "path": "YiboBuilds/Locales/zhCN.lua",
+      "sha256": "385930189bbeb41e271ff438782d31fb84f1b5ba4ab8cb0307c3f88119124bf7"
+    },
+    {
+      "path": "YiboBuilds/Media/YiboBuildsIcon-1024.tga",
+      "sha256": "0f08c443d2eab3baaa1e676d72272a32635a4e56419d4374107f433c90067145"
+    },
+    {
+      "path": "YiboBuilds/Media/YiboBuildsIcon-128.tga",
+      "sha256": "29133efc848f8c4dd19e2b9bad7d169191d9326729deea8ad5ec432ab6d15f95"
+    },
+    {
+      "path": "YiboBuilds/Media/YiboBuildsIcon-16.tga",
+      "sha256": "639604873b68d778be0c9f874fcbf52bad934ccffc934686140af2d33854d8a9"
+    },
+    {
+      "path": "YiboBuilds/Media/YiboBuildsIcon-32.tga",
+      "sha256": "5606adf7a05b4399df70e078ced7535e78032aa6639a8573087f0f514f8dabb8"
+    },
+    {
+      "path": "YiboBuilds/Media/YiboBuildsIcon-512.tga",
+      "sha256": "182001a6ec7b5dba54a4d6bf296a1375022c683b02c893e23e7549914025f78d"
+    },
+    {
+      "path": "YiboBuilds/Media/YiboBuildsIcon-64.tga",
+      "sha256": "291b7b7cd9517fb4fb074513a0d8a99158e84d51e28e7ec906a7b14bc9a6c974"
+    },
+    {
+      "path": "YiboBuilds/Media/YiboBuildsIcon.tga",
+      "sha256": "291b7b7cd9517fb4fb074513a0d8a99158e84d51e28e7ec906a7b14bc9a6c974"
+    },
+    {
+      "path": "YiboBuilds/Media/YiboBuildsLogo.tga",
+      "sha256": "182001a6ec7b5dba54a4d6bf296a1375022c683b02c893e23e7549914025f78d"
+    },
+    {
+      "path": "YiboBuilds/Media/YiboBuildsSocketBases.tga",
+      "sha256": "2c2ce5b0502c77e2fe64e45500b106172fd23b4cc04a8e166cf8f4d3148b976a"
+    },
+    {
+      "path": "YiboBuilds/Mists/Data/GemCatalog.lua",
+      "sha256": "23685fe85fb4adf704e847526770e83bf94575912912bfaa4a92f49c8b219303"
+    },
+    {
+      "path": "YiboBuilds/Mists/Data/SocketCatalog.lua",
+      "sha256": "df1df108797beb2a831939e084148d38aec542637b7b8d2ddf8c134d4d00b069"
+    },
+    {
+      "path": "YiboBuilds/Mists/Gems.lua",
+      "sha256": "6b99a64dd70c51a245b40d83094f6e7be9ca119088caf0a89e3b4f7da47d0aaf"
+    },
+    {
+      "path": "YiboBuilds/Mists/SocketReader.lua",
+      "sha256": "c2a4ef01e6084f98f4752a28bb31a2d0a72569d7bd80c86b5f01a2d25bf3b6af"
+    },
+    {
+      "path": "YiboBuilds/Snapshot.lua",
+      "sha256": "417465867efe5d1695b55b474864dc2a7b2b8b4bd6cbf20c96fff968b2d99ee7"
+    },
+    {
+      "path": "YiboBuilds/YiboBuilds.toc",
+      "sha256": "d849892107a870c1e8030dc89accd26a4b174b72410f5dde837b628c06035b08"
+    },
+    {
+      "path": "YiboBuilds/YiboReleaseManifest.json",
+      "sha256": "409643a66dddad631edcf5234e4b9d248b49414edf641d834c360f8173b564c8"
+    },
+    {
+      "path": "YiboCore/Bootstrap.lua",
+      "sha256": "e55c36f96f0b5b36fb4dfdf98c21c1787278802648f4799d94a361787b4cd4b7"
+    },
+    {
+      "path": "YiboCore/Common/ClientReaders.lua",
+      "sha256": "8d7a501d40746bfeaf7e50c3161cfd61fa4afb354471bc5cdf13c6d02117515c"
+    },
+    {
+      "path": "YiboCore/Common/ClientSurface.lua",
+      "sha256": "e9bcd9c0b36b51b78705da91f7cd13e354f003748dd929ea4be367504c8f9cd4"
+    },
+    {
+      "path": "YiboCore/Common/ProfessionDomain.lua",
+      "sha256": "31d59961fa7a956899f66aba05d05f44f82a9a3aca2117328eecc5fac4582a91"
+    },
+    {
+      "path": "YiboCore/Data/AddonCatalog.lua",
+      "sha256": "78626f74f4bb6c82129069c6ce09726bac4f4df3cd02d26cb0c4dffbdfc0d8ab"
+    },
+    {
+      "path": "YiboCore/Data/CharacterCleanup.lua",
+      "sha256": "88752798afcc09e05282f78d51660563b7810369af834ccdf8989ffcb9c2d078"
+    },
+    {
+      "path": "YiboCore/Data/Characters.lua",
+      "sha256": "289d3c94ff040fb3c6c64afb765a27c8de8a977439f58e9262eddfe29db36735"
+    },
+    {
+      "path": "YiboCore/Data/Database.lua",
+      "sha256": "f9196d9ce321f30a0c4d04bc9d81ed524d186f08565d9ff0ee26717714b01ca4"
+    },
+    {
+      "path": "YiboCore/Data/Domains/Identity.lua",
+      "sha256": "1fa3eff439cb0cbd6685abc75c663354d92c472425ec5335ca96c24d8c555714"
+    },
+    {
+      "path": "YiboCore/Data/Domains/Location.lua",
+      "sha256": "4631f043ca18c3c08f362d4ef01a904756c541943740c077bcdb2aea99272acc"
+    },
+    {
+      "path": "YiboCore/Data/DomainStore.lua",
+      "sha256": "514afd9bd9b2ccf18a7822cb7de276e2707cfa6cb2c13414f8ddd516eb79abbb"
+    },
+    {
+      "path": "YiboCore/Data/Fields/CharacterArchive.lua",
+      "sha256": "54d8920702de666266657318cd488a607744fb481ddd03963485370bd0016b0b"
+    },
+    {
+      "path": "YiboCore/Data/Migrations.lua",
+      "sha256": "f43c2cc25531a4a79ee27cb0d72f2937b6f615df4fd762cc3201b099e44bac54"
+    },
+    {
+      "path": "YiboCore/Data/PackagedAddonVersions.lua",
+      "sha256": "69c66af3cc5af3e99ebf5ec97bb9082bb895f0c0f82e9ddabd3dee94ff2a1f60"
+    },
+    {
+      "path": "YiboCore/Data/Profile.lua",
+      "sha256": "2fe8c30b70e5e21027616aa9378c6c2f5ed5b7f6e1351737ff37e1a83a99a7b5"
+    },
+    {
+      "path": "YiboCore/Data/Validation.lua",
+      "sha256": "ab83d70710f854f56059f25a7783da5d09773f75a3559145dd0ae4e02424aa67"
+    },
+    {
+      "path": "YiboCore/Libs/Ace3-LICENSE.txt",
+      "sha256": "05c69fb56f4da18c9430b2e7904e0cd1439e14e24d49c235daa18f8806b980f9"
+    },
+    {
+      "path": "YiboCore/Libs/CallbackHandler-1.0/CallbackHandler-1.0.lua",
+      "sha256": "e44e74da6fdfd71c0aeee304a716482f31a9f138a58956fda9506262d852af6f"
+    },
+    {
+      "path": "YiboCore/Libs/LDB-LICENSE.txt",
+      "sha256": "1006684f0953a13bfc9c77627904d7750a36cab64b6364116a27b0256c5ec10d"
+    },
+    {
+      "path": "YiboCore/Libs/LibDataBroker-1.1/LibDataBroker-1.1.lua",
+      "sha256": "d79b3eada649684543bbbc3c511c2515e16d644f198fa991a201ee64d045b0f2"
+    },
+    {
+      "path": "YiboCore/Libs/LibStub/LibStub.lua",
+      "sha256": "02d25b7433af734b59f0c4571bfaa73b2b660992d71d2fb6a8809b32de3f964c"
+    },
+    {
+      "path": "YiboCore/Libs/UPSTREAM.md",
+      "sha256": "7c5af719d62bffd75d81124f2a17c1489023095cffbf99c64b641b3f1e07b5b5"
+    },
+    {
+      "path": "YiboCore/Locales/enUS.lua",
+      "sha256": "185791273e5b340a923f9081f65ae07f491456c5754df776fa6bdd923bbaff8e"
+    },
+    {
+      "path": "YiboCore/Locales/zhCN.lua",
+      "sha256": "ee0a535965519551032528fcb7254a8565314a0a3706226c287a12708a8bf83d"
+    },
+    {
+      "path": "YiboCore/Media/YiboCoreIcon-1024.tga",
+      "sha256": "5219d56a7b9e34f00e4cc0ec9296bf7d3a4059d82f171214ae1d7d8c65b1e602"
+    },
+    {
+      "path": "YiboCore/Media/YiboCoreIcon-128.tga",
+      "sha256": "7b709b5bbda504291e236b93fa3e317732b6e631435fd6817dbdd5088ac1e551"
+    },
+    {
+      "path": "YiboCore/Media/YiboCoreIcon-16.tga",
+      "sha256": "ca328d01d47275a256e9174b3a79efc0949465c179324d1edc3174334dc21f45"
+    },
+    {
+      "path": "YiboCore/Media/YiboCoreIcon-32.tga",
+      "sha256": "8512320e6da4b2ee4e982ecbb749624ac46387f275e52c1064e3ae5609b1c681"
+    },
+    {
+      "path": "YiboCore/Media/YiboCoreIcon-512.tga",
+      "sha256": "a99c0b768145753b523f95f8fdccd55620eab0607a892352cd309cb7fb3fa5be"
+    },
+    {
+      "path": "YiboCore/Media/YiboCoreIcon-64.tga",
+      "sha256": "b149f81af54f1aeda3bf5e4c7c5ee1fd8a8d325814e9cc6f25efbd1f4b865c32"
+    },
+    {
+      "path": "YiboCore/Media/YiboCoreIcon.tga",
+      "sha256": "b149f81af54f1aeda3bf5e4c7c5ee1fd8a8d325814e9cc6f25efbd1f4b865c32"
+    },
+    {
+      "path": "YiboCore/Media/YiboCoreLogo.tga",
+      "sha256": "a99c0b768145753b523f95f8fdccd55620eab0607a892352cd309cb7fb3fa5be"
+    },
+    {
+      "path": "YiboCore/Mists/Calendar.lua",
+      "sha256": "8ec4f9d094272c38a23c173ea8ba62dbab44ab5152f1eb776b7a04fef8f503e5"
+    },
+    {
+      "path": "YiboCore/Mists/Client.lua",
+      "sha256": "8d1d99af17aed404cdb58c898d9762edffa871cf5226a3191c4c81017772ded6"
+    },
+    {
+      "path": "YiboCore/Mists/Equipment.lua",
+      "sha256": "320d7775e604a90473bf80f95f306aa8fe0d30005edec676268861f4762bfdbd"
+    },
+    {
+      "path": "YiboCore/Mists/Fields.lua",
+      "sha256": "902261c37a97dcc26bd70a050451d4fa97b003cba73d29d71972201e8e643633"
+    },
+    {
+      "path": "YiboCore/Mists/Metadata.lua",
+      "sha256": "b36856ed30de8328427107a79e9f83dcd765ace9314e57c97cad5abbcb4f3197"
+    },
+    {
+      "path": "YiboCore/Mists/Professions.lua",
+      "sha256": "286b55fddb7c9c212628afbe269627be4546e910da515c1508352aa27ad38147"
+    },
+    {
+      "path": "YiboCore/Mists/Specialization.lua",
+      "sha256": "5cdcbb5849f682d9e71f0bb0cf5111968e9ff68a48fb0e242b6463f75fd42989"
+    },
+    {
+      "path": "YiboCore/Mists/Surface.lua",
+      "sha256": "f2e36cb5faf560f245ba1e0f055a60ce1001417a24258e929c8ebb4d6a7dda9a"
+    },
+    {
+      "path": "YiboCore/Mists/Target.lua",
+      "sha256": "a9b69c3ddae6eb710befc5ff2063f91183cfa36ea5dfeaab8ffc76c1d209f2ae"
+    },
+    {
+      "path": "YiboCore/Runtime/AddonStatus.lua",
+      "sha256": "7e62e8dbc5b64b1e0a0c75043acf6a99664016aa32dad519be09d3e9f2d56122"
+    },
+    {
+      "path": "YiboCore/Runtime/ArchiveFields.lua",
+      "sha256": "bcbbfd1efa8c37a906bf0f510639a872f2706730748acfa121690e3be56cee0f"
+    },
+    {
+      "path": "YiboCore/Runtime/Capabilities.lua",
+      "sha256": "d57ca76c4d3b6cd97f0fbe684cf8d5ec67772ade46a3902fe5368b3cef1e5b2f"
+    },
+    {
+      "path": "YiboCore/Runtime/Client.lua",
+      "sha256": "b764a90f169701e3e1ee00621f1db9c0fa05c7b08f06af22b7f850454c5e9f15"
+    },
+    {
+      "path": "YiboCore/Runtime/Commands.lua",
+      "sha256": "4442df8b8dcdff2cebbeb009f698913c92aa42a34f0808c44c1ca7edc6699c52"
+    },
+    {
+      "path": "YiboCore/Runtime/Contracts.lua",
+      "sha256": "02f9bf1324f54004890d22fda15eec98e7d50a91434a5b169bd899ab5f8203ef"
+    },
+    {
+      "path": "YiboCore/Runtime/DataDomains.lua",
+      "sha256": "0c28b083ca2de0d4aa16be71224f0bb6bdf398c62a4143985e19c70f5e23fc4f"
+    },
+    {
+      "path": "YiboCore/Runtime/EntryConfig.lua",
+      "sha256": "df07eb132450acaa1e0d5b391b7ab09ad1834d83ace4f2b00f6368c01d2e07dc"
+    },
+    {
+      "path": "YiboCore/Runtime/Events.lua",
+      "sha256": "17f3392417cc4f141d8150403bf1d372e39bd6bce78152d7117c27320f4f0e27"
+    },
+    {
+      "path": "YiboCore/Runtime/Fields.lua",
+      "sha256": "5d0a9d1536984418c28ff53634595b0bf37992a86304fe6c2c76898f0d635ea0"
+    },
+    {
+      "path": "YiboCore/Runtime/ItemResolver.lua",
+      "sha256": "f79c0861e5a1b7cdb5cc203469bd95b184eb10bf31e482c8e3b01f20739abb45"
+    },
+    {
+      "path": "YiboCore/Runtime/Lifecycle.lua",
+      "sha256": "5fab3e57ed3cef0e372e3162eb6bffb1fb3087c0f33f32fea6c58d14de2de19a"
+    },
+    {
+      "path": "YiboCore/Runtime/Locale.lua",
+      "sha256": "7b950e86df8085bc7aac78bf7e4a2489cd1ebaa2ddcf6079ec707bc371f22faf"
+    },
+    {
+      "path": "YiboCore/Runtime/Registry.lua",
+      "sha256": "99117844d84969efffde4444f7e7802c8e2eb17809f2bc974613ead97ee5c91d"
+    },
+    {
+      "path": "YiboCore/Runtime/Resources.lua",
+      "sha256": "72fc4422d4b8e886716590e03b2a114dd29cd9bc26344f506dfbbf7dfb4c24c4"
+    },
+    {
+      "path": "YiboCore/Runtime/SettingsRegistry.lua",
+      "sha256": "b2b5a710a041e92d602afddd317f8bb623cdda176280145a85e08685f74dd884"
+    },
+    {
+      "path": "YiboCore/UI/AccountPages/About.lua",
+      "sha256": "278b8ed64294316de719855a6110b74e4b89519009591485678efd9a47ffec7b"
+    },
+    {
+      "path": "YiboCore/UI/AccountPages/CharacterArchive.lua",
+      "sha256": "c562ebec5e92fd32dc2e3af3cb91dce88a68f37274d9bea0e4af0a4ef3a95ea6"
+    },
+    {
+      "path": "YiboCore/UI/AccountPages/Help.lua",
+      "sha256": "91c78a8a54ea76074b2d086d20f8d769b9efe06de30821902974a796094225dd"
+    },
+    {
+      "path": "YiboCore/UI/AccountPages/Overview.lua",
+      "sha256": "4bce30d20a11835cc1b4652701ade8dcdb3b140de30add63d8f0f2cf64cb786f"
+    },
+    {
+      "path": "YiboCore/UI/AccountPages/SettingsWorkbench.lua",
+      "sha256": "80dcabde26961a2230ca77752a8137d8632db3dcf5259a83ef3145d5acf0f8b3"
+    },
+    {
+      "path": "YiboCore/UI/AccountView.lua",
+      "sha256": "52d65291f83fb877ecfa8a41e9f029ad22d2d00e82a7b01853449ad11541bb91"
+    },
+    {
+      "path": "YiboCore/UI/BusinessItemActions.lua",
+      "sha256": "e4484c3e8d90d4d80a6da1452a144dfda10268b3144a3f522c341ee0a725de44"
+    },
+    {
+      "path": "YiboCore/UI/Entry.lua",
+      "sha256": "ceea40101a931b9905daeadaedda776aa992401b66869183deb09454160686c7"
+    },
+    {
+      "path": "YiboCore/UI/EntryBar.lua",
+      "sha256": "b8857dfe276266663773f97d942d529c3feeee819030ae3de78962c950fefc0a"
+    },
+    {
+      "path": "YiboCore/UI/IconPicker.lua",
+      "sha256": "4f6475b85372807356268b287abfdd69c3ab931404e3169a1f9a430b4765f685"
+    },
+    {
+      "path": "YiboCore/UI/Input.lua",
+      "sha256": "c70df7b9819e09a2de9f7c8f4f9251857a0b7371854965f7f3328ca594ba8e9a"
+    },
+    {
+      "path": "YiboCore/UI/ItemConfirmation.lua",
+      "sha256": "b709d94cc8f80f481fb3bea9ce4d12b29b6fb0515ffedaf276d020dc162e9c17"
+    },
+    {
+      "path": "YiboCore/UI/ItemPicker.lua",
+      "sha256": "09eec1485db999850be8cb0f0bd7935251bcede9229df7c173add72d1cd5c530"
+    },
+    {
+      "path": "YiboCore/UI/Theme.lua",
+      "sha256": "0fc55008289bd390dcd57e78bf1edece25df04f20e016ef0552116de66acee2e"
+    },
+    {
+      "path": "YiboCore/Util/CharacterSort.lua",
+      "sha256": "3ba2af22bd37d6ab29cd7e9d74512c20d1da1358b6055e24b93759b50550e6e6"
+    },
+    {
+      "path": "YiboCore/Util/Defaults.lua",
+      "sha256": "7a888c8e1542131db5344725060ec6e70d1b6d716d91fcd10dfaf6978a76a409"
+    },
+    {
+      "path": "YiboCore/Util/LevelFilter.lua",
+      "sha256": "7e0a57607de0e4379e627364467320ebcbc1361e11ee6a67d42cc023439f1b36"
+    },
+    {
+      "path": "YiboCore/YiboCore.toc",
+      "sha256": "daf99ce269484a583ffb18fbbc9e3d56fd56a2f2b4e45540fb011811e73a93ae"
+    },
+    {
+      "path": "YiboCore/YiboReleaseManifest.json",
+      "sha256": "8d98bd3f87dedbe7deb02e1868c5600c0ce3409e5d650e8955c3152f5cf13ddf"
+    },
+    {
+      "path": "YiboCrafting/AccountPage.lua",
+      "sha256": "e01606c24a553de01e388a31f81ac0ace1268f793b1713675b469f9f73775a94"
+    },
+    {
+      "path": "YiboCrafting/Bootstrap.lua",
+      "sha256": "67db5acdfb5ff82d76b7087a5ea89f972cdda9cc20e3412a5a6b2bd4d53673c5"
+    },
+    {
+      "path": "YiboCrafting/CategoryCatalog.lua",
+      "sha256": "46ebbb04fb2a15825cb093ac410e46b9e55b19b1ffb833d4fd683bcbdcae10c1"
+    },
+    {
+      "path": "YiboCrafting/Collector.lua",
+      "sha256": "fc5719737ac71a093c77eb98a5455255cbf49379cdfd20dda0ade61753c6b7bd"
+    },
+    {
+      "path": "YiboCrafting/Locales/Categories.lua",
+      "sha256": "c08851ba6389c22f895a2ac27f29904c86a26d1d2fb0a31998e595127bbac221"
+    },
+    {
+      "path": "YiboCrafting/Locales/Interface.lua",
+      "sha256": "3655a3298725f46b62e3cf5141fe817a6e88a7ad0b421bb7cb594bc86493d9b4"
+    },
+    {
+      "path": "YiboCrafting/Locales/Targets.lua",
+      "sha256": "11093e68de892050005cd8d689caac98a16afeb86de5348082c9da0dacb0587f"
+    },
+    {
+      "path": "YiboCrafting/Media/YiboCraftingIcon-1024.tga",
+      "sha256": "62d258d0a19e307ff8e0126fb7ea125f7306ce027a896dcb9c87b794ee7527c1"
+    },
+    {
+      "path": "YiboCrafting/Media/YiboCraftingIcon-128.tga",
+      "sha256": "b8f7f27237a25e9e534187c42ac5209296689d9bc84c8801856f07e4c5d4f175"
+    },
+    {
+      "path": "YiboCrafting/Media/YiboCraftingIcon-16.tga",
+      "sha256": "a80000b82645d253534a172d1cece21eb7265f5952e8c14e2be67ad39f0b62b6"
+    },
+    {
+      "path": "YiboCrafting/Media/YiboCraftingIcon-32.tga",
+      "sha256": "c9a0df2160dc5fd95559f77fdb4f7a0c3300c41ce08842d1577e606bb687e5eb"
+    },
+    {
+      "path": "YiboCrafting/Media/YiboCraftingIcon-512.tga",
+      "sha256": "ef1586b356e3237547b26d4d013774032e3290534bb862a3059852b4e7aa3fa1"
+    },
+    {
+      "path": "YiboCrafting/Media/YiboCraftingIcon-64.tga",
+      "sha256": "7e185c00afc9420276f6b108342c774e2254084f95cb25125be69e77c7cbad68"
+    },
+    {
+      "path": "YiboCrafting/Media/YiboCraftingIcon.tga",
+      "sha256": "7e185c00afc9420276f6b108342c774e2254084f95cb25125be69e77c7cbad68"
+    },
+    {
+      "path": "YiboCrafting/Media/YiboCraftingLogo.tga",
+      "sha256": "ef1586b356e3237547b26d4d013774032e3290534bb862a3059852b4e7aa3fa1"
+    },
+    {
+      "path": "YiboCrafting/Mists/GoalTargets.lua",
+      "sha256": "80dea93f9fa12ff38811d747795f0d01b023151aacb115f9f783687f75c57a8d"
+    },
+    {
+      "path": "YiboCrafting/Mists/RecipeCatalog.lua",
+      "sha256": "9385eeeacbfe26880d264ad818b425289811ab9178eb350245b72c626fe37158"
+    },
+    {
+      "path": "YiboCrafting/Namespace.lua",
+      "sha256": "d86c1297792abff9dc954313b3cb058106ff4aca8f7f1c210d30b72d14981fb7"
+    },
+    {
+      "path": "YiboCrafting/RecipeStateScanner.lua",
+      "sha256": "60487075c6875f9951c01a3b4608c9ba31ff4e1a87cde00fcc688a3e7600f190"
+    },
+    {
+      "path": "YiboCrafting/Store.lua",
+      "sha256": "413e668ac55736e0d5f48216a8ae0ab3c8be76a704b3b6f767e314e5a234d961"
+    },
+    {
+      "path": "YiboCrafting/YiboCrafting.toc",
+      "sha256": "2e0492f3d9e6f6862265c9e4067c774b682c258639266de072b2e66a73cf63c9"
+    },
+    {
+      "path": "YiboCrafting/YiboReleaseManifest.json",
+      "sha256": "c903404f4baebc886c4896a60ef7848c5fda8f27f01e38d5baea5426cf3d22db"
+    },
+    {
+      "path": "YiboCurrency/AccountPage.lua",
+      "sha256": "a7ebc4b16c4d0ab34e4394ade77f17d0e21be72e936602871af0b79dcf9d73d9"
+    },
+    {
+      "path": "YiboCurrency/ArchiveProvider.lua",
+      "sha256": "734f10846f49d6596f8c1151795d8210821fe9fca20314cfce891264d0618d5d"
+    },
+    {
+      "path": "YiboCurrency/Catalog.lua",
+      "sha256": "b385c3ec0778496795587dcaebed76aff014aaf41985ae3ff0ea8cd4e7daf123"
+    },
+    {
+      "path": "YiboCurrency/CoreIntegration.lua",
+      "sha256": "8304b51d0a665960fdd5ec16d9d03d37f8eed059ac92849858edcd2f65792044"
+    },
+    {
+      "path": "YiboCurrency/Data.lua",
+      "sha256": "6ed53c3c52f8d5d96ffc37f2f93a6dc30b1e30b3e5c721666c897b7966b7148c"
+    },
+    {
+      "path": "YiboCurrency/GoalTargets.lua",
+      "sha256": "8438fefa6667a5ea6e12ffbdc516118325eeee14729a2f39316524a2e6f3e846"
+    },
+    {
+      "path": "YiboCurrency/Locales/enUS.lua",
+      "sha256": "60fec2d98976dff68beb06dbcca13007a1a9a5b937d82c3a2d7e22411443f3d7"
+    },
+    {
+      "path": "YiboCurrency/Locales/zhCN.lua",
+      "sha256": "857f3ca3102bb8411697fdf5d82328f7d43ed37caca9a53039f6d3d4f8e3be6b"
+    },
+    {
+      "path": "YiboCurrency/Media/YiboCurrencyIcon-1024.tga",
+      "sha256": "096409803bbe55fc89e60bc88c06a3cfa7cf2695c1683313878cbe7a91650cf3"
+    },
+    {
+      "path": "YiboCurrency/Media/YiboCurrencyIcon-128.tga",
+      "sha256": "d765d69d8a09d1204e5efb3706288976b1964b1b50c24c58b0c89ca17ebb82f8"
+    },
+    {
+      "path": "YiboCurrency/Media/YiboCurrencyIcon-16.tga",
+      "sha256": "90bd1fb20a76e19622105b35acaadafb50698ccda033d4cf4b2d755ccd4554c8"
+    },
+    {
+      "path": "YiboCurrency/Media/YiboCurrencyIcon-32.tga",
+      "sha256": "bb8607c055dc38a34a84869448cd4dbdc36350bf232d7095eb188b656d1d1774"
+    },
+    {
+      "path": "YiboCurrency/Media/YiboCurrencyIcon-512.tga",
+      "sha256": "cd7b6225b7703c9ee7e38ed045483d991069ff12bf8b6bbac58179fa24b730f9"
+    },
+    {
+      "path": "YiboCurrency/Media/YiboCurrencyIcon-64.tga",
+      "sha256": "403456ccf4247ed6a8d7ddf1e93329caeffd26da4b2692bcddef031ae4d64a7a"
+    },
+    {
+      "path": "YiboCurrency/Media/YiboCurrencyIcon.tga",
+      "sha256": "403456ccf4247ed6a8d7ddf1e93329caeffd26da4b2692bcddef031ae4d64a7a"
+    },
+    {
+      "path": "YiboCurrency/Media/YiboCurrencyLogo.tga",
+      "sha256": "cd7b6225b7703c9ee7e38ed045483d991069ff12bf8b6bbac58179fa24b730f9"
+    },
+    {
+      "path": "YiboCurrency/Migration.lua",
+      "sha256": "7d162d9bddffff876989408dea1267913d6def2d700258d668bfda20e4dc70d2"
+    },
+    {
+      "path": "YiboCurrency/Mists/Bootstrap.lua",
+      "sha256": "9b85652b9cee3bfba9eb23d0d650dd99c230846d640bd9439d0ac83b52966c7e"
+    },
+    {
+      "path": "YiboCurrency/Mists/Commands.lua",
+      "sha256": "1b49ec14b196850ae7b0d1dc33773cbe5cea4aacd8e8a547ed0ed80555f50aca"
+    },
+    {
+      "path": "YiboCurrency/Projection.lua",
+      "sha256": "e18e440577c37709200018b63e7373012b4eeecef50b2a256477074b387c1152"
+    },
+    {
+      "path": "YiboCurrency/Scanner.lua",
+      "sha256": "4b810ec0c9445489ff30ec944265712df97b43cca096e0b4e6ba6b1a958717dd"
+    },
+    {
+      "path": "YiboCurrency/Settings.lua",
+      "sha256": "c2be59037c3213ba9eaf3c909dff6fe9abd04a6ad4c041464ddbc7cb19783dc1"
+    },
+    {
+      "path": "YiboCurrency/Store.lua",
+      "sha256": "058f666e2223f3f2977a6f8fbd427583922847d7dde6138bf71275bab5452e9e"
+    },
+    {
+      "path": "YiboCurrency/VaultIntegration.lua",
+      "sha256": "2fe7a07fe71236b20f7b6b2b7715b6d6df50fcc7c72e933e74e672840e036355"
+    },
+    {
+      "path": "YiboCurrency/YiboCurrency.toc",
+      "sha256": "6dc73528ef8b68c267ef36910cf9b1dc8a24eaa602ae6ecbff77c91f011a8e40"
+    },
+    {
+      "path": "YiboCurrency/YiboReleaseManifest.json",
+      "sha256": "897784695f6b3bf1273674ebf0758d551b4f86bc03ea41ebdf12168e36b15f28"
+    },
+    {
+      "path": "YiboLegendary/Bootstrap.lua",
+      "sha256": "34add11c2392afae9b2628633130f631360439b1a40b1338d623ce2a64a3b4d5"
+    },
+    {
+      "path": "YiboLegendary/Catalog.lua",
+      "sha256": "f98a2efec3138575be4302916c92eec5f70179db00c1023ae01a7f9666a2dde4"
+    },
+    {
+      "path": "YiboLegendary/Data.lua",
+      "sha256": "56d5db6f560e4539714b0751eb1937218a5e7d40172eae382c3f9d9daabe24ce"
+    },
+    {
+      "path": "YiboLegendary/GoalTargets.lua",
+      "sha256": "be35ebf162734e1ae477d309ba91bc3e1afa77eeb310f542eb9cca17be8602ec"
+    },
+    {
+      "path": "YiboLegendary/Locales/Interface.lua",
+      "sha256": "d24328584d0dccad01036381a49fbb2b630dd52897b60a48d4b46149a72112ea"
+    },
+    {
+      "path": "YiboLegendary/Media/YiboLegendaryIcon-1024.tga",
+      "sha256": "95d9fe92611d82bc94137705fab29aecaf1437e015f763b4fa769bf83fad71fa"
+    },
+    {
+      "path": "YiboLegendary/Media/YiboLegendaryIcon-128.tga",
+      "sha256": "88f67ef8218c4f3119fe00b576ce9a197be3eb69ed8cdac171e66074a627241f"
+    },
+    {
+      "path": "YiboLegendary/Media/YiboLegendaryIcon-16.tga",
+      "sha256": "12a59692333190a5802e3bb84940d2b2e51776eba3fd99a8fa8ddc0fece4a210"
+    },
+    {
+      "path": "YiboLegendary/Media/YiboLegendaryIcon-32.tga",
+      "sha256": "fa0e4b36dda3b933f3dd48f0825be66b646b3593f314dc93a8f2d8157deba57b"
+    },
+    {
+      "path": "YiboLegendary/Media/YiboLegendaryIcon-512.tga",
+      "sha256": "a74caf857ed596edf3da431351b8912299839b30c2da65d2c82a19e67b039d0b"
+    },
+    {
+      "path": "YiboLegendary/Media/YiboLegendaryIcon-64.tga",
+      "sha256": "ad0383650a2900c7275e2359158ba7ba409f992404af9645da93384743a658a6"
+    },
+    {
+      "path": "YiboLegendary/Media/YiboLegendaryIcon.tga",
+      "sha256": "ad0383650a2900c7275e2359158ba7ba409f992404af9645da93384743a658a6"
+    },
+    {
+      "path": "YiboLegendary/Media/YiboLegendaryLogo.tga",
+      "sha256": "a74caf857ed596edf3da431351b8912299839b30c2da65d2c82a19e67b039d0b"
+    },
+    {
+      "path": "YiboLegendary/Model.lua",
+      "sha256": "46f6064aea79b3bb19b658003896e67a64f6d5faca55d103bcc40e9b7bca808d"
+    },
+    {
+      "path": "YiboLegendary/UI.lua",
+      "sha256": "72b9a962c09f650436ea5533e2a740b7b3d83de1e73988ab33081e0bed1f03d5"
+    },
+    {
+      "path": "YiboLegendary/YiboLegendary.toc",
+      "sha256": "ee0955f3d50eba9603195dae9edd8daef68a6e5a8a062d705315bfac956f2d80"
+    },
+    {
+      "path": "YiboLegendary/YiboReleaseManifest.json",
+      "sha256": "869343d9455df2e8ec31c1c223d77e6c62e5fb8b5a0550ca2b6a07c42b613470"
+    },
+    {
+      "path": "YiboMail/AccountPage.lua",
+      "sha256": "015bf3a275634aad6bfd2239abbd8e9027551efb41e81538ef43429dc711b671"
+    },
+    {
+      "path": "YiboMail/ActionTodo.lua",
+      "sha256": "dc348b9b886b07e8c395cdb7c2120509ebe838d71524ab093ff6b561cb62fdd2"
+    },
+    {
+      "path": "YiboMail/Bootstrap.lua",
+      "sha256": "dc962dac824062b77e72d0e5e0bdde25b27ffa4dbf80622b809e097bd8fb9a5e"
+    },
+    {
+      "path": "YiboMail/CacheModel.lua",
+      "sha256": "acab2540486060209c166d9aea68cbeedc510c03a3dc8771ffdd2c35a45a1be6"
+    },
+    {
+      "path": "YiboMail/CacheUI.lua",
+      "sha256": "040537009c0441f983ac0a58a76c3d16625a6d5ca664c369ee7d7f84ddc8d14d"
+    },
+    {
+      "path": "YiboMail/Compose.lua",
+      "sha256": "f3d7cf0dcb795cde847d58649dbe16245c58963b43f33e1a8b61030014491bfa"
+    },
+    {
+      "path": "YiboMail/GoalTargets.lua",
+      "sha256": "0189571307498548c30a7da05f4f1f575d3e240e81f3cab5c5b2cd2d0e34b37b"
+    },
+    {
+      "path": "YiboMail/HistoryModel.lua",
+      "sha256": "84ff269f35409862466d858368ad7c61b2c2c01222055b8bfa4555faca673187"
+    },
+    {
+      "path": "YiboMail/Inbox.lua",
+      "sha256": "a7c6931e2397708a02406502e57264e4b2bf2c8b906746074a060aeb19488c3c"
+    },
+    {
+      "path": "YiboMail/Items.lua",
+      "sha256": "9670bca1a5eb713cb5511b227c6bfc3cdd054a5184778558403f808a2cabd26a"
+    },
+    {
+      "path": "YiboMail/Locales/en.lua",
+      "sha256": "7effffccc852949eb59e19130d29daf1422c500be8920853e099a1015c6dab93"
+    },
+    {
+      "path": "YiboMail/Locales/zh.lua",
+      "sha256": "0b3dede53fb3a4be77499b29b54eca78b8e9fed3fcd09ac3c24d917c67d85856"
+    },
+    {
+      "path": "YiboMail/MailUI.lua",
+      "sha256": "d1f28d676bc0c08cf7b0168fc7148a8e88b4c894a63294d3a6a4f883277e2e8d"
+    },
+    {
+      "path": "YiboMail/Media/YiboMailIcon-1024.tga",
+      "sha256": "7fcec13c0bdb5bb8697e3c8c14891145e1c5be2a529338f8f2323779a833b5d4"
+    },
+    {
+      "path": "YiboMail/Media/YiboMailIcon-128.tga",
+      "sha256": "ddf9d4b12d9744c24bb185a2984751c601987a2c2d946c1383e45483d26d85d6"
+    },
+    {
+      "path": "YiboMail/Media/YiboMailIcon-16.tga",
+      "sha256": "e142089898803cbab016a617987e1921a8e754259abbaa074275ae885503e843"
+    },
+    {
+      "path": "YiboMail/Media/YiboMailIcon-32.tga",
+      "sha256": "a8580d009dd35ee880097410e838476728b333161035e27c1a3fc43a9ed77d22"
+    },
+    {
+      "path": "YiboMail/Media/YiboMailIcon-512.tga",
+      "sha256": "657d6febf56783e0b930ca06db6814fd2a6eadd00d2d75358b8de4d855b514f7"
+    },
+    {
+      "path": "YiboMail/Media/YiboMailIcon-64.tga",
+      "sha256": "a650a7b39388a103e6ccedde29fb6053762e244a637f1f7e76e9c4cd85cf17af"
+    },
+    {
+      "path": "YiboMail/Media/YiboMailIcon.tga",
+      "sha256": "a650a7b39388a103e6ccedde29fb6053762e244a637f1f7e76e9c4cd85cf17af"
+    },
+    {
+      "path": "YiboMail/Media/YiboMailLogo.tga",
+      "sha256": "657d6febf56783e0b930ca06db6814fd2a6eadd00d2d75358b8de4d855b514f7"
+    },
+    {
+      "path": "YiboMail/Mists/InboxUI.lua",
+      "sha256": "fd7a82a8ed1e63218fdd7a3c22a370a672d1f35061ce7f9e9f27e3ddf67c2230"
+    },
+    {
+      "path": "YiboMail/Mists/Queue.lua",
+      "sha256": "fce09f37c752e6aad9d18d223fc6a8ec887ccfee003aa1894dd7aba4ea31ebe7"
+    },
+    {
+      "path": "YiboMail/Mists/Returns.lua",
+      "sha256": "78116f5898496acab3c224207660afe0bb018d79ae245542fa1055429373475c"
+    },
+    {
+      "path": "YiboMail/Mists/ReturnUI.lua",
+      "sha256": "d59d4b7da275ef1d9e06c11322bf9dc9a5540dc6089e1e7787bc86cce47aba38"
+    },
+    {
+      "path": "YiboMail/Mists/Scanner.lua",
+      "sha256": "82dc63aaf359f488034679a15f72b96196bdf561cbd0d697c7cc574b5289be61"
+    },
+    {
+      "path": "YiboMail/Mists/TransferMigration.lua",
+      "sha256": "a6233d2f940c24b7da2eab28203fbb3c948bf32628dfbce0d07fcd9dcf1c44fe"
+    },
+    {
+      "path": "YiboMail/Namespace.lua",
+      "sha256": "2ad5cd6b70ca5043274562dedd17d057fae456fffc65e38c262dcf01266842eb"
+    },
+    {
+      "path": "YiboMail/NativeUI.lua",
+      "sha256": "bbded136a39437981395be3919a173bedff8321546f6bb94b1e257d609398f90"
+    },
+    {
+      "path": "YiboMail/Recipients.lua",
+      "sha256": "fdb665b53cec0ebb12999538657a911517f1320e66a13ae812bff7283a58c66a"
+    },
+    {
+      "path": "YiboMail/RecipientUI.lua",
+      "sha256": "aa22489ac044c9c4442f4c8dce9f38ec1d5fcd383e5bb5a8d93dc4fadff589c3"
+    },
+    {
+      "path": "YiboMail/RuleSendController.lua",
+      "sha256": "15d082a4d0f3980a2aa9811df48bb38dd21c476a26748c8179818b3b5475fab1"
+    },
+    {
+      "path": "YiboMail/RuleSendUI.lua",
+      "sha256": "d65826d2bdbf703d82563c3a878a6d1b13a911bf527aeb59363074aad3aec1a7"
+    },
+    {
+      "path": "YiboMail/SendRules.lua",
+      "sha256": "98d5bc053495f7cb66ae6580295b79af8c6f0dff52653f6149f029b650d30334"
+    },
+    {
+      "path": "YiboMail/SendRulesSettings.lua",
+      "sha256": "1b722bba4806860f506a846a7dc4e1a577612885e90ce78b996f3dac55b83eba"
+    },
+    {
+      "path": "YiboMail/Store.lua",
+      "sha256": "83b7810171420f3665c486b382a3014bbc8a08b32e8cac37cc4dfb308cfecc81"
+    },
+    {
+      "path": "YiboMail/ViewModel.lua",
+      "sha256": "01ac0fc5416b1b1ea384a041f911723161dfe652d8d015f5476265bd2ff742e7"
+    },
+    {
+      "path": "YiboMail/WorkspaceState.lua",
+      "sha256": "94832adb81cc29519fd690d8c8240eece575e5ecbe0405a405c0b214b9f27a5a"
+    },
+    {
+      "path": "YiboMail/YiboMail.toc",
+      "sha256": "1e732a68660f42e3d39be486d820b60aa253d3dec5721d350fc8d6fb9cd2a6b1"
+    },
+    {
+      "path": "YiboMail/YiboReleaseManifest.json",
+      "sha256": "ac3c03cc109e2bca541f3b4ba524bee1f6f18f4bb69aa41d3b2b5468da8d8435"
+    },
+    {
+      "path": "YiboMounts/Bootstrap.lua",
+      "sha256": "9e4d4c88b5010b2f874f12913966c7ce44a72de8a1d69cec3665523e611adaab"
+    },
+    {
+      "path": "YiboMounts/Catalog.lua",
+      "sha256": "02f0de63645230da682f9c947456ec79ae40eb1ffb710b050ed4cb6817fae148"
+    },
+    {
+      "path": "YiboMounts/Commands.lua",
+      "sha256": "60b6e6fa79046c940a94812750033fecec9463ad5845ceae3a4aaf61691709ac"
+    },
+    {
+      "path": "YiboMounts/CoreIntegration.lua",
+      "sha256": "de0cb1779cae9d3515c43850f754e4b48625d5396d7e29826198526b96194f4d"
+    },
+    {
+      "path": "YiboMounts/Data/MountCatalog.generated.lua",
+      "sha256": "9e4deed99a942ecea338bb9b8758d21052d2a3399e26a583db0bac63ae8b270d"
+    },
+    {
+      "path": "YiboMounts/Locale/enUS.lua",
+      "sha256": "beb01f43bd1f1390139496b8cd9980002e18e0e88d75eab5dfb4c0c995baf5ec"
+    },
+    {
+      "path": "YiboMounts/Locale/zhCN.lua",
+      "sha256": "e29444e584c8973a0de19661601712b412ef195e97ab3c00168e722b0c3bbf12"
+    },
+    {
+      "path": "YiboMounts/Media/YiboMountsIcon-1024.tga",
+      "sha256": "409df537fb881e2122a386a361e5d240d2150ea4a23880f80ac3d4f0c481d417"
+    },
+    {
+      "path": "YiboMounts/Media/YiboMountsIcon-128.tga",
+      "sha256": "0e932066de2dff2c457f1457c6045da793e8383c7755d3b69db5d19d13e4f66f"
+    },
+    {
+      "path": "YiboMounts/Media/YiboMountsIcon-16.tga",
+      "sha256": "283595ad8104ddd77d537ede0badb543c5fba0fd5c3e877b6c0671aac6bcd845"
+    },
+    {
+      "path": "YiboMounts/Media/YiboMountsIcon-32.tga",
+      "sha256": "f3b70bf8228d9e584d98ae238299d404faa290a33ac071efea825c2d2d2167f4"
+    },
+    {
+      "path": "YiboMounts/Media/YiboMountsIcon-512.tga",
+      "sha256": "91141ed9646e18d474a818319fb1fb087a321528a8e3f3065aa67e42c4e1f0c4"
+    },
+    {
+      "path": "YiboMounts/Media/YiboMountsIcon-64.tga",
+      "sha256": "dedae09cb4b398dea2deb48535e561fcbd2cf32ad454bc2e6fd648ec93743bb8"
+    },
+    {
+      "path": "YiboMounts/Media/YiboMountsIcon.tga",
+      "sha256": "dedae09cb4b398dea2deb48535e561fcbd2cf32ad454bc2e6fd648ec93743bb8"
+    },
+    {
+      "path": "YiboMounts/Media/YiboMountsLogo.tga",
+      "sha256": "91141ed9646e18d474a818319fb1fb087a321528a8e3f3065aa67e42c4e1f0c4"
+    },
+    {
+      "path": "YiboMounts/Mists/AuraTooltip.lua",
+      "sha256": "c372f17f345973f676896e10c2028fd04f8c3d2eac0155d46135e5d83689351f"
+    },
+    {
+      "path": "YiboMounts/Mists/CollectionState.lua",
+      "sha256": "3a96bae7cd97c30d1b30d10afafc9f7d16be5b11260786159fa3b61203f1a209"
+    },
+    {
+      "path": "YiboMounts/Namespace.lua",
+      "sha256": "e58ed8792720f2d84444881cece47ca7f15f5e772a34127200e51f6beeb35ae8"
+    },
+    {
+      "path": "YiboMounts/SourceFormatter.lua",
+      "sha256": "d45adf26ed64d0bdff3c83f51040952559dc013b13c7733effebb82584ab6a70"
+    },
+    {
+      "path": "YiboMounts/Tooltip.lua",
+      "sha256": "5e23ef876af01ad28c29a6e33e1789990af75f313412106dd8c6f9a285e7a64a"
+    },
+    {
+      "path": "YiboMounts/YiboMounts.toc",
+      "sha256": "d3a8485304d9d2ea04488b6a83cb70ade653bd5c988d2da3c04cc9e42f039f2c"
+    },
+    {
+      "path": "YiboMounts/YiboReleaseManifest.json",
+      "sha256": "5a31ad647da5bd38df8efb024cb137206dbcf978d1e9291bdc1981bbb484ca7c"
+    },
+    {
+      "path": "YiboQuestBlocker/AccountPage.lua",
+      "sha256": "014dc6acea1efe3c94e0fdc5f9dd7307d9373c38f02040cfa0f25fd53fefa6a1"
+    },
+    {
+      "path": "YiboQuestBlocker/CoreIntegration.lua",
+      "sha256": "afd43b2b45fc59771fb84f2dfa1a41cba6cb60ab2e1579a074bc34340d0b050e"
+    },
+    {
+      "path": "YiboQuestBlocker/Locale.lua",
+      "sha256": "598450f0cc01f09c4790e8be53ea142076f6b4a8e8ca4dd88beb58b2cb073a99"
+    },
+    {
+      "path": "YiboQuestBlocker/Media/YiboQuestBlockerIcon-1024.tga",
+      "sha256": "05f6f6af0e609e0c478b5c09fe8d79820df0f0fe1bf858bfb96f965284294d5f"
+    },
+    {
+      "path": "YiboQuestBlocker/Media/YiboQuestBlockerIcon-128.tga",
+      "sha256": "fe681b0e2b3e53df65bef3a5a0da31f3ba49d0036efd290f364616ad4b81ee1f"
+    },
+    {
+      "path": "YiboQuestBlocker/Media/YiboQuestBlockerIcon-16.tga",
+      "sha256": "2a3a6bf8e7ee393ae69221ecc5418b64b4a519beea6009828d3807c7968c27fe"
+    },
+    {
+      "path": "YiboQuestBlocker/Media/YiboQuestBlockerIcon-32.tga",
+      "sha256": "3ec36f73c57c89e1558194e54598426d722855545c9003c88a1695736dbe50d3"
+    },
+    {
+      "path": "YiboQuestBlocker/Media/YiboQuestBlockerIcon-512.tga",
+      "sha256": "37b49f5324e05f5e9d6336e4c17dcc4912b2442dd7de18691dd3092d6035e8c5"
+    },
+    {
+      "path": "YiboQuestBlocker/Media/YiboQuestBlockerIcon-64.tga",
+      "sha256": "228098b2e6b172c515783611597cb63733e7715fffc529fb79629bbb3c40fc10"
+    },
+    {
+      "path": "YiboQuestBlocker/Media/YiboQuestBlockerIcon.tga",
+      "sha256": "228098b2e6b172c515783611597cb63733e7715fffc529fb79629bbb3c40fc10"
+    },
+    {
+      "path": "YiboQuestBlocker/Media/YiboQuestBlockerLogo.tga",
+      "sha256": "37b49f5324e05f5e9d6336e4c17dcc4912b2442dd7de18691dd3092d6035e8c5"
+    },
+    {
+      "path": "YiboQuestBlocker/Settings.lua",
+      "sha256": "d652de9d8dd59601c6c53b3355790446f7c401265d1a5e0dabba527a5f3e82b2"
+    },
+    {
+      "path": "YiboQuestBlocker/YiboQuestBlocker_Core.lua",
+      "sha256": "eccbb2b71d99a765811540efae39c8aa6bf0b100df53ffee82445cb62a555ef8"
+    },
+    {
+      "path": "YiboQuestBlocker/YiboQuestBlocker.toc",
+      "sha256": "da85f98c518b1127a253b9309f1167b3198ddb2a176c4f4ef990bb639062980c"
+    },
+    {
+      "path": "YiboQuestBlocker/YiboReleaseManifest.json",
+      "sha256": "596fce18f99d16580cf3642780f3db721e23c1d56bca81796395a93de5c0958a"
+    },
+    {
+      "path": "YiboReputation/AccountMatrixView.lua",
+      "sha256": "a03a1a268f0656cf5c0a7526fc955e2e56f231551d1af6b9edb4e02b690bfd8d"
+    },
+    {
+      "path": "YiboReputation/Bootstrap.lua",
+      "sha256": "419e768bc757fe2a9357167683de414951f5e0ec1b3904056551eafa8b3f961d"
+    },
+    {
+      "path": "YiboReputation/Commands.lua",
+      "sha256": "1b5a6be91e0a140f1d9d533f6886f06c125e2cd5d2d347cef12c83e074ebce7c"
+    },
+    {
+      "path": "YiboReputation/CoreIntegration.lua",
+      "sha256": "bf283c76047e16360d2171d2e0712f9397d8dddcebe3eb8ffec3b7caab68651d"
+    },
+    {
+      "path": "YiboReputation/CurrentCharacterPreview.lua",
+      "sha256": "8c92428803597374490230f3d87e4513048a62f7d7bd2a6703adb24023d2b204"
+    },
+    {
+      "path": "YiboReputation/Friendship.lua",
+      "sha256": "de6ed8874b40a3fc15dfa9370f22ba26b08ff2ebec7e1af282fef79aadc3f00d"
+    },
+    {
+      "path": "YiboReputation/GoalTargets.lua",
+      "sha256": "fedef3428d85056ebe26023d124c85653c006126c1fd87611c61e08918508ee8"
+    },
+    {
+      "path": "YiboReputation/Locales/Interface.lua",
+      "sha256": "ce744ddaa2b3a64c53f492d63d0ce08e8e1d58db64a174f3d4a4028070cdc1d5"
+    },
+    {
+      "path": "YiboReputation/Media/YiboReputationIcon-1024.tga",
+      "sha256": "51f8a502e487c9346b75453410eed227778b1c5e03695f28e46852c627e3b7dd"
+    },
+    {
+      "path": "YiboReputation/Media/YiboReputationIcon-128.tga",
+      "sha256": "6a5b9416191257ffc352b6356641f15e51599655cc31852c206dee699c07cdcf"
+    },
+    {
+      "path": "YiboReputation/Media/YiboReputationIcon-16.tga",
+      "sha256": "ddbef013e4dcbcdf53e50b4e3b4cf0c0fb708d2b3908dda5177dd745727ae6f5"
+    },
+    {
+      "path": "YiboReputation/Media/YiboReputationIcon-32.tga",
+      "sha256": "351aacceb6b0ad44f65aac1e04040b39d32721f35135072bbe3175b7dc233d74"
+    },
+    {
+      "path": "YiboReputation/Media/YiboReputationIcon-512.tga",
+      "sha256": "295b256da2cbe1ac89f7ca0f894e1f1a04c51712c030c4b39778a36e06cb92d8"
+    },
+    {
+      "path": "YiboReputation/Media/YiboReputationIcon-64.tga",
+      "sha256": "da7598b9902301d24c9614a3a2816f318a07c5e581b7419ef170702b8a82879c"
+    },
+    {
+      "path": "YiboReputation/Media/YiboReputationIcon.tga",
+      "sha256": "da7598b9902301d24c9614a3a2816f318a07c5e581b7419ef170702b8a82879c"
+    },
+    {
+      "path": "YiboReputation/Media/YiboReputationLogo.tga",
+      "sha256": "295b256da2cbe1ac89f7ca0f894e1f1a04c51712c030c4b39778a36e06cb92d8"
+    },
+    {
+      "path": "YiboReputation/Migration.lua",
+      "sha256": "7f4e2064d1fe04cdbcb7b933a2a8453a3b2542233055a07352ca3193e7d35a27"
+    },
+    {
+      "path": "YiboReputation/MonitoredPreview.lua",
+      "sha256": "848968f013641cea653959901e4247d87b1c28dfbd16ea28a4fe20c2e72d95cd"
+    },
+    {
+      "path": "YiboReputation/Nomi.lua",
+      "sha256": "b3b0b67c731238d7094e67aa2f20b6c74c40b9adef267ca9b62ddc585d036530"
+    },
+    {
+      "path": "YiboReputation/PreviewController.lua",
+      "sha256": "93d6b3cc0707c9aa2acd2140999aeed3a3be4c80e2abbb0f80ca764589ebf550"
+    },
+    {
+      "path": "YiboReputation/ReputationCatalog.lua",
+      "sha256": "054111364b040058d83a142a8eea1c4c52fbbcf0c278315b242f5f77030b9e11"
+    },
+    {
+      "path": "YiboReputation/ReputationFormat.lua",
+      "sha256": "7ebef20d10dc82c2d954b9e2077520abc96d0335b462a1cbf53bd74c270b84fe"
+    },
+    {
+      "path": "YiboReputation/ReputationHierarchy.lua",
+      "sha256": "a5c368b20e88f4c602bb79a9aecdbab4cafc8194ff584523ae7fa1bb8ac61e23"
+    },
+    {
+      "path": "YiboReputation/Scanner.lua",
+      "sha256": "082eddc3bc38abc22fb43a50194f9d890401d55e23d08def079d2952609639cd"
+    },
+    {
+      "path": "YiboReputation/Settings.lua",
+      "sha256": "fbf2bcb1d01f0a105b169c0afdd5d1d2c2b0b10b115baa21465da9c05fbb2b45"
+    },
+    {
+      "path": "YiboReputation/Store.lua",
+      "sha256": "f423a47ef81874287ed159dfcee4adf88aa0b1787bd04e1d8c0592efe113b8e0"
+    },
+    {
+      "path": "YiboReputation/YiboReleaseManifest.json",
+      "sha256": "fb044eefe633fe8f9e987d3173e0f6060bbff51fa8283f843bd9684759d98888"
+    },
+    {
+      "path": "YiboReputation/YiboReputation.toc",
+      "sha256": "9525ab9980997f50c19128d64c2d5be6d9724faa6347017e5bd8717f268c337c"
+    },
+    {
+      "path": "YiboTaskHub/AccountPage.lua",
+      "sha256": "7e42e9efa0fe6dd792445e3eb5e9e4fdda391a4d7d27aa22f03286f2c137738a"
+    },
+    {
+      "path": "YiboTaskHub/Bootstrap.lua",
+      "sha256": "3f47d1e6377d43d46ee323f872ae835d68f5f7dd7313684ced5ab4e26a3f3676"
+    },
+    {
+      "path": "YiboTaskHub/BossTargets.lua",
+      "sha256": "3bf1c4d5cdc51871b017768267fea59fd066257a1ab376b2899848959029bacf"
+    },
+    {
+      "path": "YiboTaskHub/Common/GoalEditor.lua",
+      "sha256": "5bae4f9ef39443c26d657ce439097fc7bb1b50f2e84b6865a273e62ba1cae175"
+    },
+    {
+      "path": "YiboTaskHub/Common/Goals.lua",
+      "sha256": "c26c3c022390e823b986b085248a3257e568ca249f2411b3c99693b236964ca1"
+    },
+    {
+      "path": "YiboTaskHub/Common/TargetsPage.lua",
+      "sha256": "1c2cb28fa7d9a8b4243e7e885fec24260740ea3a84fe05349666c9bd6f743cee"
+    },
+    {
+      "path": "YiboTaskHub/Contracts.lua",
+      "sha256": "4b9aa01fa71a445f6d1cd3b3fa499daca45aaac02593c303acb52bc0dc72c442"
+    },
+    {
+      "path": "YiboTaskHub/CoreIntegration.lua",
+      "sha256": "9fbffc0fb8e103b60bd853d2e9384e6a95cd9f1f8417e1120b3c6ce265815cb8"
+    },
+    {
+      "path": "YiboTaskHub/Database.lua",
+      "sha256": "e80a50af8aa6ad83fde6c36f135a92b8e240e51ec24a52cabe6676b044fe8784"
+    },
+    {
+      "path": "YiboTaskHub/Displays.lua",
+      "sha256": "2ab687d537a6593a5c2979c1b1f3a49c71aadee33ee6d98568c99662eb7a542b"
+    },
+    {
+      "path": "YiboTaskHub/GoalContracts.lua",
+      "sha256": "430f1c0ae75c548bc906cd3d3531a56c25a6feb59e11e5ba3be75701e2ab6ac2"
+    },
+    {
+      "path": "YiboTaskHub/HUD.lua",
+      "sha256": "0849db3b75297795e25a02260aca3da89b1d65ead08c3fffac92d60c1faedd26"
+    },
+    {
+      "path": "YiboTaskHub/Locales/en.lua",
+      "sha256": "864970f928245663c1c49b1b7240dc6a3f50418e41733ab4e32b570c14a33968"
+    },
+    {
+      "path": "YiboTaskHub/Locales/zh.lua",
+      "sha256": "40bc40380a66bbcc500ba568085fa522eab957d063d6f77d9c32be71ede7dd12"
+    },
+    {
+      "path": "YiboTaskHub/Media/YiboTaskHubIcon-1024.tga",
+      "sha256": "2ccd07f9048cf72760dc71cdb62f082a88dc1c1e8247e05b03e39229a7175054"
+    },
+    {
+      "path": "YiboTaskHub/Media/YiboTaskHubIcon-128.tga",
+      "sha256": "88c3e77441eaf5a43dc21090443353b58cb68444712098d21acd4f5e99504be3"
+    },
+    {
+      "path": "YiboTaskHub/Media/YiboTaskHubIcon-16.tga",
+      "sha256": "21897b4e5d78d327fc5b7b8ae3c2bee536348cbd3dd9e60bd02ff4abb5c6d4b2"
+    },
+    {
+      "path": "YiboTaskHub/Media/YiboTaskHubIcon-32.tga",
+      "sha256": "e4306567ede686e3d5ee6310932968593ebc4776da81c2814f50c3a16c8cfa52"
+    },
+    {
+      "path": "YiboTaskHub/Media/YiboTaskHubIcon-512.tga",
+      "sha256": "52f303330de29fab96a78cdd5d5c431d39cbf702ada0a4fd405244eeef2b1b2a"
+    },
+    {
+      "path": "YiboTaskHub/Media/YiboTaskHubIcon-64.tga",
+      "sha256": "d6b6d44b0a55fdb6dad0c0a43cd4c2bca3194ff850e6d87a85cb661fe4aa74d9"
+    },
+    {
+      "path": "YiboTaskHub/Media/YiboTaskHubIcon.tga",
+      "sha256": "d6b6d44b0a55fdb6dad0c0a43cd4c2bca3194ff850e6d87a85cb661fe4aa74d9"
+    },
+    {
+      "path": "YiboTaskHub/Media/YiboTaskHubLogo.tga",
+      "sha256": "52f303330de29fab96a78cdd5d5c431d39cbf702ada0a4fd405244eeef2b1b2a"
+    },
+    {
+      "path": "YiboTaskHub/Namespace.lua",
+      "sha256": "86634a3e403022f152cb56e32e26f98c06ebae8818a840f1ce1928dfe459a45f"
+    },
+    {
+      "path": "YiboTaskHub/Presentation.lua",
+      "sha256": "72c41e04f468ed62800fcb106e1139acdc83cba396bd9d980d090dd6cf1e9dc9"
+    },
+    {
+      "path": "YiboTaskHub/Preview.lua",
+      "sha256": "d499affe721bd0a594416a42bd75d549d5bd7adf28a8b89515a16ca701bedce6"
+    },
+    {
+      "path": "YiboTaskHub/Reminders.lua",
+      "sha256": "292c790573e9fa56a6d3719a154440e7d3f22fca4c3c8a1f2dffaf77e1785a65"
+    },
+    {
+      "path": "YiboTaskHub/Settings.lua",
+      "sha256": "10eb8d97de7b94a2c216af508e9f863742f30917549059859b81911b6f75dc2c"
+    },
+    {
+      "path": "YiboTaskHub/Snapshot.lua",
+      "sha256": "4393878165f12ff6175c67fddddf4928ba44b8df9ca69d8f9186ca6d40f104af"
+    },
+    {
+      "path": "YiboTaskHub/TargetTabs.lua",
+      "sha256": "68e6acdfdf98f98612e97b56616920ba9844e8dc9ba3632d5d45c55c1a7090b1"
+    },
+    {
+      "path": "YiboTaskHub/TaskActions.lua",
+      "sha256": "8379bdb1cc78c8d0548b392d9c26808dd0649b95de3483686f98f869a300be16"
+    },
+    {
+      "path": "YiboTaskHub/YiboReleaseManifest.json",
+      "sha256": "5c1da25901e276e13f546917a2dbb3b8c9e4d5b2011493962c448e27f696d934"
+    },
+    {
+      "path": "YiboTaskHub/YiboTaskHub.toc",
+      "sha256": "31ce68605c717b8286e05f834506fc982faab562637f77ffcd2ab1cb26cd577b"
+    },
+    {
+      "path": "YiboTodo/AccountPage.lua",
+      "sha256": "33bc9dc1f630beb56c626cb9feb13c0cf1d159281bbec2e9d88cdd76d57d44e3"
+    },
+    {
+      "path": "YiboTodo/ActionActivities.lua",
+      "sha256": "033b4f33c6cab94cef3125d80e56fb76ccebbf16cc55336979192fca0a8e24cc"
+    },
+    {
+      "path": "YiboTodo/ActionContracts.lua",
+      "sha256": "d7653fe6ce7b7671a259e222cd561e5e7d75e75d0a45e88c889258ea39f82b54"
+    },
+    {
+      "path": "YiboTodo/ActionNomi.lua",
+      "sha256": "02f803353686a97a3e898b56ca79e912373393b7379a5c504698d4b4a4d7f3de"
+    },
+    {
+      "path": "YiboTodo/Actions.lua",
+      "sha256": "2a9d9f043e8d6afca3bfcfd9e689aee68a694616040f7bf74a76c27b70d79605"
+    },
+    {
+      "path": "YiboTodo/ActionTodo.lua",
+      "sha256": "e86e68a2c3409236c6cf317e6dee1d9dc1d0d7e644c01044b5908ccfb675a67b"
+    },
+    {
+      "path": "YiboTodo/Bootstrap.lua",
+      "sha256": "b306f85e31de6ec3635fae9f4446eb4dfe959182a2dcb3388cd8a4ba0c4977fb"
+    },
+    {
+      "path": "YiboTodo/Catalog/ActivityCatalog.lua",
+      "sha256": "2a68e7550f49379e59b160ef0629188a05b117c8bd138e997395a9913758328c"
+    },
+    {
+      "path": "YiboTodo/Catalog/CooldownCatalog_MoP.lua",
+      "sha256": "8839e30bb39c48998680aa7d9171b8ffe45aa5c6cea75a7419a11c0c3cbb3b8d"
+    },
+    {
+      "path": "YiboTodo/Catalog/CooldownGroupCatalog.lua",
+      "sha256": "752616e472cb13fe5f0f72e4a73b4fa2f7dbce2e7836f28a77578d41d5e8bee9"
+    },
+    {
+      "path": "YiboTodo/Catalog/DailyActivityCatalog_Legacy.lua",
+      "sha256": "085ac5651290f1341e246bc59628e3961da4b0c837f3c7e8d64c752e716cba9f"
+    },
+    {
+      "path": "YiboTodo/Catalog/DailyActivityCatalog_MoP.lua",
+      "sha256": "bfb5f4c056653d3fb3b0c85810f93e3272aaeb27e9a6240da570e2236b7f9e85"
+    },
+    {
+      "path": "YiboTodo/Catalog/FarmOperationCatalog.lua",
+      "sha256": "e2906bd8db85eabce8ecc75e83aa6dfc5612cc8aff2f6cb23d01a05fbc5b8f4c"
+    },
+    {
+      "path": "YiboTodo/Catalog/MonitoringGroupCatalog.lua",
+      "sha256": "2f7009b99f9109487309a6b149c2641502a2dfdc7727fd7beec078b26b7b5ad1"
+    },
+    {
+      "path": "YiboTodo/Catalog/Ruleset_50504.lua",
+      "sha256": "dc90c381734666bf036489ffb87079b238d297b43a69f9f6db6756cdd18eafab"
+    },
+    {
+      "path": "YiboTodo/Catalog/SpecialActivityCatalog_MoP.lua",
+      "sha256": "af1d0a0d88048abed19ef6199222a4b4177ae5105bfdbd423889be11126f885f"
+    },
+    {
+      "path": "YiboTodo/Catalog/Validator.lua",
+      "sha256": "9fceece72b7faf95fbc106fedac63d81436a019ab10c92ea13551b3c210c2c35"
+    },
+    {
+      "path": "YiboTodo/Commands.lua",
+      "sha256": "2c8145b8ef476695977474a99e3cb0fb904ad4c6030788e9604993385c5328c8"
+    },
+    {
+      "path": "YiboTodo/CoreIntegration.lua",
+      "sha256": "a78d8ea353895e9081476519aafc10071741b7d5d4db0db712bd904722ca1c2d"
+    },
+    {
+      "path": "YiboTodo/Database.lua",
+      "sha256": "32a2713d9ed2837fa0d829271c5f2290359d3864152e00b322161c05afc3bc29"
+    },
+    {
+      "path": "YiboTodo/GoalTargets.lua",
+      "sha256": "86954686c9e954d14dcabaeb40ae4e4f2b4617f552a2391b0bf8a05ddbfe6615"
+    },
+    {
+      "path": "YiboTodo/Locale.lua",
+      "sha256": "0b8bb6411e99b0af07413cc2c89f5353157c8ffcf5bd6ab70e7e0d7cb447ac76"
+    },
+    {
+      "path": "YiboTodo/Media/YiboTodoIcon-1024.tga",
+      "sha256": "79feae3c10293417821c5feab01b07d32edf47aed918d385a5e0cf44cf7deadd"
+    },
+    {
+      "path": "YiboTodo/Media/YiboTodoIcon-128.tga",
+      "sha256": "6b2ef1bc494fd236d0482fc166b00f6111f190c561175322d120afe0870cca82"
+    },
+    {
+      "path": "YiboTodo/Media/YiboTodoIcon-16.tga",
+      "sha256": "1563f6919d03440fde20a52762325a54be1d51e5f706db4422a1d2ac0eba95b3"
+    },
+    {
+      "path": "YiboTodo/Media/YiboTodoIcon-32.tga",
+      "sha256": "792f9dd2ab572df865bce915982aa30370898c80243bd86e6dabb8060b4cd8aa"
+    },
+    {
+      "path": "YiboTodo/Media/YiboTodoIcon-512.tga",
+      "sha256": "23177574f4c4d8a8d27d7b168357efa93259533b28ed1990536ebcce0422cd62"
+    },
+    {
+      "path": "YiboTodo/Media/YiboTodoIcon-64.tga",
+      "sha256": "84652cfd59df13bec9cd14b10f8848920e32bb2d7e51214402232a5731a2f9d1"
+    },
+    {
+      "path": "YiboTodo/Media/YiboTodoIcon.tga",
+      "sha256": "84652cfd59df13bec9cd14b10f8848920e32bb2d7e51214402232a5731a2f9d1"
+    },
+    {
+      "path": "YiboTodo/Media/YiboTodoLogo.tga",
+      "sha256": "23177574f4c4d8a8d27d7b168357efa93259533b28ed1990536ebcce0422cd62"
+    },
+    {
+      "path": "YiboTodo/Mists/Darkmoon.lua",
+      "sha256": "8c45c1edbdc0abb3b3f734529732d80b66a6bc07f8c6391b4b71c53cf5d9c6d8"
+    },
+    {
+      "path": "YiboTodo/Model/Schedule.lua",
+      "sha256": "b4dcbea5876b54c5577f87af3588f16e9684bc1c995a33184027e54ee1fa55a1"
+    },
+    {
+      "path": "YiboTodo/Model/Snapshot.lua",
+      "sha256": "51a3ed40308c54a08518ec0258aa7a76584170a99a2639950cd727729628c15e"
+    },
+    {
+      "path": "YiboTodo/Model/State.lua",
+      "sha256": "c6105955e16a176300f48c1b7abc6b31fad2657e10aef2a6becb0c4777e2464d"
+    },
+    {
+      "path": "YiboTodo/Namespace.lua",
+      "sha256": "781fa66f356551b4a737b19a917b54037c4bbabca8fa2bd71c6088f29d831204"
+    },
+    {
+      "path": "YiboTodo/Providers/DailyQuest.lua",
+      "sha256": "30009121c5b6c39048e87b00881d687bbe9156207fb32c8a40705a8e88ed27fb"
+    },
+    {
+      "path": "YiboTodo/Providers/FarmOperationObservation.lua",
+      "sha256": "a7a3bc2dbbe8f2e6a1bf9d273c0bbd03374a8bdfb0706e4cca1d838e04f83b8b"
+    },
+    {
+      "path": "YiboTodo/Providers/ProfessionCooldown.lua",
+      "sha256": "9e4e14dcee3290f4e8a2759f250ce08dd466cff116751fa6c2a05ae64c555768"
+    },
+    {
+      "path": "YiboTodo/Providers/Registry.lua",
+      "sha256": "dfde278307cf7bb2e8511fe2694c210fcb87af0f198faf580189701f4b8fb511"
+    },
+    {
+      "path": "YiboTodo/Providers/SpecialActivity.lua",
+      "sha256": "355d2d9334fc57da5194a86f08e8a3539a4745bc245e3e5cbec08c97a6115439"
+    },
+    {
+      "path": "YiboTodo/Settings.lua",
+      "sha256": "4ca65b08326d47bd1001d45f2ead4f8d1924875b8770e989940307dd168181b0"
+    },
+    {
+      "path": "YiboTodo/YiboReleaseManifest.json",
+      "sha256": "643748d931c97042dd7fe02a7b25aba06a8a05f058dbbb94670fb3ad23d6795b"
+    },
+    {
+      "path": "YiboTodo/YiboTodo.toc",
+      "sha256": "4e993109c3cdb78fb7cd8005c3a93b71df285a09d33882388028c71608c83d4c"
+    },
+    {
+      "path": "YiboVault/AccountPage.lua",
+      "sha256": "7aa0a88b96593d0ca3bd61d612ff3ccb5d01e2bea25feea21dc7b4dd9468d1f8"
+    },
+    {
+      "path": "YiboVault/AuctionHouse.lua",
+      "sha256": "03b8105a85e5f6df7b8ec1a7c2ee6f70503752004cff95d18646de07bb0cceaf"
+    },
+    {
+      "path": "YiboVault/Bootstrap.lua",
+      "sha256": "c33ac712fc986cbd065af9ad119eaa5a058a6360a19b1f4a71f1cea7bf94e815"
+    },
+    {
+      "path": "YiboVault/Commands.lua",
+      "sha256": "318d77aced45da7cdccca9d8a839d37662e04b5471503922dbed39daf7c5b2b1"
+    },
+    {
+      "path": "YiboVault/Common/Collector.lua",
+      "sha256": "7113df75c8ec69ae11d92a0c27b84d59c99261404342c4da067b7e5fb2559b77"
+    },
+    {
+      "path": "YiboVault/Common/CoreIntegration.lua",
+      "sha256": "2e6874f5be9303c2f68dc894a5b539ebb3dca3265fa54aff647ebc2dc276613b"
+    },
+    {
+      "path": "YiboVault/Common/ItemRecords.lua",
+      "sha256": "a3cd3f6e3e8f7b1101acde0474d0f9a0758996685413d181097a7a92b1734605"
+    },
+    {
+      "path": "YiboVault/GoalTargets.lua",
+      "sha256": "cf109f89f42d10a9eccce96243de884d9752c3e87fbe9c10466f21df890146bd"
+    },
+    {
+      "path": "YiboVault/GuildBank.lua",
+      "sha256": "893ff2d20a23cffd088f9ea930279712a441fd86b4bc0b580fac998d1e9d3e09"
+    },
+    {
+      "path": "YiboVault/Items.lua",
+      "sha256": "88a1290b6e71f44a29ad5dc906a113e69721a81e7dcf86c7b24aed1004b573b3"
+    },
+    {
+      "path": "YiboVault/Locales/en.lua",
+      "sha256": "ebf54ac74635f04344598c021ca688c350b78c60356a853df798d54f8ac054aa"
+    },
+    {
+      "path": "YiboVault/Locales/zh.lua",
+      "sha256": "d4cc1bd8034dba4f03a889337cfda31c630740d95d108a86e9a9a77505c607a9"
+    },
+    {
+      "path": "YiboVault/MailItems.lua",
+      "sha256": "da95d4da67d605a2ece5e6a293ba77949c081ec71eef18108b7df0c695fecb95"
+    },
+    {
+      "path": "YiboVault/MailProvider.lua",
+      "sha256": "6ab019eaf64083d51ce0e3079146b867f33f4c2a0b6017f3f112283c622fdaaf"
+    },
+    {
+      "path": "YiboVault/Media/YiboVaultIcon-1024.tga",
+      "sha256": "f757259224fbee4d6fb4e84ba2906f942cd1f8b6727b9050fd7cd907070e1978"
+    },
+    {
+      "path": "YiboVault/Media/YiboVaultIcon-128.tga",
+      "sha256": "470e639d6779de7aa2a779a6a766a2b04a95a4b32754d77404e9cb0e908a1e68"
+    },
+    {
+      "path": "YiboVault/Media/YiboVaultIcon-16.tga",
+      "sha256": "e89f41afbcdec88ddf1c51913cd0cd93b7c50b08e778eb167c0db91dcde76ab8"
+    },
+    {
+      "path": "YiboVault/Media/YiboVaultIcon-32.tga",
+      "sha256": "0d1af744eca1891709a0f1d89c17e253cf3ff50409b3e89ddd9296af4605ba15"
+    },
+    {
+      "path": "YiboVault/Media/YiboVaultIcon-512.tga",
+      "sha256": "e1421182f62e5fa90c4efe235678f8736cc673d35810f97a9f6cbf183dc052c2"
+    },
+    {
+      "path": "YiboVault/Media/YiboVaultIcon-64.tga",
+      "sha256": "cedbb2be2f767964c3314e941933a79e5938938f3119b5babfc9efb58e819acf"
+    },
+    {
+      "path": "YiboVault/Media/YiboVaultIcon.tga",
+      "sha256": "cedbb2be2f767964c3314e941933a79e5938938f3119b5babfc9efb58e819acf"
+    },
+    {
+      "path": "YiboVault/Media/YiboVaultLogo.tga",
+      "sha256": "e1421182f62e5fa90c4efe235678f8736cc673d35810f97a9f6cbf183dc052c2"
+    },
+    {
+      "path": "YiboVault/Media/YiboVaultMailTransitIcon-v1.tga",
+      "sha256": "59c60481fe69c7fa317620c91e0cc2bc3d6da237e3f98243b3360d22bd6851ea"
+    },
+    {
+      "path": "YiboVault/Media/YiboVaultMailTransitIcon-v2.tga",
+      "sha256": "cabffa17613fd71f782e824c12cf9e5c1e41964ad7c934fa35b84cbf8a4550b3"
+    },
+    {
+      "path": "YiboVault/Mists/BagCapacity.lua",
+      "sha256": "9b4f4593ec0f9caf3066380b2182a06ccd800274ee47cd204234c76c72d003a3"
+    },
+    {
+      "path": "YiboVault/Mists/Collector.lua",
+      "sha256": "c9b22e30c824e81a014cd1b010067cf971b4b4485595bf0c8d82875c8eab4edd"
+    },
+    {
+      "path": "YiboVault/Mists/Store.lua",
+      "sha256": "324e17fbd02c62b0908935d2600cb6ecec5abe8aa7fd3ba52c30a0fdd9354907"
+    },
+    {
+      "path": "YiboVault/Namespace.lua",
+      "sha256": "9f77bf31ead4da03c0b372b5ac0ea50cdf11ad53f094ba24e043f5a40811b39f"
+    },
+    {
+      "path": "YiboVault/PersonalCounts.lua",
+      "sha256": "64bbd6495aff787b7cc5f6ef278807c1815b6aa38f1ac85c39898ab612904d11"
+    },
+    {
+      "path": "YiboVault/StoragePage.lua",
+      "sha256": "d1d7fe40b681f1affa36683724440e5752b175b0bc63769343a2fce7a841a5db"
+    },
+    {
+      "path": "YiboVault/Store.lua",
+      "sha256": "5c11ef585ab5d4956c348e6e65237be915107390c799603b4e62c2a700ba9457"
+    },
+    {
+      "path": "YiboVault/Tooltip.lua",
+      "sha256": "437fea46a0fda83abddd7924aadd41f0299f0046928e2fb62baf287e078bc767"
+    },
+    {
+      "path": "YiboVault/YiboReleaseManifest.json",
+      "sha256": "3b50179ab47af1be54ec4af9eaeee6c598a28522425ad61fb50fd7c55089c3c6"
+    },
+    {
+      "path": "YiboVault/YiboVault.toc",
+      "sha256": "609db3c6a92827a9a9d0b3834fc9b56db934ae300db1d9856081828364a736ad"
+    }
+  ]
+}

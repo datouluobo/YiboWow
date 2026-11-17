@@ -1,4 +1,6 @@
 YiboAutoOpen = {}
+dofile("YiboAutoOpen/Mists/Target.lua")
+YiboAutoOpen.Target.supported = true
 dofile("YiboAutoOpen/Catalog.lua")
 
 local catalog = YiboAutoOpen.Catalog.defaultOrder

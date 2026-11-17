@@ -1,5 +1,6 @@
 local Addon = _G.YiboMail
 local Scanner = { publishedStatus = {} }; Addon.Scanner = Scanner
+local MAX_PENDING_RETRIES = 4
 local function Pack(...) return { n = select("#", ...), ... } end
 local function Read(fn, ...)
     if type(fn) ~= "function" then error("mail-api-unavailable") end
@@ -73,7 +74,8 @@ local function Stage()
         for _, field in ipairs({ 3, 4, 5, 6, 8, 9, 10 }) do if h[field] ~= headers[index][field] then error("mail-header-changed") end end
     end
     local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
-    if not Scanner:IsOpen() or not current or current.id ~= character.id or PendingCommand() then return nil, "mail-context-changed" end
+    if not Scanner:IsOpen() or not current or current.id ~= character.id then return nil, "mail-context-changed" end
+    if PendingCommand() then return nil, "command-pending" end
     return { character = character, mails = mails, coverage = { status = loaded == 0 and "known-empty" or "known",
         currentCount = loaded, totalCount = total, unscannedCount = 0, observedAt = now, clockSource = clock } }
 end
@@ -88,19 +90,26 @@ function Scanner:Scan(manual)
     if manual then self.updated = true end
     local ok, result, reason = pcall(Stage)
     if not ok then self:Invalidate(tostring(result)); return nil, "read-failed" end
-    if not result then self:Invalidate(nil, reason); return nil, reason end
+    if not result then
+        if reason ~= "command-pending" or self.pending ~= reason then self:Invalidate(nil, reason) end
+        return nil, reason
+    end
     self.lastError, self.pending, self.validAt, self.updated = nil, nil, result.coverage.observedAt, true
     Addon:CommitScan(result.character, result.mails, result.coverage)
     return true
 end
-function Scanner:Schedule()
+function Scanner:Schedule(retries)
     if self.queued then return end
     self.queued = true
     local token = self.generation
     local function Run()
         if self.generation ~= token then return end
         self.queued = false
-        if self:IsOpen() then self:Scan(false) end
+        if not self:IsOpen() then return end
+        local _, reason = self:Scan(false)
+        if reason == "command-pending" and retries > 0 and C_Timer and C_Timer.After then
+            self:Schedule(retries - 1)
+        end
     end
     if C_Timer and C_Timer.After then C_Timer.After(0.3, Run) else Run() end
 end
@@ -112,7 +121,7 @@ end
 function Scanner:OnEvent(event)
     if event == "PLAYER_ENTERING_WORLD" then self:Close(); self.inWorld = true
     elseif event == "PLAYER_LEAVING_WORLD" or event == "PLAYER_LOGOUT" then self:Close(); self.inWorld = false
-    elseif event == "MAIL_SHOW" and self.inWorld then self.open, self.updated = true, false; self:Invalidate(nil, "inbox-not-ready"); self:Schedule()
+    elseif event == "MAIL_SHOW" and self.inWorld then self.open, self.updated = true, false; self:Invalidate(nil, "inbox-not-ready"); self:Schedule(MAX_PENDING_RETRIES)
     elseif event == "MAIL_CLOSED" then self:Close()
-    elseif event == "MAIL_INBOX_UPDATE" and self:IsOpen() then self.updated = true; self:Schedule() end
+    elseif event == "MAIL_INBOX_UPDATE" and self:IsOpen() then self.updated = true; self:Schedule(MAX_PENDING_RETRIES) end
 end

@@ -1,6 +1,6 @@
-# YiboCore for MoP
+# Yibo Addon Suite for MoP
 
-YiboCore for MoP brings together 15 modular Yibo addons for **Mists of Pandaria Classic**, combining account-wide tracking with everyday quality-of-life features.
+Yibo Addon Suite for MoP brings together 15 modular Yibo addons for **Mists of Pandaria Classic**, combining account-wide tracking with everyday quality-of-life features.
 
 ## Included Addons
 
@@ -71,9 +71,9 @@ Please include your game version, Suite version, affected addon version, steps t
 
 ---
 
-# YiboCore for MoP 熊猫人之谜整合包
+# Yibo Addon Suite for MoP 熊猫人之谜整合包
 
-YiboCore for MoP 汇集了 15 个可按需启用的 Yibo 系列插件，面向**熊猫人之谜怀旧服**，提供账号多角色信息追踪与日常便利功能。
+Yibo Addon Suite for MoP 汇集了 15 个可按需启用的 Yibo 系列插件，面向**熊猫人之谜怀旧服**，提供账号多角色信息追踪与日常便利功能。
 
 ## 包含的插件
 

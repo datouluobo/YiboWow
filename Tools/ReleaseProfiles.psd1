@@ -48,13 +48,26 @@
             ExtraFiles = @()
             Targets = @{
                 Mists = @{
-                    SourceToc = 'YiboAutoOpen.toc'
+                    SourceToc = 'YiboAutoOpen_Mists.toc'
                     LoadToc = 'YiboAutoOpen.toc'
                     Interfaces = @(50504)
                     CurseForgeFlavor = 'mists'
                     CurseForgeVersionNames = @('5.5.4')
                     LuaVersion = '5.1'
                     ValidationState = 'existing-mists-baseline'
+                }
+                Forever = @{
+                    SourceToc = 'YiboAutoOpen_Forever.toc'
+                    LoadToc = 'YiboAutoOpen.toc'
+                    VersionFile = 'Forever/Target.lua'
+                    RequiredCoreFile = 'Forever/Target.lua'
+                    RequiredCorePattern = '^Addon\.REQUIRED_CORE_API\s*=\s*(\d+)'
+                    VersionPattern = '^Addon\.VERSION\s*=\s*"([^"]+)"'
+                    Interfaces = @(16001)
+                    CurseForgeFlavor = 'forever'
+                    CurseForgeVersionNames = @('1.60.1')
+                    LuaVersion = '5.1'
+                    ValidationState = 'offline-client-pending'
                 }
             }
         }
@@ -67,7 +80,7 @@
             ExtraFiles = @()
             Targets = @{
                 Mists = @{
-                    SourceToc = 'YiboBuilds.toc'
+                    SourceToc = 'YiboBuilds_Mists.toc'
                     LoadToc = 'YiboBuilds.toc'
                     Interfaces = @(50504)
                     CurseForgeFlavor = 'mists'
@@ -86,7 +99,7 @@
                     CurseForgeFlavor = 'forever'
                     CurseForgeVersionNames = @('1.60.1')
                     LuaVersion = '5.1'
-                    ValidationState = 'forever-0.1.0-equipment-scope-accepted-20261106'
+                    ValidationState = 'forever-0.1.20-realm-scope-client-pending-20261111'
                 }
             }
         }
@@ -126,7 +139,7 @@
                     CurseForgeFlavor = 'forever'
                     CurseForgeVersionNames = @('1.60.1')
                     LuaVersion = '5.1'
-                    ValidationState = 'forever-0.2.1-release-ready-user-accepted-scope-20261105'
+                    ValidationState = 'forever-0.2.4-item-level-and-sub-gold-formatting'
                 }
             }
         }
@@ -138,13 +151,24 @@
             ExtraFiles = @()
             Targets = @{
                 Mists = @{
-                    SourceToc = 'YiboCrafting.toc'
+                    SourceToc = 'YiboCrafting_Mists.toc'
                     LoadToc = 'YiboCrafting.toc'
                     Interfaces = @(50504)
                     CurseForgeFlavor = 'mists'
                     CurseForgeVersionNames = @('5.5.4')
                     LuaVersion = '5.1'
                     ValidationState = 'existing-mists-baseline'
+                }
+                Forever = @{
+                    SourceToc = 'YiboCrafting_Forever.toc'
+                    LoadToc = 'YiboCrafting.toc'
+                    Interfaces = @(16001)
+                    VersionFile = 'Forever/Namespace.lua'
+                    VersionPattern = '^local Addon=.*VERSION="([^"]+)"'
+                    CurseForgeFlavor = 'forever'
+                    CurseForgeVersionNames = @('1.60.1')
+                    LuaVersion = '5.1'
+                    ValidationState = 'forever-0.1.5-realm-scope-client-pending-20261111'
                 }
             }
         }
@@ -177,7 +201,7 @@
                     CurseForgeFlavor = 'forever'
                     CurseForgeVersionNames = @('1.60.1')
                     LuaVersion = '5.1'
-                    ValidationState = 'forever-0.1.0-money-scope-accepted-20261106'
+                    ValidationState = 'forever-0.1.9-realm-scope-client-pending-20261111'
                 }
             }
         }
@@ -204,6 +228,7 @@
             VersionFile = 'Namespace.lua'
             VersionPattern = '^Addon\.NAME, Addon\.VERSION, Addon\.API_VERSION\s*=\s*"YiboMail",\s*"([^"]+)"'
             APIPattern = '^Addon\.NAME, Addon\.VERSION, Addon\.API_VERSION\s*=\s*"YiboMail",\s*"[^"]+",\s*(\d+)'
+            APIFile = 'Namespace.lua'
             SourceVersionIncludesAPI = $true
             RequiredCorePattern = '^Addon\.REQUIRED_CORE_API\s*=\s*(\d+)'
             VersionIncludesAPI = $true
@@ -211,13 +236,25 @@
             ExtraFiles = @()
             Targets = @{
                 Mists = @{
-                    SourceToc = 'YiboMail.toc'
+                    SourceToc = 'YiboMail_Mists.toc'
                     LoadToc = 'YiboMail.toc'
                     Interfaces = @(50504)
                     CurseForgeFlavor = 'mists'
                     CurseForgeVersionNames = @('5.5.4')
                     LuaVersion = '5.1'
                     ValidationState = 'existing-mists-baseline'
+                }
+                Forever = @{
+                    SourceToc = 'YiboMail_Forever.toc'
+                    LoadToc = 'YiboMail.toc'
+                    Interfaces = @(16001)
+                    VersionFile = 'Forever/Target.lua'
+                    VersionPattern = '^Addon\.VERSION\s*=\s*"([^"]+)"'
+                    RequiredCoreFile = 'Namespace.lua'
+                    CurseForgeFlavor = 'forever'
+                    CurseForgeVersionNames = @('1.60.1')
+                    LuaVersion = '5.1'
+                    ValidationState = 'forever-0.1.5-api1-realm-scope-client-pending-20261111'
                 }
             }
         }
@@ -269,7 +306,7 @@
             ExtraFiles = @()
             Targets = @{
                 Mists = @{
-                    SourceToc = 'YiboReputation.toc'
+                    SourceToc = 'YiboReputation_Mists.toc'
                     LoadToc = 'YiboReputation.toc'
                     Interfaces = @(50504)
                     CurseForgeFlavor = 'mists'
@@ -288,7 +325,7 @@
                     CurseForgeFlavor = 'forever'
                     CurseForgeVersionNames = @('1.60.1')
                     LuaVersion = '5.1'
-                    ValidationState = 'forever-0.1.1-reputation-scope-accepted-20261106'
+                    ValidationState = 'forever-0.1.9-realm-scope-client-pending-20261111'
                 }
             }
         }
@@ -334,19 +371,31 @@
             VersionFile = 'Namespace.lua'
             VersionPattern = '^Addon\.RELEASE_VERSION\s*=\s*"([^"]+)"'
             APIPattern = '^Addon\.API_VERSION\s*=\s*(\d+)'
+            APIFile = 'Namespace.lua'
+            RequiredCoreFile = 'Namespace.lua'
             RequiredCorePattern = '^Addon\.REQUIRED_CORE_API\s*=\s*(\d+)'
             VersionIncludesAPI = $true
             ResourceDirectories = @('Media')
             ExtraFiles = @()
             Targets = @{
                 Mists = @{
-                    SourceToc = 'YiboVault.toc'
+                    SourceToc = 'YiboVault_Mists.toc'
                     LoadToc = 'YiboVault.toc'
                     Interfaces = @(50504)
                     CurseForgeFlavor = 'mists'
                     CurseForgeVersionNames = @('5.5.4')
                     LuaVersion = '5.1'
                     ValidationState = 'mists-1.2.4-manual-install-client-accepted'
+                }
+                Forever = @{
+                    SourceToc = 'YiboVault_Forever.toc'
+                    LoadToc = 'YiboVault.toc'
+                    Interfaces = @(16001)
+                    VersionFile = 'Forever/Target.lua'
+                    CurseForgeFlavor = 'forever'
+                    CurseForgeVersionNames = @('1.60.1')
+                    LuaVersion = '5.1'
+                    ValidationState = 'forever-0.6.4-api1-realm-scope-client-pending-20261111'
                 }
             }
         }

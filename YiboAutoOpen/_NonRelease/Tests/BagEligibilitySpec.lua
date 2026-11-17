@@ -9,6 +9,8 @@ C_Container = {
     GetContainerItemCooldown = function() return cooldownStart, cooldownDuration, 1 end,
 }
 YiboAutoOpen = {}
+dofile("YiboAutoOpen/Mists/Target.lua")
+YiboAutoOpen.Target.supported = true
 dofile("YiboAutoOpen/Catalog.lua")
 
 dofile("YiboAutoOpen/BagAdapter.lua")

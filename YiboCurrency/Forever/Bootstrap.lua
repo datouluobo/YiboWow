@@ -12,15 +12,17 @@ function Addon:Initialize()
     if valid then
         for name, version in pairs({ localization = 1, ["character-name-format"] = 1, ["character-identity"] = 1,
             characters = 1, ["character-cleanup"] = 2, ["account-view"] = 2, ["account-entry"] = 2,
-            ["account-preview-characters"] = 1, ["account-character-admission"] = 1, ["account-surface-budget"] = 2 }) do
+            ["account-preview-characters"] = 1, ["account-character-admission"] = 1, ["account-surface-realm-scope"] = 1, ["account-surface-budget"] = 2,
+            ["character-archive-providers"] = 1, ["business-providers"] = 1, ["item-picker"] = 1, ["item-resolver"] = 1, ["basic-input"] = 1 }) do
             if not core:HasCapability(name, version) then valid = false end
         end
     end
-    for _, group in ipairs({ { core, "RegisterAddon" }, { core and core.Locale, "Get" },
-        { core and core.Characters, "GetCurrentID", "GetCurrent", "FormatName" },
-        { core and core.AccountView, "RegisterPage", "NotifyPageChanged", "Toggle" },
-        { core and core.Entry, "RegisterBusinessEntry" }, { core and core.CharacterCleanup, "RegisterOwner" },
-        { core and core.Defaults, "Copy" }, { core and core.UITheme, "CreateText", "CreateButton" } }) do
+    for _, group in ipairs({ { core, "RegisterAddon", "CreateItemPicker", "Text" }, { core and core.Locale, "Get" },
+        { core and core.Characters, "GetCurrentID", "GetCurrent", "FormatName", "Get" },
+        { core and core.AccountView, "RegisterPage", "NotifyPageChanged", "Toggle", "GetColumnPage", "UpdateColumnPager" },
+        { core and core.Contracts, "Register", "NotifyChanged" }, { core and core.Entry, "RegisterBusinessEntry" }, { core and core.CharacterCleanup, "RegisterOwner" },
+        { core and core.Defaults, "Copy" }, { core and core.ItemResolver, "GetInfo", "Parse", "Request" },
+        { core and core.UITheme, "CreateText", "CreateButton", "CreateScrollFrame", "CreateDropdown", "CreateInput" } }) do
         for index = 2, #group do if type(group[1]) ~= "table" or type(group[1][group[index]]) ~= "function" then valid = false end end
     end
     if not valid then
@@ -33,12 +35,21 @@ function Addon:Initialize()
     local ok, err = core:RegisterAddon(self.NAME, { version = self.VERSION, requiredAPI = 13 })
     if not ok then self:Print(err); return false end
     ok, err = core.CharacterCleanup:RegisterOwner(self.NAME, {
-        Inspect = function(character) return { hasData = Addon.Store.db.characters[character.id] ~= nil, label = Addon:T("FOREVER.TITLE") } end,
+        Inspect = function(character)
+            local db, id = Addon.Store.db, character.id
+            local nativeChars = db.nativeDiscovery and db.nativeDiscovery.characters
+            return {
+                hasData = db.characters[id] ~= nil or (db.itemSnapshots or {})[id] ~= nil
+                    or (nativeChars and nativeChars[id] ~= nil and next(nativeChars[id]) ~= nil),
+                label = Addon:T("FOREVER.TITLE")
+            }
+        end,
         Delete = function(character, _, context) return Addon.Store:Delete(character, context) end })
     if not ok then self:Print(err); return false end
+    ok, err = self.ArchiveProvider:Initialize(); if not ok then self:Print(err); return false end
     ok, err = self.AccountPage:Register(); if not ok then self:Print(err); return false end
     self.initialized, self._unsupportedEvents = true, {}
-    for _, event in ipairs({ "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "PLAYER_LOGOUT", "PLAYER_MONEY", "BAG_UPDATE_DELAYED", "UNIT_INVENTORY_CHANGED" }) do
+    for _, event in ipairs({ "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "PLAYER_LOGOUT", "PLAYER_MONEY", "BAG_UPDATE_DELAYED", "CURRENCY_DISPLAY_UPDATE", "UNIT_INVENTORY_CHANGED" }) do
         local registered, reason = pcall(self.Frame.RegisterEvent, self.Frame, event)
         if not registered then self._unsupportedEvents[event] = tostring(reason) end
     end

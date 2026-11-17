@@ -21,7 +21,7 @@ local function Boot(saved, configure, forever)
         local h = data.headers[index]
         if not h then return end
         local subject = data.changing and data.reads % 2 == 0 and "Changed" or h.subject
-        return nil, nil, h.sender, subject, h.money, h.cod, 30, h.count, false, false
+        return nil, nil, h.sender, subject, h.money, h.cod, h.days or 30, h.count, false, h.returned == true
     end
     e.GetInboxItem = function(index, slot)
         assert(slot >= 1 and slot <= 16, "attachment bounds")
@@ -32,7 +32,13 @@ local function Boot(saved, configure, forever)
         local item = data.items[index] and data.items[index][slot]
         if item and not data.missingLink then return "item:" .. (data.badLink and 9000 or item.id) end
     end
-    e.C_Mail = { IsCommandPending = function() return data.pending == true end }
+    e.C_Mail = { IsCommandPending = function()
+        if data.pendingReads and data.pendingReads > 0 then
+            data.pendingReads = data.pendingReads - 1
+            return true
+        end
+        return data.pending == true
+    end }
     e.C_Item.GetItemInfo = function(id) return "NativeItem" .. id, "item:" .. id end
     for _, action in ipairs({ "TakeInboxItem", "TakeInboxMoney", "AutoLootMailItem", "SendMail", "DeleteInboxItem", "ReturnInboxItem", "CheckInbox" }) do
         e[action] = function() error("unexpected mailbox action " .. action) end
@@ -55,7 +61,7 @@ local function Boot(saved, configure, forever)
     return e, core, e.YiboMail, event, Flush, data, load
 end
 local e,c,m,fire,flush,data,load = Boot()
-Check(m.initialized and m.VERSION == "0.1.0-api1", "real Forever Mail manifest starts")
+Check(m.initialized and m.VERSION == "0.1.5-api1", "real Forever Mail manifest starts")
 Check(e.YiboMailDB.sentinel == "mists" and not e.YiboMailDB.byCharacter, "Mail Mists store untouched")
 Check(not m.Queue and not m.Compose and not m.NativeUI and not m.Recipients and not m.ActionTodo, "operation modules excluded")
 Check(not m.Frame.events.MAIL_SEND_SUCCESS and not m.Items:HasCapability("mail-items.transfers",1), "operations and transfer capability not claimed")
@@ -70,6 +76,7 @@ Check(m.Items:GetState(e.TEST_GUID).status == "known" and #panel.renderedMails =
 local query = m.Items:GetByCharacter(e.TEST_GUID,{includeStale=true})
 Check(#query.records == 2 and query.quantity == 5 and query.records[2].location.attachmentIndex == 16, "all attachment slots saved through public API")
 Check(panel.rows[1].labels.sender:GetText() == "Sender" and panel.rows[1].labels.subject:GetText() == "Parcel", "real inbox header fields rendered")
+Check(panel.renderedMails[1].money == 5 and panel.renderedMails[1].cod == 0, "inbox snapshot preserves header copper and COD")
 Check(panel.rows[1].labels.attachments:GetText():match("NativeItem"), "Core resolves attachment names")
 local mailKey = m.db.byCharacter[e.TEST_GUID].visibleKeys[1]
 m.Scanner:Scan(false)
@@ -82,8 +89,34 @@ c:RegisterAddon("MailConsumer",{requiredAPI=13})
 local descriptor = assert(c.Contracts:Resolve("mail.items",{major=1,minMinor=0}))
 Check(descriptor.version.minor == 0 and c.Contracts:Call("MailConsumer",descriptor,"GetByCharacter",{characterID=e.TEST_GUID}).quantity == 5, "Core routes versioned Mail snapshot contract")
 c.AccountView.frame:Hide(); Check(c.AccountView:ShowPreview("mail-inbox",e.Minimap), "Core owns Mail preview")
-Check(#panel.renderedMails == 2 and not panel.refresh:IsShown(), "Mail preview reuses inbox rows")
-c.AccountView:HidePreview(); c.AccountView:Toggle("mail-inbox")
+Check(panel.summaryRows[1].labels.mailCount:GetText() == "2" and not panel.rows[1]:IsShown(), "Mail preview summarizes one character")
+Check(panel.summaryRows[1].labels.attachmentCount:GetText() == "2"
+    and panel.summaryRows[1].labels.claimable:GetText() == "5", "Mail summary counts attachment slots and claimable copper")
+local summaryAlt = {id="MailSummaryAlt", name="Alt", realm="Realm"}
+local summaryCache = m.Copy(m.db.byCharacter[e.TEST_GUID])
+summaryCache.visibleKeys = {}
+summaryCache.coverage.status = "known-empty"
+m.db.byCharacter[summaryAlt.id] = summaryCache
+m.AccountPage:Refresh(panel,{preview=true,characters={c.Characters:GetCurrent(),summaryAlt}})
+Check(panel.summaryRows[1].labels.mailCount:GetText()=="2" and panel.summaryRows[2].labels.mailCount:GetText()=="0"
+    and panel.summaryRows[2].labels.updated:GetText():sub(1,1)=="~", "other GUID keeps its own empty historical summary")
+m.db.byCharacter[summaryAlt.id] = nil
+local savedExpiry = m.db.byCharacter[e.TEST_GUID].records[mailKey].expiresAtEstimate
+local summaryRecord = m.db.byCharacter[e.TEST_GUID].records[mailKey]
+summaryRecord.expiresAtEstimate = m:Now() - 1
+m.AccountPage:Refresh(panel,{preview=true,characters={c.Characters:GetCurrent()}})
+Check(panel.expiryNotice:GetText()==m:T("FOREVER.SUMMARY_EXPIRED",1), "expired estimate requests mailbox verification")
+Check(panel.summaryRows[1].labels.mailCount:GetText()=="2", "estimated expiry retains historical mail count")
+summaryRecord.expiresAtEstimate = m:Now() + 3 * 86400
+m.AccountPage:Refresh(panel,{preview=true,characters={c.Characters:GetCurrent()}})
+Check(panel.expiryNotice:GetText()==m:T("FOREVER.SUMMARY_URGENT",1,3), "three-day boundary uses urgent reminder")
+summaryRecord.expiresAtEstimate = m:Now() + 7 * 86400
+m.AccountPage:Refresh(panel,{preview=true,characters={c.Characters:GetCurrent()}})
+Check(panel.expiryNotice:GetText()==m:T("FOREVER.SUMMARY_SOON",1,7), "seven-day boundary uses upcoming reminder")
+summaryRecord.expiresAtEstimate = savedExpiry
+panel.openInbox:Fire("OnClick")
+Check(not c.AccountView.frame.preview and panel.toolbar:IsShown() and #panel.renderedMails==2,
+    "summary action opens the inbox detail")
 local before = data.reads
 for i=1,20 do fire("MAIL_INBOX_UPDATE") end
 flush()
@@ -136,6 +169,12 @@ local _,_,budget=Boot(nil,function(_,core)
     core.HasCapability=function(self,name,minimum) if name=="account-surface-budget" then return false end; return original(self,name,minimum) end
 end)
 Check(not budget.initialized and not budget.db,"required Core surface capability checked before DB initialization")
+local ie,_,inputMissing=Boot(nil,function(_,core)
+    local original=core.HasCapability
+    core.HasCapability=function(self,name,minimum) return name~="basic-input" and original(self,name,minimum) end
+end)
+Check(not inputMissing.initialized and not inputMissing.db and not ie.YiboMailForeverDB.byCharacter,
+    "input capability is required before writing Mail DB")
 local defaultEnv,_,defaultMail=Boot(nil,function(env) env.WOW_PROJECT_CAMELOT=18; env.WOW_PROJECT_ID=18 end,false)
 Check(not defaultMail.initialized and not defaultEnv.YiboMailDB,"forced Mists manifest cannot write on Forever")
 local ge,gc,gm,gf,gd,gdata=Boot(nil,function(_,core) core.Characters.GetCurrent=function() return nil end end)
@@ -187,6 +226,30 @@ do
     local vp=ic.AccountView.frame.instances["vault-items"]
     vp.tabs.mail.scripts.OnClick(); dr()
     Check(#vp.renderedRecords==2 and vp.renderedStatus=="known","Vault mail page uses same provider snapshot")
+    ie.SlashCmdList.YIBOMAIL(""); dr()
+    local mailPage=ic.AccountView.frame.instances["mail-inbox"]
+    mailPage.search:SetValue("nothing matches",true); dr()
+    Check(#mailPage.renderedMails==0 and vault.Items:Query({sources={"mail"}}).totals.totalQuantity==10,
+        "Mail UI filters do not change the Vault provider snapshot")
+    ie.SlashCmdList.YIBOVAULT("open"); dr()
+    local snapshot=im.db.byCharacter[ie.TEST_GUID]
+    box.pending=true; box.items[1][16]=nil; box.headers[1].count=1
+    ef("MAIL_INBOX_UPDATE"); dr()
+    Check(vault.Items:Query({sources={"mail"}}).totals.totalQuantity==10,"pending attachment take keeps the last completed Vault snapshot")
+    box.pending=false
+    box.pendingReads=1
+    ef("MAIL_INBOX_UPDATE"); dr()
+    Check(im.Items:GetByCharacter(ie.TEST_GUID).quantity==8 and #vp.renderedRecords==1
+        and vault.Items:Query({sources={"mail"}}).totals.totalQuantity==8,"retry after pending command updates Vault without a second inbox event")
+    local archived
+    for _, observation in ipairs(snapshot.history or {}) do
+        for _, item in ipairs(observation.attachments or {}) do
+            if item.attachmentIndex==16 and item.quantity==2 then archived=true end
+        end
+    end
+    Check(archived,"attachment take retains the previously discovered item in Mail history")
+    box.items[1][16]={ id=7002, quantity=2 }; box.headers[1].count=2
+    ef("MAIL_INBOX_UPDATE"); dr()
     box.open=false; ef("MAIL_CLOSED"); dr()
     Check(vault.AccountPage:Status("mail",ie.TEST_GUID)=="stale" and #vault.Items:Query({sources={"mail"},includeStale=false}).records==0,"provider close invalidates Vault fresh view")
     box.open=true; ef("MAIL_SHOW"); dr()
@@ -206,6 +269,36 @@ do
     Check(not vault.MailProvider:Connect() and vault.Items:Query({sources={"mail"}}).totals.totalQuantity==10,"incompatible provider methods leave Vault native base usable")
     ic.Contracts:Unregister("BadMail",badRef)
     Check(#ie.TEST_MESSAGES==0,"Mail/Vault integration has no hidden callback errors: " .. table.concat(ie.TEST_MESSAGES," | "))
+end
+do
+    local fe,fc,fm,ff,fd,box=Boot()
+    box.headers[1].days=2
+    box.headers[2].returned=true
+    box.headers[3]={sender="Courier",subject="Order",money=0,cod=10,days=0}
+    box.count,box.total=3,3
+    ff("PLAYER_ENTERING_WORLD"); box.open=true; ff("MAIL_SHOW"); fd()
+    fe.SlashCmdList.YIBOMAIL(""); fd()
+    local inbox=fc.AccountView.frame.instances["mail-inbox"]
+    local reads,revision=box.reads,fm.Items:GetRevision()
+    for index,subject in ipairs({"Parcel","Parcel","Order","Letter","Parcel"}) do
+        inbox.filter.menu.buttons[index+1].scripts.OnClick(); fd()
+        Check(#inbox.renderedMails==1 and inbox.renderedMails[1].subject==subject,"mail kind filter: "..inbox.filter.value)
+    end
+    inbox.search:SetValue("  NATIVEITEM7002  ",true); fd()
+    Check(#inbox.renderedMails==1 and inbox.matchCount:GetText()==fm:T("FOREVER.MATCH_COUNT",1,3),"attachment name search and kind filter intersect")
+    inbox.search:SetValue("Courier",true); fd()
+    Check(#inbox.renderedMails==0 and inbox.matchCount:GetText()==fm:T("FOREVER.NO_MATCH"),"sender match excluded by active kind")
+    inbox.filter.menu.buttons[1].scripts.OnClick(); fd()
+    Check(#inbox.renderedMails==1 and inbox.renderedMails[1].subject=="Order","all-mail filter finds sender")
+    inbox.search:SetValue("7002",true); fd()
+    Check(#inbox.renderedMails==1 and inbox.renderedMails[1].subject=="Parcel","attachment ID matches")
+    fc.AccountView.frame:Hide()
+    Check(fc.AccountView:ShowPreview("mail-inbox",fe.Minimap) and inbox.summaryRows[1].labels.mailCount:GetText()=="3" and not inbox.toolbar:IsShown(),
+        "mail preview summarizes complete snapshot without transient filters")
+    fc.AccountView:HidePreview(); fe.SlashCmdList.YIBOMAIL(""); fd()
+    Check(#inbox.renderedMails==1 and inbox.toolbar:IsShown(),"mail filter resumes on return")
+    inbox.search.clearButton.scripts.OnClick(); fd()
+    Check(#inbox.renderedMails==3 and box.reads==reads and fm.Items:GetRevision()==revision,"clearing UI filters restores all mail without scanning or publishing")
 end
 print("MailForever Smoke passed: " .. checks .. " checks (real Core/Mail manifests, simulated client)")
 return Boot

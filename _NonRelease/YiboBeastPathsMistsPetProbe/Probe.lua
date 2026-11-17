@@ -28,6 +28,55 @@ local function CoreReady()
 end
 local function First(r) return r and r.values and r.values[1] end
 local function Positive(v) return type(v) == "number" and v > 0 and v == math.floor(v) end
+local function UnitSnapshot(unit)
+    return { guid = First(Protected(_G.UnitGUID, unit)), name = First(Protected(_G.UnitName, unit)),
+        exists = First(Protected(_G.UnitExists, unit)) }
+end
+local function PositionSnapshot()
+    local api = _G.C_Map or {}
+    local id = First(Protected(api.GetBestMapForUnit, "player"))
+    local result = { mapID = id }
+    if id and type(api.GetMapInfo) == "function" then
+        local ok, info = pcall(api.GetMapInfo, id)
+        if ok and type(info) == "table" then result.mapName = info.name end
+    end
+    if id and type(api.GetPlayerMapPosition) == "function" then
+        local ok, position = pcall(api.GetPlayerMapPosition, id, "player")
+        if ok and position and type(position.GetXY) == "function" then
+            local valid, x, y = pcall(position.GetXY, position)
+            if valid then result.x, result.y = x, y end
+        end
+    end
+    return result
+end
+function Probe:RecordTame(event, args)
+    if not self.tame then return end
+    local trail = self.tame.events
+    trail[#trail + 1] = { event = event, at = time(), args = args,
+        target = UnitSnapshot("target"), pet = UnitSnapshot("pet"), position = PositionSnapshot() }
+    while #trail > 100 do table.remove(trail, 1) end
+end
+function Probe:BeginTame(event, args)
+    if not self.record then return end
+    self.record.tameSamples = type(self.record.tameSamples) == "table" and self.record.tameSamples or {}
+    local sample = { at = time(), version = { GetBuildInfo() }, events = {} }
+    self.record.tameSamples[#self.record.tameSamples + 1] = sample
+    while #self.record.tameSamples > 10 do table.remove(self.record.tameSamples, 1) end
+    self.tame = sample
+    self:RecordTame(event, args)
+    print("[YBP Mists Probe] tame capture started; continue taming normally")
+    if C_Timer and C_Timer.After then
+        for _, delay in ipairs({ 4, 10, 30, 60 }) do
+            local observedDelay = delay
+            C_Timer.After(observedDelay, function()
+                if Probe.tame == sample then
+                    Probe:RecordTame("TIMER_" .. observedDelay)
+                    if observedDelay == 60 then Probe.tame = nil; print("[YBP Mists Probe] tame capture finished; /reload to save") end
+                end
+            end)
+        end
+    end
+end
 local function Bounds()
     local active, eachPage, pages = _G.NUM_PET_ACTIVE_SLOTS, _G.NUM_PET_STABLE_SLOTS, _G.NUM_PET_STABLE_PAGES
     local verifiedShape = Positive(active) and Positive(eachPage) and Positive(pages)
@@ -38,7 +87,7 @@ end
 local function BuildSnapshot(trigger)
     local bounds, stableAPI = Bounds(), _G.C_StableInfo or {}
     local s = { at = time(), trigger = trigger, version = { GetBuildInfo() }, project = _G.WOW_PROJECT_ID,
-        locale = GetLocale(), stableOpen = Probe.stableOpen, bounds = bounds,
+        locale = GetLocale(), stableOpen = Probe.stableOpen, bounds = bounds, currentPet = UnitSnapshot("pet"),
         activeCount = Protected(stableAPI.GetNumActivePets), stableCount = Protected(stableAPI.GetNumStablePets),
         purchasedSlots = Protected(_G.GetNumStableSlots), slots = {}, counts = { active = 0, stable = 0, nilSlots = 0, errors = 0 },
         capabilities = { slotInfo = type(_G.GetStablePetInfo) == "function",
@@ -106,10 +155,16 @@ end
 function Probe:Command(message)
     local command = (message or ""):match("^%s*(%S*)")
     if command == "scan" then self:Scan("manual")
+    elseif command == "tame" then
+        local samples = self.record and self.record.tameSamples
+        local sample = samples and samples[#samples]
+        print("[YBP Mists Probe] tame samples=" .. tostring(samples and #samples or 0)
+            .. " latest events=" .. tostring(sample and #sample.events or 0)
+            .. " recording=" .. tostring(self.tame ~= nil))
     elseif command == "report" or command == "" then self:Report()
-    else print("[YBP Mists Probe] /ymx scan | report") end
+    else print("[YBP Mists Probe] /ymx scan | report | tame") end
 end
-frame:SetScript("OnEvent", function(_, event, arg1)
+frame:SetScript("OnEvent", function(_, event, ...)
     if event == "PLAYER_LOGIN" then
         if not IsTarget() then print("[YBP Mists Probe] STOP wrong product; target probe inactive"); return end
         local core = CoreReady()
@@ -120,6 +175,17 @@ frame:SetScript("OnEvent", function(_, event, arg1)
         print("[YBP Mists Probe] ready; read-only game API; /ymx scan")
         Probe:Scan("login")
     elseif IsTarget() and Probe.core then
+        local args = Pack(...)
+        local spellID = args[args.n]
+        if event == "UNIT_SPELLCAST_SENT" or event == "UNIT_SPELLCAST_START" then
+            if args[1] == "player" and spellID == 1515 then
+                if not Probe.tame then Probe:BeginTame(event, args) else Probe:RecordTame(event, args) end
+            end
+        elseif Probe.tame and (event == "PLAYER_TARGET_CHANGED" or event == "UNIT_PET"
+            or event == "PET_UI_UPDATE" or event == "PET_STABLE_UPDATE"
+            or event:match("^UNIT_SPELLCAST_") and args[1] == "player" and spellID == 1515) then
+            Probe:RecordTame(event, args)
+        end
         if event == "PET_STABLE_SHOW" then Probe.stableOpen = true
         elseif event == "PET_STABLE_CLOSED" then Probe.stableOpen = false end
         Probe.events[#Probe.events + 1] = { event = event, at = time() }
@@ -130,4 +196,5 @@ _G.SLASH_YIBOBEASTPATHSMISTSPETPROBE1 = "/ymx"
 _G.SlashCmdList = _G.SlashCmdList or {}
 _G.SlashCmdList.YIBOBEASTPATHSMISTSPETPROBE = function(msg) Probe:Command(msg) end
 for _, event in ipairs({ "PLAYER_LOGIN", "PET_STABLE_SHOW", "PET_STABLE_UPDATE", "PET_STABLE_CLOSED",
-    "UNIT_PET", "UNIT_NAME_UPDATE", "PET_UI_UPDATE" }) do frame:RegisterEvent(event) end
+    "UNIT_PET", "UNIT_NAME_UPDATE", "PET_UI_UPDATE", "PLAYER_TARGET_CHANGED", "UNIT_SPELLCAST_SENT",
+    "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_SUCCEEDED", "UNIT_SPELLCAST_FAILED", "UNIT_SPELLCAST_INTERRUPTED" }) do frame:RegisterEvent(event) end

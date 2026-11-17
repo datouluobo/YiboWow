@@ -5,7 +5,7 @@
 ## Notes: Forever development build: current character read-only inbox snapshots. Client acceptance pending.
 ## Notes-zhCN: 无限开发版：当前角色收件箱只读快照，待实机验证。
 ## Author: YiboSoft
-## Version: 0.1.0-api1
+## Version: 0.1.5-api1
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
 ## SavedVariables: YiboMailForeverDB

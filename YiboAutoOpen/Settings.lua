@@ -4,13 +4,13 @@ local function Text(parent, size, color) return _G.YiboCore.UITheme:CreateText(p
 local DELETE_POPUP = "YIBOAUTOOPEN_DELETE_CATALOG_ITEM"
 local DELETE_CONFIRM_SOURCE_POPUP = "YIBOAUTOOPEN_DELETE_CONFIRM_SOURCE"
 StaticPopupDialogs[DELETE_POPUP] = {
-    text = "确定从自动开包目录删除“%s”吗？\n这不会删除背包中的物品。",
-    button1 = "删除", button2 = "取消", timeout = 0, whileDead = true, hideOnEscape = true,
+    text = Addon:T("CONFIRM.DELETE_ITEM"),
+    button1 = Addon:T("ACTION.DELETE"), button2 = Addon:T("ACTION.CANCEL"), timeout = 0, whileDead = true, hideOnEscape = true,
     OnAccept = function(_, data) Addon.Database:RemoveItem(data); Addon:Refresh(); if Addon.Settings.panel and Addon.Settings.panel.host then Addon.Settings.panel.host.refreshPage() end end,
 }
 StaticPopupDialogs[DELETE_CONFIRM_SOURCE_POPUP] = {
-    text = "确定从确认框来源白名单删除“%s”吗？\n删除后该来源的确认框将保留游戏原生位置。",
-    button1 = "删除", button2 = "取消", timeout = 0, whileDead = true, hideOnEscape = true,
+    text = Addon:T("CONFIRM.DELETE_SOURCE"),
+    button1 = Addon:T("ACTION.DELETE"), button2 = Addon:T("ACTION.CANCEL"), timeout = 0, whileDead = true, hideOnEscape = true,
     OnAccept = function(_, data)
         Addon.Database:RemoveConfirmSource(data)
         if Addon.Settings.panel and Addon.Settings.panel.host then Addon.Settings.panel.host.refreshPage() end
@@ -26,25 +26,25 @@ function Settings:CreatePanel(parent, host)
         panel = CreateFrame("Frame", nil, parent); parent.autoOpenSettingsPanel = panel; panel:SetPoint("TOPLEFT"); panel:SetPoint("TOPRIGHT"); panel.checks, panel.rows = {}, {}
         panel.status = Text(panel, theme.Font.meta, colors.muted); panel.status:SetPoint("TOPLEFT", 12, -8)
         panel.spaceLabel = Text(panel, theme.Font.meta, colors.muted)
-        panel.space = CreateFrame("EditBox", nil, panel, "InputBoxTemplate"); panel.space:SetSize(64, 22); panel.space:SetAutoFocus(false)
-        panel.mode = theme:CreateDropdown(panel, 160, { { value="silent", label="静默" }, { value="issues", label="仅问题" }, { value="verbose", label="详细" } })
-        panel.retry = theme:CreateButton(panel, 96, "重新尝试", "secondary")
-        panel.add = CreateFrame("EditBox", nil, panel, "InputBoxTemplate"); panel.add:SetSize(300, 22); panel.add:SetAutoFocus(false)
-        panel.addButton = theme:CreateButton(panel, 60, "添加")
-        panel.drop = theme:CreateButton(panel, 180, "拖放背包物品到这里", "secondary"); panel.drop:RegisterForDrag("LeftButton")
+        panel.space = theme:CreateInput(panel, { width = 64, height = 22, numeric = true, OnSubmit = function(_, c) if c.onSubmit then c.onSubmit(c) end end, OnFocus = function(focused, c) if not focused and c.onBlur then c.onBlur(c) end end }); panel.space:SetSize(64, 22); panel.space:SetAutoFocus(false)
+        panel.mode = theme:CreateDropdown(panel, 160, { { value="silent", label=Addon:T("MODE.SILENT") }, { value="issues", label=Addon:T("MODE.ISSUES") }, { value="verbose", label=Addon:T("MODE.VERBOSE") } })
+        panel.retry = theme:CreateButton(panel, 96, Addon:T("ACTION.RETRY"), "secondary")
+        panel.add = theme:CreateInput(panel, { width = 300, height = 22, OnSubmit = function(_, c) if c.onSubmit then c.onSubmit(c) end end }); panel.add:SetSize(300, 22); panel.add:SetAutoFocus(false)
+        panel.addButton = theme:CreateButton(panel, 60, Addon:T("ACTION.ADD"))
+        panel.drop = theme:CreateButton(panel, 180, Addon:T("ACTION.DROP"), "secondary"); panel.drop:RegisterForDrag("LeftButton")
         panel.message = Text(panel, theme.Font.meta, colors.muted)
         panel.catalog = Text(panel, theme.Font.meta, colors.muted)
         panel.confirmHeader = Text(panel, theme.Font.meta, colors.text)
         panel.confirmSourceHeader = Text(panel, theme.Font.meta, colors.text)
-        panel.confirmSourceInput = CreateFrame("EditBox", nil, panel, "InputBoxTemplate"); panel.confirmSourceInput:SetSize(300, 22); panel.confirmSourceInput:SetAutoFocus(false)
-        panel.confirmSourceAddButton = theme:CreateButton(panel, 60, "添加")
+        panel.confirmSourceInput = theme:CreateInput(panel, { width = 300, height = 22, OnSubmit = function(_, c) if c.onSubmit then c.onSubmit(c) end end }); panel.confirmSourceInput:SetSize(300, 22); panel.confirmSourceInput:SetAutoFocus(false)
+        panel.confirmSourceAddButton = theme:CreateButton(panel, 60, Addon:T("ACTION.ADD"))
         panel.confirmSourceRows = {}
         panel.recentSourceHeader = Text(panel, theme.Font.meta, colors.text)
         panel.recentSourceRows = {}
-        panel.refresh = theme:CreateButton(panel, 80, "刷新", "secondary")
-        panel.checks[1] = host.createCheckbox(panel, "启用自动开包"); panel.checks[1]:SetWidth(200)
-        panel.checks[2] = host.createCheckbox(panel, "登录时扫描已有包裹"); panel.checks[2]:SetWidth(260)
-        panel.checks[3] = host.createCheckbox(panel, "允许白名单确认框跟随鼠标"); panel.checks[3]:SetWidth(300)
+        panel.refresh = theme:CreateButton(panel, 80, Addon:T("ACTION.REFRESH"), "secondary")
+        panel.checks[1] = host.createCheckbox(panel, Addon:T("SETTING.ENABLED")); panel.checks[1]:SetWidth(200)
+        panel.checks[2] = host.createCheckbox(panel, Addon:T("SETTING.LOGIN")); panel.checks[2]:SetWidth(260)
+        panel.checks[3] = host.createCheckbox(panel, Addon:T("SETTING.CURSOR")); panel.checks[3]:SetWidth(300)
         panel.itemInfoEvents = CreateFrame("Frame")
         panel.itemInfoEvents:RegisterEvent("GET_ITEM_INFO_RECEIVED")
         panel.itemInfoEvents:SetScript("OnEvent", function(_, _, itemID, success)
@@ -56,7 +56,7 @@ function Settings:CreatePanel(parent, host)
             end
             if C_Timer and C_Timer.After then C_Timer.After(0.1, RefreshNames) else RefreshNames() end
         end)
-        if host.bindTooltip then host.bindTooltip(panel.refresh, "刷新目录", { "重新请求目录物品名称。", "同时清除本次登录的失败隔离并重新扫描背包。" }) end
+        if host.bindTooltip then host.bindTooltip(panel.refresh, Addon:T("TOOLTIP.REFRESH"), { Addon:T("TOOLTIP.NAMES"), Addon:T("TOOLTIP.RETRY") }) end
     end
     panel.host = host; self.panel = panel; panel:Show()
     local availableWidth = math.max(parent:GetWidth() or 0, panel:GetWidth() or 0)
@@ -117,24 +117,24 @@ function Settings:CreatePanel(parent, host)
         Anchor(panel.refresh, "TOPRIGHT", panel, "TOPRIGHT", -12, -192)
         panel.listTop = 228
     end
-    panel.confirmHeader:SetText("确认框位置")
+    panel.confirmHeader:SetText(Addon:T("SETTING.CONFIRM"))
     local function Refresh() host.refreshPage() end
     panel.checks[1]:SetChecked(Addon.db.enabled); panel.checks[1]:SetScript("OnClick", function(c) Addon.db.enabled = not c:GetChecked(); if not Addon.db.enabled then Addon.Queue:Clear() else Addon:Refresh() end; Refresh() end)
     panel.checks[2]:SetChecked(Addon.db.scanExistingOnLogin); panel.checks[2]:SetScript("OnClick", function(c) Addon.db.scanExistingOnLogin = not c:GetChecked(); Refresh() end)
     panel.checks[3]:SetChecked(Addon.db.bindConfirmFollowCursor); panel.checks[3]:SetScript("OnClick", function(c) Addon.db.bindConfirmFollowCursor = not c:GetChecked(); Refresh() end)
-    panel.spaceLabel:SetText("最低通用背包空位（1–20）") ; panel.space:SetText(Addon.db.minFreeSlots)
+    panel.spaceLabel:SetText(Addon:T("SETTING.SPACE")) ; panel.space:SetText(Addon.db.minFreeSlots)
     local function SaveSpace(c)
         local value = tonumber(c:GetText())
         if not value or value < 1 or value > 20 or value ~= math.floor(value) then c:SetText(Addon.db.minFreeSlots); return false end
         if value == Addon.db.minFreeSlots then return false end
         Addon.db.minFreeSlots = value; Addon:Refresh(); return true
     end
-    panel.space:SetScript("OnEnterPressed", function(c) SaveSpace(c); c:ClearFocus() end)
-    panel.space:SetScript("OnEditFocusLost", function(c) if SaveSpace(c) then Refresh() end end)
-    panel.mode:SetOptions({ { value="silent", label="聊天提示：静默" }, { value="issues", label="聊天提示：仅问题" }, { value="verbose", label="聊天提示：详细" } }); panel.mode:SetValue(Addon.db.notificationMode); panel.mode:SetOnValueChanged(function(v) Addon.db.notificationMode = v; Refresh() end)
+    panel.space.onSubmit = function(c) SaveSpace(c); c:ClearFocus() end
+    panel.space.onBlur = function(c) if SaveSpace(c) then Refresh() end end
+    panel.mode:SetOptions({ { value="silent", label=Addon:T("MODE.CHAT_SILENT") }, { value="issues", label=Addon:T("MODE.CHAT_ISSUES") }, { value="verbose", label=Addon:T("MODE.CHAT_VERBOSE") } }); panel.mode:SetValue(Addon.db.notificationMode); panel.mode:SetOnValueChanged(function(v) Addon.db.notificationMode = v; Refresh() end)
     local state, reason = Addon.Queue:GetStatus(); local quarantined = 0; for _ in pairs(Addon.runtime.quarantined) do quarantined = quarantined + 1 end
     local catalogued = Addon.BagAdapter:CountCatalogued(Addon.db.catalog.entries)
-    panel.status:SetText("当前状态：" .. state .. (reason and (" · " .. reason) or "") .. " · 背包目录物品 " .. catalogued .. " 项 · 本次登录隔离 " .. quarantined .. " 项")
+    panel.status:SetText(Addon:T("STATUS.SUMMARY", Addon:StatusText(state, reason), catalogued, quarantined))
     local function RetryScan()
         Addon:ResetAllItemRuntimeState()
         if Addon.Safety and Addon.Safety.ReconcileSensitiveFrames then Addon.Safety:ReconcileSensitiveFrames() end
@@ -154,14 +154,13 @@ function Settings:CreatePanel(parent, host)
     local columnWidth = math.floor((availableWidth - 24 - columnGap * (columnCount - 1)) / columnCount)
     local rowHeight = (theme.Size and theme.Size.compact) or 26
     local rowStep = rowHeight + 4
-    panel.catalog:SetText("目录物品：" .. #items .. " 项 · " .. columnCount .. " 列（按列排列）")
+    panel.catalog:SetText(Addon:T("CATALOG.COUNT", #items, columnCount))
     panel.refresh:SetScript("OnClick", function()
         RetryScan()
         for _, id in ipairs(items) do
-            if C_Item and C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(id) end
-            if GetItemInfo then GetItemInfo(id) end
+            Addon.Core.ItemResolver:Request(id, function() if panel:IsShown() and panel.host then panel.host.refreshPage() end end, { retry = true })
         end
-        panel.message:SetText("已刷新目录名称与运行状态，并重新扫描背包。若敏感界面仍处于打开状态，自动开包会继续暂停。")
+        panel.message:SetText(Addon:T("STATUS.REFRESHED"))
     end)
     for i = 1, #items do
         local column = math.floor((i - 1) / rowsPerColumn)
@@ -170,24 +169,24 @@ function Settings:CreatePanel(parent, host)
         if not row then
             row = CreateFrame("Frame", nil, panel)
             row.name = Text(row, theme.Font.body, colors.text); row.name:SetPoint("LEFT"); row.name:SetPoint("RIGHT", -56, 0); row.name:SetWordWrap(false)
-            row.delete = theme:CreateButton(row, 44, "删除", "danger"); row.delete:SetPoint("RIGHT")
+            row.delete = theme:CreateButton(row, 44, Addon:T("ACTION.DELETE"), "danger"); row.delete:SetPoint("RIGHT")
             panel.rows[i] = row
         end
         row.delete:SetHeight(rowHeight)
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", 12 + column * (columnWidth + columnGap), -(panel.listTop + rowIndex * rowStep)); row:SetSize(columnWidth, rowHeight)
-        local id = items[i]; local name, link = GetItemInfo(id); local label = link or name or ("物品 #" .. id)
+        local id = items[i]; local info = Addon.Core.ItemResolver:GetInfo(id); local name, link = info and info.name, info and info.link; local label = link or name or (Addon:T("ITEM.UNKNOWN", id))
         local manualOnly = Addon.Catalog and Addon.Catalog:IsManualOnly(id)
-        row.name:SetText(i .. ". " .. label .. " · " .. id .. (manualOnly and " · 仅手动开启（不会自动开启）" or "")); row.delete:SetScript("OnClick", function() StaticPopup_Show(DELETE_POPUP, label, nil, id) end); row:Show()
+        row.name:SetText(i .. ". " .. label .. " · " .. id .. (manualOnly and Addon:T("ITEM.MANUAL") or "")); row.delete:SetScript("OnClick", function() StaticPopup_Show(DELETE_POPUP, label, nil, id) end); row:Show()
     end
     for i = #items + 1, #panel.rows do panel.rows[i]:Hide() end
     local confirmSources = Addon.Database:GetConfirmSources()
     local confirmSourceTop = panel.listTop + rowsPerColumn * rowStep + 22
     Anchor(panel.confirmSourceHeader, "TOPLEFT", panel, "TOPLEFT", 12, -confirmSourceTop)
-    panel.confirmSourceHeader:SetText("确认框来源白名单：" .. #confirmSources .. " 项 · 输入对象 ID 添加")
+    panel.confirmSourceHeader:SetText(Addon:T("SOURCE.COUNT", #confirmSources))
     Anchor(panel.confirmSourceInput, "TOPLEFT", panel, "TOPLEFT", 12, -(confirmSourceTop + 28))
     panel.confirmSourceInput:SetWidth(math.max(260, math.min(420, availableWidth - 190)))
     panel.confirmSourceInput:SetText("")
-    panel.confirmSourceInput:SetScript("OnEnterPressed", function(c) panel.confirmSourceAddButton:Click(); c:ClearFocus() end)
+    panel.confirmSourceInput.onSubmit = function(c) panel.confirmSourceAddButton:Click(); c:ClearFocus() end
     Anchor(panel.confirmSourceAddButton, "LEFT", panel.confirmSourceInput, "RIGHT", 8, 0)
     local confirmRowTop = confirmSourceTop + 62
     local confirmColumnCount = columnCount
@@ -202,10 +201,10 @@ function Settings:CreatePanel(parent, host)
             row.enabled = host.createCheckbox(row, ""); row.enabled:SetSize(24, 24); row.enabled:SetPoint("LEFT")
             row.name = Text(row, theme.Font.body, colors.text); row.name:SetPoint("LEFT", 28, 0); row.name:SetPoint("RIGHT", -176, 0); row.name:SetWordWrap(false)
             row.id = Text(row, theme.Font.body, colors.muted); row.id:SetJustifyH("RIGHT"); row.id:SetPoint("RIGHT", -84, 0); row.id:SetWidth(54)
-            row.alias = CreateFrame("EditBox", nil, row, "InputBoxTemplate"); row.alias:SetAutoFocus(false); row.alias:SetHeight(rowHeight); row.alias:SetPoint("LEFT", 28, 0); row.alias:SetPoint("RIGHT", -104, 0); row.alias:Hide()
-            row.edit = theme:CreateButton(row, 32, "改", "secondary"); row.edit:SetPoint("RIGHT", -44, 0)
-            row.save = theme:CreateButton(row, 44, "保存", "secondary"); row.save:SetPoint("RIGHT", -50, 0); row.save:Hide()
-            row.delete = theme:CreateButton(row, 44, "删除", "danger"); row.delete:SetPoint("RIGHT")
+            row.alias = theme:CreateInput(row, { height = rowHeight, OnSubmit = function(_, c) if c.onSubmit then c.onSubmit(c) end end }); row.alias:SetAutoFocus(false); row.alias:SetHeight(rowHeight); row.alias:SetPoint("LEFT", 28, 0); row.alias:SetPoint("RIGHT", -104, 0); row.alias:Hide()
+            row.edit = theme:CreateButton(row, 32, Addon:T("ACTION.EDIT"), "secondary"); row.edit:SetPoint("RIGHT", -44, 0)
+            row.save = theme:CreateButton(row, 44, Addon:T("ACTION.SAVE"), "secondary"); row.save:SetPoint("RIGHT", -50, 0); row.save:Hide()
+            row.delete = theme:CreateButton(row, 44, Addon:T("ACTION.DELETE"), "danger"); row.delete:SetPoint("RIGHT")
             panel.confirmSourceRows[i] = row
         end
         row.delete:SetHeight(rowHeight)
@@ -236,10 +235,10 @@ function Settings:CreatePanel(parent, host)
             end
             return false
         end
-        row.alias:SetScript("OnEnterPressed", function(c)
+        row.alias.onSubmit = function(c)
             SaveAlias(c:GetText())
             c:ClearFocus()
-        end)
+        end
         row.edit:SetScript("OnClick", function() SetEditing(true) end)
         row.save:SetScript("OnClick", function()
             SaveAlias(row.alias:GetText())
@@ -260,16 +259,16 @@ function Settings:CreatePanel(parent, host)
             panel.confirmSourceInput:SetText("")
             Addon:Refresh(); Refresh()
         elseif result == "already_exists" then
-            panel.message:SetText("该对象 ID 已在确认框来源白名单中。")
+            panel.message:SetText(Addon:T("SOURCE.EXISTS_ID"))
         else
-            panel.message:SetText("请输入有效的对象 ID，例如 210565。")
+            panel.message:SetText(Addon:T("SOURCE.INVALID"))
         end
     end)
     local recentSources = Addon.BindConfirmAssist and Addon.BindConfirmAssist.GetRecentConfirmObjects
         and Addon.BindConfirmAssist:GetRecentConfirmObjects() or {}
     local recentSourceTop = confirmRowTop + confirmRowsPerColumn * rowStep + 22
     Anchor(panel.recentSourceHeader, "TOPLEFT", panel, "TOPLEFT", 12, -recentSourceTop)
-    panel.recentSourceHeader:SetText("最近可添加对象：" .. #recentSources .. " 项 · 本次登录")
+    panel.recentSourceHeader:SetText(Addon:T("SOURCE.RECENT", #recentSources))
     local recentRowTop = recentSourceTop + 28
     for i, source in ipairs(recentSources) do
         local column = math.floor((i - 1) / confirmRowsPerColumn)
@@ -278,39 +277,39 @@ function Settings:CreatePanel(parent, host)
         if not row then
             row = CreateFrame("Frame", nil, panel)
             row.name = Text(row, theme.Font.body, colors.text); row.name:SetPoint("LEFT"); row.name:SetPoint("RIGHT", -86, 0); row.name:SetWordWrap(false)
-            row.add = theme:CreateButton(row, 74, "添加", "secondary"); row.add:SetPoint("RIGHT")
+            row.add = theme:CreateButton(row, 74, Addon:T("ACTION.ADD"), "secondary"); row.add:SetPoint("RIGHT")
             panel.recentSourceRows[i] = row
         end
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", 12 + column * (confirmColumnWidth + columnGap), -(recentRowTop + rowIndex * rowStep)); row:SetSize(confirmColumnWidth, rowHeight)
         row.name:SetText(i .. ". " .. source.label .. " · " .. tostring(source.objectID))
         local sourceKey = "object:" .. source.objectID
         local alreadyAdded = Addon.Database:HasConfirmSource(sourceKey)
-        row.add:SetText(alreadyAdded and "已在名单" or "添加")
+        row.add:SetText(alreadyAdded and Addon:T("SOURCE.ALREADY") or Addon:T("ACTION.ADD"))
         row.add:SetEnabled(not alreadyAdded)
         row.add:SetScript("OnClick", function()
             local ok, result = Addon.Database:AddConfirmObject(source.objectID, source.label)
             if ok then Addon:Refresh(); Refresh()
-            elseif result == "already_exists" then panel.message:SetText("该对象已在确认框来源白名单中。") end
+            elseif result == "already_exists" then panel.message:SetText(Addon:T("SOURCE.EXISTS")) end
         end)
         row:Show()
     end
     for i = #recentSources + 1, #panel.recentSourceRows do panel.recentSourceRows[i]:Hide() end
     local function AddInput(raw, fromDrop)
         local id, err = Addon.ItemResolver:Resolve(raw)
-        if not id then panel.message:SetText(err == "ambiguous" and "名称不唯一，请使用链接或 ID。" or "未找到物品，请使用物品链接或 ID。"); return end
+        if not id then panel.message:SetText(err == "ambiguous" and Addon:T("ITEM.AMBIGUOUS") or Addon:T("ITEM.NOT_FOUND")); return end
         local ok, result = Addon.Database:AddItem(id)
         local manualOnly = Addon.Catalog and Addon.Catalog:IsManualOnly(id)
         if ok then
-            panel.add:SetText(""); panel.message:SetText(manualOnly and "已加入目录，但受游戏限制不会自动开启，请手动右键。" or (fromDrop and "已通过拖放加入目录。" or "已加入目录。")); Addon:Refresh()
-        elseif result == "manual_only" then panel.message:SetText(Addon:T("CATALOG.MANUAL_ONLY_REJECTED", GetItemInfo(id) or tostring(id)))
-        elseif result == "already_exists" and manualOnly then panel.message:SetText("该物品已在目录中，但受游戏限制不会自动开启，请手动右键。")
-        else panel.message:SetText(result == "already_exists" and "该物品已在目录中。" or "无法添加物品。") end
+            panel.add:SetText(""); panel.message:SetText(manualOnly and Addon:T("ITEM.ADDED_MANUAL") or (fromDrop and Addon:T("ITEM.ADDED_DROP") or Addon:T("ITEM.ADDED"))); Addon:Refresh()
+        elseif result == "manual_only" then panel.message:SetText(Addon:T("CATALOG.MANUAL_ONLY_REJECTED", (Addon.Core.ItemResolver:GetInfo(id).name or tostring(id))))
+        elseif result == "already_exists" and manualOnly then panel.message:SetText(Addon:T("ITEM.EXISTS_MANUAL"))
+        else panel.message:SetText(result == "already_exists" and Addon:T("ITEM.EXISTS") or Addon:T("ITEM.ADD_FAILED")) end
         Refresh()
     end
     local function AddCursorItem()
         local cursorType, itemID, itemLink
         if GetCursorInfo then cursorType, itemID, itemLink = GetCursorInfo() end
-        if cursorType ~= "item" then panel.message:SetText("请从背包拖动物品到这里。"); return end
+        if cursorType ~= "item" then panel.message:SetText(Addon:T("ITEM.DROP_REQUIRED")); return end
         if ClearCursor then ClearCursor() end
         AddInput(itemLink or itemID, true)
     end

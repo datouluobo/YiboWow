@@ -1,4 +1,4 @@
-local Addon = { NAME = "YiboReputation", VERSION = "0.1.1", PAGE_ID = "reputation" }
+local Addon = { NAME = "YiboReputation", VERSION = "0.1.9", PAGE_ID = "reputation" }
 _G.YiboReputation = Addon
 Addon.Frame = CreateFrame("Frame")
 function Addon:T(key, ...) return _G.YiboCore.Locale:Get(self.NAME, key, ...) end

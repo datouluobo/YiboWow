@@ -11,15 +11,17 @@ function Addon:Initialize()
     if valid then
         for name, version in pairs({ localization = 1, ["character-name-format"] = 1, ["character-identity"] = 1,
             characters = 1, ["character-cleanup"] = 2, ["account-view"] = 2, ["account-entry"] = 2,
-            ["account-preview-characters"] = 1, ["account-character-admission"] = 1, ["account-surface-budget"] = 2 }) do
+            ["account-preview-characters"] = 1, ["account-character-admission"] = 1, ["account-surface-realm-scope"] = 1, ["account-surface-budget"] = 2,
+            ["basic-input"] = 1 }) do
             if not core:HasCapability(name, version) then valid = false end
         end
     end
-    for _, group in ipairs({ { core, "RegisterAddon" }, { core and core.Locale, "Get" },
+    for _, group in ipairs({ { core, "RegisterAddon", "Text" }, { core and core.Locale, "Get" },
         { core and core.Characters, "GetCurrentID", "GetCurrent", "FormatName" },
-        { core and core.AccountView, "RegisterPage", "NotifyPageChanged", "Toggle" },
+        { core and core.AccountView, "RegisterPage", "NotifyPageChanged", "Toggle", "GetColumnPage", "UpdateColumnPager" },
         { core and core.Entry, "RegisterBusinessEntry" }, { core and core.CharacterCleanup, "RegisterOwner" },
-        { core and core.Defaults, "Copy" }, { core and core.UITheme, "CreateText", "CreateButton", "CreateScrollFrame" } }) do
+        { core and core.Defaults, "Copy" },
+        { core and core.UITheme, "CreateText", "CreateButton", "CreateScrollFrame", "CreateInput", "CreateDropdown" } }) do
         for index = 2, #group do if type(group[1]) ~= "table" or type(group[1][group[index]]) ~= "function" then valid = false end end
     end
     if not valid then

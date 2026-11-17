@@ -14,6 +14,7 @@ YiboAutoOpen = {
     NotifyIssue = function() warnings = warnings + 1 end,
 }
 
+if not YiboAutoOpen.T then dofile("YiboAutoOpen/Locale.lua") end
 dofile("YiboAutoOpen/Queue.lua")
 YiboAutoOpen.Queue:ProcessNext()
 

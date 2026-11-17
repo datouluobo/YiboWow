@@ -1,6 +1,6 @@
-# YiboCore for MoP v1.0.1 CurseForge 填表指南
+# Yibo Addon Suite for MoP - Account QoL Addons CurseForge 填表指南
 
-状态：v1.0.0 因 ZIP 中包含资料目录而被拒。当前本地候选为 v1.0.1；打包时仅保留真实插件目录，尚未重建、重传。
+状态：v1.0.0 因 ZIP 中包含资料目录而被拒。v1.1.0 使用新名称重新构建，尚未上传；旧名称构建记录另行保留。
 
 ## 创建项目
 
@@ -8,8 +8,8 @@
 |---|---|
 | Game | World of Warcraft |
 | Class | Addons |
-| Name | YiboCore for MoP |
-| Slug（允许手动设置时） | yibocore-for-mop（若可修改且可用） |
+| Name | Yibo Addon Suite for MoP - Account QoL Addons |
+| Slug（允许手动设置时） | 优先沿用现有项目 slug；更名不要求更改链接 |
 | Summary | A modular collection of 15 Yibo addons for account-wide tracking and everyday convenience in MoP Classic. |
 | Main category | Miscellaneous |
 | Additional categories | Bags & Inventory、Mail、Professions、Quests & Leveling |
@@ -23,7 +23,7 @@
 
 当前应复制同目录 `CURSEFORGE_DESCRIPTION.md`：英文在前、中文在后，插件名称均带 CF 站内链接。下文为早期英文草稿。
 
-YiboCore for MoP is a collection of 15 modular Yibo addons for Mists of Pandaria Classic, combining account-wide tracking with everyday quality-of-life features.
+Yibo Addon Suite for MoP is a collection of 15 modular Yibo addons for Mists of Pandaria Classic, combining account-wide tracking with everyday quality-of-life features.
 
 It includes YiboCore, YiboAltoBoss, YiboAutoOpen, YiboBeastPaths, YiboBuilds, YiboCrafting, YiboCurrency, YiboLegendary, YiboMail, YiboMounts, YiboQuestBlocker, YiboReputation, YiboTaskHub, YiboTodo and YiboVault. Features cover boss lockouts, container opening, hunter routes, character builds, crafting, currencies, legendary progress, mail, mount sources, quest blocking, reputation, tasks and inventory.
 
@@ -43,8 +43,8 @@ This Suite targets MoP Classic only. The included BeastPaths maintenance package
 
 | 字段 | 填写内容 |
 |---|---|
-| Choose file | Builds/YiboCore-for-MoP-mists-v1.0.1-curseforge.zip |
-| Display Name | YiboCore for MoP v1.0.1 - MoP Classic |
+| Choose file | Builds/Yibo-Addon-Suite-for-MoP-mists-v1.1.0-curseforge.zip |
+| Display Name | Yibo Addon Suite for MoP v1.1.0 - MoP Classic |
 | Release Type | 建议首轮选 Beta；完成预定验收后可选 Release。两者不改变 Suite 版本号。 |
 | Game Version / Flavor | MoP Classic / Mists of Pandaria Classic |
 | Supported Version | 5.5.4（与当前 14 个主组件构建配置对应；不勾选未验收版本） |
@@ -55,10 +55,10 @@ This Suite targets MoP Classic only. The included BeastPaths maintenance package
 | Incompatible | 不因“同时管理未验证”就标记运行不兼容；通过项目正文与文件 Changelog 说明限制。 |
 | Embedded Library / Includes（如有） | 仅在后台确实提供此关系并明确适用于已内嵌组件时关联对应单体项目；不要将已内嵌组件误标 Required Dependency。 |
 
-项目名与 ZIP 根目录名分开处理。ZIP 只包含各自带同名 TOC 的插件目录，`YiboCore/` 与其余插件目录并列；仓库里的 `YiboCore for MoP/` 文档与脚本目录不进入 ZIP。CurseForge 是否接受多个并列插件目录仍待 v1.0.1 上传验证。
+项目名与 ZIP 根目录名分开处理。ZIP 只包含各自带同名 TOC 的插件目录，`YiboCore/` 与其余插件目录并列；仓库里的 `YiboCore for MoP/` 文档与脚本目录不进入 ZIP。CurseForge 是否接受多个并列插件目录仍待上传验证。
 
 ## 构建追溯
 
-重建 ZIP 时会从当前工作区生成 15 个单体组件包，再按固定组件清单合并。组件摘要与逐文件记录保存在本地 `Releases/v1.0.1/YiboCoreForMoPManifest.json`；这些资料不进入玩家 ZIP。
+重建 ZIP 时会从当前工作区生成 15 个单体组件包，再按固定组件清单合并。组件摘要与逐文件记录保存在本地 `Releases/v1.1.0/YiboAddonSuiteManifest.json`；这些资料不进入玩家 ZIP。
 
 参考：[创建项目](https://support.curseforge.com/support/solutions/articles/9000197241-creating-and-submitting-a-project)、[文件字段与项目关系](https://support.curseforge.com/support/solutions/articles/9000197242)、[WoW 当前分类与游戏版本](https://www.curseforge.com/wow/addons)。

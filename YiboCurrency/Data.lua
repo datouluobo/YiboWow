@@ -2,14 +2,7 @@ local Addon, Core = _G.YiboCurrency, _G.YiboCore
 local function Copy(entry) local result = {}; for key, value in pairs(entry) do result[key] = value end; return result end
 
 function Addon:GetCatalog()
-    local list, known = {}, {}
-    for _, entry in ipairs(self.Catalog) do list[#list + 1] = entry; known[entry.id] = true end
-    for _, entry in ipairs(self:GetSettings().customItems or {}) do
-        local copy = Copy(entry); copy.id = "item:" .. tostring(copy.itemID); copy.source = "item"; copy.sourceType = Addon:T("CURRENCY.ITEM_TOKEN_1605F4")
-        copy.shortTitle = copy.shortTitle or copy.title; copy.expansion = copy.expansion or Addon:T("CURRENCY.CUSTOM_CURRENCY_72DBEB"); copy.status = Addon:T("CURRENCY.OBTAINABLE_2BF203"); copy.totalAllowed = true; copy.isCustom = true
-        if not known[copy.id] then list[#list + 1] = copy; known[copy.id] = true end
-    end
-    return list
+    return self:MergeCatalog(self.Catalog, self:GetSettings().customItems)
 end
 
 function Addon:GetCustomItem(itemID)

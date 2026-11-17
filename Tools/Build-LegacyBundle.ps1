@@ -1,16 +1,19 @@
-#Requires -Version 7.2
+#Requires -Version 5.1
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$true)][string]$Addon,
     [string]$Target='Universal',
     [ValidateSet('Both','CurseForge','GitHub')][string]$Channel='CurseForge',
-    [string]$WorkspaceRoot=(Split-Path $PSScriptRoot -Parent),
+    [string]$WorkspaceRoot,
     [string]$OutputRoot,
     [string]$Version,
     [switch]$ValidateOnly,
     [switch]$KeepStaging
 )
 $ErrorActionPreference='Stop'
+Add-Type -AssemblyName 'System.IO.Compression'
+Add-Type -AssemblyName 'System.IO.Compression.FileSystem'
+if (-not $WorkspaceRoot) { $WorkspaceRoot = (Split-Path $PSScriptRoot -Parent) }
 . (Join-Path $PSScriptRoot 'Release.Common.ps1')
 $config=Import-PowerShellDataFile -LiteralPath (Join-Path $PSScriptRoot 'ReleaseProfiles.psd1')
 if (-not $config.LegacyBundles.ContainsKey($Addon) -or $Target -ne 'Universal') { throw 'No configured legacy multi-TOC bundle for this addon/target.' }

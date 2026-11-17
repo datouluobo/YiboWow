@@ -19,11 +19,21 @@ function Store:Initialize()
             or db.clientScope.projectID~=WOW_PROJECT_ID or db.clientScope.scope~="current-character" or type(db.characters)~="table"
             or type(db.settings)~="table" or type(db.settings.previewColumns)~="table" then return false end
         for id,row in pairs(db.characters) do if type(id)~="string" or not self:Valid(row) then return false end end
+        if db.talents ~= nil then
+            if type(db.talents) ~= "table" then return false end
+            for id, row in pairs(db.talents) do
+                if type(id) ~= "string" or not Addon.Talents:Valid(row) then return false end
+            end
+        end
     else
         db={schema=1,clientScope={target="Forever",projectID=WOW_PROJECT_ID,scope="current-character",rulesetState="unknown"},characters={},
             settings={previewColumns={slot=true,item=true}}}
     end
     self.db=db; _G.YiboBuildsForeverDB=db; return true
+end
+function Store:GetCachedEquipment(id)
+    local row = id and self.db and self.db.characters[id]
+    return row and Addon.Core.Defaults:Copy(row) or nil
 end
 function Store:Get(id)
     if id~=Addon.Core.Characters:GetCurrentID() then return nil,"unsupported-scope" end
@@ -36,10 +46,22 @@ function Store:Commit(id,row)
     self.db.characters[id]=Addon.Core.Defaults:Copy(row); self.freshID,self.error=id,nil; Addon:NotifyChanged(); return true
 end
 function Store:Delete(character,context)
-    local row=self.db.characters[character.id]
+    local id=character.id
     local now=GetServerTime and GetServerTime()
-    if context and context.replay and row and self:Integer(context.deletedAt,0,9007199254740991) and self:Integer(now,0,9007199254740991) and row.observedAt>context.deletedAt and row.observedAt<=now then return true end
-    self.db.characters[character.id]=nil
-    if character.id==Addon.Core.Characters:GetCurrentID() then Addon.Scanner:Cancel(); self.freshID,self.error=nil,nil end
+    local function DeleteRecord(records)
+        local row=records and records[id]
+        if context and context.replay and type(row)=="table" and self:Integer(row.observedAt,0,9007199254740991)
+            and self:Integer(context.deletedAt,0,9007199254740991)
+            and self:Integer(now,0,9007199254740991) and row.observedAt>context.deletedAt and row.observedAt<=now then return false end
+        if records then records[id]=nil end
+        return true
+    end
+    local equipmentDeleted=DeleteRecord(self.db.characters)
+    local talentsDeleted=DeleteRecord(self.db.talents)
+    if type(self.db.equipmentBaselines)=="table" then DeleteRecord(self.db.equipmentBaselines) end
+    if id==Addon.Core.Characters:GetCurrentID() then
+        if equipmentDeleted then Addon.Scanner:Cancel(); self.freshID,self.error=nil,nil end
+        if talentsDeleted then Addon.Talents:Cancel() end
+    end
     Addon:NotifyChanged(); return true
 end

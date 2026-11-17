@@ -11,11 +11,14 @@ $suites = @(
     '_NonRelease/MailForever/Smoke.lua',
     '_NonRelease/ReputationForever/Smoke.lua',
     '_NonRelease/VaultForever/Smoke.lua',
-    '_NonRelease/ForeverBatch/Integration.lua',
-    '_NonRelease/YiboAltoBossForeverProbe/Tests/Smoke.lua',
-    '_NonRelease/YiboBuildsForeverProbe/Tests/Smoke.lua',
-    '_NonRelease/YiboProgressForeverProbe/Tests/Smoke.lua'
+    '_NonRelease/ForeverBatch/Integration.lua'
 )
+# Probe loading and repeated notifications are covered by Integration.lua.
+foreach ($suite in $suites) {
+    if (-not (Test-Path -LiteralPath (Join-Path $root $suite) -PathType Leaf)) {
+        throw "Missing offline suite: $suite"
+    }
+}
 $tocs = @('YiboCore', 'YiboBuilds', 'YiboCrafting', 'YiboCurrency', 'YiboMail', 'YiboReputation', 'YiboVault') |
     ForEach-Object { Join-Path $root "$_/${_}_Forever.toc" }
 $tocs += @('YiboAltoBossForeverProbe', 'YiboBuildsForeverProbe', 'YiboProgressForeverProbe') |

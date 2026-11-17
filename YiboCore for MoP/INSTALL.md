@@ -1,8 +1,8 @@
-# YiboCore for MoP installation / 安装说明
+# Yibo Addon Suite for MoP installation / 安装说明
 
-YiboCore for MoP is a collection of 15 addons for Mists of Pandaria Classic. Each download contains a fixed component snapshot; every addon retains its own version. See the project's file changelog for the exact component versions.
+Yibo Addon Suite for MoP is a collection of 15 addons for Mists of Pandaria Classic. Each download contains a fixed component snapshot; every addon retains its own version. See the project's file changelog for the exact component versions.
 
-YiboCore for MoP 面向熊猫人之谜怀旧服。Suite 版本标识一次固定组件快照，各插件保留自己的版本号；具体版本以本次下载附带的 CHANGELOG 为准。包含 BeastPaths 的多 TOC 维护包不代表 Suite 支持正式服；BeastPaths Mists TOC 当前声明 Interface 50400，进入客户端可能需要允许加载过期插件，发布前仍须核对当前客户端表现。
+Yibo Addon Suite for MoP 面向熊猫人之谜怀旧服。Suite 版本标识一次固定组件快照，各插件保留自己的版本号；具体版本以本次下载附带的 CHANGELOG 为准。包含 BeastPaths 的多 TOC 维护包不代表 Suite 支持正式服；BeastPaths Mists TOC 当前声明 Interface 50504，发布前仍须核对当前客户端表现。
 
 ## Manual installation / 手动安装
 

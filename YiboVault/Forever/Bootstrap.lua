@@ -6,7 +6,9 @@ function Addon:Initialize()
     end
     self.Core = self:CheckCoreRequirements()
     if not self.Core then return false end
-    if not self.Core:HasCapability("account-surface-budget", 2) or not self.Core:HasCapability("account-character-admission", 1) then
+    if not self.Core:HasCapability("account-surface-budget", 2) or not self.Core:HasCapability("account-character-admission", 1)
+        or not self.Core:HasCapability("account-surface-realm-scope", 1)
+        or not (self.Core.UITheme and type(self.Core.UITheme.CreateDropdown) == "function") then
         self:PrintBootstrap(self:T("BOOT.CORE_REQUIRED")); return false
     end
     local ok, reason = self:InitializeDatabase()
@@ -16,7 +18,7 @@ function Addon:Initialize()
     if self.MailProvider then self.MailProvider:Install() end
     for _, event in ipairs({ "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "PLAYER_LOGOUT", "BAG_UPDATE_DELAYED", "UNIT_INVENTORY_CHANGED", "PLAYER_EQUIPMENT_CHANGED" }) do self.Frame:RegisterEvent(event) end
     self._unsupportedEvents = {}
-    for _, event in ipairs({ "BANKFRAME_OPENED", "BANKFRAME_CLOSED", "PLAYERBANKSLOTS_CHANGED", "BAG_CONTAINER_UPDATE", "BANK_TABS_CHANGED", "MAIL_SHOW", "MAIL_CLOSED", "MAIL_INBOX_UPDATE", "AUCTION_HOUSE_SHOW", "AUCTION_HOUSE_CLOSED", "OWNED_AUCTIONS_UPDATED", "AUCTION_HOUSE_THROTTLED_SYSTEM_READY", "GUILDBANKFRAME_OPENED", "GUILDBANKFRAME_CLOSED", "GUILDBANKBAGSLOTS_CHANGED", "GUILDBANK_UPDATE_TABS", "GUILD_ROSTER_UPDATE", "PLAYER_GUILD_UPDATE" }) do
+    for _, event in ipairs({ "BAG_UPDATE", "BANKFRAME_OPENED", "BANKFRAME_CLOSED", "PLAYERBANKSLOTS_CHANGED", "BAG_CONTAINER_UPDATE", "BANK_TABS_CHANGED", "MAIL_SHOW", "MAIL_CLOSED", "MAIL_INBOX_UPDATE", "AUCTION_HOUSE_SHOW", "AUCTION_HOUSE_CLOSED", "OWNED_AUCTIONS_UPDATED", "AUCTION_HOUSE_THROTTLED_SYSTEM_READY", "GUILDBANKFRAME_OPENED", "GUILDBANKFRAME_CLOSED", "GUILDBANKBAGSLOTS_CHANGED", "GUILDBANK_UPDATE_TABS", "GUILD_ROSTER_UPDATE", "PLAYER_GUILD_UPDATE" }) do
         local registered, errorMessage = pcall(self.Frame.RegisterEvent, self.Frame, event)
         if not registered then self._unsupportedEvents[event] = tostring(errorMessage) end
     end

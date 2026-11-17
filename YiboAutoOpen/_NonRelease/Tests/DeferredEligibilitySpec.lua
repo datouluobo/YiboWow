@@ -23,6 +23,7 @@ YiboAutoOpen = {
     NotifyIssue = function() end,
 }
 
+if not YiboAutoOpen.T then dofile("YiboAutoOpen/Locale.lua") end
 dofile("YiboAutoOpen/Queue.lua")
 
 local function RunNextTimer()

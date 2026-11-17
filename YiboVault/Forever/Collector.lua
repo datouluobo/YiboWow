@@ -62,7 +62,8 @@ end
 local function StageContainers(source, ids)
     local character, staged, total = Current(), {}, 0
     for _, bag in ipairs(ids) do
-        local count = Number(Read(C_Container and C_Container.GetContainerNumSlots, bag), (source == "bank" and #staged == 0 or bag == 0) and 1 or 0, 200)
+        local minimum = (source == "bank" or bag == 0) and 1 or 0
+        local count = Number(Read(C_Container and C_Container.GetContainerNumSlots, bag), minimum, 200)
         local records = {}
         for slot = 1, count do
             local info = Read(C_Container and C_Container.GetContainerItemInfo, bag, slot)
@@ -168,11 +169,17 @@ function Addon:ScanBags() local ok, reason = Scan("bags", StageBags); return ok 
 function Addon:ScanBank()
     if not self._bankOpen then return nil, "bank-closed" end
     local ok, reason = Scan("bank", StageBank)
-    if not ok and reason ~= "read-failed" then
+    local waiting = not ok and reason ~= "read-failed"
+    if ok then self._ready.bank = true end
+    if waiting then
         local current = self.Core.Characters:GetCurrentID()
         if current then
             for key in pairs(self:GetCharacterCoverage(current, "bank")) do self:MarkLocationStale(current, "bank", key) end
         end
+    end
+    if self._bankWaiting ~= waiting then
+        self._bankWaiting = waiting
+        self.Core.AccountView:NotifyPageChanged("vault-items")
     end
     return ok, reason
 end
@@ -207,7 +214,7 @@ function Addon:QueueScan(delay)
     if C_Timer and type(C_Timer.After) == "function" then C_Timer.After(delay or 0.1, Run) else Run() end
 end
 function Addon:CloseBank()
-    self._bankOpen = false
+    self._bankOpen, self._bankWaiting = false, false
     if self._ready then self._ready.bank = nil end
     local current = self.Core.Characters:GetCurrentID()
     if current then
@@ -265,16 +272,24 @@ function Addon:OnEvent(event, unit)
         self._ready.mail = true; self:QueueScan(0.2)
     elseif event == "BANKFRAME_OPENED" and self._inWorld then
         self._ready.bank = nil
-        self._bankOpen = true; self:QueueScan(0.3)
+        self._bankOpen, self._bankWaiting = true, true
+        self:QueueScan(0.3)
         self.Core.AccountView:NotifyPageChanged("vault-items")
     elseif event == "BANKFRAME_CLOSED" then
         self:CloseBank()
+    elseif event == "BAG_UPDATE" and self._bankOpen then
+        for key, id in pairs(Enum and Enum.BagIndex or {}) do
+            if id == unit and type(key) == "string" and key:match("^CharacterBankTab_%d+$") then
+                self._ready.bank = true
+                self:QueueScan()
+                break
+            end
+        end
     elseif (event == "PLAYERBANKSLOTS_CHANGED" or event == "BAG_CONTAINER_UPDATE"
         or (event == "BANK_TABS_CHANGED" and unit == (Enum and Enum.BankType and Enum.BankType.Character))) and self._bankOpen then
-        if event ~= "BANK_TABS_CHANGED" then self._ready.bank = true end
+        if event == "PLAYERBANKSLOTS_CHANGED" then self._ready.bank = true end
         self:QueueScan()
     elseif event == "BAG_UPDATE_DELAYED" and self._inWorld then
-        if self._bankOpen then self._ready.bank = true end
         self._ready.bags = true; self:QueueScan()
     elseif (event == "UNIT_INVENTORY_CHANGED" and unit == "player") or event == "PLAYER_EQUIPMENT_CHANGED" then
         if self._inWorld then self._ready.equipment = true; self:QueueScan() end

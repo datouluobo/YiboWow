@@ -44,7 +44,7 @@ local function Boot(saved,configure,defaultManifest,localeCase)
     return e,c,e.YiboReputation,fire,Flush,data
 end
 local e,c,a,fire,flush,d=Boot()
-Check(a.initialized and a.VERSION=="0.1.1","Forever manifest starts")
+Check(a.initialized and a.VERSION=="0.1.9","Forever manifest starts")
 Check(not e.YiboReputationDB.settings and e.YiboReputationDB.sentinel=="mists","Mists save untouched")
 Check(not a.Migration and not a.FactionRegistry and not a.GoalTargets and not a.Nomi,"MoP catalogs and operations excluded")
 Check(not a.Scanner:Scan() and d.reads==0,"no native reads before world entry")
@@ -58,6 +58,64 @@ Check(#panel.renderedFactions==2 and panel.rows[1].labels.faction:GetText()=="Fa
 Check(panel.rows[2].labels.scope:GetText()==a:T("FOREVER.SCOPE_ACCOUNT_FLAG"),"native account flag separately labeled")
 Check(panel.rows[1].labels.reaction:GetText()==a:T("STANDING.5") and panel.rows[1].labels.value:GetText()=="1500 / 6000","standing and current-rank progress displayed")
 Check(panel.rows[1].progress:IsShown() and panel.rows[1].progress.fill:IsShown() and panel.rows[1].display.fraction==0.25,"colored current-rank progress bar")
+Check(panel.rows[1].labels.session:GetText()=="0" and panel.rows[2].labels.session:GetText()==a:T("FOREVER.SESSION_UNKNOWN"),
+    "first ordinary reading establishes zero while unsupported bounds stay unknown")
+local filterReads=d.reads
+panel.search:SetValue("  FACTION72  ",true); flush()
+Check(#panel.renderedFactions==1 and panel.matchCount:GetText()==a:T("FOREVER.MATCH_COUNT",1,2),"faction name search counts cached matches")
+panel.rankFilter.menu.buttons[6].scripts.OnClick(); flush()
+Check(#panel.renderedFactions==1 and panel.renderedFactions[1].factionID==72,"standing and name filters intersect")
+panel.search:SetValue("9999",true); flush()
+Check(#panel.renderedFactions==0 and panel.matchCount:GetText()==a:T("FOREVER.NO_MATCH"),"faction ID excluded by selected standing")
+panel.rankFilter.menu.buttons[1].scripts.OnClick(); flush()
+Check(#panel.renderedFactions==1 and panel.renderedFactions[1].factionID==9999,"ID search matches with all standings")
+c.AccountView.frame:Hide()
+Check(c.AccountView:ShowPreview("reputation",e.Minimap) and #panel.monitoredRows==0 and not panel.toolbar:IsShown()
+    and panel.status:GetText()==a:T("FOREVER.NO_WATCHED"),"preview asks for monitored factions and hides main filters")
+Check(not panel.rows[1]:IsShown(),"empty preview hides previously visible rows")
+c.AccountView:HidePreview(); c.AccountView:Toggle("reputation"); flush()
+Check(#panel.renderedFactions==1 and panel.toolbar:IsShown(),"main filter is retained after preview")
+panel.search.clearButton.scripts.OnClick(); flush()
+Check(#panel.renderedFactions==2 and d.reads==filterReads,"clearing filter restores records without native scans")
+panel.watchFilter:Fire("OnClick"); flush()
+Check(#panel.renderedFactions==0 and panel.matchCount:GetText()==a:T("FOREVER.NO_WATCHED"),"empty watch list has its own state")
+panel.watchFilter:Fire("OnClick"); flush()
+panel.rows[2].watch:Fire("OnClick"); flush()
+Check(panel.renderedFactions[2].factionID==9999 and panel.rows[2].watch.label:GetText()==a:T("FOREVER.WATCHED"),
+    "watching a faction updates its control without pinning")
+Check(not a.Store:ToggleWatched("Other",9999) and not a.Store:ToggleWatched(e.TEST_GUID,123456),"watch only applies to current character's observed factions")
+panel.watchFilter:Fire("OnClick"); flush()
+Check(#panel.renderedFactions==1 and panel.renderedFactions[1].factionID==9999,"watched-only filter applies")
+panel.search:SetValue("72",true); flush()
+Check(#panel.renderedFactions==0 and panel.matchCount:GetText()==a:T("FOREVER.NO_MATCH"),"watched-only intersects search")
+c.AccountView.frame:Hide()
+Check(c.AccountView:ShowPreview("reputation",e.Minimap) and panel.monitoredCount==1
+    and panel.monitoredRows[1].labels.faction:GetText()=="Faction9999" and not panel.rows[1]:IsShown(),"entry preview shows watched factions and hides watch controls")
+Check(panel.monitoredRows[1].labels[e.TEST_GUID]~=nil,"matrix has a character column")
+local matrixAlt = {id="ReputationMatrixAlt", name="Alt", realm="Realm"}
+a.Store.db.characters[matrixAlt.id] = {observedAt=1, factions={}}
+a.AccountPage:Refresh(panel,{preview=true,surfaceAvailableWidth=500,characters={c.Characters:GetCurrent(),matrixAlt}})
+Check(panel.monitoredRows[1].labels[matrixAlt.id]:GetText()=="?", "missing observations stay unknown")
+a.Store.db.characters[matrixAlt.id].factions[9999] = {factionID=9999, name="Faction9999",
+    reaction=5, minimum=3000, maximum=9000, value=4123, observedAt=1}
+a.AccountPage:Refresh(panel,{preview=true,surfaceAvailableWidth=500,characters={c.Characters:GetCurrent(),matrixAlt}})
+Check(panel.monitoredRows[1].labels[matrixAlt.id]:GetText()=="1123"
+    and panel.monitoredRows[1].labels[e.TEST_GUID]:GetText()~="1123", "each GUID uses its own observation")
+a.Store.db.characters[matrixAlt.id] = nil
+c.AccountView:HidePreview(); c.AccountView:Toggle("reputation"); flush()
+panel.search:SetValue("",true); flush()
+local we,_,wa=Boot(c.Defaults:Copy(e.YiboReputationForeverDB))
+Check(wa.Store.db.settings.watchedFactionIDs[1]==9999,"watched factions restore from save")
+local legacyWatch = c.Defaults:Copy(e.YiboReputationForeverDB)
+legacyWatch.settings.watchedFactionIDs = nil
+legacyWatch.characters[e.TEST_GUID].watched = {[9999]=true,[72]=true}
+local _,_,migratedWatch = Boot(legacyWatch)
+Check(migratedWatch.Store.db.settings.watchedFactionIDs[1]==72 and migratedWatch.Store.db.settings.watchedFactionIDs[2]==9999,
+    "legacy unordered selections migrate in deterministic order")
+panel.rows[1].watch:Fire("OnClick"); flush()
+Check(#panel.renderedFactions==0 and panel.matchCount:GetText()==a:T("FOREVER.NO_WATCHED"),"unwatch updates active filter")
+panel.watchFilter:Fire("OnClick"); flush()
+Check(d.reads==filterReads,"watch operations do not query or mutate native reputation")
 snapshot.factions[72].value=999
 Check(a.Store:Get(e.TEST_GUID).factions[72].value==4500,"snapshots are detached")
 Check(not a.Store:Get("Other"),"other GUID rejected")
@@ -70,6 +128,8 @@ d.byID[9999]=nil; fire("UPDATE_FACTION"); flush()
 Check(a.Store:Get(e.TEST_GUID).factions[9999] and a.Store:RowState(e.TEST_GUID,9999)=="stale","hidden unavailable faction retains stale data")
 d.rows[2].currentStanding=5000; fire("FACTION_STANDING_CHANGED",72,5000); flush()
 Check(a.Store:Get(e.TEST_GUID).factions[72].value==5000,"native standing changes saved")
+Check(a.Store:GetSessionChange(e.TEST_GUID,72)==500 and panel.rows[1].labels.session:GetText()=="+500",
+    "standing event shows positive net change in the main table")
 for _,flag in ipairs({"failCount","failRow","nilRow","changing","changingCount"}) do
     d[flag]=true; a.Scanner:Scan(); snapshot,state=a.Store:Get(e.TEST_GUID)
     Check(state=="error" and snapshot.factions[72].value==5000,"incomplete or changing result preserves previous batch: "..flag)
@@ -92,18 +152,36 @@ Check(select(2,a.Store:Get(e.TEST_GUID))=="error","duplicate IDs reject atomic b
 d.rows={Faction(72,0,false)}; a.Scanner:Scan()
 a.AccountPage:Refresh(panel,{characters={},fields=a.AccountPage:Fields()})
 Check(#panel.renderedFactions==0,"Core character exclusions respected")
+a.Store:ToggleWatched(e.TEST_GUID,72); a.Store:ToggleWatched(e.TEST_GUID,9999)
 c.AccountView:NotifyPageChanged("reputation"); flush(); c.AccountView.frame:Hide()
 Check(c.AccountView:ShowPreview("reputation",e.Minimap),"Core owns preview")
-Check(#panel.renderedFactions==2 and not panel.refresh:IsShown(),"preview uses same observed plus stale snapshot")
+Check(panel.monitoredCount==2 and not panel.refresh:IsShown(),"preview uses same observed plus stale watched records")
 c.AccountView:HidePreview(); c.AccountView:Toggle("reputation")
 fire("PLAYER_LEAVING_WORLD"); flush(); before=d.reads; fire("UPDATE_FACTION"); flush()
 Check(d.reads==before and select(2,a.Store:Get(e.TEST_GUID))=="stale","outside world no reads and historical state stale")
 local saved=c.Defaults:Copy(e.YiboReputationForeverDB)
 local e2,c2,a2,f2,fl2,d2=Boot(saved)
 Check(select(2,a2.Store:Get(e2.TEST_GUID))=="stale" and a2.Store:Get(e2.TEST_GUID).factions[72].value==0,"saved data restored stale")
+Check(a2.Store:GetSessionChange(e2.TEST_GUID,72)==nil,"saved reputation does not restore a session baseline")
 e2.TEST_GUID=nil; f2("PLAYER_ENTERING_WORLD"); fl2(); Check(d2.reads==0,"missing identity blocks native scan")
 e2.TEST_GUID="Player-Test-1"; f2("BAG_UPDATE_DELAYED"); fl2()
 Check(a2.Store:Get(e2.TEST_GUID).factions[72].value==4500,"late GUID recovers from native event")
+Check(a2.Store:GetSessionChange(e2.TEST_GUID,72)==0,"new session does not compare to saved standing")
+local observed=d2.rows[2]
+observed.reaction,observed.currentReactionThreshold,observed.nextReactionThreshold,observed.currentStanding=4,0,3000,2900
+f2("UPDATE_FACTION"); fl2()
+Check(a2.Store:GetSessionChange(e2.TEST_GUID,72)==-1600,"loss across ordinary ranks uses the absolute standing")
+Check(c2.AccountView:ShowPreview("reputation",e2.Minimap),"Core opens the monitored matrix")
+local previewPanel=c2.AccountView.frame.instances.reputation
+Check(previewPanel.monitoredRows[1].labels[e2.TEST_GUID]:GetText()=="2900",
+    "preview shows compact rank-relative progress")
+observed.isAccountWide=true
+f2("UPDATE_FACTION"); fl2()
+Check(a2.Store:GetSessionChange(e2.TEST_GUID,72)==0,"native scope change establishes a separate baseline")
+d2.failRow=true; a2.Scanner:Scan()
+Check(a2.Store:GetSessionChange(e2.TEST_GUID,72)==nil,"failed scan never shows stale change as current")
+d2.failRow=nil
+observed.reaction,observed.currentReactionThreshold,observed.nextReactionThreshold,observed.currentStanding,observed.isAccountWide=5,3000,9000,4500,false
 f2("UPDATE_FACTION"); a2.Store:Delete({id=e2.TEST_GUID}); fl2()
 Check(not a2.Store:Get(e2.TEST_GUID),"cache deletion cancels queued scan")
 f2("UPDATE_FACTION"); fl2(); a2.Store:Delete({id=e2.TEST_GUID},{replay=true,deletedAt=199999})
@@ -114,7 +192,7 @@ for _,mutate in ipairs({function(db) db.schema=2 end,function(db) db.clientScope
     local bad=c.Defaults:Copy(saved); mutate(bad); local _,_,addon=Boot(bad)
     Check(not addon.initialized and not addon.Store.db,"incompatible stored structure rejected before mutation")
 end
-for _,cap in ipairs({"localization","character-name-format","character-identity","character-cleanup","account-surface-budget"}) do
+for _,cap in ipairs({"localization","character-name-format","character-identity","character-cleanup","account-surface-budget","basic-input"}) do
     local env,_,addon=Boot(nil,function(_,core) local old=core.HasCapability; core.HasCapability=function(self,name,version) return name~=cap and old(self,name,version) end end)
     Check(not addon.initialized and env.YiboReputationForeverDB==nil,"missing Core capability stops before DB: "..cap)
 end
@@ -178,6 +256,68 @@ pdata.rows={Faction(72,3000,false)}; pdata.byID={}; pa.Scanner:Scan(); pdrain()
 Check(pp.rows[1].labels.value:GetText()=="0 / 6000" and not pp.rows[1].progress.fill:IsShown(),"zero progress keeps readable label with empty fill")
 pa.AccountPage:Refresh(pp,{characters={{id=pe.TEST_GUID}},fields={{id="faction",title="Faction"}}})
 Check(not pp.rows[1].progress:IsShown(),"hidden progress field hides bar and label")
+pa.Store:ToggleWatched(pe.TEST_GUID,72)
 pc.AccountView:NotifyPageChanged("reputation"); pdrain(); pc.AccountView.frame:Hide(); pc.AccountView:ShowPreview("reputation",pe.Minimap)
-Check(pp.rows[1].labels.reaction:GetText()==pa:T("STANDING.5") and pp.rows[1].labels.value:GetText()=="0 / 6000","preview uses same standing and progress")
+Check(pp.monitoredRows[1].labels[pe.TEST_GUID]:GetText()=="0","preview uses same standing and progress")
+local se,sc,sa,sf,sflush,sd=Boot(nil,function(env)
+    env.GameTooltip.IsOwned=function(self,owner) return self:GetOwner()==owner end
+end)
+local zulu,alpha,unknown=Faction(72,4500,false),Faction(9999,2700,false),Faction(11,30,false)
+zulu.name,alpha.name,unknown.name="Zulu","Alpha","Bravo"
+alpha.reaction,alpha.currentReactionThreshold,alpha.nextReactionThreshold=4,0,3000
+sd.rows,sd.byID={zulu,alpha,unknown},{}
+sf("PLAYER_ENTERING_WORLD"); sflush(); se.SlashCmdList.YIBOREPUTATION(""); sflush()
+local sp=sc.AccountView.frame.instances.reputation
+local function SortBy(index)
+    sp.sortMode:Fire("OnClick")
+    sp.sortMode.menu.buttons[index]:Fire("OnClick")
+    sflush()
+end
+local sortReads=sd.reads
+SortBy(2)
+Check(sp.renderedFactions[1].factionID==9999 and sp.renderedFactions[3].factionID==72,"name order uses the recorded faction labels")
+SortBy(3)
+Check(sp.renderedFactions[1].factionID==72 and sp.renderedFactions[3].factionID==11,"standing sort puts unconfirmed ranks last")
+SortBy(4)
+Check(sp.renderedFactions[1].factionID==9999 and sp.renderedFactions[3].factionID==11,"progress sort compares rank-relative fractions")
+Check(sd.reads==sortReads,"sorting does not rescan native data")
+zulu.currentStanding,alpha.currentStanding=4600,2600
+sf("UPDATE_FACTION"); sflush()
+SortBy(5)
+Check(sp.renderedFactions[1].factionID==72 and sp.renderedFactions[2].factionID==9999
+    and sp.renderedFactions[3].factionID==11,"session sort orders gain, loss, and unknown")
+sp.rows[2].watch:Fire("OnClick"); sflush()
+Check(sp.renderedFactions[1].factionID==72,"watching a faction preserves the main sort")
+sp.search:SetValue("Zulu",true); sflush()
+Check(#sp.renderedFactions==1 and sp.renderedFactions[1].factionID==72,"sorting preserves search eligibility")
+sc.AccountView.frame:Hide()
+Check(sc.AccountView:ShowPreview("reputation",se.Minimap) and sp.monitoredCount==1
+    and sp.monitoredRows[1].labels.faction:GetText()=="Alpha" and not sp.toolbar:IsShown(),"preview ignores main-window sort and filters")
+sc.AccountView:HidePreview(); sc.AccountView:Toggle("reputation"); sflush()
+Check(sp.sortMode.value=="session" and #sp.renderedFactions==1,"returning to the main page keeps the selected sort and search")
+sp.search:SetValue("",true); sflush()
+SortBy(1)
+sp.scroll:SetHeight(96); sp.scroll:Fire("OnSizeChanged")
+for id=100,339 do sd.rows[#sd.rows+1]=Faction(id,4500,false) end
+sf("UPDATE_FACTION"); sflush()
+Check(#sp.renderedFactions==243 and #sp.rows==5 and sp.content:GetHeight()==243*32,
+    "large snapshot retains all rows while allocating only enough controls for the viewport")
+local reused=sp.rows[1]
+reused:Fire("OnEnter")
+Check(se.GameTooltip:IsShown() and se.GameTooltip.lines[1].text==sp.renderedFactions[1].name,"tooltip describes the current row")
+local reads=sd.reads
+sp.scroll:SetVerticalScroll(80*32)
+local scrolled=sp.renderedFactions[81]
+Check(sp.rows[1]==reused and reused.faction.factionID==scrolled.factionID and not se.GameTooltip:IsShown()
+    and sd.reads==reads,"scrolling recycles rows and closes the old tooltip without reading game data")
+reused:Fire("OnEnter")
+reused:Fire("OnEnter")
+Check(#se.GameTooltip.lines==4 and se.GameTooltip.lines[1].text==scrolled.name,"reused tooltip contains only the current faction lines")
+reused.watch:Fire("OnClick"); sflush()
+Check(sa.Store.db.settings.watchedFactionIDs[2]==scrolled.factionID,"watch action follows the scrolled faction")
+sp.scroll:SetWidth(790); sp.scroll:SetHeight(160); sp.scroll:Fire("OnSizeChanged")
+Check(#sp.rows==7 and sp.rows[1]:GetWidth()==770,"resize repaints and extends the visible row pool")
+sp.search:SetValue("Zulu",true); sflush()
+Check(sp.scroll:GetVerticalScroll()==0 and sp.rows[1].faction.name=="Zulu" and not sp.rows[2]:IsShown(),
+    "filtering a scrolled list returns to the matching row and hides surplus controls")
 print("ReputationForever Smoke passed: "..checks.." checks (actual Core/Reputation manifests; simulated client/UI)")

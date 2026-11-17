@@ -62,6 +62,11 @@ dofile("YiboCore/Runtime/EntryConfig.lua")
 dofile("YiboCore/Util/CharacterSort.lua")
 local Core = YiboCore
 Core.Print = function() end
+Core.Client = {
+    ReadGUID = function() return UnitGUID("player"), "known" end,
+    ReadNameRealm = function() return { name = "Original", realm = "Realm" } end,
+    ReadCharacter = function() return { guid = UnitGUID("player"), name = "Original", realm = "Realm", class = "MAGE" } end,
+}
 local characters = { { id = "A-Realm", name = "Original", realm = "Realm", class = "MAGE" }, { id = "B-Other", name = "Other", realm = "Other", class = "MAGE" } }
 local db = { settings = {}, characters = { byID = {}, aliases = {}, seenOrder = {} }, characterDisplay = { ["A-Realm"] = { shortName = "Short" } } }
 for _, character in ipairs(characters) do db.characters.byID[character.id] = character end
@@ -95,7 +100,8 @@ WOW_PROJECT_ID, WOW_PROJECT_MISTS_CLASSIC = 19, 19
 dofile("YiboCurrency/Mists/Bootstrap.lua")
 dofile("YiboCurrency/Locales/zhCN.lua")
 dofile("YiboCurrency/Locales/enUS.lua")
-dofile("YiboCurrency/Catalog.lua")
+dofile("YiboCurrency/Common/Catalog.lua")
+dofile("YiboCurrency/Mists/Catalog.lua")
 dofile("YiboCurrency/Store.lua")
 dofile("YiboCurrency/Migration.lua")
 dofile("YiboCurrency/Scanner.lua")

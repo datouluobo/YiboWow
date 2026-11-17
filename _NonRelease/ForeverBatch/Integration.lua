@@ -77,6 +77,16 @@ end
 for _, language in ipairs({ "zhCN", "enUS" }) do
     for _, reverse in ipairs({ false, true }) do
         local e, core, fire, flush = Boot(reverse, language)
+        -- These shared resources use table-variable registration and require a runtime check.
+        local crafting = e.YiboCrafting
+        local chinese = language == "zhCN"
+        Check(crafting:T("UI.ALL_CHARACTERS") == (chinese and "全部角色" or "All characters"), "Crafting character filter translation")
+        Check(crafting:T("UI.ALL_PROFESSIONS") == (chinese and "全部专业" or "All professions"), "Crafting profession filter translation")
+        Check(crafting:T("UI.ALL_STATES") == (chinese and "全部状态" or "All states"), "Crafting state filter translation")
+        Check(crafting:T("UI.LEARNED") == (chinese and "已学" or "Learned"), "Crafting learned cell translation")
+        local footer = chinese and "显示 6 / 12 项 · 左键入口打开完整列表"
+            or "Showing 6 / 12 recipes · Left-click the entry for the full list"
+        Check(crafting:T("UI.PREVIEW_REMAINDER", 6, 12) == footer, "Crafting formatted preview footer translation")
         local frames, slashCount = #e.TEST_FRAMES, Count(e.SlashCmdList)
         local seen = {}
         for key, value in pairs(e) do
@@ -103,6 +113,35 @@ for _, language in ipairs({ "zhCN", "enUS" }) do
             Check(core.AccountView.activePageID == page and core.AccountView.frame.instances[page], "combined page opens: " .. page)
             core.AccountView.frame:Hide()
         end
+        local view = core.AccountView
+        local current = assert(core.Characters:GetCurrent())
+        local alt = {id="Player-Batch-Alt", name="Alt", realm="OtherRealm", level=14}
+        local originalRoster = view.GetVisibleCharacters
+        view.GetVisibleCharacters = function() return {current, alt} end
+        local slots = {}
+        for slot=1,19 do slots[slot]={itemID=0} end
+        local store = e.YiboBuilds.Store.db.characters
+        store[alt.id] = {observedAt=1,slots=slots}
+        local builds = view._pages.builds
+        local historical = view:BuildContext(builds,{preview=true})
+        Check(historical.scope=="all" and historical.characters[1].id==alt.id,
+            "only historical realm falls back to all instead of an absent current realm")
+        store[current.id] = {observedAt=1,slots=slots}
+        Check(view:ShowPreview("builds",e.Minimap),"Builds opens a scoped preview")
+        Check(view:SetPageScope("builds","realm:"..alt.realm),"preview can switch to the other realm")
+        local preview = view.frame.instances.builds
+        Check(preview.previewRows[1].name:GetText():find("Alt",1,true)~=nil
+            and not builds.lastError,"scope switch repaints the other realm")
+        view:Toggle("builds"); flush()
+        Check(not view.frame.preview and not view:BuildContext(builds).scope and #preview.renderedEquipment==19,
+            "realm choice in preview does not filter the current-character main page")
+        local vaultPage = view._pages["vault-items"]
+        Check(view:BuildContext(vaultPage).scopeDefinition~=nil
+            and view:BuildContext(vaultPage,{preview=true}).scopeDefinition==nil,
+            "Vault realm selector belongs to the account storage workspace")
+        view.frame:Hide()
+        view.GetVisibleCharacters = originalRoster
+        store[alt.id], store[current.id] = nil, nil
         local descriptor = core.Contracts:Resolve("mail.items", { major = 1, minMinor = 0 })
         Check(descriptor ~= nil, "Mail contract resolves with all addons loaded")
         Check(e.YiboMail.Items:GetState(e.TEST_GUID).status == "not-yet-scanned", "unopened mailbox remains unknown in batch")

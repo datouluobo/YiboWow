@@ -187,7 +187,7 @@ function Queue:ProcessNext()
             self:ScheduleDeferredScan(0.5)
         else
             Addon.runtime.queueState = "PAUSED"
-            if reason == "INSUFFICIENT_SPACE" then Addon:NotifyIssue("space", "通用背包空位不足，已暂停自动开包。") else Addon.runtime.warned.space = nil end
+            if reason == "INSUFFICIENT_SPACE" then Addon:NotifyIssue("space", Addon:T("QUEUE.SPACE")) else Addon.runtime.warned.space = nil end
         end
         return
     end
@@ -229,7 +229,7 @@ function Queue:ProcessNext()
     end
     pending.useCallFailed = not useOK
     Addon.runtime.queueState = "WAITING_RESULT"
-    if not useOK then Addon:NotifyIssue("use-call:" .. item.itemID, "调用容器开启接口失败，稍后会按失败重试：" .. tostring(useError)) end
+    if not useOK then Addon:NotifyIssue("use-call:" .. item.itemID, Addon:T("QUEUE.CALL_FAILED") .. tostring(useError)) end
     local function Timeout()
         if Addon.runtime.pending ~= pending or pending.token ~= Addon.runtime.generation then return end
         if pending.awaitingBindConfirmation then
@@ -302,7 +302,7 @@ function Queue:ResolvePending(fromBagEvent)
         Addon.runtime.pending = nil
         Addon.runtime.queueState = #otherCandidates > 0 and "READY" or "WAITING_READY"
         Addon.runtime.pauseReason = #otherCandidates > 0 and nil or "RETRY_BACKOFF"
-        Addon:NotifyIssue("quarantine:" .. pending.itemID, "物品 #" .. pending.itemID .. " 连续失败，将在 " .. tostring(retryDelay) .. " 秒后重试。")
+        Addon:NotifyIssue("quarantine:" .. pending.itemID, Addon:T("QUEUE.RETRY", pending.itemID, retryDelay))
         if #otherCandidates > 0 then self:RequestScan() end
     else
         if Addon.BindConfirmAssist then Addon.BindConfirmAssist:Disarm(pending) end
@@ -375,7 +375,7 @@ local frame = CreateFrame("Frame")
 frame:SetScript("OnEvent", function(_, event, ...)
     if event == "ADDON_LOADED" then if ... == Addon.NAME then Addon:Initialize() end; return end
     if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
-        Addon:Initialize()
+        if not Addon:Initialize() then return end
         if not Addon.runtime.loggedIn then Addon:StartPostLogin() end
         if event == "PLAYER_ENTERING_WORLD" then
             Addon.runtime.worldLoading = false

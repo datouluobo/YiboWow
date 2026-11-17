@@ -7,6 +7,7 @@ local POPUP_COUNT = 4
 local EDGE_PADDING = 16
 
 local function IsPositionAssistEnabled()
+    if Addon.Target and not Addon.runtime.initialized then return false end
     return not (Addon.db and Addon.db.bindConfirmFollowCursor == false)
 end
 
@@ -119,7 +120,7 @@ function Assist:Cancel(pending)
         Addon.runtime.pending = nil
         Addon.runtime.queueState = "READY"
         Addon.runtime.pauseReason = nil
-        Addon:NotifyIssue("bind-cancelled:" .. pending.itemID, "已取消拾取后绑定确认；物品 #" .. pending.itemID .. " 将在本次登录跳过。")
+        Addon:NotifyIssue("bind-cancelled:" .. pending.itemID, Addon:T("BIND.CANCELLED", pending.itemID))
         if Addon.Queue then Addon.Queue:RequestScan() end
     end
 end
@@ -297,7 +298,7 @@ function Assist:CaptureLootSource()
         if objectID then
             local recent = Addon.runtime.recentConfirmObjects[objectID]
             if not recent then
-                recent = { objectID = objectID, label = sourceName or ("拾取来源对象 #" .. objectID) }
+                recent = { objectID = objectID, label = sourceName or (Addon:T("SOURCE.UNKNOWN", objectID)) }
                 Addon.runtime.recentConfirmObjects[objectID] = recent
                 table.insert(Addon.runtime.recentConfirmObjectOrder, 1, objectID)
                 while #Addon.runtime.recentConfirmObjectOrder > 10 do

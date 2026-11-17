@@ -25,6 +25,7 @@ YiboAutoOpen = {
     NotifyIssue = function() end,
 }
 
+if not YiboAutoOpen.T then dofile("YiboAutoOpen/Locale.lua") end
 dofile("YiboAutoOpen/Queue.lua")
 assert(eventHandler, "the OnEvent handler must be installed even when an optional event is unsupported")
 assert(registeredEvents.PLAYER_LOGIN, "core events should register before an unsupported event")

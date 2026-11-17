@@ -1,4 +1,20 @@
 Set-StrictMode -Version Latest
+Add-Type -AssemblyName 'System.IO.Compression.FileSystem'
+
+function Get-YiboRelativePath {
+    param([string]$Base, [string]$Path)
+    $basePath = [IO.Path]::GetFullPath($Base).TrimEnd([char[]]'\/')
+    $fullPath = [IO.Path]::GetFullPath($Path)
+    if ($fullPath.StartsWith($basePath + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
+        return $fullPath.Substring($basePath.Length + 1).Replace('\', '/')
+    }
+    if ($fullPath.Equals($basePath, [StringComparison]::OrdinalIgnoreCase)) {
+        return ''
+    }
+    $baseUri = [Uri]($basePath + '/')
+    $targetUri = [Uri]$fullPath
+    return [Uri]::UnescapeDataString($baseUri.MakeRelativeUri($targetUri).ToString()).Replace('\', '/')
+}
 
 function Resolve-YiboSourceFile {
     param([string]$Root, [string]$Relative)
@@ -145,7 +161,7 @@ function Get-YiboTocEntries {
             throw "Shared packager currently accepts static Lua TOC entries only: $relative"
         }
         $source = Resolve-YiboSourceFile $Profile.Root $relative
-        $relative = [IO.Path]::GetRelativePath($Profile.Root, $source).Replace('\', '/')
+        $relative = (Get-YiboRelativePath $Profile.Root $source).Replace('\', '/')
         foreach ($id in $Profile.Config.Targets.Keys) {
             if ($id -ne $Profile.Target -and $relative.StartsWith($Profile.Config.Targets[$id].Directory + '/', [StringComparison]::OrdinalIgnoreCase)) {
                 throw "TOC loads another product target: $relative"
@@ -160,7 +176,7 @@ function Get-YiboTocEntries {
 function Get-YiboPublicEntries {
     param([string]$Root)
     foreach ($file in (Get-ChildItem -LiteralPath $Root -Recurse -File | Sort-Object FullName)) {
-        $relative = [IO.Path]::GetRelativePath($Root, $file.FullName).Replace('\', '/')
+        $relative = (Get-YiboRelativePath $Root $file.FullName).Replace('\', '/')
         if ($relative -match '(^|/)(?:_NonRelease|\.git|\.svn|\.hg|Builds|dist|tmp|__pycache__|\.pytest_cache)/' -or
             $file.Name -in @('AGENTS.md', '_audit_worklist.tsv') -or $file.Extension -in @('.pyc', '.pyo') -or $file.Name -match '\.building(?:-|$)') { continue }
         [pscustomobject]@{ Relative = $relative; Source = (Resolve-YiboSourceFile $Root $relative); Content = $null }
@@ -173,7 +189,9 @@ function Get-YiboSourceDigest {
         "{0}  {1}" -f (Get-FileHash -LiteralPath $entry.Source -Algorithm SHA256).Hash.ToLowerInvariant(), $entry.Relative
     }
     $bytes = [Text.Encoding]::UTF8.GetBytes(($lines -join "`n"))
-    return [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+    $sha = [Security.Cryptography.SHA256]::Create()
+    $hash = $sha.ComputeHash($bytes)
+    return ([BitConverter]::ToString($hash).Replace('-', '')).ToLowerInvariant()
 }
 
 function Get-YiboLegacyIndexedVersion {

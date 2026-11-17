@@ -2,6 +2,7 @@ local refreshes = 0
 
 YiboAutoOpen = nil
 dofile("YiboAutoOpen/Bootstrap.lua")
+dofile("YiboAutoOpen/Locale.lua")
 
 YiboAutoOpen.db = { scanExistingOnLogin = true }
 YiboAutoOpen.Queue = { RequestScan = function() refreshes = refreshes + 1 end }

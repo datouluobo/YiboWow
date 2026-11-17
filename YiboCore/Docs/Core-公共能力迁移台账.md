@@ -902,3 +902,7 @@ Core CalendarDaySpec16项通过；三插件TOC语法107文件及Mists构建Valid
 2026-11-10 Reputation Forever 0.1.6 复用 CAP-004 托管页面及 Core 滚动控件，业务只按视口投影声望行。API13 和能力门槛沿用。134 项模拟覆盖行控件重用、提示及尺寸变化，实际界面待验。见[声望验收](../../YiboReputation/Docs/Forever-当前角色声望最小适配与验收.md)。
 
 2026-11-14 YiboBeastPaths 1.9.0（Retail／Mists）维护面板迁入 CAP-004 统一设置宿主：沿用唯一业务页面 `settings.CreateSettingsPanel`，使用 `createSection`／`refreshPanel` 回报动态高度，移除主页面维护子视图及整页内层滚动；复用 CAP-002 输入／按钮与 CAP-009 owner 中英文资源。Core API13、所需能力版本不变，关联入口增加 `AccountView:ShowSettings` 方法检查；不新增业务窗口壳或语言回退。两端真实 Core 离线注册／设置高度／控件复用及中英文视图检查通过，Retail 70783 与 Mists 70631 自动登录实机验证四页签、滚动和迁移入口；Mists 补重载。CAP-001／007／010 原有身份、快照与清理调用保持，整插件未验范围与部分接入状态不扩大。详见[维护设置迁移](../../YiboBeastPaths/Docs/1.9-维护面板迁入设置页-20261114.md)。
+
+2026-11-17 AutoOpen Forever 0.1.0 CAP-002/003/009复核：新增目标要求Core API13/localization:1就绪后才写库，RequiredDeps与构建最低Core元数据已登记。Mists保留既有可选Core边界。共享输入和物品解析仍为历史实现，语言资源仍只有局部覆盖，接入状态为部分接入；不能以本次目标/队列离线测试替代完整能力迁移或中英文实机验收。范围和证据见[YAO记录](../../YiboAutoOpen/Docs/Forever-容器取证与适配准备.md)。
+
+2026-11-17 YiboAutoOpen CAP-002/003/009最终复核（Forever0.1.1/Mists1.2.6）：Forever调用范围已全部接入Core CreateInput、ItemResolver Parse/GetInfo/Request、owner Locale:Get；最低API13及localization:1/basic-input:1/item-resolver:1写库前检查。中英文命令/设置/队列/绑定反馈已迁移；原生动态名称及玩家别名不翻译。Mists保留既有独立模式兼容范围，目标内LegacyResolver仅在无可用Core解析时调用，有Core时消费公共解析，Core设置不回退。无角色身份、缓存清理或跨业务服务调用，其他能力在本次职责单元不适用。接口直接复用Core现有公开契约，无Core实现变更。Forever235/Mists229联合断言及既有17组、Forever21项通过，静态语言key/格式检查通过；语言排版、手动模式和容器操作实机仍待验，状态为“代码接入/离线完成，实机待验”，不继承旧版实机通过结论。详见[YAO记录](../../YiboAutoOpen/Docs/Forever-容器取证与适配准备.md)。

@@ -1,6 +1,12 @@
 local BootCore = dofile("_NonRelease/CoreForever/Harness.lua")
 local checks = 0
 local function Check(ok, label) checks = checks + 1; assert(ok, label) end
+local function LoadManifest(load, addon, toc)
+    for line in io.lines(addon .. "/" .. toc) do
+        line = line:gsub("\r", "")
+        if line:match("%.lua$") then load(addon .. "/" .. line:gsub("\\", "/"), addon) end
+    end
+end
 local function Boot(saved, coreSaved, configure, forever)
     if forever == nil then forever = true end
     local env, core, event, _, load = BootCore(forever, coreSaved)
@@ -44,20 +50,17 @@ local function Boot(saved, coreSaved, configure, forever)
             for _, timer in ipairs(pending) do clock = clock + timer[1]; timer[2]() end
         end
     end
-    if configure then configure(env, core) end
-    for line in io.lines("YiboVault/" .. (forever and "YiboVault_Forever.toc" or "YiboVault.toc")) do
-        line = line:gsub("\r", "")
-        if line:match("%.lua$") then load("YiboVault/" .. line:gsub("\\", "/"), "YiboVault") end
-    end
+    if configure then configure(env, core, load, event) end
+    LoadManifest(load, "YiboVault", forever and "YiboVault_Forever.toc" or "YiboVault.toc")
     event("ADDON_LOADED", "YiboVault")
     return env, core, env.YiboVault, event, Flush, data
 end
 local env, core, vault, event, flush, data = Boot()
-Check(vault.initialized and vault.VERSION == "0.6.0-api1", "Vault initialized on actual Core")
+Check(vault.initialized and vault.VERSION == "0.6.4-api1", "Vault initialized on actual Core")
 Check(env.YiboVaultDB.sentinel == "mists" and not env.YiboVaultDB.byCharacter, "MoP saved table untouched")
 Check(vault.Items:HasCapability("source.bags", 1) and vault.Items:HasCapability("source.bank", 1), "honest source capabilities")
 Check(not vault.GuildBank and not vault.MailItems and not vault.AuctionHouse, "unsupported modules not loaded")
-Check(vault.Frame.events.BANKFRAME_OPENED and vault.Frame.events.MAIL_SHOW, "bank and mail context events registered")
+Check(vault.Frame.events.BANKFRAME_OPENED and vault.Frame.events.BAG_UPDATE and vault.Frame.events.MAIL_SHOW, "bank and mail context events registered")
 event("PLAYER_ENTERING_WORLD")
 Check(not next(vault.db.byCharacter), "no immediate entry-time snapshot")
 env.SlashCmdList.YIBOVAULT("scan")
@@ -88,19 +91,50 @@ env.SlashCmdList.YIBOVAULT("open"); flush()
 Check(core.AccountView.activePageID == "vault-items", "window opens through Core")
 local page = core.AccountView.frame.instances["vault-items"]
 Check(#page.renderedRecords == 3 and page.renderedStatus == "known", "bag rows visible")
+Check(page.rosterScroll:IsShown() and page.grid[1]:IsShown() and not page.header:IsShown(), "main workspace uses roster and item grid")
+page.grid[1]:Fire("OnEnter")
+Check(env.GameTooltip.link=="item:"..page.grid[1].record.itemID and env.GameTooltip:IsShown(),"item grid opens the native tooltip")
+page.grid[1]:Fire("OnLeave")
+Check(page.container:IsShown(), "multiple scanned bag containers expose a selector")
+page.container.menu.buttons[3]:Fire("OnClick"); flush()
+Check(#page.renderedRecords==1 and page.grid[1].record.location.container==1, "container selection filters the grid")
+page.container.menu.buttons[1]:Fire("OnClick"); flush()
+local rosterAlt = {id="VaultRosterAlt",name="Alt",realm="Realm"}
+vault.db.byCharacter[rosterAlt.id] = core.Defaults:Copy(vault.db.byCharacter[env.TEST_GUID])
+local rosterContext = {characters={core.Characters:GetCurrent(),rosterAlt},surfaceAvailableWidth=920}
+vault.AccountPage:Refresh(page,rosterContext)
+local readsBeforeAlt = data.reads
+page.selectedCharacter = rosterAlt.id
+vault.AccountPage:Refresh(page,rosterContext)
+Check(page.rosterButtons[2].state=="selected" and page.renderedStatus=="stale" and page.refresh.state=="disabled"
+    and not page.tabs["guild-bank"]:IsShown() and data.reads==readsBeforeAlt, "other character uses historical physical cache without a native read")
+page.selectedCharacter = nil
+vault.db.byCharacter[rosterAlt.id] = nil
+core.AccountView:NotifyPageChanged("vault-items"); flush()
 Check(page.tabs.bags.label:GetText() == vault:T("FOREVER.bags"), "bag button renders localized label rather than height")
 Check(page.tabs.equipment.label:GetText() == vault:T("FOREVER.equipment"), "equipment button renders localized label rather than height")
 Check(page.refresh.label:GetText() == vault:T("FOREVER.REFRESH"), "refresh button renders localized action")
 page.tabs.equipment.scripts.OnClick(); flush()
 Check(page.tabs.equipment.state == "selected" and page.tabs.bags.state == "default", "selected source tab follows displayed snapshot")
 Check(#page.renderedRecords == 2, "equipment tab renders same query snapshot")
-Check(page.rows[1].labels.item:GetText():match("NativeItem"), "metadata rendered through Core resolver")
+Check(page.grid[1].itemName:match("NativeItem"), "metadata rendered through Core resolver")
 local mainSourceID = page.renderedRecords[1].sourceID
+local searchReads = data.reads
+page.search:SetValue("  NATIVEITEM  ", true); flush()
+Check(#page.renderedRecords == 5 and page.status:GetText() == vault:T("FOREVER.SEARCH_COUNT", 5), "storage search matches names across bags and equipment")
+page.search:SetValue("6948", true); flush()
+Check(#page.renderedRecords == 1 and page.renderedRecords[1].source == "bags" and data.reads == searchReads, "ID search uses saved locations without scanning")
 core.AccountView.frame:Hide()
 Check(core.AccountView:ShowPreview("vault-items", env.Minimap), "Core owns preview window")
-Check(page.renderedRecords[1].sourceID == mainSourceID and not page.refresh:IsShown(), "preview uses same snapshot and hides refresh action")
+Check(page.renderedRecords[1].sourceID == mainSourceID and not page.refresh:IsShown() and not page.search:IsShown(), "preview shows the selected source without transient search")
 core.AccountView:HidePreview()
-core.AccountView:ShowPage("vault-items")
+core.AccountView:Toggle("vault-items")
+flush()
+Check(#page.renderedRecords == 1 and page.search:IsShown(), "search resumes on return to the main page")
+page.search:SetValue("no match", true); flush()
+Check(#page.renderedRecords == 0 and page.status:GetText() == vault:T("TEXT.NO_CACHED_ITEMS_MATCH_89E336"), "search miss has its own status")
+page.search.clearButton.scripts.OnClick(); flush()
+Check(#page.renderedRecords == 2 and page.tabs.equipment.state == "selected", "clear restores selected storage tab")
 local actualCreateCount = #vault.Items.Events._listeners
 vault:Initialize()
 Check(#vault.Items.Events._listeners == actualCreateCount, "reinitialization does not duplicate subscribers")
@@ -143,7 +177,9 @@ Check(not mismatch.initialized and not mismatch.db, "wrong target stopped")
 Check(#env.TEST_MESSAGES == 1, "only intentional early-scan feedback; no hidden Core callback errors: " .. table.concat(env.TEST_MESSAGES, " | "))
 do
     local mop, mopCore, mopVault, mopEvent, mopFlush = Boot(nil, nil, nil, false)
-    Check(mopVault.initialized and mopVault.VERSION == "1.2.4-api1", "real Mists Vault manifest initializes")
+    local expectedVersion
+    for line in io.lines("YiboVault/YiboVault.toc") do expectedVersion = line:match("^## Version:%s*(%S+)") or expectedVersion end
+    Check(mopVault.initialized and mopVault.VERSION == expectedVersion, "real Mists Vault manifest initializes with matching version")
     mopEvent("PLAYER_LOGIN"); mopEvent("PLAYER_ENTERING_WORLD"); mopFlush()
     Check(mopVault.Items:HasCapability("source.bank", 1) and mopVault.Items:HasCapability("source.mail", 1), "Mists source capabilities retained")
     Check(mopVault.GuildBank and mopVault.MailItems and mopVault.AuctionHouse, "Mists modules retained")
@@ -206,7 +242,7 @@ do
             Check(bank.open and (id == 101 or id == 102), "bank containers limited to open Character bank")
             bank.reads = bank.reads + 1
             if bank.fail and id == 102 then error("second tab unavailable") end
-            return bank.zeroCapacity and 0 or 2
+            return (bank.zeroCapacity == true or bank.zeroCapacity == id) and 0 or 2
         end
         e.C_Container.GetContainerItemInfo = function(id, slot)
             if id < 100 then return item(id, slot) end
@@ -218,10 +254,22 @@ do
             local n = 2; for _ in pairs(bank.items[id] or {}) do n = n - 1 end; return n
         end
     end
-    local e, c, v, fire, drain = Boot(nil, nil, Configure)
+    local e, c, v, fire, drain = Boot(nil, nil, function(client, _, load, event)
+        Configure(client)
+        client.GetMoney = function() return 100 end
+        client.C_Item.GetItemCount = function(id) if id == 9001 then return 3 end end
+        LoadManifest(load, "YiboCurrency", "YiboCurrency_Forever.toc")
+        event("ADDON_LOADED", "YiboCurrency")
+        Check(client.YiboCurrency.initialized and not client.YiboVault, "real Currency manifest starts before optional Vault provider")
+        Check(client.YiboCurrency.CustomItems:Add({ itemID = 9001, name = "NativeItem9001" }), "track the bank fixture item")
+    end)
+    local currency = e.YiboCurrency
     Check(v.initialized and v._unsupportedEvents.PLAYERBANKSLOTS_CHANGED, "unsupported optional bank event does not break startup")
     fire("PLAYER_ENTERING_WORLD"); drain()
     Check(bank.reads == 0 and not next(v:GetCharacterCoverage(e.TEST_GUID, "bank")), "never visited bank stays uncollected")
+    local detail = currency.CustomItems:GetVaultDetails(e.TEST_GUID, 9001)
+    Check(detail[1].source == "equipment" and detail[1].count == 0 and detail[1].fresh
+        and detail[2].source == "bank" and detail[2].count == nil, "real service keeps unvisited bank unknown and equipment zero known")
     e.SlashCmdList.YIBOVAULT("open"); drain()
     local panel = c.AccountView.frame.instances["vault-items"]
     panel.tabs.bank.scripts.OnClick(); drain()
@@ -231,8 +279,10 @@ do
     bank.open = true; fire("BANKFRAME_OPENED"); drain()
     local q = v.Items:Query({ sources = { "bank" } })
     Check(q.totals.totalQuantity == 10 and #q.records == 2, "all purchased Character bank containers persisted")
+    detail = currency.CustomItems:GetVaultDetails(e.TEST_GUID, 9001)
+    Check(detail[2].count == 8 and detail[2].fresh, "real service returns only the tracked item's bank total")
     Check(panel.renderedStatus == "known" and #panel.renderedRecords == 2 and panel.refresh.state == "default", "bank source displayed through actual Core page")
-    Check(panel.rows[1].labels.location:GetText():match("101"), "bank location uses actual container ID")
+    Check(panel.grid[1].locationText:match("101"), "bank location uses actual container ID")
     c.AccountView.frame:Hide(); Check(c.AccountView:ShowPreview("vault-items", e.Minimap), "Core bank preview opens")
     Check(#panel.renderedRecords == 2 and panel.renderedStatus == "known" and not panel.refresh:IsShown(), "bank preview shares page snapshot")
     c.AccountView:HidePreview(); c.AccountView:Toggle("vault-items")
@@ -245,6 +295,8 @@ do
     fire("BAG_CONTAINER_UPDATE"); drain()
     Check(v.Items:Query({ sources = { "bank" } }).totals.totalQuantity == 13, "failure in second bank container commits none of first")
     Check(v.AccountPage:Status("bank", e.TEST_GUID) == "error" and #v.Items:Query({ sources = { "bank" }, includeStale = false }).records == 0, "bank read failure reported and stale records excluded")
+    detail = currency.CustomItems:GetVaultDetails(e.TEST_GUID, 9001)
+    Check(detail[2].count == nil, "source-level bank failure is not presented as a known count")
     bank.fail = false; bank.items[101][1].stackCount = 11
     fire("BANK_TABS_CHANGED", 73); drain()
     Check(v.AccountPage:Status("bank", e.TEST_GUID) == "known", "bank recovers after complete read")
@@ -260,10 +312,32 @@ do
     Check(v.Items:Query({ sources = { "bank" } }).totals.totalQuantity == 13, "empty tab metadata is not empty bank")
     bank.tabs = originalTabs; bank.zeroCapacity = true; fire("BAG_UPDATE_DELAYED"); drain()
     Check(v.Items:Query({ sources = { "bank" } }).totals.totalQuantity == 13, "unready primary container capacity cannot erase bank")
+    bank.zeroCapacity = 102; fire("BAG_UPDATE_DELAYED"); drain()
+    Check(v.AccountPage:Status("bank", e.TEST_GUID) == "error" and v.Items:Query({ sources = { "bank" } }).totals.totalQuantity == 13,
+        "unready secondary bank tab preserves every saved location")
     bank.zeroCapacity = false; fire("BAG_UPDATE_DELAYED"); drain()
+    local observedItems = bank.items
+    bank.items = {}; fire("BAG_UPDATE_DELAYED"); drain()
+    Check(v.AccountPage:Status("bank", e.TEST_GUID) == "empty" and v.Items:Query({ sources = { "bank" } }).totals.totalQuantity == 0,
+        "last item removed in an already confirmed bank session updates to empty")
+    detail = currency.CustomItems:GetVaultDetails(e.TEST_GUID, 9001)
+    Check(detail[2].count == 0 and detail[2].fresh, "real complete bank scan confirms zero")
+    bank.items = observedItems; fire("BAG_UPDATE_DELAYED"); drain()
     local savedBank, savedCore = v.Copy(v.db), c.Defaults:Copy(c.Database:GetDB())
     bank.open = false; fire("BANKFRAME_CLOSED"); drain()
     Check(panel.renderedStatus == "stale" and #panel.renderedRecords == 2, "closed bank keeps previous snapshot with stale status")
+    c.AccountView:Toggle("currency"); drain()
+    local token = c.AccountView.frame.instances.currency.itemRows[1]
+    token:Fire("OnEnter")
+    Check(e.GameTooltip.lines[2].value == "3" and e.GameTooltip.lines[4].value == currency:T("FOREVER.CUSTOM_STALE", "11"),
+        "real Currency tooltip shows independent carried and historical bank counts")
+    c.AccountView:Toggle("vault-items"); drain()
+    local bankReads = bank.reads
+    panel.search:SetValue("9001", true); drain()
+    Check(#panel.renderedRecords == 1 and panel.renderedRecords[1].source == "bank"
+        and panel.grid[1].locationText == v:T("FOREVER.SEARCH_STALE_LOCATION", v:T("FOREVER.BANK_SLOT", 101, 1))
+        and bank.reads == bankReads, "storage search labels cached bank results without reading the closed bank")
+    panel.search.clearButton.scripts.OnClick(); drain()
     before = bank.reads; panel.refresh.scripts.OnClick(); e.SlashCmdList.YIBOVAULT("scan"); drain()
     Check(bank.reads == before and v.Items:Query({ sources = { "bank" } }).totals.totalQuantity == 13, "closed bank refresh never queries containers or clears records")
     bank.open = true; fire("BANKFRAME_OPENED"); bank.open = false; fire("BANKFRAME_CLOSED"); drain()
@@ -273,10 +347,21 @@ do
     Check(sv.Items:Query({ sources = { "bank" } }).totals.totalQuantity == 13 and sv.AccountPage:Status("bank", se.TEST_GUID) == "stale", "bank saved snapshot restored without opening bank")
     Check(sv.db.settings.foreverSource == "bank", "bank tab selection persists")
     bank.items = {}; bank.open = true; sf("BANKFRAME_OPENED"); sd()
-    Check(sv.Items:Query({ sources = { "bank" } }).totals.totalQuantity == 13, "empty response immediately after bank open cannot erase previous snapshot")
-    se.SlashCmdList.YIBOVAULT("scan"); sd()
-    Check(sv.Items:Query({ sources = { "bank" } }).totals.totalQuantity == 0 and sv.AccountPage:Status("bank", se.TEST_GUID) == "empty", "accessible fully scanned empty bank clears old records")
-    Check(sv:GetCharacterCoverage(se.TEST_GUID, "bank")["101"].status == "known-empty", "successful empty bank persists explicit coverage")
+    Check(sv.Items:Query({ sources = { "bank" } }).totals.totalQuantity == 13 and sv.AccountPage:Status("bank", se.TEST_GUID) == "bank_waiting",
+        "empty response immediately after bank open retains snapshot and reports unconfirmed data")
+    sf("BAG_UPDATE", 0); sf("BAG_UPDATE", 201); sf("BAG_CONTAINER_UPDATE"); sf("BAG_UPDATE_DELAYED"); sd()
+    Check(sv.Items:Query({ sources = { "bank" } }).totals.totalQuantity == 13, "unrelated bag events cannot confirm the first empty bank read")
+    sf("BAG_UPDATE", 101); sd()
+    Check(sv.AccountPage:Status("bank", se.TEST_GUID) == "empty" and sv.Items:Query({ sources = { "bank" } }).totals.totalQuantity == 0,
+        "character bank tab update confirms a complete empty scan")
+    bank.open = false; sf("BANKFRAME_CLOSED"); sd()
+    bank.open = true; sf("BANKFRAME_OPENED"); sd()
+    Check(sv.AccountPage:Status("bank", se.TEST_GUID) == "bank_waiting", "reopening requires confirmation for the new bank session")
+    local me, _, mv, mf, md = Boot(v.Copy(savedBank), c.Defaults:Copy(savedCore), Configure)
+    mf("PLAYER_ENTERING_WORLD"); md(); mf("BANKFRAME_OPENED"); md()
+    me.SlashCmdList.YIBOVAULT("scan"); md()
+    Check(mv.Items:Query({ sources = { "bank" } }).totals.totalQuantity == 0 and mv.AccountPage:Status("bank", me.TEST_GUID) == "empty", "manual confirmation of a complete empty bank clears old records")
+    Check(mv:GetCharacterCoverage(me.TEST_GUID, "bank")["101"].status == "known-empty", "successful empty bank persists explicit coverage")
     bank.open = false; sf("PLAYER_LEAVING_WORLD"); before = bank.reads; sf("BANKFRAME_OPENED"); sd()
     Check(bank.reads == before and not sv._bankOpen, "bank event outside world does not read")
     Check(#e.TEST_MESSAGES == 0 and #se.TEST_MESSAGES == 0, "bank paths have no hidden Core callback errors")
@@ -333,7 +418,7 @@ do
     Check(#q.records == 2 and q.totals.externalQuantity == 6 and q.totals.physicalQuantity == 0, "mail attachments use external source and exact quantities")
     Check(q.records[1].sourceID ~= q.records[2].sourceID and q.records[2].location.attachmentIndex == 16, "multiple attachments keep distinct stable slot identities")
     Check(panel.renderedStatus == "known" and #panel.renderedRecords == 2 and panel.refresh.state == "default", "mail attachments displayed in Core page")
-    Check(panel.rows[1].labels.location:GetText():match("1"), "mail attachment location rendered")
+    Check(panel.grid[1].locationText:match("1"), "mail attachment location rendered")
     q.records[1].quantity = 999
     Check(v.Items:Query({ sources = { "mail" } }).totals.totalQuantity == 6, "mail query returns detached snapshot")
     local coverage = v:GetCharacterCoverage(e.TEST_GUID, "mail").inbox
@@ -435,7 +520,7 @@ do
     local q = v.Items:Query({ sources = { "auction" } })
     Check(#q.records == 2 and q.totals.listedQuantity == 6 and q.totals.physicalQuantity == 0, "active own auctions collected as listed quantities; sold excluded")
     Check(q.records[1].auctionID == 501 and q.records[1].sourceID:match(":501$"), "auction ID persists as snapshot identity")
-    Check(panel.renderedStatus == "known" and #panel.renderedRecords == 2 and panel.rows[1].labels.location:GetText():match("501"), "auction page renders same active snapshot and auction ID")
+    Check(panel.renderedStatus == "known" and #panel.renderedRecords == 2 and panel.grid[1].locationText:match("501"), "auction page renders same active snapshot and auction ID")
     q.records[1].quantity = 999
     Check(v.Items:Query({ sources = { "auction" } }).totals.totalQuantity == 6, "auction query detached from saved authority")
     c.AccountView.frame:Hide(); Check(c.AccountView:ShowPreview("vault-items", e.Minimap), "auction Core preview opens")
@@ -549,7 +634,7 @@ do
     Check(bank.queries == 2 and v.Items:Query({ sources = { "guild-bank" } }).totals.totalQuantity == 5, "native tab change requests matching tab before reading event")
     fire("GUILDBANKBAGSLOTS_CHANGED"); drain()
     Check(v.Items:Query({ sources = { "guild-bank" } }).totals.totalQuantity == 7 and panel.renderedStatus == "known", "all viewable guild tabs collected without reading forbidden tab")
-    Check(panel.rows[2].labels.location:GetText():match("98"), "guild final slot and tab location rendered")
+    Check(panel.grid[2].locationText:match("98"), "guild final slot and tab location rendered")
     c.AccountView.frame:Hide(); Check(c.AccountView:ShowPreview("vault-items", e.Minimap), "guild preview owned by Core")
     Check(#panel.renderedRecords == 2 and not panel.refresh:IsShown(), "guild preview shares authorized snapshot")
     c.AccountView:HidePreview(); c.AccountView:Toggle("vault-items")
@@ -571,6 +656,10 @@ do
     bank.tabs[1].view = false; fire("GUILDBANK_UPDATE_TABS"); drain()
     Check(v.Items:Query({ sources = { "guild-bank" }, includeHiddenGuilds = true }).totals.totalQuantity == 4 and not v:GetGuildCoverage(key)["1"], "revoked permission hides cached records even with hidden-guild override")
     Check(v.db.byGuild[key].tabs["1"][1].quantity == 5, "revoked cache retained as inaccessible archive")
+    local revokedID = v.db.byGuild[key].tabs["1"][1].itemID
+    panel.search:SetValue(tostring(revokedID), true); drain()
+    Check(#panel.renderedRecords == 0, "storage search excludes revoked guild records")
+    panel.tabs["guild-bank"].scripts.OnClick(); drain()
     local saved, savedCore = v.Copy(v.db), c.Defaults:Copy(c.Database:GetDB())
     bank.open = false; fire("GUILDBANKFRAME_CLOSED"); drain()
     Check(panel.renderedStatus == "stale" and panel.refresh.state == "disabled", "guild close keeps stale authorized snapshot")

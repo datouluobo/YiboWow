@@ -6,7 +6,8 @@ local function Print(text)
 end
 
 local function IsSupportedClient()
-    return type(WOW_PROJECT_MISTS_CLASSIC) == "number" and WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC
+    return (type(WOW_PROJECT_MISTS_CLASSIC) == "number" and WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC)
+        or (type(WOW_PROJECT_CAMELOT) == "number" and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT)
 end
 
 local function SafeCall(callback, ...)
@@ -21,34 +22,55 @@ local function Capture()
     if not IsSupportedClient() then Print(NS:T("wrongClient")); return end
     local version, build, buildDate, interface = GetBuildInfo()
     local money, moneyOK = SafeCall(GetMoney)
-    local rows, listOK = {}, false
+    local rows, listOK, failures = {}, false, 0
     local listSizeAPI = (C_CurrencyInfo and C_CurrencyInfo.GetCurrencyListSize) or GetCurrencyListSize
     local listInfoAPI = (C_CurrencyInfo and C_CurrencyInfo.GetCurrencyListInfo) or GetCurrencyListInfo
+    local listLinkAPI = (C_CurrencyInfo and C_CurrencyInfo.GetCurrencyListLink) or GetCurrencyListLink
+    local detailAPI = (C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo) or GetCurrencyInfo
     local size, sizeOK = SafeCall(listSizeAPI)
     if sizeOK and type(size[1]) == "number" and type(listInfoAPI) == "function" then
-        listOK = true
-        for index = 1, math.min(size[1], 100) do
+        listOK = size[1] <= 500
+        for index = 1, math.min(size[1], 500) do
             local info, ok = SafeCall(listInfoAPI, index)
             if ok then
                 local value = info[1]
+                local link, linkOK = SafeCall(listLinkAPI, index)
+                local hyperlink = linkOK and type(link[1]) == "string" and link[1] or nil
+                local currencyID = type(value) == "table" and tonumber(value.currencyID) or nil
+                currencyID = currencyID or (hyperlink and tonumber(hyperlink:match("currency:(%d+)")))
+                local row
                 if type(value) == "table" then
-                    rows[#rows + 1] = {
+                    row = {
                         name = value.name, quantity = value.quantity, iconFileID = value.iconFileID,
-                        isHeader = value.isHeader, isShowInBackpack = value.isShowInBackpack,
+                        isHeader = value.isHeader, isExpanded = value.isHeaderExpanded,
+                        isShowInBackpack = value.isShowInBackpack,
                     }
                 else
-                    rows[#rows + 1] = { name = value, quantity = info[2], icon = info[3], isHeader = info[4], isShowInBackpack = info[7] }
+                    row = { name = value, isHeader = info[2], isExpanded = info[3],
+                        isShowInBackpack = info[5], quantity = info[6], icon = info[7] }
                 end
+                row.index, row.currencyID, row.link = index, currencyID, hyperlink
+                if currencyID then
+                    local detail, detailOK = SafeCall(detailAPI, currencyID)
+                    row.detailOK = detailOK
+                    if detailOK then row.detail = detail end
+                end
+                rows[#rows + 1] = row
+            else
+                failures = failures + 1
+                rows[#rows + 1] = { index = index, error = tostring(info) }
             end
         end
+        listOK = listOK and failures == 0
     end
     local snapshot = {
         version = version, build = build, buildDate = buildDate, interface = tonumber(interface),
-        locale = GetLocale and GetLocale() or "unknown", moneyAPI = type(GetMoney) == "function",
+        projectID = WOW_PROJECT_ID, locale = GetLocale and GetLocale() or "unknown", moneyAPI = type(GetMoney) == "function",
         moneyCopper = moneyOK and money[1] or nil,
         currencyInfoAPI = type(C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo) == "function",
         currencyListAPI = type(listSizeAPI) == "function" and type(listInfoAPI) == "function",
         currencyListSize = sizeOK and size[1] or nil, currencyRows = rows, rowsComplete = listOK,
+        currencyListFailures = failures, currencyLinkAPI = type(listLinkAPI) == "function",
         itemCountAPI = type(C_Item and C_Item.GetItemCount) == "function" or type(GetItemCount) == "function",
     }
     YiboCurrencyProbeDB = YiboCurrencyProbeDB or {}

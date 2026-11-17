@@ -1,7 +1,7 @@
 @{
-    Name = 'YiboCore-for-MoP'
-    Title = 'YiboCore for MoP'
-    Version = '1.0.1'
+    Name = 'Yibo-Addon-Suite-for-MoP'
+    Title = 'Yibo Addon Suite for MoP - Account QoL Addons'
+    Version = '1.1.0'
     Target = 'Mists'
     Addons = @(
         'YiboAltoBoss', 'YiboAutoOpen', 'YiboBeastPaths', 'YiboBuilds', 'YiboCore',

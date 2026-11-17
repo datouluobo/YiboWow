@@ -48,7 +48,15 @@ function Database:MigrateCatalog()
     end
     db.catalogVersion = math.max(db.catalogVersion, Addon.Catalog.version)
 end
-function Database:Initialize() self.db = type(YiboAutoOpenDB) == "table" and YiboAutoOpenDB or {}; YiboAutoOpenDB = self.db; self:Normalize(); self:MigrateCatalog(); Addon.db = self.db end
+function Database:Initialize()
+    if Addon.Target and not Addon.Target.supported then return false end
+    if Addon.Target and Addon.Target.requireCore and not Addon.runtime.initializing then return Addon:Initialize() end
+    local name = Addon.Target and Addon.Target.savedVariable or "YiboAutoOpenDB"
+    self.db = type(_G[name]) == "table" and _G[name] or {}
+    _G[name] = self.db
+    self:Normalize(); self:MigrateCatalog(); Addon.db = self.db
+    return true
+end
 function Database:EnsureInitialized()
     if not self.db then Addon:Initialize() end
     return self.db
@@ -71,7 +79,7 @@ function Database:GetConfirmSources()
     local result = {}
     for _, key in ipairs(self.db.confirmSourceOrder) do
         local source = self.db.confirmSourceEntries[key]
-        if source then result[#result + 1] = { key = key, kind = source.kind, objectID = source.objectID, label = source.label, enabled = source.enabled ~= false } end
+        if source then result[#result + 1] = { key = key, kind = source.kind, objectID = source.objectID, label = source.label == "SOURCE.CATALOG" and Addon:T("SOURCE.CATALOG") or source.label, enabled = source.enabled ~= false } end
     end
     return result
 end
@@ -106,7 +114,7 @@ function Database:AddConfirmObject(raw, label)
     if not objectID or objectID < 1 or objectID ~= math.floor(objectID) then return nil, "invalid" end
     local key = "object:" .. objectID
     if self.db.confirmSourceEntries[key] then return nil, "already_exists" end
-    self.db.confirmSourceEntries[key] = { kind = "object", objectID = objectID, label = label or ("拾取来源对象 #" .. objectID), enabled = true }
+    self.db.confirmSourceEntries[key] = { kind = "object", objectID = objectID, label = label or (Addon:T("SOURCE.UNKNOWN", objectID)), enabled = true }
     self.db.confirmSourceOrder[#self.db.confirmSourceOrder + 1] = key
     return true
 end

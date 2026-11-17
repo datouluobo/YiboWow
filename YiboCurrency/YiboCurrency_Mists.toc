@@ -17,7 +17,8 @@
 Mists/Bootstrap.lua
 Locales/zhCN.lua
 Locales/enUS.lua
-Catalog.lua
+Common/Catalog.lua
+Mists/Catalog.lua
 Store.lua
 Migration.lua
 Scanner.lua

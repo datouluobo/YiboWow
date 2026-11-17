@@ -8,7 +8,8 @@ function Addon:Initialize()
     if valid then
         for name, minimum in pairs({ localization = 1, ["business-services"] = 1, ["character-name-format"] = 1, ["item-resolver"] = 1,
             ["character-identity"] = 1, ["character-identity-cache"] = 1, characters = 1, ["character-cleanup"] = 1, ["account-view"] = 2,
-            ["account-preview-characters"] = 1, ["account-character-admission"] = 1, ["account-surface-budget"] = 2, ["account-entry"] = 2 }) do
+            ["account-preview-characters"] = 1, ["account-character-admission"] = 1, ["account-surface-realm-scope"] = 1, ["account-surface-budget"] = 2, ["account-entry"] = 2,
+            ["basic-input"] = 1 }) do
             if not core:HasCapability(name, minimum) then valid = false end
         end
     end
@@ -19,6 +20,7 @@ function Addon:Initialize()
         and type(core.AccountView.Toggle) == "function" and core.Entry and type(core.Entry.RegisterBusinessEntry) == "function"
         and core.CharacterCleanup and type(core.CharacterCleanup.RegisterOwner) == "function" and core.ItemResolver
         and type(core.ItemResolver.GetInfo) == "function" and type(core.ItemResolver.Request) == "function" and core.UITheme
+        and type(core.UITheme.CreateInput) == "function" and type(core.UITheme.CreateDropdown) == "function"
     if not valid then
         if core and core.Print and not (core.Locale and core.Locale.Get) then core:Print("YiboMail requires a matching YiboCore build with API 13 and inbox capabilities.")
         else self:Print(self:T("FOREVER.CORE_REQUIRED")) end

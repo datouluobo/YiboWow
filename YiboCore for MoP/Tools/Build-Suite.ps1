@@ -11,7 +11,7 @@ $suiteRoot = Join-Path $workspace 'YiboCore for MoP'
 . (Join-Path $workspace 'Tools/Release.Common.ps1')
 $suite = Import-PowerShellDataFile -LiteralPath (Join-Path $suiteRoot 'Suite.psd1')
 $config = Import-PowerShellDataFile -LiteralPath (Join-Path $workspace 'Tools/ReleaseProfiles.psd1')
-if ($suite.Name -cne 'YiboCore-for-MoP' -or $suite.Target -cne 'Mists' -or $suite.Version -notmatch '^\d+\.\d+\.\d+$') {
+if ($suite.Name -cne 'Yibo-Addon-Suite-for-MoP' -or $suite.Target -cne 'Mists' -or $suite.Version -notmatch '^\d+\.\d+\.\d+$') {
     throw 'Invalid Suite identity, version or target.'
 }
 $addons = @($suite.Addons | Sort-Object -Unique)
@@ -24,7 +24,7 @@ foreach ($sourceRootPath in (@($addons | ForEach-Object { Join-Path $workspace $
         throw 'OutputRoot must be outside addon and Suite source directories.'
     }
 }
-$filename = "YiboCore-for-MoP-mists-v$($suite.Version)-curseforge.zip"
+$filename = "Yibo-Addon-Suite-for-MoP-mists-v$($suite.Version)-curseforge.zip"
 $final = Join-Path $outputPath $filename
 $releaseRoot = Join-Path $suiteRoot "Releases/v$($suite.Version)"
 if (-not $ValidateOnly -and ((Test-Path -LiteralPath $final) -or (Test-Path -LiteralPath $releaseRoot))) {
@@ -106,8 +106,8 @@ $manifest = [ordered]@{
 $lines = @(
     "# $($suite.Title) - v$($suite.Version)", '',
     'Local release candidate / 本地发布候选；not uploaded / 未上传。', '',
-    'First Suite snapshot containing all 15 current release addons for Mists of Pandaria Classic. Component versions remain independent.',
-    '首个 Suite 快照，包含全部 15 个正式插件的当前打包版本。Suite 与单体分别维护版本。', '',
+    'Suite snapshot containing all 15 configured addons for Mists of Pandaria Classic. Component versions remain independent.',
+    'Suite 快照包含全部 15 个插件的本次打包版本。Suite 与单体分别维护版本。', '',
     "Source snapshot SHA256: $inputDigest", '',
     '## Included components / 本文件包含的具体组件', '',
     '| Addon | Version | Required TOC dependencies / 必须依赖 | Optional TOC dependencies / 可选依赖 | Minimum Core API / 最低 Core API |',
@@ -142,10 +142,10 @@ $archived = Publish-YiboPackages $outputPath $profile @($artifact)
 [void](New-Item -ItemType Directory -Path $releaseRoot)
 [IO.File]::WriteAllText((Join-Path $releaseRoot 'CHANGELOG.md'), ($lines -join "`n"), [Text.UTF8Encoding]::new($false))
 Copy-Item -LiteralPath (Join-Path $suiteRoot 'INSTALL.md') -Destination $releaseRoot
-[IO.File]::WriteAllText((Join-Path $releaseRoot 'YiboCoreForMoPManifest.json'), ($manifest | ConvertTo-Json -Depth 14), [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllText((Join-Path $releaseRoot 'YiboAddonSuiteManifest.json'), ($manifest | ConvertTo-Json -Depth 14), [Text.UTF8Encoding]::new($false))
 return [pscustomobject]@{
     Suite = $suite.Name; Version = $suite.Version; Components = $components.Count; Package = $final
     PackageSHA256 = (Get-FileHash -LiteralPath $final -Algorithm SHA256).Hash.ToLowerInvariant()
-    Changelog = (Join-Path $releaseRoot 'CHANGELOG.md'); Manifest = (Join-Path $releaseRoot 'YiboCoreForMoPManifest.json')
+    Changelog = (Join-Path $releaseRoot 'CHANGELOG.md'); Manifest = (Join-Path $releaseRoot 'YiboAddonSuiteManifest.json')
     SourceSHA256 = $inputDigest; IntermediateRoot = $runRoot; Archived = $archived; Uploaded = $false
 }

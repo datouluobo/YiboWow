@@ -66,14 +66,16 @@ function Scanner:Scan()
     local ok, stamp = Read(GetServerTime)
     if not ok or not Addon.Store:Integer(stamp, 0, 9007199254740991) then return self:Fail("error") end
     local previous = Addon.Store.db.characters[id]
-    local known = previous and previous.factions or {}
+    local known = {}
+    for factionID in pairs(Addon.Store:GetFactionDirectory()) do known[factionID] = true end
+    if previous and previous.factions then
+        for factionID in pairs(previous.factions) do known[factionID] = true end
+    end
     local first, count = self:Collect(known, stamp)
     if not first then return self:Fail(count) end
     local second, afterCount = self:Collect(known, stamp)
     if not second then return self:Fail(afterCount) end
     if count ~= afterCount or not Equal(first, second) or id ~= Addon.Core.Characters:GetCurrentID() or not self.inWorld then return self:Fail("error") end
-    -- An empty visible list never proves that this character has no reputation.
-    if not next(second) then return self:Fail("pending") end
     return Addon.Store:Commit(id, second, stamp)
 end
 function Scanner:Fail(state)

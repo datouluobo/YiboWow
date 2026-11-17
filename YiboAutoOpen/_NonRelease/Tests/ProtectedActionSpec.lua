@@ -13,12 +13,13 @@ local function Scenario(event, owner, throws)
     local savedCore = YiboCore
     YiboCore = nil
     dofile("YiboAutoOpen/Bootstrap.lua")
+dofile("YiboAutoOpen/Locale.lua")
     dofile("YiboAutoOpen/Locale.lua")
     YiboCore = savedCore
     local Addon = YiboAutoOpen
     -- Keep the test independent of any Core fixture left by earlier specs.
     Addon.T = function(_, key, id)
-        assert(key == "QUEUE.MANUAL_REQUIRED")
+        if key ~= "QUEUE.MANUAL_REQUIRED" then return key end
         return string.format("Item #%d: please open manually", id)
     end
     Addon.runtime.initialized, Addon.runtime.loggedIn = true, true
@@ -45,7 +46,8 @@ local function Scenario(event, owner, throws)
             end
         end,
     }
-    dofile("YiboAutoOpen/Queue.lua")
+    if not YiboAutoOpen.T then dofile("YiboAutoOpen/Locale.lua") end
+dofile("YiboAutoOpen/Queue.lua")
     assert(registered.ADDON_ACTION_FORBIDDEN and registered.ADDON_ACTION_BLOCKED)
     Addon.Queue:ProcessNext()
     return Addon, scheduled, messages, uses, handler
