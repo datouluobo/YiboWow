@@ -2,6 +2,22 @@ local Addon = _G.YiboMail
 local Model = {}; Addon.CacheModel = Model
 local View = Addon.ViewModel
 local VALID = { known = true, ["known-empty"] = true, partial = true }
+function Model:ItemName(item)
+    if item.currencyID then return View:AttachmentName(item) end
+    if item.name and item.name ~= "" then return item.name end
+    local resolver = Addon.Core.ItemResolver
+    local info = resolver:GetInfo(item.itemID)
+    if info and info.name then return info.name end
+    self.pendingItems = self.pendingItems or {}
+    if info and info.state == "unloaded" and not self.pendingItems[item.itemID] then
+        self.pendingItems[item.itemID] = true
+        resolver:Request(item.itemID, function(result)
+            self.pendingItems[item.itemID] = nil
+            if result and result.state == "ready" then Addon.Core.AccountView:NotifyPageChanged("mail-inbox") end
+        end)
+    end
+    return ""
+end
 function Model:HasSnapshot(character)
     local snapshot = Addon.db and Addon.db.byCharacter[character.id]
     local coverage = snapshot and snapshot.coverage
@@ -24,7 +40,7 @@ function Model:Matches(character, mail, query, item)
     if Addon.Core and Addon.Core.Characters.GetDisplayName then parts[#parts + 1] = Addon.Core.Characters:GetDisplayName(character, "short") end
     local items = item and { item } or mail.attachments or {}
     for _, value in ipairs(items) do
-        parts[#parts + 1] = value.name or ""; parts[#parts + 1] = tostring(value.itemID or "")
+        parts[#parts + 1] = self:ItemName(value); parts[#parts + 1] = tostring(value.currencyID or value.itemID or "")
     end
     return string.lower(table.concat(parts, " ")):find(query, 1, true) ~= nil
 end
@@ -42,9 +58,11 @@ function Model:GetMails(context, options)
                 local mail = snapshot.records[key]
                 if mail then
                     local kind, risk, source = options.kind or "all", self:Risk(mail), options.source or "all"
+                    local hasCurrency = false
+                    for _, item in ipairs(mail.attachments or {}) do if item.currencyID then hasCurrency = true; break end end
                     local sourceMatch = source == "all" or (source == "auction" and mail.auctionMail == true)
                         or (source == "player" and mail.auctionMail ~= true)
-                    local kindMatch = kind == "all" or (kind == "items" and #(mail.attachments or {}) > 0)
+                    local kindMatch = kind == "all" or (kind == "items" and #(mail.attachments or {}) > 0) or (kind == "currency" and hasCurrency)
                         or (kind == "money" and (mail.money or 0) > 0 and (mail.cod or 0) == 0)
                         or (kind == "cod" and (mail.cod or 0) > 0) or (kind == "returned" and (mail.wasReturned or mail.returned))
                         or (kind == "empty" and #(mail.attachments or {}) == 0 and (mail.money or 0) == 0 and (mail.cod or 0) == 0)

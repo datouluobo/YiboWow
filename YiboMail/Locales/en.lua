@@ -1,6 +1,10 @@
 local Core = _G.YiboCore
 if Core and Core.Locale and type(Core.Locale.Register) == "function" then
     Core.Locale:Register("YiboMail", "en", {
+        ["ERROR.CORE_REGISTER"] = "Mail did not start: Core registration failed. Log in again to retry.",
+        ["ERROR.CLEANUP_REGISTER"] = "Mail did not start: character cleanup registration failed. Log in again to retry.",
+        ["ERROR.PAGE_REGISTER"] = "Mail did not start: account page or entry registration failed. Log in again to retry.",
+        ["ERROR.ITEMS_REGISTER"] = "Mail did not start: the mail data service could not register. Log in again to retry.",
         ["ERROR.TRANSFER_MIGRATION"] = "Legacy send review could not finish: %s. Log in again to retry.",
         ["HISTORY.LEGACY_TRANSFER_REVIEW"] = "This send predates transit tracking and has no receipt or return evidence. Verification is required.",
         ["FOREVER.WRONG_CLIENT"] = "Mail did not start: install the matching client build.",
@@ -71,6 +75,8 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["HISTORY.CONTENT_TEXT"] = "Text only",
         ["HISTORY.CONTENT_ITEMS"] = "With attachments",
         ["HISTORY.CONTENT_MONEY"] = "With gold",
+        ["ATTACHMENT.CURRENCY_ID"] = "Currency #%d",
+        ["ATTACHMENT.CURRENCY_FILTER"] = "With currency",
         ["HISTORY.PARTICIPANT_ALL"] = "Other: All",
         ["HISTORY.DIRECTION_EITHER"] = "Both",
         ["HISTORY.DIRECTION_TO"] = "To selected",
@@ -138,6 +144,8 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["UI.TEXT_0057"] = "%.1fh",
         ["UI.TEXT_0058"] = "%.1f gold",
         ["UI.TEXT_0059"] = "%.2f gold",
+        ["MONEY.EXACT_GOLD"] = "%.4f gold",
+        ["INBOX.GM_MANUAL_OPEN"] = "Open GM mail manually to review its contents.",
         ["UI.TEXT_0060"] = "180 days",
         ["UI.TEXT_0061"] = "1–3 days",
         ["UI.TEXT_0062"] = "Within 24 hours",
@@ -744,6 +752,7 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["UI.TEXT_0673"] = "Sending safety",
         ["UI.TEXT_0674"] = "Confirm before sending gold",
         ["UI.TEXT_0675"] = "When enabled, review the recipient and amount before sending mail with gold.",
+        ["SETTINGS.NATIVE_GOLD_CONFIRMATION"] = "Sending gold uses the game's native confirmation. This confirmation cannot be disabled here.",
         ["EMPTY_MAIL.MENU"] = "Clean Up Mail",
         ["EMPTY_MAIL.NONE"] = "No mail eligible for cleanup in the loaded inbox.",
         ["EMPTY_MAIL.CONFIRM"] = "Permanently delete %d messages from the loaded inbox? Cleanup covers empty mail without items, money, or COD. On Simplified Chinese clients, eligible system mail may also be deleted even if it has a body.",

@@ -2,10 +2,10 @@
 ## Title: |cff20e070[Yibo]|r YiboMail - Mail Assistant
 ## Title-zhCN: |cff20e070[Yibo]|r YiboMail - 邮件助手
 ## Title-zhTW: |cff20e070[Yibo]|r YiboMail - 邮件助手
-## Notes: Forever development build: current character read-only inbox snapshots. Client acceptance pending.
-## Notes-zhCN: 无限开发版：当前角色收件箱只读快照，待实机验证。
+## Notes: Forever development build: account snapshots, collection, contacts, rule sending and transit tracking. Client acceptance pending.
+## Notes-zhCN: 无限开发版：账号快照、收件、联系人、规则寄与在途记录，待实机验证。
 ## Author: YiboSoft
-## Version: 0.1.5-api1
+## Version: 0.2.0-api1
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
 ## SavedVariables: YiboMailForeverDB
@@ -16,7 +16,40 @@ Forever\Target.lua
 Locales\zh.lua
 Locales\en.lua
 Store.lua
+Recipients.lua
+Common/RecipientRuntime.lua
+RecipientUI.lua
+SendRules.lua
+Common/RuleCategories.lua
+RuleSendController.lua
+SendRulesSettings.lua
+RuleSendUI.lua
 Items.lua
+Common/TransferMigration.lua
 Forever\Scanner.lua
-Forever\AccountPage.lua
-Forever\Bootstrap.lua
+Common/ArrivalSignal.lua
+Common/ScanCommit.lua
+Common/CollectionScan.lua
+Common/CollectionRuntime.lua
+Forever/CollectionRuntime.lua
+ViewModel.lua
+ActionTodo.lua
+GoalTargets.lua
+WorkspaceState.lua
+MailUI.lua
+CacheModel.lua
+HistoryModel.lua
+CacheUI.lua
+AccountPage.lua
+Common\AccountSettings.lua
+Inbox.lua
+Common/Queue.lua
+Common/Returns.lua
+Compose.lua
+Common/ComposeRuntime.lua
+Forever/Compose.lua
+NativeUI.lua
+Common/MoneySendConfirmation.lua
+Common/InboxUI.lua
+Common/ReturnUI.lua
+Common\Lifecycle.lua

@@ -1,3 +1,7 @@
+2026-11-18 YiboMail Forever发件扩展：CAP-003接入既有item-picker:2/CreateItemPicker，CAP-007接入character-identity:2与account-identity-context:1用于联系人/规则；API13及对应能力/方法在写库前检查，不保留并行回退。CAP-004/009继续复用托管页面/设置和owner资源。Vault Forever经Core.Contracts消费mail.items v1.1离线角色在途；未新增Core公共API。真实Mail/Vault清单发送/失败/在途与隔离、双目标规则专项及缺依赖回归通过；金币发送继续客户端原生确认。实机与覆盖恢复待验，部分接入。见[Mail整体记录](../../YiboMail/Docs/Forever-整体适配方案-2026-11-17.md)。
+
+2026-11-18 YiboMail Forever收件表面：CAP-003复用Core.ItemConfirmation:Show完成批量退信/空信删除确认，API13与既有能力保持，初始化对collect增加Show方法检查，缺失在业务写库前停止；CAP-004/007/009沿用托管账号页、GUID与owner语言。真实目标清单UI安装/缺依赖/队列和退信离线通过，客户端确认与操作待验，记部分接入。见[Mail整体记录](../../YiboMail/Docs/Forever-整体适配方案-2026-11-17.md)。
+
 2026-11-13 YiboBeastPaths 1.9.0：离线兽栏 CAP-001／002／004／007／009／010 按 API13 和所需能力接入角色格式、Core 输入下拉、托管页面／预览／入口、身份、owner 双语及清理 owner；角色选择检查 `basic-input:1` 和公开下拉方法。仍为**部分接入**：两端正向观察及退出重登恢复已实机验证，完整性仍未确认；真实旧档升级、部分客户端路径和双语验收待做。两目标真实 Core 合成数据页面及幂等／错目标离线检查通过；见[采集判据审查](../../YiboBeastPaths/Docs/1.9-采集判据审查-20261113.md)。下列旧版“待接入”行按历史范围理解。
 
 2026-11-11 CAP-004 新增 `account-surface-realm-scope:1`。Forever Builds、Crafting、Currency、Mail、Reputation 声明范围只作用于入口悬停，Vault 声明只作用于仓储主窗。六个消费者在写库前检查能力，Core API13 保持。共享 Core 界面适用于 Mists、Forever、Retail。各目标既有清单及默认包清单、写库保护、Core 就绪、一次初始化、SavedVariables 身份、引用和旧文件覆盖路径保持。Forever 更新版本，其他目标通过回归和构建预检。292 项合批模拟及单角色真实存档回放通过，覆盖实机与切角色待验。见[范围契约](API-v5-业务插件接入指南.md)。
@@ -190,13 +194,25 @@
 
 YiboMounts 1.0.0 已按 API13 接入 `localization:1` 和 API v6 独立设置注册；Core 保持可选，增强功能要求 API13，独立来源 Tooltip 保持可用。现有范围已验收，契约与历史证据见 [YiboMounts API13 接入说明](../../YiboMounts/Docs/Core-API13-接入说明.md)。
 
+2026-11-18 CAP-003物品元数据：Core工作树提供API13/item-resolver:2的quality/classID/subclassID可选字段，能力1兼容。Retail/Mists/Forever33项元数据、192项共享边界、70项Core及2463项消费者模拟通过；客户端与发布待验。Mail本轮仅建立Core能力，ViewModel/SendRules尚未接入新字段，不计业务迁移完成；其他消费者本轮未审查新字段需求，保持原接入状态。契约、字段未知语义及后续触发条件见[元数据扩展](物品元数据扩展-2026-11-18.md)。
+
 ## 活动能力总表
+
+2026-11-18 CAP-009 / YiboMail：共同生命周期4条失败路径补齐owner中英文ERROR资源，新增8个实际注册失败提示用例，Forever122项通过。捆绑Python运行并人工查看工作区语言报告，Mail未知key0，全仓库资源缺英文/格式参数不一致0；3条Mail硬编码候选已分类为既有启动诊断/原生类别别名。实际双语言和手动模式排版仍待验；不据词法报告扩展已验区域。记录见Mail/Docs/Forever-重构剩余项-2026-11-18.md及带报告摘要的LocalizationReview。
+
+2026-11-18 CAP-004 / YiboMail：本次触及寄金币确认时，已将私有StaticPopup流程收拢到Core.ItemConfirmation:Show；既有API13/Show方法检查继续作为门槛，无本地并行回退。共享草稿复核与目标按钮绑定分离；真实Core确认专项及19组Mail、114项Forever、3145项Vault模拟、双目标预检通过。此调用目前为Mists原生发件链，Forever仍未加载；原生安全转移/客户端确认与覆盖恢复待验，不扩展实机或整插件接入结论。
+
+2026-11-18 Mail生命周期接入复核：Mists/Forever统一使用Core就绪/API13及item-resolver:2、account-surface-budget:2、account-surface-realm-scope:1等实际调用门槛，缺失在写库前停止；Mists窗口门槛由1提升2。CAP-004/005/007/009/010调用与角色别名清理集中在Common/Lifecycle，服务失败重试不重复页面/入口/清理注册的专项通过。111项Forever、18组Mail、3145项Vault模拟及双目标预检通过；客户端/覆盖待验，原生操作仍未完成，不扩大整插件接入结论。
+
+2026-11-18 YiboMail Forever共享账号工作区接入CAP-003/004/007/009：加载共享ViewModel/CacheModel等模型，最低item-resolver:2；Core窗口/范围/字段/悬停与GUID沿用，无本地物品信息回退。Forever108项（含双角色总览/附件/历史和纯浏览不扫描）、Mail18组与Vault3145项模拟通过；实际界面/恢复待验。此前“Forever未加载新模型”仅属前一中间态，现已接入这些调用；收发模块/规则新字段在Forever尚未加载，不能记整插件完成。
+
+2026-11-18 CAP-003 / YiboMail：Mists共享ViewModel物品边框、SendRules:GetItem和背包匹配已使用Core ItemResolver:GetInfo读取品质/类别/子类别，Bootstrap提高至item-resolver:2并检查GetInfo方法，旧能力在写库前停止；未保留本地GetItemInfo回退。新Core-only消费者Spec、18组Mail及84项中英文依赖拒绝检查通过，Mail/Vault现有联动模拟保持；业务客户端与新版覆盖待验。Forever当前只读链未加载这两个模型，不提高未调用能力的门槛，整插件仍按原部分接入记录，不能记完整迁移。类别目录查询已归Mists/RuleCategories.lua，未迁入Core业务规则；后续Forever接入共享模型时必须提高对应能力检查。
 
 | 编号 | 能力 | Core 状态与最低版本 | 当前适配状态 | 后续事项 |
 | --- | --- | --- | --- | --- |
 | CAP-001 | 公共角色／联系人名称格式化 | 已提供；API v8 / `character-name-format:1` | 当前已验收插件按各自范围接入；Legendary、Todo 语言以外的当前范围按本轮验收结论处理 | AutoOpen 不涉及角色名；联系人特殊显示语义见插件条目 |
 | CAP-002 | 基础输入控件 | 已提供；API v7 / `basic-input:1` | 当前适用范围实机验收完成 | 现有功能已收口；后续输入变更按公开能力审查 |
-| CAP-003 | 物品解析、选择与操作确认 | 已提供；API v7 / `item-resolver:1`，`item-picker:2` | 当前适用范围实机验收完成 | 现有功能已收口；独立模式与可选Core边界继续保持 |
+| CAP-003 | 物品解析、选择与操作确认 | 已提供；API v7基础；API13工作树`item-resolver:2`（兼容1），`item-picker:2` | 既有范围沿用实机记录；新增元数据仅离线通过，Mail待接入 | 新字段客户端与消费方迁移待验；独立模式与可选Core边界保持 |
 | CAP-004 | 账号页面、入口与设置工作台 | 已提供；API 13 / `account-entry:2`、`builtin-entry-bar:3`、`account-surface-budget:2`；其余能力版本按消费范围检查 | 当前适用范围实机验收完成；可选集成仍按自身契约处理 | 无当前已知阻断；历史兼容边界见 CAP-004 |
 | CAP-005 | 通用跨业务能力连接 | 已提供；Service API v9、Provider API v11；以能力版本为准 | 当前服务／提供者／消费者按 CAP-005 逐项记录，客户端适配验收完成 | 待评估项仅在出现真实跨业务需求时重审 |
 | CAP-006 | 页面首次打开提示 | 已提供；API v10 / `account-view:2` | 当前适用页面按本轮验收结论完成 | 新增真实低频操作引导时再评估 |

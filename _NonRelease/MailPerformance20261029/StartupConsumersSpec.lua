@@ -24,7 +24,7 @@ assert(#prints==1 and contextWatch[1]==nil and C.Characters._allSnapshot==nil,'R
 A.AccountPage:OnLogin(); assert(#timers==0)
 C.AccountView.BuildContext=build
 print('PASS: real login reminder schedules once, preserves reminders, releases context, never warms full account cache')
-for _,file in ipairs({'Recipients','Items','Mists/TransferMigration'}) do dofile('YiboMail/'..file..'.lua') end
+for _,file in ipairs({'Recipients', 'Common/RecipientRuntime','Items','Common/TransferMigration'}) do dofile('YiboMail/'..file..'.lua') end
 assert(A.Items:MigrateLegacyTransfers())
 assert(A.Items.transferIndex==nil and next(A.Items.transfersCache)==nil and C.Characters._allSnapshot==nil,'No legacy sends means no eager directory/transit materialization')
 A.db.byCharacter.A.history={{eventID='send',state='in-transit',recipient='B-Two',observedAt=100,attachments={{itemID=123,quantity=2}}}}
@@ -34,7 +34,7 @@ transfer.records[1].quantity=999
 assert(A.Items:GetTransfers('B').records[1].quantity==2 and C.Characters._allSnapshot==nil)
 assert(A.Recipients:Current().domains==nil and C.Characters._allSnapshot==nil)
 print('PASS: lazy transit queries and recipient identity/faction use public projections; isolated results and full cache stays cold')
-dofile('YiboMail/SendRules.lua')
+dofile('YiboMail/SendRules.lua'); dofile('YiboMail/Common/RuleCategories.lua')
 local scans=0
 A.db.sendRuleRevision=0
 A.RuleSendController={state='idle',Invalidate=function() end,Scan=function() scans=scans+1 end}

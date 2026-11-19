@@ -41,6 +41,7 @@
 | `YiboBuildsForeverProbe` | `/ybf` | 已占用；2026-11-03已联接无限正式客户端，待运行核验 |
 | `YiboLegendaryProbe` | `/yep` | 已占用；Mists 原生 API 采样 |
 | `YiboMountsProbe` | `/ymp` | 已占用；Mists 原生 API 采样 |
+| `YiboMailForeverProbe` | `/ymf` | 已占用；Forever 邮件只读观察，未部署/实机验证 |
 | `YiboTodoProbe` | `/ytp` | 已占用；Mists 原生 API/事件采样 |
 | `YiboCurrencyProbe` | `/ycp` | 已占用；Mists／Forever 原生金币与货币列表采样，双目标客户端待验 |
 

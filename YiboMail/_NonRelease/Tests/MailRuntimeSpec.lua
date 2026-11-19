@@ -37,7 +37,7 @@ end
 function GetContainerNumFreeSlots() return 10, 0 end
 local function Item(id, slot, quantity, variant) return { id = id, slot = slot, quantity = quantity, variant = variant } end
 local function Mail(subject, items, money, cod) return { sender = "Sender", subject = subject, items = items or {}, money = money or 0, cod = cod or 0 } end
-for _, file in ipairs({ "Namespace", "Store", "Items", "Mists/Scanner", "ViewModel", "Inbox", "Mists/Queue" }) do dofile("YiboMail/" .. file .. ".lua") end
+for _, file in ipairs({ "Namespace", "Store", "Items", "Mists/Scanner", "Common/ArrivalSignal", "Common/ScanCommit", "Common/CollectionScan", "ViewModel", "Inbox", "Common/CollectionRuntime", "Mists/CollectionRuntime", "Common/Queue" }) do dofile("YiboMail/" .. file .. ".lua") end
 local addon, scanner, api, queue = YiboMail, YiboMail.Scanner, YiboMail.Items, YiboMail.Queue
 addon.Core = { Characters = { GetCurrent = function() return a end, GetAllCached = function() return { a, b, c } end },
     AccountView = { GetVisibleCharacters = function() return { a, b } end, NotifyPageChanged = function() end } }
@@ -122,7 +122,8 @@ assert(#addon.db.byCharacter.A.visibleKeys == 2 and firstKey ~= addon.db.byChara
 local duplicates = addon.ViewModel:GetMails({ characters = { a } }, {})
 assert(duplicates[1].actionable and duplicates[2].actionable and duplicates[1].key ~= duplicates[2].key)
 Scan({ duplicate })
-assert(api:Query().quantity == 5 and addon.db.byCharacter.A.records[firstKey].state == "unverified")
+assert(api:Query().quantity == 5 and addon.db.byCharacter.A.records[firstKey] == nil,
+    "ambiguous removed instance must not remain an active inbox record")
 now = now + 61; assert(scanner:Scan())
 assert(addon.db.byCharacter.A.records[firstKey] == nil and api:Query().quantity == 5, "stable complete mailbox clears only unverified backlog")
 api.Events:Unregister("broken"); api.Events:Unregister("healthy"); api.Events:Unregister(owner)

@@ -1,3 +1,6 @@
+function CreateFrame() return {} end
+dofile("YiboMail/Namespace.lua")
+local namespace=YiboMail
 local character = { id = "A", name = "A" }
 local mail = { signature = "empty", attachments = {}, money = 0, cod = 0,
     expiresAtEstimate = 999999, state = "observed", inboxIndex = 1, sender = "Sender", subject = "Letter", mailType = "normal" }
@@ -8,6 +11,7 @@ YiboMail = { db = { byCharacter = { A = { records = { letter = mail }, visibleKe
     Items = { GetState = function() return { status = "known" } end },
     Encode = function() return "key" end,
     T = function(_, key) return key end, Now = function() return 100 end }
+setmetatable(YiboMail,{__index=namespace})
 dofile("YiboMail/ViewModel.lua")
 dofile("YiboMail/CacheModel.lua")
 local context = { characters = { character } }

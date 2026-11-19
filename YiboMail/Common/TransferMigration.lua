@@ -1,7 +1,7 @@
 local Addon = _G.YiboMail
 -- Vault 1.2.1 / Mail 1.2.7 introduced receipt correlation at this release.
 -- Older successful-send history has no guaranteed receipt tracking baseline.
-local TRACKING_STARTED_AT = 1791784788 -- 2026-10-12 13:59:48 Asia/Shanghai
+local TRACKING_STARTED_AT = Addon.Target and Addon.Target.transferTrackingStartedAt or 1791784788 -- Mists: 2026-10-12
 
 function Addon.Items:MigrateLegacyTransfers()
     if Addon.db.transferTrackingMigrationVersion == 1 then return true end

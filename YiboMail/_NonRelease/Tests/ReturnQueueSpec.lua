@@ -69,14 +69,14 @@ function hooksecurefunc(name, callback)
     local original = _G[name]
     _G[name] = function(...) local result = original(...); callback(...); return result end
 end
-for _, name in ipairs({ "Namespace", "Store", "Items", "Mists/Scanner", "ViewModel", "Inbox", "Mists/Queue", "Mists/Returns" }) do dofile("YiboMail/" .. name .. ".lua") end
+for _, name in ipairs({ "Namespace", "Store", "Items", "Mists/Scanner", "Common/ArrivalSignal", "Common/ScanCommit", "Common/CollectionScan", "ViewModel", "Inbox", "Common/CollectionRuntime", "Mists/CollectionRuntime", "Common/Queue", "Common/Returns" }) do dofile("YiboMail/" .. name .. ".lua") end
 local A, S, Q = YiboMail, YiboMail.Scanner, YiboMail.Queue
 A.Core = { Characters = { GetCurrent = function() return character end, GetAllCached = function() return { character } end },
     AccountView = { GetVisibleCharacters = function() return { character } end, NotifyPageChanged = function() end } }
 A.NativeUI = { Refresh = function() end, OnCollected = function() end }
 A.NativeUI.inboxWidgets = { [4] = function() end }
 A.NativeUI.inbox = { selection = {} }
-dofile("YiboMail/Mists/ReturnUI.lua")
+dofile("YiboMail/Common/ReturnUI.lua")
 local readVisible, scanAsync = S.ReadVisible, S.ScanAsync
 function S:ReadVisible(...) fullReads = fullReads + 1; return readVisible(self, ...) end
 function S:ScanAsync(...) scans = scans + 1; return scanAsync(self, ...) end

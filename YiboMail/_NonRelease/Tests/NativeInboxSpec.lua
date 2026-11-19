@@ -110,9 +110,10 @@ function methods:GetStringWidth() return #(self.text or "") * 7 end
 function methods:GetStringHeight() return math.max(1, math.ceil(self:GetStringWidth() / math.max(1, self:GetWidth()))) * 14 end
 local realExpiry = Addon.ViewModel.Expiry
 stubView.ItemBorder, stubView.AttachmentBorder = Addon.ViewModel.ItemBorder, Addon.ViewModel.AttachmentBorder
+stubView.AttachmentName, stubView.AttachmentLink = Addon.ViewModel.AttachmentName, Addon.ViewModel.AttachmentLink
 stubView.CharacterLabel, stubView.CounterpartLabel = Addon.ViewModel.CharacterLabel, Addon.ViewModel.CounterpartLabel
 Addon.ViewModel = stubView
-dofile("YiboMail/Inbox.lua"); dofile("YiboMail/Mists/Queue.lua"); dofile("YiboMail/Mists/Returns.lua"); dofile("YiboMail/NativeUI.lua"); dofile("YiboMail/Mists/InboxUI.lua"); dofile("YiboMail/Mists/ReturnUI.lua")
+dofile("YiboMail/Inbox.lua"); dofile("YiboMail/Common/CollectionRuntime.lua"); dofile("YiboMail/Mists/CollectionRuntime.lua"); dofile("YiboMail/Common/Queue.lua"); dofile("YiboMail/Common/Returns.lua"); dofile("YiboMail/NativeUI.lua"); dofile("YiboMail/Common/MoneySendConfirmation.lua"); dofile("YiboMail/Mists/NativeSend.lua"); dofile("YiboMail/Common/InboxUI.lua"); dofile("YiboMail/Common/ReturnUI.lua")
 local native, queue = Addon.NativeUI, Addon.Queue
 native:CreateInbox(); native:RefreshInbox()
 local panel = native.inbox

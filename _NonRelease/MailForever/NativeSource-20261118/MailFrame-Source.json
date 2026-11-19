@@ -1,0 +1,15 @@
+{
+  "FetchedAt": "2026-11-18T00:31:41.3570589+08:00",
+  "Commit": "3d8abb1da73acd38e412e24fb3f99454a6392346",
+  "Source": "https://raw.githubusercontent.com/Gethe/wow-ui-source/3d8abb1da73acd38e412e24fb3f99454a6392346/Interface/AddOns/Blizzard_MailFrame/MailFrame.lua",
+  "SHA256": "053362E18D9FC3C13E6B98B64BA85BB534ACEE5B8E3BF805B70F64BB0CC74A54",
+  "Evidence": "Static source mirror only; client build and runtime behavior unverified",
+  "Checks": [
+    "16 receive / 12 send slots",
+    "legacy SendMailBodyEditBox",
+    "SendMailMailButton",
+    "native TakeInboxItem(index,slot) / TakeInboxMoney(index)",
+    "InboxItemCanDelete routes delete vs return",
+    "secure transfer send-money path; runtime confirmation pending"
+  ]
+}

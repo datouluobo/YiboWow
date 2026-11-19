@@ -3,11 +3,6 @@ local History = {}; Addon.HistoryModel = History
 local names = { ["collected-archived"] = Addon:T("UI.TEXT_0220"), ["in-transit"] = Addon:T("UI.TEXT_0305"),
     ["received-confirmed"] = Addon:T("UI.TEXT_0464"), ["return-confirmed"] = Addon:T("UI.TEXT_0468"),
     ["returned-archived"] = Addon:T("RETURN.ARCHIVED") }
-local function MatchesTemplate(subject, template)
-    if type(subject) ~= "string" or type(template) ~= "string" or template == "" then return false end
-    local pattern = template:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1"):gsub("%%%%s", ".+")
-    return subject:match("^" .. pattern .. "$") ~= nil
-end
 function History:HasHistory(character)
     local snapshot = Addon.db and Addon.db.byCharacter[character.id]
     if not snapshot then return false end
@@ -40,9 +35,14 @@ function History:Query(context, options)
                 local subject = record.subject or mail.subject or ""
                 local auction = mail.auctionMail == true
                 local hasItems, hasMoney = #items > 0, money > 0 or (tonumber(record.codAmount or mail.cod) or 0) > 0
-                local filtered = options.kind and options.kind ~= "all" and ((options.kind == "auction" and not auction) or (options.kind == "player" and auction))
-                local contentFiltered = options.content and options.content ~= "all" and ((options.content == "text" and (hasItems or hasMoney)) or (options.content == "items" and not hasItems) or (options.content == "money" and not hasMoney))
-                local auctionSuccess = auction and MatchesTemplate(subject, _G.AUCTION_SOLD_MAIL_SUBJECT)
+                local hasCurrency = false
+                for _, item in ipairs(items) do if item.currencyID then hasCurrency = true; break end end
+                local wantedKind = options.kind or "all"
+                local filtered = wantedKind ~= "all" and not (
+                    (wantedKind == "auction" and auction) or (wantedKind == "player" and not auction)
+                    or (wantedKind ~= "auction" and wantedKind ~= "player" and wantedKind == kind))
+                local contentFiltered = options.content and options.content ~= "all" and ((options.content == "text" and (hasItems or hasMoney)) or (options.content == "items" and not hasItems) or (options.content == "currency" and not hasCurrency) or (options.content == "money" and not hasMoney))
+                local auctionSuccess = auction and Addon:MatchesMailSubject(subject, _G.AUCTION_SOLD_MAIL_SUBJECT)
                 local filteredResult = options.result and options.result ~= "all" and
                     (options.result == "auction-success" and not auctionSuccess or options.result ~= "auction-success" and options.result ~= state)
                 local participant = options.participant or "all"
@@ -61,11 +61,11 @@ function History:Query(context, options)
                 end
                 -- An unknown legacy timestamp can only appear in the explicit all-time view.
                 local validTime = (stamp and now - stamp < retention * 86400 and (not since or stamp >= since)) or (not stamp and not since)
-                if state == "discovered" or state == "unverified" then validTime = false end
+                if state == "discovered" or (state == "unverified" and (options.result ~= "unverified" or record.cacheProjection)) then validTime = false end
                 local match = query == ""
                 if not match and not filtered and not contentFiltered and not filteredResult and participantMatch and validTime then
                     local parts = { character.name or "", character.realm or "", counterpart, subject, displayName or "" }
-                    for _, item in ipairs(items) do parts[#parts + 1] = item.name or ""; parts[#parts + 1] = tostring(item.itemID or "") end
+                    for _, item in ipairs(items) do parts[#parts + 1] = Addon.ViewModel:AttachmentName(item); parts[#parts + 1] = tostring(item.currencyID or item.itemID or "") end
                     match = string.lower(table.concat(parts, " ")):find(query, 1, true) ~= nil
                 end
                 if match and not filtered and not contentFiltered and not filteredResult and participantMatch and validTime then
@@ -73,7 +73,7 @@ function History:Query(context, options)
                         character = character, record = record, mail = mail, time = stamp, kind = kind, direction = direction,
                         counterpart = counterpart, subject = subject, items = items, money = money,
                         event = record.cacheProjection and Addon:T("UI.TEXT_0316") or (names[record.state] or Addon:T("UI.TEXT_0511")), state = state,
-                        result = state == "in-transit" and Addon:T("UI.TEXT_0247") or (names[state] or Addon:T("UI.TEXT_0399")),
+                        result = state == "in-transit" and Addon:T("UI.TEXT_0247") or (state == "unverified" and Addon:T("HISTORY.NEEDS_REVIEW") or names[state] or Addon:T("UI.TEXT_0399")),
                         sourceKey = record.sourceMailKey or mail.mailKey }
                 end
             end
@@ -88,7 +88,7 @@ end
 function History:Content(entry, omitItems)
     local parts = {}
     if not omitItems then
-        for _, item in ipairs(entry.items) do parts[#parts + 1] = Addon.ViewModel:Escape(item.name or (Addon:T("UI.TEXT_0453") .. tostring(item.itemID))) .. " ×" .. tostring(item.quantity or 0) end
+        for _, item in ipairs(entry.items) do parts[#parts + 1] = Addon.ViewModel:Escape(Addon.ViewModel:AttachmentName(item)) .. " ×" .. tostring(item.quantity or 0) end
     end
     if entry.money > 0 then
         local cod = entry.record.cod == true or (tonumber(entry.record.cod) or tonumber(entry.record.codAmount) or 0) > 0

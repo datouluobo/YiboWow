@@ -41,6 +41,7 @@ local function Boot(saved, coreSaved, configure, forever)
     end
     env.GetInventoryItemLink = function(_, slot) local id = data.equipment[slot]; return id and ("item:" .. id) end
     env.C_Item.GetItemInfo = function(id) return "NativeItem" .. id, "item:" .. id end
+    env.GetItemInfo = env.C_Item.GetItemInfo
     local function Flush()
         local guard = 0
         while #env.TEST_TIMERS > 0 do
@@ -51,7 +52,7 @@ local function Boot(saved, coreSaved, configure, forever)
         end
     end
     if configure then configure(env, core, load, event) end
-    LoadManifest(load, "YiboVault", forever and "YiboVault_Forever.toc" or "YiboVault.toc")
+    LoadManifest(load, "YiboVault", forever and "YiboVault_Forever.toc" or "YiboVault_Mists.toc")
     event("ADDON_LOADED", "YiboVault")
     return env, core, env.YiboVault, event, Flush, data
 end
@@ -178,7 +179,7 @@ Check(#env.TEST_MESSAGES == 1, "only intentional early-scan feedback; no hidden 
 do
     local mop, mopCore, mopVault, mopEvent, mopFlush = Boot(nil, nil, nil, false)
     local expectedVersion
-    for line in io.lines("YiboVault/YiboVault.toc") do expectedVersion = line:match("^## Version:%s*(%S+)") or expectedVersion end
+    for line in io.lines("YiboVault/YiboVault_Mists.toc") do expectedVersion = line:match("^## Version:%s*(%S+)") or expectedVersion end
     Check(mopVault.initialized and mopVault.VERSION == expectedVersion, "real Mists Vault manifest initializes with matching version")
     mopEvent("PLAYER_LOGIN"); mopEvent("PLAYER_ENTERING_WORLD"); mopFlush()
     Check(mopVault.Items:HasCapability("source.bank", 1) and mopVault.Items:HasCapability("source.mail", 1), "Mists source capabilities retained")

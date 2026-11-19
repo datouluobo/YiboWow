@@ -40,6 +40,10 @@ function GetItemSubClassInfo(class, id)
 end
 function GetItemInfo(value) local id = tonumber(value) or tonumber(tostring(value):match('item:(%d+)')); if id then return '物品' .. id, '|Hitem:' .. id .. '|h[物品]|h', 1, 1, 1, '交易材料', '金属和矿石', 20, '', 1, 1, 7, 7 end end
 A.db.rules = {}; A.Queue = { state = 'idle' }; A.Scanner = { IsOpen = function() return true end }
+local readAttachments = A.Compose.GetAttachments
+dofile('YiboMail/Compose.lua')
+dofile('YiboMail/Common/ComposeRuntime.lua'); dofile('YiboMail/Mists/Compose.lua')
+A.Compose.GetAttachments = readAttachments
 A.Compose.BagItems = function() return {} end
 MailFrameTab1, MailFrameTab2, SendMailAttachment1 = CreateFrame('Button', nil, MailFrame), CreateFrame('Button', nil, MailFrame), CreateFrame('Button', nil, SendMailFrame)
 MailFrameTab1:SetSize(70, 30); MailFrameTab2:SetSize(70, 30)
@@ -60,12 +64,13 @@ function methods:HookScript(event, callback)
     return nativeHookScript(self, event, callback)
 end
 A.Core.ItemResolver = {
+    GetInfo = dofile('YiboMail/_NonRelease/Tests/ItemMetadataFixture.lua'),
     Parse = function(_, value) local id = tonumber(value); if id then return { { itemID = id, name = '物品' .. id } } end return nil, '请选择物品' end,
     Request = function(_, id, callback) callback({ itemID = id, name = '物品' .. id, icon = 1 }); return { Cancel = function() end } end,
 }
 A.Core.ItemConfirmation = { Show = function(_, options) A.confirmation = options; return options end }
 dofile('YiboCore/UI/ItemPicker.lua')
-dofile('YiboMail/SendRules.lua'); A.SendRules:Initialize()
+dofile('YiboMail/SendRules.lua'); dofile('YiboMail/Common/RuleCategories.lua'); A.SendRules:Initialize()
 -- English class names are localized without changing IDs; obsolete permanent
 -- items are not offered for new category rules.
 local localizedClassAPI = GetItemClassInfo
@@ -555,6 +560,10 @@ assert(#batchRule.itemIDs == 4 and batchRule.recipient == 'Batch-Realm')
 p.item.input:SetValue('501;;502', true); Click(OperationButton(p.item)); Click(p.save)
 assert(#A.db.sendRules[batchRule.id].itemIDs == 4 and S.notice:find('确认', 1, true))
 S.dirty = nil; S:Edit(batchRule.id); assert(p.item.input:GetText() == '501;502;503;504')
+local existingView = A.ViewModel
+dofile('YiboMail/ViewModel.lua')
+existingView.AttachmentName, existingView.AttachmentLink = A.ViewModel.AttachmentName, A.ViewModel.AttachmentLink
+A.ViewModel = existingView
 dofile('YiboMail/CacheUI.lua')
 local bags = {}; for _, id in ipairs(batchRule.itemIDs) do bags[#bags + 1] = { itemID = id, quantity = 2, bag = 0, slot = #bags + 1 } end
 assert(A.Recipients:SetFaction('Batch-Realm', 'Alliance'))

@@ -1,4 +1,6 @@
 -- Real rule model, compose adapter and controller; no live mail is sent.
+local target=arg and arg[1] or "Mists"
+assert(target=="Mists" or target=="Forever")
 function CreateFrame() return {} end
 dofile('YiboMail/Namespace.lua')
 local A = YiboMail
@@ -16,6 +18,7 @@ function GetItemInfo(value)
     if not id or id == 99 then return end
     return 'Item' .. id, Link(id), 1, 1, 1, 'Trade', 'Ore', 20, '', 123, 1, 7, id == 4 and 9 or 7
 end
+A.Core.ItemResolver = {GetInfo=dofile('YiboMail/_NonRelease/Tests/ItemMetadataFixture.lua')}
 function GetItemClassInfo(id) if id == 7 then return 'Trade' end end
 function GetItemSubClassInfo(class, id) if class == 7 and id == 7 then return 'Ore' elseif class == 7 and id == 9 then return 'Herb' end end
 function GetTime() return clock end
@@ -47,11 +50,12 @@ SendMailMailButton = { IsEnabled = function() return true end, GetScript = funct
     sends = sends + 1; hooks.SendMail(SendMailNameEditBox:GetText(), SendMailSubjectEditBox:GetText())
 end end }
 function SendMail() end
+function SendMailMailButton:Click(mouse) return self:GetScript("OnClick")(self,mouse) end
 function hooksecurefunc(name, fn) hooks[name] = fn end
 function A:AddHistory(_, history) histories[#histories + 1] = history end
 A.FEATURES.account = false
-dofile('YiboMail/Recipients.lua'); A.Recipients:Initialize()
-dofile('YiboMail/Compose.lua'); dofile('YiboMail/SendRules.lua'); dofile('YiboMail/RuleSendController.lua')
+dofile('YiboMail/Recipients.lua'); dofile('YiboMail/Common/RecipientRuntime.lua'); A.Recipients:Initialize()
+dofile('YiboMail/Compose.lua'); dofile('YiboMail/Common/ComposeRuntime.lua'); dofile('YiboMail/'..target..'/Compose.lua'); dofile('YiboMail/SendRules.lua'); dofile('YiboMail/Common/RuleCategories.lua'); dofile('YiboMail/RuleSendController.lua')
 local R, C = A.SendRules, A.RuleSendController
 R:Initialize(); assert(A.db.rules[9] and #R:List() == 1); R:Initialize(); assert(#R:List() == 1)
 local _, multi = R:Save({ kind = 'item', itemIDs = { 20, 21, 20 }, recipient = 'Multi-Realm' })

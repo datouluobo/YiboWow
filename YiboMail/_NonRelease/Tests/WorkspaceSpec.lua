@@ -1,5 +1,6 @@
 -- Lua 5.1: actual workspace/models/theme, simulated WoW frames and snapshots.
 local methods = {}
+function wipe(value) for key in pairs(value) do value[key] = nil end; return value end
 function methods:SetClampedToScreen() end
 function methods:GetStringHeight()
     return math.max(1, math.ceil(self:GetStringWidth() / math.max(1, self:GetWidth()))) * (self.fontSize or 16)
@@ -17,6 +18,8 @@ function methods:SetAllPoints(target) self.allPoints = target or self.parent end
 function methods:SetFont(_, size) self.fontSize = size end
 function methods:GetStringWidth() return #(self.text or ""):gsub("[\128-\191]", "") * (self.fontSize or 16) * 0.75 end
 function methods:GetChildren() return unpack(self.children) end
+-- This mock models font strings/textures in children rather than a separate region list.
+function methods:GetRegions() return end
 function methods:GetParent() return self.parent end
 function methods:GetFrameLevel() return self.level end
 function methods:SetFrameLevel(v) self.level = v end
@@ -92,6 +95,7 @@ for _, fn in ipairs({ "TakeInboxItem", "TakeInboxMoney", "ReturnInboxItem", "Del
 end
 YiboCore = {}; dofile("YiboCore/_NonRelease/Tests/LoadLocale.lua"); dofile("YiboCore/UI/Theme.lua")
 YiboCore.Capabilities = { Register = function() end }
+YiboCore.ItemResolver = {GetInfo=function(_, id) return {itemID=id, name="Item", state="ready"} end}
 STANDARD_TEXT_FONT = "font"
 dofile("YiboCore/UI/Input.lua")
 RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.78, b = 0.92 }, DRUID = { r = 1, g = 0.49, b = 0.04 } }
@@ -116,7 +120,7 @@ characterAPI.FormatName = YiboCore.Characters.FormatName; YiboCore.Characters = 
 local definition
 YiboCore.AccountView = { NotifyPageChanged = function() end, RegisterPage = function(_, _, page) definition = page; return true end }
 YiboCore.Entry = { RegisterBusinessEntry = function() return true end }
-for _, file in ipairs({ "Store", "Recipients", "ViewModel", "WorkspaceState", "MailUI", "CacheModel", "HistoryModel", "AccountPage", "CacheUI" }) do dofile("YiboMail/" .. file .. ".lua") end
+for _, file in ipairs({ "Store", "Recipients", "Common/RecipientRuntime", "ViewModel", "WorkspaceState", "MailUI", "CacheModel", "HistoryModel", "AccountPage", "Common/AccountSettings", "CacheUI" }) do dofile("YiboMail/" .. file .. ".lua") end
 Addon.Items = {
     Events = { Emit = function() end },
     GetState = function(_, id) return { status = id == "B" and "stale" or "known" } end,
@@ -193,7 +197,9 @@ assert(root.tabs.activeGap:IsShown() and root.tabs.activeGap.points[1][2] == roo
 assert(root.ownerRows[2]:GetHeight() == 40 and root.ownerRows[2].name.points[1][3] > root.ownerRows[2].meta.points[1][3])
 Click(root.tabs.buttons.history); assert(state.tab == "history" and root.total == 3)
 assert(root.tabs.activeGap.points[1][2] == root.tabs.buttons.history)
-assert(root.historyCharacter.options[2].label:find("|cff", 1, true), "Character filters need class colors")
+local characterOption
+for _, option in ipairs(root.historyCharacter.options) do if option.value == a.id then characterOption = option end end
+assert(characterOption and characterOption.label:find("|cff", 1, true), "Character filters need class colors")
 assert(root.rows[2].cells[2]:GetText():find("|cff", 1, true), "Historical character names need class colors")
 -- Wubi d -> dy -> dyt is native composition text, not a search query.
 root.search:SetFocus(); root.search.composing = true
@@ -262,7 +268,7 @@ host:SetSize(640, 480); Addon.AccountPage:Refresh(host, context)
 assert(root.overview.mailRows[1]:GetWidth() <= host:GetWidth() - 30)
 Click(root.tabs.buttons.inbox)
 assert(root.list:GetHeight() > 0 and not root.previous:IsShown() and not root.next:IsShown())
-local filterY = root.scope.points[1][3]
+local filterY = root.source.points[1][3]
 for _, control in ipairs({ root.kind, root.risk, root.sort, root.mail, root.items }) do
     assert(control.points[1][3] <= filterY, "Whole filter controls wrap to additional rows")
     assert(control.points[1][2] + control:GetWidth() <= host:GetWidth() - 8)
@@ -280,11 +286,12 @@ for index = 1, 23 do
     many[#many + 1] = character
 end
 local manyContext = { characters = many, preview = false, GetFieldVisible = context.GetFieldVisible }
+Addon:AddHistory(a.id, { state = "in-transit", recipient = "角色5-One", subject = "Participant", observedAt = now })
 Addon.AccountPage:Refresh(host, manyContext); root.search:InputText("")
 assert(root.historyCharacter.menuPageSize == 8 and root.historyCharacter.menu:GetHeight() <= 300)
 Click(root.historyCharacter); Click(root.historyCharacter.menu.next)
-assert(root.historyCharacter.menu.buttons[1].option.value == "Many6")
-Click(root.historyCharacter.menu.buttons[1]); assert(state.history.character == "Many6" and root.total == 1)
+assert(root.historyCharacter.menu.buttons[1].option.value == "Many5")
+Click(root.historyCharacter.menu.buttons[1]); assert(state.history.participant == "Many5" and root.total == 1)
 Click(root.tabs.buttons.overview); assert(root.total == 25 and root.pageCount > 1)
 Click(root.next); assert(state.overview.page == 2 and root.overview.mailRows[1].cells[1]:GetText() == "角色" .. (root.overview.capacity - 1))
 -- Real Core scrollbars must follow hidden viewports and retain their offsets.
@@ -300,8 +307,11 @@ for _, row in ipairs(root.rows) do if row:IsShown() and row.recordID == lastID t
 assert(foundLast, "The final record must remain accessible through scrolling")
 root.list:SetVerticalScroll(92)
 Click(root.tabs.buttons.history)
+assert(root.owners:IsShown(), "History keeps the role sidebar for owner selection")
+Click(root.tabs.buttons.overview)
 assert(not root.owners.ScrollBar:IsShown(), "Hidden role sidebar must hide its sibling scrollbar")
 root.owners:UpdateScrollbar(); assert(not root.owners.ScrollBar:IsShown(), "Delayed updates must not resurrect the track")
+Click(root.tabs.buttons.history)
 Click(root.clear); assert(root.list.ScrollBar:IsShown())
 local historyWidth = host:GetWidth()
 host:SetWidth(360); root.refresh()
@@ -328,9 +338,10 @@ local missing = Mail("Missing", { Item(777, 8) }, now + 1000)
 missing.state, missing.stateEnteredAt = "unverified", now - 10
 sB.records.missing = missing
 local backlog = Addon.HistoryModel:Query(context, { result = "unverified", search = "777" })
-assert(#backlog == 1 and backlog[1].event == "扫描待核实" and backlog[1].sourceKey == "missing")
+assert(#backlog == 0, "Unverified legacy projections are not confirmed history events")
 assert(#Addon.CacheModel:GetMails(context, { search = "777" }) == 0)
-assert(#Addon.CacheModel:GetMails(context, { search = "777", scope = "unverified" }) == 1)
+assert(#Addon.CacheModel:GetMails(context, { search = "777", scope = "unverified" }) == 0,
+    "Legacy scope must not turn a missing mail into active inbox content")
 -- Settings controls are pooled; decreasing retention requires the player's in-game confirmation.
 local settingsHost = Frame(UIParent); settingsHost:SetWidth(600)
 local helpers = { createSection = function(parent) return Frame(parent) end,
@@ -364,6 +375,19 @@ retention.onValueChanged(30); assert(Addon.db.settings.historyDays == 90 and ret
 StaticPopupDialogs.YIBOMAIL_RETENTION.OnAccept({}, popupData); assert(Addon.db.settings.historyDays == 30 and retention.value == 30)
 retention.onValueChanged(90); assert(Addon.db.settings.historyDays == 90)
 assert(Addon.AccountPage:SetRetention("historyDays", -1) == false)
+-- A read-only target shares cache settings without requiring send modules.
+local sendFeature, sourceDefinitions, ruleSettings = Addon.FEATURES.send, Addon.RECIPIENT_SOURCES, Addon.SendRulesSettings
+Addon.FEATURES.send, Addon.RECIPIENT_SOURCES = false, nil
+Addon.SendRulesSettings = {Host=function() error("Read-only settings must not host send rules") end}
+local readOnlyHost = Frame(UIParent); readOnlyHost:SetWidth(600)
+assert(definition.settings.CreateSettingsPanel(readOnlyHost, helpers)==156)
+assert(not readOnlyHost.mailBusinessSettings and readOnlyHost.mailCacheSettings:IsShown())
+assert(readOnlyHost.mailCacheSettings.points[1][5]==0, "Cache settings start at the content origin")
+definition.settings.CreateSettingsPanel(settingsHost, helpers)
+assert(not business:IsShown(), "A reused settings host must hide unavailable business controls")
+Addon.FEATURES.send, Addon.RECIPIENT_SOURCES, Addon.SendRulesSettings = sendFeature, sourceDefinitions, ruleSettings
+definition.settings.CreateSettingsPanel(settingsHost, helpers)
+assert(business:IsShown() and Addon.db.settings.historyDays==90, "Feature composition preserves existing settings")
 -- Verify grouped Core field controls address the displayed option, not index in another group.
 local selections = { x = true, y = false }
 local multi = YiboCore.UITheme:CreateMultiSelectDropdown(host, 180, {
@@ -527,7 +551,7 @@ print(string.format('PASS: 3411 history rows laid out in %.4fs; %d text measurem
 
 -- Recreate the business page in English, as a language reload would do.
 YiboCore.Locale.language = 'en'
-dofile('YiboMail/HistoryModel.lua'); dofile('YiboMail/AccountPage.lua'); dofile('YiboMail/CacheUI.lua')
+dofile('YiboMail/HistoryModel.lua'); dofile('YiboMail/AccountPage.lua'); dofile('YiboMail/Common/AccountSettings.lua'); dofile('YiboMail/CacheUI.lua')
 local englishHost = Frame(UIParent); englishHost:SetSize(1050, 650)
 Addon.WorkspaceState:Get().tab = 'inbox'
 Addon.AccountPage:Create(englishHost); Addon.AccountPage:Refresh(englishHost, context)
@@ -536,7 +560,7 @@ assert(englishRoot.tabs.buttons.overview.label:GetText() == 'Overview')
 for _, viewportWidth in ipairs({ 640, 1050 }) do
     englishHost:SetWidth(viewportWidth); Addon.AccountPage:Refresh(englishHost, context)
     local previousControl
-    for _, control in ipairs({ englishRoot.scope, englishRoot.kind, englishRoot.risk, englishRoot.sort, englishRoot.mail, englishRoot.items }) do
+    for _, control in ipairs({ englishRoot.source, englishRoot.kind, englishRoot.risk, englishRoot.sort, englishRoot.mail, englishRoot.items }) do
         local point = control.points[1]
         assert(point[2] + control:GetWidth() <= viewportWidth - 8)
         assert(control:GetWidth() >= theme:MeasureText(theme.Font.body, control.label:GetText()) + (control.menu and 38 or 20))
@@ -579,7 +603,7 @@ YiboCore.CharacterSort.Sort = function(_, characters) return characters end
 YiboCore.CharacterSort.BuildCustomOrder = function() return {} end
 local view = YiboCore.AccountView
 local function PreviewContext(scope)
-    view:GetSettings().selectedRealmScope = scope
+    view:SetPageScope(mailPage.id, scope)
     return view:BuildContext(mailPage, { preview = true, fieldOverrides = mailPage.GetPreviewFields() })
 end
 local all = PreviewContext('all')
@@ -594,7 +618,7 @@ mailPage.previewCharacterLimit = false
 -- Core shell geometry, then exercise Theme's real overflow decision.
 for _, language in ipairs({ 'zh', 'en' }) do
     YiboCore.Locale.language = language
-    dofile('YiboMail/AccountPage.lua'); mailPage = RegisterMailPage()
+    dofile('YiboMail/AccountPage.lua'); dofile('YiboMail/Common/AccountSettings.lua'); mailPage = RegisterMailPage()
     for _, rowCount in ipairs({ 1, 4, 18, 24 }) do
         local previewContext = PreviewContext('all')
         previewContext.characters = {}
@@ -643,7 +667,8 @@ local savedPrint, savedInitializeDatabase = Addon.Print, Addon.InitializeDatabas
 Addon.Print = function(_, message) upgradeMessage = message end
 Addon.InitializeDatabase = function() error('Missing preview contract must stop before data initialization') end
 Addon.Frame.RegisterEvent = function() end
-Addon.initialized = nil; dofile('YiboMail/Bootstrap.lua'); Addon:Initialize()
+SlashCmdList = {}
+Addon.initialized = nil; dofile('YiboMail/Common/Lifecycle.lua'); Addon:Initialize()
 assert(not Addon.initialized and upgradeMessage)
 _G.YiboCore, Addon.initialized = savedCore, savedInitialized
 Addon.Print, Addon.InitializeDatabase = savedPrint, savedInitializeDatabase

@@ -1,4 +1,6 @@
-﻿# YiboMail - 邮件助手
+# YiboMail - 邮件助手
+
+Forever开发源码（2026-11-19）新增货币附件：支持邮箱/账号快照、货币筛选与汇总、收取及历史，保持货币ID与物品ID隔离；不将货币计入Vault物品库存或提供为物品API记录。代码和离线验证完成，游戏内到账及显示待验收，见[货币附件专项](Docs/Forever-货币附件支持-2026-11-19.md)。
 
 > 文档状态更新（2026-10-16，Mists基线）：现有Mists功能已由用户确认实机验收收口。Forever开发目标另行验收，当前保持待实机验证。当前源码版本与发行证据见[状态总览](../Docs/仓库当前状态总览.md)，后续任务见[延期清单](../Docs/后续开发任务清单.md)。下文旧版本的开发／待验收描述按其原日期理解；当前版本渠道状态没有明确证据时保留待核对。
 
@@ -45,21 +47,23 @@ Mists当前版本 `1.3.0-api1` 提供原生邮箱增强，以及由 YiboCore 承
 
 ## 发布范围与代码结构
 
-`YiboMail.toc` 当前只加载：
+`YiboMail_Mists.toc` 当前加载以下文件，玩家包输出为默认 `YiboMail.toc`；源码默认清单仅提示缺目标：
 
 ```text
 Namespace.lua
+Mists/Target.lua
 Locales/zh.lua
 Locales/en.lua
 Store.lua
 Recipients.lua
+Common/RecipientRuntime.lua
 RecipientUI.lua
 SendRules.lua
 RuleSendController.lua
 SendRulesSettings.lua
 RuleSendUI.lua
 Items.lua
-Mists/TransferMigration.lua
+Common/TransferMigration.lua
 Mists/Scanner.lua
 ViewModel.lua
 ActionTodo.lua
@@ -70,14 +74,18 @@ CacheModel.lua
 HistoryModel.lua
 CacheUI.lua
 AccountPage.lua
+Common/AccountSettings.lua
 Inbox.lua
-Mists/Queue.lua
-Mists/Returns.lua
+Mists/CollectionRuntime.lua
+Common/Queue.lua
+Common/Returns.lua
 Compose.lua
+Common/ComposeRuntime.lua
+Mists/Compose.lua
 NativeUI.lua
-Mists/InboxUI.lua
-Mists/ReturnUI.lua
-Bootstrap.lua
+Common/InboxUI.lua
+Common/ReturnUI.lua
+Common/Lifecycle.lua
 ```
 
 `Inbox.lua` 独立提供收件偏好与可收项目生成。`Namespace.lua` 开启原生发件基础 UI、发送事件记录与账号页面；账号页、缓存浏览和收件工作区由 YiboCore 统一窗口承载。系统邮箱按“收件箱／附件箱／发件箱／规则寄”排列四个标签，统一主题和标准控件高度；标签栏锚定邮箱面板底边，四个标签均分面板宽度（间隔 2），两端与面板边缘对齐并随面板尺寸更新。附件箱复用收件数据、搜索与筛选。四个标签由插件统一管理选中状态，并记忆上次选择；关闭重开或重载界面后首次打开邮箱均恢复该标签，规则寄会重新扫描，临时跳过仍在关闭邮箱时清除。规则寄与发件箱共用原生发件页时也显式切换业务界面；不扩展暴雪的标签注册表。Core 设置内容区使用“业务设置／规则管理／数据与缓存”三个标签。

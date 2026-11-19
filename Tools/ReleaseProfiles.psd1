@@ -254,7 +254,7 @@
                     CurseForgeFlavor = 'forever'
                     CurseForgeVersionNames = @('1.60.1')
                     LuaVersion = '5.1'
-                    ValidationState = 'forever-0.1.5-api1-realm-scope-client-pending-20261111'
+                    ValidationState = 'forever-0.2.0-api1-mail-parity-client-pending-20261119'
                 }
             }
         }

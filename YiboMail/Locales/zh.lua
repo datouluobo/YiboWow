@@ -1,6 +1,10 @@
 local Core = _G.YiboCore
 if Core and Core.Locale and type(Core.Locale.Register) == "function" then
     Core.Locale:Register("YiboMail", "zh", {
+        ["ERROR.CORE_REGISTER"] = "邮件助手未启动：无法向 Core 注册，请重新登录后重试。",
+        ["ERROR.CLEANUP_REGISTER"] = "邮件助手未启动：角色缓存清理注册失败，请重新登录后重试。",
+        ["ERROR.PAGE_REGISTER"] = "邮件助手未启动：账号页面或入口注册失败，请重新登录后重试。",
+        ["ERROR.ITEMS_REGISTER"] = "邮件助手未启动：邮件数据服务注册失败，请重新登录后重试。",
         ["ERROR.TRANSFER_MIGRATION"] = "旧寄件记录核对未完成：%s。请重新登录后重试。",
         ["HISTORY.LEGACY_TRANSFER_REVIEW"] = "此记录早于在途追踪功能，缺少收件或退回证据，待核实。",
         ["FOREVER.WRONG_CLIENT"] = "邮件助手未启动，请安装对应客户端版本。",
@@ -71,6 +75,8 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["HISTORY.CONTENT_TEXT"] = "纯文字信",
         ["HISTORY.CONTENT_ITEMS"] = "带附件",
         ["HISTORY.CONTENT_MONEY"] = "含金币",
+        ["ATTACHMENT.CURRENCY_ID"] = "货币 #%d",
+        ["ATTACHMENT.CURRENCY_FILTER"] = "含货币附件",
         ["HISTORY.PARTICIPANT_ALL"] = "对象：全部",
         ["HISTORY.DIRECTION_EITHER"] = "双向",
         ["HISTORY.DIRECTION_TO"] = "发给对象",
@@ -138,6 +144,8 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["UI.TEXT_0057"] = "%.1fh",
         ["UI.TEXT_0058"] = "%.1f 金",
         ["UI.TEXT_0059"] = "%.2f 金",
+        ["MONEY.EXACT_GOLD"] = "%.4f 金",
+        ["INBOX.GM_MANUAL_OPEN"] = "请手动打开 GM 邮件查看内容。",
         ["UI.TEXT_0060"] = "180天",
         ["UI.TEXT_0061"] = "1–3天",
         ["UI.TEXT_0062"] = "24小时内",
@@ -744,6 +752,7 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["UI.TEXT_0673"] = "寄送安全",
         ["UI.TEXT_0674"] = "寄送金币前确认",
         ["UI.TEXT_0675"] = "启用后，发送带金币的邮件前会显示收件人和金额供核对。",
+        ["SETTINGS.NATIVE_GOLD_CONFIRMATION"] = "寄送金币时使用游戏原生确认流程。此处不提供关闭原生确认的开关。",
         ["EMPTY_MAIL.MENU"] = "批量清理空邮件",
         ["EMPTY_MAIL.NONE"] = "当前已加载的邮件中没有可清理的邮件。",
         ["EMPTY_MAIL.CONFIRM"] = "将永久删除当前已加载的 %d 封邮件，包括空邮件和符合条件的系统邮件（可能含正文）。仅清理无附件、金币或付款要求的邮件。",

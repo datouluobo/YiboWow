@@ -17,9 +17,9 @@ YiboMail.Core = { Characters = {
     GetAllCached = function() return characters end,
     FormatName = function(_, character) return character.name end,
 } }
-dofile('YiboMail/Recipients.lua'); dofile('YiboMail/Items.lua'); dofile('YiboMail/HistoryModel.lua')
+dofile('YiboMail/Recipients.lua'); dofile('YiboMail/Common/RecipientRuntime.lua'); dofile('YiboMail/Items.lua'); dofile('YiboMail/HistoryModel.lua')
 if arg[4] == 'migrate' then
-    dofile('YiboMail/Store.lua'); dofile('YiboMail/Mists/TransferMigration.lua')
+    dofile('YiboMail/Store.lua'); dofile('YiboMail/Common/TransferMigration.lua')
     assert(YiboMail.Items:MigrateLegacyTransfers())
 end
 local visible = {}

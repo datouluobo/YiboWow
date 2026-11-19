@@ -186,6 +186,9 @@ local function TransferDirectory()
 end
 local function GetTransferResult(characterID)
     local self = Items
+    if not (Addon.CAPABILITIES and Addon.CAPABILITIES["mail-items.transfers"] == 1) then
+        return nil, "unsupported-capability"
+    end
     if type(characterID) ~= "string" or characterID == "" then return nil, "invalid-character-id" end
     local revision = self:GetRevision()
     local directory = TransferDirectory()
@@ -255,7 +258,8 @@ end
 function Items:RegisterService()
     local contracts = Addon.Core.Contracts
     self.serviceDefinition = self.serviceDefinition or {
-        name = "mail.items", kind = "service", providerID = Addon.NAME .. ":inbox", version = { major = 1, minor = Addon.Target and 0 or 1 },
+        name = "mail.items", kind = "service", providerID = Addon.NAME .. ":inbox",
+        version = { major = 1, minor = Addon.CAPABILITIES["mail-items.transfers"] == 1 and 1 or 0 },
         methods = {
             GetState = function(request) return Items:GetState(request and request.characterID) end,
             GetByCharacter = function(request) return Items:GetByCharacter(request and request.characterID, request and request.options) end,
@@ -263,7 +267,7 @@ function Items:RegisterService()
             GetRevision = function() return Items:GetRevision() end,
         },
     }
-    if Addon.Target then self.serviceDefinition.methods.GetTransfers = nil end
+    if Addon.CAPABILITIES["mail-items.transfers"] ~= 1 then self.serviceDefinition.methods.GetTransfers = nil end
     local ref, err = contracts:Register(Addon.NAME, self.serviceDefinition)
     if not ref then return nil, err end
     self.serviceRef = ref
@@ -301,7 +305,7 @@ function Items.Events:Emit(payload)
 end
 function Items:GetState(characterID)
     if type(characterID) ~= "string" or characterID == "" then return nil, "invalid-character-id" end
-    if Addon.Target then
+    if Addon.INBOX_QUERY_SCOPE == "current-character" then
         local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
         if not current or current.id ~= characterID then return nil, "scope-not-supported" end
     end
@@ -330,7 +334,7 @@ end
 local function Resolve(scope)
     local core = Addon.Core
     if not core then return {} end
-    if Addon.Target and scope ~= nil then
+    if Addon.INBOX_QUERY_SCOPE == "current-character" and scope ~= nil then
         local current = core.Characters:GetCurrent({ identityOnly = true })
         if not current then return nil, "current-character-unavailable" end
         if type(scope) ~= "table" or scope.mode ~= "characters" or type(scope.characterIDs) ~= "table" then return nil, "scope-not-supported" end
@@ -381,7 +385,7 @@ function Items:Query(options)
             for _, key in ipairs(snapshot.visibleKeys) do
                 local mail = snapshot.records[key]
                 for _, item in ipairs(mail and mail.attachments or {}) do
-                    if (options.itemID == nil or options.itemID == item.itemID) and (options.variantKey == nil or options.variantKey == item.variantKey) then
+                    if not item.currencyID and (options.itemID == nil or options.itemID == item.itemID) and (options.variantKey == nil or options.variantKey == item.variantKey) then
                         local record = Addon.Copy(item)
                         record.sourceID = "mail:" .. character.id .. ":" .. key .. ":" .. item.attachmentIndex
                         record.source, record.sourceClass = "mail", "external"

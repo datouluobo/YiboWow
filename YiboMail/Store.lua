@@ -60,6 +60,7 @@ function Addon:ShareStoredAttachments()
     return reused, reusedArrays
 end
 function Addon:InitializeDatabase()
+    if self.CLIENT_SUPPORTED == false then return nil, "wrong-client" end
     local name = self.Target and self.Target.savedVariable or "YiboMailDB"
     local saved = _G[name]
     if self.Target then
@@ -67,7 +68,7 @@ function Addon:InitializeDatabase()
         if saved then
             if saved.schemaVersion ~= nil and saved.schemaVersion ~= 1 then return nil, "store-mismatch" end
             local scope = saved.clientScope
-            if scope and (type(scope) ~= "table" or scope.target ~= "Forever" or scope.projectID ~= WOW_PROJECT_ID or scope.scope ~= "current-character") then return nil, "store-mismatch" end
+            if scope and (type(scope) ~= "table" or scope.target ~= self.Target.id or scope.projectID ~= WOW_PROJECT_ID or scope.scope ~= self.Target.storageScope) then return nil, "store-mismatch" end
             for _, key in ipairs({ "byCharacter", "settings", "contacts", "rules", "collectedMailMarkers", "mailArrivalSignals", "mailNoticeBatches" }) do
                 if saved[key] ~= nil and type(saved[key]) ~= "table" then return nil, "store-mismatch" end
             end
@@ -78,7 +79,9 @@ function Addon:InitializeDatabase()
     end
     _G[name] = type(saved) == "table" and saved or {}
     self.db = _G[name]
-    if self.Target then self.db.clientScope = { target = "Forever", projectID = WOW_PROJECT_ID, scope = "current-character", rulesetState = "unknown" } end
+    if self.Target and self.Target.id == "Forever" then
+        self.db.clientScope = { target = self.Target.id, projectID = WOW_PROJECT_ID, scope = self.Target.storageScope, rulesetState = "unknown" }
+    end
     self.db.schemaVersion = 1
     self.db.revision = tonumber(self.db.revision) or 0
     self.db.nextMailKey = tonumber(self.db.nextMailKey) or 0
@@ -194,7 +197,7 @@ function Addon:PruneHistory()
         for key, mail in pairs(snapshot.records) do
             if mail.state == "unverified" and now - (mail.stateEnteredAt or now) >= self.db.settings.unverifiedDays * 86400 then
                 snapshot.records[key] = nil; keys[#keys + 1] = key; changed = true
-                for _, item in ipairs(mail.attachments) do if not seen[item.itemID] then seen[item.itemID] = true; ids[#ids + 1] = item.itemID end end
+                for _, item in ipairs(mail.attachments) do if item.itemID and not seen[item.itemID] then seen[item.itemID] = true; ids[#ids + 1] = item.itemID end end
             end
         end
         for index = #(snapshot.history or {}), 1, -1 do
@@ -286,7 +289,7 @@ function Addon:CommitScan(character, mails, coverage)
     local keys, changed, itemIDs, itemSet, keySet = {}, {}, {}, {}, {}
     local function Mark(mail)
         if not keySet[mail.mailKey] then changed[#changed + 1] = mail.mailKey; keySet[mail.mailKey] = true end
-        for _, item in ipairs(mail.attachments) do if not itemSet[item.itemID] then itemSet[item.itemID] = true; itemIDs[#itemIDs + 1] = item.itemID end end
+        for _, item in ipairs(mail.attachments) do if item.itemID and not itemSet[item.itemID] then itemSet[item.itemID] = true; itemIDs[#itemIDs + 1] = item.itemID end end
     end
     for signature, group in pairs(after) do
         local candidates = before[signature]
@@ -303,9 +306,11 @@ function Addon:CommitScan(character, mails, coverage)
                 mail.noticeHandled = candidate.noticeHandled == true or mail.openedByUser
                 mail.firstSeenAt, mail.discoveryUncertain = candidate.firstSeenAt, candidate.discoveryUncertain
                 local moved = candidate.inboxIndex ~= mail.inboxIndex or candidate.wasRead ~= mail.wasRead
+                    or candidate.auctionMail ~= mail.auctionMail or candidate.auctionPlayer ~= mail.auctionPlayer
                 for slot, item in ipairs(mail.attachments) do
                     local prior = candidate.attachments[slot]
-                    if not prior or prior.attachmentIndex ~= item.attachmentIndex or prior.variantKey ~= item.variantKey or prior.quantity ~= item.quantity then moved = true end
+                    if not prior or prior.attachmentIndex ~= item.attachmentIndex or prior.variantKey ~= item.variantKey
+                        or prior.quantity ~= item.quantity or prior.name ~= item.name or prior.texture ~= item.texture then moved = true end
                 end
                 if moved then Mark(mail) end
             else
@@ -393,7 +398,7 @@ function Addon:CleanupBacklog(characterID)
     for key, mail in pairs(snapshot.records) do
         if mail.state == "unverified" then
             keys[#keys + 1] = key
-            for _, item in ipairs(mail.attachments) do if not seen[item.itemID] then seen[item.itemID] = true; ids[#ids + 1] = item.itemID end end
+            for _, item in ipairs(mail.attachments) do if item.itemID and not seen[item.itemID] then seen[item.itemID] = true; ids[#ids + 1] = item.itemID end end
         end
     end
     for _, key in ipairs(keys) do snapshot.records[key] = nil end
@@ -408,7 +413,7 @@ function Addon:DeleteCharacter(character)
         local keys, ids, seen = {}, {}, {}
         for key, mail in pairs(snapshot.records) do
             keys[#keys + 1] = key
-            for _, item in ipairs(mail.attachments) do if not seen[item.itemID] then seen[item.itemID] = true; ids[#ids + 1] = item.itemID end end
+            for _, item in ipairs(mail.attachments) do if item.itemID and not seen[item.itemID] then seen[item.itemID] = true; ids[#ids + 1] = item.itemID end end
         end
         self.db.byCharacter[character.id] = nil; self:Publish(character.id, keys, ids, "cleanup")
     elseif hadArrival then self:Publish(character.id, {}, {}, "cleanup")

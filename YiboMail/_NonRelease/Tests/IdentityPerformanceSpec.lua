@@ -12,7 +12,7 @@ for index = 1, 10000 do character.domains.inventory[index] = { itemID = index, q
 local database = { characters = { byID = { [character.id] = character } }, characterDisplay = { [character.id] = { shortName = "Short" } } }
 Core.Database = { GetDB = function() return database end }
 dofile("YiboCore/Data/Characters.lua")
-for _, file in ipairs({ "Namespace", "Store", "Items", "Mists/Scanner", "ViewModel", "NativeUI", "Recipients" }) do dofile("YiboMail/" .. file .. ".lua") end
+for _, file in ipairs({ "Namespace", "Store", "Items", "Mists/Scanner", "Common/ArrivalSignal", "Common/ScanCommit", "Common/CollectionScan", "ViewModel", "NativeUI", "Common/MoneySendConfirmation", "Mists/NativeSend", "Recipients" }) do dofile("YiboMail/" .. file .. ".lua") end
 local Addon = YiboMail; Addon.Core = Core
 Addon:InitializeDatabase()
 Addon.FEATURES.account = false

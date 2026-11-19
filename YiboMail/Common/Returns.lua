@@ -21,7 +21,7 @@ end
 function Returns:CanReturn(mail)
     if mail.auctionMail then return nil, Addon:T("RETURN.AUCTION_EXCLUDED") end
     if mail.canReply ~= true or mail.isGM == true then return nil, Addon:T("RETURN.SENDER_UNVERIFIED") end
-    if type(ReturnInboxItem) ~= "function" then return nil, Addon:T("RETURN.API_UNAVAILABLE") end
+    if not Addon.CollectionRuntime:HasReturnAPI() then return nil, Addon:T("RETURN.API_UNAVAILABLE") end
     if mail.canReturn == true then return true end
     return nil, Addon:T(mail.canReturn == false and "RETURN.NOT_RETURNABLE" or "RETURN.PERMISSION_UNKNOWN")
 end
@@ -44,22 +44,6 @@ local function SameInbox(mails, baseline, visible, total, count, all)
     end
     return true
 end
-local function CanDeleteEmpty(mail)
-    if #mail.attachments ~= 0 or mail.money ~= 0 or mail.cod ~= 0 or mail.isGM or mail.auctionMail
-        or type(GetInboxText) ~= "function" or type(DeleteInboxItem) ~= "function"
-        or type(InboxItemCanDelete) ~= "function" then return false end
-    local ok, permitted = pcall(InboxItemCanDelete, mail.inboxIndex)
-    if not ok or (permitted ~= true and permitted ~= 1) then return false end
-    local read, body, _, _, _, invoice = pcall(GetInboxText, mail.inboxIndex)
-    if not read or type(body) ~= "string" or (invoice ~= nil and invoice ~= false and invoice ~= 0) then
-        return false
-    end
-    if body == "" then return true end
-    if type(GetLocale) ~= "function" or GetLocale() ~= "zhCN" or mail.wasReturned
-        or not mail.replyExplicitlyDisabled or type(CanComplainInboxItem) ~= "function" then return false end
-    local complaintOK, canComplain = pcall(CanComplainInboxItem, mail.inboxIndex)
-    return complaintOK and canComplain == false
-end
 
 function Returns:PrepareEmptyDeletion()
     local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
@@ -69,7 +53,7 @@ function Returns:PrepareEmptyDeletion()
         generation = Addon.Scanner.generation, selection = {}, deleteEmpty = true }
     for index = #mails, 1, -1 do
         local mail = mails[index]
-        if CanDeleteEmpty(mail) then
+        if Addon.CollectionRuntime:CanDeleteEmpty(mail) then
             plan.actions[#plan.actions + 1] = { characterID = current.id, signature = mail.signature,
                 original = mail, slot = "delete-empty", state = "pending" }
         end
@@ -79,7 +63,7 @@ function Returns:PrepareEmptyDeletion()
 end
 
 local function CanProcess(plan, mail)
-    if plan.deleteEmpty then return CanDeleteEmpty(mail) end
+    if plan.deleteEmpty then return Addon.CollectionRuntime:CanDeleteEmpty(mail) end
     return Returns:CanReturn(mail)
 end
 
@@ -179,7 +163,7 @@ function Queue:NextReturn()
         end
         return
     end
-    if InCombatLockdown and InCombatLockdown() then self:Pause(Addon:T("UI.TEXT_0306")); return end
+    if Addon.CollectionRuntime:InCombat() then self:Pause(Addon:T("UI.TEXT_0306")); return end
     local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     if not current or current.id ~= action.characterID then self:Pause(Addon:T("RETURN.CHANGED")); return end
     local mails, visible, total = Addon.Scanner:ReadVisible()
@@ -195,7 +179,7 @@ function Queue:NextReturn()
         targetIndex = mail.inboxIndex, originalIndex = action.original.inboxIndex, startedAt = GetTime(),
         success = false, updated = false }
     self.lastRequestAt, self.invoking = GetTime(), true
-    local ok, err = pcall(plan.deleteEmpty and DeleteInboxItem or ReturnInboxItem, mail.inboxIndex)
+    local ok, err = pcall(Addon.CollectionRuntime:GetDispositionFunction(plan.deleteEmpty), mail.inboxIndex)
     self.invoking = false
     if not ok then
         -- A wrapped API can raise after submitting its request. Keep the
@@ -231,7 +215,8 @@ function Queue:OnReturnScan(mails, visible, total, committed)
     for index, mail in ipairs(pending.beforeMails) do
         if index ~= pending.targetIndex then expected[#expected + 1] = mail end
     end
-    if visible ~= math.min(100, total) or #mails ~= visible or #mails < #expected then return false end
+    local limit = Addon.STABLE_INBOX_LIMIT
+    if (limit and visible ~= math.min(limit, total)) or #mails ~= visible or #mails < #expected then return false end
     for index, mail in ipairs(expected) do
         if mails[index].signature ~= mail.signature then return false end
     end

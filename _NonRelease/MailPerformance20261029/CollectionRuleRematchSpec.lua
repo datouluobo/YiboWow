@@ -1,7 +1,7 @@
 dofile('YiboMail/_NonRelease/Tests/RuleSendSpec.lua')
 local A=YiboMail
 local C=A.RuleSendController
-dofile('YiboMail/Mists/Queue.lua')
+dofile('YiboMail/Common/CollectionRuntime.lua'); dofile('YiboMail/Mists/CollectionRuntime.lua'); dofile('YiboMail/Common/Queue.lua')
 local Q=A.Queue
 local scans,scan=0,C.Scan
 C.Scan=function(self,...) scans=scans+1;return scan(self,...) end

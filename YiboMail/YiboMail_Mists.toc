@@ -4,7 +4,7 @@
 ## Title-zhTW: |cff20e070[Yibo]|r YiboMail - 邮件助手
 ## Notes-zhCN: 原生收件箱增强、账号邮件视图、到期提醒与附件收取。
 ## Author: YiboSoft
-## Version: 1.3.4-api1
+## Version: 1.3.5-api1
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
 ## SavedVariables: YiboMailDB
@@ -12,18 +12,24 @@
 ## X-Yibo-Target: Mists
 
 Namespace.lua
+Mists/Target.lua
 Locales/zh.lua
 Locales/en.lua
 Store.lua
 Recipients.lua
+Common/RecipientRuntime.lua
 RecipientUI.lua
 SendRules.lua
+Common/RuleCategories.lua
 RuleSendController.lua
 SendRulesSettings.lua
 RuleSendUI.lua
 Items.lua
-Mists/TransferMigration.lua
+Common/TransferMigration.lua
 Mists/Scanner.lua
+Common/ArrivalSignal.lua
+Common/ScanCommit.lua
+Common/CollectionScan.lua
 ViewModel.lua
 ActionTodo.lua
 GoalTargets.lua
@@ -33,11 +39,18 @@ CacheModel.lua
 HistoryModel.lua
 CacheUI.lua
 AccountPage.lua
+Common/AccountSettings.lua
 Inbox.lua
-Mists/Queue.lua
-Mists/Returns.lua
+Common/CollectionRuntime.lua
+Mists/CollectionRuntime.lua
+Common/Queue.lua
+Common/Returns.lua
 Compose.lua
+Common/ComposeRuntime.lua
+Mists/Compose.lua
 NativeUI.lua
-Mists/InboxUI.lua
-Mists/ReturnUI.lua
-Bootstrap.lua
+Common/MoneySendConfirmation.lua
+Mists/NativeSend.lua
+Common/InboxUI.lua
+Common/ReturnUI.lua
+Common/Lifecycle.lua

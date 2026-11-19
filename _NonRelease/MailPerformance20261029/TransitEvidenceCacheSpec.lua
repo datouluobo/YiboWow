@@ -41,12 +41,12 @@ local function Item(id, slot, quantity, variant) return { id = id, slot = slot, 
 local function Mail(subject, items, money, cod) return { sender = "Sender", subject = subject, items = items or {}, money = money or 0, cod = cod or 0 } end
 local function LoadMail(file)
     if arg[2]=='before-r2' then
-        local name=file=='YiboMail/Store.lua' and 'Store' or file=='YiboMail/Mists/Queue.lua' and 'Queue' or file=='YiboMail/Mists/Scanner.lua' and 'Scanner'
+        local name=file=='YiboMail/Store.lua' and 'Store' or file=='YiboMail/Common/Queue.lua' and 'Queue' or file=='YiboMail/Mists/Scanner.lua' and 'Scanner'
         if name then return dofile('_NonRelease/MailPerformance20261029/CollectionR2-before-'..name..'.lua') end
     end
     if arg[2]=='transient-baseline' then
         if file=='YiboMail/Store.lua' then return dofile('_NonRelease/MailPerformance20261029/Transient-before-Store.lua') end
-        if file=='YiboMail/Mists/Queue.lua' then return dofile('_NonRelease/MailPerformance20261029/Transient-before-Queue.lua') end
+        if file=='YiboMail/Common/Queue.lua' then return dofile('_NonRelease/MailPerformance20261029/Transient-before-Queue.lua') end
     end
     if arg[2]~='baseline' then return dofile(file) end
     local handle=assert(io.open(file,'r')); local source=handle:read('*a'); handle:close()
@@ -54,7 +54,7 @@ local function LoadMail(file)
         local first,last=source:find(old,1,true); assert(first, 'Missing comparison block: '..file)
         source=source:sub(1,first-1)..new..source:sub(last+1)
     end
-    if file=='YiboMail/Mists/Queue.lua' then
+    if file=='YiboMail/Common/Queue.lua' then
         Replace('local shifted = {}; for key, value in pairs(mail) do shifted[key] = value end', 'local shifted = Addon.Copy(mail)')
     elseif file=='YiboMail/Store.lua' then
         Replace('local stored = self.Copy(record, copies)', 'local stored = self.Copy(record)')
@@ -63,7 +63,7 @@ local function LoadMail(file)
     end
     return assert(loadstring(source,'@'..file))()
 end
-for _, file in ipairs({ "Namespace", "Store", "Items", "Mists/Scanner", "ViewModel", "Inbox", "Mists/Queue", "Recipients" }) do LoadMail("YiboMail/" .. file .. ".lua") end
+for _, file in ipairs({ "Namespace", "Store", "Items", "Mists/Scanner", "Common/ArrivalSignal", "Common/ScanCommit", "Common/CollectionScan", "ViewModel", "Inbox", "Common/CollectionRuntime", "Mists/CollectionRuntime", "Common/Queue", "Recipients" }) do LoadMail("YiboMail/" .. file .. ".lua") end
 local addon, scanner, api, queue = YiboMail, YiboMail.Scanner, YiboMail.Items, YiboMail.Queue
 addon.Core = { Characters = { GetCurrent = function() return a end, GetAllCached = function() return { a, b, c } end },
     AccountView = { GetVisibleCharacters = function() return { a, b } end, NotifyPageChanged = function() end } }

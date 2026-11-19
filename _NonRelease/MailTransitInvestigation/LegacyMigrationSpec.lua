@@ -5,7 +5,7 @@ local sender = { id = "sender", name = "Sender", realm = "Realm" }
 local receiver = { id = "receiver", name = "Receiver", realm = "Realm" }
 YiboCore = { Characters = { GetAllCached = function() return { sender, receiver } end,
     GetCurrent = function() return sender end, FormatName = function(_, c) return c.name end } }
-for _, file in ipairs({ "Namespace", "Store", "Recipients", "Items", "Mists/TransferMigration", "HistoryModel" }) do dofile("YiboMail/" .. file .. ".lua") end
+for _, file in ipairs({ "Namespace", "Store", "Recipients", "Common/RecipientRuntime", "Items", "Common/TransferMigration", "HistoryModel" }) do dofile("YiboMail/" .. file .. ".lua") end
 local addon = YiboMail; addon.Core = YiboCore
 addon:InitializeDatabase()
 local function Item(n) return { itemID = 72095, quantity = n } end
@@ -32,7 +32,7 @@ local rows = addon.HistoryModel:Query({ characters = { sender, receiver } }, { d
 assert(#rows == 1 and rows[1].record == old and rows[1].state == "unverified", "Legacy send remains searchable as needs verification")
 local revision = addon.db.revision
 assert(addon.Items:MigrateLegacyTransfers() and addon.db.revision == revision and Total() == 101, "Migration is idempotent")
-dofile("YiboMail/Items.lua"); dofile("YiboMail/Mists/TransferMigration.lua")
+dofile("YiboMail/Items.lua"); dofile("YiboMail/Common/TransferMigration.lua")
 assert(addon.Items:MigrateLegacyTransfers() and Total() == 101, "Reload retains the review classification")
 addon.db.byCharacter.receiver.records.modern = { state = "observed", sender = "Sender", observedAt = now, attachments = addon.Copy(modern.attachments) }
 addon:Publish(receiver.id, {}, {72095}, "scan")

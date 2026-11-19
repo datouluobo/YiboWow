@@ -179,10 +179,17 @@ local function ArchiveCharacters(context)
     return sorted
 end
 
-local function GetArchiveColumnWidths(fields)
+local function GetArchiveColumnWidths(fields, characters, snapshot)
     local widths = {}
+    snapshot = snapshot or (Core.ArchiveFields and Core.ArchiveFields:Read(characters, fields))
     for index, field in ipairs(fields) do
         widths[index] = math.max(math.min(field.width, field.maxWidth or field.width), Theme:MeasureText(Theme.Font.body, field.title) + 12)
+        if field.formatKind == "money" then
+            for _, character in ipairs(characters) do
+                local text = ArchiveFieldText(character, field, snapshot)
+                widths[index] = math.max(widths[index], Theme:MeasureText(Theme.Font.body, text) + 12)
+            end
+        end
     end
     return widths
 end
@@ -233,7 +240,7 @@ local function RefreshCharacters(parent, context)
     parent.listContent:SetWidth(contentWidth)
     local fields = GetArchiveFields(preview)
     local providerSnapshot = Core.ArchiveFields and Core.ArchiveFields:Read(characters, fields)
-    local widths = GetArchiveColumnWidths(fields)
+    local widths = GetArchiveColumnWidths(fields, characters, providerSnapshot)
     local tableWidth = GetArchiveTableWidth(fields, widths)
     local surfaceWidth = math.max(contentWidth, tableWidth)
     parent.listContent:SetWidth(surfaceWidth)
@@ -321,18 +328,20 @@ local function RefreshCharacters(parent, context)
 end
 
 local function GetCharacterSurfaceMetrics(context)
-    local count = #ArchiveCharacters(context)
+    local characters = ArchiveCharacters(context)
+    local count = #characters
     local fields = GetArchiveFields(false)
-    local tableWidth = GetArchiveTableWidth(fields, GetArchiveColumnWidths(fields))
+    local tableWidth = GetArchiveTableWidth(fields, GetArchiveColumnWidths(fields, characters))
     local inset = Theme:GetMatrixInsets(context and context.preview)
     local contentWidth = math.max(582, tableWidth + inset.left + inset.right)
     return { minContentWidth = contentWidth, naturalContentWidth = contentWidth, minContentHeight = 150, naturalContentHeight = inset.top + Theme.Table.headerHeight + Theme.Space.xs + math.min(count, 20) * Theme.Table.rowHeight + inset.bottom, verticalOverflow = "content" }
 end
 
 local function GetCharacterHoverMetrics(context)
-    local count = #ArchiveCharacters(context)
+    local characters = ArchiveCharacters(context)
+    local count = #characters
     local fields = GetArchiveFields(true)
-    local tableWidth = GetArchiveTableWidth(fields, GetArchiveColumnWidths(fields))
+    local tableWidth = GetArchiveTableWidth(fields, GetArchiveColumnWidths(fields, characters))
     local inset = Theme:GetMatrixInsets(true)
     local contentHeight = inset.top + Theme.Table.headerHeight + Theme.Space.xs + math.max(1, math.min(count, 20)) * Theme.Table.previewRowHeight + inset.bottom
     return {

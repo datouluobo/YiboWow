@@ -12,18 +12,19 @@ local function Manifest(path)
     end
     return entries, seen
 end
-local _, mists = Manifest("YiboMail/YiboMail.toc")
+local _, mists = Manifest("YiboMail/YiboMail_Mists.toc")
 local foreverFile = io.open("YiboMail/YiboMail_Forever.toc", "r")
 local forever
 if foreverFile then
     foreverFile:close()
     _, forever = Manifest("YiboMail/YiboMail_Forever.toc")
 end
-assert(mists["Mists/Scanner.lua"] and mists["Mists/Queue.lua"])
-assert(mists["Mists/InboxUI.lua"] and mists["Mists/Returns.lua"] and mists["Mists/ReturnUI.lua"])
+assert(mists["Mists/Scanner.lua"] and mists["Common/Queue.lua"] and mists["Mists/CollectionRuntime.lua"])
+assert(mists["Common/InboxUI.lua"] and mists["Common/Returns.lua"] and mists["Common/ReturnUI.lua"])
 assert(not mists["Scanner.lua"] and not mists["Queue.lua"])
 if forever then
-    assert(not forever["Mists/InboxUI.lua"] and not forever["Mists/Returns.lua"] and not forever["Mists/ReturnUI.lua"])
+    assert(forever["Common/InboxUI.lua"] and forever["Common/Returns.lua"] and forever["Common/ReturnUI.lua"])
+    assert(forever["Common/CollectionRuntime.lua"] and forever["Forever/CollectionRuntime.lua"])
     assert(forever["Forever/Scanner.lua"] and not forever["Mists/Scanner.lua"] and not forever["Mists/Queue.lua"])
 end
 local source = assert(io.open("YiboMail/NativeUI.lua", "r")):read("*a")
@@ -34,7 +35,10 @@ for _, overlay in ipairs({ false, true }) do
     -- Blizzard UI; the previous run leaves a minimal IsShown-only mailbox.
     MailFrame, InboxFrame, OpenMailFrame = nil, nil, nil
     function dofile(path)
-        if overlay and (path == "YiboMail/Scanner.lua" or path == "YiboMail/Queue.lua") then
+        if overlay and (path == "YiboMail/Scanner.lua" or path == "YiboMail/Queue.lua"
+            or path == "YiboMail/Mists/InboxUI.lua" or path == "YiboMail/Mists/ReturnUI.lua"
+            or path == "YiboMail/Mists/Queue.lua" or path == "YiboMail/Mists/Returns.lua" or path == "YiboMail/Bootstrap.lua"
+            or path == "YiboMail/Forever/Bootstrap.lua" or path == "YiboMail/Forever/AccountPage.lua") then
             oldLoads = oldLoads + 1
             error("Legacy residual file executed: " .. path)
         end

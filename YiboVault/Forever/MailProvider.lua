@@ -1,15 +1,15 @@
 local Addon = _G.YiboVault
 local Provider = {}; Addon.MailProvider = Provider
-function Provider:Connect()
+function Provider:Connect(characterID)
     local core = Addon.Core
-    local current = core and core.Characters:GetCurrentID()
+    local current = characterID or (core and core.Characters:GetCurrentID())
     local descriptor = core and core.Contracts:Resolve("mail.items", { major = 1, minMinor = 0 })
     self.descriptor = nil
     if not descriptor or not current then return false end
     local revision = core.Contracts:Call(Addon.NAME, descriptor, "GetRevision")
     local state = core.Contracts:Call(Addon.NAME, descriptor, "GetState", { characterID = current })
     if type(revision) ~= "number" or type(state) ~= "table" or type(state.status) ~= "string" then return false end
-    local signature = table.concat({ descriptor.registrationRef, revision, state.status, tostring(state.observedAt) }, ":")
+    local signature = table.concat({ current, descriptor.registrationRef, revision, state.status, tostring(state.observedAt) }, ":")
     if self.signature == signature and self.snapshot then self.descriptor = descriptor; return true end
     local query = core.Contracts:Call(Addon.NAME, descriptor, "GetByCharacter", { characterID = current, options = { includeStale = true } })
     if type(query) ~= "table" or query.revision ~= revision or type(query.records) ~= "table" or type(query.coverage) ~= "table"
@@ -23,15 +23,28 @@ function Provider:Connect()
         records[#records + 1] = Addon.Copy(record)
     end
     local coverage = Addon.Copy(state)
-    if coverage.status == "partial" then coverage.status = "stale" end
     coverage.completedScan, coverage.recordCount, coverage.location = state.observedAt ~= nil, #records, { container = "inbox" }
     coverage.providerRevision = revision
+    local transit
+    if (descriptor.version.minor or 0) >= 1 then
+        local transfers = core.Contracts:Call(Addon.NAME, descriptor, "GetTransfers", { characterID = current })
+        if type(transfers) ~= "table" or transfers.characterID ~= current or type(transfers.records) ~= "table" then return false end
+        for _, record in ipairs(transfers.records) do
+            if record.characterID ~= current or record.source ~= "mail" or record.state ~= "in-transit" or record.mailStatus ~= "in-transit"
+                or type(record.sourceID) ~= "string" or type(record.senderCharacterID) ~= "string"
+                or type(record.itemID) ~= "number" or record.itemID <= 0 or record.itemID % 1 ~= 0
+                or type(record.quantity) ~= "number" or record.quantity <= 0 or record.quantity % 1 ~= 0
+                or type(record.location) ~= "table" then return false end
+            records[#records+1] = Addon.Copy(record)
+        end
+        transit = {status="known",completedScan=true,recordCount=#transfers.records,providerRevision=revision,location={container="in-transit"}}
+    end
     self.signature, self.descriptor = signature, descriptor
-    self.snapshot = { records = records, coverage = { inbox = coverage } }
+    self.snapshot = { records = records, coverage = { inbox = coverage, transit = transit } }
     return true
 end
 function Provider:GetSnapshot(characterID)
-    if characterID ~= Addon.Core.Characters:GetCurrentID() or not self:Connect() then return nil end
+    if not self:Connect(characterID) then return nil end
     return Addon.Copy(self.snapshot)
 end
 function Provider:Refresh()

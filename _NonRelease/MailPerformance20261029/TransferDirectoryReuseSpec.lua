@@ -1,7 +1,7 @@
 
 dofile('_NonRelease/MailPerformance20261029/IdentityCacheSpec.lua')
 local C=YiboCore;YiboMailDB={}
-dofile('YiboMail/Namespace.lua');dofile('YiboMail/Store.lua');dofile('YiboMail/Recipients.lua');dofile('YiboMail/Items.lua')
+dofile('YiboMail/Namespace.lua');dofile('YiboMail/Store.lua');dofile('YiboMail/Recipients.lua'); dofile('YiboMail/Common/RecipientRuntime.lua');dofile('YiboMail/Items.lua')
 local A=YiboMail;A.Core=C;A.FEATURES.account=false;A:InitializeDatabase()
 A.db.byCharacter.A={records={},visibleKeys={},coverage={},history={{state='in-transit',recipient='B-Two',eventID='send',observedAt=10,attachments={{itemID=123,quantity=2}}}}}
 A:Publish('A',{}, {},'archive')

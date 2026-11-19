@@ -3,7 +3,7 @@ local Resolver = { pending = {}, failed = {} }
 local frame = CreateFrame("Frame")
 local Poll, pollElapsed = nil, 0
 Core.ItemResolver = Resolver
-Core.Capabilities:Register("item-resolver", 1)
+Core.Capabilities:Register("item-resolver", 2)
 
 local function CancelWaiter(waiter)
     waiter.cancelled, waiter.callback = true, nil
@@ -28,6 +28,7 @@ function Resolver:GetInfo(itemID)
     local native, availability = Core.Client:ReadItemInfo(itemID)
     local name, link, icon = native and native.name, native and native.link, native and native.icon
     return { itemID = itemID, name = name, link = link, icon = icon, availability = availability,
+        quality = native and native.quality, classID = native and native.classID, subclassID = native and native.subclassID,
         state = name and "ready" or self.pending[itemID] and "loading" or self.failed[itemID] and "failed" or "unloaded" }
 end
 

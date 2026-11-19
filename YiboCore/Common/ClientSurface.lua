@@ -44,7 +44,12 @@ function Core._private.CreateClientSurface(resolve, bagIDs)
         local link, icon = result[3], result[11]
         if link ~= nil and type(link) ~= "string" then return nil, "error" end
         if icon ~= nil and type(icon) ~= "string" and not Number(icon) then return nil, "error" end
-        return { name = result[2], link = link, icon = icon }, "known"
+        -- Optional metadata must not make the v1 name/link/icon contract fail.
+        -- Unknown or malformed native metadata remains unknown, never zero.
+        return { name = result[2], link = link, icon = icon,
+            quality = Integer(result[4], 255) and result[4] or nil,
+            classID = Integer(result[13], 2147483647) and result[13] or nil,
+            subclassID = Integer(result[14], 2147483647) and result[14] or nil }, "known"
     end
     function surface.RequestItemData(id)
         local result, state = Read(resolve("RequestItem") and "RequestItem" or "ItemInfo", id)

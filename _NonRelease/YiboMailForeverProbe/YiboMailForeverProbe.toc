@@ -1,0 +1,6 @@
+## Interface: 16001
+## Title: |cff20e070[Yibo]|r YiboMail Forever Probe
+## Notes: Non-release read-only mail observations.
+## Version: 0.1.2
+## SavedVariables: YiboMailForeverProbeDB
+Probe.lua

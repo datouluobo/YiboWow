@@ -20,7 +20,7 @@ for id,snapshot in pairs(YiboMailDB.byCharacter) do
 end
 YiboCore.Characters.GetCurrentID=function() return first end
 dofile('YiboMail/Store.lua');A:InitializeDatabase()
-dofile('YiboMail/Recipients.lua')
+dofile('YiboMail/Recipients.lua'); dofile('YiboMail/Common/RecipientRuntime.lua')
 if arg[3]=='before' then dofile('_NonRelease/MailPerformance20261029/TransitR5-before-Items.lua') else dofile('YiboMail/Items.lua') end
 local function Fingerprint(value)
     local a,b=1,0

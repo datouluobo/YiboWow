@@ -1,0 +1,12 @@
+{
+  "date": "2026-11-18",
+  "reportSHA256": "ab7533d5ef58d4488c78f78a53dbc97a35bc9e30ceb71e81a41cfd4e5b45901d",
+  "mailUnknownKeys": [],
+  "missingEnglish": [],
+  "formatMismatch": [],
+  "reviewedCandidates": {
+    "YiboMail/Common/TocHint.lua": "pre-Core missing-target bootstrap diagnostic; existing bilingual startup exception",
+    "YiboMail/Mists/RuleCategories.lua": "two existing native obsolete-category aliases, not newly displayed UI text"
+  },
+  "clientAcceptance": "pending"
+}

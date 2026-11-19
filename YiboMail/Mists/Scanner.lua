@@ -1,30 +1,8 @@
 local Addon = _G.YiboMail
 local Scanner = { publishedStatus = {} }; Addon.Scanner = Scanner
-function Scanner:ObserveArrivalSignal()
-    if type(HasNewMail) ~= "function" or not Addon.db then return end
-    local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
-    if not current then return end
-    local ok, value = pcall(HasNewMail)
-    if not ok then return end
-    local present = value == true or value == 1
-    local previous = Addon.db.mailArrivalSignals[current.id]
-    if previous and previous.present == present then return end
-    Addon.db.mailArrivalSignals[current.id] = { present = present, awaitingScan = present, observedAt = Addon:Now() }
-    Addon:UpdateMailNoticeBatch(current.id)
-    if present or (previous and previous.awaitingScan) then Addon:Publish(current.id, {}, {}, "scan", true) end
-end
 function Scanner:IsOpen() return self.open and MailFrame and MailFrame:IsShown() end
 function Scanner:RequestInbox()
     if self.open and type(CheckInbox) == "function" then CheckInbox() end
-end
-function Scanner:PublishStatus(characterID)
-    if not characterID or not Addon.db then return end
-    local status = Addon.Items:GetState(characterID).status
-    local previous = self.publishedStatus[characterID] or (Addon.db.byCharacter[characterID] and "stale" or "not-yet-scanned")
-    if previous ~= status then
-        self.publishedStatus[characterID] = status
-        Addon:Publish(characterID, {}, {}, "scan", true)
-    end
 end
 function Scanner:CancelRead()
     if self.scanJob then self.scanJob.mails, self.scanJob.hints = nil, nil; self.scanJob = nil end
@@ -61,11 +39,7 @@ function Scanner:IsAuctionMail(index, subject)
     -- native localized subject templates, independent of Core's UI language.
     for _, key in ipairs(AUCTION_SUBJECT_KEYS) do
         local template = _G[key]
-        if type(template) == "string" and template ~= "" then
-            local pattern = template:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
-                :gsub("%%%%s", ".+")
-            if subject:match("^" .. pattern .. "$") then return true end
-        end
+        if Addon:MatchesMailSubject(subject, template) then return true end
     end
     return false
 end
@@ -196,28 +170,6 @@ function Scanner:ReadTarget(index, hint)
     if not ok then return nil, nil, nil, tostring(mail) end
     return mail, visible, total
 end
-function Scanner:BeginCollection()
-    self:CancelRead()
-    self.refreshPending = self.validAt ~= nil or self.refreshPending
-    self.validAt, self.stable, self.scheduledScan = nil, nil, nil
-    self.generation = (self.generation or 0) + 1
-    local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
-    self:PublishStatus(current and current.id)
-end
-function Scanner:CommitCollection(mails, visible, total, fullRead)
-    local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
-    local snapshot = current and Addon.db.byCharacter[current.id]
-    if not snapshot then return end
-    self.validAt, self.refreshPending = nil, true
-    -- This is an observed action delta, not a fresh full-inbox sample. Keep
-    -- the last full scan time and public stale status until final reconciliation.
-    local coverage = Addon.Copy(snapshot.coverage)
-    if fullRead then coverage.observedAt, coverage.clockSource = Addon:Now() end
-    coverage.currentCount, coverage.totalCount, coverage.unscannedCount = visible, total, total - visible
-    coverage.status = visible < total and "partial" or (total == 0 and "known-empty" or "known")
-    Addon:CommitScan(current, mails, coverage)
-    self.publishedStatus[current.id] = "stale"
-end
 function Scanner:ReadEntry(entry)
     if not self:IsOpen() or not self.updated then return nil, Addon:T("UI.TEXT_0526") end
     local index = entry and entry.mail and tonumber(entry.mail.inboxIndex)
@@ -234,51 +186,6 @@ function Scanner:ReadEntry(entry)
     if not ok then return nil, tostring(current) end
     if current.signature ~= entry.mail.signature then return nil, Addon:T("UI.TEXT_0594") end
     return current
-end
-local function CommitScan(character, mails, visible, total, now, clock)
-    -- Header days are fractional while observation time is whole seconds.
-    -- Reconstructing the same expiry can jitter around adjacent letters and
-    -- reorder an untouched list. Retain only a matching envelope's estimate
-    -- within the clock rounding tolerance; larger corrections still apply.
-    local snapshot = Addon.db.byCharacter[character.id]
-    local previous = {}
-    for _, key in ipairs(snapshot and snapshot.visibleKeys or {}) do
-        local mail = snapshot.records[key]
-        if mail then previous[mail.inboxIndex] = mail end
-    end
-    for _, mail in ipairs(mails) do
-        local prior = previous[mail.inboxIndex]
-        if prior and prior.signature == mail.signature and type(prior.expiresAtEstimate) == "number"
-            and math.abs(prior.expiresAtEstimate - mail.expiresAtEstimate) <= 2 then
-            mail.expiresAtEstimate = prior.expiresAtEstimate
-        end
-    end
-    local queueRefreshed
-    -- Publication callbacks invalidate consumers, while this scan owns the
-    -- native presentation refresh immediately after its complete commit.
-    local previousCommit = Scanner.committingObservation
-    Scanner.committingObservation = true
-    local committed, commitError = pcall(Addon.WithPublicationBatch, Addon, function()
-        local signatures = {}; for _, mail in ipairs(mails) do signatures[#signatures + 1] = mail.signature end; table.sort(signatures)
-        local fingerprint = Addon.Encode(signatures)
-        Scanner.lastError, Scanner.validAt, Scanner.refreshPending = nil, now, nil
-        Addon:CommitScan(character, mails, { status = visible < total and "partial" or (total == 0 and "known-empty" or "known"),
-            currentCount = visible, totalCount = total, unscannedCount = total - visible, observedAt = now, clockSource = clock })
-        if visible == total and total <= 100 then
-            local stable = Scanner.stable
-            if stable and stable.characterID == character.id and stable.fingerprint == fingerprint and stable.count == total then
-                if now - stable.at >= 60 then Addon:CleanupBacklog(character.id) end
-            else Scanner.stable = { characterID = character.id, fingerprint = fingerprint, count = total, at = now } end
-        else Scanner.stable = nil end
-        queueRefreshed = Addon.Queue and Addon.Queue:OnScan(mails, visible, total)
-    end)
-    Scanner.committingObservation = previousCommit
-    if not committed then error(commitError, 0) end
-    if Addon.Queue and Addon.Queue.notifyPending then Addon.Queue:Notify() end
-    if Addon.NativeUI then
-        Addon.NativeUI.deleting = nil
-        if not queueRefreshed then Addon.NativeUI:Refresh(true) end
-    end
 end
 local function ScanError(character, err)
     Scanner.stable, Scanner.validAt, Scanner.lastError, Scanner.refreshPending = nil, nil, tostring(err), nil
@@ -308,7 +215,7 @@ function Scanner:Scan()
         ScanError(character, mails)
         return nil, self.lastError
     end
-    CommitScan(character, mails, visible, total, now, clock)
+    self:CommitObservation(character, mails, visible, total, now, clock)
     return true
 end
 function Scanner:ScanAsync(generation)
@@ -337,7 +244,7 @@ function Scanner:ScanAsync(generation)
         self:CancelRead()
         local stableOK, afterCount, afterTotal = pcall(GetInboxNumItems)
         if not stableOK or afterCount ~= count or afterTotal ~= total then ScanError(character, "inbox-changed"); return end
-        CommitScan(character, mails, count, total, now, clock)
+        self:CommitObservation(character, mails, count, total, now, clock)
     end
     ReadChunk()
     return true

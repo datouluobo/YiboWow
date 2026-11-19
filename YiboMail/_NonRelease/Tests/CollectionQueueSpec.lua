@@ -51,7 +51,7 @@ function hooksecurefunc(name, callback)
     local original = _G[name]
     _G[name] = function(...) local result = original(...); callback(...); return result end
 end
-for _, name in ipairs({ "Namespace", "Store", "Items", "Mists/Scanner", "ViewModel", "Inbox", "Mists/Queue" }) do dofile("YiboMail/" .. name .. ".lua") end
+for _, name in ipairs({ "Namespace", "Store", "Items", "Mists/Scanner", "Common/ArrivalSignal", "Common/ScanCommit", "Common/CollectionScan", "ViewModel", "Inbox", "Common/CollectionRuntime", "Mists/CollectionRuntime", "Common/Queue" }) do dofile("YiboMail/" .. name .. ".lua") end
 local A, S, Q = YiboMail, YiboMail.Scanner, YiboMail.Queue
 A.Core = { Characters = { GetCurrent = function() return character end, GetAllCached = function() return { character } end },
     AccountView = { GetVisibleCharacters = function() return { character } end, NotifyPageChanged = function() end } }

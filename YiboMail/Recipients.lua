@@ -74,7 +74,8 @@ function R:Normalize(value, realm)
     local name, server = value:match("^([^-]+)%-(.+)$")
     if not name then name, server = value, realm or (self:Current() or {}).realm end
     name, server = Trim(name), Trim(server)
-    if name == "" or name:find("%s") or name:find("-", 1, true) or server == "" or server:find("[|%c]") then return nil, Addon:T("UI.TEXT_0538") end
+    if name == "" or (name:find("%s") and not (Addon.Target and Addon.Target.mailNamesHaveSpaces))
+        or name:find("-", 1, true) or server == "" or server:find("[|%c]") then return nil, Addon:T("UI.TEXT_0538") end
     -- Preserve a known realm's spelling; matching also ignores realm whitespace.
     if not self.realms then
         self.realms = {}
@@ -216,27 +217,13 @@ function R:SetFriendStatus(status)
     if Addon.RecipientUI then Addon.RecipientUI:Refresh() end
 end
 function R:ReadFriends(readyEvent)
-    local api = _G.C_FriendList
-    local countFn = api and api.GetNumFriends or _G.GetNumFriends
-    local infoFn = api and api.GetFriendInfoByIndex or _G.GetFriendInfo
-    if type(countFn) ~= "function" or type(infoFn) ~= "function" then self:SetFriendStatus(Addon:T("UI.TEXT_0221")); return end
-    local ok, count = pcall(countFn)
-    if not ok or type(count) ~= "number" or (count == 0 and not readyEvent) then self:SetFriendStatus(Addon:T("UI.TEXT_0215")); return end
-    local entries = {}
-    for index = 1, count do
-        local success, info = pcall(infoFn, index)
-        local name = type(info) == "table" and info.name or info
-        if not success or type(name) ~= "string" or name == "" then self:SetFriendStatus(Addon:T("UI.TEXT_0216")); return end
-        entries[#entries + 1] = name
-    end
-    local success, afterCount = pcall(countFn)
-    if not success or afterCount ~= count then self:SetFriendStatus(Addon:T("UI.TEXT_0216")); return end
+    local entries, status = Addon.RecipientRuntime:ReadFriends(readyEvent)
+    if not entries then self:SetFriendStatus(Addon:T(status)); return end
     self:CommitFriends(self:Current(), entries, true)
 end
 function R:RequestFriends(request)
     if request then
-        local show = _G.C_FriendList and C_FriendList.ShowFriends or _G.ShowFriends
-        if type(show) == "function" then show() end
+        Addon.RecipientRuntime:RequestFriends()
     end
     if self.friendPending then return end
     self.friendPending = true
@@ -253,19 +240,15 @@ function R:OnEvent(event)
     elseif event == "GUILD_ROSTER_UPDATE" then self:ReadGuild(); self:Changed() end
 end
 function R:RequestGuild()
-    if _G.C_GuildInfo and C_GuildInfo.GuildRoster then C_GuildInfo.GuildRoster()
-    elseif _G.GuildRoster then GuildRoster() end
+    Addon.RecipientRuntime:RequestGuild()
     self:ReadGuild()
 end
 function R:ReadGuild()
-    self.guild = {}; self.guildStatus = nil
-    if not _G.IsInGuild or not IsInGuild() then return end
-    if not _G.GetNumGuildMembers or not _G.GetGuildRosterInfo then self.guildStatus = Addon:T("UI.TEXT_0141"); return end
-    local count = GetNumGuildMembers(true)
-    if type(count) ~= "number" or count == 0 then self.guildStatus = Addon:T("UI.TEXT_0140"); return end
+    self.guild = {}
+    local names, status = Addon.RecipientRuntime:ReadGuild()
+    self.guildStatus = status and Addon:T(status) or nil
     local seen = {}
-    for index = 1, count do
-        local name = GetGuildRosterInfo(index)
+    for _, name in ipairs(names) do
         local address = self:Normalize(name)
         if address and not seen[self:Key(address)] then seen[self:Key(address)] = true; self.guild[#self.guild + 1] = { address = address } end
     end

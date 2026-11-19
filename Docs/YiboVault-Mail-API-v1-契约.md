@@ -1,5 +1,13 @@
 # YiboVault / YiboMail Public API v1 契约
 
+2026-11-19 Forever货币附件边界：Mail内部快照可保存currencyID附件，但mail.items major1/minor1的记录和数量仍只包含普通物品；货币不占用itemID/itemKey/changedItemIDs，也不作为物品在途收件证据。仅含货币的已扫描邮箱可返回known及零物品记录，不能据零物品量认定收件箱known-empty。货币变化仍发布changedMailKeys和revision以失效缓存；Vault继续只读公开物品投影，不能从Mail私有存档另取货币或伪装为物品。此处不新增货币钱包来源或跨插件能力，详见[Mail内部附件契约](../YiboMail/Docs/Forever-货币附件支持-2026-11-19.md)。
+
+2026-11-18 Forever部分覆盖：GetByCharacter返回当前已载入窗口，GetState/coverage保留partial、currentCount、totalCount和unscannedCount；已复核的可见附件为observed，未载入邮件不生成记录。includeStale=false仍可读取已观测的当前附件，不能据返回量推断完整收件箱总量。Vault Forever保留partial并采用同一鲜度语义，不将其伪装成完整或旧数据；0已载入而total>0不会返回known-empty。失效/读取失败仍保留最近完成快照并返回相应旧/错误状态。
+
+2026-11-18 Forever开发源码接通 `mail.items` major1/minor1，增加既有 `mail-items.transfers:1` 和 `GetTransfers({characterID})`。由发送成功事件生成在途事实；失败只记unverified，正文不入库。收件关联继续复用共享多重集及时间证据，未知收件角色不伪造归属。Forever首次追踪基线为1795006800（2026-11-18 21:00北京时间），既有未知旧发件按共享迁移保留待核实，不重置独立存档。Vault Forever按descriptor minor条件消费，在同一公开快照中保留inbox/transit两种coverage；跨角色只查本目标Core GUID，结果值副本，未采集收件箱不等于空箱。minor0提供方仍可连接且不查询transfers。当前源码离线联动通过，实机/覆盖恢复待验；下文早期minor0声明是前态记录。
+
+2026-11-18 Forever重构工作树范围扩展：mail.items保持major1/minor0及query/state/events能力，不提供transfers。GetByCharacter/Query允许通过Core角色GUID读取本目标已有历史快照，支持既有characters/account/realm范围结构；默认无scope仍只查询当前角色。旧数据保留采样时间并返回stale，includeStale=false排除历史记录但保留coverage，未采为not-yet-scanned，未知GUID不生成附件。响应继续为值副本；本变化只扩大只读范围，不授予跨角色操作权限、不跨目标读库。Vault当前角色消费范围不变。工作树非已发布版本，不把旧只读版实机证据外推到本次多角色范围。
+
 > 状态：Vault 与 Mail 当前工作树在既有 `mail.items` / `vault.items` Service 上增加可选在途投影；Mail `mail.items` v1.1 的 `GetTransfers` 与 Vault 在途展示已实施，客户端联动待验收。2026-10-12。
 >
 > 适用范围：YiboVault 物品查询 API、YiboMail 邮件附件来源 API，以及二者的状态、范围和变更通知语义。

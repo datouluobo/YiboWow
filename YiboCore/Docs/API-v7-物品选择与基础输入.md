@@ -34,6 +34,7 @@
 - 目录名称可以用于匹配，但保存前仍须确认客户端真实信息。
 
 `GetInfo(itemID)` 返回当前信息，状态为 `ready/unloaded/loading/failed`。
+2026-11-18工作树新增`item-resolver:2`：`GetInfo`及`Request`回调追加可选`quality/classID/subclassID`，缺失保持nil，ready不保证类别已知。能力1兼容；依赖新字段的消费者须检查能力2。范围、失败与验证边界见[元数据扩展](物品元数据扩展-2026-11-18.md)，不代表Mail已经接入。
 2026-10-27 R1-05／06补充：查询走目标原生边界，追加`availability=known/unloaded/error/unavailable`；异常、非法类型、秘密值不会成为ready缓存。该字段为兼容性追加，API／能力版本不变。原生事件不可订阅时仍有界轮询，原生请求抛错返回失败；无效或无限timeout采用8秒。具体目标策略与离线／实机边界见[实施验收](R1-05-06-公共物品与UI原生边界实施验收.md)。
 `Request(itemID, callback, { retry, timeout })` 返回带 `Cancel()` 的句柄，回调为 `(info, errorMessage)`。缓存就绪时同步回调；未缓存时同 ID 合并请求，默认 8 秒超时。失败后只有显式 `retry=true` 才再次请求，无自动循环。取消仅影响自己的回调。UI 调用方仍须用组件代次和可见状态检查过期结果。
 

@@ -18,7 +18,9 @@ Core.DataDomains:Register("YiboCore", {
             for _, slot in ipairs(slots) do
                 local link = GetInventoryItemLink and GetInventoryItemLink("player", slot)
                 if link then
-                    local _, _, _, ilvl = GetItemInfo(link)
+                    local itemInfo = C_Item and C_Item.GetItemInfo or GetItemInfo
+                    local _, _, _, ilvl
+                    if itemInfo then _, _, _, ilvl = itemInfo(link) end
                     if ilvl and ilvl > 0 then
                         total = total + ilvl
                         count = count + 1

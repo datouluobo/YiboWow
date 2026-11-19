@@ -1,4 +1,5 @@
 -- Run from the repository root using Lua 5.1. Load the actual release manifest.
+WOW_PROJECT_MISTS_CLASSIC, WOW_PROJECT_ID = 19, 19
 function CreateFrame()
     return {
         events = {}, scripts = {}, hooks = {},
@@ -17,10 +18,11 @@ local current = { id = "test", name = "Test", realm = "Realm", faction = "Allian
 local coreAPI = 13
 local requiredCapabilities = {
     localization = 1, ["business-services"] = 1, ["character-name-format"] = 1,
-    ["basic-input"] = 1, ["item-resolver"] = 1, ["item-picker"] = 2,
-    ["character-identity"] = 1, characters = 1, ["character-cleanup"] = 1,
+    ["basic-input"] = 1, ["item-resolver"] = 2, ["item-picker"] = 2,
+    ["character-identity"] = 2, ["character-identity-cache"] = 1,
+    ["account-identity-context"] = 1, characters = 1, ["character-cleanup"] = 1,
     ["account-view"] = 2, ["account-preview-characters"] = 1,
-    ["account-character-admission"] = 1, ["account-surface-budget"] = 1, ["account-entry"] = 2,
+    ["account-character-admission"] = 1, ["account-surface-budget"] = 2, ["account-entry"] = 2, ["account-surface-realm-scope"] = 1,
 }
 YiboCore = {
     CheckAPIVersion = function(_, version) return version <= coreAPI end,
@@ -43,6 +45,8 @@ YiboCore = {
     CharacterCleanup = { RegisterOwner = function(_, name, callbacks) owner = callbacks; assert(name == "YiboMail"); return true end },
     Characters = {
         GetCurrent = function() return current end, GetAllCached = function() return { current } end,
+        GetCurrentID = function() return current.id end,
+        GetAll = function() return { current } end,
         Get = function(_, id) return id == current.id and current or nil end,
         FormatName = function(_, character) return character.name end,
     },
@@ -67,14 +71,14 @@ YiboCore = {
         assert(addonName == "YiboMail" and definition.id == "yma" and definition.pageID == "mail-inbox")
         return definition
     end },
-    UITheme = { CreateInput = Forbidden },
-    ItemConfirmation = { Show = Forbidden }, CreateItemPicker = Forbidden, ItemResolver = { Request = Forbidden },
+    UITheme = { CreateInput = Forbidden, CreateDropdown = Forbidden },
+    ItemConfirmation = { Show = Forbidden }, CreateItemPicker = Forbidden, ItemResolver = { Request = Forbidden, GetInfo = Forbidden },
     Defaults = { Copy = function(_, value) return YiboMail.Copy(value) end },
 }
 dofile("YiboCore/_NonRelease/Tests/LoadLocale.lua")
 for name, version in pairs(requiredCapabilities) do YiboCore.Capabilities:Register(name, version) end
 YiboMailDB = { contacts = { marker = "contact" }, rules = { marker = "rule" }, settings = { inbox = { sort = "inbox" } } }
-for line in io.lines("YiboMail/YiboMail.toc") do
+for line in io.lines("YiboMail/YiboMail_Mists.toc") do
     local file = line:match("^%s*([^#%s].-)%s*$")
     if file then dofile("YiboMail/" .. file) end
 end
@@ -100,7 +104,7 @@ assert(registeredAddons == 1 and registeredContracts['mail.items'] and not regis
 assert(addon.Core.AccountView)
 addon.Frame.scripts.OnEvent(addon.Frame, "MAIL_CLOSED")
 addon.Frame.scripts.OnEvent(addon.Frame, "PLAYER_REGEN_ENABLED")
-addon.Frame.hooks.OnUpdate()
+addon.NativeUI:Install()
 assert(not addon.NativeUI.installed) -- Native mailbox can load later.
 MailFrame = { IsShown = function() return true end }
 GetInboxNumItems = function() return 1, 1 end
@@ -188,7 +192,7 @@ local requiredMethods = {
     { YiboCore.AccountView, 'Toggle' }, { YiboCore.AccountView, 'BuildContext' },
     { YiboCore.AccountView, 'GetVisibleCharacters' }, { YiboCore.AccountView, 'GetEffectiveCharacterSort' },
     { YiboCore.AccountView, 'GetCustomCharacterOrder' }, { YiboCore.Entry, 'RegisterBusinessEntry' },
-    { YiboCore.ItemConfirmation, 'Show' }, { YiboCore.UITheme, 'CreateInput' }, { YiboCore, 'CreateItemPicker' }, { YiboCore.ItemResolver, 'Request' },
+    { YiboCore.ItemConfirmation, 'Show' }, { YiboCore.UITheme, 'CreateInput' }, { YiboCore, 'CreateItemPicker' }, { YiboCore.ItemResolver, 'Request' }, { YiboCore.ItemResolver, 'GetInfo' },
 }
 for _, entry in ipairs(requiredMethods) do
     local target, method = entry[1], entry[2]

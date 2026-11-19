@@ -45,7 +45,7 @@ for i,role in ipairs(roles) do
     local recipient=roles[i%31+1]
     for n=1,22 do snapshot.history[#snapshot.history+1]={state='in-transit',eventID='send'..n,observedAt=500,recipient=recipient.name..'-Realm',attachments={{itemID=1000+n,quantity=1,attachmentIndex=1}}} end
 end
-for _,file in ipairs({'ViewModel','Inbox','Mists/Queue'}) do dofile('YiboMail/'..file..'.lua') end
+for _,file in ipairs({'ViewModel','Inbox','Common/CollectionRuntime', 'Mists/CollectionRuntime', 'Common/Queue'}) do dofile('YiboMail/'..file..'.lua') end
 local Q=M.Queue
 local paints,progress=0,0
 M.NativeUI={Refresh=function() paints=paints+1 end,OnCollected=function() end,inbox={keepTilesDuringQueue=true},RefreshInboxProgress=function() progress=progress+1 end}

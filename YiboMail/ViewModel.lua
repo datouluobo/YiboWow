@@ -1,8 +1,17 @@
 local Addon = _G.YiboMail
 local View = {}; Addon.ViewModel = View
+function View:AttachmentName(item)
+    if item.name and item.name ~= "" then return item.name end
+    if item.currencyID then return Addon:T("ATTACHMENT.CURRENCY_ID", item.currencyID) end
+    return Addon:T("UI.TEXT_0453") .. tostring(item.itemID)
+end
+function View:AttachmentLink(item)
+    if item.itemLink and item.itemLink ~= "" then return item.itemLink end
+    return (item.currencyID and ("currency:" .. item.currencyID)) or (item.itemID and ("item:" .. item.itemID))
+end
 function View:ItemBorder(item)
-    local name, link, quality
-    if type(GetItemInfo) == "function" then name, link, quality = GetItemInfo(item.itemLink or item.itemID) end
+    local info = not item.currencyID and Addon.Core.ItemResolver:GetInfo(item.itemID)
+    local name, quality = item.currencyID and self:AttachmentName(item) or (info and info.name), info and info.quality
     local color = quality and ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[quality]
     if color then return { color.r, color.g, color.b, 1 }, not name end
     if type(item.itemLink) == "string" then
@@ -66,7 +75,11 @@ function View:CounterpartLabel(address, owner)
     end
     return self:CharacterLabel({ name = name, realm = realm })
 end
-function View:Money(value) return string.format(Addon:T("UI.TEXT_0059"), (tonumber(value) or 0) / 10000) end
+function View:Money(value)
+    local copper = tonumber(value) or 0
+    if copper % 100 ~= 0 then return string.format(Addon:T("MONEY.EXACT_GOLD"), copper / 10000) end
+    return string.format(Addon:T("UI.TEXT_0059"), copper / 10000)
+end
 function View:Expiry(mail)
     local expiry = tonumber(mail and mail.expiresAtEstimate)
     if not expiry or expiry <= 0 then return Addon:T("UI.TEXT_0398") end
@@ -97,20 +110,24 @@ function View:GetMails(context, options)
                 local match = true
                 if query ~= "" then
                     local parts = { mail.sender, mail.subject, character.name, tostring(mail.money), mail.mailType }
-                    for _, item in ipairs(mail.attachments) do parts[#parts + 1] = item.name or ""; parts[#parts + 1] = tostring(item.itemID) end
+                    for _, item in ipairs(mail.attachments) do parts[#parts + 1] = self:AttachmentName(item); parts[#parts + 1] = tostring(item.currencyID or item.itemID) end
                     match = string.lower(table.concat(parts, " ")):find(query, 1, true)
                 end
                 if options.kind and options.kind ~= "all" then
+                    local hasCurrency = false
+                    for _, item in ipairs(mail.attachments) do if item.currencyID then hasCurrency = true; break end end
                     match = match and (options.kind == mail.mailType or (options.kind == "money" and mail.money > 0)
+                        or (options.kind == "currency" and hasCurrency)
                         or (options.kind == "items" and #mail.attachments > 0) or (options.kind == "urgent" and mail.expiresAtEstimate - Addon:Now() < 3 * 86400))
                 end
                 if match then
                     local live = liveStates[character.id]
                     if not live then live = Addon.Items:GetState(character.id); liveStates[character.id] = live end
                     local actionable = current and current.id == character.id and (live.status == "known" or live.status == "partial")
-                        and mail.state == "observed" and mail.cod == 0
+                        and mail.state == "observed" and mail.cod == 0 and not Addon:RequiresManualMailReview(mail)
                     local restriction
-                    if mail.cod > 0 then restriction = Addon:T("UI.TEXT_0111")
+                    if Addon:RequiresManualMailReview(mail) then restriction = Addon:T("INBOX.GM_MANUAL_OPEN")
+                    elseif mail.cod > 0 then restriction = Addon:T("UI.TEXT_0111")
                     elseif not current or current.id ~= character.id then restriction = Addon:T("UI.TEXT_0195")
                     elseif mail.state ~= "observed" then restriction = Addon:T("UI.TEXT_0595")
                     elseif live.status == "error" then restriction = Addon:T("UI.TEXT_0605")

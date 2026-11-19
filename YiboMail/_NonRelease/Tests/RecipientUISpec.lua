@@ -108,12 +108,13 @@ A.ViewModel = { Escape = function(_, s) return s end }
 A.db = { contacts = { { address = 'First-Realm' }, { address = 'Second-Other' } } }
 local attachments, sends = {}, 0
 A.Compose = { GetAttachments = function() return attachments end }
+dofile('YiboMail/Mists/Compose.lua')
 A.Compose.GetBodyEditBox = function() return MailEditBox and MailEditBox:GetEditBox() or SendMailBodyEditBox end
 SendMailMailButton:SetScript('OnClick', function(_, button) assert(button == 'LeftButton'); sends = sends + 1 end)
 A.Print = function() end
 function SendMailFrame_Update() end
 function GetServerTime() return 1000 end
-dofile('YiboMail/Recipients.lua'); dofile('YiboMail/RecipientUI.lua'); dofile('YiboMail/NativeUI.lua'); dofile("YiboMail/Mists/InboxUI.lua"); dofile("YiboMail/Mists/ReturnUI.lua")
+dofile('YiboMail/Recipients.lua'); dofile('YiboMail/Common/RecipientRuntime.lua'); dofile('YiboMail/RecipientUI.lua'); dofile('YiboMail/NativeUI.lua'); dofile('YiboMail/Common/MoneySendConfirmation.lua'); dofile('YiboMail/Mists/NativeSend.lua'); dofile("YiboMail/Common/InboxUI.lua"); dofile("YiboMail/Common/ReturnUI.lua")
 local R, U, N = A.Recipients, A.RecipientUI, A.NativeUI
 R:Initialize(); N:CreateBasicSend(); N:RefreshBasicSend()
 local function Click(control, mouse) assert(control:IsEnabled()); control:GetScript('OnClick')(control, mouse or 'LeftButton') end

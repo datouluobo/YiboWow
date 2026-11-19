@@ -20,8 +20,8 @@ local function Tooltip(control, lines, item, wrap)
     control:SetScript("OnEnter", function()
         if not GameTooltip then return end
         GameTooltip:SetOwner(control, "ANCHOR_RIGHT")
-        if item and item.itemLink and item.itemLink ~= "" then GameTooltip:SetHyperlink(item.itemLink)
-        elseif item and item.itemID then GameTooltip:SetHyperlink("item:" .. tostring(item.itemID))
+        local link = item and View:AttachmentLink(item)
+        if link then GameTooltip:SetHyperlink(link)
         else GameTooltip:SetText(lines[1] or Addon:T("UI.TEXT_0589")) end
         for index = item and 1 or 2, #lines do GameTooltip:AddLine(lines[index], 1, 1, 1, wrap ~= false) end
         GameTooltip:Show()
@@ -29,7 +29,7 @@ local function Tooltip(control, lines, item, wrap)
     control:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
 end
 function UI:AttachmentTooltip(group)
-    local lines = { Escape(group.item.name or (Addon:T("UI.TEXT_0453") .. tostring(group.item.itemID))),
+    local lines = { Escape(View:AttachmentName(group.item)),
         Addon:T("UI.TEXT_0201") .. group.quantity .. Addon:T("UI.TEXT_0114") .. group.mailCount .. Addon:T("UI.TEXT_0240"),
         Addon:T("UI.TEXT_0378") .. group.normalQuantity .. Addon:T("UI.TEXT_0003") .. group.codQuantity }
     for _, source in ipairs(group.sources) do
@@ -101,14 +101,17 @@ function UI:Create(parent)
     root.days = Dropdown({ { value = 7, label = Addon:T("UI.TEXT_0573") }, { value = 30, label = Addon:T("UI.TEXT_0572") }, { value = 90, label = Addon:T("UI.TEXT_0574") }, { value = 0, label = Addon:T("UI.TEXT_0124") } }, "days", 100)
     root.historyCharacter = Dropdown({}, "participant", 140)
     root.historyCharacter:SetMenuPageSize(8)
-    root.content = Dropdown({ { value = "all", label = Addon:T("HISTORY.CONTENT_ALL") }, { value = "text", label = Addon:T("HISTORY.CONTENT_TEXT") },
-        { value = "items", label = Addon:T("HISTORY.CONTENT_ITEMS") }, { value = "money", label = Addon:T("HISTORY.CONTENT_MONEY") } }, "content", 110)
+    local contentOptions = { { value = "all", label = Addon:T("HISTORY.CONTENT_ALL") }, { value = "text", label = Addon:T("HISTORY.CONTENT_TEXT") },
+        { value = "items", label = Addon:T("HISTORY.CONTENT_ITEMS") }, { value = "money", label = Addon:T("HISTORY.CONTENT_MONEY") } }
+    if Addon.FEATURES.currencyAttachments then table.insert(contentOptions, 4, { value = "currency", label = Addon:T("ATTACHMENT.CURRENCY_FILTER") }) end
+    root.content = Dropdown(contentOptions, "content", 110)
     root.direction = Dropdown({ { value = "either", label = Addon:T("HISTORY.DIRECTION_EITHER") }, { value = "to", label = Addon:T("HISTORY.DIRECTION_TO") },
         { value = "from", label = Addon:T("HISTORY.DIRECTION_FROM") } }, "direction", 110)
     root.result = Dropdown({ { value = "all", label = Addon:T("UI.TEXT_0488") }, { value = "auction-success", label = Addon:T("HISTORY.AUCTION_SUCCESS") }, { value = "collected-archived", label = Addon:T("UI.TEXT_0251") },
         { value = "returned-archived", label = Addon:T("RETURN.ARCHIVED") },
         { value = "in-transit", label = Addon:T("UI.TEXT_0246") },
-        { value = "received-confirmed", label = Addon:T("UI.TEXT_0464") }, { value = "return-confirmed", label = Addon:T("UI.TEXT_0468") } }, "result", 115)
+        { value = "received-confirmed", label = Addon:T("UI.TEXT_0464") }, { value = "return-confirmed", label = Addon:T("UI.TEXT_0468") },
+        { value = "unverified", label = Addon:T("HISTORY.NEEDS_REVIEW") } }, "result", 115)
     root.summary = Text(root, Theme.Font.assist)
     root.tableHeader = CreateFrame("Frame", nil, root); root.tableHeader.cells = {}
     root.tableHeader.background = root.tableHeader:CreateTexture(nil, "BACKGROUND"); root.tableHeader.background:SetAllPoints()
@@ -220,7 +223,7 @@ function UI:ItemLayout(values, width, measure)
     local items, extra = values.itemList, values.extraContent or ""
     local available, x, y, positions = math.max(1, width - 12), 0, 0, {}
     for index, item in ipairs(items or {}) do
-        local name = item.name or (Addon:T("UI.TEXT_0453") .. tostring(item.itemID))
+        local name = View:AttachmentName(item)
         local needed = math.min(available, math.max(60, (measure and measure(name) or Theme:MeasureText(Theme.Font.body, name)) + 32))
         if x > 0 and x + needed > available then x, y = 0, y + 28 end
         positions[index] = { x = x, y = y, width = needed }
@@ -253,7 +256,7 @@ function UI:ItemCell(row, cell, values, left, width, height)
         button.icon:SetTexture(item.texture or "Interface\\Icons\\INV_Misc_QuestionMark")
         button.count:SetText((tonumber(item.quantity) or 0) > 1 and tostring(item.quantity) or "")
         Place(button.name, 26, 1, math.max(1, position.width - 26), 22)
-        button.name:SetText(Escape(item.name or (Addon:T("UI.TEXT_0453") .. tostring(item.itemID))):gsub("[\r\n]+", " "))
+        button.name:SetText(Escape(View:AttachmentName(item)):gsub("[\r\n]+", " "))
         button.name:SetShown(position.width >= 60)
         Tooltip(button, { Addon:T("UI.TEXT_0355") .. tostring(item.quantity or 0), values.content or values.items or "", Addon:T("UI.TEXT_0449") }, item)
         button:SetScript("OnClick", Click)
@@ -388,7 +391,7 @@ function UI:Owners(root, characters, entries, state, x, top, width, height)
 end
 local function ItemsText(items)
     local parts = {}
-    for _, item in ipairs(items or {}) do parts[#parts + 1] = Escape(item.name or (Addon:T("UI.TEXT_0453") .. tostring(item.itemID))) .. " ×" .. tostring(item.quantity or 0) end
+    for _, item in ipairs(items or {}) do parts[#parts + 1] = Escape(View:AttachmentName(item)) .. " ×" .. tostring(item.quantity or 0) end
     return #parts > 0 and table.concat(parts, Addon:T("UI.TEXT_0652")) or Addon:T("UI.TEXT_0369")
 end
 function UI:MailValues(entry, global)
@@ -428,7 +431,7 @@ function UI:Detail(root, state, data, x, top, width, height)
         local group
         for _, candidate in ipairs(data) do if candidate.id == detail.id then group = candidate; break end end
         if group then
-            title = Escape(group.item.name or (Addon:T("UI.TEXT_0453") .. tostring(group.item.itemID))) .. Addon:T("UI.TEXT_0016")
+            title = Escape(View:AttachmentName(group.item)) .. Addon:T("UI.TEXT_0016")
             Add(Addon:T("UI.TEXT_0378") .. group.normalQuantity .. Addon:T("UI.TEXT_0003") .. group.codQuantity .. " · " .. group.mailCount .. Addon:T("UI.TEXT_0033"))
             for _, source in ipairs(group.sources) do
                 local entry = source.entry
@@ -604,8 +607,10 @@ function UI:Refresh(parent, context)
         local searchWidth = math.max(160, contentWidth - 108)
         top = Flow({ { root.search, searchWidth }, { root.clear, 100 } }, left, top, contentWidth)
         root.source:SetValue(state.source or "all"); root.sort:SetValue(state.sort); root.risk:SetValue(state.risk)
-        root.kind:SetOptions({ { value = "all", label = Addon:T("HISTORY.CONTENT_ALL") }, { value = "items", label = Addon:T("UI.TEXT_0203") }, { value = "money", label = Addon:T("UI.TEXT_0204") },
-            { value = "cod", label = Addon:T("UI.TEXT_0110") }, { value = "returned", label = Addon:T("UI.TEXT_0578") }, { value = "empty", label = Addon:T("UI.TEXT_0370") } }); root.kind:SetValue(state.kind)
+        local kindOptions = { { value = "all", label = Addon:T("HISTORY.CONTENT_ALL") }, { value = "items", label = Addon:T(Addon.FEATURES.currencyAttachments and "UI.TEXT_0205" or "UI.TEXT_0203") }, { value = "money", label = Addon:T("UI.TEXT_0204") },
+            { value = "cod", label = Addon:T("UI.TEXT_0110") }, { value = "returned", label = Addon:T("UI.TEXT_0578") }, { value = "empty", label = Addon:T("UI.TEXT_0370") } }
+        if Addon.FEATURES.currencyAttachments then table.insert(kindOptions, 3, { value = "currency", label = Addon:T("ATTACHMENT.CURRENCY_FILTER") }) end
+        root.kind:SetOptions(kindOptions); root.kind:SetValue(state.kind)
         top = Flow({ { root.source, 132 }, { root.kind, 128 }, { root.risk, 130 }, { root.sort, 114 }, { root.mail, 78 }, { root.items, 96 } }, left, top, contentWidth)
         root.mail:SetState(state.mode == "mail" and "selected" or "default"); root.items:SetState(state.mode == "items" and "selected" or "default")
         local totals = Model:Totals(entries)

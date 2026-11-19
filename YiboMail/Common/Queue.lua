@@ -54,11 +54,7 @@ function Queue:Pause(reason, code)
     self:Notify()
 end
 local function HasRegularBagSpace()
-    local slots = C_Container and C_Container.GetContainerNumFreeSlots or GetContainerNumFreeSlots
-    if not slots then return nil end
-    local free = 0
-    for bag = 0, NUM_BAG_SLOTS or 4 do local count, family = slots(bag); if family == 0 then free = free + (count or 0) end end
-    return free > 0
+    return Addon.CollectionRuntime:HasRegularBagSpace()
 end
 local function CurrentInboxIndex(queue, originalIndex)
     if queue.positions then return queue.positions[originalIndex] end
@@ -271,6 +267,7 @@ function Queue:Start(actions)
         local index = tonumber(action.original and action.original.inboxIndex)
         local mail = index and mails[index]
         if not mail or mail.signature ~= action.signature then return nil, Addon:T("UI.TEXT_0312") end
+        if Addon:RequiresManualMailReview(mail) then return nil, Addon:T("INBOX.GM_MANUAL_OPEN") end
         if mail.cod > 0 then return nil, Addon:T("UI.TEXT_0112") end
         if action.slot == "money" then
             if mail.money <= 0 or mail.money ~= action.original.money then return nil, Addon:T("UI.TEXT_0620") end
@@ -341,7 +338,7 @@ function Queue:Next()
     end
     local current = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     if not current or current.id ~= action.characterID then self:Pause(Addon:T("UI.TEXT_0278")); return end
-    if InCombatLockdown and InCombatLockdown() then self:Pause(Addon:T("UI.TEXT_0306")); return end
+    if Addon.CollectionRuntime:InCombat() then self:Pause(Addon:T("UI.TEXT_0306")); return end
     local mails = self.verifiedMails
     local originalIndex = tonumber(action.original and action.original.inboxIndex)
     local index = originalIndex and CurrentInboxIndex(self, originalIndex)
@@ -392,6 +389,7 @@ function Queue:Next()
         end
     end
     self.preflight = nil
+    if Addon:RequiresManualMailReview(mail) then self:Pause(Addon:T("INBOX.GM_MANUAL_OPEN")); return end
     if mail.cod > 0 then self:Pause(Addon:T("UI.TEXT_0112")); return end
     -- Only money and the attachment array change. Item observations remain
     -- immutable, so copying their full payload again serves no isolation need.
@@ -406,9 +404,11 @@ function Queue:Next()
             if item.attachmentIndex == action.slot and item.variantKey == action.item.variantKey and item.quantity == action.item.quantity then match = index end
         end
         if not match then self:Pause(Addon:T("UI.TEXT_0632")); return end
-        local hasSpace = HasRegularBagSpace()
-        if hasSpace == nil then self:Pause(Addon:T("UI.TEXT_0367"), "bag-space-unknown"); return end
-        if not hasSpace then self:Pause(Addon:T("UI.TEXT_0377"), "bag-full"); return end
+        if not action.item.currencyID then
+            local hasSpace = HasRegularBagSpace()
+            if hasSpace == nil then self:Pause(Addon:T("UI.TEXT_0367"), "bag-space-unknown"); return end
+            if not hasSpace then self:Pause(Addon:T("UI.TEXT_0377"), "bag-full"); return end
+        end
         table.remove(expected.attachments, match)
     end
     expected.signature = Addon.Scanner:Signature(expected)
@@ -419,7 +419,7 @@ function Queue:Next()
         startedAt = GetTime(), success = false, updated = false }
     self.lastRequestAt = self.pending.startedAt
     self.invoking = true
-    local fn = action.slot == "money" and TakeInboxMoney or TakeInboxItem
+    local fn = Addon.CollectionRuntime:GetTakeFunction(action.slot)
     local ok, errorMessage
     if type(fn) == "function" then
         if action.slot == "money" then ok, errorMessage = pcall(fn, mail.inboxIndex) else ok, errorMessage = pcall(fn, mail.inboxIndex, action.slot) end
@@ -687,14 +687,10 @@ function Queue:Install()
     self.installed = true
     -- Pending collection/return requests already schedule bounded checks and
     -- enforce their timeout there. An idle queue needs no per-frame callback.
-    if hooksecurefunc then
-        for _, name in ipairs({ "TakeInboxItem", "TakeInboxMoney", "AutoLootMailItem", "ReturnInboxItem", "DeleteInboxItem" }) do
-            if type(_G[name]) == "function" then hooksecurefunc(name, function()
+    Addon.CollectionRuntime:ObserveActions(function()
                 if (Queue.state == "running" or Queue.pending) and not Queue.invoking then
                     if Queue.pending then Queue.pending.interference = true end
                     Queue:Pause(Addon:T("UI.TEXT_0419"))
                 end
-            end) end
-        end
-    end
+    end)
 end

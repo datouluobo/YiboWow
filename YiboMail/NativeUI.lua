@@ -44,13 +44,18 @@ local function Tooltip(control, title, detail, link)
     end)
     control:SetScript("OnLeave", function() GameTooltip:Hide() end)
 end
--- Shared widgets are reused by the Mists mailbox surface.
+-- Shared widgets are reused by both mailbox surfaces.
 Native.inboxWidgets = { Text, InboxButton, Surface, Tooltip, BACKDROP }
+function Native:MailboxTabs()
+    local tabs = { { "mail", Addon:T("UI.TEXT_0344") }, { "items", Addon:T("UI.TEXT_0635") }, { "send", Addon:T("UI.TEXT_0179") } }
+    if Addon.FEATURES.rules then tabs[#tabs + 1] = { "rules", Addon:T("MAILBOX.RULES") } end
+    return tabs
+end
 function Native:InstallMailboxTabs()
     if self.mailboxTabs or not MailFrameTab1 or not MailFrameTab2 then return end
     self.mailboxTabs = {}
     -- Own the navigation controls; leave Blizzard's two-page registry untouched.
-    for _, entry in ipairs({ { "mail", Addon:T("UI.TEXT_0344") }, { "items", Addon:T("UI.TEXT_0635") }, { "send", Addon:T("UI.TEXT_0179") }, { "rules", Addon:T("MAILBOX.RULES") } }) do
+    for _, entry in ipairs(self:MailboxTabs()) do
         local key = entry[1]
         local tab = Addon.Core.UITheme:CreateButton(MailFrame, 1, entry[2], "secondary")
         local theme = Addon.Core.UITheme
@@ -77,9 +82,11 @@ end
 function Native:LayoutMailboxTabs()
     if not self.mailboxTabs then return end
     local gap = 2
-    local width = math.max(1, (MailFrame:GetWidth() - gap * 3) / 4)
+    local tabs = self:MailboxTabs()
+    local width = math.max(1, (MailFrame:GetWidth() - gap * (#tabs - 1)) / #tabs)
     local height = Addon.Core.UITheme.Size.compact
-    for index, key in ipairs({ "mail", "items", "send", "rules" }) do
+    for index, entry in ipairs(tabs) do
+        local key = entry[1]
         local tab = self.mailboxTabs[key]
         tab:ClearAllPoints()
         tab:SetSize(width, height)
@@ -123,82 +130,11 @@ function Native:SelectMailboxTab(key)
 end
 function Native:SetMailRecipient(address)
     if not SendMailNameEditBox or type(address) ~= "string" or address == "" then return false end
+    address = Addon.Compose:NativeRecipient(address)
     SendMailNameEditBox:SetText(address)
     if type(_G.SendMailFrame_Update) == "function" then _G.SendMailFrame_Update() end
     SendMailNameEditBox:ClearFocus()
     return SendMailNameEditBox:GetText() == address
-end
-function Native:CaptureMoneySendDraft()
-    local compose = Addon.Compose
-    local draft = { recipient = SendMailNameEditBox and SendMailNameEditBox:GetText() or "",
-        subject = SendMailSubjectEditBox and SendMailSubjectEditBox:GetText() or "",
-        body = compose and compose:GetBodyEditBox() and compose:GetBodyEditBox():GetText() or "",
-        copper = MoneyInputFrame_GetCopper and SendMailMoney and MoneyInputFrame_GetCopper(SendMailMoney) or 0,
-        cod = SendMailCODButton and SendMailCODButton:GetChecked() and true or false, attachments = {} }
-    for _, item in ipairs(compose and compose:GetAttachments() or {}) do
-        draft.attachments[#draft.attachments + 1] = { item.slot, item.itemLink or item.itemID, item.quantity }
-    end
-    return draft
-end
-function Native:MoneySendDraftMatches(expected)
-    if not expected or not Addon.Scanner:IsOpen() then return false end
-    local current = self:CaptureMoneySendDraft()
-    for _, key in ipairs({ "recipient", "subject", "body", "copper", "cod" }) do
-        if current[key] ~= expected[key] then return false end
-    end
-    if #current.attachments ~= #expected.attachments then return false end
-    for index, item in ipairs(expected.attachments) do
-        local actual = current.attachments[index]
-        if not actual or actual[1] ~= item[1] or actual[2] ~= item[2] or actual[3] ~= item[3] then return false end
-    end
-    return current.copper > 0
-end
-function Native:ConfirmMoneySend(button, original, clickArgs)
-    if Addon.db and Addon.db.settings and Addon.db.settings.confirmGoldSend == false then
-        original(button, unpack(clickArgs)); return
-    end
-    if not StaticPopupDialogs or not StaticPopup_Show then
-        Addon:Print(Addon:T("UI.TEXT_0671")); return
-    end
-    StaticPopupDialogs.YIBOMAIL_CONFIRM_GOLD_SEND = StaticPopupDialogs.YIBOMAIL_CONFIRM_GOLD_SEND or {
-        text = "%s", button1 = Addon:T("UI.TEXT_0463"), button2 = Addon:T("UI.TEXT_0192"), timeout = 0,
-        whileDead = true, hideOnEscape = 1, preferredIndex = 3,
-        OnAccept = function(_, data)
-            if Native.moneyConfirmPending ~= data then return end
-            Native.moneyConfirmPending = nil
-            if not Native:MoneySendDraftMatches(data.draft) or not data.button:IsEnabled() then
-                Addon:Print(Addon:T("UI.TEXT_0672")); return
-            end
-            data.original(data.button, unpack(data.clickArgs))
-        end,
-        OnCancel = function(_, data)
-            if Native.moneyConfirmPending == data then Native.moneyConfirmPending = nil end
-        end,
-    }
-    if self.moneyConfirmPending then return end
-    local draft = self:CaptureMoneySendDraft()
-    if draft.copper <= 0 then original(button, unpack(clickArgs)); return end
-    local data = { draft = draft, button = button, original = original, clickArgs = clickArgs }
-    self.moneyConfirmPending = data
-    local popup = StaticPopup_Show("YIBOMAIL_CONFIRM_GOLD_SEND",
-        Addon:T("UI.TEXT_0670", draft.recipient, View:Money(draft.copper)), nil, data)
-    if not popup then self.moneyConfirmPending = nil; Addon:Print(Addon:T("UI.TEXT_0671")) end
-end
-function Native:InstallMoneySendConfirmation()
-    local button = _G.SendMailMailButton or _G.SendMailSendButton
-    if self.moneyConfirmationInstalled or not button then return end
-    local original = button:GetScript("OnClick")
-    if type(original) ~= "function" then return end
-    self.moneyConfirmationInstalled, self.nativeSendButton = true, button
-    button:SetScript("OnClick", function(control, ...)
-        if Native.moneyConfirmPending then return end
-        if Addon.Compose and Addon.Compose:HasSendMoney() then
-            local args = { ... }
-            Native:ConfirmMoneySend(control, original, args)
-            return
-        end
-        return original(control, ...)
-    end)
 end
 local function ContactAddressKey(value)
     return string.lower((tostring(value or "")):gsub("%s", ""))
@@ -379,7 +315,7 @@ function Native:CreateBasicSend()
             -- Escape uses string.gsub internally, which also returns the
             -- replacement count. Parenthesize it so the tooltip receives only
             -- the escaped string as its first argument.
-            GameTooltip:SetText((Addon.Recipients:Escape(contact.address)))
+            GameTooltip:SetText((Addon.Recipients:Escape(Addon.Compose:NativeRecipient(contact.address))))
             if Addon.RuleSendUI and Addon.RuleSendUI.active then
                 local c = Addon.RuleSendController
                 local ready = c.state == "ready" and c.packet and Addon.Recipients:Key(c.packet[1].recipient) == Addon.Recipients:Key(contact.address)
@@ -997,14 +933,10 @@ function Native:Install()
         return
     end
     self.installed = true
-    if Addon.FEATURES.send and hooksecurefunc and type(ContainerFrameItemButton_OnModifiedClick) == "function" then
-        hooksecurefunc("ContainerFrameItemButton_OnModifiedClick", function(button)
-            if not button or not IsControlKeyDown or not IsControlKeyDown()
+    if Addon.FEATURES.send and hooksecurefunc then
+        Addon.Compose:InstallBagItemClicks(function(bag, slot)
+            if not IsControlKeyDown or not IsControlKeyDown()
                 or not SendMailFrame or not SendMailFrame:IsShown() or (CursorHasItem and CursorHasItem()) then return end
-            local parent = button:GetParent()
-            local bag = button.bagID or (parent and (parent:GetID() or parent.bagID))
-            local slot = button:GetID()
-            if bag == nil or not slot then return end
             local ok, message = Addon.Compose:AddMatchingBagItems(bag, slot)
             if self.send then self.send.notice = message; self:RefreshSend() end
         end)
@@ -1013,7 +945,7 @@ function Native:Install()
         StyleNativeActionButton(_G.SendMailMailButton or _G.SendMailSendButton, true, "UI.TEXT_0182")
         StyleNativeActionButton(SendMailCancelButton, false, "UI.TEXT_0192")
     end
-    if Addon.FEATURES.send then self:InstallMoneySendConfirmation() end
+    if Addon.FEATURES.send and not (Addon.Target and Addon.Target.nativeMoneyConfirmation) then self:InstallMoneySendConfirmation() end
     self:CreateInbox()
     if Addon.FEATURES.send then self:CreateBasicSend(); if Addon.RuleSendUI then Addon.RuleSendUI:Install() end end
     if Addon.FEATURES.send and hooksecurefunc and type(SendMailFrame_Update) == "function" then
@@ -1055,10 +987,7 @@ function Native:Install()
         Native:RestoreBrowsePageWhenShown()
     end)
     MailFrame:HookScript("OnHide", function()
-        if Native.moneyConfirmPending then
-            StaticPopup_Hide("YIBOMAIL_CONFIRM_GOLD_SEND")
-            Native.moneyConfirmPending = nil
-        end
+        Native:CancelMoneySendConfirmation()
         Native:SetInboxShell(false)
         if Addon.RuleSendUI then Addon.RuleSendUI:SetActive(false) end
         Native.deleting = nil

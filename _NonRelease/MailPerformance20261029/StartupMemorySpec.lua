@@ -5,7 +5,7 @@ function CreateFrame() frames=frames+1; return {} end
 MailFrame={IsShown=function() return false end,HookScript=function() hooks=hooks+1 end}
 InboxFrame={}; SendMailFrame={}; SendMailNameEditBox={}; SendMailCancelButton={}
 function InCombatLockdown() return false end
-for _,file in ipairs({'Namespace','Store','NativeUI','Mists/InboxUI'}) do dofile('YiboMail/'..file..'.lua') end
+for _,file in ipairs({'Namespace','Store','NativeUI', 'Common/MoneySendConfirmation', 'Mists/NativeSend','Common/InboxUI'}) do dofile('YiboMail/'..file..'.lua') end
 local A=YiboMail; local loaded=frames
 for i=1,10 do A.NativeUI:Install() end
 assert(frames==loaded and hooks==1 and not A.NativeUI.installed and not A.NativeUI.readyInbox)

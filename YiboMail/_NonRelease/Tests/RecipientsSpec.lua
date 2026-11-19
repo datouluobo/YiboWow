@@ -14,7 +14,7 @@ A.Core = { Characters = { GetCurrent = function() return current end, GetAllCach
     Events = { Register = function(_, event, owner, callback) events[event] = function(...) callback(owner, ...) end end },
     AccountView = { GetVisibleCharacters = function() return { current, other } end } }
 A.db = { contacts = { { address = "Alpha", label = "First" }, { address = "alpha-Realm-With-Hyphen" }, { address = "|bad" }, { address = "Beta-Other Realm" } } }
-dofile("YiboMail/Recipients.lua")
+dofile("YiboMail/Recipients.lua"); dofile("YiboMail/Common/RecipientRuntime.lua")
 local R = A.Recipients; R:Initialize()
 assert(A.db.recipientSchemaVersion == 1 and #A.db.contacts == 4 and #A.db.quickRecipients == 2)
 assert(R.migrationSkipped == 1 and A.db.quickRecipients[1] ~= A.db.contacts[1])

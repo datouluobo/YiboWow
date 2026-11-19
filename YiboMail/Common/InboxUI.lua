@@ -154,8 +154,10 @@ function Native:CreateInbox()
     theme:AttachClearButton(panel.search)
     panel.filter = self:Dropdown(panel, 96, Addon:T("UI.TEXT_0138")); panel.filter:SetHeight(height); panel.filter:SetPoint("RIGHT", panel.close, "LEFT", -6, 0)
     panel.search:SetPoint("RIGHT", panel.filter, "LEFT", -6, 0)
-    panel.filter:SetOptions({ { value = "all", label = Addon:T("UI.TEXT_0138") }, { value = "items", label = Addon:T("UI.TEXT_0205") }, { value = "money", label = Addon:T("UI.TEXT_0204") },
-        { value = "cod", label = Addon:T("UI.TEXT_0110") }, { value = "returned", label = Addon:T("UI.TEXT_0578") }, { value = "urgent", label = Addon:T("UI.TEXT_0084") } })
+    local kindOptions = { { value = "all", label = Addon:T("UI.TEXT_0138") }, { value = "items", label = Addon:T("UI.TEXT_0205") }, { value = "money", label = Addon:T("UI.TEXT_0204") },
+        { value = "cod", label = Addon:T("UI.TEXT_0110") }, { value = "returned", label = Addon:T("UI.TEXT_0578") }, { value = "urgent", label = Addon:T("UI.TEXT_0084") } }
+    if Addon.FEATURES.currencyAttachments then table.insert(kindOptions, 3, { value = "currency", label = Addon:T("ATTACHMENT.CURRENCY_FILTER") }) end
+    panel.filter:SetOptions(kindOptions)
     panel.filter:SetValue("all"); panel.filter:SetOnValueChanged(function(value) panel.options.kind = value; Native:RememberInboxFilters(); Native:RefreshInbox() end)
     panel.scroll = Addon.Core.UITheme:CreateScrollFrame(panel); panel.scroll:SetPoint("TOPLEFT", 8, -height - 14); panel.scroll:SetPoint("BOTTOMRIGHT", -8, theme.Size.compact + 20)
     panel.scroll:SetFrameLevel(panel:GetFrameLevel() + 2)
@@ -276,7 +278,7 @@ function Native:Row(data)
     row.iconHover:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonUp")
     row.iconHover:SetScript("OnClick", data.onClick)
     local item = data.item or (data.itemList or {})[1]
-    Tooltip(row.iconHover, data.title, data.tooltip or data.detail, item and (item.itemLink or item.itemID and ("item:" .. item.itemID)) or data.itemLink)
+    Tooltip(row.iconHover, data.title, data.tooltip or data.detail, item and View:AttachmentLink(item) or data.itemLink)
     row.iconHover:SetShown(item ~= nil or data.itemLink ~= nil)
     self:RowItems(row, data.itemList)
     if data.empty then
@@ -359,7 +361,8 @@ function Native:OpenMail(entry, keepOpen)
         if current and current.signature ~= entry.mail.signature then current = nil end
     end
     if not current then self.inbox.notice = err or Addon:T("UI.TEXT_0594"); self:RefreshInbox(); return end
-    if OpenMail_Update and ShowUIPanel then
+    local update = OpenMail_Update or (OpenMailFrame and OpenMailFrame.Update)
+    if update and ShowUIPanel then
         local index = entry.mail.inboxIndex
         InboxFrame.openMailID = index
         OpenMailFrame.updateButtonPositions = true
@@ -369,10 +372,11 @@ function Native:OpenMail(entry, keepOpen)
         -- frame is visible so the sender, subject, body and attachments remain
         -- present in the native panel.
         OpenMailFrame.updateButtonPositions = true
-        OpenMail_Update()
+        update(OpenMailFrame)
         self.openMailKey = entry.key
         if Addon.MarkMailOpened then Addon:MarkMailOpened(entry) else entry.mail.openedByUser = true end
-        if InboxFrame_Update then InboxFrame_Update() end
+        local updateInbox = InboxFrame_Update or (InboxFrame and InboxFrame.Update)
+        if updateInbox then updateInbox(InboxFrame) end
         if Addon.Scanner.Schedule then Addon.Scanner:Schedule() end
         return true, current
     end
@@ -413,7 +417,7 @@ function Native:ReadDisplayedMails(entries)
     if not Addon.Scanner.IsOpen or not Addon.Scanner:IsOpen() then return end
     local seen, batch = {}, {}
     for _, entry in ipairs(entries) do
-        if not seen[entry.key] then
+        if not seen[entry.key] and not Addon:RequiresManualMailReview(entry.mail) then
             seen[entry.key] = true
             if not entry.mail.wasRead or not entry.mail.openedByUser then self:ReadMail(entry, true, batch) end
         end
@@ -468,7 +472,7 @@ function Native:EntryRows(entry)
     panel.rows[panel.used]:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonUp")
     if panel.expanded[entry.key] then
         for _, item in ipairs(mail.attachments) do
-            self:Row({ title = item.itemLink or View:Escape(item.name), detail = Addon:T("UI.TEXT_0631") .. item.attachmentIndex .. " · " .. (mail.cod > 0 and (Addon:T("UI.TEXT_0109") .. View:Money(mail.cod)) or (entry.actionable and Addon:T("UI.TEXT_0196") or entry.restriction)),
+            self:Row({ title = item.itemLink or View:Escape(View:AttachmentName(item)), detail = Addon:T("UI.TEXT_0631") .. item.attachmentIndex .. " · " .. (mail.cod > 0 and (Addon:T("UI.TEXT_0109") .. View:Money(mail.cod)) or (entry.actionable and Addon:T("UI.TEXT_0196") or entry.restriction)),
                 mailOriginalIndex = mail.inboxIndex, mailEntryKey = entry.key, mailAttachmentSlot = item.attachmentIndex,
                 texture = item.texture, quantity = item.quantity, expiry = View:Expiry(mail), expiryMail = mail, indent = true, item = item, itemLink = item.itemLink, actions = Addon:GetInboxActions(entry, item),
                 onClick = function(_, mouse)
@@ -641,7 +645,7 @@ function Native:ItemTile(group, index, columns, size)
             GameTooltip:Show()
             return
         end
-        local itemLink = group.item.itemLink
+        local itemLink = View:AttachmentLink(group.item)
         if itemLink and itemLink ~= "" then
             GameTooltip:SetHyperlink(itemLink)
         elseif group.item.itemID then
@@ -798,7 +802,7 @@ function Native:RefreshCollectedMailRow(action)
         end
         mainRow.count:SetText(#mail.attachments == 1 and tostring(mail.attachments[1].quantity) or "")
         local item = mail.attachments[1]
-        Tooltip(mainRow.iconHover, View:Escape(mail.sender), View:Escape(mail.subject), item and (item.itemLink or item.itemID and ("item:" .. item.itemID)))
+        Tooltip(mainRow.iconHover, View:Escape(mail.sender), View:Escape(mail.subject), item and View:AttachmentLink(item))
         mainRow.iconHover:SetShown(item ~= nil)
         mainRow.expiry:SetText(View:Expiry(mail)); mainRow.expiry:SetTextColor(View:ExpiryColor(mail))
         local attachments = {}; for _, item in ipairs(mail.attachments) do attachments[#attachments + 1] = View:Escape(item.name or item.itemLink or Addon:T("UI.TEXT_0624")) end

@@ -62,7 +62,7 @@ function U:Create()
         GameTooltip:SetOwner(control, "ANCHOR_RIGHT")
         local saved = U.slot and Addon.db.quickRecipients[U.slot]
         local address = saved and saved.address or SendMailNameEditBox and SendMailNameEditBox:GetText() or ""
-        GameTooltip:SetText((R:Escape(address))); GameTooltip:Show()
+        GameTooltip:SetText((R:Escape(Addon.Compose:NativeRecipient(address)))); GameTooltip:Show()
     end)
     p.action:SetScript("OnLeave", function() GameTooltip:Hide() end)
     p.manage = Button(Addon:T("UI.TEXT_0513"), function()
@@ -309,7 +309,7 @@ function U:Refresh()
                     GameTooltip:AddLine(Addon:T("UI.TEXT_0122") .. R.invalidContacts .. Addon:T("UI.TEXT_0039"), 0.8, 0.85, 0.83, true); GameTooltip:Show(); return
                 end
                 if not entry.address then return end
-                GameTooltip:SetOwner(control, "ANCHOR_RIGHT"); GameTooltip:SetText((R:Escape(entry.address)))
+                GameTooltip:SetOwner(control, "ANCHOR_RIGHT"); GameTooltip:SetText((R:Escape(Addon.Compose:NativeRecipient(entry.address))))
                 if entry.sources then GameTooltip:AddLine(table.concat(entry.sources, Addon:T("UI.TEXT_0078")), 0.8, 0.85, 0.83, true) end
                 if U.source == "accountFriends" then
                     for _, owner in ipairs(R:FriendOwners(entry.address)) do GameTooltip:AddLine(R:Escape(owner), 0.8, 0.85, 0.83, true) end
