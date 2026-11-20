@@ -16,6 +16,7 @@ function Addon:Initialize()
     if not self:RegisterWithCore() then return false end
     self.initialized = true
     if self.MailProvider then self.MailProvider:Install() end
+    self.Tooltip:Install()
     for _, event in ipairs({ "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "PLAYER_LOGOUT", "BAG_UPDATE_DELAYED", "UNIT_INVENTORY_CHANGED", "PLAYER_EQUIPMENT_CHANGED" }) do self.Frame:RegisterEvent(event) end
     self._unsupportedEvents = {}
     for _, event in ipairs({ "BAG_UPDATE", "BANKFRAME_OPENED", "BANKFRAME_CLOSED", "PLAYERBANKSLOTS_CHANGED", "BAG_CONTAINER_UPDATE", "BANK_TABS_CHANGED", "MAIL_SHOW", "MAIL_CLOSED", "MAIL_INBOX_UPDATE", "AUCTION_HOUSE_SHOW", "AUCTION_HOUSE_CLOSED", "OWNED_AUCTIONS_UPDATED", "AUCTION_HOUSE_THROTTLED_SYSTEM_READY", "GUILDBANKFRAME_OPENED", "GUILDBANKFRAME_CLOSED", "GUILDBANKBAGSLOTS_CHANGED", "GUILDBANK_UPDATE_TABS", "GUILD_ROSTER_UPDATE", "PLAYER_GUILD_UPDATE" }) do

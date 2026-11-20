@@ -47,6 +47,9 @@ end
 local function SourceSnapshotAvailable(result, characterID, source)
     local coverage = result.coverage and result.coverage[source] and result.coverage[source][characterID]
     local locations = coverage and coverage.locations or {}
+    if Addon.TooltipSourceSnapshotAvailable then
+        return Addon:TooltipSourceSnapshotAvailable(source, locations, SnapshotAvailable)
+    end
     if source == "bags" then
         for bagID = 0, (tonumber(NUM_BAG_SLOTS) or 4) do
             if not SnapshotAvailable(locations[tostring(bagID)], source) then return false end
@@ -129,7 +132,8 @@ local function CachedQuery(self, scope, itemID)
     end
     local cached = self.cacheResults[itemID]
     if cached then return cached end
-    local result = Addon.Items:Query({ scope = scope, itemID = itemID })
+    local result = Addon.QueryTooltip and Addon:QueryTooltip(scope, itemID)
+        or Addon.Items:Query({ scope = scope, itemID = itemID })
     if #self.cacheOrder >= 64 then
         self.cacheResults[table.remove(self.cacheOrder, 1)] = nil
     end

@@ -57,7 +57,7 @@ local function Boot(saved, coreSaved, configure, forever)
     return env, core, env.YiboVault, event, Flush, data
 end
 local env, core, vault, event, flush, data = Boot()
-Check(vault.initialized and vault.VERSION == "0.6.4-api1", "Vault initialized on actual Core")
+Check(vault.initialized and vault.VERSION == "0.6.5-api1", "Vault initialized on actual Core")
 Check(env.YiboVaultDB.sentinel == "mists" and not env.YiboVaultDB.byCharacter, "MoP saved table untouched")
 Check(vault.Items:HasCapability("source.bags", 1) and vault.Items:HasCapability("source.bank", 1), "honest source capabilities")
 Check(not vault.GuildBank and not vault.MailItems and not vault.AuctionHouse, "unsupported modules not loaded")
@@ -102,6 +102,42 @@ Check(#page.renderedRecords==1 and page.grid[1].record.location.container==1, "c
 page.container.menu.buttons[1]:Fire("OnClick"); flush()
 local rosterAlt = {id="VaultRosterAlt",name="Alt",realm="Realm"}
 vault.db.byCharacter[rosterAlt.id] = core.Defaults:Copy(vault.db.byCharacter[env.TEST_GUID])
+for _, locations in pairs(vault.db.byCharacter[rosterAlt.id].bags) do
+    for _, record in ipairs(locations) do record.characterID = rosterAlt.id end
+end
+local currentCharacter = core.Characters:GetCurrent({ identityOnly = true })
+local getVisible = core.AccountView.GetVisibleCharacters
+local sortCharacters = core.CharacterSort.Sort
+core.AccountView.GetVisibleCharacters = function() return { currentCharacter, rosterAlt, { id = "Elsewhere", name = "Elsewhere", realm = "Other" } } end
+core.CharacterSort.Sort = function(_, characters) return characters end
+rosterAlt.realm = currentCharacter.realm
+local scoped, visible = vault.AccountPage:GetTooltipScope()
+Check(#scoped.characterIDs == 2 and #visible == 2, "tooltip defaults to current realm")
+vault.db.settings.tooltipRealmScope = "all"
+scoped = vault.AccountPage:GetTooltipScope()
+Check(#scoped.characterIDs == 3, "tooltip all-realms scope includes other realms")
+vault.db.settings.tooltipRealmScope = nil
+core.AccountView.GetVisibleCharacters, core.CharacterSort.Sort = getVisible, sortCharacters
+local tooltipScope = { mode = "characters", characterIDs = { currentCharacter.id, rosterAlt.id } }
+local tooltipResult = vault:QueryTooltip(tooltipScope, 42)
+Check(#tooltipResult.records == 2 and tooltipResult.coverage.bags[rosterAlt.id], "tooltip reads current and offline snapshots")
+local oldScope = vault.AccountPage.GetTooltipScope
+vault.AccountPage.GetTooltipScope = function() return tooltipScope, { currentCharacter, rosterAlt }, false end
+local itemTooltip = { lines = {} }
+function itemTooltip:AddLine(value) self.lines[#self.lines + 1] = value end
+function itemTooltip:AddDoubleLine(left, right) self.lines[#self.lines + 1] = left .. " " .. right end
+function itemTooltip:Show() end
+vault.Tooltip:Append(itemTooltip, 42)
+local tooltipText = table.concat(itemTooltip.lines, "\n")
+Check(tooltipText:find("|cff20e0706|r", 1, true) and tooltipText:find("Alt", 1, true), "tooltip displays summed quantity and offline character")
+local lineCount = #itemTooltip.lines
+vault.Tooltip:Append(itemTooltip, 42)
+Check(#itemTooltip.lines == lineCount and vault.Tooltip.installed, "tooltip hook is installed and summary is not duplicated")
+local hooks = #env.GameTooltip.hooks.OnShow
+vault:Initialize()
+Check(#env.GameTooltip.hooks.OnShow == hooks, "repeated initialization does not install tooltip hooks twice")
+Check(vault:TooltipSourceSnapshotAvailable("bank", { ["7"] = { completedScan = true } }, function(state) return state.completedScan end), "Forever bank uses observed tab coverage")
+vault.AccountPage.GetTooltipScope = oldScope
 local rosterContext = {characters={core.Characters:GetCurrent(),rosterAlt},surfaceAvailableWidth=920}
 vault.AccountPage:Refresh(page,rosterContext)
 local readsBeforeAlt = data.reads
