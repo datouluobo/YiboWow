@@ -134,7 +134,8 @@ assert(failed == 1 and not resolverFrame.scripts.OnUpdate)
 
 YAB = { LockoutLocaleReady = true }
 GetInstanceInfo = function() return "", "none", 0, "", 0, 0, false, 0 end
-dofile('YiboAltoBoss/InstanceLockouts.lua')
+dofile("YiboAltoBoss/Common/InstanceProgress.lua")
+dofile('YiboAltoBoss/Mists/InstanceLockouts.lua')
 local bossFrame, requests, scans = frames[#frames], 0, 0
 YAB.RecordNormalInstanceEntry = function() end
 YAB.RefreshInstanceLockouts = function() scans = scans + 1 end

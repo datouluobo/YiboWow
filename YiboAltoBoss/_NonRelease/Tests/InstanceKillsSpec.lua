@@ -41,8 +41,8 @@ YiboCore = {
     },
 }
 YAB = { GetCurrentCharKey = function() return "Tester-Realm" end }
-dofile(root .. "Locale.lua")
-dofile(root .. "LockoutLocale.lua")
+dofile(root .. "Common/Locale.lua")
+dofile(root .. "Common/LockoutLocale.lua")
 local resourceCount = 0
 for key, zh in pairs(resources.zh) do
     resourceCount = resourceCount + 1
@@ -54,9 +54,10 @@ for key, zh in pairs(resources.zh) do
     assert(signature(zh) == signature(en), key .. " format signature")
 end
 check(resourceCount >= 35, "all loaded resource pairs have matching format arguments")
-dofile(root .. "DungeonBossCatalog.lua")
-dofile(root .. "DungeonRuns.lua")
-dofile(root .. "InstanceLockouts.lua")
+dofile(root .. "Mists/DungeonBossCatalog.lua")
+dofile(root .. "Mists/DungeonRuns.lua")
+dofile("YiboAltoBoss/Common/InstanceProgress.lua")
+dofile(root .. "Mists/InstanceLockouts.lua")
 local frame = frames[#frames]
 local function event(name, ...) frame.callback(frame, name, ...) end
 local function reset()
@@ -206,7 +207,7 @@ YAB.TargetCatalog = {
     } } end,
 }
 DBM = nil
-dofile(root .. "DungeonDBM.lua")
+dofile(root .. "Mists/DungeonDBM.lua")
 local bridge = YAB.DungeonDBM
 check(bridge and not bridge:Attach(), "DBM absent: optional bridge unavailable")
 reset()
@@ -322,7 +323,7 @@ dbm("DBM_Kill", chillheart)
 check(totals() == 1, "world transition discards stale pull")
 reset()
 event("BOSS_KILL", 1146, "Randolph Moloch")
-dofile(root .. "DungeonRuns.lua")
+dofile(root .. "Mists/DungeonRuns.lua")
 now = now + 500
 event("BOSS_KILL", 1146, "Randolph Moloch")
 check(totals() == 1, "per-run completion survives module reload and long delay")
@@ -378,10 +379,11 @@ bridge:Shutdown()
 check(not YiboCore.Events:HasListeners(bridge.eventName), "shutdown cleans Core subscription")
 api = 12
 YAB = { GetCurrentCharKey = function() return "Tester-Realm" end }
-dofile(root .. "LockoutLocale.lua")
-dofile(root .. "InstanceLockouts.lua")
+dofile(root .. "Common/LockoutLocale.lua")
+dofile("YiboAltoBoss/Common/InstanceProgress.lua")
+dofile(root .. "Mists/InstanceLockouts.lua")
 check(not YAB.LockoutLocaleReady and not YAB.RecordDungeonDeath, "old Core stops locale-dependent module")
-dofile(root .. "CoreIntegration.lua")
+dofile(root .. "Mists/CoreIntegration.lua")
 local ok, err = YAB.CoreIntegration:Initialize()
 check(not ok and err:find("API v13", 1, true), "old Core receives explicit upgrade requirement")
 print("InstanceKillsSpec: " .. checks .. " checks passed")

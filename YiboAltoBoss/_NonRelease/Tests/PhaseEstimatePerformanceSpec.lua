@@ -3,7 +3,8 @@ local function upvalue(fn,name) for i=1,100 do local n,v=debug.getupvalue(fn,i);
 UnitName=function() return 'Tester' end; GetRealmName=function() return 'Realm' end; time=function() return 1000 end
 YiboCore={Locale={Get=function(_,_,key) return key end}}; YAB={}; YiboAltoBossDB={worldState={realms={}}}
 CreateFrame=function() return {RegisterEvent=function() end,SetScript=function() end} end
-dofile('YiboAltoBoss/Core.lua')
+dofile("YiboAltoBoss/Common/CustomTargets.lua")
+dofile('YiboAltoBoss/Mists/Core.lua')
 local byKey=upvalue(upvalue(YAB.GetBossPhaseState,'GetBossDefinition'),'bossByKey')
 for i=1,10 do byKey['b'..i]={key='b'..i} end
 local phaseReads, estimates=0,0

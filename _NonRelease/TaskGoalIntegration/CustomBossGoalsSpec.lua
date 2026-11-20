@@ -9,7 +9,8 @@ GetRealmName = function() return "甲" end
 UnitLevel = function() return 90 end
 UnitClass = function() return "法师", "MAGE" end
 wipe = function(t) for k in pairs(t) do t[k] = nil end end
-dofile("YiboAltoBoss/Core.lua")
+dofile("YiboAltoBoss/Common/CustomTargets.lua")
+dofile("YiboAltoBoss/Mists/Core.lua")
 YAB.PersistDB()
 assert(YAB.PlannedTargets:Initialize())
 local function Equal(a, b, label) checks = checks + 1; assert(a == b, label .. ": " .. tostring(a) .. " ~= " .. tostring(b)) end

@@ -1,1 +1,1 @@
--- Goal target provider moved to Common/GoalTargets.lua. Loaded only by the current TOC.
+-- Inert legacy path. The Mists TOC loads Mists/GoalTargets.lua.

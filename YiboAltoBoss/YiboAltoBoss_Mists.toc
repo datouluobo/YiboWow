@@ -1,0 +1,45 @@
+## Interface: 50504
+## Title: |cff20e070[Yibo]|r YiboAltoBoss - Boss & Weekly Tracker
+## Title-zhCN: |cff20e070[Yibo]|r YiboAltoBoss - 首领追踪
+## Title-zhTW: |cff20e070[Yibo]|r YiboAltoBoss - 首领追踪
+## Notes: Cross-character boss progress and phase observations.
+## Notes-zhCN: 跨角色首领进度与位面观察总览
+## Author: YiboSoft
+## Version: 2.8.7
+## IconTexture: Interface\AddOns\YiboAltoBoss\Media\YiboAltoBossIcon-128
+## SavedVariables: YiboAltoBossDB
+## RequiredDeps: YiboCore
+## Group: YiboCore
+## LoadOnDemand: 0
+## X-Yibo-Target: Mists
+
+Common/Startup.lua
+Mists/Target.lua
+Mists/CoreRequirements.lua
+Common/Locale.lua
+Common/CustomTargets.lua
+Mists/Core.lua
+Mists/Calendar.lua
+Mists/HolidayBoss.lua
+Mists/TrackingV3.lua
+Common/CustomTargetSettings.lua
+Mists/Settings.lua
+Common/LockoutLocale.lua
+Mists/DungeonBossCatalog.lua
+Mists/DungeonRuns.lua
+Common/InstanceProgress.lua
+Mists/InstanceLockouts.lua
+Mists/RaidCatalog.lua
+Mists/TargetCatalogRuntime.lua
+Mists/TargetCatalog.lua
+Mists/DungeonDBM.lua
+Mists/PlannedTargets.lua
+Mists/RaidProgress.lua
+Mists/RaidEvents.lua
+Mists/GoalTargets.lua
+Mists/TargetProjection.lua
+Common/LockoutsPage.lua
+Mists/LockoutsPage.lua
+Mists/AccountPage.lua
+Mists/CoreIntegration.lua
+Mists/Commands.lua

@@ -8,7 +8,7 @@ for i=1,30 do bosses[i] = { key = tostring(i), name = tostring(i) } end
 for i=1,20 do local id='C'..i; chars[i]={id=id}; YiboAltoBossDB.knownChars[id]={} end
 YAB = { GetBossList = function() calls=calls+1; local list={}; for _, b in ipairs(bosses) do list[#list+1]=b end; table.sort(list,function(a,b) return a.key<b.key end); return list end,
  IsBossKilled = function() return false end, GetBossKillStatus = function() return 'killed' end }
-dofile('YiboAltoBoss/CoreIntegration.lua')
+dofile('YiboAltoBoss/Mists/CoreIntegration.lua')
 local function upvalue(fn, wanted)
  for i=1,100 do local name,value=debug.getupvalue(fn,i); if not name then break end; if name==wanted then return value end end
  error('missing '..wanted)

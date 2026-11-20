@@ -2,6 +2,10 @@ local Core = _G.YiboCore
 local YAB = _G.YAB or {}
 _G.YAB = YAB
 YAB.CoreReady = false
+if YAB.MatchesTarget == false then
+    YAB.PrintStartupMessage("WRONG_MISTS")
+    return
+end
 local required = {
     { "calendar-day-query", 1 },
     { "localization", 1 }, { "characters", 1 }, { "character-identity", 1 },
@@ -27,9 +31,7 @@ if ready then
     end
 end
 if not ready then
-    if DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
-        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r YiboAltoBoss requires YiboCore API13, current UI/locale capabilities, account-surface-budget:2 and calendar-day-query:1. Please upgrade YiboCore. 请升级 YiboCore。")
-    end
+    YAB.PrintStartupMessage("CORE_MISTS")
     return
 end
 YAB.CoreReady = true

@@ -23,20 +23,33 @@
     }
     Addons = @{
         YiboAltoBoss = @{
-            VersionFile = 'YiboAltoBoss.toc'
-            VersionPattern = '^## Version:\s*([^\r\n]+)'
+            VersionFile = 'Mists/Target.lua'
+            VersionPattern = '^YAB\.Version\s*=\s*"([^"]+)"'
+            RequiredCoreFile = 'Mists/CoreRequirements.lua'
+            RequiredCorePattern = 'Core:CheckAPIVersion\((\d+)\)'
             VersionIncludesAPI = $false
             ResourceDirectories = @('Media')
             ExtraFiles = @()
             Targets = @{
                 Mists = @{
-                    SourceToc = 'YiboAltoBoss.toc'
+                    SourceToc = 'YiboAltoBoss_Mists.toc'
                     LoadToc = 'YiboAltoBoss.toc'
                     Interfaces = @(50504)
                     CurseForgeFlavor = 'mists'
                     CurseForgeVersionNames = @('5.5.4')
                     LuaVersion = '5.1'
-                    ValidationState = 'existing-mists-baseline'
+                    ValidationState = 'mists-2.8.7-multi-target-client-pending'
+                }
+                Forever = @{
+                    SourceToc = 'YiboAltoBoss_Forever.toc'
+                    LoadToc = 'YiboAltoBoss.toc'
+                    VersionFile = 'Forever/Target.lua'
+                    RequiredCoreFile = 'Forever/Target.lua'
+                    Interfaces = @(16001)
+                    CurseForgeFlavor = 'forever'
+                    CurseForgeVersionNames = @('1.60.1')
+                    LuaVersion = '5.1'
+                    ValidationState = 'forever-0.1.0-manual-targets-instance-framework-client-pending'
                 }
             }
         }

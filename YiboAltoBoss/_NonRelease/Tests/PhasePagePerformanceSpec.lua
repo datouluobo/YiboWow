@@ -4,7 +4,7 @@ local colors=setmetatable({}, {__index=function() return {1,1,1,1} end})
 YiboCore={UITheme={Colors=colors,Table={groupHeight=1,headerHeight=1,rowHeight=1},GetCharacterMatrixColumnWidth=function() return 80 end},Locale={Get=function(_,_,key) return key end}}
 local cols={}; for i=1,12 do cols[i]={realm='Realm',phaseKey='p'..i,displayId=tostring(i)} end
 YAB={GetPhaseColumns=function() scans=scans+1; return cols end,GetBossPhaseState=function(_,column) states=states+1; return {observedAt=1000,phaseDisplayId=column.displayId} end,GetServerTimestamp=function() return 1000 end,GetCurrentRealm=function() return 'Realm' end}
-dofile('YiboAltoBoss/AccountPage.lua')
+dofile('YiboAltoBoss/Mists/AccountPage.lua')
 local function upvalue(fn,name) for i=1,100 do local n,v=debug.getupvalue(fn,i); if not n then break end; if n==name then return v end end; error('missing '..name) end
 local action=upvalue(YAB.RefreshAccountPage,'PickBestAction'); local summary=upvalue(YAB.RefreshAccountPage,'BuildPhaseSummary')
 local snapshot=upvalue(YAB.RefreshAccountPage,'CreatePhaseSnapshot')

@@ -1,38 +1,4 @@
-## Interface: 50504
-## Title: |cff20e070[Yibo]|r YiboAltoBoss - Boss & Weekly Tracker
-## Title-zhCN: |cff20e070[Yibo]|r YiboAltoBoss - 首领追踪
-## Title-zhTW: |cff20e070[Yibo]|r YiboAltoBoss - 首领追踪
-## Notes: Cross-character boss progress and phase observations.
-## Notes-zhCN: 跨角色首领进度与位面观察总览
-## Author: YiboSoft
-## Version: 2.8.6
-## IconTexture: Interface\AddOns\YiboAltoBoss\Media\YiboAltoBossIcon-128
-## SavedVariables: YiboAltoBossDB
-## RequiredDeps: YiboCore
-## Group: YiboCore
-## LoadOnDemand: 0
-
-CoreRequirements.lua
-Locale.lua
-Core.lua
-Mists\Calendar.lua
-HolidayBoss.lua
-TrackingV3.lua
-Settings.lua
-LockoutLocale.lua
-DungeonBossCatalog.lua
-DungeonRuns.lua
-InstanceLockouts.lua
-Mists/RaidCatalog.lua
-Mists/TargetCatalogRuntime.lua
-Common/TargetCatalog.lua
-DungeonDBM.lua
-PlannedTargets.lua
-Common/RaidProgress.lua
-Mists/RaidEvents.lua
-Common/GoalTargets.lua
-Common/TargetProjection.lua
-LockoutsPage.lua
-AccountPage.lua
-CoreIntegration.lua
-Commands.lua
+## Interface: 50504, 16001
+## Title: |cff20e070[Yibo]|r YiboAltoBoss
+## X-Yibo-Target: Hint
+Common/TocHint.lua

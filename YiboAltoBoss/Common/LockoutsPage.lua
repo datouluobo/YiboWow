@@ -8,17 +8,6 @@ local TAB_H = 34
 local CELL_W = 88
 local ROW_H = 24
 
-function YAB.SetAccountBusinessPage(pageID)
-    YiboAltoBossDB = YiboAltoBossDB or {}
-    YiboAltoBossDB.settings = YiboAltoBossDB.settings or {}
-    YiboAltoBossDB.settings.accountPage = pageID == "alto-lockouts" and "lockouts" or "boss"
-end
-
-function YAB.GetAccountBusinessPageID()
-    local selected = YiboAltoBossDB and YiboAltoBossDB.settings and YiboAltoBossDB.settings.accountPage
-    return selected == "lockouts" and "alto-lockouts" or "alto-boss"
-end
-
 function YAB.GetBusinessTabHeight() return TAB_H end
 
 function YAB.CreateBusinessTabs(parent, active)
@@ -32,11 +21,7 @@ function YAB.CreateBusinessTabs(parent, active)
     tabs.leftBridge:SetHeight(1)
     tabs.rightBridge = tabs:CreateTexture(nil, "OVERLAY")
     tabs.rightBridge:SetHeight(1)
-    local defs = {
-        { id = "boss", title = "Boss", page = "alto-boss", width = 112 },
-        { id = "lockouts", title = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.INSTANCES"), page = "alto-lockouts", width = 126 },
-    }
-    for index, def in ipairs(defs) do
+    for index, def in ipairs(YAB.BusinessTabs) do
         local button = CreateFrame("Button", nil, tabs, "BackdropTemplate")
         button:SetSize(def.width, TAB_H)
         button:SetPoint("TOPLEFT", 8 + (index - 1) * (def.width + 2), 0)
@@ -129,44 +114,55 @@ local function HeaderCell(parent, x, width, title, secondary)
     return header
 end
 
-local function StatusCell(parent, index, x, y, column, charKey, definition)
+local function StatusCell(parent, index, x, y, column, charKey, definition, view)
     local cell = parent.cells[index] or CreateFrame("Button", nil, parent, "BackdropTemplate")
     parent.cells[index] = cell
     cell:Show()
     cell:SetSize(CELL_W, ROW_H)
     cell:SetPoint("TOPLEFT", x, y)
     cell:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    local status, label = YAB.GetLockoutStatus(charKey, column)
+    local status, label = view.status(charKey, column)
     local color = status == "clear" and C.success or (status == "locked" or status == "progress") and C.accent or C.muted
     cell:SetBackdropColor(color[1] * 0.18, color[2] * 0.18, color[3] * 0.18, 0.95)
     cell:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], 1)
     cell.text = cell.text or Text(cell, Theme.Font.body, color, "CENTER")
     cell.text:SetAllPoints()
     cell.text:SetText(label)
-    Theme:BindTooltip(cell, column.plannedCatalogID and column.name or nil, YAB.GetLockoutTooltip(charKey, column))
-    if _G.YiboCore.BusinessItemActions then _G.YiboCore.BusinessItemActions:Unbind(cell) end
-    if YAB.GoalTargets and YAB.GoalTargets.ref then
+    Theme:BindTooltip(cell, column.plannedCatalogID and column.name or nil, view.tooltip(charKey, column, parent.preview))
+    if view.goalActions and Core.BusinessItemActions then Core.BusinessItemActions:Unbind(cell) end
+    if view.goalActions and YAB.GoalTargets and YAB.GoalTargets.ref then
         if definition then YAB.GoalTargets:Bind(cell, charKey, { catalogID = definition.id, difficultyID = column.plannedDifficultyID or column.difficultyID, scope = "all", encounterIDs = {} }, nil, true) end
+    end
+    if view.activate then
+        if not parent.preview and view.canActivate(charKey) then
+            cell:SetScript("OnClick", function() view.activate(charKey, column) end)
+        else
+            cell:SetScript("OnClick", nil)
+        end
     end
 end
 
-function YAB.CreateLockoutsPage(parent)
+function YAB.CreateProgressPage(parent, view)
     parent:SetClipsChildren(true)
-    parent.businessTabs = YAB.CreateBusinessTabs(parent, "lockouts")
+    parent.businessTabs = YAB.CreateBusinessTabs(parent, view.tab)
     parent.header = CreateFrame("Frame", nil, parent)
     parent.header:SetHeight(Theme.Table.headerHeight)
     parent.scroll = Theme:CreateScrollFrame(parent); parent.scroll:BindScrollbarGutter(parent.header)
     parent.body = CreateFrame("Frame", nil, parent.scroll); parent.scroll:SetScrollChild(parent.body)
     parent.headers, parent.rows = {}, {}
+    if view.empty then
+        parent.empty = Text(parent.body, Theme.Font.body, C.muted)
+        parent.empty:SetPoint("TOPLEFT", 6, -4)
+    end
     return parent
 end
 
-function YAB.RefreshLockoutsPage(instance, context)
-    YAB.SetAccountBusinessPage("alto-lockouts")
+function YAB.RefreshProgressPage(instance, context, view)
+    if not (context and context.preview and view.empty) then YAB.SetAccountBusinessPage(view.id) end
     local inset = Theme:GetMatrixInsets(context and context.preview)
     local keys = YAB.GetAccountCharacterKeys(context)
-    local allColumns = YAB.GetLockoutColumns(context)
-    instance.businessTabs:SetActive("lockouts")
+    local allColumns = view.columns(context)
+    instance.businessTabs:SetActive(view.tab)
     instance.header:ClearAllPoints()
     instance.header:SetPoint("TOPLEFT", inset.left, -TAB_H)
     instance.header:SetPoint("TOPRIGHT", -inset.right, -TAB_H)
@@ -181,10 +177,10 @@ function YAB.RefreshLockoutsPage(instance, context)
             TAB_H + Theme.Table.headerHeight + Theme.Space.xs + inset.bottom) - inset.left - inset.right
     )
     local columns, pageInfo = Core.AccountView:GetColumnPage(
-        "alto-lockouts", "instances", allColumns, availableWidth, charWidth, CELL_W
+        view.id, "instances", allColumns, availableWidth, charWidth, CELL_W
     )
     local definitions = {}
-    if #keys > 0 and #columns > 0 and YAB.GoalTargets and YAB.GoalTargets.ref then
+    if view.goalActions and #keys > 0 and #columns > 0 and YAB.GoalTargets and YAB.GoalTargets.ref then
         local targets = YAB.TargetCatalog:Query().targets
         for index, column in ipairs(columns) do
             for _, definition in ipairs(targets) do
@@ -198,25 +194,32 @@ function YAB.RefreshLockoutsPage(instance, context)
     end
     -- Pagination shares the tab row so no separate status strip interrupts
     -- the active tab's connection to the matrix header.
-    Core.AccountView:UpdateColumnPager(instance, "alto-lockouts", "instances", pageInfo, instance.businessTabs, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.INSTANCES"))
+    Core.AccountView:UpdateColumnPager(instance, view.id, "instances", pageInfo, instance.businessTabs, view.title())
     Release(instance.headers)
-    local first = HeaderCell(instance.header, 0, charWidth, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTER"))
-    instance.headers[1] = first
-    for index, column in ipairs(columns) do
-        local abbreviation = column.abbreviation or "INST"
+    local empty = view.empty and (#allColumns == 0 or #keys == 0)
+    if instance.empty then
+        instance.empty:SetText(empty and view.empty(#allColumns == 0, context) or "")
+        instance.empty:SetShown(empty == true)
+        instance.empty:SetWidth(math.max(1, availableWidth - 12))
+    end
+    if not empty then
+        instance.headers[1] = HeaderCell(instance.header, 0, charWidth, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTER"))
+    end
+    for index, column in ipairs(empty and {} or columns) do
+        local abbreviation = column.abbreviation or (view.tab == "lockouts" and "INST")
         local header = HeaderCell(
             instance.header,
             charWidth + (index - 1) * CELL_W,
             CELL_W,
             column.shortName or column.name,
-            "(" .. abbreviation .. ")"
+            abbreviation and ("(" .. abbreviation .. ")") or nil
         )
-        Theme:BindTooltip(header, string.format("%s (%s)", column.name, abbreviation))
+        Theme:BindTooltip(header, abbreviation and string.format("%s (%s)", column.name, abbreviation) or column.name)
         instance.headers[index + 1] = header
     end
     local y = 0
     Release(instance.rows)
-    for rowIndex, charKey in ipairs(keys) do
+    for rowIndex, charKey in ipairs(empty and {} or keys) do
         local row = instance.rows[rowIndex] or CreateFrame("Frame", nil, instance.body)
         instance.rows[rowIndex] = row
         row:Show()
@@ -225,6 +228,7 @@ function YAB.RefreshLockoutsPage(instance, context)
         row:SetPoint("TOPLEFT", 0, -y)
         row:SetPoint("TOPRIGHT", 0, -y)
         row.cells = row.cells or {}
+        row.preview = context and context.preview
         local name = YAB.FormatCharacterName(charKey, context and context.scope == "all" and "all" or "current")
         row.label = row.label or Text(row, Theme.Font.body, C.text, "LEFT")
         row.label:SetPoint("LEFT", 6, 0)
@@ -232,27 +236,30 @@ function YAB.RefreshLockoutsPage(instance, context)
         row.label:SetText(name)
         local color = CharacterColor(charKey)
         row.label:SetTextColor(color.r or color[1], color.g or color[2], color.b or color[3])
-        for index, column in ipairs(columns) do StatusCell(row, index, charWidth + (index - 1) * CELL_W, 0, column, charKey, definitions[index]) end
+        for index, column in ipairs(columns) do StatusCell(row, index, charWidth + (index - 1) * CELL_W, 0, column, charKey, definitions[index], view) end
         Release(row.cells, #columns + 1)
         y = y + ROW_H + 2
     end
-    Release(instance.rows, #keys + 1)
+    if empty then y = ROW_H end
+    Release(instance.rows, (empty and 0 or #keys) + 1)
     instance.body:SetSize(math.max(1, charWidth + #columns * CELL_W), math.max(1, y))
     instance.scroll:SetContentHeight(math.max(1, y)); instance.scroll:RefreshScrollbar()
     instance.renderedContentHeight = TAB_H + Theme.Table.headerHeight
         + Theme.Space.xs + math.max(1, y) + inset.bottom
 end
 
-function YAB.GetLockoutsSurfaceMetrics(context)
-    local columns = YAB.GetLockoutColumns(context)
+function YAB.GetProgressSurfaceMetrics(context, view)
+    local columns = view.columns(context)
     local keys = YAB.GetAccountCharacterKeys(context)
     local inset = Theme:GetMatrixInsets(context and context.preview)
-    local charWidth = 150
+    local empty = view.empty and (#columns == 0 or #keys == 0)
+    local charWidth = empty and 340 or 150
+    local columnCount = empty and 0 or #columns
     local height = TAB_H + Theme.Table.headerHeight + Theme.Space.xs
         + math.max(1, #keys) * (ROW_H + 2) + inset.bottom
     return {
-        naturalContentWidth = inset.left + charWidth + #columns * CELL_W + inset.right,
-        minContentWidth = inset.left + charWidth + math.min(1, #columns) * CELL_W + inset.right,
+        naturalContentWidth = inset.left + charWidth + columnCount * CELL_W + inset.right,
+        minContentWidth = inset.left + charWidth + math.min(1, columnCount) * CELL_W + inset.right,
         naturalContentHeight = height,
         minContentHeight = TAB_H + Theme.Table.headerHeight + Theme.Space.xs + ROW_H + inset.bottom,
         scrollContentHeight = #keys * (ROW_H + 2),
@@ -266,13 +273,13 @@ end
 -- Core calls this after the page has rendered.  Keeping the measurement in
 -- the page makes the window height follow the actual character-row matrix,
 -- including rows that were filtered or added after the first layout pass.
-function YAB.GetLockoutsMeasuredHeight(instance, context)
+function YAB.GetProgressMeasuredHeight(instance, context, view)
     if instance and instance.renderedContentHeight then return instance.renderedContentHeight end
-    return YAB.GetLockoutsSurfaceMetrics(context).naturalContentHeight
+    return YAB.GetProgressSurfaceMetrics(context, view).naturalContentHeight
 end
 
-function YAB.GetLockoutsHoverMetrics(context)
-    local metrics = YAB.GetLockoutsSurfaceMetrics(context)
+function YAB.GetProgressHoverMetrics(context, view)
+    local metrics = YAB.GetProgressSurfaceMetrics(context, view)
     return {
         minWidth = metrics.minContentWidth + Theme.Geometry.shellBorder * 2,
         preferredWidth = metrics.naturalContentWidth + Theme.Geometry.shellBorder * 2,
@@ -283,10 +290,3 @@ function YAB.GetLockoutsHoverMetrics(context)
         verticalOverflow = "content",
     }
 end
-
-function YAB.GetLockoutsSummary(characters)
-    local count, limit = YAB.GetThrottleStatus()
-    return string.format(_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NORMAL_DUNGEONS_D_D"), count, limit)
-end
-
-function YAB.GetLockoutsActions() return {} end

@@ -19,7 +19,8 @@ YAB={GetAccountCharacterKeys=function() return keys end,GetLockoutColumns=functi
  FormatCharacterName=function(key) return key end,GetCharacterIdentity=function() return {} end,
  TargetCatalog={Query=function() copies=copies+1; return {targets=copy(defs)} end},
  GoalTargets={ref=true,Bind=function(_,_,key,target) binds[#binds+1]=key..':'..target.catalogID end}}
-YiboAltoBossDB={settings={}}; dofile('YiboAltoBoss/LockoutsPage.lua')
+YiboAltoBossDB={settings={}}; dofile('YiboAltoBoss/Common/LockoutsPage.lua')
+dofile("YiboAltoBoss/Mists/LockoutsPage.lua")
 local instance={businessTabs=frame(),header=frame(),scroll=frame(),body=frame(),headers={},rows={}}
 local start=os.clock(); for i=1,20 do YAB.RefreshLockoutsPage(instance,{}) end
 print(string.format('lockout page 20 refreshes, 20 characters, 10 columns, 100 catalog entries: %.3f s; catalog copies=%d status=%d binds=%d',os.clock()-start,copies,statusCalls,#binds))

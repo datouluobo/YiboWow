@@ -207,7 +207,7 @@ function Integration:Initialize()
         return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "ERROR.CORE_API13_REQUIRED")
     end
 
-    Core:RegisterAddon("YiboAltoBoss", { version = "2.8.4", requiredAPI = 13 })
+    Core:RegisterAddon("YiboAltoBoss", { version = YAB.Version, requiredAPI = 13 })
     if Core.CharacterCleanup then
         local cleanupRegistered, cleanupError = RegisterCharacterCleanupOwner()
         if not cleanupRegistered then return nil, cleanupError end

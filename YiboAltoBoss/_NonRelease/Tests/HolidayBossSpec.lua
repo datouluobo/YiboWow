@@ -34,9 +34,9 @@ GetLFGMode = function(_, id) return queued and id == dungeon and "queued" or nil
 IsLFGDungeonJoinable = function() return true, true end
 GetAvailableRoles = function() return false, false, true end
 GetLFGRoles = function() return false, false, false, true end
-dofile("YiboAltoBoss/Locale.lua")
+dofile("YiboAltoBoss/Common/Locale.lua")
 dofile("YiboCore/_NonRelease/Tests/LoadCalendar.lua")
-dofile("YiboAltoBoss/HolidayBoss.lua")
+dofile("YiboAltoBoss/Mists/HolidayBoss.lua")
 local Holiday, key = YAB.Holiday, "holiday:headless-horseman"
 check(Holiday:GetBoss(key).name == "万圣节·无头骑士", "Chinese player-visible name")
 local active = Holiday:GetActiveBosses()
@@ -75,20 +75,20 @@ check(Holiday:GetQueueState(key).state == "unavailable", "unsupported client dun
 YiboAltoBossDB.settings.showHolidayBosses = false
 check(#Holiday:GetActiveBosses() == 0, "manual display toggle hides seasonal row")
 clock = clock + 86400
-dofile("YiboAltoBoss/PlannedTargets.lua")
+dofile("YiboAltoBoss/Mists/PlannedTargets.lua")
 YAB.PlannedTargets.Period = function() end
 YAB.PlannedTargets.ScheduleChange = function() end
 YAB.PlannedTargets:Observe()
 check(Holiday:GetStatus("A", key) == "available", "planned observation enumerates Horseman with manual display disabled")
 dofile("YiboAltoBoss/Mists/RaidCatalog.lua")
 dofile("YiboAltoBoss/Mists/TargetCatalogRuntime.lua")
-dofile("YiboAltoBoss/Common/TargetCatalog.lua")
+dofile("YiboAltoBoss/Mists/TargetCatalog.lua")
 YAB.TargetCatalog:Build()
 local definition = YAB.TargetCatalog:Get(key)
 check(definition and definition.kind == "holiday" and definition.reset == "daily", "Horseman exported in action-center catalog")
 check(YAB.TargetCatalog:Get("holiday:coren-direbrew") ~= nil, "Brewfest remains in catalog")
 language = "en"
-dofile("YiboAltoBoss/HolidayBoss.lua")
+dofile("YiboAltoBoss/Mists/HolidayBoss.lua")
 check(YAB.Holiday:GetBoss(key).name == "Hallow's End · Headless Horseman", "English player-visible name")
 -- Audit every seasonal dungeon with independent expected client identifiers.
 local roster = {
@@ -116,7 +116,7 @@ end
 for _, spec in ipairs(roster) do
     for index, eventTitle in ipairs(spec.titles) do
         language = index == 3 and "en" or "zh"
-        dofile("YiboAltoBoss/HolidayBoss.lua")
+        dofile("YiboAltoBoss/Mists/HolidayBoss.lua")
         Holiday = YAB.Holiday
         YiboAltoBossDB = { settings = {}, characters = { A = {}, B = {} } }
         title, reward, quest, dungeon, queued = eventTitle, false, false, spec.dungeonID, false
@@ -276,7 +276,7 @@ YiboCore.UITheme = {
     BindTooltip = function(_, control, title, lines) control.title, control.lines = title, lines end,
     ShowTooltip = function(_, control, title, lines) control.title, control.lines = title, lines end,
 }
-dofile("YiboAltoBoss/AccountPage.lua")
+dofile("YiboAltoBoss/Mists/AccountPage.lua")
 local visited = {}
 local function Find(fn, wanted)
     if visited[fn] then return end
@@ -327,7 +327,7 @@ YiboCore.BusinessItemActions = {
     Handle = function() return intercepted end,
     TooltipLines = function(_, lines) return lines end,
 }
-dofile("YiboAltoBoss/Common/GoalTargets.lua")
+dofile("YiboAltoBoss/Mists/GoalTargets.lua")
 YAB.GoalTargets.ref = {}
 YAB.PersistDB = function() saves = saves + 1 end
 YAB.NotifyCorePageChanged = function() changes = changes + 1 end

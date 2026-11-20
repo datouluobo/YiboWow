@@ -515,11 +515,7 @@ function YAB.GetLockoutStatus(charKey, column)
         if not record.instanceLockoutsObservedAt then return "unknown", Core.Locale:Get("YiboAltoBoss", "LOCKOUT.UNKNOWN"), nil end
         return "open", Core.Locale:Get("YiboAltoBoss", "LOCKOUT.OPEN"), nil
     end
-    local killed, total = 0, tonumber(lockout.bossCount) or 0
-    for _, boss in ipairs(lockout.bosses or {}) do if boss.killed then killed = killed + 1 end end
-    local completed = total > 0 and killed >= total
-    local label = completed and Core.Locale:Get("YiboAltoBoss", "LOCKOUT.CLEAR") or (total > 0 and Core.Locale:Get("YiboAltoBoss", "LOCKOUT.PROGRESS", killed, total) or Core.Locale:Get("YiboAltoBoss", "LOCKOUT.LOCKED"))
-    return completed and "clear" or "locked", label, lockout
+    return YAB.InstanceProgress:DescribeLockout(lockout)
 end
 
 function YAB.GetLockoutTooltip(charKey, column)

@@ -6,7 +6,8 @@ date=os.date; GetServerTime=function() return 1000 end; time=function() return 1
 wipe=function(t) for k in pairs(t) do t[k]=nil end end
 CreateFrame=function() return {RegisterEvent=function() end,SetScript=function() end} end
 YiboCore={Locale={Get=function(_,_,key) return key end}}; YAB={}; YiboAltoBossDB={}
-dofile('YiboAltoBoss/Core.lua')
+dofile("YiboAltoBoss/Common/CustomTargets.lua")
+dofile('YiboAltoBoss/Mists/Core.lua')
 local samples={}; for i=1,20 do samples[i]={bossKey='ordos',elapsedSeconds=120+i,modelEligible=true,status='complete',provenance='v3',realmKey='Realm',completedAt=900+i} end
 YAB.TrackingV3={GetSamples=function() return samples end,GetPendingCount=function() return 0 end}
 local bosses={'ordos','nalak','oondasta','galleon','sha_of_anger','warbringer_jade_forest','warbringer_kun_lai_summit','warbringer_townlong_steppes','warbringer_krasarang_wilds','warbringer_dread_wastes'}

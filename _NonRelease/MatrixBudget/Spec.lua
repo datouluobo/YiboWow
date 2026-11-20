@@ -63,7 +63,7 @@ end
 
 -- AltoBoss and lockouts.
 YAB = { CoreReady = true }
-dofile("YiboAltoBoss/Locale.lua"); dofile("YiboAltoBoss/LockoutLocale.lua")
+dofile("YiboAltoBoss/Common/Locale.lua"); dofile("YiboAltoBoss/Common/LockoutLocale.lua")
 local bosses, columns = {}, {}
 for i = 1, 54 do bosses[i] = { key = "boss" .. i, name = "Boss " .. i } end
 for i = 1, 13 do columns[i] = { id = "instance" .. i, name = "Instance " .. i, abbreviation = "I" .. i } end
@@ -77,7 +77,8 @@ YAB.GetLockoutColumns = function() return columns end
 YAB.GetLockoutStatus = function() return "unknown", "?" end
 YAB.GetLockoutTooltip = function() return {} end
 YAB.GetBusinessTabHeight = function() return 34 end
-dofile("YiboAltoBoss/AccountPage.lua"); dofile("YiboAltoBoss/LockoutsPage.lua")
+dofile("YiboAltoBoss/Mists/AccountPage.lua"); dofile("YiboAltoBoss/Common/LockoutsPage.lua")
+dofile("YiboAltoBoss/Mists/LockoutsPage.lua")
 local bossPage = Frame(); YAB.CreateAccountPage(bossPage)
 Exercise("boss", YAB.GetAccountSurfaceMetrics, YAB.RefreshAccountPage, bossPage, Context())
 Exercise("boss-hover", YAB.GetAccountSurfaceMetrics, YAB.RefreshAccountPage, bossPage, Context(true))
@@ -197,7 +198,7 @@ local emptyTargetColumns = legendary:GetSurfaceMetrics(hiddenTargets)
 Check(emptyTargetColumns.naturalContentWidth < legendary:GetSurfaceMetrics(Context(true)).naturalContentWidth, "Legendary hidden target columns change natural width")
 
 -- Source invariant supplements runtime checks: business matrices must not own a track constant or screen budget.
-for _, path in ipairs({ "YiboAltoBoss/AccountPage.lua", "YiboAltoBoss/LockoutsPage.lua", "YiboCrafting/AccountPage.lua",
+for _, path in ipairs({ "YiboAltoBoss/Mists/AccountPage.lua", "YiboAltoBoss/Common/LockoutsPage.lua", "YiboCrafting/AccountPage.lua",
     "YiboLegendary/UI.lua", "YiboQuestBlocker/AccountPage.lua", "YiboCurrency/AccountPage.lua", "YiboReputation/AccountMatrixView.lua" }) do
     local file = assert(io.open(path, "r")); local source = file:read("*a"); file:close()
     Check(not source:find("scrollbarGutter", 1, true) and not source:find("PREVIEW_SCROLLBAR_GUTTER", 1, true)
@@ -209,9 +210,10 @@ local originalHas, originalRegister, failures = Core.HasCapability, Core.Registe
 Core.RegisterAddon = function() error("unsupported Core must not register a business addon") end
 local function LowBudget(_, name, version) return name ~= "account-surface-budget" or version <= 1 end
 Core.HasCapability = LowBudget
-dofile("YiboAltoBoss/CoreRequirements.lua")
+dofile("YiboAltoBoss/Common/Startup.lua")
+dofile("YiboAltoBoss/Mists/CoreRequirements.lua")
 Check(not YAB.CoreReady, "Boss early gate rejects old budget")
-YAB.CoreReady = true; dofile("YiboAltoBoss/CoreIntegration.lua")
+YAB.CoreReady = true; dofile("YiboAltoBoss/Mists/CoreIntegration.lua")
 Check(not YAB.CoreIntegration:Initialize(), "Boss integration rejects old budget")
 dofile("YiboCrafting/Bootstrap.lua")
 local ok, errorMessage = YiboCrafting:Initialize()
@@ -227,7 +229,7 @@ YQB.CoreCompatible = true; dofile("YiboQuestBlocker/CoreIntegration.lua")
 Check(not YQB.CoreIntegration:Initialize(), "Quest integration rejects old budget")
 Core.HasCapability = function() return true end
 view.GetScrollSurfaceWidth = nil
-dofile("YiboAltoBoss/CoreRequirements.lua")
+dofile("YiboAltoBoss/Mists/CoreRequirements.lua")
 Check(not YAB.CoreReady, "Boss rejects missing public width method")
 Check(not YiboCrafting:Initialize(), "Crafting rejects missing public width method")
 YiboLegendary:Initialize(); Check(failures == 2 and YiboLegendary.db == previousDB, "Legendary rejects missing public width method")

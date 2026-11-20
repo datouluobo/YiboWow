@@ -16,7 +16,8 @@ CreateFrame=function()
 end
 YiboCore={Locale={Get=function(_,_,key) return key end}}
 YAB={}
-assert(loadfile('YiboAltoBoss/Core.lua'))('YiboAltoBoss')
+dofile("YiboAltoBoss/Common/CustomTargets.lua")
+assert(loadfile('YiboAltoBoss/Mists/Core.lua'))('YiboAltoBoss')
 local function Up(fn,key)
     for i=1,100 do local name,value=debug.getupvalue(fn,i);if name==key then return value end;if not name then break end end
     error('missing upvalue '..key)

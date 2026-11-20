@@ -1,1 +1,1 @@
--- Instance target catalog is loaded from Common/TargetCatalog.lua by the current TOC.
+-- Inert legacy path. The Mists TOC loads Mists/TargetCatalog.lua.

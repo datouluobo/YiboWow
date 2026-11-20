@@ -1,0 +1,27 @@
+## Interface: 16001
+## Title: |cff20e070[Yibo]|r YiboAltoBoss - Targets & Instance Progress
+## Title-zhCN: |cff20e070[Yibo]|r YiboAltoBoss - 目标与副本进度
+## Title-zhTW: |cff20e070[Yibo]|r YiboAltoBoss - 目標與副本進度
+## Notes: Custom NPC targets and instance progress.
+## Notes-zhCN: 自定义 NPC 目标与副本进度。
+## Author: YiboSoft
+## Version: 0.1.0
+## IconTexture: Interface\AddOns\YiboAltoBoss\Media\YiboAltoBossIcon-128
+## SavedVariables: YiboAltoBossForeverDB
+## RequiredDeps: YiboCore
+## Group: YiboCore
+## LoadOnDemand: 0
+## X-Yibo-Target: Forever
+
+Common/Startup.lua
+Forever/Target.lua
+Common/Locale.lua
+Common/LockoutLocale.lua
+Forever/Locale.lua
+Common/CustomTargets.lua
+Common/CustomTargetSettings.lua
+Common/InstanceProgress.lua
+Common/LockoutsPage.lua
+Forever/Store.lua
+Forever/Pages.lua
+Forever/Bootstrap.lua

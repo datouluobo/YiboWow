@@ -9,7 +9,7 @@ end }
 YiboCore = { Locale = { Get = function(_, _, key) return key end } }
 YAB = { CoreReady = true }
 dofile("YiboCore/_NonRelease/Tests/LoadCalendar.lua")
-dofile("YiboAltoBoss/HolidayBoss.lua")
+dofile("YiboAltoBoss/Mists/HolidayBoss.lua")
 dofile("YiboTodo/Namespace.lua")
 dofile("YiboTodo/Mists/Darkmoon.lua")
 local viewed, repairs, fail = { year = 2021, month = 11 }, 0, false
@@ -51,7 +51,8 @@ local core = { Calendar = Methods(), Locale = Methods(), Characters = Methods(),
     IsInitialized = function() return true end,
     HasCapability = function(_, name) return name ~= "calendar-day-query" end }
 YiboCore = core
-dofile("YiboAltoBoss/CoreRequirements.lua")
+dofile("YiboAltoBoss/Common/Startup.lua")
+dofile("YiboAltoBoss/Mists/CoreRequirements.lua")
 Check(YAB.CoreReady == false, "AltoBoss stops with old Core")
 dofile("YiboTodo/CoreIntegration.lua")
 Check(YiboTodo.CoreIntegration:Initialize() == nil, "Todo stops with old Core")

@@ -13,7 +13,8 @@ YAB={}; YiboAltoBossDB={}; local frames={}
 CreateFrame=function() local f={}; function f:RegisterEvent() end; function f:SetScript(_,cb) self.cb=cb end; frames[#frames+1]=f; return f end
 local combat={0,'SPELL_DAMAGE',false,'Player-1',false,false,false,'Creature-0-0-0-0-999-1'}
 CombatLogGetCurrentEventInfo=function() return unpack(combat) end
-dofile('YiboAltoBoss/Core.lua')
+dofile("YiboAltoBoss/Common/CustomTargets.lua")
+dofile('YiboAltoBoss/Mists/Core.lua')
 local handler=upvalue(frames[1].cb,'HandleCombatLogEvent')
 local start=os.clock(); for i=1,100000 do handler() end
 print(string.format('combat 100000 ordinary damage: %.3f s, UnitGUID=%d strsplit=%d',os.clock()-start,units,splits))
@@ -31,7 +32,7 @@ local config={autoDisplay=true,targets={C={}}}
 for i=1,30 do local key='b'..i; config.targets.C[i]={active=true,catalogID=key}; definitions[key]={bossKey=key} end
 YiboCore.Characters={ResolveLegacyKey=function(_,key) return key end}
 YAB={PlannedTargets={providerRef=true,Configuration=function() return config end},TargetCatalog={value=catalogToken,Get=function(_,id) gets=gets+1; return definitions[id] end},GetBossList=function() return {} end,GetAllBossList=function() return {} end,GetLockoutColumns=function() return {} end,GetLockoutStatus=function() end,GetLockoutTooltip=function() end}
-dofile('YiboAltoBoss/Common/TargetProjection.lua')
+dofile('YiboAltoBoss/Mists/TargetProjection.lua')
 start=os.clock(); for i=1,10000 do local ok,id,target=YAB.PlannedTargets:IsPlanned('C','b30'); assert(ok and id=='C' and target.catalogID=='b30') end
 print(string.format('target 10000 lookups, 30 goals: %.3f s, catalog Get=%d',os.clock()-start,gets))
 local plans=YAB.PlannedTargets
@@ -48,7 +49,9 @@ GetNumSavedInstances=function() return 1 end
 GetSavedInstanceInfo=function() return 'Dungeon',1,500,1,true,false,nil,nil,5,'Normal',10,nil,nil,34 end
 GetSavedInstanceEncounterInfo=function(_,i) if i<=10 then return tostring(i),nil,true end end
 GetDifficultyInfo=function() return 'Normal' end
-frames={}; GetInstanceInfo=function() return nil, 'none' end; dofile('YiboAltoBoss/InstanceLockouts.lua')
+frames={}; GetInstanceInfo=function() return nil, 'none' end;
+dofile("YiboAltoBoss/Common/InstanceProgress.lua")
+dofile('YiboAltoBoss/Mists/InstanceLockouts.lua')
 start=os.clock(); for i=1,1000 do YAB.RefreshInstanceLockouts() end
 print(string.format('lockout 1000 scans, 10 encounters: %.3f s, encounter resolutions=%d',os.clock()-start,resolutions))
 assert(resolutions==10000, 'unchanged directory resolves each encounter once')
@@ -58,7 +61,7 @@ assert(YiboAltoBossDB.characters['Tester-Realm'].instanceLockouts['34:1'].bosses
 
 
 -- Directory lookups over a cached catalog, including ambiguity checks.
-YAB={}; dofile('YiboAltoBoss/Common/TargetCatalog.lua')
+YAB={}; dofile('YiboAltoBoss/Mists/TargetCatalog.lua')
 local catalog=YAB.TargetCatalog; local entries={}
 for map=1,100 do local encounters={}; for i=1,10 do encounters[i]={id=map*100+i,name='Boss'..i,aliases={'Alias'..i}} end; entries[map]={kind='instance',mapID=map,difficulties={{id=1,complete=true,encounters=encounters}}} end
 catalog.value={targets=entries}

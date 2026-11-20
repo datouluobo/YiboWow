@@ -22,9 +22,10 @@ YAB = {
     GetBossList = function() return {} end,
     GetAccountCharacterKeys = function() return { "A", "B" } end,
 }
-dofile("YiboAltoBoss/Locale.lua")
-dofile("YiboAltoBoss/LockoutLocale.lua")
-dofile("YiboAltoBoss/InstanceLockouts.lua")
+dofile("YiboAltoBoss/Common/Locale.lua")
+dofile("YiboAltoBoss/Common/LockoutLocale.lua")
+dofile("YiboAltoBoss/Common/InstanceProgress.lua")
+dofile("YiboAltoBoss/Mists/InstanceLockouts.lua")
 local saved = { instanceID = 580, name = "Sunwell Plateau", difficultyID = 4,
     difficultyName = "25 Player", resetAt = 2000, bossCount = 1, bosses = { { killed = true } } }
 YiboAltoBossDB = { settings = {}, characters = {
@@ -42,7 +43,7 @@ YAB.PlannedTargets = {
     Progress = function() return { state = "ready", reason = "0/1 target" } end,
 }
 YAB.TargetCatalog = { Get = function() return { mapID = 580, isRaid = true, aliases = { "SWP" } } end }
-dofile("YiboAltoBoss/Common/TargetProjection.lua")
+dofile("YiboAltoBoss/Mists/TargetProjection.lua")
 -- Override the contract reader only; exercise actual projection/status/tooltip code.
 YAB.PlannedTargets.VisibleConfiguration = function() return config end
 local allBossCalls = 0

@@ -1,1 +1,1 @@
--- Target projection is loaded from Common/TargetProjection.lua by the current TOC.
+-- Inert legacy path. The Mists TOC loads Mists/TargetProjection.lua.

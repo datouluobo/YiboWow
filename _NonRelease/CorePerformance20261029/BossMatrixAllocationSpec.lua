@@ -12,7 +12,7 @@ env.YAB = { CoreReady = true, GetAllBossList = function() return bosses end,
     ToggleBossKill = function() end, GetBossList = function() return bosses end }
 env.YiboAltoBossDB = {}
 local addon = env.YAB
-load('YiboAltoBoss/Locale.lua'); load('YiboAltoBoss/LockoutLocale.lua')
+load('YiboAltoBoss/Common/Locale.lua'); load('YiboAltoBoss/Common/LockoutLocale.lua')
 load('YiboAltoBoss/Mists/RaidCatalog.lua')
 addon.GetInstanceCatalog = function()
     local list = {}
@@ -20,7 +20,7 @@ addon.GetInstanceCatalog = function()
     return list
 end
 load('YiboAltoBoss/Mists/TargetCatalogRuntime.lua')
-load('YiboAltoBoss/Common/TargetCatalog.lua')
+load('YiboAltoBoss/Mists/TargetCatalog.lua')
 local catalog = addon.TargetCatalog
 local definitions = catalog:Query().targets
 local bindings = 0
@@ -28,7 +28,7 @@ addon.GoalTargets = { ref = 'fixture', Bind = function(_, cell, key, target, ori
     assert(type(target.catalogID) == 'string' and target.scope == 'all' and type(original) == 'function')
     bindings = bindings + 1
 end }
-load('YiboAltoBoss/AccountPage.lua')
+load('YiboAltoBoss/Mists/AccountPage.lua')
 local function Upvalue(fn, name)
     for i = 1, 100 do
         local key, value = debug.getupvalue(fn, i)

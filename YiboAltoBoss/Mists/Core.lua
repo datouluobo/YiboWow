@@ -11,6 +11,7 @@ local curRealm = GetRealmName() or "Unknown"
 local curCharKey = curCharName .. "-" .. curRealm
 local PHASE_TTL_SECONDS = 6 * 60 * 60
 local MIN_RESPAWN_SAMPLE_SECONDS = 30
+local CustomTargets = YAB.CustomTargets
 local CUSTOM_RARE_RESET_SECONDS = 24 * 60 * 60
 local PERSONAL_COMBAT_EVIDENCE_TTL_SECONDS = 45
 local bossById = {}
@@ -119,15 +120,7 @@ local function IsKillActive(killData, boss)
         return false
     end
     if boss and boss.reset == "respawn" then
-        local killedAt = tonumber(killData.updatedAt) or 0
-        -- Records written before expiresAt existed derive the same deadline
-        -- from their original kill timestamp.
-        local expiresAt = tonumber(killData.expiresAt)
-        if not expiresAt and killedAt > 0 then
-            expiresAt = killedAt + CUSTOM_RARE_RESET_SECONDS
-            killData.expiresAt = expiresAt
-        end
-        return expiresAt and expiresAt > GetServerTimestamp() or false
+        return CustomTargets:IsActive(killData, GetServerTimestamp(), CUSTOM_RARE_RESET_SECONDS)
     end
     local resetKey = GetTargetResetKey(boss)
     return not resetKey or killData.resetKey == resetKey
@@ -1521,24 +1514,8 @@ function YAB.GetPhaseInfo(charKey, npcId)
 end
 
 function YAB.AddCustomTarget(input, localizedName)
-    local value = tonumber(input)
-    if not value or value <= 0 then
-        return false, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ENTER_A_VALID_NPC_ID")
-    end
-
-    local key = tostring(value)
-    if YiboAltoBossDB.customTargets[key] then
-        return false, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.THIS_NPC_ID_ALREADY_EXISTS")
-    end
-
-    local name = type(localizedName) == "string" and localizedName ~= "" and localizedName or (_G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CUSTOM_TARGET") .. value)
-    YiboAltoBossDB.customTargets[key] = {
-        key = "custom:" .. key,
-        id = value,
-        name = name,
-        group = "custom",
-        reset = "respawn",
-    }
+    local target, message = CustomTargets:Add(YiboAltoBossDB.customTargets, input, localizedName, "respawn")
+    if not target then return false, message end
     RebuildBossCache()
     NotifyTargetCatalogChanged()
     YAB.PersistDB()
@@ -1583,19 +1560,10 @@ function YAB.UpdateCustomTargetName(npcId, localizedName)
 end
 
 function YAB.RemoveCustomTarget(input)
+    local custom, message = CustomTargets:Remove(YiboAltoBossDB.customTargets, input)
+    if not custom then return false, message end
     local value = tonumber(input)
-    if not value or value <= 0 then
-        return false, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.ENTER_THE_NPC_ID_TO_REMOVE")
-    end
-
-    local idKey = tostring(value)
-    local custom = YiboAltoBossDB.customTargets[idKey]
-    if not custom then
-        return false, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CUSTOM_NPC_NOT_FOUND")
-    end
-
-    local targetKey = custom.key or ("custom:" .. idKey)
-    YiboAltoBossDB.customTargets[idKey] = nil
+    local targetKey = custom.key or ("custom:" .. tostring(value))
 
     local display = YiboAltoBossDB.display or {}
     display.items = display.items or {}
@@ -1634,7 +1602,7 @@ function YAB.RemoveCustomTarget(input)
     if YAB.RefreshSettingsUI then
         YAB.RefreshSettingsUI()
     end
-    return true, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.REMOVED_CUSTOM_TARGET") .. idKey
+    return true, message
 end
 
 function YAB.GetAllBossList()
@@ -2554,10 +2522,12 @@ end
 eventFrame:SetScript("OnEvent", function(_, event, ...)
     local arg1 = ...
     if event == "ADDON_LOADED" and arg1 == ADDON_NAME then
+        eventFrame:UnregisterEvent("ADDON_LOADED")
         EnsureDB()
         if YAB.TrackingV3 then YAB.TrackingV3:Initialize() end
         YAB.PersistDB()
     elseif event == "PLAYER_LOGIN" then
+        eventFrame:UnregisterEvent("PLAYER_LOGIN")
         EnsureDB()
         YAB.CheckForReset()
         YAB.SyncWorldBossQuestKillsIfNeeded()

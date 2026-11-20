@@ -153,21 +153,22 @@ YAB = {
 }
 YiboAltoBossDB = { settings = { lockoutColumns = {} }, knownChars = { ["星河-甲"] = {}, ["星河-乙"] = {}, ["暮光-甲"] = {}, ["新角色-甲"] = {} },
     characters = { ["星河-甲"] = {}, ["星河-乙"] = {}, ["暮光-甲"] = {}, ["新角色-甲"] = {} } }
-dofile("YiboAltoBoss/Locale.lua")
+dofile("YiboAltoBoss/Common/Locale.lua")
 dofile("YiboCore/_NonRelease/Tests/LoadCalendar.lua")
-dofile("YiboAltoBoss/HolidayBoss.lua")
-dofile("YiboAltoBoss/LockoutLocale.lua")
-dofile("YiboAltoBoss/DungeonBossCatalog.lua")
-dofile("YiboAltoBoss/DungeonRuns.lua")
-dofile("YiboAltoBoss/InstanceLockouts.lua")
+dofile("YiboAltoBoss/Mists/HolidayBoss.lua")
+dofile("YiboAltoBoss/Common/LockoutLocale.lua")
+dofile("YiboAltoBoss/Mists/DungeonBossCatalog.lua")
+dofile("YiboAltoBoss/Mists/DungeonRuns.lua")
+dofile("YiboAltoBoss/Common/InstanceProgress.lua")
+dofile("YiboAltoBoss/Mists/InstanceLockouts.lua")
 dofile("YiboAltoBoss/Mists/RaidCatalog.lua")
 dofile("YiboAltoBoss/Mists/TargetCatalogRuntime.lua")
-dofile("YiboAltoBoss/Common/TargetCatalog.lua")
-dofile("YiboAltoBoss/PlannedTargets.lua")
-dofile("YiboAltoBoss/Common/RaidProgress.lua")
+dofile("YiboAltoBoss/Mists/TargetCatalog.lua")
+dofile("YiboAltoBoss/Mists/PlannedTargets.lua")
+dofile("YiboAltoBoss/Mists/RaidProgress.lua")
 dofile("YiboAltoBoss/Mists/RaidEvents.lua")
-dofile("YiboAltoBoss/Common/GoalTargets.lua")
-dofile("YiboAltoBoss/Common/TargetProjection.lua")
+dofile("YiboAltoBoss/Mists/GoalTargets.lua")
+dofile("YiboAltoBoss/Mists/TargetProjection.lua")
 assert(Core:RegisterAddon("YiboAltoBoss", { requiredAPI = 13 }))
 local Plans = YAB.PlannedTargets
 local originalAPI = Core.API_VERSION
