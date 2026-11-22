@@ -1,4 +1,16 @@
-# Yibo Addon Suite for MoP - Account QoL Addons CurseForge 填表指南
+# Yibo Addon Suite - Account QoL Addons CurseForge 填表指南
+
+> 2026-11-22 起：项目显示名 `Yibo Addon Suite - Account QoL Addons`（去掉 for MoP，沿用原项目与 slug），MoP 与无限服整合包都上传到本项目。项目正文改用同目录 `CURSEFORGE_DESCRIPTION.md`（双客户端版）。Summary 建议：`Modular Yibo addons for account-wide tracking and everyday convenience, packaged for MoP Classic and Forever.` 下文旧内容为 for MoP 时期记录。
+
+## 当前上传（2026-11-22）
+
+| 字段 | MoP 包 | 无限服包 |
+| --- | --- | --- |
+| Choose file | `Builds/Yibo-Addon-Suite-mists-v1.2.0-curseforge.zip` | `Builds/Yibo-Addon-Suite-forever-v1.0.0-curseforge.zip` |
+| Display Name | `Yibo Addon Suite v1.2.0 - MoP Classic` | `Yibo Addon Suite v1.0.0 - Forever` |
+| Game Version | MoP Classic 5.5.4 | Forever 1.60.1 |
+| Changelog | `Releases/mists-v1.2.0/CURSEFORGE_CHANGELOG.md` | `Releases/forever-v1.0.0/CURSEFORGE_CHANGELOG.md` |
+| Relations | 不填 Required；包内已含全部组件 | 同左 |
 
 状态：v1.0.0 因 ZIP 中包含资料目录而被拒。v1.1.0 使用新名称重新构建，尚未上传；旧名称构建记录另行保留。
 

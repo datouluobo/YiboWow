@@ -8,7 +8,9 @@ function Addon:Initialize()
     if not self.Core then return false end
     if not self.Core:HasCapability("account-surface-budget", 2) or not self.Core:HasCapability("account-character-admission", 1)
         or not self.Core:HasCapability("account-surface-realm-scope", 1)
-        or not (self.Core.UITheme and type(self.Core.UITheme.CreateDropdown) == "function") then
+        or type(self.Core.AccountView.GetVisibleCharacters) ~= "function"
+        or type(self.Core.UITheme.CreateCheckbox) ~= "function"
+        or type(self.Core.UITheme.CreateDropdown) ~= "function" then
         self:PrintBootstrap(self:T("BOOT.CORE_REQUIRED")); return false
     end
     local ok, reason = self:InitializeDatabase()
@@ -16,6 +18,7 @@ function Addon:Initialize()
     if not self:RegisterWithCore() then return false end
     self.initialized = true
     if self.MailProvider then self.MailProvider:Install() end
+    self.Items:WarmPersonalCountsIndex()
     self.Tooltip:Install()
     for _, event in ipairs({ "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "PLAYER_LOGOUT", "BAG_UPDATE_DELAYED", "UNIT_INVENTORY_CHANGED", "PLAYER_EQUIPMENT_CHANGED" }) do self.Frame:RegisterEvent(event) end
     self._unsupportedEvents = {}

@@ -17,15 +17,17 @@ function YAB.CreateBusinessTabs(parent, active)
     tabs:SetPoint("TOPRIGHT", 0, 0)
     tabs:SetFrameLevel((parent:GetFrameLevel() or 0) + 5)
     tabs.buttons = {}
+    -- Legacy bridge textures are always hidden; Core still owns their thickness.
     tabs.leftBridge = tabs:CreateTexture(nil, "OVERLAY")
-    tabs.leftBridge:SetHeight(1)
+    Theme:ApplyPixelRule(tabs.leftBridge, "horizontal")
     tabs.rightBridge = tabs:CreateTexture(nil, "OVERLAY")
-    tabs.rightBridge:SetHeight(1)
+    Theme:ApplyPixelRule(tabs.rightBridge, "horizontal")
     for index, def in ipairs(YAB.BusinessTabs) do
         local button = CreateFrame("Button", nil, tabs, "BackdropTemplate")
         button:SetSize(def.width, TAB_H)
         button:SetPoint("TOPLEFT", 8 + (index - 1) * (def.width + 2), 0)
-        button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+        -- Tabs are separated by a 2-unit gap, so each keeps its own frame.
+        Theme:ApplyPixelBackdrop(button, { background = true })
         button.label = Theme:CreateText(button, Theme.Font.body, C.text, "CENTER")
         button.label:SetPoint("CENTER")
         button:SetScript("OnClick", function()
@@ -47,14 +49,29 @@ function YAB.CreateBusinessTabs(parent, active)
     tabs.lineOverlay:SetAllPoints(tabs)
     tabs.lineOverlay:SetFrameLevel(tabs:GetFrameLevel() + 20)
     tabs.lineOverlay.left = tabs.lineOverlay:CreateTexture(nil, "OVERLAY")
-    tabs.lineOverlay.left:SetHeight(1)
-    tabs.lineOverlay.left:SetColorTexture(C.accent[1], C.accent[2], C.accent[3], 1)
+    Theme:ApplyPixelRule(tabs.lineOverlay.left, "horizontal", { color = { C.accent[1], C.accent[2], C.accent[3], 1 } })
     tabs.lineOverlay.right = tabs.lineOverlay:CreateTexture(nil, "OVERLAY")
-    tabs.lineOverlay.right:SetHeight(1)
-    tabs.lineOverlay.right:SetColorTexture(C.accent[1], C.accent[2], C.accent[3], 1)
+    Theme:ApplyPixelRule(tabs.lineOverlay.right, "horizontal", { color = { C.accent[1], C.accent[2], C.accent[3], 1 } })
     tabs.lineOverlay.activeGap = tabs.lineOverlay:CreateTexture(nil, "OVERLAY")
     tabs.lineOverlay.activeGap:SetHeight(2)
     tabs.lineOverlay.activeGap:SetColorTexture(C.chrome[1], C.chrome[2], C.chrome[3], 1)
+    -- The rule overlaps the active tab's 1px side border and the gap stays
+    -- inside it, so both offsets are one physical pixel, not one UI unit.
+    -- Core re-runs this after every pixel-size change; it reads the tab that
+    -- is active at that time.
+    local function AnchorActiveGeometry()
+        local activeButton = tabs.activeButton
+        local px = Theme:GetPixelSize(activeButton, 1)
+        tabs.lineOverlay.left:ClearAllPoints()
+        tabs.lineOverlay.left:SetPoint("BOTTOMLEFT", tabs, "BOTTOMLEFT", 0, 0)
+        tabs.lineOverlay.left:SetPoint("BOTTOMRIGHT", activeButton, "BOTTOMLEFT", px, 0)
+        tabs.lineOverlay.right:ClearAllPoints()
+        tabs.lineOverlay.right:SetPoint("BOTTOMLEFT", activeButton, "BOTTOMRIGHT", -px, 0)
+        tabs.lineOverlay.right:SetPoint("BOTTOMRIGHT", tabs, "BOTTOMRIGHT", 0, 0)
+        tabs.lineOverlay.activeGap:ClearAllPoints()
+        tabs.lineOverlay.activeGap:SetPoint("BOTTOMLEFT", activeButton, "BOTTOMLEFT", px, 0)
+        tabs.lineOverlay.activeGap:SetPoint("BOTTOMRIGHT", activeButton, "BOTTOMRIGHT", -px, 0)
+    end
     function tabs:SetActive(id)
         local activeButton
         for key, button in pairs(self.buttons) do
@@ -68,15 +85,8 @@ function YAB.CreateBusinessTabs(parent, active)
             -- active state is communicated by the tab's fill and outline.
             button.tabBottom:Hide()
         end
-        self.lineOverlay.left:ClearAllPoints()
-        self.lineOverlay.left:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 0, 0)
-        self.lineOverlay.left:SetPoint("BOTTOMRIGHT", activeButton, "BOTTOMLEFT", 1, 0)
-        self.lineOverlay.right:ClearAllPoints()
-        self.lineOverlay.right:SetPoint("BOTTOMLEFT", activeButton, "BOTTOMRIGHT", -1, 0)
-        self.lineOverlay.right:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", 0, 0)
-        self.lineOverlay.activeGap:ClearAllPoints()
-        self.lineOverlay.activeGap:SetPoint("BOTTOMLEFT", activeButton, "BOTTOMLEFT", 1, 0)
-        self.lineOverlay.activeGap:SetPoint("BOTTOMRIGHT", activeButton, "BOTTOMRIGHT", -1, 0)
+        self.activeButton = activeButton
+        Theme:SetPixelAnchor(self, AnchorActiveGeometry)
         self.lineOverlay.left:Show()
         self.lineOverlay.right:Show()
         self.lineOverlay.activeGap:Show()
@@ -120,11 +130,13 @@ local function StatusCell(parent, index, x, y, column, charKey, definition, view
     cell:Show()
     cell:SetSize(CELL_W, ROW_H)
     cell:SetPoint("TOPLEFT", x, y)
-    cell:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    cell:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+    -- Cells in one row touch horizontally (rows keep a 2-unit gap), so each
+    -- cell owns its top, bottom and right edge and only the first draws left.
+    Theme:CreatePixelBorder(cell, { color = C.matrixLine, sides = { top = true, right = true, bottom = true, left = index == 1 } })
     local status, label = view.status(charKey, column)
     local color = status == "clear" and C.success or (status == "locked" or status == "progress") and C.accent or C.muted
     cell:SetBackdropColor(color[1] * 0.18, color[2] * 0.18, color[3] * 0.18, 0.95)
-    cell:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], 1)
     cell.text = cell.text or Text(cell, Theme.Font.body, color, "CENTER")
     cell.text:SetAllPoints()
     cell.text:SetText(label)

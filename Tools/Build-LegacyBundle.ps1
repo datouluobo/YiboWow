@@ -64,6 +64,14 @@ if ((@($targetStates | ForEach-Object { $_.target } | Sort-Object -Unique) -join
 $versions=@($bundleVersions | Select-Object -Unique)
 if ($versions.Count -ne 1) { throw 'Legacy bundle TOC versions differ.' }
 $releaseVersion=$versions[0]
+$requiredCoreAPI=$null
+if ($definition.ContainsKey('RequiredCoreChecks')) {
+    $requiredValues=@(foreach ($check in $definition.RequiredCoreChecks) {
+        [int](Read-YiboRequiredValue ([IO.File]::ReadAllText((Resolve-YiboSourceFile $root $check.File))) $check.Pattern "required Core API in $($check.File)")
+    })
+    if (@($requiredValues | Select-Object -Unique).Count -ne 1) { throw "Legacy bundle Core gates differ: $($requiredValues -join ', ')" }
+    $requiredCoreAPI=$requiredValues[0]
+}
 if ($Version -and $Version.TrimStart('v','V') -ne $releaseVersion) { throw 'Requested version differs from source version.' }
 $publicEntries=@(Get-YiboPublicEntries $root | Where-Object { (Split-Path $_.Relative -Leaf) -ne 'PRODUCT.md' })
 $hashEntries=$publicEntries + [pscustomobject]@{Relative='build-config/ReleaseProfiles.psd1';Source=(Join-Path $PSScriptRoot 'ReleaseProfiles.psd1');Content=$null}
@@ -84,7 +92,7 @@ foreach ($entry in $publicEntries) {
     }
 }
 Test-YiboLuaEntries $runtimeEntries '5.1'
-$plan=[pscustomobject]@{Addon=$Addon;Target='Universal';SupportedTargets=@($definition.SupportedTargets);Version=$releaseVersion;APIVersion=$null;SourceSHA256=$sourceHash;
+$plan=[pscustomobject]@{Addon=$Addon;Target='Universal';SupportedTargets=@($definition.SupportedTargets);Version=$releaseVersion;APIVersion=$null;RequiredCoreAPI=$requiredCoreAPI;SourceSHA256=$sourceHash;
     CurseForge=$(if($Channel -in @('Both','CurseForge')) {Join-Path $outputPath $names.CurseForge} else {$null});
     GitHub=$(if($Channel -in @('Both','GitHub')) {Join-Path $outputPath $names.GitHub} else {$null});Archived=0;ValidationOnly=[bool]$ValidateOnly}
 if ($ValidateOnly) { return $plan }

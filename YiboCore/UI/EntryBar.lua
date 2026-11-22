@@ -6,7 +6,7 @@ function Bar:EnsureFrame()
     if self.frame then return self.frame end
     local frame = CreateFrame("Frame", "YiboCoreEntryBar", UIParent, "BackdropTemplate")
     frame:SetFrameStrata("MEDIUM"); frame:SetMovable(true); frame:SetClampedToScreen(true)
-    frame:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8x8",edgeFile="Interface\\Buttons\\WHITE8x8",edgeSize=1})
+    Theme:ApplyPixelBackdrop(frame)
     local c = Theme.Colors
     frame:SetBackdropColor(c.panel[1],c.panel[2],c.panel[3],0.95)
     frame:SetBackdropBorderColor(c.lineSoft[1],c.lineSoft[2],c.lineSoft[3],1)

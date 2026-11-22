@@ -291,10 +291,13 @@ end
 local setAction = assert(Find(YAB.RefreshAccountPage, "SetHolidayAction"))
 local control = { scripts = {}, label = { SetTextColor = function() end },
     SetText = function() end, SetState = function() end, SetBackdropColor = function() end,
+    -- Ordinary semantic cells clear their own border inside a ruled row.
+    SetBackdropBorderColor = function(self, ...) self.border = { ... } end,
     SetScript = function(self, event, callback) self.scripts[event] = callback end }
 for _, lang in ipairs({ "zh", "en" }) do
     language, estimate, uptime = lang, 125, 190
     setAction(control, Holiday:GetBoss("holiday:ahune"))
+    check(control.border and control.border[4] == 0, "semantic action cell draws no border parallel to the row rules")
     local expected = YiboCore.Locale:Get("YiboAltoBoss", "QUEUE.ESTIMATED_WAIT", "2" .. YiboCore.Locale:Get("YiboAltoBoss", "TIME.MINUTES_SUFFIX"))
     check(control.lines[2].text == expected, "localized estimate is rendered in actual action tooltip")
     check(control.lines[3].text == YiboCore.Locale:Get("YiboAltoBoss", "QUEUE.ELAPSED_WAIT", "1" .. YiboCore.Locale:Get("YiboAltoBoss", "TIME.MINUTES_SUFFIX")),
@@ -311,7 +314,6 @@ end
 for _, name in ipairs({ "chrome", "matrixLine", "success", "successSurface", "accent", "muted", "text" }) do
     YiboCore.UITheme.Colors[name] = { 0.2, 0.5, 0.7, 1 }
 end
-control.SetBackdropBorderColor = function() end
 control.GetScript = function(self, event) return self.scripts[event] end
 control.RegisterForClicks = function() end
 local intercepted, saves, changes = false, 0, 0

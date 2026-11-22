@@ -222,6 +222,8 @@ YiboMail.Items.Events:Unregister(owner, callback) -- callback 可空，表示注
 
 ## 7. YiboVault.Items v1
 
+Forever 自 0.6.6-api1 起支持 account、realm 和 characters 范围，省略范围仍读取当前角色。跨角色查询使用该目标历史缓存及兼容 Mail 服务的公开快照。既有 service major1/minor1 继续适用，可用 items.personal-counts:1 发现背包、个人银行和装备的批量计数。查询公会来源仍要求当前访问角色与公会身份一致，且只返回已有权限的页签。此扩展限于读取已采集数据。
+
 ### 7.1 能力
 
 ```lua

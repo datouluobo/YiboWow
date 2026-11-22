@@ -65,7 +65,7 @@ local function RefreshOverview(parent, context)
         local button = parent.lines[index]
         if not button then
             button = CreateFrame("Button", nil, parent.content, "BackdropTemplate"); button:SetHeight(38); button:SetPoint("TOPLEFT", 20, -104 - ((index - 1) * 42)); button:SetPoint("TOPRIGHT", -20, -104 - ((index - 1) * 42))
-            button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 }); button:SetBackdropColor(0.03, 0.10, 0.12, 0.85); button:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.45)
+            Theme:ApplyPixelBackdrop(button); button:SetBackdropColor(0.03, 0.10, 0.12, 0.85); button:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.45)
             button.title = AddText(button, "GameFontNormalSmall", nil, COLORS.accent); button.title:SetPoint("LEFT", 10, 0); button.title:SetWidth(125)
             button.text = AddText(button, "GameFontNormalSmall", nil, COLORS.text); button.text:SetPoint("LEFT", button.title, "RIGHT", 8, 0); button.text:SetPoint("RIGHT", -10, 0)
             button:SetScript("OnClick", function(self) AccountView:ShowPage(self.pageID) end); parent.lines[index] = button
@@ -94,7 +94,7 @@ local function RefreshOverview(parent, context)
         local button = parent.actions[index]
         if not button then
             button = CreateFrame("Button", nil, parent.content, "BackdropTemplate"); button:SetHeight(34)
-            button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 }); button:SetBackdropColor(0.035, 0.12, 0.12, 0.9); button:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.45)
+            Theme:ApplyPixelBackdrop(button); button:SetBackdropColor(0.035, 0.12, 0.12, 0.9); button:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.45)
             button.title = AddText(button, "GameFontNormalSmall", nil, COLORS.text); button.title:SetPoint("LEFT", 9, 0); button.title:SetWidth(210)
             button.text = AddText(button, "GameFontNormalSmall", nil, COLORS.muted); button.text:SetPoint("LEFT", button.title, "RIGHT", 8, 0); button.text:SetPoint("RIGHT", -9, 0)
             button:SetScript("OnClick", function(self) AccountView:ShowPage(self.pageID) end); parent.actions[index] = button

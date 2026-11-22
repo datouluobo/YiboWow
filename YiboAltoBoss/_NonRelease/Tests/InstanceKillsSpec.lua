@@ -385,5 +385,12 @@ dofile(root .. "Mists/InstanceLockouts.lua")
 check(not YAB.LockoutLocaleReady and not YAB.RecordDungeonDeath, "old Core stops locale-dependent module")
 dofile(root .. "Mists/CoreIntegration.lua")
 local ok, err = YAB.CoreIntegration:Initialize()
-check(not ok and err:find("API v13", 1, true), "old Core receives explicit upgrade requirement")
+check(not ok and err:find("API v14", 1, true), "old Core receives explicit upgrade requirement")
+-- API13 Core lacks pixel-line:1 and must stop the Mists account page too.
+api = 13
+YAB = { GetCurrentCharKey = function() return "Tester-Realm" end }
+dofile(root .. "Common/LockoutLocale.lua")
+dofile(root .. "Mists/CoreIntegration.lua")
+ok, err = YAB.CoreIntegration:Initialize()
+check(YAB.LockoutLocaleReady and not ok and err:find("pixel-line:1", 1, true), "API13 Core is refused with the pixel-line requirement")
 print("InstanceKillsSpec: " .. checks .. " checks passed")

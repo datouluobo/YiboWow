@@ -64,3 +64,7 @@ Locales/Interface、Targets、Categories 注册插件资源。分类以稳定 AS
 手动英文截图暴露专业显示优先使用原生中文快照的问题，已改为已知专业 ID 优先读取 owner 语言资源，统一覆盖专业选择、列表、矩阵分组与详情；未知专业继续使用原生名称，不改写历史快照。截图中的原生物品、配方、角色及服务器名称保持客户端原文，其它业务插件导航由各自 owner 负责。
 
 下拉展开复用 Core Theme 统一互斥生命周期，普通／多选菜单切换自动关闭前一个菜单，嵌套分组选项保留父菜单并随父菜单关闭。CoreAdaptation 通过中文快照下英文专业显示检查；LocaleLayoutSpec 213项通过，包含菜单互斥、嵌套、隐藏、切换及选中收起。仍需 `/reload` 后确认英文专业显示与连续切换各筛选下拉，Core 设置多选内部分组可正常展开。
+
+### 2026-11-22 像素线宽（Core API14 / pixel-line:1，CAP-013）
+
+MoP `AccountPage.lua` 面板外框 `Panel` 改用 Core `ApplyPixelBackdrop`，配方行底部分隔线由 `SetHeight(1)` 改为 `ApplyPixelRule(horizontal)`；行本身只有填充背景，不与底线重复。专业名移入配方列表头、当前角色描边传表头格的改动保留。面板内 1 单位内缩（滚动区、表头锚点）与 Core 宽度预算中的 `-2` 属同一布局契约，本次保持 UI 单位未改。Mists `Bootstrap.lua` 最低 Core 提高为 API14，增加 `pixel-line:1` 及 `ApplyPixelBackdrop`／`ApplyPixelRule` 方法检查，`RegisterAddon` 声明 API14；`UI.UPGRADE` 中英文同步。无限服清单不加载上述文件且没有线框，Forever 门槛保持 API13。离线：CoreNameIntegration 改为 API14 并新增 API13 拒绝及缺 `pixel-line` 拒绝，其余测试与改动前一致（Smoke 栈溢出、CraftingForever Smoke 为既有失败），双目标构建预检通过。待实机：配方矩阵行线与面板外框在非整数缩放下为单像素。随后按用户决定，面板内缩与宽度预算一并改为边框像素：滚动区与矩阵表头以 `GetPixelSize(panel, 1)` 内缩并经 `SetPixelAnchor` 随缩放重锚，原 `±2` 宽高预算改为 `2 × 像素`（宽度预算只在页面刷新时重算），Mists 方法检查增加 `SetPixelAnchor`。

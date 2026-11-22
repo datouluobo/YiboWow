@@ -34,6 +34,10 @@ theme.MeasureText=function(_,_,text)return #text*7 end
 theme.CreateButton=function(_,_,_,label)local f=Frame();f:SetText(label);return f end
 theme.CreateDropdown=function()local f=Frame();f.menu=Frame();return f end
 theme.CreateScrollFrame=function()return Frame()end
+-- Core API14 pixel backdrop used by the real Input.lua.
+theme.ApplyPixelBackdrop=function(_,frame)return frame end
+theme.GetPixelSize=function(_,_,pixels)return pixels or 1 end
+theme.SetPixelAnchor=function(_,_,anchor)if anchor then anchor()end end
 local registered,entry,refreshes=nil,nil,0
 YiboCore={UITheme=theme,ItemResolver={GetInfo=function()return{state="unloaded"}end},
     DataDomains={Get=function()return{state="known",data={professions={{id=333,name="附魔"}}}}end},

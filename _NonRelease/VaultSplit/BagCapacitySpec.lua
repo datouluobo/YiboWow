@@ -45,6 +45,8 @@ for _, child in pairs(mock) do
 end
 function mock:SetBackdropColor() end
 function mock:SetBackdropBorderColor() end
+function mock.icon:ClearAllPoints() end
+function mock.icon:SetPoint() end
 local goals = vault.GoalTargets; vault.GoalTargets = nil
 vault.StoragePage:UpdateItemCell({}, mock, slots[3], 1)
 Check(mock.emptyLabel.text == "草药" and mock.emptyCount.text == "11", "rendered herb tile has upper label and lower number")

@@ -3,6 +3,8 @@ local Addon = _G.YiboVault
 function Addon:Initialize()
     if self.initialized then return end
     if self.CLIENT_SUPPORTED == false then self:PrintBootstrap(self:T("FOREVER.CLIENT_MISMATCH")); return end
+    -- Client identity and Core readiness, API and capabilities are verified before the saved store is touched.
+    if not self:CheckCoreRequirements() then return end
     self:InitializeDatabase()
     if not self:RegisterWithCore() then return end
     if self.Items.WarmPersonalCountsIndex then self.Items:WarmPersonalCountsIndex() end

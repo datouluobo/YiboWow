@@ -1,7 +1,16 @@
 local Addon = _G.YiboMail
 local Native = {}; Addon.NativeUI = Native
 local View = Addon.ViewModel
-local BACKDROP = { bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 }
+-- Core pixel-line:1 owns the 1px border thickness; colors stay with the caller.
+local function PixelBackdrop(frame) return Addon.Core.UITheme:ApplyPixelBackdrop(frame) end
+-- Inset a texture just inside its frame's 1px border; Core re-anchors after pixel-size changes.
+local function PixelInset(texture, frame)
+    local Theme = Addon.Core.UITheme
+    Theme:SetPixelAnchor(texture, function()
+        local inset = Theme:GetPixelSize(frame, 1)
+        texture:ClearAllPoints(); texture:SetPoint("TOPLEFT", inset, -inset); texture:SetPoint("BOTTOMRIGHT", -inset, inset)
+    end)
+end
 local function StripNativeArt(control, hideText)
     if not control then return end
     if control.GetRegions then
@@ -33,7 +42,7 @@ local function InboxButton(parent, width, label, callback)
 end
 local function Surface(parent)
     local frame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    frame:SetBackdrop(BACKDROP); frame:SetBackdropColor(0.025, 0.055, 0.055, 1); frame:SetBackdropBorderColor(0.18, 0.29, 0.27, 1)
+    PixelBackdrop(frame); frame:SetBackdropColor(0.025, 0.055, 0.055, 1); frame:SetBackdropBorderColor(0.18, 0.29, 0.27, 1)
     frame:EnableMouse(true); return frame
 end
 local function Tooltip(control, title, detail, link)
@@ -45,7 +54,7 @@ local function Tooltip(control, title, detail, link)
     control:SetScript("OnLeave", function() GameTooltip:Hide() end)
 end
 -- Shared widgets are reused by both mailbox surfaces.
-Native.inboxWidgets = { Text, InboxButton, Surface, Tooltip, BACKDROP }
+Native.inboxWidgets = { Text, InboxButton, Surface, Tooltip, PixelBackdrop, PixelInset }
 function Native:MailboxTabs()
     local tabs = { { "mail", Addon:T("UI.TEXT_0344") }, { "items", Addon:T("UI.TEXT_0635") }, { "send", Addon:T("UI.TEXT_0179") } }
     if Addon.FEATURES.rules then tabs[#tabs + 1] = { "rules", Addon:T("MAILBOX.RULES") } end
@@ -226,7 +235,7 @@ function Native:CreateBasicSend()
     local theme = Addon.Core.UITheme
     panel.shell = CreateFrame("Frame", nil, MailFrame, "BackdropTemplate")
     panel.shell:SetAllPoints(MailFrame); panel.shell:SetFrameLevel(MailFrame:GetFrameLevel() + 1)
-    panel.shell:SetBackdrop(BACKDROP); panel.shell:SetBackdropColor(unpack(theme.Colors.bg)); panel.shell:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
+    PixelBackdrop(panel.shell); panel.shell:SetBackdropColor(unpack(theme.Colors.bg)); panel.shell:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
     local function CreateSendField(label)
         local field = Surface(panel)
         field.label = theme:CreateText(field, theme.Font.body, theme.Colors.muted, "LEFT")
@@ -245,18 +254,18 @@ function Native:CreateBasicSend()
     panel.favoritesExpanded = true
     panel.favoritesPanel = CreateFrame("Frame", nil, panel, "BackdropTemplate")
     panel.favoritesPanel:SetFrameLevel(panel:GetFrameLevel() + 2)
-    panel.favoritesPanel:SetBackdrop(BACKDROP)
+    PixelBackdrop(panel.favoritesPanel)
     panel.favoritesPanel:SetBackdropColor(unpack(theme.Colors.bg))
     panel.favoritesPanel:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
     panel.favoritesPanel:EnableMouse(true)
     panel.favoriteButtons = {}
     for index = 1, 72 do
         local button = CreateFrame("Button", nil, panel.favoritesPanel, "BackdropTemplate")
-        button:SetBackdrop(BACKDROP)
+        PixelBackdrop(button)
         button:SetBackdropColor(unpack(theme.Colors.panel))
         button:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
         button.icon = button:CreateTexture(nil, "ARTWORK")
-        button.icon:SetPoint("TOPLEFT", 1, -1); button.icon:SetPoint("BOTTOMRIGHT", -1, 1)
+        PixelInset(button.icon, button)
         button.emptyMark = theme:CreateText(button, theme.Font.title, theme.Colors.muted, "CENTER")
         button.emptyMark:SetAllPoints(); button.emptyMark:SetText("+")
         button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
@@ -477,14 +486,14 @@ function Native:PromptAddFavorite(prefill, slot)
         editor:SetSize(344, 156); editor:SetPoint("CENTER")
         editor:SetFrameStrata("DIALOG"); editor:SetFrameLevel(1000)
         editor:SetClampedToScreen(true); editor:EnableMouse(true); editor:SetToplevel(true)
-        editor:SetBackdrop(BACKDROP); editor:SetBackdropColor(unpack(theme.Colors.bg)); editor:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
+        PixelBackdrop(editor); editor:SetBackdropColor(unpack(theme.Colors.bg)); editor:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
         editor.title = theme:CreateText(editor, theme.Font.section, theme.Colors.text, "LEFT")
         editor.title:SetPoint("TOPLEFT", 14, -12); editor.title:SetText(Addon:T("UI.TEXT_0613"))
         editor.address = CreateFrame("EditBox", nil, editor, "BackdropTemplate")
         editor.address:SetPoint("TOPLEFT", 14, -42); editor.address:SetSize(316, theme.Size.standard)
         editor.address:SetAutoFocus(false); editor.address:SetMaxLetters(160)
         editor.address:SetFont(STANDARD_TEXT_FONT, theme.Font.body, "OUTLINE"); editor.address:SetTextColor(unpack(theme.Colors.text))
-        editor.address:SetTextInsets(8, 8, 0, 0); editor.address:SetBackdrop(BACKDROP)
+        editor.address:SetTextInsets(8, 8, 0, 0); PixelBackdrop(editor.address)
         editor.address:SetBackdropColor(unpack(theme.Colors.panel)); editor.address:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
         editor.status = theme:CreateText(editor, theme.Font.assist, theme.Colors.muted, "LEFT")
         editor.status:SetPoint("TOPLEFT", editor.address, "BOTTOMLEFT", 0, -5); editor.status:SetPoint("RIGHT", editor, "RIGHT", -14, 0); editor.status:SetHeight(20)
@@ -791,9 +800,9 @@ function Native:StyleSendAttachment(button, index)
     if not skin then
         skin = CreateFrame("Frame", nil, button, "BackdropTemplate")
         skin:SetAllPoints(button); skin:SetFrameLevel(button:GetFrameLevel() + 1); skin:EnableMouse(false)
-        skin:SetBackdrop(BACKDROP); skin:SetBackdropColor(unpack(theme.Colors.panel))
+        PixelBackdrop(skin); skin:SetBackdropColor(unpack(theme.Colors.panel))
         skin.icon = skin:CreateTexture(nil, "ARTWORK")
-        skin.icon:SetPoint("TOPLEFT", 1, -1); skin.icon:SetPoint("BOTTOMRIGHT", -1, 1); skin.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        PixelInset(skin.icon, skin); skin.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
         skin.count = theme:CreateText(skin, theme.Font.assist, theme.Colors.text, "RIGHT")
         skin.count:SetPoint("BOTTOMRIGHT", -2, 2)
         button.yiboMailAttachment = skin
@@ -829,7 +838,7 @@ function Native:LayoutSendMoney()
                 if not input.yiboMailInput then
                     local surface = CreateFrame("Frame", nil, input:GetParent(), "BackdropTemplate")
                     surface:SetAllPoints(input); surface:SetFrameLevel(math.max(0, input:GetFrameLevel() - 1)); surface:EnableMouse(false)
-                    surface:SetBackdrop(BACKDROP); surface:SetBackdropColor(unpack(theme.Colors.panel)); surface:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
+                    PixelBackdrop(surface); surface:SetBackdropColor(unpack(theme.Colors.panel)); surface:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
                     input.yiboMailInput = surface
                 end
             end
@@ -846,7 +855,7 @@ function Native:LayoutSendMoney()
             StripNativeArt(control)
             if not control.yiboMailRadio then
                 local skin = CreateFrame("Frame", nil, control, "BackdropTemplate")
-                skin:SetAllPoints(control); skin:EnableMouse(false); skin:SetBackdrop(BACKDROP)
+                skin:SetAllPoints(control); skin:EnableMouse(false); PixelBackdrop(skin)
                 skin:SetBackdropColor(unpack(theme.Colors.panel)); skin:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
                 skin.mark = skin:CreateTexture(nil, "ARTWORK"); skin.mark:SetPoint("TOPLEFT", 4, -4); skin.mark:SetPoint("BOTTOMRIGHT", -4, 4)
                 skin.mark:SetColorTexture(unpack(theme.Colors.accent)); control.yiboMailRadio = skin
@@ -893,7 +902,7 @@ local function StyleNativeActionButton(button, primary, labelKey)
     local theme = Addon.Core.UITheme
     local skin = CreateFrame("Frame", nil, button, "BackdropTemplate")
     skin:SetAllPoints(button); skin:SetFrameLevel(button:GetFrameLevel() + 1); skin:EnableMouse(false)
-    skin:SetBackdrop(BACKDROP)
+    PixelBackdrop(skin)
     skin.label = theme:CreateText(skin, theme.Font.body, theme.Colors.text, "CENTER")
     skin.label:SetAllPoints()
     button.yiboMailSkin = skin

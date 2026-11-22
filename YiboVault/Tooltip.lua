@@ -132,8 +132,7 @@ local function CachedQuery(self, scope, itemID)
     end
     local cached = self.cacheResults[itemID]
     if cached then return cached end
-    local result = Addon.QueryTooltip and Addon:QueryTooltip(scope, itemID)
-        or Addon.Items:Query({ scope = scope, itemID = itemID })
+    local result = Addon.Items:Query({ scope = scope, itemID = itemID })
     if #self.cacheOrder >= 64 then
         self.cacheResults[table.remove(self.cacheOrder, 1)] = nil
     end
@@ -163,7 +162,7 @@ function Tooltip:Append(tooltip, knownItemID)
     local result = CachedQuery(self, scope, itemID)
     local hiddenResult = hiddenGuildKey and Addon.Items:Query({
         scope = { mode = "characters", characterIDs = {} }, guildKey = hiddenGuildKey,
-        sources = { "guild-bank" }, itemID = itemID,
+        sources = { "guild-bank" }, itemID = itemID, includeHiddenGuilds = true,
     })
     if #result.records == 0 and #(result.transitRecords or {}) == 0
         and not (hiddenResult and #hiddenResult.records > 0) then return end

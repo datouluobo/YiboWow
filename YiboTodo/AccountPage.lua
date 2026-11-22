@@ -138,7 +138,8 @@ local function GetIcon(parent, index)
         if not self.actionProject or not self.actionIsCurrent or not Addon.Actions then return end
         Addon.Actions:Execute(self.actionProject, self.actionIsCurrent)
     end)
-    button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    -- Standalone icon frame inset inside its cell; it never touches the row rules.
+    Theme:ApplyPixelBackdrop(button, { background = true, pixels = 1 })
     button.texture = button:CreateTexture(nil, "ARTWORK")
     button.texture:SetPoint("TOPLEFT", 2, -2); button.texture:SetPoint("BOTTOMRIGHT", -2, 2)
     button.check = button:CreateTexture(nil, "OVERLAY")
@@ -156,7 +157,7 @@ local function GetIcon(parent, index)
     button.estimatedBorder:EnableMouse(false)
     button.actionableBorder = CreateFrame("Frame", nil, button, "BackdropTemplate")
     button.actionableBorder:SetAllPoints()
-    button.actionableBorder:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Theme:ApplyPixelBackdrop(button.actionableBorder, { background = false, pixels = 1 })
     button.actionableBorder:EnableMouse(false)
     parent.icons[index] = button
     return button
@@ -379,13 +380,21 @@ local function Row(frame, index)
     if row then return row end
     row = CreateFrame("Frame", nil, frame.body, "BackdropTemplate")
     row:SetHeight(ROW_HEIGHT)
-    row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    -- Fill only; rows touch (ROW_GAP = 0), so their rules come from
+    -- SetRowBorder and each shared boundary is painted once.
+    row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
     row.professionIcon = row:CreateTexture(nil, "ARTWORK")
     row.professionIcon:SetSize(16, 16)
     row.name = Text(row, Theme.Font.body, C.text)
     row.status = Text(row, Theme.Font.body, C.muted, "LEFT")
     frame.rows[index] = row
     return row
+end
+
+-- Stacked rows share one pixel boundary: every row draws its sides and
+-- bottom, and only the first row draws the matrix's top edge.
+local function SetRowBorder(row, rowIndex)
+    Theme:CreatePixelBorder(row, { color = C.matrixLine, sides = { top = rowIndex == 1, right = true, bottom = true, left = true } })
 end
 
 local function Header(frame, index)
@@ -400,7 +409,10 @@ function Page.Create(frame)
     frame:SetClipsChildren(true)
     frame.header = CreateFrame("Frame", nil, frame); frame.header:SetHeight(Theme.Table.headerHeight)
     frame.account = CreateFrame("Frame", nil, frame, "BackdropTemplate"); frame.account:SetHeight(ROW_HEIGHT)
-    frame.account:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    -- The shared-account row sits directly above data row 1 (ROW_GAP = 0).
+    -- It draws top and sides; the boundary below it is data row 1's top rule.
+    frame.account:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+    Theme:CreatePixelBorder(frame.account, { color = C.matrixLine, sides = { top = true, right = true, bottom = false, left = true } })
     frame.account.label = Text(frame.account, Theme.Font.assist, C.muted); frame.account.label:SetPoint("LEFT", 8, 0); frame.account.label:SetText(Addon:T("PAGE.ACCOUNT_SHARED"))
     frame.account.projects = CreateFrame("Frame", nil, frame.account)
     frame.account.projects.empty = Text(frame.account.projects, Theme.Font.body, C.muted, "CENTER"); frame.account.projects.empty:SetAllPoints()
@@ -498,7 +510,7 @@ function Page.Refresh(frame, context)
     local top = frame.header
     if showCommon and #accountProjects > 0 then
         frame.account:ClearAllPoints(); frame.account:SetPoint("TOPLEFT", frame.header, "BOTTOMLEFT", 0, -ROW_GAP); frame.account:SetSize(tableWidth, ROW_HEIGHT)
-        frame.account:SetBackdropColor(C.row[1], C.row[2], C.row[3], C.row[4]); frame.account:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
+        frame.account:SetBackdropColor(C.row[1], C.row[2], C.row[3], C.row[4])
         frame.account.label:SetWidth(characterWidth - 8)
         frame.account.projects:Show()
         frame.account.projects:ClearAllPoints(); frame.account.projects:SetPoint("TOP", 0, 0); frame.account.projects:SetPoint("BOTTOM", 0, 0)
@@ -515,7 +527,7 @@ function Page.Refresh(frame, context)
             local row = Row(frame, count)
             row:ClearAllPoints(); row:SetPoint("TOPLEFT", frame.body, "TOPLEFT", 0, -y); row:SetSize(tableWidth, ROW_HEIGHT)
             local fill = Theme:GetDataRowColor(count)
-            row:SetBackdropColor(fill[1], fill[2], fill[3], 0.9); row:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
+            row:SetBackdropColor(fill[1], fill[2], fill[3], 0.9); SetRowBorder(row, count)
             Theme:ApplyDataColumnTints(row, columns, ROW_HEIGHT, 0, COLUMN_GAP)
             Theme:UpdateCurrentCharacterRowOutline(row, current and character.id == current.id)
             local hasIcon = SetProfessionIcon(row.professionIcon, character)

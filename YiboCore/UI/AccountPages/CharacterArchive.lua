@@ -259,7 +259,7 @@ local function RefreshCharacters(parent, context)
         local row = parent.rows[index]
         if not row then
             row = CreateFrame("Button", nil, parent.listContent, "BackdropTemplate"); row:SetHeight(Theme.Table.rowHeight); row:SetPoint("TOPLEFT", 0, -((index - 1) * Theme.Table.rowHeight)); row:SetWidth(tableWidth)
-            row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 }); row.name = AddText(row, "GameFontNormalSmall", Theme.Font.body, COLORS.text); row.name:SetPoint("LEFT", 9, 0); row.name:SetWidth(246)
+            row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" }); row.name = AddText(row, "GameFontNormalSmall", Theme.Font.body, COLORS.text); row.name:SetPoint("LEFT", 9, 0); row.name:SetWidth(246)
             row.level = AddText(row, "GameFontNormalSmall", Theme.Font.body, COLORS.text); row.level:SetPoint("LEFT", row.name, "RIGHT", 6, 0); row.level:SetWidth(32)
             row.zone = AddText(row, "GameFontNormalSmall", nil, COLORS.muted); row.zone:SetPoint("LEFT", row.level, "RIGHT", 6, 0); row.zone:SetWidth(78)
             row.itemLevel = AddText(row, "GameFontNormalSmall", nil, COLORS.muted); row.itemLevel:SetPoint("LEFT", row.zone, "RIGHT", 6, 0); row.itemLevel:SetWidth(42)
@@ -313,7 +313,9 @@ local function RefreshCharacters(parent, context)
         local rowTone = Theme:GetDataRowColor(index)
         row:SetBackdropColor(rowTone[1], rowTone[2], rowTone[3], rowTone[4] or 0.88)
         Theme:ApplyDataColumnTints(row, widths, rowHeight, 8, function(fieldIndex) return GetArchiveColumnGap(fields, fieldIndex) end)
-        row:SetBackdropBorderColor(COLORS.matrixLine[1], COLORS.matrixLine[2], COLORS.matrixLine[3], COLORS.matrixLine[4])
+        -- Stacked rows share one boundary: each row draws its sides and bottom,
+        -- and only the first row draws the table's top edge.
+        Theme:CreatePixelBorder(row, { color = COLORS.matrixLine, sides = { top = index == 1, right = true, bottom = true, left = true } })
         Theme:UpdateCurrentCharacterRowOutline(row, isCurrent)
         row:Show()
     end

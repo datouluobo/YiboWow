@@ -51,3 +51,11 @@ EquipmentAugmentSpec 先复现单卷轴三条候选失败，再验证手套急�
 ## 1.5.0 发布确认（2026-10-16）
 
 状态：已完成。用户已确认Core适配正常，且重载后每张附魔卷轴只显示对应的一个附魔。Builds运行时与TOC更新至1.5.0，配套最低Core1.12.5 / API13 / character-cleanup:2。首次适配时的Core1.12.4工作区能力基线保持作为历史记录；正式Core1.12.5发布必要的清理v2能力。离线回归、语法与语言资源检查通过；下方/前述专项清单用于后续回归，不扩大用户实测反馈的场景范围。
+
+## Core API14 像素线宽接入（2026-11-22，工作树，CAP-013）
+
+状态：代码与离线验证完成，Mists／Forever 实机待验；版本号未改。最低 Core 提高到 API14 并检查 `pixel-line:1`：Mists 在 `Bootstrap.lua`（`REQUIRED_CORE_API = 14`、能力表加 `pixel-line`、校验 `UITheme.ApplyPixelBackdrop/ApplyPixelRule/CreatePixelBorder`，升级提示改为 Core 1.12.14 / API14）；Forever 在 `Forever/Bootstrap.lua`（`CheckAPIVersion(14)`、`requiredAPI = 14`、能力表加 `pixel-line`、方法检查加 `ApplyPixelBackdrop/GetPixelSize`，`FOREVER.CORE_REQUIRED` 中英文同步改为 API14）。不足时沿用原有升级提示并在写库前停止，无本地回退。
+
+迁移范围：Mists `AccountPage.lua` 的角色列表、主面板、装备详情面板、专精图标、悬停矩阵装备格、腰带扣／铁匠孔提示及详情可操作行改用 `ApplyPixelBackdrop`；天赋／雕文行底线改用 `ApplyPixelRule`；装备与宝石图标的本地四边像素框改用 Core `CreatePixelBorder`（OVERLAY 2，颜色仍随品质／孔色）。详情普通行改为透明背景与边框，不再 `SetBackdrop(nil)`，避免缩放刷新时重建出可见边框。Forever `Forever/AccountPage.lua` 悬停装备格、`Forever/TalentTree.lua` 天赋格改用 `ApplyPixelBackdrop`，天赋点数角标内缩改为 `GetPixelSize(tile, 1)`。2 单位选中框、38/34 图标底框及 2 粗天赋连线不在范围。这些控件互不相邻，未做按边去重。
+
+实机待验：两端在多种 UI 缩放下查看构筑页装备图标／宝石孔框、装备详情可操作行（选中与未选中）、天赋／雕文行底线、悬停装备矩阵，以及 Forever 天赋树格与点数角标，确认线宽 1 物理像素、无双线，缩放切换后不残留旧粗细；API13 Core 下应提示升级并停止。同日补充：Forever 天赋点数角标内缩改经 Core `Theme:SetPixelAnchor` 应用，缩放变化后由 Core 立即重新锚定、无需重新渲染，`Forever/Bootstrap.lua` 方法检查加 `SetPixelAnchor`，离线回归与 Forever ValidateOnly 通过，缩放切换后角标贴边待实机。

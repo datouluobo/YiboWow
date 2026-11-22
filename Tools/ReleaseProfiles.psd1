@@ -18,6 +18,11 @@
             Interfaces = @(120105, 120105, 50504)
             HintToc = 'YiboBeastPaths.toc'
             HintInterfaces = @(120105, 50504)
+            # Every Core gate in the shared bundle must declare the same minimum Core API.
+            RequiredCoreChecks = @(
+                @{ File = 'Common/OfflinePetCoreGate.lua'; Pattern = 'core:CheckAPIVersion\((\d+)\)' }
+                @{ File = 'Maintenance/CoreDebugAdapter.lua'; Pattern = 'core:CheckAPIVersion\((\d+)\)' }
+            )
             ValidationState = '1.9.1-retail-mists-bundle-user-accepted-20261115'
         }
     }
@@ -159,6 +164,8 @@
         YiboCrafting = @{
             VersionFile = 'Namespace.lua'
             VersionPattern = '^Addon\.VERSION\s*=\s*"([^"]+)"'
+            RequiredCoreFile = 'Bootstrap.lua'
+            RequiredCorePattern = 'Core:CheckAPIVersion\((\d+)\)'
             VersionIncludesAPI = $false
             ResourceDirectories = @('Media')
             ExtraFiles = @()
@@ -178,6 +185,8 @@
                     Interfaces = @(16001)
                     VersionFile = 'Forever/Namespace.lua'
                     VersionPattern = '^local Addon=.*VERSION="([^"]+)"'
+                    RequiredCoreFile = 'Forever/Bootstrap.lua'
+                    RequiredCorePattern = 'core:CheckAPIVersion\((\d+)\)'
                     CurseForgeFlavor = 'forever'
                     CurseForgeVersionNames = @('1.60.1')
                     LuaVersion = '5.1'
@@ -408,7 +417,7 @@
                     CurseForgeFlavor = 'forever'
                     CurseForgeVersionNames = @('1.60.1')
                     LuaVersion = '5.1'
-                    ValidationState = 'forever-0.6.5-api1-tooltip-client-pending-20261120'
+                    ValidationState = 'forever-0.6.6-api1-mists-parity-client-pending-20261120'
                 }
             }
         }

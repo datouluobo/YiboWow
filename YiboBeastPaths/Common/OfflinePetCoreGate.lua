@@ -7,6 +7,7 @@ local capabilities = {
     { "character-cleanup", 2 }, { "account-view", 2 },
     { "account-character-admission", 1 }, { "account-surface-budget", 2 },
     { "account-entry", 2 }, { "builtin-entry-bar", 3 }, { "localization", 1 }, { "basic-input", 1 },
+    { "pixel-line", 1 },
 }
 local methods = {
     { "Characters", "GetCurrentID" }, { "Characters", "GetCurrent" },
@@ -19,7 +20,7 @@ local methods = {
     { "Events", "Register" }, { "Events", "Unregister" },
     { "UITheme", "CreateText" }, { "UITheme", "CreateScrollFrame" },
     { "UITheme", "CreateInput" }, { "UITheme", "CreateButton" },
-    { "UITheme", "CreateDropdown" },
+    { "UITheme", "CreateDropdown" }, { "UITheme", "ApplyPixelBackdrop" },
 }
 
 function ns.CheckOfflinePetCore(core)
@@ -27,7 +28,7 @@ function ns.CheckOfflinePetCore(core)
     for _, name in ipairs({ "CheckAPIVersion", "IsInitialized", "HasCapability", "RegisterAddon" }) do
         if type(core[name]) ~= "function" then return false, "upgrade" end
     end
-    if not core:CheckAPIVersion(13) then return false, "upgrade" end
+    if not core:CheckAPIVersion(14) then return false, "upgrade" end
     if not core:IsInitialized() then return false, "not-ready" end
     for _, required in ipairs(capabilities) do
         if not core:HasCapability(required[1], required[2]) then return false, "upgrade" end

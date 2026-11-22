@@ -56,7 +56,9 @@ function Page:Create(parent)
 end
 local function Layout(container,labels,columns)
     for _,label in pairs(labels) do label:Hide() end
-    for _,column in ipairs(columns) do local label=labels[column.id]; label:ClearAllPoints(); label:SetPoint("TOPLEFT",container,"TOPLEFT",column.x,0); label:SetSize(column.width,30); label:Show() end
+    -- Labels fill their container's height, so text is centred in the
+    -- 26-unit header and 30-unit rows alike (a fixed 30 box sat 2 units low).
+    for _,column in ipairs(columns) do local label=labels[column.id]; label:ClearAllPoints(); label:SetPoint("TOPLEFT",container,"TOPLEFT",column.x,0); label:SetPoint("BOTTOMLEFT",container,"BOTTOMLEFT",column.x,0); label:SetWidth(column.width); label:Show() end
 end
 local previewLimit = 6
 local matrixRowHeight = 30

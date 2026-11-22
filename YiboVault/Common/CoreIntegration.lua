@@ -22,6 +22,7 @@ function Addon:CheckCoreRequirements()
         and core:HasCapability("item-resolver", 1)
         and core:HasCapability("character-identity", 1)
         and core:HasCapability("account-entry", 2)
+        and core:HasCapability("pixel-line", 1)
         and core.Characters and type(core.Characters.GetCurrent) == "function"
         and type(core.Characters.GetCurrentID) == "function"
         and type(core.Characters.GetAllCached) == "function"
@@ -29,13 +30,15 @@ function Addon:CheckCoreRequirements()
         and type(core.Characters.FormatName) == "function"
         and core.CharacterSort and type(core.CharacterSort.Sort) == "function"
         and core.UITheme and type(core.UITheme.CreateInput) == "function"
+        and type(core.UITheme.ApplyPixelBackdrop) == "function" and type(core.UITheme.GetPixelSize) == "function"
+        and type(core.UITheme.SetPixelAnchor) == "function"
         and core.ItemResolver and type(core.ItemResolver.Parse) == "function"
         and type(core.ItemResolver.GetInfo) == "function"
         and type(core.ItemResolver.Request) == "function") then
         if core and core.Locale and type(core.Locale.Get) == "function" then
             Addon:PrintBootstrap(Addon:T("BOOT.CORE_REQUIRED"))
         else
-            Addon:PrintBootstrap("Requires a matching YiboCore build with API 13 and localization:1. Please upgrade Core.")
+            Addon:PrintBootstrap("Requires a matching YiboCore build with API 14 and localization:1. Please upgrade Core.")
         end
         return nil
     end

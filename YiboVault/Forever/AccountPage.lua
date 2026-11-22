@@ -1,9 +1,10 @@
 local Addon, Core = _G.YiboVault, _G.YiboCore
 local Page, PAGE_ID = { pendingItems = {} }, "vault-items"
 Addon.AccountPage = Page
+Page.ID = PAGE_ID
 local Theme = Core.UITheme
 local sources = {"bags", "equipment", "bank", "mail", "auction", "guild-bank"}
-local cachedSources = {"bags", "equipment", "bank"}
+local cachedSources = {"bags", "equipment", "bank", "mail", "auction"}
 local sidebarWidth = 168
 local slotSize, slotStep = 37, 43
 function Page:SourceLabel(source)
@@ -30,6 +31,7 @@ end
 local function Fields()
     return {
         { id = "item", title = Addon:T("FOREVER.ITEM"), defaultVisible = true },
+        { id = "character", title = Addon:T("TEXT.CHARACTER_6B2669"), defaultVisible = true },
         { id = "location", title = Addon:T("FOREVER.LOCATION"), defaultVisible = true },
         { id = "quantity", title = Addon:T("FOREVER.QUANTITY"), defaultVisible = true },
     }
@@ -93,6 +95,8 @@ function Page:Create(parent)
     parent.refresh:SetScript("OnClick", function() if parent.refresh.state == "disabled" or not Page:CanRefresh(Addon.db.settings.foreverSource) then return end; Addon:ScanInitial("manual"); Core.AccountView:NotifyPageChanged(PAGE_ID) end)
     parent.status = Theme:CreateText(parent, Theme.Font.assist, Theme.Colors.muted)
     parent.status:SetPoint("TOPLEFT", 12, -82); parent.status:SetPoint("RIGHT", -12, 0); parent.status:SetHeight(26)
+    parent.capacity = Theme:CreateText(parent, Theme.Font.assist, Theme.Colors.muted)
+    parent.capacity:SetHeight(24)
     parent.header = CreateFrame("Frame", nil, parent); parent.header:SetPoint("TOPLEFT", 12, -114); parent.header:SetPoint("TOPRIGHT", -12, -114); parent.header:SetHeight(26)
     parent.scroll = Theme:CreateScrollFrame(parent)
     parent.scroll:SetPoint("TOPLEFT", 12, -144); parent.scroll:SetPoint("BOTTOMRIGHT", -12, 10)
@@ -100,13 +104,21 @@ function Page:Create(parent)
     parent.labels, parent.rows = {}, {}
     for _, field in ipairs(Fields()) do parent.labels[field.id] = Theme:CreateText(parent.header, Theme.Font.assist, Theme.Colors.muted) end
     parent.rosterScroll = Theme:CreateScrollFrame(parent)
-    parent.rosterScroll:SetPoint("TOPLEFT", 12, -10)
+    parent.rosterScroll:SetPoint("TOPLEFT", 12, -39)
     parent.rosterScroll:SetPoint("BOTTOMLEFT", 12, 10)
     parent.rosterScroll:SetWidth(sidebarWidth)
+    parent.showHidden = Theme:CreateCheckbox(parent, Addon:T("TEXT.SHOW_HIDDEN_GUILDS_4B158B"))
+    parent.showHidden:SetPoint("TOPLEFT", 12, -10)
+    parent.showHidden:SetWidth(sidebarWidth)
+    parent.showHidden:SetScript("OnClick", function(control)
+        control:SetChecked(not control:GetChecked())
+        parent.explicitGuild = nil
+        Core.AccountView:NotifyPageChanged(PAGE_ID)
+    end)
     parent.rosterContent = CreateFrame("Frame", nil, parent.rosterScroll)
     parent.rosterContent:SetWidth(sidebarWidth-16)
     parent.rosterScroll:SetScrollChild(parent.rosterContent)
-    parent.rosterButtons, parent.grid = {}, {}
+    parent.rosterButtons, parent.grid, parent.emptySlots = {}, {}, {}
     parent.container = Theme:CreateDropdown(parent, 156)
     parent.container:SetPoint("TOPLEFT", sidebarWidth+24, -117)
     parent.container:SetOnValueChanged(function()
@@ -154,19 +166,6 @@ local function HasCompletedSource(characterID, source)
     return false
 end
 
-local function CachedRecords(characterID, source, searching)
-    local records = {}
-    for _, key in ipairs(cachedSources) do
-        if searching or key == source then
-            for _, record in ipairs(Addon:GetCachedCharacterRecords(characterID, key)) do
-                record.state = "stale"
-                records[#records+1] = record
-            end
-        end
-    end
-    return records
-end
-
 local function PaintRoster(parent, characters)
     local selected
     local current = Core.Characters:GetCurrentID()
@@ -183,6 +182,7 @@ local function PaintRoster(parent, characters)
             button:SetHeight(32)
             button:SetScript("OnClick", function(self)
                 parent.selectedCharacter = self.characterID
+                parent.explicitGuild = nil
                 parent.container:SetValue("all")
                 parent.scroll:SetVerticalScroll(0)
                 Core.AccountView:NotifyPageChanged(PAGE_ID)
@@ -200,7 +200,7 @@ local function PaintRoster(parent, characters)
     return selected
 end
 
-local function SelectContainer(parent, records, source, searching, characterID)
+local function SelectContainer(parent, records, source, searching, characterID, guildCoverage)
     local byContainer = source == "bags" or source == "bank"
     local byTab = source == "guild-bank"
     if searching or not (byContainer or byTab) then parent.container:Hide(); return records end
@@ -215,6 +215,10 @@ local function SelectContainer(parent, records, source, searching, characterID)
             end
         end
     end
+    for tab, state in pairs(guildCoverage or {}) do
+        local id = tonumber(tab)
+        if state.completedScan then ids[#ids + 1] = id; seen[id] = true end
+    end
     for _, record in ipairs(records) do
         local id = record.location[key]
         if id ~= nil and not seen[id] then ids[#ids+1]=id; seen[id]=true end
@@ -222,7 +226,9 @@ local function SelectContainer(parent, records, source, searching, characterID)
     table.sort(ids)
     local options = {{value="all", label=Addon:T("FOREVER.ALL_CONTAINERS")}}
     for _, id in ipairs(ids) do
-        options[#options+1] = {value=id,label=Addon:T(byTab and "FOREVER.TAB_NUMBER" or "FOREVER.CONTAINER_NUMBER", id)}
+        local state = guildCoverage and guildCoverage[tostring(id)]
+        options[#options+1] = {value=id,label=state and state.location and state.location.tabName
+            or Addon:T(byTab and "FOREVER.TAB_NUMBER" or "FOREVER.CONTAINER_NUMBER", id)}
     end
     local selected = parent.container.value
     parent.container:SetOptions(options)
@@ -241,9 +247,10 @@ local function HideGridTooltip(tile)
 end
 
 local function CreateGridTile(parent)
-    local tile = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local tile = CreateFrame("Button", nil, parent, "BackdropTemplate")
     tile:SetSize(slotSize, slotSize)
-    tile:SetBackdrop({edgeFile="Interface\\Buttons\\WHITE8x8",edgeSize=1})
+    -- Tiles keep a gap between them; each owns a one-pixel, border-only frame.
+    Theme:ApplyPixelBackdrop(tile, { background = false })
     tile.icon = tile:CreateTexture(nil,"ARTWORK")
     tile.icon:SetPoint("TOPLEFT",2,-2)
     tile.icon:SetPoint("BOTTOMRIGHT",-2,2)
@@ -256,8 +263,16 @@ local function CreateGridTile(parent)
         GameTooltip:SetOwner(self,"ANCHOR_RIGHT")
         local link = record.itemLink
         if not link or not (link:match("^item:") or link:find("|Hitem:",1,true)) then link = "item:" .. record.itemID end
+        GameTooltip._yiboVaultGuildKey = record.guildKey
         GameTooltip:SetHyperlink(link)
         GameTooltip:AddLine(self.locationText)
+        if record.mailStatus == "in-transit" then
+            GameTooltip:AddLine(Addon:T("MAIL.IN_TRANSIT_FROM", record.senderName or ""))
+        end
+        if Addon.GoalTargets.ref then
+            GameTooltip:AddLine(Core.BusinessItemActions:GestureLabel() .. Addon:T("TEXT.ADD_TO_ACTION_HUB_OPEN_THE_ADD_MENU_1EB204"))
+        end
+        Addon.Tooltip:Append(GameTooltip, record.itemID)
         GameTooltip:Show()
     end)
     tile:SetScript("OnLeave",HideGridTooltip)
@@ -269,23 +284,48 @@ function Page:PaintGrid(parent)
     local records = parent.gridRecords
     local width = math.max(1,parent.scroll:GetWidth()-20)
     local columns = math.max(1, math.floor((width + slotStep-slotSize)/slotStep))
-    local height = math.ceil(#records/columns)*slotStep
+    local groups = parent.freeGroups
+    local count = #records + #groups
+    local height = math.ceil(count/columns)*slotStep
     for index, record in ipairs(records) do
         local tile = parent.grid[index] or CreateGridTile(parent.content)
         parent.grid[index] = tile
         if tile.record and tile.record.sourceID ~= record.sourceID then HideGridTooltip(tile) end
         tile.record = record
+        Addon.GoalTargets:Bind(tile, record)
         tile.locationText = record.state == "stale" and Addon:T("FOREVER.SEARCH_STALE_LOCATION",LocationLabel(record))
             or LocationLabel(record)
+        local owner = parent.searchOwners and parent.searchOwners[record.characterID]
+        if owner then tile.locationText = Core.Characters:FormatName(owner, { realmMode = "full" }) .. " · " .. tile.locationText end
+        if record.guildKey and Addon:IsGuildHidden(record.guildKey) then
+            tile.locationText = Addon:T("TEXT.HIDDEN_EXCLUDED_FROM_ACCOUNT_TOTAL_79BC9B") .. " · " .. tile.locationText
+        end
         local info = ItemInfo(record)
         tile.itemName = info.name or Addon:T("FOREVER.ITEM_ID",record.itemID)
         tile.icon:SetTexture(info.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
-        tile.quantity:SetText(record.quantity > 1 and tostring(record.quantity) or "")
-        tile:SetBackdropBorderColor(unpack(record.state=="stale" and Theme.Colors.muted or Theme.Colors.line))
+        local quantity = tostring(record.quantity)
+        tile.quantity:SetText(record.mailStatus == "in-transit" and (Addon:T("MAIL.TRANSIT_SHORT") .. quantity) or quantity)
+        local quality = info.quality and ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[info.quality]
+        if quality then
+            tile:SetBackdropBorderColor(quality.r, quality.g, quality.b)
+        else
+            tile:SetBackdropBorderColor(unpack(record.state == "stale" and Theme.Colors.muted or Theme.Colors.line))
+        end
         tile:ClearAllPoints()
         tile:SetPoint("TOPLEFT",((index-1)%columns)*slotStep,-math.floor((index-1)/columns)*slotStep)
         tile:Show()
     end
+    for index, group in ipairs(groups) do
+        local position = #records + index - 1
+        local label = parent.emptySlots[index] or Theme:CreateText(parent.content, Theme.Font.assist, Theme.Colors.muted, "CENTER")
+        parent.emptySlots[index] = label
+        label:ClearAllPoints()
+        label:SetPoint("TOPLEFT", (position % columns) * slotStep, -math.floor(position / columns) * slotStep)
+        label:SetSize(slotSize, slotSize)
+        label:SetText(Addon:T(group.emptyLabelKey) .. "\n" .. group.emptySlots)
+        label:Show()
+    end
+    for index = #groups + 1, #parent.emptySlots do parent.emptySlots[index]:Hide() end
     for index=#records+1,#parent.grid do parent.grid[index]:Hide() end
     parent.content:SetSize(width,math.max(1,height))
     parent.scroll:SetContentHeight(height)
@@ -294,6 +334,11 @@ end
 function Page:Refresh(parent, context)
     local preview = context.preview
     local characters = context.characters or {}
+    local ids, owners = {}, {}
+    for _, candidate in ipairs(characters) do
+        ids[#ids + 1] = candidate.id
+        owners[candidate.id] = candidate
+    end
     local character = characters[1]
     if not preview then character = PaintRoster(parent, characters) end
     local id = character and character.id
@@ -301,42 +346,48 @@ function Page:Refresh(parent, context)
     local offline = id and id ~= current
     local left = preview and 12 or sidebarWidth+24
     parent.rosterScroll:SetShown(not preview)
+    parent.showHidden:SetShown(not preview)
     parent.header:SetShown(preview == true)
     parent.heading:SetPoint("TOPLEFT",left,-10)
     parent.status:SetPoint("TOPLEFT",left,-82)
-    parent.heading:SetText(character and Core.Characters:FormatName(character, { realmMode = "full" }) or Addon:T("FOREVER.CURRENT_ONLY"))
+    parent.heading:SetText(preview and Addon:T("TEXT.ITEM_OVERVIEW_70B215")
+        or character and Core.Characters:FormatName(character, { realmMode = "full" }) or Addon:T("TEXT.ITEM_OVERVIEW_70B215"))
     parent.heading:SetPoint("RIGHT", context.preview and -12 or -348, 0)
     parent.search:SetShown(not context.preview)
     local query = context.preview and "" or parent.search:GetText():match("^%s*(.-)%s*$"):lower()
     local searching = query ~= ""
     local source = Addon.db.settings.foreverSource
-    if offline and source ~= "bags" and source ~= "equipment" and source ~= "bank" then source = "bags" end
+    if offline and source == "guild-bank" and not preview then source = "bags" end
     local tabWidth = preview and 110 or math.max(80, math.min(100, math.floor(((context.surfaceAvailableWidth or 960)-left-122)/6)-6))
     for index, tabSource in ipairs(sources) do
         local button = parent.tabs[tabSource]
-        local allowed = not offline or tabSource == "bags" or tabSource == "equipment" or tabSource == "bank"
+        local allowed = preview or not offline or tabSource ~= "guild-bank"
         button:SetWidth(tabWidth)
         button:SetPoint("TOPLEFT",left+(index-1)*(tabWidth+6),-45)
         button:SetShown(allowed)
         button:SetState(not searching and tabSource == source and "selected" or "default")
     end
     local options = { sources = not searching and { source } or nil }
-    if character then options.scope = { mode = "characters", characterIDs = { character.id } } end
-    local records
-    if offline then
-        records = CachedRecords(id, source, searching)
-    else
-        local result = character and Addon.Items:Query(options)
-        records = result and result.records or {}
+    options.scope = { mode = "characters", characterIDs = (preview or searching) and ids or id and { id } or {} }
+    if not preview and not searching and source == "guild-bank" and parent.explicitGuild
+        and self:CanOpenGuild(parent.explicitGuild) then
+        options.guildKey, options.includeHiddenGuilds = parent.explicitGuild, true
     end
+    if not preview and parent.showHidden:GetChecked() then options.includeHiddenGuilds = true end
+    local result = Addon.Items:Query(options)
+    local records = result.records
+    for _, record in ipairs(result.transitRecords) do records[#records + 1] = record end
     if searching then records = SearchRecords(records, query) end
     local status
-    if offline then status = HasCompletedSource(id, source) and "stale" or (source == "bank" and "bank_pending" or "pending")
+    if preview and owners[current] then status = self:Status(source, current)
+    elseif offline then status = HasCompletedSource(id, source) and "stale" or (source == "bank" and "bank_pending" or "pending")
     else status = self:Status(source, id or (not preview and current)) end
     if searching and #records > 0 then
         parent.status:SetText(Addon:T("FOREVER.SEARCH_COUNT", #records))
     elseif searching then
         parent.status:SetText(Addon:T("TEXT.NO_CACHED_ITEMS_MATCH_89E336"))
+    elseif preview and #characters > 1 then
+        parent.status:SetText(self:SourceLabel(source))
     else
         parent.status:SetText(Addon:T("FOREVER.SOURCE_STATUS", self:SourceLabel(source), self:StatusLabel(status)))
     end
@@ -345,26 +396,40 @@ function Page:Refresh(parent, context)
     parent.refresh:SetShown(not context.preview and not searching)
     parent.refresh:SetState((offline or not self:CanRefresh(source)) and "disabled" or "default")
     if not preview then
+        self.host = parent
+        parent.searchOwners = searching and owners or nil
         for _, row in ipairs(parent.rows) do row:Hide() end
-        parent.gridRecords = SelectContainer(parent, records, source, searching, id)
-        parent.scroll:SetPoint("TOPLEFT",left,parent.container:IsShown() and -153 or -116)
+        local guildCoverage = result.coverage["guild-bank"]
+        local guildKey, tabs
+        if guildCoverage then guildKey, tabs = next(guildCoverage) end
+        parent.gridRecords = SelectContainer(parent, records, source, searching, id, tabs and tabs.locations)
+        local area = not searching and Addon.Items:GetSourceCapacity(source, id, parent.container.value, guildKey)
+        parent.freeGroups = Addon.BagCapacity:Group(area, source)
+        parent.capacity:ClearAllPoints()
+        parent.capacity:SetPoint("TOPLEFT", left, parent.container:IsShown() and -147 or -113)
+        parent.capacity:SetText(Addon.BagCapacity:Format(area))
+        parent.capacity:SetShown(area and area.totalSlots ~= nil or false)
+        parent.scroll:SetPoint("TOPLEFT",left,parent.capacity:IsShown() and (parent.container:IsShown() and -175 or -141)
+            or (parent.container:IsShown() and -153 or -116))
         self:PaintGrid(parent)
         parent.renderedRecords,parent.renderedStatus = parent.gridRecords,status
         return
     end
     parent.gridRecords = nil
     parent.container:Hide()
+    parent.capacity:Hide()
+    for _, label in ipairs(parent.emptySlots) do label:Hide() end
     for _, tile in ipairs(parent.grid) do tile:Hide() end
     parent.scroll:SetPoint("TOPLEFT",12,-144)
     local width = math.max(320, parent.scroll:GetWidth() - 20)
     parent.content:SetWidth(width)
     local columns, x = {}, 0
     local visible = context.fields or Fields()
-    local locationWidth = searching and 250 or 170
+    local widths = { location = 170, character = 190, quantity = 70 }
     local fixed, itemVisible = 0, false
-    for _, field in ipairs(visible) do if field.id == "item" then itemVisible = true else fixed = fixed + (field.id == "location" and locationWidth or 70) end end
+    for _, field in ipairs(visible) do if field.id == "item" then itemVisible = true else fixed = fixed + widths[field.id] end end
     for _, field in ipairs(visible) do
-        local w = field.id == "item" and math.max(80, width - fixed) or (field.id == "location" and locationWidth or 70)
+        local w = field.id == "item" and math.max(80, width - fixed) or widths[field.id]
         columns[#columns + 1] = { id = field.id, x = x, width = w - 8 }; x = x + w
         parent.labels[field.id]:SetText(field.title)
     end
@@ -394,7 +459,10 @@ function Page:Refresh(parent, context)
         local location = LocationLabel(record)
         if searching and record.state == "stale" then location = Addon:T("FOREVER.SEARCH_STALE_LOCATION", location) end
         row.labels.location:SetText(location)
-        row.labels.quantity:SetText(tostring(record.quantity))
+        local owner = owners[record.characterID or record.visitorCharacterID]
+        row.labels.character:SetText(owner and Core.Characters:FormatName(owner, { realmMode = "full" }) or record.guildName or "")
+        local quantity = tostring(record.quantity)
+        row.labels.quantity:SetText(record.mailStatus == "in-transit" and (Addon:T("MAIL.TRANSIT_SHORT") .. quantity) or quantity)
         ConfigureColumns(row, row.labels, columns, 30); row:Show()
     end
     for index = #records + 1, #parent.rows do parent.rows[index].record = nil; parent.rows[index]:Hide() end
@@ -426,15 +494,20 @@ function Page:Register()
         GetSurfaceMetrics = function() return { minContentWidth = 870, naturalContentWidth = 960, minContentHeight = 240, naturalContentHeight = 520 } end,
         scope = {mode="realms", mainOnly=true, allTitle=Addon:T("TEXT.ALL_REALMS_A166AB")},
         HasCharacterSnapshot = HasCharacterSnapshot,
-        GetEligibleCharacters = function(characters, context)
-            local result, current = {}, Core.Characters:GetCurrentID()
+        GetEligibleCharacters = function(characters)
+            local result = {}
             for _, character in ipairs(characters) do
-                if (not context.preview or character.id == current) and HasCharacterSnapshot(character) then
+                if HasCharacterSnapshot(character) then
                     result[#result+1] = character
                 end
             end
             return result
         end,
+        settings = {
+            title = Addon:T("TEXT.ITEM_OVERVIEW_70B215"),
+            description = Addon:T("TEXT.VAULT_ITEM_TOOLTIP_AND_CACHE_SETTINGS_03FFD9"),
+            CreateSettingsPanel = function(parent, context) return Addon.Settings:CreatePanel(parent, context) end,
+        },
         Create = function(parent) Page:Create(parent) end, Refresh = function(parent, context) Page:Refresh(parent, context) end,
     }
     local page, err = Core.AccountView:RegisterPage(Addon.NAME, definition)
@@ -448,3 +521,17 @@ function Page:Register()
     return true
 end
 function Page:Open() return Core.AccountView:Toggle(PAGE_ID) end
+
+function Page:CanOpenGuild(key)
+    return next(Addon:GetGuildCoverage(key)) ~= nil
+end
+
+function Page:OpenGuild(key)
+    if not self:CanOpenGuild(key) then return end
+    Core.AccountView:ShowPage(PAGE_ID)
+    local parent = self.host
+    if not parent then return end
+    parent.selectedCharacter = Core.Characters:GetCurrentID()
+    parent.explicitGuild = key
+    parent.tabs["guild-bank"]:GetScript("OnClick")()
+end

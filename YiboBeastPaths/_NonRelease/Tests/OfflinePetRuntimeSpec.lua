@@ -20,7 +20,7 @@ for _, target in ipairs({ "Retail", "Mists" }) do
         Entry = {}, Locale = {}, Events = {}, UITheme = { Font = { body = 12, assist = 10 },
             Colors = { text = {}, muted = {}, panel = {}, lineSoft = {} } } }
     YiboCore = core
-    function core:CheckAPIVersion(v) return v == 13 end
+    function core:CheckAPIVersion(v) return v <= 14 end
     function core:IsInitialized() return self.ready end
     function core:HasCapability() return true end
     function core:RegisterAddon() return {} end
@@ -47,12 +47,24 @@ for _, target in ipairs({ "Retail", "Mists" }) do
     function core.UITheme:CreateInput() return widget() end
     function core.UITheme:CreateButton() return widget() end
     function core.UITheme:CreateDropdown() return widget() end
+    function core.UITheme:ApplyPixelBackdrop(f) return f end
     ns.RegisterLocale = function() return true end
     ns.Text = function(key) return key end
     ns.CreateMaintenanceSettingsPanel = function() return 1 end
     assert(loadfile("YiboBeastPaths/" .. target .. "/Target.lua"))("YiboBeastPaths", ns)
     for _, file in ipairs({ "OfflinePetSnapshot", "OfflinePetCapture", "OfflinePetCoreGate", "OfflinePetPage", "OfflinePetRenderer" }) do
         assert(loadfile("YiboBeastPaths/Common/" .. file .. ".lua"))("YiboBeastPaths", ns)
+    end
+    -- An API13 Core (no pixel-line:1) must be refused before readiness/registration.
+    do
+        local api, has = core.CheckAPIVersion, core.HasCapability
+        function core:CheckAPIVersion(v) return v <= 13 end
+        check(select(2, ns.CheckOfflinePetCore(core)) == "upgrade")
+        core.CheckAPIVersion = api
+        function core:HasCapability(name) return name ~= "pixel-line" end
+        core.ready = true
+        check(select(2, ns.CheckOfflinePetCore(core)) == "upgrade")
+        core.ready, core.HasCapability = false, has
     end
     local captureOptions, originalNew = nil, ns.OfflinePetCapture.New
     ns.OfflinePetCapture.New = function(options) captureOptions = options; return originalNew(options) end

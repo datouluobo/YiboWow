@@ -68,6 +68,9 @@ function theme:CreateInput()
     return input
 end
 function theme:GetDataRowColor() return { 0.2, 0.3, 0.4, 1 } end
+function theme:ApplyPixelBackdrop(frame) frame.pixelBackdrop = true; return frame end
+function theme:GetPixelSize(_, pixels) return pixels or 1 end
+function theme:SetPixelAnchor(_, fn) if fn then fn() end end
 _G.YiboCore = { UITheme = theme, Characters = { GetCurrent = function() return nil end },
     Capabilities = { Register = function() end } }
 dofile("_NonRelease/CoreIdentityDomainsR1/LoadClient.lua")
@@ -81,6 +84,7 @@ _G.YiboVault = { Items = {
 }, IsGuildHidden = function() return false end }
 YiboVault.Core = YiboCore
 dofile("YiboVault/_NonRelease/Tests/Fixture.lua").Install()
+dofile("YiboVault/Common/BagCapacity.lua")
 dofile("YiboVault/Mists/BagCapacity.lua")
 dofile("YiboVault/StoragePage.lua")
 local host = Widget()
@@ -220,6 +224,8 @@ assert(page.ownerRows[2].name.textColor[1] == 0.3
     and page.ownerRows[2].name.textColor[3] == 1,
     "character names must use their class colors")
 assert(page.selectedOwner == "two", "current-character marker must not change selection")
+assert(page.ownerRows[2].pixelBackdrop and page.itemCells[1].pixelBackdrop,
+    "owner rows and grid tiles must use Core's pixel backdrop")
 assert(#page.ownerRows == 3 and page.ownerRows[1].name.text == "Guild · Realm",
     "guild bank must occupy one owner row without per-tab duplicates")
 assert(#page.tabs == 5 and page.areaButtons[1].label.text == "背包"

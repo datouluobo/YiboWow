@@ -1,24 +1,29 @@
-# Yibo Addon Suite for MoP installation / 安装说明
+# Yibo Addon Suite installation / 安装说明
 
-Yibo Addon Suite for MoP is a collection of 15 addons for Mists of Pandaria Classic. Each download contains a fixed component snapshot; every addon retains its own version. See the project's file changelog for the exact component versions.
+Yibo Addon Suite is published as one package per game client: a Mists of Pandaria Classic package (`mists`) and a Forever package (`forever`). Each package contains every Yibo addon released for that client; each download contains a fixed component snapshot and every addon retains its own version. See the file changelog for the exact component versions. Install only the package for the client you play.
 
-Yibo Addon Suite for MoP 面向熊猫人之谜怀旧服。Suite 版本标识一次固定组件快照，各插件保留自己的版本号；具体版本以本次下载附带的 CHANGELOG 为准。包含 BeastPaths 的多 TOC 维护包不代表 Suite 支持正式服；BeastPaths Mists TOC 当前声明 Interface 50504，发布前仍须核对当前客户端表现。
-
+Yibo Addon Suite 按游戏客户端分别提供整合包：熊猫人之谜怀旧服（`mists`）与无限服（`forever`）。每个包含该客户端已发布的全部 Yibo 插件；整合包版本标识一次固定组件快照，各插件保留自己的版本号，具体版本以本次下载附带的 CHANGELOG 为准。只安装与所玩客户端对应的整合包。MoP 包内的 BeastPaths 维护包保留正式服 TOC，不代表整合包支持正式服。
 ## Manual installation / 手动安装
 
-Exit WoW. Extract the addon folders directly into the intended Mists Classic client's Interface/AddOns directory. Keep the original folder names. `YiboCore/` is the primary addon folder; the other addon folders sit beside it.
+Exit WoW. Extract the addon folders directly into the matching client's Interface/AddOns directory. Keep the original folder names. `YiboCore/` is the primary addon folder; the other addon folders sit beside it.
 
-完整退出游戏，把 ZIP 内各插件目录直接解压到目标怀旧服客户端的 Interface/AddOns 下，保留目录名。`YiboCore/` 是主体插件目录，其余插件目录与它并列。
+完整退出游戏，把 ZIP 内各插件目录直接解压到对应客户端的 Interface/AddOns 下，保留目录名。`YiboCore/` 是主体插件目录，其余插件目录与它并列。
 
 ## Components and dependencies / 组件与依赖
 
-All business addons may be disabled or removed individually. Keep YiboCore enabled while any addon marked as requiring it remains enabled. AutoOpen, BeastPaths and Mounts can run without Core; their Core settings or integrations then become unavailable. Core bundles its runtime libraries; a separate LibDataBroker installation is not required.
+All business addons may be disabled or removed individually. Keep YiboCore enabled while any addon marked as requiring it remains enabled. AutoOpen, BeastPaths and Mounts (MoP package) can run without Core; their Core settings or integrations then become unavailable. Core bundles its runtime libraries; a separate LibDataBroker installation is not required.
 
-所有业务插件均可逐个禁用或移除；仍启用任何强依赖 Core 的插件时，必须保留并启用 YiboCore。AutoOpen、BeastPaths、Mounts 可独立运行，缺少 Core 时不提供相应统一设置或增强功能。Core 包含运行所需库，不要求额外安装 LibDataBroker。逐插件依赖见本文件配套 CHANGELOG。
+所有业务插件均可逐个禁用或移除；仍启用任何强依赖 Core 的插件时，必须保留并启用 YiboCore。AutoOpen、BeastPaths、Mounts（MoP 包）可独立运行，缺少 Core 时不提供相应统一设置或增强功能。Core 包含运行所需库，不要求额外安装 LibDataBroker。逐插件依赖见本文件配套 CHANGELOG。
 
 Cross-addon integrations are optional. Removing a TaskHub source removes that source's tasks; TaskHub's own goals remain available. Without Mail, Vault loses the shared Mail snapshot and in-transit enhancement and uses its own collection. Without Vault, consumers lose Vault inventory enhancements. Compatibility is checked through Core capability contracts.
 
 跨业务插件集成均为可选增强。移除行动中心来源插件会失去相应来源任务，行动中心自建目标仍可使用。移除 Mail 后，Vault 使用自有采集，不再获得 Mail 共享快照和在途增强；移除 Vault 后，消费方失去相应库存增强。能力兼容以 Core 契约检查为准。
+
+## Wrong client / 装错客户端
+
+Packages are not interchangeable between clients. An addon built for another client stops before reading or writing its saved data and prints a message; remove it and install the matching package.
+
+不同客户端的包不可互换。装到其它客户端的插件会在读写存档前停止并提示；请删除后安装对应客户端的包。
 
 ## Overlay installation / 单体与 Suite 覆盖安装
 

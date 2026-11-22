@@ -3,8 +3,9 @@ local Integration = {}
 Addon.CoreIntegration = Integration
 local ICON = "Interface\\AddOns\\YiboTaskHub\\Media\\YiboTaskHubIcon"
 
-function Integration:Initialize()
-    if self.initialized then return true end
+-- Core must be present, initialized, API14 and expose every capability used
+-- below. Returns Core, or nil plus the upgrade message.
+function Integration:CheckCore()
     local core = _G.YiboCore
     local apiReady = core and core.CheckAPIVersion and core:CheckAPIVersion(Addon.REQUIRED_CORE_API)
     local localeReady = core and core.HasCapability and core:HasCapability("localization", 1)
@@ -22,16 +23,47 @@ function Integration:Initialize()
         and core.Characters and core.Characters.FormatName and core.UITheme and core.UITheme.ShowTooltip
         and type(core.UITheme.CreateMatrixHeader) == "function" and type(core.UITheme.SetCharacterHeader) == "function"
         and type(core.UITheme.GetDataRowColor) == "function"
+        and core:HasCapability("pixel-line", 1)
+        and type(core.UITheme.ApplyPixelBackdrop) == "function" and type(core.UITheme.ApplyPixelRule) == "function"
+        and type(core.UITheme.GetPixelSize) == "function" and type(core.UITheme.SetPixelAnchor) == "function"
         and type(core.UITheme.CreateMultiSelectDropdown) == "function"
         and core.UITheme.CreateCheckbox and core.Entry and core.AccountView and core.AccountView.GetVisibleCharacters
         and type(core.AccountView.SetPageScope) == "function") then
-        local message = "Upgrade YiboCore to 1.12.0 / API 13."
-        if core and type(core.Text) == "function" then
-            local ok, text = pcall(core.Text, core, "CORE.API_UPGRADE_REQUIRED", "1.12.0", 13)
+        local message = "Upgrade YiboCore to API 14 with pixel-line:1."
+        if localeReady then
+            local ok, text = pcall(Addon.T, Addon, "CORE.UPGRADE_REQUIRED")
             if ok and type(text) == "string" and text:sub(1, 1) ~= "[" then message = text end
         end
         return nil, message
     end
+    return core
+end
+
+-- Runs at ADDON_LOADED before YiboTaskHubDB is created or modified. The
+-- result is cached so repeated lifecycle events print at most one message.
+function Integration:CheckStartup()
+    if self.startupChecked then return self.startupReady == true end
+    self.startupChecked = true
+    if not Addon.MatchesTarget then
+        Addon.startupBlocked = "wrong-target"
+        Addon:PrintStartupMessage("WRONG_MISTS")
+        return false
+    end
+    local core, message = self:CheckCore()
+    if not core then
+        Addon.startupBlocked = "core"
+        Addon:Print(message)
+        return false
+    end
+    self.startupReady = true
+    return true
+end
+
+function Integration:Initialize()
+    if self.initialized then return true end
+    if Addon.startupBlocked == "wrong-target" then return nil, Addon:GetStartupText("WRONG_MISTS") end
+    local core, message = self:CheckCore()
+    if not core then return nil, message end
     Addon.Core = core
     local registered, err = core:RegisterAddon(Addon.NAME, { version = Addon.VERSION, requiredAPI = Addon.REQUIRED_CORE_API })
     if not registered then return nil, err end

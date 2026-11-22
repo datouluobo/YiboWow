@@ -2,7 +2,7 @@
 
 > 文档状态更新（2026-10-16）：现有功能已由用户确认实机验收收口。当前源码版本与发行证据见[状态总览](../Docs/仓库当前状态总览.md)，后续任务见[延期清单](../Docs/后续开发任务清单.md)。下文旧版本的开发／待验收描述按其原日期理解；当前版本渠道状态没有明确证据时保留待核对。
 
-当前候选为 **Mists 2.8.7** 与 **Forever 0.1.0**，两端均要求 **YiboCore API13** 及对应的账号界面能力。Mists 保留原有世界首领、节日、位面、副本和行动目标功能。Forever 可在 Core 设置中按 NPC ID 添加自定义目标，在账号页点击当前角色的单元格标记或撤销。副本页已提供进度框架，自动采集待实测样本。两端分别安装各自玩家包。见 [加载、存档与验收记录](Docs/多目标重构与无限服接入方案.md)。
+当前候选为 **Mists 2.9.0** 与 **Forever 0.2.0**，两端均要求 **YiboCore API14**（`pixel-line:1`）及对应的账号界面能力。Mists 保留原有世界首领、节日、位面、副本和行动目标功能。Forever 可在 Core 设置中按 NPC ID 添加自定义目标，在账号页点击当前角色的单元格标记或撤销。副本页已提供进度框架，自动采集待实测样本。两端分别安装各自玩家包。见 [加载、存档与验收记录](Docs/多目标重构与无限服接入方案.md)。
 
 In MoP Classic, YiboAltoBoss tracks world bosses, seasonal encounters, custom targets, raid and dungeon lockouts, and entry history. The Forever candidate provides custom NPC targets with manual marks and an instance progress view awaiting live data collection. Both use the YiboCore account window and require API 13 with the client-specific UI capabilities.
 

@@ -70,7 +70,7 @@ function Addon:RefreshMonitoredPreview(parent, context)
             Theme:SetCharacterHeader(header, character, context)
             if current and character.id == current.id then currentHeader, currentColumnX = header, x end
         else
-            Theme:SetMatrixHeader(header, self:T("MATRIX.REPUTATION"), { height = headerHeight, justify = "LEFT", inset = Theme.Space.xxs })
+            Theme:SetMatrixHeader(header, self:T("MATRIX.REPUTATION"), { height = headerHeight, justify = "LEFT", inset = Theme.Table.cellInset })
             header:SetScript("OnEnter", nil); header:SetScript("OnLeave", nil)
         end
         header:Show()
@@ -83,9 +83,11 @@ function Addon:RefreshMonitoredPreview(parent, context)
         parent.monitoredRows[rowIndex] = row
         row:SetSize(nameWidth + #shown * cellWidth, Theme.Table.previewRowHeight)
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -y)
-        row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+        row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
         local tone = Theme:GetDataRowColor(rowIndex)
-        row:SetBackdropColor(tone[1], tone[2], tone[3], 1); row:SetBackdropBorderColor(Theme.Colors.matrixLine[1], Theme.Colors.matrixLine[2], Theme.Colors.matrixLine[3], Theme.Colors.matrixLine[4])
+        row:SetBackdropColor(tone[1], tone[2], tone[3], 1)
+        -- Stacked rows share one pixel boundary: only the first row draws the top edge.
+        Theme:CreatePixelBorder(row, { color = Theme.Colors.matrixLine, sides = { top = rowIndex == 1, right = true, bottom = true, left = true } })
         Theme:ApplyDataColumnTints(row, columns, Theme.Table.previewRowHeight)
         row.cells = row.cells or {}
         local values = { self:GetFactionName(factionID) }
@@ -120,7 +122,11 @@ function Addon:RefreshMonitoredPreview(parent, context)
         row:Show(); y = y + Theme.Table.previewRowHeight
     end
     for index = #factionIDs + 1, #parent.monitoredRows do parent.monitoredRows[index]:Hide() end
-    Theme:UpdateCurrentCharacterColumnOutline(parent.monitoredCurrentOutline, currentHeader, parent, 0, cellWidth, currentHeader ~= nil, currentColumnX)
+    -- The outline ends at the last monitored row (its bottom edge), not at
+    -- the preview frame's bottom inset.
+    local lastRow = parent.monitoredRows[#factionIDs]
+    Theme:UpdateCurrentCharacterColumnOutline(parent.monitoredCurrentOutline, currentHeader, lastRow, 0, cellWidth,
+        currentHeader ~= nil and lastRow ~= nil, currentColumnX and (currentColumnX - inset.left))
     parent.monitoredPagerAnchor:ClearAllPoints(); parent.monitoredPagerAnchor:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -inset.right, -inset.top); parent.monitoredPagerAnchor:SetSize(1, 1)
     Core.AccountView:UpdateColumnPager(parent, "reputation", "monitored", pageInfo, parent.monitoredPagerAnchor, self:T("MATRIX.CHARACTERS"))
 end

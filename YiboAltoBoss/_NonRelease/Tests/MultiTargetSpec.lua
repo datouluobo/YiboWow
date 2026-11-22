@@ -36,7 +36,7 @@ local e, core, fire, flush = Boot(true, "YiboAltoBoss_Forever", function(env)
     env.CombatLogGetCurrentEventInfo = function() error("unexpected combat acquisition") end
 end)
 local addon = e.YAB
-Check(addon.initialized and addon.Version == "0.1.0", "Forever initializes through its actual TOC")
+Check(addon.initialized and addon.Version == "0.2.0", "Forever initializes through its actual TOC")
 Check(e.YiboAltoBossDB.sentinel == "mists" and not e.YiboAltoBossDB.settings, "old Mists store is untouched")
 Check(core.AccountView._pages["alto-custom"] and core.AccountView._pages["alto-lockouts"]
     and not core.AccountView._pages["alto-boss"], "only enabled business pages are registered")
@@ -136,4 +136,8 @@ local oldCore = Boot(true, "YiboAltoBoss_Forever", function(_, core)
     end
 end)
 Check(not oldCore.YiboAltoBossForeverDB and not oldCore.SlashCmdList.YIBOALTOBOSS, "missing capability stops before write")
+local api13Core = Boot(true, "YiboAltoBoss_Forever", function(_, core)
+    core.CheckAPIVersion = function(_, minimum) return minimum <= 13 end
+end)
+Check(not api13Core.YiboAltoBossForeverDB and not api13Core.SlashCmdList.YIBOALTOBOSS, "API13 Core is refused by Forever before write")
 print("MultiTargetSpec: " .. checks .. " checks passed")

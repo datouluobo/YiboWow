@@ -6,8 +6,8 @@ Addon.runtime = Addon.runtime or { testProjectionByCharacter = {}, snapshotsByCh
 Addon.runtime.testProjectionByCharacter = {}
 Addon.runtime.snapshotsByCharacter = {}
 Addon.NAME = "YiboLegendary"
-Addon.VERSION = "2.2.5"
-Addon.REQUIRED_CORE_API = 13
+Addon.VERSION = "2.3.0"
+Addon.REQUIRED_CORE_API = 14
 
 function Addon:T(key, ...)
     local core = self.Core or _G.YiboCore
@@ -17,7 +17,7 @@ function Addon:T(key, ...)
     local locale = GetLocale and GetLocale() or "enUS"
     local english = locale ~= "zhCN" and locale ~= "zhTW"
     if key == "ERROR.CORE_REQUIRED" then
-        return english and "YiboLegendary requires YiboCore API v13 with localization:1 and character-name-format:1. Please update YiboCore." or "YiboLegendary 需要 YiboCore API v13、localization:1 和 character-name-format:1。请升级 YiboCore。"
+        return english and "YiboLegendary requires YiboCore API v14 with localization:1, pixel-line:1 and character-name-format:1. Please update YiboCore." or "YiboLegendary 需要 YiboCore API v14、localization:1、pixel-line:1 和 character-name-format:1。请升级 YiboCore。"
     end
     if key == "CHAT.PREFIX" then return english and "|cff20e070[Yibo]|r Legendary Progress: " or "|cff20e070[Yibo]|r 传说之路：" end
     return "[" .. self.NAME .. ":" .. tostring(key) .. "]"
@@ -137,6 +137,8 @@ function Addon:Initialize()
     local core = _G.YiboCore
     if not (core and core.CheckAPIVersion and core:CheckAPIVersion(self.REQUIRED_CORE_API)
         and core.HasCapability and core:HasCapability("localization", 1)
+        and core:HasCapability("pixel-line", 1)
+        and core.UITheme and type(core.UITheme.ApplyPixelRule) == "function"
         and core:HasCapability("character-name-format", 1)
         and core:HasCapability("character-identity", 1)
         and core:HasCapability("account-view", 2)

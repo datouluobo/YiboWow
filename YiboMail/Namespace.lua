@@ -1,7 +1,7 @@
 local Addon = {}
 _G.YiboMail = Addon
-Addon.NAME, Addon.VERSION, Addon.API_VERSION = "YiboMail", "1.3.5-api1", 1
-Addon.REQUIRED_CORE_API = 13
+Addon.NAME, Addon.VERSION, Addon.API_VERSION = "YiboMail", "1.4.0-api1", 1
+Addon.REQUIRED_CORE_API = 14
 Addon.INBOX_QUERY_SCOPE = "account"
 Addon.STABLE_INBOX_LIMIT = 100
 Addon.CLIENT_SUPPORTED = not (type(WOW_PROJECT_CAMELOT) == "number" and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT)

@@ -31,7 +31,7 @@ function Core:ShowIconPicker(config)
         picker = CreateFrame("Frame", "YiboCoreIconPicker", UIParent, "BackdropTemplate"); self.iconPicker = picker
         picker:SetFrameStrata("DIALOG"); picker:SetFrameLevel(1100); picker:SetClampedToScreen(true)
         picker:EnableMouse(true); picker:SetToplevel(true)
-        picker:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+        Theme:ApplyPixelBackdrop(picker)
         picker:SetBackdropColor(unpack(Theme.Colors.bg)); picker:SetBackdropBorderColor(unpack(Theme.Colors.lineSoft))
         if UISpecialFrames then table.insert(UISpecialFrames, "YiboCoreIconPicker") end
         picker.title = Theme:CreateText(picker, Theme.Font.section, Theme.Colors.text, "LEFT")

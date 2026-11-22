@@ -220,6 +220,7 @@ YiboMounts 1.0.0 已按 API13 接入 `localization:1` 和 API v6 独立设置注
 | CAP-008 | 业务项目主动添加 | 已提供；API v12 起，当前 Core 提供 `business-item-actions:3`，按消费版本检查 | 当前适用插件的代码与验收状态见 CAP-008 | 业务目标范围仍按来源与消费者契约演进 |
 | CAP-009 | 公共语言服务与账号语言偏好 | 已提供；API 13 / `localization:1` | 当前适用范围验收完成；Legendary、Todo 有硬编码候选暂缓 | 使用原版英文客户端处理 Legendary、Todo 候选 |
 | CAP-010 | 角色缓存所有者与延后清理 | 已提供；Core 1.12.5 / API 13 / `character-cleanup:2`，v1 兼容 | 14 个插件逐项登记；当前适配验收完成不代表必须迁移到 v2 | 仅在确有 v2 生命周期需求时接入；发布状态见契约记录 |
+| CAP-013 | 像素线宽与按边像素边框 | 工作树已实现；API 14 / `pixel-line:1`，离线通过；MoP／Forever／Retail 三端实机确认 1 像素一致及不重载改缩放即时刷新；13 个业务插件代码迁移完成（2026-11-22）（[证据](../../_NonRelease/YiboCorePixelLineProbe/Evidence-Mists-20261121.md)），其余组合与 Forever／Retail 待验 | Core 内部用线已迁移；AltoBoss Mists 账号页为样板，部分接入 | 其余插件触及即迁移；三端探针结果决定吸附路径 |
 
 ### 当前插件最低版本与依赖基线
 
@@ -924,3 +925,50 @@ Core CalendarDaySpec16项通过；三插件TOC语法107文件及Mists构建Valid
 2026-11-17 YiboAutoOpen CAP-002/003/009最终复核（Forever0.1.1/Mists1.2.6）：Forever调用范围已全部接入Core CreateInput、ItemResolver Parse/GetInfo/Request、owner Locale:Get；最低API13及localization:1/basic-input:1/item-resolver:1写库前检查。中英文命令/设置/队列/绑定反馈已迁移；原生动态名称及玩家别名不翻译。Mists保留既有独立模式兼容范围，目标内LegacyResolver仅在无可用Core解析时调用，有Core时消费公共解析，Core设置不回退。无角色身份、缓存清理或跨业务服务调用，其他能力在本次职责单元不适用。接口直接复用Core现有公开契约，无Core实现变更。Forever235/Mists229联合断言及既有17组、Forever21项通过，静态语言key/格式检查通过；语言排版、手动模式和容器操作实机仍待验，状态为“代码接入/离线完成，实机待验”，不继承旧版实机通过结论。详见[YAO记录](../../YiboAutoOpen/Docs/Forever-容器取证与适配准备.md)。
 
 2026-11-20 YiboAltoBoss Mists 2.8.7／Forever 0.1.0：Forever 首期接入 CAP-001/002/003/004/007/009/010 的名称、输入、确认、账号窗口与入口、角色身份、语言和缓存清理。保持 API13，写库前校验实际能力；已用实际 Core TOC 离线执行账号页、设置、悬停和存档恢复，实机待验，记为部分接入。Mists 原有 CAP-005/008 目标协作、CAP-012 日历和其他公共能力调用随业务迁移，维持现有门槛与行为。Forever 首期尚未接入目标提供者和日历。见 [实施记录](../../YiboAltoBoss/Docs/多目标重构与无限服接入方案.md#2026-11-20-实施记录)。
+
+2026-11-20 YiboVault Forever 0.6.6-api1：复用 CAP-002 输入、CAP-003 物品解析、CAP-004 工作台和预览、CAP-005 库存服务、CAP-007 角色身份和 CAP-009 双语资源。新增可选 CAP-008 库存目标操作，使用 Core API13 与 business-item-actions:1，缺失时停止目标绑定。既有 Core 清理所有者覆盖角色缓存。双目标离线回归通过，客户端待验，记为部分接入。见[实施与验收](../../YiboVault/Docs/Forever-MoP基线接入-2026-11-20.md)。
+
+
+## CAP-013：像素线宽与按边像素边框
+
+最近审查：2026-11-21。Core 工作树 API 14 提供 `pixel-line:1`：线宽与线的内缩按物理像素换算，布局尺寸仍为 UI 单位；按边边框用于“一条边界只画一次”。客户端差异位于各目标 `Surface.lua` 的 `GetPhysicalScreenSize` 绑定，读不到时回退 1 UI 单位并报告 `unknown`。接口、默认与失败行为、刷新语义见 [API-v14-像素线宽](API-v14-像素线宽.md)；方案与范围见 [实施方案](Core-像素线宽统一控制-实施方案-2026-11-21.md)。Core 不写 SavedVariables。
+
+Core 内部已接入：共用表头右线／底线（拐角只画一次）、当前角色行／列描边（新旧两种句柄）、按钮、页签基线、下拉菜单、复选框、滚动条、输入框与清除按钮、图标选择器、信息条、账号窗口与范围菜单、设置分组与分隔线、总览、帮助、关于页；角色档案行改为按边边框，相邻行只共用一条线。Core 版本号与发布状态未调整。
+
+| 插件 | 接入状态与范围 | 剩余范围／证据 |
+| --- | --- | --- |
+| YiboAltoBoss | **部分接入**（代码完成）；Mists 首领矩阵、Mists/Forever 共用副本锁定页（相邻格共用竖线）、本地按钮全部迁移；Mists/Forever 门槛 API14 + `pixel-line:1` + 方法检查 | MultiTarget31（新增 Forever API13 拒绝）、LockoutPagePerformance（相邻格断言）等 10 组通过；MoP 首领矩阵已实机；锁定页两端实机待验 |
+| YiboAutoOpen | 不适用 | 无自建 1 单位线；仅测试夹具补 `ApplyPixelBackdrop` 桩（真实 Core Input.lua 已迁移） |
+| YiboBeastPaths | **部分接入**（代码完成）；Mists/Retail 共用：离线兽栏详情、维护面板分组卡／导出框／图标框、调试校准分隔线；离线兽栏与维护两条门槛均 API14 + `pixel-line:1`；`Locale.lua` 语言选择门槛有意保留 API13 | Core13Integration 1196、OfflinePetRuntime 54 等通过；ReleaseProfiles 无 RequiredCorePattern，构建器不校验其最低 Core；实机待验 |
+| YiboBuilds | **部分接入**（代码完成）；Mists 本地像素边框改用 Core、面板／装备格／宝石孔／行底线；Forever 悬停装备格、天赋格；两端门槛 API14 | Core13Spec 1065 通过；MistsTargetGuardSpec 既有失败；实机待验 |
+| YiboCrafting | **部分接入**（代码完成）；Mists 面板外框、行底线；描边与专业名进入列头；Mists 门槛 API14；Forever 无线框、门槛保持 API13 | CoreNameIntegration（新增 API13 拒绝）等 8 组通过；Smoke 既有失败；面板内 1 单位内缩未改（与宽度预算联动，待定）；ReleaseProfiles 无 RequiredCorePattern；实机待验 |
+| YiboCurrency | 不适用（本轮） | 无自建 1 单位线；仍使用 Core 描边，随 Core 生效；门槛保持 API13 |
+| YiboLegendary | **部分接入**（代码完成）；Mists 归档分隔线，行描边由子框体承载；门槛 API14 | 无独立测试；实机待验 |
+| YiboMail | **部分接入**（代码完成）；Mists/Forever 共用 19 处线框（收件人弹窗、发件字段／快捷格、附件块、收件列表行改为单底线、缓存卡、设置预览）；门槛 `REQUIRED_CORE_API=14` + `pixel-line:1` + 方法检查 | 21 组全部通过（InboxRelease 拒绝场景 96）；图标内缩改缩放后需刷新页面才重算；实机待验 |
+| YiboMounts | 待评估 | 未触及线框 |
+| YiboQuestBlocker | **部分接入**（代码完成）；Mists 矩阵行按边边框、工具栏与添加面板；门槛 API14 | 无测试文件；实机待验 |
+| YiboReputation | **部分接入**（代码完成）；Mists 主矩阵与关注预览行按边边框、描边以最后一行为底；Forever 进度条；两端门槛 API14 | Migration 90、Retention、ForeverDiscovery（新增 API13 拒绝）通过；ReputationForever Smoke:147 既有失败；实机待验 |
+| YiboTaskHub | **部分接入**（代码完成）；Mists 图标框、行底线、HUD 外框与内缩；门槛 API14；升级提示改用自身中英文资源 | 测试均因既有 `GetAllCached` 夹具缺失中断，新线条未被离线覆盖；实机待验 |
+| YiboTodo | **部分接入**（代码完成）；Mists 行按边边框（ROW_GAP=0）、图标框、可执行描边；门槛 API14 | 4 组通过，6 组既有失败（GetAllCached／Settings）；实机待验 |
+| YiboVault | **部分接入**（代码完成）；Mists 列表行（间隔 2）与物品格、Forever 物品格；`Namespace.lua` 门槛 API14（两端共用） | 16 组专项、VaultForever Smoke 3158、VaultSplit 6 组通过；实机待验 |
+
+Core PixelLineSpec 64 项通过；Core 既有 7 组、Mail 3 组、Currency API13 1102 项、TaskGoalIntegration 3 组回归通过（测试夹具补加载 Events／Client，Currency 夹具补 `ReadPhysicalScreenSize`）。Core／AltoBoss Lua 5.1 语法 111 文件通过。Core 三目标 ValidateOnly 在本机 shell 将生成内容管道给 luac 时，连纯 ASCII 也报 BOM 字符错误，属构建环境问题，待在常规终端复跑。既有失败（在 `_NonRelease/VaultForever/PackageWorktree-20261120` 快照中同样失败，与本次无关）：Currency CoreItemControlsSpec（快照中止于 ItemResolver 缺 Client，本次夹具补 Client 后推进到背包读取断言）、GoalSourcesSpec:36、TaskHub TodoSources／ActionIntegration 的 `GetAllCached` 夹具缺失。
+
+2026-11-21 CAP-013 MoP 首组实机：5.5.4/71060，2560×1476，UI 缩放 0.7。旧 1 UI 单位线为 1/2 像素混杂，Core 换算的 1 像素线在整数／+0.5 偏移下均为 1 像素，关闭纹理吸附结果相同，MoP 采用按像素换算路径、不启用吸附开关。AltoBoss Mists 首领矩阵（源码联接）行边界为单条 1 像素线、无内部竖线、普通格无边框。遗留：当前角色描边在表头处与表头右线相距 1 像素形成平行线组；副本页未迁移。其余分辨率／缩放、即时刷新及 Forever／Retail 待验。见[证据](../../_NonRelease/YiboCorePixelLineProbe/Evidence-Mists-20261121.md)。
+
+2026-11-21 CAP-013 MoP 补充：2560×1600（0.7）、窗口 1920×1107（0.7）与 2560×1476 默认缩放 1.0 均为 1 像素单线；NDui 会覆盖游戏 UI 缩放，Core 按 UIParent 实际有效缩放换算不受影响。即时刷新（不重载改缩放）与 Forever／Retail 待验。
+
+2026-11-21 CAP-013 当前角色描边修订（Core 内部，接口与版本不变）：描边改为画在格线上（列左边覆盖左邻右线、右边覆盖本列右线，行描边贴行边界、非首行覆盖上一行底线），消除表头处平行线；列描边底部按视口可见内容截止，修复行数少于窗口时描边延伸到空白区，滚动／尺寸／SetContentHeight 自动重定位。新旧句柄共用一套几何。PixelLineSpec 74 项、Crafting CoreAdaptation（夹具补 ApplyPixelBackdrop）等回归通过；实机待验。业务插件不需修改，覆盖 AltoBoss、Crafting、Currency、QuestBlocker、Reputation 主矩阵；Reputation 关注预览因视口非 Core 滚动仍以父框底部为界。
+
+2026-11-21 CAP-013 描边第二轮（用户实机反馈后）：Core 修复普通 Frame 视口 HookScript(OnVerticalScroll) 报错导致“声望总览刷新失败”；列描边顶部统一取 header 上沿（旧句柄不再排除表头）。业务插件配合：YiboCrafting Mists 账号页改传当前角色表头格并移除专业分组行（专业名进入配方列表头，随首个可见行切换；多专业时各专业首行带专业标签，新增中英文 UI.RECIPE_HEADER_PROFESSION）；YiboReputation Mists 关注预览以最后一行为描边底界；YiboLegendary 主表与预览行描边改由只覆盖表格列宽的子框体承载。三插件只使用既有 Core 接口，最低 Core 要求不变。PixelLineSpec 76 项、Crafting 8 组（Smoke 为既有失败）、语法通过；实机待验。
+2026-11-21 Core 表头对齐（CAP-004 共用表头，接口与版本不变，随 API14 工作树）：双行角色表头改为整组垂直居中；左/右对齐表头默认内距与正文 cellPadding 一致，居中表头不变。PixelLineSpec 80 项及 Core／Mail／Currency／AltoBoss／Crafting 回归通过。统一构建器修复生成内容的 luac 校验方式后，Core 三目标及 AltoBoss／Crafting／Reputation／Legendary ValidateOnly 通过；本地化报告 Core 缺英文 0、格式不一致 0。
+2026-11-21 CAP-013 Forever 实机：1.60.1/71037，2560×1476，缩放 0.7111／0.82／1.0 均为 1 像素单线。整合界面插件直接调用 UIParent:SetScale 时，缩放事件和 UIParent:OnSizeChanged 均不触发；Core 增加 hooksecurefunc(UIParent, "SetScale") 后置钩子，不重载改缩放即时刷新通过。Retail 待验。
+2026-11-21 CAP-013 MoP 即时刷新补测：游戏设置 0.8→1.0 不重载通过（缩放事件与 SetScale 钩子同时触发）。界面环境：MoP NDui、Forever EllesmereUI、Retail 原生界面。仅 Retail 待验。
+
+2026-11-21 CAP-013 Retail 实机：原生界面 2560×1476，自动缩放 0.911 与改为 0.8 后均为 1 像素，缩放事件即时刷新。三端实机验证完成，剩余版本号与发布检查。
+
+2026-11-22 CAP-013 全插件迁移：用户确认全部有线框的插件一并迁移（含 BeastPaths 维护与调试面板），最低 Core 统一 API14。AltoBoss、BeastPaths、Builds、Crafting、Mail、QuestBlocker、Reputation、TaskHub、Todo、Vault、Legendary 完成代码迁移与门槛提升；Currency、AutoOpen 无自建线框，不适用。全工作区（不含 _NonRelease、Libs、Tests、dist 旧包）已无 `edgeSize=1` 线框，剩余 `SetWidth/SetHeight(1)` 均为滚动占位或点击区。全工作区 141 个测试文件：112 通过，29 失败均与 2026-11-20 快照基线一致（既有夹具问题），AutoOpen CoreLocaleSpec 因 Core Input.lua 迁移需补桩，已补并通过。全部 36 个 TOC、431 文件语法通过；20 个目标 ValidateOnly 通过，最低 Core 读取为 14（Crafting、BeastPaths 无构建器规则）。所有版本号未改。实机待验。
+2026-11-22 CAP-013 补充（用户决定）：(1) Core 公开 `Theme:SetPixelAnchor(region, anchor)`（属 `pixel-line:1`，工作树未发布，能力版本不变），业务插件依赖像素尺寸的内缩改用它在缩放变化后自动重定位；Crafting Mists 面板 1 单位内缩与 2 单位宽度预算改为按物理像素同步计算。(2) 统一构建器补齐最低 Core 读取：Crafting Mists（`Bootstrap.lua`）、Forever（`Forever/Bootstrap.lua`）；BeastPaths 共享包新增 `RequiredCoreChecks`，要求离线兽栏与维护两处门槛一致，当前为 14。(3) 待办：Core 新版本号确定后，补回 TaskHub 升级提示中的 Core 版本号（`CORE.UPGRADE_REQUIRED` 等中英文）。
+2026-11-22 CAP-013 SetPixelAnchor 接入完成：Mail（图标内缩，InboxRelease 98）、Vault 物品图标、Reputation Forever 进度条、TaskHub HUD、Builds Forever 天赋角标、AltoBoss 两端页签衔接、Crafting Mists 面板内缩与宽高预算（按 2 个物理像素）均改为 `SetPixelAnchor`，并在各自方法检查中加入 `SetPixelAnchor`。全工作区 145 个在用测试 114 通过，失败均与 2026-11-20 基线一致；431 文件语法与 20 个目标 ValidateOnly 通过。实机待验：不重载改缩放后上述位置仍贴 1 像素边框。
+
+2026-11-22 CAP-013 业务插件发布检查：Core API14 已发布（Mists 1.13.0／Forever 0.3.0／Retail 0.2.0）。AltoBoss 2.9.0/0.2.0、Builds 1.6.0/0.2.0、Mail 1.4.0/0.3.0-api1、Vault 1.3.0/0.7.0-api1、Reputation 1.8.0/0.2.0、Crafting 1.3.0/0.2.0、QuestBlocker 3.2.0、Todo 1.3.0、TaskHub 0.7.0、Legendary 2.3.0、BeastPaths 1.10.0（universal）完成正式包与打包回放，构建器读取最低 Core 14（Crafting Forever 13）。各插件接入状态在用户实机确认基础上记为已接入，发布状态以各发布记录为准；Todo、TaskHub 误装保护缺失与 BeastPaths 分包例外待用户决定。

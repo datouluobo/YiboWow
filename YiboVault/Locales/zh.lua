@@ -44,7 +44,7 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["FOREVER.GUILD_SLOT"] = "公会页 %d / 格 %d",
         ["FOREVER.GUILD_CACHE"] = "含该角色采集的公会银行快照",
         ["FOREVER.STATUS_empty"] = "已完整采集：无物品",
-        ["BOOT.CORE_REQUIRED"] = "需要对应客户端的 YiboCore，最低 API 13 及 Vault 所需公共能力，请升级 Core。",
+        ["BOOT.CORE_REQUIRED"] = "需要对应客户端的 YiboCore，最低 API 14 及 Vault 所需公共能力，请升级 Core。",
         ["FOREVER.STORE_MISMATCH"] = "Vault 未启动：存档格式或客户端范围不匹配，原数据已保留。",
         ["FOREVER.CLIENT_MISMATCH"] = "Vault 未启动，请安装对应客户端的版本。",
         ["FOREVER.NOT_READY"] = "Vault 尚未启动，请检查启动提示，必要时升级 Core。",

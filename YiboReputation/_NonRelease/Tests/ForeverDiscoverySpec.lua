@@ -39,7 +39,7 @@ local currentID = "player-reputation-guid-1"
 local registeredPages = {}
 local registeredOwners = {}
 local mockCore = {
-    CheckAPIVersion = function(self, version) return version <= 13 end,
+    CheckAPIVersion = function(self, version) return version <= 14 end,
     IsInitialized = function(self) return true end,
     HasCapability = function(self, name, version) return true end,
     RegisterAddon = function(self, name, info) return true end,
@@ -128,6 +128,9 @@ local mockCore = {
             function inp:GetText() return "" end
             return inp
         end,
+        ApplyPixelBackdrop = function(_, f) return f end,
+        GetPixelSize = function(_, _, n) return n or 1 end,
+        SetPixelAnchor = function(_, _, fn) if fn then fn() end end,
     }
 }
 _G.YiboCore = mockCore
@@ -152,6 +155,13 @@ dofile("YiboReputation/Forever/AccountPage.lua")
 dofile("YiboReputation/Forever/Bootstrap.lua")
 
 local Addon = _G.YiboReputation
+
+-- Test 0: an API13 Core (pixel-line migration) is refused before any write.
+mockCore.CheckAPIVersion = function(self, version) return version <= 13 end
+local savedPrint = Addon.Print; Addon.Print = function() end
+assertTrue(not Addon:Initialize() and not Addon.initialized and Addon.Store.db == nil, "API13 Core should be refused")
+Addon.Print = savedPrint
+mockCore.CheckAPIVersion = function(self, version) return version <= 14 end
 
 -- Test 1: Initialize
 assertTrue(Addon:Initialize(), "Bootstrap:Initialize should succeed")

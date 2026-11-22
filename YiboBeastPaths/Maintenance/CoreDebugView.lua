@@ -99,7 +99,7 @@ end
 
 local function addGroup(theme, tab, title, note)
     local frame = CreateFrame("Frame", nil, tab.frame, "BackdropTemplate")
-    frame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    theme:ApplyPixelBackdrop(frame, { background = true, pixels = 1 })
     frame:SetBackdropColor(unpack(theme.Colors.panel))
     frame:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
     local group = { frame = frame, buttons = {}, theme = theme,
@@ -296,7 +296,7 @@ local function buildExport(theme, tab)
         if view and view.exportBox then view.exportBox:SetFocus(); view.exportBox:HighlightText() end
     end, "default")
     local boxFrame = CreateFrame("Frame", nil, tab.frame, "BackdropTemplate")
-    boxFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    theme:ApplyPixelBackdrop(boxFrame, { background = true, pixels = 1 })
     boxFrame:SetBackdropColor(unpack(theme.Colors.bg))
     boxFrame:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
     local scroll = CreateFrame("ScrollFrame", nil, boxFrame, "UIPanelScrollFrameTemplate")
@@ -617,8 +617,7 @@ function YBP:CreateCoreDebugPanel(parent)
     panel:SetWidth(math.max(580, parent:GetWidth() or 580))
     panel.petIconFrame = CreateFrame("Frame", nil, panel, "BackdropTemplate")
     panel.petIconFrame:SetSize(52, 52)
-    panel.petIconFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    theme:ApplyPixelBackdrop(panel.petIconFrame, { background = true, pixels = 1 })
     panel.petIconFrame:SetBackdropColor(unpack(theme.Colors.panel))
     panel.petIconFrame:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
     panel.petIcon = panel.petIconFrame:CreateTexture(nil, "ARTWORK")

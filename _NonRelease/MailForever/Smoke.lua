@@ -2,7 +2,7 @@ local Boot = dofile("_NonRelease/MailForever/Harness.lua")
 local checks = 0
 local function Check(value, name) checks = checks + 1; assert(value, name) end
 local e,c,m,fire,flush,data,load = Boot()
-Check(m.initialized and m.VERSION == "0.2.0-api1", "real Forever Mail manifest starts")
+Check(m.initialized and m.VERSION == "0.3.0-api1", "real Forever Mail manifest starts")
 Check(e.YiboMailDB.sentinel == "mists" and not e.YiboMailDB.byCharacter, "Mail Mists store untouched")
 Check(m.Queue and m.Returns and m.CollectionRuntime and m.FEATURES.collect and m.NativeUI
     and m.Compose and m.Recipients and m.ActionTodo, "shared collection/send/contact/action modules enabled")

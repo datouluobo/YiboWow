@@ -303,7 +303,7 @@ end
 
 local function CreatePreviewCell(parent)
     local cell = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    cell:SetBackdrop({edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1})
+    Theme:ApplyPixelBackdrop(cell, {background = false})
     cell.icon = cell:CreateTexture(nil, "ARTWORK")
     cell.icon:SetPoint("TOPLEFT", 2, -2)
     cell.icon:SetPoint("BOTTOMRIGHT", -2, 2)

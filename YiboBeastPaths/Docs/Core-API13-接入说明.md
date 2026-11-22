@@ -62,3 +62,7 @@ Core13IntegrationSpec 使用真实 Core Locale 模块验证缺失、旧版、缺
 - 世界地图／小地图路线显示、当前位置选宠、脚印编辑／确认、保存与重载保持原行为。
 
 客户端全部通过后才将 CAP-002／004／009 从部分接入更新为已验收。
+
+## 2026-11-22 像素线宽迁移（Core API14 / pixel-line:1）
+
+维护增强（CoreDebugAdapter）与离线兽栏（OfflinePetCoreGate，Retail/Mists 共用）的 Core 门槛由 API13 提升为 API14，并新增 `pixel-line:1` 及 `UITheme.ApplyPixelBackdrop`（维护另查 `ApplyPixelRule`）方法检查；两处 `RegisterAddon` 的 `requiredAPI` 同步为 14，中英文 `CORE_REQUIRED`／`MAINTENANCE_STATUS` 改为 API14。独立语言解析门槛（Locale.lua 的 `localization:1`）不变，Core 缺失时地图路线仍独立运行。1 像素描边改由 Core 绘制：兽栏详情面板、CoreDebugView 的分组卡片、导出框和宠物图标框改用 `ApplyPixelBackdrop`（独立面板，无需去重）；旧 DebugCalibrator 独立布局的 5 条水平分隔线改用 `ApplyPixelRule`（该布局在 TOC 中被 CoreDebugView 覆盖，当前不构建）。Renderer.lua 的 14/10 像素 Tooltip 边框与路线几何不属于 1 像素线，保持不变。离线测试与真实 Core 合成渲染通过；四页签维护页与兽栏详情框在不同 UI 缩放下的 1 物理像素边框待实机确认。

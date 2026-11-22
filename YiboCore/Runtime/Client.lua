@@ -20,7 +20,7 @@ end
 
 for _, name in ipairs({ "ReadItemInfo", "RequestItemData", "ReadBagItemIDs", "ReadCursorItem", "ClearItemCursor",
     "ReadMouseFocus", "ReadCursorPosition", "ReadAddon", "ReadBuiltinIcons", "IsInCombat", "ShowPopup", "HidePopup",
-    "RegisterCombatDriver", "BindItemEvents" }) do
+    "RegisterCombatDriver", "BindItemEvents", "ReadPhysicalScreenSize" }) do
     local method = name
     Client[method] = function(self, ...)
         if not self.surface then return nil, "unavailable" end

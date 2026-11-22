@@ -1,3 +1,11 @@
+## MoP 1.8.0 / 无限服 0.2.0 — Core 像素线（2026-11-22）
+
+- 最低配套 Core 提高为 API14（MoP 1.13.0 / 无限服 0.3.0），检查 `pixel-line:1` 及像素线方法；旧 Core 提示升级并停止初始化。
+- MoP 主矩阵与悬停关注预览的行线改由 Core 按物理像素绘制，相邻行只共用一条 1 像素线。
+- 无限服进度条边框与填充内缩改用 Core 像素接口，随 UI 缩放即时刷新；表头文字垂直居中。
+- 存档、TOC 文件列表与数据格式不变。
+- MoP：Core 校验通过后才创建或补齐 `YiboReputationDB` 默认设置，旧 Core 下存档保持原样（不再在加载时预建空存档）。无限服包不受影响。
+
 ## 1.7.3 — 性能优化（2026-10-30）
 
 - 矩阵当前角色读取使用轻量身份快照，行悬停时才绑定刷新回调，离开或隐藏后释放。
@@ -84,3 +92,7 @@
 - Fixed incorrect reputation level colors and restored distinct colors for each standing.
 - Fixed Tillers NPC friendship data so levels such as Stranger, Acquaintance, Buddy, Friend, Good Friend, and Best Friend are displayed correctly.
 - Fixed incorrect parsing of the friendship reputation API, which caused inaccurate reputation values and levels.
+
+## 1.7.4 Mists — 2026-11-17
+- Mists目标清单与共享加载链更新，补发目标专用包。
+- Forever功能范围不变；本版本不代表旧文件覆盖实机通过。

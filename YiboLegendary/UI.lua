@@ -312,7 +312,8 @@ function UI:CreateMain(parent)
     for index, target in ipairs(Addon.Catalog:GetTargets()) do frame.targets.buttons[target.id] = self:CreateTargetButton(frame.targets, index, target) end
     frame.targets.archiveButton = self:CreateArchiveButton(frame.targets)
     frame.targets.archiveDivider = frame.targets:CreateTexture(nil, "ARTWORK")
-    frame.targets.archiveDivider:SetWidth(1); frame.targets.archiveDivider:SetColorTexture(C.line[1], C.line[2], C.line[3], 0.9)
+    -- Core owns the divider's physical-pixel thickness; layout keeps its height.
+    Theme:ApplyPixelRule(frame.targets.archiveDivider, "vertical", { color = { C.line[1], C.line[2], C.line[3], 0.9 }, pixels = 1 })
 
     frame.detail = CreateFrame("Frame", nil, frame); frame.detail:SetPoint("TOPLEFT", frame.targets, "BOTTOMLEFT", 0, -Theme.Space.sm); frame.detail:SetPoint("BOTTOMRIGHT", -Theme.Space.sm, Theme.Space.sm)
     frame.detail.title = self:Text(frame.detail, Theme.Font.section); frame.detail.title:SetPoint("TOPLEFT", 0, 0)
@@ -389,6 +390,16 @@ function UI:CreateMainRow(page, index)
         if button == "LeftButton" and state.status ~= "completed" then UI:ConfirmManualEvidence(item.character, target.id) end
     end)
     Theme:BindTooltip(row, nil, row.tooltipLines or {}); parent.rows[index] = row; return row
+end
+
+-- Rows span the whole viewport; a child host spanning only the matrix columns
+-- owns Core's current-character outline so it never passes the last column.
+function UI:UpdateRowOutline(row, left, width, isCurrent)
+    local host = row.outlineHost
+    if not host then host = CreateFrame("Frame", nil, row); row.outlineHost = host end
+    host:ClearAllPoints(); host:SetPoint("TOPLEFT", row, "TOPLEFT", left, 0); host:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", left, 0)
+    host:SetWidth(math.max(1, width)); host:Show()
+    Theme:UpdateCurrentCharacterRowOutline(host, isCurrent)
 end
 
 function UI:CreatePreviewRow(index)
@@ -468,7 +479,8 @@ function UI:RefreshMain(context)
     local currentCharacter = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     for index, item in ipairs(roster) do
         local row = page.detail.rows[index] or self:CreateMainRow(page, index); local state = DisplayState(item.snapshot, target); local meta = StateMeta(state)
-        local bg = Theme:GetDataRowColor(index); row.bg:SetColorTexture(bg[1], bg[2], bg[3], bg[4]); Theme:UpdateCurrentCharacterRowOutline(row, currentCharacter and item.character.id == currentCharacter.id)
+        local bg = Theme:GetDataRowColor(index); row.bg:SetColorTexture(bg[1], bg[2], bg[3], bg[4])
+        self:UpdateRowOutline(row, CELL_INSET, tracks.character + tracks.stage + tracks.progress + tracks.action, currentCharacter and item.character.id == currentCharacter.id)
         Theme:ApplyDataColumnTints(row, { tracks.character, tracks.stage, tracks.progress, tracks.action }, ROW_HEIGHT)
         local red, green, blue = ClassColor(item.character); local coords = CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[item.character.class]
         if coords then row.professionIcon:SetTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES"); row.professionIcon:SetTexCoord(unpack(coords)); row.professionIcon:ClearAllPoints(); row.professionIcon:SetPoint("LEFT", CELL_INSET, 0); row.professionIcon:Show() else row.professionIcon:Hide() end
@@ -547,7 +559,10 @@ function UI:RefreshPreview(context)
     for id, cell in pairs(page.header.cells) do if not rendered[id] then cell:Hide() end end
     local currentCharacter = Addon.Core.Characters:GetCurrent({ identityOnly = true })
     for index,item in ipairs(roster) do
-        local row = page.rows[index] or self:CreatePreviewRow(index); local bg = Theme:GetDataRowColor(index); row.bg:SetColorTexture(bg[1],bg[2],bg[3],bg[4]); Theme:UpdateCurrentCharacterRowOutline(row,currentCharacter and item.character.id==currentCharacter.id)
+        local row = page.rows[index] or self:CreatePreviewRow(index); local bg = Theme:GetDataRowColor(index); row.bg:SetColorTexture(bg[1],bg[2],bg[3],bg[4])
+        -- The row is wider than the matrix (zebra fill reaches the viewport);
+        -- the current-character outline follows the columns only.
+        self:UpdateRowOutline(row, CELL_INSET, offset - CELL_INSET, currentCharacter and item.character.id==currentCharacter.id)
         -- Cells and column tints share Core's left inset. The row itself is
         -- widened below to the scroll viewport so its zebra background and
         -- right-side safety margin never stop at the final target column.

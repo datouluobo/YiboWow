@@ -1,10 +1,11 @@
 local Addon, Core = _G.YiboReputation, _G.YiboCore
 local Integration={}; Addon.CoreIntegration=Integration
 local PAGE_ID="reputation"
-local REQUIRED_CORE_API=13
+local REQUIRED_CORE_API=14
 local function HasCoreRequirements()
  return Core and Core.CheckAPIVersion and Core:CheckAPIVersion(REQUIRED_CORE_API)
   and Core.HasCapability and Core:HasCapability("localization",1)
+  and Core:HasCapability("pixel-line",1)
   and Core:HasCapability("account-view",2)
   and Core:HasCapability("account-surface-budget",2)
   and Core:HasCapability("data-domains",1)
@@ -33,6 +34,7 @@ local function HasCoreRequirements()
   and type(Core.AccountView.NotifyPageChanged)=="function"
   and Core.Entry and type(Core.Entry.RegisterBusinessEntry)=="function"
   and Core.UITheme and type(Core.UITheme.CreateInput)=="function"
+  and type(Core.UITheme.ApplyPixelBackdrop)=="function" and type(Core.UITheme.CreatePixelBorder)=="function"
   and Core.Characters and type(Core.Characters.FormatName)=="function"
   and type(Core.Characters.Get)=="function" and type(Core.Characters.GetAll)=="function"
   and type(Core.Characters.GetCurrent)=="function"

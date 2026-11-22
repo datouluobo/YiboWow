@@ -52,7 +52,9 @@ function Targets:Evaluate(r)
                 local locations = entry and entry.locations or {}
                 if not next(locations) then known = false end
                 local required = {}
-                if source == "bags" then for bagID = 0, (tonumber(NUM_BAG_SLOTS) or 4) do required[#required + 1] = tostring(bagID) end
+                if Addon.Target and Addon.Target.id == "Forever" and (source == "bags" or source == "bank") then
+                    -- Forever commits the enumerated containers as a batch.
+                elseif source == "bags" then for bagID = 0, (tonumber(NUM_BAG_SLOTS) or 4) do required[#required + 1] = tostring(bagID) end
                 elseif source == "bank" then
                     required[1] = tostring(tonumber(BANK_CONTAINER) or -1)
                     local first = (tonumber(NUM_BAG_SLOTS) or 4) + 1
@@ -87,13 +89,14 @@ function Targets:Initialize()
         and type(core.BusinessItemActions.Bind) == "function"
         and type(core.BusinessItemActions.Unbind) == "function"
         and type(core.BusinessItemActions.Handle) == "function"
+        and type(core.BusinessItemActions.GestureLabel) == "function"
         and core.Characters and type(core.Characters.Get) == "function"
         and type(core.Characters.GetAll) == "function") then
         Addon:Print(Addon:T("ERROR.GOAL_CORE_REQUIRED")); return
     end
     if self.ref then return true end
     Addon.db.goalSourceEpoch = Addon.db.goalSourceEpoch or ("vault:" .. Addon:Now() .. ":" .. math.random(100000, 999999))
-    self.definition = { name = "action.targets", kind = "provider", providerID = self.PROVIDER, version = { major = 1, minor = 1 }, methods = { GetEntry = function() return { title = Addon:T("TEXT.ITEM_INVENTORY_CEAB6C"), pageID = "vault" } end,
+    self.definition = { name = "action.targets", kind = "provider", providerID = self.PROVIDER, version = { major = 1, minor = 1 }, methods = { GetEntry = function() return { title = Addon:T("TEXT.ITEM_INVENTORY_CEAB6C"), pageID = Addon.Target and Addon.AccountPage.ID or "vault" } end,
         Normalize = function(r) return Targets:Normalize(r) end, Evaluate = function(r) return Targets:Evaluate(r) end } }
     self.ref = core.Contracts:Register(Addon.NAME, self.definition)
     return self.ref ~= nil

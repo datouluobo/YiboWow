@@ -51,6 +51,7 @@ YiboVault = { db = { settings = { tooltipRealmScope = "current", tooltipEnabled 
 }
 dofile("YiboVault/_NonRelease/Tests/Fixture.lua").Install()
 dofile("YiboVault/AccountPage.lua")
+dofile("YiboVault/Common/Settings.lua")
 local host = Widget()
 local context = {
     createSection = function() return Widget() end,
@@ -60,14 +61,14 @@ local context = {
         local button = Widget(); button.kind = kind; return button
     end,
 }
-context.refreshPanel = function() YiboVault.AccountPage:CreateSettingsPanel(host, context) end
-local height = YiboVault.AccountPage:CreateSettingsPanel(host, context)
+context.refreshPanel = function() YiboVault.Settings:CreatePanel(host, context) end
+local height = YiboVault.Settings:CreatePanel(host, context)
 local panel = host.yiboVaultSettings
 assert(height == 440 and height == panel.height and panel.data.height == 194 and panel.enabled.checked,
     "settings height must fit the visible guild rows")
 local narrowHost = Widget()
 narrowHost.width = 480
-assert(YiboVault.AccountPage:CreateSettingsPanel(narrowHost, context) == 490
+assert(YiboVault.Settings:CreatePanel(narrowHost, context) == 490
     and narrowHost.yiboVaultSettings.height == 490
     and narrowHost.yiboVaultSettings.guildRows[1].height == 54,
     "a narrow settings area must stack each guild name above its actions")

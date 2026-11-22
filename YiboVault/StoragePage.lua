@@ -114,7 +114,9 @@ end
 
 local function CreateOwnerRow(page, index)
     local row = CreateFrame("Button", nil, page.ownersContent, "BackdropTemplate")
-    row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    -- Owner rows are separated by a 2-unit gap and never share a boundary,
+    -- so each keeps its own one-pixel frame (selected state = accent border).
+    Theme:ApplyPixelBackdrop(row)
     row:SetHeight(OWNER_HEIGHT)
     row:SetPoint("TOPLEFT", 0, -((index - 1) * (OWNER_HEIGHT + 2)))
     row:SetPoint("TOPRIGHT", 0, -((index - 1) * (OWNER_HEIGHT + 2)))
@@ -147,9 +149,15 @@ end
 local function CreateItemCell(page, index)
     local cell = CreateFrame("Button", nil, page.itemsContent, "BackdropTemplate")
     cell:SetSize(CELL_SIZE, CELL_SIZE)
-    cell:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    -- Grid tiles keep a CELL_GAP between them; each owns its one-pixel frame.
+    Theme:ApplyPixelBackdrop(cell)
     cell.icon = cell:CreateTexture(nil, "ARTWORK")
-    cell.icon:SetPoint("TOPLEFT", 1, -1); cell.icon:SetPoint("BOTTOMRIGHT", -1, 1)
+    -- The icon sits just inside the tile's one-pixel border; Core re-applies
+    -- the inset whenever the pixel size changes.
+    Theme:SetPixelAnchor(cell.icon, function()
+        local px = Theme:GetPixelSize(cell, 1)
+        cell.icon:ClearAllPoints(); cell.icon:SetPoint("TOPLEFT", px, -px); cell.icon:SetPoint("BOTTOMRIGHT", -px, px)
+    end)
     cell.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     cell.count = Text(cell, Theme.Font.assist, Colors.text, "LEFT")
     cell.count:SetPoint("TOPLEFT", 3, -2)

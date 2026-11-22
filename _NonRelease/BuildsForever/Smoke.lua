@@ -44,7 +44,7 @@ local function Boot(saved,configure,defaultManifest,language)
     return e,c,e.YiboBuilds,fire,Flush,d
 end
 local e,c,a,fire,flush,d=Boot()
-Check(a.initialized and a.VERSION=="0.1.20","Forever builds manifest starts")
+Check(a.initialized and a.VERSION=="0.2.0","Forever builds manifest starts")
 Check(e.YiboBuildsDB.sentinel=="mists" and not e.YiboBuildsDB.characters,"Mists store untouched")
 Check(not a.Snapshot and not a.GoalTargets and not a.EnchantCatalog,"MoP talents and augmentation excluded")
 Check(not a.Scanner:Scan(true) and d.reads==0,"no reads before entering world")

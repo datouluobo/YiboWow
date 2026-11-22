@@ -8,13 +8,13 @@ function Addon:Initialize()
         self:Print(locale and locale.Get and self:T("FOREVER.WRONG_CLIENT") or "This YiboBuilds manifest requires Forever."); return false
     end
     local core = _G.YiboCore
-    local valid = core and type(core.CheckAPIVersion) == "function" and core:CheckAPIVersion(13)
+    local valid = core and type(core.CheckAPIVersion) == "function" and core:CheckAPIVersion(14)
         and type(core.IsInitialized) == "function" and core:IsInitialized() and type(core.HasCapability) == "function"
     if valid then
         for name, version in pairs({ localization = 1, ["item-resolver"] = 1, ["character-name-format"] = 1, ["character-identity"] = 1,
             characters = 1, ["character-cleanup"] = 2, ["account-view"] = 2, ["account-entry"] = 2,
             ["account-preview-characters"] = 1, ["account-character-admission"] = 1, ["account-surface-realm-scope"] = 1, ["account-surface-budget"] = 2,
-            ["basic-input"] = 1 }) do
+            ["basic-input"] = 1, ["pixel-line"] = 1 }) do
             if not core:HasCapability(name, version) then valid = false end
         end
     end
@@ -23,17 +23,17 @@ function Addon:Initialize()
         { core and core.AccountView, "RegisterPage", "NotifyPageChanged", "Toggle" },
         { core and core.Entry, "RegisterBusinessEntry" }, { core and core.CharacterCleanup, "RegisterOwner" },
         { core and core.ItemResolver, "GetInfo", "Parse" }, { core and core.Defaults, "Copy" },
-        { core and core.UITheme, "CreateText", "CreateButton", "CreateScrollFrame", "CreateInput", "CreateDropdown" } }) do
+        { core and core.UITheme, "CreateText", "CreateButton", "CreateScrollFrame", "CreateInput", "CreateDropdown", "ApplyPixelBackdrop", "GetPixelSize", "SetPixelAnchor" } }) do
         for index = 2, #group do if type(group[1]) ~= "table" or type(group[1][group[index]]) ~= "function" then valid = false end end
     end
     if not valid then
         if core and core.Locale and core.Locale.Get then self:Print(self:T("FOREVER.CORE_REQUIRED"))
-        else self:Print("YiboBuilds requires a matching YiboCore build with API 13 and current-character capabilities.") end
+        else self:Print("YiboBuilds requires a matching YiboCore build with API 14 and current-character capabilities.") end
         return false
     end
     self.Core = core
     if not self.Store:Initialize() then self:Print(self:T("FOREVER.STORE_MISMATCH")); return false end
-    local ok, err = core:RegisterAddon(self.NAME, { version = self.VERSION, requiredAPI = 13 })
+    local ok, err = core:RegisterAddon(self.NAME, { version = self.VERSION, requiredAPI = 14 })
     if not ok then self:Print(err); return false end
     ok, err = core.CharacterCleanup:RegisterOwner(self.NAME, {
         Inspect = function(character)
@@ -58,7 +58,7 @@ SLASH_YIBOBUILDS1 = "/ybb"
 SlashCmdList.YIBOBUILDS = function(message)
     if not Addon.initialized then
         local core = _G.YiboCore
-        Addon:Print(core and core.Locale and core.Locale.Get and Addon:T("FOREVER.CORE_REQUIRED") or "YiboBuilds requires YiboCore API 13."); return
+        Addon:Print(core and core.Locale and core.Locale.Get and Addon:T("FOREVER.CORE_REQUIRED") or "YiboBuilds requires YiboCore API 14."); return
     end
     local command = string.lower((message or ""):match("^%s*(%S*)") or "")
     if command == "scan" then Addon.Scanner:Scan(true); Addon:Print(Addon.AccountPage:Status())

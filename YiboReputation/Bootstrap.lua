@@ -1,9 +1,10 @@
 local ADDON_NAME = ...
 local Addon = _G.YiboReputation or {}
 _G.YiboReputation = Addon
-Addon.NAME, Addon.VERSION = "YiboReputation", "1.7.3"
+Addon.NAME, Addon.VERSION = "YiboReputation", "1.8.0"
 Addon.CLIENT_SUPPORTED = not (type(WOW_PROJECT_CAMELOT) == "number" and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT)
-if Addon.CLIENT_SUPPORTED then YiboReputationDB = YiboReputationDB or {} end
+-- YiboReputationDB is created or normalized only by EnsureDB, which CoreIntegration:Initialize
+-- calls after the client, Core readiness, API and capability checks.
 
 local function Defaults(target, values)
     for key, value in pairs(values) do
@@ -12,6 +13,7 @@ local function Defaults(target, values)
     end
 end
 function Addon:EnsureDB()
+    if type(YiboReputationDB) ~= "table" then YiboReputationDB = {} end
     Defaults(YiboReputationDB, { settings = { hoverMode = "monitored", monitoredFactionIDs = {}, defaultExpansion = "auto", defaultMatrixFilter = "all", matrixLevelExpr = "", showFriendshipTotal = false }, matrixExpanded = {}, nomi = {} })
     local settings = YiboReputationDB.settings
     -- The old dual-view state and preview-column projection are deliberately
@@ -45,8 +47,8 @@ function Addon:T(key, ...)
     if key == "ERROR.CORE_REQUIRED" then
         local locale = GetLocale and GetLocale() or "enUS"
         return (locale == "zhCN" or locale == "zhTW")
-            and "YiboReputation 需要 YiboCore 1.12.4 / API13，以及 account-surface-budget:2、语言、账号视图、角色身份、角色缓存清理、事件与标准控件能力。请升级 YiboCore。"
-            or "YiboReputation requires YiboCore 1.12.4 / API13 with account-surface-budget:2, localization, account views, character identity, character cleanup, events, and standard controls. Please update YiboCore."
+            and "YiboReputation 需要 YiboCore API14，以及 pixel-line:1、account-surface-budget:2、语言、账号视图、角色身份、角色缓存清理、事件与标准控件能力。请升级 YiboCore。"
+            or "YiboReputation requires YiboCore API14 with pixel-line:1, account-surface-budget:2, localization, account views, character identity, character cleanup, events, and standard controls. Please update YiboCore."
     end
     local value = "[YiboReputation:" .. tostring(key) .. "]"
     if select("#", ...) > 0 then return string.format(value, ...) end
@@ -70,7 +72,6 @@ frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(_, event, name)
     if event ~= "ADDON_LOADED" or name ~= ADDON_NAME then return end
     if not Addon.CLIENT_SUPPORTED then Addon:Print(Addon:T("FOREVER.WRONG_MANIFEST")); return end
-    Addon:EnsureDB()
     local core = _G.YiboCore
     if core and core.IsInitialized and core:IsInitialized() then Initialize()
     elseif core and core.Events and core.Events.Register then

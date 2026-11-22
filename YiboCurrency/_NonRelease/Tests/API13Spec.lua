@@ -66,6 +66,7 @@ Core.Client = {
     ReadGUID = function() return UnitGUID("player"), "known" end,
     ReadNameRealm = function() return { name = "Original", realm = "Realm" } end,
     ReadCharacter = function() return { guid = UnitGUID("player"), name = "Original", realm = "Realm", class = "MAGE" } end,
+    ReadPhysicalScreenSize = function() return nil, nil, "unavailable" end,
 }
 local characters = { { id = "A-Realm", name = "Original", realm = "Realm", class = "MAGE" }, { id = "B-Other", name = "Other", realm = "Other", class = "MAGE" } }
 local db = { settings = {}, characters = { byID = {}, aliases = {}, seenOrder = {} }, characterDisplay = { ["A-Realm"] = { shortName = "Short" } } }

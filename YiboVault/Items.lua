@@ -20,18 +20,6 @@ function Items:GetRevision()
 end
 
 local function ValidateScope(scope)
-    if Addon.Target and Addon.Target.currentOnly then
-        local current = Addon.Core and Addon.Core.Characters:GetCurrent({ identityOnly = true })
-        if not current then return nil, "current-character-unavailable" end
-        if scope ~= nil then
-            if type(scope) ~= "table" or scope.mode ~= "characters" or type(scope.characterIDs) ~= "table" then
-                return nil, "scope-not-supported"
-            end
-            for _, id in ipairs(scope.characterIDs) do
-                if id ~= current.id then return nil, "scope-not-supported" end
-            end
-        end
-    end
     if scope == nil then return true end
     if type(scope) ~= "table" then return nil, "invalid-scope" end
     if scope.mode == "account" then return true end
@@ -203,16 +191,18 @@ function Items:GetStorageSummary(scope, options)
         local bank = StorageArea(Addon:GetCharacterCoverage(character.id, "bank"))
         local equipment = StorageArea(Addon:GetCharacterCoverage(character.id, "equipment"))
         local mail = StorageArea(Addon:GetCharacterCoverage(character.id, "mail"))
-        if bags or bank or equipment or mail then
+        local auction = StorageArea(Addon:GetCharacterCoverage(character.id, "auction"))
+        if bags or bank or equipment or mail or auction then
             result.characters[#result.characters + 1] = {
                 characterID = character.id, realm = character.realm,
-                bags = bags, bank = bank, equipment = equipment, mail = mail,
+                bags = bags, bank = bank, equipment = equipment, mail = mail, auction = auction,
             }
         end
     end
-    for _, guildKey in ipairs(ResolveGuildKeys(characters, options)) do
+    for _, guildKey in ipairs(ResolveGuildKeys(characters, options or {})) do
         local guild = Addon.db.byGuild and Addon.db.byGuild[guildKey]
-        local tabs = StorageArea(guild and guild.coverage, guild and guild.tabs)
+        local tabs = Addon.ResolveCurrentGuildBankKeys and StorageArea(Addon:GetGuildCoverage(guildKey))
+            or (not Addon.ResolveCurrentGuildBankKeys and StorageArea(guild and guild.coverage, guild and guild.tabs))
         if tabs then
             result.guilds[#result.guilds + 1] = {
                 guildKey = guildKey, guildName = guild.guildName, realm = guild.realm, tabs = tabs,
@@ -220,6 +210,22 @@ function Items:GetStorageSummary(scope, options)
         end
     end
     return result
+end
+
+function Items:GetSourceCapacity(source, characterID, selected, guildKey)
+    local locations
+    if source == "guild-bank" then
+        local keys = ResolveGuildKeys(characterID and { { id = characterID } } or {},
+            { guildKey = guildKey, includeHiddenGuilds = guildKey ~= nil })
+        locations = keys[1] and Addon:GetGuildCoverage(keys[1])
+    elseif characterID and (source == "bags" or source == "bank") then
+        locations = Addon:GetCharacterCoverage(characterID, source)
+    end
+    if locations and type(selected) == "number" then
+        local key = tostring(selected)
+        locations = { [key] = locations[key] }
+    end
+    return StorageArea(locations)
 end
 
 function Items:GetSourceState(source, scope, options)
@@ -230,7 +236,7 @@ function Items:GetSourceState(source, scope, options)
     if not valid then return nil, errorCode end
     local result = {}
     if source == "guild-bank" then
-        for _, guildKey in ipairs(ResolveGuildKeys(ResolveCharacters(scope), options)) do
+        for _, guildKey in ipairs(ResolveGuildKeys(ResolveCharacters(scope), options or {})) do
             local locations = Addon:GetGuildCoverage(guildKey)
             result[guildKey] = SourceCoverage(locations)
         end
@@ -286,7 +292,7 @@ function Items:Query(options)
         totalQuantity = 0, physicalQuantity = 0, listedQuantity = 0, externalQuantity = 0,
         inTransitQuantity = 0, bySource = {},
     }
-    local characters = ResolveCharacters(options.scope, not selectedSources["guild-bank"] or (Addon.Target and Addon.Target.currentOnly))
+    local characters = ResolveCharacters(options.scope, not selectedSources["guild-bank"] or Addon.ResolveCurrentGuildBankKeys ~= nil)
     for _, character in ipairs(characters) do
         for source in pairs(selectedSources) do
             if source ~= "guild-bank" then
@@ -330,7 +336,7 @@ function Items:Query(options)
         end
     end
     if selectedSources["guild-bank"] then
-        for _, guildKey in ipairs(ResolveGuildKeys(characters, options)) do
+        for _, guildKey in ipairs(ResolveGuildKeys(characters, options or {})) do
                 local states = Addon:GetGuildCoverage(guildKey)
                 coverage["guild-bank"] = coverage["guild-bank"] or {}
                 coverage["guild-bank"][guildKey] = SourceCoverage(states)

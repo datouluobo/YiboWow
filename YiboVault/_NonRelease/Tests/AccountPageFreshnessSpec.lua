@@ -8,6 +8,7 @@ YiboCore = {
 YiboVault = {}
 
 dofile("YiboVault/AccountPage.lua")
+dofile("YiboVault/Common/TooltipScope.lua")
 
 local Page = YiboVault.AccountPage
 local currentID = "Current-Realm"

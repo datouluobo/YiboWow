@@ -2,7 +2,8 @@ local Addon = _G.YiboMail
 local U = {}; Addon.RecipientUI = U
 local R = Addon.Recipients
 local ROW, GAP, FOOT = 28, 6, 36
-local BACKDROP = { bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 }
+-- Core pixel-line:1 owns the 1px border thickness; colors stay with the caller.
+local function PixelBackdrop(frame) return Addon.Core.UITheme:ApplyPixelBackdrop(frame) end
 local function IME(edit) return edit.IsInIMEComposition and edit:IsInIMEComposition() end
 function U:Hide()
     self.hoveredSource = nil
@@ -19,7 +20,7 @@ function U:Create()
     self.dismiss:SetScript("OnClick", function() U:Hide() end)
     local p = CreateFrame("Frame", "YiboMailRecipientPopup", UIParent, "BackdropTemplate"); self.popup = p
     p:SetFrameStrata("FULLSCREEN_DIALOG"); p:SetFrameLevel(20); p:SetClampedToScreen(true); p:EnableMouse(true)
-    p:SetBackdrop(BACKDROP); p:SetBackdropColor(unpack(theme.Colors.bg)); p:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
+    PixelBackdrop(p); p:SetBackdropColor(unpack(theme.Colors.bg)); p:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
     if _G.UISpecialFrames then table.insert(UISpecialFrames, "YiboMailRecipientPopup") end
     p:SetScript("OnHide", function() U.dismiss:Hide(); if U.home then U.home:Hide() end; U.confirm = nil; p.search:ClearFocus() end)
     local function Button(label, action)
@@ -39,7 +40,7 @@ function U:Create()
     p.search:SetTextColor(unpack(theme.Colors.text)); p.search:SetTextInsets(8, 8, 0, 0)
     p.search.hint = theme:CreateText(p.search, theme.Font.assist, theme.Colors.muted, "LEFT")
     p.search.hint:SetPoint("LEFT", 8, 0); p.search.hint:SetText(Addon:T("UI.TEXT_0126"))
-    p.search:SetBackdrop(BACKDROP); p.search:SetBackdropColor(unpack(theme.Colors.panel))
+    PixelBackdrop(p.search); p.search:SetBackdropColor(unpack(theme.Colors.panel))
     p.search:SetScript("OnTextChanged", function() U.page = 1; U.confirm = nil; U.realmMode = nil; U:Refresh() end)
     theme:AttachClearButton(p.search)
     p.search:SetScript("OnEscapePressed", function(edit)
@@ -96,7 +97,7 @@ function U:ShowSources(x, y, width)
         local theme = Addon.Core.UITheme
         home = CreateFrame("Frame", nil, UIParent, "BackdropTemplate"); self.home = home
         home:SetFrameStrata("FULLSCREEN_DIALOG"); home:SetFrameLevel(20); home:SetClampedToScreen(true); home:EnableMouse(true)
-        home:SetBackdrop(BACKDROP); home:SetBackdropColor(unpack(theme.Colors.bg)); home:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
+        PixelBackdrop(home); home:SetBackdropColor(unpack(theme.Colors.bg)); home:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
         home.title = theme:CreateButton(home, 180, Addon:T("UI.TEXT_0077")); home.title:SetHeight(ROW)
         home.title:SetPoint("TOPLEFT", GAP, -GAP)
         home.title:SetScript("OnClick", function()

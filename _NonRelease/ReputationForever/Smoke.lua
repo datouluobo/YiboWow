@@ -44,7 +44,7 @@ local function Boot(saved,configure,defaultManifest,localeCase)
     return e,c,e.YiboReputation,fire,Flush,data
 end
 local e,c,a,fire,flush,d=Boot()
-Check(a.initialized and a.VERSION=="0.1.9","Forever manifest starts")
+Check(a.initialized and a.VERSION=="0.2.0","Forever manifest starts")
 Check(not e.YiboReputationDB.settings and e.YiboReputationDB.sentinel=="mists","Mists save untouched")
 Check(not a.Migration and not a.FactionRegistry and not a.GoalTargets and not a.Nomi,"MoP catalogs and operations excluded")
 Check(not a.Scanner:Scan() and d.reads==0,"no native reads before world entry")

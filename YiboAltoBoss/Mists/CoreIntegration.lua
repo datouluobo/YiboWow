@@ -26,7 +26,7 @@ end
 local function CreateButton(parent, label)
     local button = CreateFrame("Button", nil, parent, "BackdropTemplate")
     button:SetSize(152, 25)
-    button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Core.UITheme:ApplyPixelBackdrop(button, { background = true })
     button:SetBackdropColor(0.16, 0.16, 0.18, 0.98)
     button:SetBackdropBorderColor(0.70, 0.50, 0.16, 0.92)
     button.label = AddText(button, "GameFontNormalSmall", { 0.95, 0.95, 0.95 })
@@ -201,13 +201,14 @@ function Integration:Initialize()
     if not (Core and Core.CheckAPIVersion and Core.AccountView) then
         return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.YIBOCORE_IS_UNAVAILABLE")
     end
-    local compatible = Core:CheckAPIVersion(13)
+    local compatible = Core:CheckAPIVersion(14)
     if not compatible or not Core.HasCapability or not Core:HasCapability("localization", 1) or not Core:HasCapability("account-surface-budget", 2)
+        or not Core:HasCapability("pixel-line", 1)
         or type(Core.AccountView.GetScrollSurfaceWidth) ~= "function" or not YAB.LockoutLocaleReady then
-        return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "ERROR.CORE_API13_REQUIRED")
+        return nil, _G.YiboCore.Locale:Get("YiboAltoBoss", "ERROR.CORE_API14_REQUIRED")
     end
 
-    Core:RegisterAddon("YiboAltoBoss", { version = YAB.Version, requiredAPI = 13 })
+    Core:RegisterAddon("YiboAltoBoss", { version = YAB.Version, requiredAPI = 14 })
     if Core.CharacterCleanup then
         local cleanupRegistered, cleanupError = RegisterCharacterCleanupOwner()
         if not cleanupRegistered then return nil, cleanupError end

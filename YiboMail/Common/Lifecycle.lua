@@ -11,7 +11,7 @@ local function CoreReady(core)
         ["basic-input"]=1, ["item-resolver"]=2, ["character-identity"]=1, ["character-identity-cache"]=1,
         characters=1, ["character-cleanup"]=1, ["account-view"]=2, ["account-preview-characters"]=1,
         ["account-character-admission"]=1, ["account-surface-budget"]=2, ["account-entry"]=2,
-        ["account-surface-realm-scope"]=1}
+        ["account-surface-realm-scope"]=1, ["pixel-line"]=1}
     if Addon.FEATURES.contacts then capabilities["character-identity"], capabilities["account-identity-context"] = 2, 1 end
     if Addon.FEATURES.send then capabilities["item-picker"] = 2 end
     for name, minimum in pairs(capabilities) do if not core:HasCapability(name, minimum) then return false end end
@@ -22,7 +22,7 @@ local function CoreReady(core)
         and Methods(core.AccountView, {"RegisterPage", "NotifyPageChanged", "Toggle", "BuildContext",
             "GetVisibleCharacters", "GetEffectiveCharacterSort", "GetCustomCharacterOrder"})
         and Methods(core.Entry, {"RegisterBusinessEntry"})
-        and Methods(core.UITheme, {"CreateInput", "CreateDropdown"})
+        and Methods(core.UITheme, {"CreateInput", "CreateDropdown", "ApplyPixelBackdrop", "ApplyPixelRule", "GetPixelSize", "SetPixelAnchor"})
         and Methods(core.ItemResolver, {"GetInfo", "Request"})
         and (not (Addon.FEATURES.send or Addon.FEATURES.collect) or Methods(core.ItemConfirmation, {"Show"}))
         and (not Addon.FEATURES.send or Methods(core, {"CreateItemPicker"}))
@@ -101,7 +101,7 @@ function Addon:Initialize()
     local core = _G.YiboCore
     if not CoreReady(core) then
         if core and core.Print and not (core.Locale and core.Locale.Get) then
-            core:Print("YiboMail requires a matching YiboCore with API 13 and the required mail capabilities.")
+            core:Print("YiboMail requires a matching YiboCore with API 14 and the required mail capabilities.")
         else self:Print(self:T("BOOTSTRAP.UPGRADE_CORE")) end
         return false
     end

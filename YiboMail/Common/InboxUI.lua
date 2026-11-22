@@ -1,6 +1,6 @@
 local Addon = _G.YiboMail
 local Native, View = Addon.NativeUI, Addon.ViewModel
-local Text, InboxButton, Surface, Tooltip, BACKDROP = unpack(Native.inboxWidgets)
+local Text, InboxButton, Surface, Tooltip, PixelBackdrop, PixelInset = unpack(Native.inboxWidgets)
 
 -- WoW frames are pooled for the session. Release their business references
 -- when unmounted instead of leaving callbacks pointing at an old mailbox.
@@ -140,7 +140,7 @@ function Native:CreateInbox()
     panel.close:SetSize(height, height); panel.close:SetPoint("TOPRIGHT", -8, -6)
     panel.mode, panel.selection, panel.expanded, panel.rows, panel.options = "mail", {}, {}, {}, { search = "", kind = "all", sort = "expiry" }
     panel.search = CreateFrame("EditBox", nil, panel, "BackdropTemplate"); panel.search:SetAutoFocus(false); panel.search:SetMaxLetters(100); panel.search:SetHeight(height)
-    panel.search:SetBackdrop(BACKDROP); panel.search:SetBackdropColor(unpack(theme.Colors.panel)); panel.search:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
+    PixelBackdrop(panel.search); panel.search:SetBackdropColor(unpack(theme.Colors.panel)); panel.search:SetBackdropBorderColor(unpack(theme.Colors.lineSoft))
     panel.search:SetFont(STANDARD_TEXT_FONT, theme.Font.body, ""); panel.search:SetTextColor(unpack(theme.Colors.text)); panel.search:SetTextInsets(8, 8, 0, 0)
     panel.search:SetPoint("TOPLEFT", 8, -6)
     panel.search:SetScript("OnEditFocusGained", function(control) control:SetBackdropBorderColor(unpack(theme.Colors.accent)) end)
@@ -202,9 +202,11 @@ function Native:Row(data)
     local panel = self.inbox; panel.used = panel.used + 1
     local row = panel.rows[panel.used]
     if not row then
-        row = CreateFrame("Button", nil, panel.content, "BackdropTemplate"); row:SetBackdrop(BACKDROP)
-        row.separator = row:CreateTexture(nil, "BACKGROUND"); row.separator:SetColorTexture(0.12, 0.24, 0.22, 0.6)
-        row.separator:SetPoint("BOTTOMLEFT", 0, 0); row.separator:SetPoint("BOTTOMRIGHT", 0, 0); row.separator:SetHeight(1)
+        -- Fill-only backdrop: the bottom separator is the row's only rule.
+        row = CreateFrame("Button", nil, panel.content, "BackdropTemplate"); row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+        row.separator = row:CreateTexture(nil, "BACKGROUND")
+        row.separator:SetPoint("BOTTOMLEFT", 0, 0); row.separator:SetPoint("BOTTOMRIGHT", 0, 0)
+        Addon.Core.UITheme:ApplyPixelRule(row.separator, "horizontal", { color = { 0.12, 0.24, 0.22, 0.6 } })
         row.check = Addon.Core.UITheme:CreateCheckbox(row, ""); row.check:SetSize(24, 46); row.check:SetPoint("LEFT", 0, 0)
         row.check.label:Hide(); row.check.box:ClearAllPoints(); row.check.box:SetPoint("CENTER"); row.check.box:EnableMouse(false)
         row.check:SetHitRectInsets(0, 0, 0, 0); row.check:RegisterForClicks("LeftButtonUp")
@@ -225,7 +227,7 @@ function Native:Row(data)
     row.mailListTop = panel.top
     row.mailIndented = data.indent == true
     row:ClearAllPoints(); row:SetPoint("TOPLEFT", data.indent and 16 or 0, -panel.top); row:SetSize(panel.width - (data.indent and 16 or 0), height)
-    row:SetBackdropColor(0, 0, 0, 0); row:SetBackdropBorderColor(0, 0, 0, 0)
+    row:SetBackdropColor(0, 0, 0, 0)
     row.title:SetText(tostring(data.title or ""):gsub("[\r\n]+", " ")); row.detail:SetText(tostring(data.detail or ""):gsub("[\r\n]+", " ")); row.expiry:SetText(data.expiry or "")
     if data.expiryMail then row.expiry:SetTextColor(View:ExpiryColor(data.expiryMail)) else row.expiry:SetTextColor(0.25, 0.9, 0.35) end
     local bodyWidth = math.max(1, row:GetWidth() - 58 - (data.expiry and 76 or 6))
@@ -569,8 +571,8 @@ function Native:ItemTile(group, index, columns, size)
     panel.tiles = panel.tiles or {}
     local tile = panel.tiles[index]
     if not tile then
-        tile = CreateFrame("Button", nil, panel.content, "BackdropTemplate"); tile:SetBackdrop(BACKDROP); tile:SetSize(42, 42)
-        tile.icon = tile:CreateTexture(nil, "ARTWORK"); tile.icon:SetPoint("TOPLEFT", 1, -1); tile.icon:SetPoint("BOTTOMRIGHT", -1, 1)
+        tile = CreateFrame("Button", nil, panel.content, "BackdropTemplate"); PixelBackdrop(tile); tile:SetSize(42, 42)
+        tile.icon = tile:CreateTexture(nil, "ARTWORK"); PixelInset(tile.icon, tile)
         tile.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
         tile.count = Text(tile, "NumberFontNormal", "RIGHT"); tile.count:SetPoint("BOTTOMRIGHT", -3, 3)
         panel.tiles[index] = tile

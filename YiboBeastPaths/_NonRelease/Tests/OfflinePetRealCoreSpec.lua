@@ -16,7 +16,7 @@ for _, target in ipairs({ "Retail", "Mists" }) do
     end
     fire("ADDON_LOADED"); fire("PLAYER_LOGIN"); flush()
     assert(core:IsInitialized())
-    assert(core:RegisterAddon("YiboBeastPaths", { requiredAPI = 13, version = "1.9.1" }))
+    assert(core:RegisterAddon("YiboBeastPaths", { requiredAPI = 14, version = "1.10.0" }))
     local ns = { YBP_TARGET_OK = true, pets = { [10] = { mapID = 371 } },
         routeNodeTooltips = { [10] = { npcID = 50998 } } }
     env.C_Map = { GetMapInfo = function(id) if id == 371 then return { name = "Test map" } end end }

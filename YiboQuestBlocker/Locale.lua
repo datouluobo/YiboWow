@@ -4,17 +4,18 @@ _G.YQB = YQB
 
 if Core and Core.Locale and Core.Locale.Register and Core.Locale.Get then
     Core.Locale:Register("YiboQuestBlocker", "zh", {
-        ["CORE.STARTUP_REQUIREMENTS"] = "任务屏蔽需要熊猫人之谜经典服及 YiboCore API 13、character-identity:1 和所需公共能力。请使用对应客户端并升级 Core；已保留存档。",
+        ["CORE.STARTUP_REQUIREMENTS"] = "任务屏蔽需要熊猫人之谜经典服及 YiboCore API 14、character-identity:1、pixel-line:1 和所需公共能力。请使用对应客户端并升级 Core；已保留存档。",
     })
     Core.Locale:Register("YiboQuestBlocker", "en", {
-        ["CORE.STARTUP_REQUIREMENTS"] = "QuestBlocker requires Mists Classic and YiboCore API 13 with character-identity:1 and the declared capabilities. Use the matching client and upgrade Core. Saved data was retained.",
+        ["CORE.STARTUP_REQUIREMENTS"] = "QuestBlocker requires Mists Classic and YiboCore API 14 with character-identity:1, pixel-line:1 and the declared capabilities. Use the matching client and upgrade Core. Saved data was retained.",
     })
 end
 
 local function IsSupported()
     return not not (type(WOW_PROJECT_MISTS_CLASSIC) == "number" and WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC
-        and Core and Core.CheckAPIVersion and Core:CheckAPIVersion(13)
+        and Core and Core.CheckAPIVersion and Core:CheckAPIVersion(14)
         and Core.HasCapability and Core:HasCapability("localization", 1)
+        and Core:HasCapability("pixel-line", 1)
         and Core:HasCapability("character-name-format", 1)
         and Core:HasCapability("character-identity", 1)
         and Core:HasCapability("basic-input", 1)
@@ -24,7 +25,8 @@ local function IsSupported()
         and Core.Locale and Core.Locale.Register and Core.Locale.Get
         and Core.IsInitialized and Core:IsInitialized()
         and Core.AccountView and type(Core.AccountView.GetScrollSurfaceWidth) == "function" and Core.Entry and Core.Characters
-        and Core.Characters.FormatName and Core.UITheme and Core.UITheme.CreateInput)
+        and Core.Characters.FormatName and Core.UITheme and Core.UITheme.CreateInput
+        and type(Core.UITheme.ApplyPixelBackdrop) == "function" and type(Core.UITheme.CreatePixelBorder) == "function")
 end
 
 YQB.CoreCompatible = IsSupported() == true
@@ -33,7 +35,7 @@ if not YQB.CoreCompatible then
         if Core.Locale and Core.Locale.Get then
             Core:Print(Core.Locale:Get("YiboQuestBlocker", "CORE.STARTUP_REQUIREMENTS"))
         else
-            Core:Print("YiboQuestBlocker requires YiboCore API 13 with localization:1, character-name-format:1, basic-input:1, account-view:2 and account-entry:2, account-surface-budget:2. Update YiboCore to enable QuestBlocker.")
+            Core:Print("YiboQuestBlocker requires YiboCore API 14 with localization:1, pixel-line:1, character-name-format:1, basic-input:1, account-view:2 and account-entry:2, account-surface-budget:2. Update YiboCore to enable QuestBlocker.")
         end
     end
     return
@@ -41,7 +43,7 @@ end
 
 Core.Locale:Register("YiboQuestBlocker", "zh", {
     ["CORE.UNAVAILABLE"] = "YiboCore 不可用。",
-    ["CORE.UPGRADE"] = "需要 YiboCore API v13 及语言服务、角色名格式化、基础输入、账号页面与入口能力。请更新 YiboCore 后再使用任务屏蔽。 (account-surface-budget:2)",
+    ["CORE.UPGRADE"] = "需要 YiboCore API v14 及语言服务、像素线宽、角色名格式化、基础输入、账号页面与入口能力。请更新 YiboCore 后再使用任务屏蔽。 (account-surface-budget:2, pixel-line:1)",
     ["CORE.INTEGRATION_FAILED"] = "QuestBlocker Core 集成失败：%s",
     ["PAGE.TITLE"] = "任务屏蔽",
     ["PAGE.GLOBAL_FIELD"] = "全局屏蔽",
@@ -110,7 +112,7 @@ Core.Locale:Register("YiboQuestBlocker", "zh", {
 
 Core.Locale:Register("YiboQuestBlocker", "en", {
     ["CORE.UNAVAILABLE"] = "YiboCore is unavailable.",
-    ["CORE.UPGRADE"] = "YiboQuestBlocker requires YiboCore API v13 with localization, character-name formatting, basic-input, account-view and account-entry capabilities. Update YiboCore to use QuestBlocker. (account-surface-budget:2)",
+    ["CORE.UPGRADE"] = "YiboQuestBlocker requires YiboCore API v14 with localization, pixel-line, character-name formatting, basic-input, account-view and account-entry capabilities. Update YiboCore to use QuestBlocker. (account-surface-budget:2, pixel-line:1)",
     ["CORE.INTEGRATION_FAILED"] = "QuestBlocker Core integration failed: %s",
     ["PAGE.TITLE"] = "Quest Blocker",
     ["PAGE.GLOBAL_FIELD"] = "Global blocks",

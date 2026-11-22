@@ -70,9 +70,12 @@ end
 frame:SetScript("OnEvent", function(_, event, ...)
     local name = ...
     if event == "ADDON_LOADED" and name == Addon.NAME then
+        -- Client identity and Core readiness gate every YiboTodoDB write.
+        if not Addon.CoreIntegration:CheckStartup() then return end
         Addon.Database:Initialize()
         Addon:ValidateCatalog()
     elseif event == "PLAYER_LOGIN" then
+        if not Addon.CoreIntegration.startupReady then return end
         local ok, err = Addon.CoreIntegration:Initialize()
         if not ok then Addon:Print(Addon:T("ERROR.INTEGRATION", tostring(err))) else
             Addon.initialized = true

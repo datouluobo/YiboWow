@@ -85,4 +85,35 @@ local oldEnv, oldCore, oldVault = Boot(nil, nil, function(_, c)
 end, false)
 Check(not oldVault.initialized and #oldEnv.TEST_MESSAGES > 0, "insufficient MoP Core API stops and prompts")
 Check(not oldCore.Contracts:Resolve("vault.items", { major = 1 }), "insufficient Core API cannot publish Vault service")
+-- Release fix 2026-11-22: refused Core (API13) and wrong client leave a real Mists store byte-identical
+-- (no default structure, no known->stale normalization before the Core check).
+local function Serialize(value)
+    if type(value) == "string" then return string.format("%q", value) end
+    if type(value) ~= "table" then return tostring(value) end
+    local keys, parts = {}, { "{" }
+    for key in pairs(value) do keys[#keys + 1] = key end
+    table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
+    for _, key in ipairs(keys) do parts[#parts + 1] = "[" .. Serialize(key) .. "]=" .. Serialize(value[key]) .. "," end
+    return table.concat(parts) .. "}"
+end
+local function Deserialize(text) local chunk = assert(loadstring("return " .. text)); setfenv(chunk, {}); return chunk() end
+local storeText = Serialize(v.db)
+Check(storeText:find('"known"', 1, true), "fixture store has known coverage that pre-Core normalization would rewrite")
+for _, case in ipairs({
+    { "API13 Core", function(_, c) c.CheckAPIVersion = function(_, version) return version <= 13 end end },
+    { "Core without pixel-line", function(_, c)
+        local has = c.HasCapability
+        c.HasCapability = function(self, name, minimum) if name == "pixel-line" then return false end; return has(self, name, minimum) end
+    end },
+    { "wrong client", function(env) env.WOW_PROJECT_ID = 18; env.WOW_PROJECT_CAMELOT = 18 end },
+}) do
+    local store = Deserialize(storeText)
+    local refusedEnv, refusedCore, refused = Boot(store, coreSaved, case[2], false)
+    Check(not refused.initialized and not refused.db, case[1] .. ": Mists Vault refused")
+    Check(refusedEnv.YiboVaultDB == store and Serialize(store) == storeText, case[1] .. ": Mists store byte-identical")
+    Check(#refusedEnv.TEST_MESSAGES == 1, case[1] .. ": one refusal message: " .. table.concat(refusedEnv.TEST_MESSAGES, " | "))
+    Check(not refusedCore.Registry:Get("YiboVault"), case[1] .. ": not registered with Core")
+end
+local missingEnv = Boot(nil, nil, function(_, c) c.CheckAPIVersion = function(_, version) return version <= 13 end end, false)
+Check(missingEnv.YiboVaultDB == nil, "API13 Core: missing Mists store is not created")
 print("Vault MistsReleaseSpec passed: " .. checks .. " checks")

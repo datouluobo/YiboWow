@@ -67,7 +67,8 @@ function View:BindWork(band, cell, task)
     if not icon then
         icon = CreateFrame("Frame", nil, band, "BackdropTemplate"); band.workIcon = icon
         icon:SetSize(24, 24); icon:EnableMouse(false)
-        icon:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+        -- Standalone icon frame inside the work cell; it touches no row rule.
+        Addon.Core.UITheme:ApplyPixelBackdrop(icon, { background = true, pixels = 1 })
         icon:SetBackdropColor(unpack(Addon.Core.UITheme.Colors.chrome))
         icon:SetBackdropBorderColor(unpack(Addon.Core.UITheme.Colors.matrixLine))
         icon.texture = icon:CreateTexture(nil, "ARTWORK")
@@ -236,9 +237,11 @@ function View:Band(parent, count)
     local band = CreateFrame("Frame", nil, parent)
     band.fill = band:CreateTexture(nil, "BACKGROUND"); band.fill:SetAllPoints()
     band.fill:SetColorTexture(unpack(theme.Colors.row))
+    -- Each stacked band owns only its bottom rule, so adjacent bands share
+    -- one boundary.  Core owns the rule's physical-pixel thickness.
     band.rule = band:CreateTexture(nil, "ARTWORK")
-    band.rule:SetHeight(1); band.rule:SetPoint("BOTTOMLEFT"); band.rule:SetPoint("BOTTOMRIGHT")
-    band.rule:SetColorTexture(unpack(theme.Colors.matrixLine))
+    band.rule:SetPoint("BOTTOMLEFT"); band.rule:SetPoint("BOTTOMRIGHT")
+    theme:ApplyPixelRule(band.rule, "horizontal", { color = theme.Colors.matrixLine, pixels = 1 })
     band.cells = {}
     for index = 1, count do band.cells[index] = theme:CreateText(band, theme.Font.body, theme.Colors.text) end
     return band

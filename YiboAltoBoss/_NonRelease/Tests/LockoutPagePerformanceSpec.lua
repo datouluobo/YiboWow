@@ -7,7 +7,10 @@ CreateFrame=function() return frame() end
 local colors={}; setmetatable(colors,{__index=function() return {1,1,1,1} end})
 local theme={Colors=colors,Font={body=1},Space={lg=2,xs=1},Table={headerHeight=20},
  GetMatrixInsets=function() return {left=0,right=0,bottom=0} end,MeasureText=function() return 10 end,
- CreateMatrixHeader=function() return frame() end,SetMatrixHeader=function() end,CreateText=function() return frame() end,BindTooltip=function() end}
+ CreateMatrixHeader=function() return frame() end,SetMatrixHeader=function() end,CreateText=function() return frame() end,BindTooltip=function() end,
+ ApplyPixelBackdrop=function(_,f) return f end,ApplyPixelRule=function(_,t) return t end,GetPixelSize=function(_,_,n) return n or 1 end,
+ SetPixelAnchor=function(_,r,fn) if fn then fn() end end,
+ CreatePixelBorder=function(_,f,o) rawset(f,'pixelSides',o.sides); return {SetColor=function() end,SetShown=function() end,SetSides=function() end} end}
 YiboCore={UITheme=theme,Locale={Get=function(_,_,key) return key end},AccountView={GetScrollSurfaceWidth=function() return 2000 end,GetColumnPage=function(_,_,_,columns) return columns,{} end,UpdateColumnPager=function() end}}
 local keys,columns,defs={},{},{}
 for i=1,20 do keys[i]='C'..i end
@@ -26,6 +29,8 @@ local start=os.clock(); for i=1,20 do YAB.RefreshLockoutsPage(instance,{}) end
 print(string.format('lockout page 20 refreshes, 20 characters, 10 columns, 100 catalog entries: %.3f s; catalog copies=%d status=%d binds=%d',os.clock()-start,copies,statusCalls,#binds))
 assert(statusCalls==4000 and #binds==4000 and binds[1]=='C1:instance:1' and binds[200]=='C20:instance:10')
 assert(copies==20, 'one catalog copy per visible refresh')
+local s1, s2 = instance.rows[1].cells[1].pixelSides, instance.rows[1].cells[2].pixelSides
+assert(s1.left and s1.top and s1.right and s1.bottom and s2.top and s2.right and s2.bottom and not s2.left, 'adjacent lockout cells share one vertical boundary')
 YAB.GoalTargets.ref=nil; YAB.RefreshLockoutsPage(instance,{}); assert(copies==20, 'disabled goal actions skip catalog')
 YAB.GoalTargets.ref=true; local savedKeys=keys; keys={}; YAB.RefreshLockoutsPage(instance,{}); assert(copies==20, 'empty roster skips catalog'); keys=savedKeys
 defs[1].id='changed'; binds={}; YAB.RefreshLockoutsPage(instance,{})

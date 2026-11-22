@@ -978,7 +978,7 @@ local function RefreshScopeBar(frame, context)
     bar.menu:SetFrameLevel((frame:GetFrameLevel() or 0) + 30)
     bar.menu:SetToplevel(true)
     bar.menu:EnableMouse(true)
-    bar.menu:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Theme:ApplyPixelBackdrop(bar.menu)
     bar.menu:SetBackdropColor(COLORS.panel[1], COLORS.panel[2], COLORS.panel[3], 1)
     bar.menu:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], COLORS.line[4])
     bar.menu.buttons = bar.menu.buttons or {}
@@ -1114,7 +1114,7 @@ function AccountView:CreateFrame()
             self:SetAttribute("restoreMainAfterPreview", nil)
         end
     end)
-    frame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Theme:ApplyPixelBackdrop(frame)
     frame:SetBackdropColor(COLORS.bg[1], COLORS.bg[2], COLORS.bg[3], COLORS.bg[4])
     frame:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], COLORS.line[4])
 

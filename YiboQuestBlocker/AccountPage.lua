@@ -113,7 +113,9 @@ local function Row(instance)
     if not row then
         row = CreateFrame("Frame", nil, instance.content, "BackdropTemplate")
         row:SetHeight(ROW_H)
-        row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+        -- Fill only; the stacked-row rules come from SetRowBorder so each
+        -- shared boundary is painted once.
+        row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
         row.task = Text(row, "GameFontNormalSmall", COLORS.text, Theme.Font.body); row.task:SetPoint("LEFT", 8, 0)
         row.global = StatusCheck(row)
         row.cells = {}
@@ -121,10 +123,17 @@ local function Row(instance)
         row.characterBandEdges = {}
         instance.rows[index] = row
     end
+    row.rowIndex = index
     row:ClearAllPoints(); row:SetPoint("TOPLEFT", instance.content, "TOPLEFT", 0, -((index - 1) * ROW_H))
     row:SetPoint("RIGHT", instance.content, "RIGHT", 0, 0)
     row:Show()
     return row
+end
+
+-- Stacked rows share one pixel boundary: every row draws its sides and
+-- bottom, and only the first row draws the matrix's top edge.
+local function SetRowBorder(row, color)
+    Theme:CreatePixelBorder(row, { color = color, sides = { top = row.rowIndex == 1, right = true, bottom = true, left = true } })
 end
 
 local function SetCharacterBands(row, characters, startX, characterWidth, showCharacters)
@@ -209,8 +218,7 @@ local function RenderQuest(instance, item, characters, showGlobal, showCharacter
     -- carries that state, so the fill remains comparable with adjacent rows.
     local tone = Theme:GetDataRowColor(instance.dataRowCount)
     row:SetBackdropColor(tone[1], tone[2], tone[3], 0.94)
-    local rowBorder = currentTask and COLORS.line or COLORS.matrixLine
-    row:SetBackdropBorderColor(rowBorder[1], rowBorder[2], rowBorder[3], rowBorder[4])
+    SetRowBorder(row, currentTask and COLORS.line or COLORS.matrixLine)
     local status = YQB.GetBlockStatus(item.id)
     local x = instance.taskWidth
     local characterWidth = CharacterWidth(instance)
@@ -248,7 +256,7 @@ local function RenderGroup(instance, title, characters, showGlobal, showCharacte
     row.task:SetText(title); row.task:SetWidth(600)
     row.task:SetTextColor(COLORS.accent[1], COLORS.accent[2], COLORS.accent[3])
     row:SetBackdropColor(COLORS.toolbar[1], COLORS.toolbar[2], COLORS.toolbar[3], 0.98)
-    row:SetBackdropBorderColor(COLORS.matrixLine[1], COLORS.matrixLine[2], COLORS.matrixLine[3], COLORS.matrixLine[4])
+    SetRowBorder(row, COLORS.matrixLine)
     row.global:Hide(); for _, cell in ipairs(row.cells) do cell:Hide() end
     SetCharacterBands(row, characters or {}, instance.taskWidth + (showGlobal and GLOBAL_W or 0), CharacterWidth(instance), showCharacters)
     row:EnableMouse(true)
@@ -263,7 +271,7 @@ function Page.Create(instance)
     instance.title = Text(instance, "GameFontNormalLarge", COLORS.text); instance.title:Hide()
     instance.summary = Text(instance, "GameFontNormalSmall", COLORS.muted); instance.summary:Hide()
     instance.toolbar = CreateFrame("Frame", nil, instance, "BackdropTemplate"); instance.toolbar:SetPoint("TOPLEFT", mainInset.left, -mainInset.top); instance.toolbar:SetPoint("TOPRIGHT", -mainInset.right, -mainInset.top); instance.toolbar:SetHeight(Theme.Size.standard)
-    instance.toolbar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Theme:ApplyPixelBackdrop(instance.toolbar, { background = true, pixels = 1 })
     instance.toolbar:SetBackdropColor(COLORS.toolbar[1], COLORS.toolbar[2], COLORS.toolbar[3], 0.9); instance.toolbar:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.52)
     instance.daily = Check(instance.toolbar, YQB.T("PAGE.DAILY")); instance.daily:SetPoint("LEFT", 7, 0)
     instance.normal = Check(instance.toolbar, YQB.T("PAGE.NORMAL")); instance.normal:SetPoint("LEFT", instance.daily.label, "RIGHT", Theme.Space.sm, 0)
@@ -294,7 +302,7 @@ function Page.Create(instance)
     instance.scopeButtons = {}
     instance.addPanel = CreateFrame("Frame", nil, instance, "BackdropTemplate"); instance.addPanel:SetPoint("BOTTOMLEFT", mainInset.left, mainInset.bottom); instance.addPanel:SetPoint("BOTTOMRIGHT", -mainInset.right, mainInset.bottom); instance.addPanel:SetHeight(29)
     instance.scroll:SetPoint("BOTTOMRIGHT", instance.addPanel, "TOPRIGHT", 0, Theme.Space.sm)
-    instance.addPanel:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 }); instance.addPanel:SetBackdropColor(COLORS.toolbar[1], COLORS.toolbar[2], COLORS.toolbar[3], 0.9); instance.addPanel:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.52)
+    Theme:ApplyPixelBackdrop(instance.addPanel, { background = true, pixels = 1 }); instance.addPanel:SetBackdropColor(COLORS.toolbar[1], COLORS.toolbar[2], COLORS.toolbar[3], 0.9); instance.addPanel:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.52)
     instance.manualLabel = Text(instance.addPanel, "GameFontNormalSmall", COLORS.muted, Theme.Font.assist); instance.manualLabel:SetPoint("LEFT", 7, 0); instance.manualLabel:SetText(YQB.T("PAGE.QUEST_ID"))
     instance.manual = Theme:CreateInput(instance.addPanel, { width = 108, height = 20, maxLetters = 12, numeric = true })
     instance.manual:SetPoint("LEFT", instance.manualLabel, "RIGHT", 6, 0)

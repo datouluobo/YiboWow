@@ -76,8 +76,12 @@ local function Layout(container, labels, columns)
     for _, column in ipairs(columns) do
         local label = labels[column.id]
         if label then
+            -- Fill the container's own height so the text is centred in the
+            -- 26/28-unit headers and the 32-unit rows alike (a fixed 32-unit
+            -- box anchored at the top put header text 3 units low).
             label:ClearAllPoints(); label:SetPoint("TOPLEFT", container, "TOPLEFT", column.x, 0)
-            label:SetSize(column.width, rowHeight); label:Show()
+            label:SetPoint("BOTTOMLEFT", container, "BOTTOMLEFT", column.x, 0)
+            label:SetWidth(column.width); label:Show()
         end
     end
 end
@@ -320,10 +324,9 @@ function Page:PaintRows(parent, scrollOnly)
         if not row then
             row = CreateFrame("Button",nil,parent.content,"BackdropTemplate"); row:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8x8"}); row.labels={}
             row.progress=CreateFrame("Frame",nil,row,"BackdropTemplate")
-            row.progress:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8x8",edgeFile="Interface\\Buttons\\WHITE8x8",edgeSize=1})
+            Theme:ApplyPixelBackdrop(row.progress)
             row.progress:SetBackdropColor(0.02,0.04,0.04,1); row.progress:SetBackdropBorderColor(0.15,0.3,0.3,1)
             row.progress.fill=row.progress:CreateTexture(nil,"ARTWORK")
-            row.progress.fill:SetPoint("TOPLEFT",1,-1); row.progress.fill:SetPoint("BOTTOMLEFT",1,1)
             for _, field in ipairs(self:Fields()) do row.labels[field.id]=Theme:CreateText(field.id=="value" and row.progress or row,Theme.Font.body,Theme.Colors.text) end
             row.labels.value:SetJustifyH("CENTER")
             row.watch = Theme:CreateButton(row, 80, "", "secondary")
@@ -373,8 +376,16 @@ function Page:PaintRows(parent, scrollOnly)
             row.progress:ClearAllPoints(); row.progress:SetPoint("TOPLEFT",row,"TOPLEFT",column.x,-5); row.progress:SetSize(column.width,22)
             if display.color then
                 row.progress:SetBackdropColor(0.02,0.04,0.04,1); row.progress:SetBackdropBorderColor(0.15,0.3,0.3,1)
+                -- The fill sits inside the progress frame's one-pixel border;
+                -- Core re-applies inset and width when the pixel size changes.
+                local fill,fraction=row.progress.fill,display.fraction
+                Theme:SetPixelAnchor(fill,function()
+                    local px=Theme:GetPixelSize(row.progress,1)
+                    fill:ClearAllPoints(); fill:SetPoint("TOPLEFT",px,-px); fill:SetPoint("BOTTOMLEFT",px,px)
+                    fill:SetWidth(math.max(0.001,(column.width-2*px)*fraction))
+                end)
                 row.progress.fill:SetColorTexture(display.color[1],display.color[2],display.color[3],0.8)
-                row.progress.fill:SetWidth(math.max(0.001,(column.width-2)*display.fraction)); row.progress.fill:SetShown(display.fraction>0)
+                row.progress.fill:SetShown(display.fraction>0)
             else
                 row.progress.fill:Hide()
                 row.progress:SetBackdropColor(0,0,0,0); row.progress:SetBackdropBorderColor(0,0,0,0)

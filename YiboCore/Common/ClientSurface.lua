@@ -112,6 +112,14 @@ function Core._private.CreateClientSurface(resolve, bagIDs)
         if not Number(result[2]) or not Number(result[3]) then return nil, nil, "error" end
         return result[2], result[3], "known"
     end
+    -- Physical render size for pixel-line conversion; unknown never means zero.
+    function surface.ReadPhysicalScreenSize()
+        local result, state = Read("PhysicalScreenSize")
+        if not result then return nil, nil, state end
+        local width, height = result[2], result[3]
+        if not (Integer(width, 65535) and Integer(height, 65535) and width > 0 and height > 0) then return nil, nil, "error" end
+        return width, height, "known"
+    end
     function surface.ReadAddon(name)
         local info, state = Read("AddonInfo", name)
         if not info then return { installed = false, enabled = false, availability = state } end

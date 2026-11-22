@@ -38,6 +38,8 @@ function Addon:InitializeDatabase()
     db.byCharacter, db.byGuild, db.settings = db.byCharacter or {}, db.byGuild or {}, db.settings or {}
     db.clientScope = { target = "Forever", projectID = WOW_PROJECT_ID, scope = "current-character", rulesetState = "unknown" }
     db.settings.previewColumns = db.settings.previewColumns or { item = true, location = true, quantity = true }
+    if db.settings.previewColumns.character == nil then db.settings.previewColumns.character = true end
+    if db.settings.tooltipRealmScope ~= "all" then db.settings.tooltipRealmScope = "current" end
     if db.settings.foreverSource ~= "equipment" and db.settings.foreverSource ~= "bank" and db.settings.foreverSource ~= "mail" and db.settings.foreverSource ~= "auction" and db.settings.foreverSource ~= "guild-bank" then db.settings.foreverSource = "bags" end
     for _, character in pairs(db.byCharacter) do
         for _, source in ipairs({ "bags", "equipment", "bank", "mail", "auction" }) do
@@ -79,7 +81,12 @@ local function StageContainers(source, ids)
         end
         local capacity = { totalSlots = count }
         if C_Container and type(C_Container.GetContainerNumFreeSlots) == "function" and count > 0 then
-            capacity.freeSlots = Number(Read(C_Container.GetContainerNumFreeSlots, bag), 0, count)
+            local free, family = C_Container.GetContainerNumFreeSlots(bag)
+            capacity.freeSlots = Number(free, 0, count)
+            if bag == 0 then capacity.bagType = 0
+            elseif not (type(issecretvalue) == "function" and issecretvalue(family))
+                and type(family) == "number" and family >= 0 and family % 1 == 0
+                and (family > 0 or #records > 0) then capacity.bagType = family end
             if capacity.freeSlots + #records ~= count then error("container-data-incomplete") end
         end
         total = total + #records
@@ -295,6 +302,3 @@ function Addon:OnEvent(event, unit)
         if self._inWorld then self._ready.equipment = true; self:QueueScan() end
     end
 end
-
--- The shared service advertises only implemented capabilities on this target.
-function Addon.Items:GetPersonalCounts() return nil, "unsupported-capability" end

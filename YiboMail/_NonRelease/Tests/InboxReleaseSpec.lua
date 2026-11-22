@@ -15,7 +15,7 @@ DEFAULT_CHAT_FRAME = { AddMessage = function(_, message) messages[#messages + 1]
 local function Forbidden() error("Release startup must not construct or open native UI") end
 local owner, registeredAddons, registeredContracts, contractRegistrations = nil, 0, {}, 0
 local current = { id = "test", name = "Test", realm = "Realm", faction = "Alliance" }
-local coreAPI = 13
+local coreAPI = 14
 local requiredCapabilities = {
     localization = 1, ["business-services"] = 1, ["character-name-format"] = 1,
     ["basic-input"] = 1, ["item-resolver"] = 2, ["item-picker"] = 2,
@@ -23,13 +23,14 @@ local requiredCapabilities = {
     ["account-identity-context"] = 1, characters = 1, ["character-cleanup"] = 1,
     ["account-view"] = 2, ["account-preview-characters"] = 1,
     ["account-character-admission"] = 1, ["account-surface-budget"] = 2, ["account-entry"] = 2, ["account-surface-realm-scope"] = 1,
+    ["pixel-line"] = 1,
 }
 YiboCore = {
     CheckAPIVersion = function(_, version) return version <= coreAPI end,
     IsInitialized = function() return true end,
     Print = function(_, message) messages[#messages + 1] = message end,
     RegisterAddon = function(_, name, options)
-        assert(name == "YiboMail" and options.requiredAPI == 13)
+        assert(name == "YiboMail" and options.requiredAPI == 14)
         registeredAddons = registeredAddons + 1; return true
     end,
     Contracts = {
@@ -71,7 +72,8 @@ YiboCore = {
         assert(addonName == "YiboMail" and definition.id == "yma" and definition.pageID == "mail-inbox")
         return definition
     end },
-    UITheme = { CreateInput = Forbidden, CreateDropdown = Forbidden },
+    UITheme = { CreateInput = Forbidden, CreateDropdown = Forbidden,
+        ApplyPixelBackdrop = Forbidden, ApplyPixelRule = Forbidden, GetPixelSize = Forbidden, SetPixelAnchor = Forbidden },
     ItemConfirmation = { Show = Forbidden }, CreateItemPicker = Forbidden, ItemResolver = { Request = Forbidden, GetInfo = Forbidden },
     Defaults = { Copy = function(_, value) return YiboMail.Copy(value) end },
 }
@@ -172,7 +174,8 @@ local function Reject(label, apply, restore)
         restore(); rejectionCount = rejectionCount + 1
     end
 end
-Reject('Core API12', function() coreAPI = 12 end, function() coreAPI = 13 end)
+Reject('Core API12', function() coreAPI = 12 end, function() coreAPI = 14 end)
+Reject('Core API13 without pixel-line', function() coreAPI = 13 end, function() coreAPI = 14 end)
 local isInitialized = YiboCore.IsInitialized
 Reject('Core not ready', function() YiboCore.IsInitialized = function() return false end end,
     function() YiboCore.IsInitialized = isInitialized end)
@@ -192,7 +195,8 @@ local requiredMethods = {
     { YiboCore.AccountView, 'Toggle' }, { YiboCore.AccountView, 'BuildContext' },
     { YiboCore.AccountView, 'GetVisibleCharacters' }, { YiboCore.AccountView, 'GetEffectiveCharacterSort' },
     { YiboCore.AccountView, 'GetCustomCharacterOrder' }, { YiboCore.Entry, 'RegisterBusinessEntry' },
-    { YiboCore.ItemConfirmation, 'Show' }, { YiboCore.UITheme, 'CreateInput' }, { YiboCore, 'CreateItemPicker' }, { YiboCore.ItemResolver, 'Request' }, { YiboCore.ItemResolver, 'GetInfo' },
+    { YiboCore.ItemConfirmation, 'Show' }, { YiboCore.UITheme, 'CreateInput' }, { YiboCore.UITheme, 'ApplyPixelBackdrop' },
+    { YiboCore.UITheme, 'ApplyPixelRule' }, { YiboCore.UITheme, 'GetPixelSize' }, { YiboCore.UITheme, 'SetPixelAnchor' }, { YiboCore, 'CreateItemPicker' }, { YiboCore.ItemResolver, 'Request' }, { YiboCore.ItemResolver, 'GetInfo' },
 }
 for _, entry in ipairs(requiredMethods) do
     local target, method = entry[1], entry[2]

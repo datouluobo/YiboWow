@@ -1,0 +1,1308 @@
+{
+    "schemaVersion":  2,
+    "package":  "Yibo-Addon-Suite",
+    "title":  "Yibo Addon Suite - Account QoL Addons",
+    "target":  "Forever",
+    "slug":  "forever",
+    "version":  "1.0.0",
+    "supportedTargets":  [
+                             "Forever"
+                         ],
+    "sourceSHA256":  "af963aa6decbd71b8389c68695133484e59e88398628cbed9322e42fb9e3871e",
+    "buildTimeUTC":  "2026-11-22T06:58:15.7432910Z",
+    "uploadState":  "not-uploaded",
+    "clientAcceptance":  "not-established-by-packaging",
+    "curseForgeConcurrentManagement":  "unverified-not-supported",
+    "components":  [
+                       {
+                           "addon":  "YiboAltoBoss",
+                           "version":  "0.2.0",
+                           "sourceToc":  "YiboAltoBoss.toc",
+                           "interface":  "16001",
+                           "requiredDependencies":  [
+                                                        "YiboCore"
+                                                    ],
+                           "optionalDependencies":  [
+
+                                                    ],
+                           "minimumCoreAPI":  14,
+                           "sourceSHA256":  "ddb03809eb9b7cd8f9e25b91c15dd359a2304f6b501e4b5510c9a36abd0e786a",
+                           "componentPackage":  "YiboAltoBoss-forever-v0.2.0-curseforge.zip",
+                           "componentPackageSHA256":  "1b7208bb444332501205cd81a5d992b90c857210925fdc328aa19529e759bb0b"
+                       },
+                       {
+                           "addon":  "YiboAutoOpen",
+                           "version":  "0.1.2",
+                           "sourceToc":  "YiboAutoOpen.toc",
+                           "interface":  "16001",
+                           "requiredDependencies":  [
+                                                        "YiboCore"
+                                                    ],
+                           "optionalDependencies":  [
+
+                                                    ],
+                           "minimumCoreAPI":  13,
+                           "sourceSHA256":  "730b4914c550842815cc198fcef862e310b400892c51043d46b420dc48990889",
+                           "componentPackage":  "YiboAutoOpen-forever-v0.1.2-curseforge.zip",
+                           "componentPackageSHA256":  "8bb670db1e4caf98ededac9d2349d2b721056f5870c92f005ad25aa0f5de3cda"
+                       },
+                       {
+                           "addon":  "YiboBuilds",
+                           "version":  "0.2.0",
+                           "sourceToc":  "YiboBuilds.toc",
+                           "interface":  "16001",
+                           "requiredDependencies":  [
+                                                        "YiboCore"
+                                                    ],
+                           "optionalDependencies":  [
+
+                                                    ],
+                           "minimumCoreAPI":  14,
+                           "sourceSHA256":  "08bbcac71428ee303aa4649bf818eff391fc8af735635b487ba1e4b2f6992bf7",
+                           "componentPackage":  "YiboBuilds-forever-v0.2.0-curseforge.zip",
+                           "componentPackageSHA256":  "31f79aa6e8ecd5060a5b4f8044f20b7967a203c7823bb0308e8c2e7c08543e4d"
+                       },
+                       {
+                           "addon":  "YiboCore",
+                           "version":  "0.3.0",
+                           "sourceToc":  "YiboCore.toc",
+                           "interface":  "16001",
+                           "requiredDependencies":  [
+
+                                                    ],
+                           "optionalDependencies":  [
+                                                        "LibDataBroker-1.1"
+                                                    ],
+                           "minimumCoreAPI":  null,
+                           "sourceSHA256":  "c65318da1c5b69fb184b82cbea3a29220b7ab18c0cc4030672420a05e0f5462f",
+                           "componentPackage":  "YiboCore-forever-v0.3.0-api14-curseforge.zip",
+                           "componentPackageSHA256":  "e2e98418cb79f0ab5f560233d1bdcb24a5a6db2102fe0f1616f14ce0b9b29000"
+                       },
+                       {
+                           "addon":  "YiboCrafting",
+                           "version":  "0.2.0",
+                           "sourceToc":  "YiboCrafting.toc",
+                           "interface":  "16001",
+                           "requiredDependencies":  [
+                                                        "YiboCore"
+                                                    ],
+                           "optionalDependencies":  [
+
+                                                    ],
+                           "minimumCoreAPI":  13,
+                           "sourceSHA256":  "a13f7c2949c3cad7ac4f3ef3be5a95ac0654204746a2a7d310bf5534526fb352",
+                           "componentPackage":  "YiboCrafting-forever-v0.2.0-curseforge.zip",
+                           "componentPackageSHA256":  "dc521a0177f428331cee434f97e12eca28eac9483e7ce96c66880b5202a88e1f"
+                       },
+                       {
+                           "addon":  "YiboCurrency",
+                           "version":  "0.1.9",
+                           "sourceToc":  "YiboCurrency.toc",
+                           "interface":  "16001",
+                           "requiredDependencies":  [
+                                                        "YiboCore"
+                                                    ],
+                           "optionalDependencies":  [
+
+                                                    ],
+                           "minimumCoreAPI":  13,
+                           "sourceSHA256":  "6857774b0124ac02fa7b3b37bc5e59214a605d4b07f6f79839c26a28e76d4324",
+                           "componentPackage":  "YiboCurrency-forever-v0.1.9-curseforge.zip",
+                           "componentPackageSHA256":  "3485921b22993b94508ce839be3a042b1cf8998a665f5005fa7b1e6a4ad5eae7"
+                       },
+                       {
+                           "addon":  "YiboMail",
+                           "version":  "0.3.0-api1",
+                           "sourceToc":  "YiboMail.toc",
+                           "interface":  "16001",
+                           "requiredDependencies":  [
+                                                        "YiboCore"
+                                                    ],
+                           "optionalDependencies":  [
+
+                                                    ],
+                           "minimumCoreAPI":  14,
+                           "sourceSHA256":  "c3cdb22485cba94ef5df5f9f1d689d24341c0704b8a1c0fe6f855eb5bb0664bf",
+                           "componentPackage":  "YiboMail-forever-v0.3.0-api1-curseforge.zip",
+                           "componentPackageSHA256":  "3b2c038e0f9aee98fc4049dc41a57da03f4a9e05708fdbf9d211c0d225326aea"
+                       },
+                       {
+                           "addon":  "YiboReputation",
+                           "version":  "0.2.0",
+                           "sourceToc":  "YiboReputation.toc",
+                           "interface":  "16001",
+                           "requiredDependencies":  [
+                                                        "YiboCore"
+                                                    ],
+                           "optionalDependencies":  [
+
+                                                    ],
+                           "minimumCoreAPI":  14,
+                           "sourceSHA256":  "f35e646ecee470bf27f812bd3a12d3f28d9f854a3b8acab1b1f68e6c7daf8849",
+                           "componentPackage":  "YiboReputation-forever-v0.2.0-curseforge.zip",
+                           "componentPackageSHA256":  "a36276f8a58670939dcc1b6ea869021035646a2ead265baf8e27c065e8ed01c9"
+                       },
+                       {
+                           "addon":  "YiboVault",
+                           "version":  "0.7.0-api1",
+                           "sourceToc":  "YiboVault.toc",
+                           "interface":  "16001",
+                           "requiredDependencies":  [
+                                                        "YiboCore"
+                                                    ],
+                           "optionalDependencies":  [
+
+                                                    ],
+                           "minimumCoreAPI":  14,
+                           "sourceSHA256":  "9eee3429dfe4147d99433c74e451cc2cdfc293abad4b1d3e92faaab6baca72fd",
+                           "componentPackage":  "YiboVault-forever-v0.7.0-api1-curseforge.zip",
+                           "componentPackageSHA256":  "dc892bcdb2b771239ea9637b16d714723bf50533a2606f1b4be19f6fd2f5b89c"
+                       }
+                   ],
+    "componentFiles":  [
+                           {
+                               "path":  "YiboAltoBoss/Common/CustomTargets.lua",
+                               "sha256":  "63ae0988b81c5056387e285362ac1fe900b4d7a64d12592a4975efc994177287"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Common/CustomTargetSettings.lua",
+                               "sha256":  "4b55ca8dfa400c4ebeb8ad3994e886f94f46807eb1472ae534eae25c8861360d"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Common/InstanceProgress.lua",
+                               "sha256":  "cd3df70c45e4dda9eed607b7a017a01141944a0c145d99b4c471a7230a84bcc6"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Common/Locale.lua",
+                               "sha256":  "1bf7eba5e5dd57b5cd3a75b5ee3227a1c87641f5c8eb6ca3e97c272dd1f46737"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Common/LockoutLocale.lua",
+                               "sha256":  "8f02008ac80030d0e7dba0f02da954a5379b1da1d8c7c0786eab523d3cd1237c"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Common/LockoutsPage.lua",
+                               "sha256":  "2d70f3390548f45f9fb51bd1449d7a510b0b552b0e0288c77c74945191e1b753"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Common/Startup.lua",
+                               "sha256":  "7cdb85e4972cfb3fa45c1aeb7881d210b106c39edf0b43b7b8628ed6ee029d0c"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Forever/Bootstrap.lua",
+                               "sha256":  "5a9717bc7f986c90921ac96f5427eb398b7b97fe26d9d958535f2dfecb6494f8"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Forever/Locale.lua",
+                               "sha256":  "ffbcbfdc564c1087c8b6b16bfaa71fd01185c7bf9d0159f7c3754ed7aa0229b8"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Forever/Pages.lua",
+                               "sha256":  "050bfadb8ed01f70d7b21896bb1086de75853ba9980af9627795df7d87943a6a"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Forever/Store.lua",
+                               "sha256":  "ea12511b5ed2857abb828fb8bbe7ce5affdccd60d4fb6cbd59e8a32e1141c9d8"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Forever/Target.lua",
+                               "sha256":  "54f1643a19483487326a5c56510ac98d14ea566223856d1a7eacfc34f6bb7112"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Media/YiboAltoBossIcon.tga",
+                               "sha256":  "d2ef40a1200965abdbc172541d49753fdd115295705db7a936a7c3b97a071d4d"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Media/YiboAltoBossIcon-1024.tga",
+                               "sha256":  "5695b424f8ce9e782e0a7d3495f2d7b531a2bba96a0bedc7b906948a43bb0d3a"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Media/YiboAltoBossIcon-128.tga",
+                               "sha256":  "eb31abed44196b10cf14297f4b6f667403f7889716a23278922876b946e47025"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Media/YiboAltoBossIcon-16.tga",
+                               "sha256":  "791056578ea9d720688113090946d95ef7c48db1cd3400b2912018fcc680b2de"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Media/YiboAltoBossIcon-32.tga",
+                               "sha256":  "c52c9edcd8a7d8998a2bf5602db6e443c059a3ab2f2a9de6bac19f121d82af97"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Media/YiboAltoBossIcon-512.tga",
+                               "sha256":  "0f5255f1b484cde9060186fcbe1bbe6f8cd94b932ab57e0e66abbcfb2ed1fec6"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Media/YiboAltoBossIcon-64.tga",
+                               "sha256":  "d2ef40a1200965abdbc172541d49753fdd115295705db7a936a7c3b97a071d4d"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/Media/YiboAltoBossLogo.tga",
+                               "sha256":  "0f5255f1b484cde9060186fcbe1bbe6f8cd94b932ab57e0e66abbcfb2ed1fec6"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/YiboAltoBoss.toc",
+                               "sha256":  "3195c1326ab14423929258e7cc28d6398b197d2482a883e729e3d7db74c66375"
+                           },
+                           {
+                               "path":  "YiboAltoBoss/YiboReleaseManifest.json",
+                               "sha256":  "31316401a3e7715b0a4cf6299e9fe2bee110d65ccda81cc2d4ab6350584ff3f8"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/BagAdapter.lua",
+                               "sha256":  "d16729e1960c58a82673a6b56782053ff7e620ec6a089a00f49dd1b7eca6ee61"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/BindConfirmAssist.lua",
+                               "sha256":  "ab470b57defa7804e588fbceffda015b3d77aa0733c9482a41663cb0b24e1b87"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Bootstrap.lua",
+                               "sha256":  "82b1b56119716da0db9fa12cbbf102891676b14c9cf6a2494e00e24346f7c7b3"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Catalog.lua",
+                               "sha256":  "645383c6cc8d8732b1639c63f6f5f8e89b067a4307c50c236a574491342c2530"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Commands.lua",
+                               "sha256":  "eda7c301bbe4cd003f454c5cae0a4006d63b13de83e50a44aff98e0e431e5dd5"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/CoreIntegration.lua",
+                               "sha256":  "ddc0bb108a027fdffa0c67488873346d1e4638fe62a51d0b161a7a4f13b6092a"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Database.lua",
+                               "sha256":  "33490c91e049f3c26f8393c10ff2fa6f8101ec8046ea590f38627d6b96097ec6"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Defaults.lua",
+                               "sha256":  "9639bd33aec64d633602b4e81292e8469e329bd8d9f1cd84063974aad93736ea"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Forever/Target.lua",
+                               "sha256":  "48922f2b2feaa760baa5a3c03f5b9dc011a5a81bc777235a2798515759807b45"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/ItemResolver.lua",
+                               "sha256":  "e95bc00e813e84880e720f3217bf71f2b839e52f4c25ac23a692fac0007e3d55"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Locale.lua",
+                               "sha256":  "bf41fe9780168edc856170e140838a1257509674f268ad4ea81515d6de184800"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Media/YiboAutoOpenIcon.tga",
+                               "sha256":  "f892340b71bb15d20945c6cd51988653defa6f1e11e8395ff66d19e16c47ca14"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Media/YiboAutoOpenIcon-1024.tga",
+                               "sha256":  "ea29f95043091b581a925f0d3fdae8918cefdfaa411dad450e80fb2951ea0682"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Media/YiboAutoOpenIcon-128.tga",
+                               "sha256":  "e3bf83220b0431235e322ae617cc5e60cf6083dbdbb19b09cc830152b1820f92"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Media/YiboAutoOpenIcon-16.tga",
+                               "sha256":  "5da1b545c35387656eed85ae3be8e9bede6ebe1d7c605cd483e52216c3d639b6"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Media/YiboAutoOpenIcon-32.tga",
+                               "sha256":  "d05e8aa4944fd6944d8c3ac52d0ca08bcd688fa826abb517f0c751b5a60613e2"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Media/YiboAutoOpenIcon-512.tga",
+                               "sha256":  "ec9481750a4185370b6bd6fc1e70ee5e71d43e294895a3605adc3d5810014072"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Media/YiboAutoOpenIcon-64.tga",
+                               "sha256":  "f892340b71bb15d20945c6cd51988653defa6f1e11e8395ff66d19e16c47ca14"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Media/YiboAutoOpenLogo.tga",
+                               "sha256":  "ec9481750a4185370b6bd6fc1e70ee5e71d43e294895a3605adc3d5810014072"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Queue.lua",
+                               "sha256":  "c57ccb14ab164bcd36a2a00e7bb0829d83fe7f76b58b9f7196c1275c334cb2c8"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Safety.lua",
+                               "sha256":  "28fd8ea75534005e2bc37c333f28a29748e8fbfa7d62405acd6d4100adf6b9e9"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/Settings.lua",
+                               "sha256":  "e9d405cf7cac08ca7484ffc5e252370c96afc436527c882313e4102b08584bfc"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/YiboAutoOpen.toc",
+                               "sha256":  "573826d34e6aaecffdb1e6dcf6ab539c71a0137b4f2df1660d3d229c49afeb7a"
+                           },
+                           {
+                               "path":  "YiboAutoOpen/YiboReleaseManifest.json",
+                               "sha256":  "d4a6a62c805a8ab7d8042f9af171979009a776c2f42f79d2e1515fe7d1e6e44d"
+                           },
+                           {
+                               "path":  "YiboBuilds/Forever/AccountPage.lua",
+                               "sha256":  "1cbaedfe36194b795acdbc1ab1e037caad643f01fee9278c3900e5f499ecb26b"
+                           },
+                           {
+                               "path":  "YiboBuilds/Forever/Bootstrap.lua",
+                               "sha256":  "1b36603033653751c5c38c1c00cccaea8b1a3aaa669c6540ce2fb3aca86e0a18"
+                           },
+                           {
+                               "path":  "YiboBuilds/Forever/Enhancements.lua",
+                               "sha256":  "0218179c00342960bda8752930e468364391335417f2c481aa1083a2c4b5ffd4"
+                           },
+                           {
+                               "path":  "YiboBuilds/Forever/Locale.lua",
+                               "sha256":  "aff8b8cdc9a0705140cfbcfce11b832fa894081884c7193b7a97f05b317ade56"
+                           },
+                           {
+                               "path":  "YiboBuilds/Forever/Namespace.lua",
+                               "sha256":  "125b264d317bab68c9caa877cf9883988ce9905dcc4107198d2cdd9e12f36395"
+                           },
+                           {
+                               "path":  "YiboBuilds/Forever/Scanner.lua",
+                               "sha256":  "162c926821f4daa401ee78ecfa112fd54125f1377567058636e831d113041ea3"
+                           },
+                           {
+                               "path":  "YiboBuilds/Forever/Store.lua",
+                               "sha256":  "9fd9837ff9aa7113d1d41b4f1c1fe9ccc08497467c7222cad0fb1506d8ddb5d6"
+                           },
+                           {
+                               "path":  "YiboBuilds/Forever/Talents.lua",
+                               "sha256":  "c62e193b94dee97ea31ab7492b518e6a9d2ff2abedb1eadca5dc217c4e9862ed"
+                           },
+                           {
+                               "path":  "YiboBuilds/Forever/TalentTree.lua",
+                               "sha256":  "84499879debf7871f903b936374a8ae6240d92894ca740efd0f216f9666b8d08"
+                           },
+                           {
+                               "path":  "YiboBuilds/Media/YiboBuildsIcon.tga",
+                               "sha256":  "291b7b7cd9517fb4fb074513a0d8a99158e84d51e28e7ec906a7b14bc9a6c974"
+                           },
+                           {
+                               "path":  "YiboBuilds/Media/YiboBuildsIcon-1024.tga",
+                               "sha256":  "0f08c443d2eab3baaa1e676d72272a32635a4e56419d4374107f433c90067145"
+                           },
+                           {
+                               "path":  "YiboBuilds/Media/YiboBuildsIcon-128.tga",
+                               "sha256":  "29133efc848f8c4dd19e2b9bad7d169191d9326729deea8ad5ec432ab6d15f95"
+                           },
+                           {
+                               "path":  "YiboBuilds/Media/YiboBuildsIcon-16.tga",
+                               "sha256":  "639604873b68d778be0c9f874fcbf52bad934ccffc934686140af2d33854d8a9"
+                           },
+                           {
+                               "path":  "YiboBuilds/Media/YiboBuildsIcon-32.tga",
+                               "sha256":  "5606adf7a05b4399df70e078ced7535e78032aa6639a8573087f0f514f8dabb8"
+                           },
+                           {
+                               "path":  "YiboBuilds/Media/YiboBuildsIcon-512.tga",
+                               "sha256":  "182001a6ec7b5dba54a4d6bf296a1375022c683b02c893e23e7549914025f78d"
+                           },
+                           {
+                               "path":  "YiboBuilds/Media/YiboBuildsIcon-64.tga",
+                               "sha256":  "291b7b7cd9517fb4fb074513a0d8a99158e84d51e28e7ec906a7b14bc9a6c974"
+                           },
+                           {
+                               "path":  "YiboBuilds/Media/YiboBuildsLogo.tga",
+                               "sha256":  "182001a6ec7b5dba54a4d6bf296a1375022c683b02c893e23e7549914025f78d"
+                           },
+                           {
+                               "path":  "YiboBuilds/Media/YiboBuildsSocketBases.tga",
+                               "sha256":  "2c2ce5b0502c77e2fe64e45500b106172fd23b4cc04a8e166cf8f4d3148b976a"
+                           },
+                           {
+                               "path":  "YiboBuilds/YiboBuilds.toc",
+                               "sha256":  "302606412ffaa45031737603993f99baafc7ffd9c05828d79ffd7789e5692646"
+                           },
+                           {
+                               "path":  "YiboBuilds/YiboReleaseManifest.json",
+                               "sha256":  "5fe8a19a4e3006ba3892c2202a2a894c2fbecdf06b889d0864fb4c1b2acbbf45"
+                           },
+                           {
+                               "path":  "YiboCore/Bootstrap.lua",
+                               "sha256":  "bbd490111a59ce2461a1e4fc193ef58334a6cd631335545a92f52e39f0efd974"
+                           },
+                           {
+                               "path":  "YiboCore/Common/ClientReaders.lua",
+                               "sha256":  "8d7a501d40746bfeaf7e50c3161cfd61fa4afb354471bc5cdf13c6d02117515c"
+                           },
+                           {
+                               "path":  "YiboCore/Common/ClientSurface.lua",
+                               "sha256":  "e56180291fc21a235dabf96149373f828213ce621e3a1aca7beafb49270cb11a"
+                           },
+                           {
+                               "path":  "YiboCore/Common/ProfessionDomain.lua",
+                               "sha256":  "31d59961fa7a956899f66aba05d05f44f82a9a3aca2117328eecc5fac4582a91"
+                           },
+                           {
+                               "path":  "YiboCore/Data/AddonCatalog.lua",
+                               "sha256":  "78626f74f4bb6c82129069c6ce09726bac4f4df3cd02d26cb0c4dffbdfc0d8ab"
+                           },
+                           {
+                               "path":  "YiboCore/Data/CharacterCleanup.lua",
+                               "sha256":  "88752798afcc09e05282f78d51660563b7810369af834ccdf8989ffcb9c2d078"
+                           },
+                           {
+                               "path":  "YiboCore/Data/Characters.lua",
+                               "sha256":  "289d3c94ff040fb3c6c64afb765a27c8de8a977439f58e9262eddfe29db36735"
+                           },
+                           {
+                               "path":  "YiboCore/Data/Database.lua",
+                               "sha256":  "f9196d9ce321f30a0c4d04bc9d81ed524d186f08565d9ff0ee26717714b01ca4"
+                           },
+                           {
+                               "path":  "YiboCore/Data/Domains/Identity.lua",
+                               "sha256":  "1fa3eff439cb0cbd6685abc75c663354d92c472425ec5335ca96c24d8c555714"
+                           },
+                           {
+                               "path":  "YiboCore/Data/Domains/Location.lua",
+                               "sha256":  "4631f043ca18c3c08f362d4ef01a904756c541943740c077bcdb2aea99272acc"
+                           },
+                           {
+                               "path":  "YiboCore/Data/DomainStore.lua",
+                               "sha256":  "514afd9bd9b2ccf18a7822cb7de276e2707cfa6cb2c13414f8ddd516eb79abbb"
+                           },
+                           {
+                               "path":  "YiboCore/Data/Fields/CharacterArchive.lua",
+                               "sha256":  "a626c522715105fcf56ef10d5e47f8a4c369c2dc40fe9ff8dd295491859a307c"
+                           },
+                           {
+                               "path":  "YiboCore/Data/Migrations.lua",
+                               "sha256":  "f43c2cc25531a4a79ee27cb0d72f2937b6f615df4fd762cc3201b099e44bac54"
+                           },
+                           {
+                               "path":  "YiboCore/Data/PackagedAddonVersions.lua",
+                               "sha256":  "293655c042c9cb3005d670515d5b7ac076e51a60eb965003e3534539e84a45a8"
+                           },
+                           {
+                               "path":  "YiboCore/Data/Profile.lua",
+                               "sha256":  "2fe8c30b70e5e21027616aa9378c6c2f5ed5b7f6e1351737ff37e1a83a99a7b5"
+                           },
+                           {
+                               "path":  "YiboCore/Data/Validation.lua",
+                               "sha256":  "ab83d70710f854f56059f25a7783da5d09773f75a3559145dd0ae4e02424aa67"
+                           },
+                           {
+                               "path":  "YiboCore/Forever/Client.lua",
+                               "sha256":  "0910abf0c7bab27c56840aeaadd5b26a781c3aeb9cf3aef85a4720d84508827a"
+                           },
+                           {
+                               "path":  "YiboCore/Forever/Equipment.lua",
+                               "sha256":  "2605b87682f4d02410b82d97e2753d59843d87b5529d061d043e319bb5d0018a"
+                           },
+                           {
+                               "path":  "YiboCore/Forever/Fields.lua",
+                               "sha256":  "c917802e8a3118ddafe4371524e42a8fff6c88d7af9e29b9e717cbabadf02c3a"
+                           },
+                           {
+                               "path":  "YiboCore/Forever/Metadata.lua",
+                               "sha256":  "e024dba5f57ffafd7db5763699b3f8f3c87882f7df8e1b0537bf7014626d0825"
+                           },
+                           {
+                               "path":  "YiboCore/Forever/Professions.lua",
+                               "sha256":  "d23e9cff1a924e1a1d33af5e84c876943afb94564092b44a05092facb3b7a782"
+                           },
+                           {
+                               "path":  "YiboCore/Forever/Surface.lua",
+                               "sha256":  "c7a9deec38306f2cd50473e7fdf3cfb9f81f0115e785bd61110ffe660151d8a8"
+                           },
+                           {
+                               "path":  "YiboCore/Forever/Target.lua",
+                               "sha256":  "da6032c4cfde6dd79b9903dfde95f0640f76624a0590595489707d0be4ba6b1c"
+                           },
+                           {
+                               "path":  "YiboCore/Libs/Ace3-LICENSE.txt",
+                               "sha256":  "05c69fb56f4da18c9430b2e7904e0cd1439e14e24d49c235daa18f8806b980f9"
+                           },
+                           {
+                               "path":  "YiboCore/Libs/CallbackHandler-1.0/CallbackHandler-1.0.lua",
+                               "sha256":  "e44e74da6fdfd71c0aeee304a716482f31a9f138a58956fda9506262d852af6f"
+                           },
+                           {
+                               "path":  "YiboCore/Libs/LDB-LICENSE.txt",
+                               "sha256":  "1006684f0953a13bfc9c77627904d7750a36cab64b6364116a27b0256c5ec10d"
+                           },
+                           {
+                               "path":  "YiboCore/Libs/LibDataBroker-1.1/LibDataBroker-1.1.lua",
+                               "sha256":  "d79b3eada649684543bbbc3c511c2515e16d644f198fa991a201ee64d045b0f2"
+                           },
+                           {
+                               "path":  "YiboCore/Libs/LibStub/LibStub.lua",
+                               "sha256":  "02d25b7433af734b59f0c4571bfaa73b2b660992d71d2fb6a8809b32de3f964c"
+                           },
+                           {
+                               "path":  "YiboCore/Libs/UPSTREAM.md",
+                               "sha256":  "7c5af719d62bffd75d81124f2a17c1489023095cffbf99c64b641b3f1e07b5b5"
+                           },
+                           {
+                               "path":  "YiboCore/Locales/enUS.lua",
+                               "sha256":  "7f380e910d2d8e1752d4badd06d73ab9a26fa1546a9462e112d38359ee46626b"
+                           },
+                           {
+                               "path":  "YiboCore/Locales/zhCN.lua",
+                               "sha256":  "e3bfff61b3120f6a8533f4a4baa4fc825749758aea96377a693abd899ea10b07"
+                           },
+                           {
+                               "path":  "YiboCore/Media/YiboCoreIcon.tga",
+                               "sha256":  "b149f81af54f1aeda3bf5e4c7c5ee1fd8a8d325814e9cc6f25efbd1f4b865c32"
+                           },
+                           {
+                               "path":  "YiboCore/Media/YiboCoreIcon-1024.tga",
+                               "sha256":  "5219d56a7b9e34f00e4cc0ec9296bf7d3a4059d82f171214ae1d7d8c65b1e602"
+                           },
+                           {
+                               "path":  "YiboCore/Media/YiboCoreIcon-128.tga",
+                               "sha256":  "7b709b5bbda504291e236b93fa3e317732b6e631435fd6817dbdd5088ac1e551"
+                           },
+                           {
+                               "path":  "YiboCore/Media/YiboCoreIcon-16.tga",
+                               "sha256":  "ca328d01d47275a256e9174b3a79efc0949465c179324d1edc3174334dc21f45"
+                           },
+                           {
+                               "path":  "YiboCore/Media/YiboCoreIcon-32.tga",
+                               "sha256":  "8512320e6da4b2ee4e982ecbb749624ac46387f275e52c1064e3ae5609b1c681"
+                           },
+                           {
+                               "path":  "YiboCore/Media/YiboCoreIcon-512.tga",
+                               "sha256":  "a99c0b768145753b523f95f8fdccd55620eab0607a892352cd309cb7fb3fa5be"
+                           },
+                           {
+                               "path":  "YiboCore/Media/YiboCoreIcon-64.tga",
+                               "sha256":  "b149f81af54f1aeda3bf5e4c7c5ee1fd8a8d325814e9cc6f25efbd1f4b865c32"
+                           },
+                           {
+                               "path":  "YiboCore/Media/YiboCoreLogo.tga",
+                               "sha256":  "a99c0b768145753b523f95f8fdccd55620eab0607a892352cd309cb7fb3fa5be"
+                           },
+                           {
+                               "path":  "YiboCore/Runtime/AddonStatus.lua",
+                               "sha256":  "7e62e8dbc5b64b1e0a0c75043acf6a99664016aa32dad519be09d3e9f2d56122"
+                           },
+                           {
+                               "path":  "YiboCore/Runtime/ArchiveFields.lua",
+                               "sha256":  "45331044ce81ae76ed06f5303ee1e3bde1abff68dd2a4e7c3d4bf6b3da74276a"
+                           },
+                           {
+                               "path":  "YiboCore/Runtime/Capabilities.lua",
+                               "sha256":  "d57ca76c4d3b6cd97f0fbe684cf8d5ec67772ade46a3902fe5368b3cef1e5b2f"
+                           },
+                           {
+                               "path":  "YiboCore/Runtime/Client.lua",
+                               "sha256":  "31c66c7ee63ed6af077617e428f7ecab0c3eae781d514416f389b642652f3ca2"
+                           },
+                           {
+                               "path":  "YiboCore/Runtime/Commands.lua",
+                               "sha256":  "4442df8b8dcdff2cebbeb009f698913c92aa42a34f0808c44c1ca7edc6699c52"
+                           },
+                           {
+                               "path":  "YiboCore/Runtime/Contracts.lua",
+                               "sha256":  "02f9bf1324f54004890d22fda15eec98e7d50a91434a5b169bd899ab5f8203ef"
+                           },
+                           {
+                               "path":  "YiboCore/Runtime/DataDomains.lua",
+                               "sha256":  "0c28b083ca2de0d4aa16be71224f0bb6bdf398c62a4143985e19c70f5e23fc4f"
+                           },
+                           {
+                               "path":  "YiboCore/Runtime/EntryConfig.lua",
+                               "sha256":  "df07eb132450acaa1e0d5b391b7ab09ad1834d83ace4f2b00f6368c01d2e07dc"
+                           },
+                           {
+                               "path":  "YiboCore/Runtime/Events.lua",
+                               "sha256":  "17f3392417cc4f141d8150403bf1d372e39bd6bce78152d7117c27320f4f0e27"
+                           },
+                           {
+                               "path":  "YiboCore/Runtime/Fields.lua",
+                               "sha256":  "5d0a9d1536984418c28ff53634595b0bf37992a86304fe6c2c76898f0d635ea0"
+                           },
+                           {
+                               "path":  "YiboCore/Runtime/ItemResolver.lua",
+                               "sha256":  "0fd9ab989e02a6a173fd7dedacf2713c362da7d47f7f08ab6f717931a360930a"
+                           },
+                           {
+                               "path":  "YiboCore/Runtime/Lifecycle.lua",
+                               "sha256":  "5fab3e57ed3cef0e372e3162eb6bffb1fb3087c0f33f32fea6c58d14de2de19a"
+                           },
+                           {
+                               "path":  "YiboCore/Runtime/Locale.lua",
+                               "sha256":  "7b950e86df8085bc7aac78bf7e4a2489cd1ebaa2ddcf6079ec707bc371f22faf"
+                           },
+                           {
+                               "path":  "YiboCore/Runtime/Registry.lua",
+                               "sha256":  "99117844d84969efffde4444f7e7802c8e2eb17809f2bc974613ead97ee5c91d"
+                           },
+                           {
+                               "path":  "YiboCore/Runtime/Resources.lua",
+                               "sha256":  "72fc4422d4b8e886716590e03b2a114dd29cd9bc26344f506dfbbf7dfb4c24c4"
+                           },
+                           {
+                               "path":  "YiboCore/Runtime/SettingsRegistry.lua",
+                               "sha256":  "b2b5a710a041e92d602afddd317f8bb623cdda176280145a85e08685f74dd884"
+                           },
+                           {
+                               "path":  "YiboCore/UI/AccountPages/About.lua",
+                               "sha256":  "005ac7ed9fb2da22e1c184990b492b0f3f302b2548b6eff28fcb1e5c7fbd9f74"
+                           },
+                           {
+                               "path":  "YiboCore/UI/AccountPages/CharacterArchive.lua",
+                               "sha256":  "287aefd0f170d57c485fcd8aa96288c4d8102027baa9453e0b36a6feb9a9e0a5"
+                           },
+                           {
+                               "path":  "YiboCore/UI/AccountPages/Help.lua",
+                               "sha256":  "3995d3a4d1de22a281c16ffeaf6596e63b9947e94a2625ae590c0586397a864b"
+                           },
+                           {
+                               "path":  "YiboCore/UI/AccountPages/Overview.lua",
+                               "sha256":  "4240ffb8097d6c0b95ba2a84b5b69fe706ed87390522e299a8cbe3ab72185aca"
+                           },
+                           {
+                               "path":  "YiboCore/UI/AccountPages/SettingsWorkbench.lua",
+                               "sha256":  "fd047e8c362fb758e334fa53d3911eb65d3b3c4c72d5ce7238613938ec94d189"
+                           },
+                           {
+                               "path":  "YiboCore/UI/AccountView.lua",
+                               "sha256":  "beef85aea32d12aee7544cbc1b04cd4ae98dcc78941b7676df7bd52a495bc192"
+                           },
+                           {
+                               "path":  "YiboCore/UI/BusinessItemActions.lua",
+                               "sha256":  "e4484c3e8d90d4d80a6da1452a144dfda10268b3144a3f522c341ee0a725de44"
+                           },
+                           {
+                               "path":  "YiboCore/UI/Entry.lua",
+                               "sha256":  "ceea40101a931b9905daeadaedda776aa992401b66869183deb09454160686c7"
+                           },
+                           {
+                               "path":  "YiboCore/UI/EntryBar.lua",
+                               "sha256":  "b08c4e6c9373dec6dc1327b86f9bd7237a0c559b41b5d176fe53957f37e63902"
+                           },
+                           {
+                               "path":  "YiboCore/UI/IconPicker.lua",
+                               "sha256":  "c5c4ff7e5d0b9d176aede4371f847efe32e78039e15ed759f39ddffd35b4a413"
+                           },
+                           {
+                               "path":  "YiboCore/UI/Input.lua",
+                               "sha256":  "672f56629fcfa19596c23109e09a3861c2344dd7b861d9c497aed7862fd994b9"
+                           },
+                           {
+                               "path":  "YiboCore/UI/ItemConfirmation.lua",
+                               "sha256":  "b709d94cc8f80f481fb3bea9ce4d12b29b6fb0515ffedaf276d020dc162e9c17"
+                           },
+                           {
+                               "path":  "YiboCore/UI/ItemPicker.lua",
+                               "sha256":  "09eec1485db999850be8cb0f0bd7935251bcede9229df7c173add72d1cd5c530"
+                           },
+                           {
+                               "path":  "YiboCore/UI/Theme.lua",
+                               "sha256":  "9eb450f8c584370c29ed45226cb6dd2652de3151d60bc4f99360320a42eca858"
+                           },
+                           {
+                               "path":  "YiboCore/Util/CharacterSort.lua",
+                               "sha256":  "3ba2af22bd37d6ab29cd7e9d74512c20d1da1358b6055e24b93759b50550e6e6"
+                           },
+                           {
+                               "path":  "YiboCore/Util/Defaults.lua",
+                               "sha256":  "7a888c8e1542131db5344725060ec6e70d1b6d716d91fcd10dfaf6978a76a409"
+                           },
+                           {
+                               "path":  "YiboCore/Util/LevelFilter.lua",
+                               "sha256":  "7e0a57607de0e4379e627364467320ebcbc1361e11ee6a67d42cc023439f1b36"
+                           },
+                           {
+                               "path":  "YiboCore/YiboCore.toc",
+                               "sha256":  "c71fdfb7bf9cff23247830d51e5856849e8dd3db833156b313214bd76c6400c8"
+                           },
+                           {
+                               "path":  "YiboCore/YiboReleaseManifest.json",
+                               "sha256":  "c37cc0137523b84b89d6f6f5ec2011af96c6e23640c5209108cc9cd6581d8686"
+                           },
+                           {
+                               "path":  "YiboCrafting/Forever/AccountPage.lua",
+                               "sha256":  "e4ff114eb1013c18b48a0cbe02130ba93e4cfb2f7aaf206615861f1b1532aeef"
+                           },
+                           {
+                               "path":  "YiboCrafting/Forever/Bootstrap.lua",
+                               "sha256":  "2a5d0ff28cee3b377bfee81e10ed141d5ed42e8c953d7c4287688699327cf777"
+                           },
+                           {
+                               "path":  "YiboCrafting/Forever/Locale.lua",
+                               "sha256":  "70ec0cb31c9ae648ac366719e1c1e80ccd2a87210d582080a279e6d56af06c69"
+                           },
+                           {
+                               "path":  "YiboCrafting/Forever/Namespace.lua",
+                               "sha256":  "f2f87659103694ca98688f8738005e8bd70f308d897dfa897f0d59f7a87e86b1"
+                           },
+                           {
+                               "path":  "YiboCrafting/Forever/Scanner.lua",
+                               "sha256":  "c70145215cc01659b2e50d458230349557fa3d1edf67db1e8a0b8c5f80e9050d"
+                           },
+                           {
+                               "path":  "YiboCrafting/Forever/Store.lua",
+                               "sha256":  "cc6e7b2c894ff8e4e611f8c38fbe448be7a582ccd1d156b421dd4a66b3691193"
+                           },
+                           {
+                               "path":  "YiboCrafting/Locales/Interface.lua",
+                               "sha256":  "f4104789d28902bc9cc9589e3d9b1603414680ef3268652102034ff4575b8fe7"
+                           },
+                           {
+                               "path":  "YiboCrafting/Media/YiboCraftingIcon.tga",
+                               "sha256":  "7e185c00afc9420276f6b108342c774e2254084f95cb25125be69e77c7cbad68"
+                           },
+                           {
+                               "path":  "YiboCrafting/Media/YiboCraftingIcon-1024.tga",
+                               "sha256":  "62d258d0a19e307ff8e0126fb7ea125f7306ce027a896dcb9c87b794ee7527c1"
+                           },
+                           {
+                               "path":  "YiboCrafting/Media/YiboCraftingIcon-128.tga",
+                               "sha256":  "b8f7f27237a25e9e534187c42ac5209296689d9bc84c8801856f07e4c5d4f175"
+                           },
+                           {
+                               "path":  "YiboCrafting/Media/YiboCraftingIcon-16.tga",
+                               "sha256":  "a80000b82645d253534a172d1cece21eb7265f5952e8c14e2be67ad39f0b62b6"
+                           },
+                           {
+                               "path":  "YiboCrafting/Media/YiboCraftingIcon-32.tga",
+                               "sha256":  "c9a0df2160dc5fd95559f77fdb4f7a0c3300c41ce08842d1577e606bb687e5eb"
+                           },
+                           {
+                               "path":  "YiboCrafting/Media/YiboCraftingIcon-512.tga",
+                               "sha256":  "ef1586b356e3237547b26d4d013774032e3290534bb862a3059852b4e7aa3fa1"
+                           },
+                           {
+                               "path":  "YiboCrafting/Media/YiboCraftingIcon-64.tga",
+                               "sha256":  "7e185c00afc9420276f6b108342c774e2254084f95cb25125be69e77c7cbad68"
+                           },
+                           {
+                               "path":  "YiboCrafting/Media/YiboCraftingLogo.tga",
+                               "sha256":  "ef1586b356e3237547b26d4d013774032e3290534bb862a3059852b4e7aa3fa1"
+                           },
+                           {
+                               "path":  "YiboCrafting/YiboCrafting.toc",
+                               "sha256":  "d3a2a48f668a842033ad1eb3fb41922062dd2f6f8669c96423729494f4bb4118"
+                           },
+                           {
+                               "path":  "YiboCrafting/YiboReleaseManifest.json",
+                               "sha256":  "c36c1f162d3c92e595c16421c77a2eebd03b9d0828bfda7fed2b2e14804361b7"
+                           },
+                           {
+                               "path":  "YiboCurrency/ArchiveProvider.lua",
+                               "sha256":  "0f392b2765e3b917b7309953ce72675d3d0b5c32e4a27b95cb12d20d4c6f83e6"
+                           },
+                           {
+                               "path":  "YiboCurrency/Common/Catalog.lua",
+                               "sha256":  "7d58ff590419e9f1a16f9549efedf2aa4c8326d4f72c023804a1b2aaa3d128d4"
+                           },
+                           {
+                               "path":  "YiboCurrency/Common/NativeAPI.lua",
+                               "sha256":  "8d7e7c87bd9bc8fd9630a6fc5af9739348efba5d5b3c340f4f56fc24a14cf8be"
+                           },
+                           {
+                               "path":  "YiboCurrency/Common/NativeDiscovery.lua",
+                               "sha256":  "0bb9ba3fd4c934c60629178c2c185339318fa1262352b92bd2f3a251df4c3be6"
+                           },
+                           {
+                               "path":  "YiboCurrency/Common/NativeStore.lua",
+                               "sha256":  "3c980e98eba9fb4b0a2a46a7dea80677aebc1b2e787cf9809c42c5e151b922eb"
+                           },
+                           {
+                               "path":  "YiboCurrency/Forever/AccountPage.lua",
+                               "sha256":  "2f3cf5b404b8cd999bd220db75d5725230e8bbe761dfb7df3dfa1ebb9bb625ed"
+                           },
+                           {
+                               "path":  "YiboCurrency/Forever/Bootstrap.lua",
+                               "sha256":  "f397f1e09484775b014c31427f8a75c650062b0053fa595c6dbecf9fb83d6b1f"
+                           },
+                           {
+                               "path":  "YiboCurrency/Forever/Catalog.lua",
+                               "sha256":  "837daa4403b4ba1d58a1a635bab0065c1fce0b28ce6a8f7db471621d7a4d350a"
+                           },
+                           {
+                               "path":  "YiboCurrency/Forever/CustomItems.lua",
+                               "sha256":  "1b27a4943976cdafda24a07d3814e14550595a324dce7601e5be513032511899"
+                           },
+                           {
+                               "path":  "YiboCurrency/Forever/Namespace.lua",
+                               "sha256":  "ca816d8063d02bccfcb6f0fb088412a73e03632d885059c4d9894ba9352326af"
+                           },
+                           {
+                               "path":  "YiboCurrency/Forever/Scanner.lua",
+                               "sha256":  "2634cac3a9f526ddf52fdd39b8e3e542d492a7012250fceb358135103f360dd1"
+                           },
+                           {
+                               "path":  "YiboCurrency/Forever/Store.lua",
+                               "sha256":  "a14ac48a767b4a2d90c00dadd42fb6deeebd6dd51c49e5de934530c171e38886"
+                           },
+                           {
+                               "path":  "YiboCurrency/Locales/enUS.lua",
+                               "sha256":  "97417a9ddb06a621deed9b8d831a5b44f1302ca1b1647506e0c756195f5e1b21"
+                           },
+                           {
+                               "path":  "YiboCurrency/Locales/zhCN.lua",
+                               "sha256":  "c901d5746837fa033e551a5e5b2b5f5754ccb214d15cae0d9c92c00e617e8d2f"
+                           },
+                           {
+                               "path":  "YiboCurrency/Media/YiboCurrencyIcon.tga",
+                               "sha256":  "403456ccf4247ed6a8d7ddf1e93329caeffd26da4b2692bcddef031ae4d64a7a"
+                           },
+                           {
+                               "path":  "YiboCurrency/Media/YiboCurrencyIcon-1024.tga",
+                               "sha256":  "096409803bbe55fc89e60bc88c06a3cfa7cf2695c1683313878cbe7a91650cf3"
+                           },
+                           {
+                               "path":  "YiboCurrency/Media/YiboCurrencyIcon-128.tga",
+                               "sha256":  "d765d69d8a09d1204e5efb3706288976b1964b1b50c24c58b0c89ca17ebb82f8"
+                           },
+                           {
+                               "path":  "YiboCurrency/Media/YiboCurrencyIcon-16.tga",
+                               "sha256":  "90bd1fb20a76e19622105b35acaadafb50698ccda033d4cf4b2d755ccd4554c8"
+                           },
+                           {
+                               "path":  "YiboCurrency/Media/YiboCurrencyIcon-32.tga",
+                               "sha256":  "bb8607c055dc38a34a84869448cd4dbdc36350bf232d7095eb188b656d1d1774"
+                           },
+                           {
+                               "path":  "YiboCurrency/Media/YiboCurrencyIcon-512.tga",
+                               "sha256":  "cd7b6225b7703c9ee7e38ed045483d991069ff12bf8b6bbac58179fa24b730f9"
+                           },
+                           {
+                               "path":  "YiboCurrency/Media/YiboCurrencyIcon-64.tga",
+                               "sha256":  "403456ccf4247ed6a8d7ddf1e93329caeffd26da4b2692bcddef031ae4d64a7a"
+                           },
+                           {
+                               "path":  "YiboCurrency/Media/YiboCurrencyLogo.tga",
+                               "sha256":  "cd7b6225b7703c9ee7e38ed045483d991069ff12bf8b6bbac58179fa24b730f9"
+                           },
+                           {
+                               "path":  "YiboCurrency/YiboCurrency.toc",
+                               "sha256":  "455aecb236921caeb73cc4551cbd1cc77b56547038e02c6032c327e42502183b"
+                           },
+                           {
+                               "path":  "YiboCurrency/YiboReleaseManifest.json",
+                               "sha256":  "9f76c37ed0cc2e98888b19d8dde9f7befb4097b3e832f8be05924ec689086543"
+                           },
+                           {
+                               "path":  "YiboMail/AccountPage.lua",
+                               "sha256":  "c929bda368bb1a921ae9e59f2b8ec67d3be382bec47811acf5164141fb86414b"
+                           },
+                           {
+                               "path":  "YiboMail/ActionTodo.lua",
+                               "sha256":  "dc348b9b886b07e8c395cdb7c2120509ebe838d71524ab093ff6b561cb62fdd2"
+                           },
+                           {
+                               "path":  "YiboMail/CacheModel.lua",
+                               "sha256":  "5f553ea0be982d0f6fee093916d11fd0050cbd2d2866f19dba1930a771e3bdd7"
+                           },
+                           {
+                               "path":  "YiboMail/CacheUI.lua",
+                               "sha256":  "d39382922e9da772e62a53185c85809905f6a196bcb1c34b7dd265cd767de58e"
+                           },
+                           {
+                               "path":  "YiboMail/Common/AccountSettings.lua",
+                               "sha256":  "8ceaee60f19413d3e8164c158500b1e30eda5a881102b1a2071a8c696c649031"
+                           },
+                           {
+                               "path":  "YiboMail/Common/ArrivalSignal.lua",
+                               "sha256":  "c79b135570f263fa035e0bcd46fda8dffde42ef85f75318230de6239786e130e"
+                           },
+                           {
+                               "path":  "YiboMail/Common/CollectionRuntime.lua",
+                               "sha256":  "01800b2e9694b81aa0b9ab9418126d511a499b0867fcb5d8721302776cfab19d"
+                           },
+                           {
+                               "path":  "YiboMail/Common/CollectionScan.lua",
+                               "sha256":  "c3130cd6bc004aea0c518e6ee42be33562b73cd4a5804ae3f97257acbfbcbcfa"
+                           },
+                           {
+                               "path":  "YiboMail/Common/ComposeRuntime.lua",
+                               "sha256":  "c874f667e7b0590c10781c9132366d0cfab357a34d829a5d29b4637dd0a1dc87"
+                           },
+                           {
+                               "path":  "YiboMail/Common/InboxUI.lua",
+                               "sha256":  "a8aecc35a94e53d72cd24294817abfdbd3b39a651bf9f7b21703fb6df3dd6785"
+                           },
+                           {
+                               "path":  "YiboMail/Common/Lifecycle.lua",
+                               "sha256":  "32f224905187f971104e1266c9b990ac9cd2381d72fb054e117396da94742a09"
+                           },
+                           {
+                               "path":  "YiboMail/Common/MoneySendConfirmation.lua",
+                               "sha256":  "b91ca1dd07df0464de83f227964b043d7e879f2f97a25b4ce45406cf0eb1869d"
+                           },
+                           {
+                               "path":  "YiboMail/Common/Queue.lua",
+                               "sha256":  "65b768a7067efe9239594c7da3d4274b9f730b8c0d1c962db6951925c8bc6023"
+                           },
+                           {
+                               "path":  "YiboMail/Common/RecipientRuntime.lua",
+                               "sha256":  "50d9e77513848376b9f4f4260badc84f544e802d91e4de2b3866b79356b549f6"
+                           },
+                           {
+                               "path":  "YiboMail/Common/Returns.lua",
+                               "sha256":  "36d447aa9f0dcb5547448ef0eb7053bf3b2438727878325942afb7bf685fad4e"
+                           },
+                           {
+                               "path":  "YiboMail/Common/ReturnUI.lua",
+                               "sha256":  "d59d4b7da275ef1d9e06c11322bf9dc9a5540dc6089e1e7787bc86cce47aba38"
+                           },
+                           {
+                               "path":  "YiboMail/Common/RuleCategories.lua",
+                               "sha256":  "8739e4fe4d7b1f5598a60e4266bfd2825837b93f5983c0cb8af865dccb12b668"
+                           },
+                           {
+                               "path":  "YiboMail/Common/ScanCommit.lua",
+                               "sha256":  "f29da9071c1efa0f3f6a6f25e31304b49402ece60b2bd586e79fc3a6d9b8f5bf"
+                           },
+                           {
+                               "path":  "YiboMail/Common/TransferMigration.lua",
+                               "sha256":  "ec71f60e99f6798f3cd51e246f30a60195953997732b5ee3591715acb3f17efc"
+                           },
+                           {
+                               "path":  "YiboMail/Compose.lua",
+                               "sha256":  "7c307358252e7c95e2fd3f1ad4908461a8b1d171b21c3b0876edb11445634c4f"
+                           },
+                           {
+                               "path":  "YiboMail/Forever/CollectionRuntime.lua",
+                               "sha256":  "8ee11b030cfee3fdf6445f4728051c54e6b0bbe26fe2ea5fa6fb0d41e561d09c"
+                           },
+                           {
+                               "path":  "YiboMail/Forever/Compose.lua",
+                               "sha256":  "860acba7aa67351f01fb65760dd5d78d6dc66520c50f8dd02e3c02674187fe87"
+                           },
+                           {
+                               "path":  "YiboMail/Forever/Scanner.lua",
+                               "sha256":  "2b2d42dae47f80e31e3e57c2cb7787ede683e25533c9c10f89bfb23f53c38a33"
+                           },
+                           {
+                               "path":  "YiboMail/Forever/Target.lua",
+                               "sha256":  "d1ba7e18940eb920bb054e62c20d1b6e5735eeda2006e03eaf3ad2c4311bde79"
+                           },
+                           {
+                               "path":  "YiboMail/GoalTargets.lua",
+                               "sha256":  "0189571307498548c30a7da05f4f1f575d3e240e81f3cab5c5b2cd2d0e34b37b"
+                           },
+                           {
+                               "path":  "YiboMail/HistoryModel.lua",
+                               "sha256":  "a4b875fc0e02c5aba79ae4bf0a79e7ff94ad0fbd48228c0e8c310b78be986b04"
+                           },
+                           {
+                               "path":  "YiboMail/Inbox.lua",
+                               "sha256":  "a7c6931e2397708a02406502e57264e4b2bf2c8b906746074a060aeb19488c3c"
+                           },
+                           {
+                               "path":  "YiboMail/Items.lua",
+                               "sha256":  "bb7100fc60711972df6bc5bf59067b75d7f51ac3547c7ffceddabcd6783bf983"
+                           },
+                           {
+                               "path":  "YiboMail/Locales/en.lua",
+                               "sha256":  "a9c2c3755713b7777c5dc7b2668f3293416748a30e391ce2fafe6091f4b328a6"
+                           },
+                           {
+                               "path":  "YiboMail/Locales/zh.lua",
+                               "sha256":  "7b17bcfd359c75133d2fcb080946e92aed62d704df0755af48e3957e766c3e71"
+                           },
+                           {
+                               "path":  "YiboMail/MailUI.lua",
+                               "sha256":  "d1f28d676bc0c08cf7b0168fc7148a8e88b4c894a63294d3a6a4f883277e2e8d"
+                           },
+                           {
+                               "path":  "YiboMail/Media/YiboMailIcon.tga",
+                               "sha256":  "a650a7b39388a103e6ccedde29fb6053762e244a637f1f7e76e9c4cd85cf17af"
+                           },
+                           {
+                               "path":  "YiboMail/Media/YiboMailIcon-1024.tga",
+                               "sha256":  "7fcec13c0bdb5bb8697e3c8c14891145e1c5be2a529338f8f2323779a833b5d4"
+                           },
+                           {
+                               "path":  "YiboMail/Media/YiboMailIcon-128.tga",
+                               "sha256":  "ddf9d4b12d9744c24bb185a2984751c601987a2c2d946c1383e45483d26d85d6"
+                           },
+                           {
+                               "path":  "YiboMail/Media/YiboMailIcon-16.tga",
+                               "sha256":  "e142089898803cbab016a617987e1921a8e754259abbaa074275ae885503e843"
+                           },
+                           {
+                               "path":  "YiboMail/Media/YiboMailIcon-32.tga",
+                               "sha256":  "a8580d009dd35ee880097410e838476728b333161035e27c1a3fc43a9ed77d22"
+                           },
+                           {
+                               "path":  "YiboMail/Media/YiboMailIcon-512.tga",
+                               "sha256":  "657d6febf56783e0b930ca06db6814fd2a6eadd00d2d75358b8de4d855b514f7"
+                           },
+                           {
+                               "path":  "YiboMail/Media/YiboMailIcon-64.tga",
+                               "sha256":  "a650a7b39388a103e6ccedde29fb6053762e244a637f1f7e76e9c4cd85cf17af"
+                           },
+                           {
+                               "path":  "YiboMail/Media/YiboMailLogo.tga",
+                               "sha256":  "657d6febf56783e0b930ca06db6814fd2a6eadd00d2d75358b8de4d855b514f7"
+                           },
+                           {
+                               "path":  "YiboMail/Namespace.lua",
+                               "sha256":  "171cd592f8bc7ac285b5423457ce12f4a8758116a2f1385be11cc0d077d188ff"
+                           },
+                           {
+                               "path":  "YiboMail/NativeUI.lua",
+                               "sha256":  "024a8cd82d7b81742dbc7989b13fe5adafa1f3d994afb52e0077005cee19c127"
+                           },
+                           {
+                               "path":  "YiboMail/Recipients.lua",
+                               "sha256":  "73d19fbbffaa7e4a103fe3b7befe5fbea63c749df91f296cbc1415a70c016974"
+                           },
+                           {
+                               "path":  "YiboMail/RecipientUI.lua",
+                               "sha256":  "d6313af2c7b2259f29781ff34c9edb1b1ccba3a636adbb85173c2de1752f7407"
+                           },
+                           {
+                               "path":  "YiboMail/RuleSendController.lua",
+                               "sha256":  "b18471b337ec398655e30d373cdc2ca4727b6647b5758ad940dbd3aaabbab346"
+                           },
+                           {
+                               "path":  "YiboMail/RuleSendUI.lua",
+                               "sha256":  "d65826d2bdbf703d82563c3a878a6d1b13a911bf527aeb59363074aad3aec1a7"
+                           },
+                           {
+                               "path":  "YiboMail/SendRules.lua",
+                               "sha256":  "5e4e766936c2e966db2226e9714e5eae4adcf6a154c51ee7146792855fdca14c"
+                           },
+                           {
+                               "path":  "YiboMail/SendRulesSettings.lua",
+                               "sha256":  "1b722bba4806860f506a846a7dc4e1a577612885e90ce78b996f3dac55b83eba"
+                           },
+                           {
+                               "path":  "YiboMail/Store.lua",
+                               "sha256":  "508fafd0b9aa9ecf0fb627c0211dc96d4f8d675227461fb491358607f5512286"
+                           },
+                           {
+                               "path":  "YiboMail/ViewModel.lua",
+                               "sha256":  "8a49fb2b8cdc0edb3eae3e0f8a0f82c12063f7bb80d580b8ea68259fb1ab1c99"
+                           },
+                           {
+                               "path":  "YiboMail/WorkspaceState.lua",
+                               "sha256":  "94832adb81cc29519fd690d8c8240eece575e5ecbe0405a405c0b214b9f27a5a"
+                           },
+                           {
+                               "path":  "YiboMail/YiboMail.toc",
+                               "sha256":  "d3862210e362ea14286fd5219a942df7f67ad68c66ac2340321ef76c9e2cf43d"
+                           },
+                           {
+                               "path":  "YiboMail/YiboReleaseManifest.json",
+                               "sha256":  "429dfc59741ddbb328c2aaee5b792ec4a72359aa5e4c02476331b10493a6ff9c"
+                           },
+                           {
+                               "path":  "YiboReputation/Forever/AccountPage.lua",
+                               "sha256":  "36fbe9e0d5430633f078367f9b6208f57946cdffcf53bce133726ea74fe80e01"
+                           },
+                           {
+                               "path":  "YiboReputation/Forever/Bootstrap.lua",
+                               "sha256":  "38d783c6cd6f51454aac04a3ae0f7fb313ed2e53cc61ed902879984a5a6659db"
+                           },
+                           {
+                               "path":  "YiboReputation/Forever/Format.lua",
+                               "sha256":  "71912fa440db169eec14907ba6e8b65a54f29a3d7318f8d2e627f85636f913fa"
+                           },
+                           {
+                               "path":  "YiboReputation/Forever/Namespace.lua",
+                               "sha256":  "037f848828e311d7b4b676ac4b6fe736bbe90cec0a06d81b7a8c00715483ddd7"
+                           },
+                           {
+                               "path":  "YiboReputation/Forever/Scanner.lua",
+                               "sha256":  "7c39758b64dfcd548540c5422f0bea521a15e39ff161aa0638b06e5db7933d94"
+                           },
+                           {
+                               "path":  "YiboReputation/Forever/Store.lua",
+                               "sha256":  "5bd5cf0bf5f890d2caff855e3fd7ed5d8caa0310df3921f37ba6b750f480c9c4"
+                           },
+                           {
+                               "path":  "YiboReputation/Locales/Interface.lua",
+                               "sha256":  "c9f4469c6787ad1eb4111401fb056a1a9c7e64d4bea0ce5ffa3fed4e5f7cfa66"
+                           },
+                           {
+                               "path":  "YiboReputation/Media/YiboReputationIcon.tga",
+                               "sha256":  "da7598b9902301d24c9614a3a2816f318a07c5e581b7419ef170702b8a82879c"
+                           },
+                           {
+                               "path":  "YiboReputation/Media/YiboReputationIcon-1024.tga",
+                               "sha256":  "51f8a502e487c9346b75453410eed227778b1c5e03695f28e46852c627e3b7dd"
+                           },
+                           {
+                               "path":  "YiboReputation/Media/YiboReputationIcon-128.tga",
+                               "sha256":  "6a5b9416191257ffc352b6356641f15e51599655cc31852c206dee699c07cdcf"
+                           },
+                           {
+                               "path":  "YiboReputation/Media/YiboReputationIcon-16.tga",
+                               "sha256":  "ddbef013e4dcbcdf53e50b4e3b4cf0c0fb708d2b3908dda5177dd745727ae6f5"
+                           },
+                           {
+                               "path":  "YiboReputation/Media/YiboReputationIcon-32.tga",
+                               "sha256":  "351aacceb6b0ad44f65aac1e04040b39d32721f35135072bbe3175b7dc233d74"
+                           },
+                           {
+                               "path":  "YiboReputation/Media/YiboReputationIcon-512.tga",
+                               "sha256":  "295b256da2cbe1ac89f7ca0f894e1f1a04c51712c030c4b39778a36e06cb92d8"
+                           },
+                           {
+                               "path":  "YiboReputation/Media/YiboReputationIcon-64.tga",
+                               "sha256":  "da7598b9902301d24c9614a3a2816f318a07c5e581b7419ef170702b8a82879c"
+                           },
+                           {
+                               "path":  "YiboReputation/Media/YiboReputationLogo.tga",
+                               "sha256":  "295b256da2cbe1ac89f7ca0f894e1f1a04c51712c030c4b39778a36e06cb92d8"
+                           },
+                           {
+                               "path":  "YiboReputation/YiboReleaseManifest.json",
+                               "sha256":  "09275a77950d8c88c81ff36d09a3988e1d7f290197c82faebf567023cdc51a93"
+                           },
+                           {
+                               "path":  "YiboReputation/YiboReputation.toc",
+                               "sha256":  "b11cee2e2557622faf4aed0403d5158d988605d85ea8536d2acdc1b8f19c3ab1"
+                           },
+                           {
+                               "path":  "YiboVault/Common/BagCapacity.lua",
+                               "sha256":  "ab9707ca0dd3ed1f81ed0ee36d2a73dc73b02271448d4128f4799a95ee2beb03"
+                           },
+                           {
+                               "path":  "YiboVault/Common/Collector.lua",
+                               "sha256":  "7113df75c8ec69ae11d92a0c27b84d59c99261404342c4da067b7e5fb2559b77"
+                           },
+                           {
+                               "path":  "YiboVault/Common/CoreIntegration.lua",
+                               "sha256":  "9ac0c749969f072a2365409b58d673a26f7f4feff81855dfeb8697d7e5e6a455"
+                           },
+                           {
+                               "path":  "YiboVault/Common/ItemRecords.lua",
+                               "sha256":  "a3cd3f6e3e8f7b1101acde0474d0f9a0758996685413d181097a7a92b1734605"
+                           },
+                           {
+                               "path":  "YiboVault/Common/Settings.lua",
+                               "sha256":  "97281c93a3550831328ba05b2aafb323d8db2bd777b6ac1f689b9ba02f4aee50"
+                           },
+                           {
+                               "path":  "YiboVault/Common/TooltipScope.lua",
+                               "sha256":  "f6d017ccf8b456392d8c529192c004a218e9eb36a7ef21a9544c70569d694b82"
+                           },
+                           {
+                               "path":  "YiboVault/Forever/AccountPage.lua",
+                               "sha256":  "13369f2f73e403710b4ee6bc7bdff674ae242f6f489ecab5792b736f879490f4"
+                           },
+                           {
+                               "path":  "YiboVault/Forever/Auction.lua",
+                               "sha256":  "52464c1a49ea4c51e77b6b841a6ab355a54b266627abb8d37e0bbf9460f3982e"
+                           },
+                           {
+                               "path":  "YiboVault/Forever/Bootstrap.lua",
+                               "sha256":  "c57421dd55e4849593131c65c8f60cce21516ee6d411178566339da5a6b30a1f"
+                           },
+                           {
+                               "path":  "YiboVault/Forever/Collector.lua",
+                               "sha256":  "3804029a16c21962578b2642fd93e8bb356054de077576e54672c403b5ed847d"
+                           },
+                           {
+                               "path":  "YiboVault/Forever/Commands.lua",
+                               "sha256":  "02d149d0713a1088ccbd63c982ea9539a8e687f3d7823f506fd2a6c1a7a7180d"
+                           },
+                           {
+                               "path":  "YiboVault/Forever/GuildBank.lua",
+                               "sha256":  "fc181638a36ac4a744d7b390752ffb733dd2ecaac9d7fd12258e756043eea447"
+                           },
+                           {
+                               "path":  "YiboVault/Forever/Mail.lua",
+                               "sha256":  "f8c1566708619328c05d8798cdb99e89b3eb02efa1125cbe7f70615ab6700cc6"
+                           },
+                           {
+                               "path":  "YiboVault/Forever/MailProvider.lua",
+                               "sha256":  "cbaf48cdefbcdd4beb1fd41efc2d553857a3811c08877011f0df125848fb2434"
+                           },
+                           {
+                               "path":  "YiboVault/Forever/Target.lua",
+                               "sha256":  "ece36edfcd8da6d52fa8e4cce0a03106be7ea4ee090a464bb19b9b5814769bb2"
+                           },
+                           {
+                               "path":  "YiboVault/Forever/Tooltip.lua",
+                               "sha256":  "c283d2e3a97027fea090888db39e4066a22a774226345ec8262356a3f2f316bb"
+                           },
+                           {
+                               "path":  "YiboVault/GoalTargets.lua",
+                               "sha256":  "afb6533e5f3944fd068e00b6576438f69097ed1f2099559fcf6278e91bca2240"
+                           },
+                           {
+                               "path":  "YiboVault/Items.lua",
+                               "sha256":  "b0f0fd1c29a1062008a44450f4cdf04f2e9a75df2e3de3ea7b4aac18fa244d79"
+                           },
+                           {
+                               "path":  "YiboVault/Locales/en.lua",
+                               "sha256":  "762fbe1b6a5f4fd67019e2a8e6101f133411d9e519740c986def3b3ee49695c0"
+                           },
+                           {
+                               "path":  "YiboVault/Locales/zh.lua",
+                               "sha256":  "5c1c525c7dd4c44780078eb2b00aa1175231329ffc5d926f2d82d960fa95e93d"
+                           },
+                           {
+                               "path":  "YiboVault/Media/YiboVaultIcon.tga",
+                               "sha256":  "cedbb2be2f767964c3314e941933a79e5938938f3119b5babfc9efb58e819acf"
+                           },
+                           {
+                               "path":  "YiboVault/Media/YiboVaultIcon-1024.tga",
+                               "sha256":  "f757259224fbee4d6fb4e84ba2906f942cd1f8b6727b9050fd7cd907070e1978"
+                           },
+                           {
+                               "path":  "YiboVault/Media/YiboVaultIcon-128.tga",
+                               "sha256":  "470e639d6779de7aa2a779a6a766a2b04a95a4b32754d77404e9cb0e908a1e68"
+                           },
+                           {
+                               "path":  "YiboVault/Media/YiboVaultIcon-16.tga",
+                               "sha256":  "e89f41afbcdec88ddf1c51913cd0cd93b7c50b08e778eb167c0db91dcde76ab8"
+                           },
+                           {
+                               "path":  "YiboVault/Media/YiboVaultIcon-32.tga",
+                               "sha256":  "0d1af744eca1891709a0f1d89c17e253cf3ff50409b3e89ddd9296af4605ba15"
+                           },
+                           {
+                               "path":  "YiboVault/Media/YiboVaultIcon-512.tga",
+                               "sha256":  "e1421182f62e5fa90c4efe235678f8736cc673d35810f97a9f6cbf183dc052c2"
+                           },
+                           {
+                               "path":  "YiboVault/Media/YiboVaultIcon-64.tga",
+                               "sha256":  "cedbb2be2f767964c3314e941933a79e5938938f3119b5babfc9efb58e819acf"
+                           },
+                           {
+                               "path":  "YiboVault/Media/YiboVaultLogo.tga",
+                               "sha256":  "e1421182f62e5fa90c4efe235678f8736cc673d35810f97a9f6cbf183dc052c2"
+                           },
+                           {
+                               "path":  "YiboVault/Media/YiboVaultMailTransitIcon-v1.tga",
+                               "sha256":  "59c60481fe69c7fa317620c91e0cc2bc3d6da237e3f98243b3360d22bd6851ea"
+                           },
+                           {
+                               "path":  "YiboVault/Media/YiboVaultMailTransitIcon-v2.tga",
+                               "sha256":  "cabffa17613fd71f782e824c12cf9e5c1e41964ad7c934fa35b84cbf8a4550b3"
+                           },
+                           {
+                               "path":  "YiboVault/Namespace.lua",
+                               "sha256":  "88acbd96bcba79250c0529409574701e35998e96c0ede4b5abb522eafa67c55d"
+                           },
+                           {
+                               "path":  "YiboVault/PersonalCounts.lua",
+                               "sha256":  "64bbd6495aff787b7cc5f6ef278807c1815b6aa38f1ac85c39898ab612904d11"
+                           },
+                           {
+                               "path":  "YiboVault/Store.lua",
+                               "sha256":  "5c11ef585ab5d4956c348e6e65237be915107390c799603b4e62c2a700ba9457"
+                           },
+                           {
+                               "path":  "YiboVault/Tooltip.lua",
+                               "sha256":  "149ded6211bc405c0c8cdf76a4b103996a54169650f8d8c8b41a7ae632660405"
+                           },
+                           {
+                               "path":  "YiboVault/YiboReleaseManifest.json",
+                               "sha256":  "1c7f8d811cc53a50d8ea722ad19bcdc2934f493bcd1e981f4bcce41d0519ddf2"
+                           },
+                           {
+                               "path":  "YiboVault/YiboVault.toc",
+                               "sha256":  "5e7cccdd4b1be98c06cb0a375b15946d3e7e7c0c360f2490849c17b21cbb1d91"
+                           }
+                       ]
+}

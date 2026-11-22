@@ -1,0 +1,16 @@
+﻿# YiboQuestBlocker packaged replay 2026-11-22
+## new package (clean + overlay), exit=0
+YiboQuestBlocker: 26 boots
+  section clean/api13                  13 passed, 0 failed
+  section clean/install                41 passed, 0 failed
+  section clean/wrong-target           24 passed, 0 failed
+  section overlay/api13                13 passed, 0 failed
+  section overlay/install              41 passed, 0 failed
+  section overlay/wrong-target         24 passed, 0 failed
+YiboQuestBlocker packaged replay: 156 passed, 0 failed
+
+## previous release package, wrong-target only (comparison), exit=0
+YiboQuestBlocker: 6 boots
+  section previous-release/install     2 passed, 0 failed
+  section previous-release/wrong-target 24 passed, 0 failed
+YiboQuestBlocker packaged replay: 26 passed, 0 failed

@@ -1417,6 +1417,9 @@ local function GetOrCreatePanel(parent)
         return nil
     end
 
+    -- Only reachable through the API14 / pixel-line:1 gated Core adapter.
+    local pixelTheme = _G.YiboCore.UITheme
+
     -- 此面板只能作为 Core 页面内容的滚动子项创建，绝不再成为顶层窗口。
     panel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     panel:SetSize(math.max(620, parent:GetWidth() or 620), 1160)
@@ -1517,7 +1520,7 @@ local function GetOrCreatePanel(parent)
     divider1:SetVertexColor(0.4, 0.55, 0.9, 0.3)
     divider1:SetPoint("TOPLEFT", panel, "TOPLEFT", 8, stateY - 158)
     divider1:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -8, stateY - 158)
-    divider1:SetHeight(1)
+    pixelTheme:ApplyPixelRule(divider1, "horizontal", { pixels = 1 })
 
     -- === 区块 2：路径切换区 ===
     local navY = stateY - 186
@@ -1589,7 +1592,7 @@ local function GetOrCreatePanel(parent)
     divider2:SetVertexColor(0.4, 0.55, 0.9, 0.3)
     divider2:SetPoint("TOPLEFT", panel, "TOPLEFT", 8, navY - 22)
     divider2:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -8, navY - 22)
-    divider2:SetHeight(1)
+    pixelTheme:ApplyPixelRule(divider2, "horizontal", { pixels = 1 })
 
     local tabsY = navY - 34
 
@@ -1616,7 +1619,7 @@ local function GetOrCreatePanel(parent)
     dividerTabs:SetVertexColor(0.4, 0.55, 0.9, 0.3)
     dividerTabs:SetPoint("TOPLEFT", panel, "TOPLEFT", 8, tabsY - 26)
     dividerTabs:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -8, tabsY - 26)
-    dividerTabs:SetHeight(1)
+    pixelTheme:ApplyPixelRule(dividerTabs, "horizontal", { pixels = 1 })
     panelElements.dividerTabs = dividerTabs
 
     -- === 区块 3：参数调节区 ===
@@ -2118,7 +2121,7 @@ local function GetOrCreatePanel(parent)
     divider3:SetVertexColor(0.4, 0.55, 0.9, 0.3)
     divider3:SetPoint("TOPLEFT", panel, "TOPLEFT", 8, fusionVisualY3 - 46)
     divider3:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -8, fusionVisualY3 - 46)
-    divider3:SetHeight(1)
+    pixelTheme:ApplyPixelRule(divider3, "horizontal", { pixels = 1 })
 
     -- === 区块 4：脚印列表区 ===
     local footprintListY = fusionVisualY3 - 78
@@ -2240,7 +2243,7 @@ local function GetOrCreatePanel(parent)
     divider4:SetVertexColor(0.4, 0.55, 0.9, 0.3)
     divider4:SetPoint("TOPLEFT", panel, "TOPLEFT", 8, footprintListY - 256)
     divider4:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -8, footprintListY - 256)
-    divider4:SetHeight(1)
+    pixelTheme:ApplyPixelRule(divider4, "horizontal", { pixels = 1 })
 
     -- === 区块 5：参数导出区 ===
     local exportY = footprintListY - 296

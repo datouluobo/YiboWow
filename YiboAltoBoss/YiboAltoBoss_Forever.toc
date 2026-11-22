@@ -5,7 +5,7 @@
 ## Notes: Custom NPC targets and instance progress.
 ## Notes-zhCN: 自定义 NPC 目标与副本进度。
 ## Author: YiboSoft
-## Version: 0.1.0
+## Version: 0.2.0
 ## IconTexture: Interface\AddOns\YiboAltoBoss\Media\YiboAltoBossIcon-128
 ## SavedVariables: YiboAltoBossForeverDB
 ## RequiredDeps: YiboCore

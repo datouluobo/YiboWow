@@ -1,11 +1,15 @@
 -- Minimal host for actual Builds modules and the real Core language service.
 local function Setup(language)
-    local state = { api = 13, ready = true, missing = nil, addonRegistrations = 0, ownerRegistrations = 0, pages = 0, entries = 0 }
+    local state = { api = 14, ready = true, missing = nil, addonRegistrations = 0, ownerRegistrations = 0, pages = 0, entries = 0 }
     CreateFrame = function() return { RegisterEvent = function() end, SetScript = function(self, _, fn) state.onEvent = fn end } end
     GetServerTime = function() return 1000 end
     YiboBuilds, YiboBuildsDB = nil, nil
     YiboCore = {
-        UITheme = { Colors = {}, Font = {} }, Capabilities = { Register = function() end },
+        UITheme = { Colors = {}, Font = {},
+            ApplyPixelBackdrop = function(_, frame) return frame end,
+            ApplyPixelRule = function(_, texture) return texture end,
+            CreatePixelBorder = function() return { SetColor = function() end, SetShown = function() end, SetSides = function() end } end,
+        }, Capabilities = { Register = function() end },
         CheckAPIVersion = function(_, required) return state.api >= required end,
         HasCapability = function(_, name) return state.missing ~= name end,
         IsInitialized = function() return state.ready end,

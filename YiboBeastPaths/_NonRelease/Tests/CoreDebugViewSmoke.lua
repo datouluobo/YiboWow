@@ -34,6 +34,7 @@ local theme = {
         bg = { 0, 0, 0, 1 } },
 }
 function theme:CreateText(parent) return widget(parent) end
+function theme:ApplyPixelBackdrop(frame) return frame end
 function theme:CreateInput(parent, options)
     assert(options.maxLetters == 0, "Exports must not be truncated")
     local input = widget(parent)

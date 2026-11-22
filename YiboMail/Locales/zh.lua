@@ -8,7 +8,7 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["ERROR.TRANSFER_MIGRATION"] = "旧寄件记录核对未完成：%s。请重新登录后重试。",
         ["HISTORY.LEGACY_TRANSFER_REVIEW"] = "此记录早于在途追踪功能，缺少收件或退回证据，待核实。",
         ["FOREVER.WRONG_CLIENT"] = "邮件助手未启动，请安装对应客户端版本。",
-        ["FOREVER.CORE_REQUIRED"] = "邮件助手需要对应客户端的 YiboCore，最低 API 13 及收件箱所需公共能力，请升级 Core。",
+        ["FOREVER.CORE_REQUIRED"] = "邮件助手需要对应客户端的 YiboCore，最低 API 14 及收件箱所需公共能力，请升级 Core。",
         ["FOREVER.STORE_MISMATCH"] = "邮件助手未启动：存档格式或客户端范围不匹配，原数据已保留。",
         ["FOREVER.NOT_READY"] = "邮件助手尚未启动，请检查启动提示。",
         ["FOREVER.TITLE"] = "收件箱",
@@ -48,7 +48,7 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["FOREVER.ITEM_ID"] = "物品 %d",
 
         ["APP.PREFIX"] = "|cff20e070[Yibo]|r 邮件：",
-        ["BOOTSTRAP.UPGRADE_CORE"] = "请升级 YiboCore：Mail 需要 API13、character-identity:2、character-identity-cache:1、account-identity-context:1 及原有公共能力。",
+        ["BOOTSTRAP.UPGRADE_CORE"] = "请升级 YiboCore：Mail 需要 API14、pixel-line:1、character-identity:2、character-identity-cache:1、account-identity-context:1 及原有公共能力。",
         ["ENTRY.TITLE"] = "[Yibo] YiboMail - 邮件助手",
         ["HISTORY.NEEDS_REVIEW"] = "扫描待核实",
         ["RULE.CONTACTS"] = "选择收件人",

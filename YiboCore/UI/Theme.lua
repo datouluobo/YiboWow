@@ -83,6 +83,8 @@ Theme.Table = {
     -- FontString reports through GetStringWidth. Keep that tolerance shared
     -- in Core so business pages never compensate with local width hacks.
     iconTextRasterTolerance = 4,
+    -- Physical screen pixels, not UI units (API 14). Convert with
+    -- Theme:GetPixelSize; never use this number as an anchor offset directly.
     lineWidth = 1,
 }
 
@@ -200,6 +202,235 @@ local function Color(color)
     return color[1], color[2], color[3], color[4] or 1
 end
 
+-- Physical-pixel lines (API 14 / pixel-line:1).  Layout keeps UI units; only
+-- line thickness and line insets are converted, so a rule is exactly N screen
+-- pixels at every resolution and UI scale.  When the client cannot report its
+-- physical size, a pixel falls back to the former 1 UI unit.
+local PIXEL_BASE_HEIGHT = 768
+local WHITE = "Interface\\Buttons\\WHITE8x8"
+local pixelItems = setmetatable({}, { __mode = "k" })
+local physicalHeight, pixelRefreshPending
+
+local function PhysicalHeight()
+    -- Only a valid reading is cached; an early or failed read is retried.
+    if not physicalHeight then
+        local _, height = Core.Client:ReadPhysicalScreenSize()
+        if type(height) == "number" and height > 0 then physicalHeight = height end
+    end
+    return physicalHeight
+end
+
+local function PixelCount(pixels)
+    return math.max(1, math.floor((tonumber(pixels) or 1) + 0.5))
+end
+
+local function PixelsPerUnit(region)
+    local height = PhysicalHeight()
+    local scale = region and region.GetEffectiveScale and region:GetEffectiveScale()
+    if not height or type(scale) ~= "number" or scale <= 0 then return nil end
+    return height / PIXEL_BASE_HEIGHT * scale
+end
+
+function Theme:GetPixelMetricsState()
+    return PhysicalHeight() and "known" or "unknown"
+end
+
+function Theme:GetPixelSize(region, pixels)
+    local count, ratio = PixelCount(pixels), PixelsPerUnit(region)
+    return ratio and count / ratio or count
+end
+
+function Theme:SnapToPixel(region, value)
+    value = tonumber(value) or 0
+    local ratio = PixelsPerUnit(region)
+    if not ratio then return value end
+    return math.floor(value * ratio + 0.5) / ratio
+end
+
+local function Track(object, refresh)
+    pixelItems[object] = refresh
+    refresh(object)
+    return object
+end
+
+function Theme:RefreshPixelLines()
+    physicalHeight = nil
+    pixelRefreshPending = nil
+    for object, refresh in pairs(pixelItems) do refresh(object) end
+end
+
+local function SchedulePixelRefresh()
+    physicalHeight = nil
+    if pixelRefreshPending then return end
+    pixelRefreshPending = true
+    if C_Timer and C_Timer.After then C_Timer.After(0, function() Theme:RefreshPixelLines() end)
+    else Theme:RefreshPixelLines() end
+end
+Core.Events:Register("UI_SCALE_CHANGED", Theme, SchedulePixelRefresh)
+Core.Events:Register("DISPLAY_SIZE_CHANGED", Theme, SchedulePixelRefresh)
+-- Addons such as NDui call UIParent:SetScale directly; no UI_SCALE_CHANGED
+-- fires then (observed on Forever 1.60.1), but UIParent's UI size changes.
+-- OnSizeChanged did not fire either in the Forever 1.60.1 retest, so the
+-- SetScale call itself is hooked (post-hook, no taint of the call).
+if type(UIParent) == "table" then
+    if type(UIParent.HookScript) == "function" then pcall(UIParent.HookScript, UIParent, "OnSizeChanged", SchedulePixelRefresh) end
+    if type(hooksecurefunc) == "function" and type(UIParent.SetScale) == "function" then
+        pcall(hooksecurefunc, UIParent, "SetScale", SchedulePixelRefresh)
+    end
+end
+
+-- Re-run a region's line-dependent anchors whenever the pixel size changes.
+local function SetPixelAnchor(region, anchor)
+    region.__yiboPixelAnchor = anchor
+    if anchor then anchor() end
+end
+
+local function RunPixelAnchor(region)
+    if region.__yiboPixelAnchor then region.__yiboPixelAnchor() end
+end
+
+-- Public (pixel-line:1): run `anchor` now and again after every pixel-size
+-- change (UI scale, display size, UIParent:SetScale).  Use it for anchors or
+-- sizes derived from GetPixelSize, e.g. an icon inset inside a 1 px border.
+-- One anchor per region; calling again replaces it, nil removes it.  Regions
+-- that already carry a Core pixel rule/backdrop keep their own refresh.
+function Theme:SetPixelAnchor(region, anchor)
+    if type(region) ~= "table" then return end
+    region.__yiboPixelAnchor = anchor
+    if anchor then
+        if not pixelItems[region] then pixelItems[region] = RunPixelAnchor end
+        anchor()
+    elseif pixelItems[region] == RunPixelAnchor then
+        pixelItems[region] = nil
+    end
+end
+
+local function RefreshPixelRule(texture)
+    local state = texture.__yiboPixelRule
+    local size = Theme:GetPixelSize(texture, state.pixels)
+    if state.orientation == "vertical" then texture:SetWidth(size) else texture:SetHeight(size) end
+    if texture.__yiboPixelAnchor then texture.__yiboPixelAnchor() end
+end
+
+-- Turns an existing texture into an N-pixel rule.  Callers own its anchors
+-- along the rule; Core owns only the thickness.
+function Theme:ApplyPixelRule(texture, orientation, options)
+    options = options or {}
+    texture.__yiboPixelRule = { orientation = orientation == "vertical" and "vertical" or "horizontal", pixels = PixelCount(options.pixels or self.Table.lineWidth) }
+    if options.color then texture:SetColorTexture(Color(options.color)) end
+    return Track(texture, RefreshPixelRule)
+end
+
+function Theme:CreatePixelRule(parent, orientation, options)
+    options = options or {}
+    local texture = parent:CreateTexture(nil, options.layer or "ARTWORK", nil, options.sublevel or 7)
+    return self:ApplyPixelRule(texture, orientation, options)
+end
+
+local function RefreshPixelBackdrop(frame)
+    local state = frame.__yiboPixelBackdrop
+    local size = Theme:GetPixelSize(frame, state.pixels)
+    if state.size ~= size then
+        local fill, border
+        if state.size then
+            if state.background and frame.GetBackdropColor then fill = { frame:GetBackdropColor() } end
+            if frame.GetBackdropBorderColor then border = { frame:GetBackdropBorderColor() } end
+        end
+        frame:SetBackdrop({ bgFile = state.background and WHITE or nil, edgeFile = WHITE, edgeSize = size })
+        if fill and fill[1] then frame:SetBackdropColor(unpack(fill)) end
+        if border and border[1] then frame:SetBackdropBorderColor(unpack(border)) end
+        state.size = size
+    end
+    if frame.__yiboPixelAnchor then frame.__yiboPixelAnchor() end
+end
+
+-- Replacement for SetBackdrop({ bgFile, edgeFile, edgeSize = 1 }).  Existing
+-- SetBackdropColor / SetBackdropBorderColor calls keep working unchanged.
+function Theme:ApplyPixelBackdrop(frame, options)
+    options = options or {}
+    local state = frame.__yiboPixelBackdrop or {}
+    frame.__yiboPixelBackdrop = state
+    state.background = options.background ~= false
+    state.pixels = PixelCount(options.pixels or self.Table.lineWidth)
+    state.size = nil
+    return Track(frame, RefreshPixelBackdrop)
+end
+
+-- Side-selectable border.  Only the requested edges exist, so adjacent
+-- rows/cells can share one boundary instead of painting it twice.  Vertical
+-- edges stop short of drawn horizontal edges so no corner pixel overlaps.
+local PixelBorder = {}
+PixelBorder.__index = PixelBorder
+local SIDES = { "top", "right", "bottom", "left" }
+
+local function RefreshPixelBorder(border)
+    local frame, size = border.frame, Theme:GetPixelSize(border.frame, border.pixels)
+    local top = border.sides.top and size or 0
+    local bottom = border.sides.bottom and size or 0
+    for _, side in ipairs(SIDES) do
+        local edge = border.edges[side]
+        if border.sides[side] then
+            if not edge then
+                edge = frame:CreateTexture(nil, border.layer, nil, border.sublevel)
+                border.edges[side] = edge
+            end
+            edge:ClearAllPoints()
+            if side == "top" then
+                edge:SetPoint("TOPLEFT"); edge:SetPoint("TOPRIGHT"); edge:SetHeight(size)
+            elseif side == "bottom" then
+                edge:SetPoint("BOTTOMLEFT"); edge:SetPoint("BOTTOMRIGHT"); edge:SetHeight(size)
+            elseif side == "left" then
+                edge:SetPoint("TOPLEFT", 0, -top); edge:SetPoint("BOTTOMLEFT", 0, bottom); edge:SetWidth(size)
+            else
+                edge:SetPoint("TOPRIGHT", 0, -top); edge:SetPoint("BOTTOMRIGHT", 0, bottom); edge:SetWidth(size)
+            end
+            edge:SetColorTexture(unpack(border.color))
+            edge:SetShown(border.shown)
+        elseif edge then
+            edge:Hide()
+        end
+    end
+end
+
+function PixelBorder:SetColor(r, g, b, a)
+    if type(r) == "table" then r, g, b, a = Color(r) end
+    self.color = { r or 1, g or 1, b or 1, a or 1 }
+    for side, edge in pairs(self.edges) do
+        if self.sides[side] then edge:SetColorTexture(unpack(self.color)) end
+    end
+end
+
+function PixelBorder:SetSides(sides)
+    local chosen = {}
+    for _, side in ipairs(SIDES) do chosen[side] = sides == nil or sides[side] == true end
+    self.sides = chosen
+    RefreshPixelBorder(self)
+end
+
+function PixelBorder:SetShown(shown)
+    self.shown = shown ~= false
+    for side, edge in pairs(self.edges) do edge:SetShown(self.shown and self.sides[side] == true) end
+end
+
+-- options: sides = { top, right, bottom, left } (default all four), color,
+-- pixels, layer, sublevel.  Repeated calls on one frame update in place.
+function Theme:CreatePixelBorder(frame, options)
+    options = options or {}
+    local border = frame.__yiboPixelBorder
+    if not border then
+        border = setmetatable({ frame = frame, edges = {}, shown = true, color = { Color(self.Colors.matrixLine) } }, PixelBorder)
+        border.layer, border.sublevel = options.layer or "ARTWORK", options.sublevel or 7
+        frame.__yiboPixelBorder = border
+    end
+    border.pixels = PixelCount(options.pixels or border.pixels or self.Table.lineWidth)
+    if options.color then border.color = { Color(options.color) } end
+    border.sides = {}
+    for _, side in ipairs(SIDES) do border.sides[side] = options.sides == nil or options.sides[side] == true end
+    return Track(border, RefreshPixelBorder)
+end
+
+Core.Capabilities:Register("pixel-line", 1)
+
 function Theme:CreateText(parent, size, color, justify)
     local text = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     text:SetFont(STANDARD_TEXT_FONT, size or self.Font.body)
@@ -282,12 +513,17 @@ function Theme:CreateMatrixHeader(parent)
     -- keeping a second header implementation.
     header.title, header.name = header.label, header.label
     header.sub, header.realm = header.secondary, header.secondary
-    header.rightRule = header:CreateTexture(nil, "ARTWORK")
-    header.rightRule:SetPoint("TOPRIGHT"); header.rightRule:SetPoint("BOTTOMRIGHT")
-    header.rightRule:SetWidth(self.Table.lineWidth)
-    header.bottomRule = header:CreateTexture(nil, "ARTWORK")
+    header.bottomRule = self:ApplyPixelRule(header:CreateTexture(nil, "ARTWORK"), "horizontal")
     header.bottomRule:SetPoint("BOTTOMLEFT"); header.bottomRule:SetPoint("BOTTOMRIGHT")
-    header.bottomRule:SetHeight(self.Table.lineWidth)
+    header.rightRule = header:CreateTexture(nil, "ARTWORK")
+    -- The right rule stops above the bottom rule: the shared corner pixel is
+    -- painted once, so translucent rules do not form a darker dot.
+    SetPixelAnchor(header.rightRule, function()
+        header.rightRule:ClearAllPoints()
+        header.rightRule:SetPoint("TOPRIGHT")
+        header.rightRule:SetPoint("BOTTOMRIGHT", 0, Theme:GetPixelSize(header, Theme.Table.lineWidth))
+    end)
+    self:ApplyPixelRule(header.rightRule, "vertical")
     header:EnableMouse(true)
     return header
 end
@@ -295,8 +531,11 @@ end
 function Theme:SetMatrixHeader(header, title, options)
     options = options or {}
     local height = options.height or self.Table.headerHeight
-    local inset = options.inset or self.Table.cellInset
     local justify = options.justify or "CENTER"
+    -- Left/right aligned headers share the body's content edge (cellPadding)
+    -- so a column's title and values start at the same x.  Centred headers
+    -- keep the narrower cellInset their measured column widths assume.
+    local inset = options.inset or (justify == "CENTER" and self.Table.cellInset or self.Table.cellPadding)
     local fill = options.fill or self.Colors.toolbar
     local rule = options.rule or self.Colors.lineSoft
     local titleColor = options.color or self.Colors.muted
@@ -310,10 +549,17 @@ function Theme:SetMatrixHeader(header, title, options)
     header.secondary:SetTextColor(Color(options.secondaryColor or self.Colors.muted))
     header.label:SetText(title or "")
     if secondary and secondary ~= "" then
-        -- A font size is not a safe frame height for CJK glyphs. The former
-        -- 11px font inside a 10px box clipped the realm line.
-        header.label:SetPoint("TOPLEFT", inset, -1); header.label:SetPoint("TOPRIGHT", -inset, -1); header.label:SetHeight(13)
-        header.secondary:SetPoint("BOTTOMLEFT", inset, 0); header.secondary:SetPoint("BOTTOMRIGHT", -inset, 0); header.secondary:SetHeight(12)
+        -- A font size is not a safe frame height for CJK glyphs, so each line
+        -- gets font size + 2.  Name and realm form one group that is centred
+        -- vertically; the former top-1 / bottom-0 anchors left an 8-unit gap
+        -- between the lines and pushed the group off centre.
+        local labelHeight = (self.Font.assist or 14) + 2
+        local secondaryHeight = (self.Font.meta or 12) + 2
+        local gap = 1
+        local top = self:SnapToPixel(header, math.max(0, (height - labelHeight - gap - secondaryHeight) / 2))
+        header.label:SetPoint("TOPLEFT", inset, -top); header.label:SetPoint("TOPRIGHT", -inset, -top); header.label:SetHeight(labelHeight)
+        header.secondary:SetPoint("TOPLEFT", header.label, "BOTTOMLEFT", 0, -gap); header.secondary:SetPoint("TOPRIGHT", header.label, "BOTTOMRIGHT", 0, -gap)
+        header.secondary:SetHeight(secondaryHeight)
         header.secondary:SetText(secondary); header.secondary:Show()
     else
         header.label:SetPoint("TOPLEFT", inset, 0); header.label:SetPoint("BOTTOMRIGHT", -inset, 0)
@@ -363,10 +609,7 @@ local function GetCurrentCharacterOutline(self, owner)
     local outline = owner.__yiboCurrentCharacterOutline
     if outline then return outline end
     outline = CreateFrame("Frame", nil, owner, "BackdropTemplate")
-    local lineWidth = math.max(1, tonumber(self.Table.lineWidth) or 1)
-    outline:SetPoint("TOPLEFT", owner, "TOPLEFT", lineWidth, -lineWidth)
-    outline:SetPoint("BOTTOMRIGHT", owner, "BOTTOMRIGHT", -lineWidth, lineWidth)
-    outline:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = lineWidth })
+    self:ApplyPixelBackdrop(outline, { background = false })
     outline:SetBackdropBorderColor(self.Colors.accent[1], self.Colors.accent[2], self.Colors.accent[3], 0.96)
     outline:SetFrameLevel((owner:GetFrameLevel() or 0) + 10)
     outline:EnableMouse(false)
@@ -379,10 +622,13 @@ end
 -- transition to the owner-based shared lifecycle.
 function Theme:CreateCurrentCharacterOutline(parent)
     local outline = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    local lineWidth = math.max(1, tonumber(self.Table.lineWidth) or 1)
-    outline:SetPoint("TOPLEFT", parent, "TOPLEFT", lineWidth, -lineWidth)
-    outline:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -lineWidth, lineWidth)
-    outline:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = lineWidth })
+    SetPixelAnchor(outline, function()
+        local inset = Theme:GetPixelSize(outline, Theme.Table.lineWidth)
+        outline:ClearAllPoints()
+        outline:SetPoint("TOPLEFT", parent, "TOPLEFT", inset, -inset)
+        outline:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset, inset)
+    end)
+    self:ApplyPixelBackdrop(outline, { background = false })
     outline:SetBackdropBorderColor(self.Colors.accent[1], self.Colors.accent[2], self.Colors.accent[3], 0.96)
     outline:SetFrameLevel((parent:GetFrameLevel() or 0) + 10)
     outline:EnableMouse(false)
@@ -395,68 +641,113 @@ function Theme:SetCurrentCharacterOutline(outline, shown)
     if outline then outline:SetShown(shown == true) end
 end
 
+-- The outline is drawn ON the grid lines it highlights, never one pixel
+-- inside them, so no plain rule runs parallel to the accent.  Core grids give
+-- each cell its right/bottom rule (rows: bottom, plus top only on the first
+-- row), so the boundary before a cell belongs to its neighbour.
+local function RowOutlineTop(row, px)
+    local border = row.__yiboPixelBorder
+    return (border and not border.sides.top) and px or 0
+end
+
 function Theme:UpdateCurrentCharacterRowOutline(row, isCurrent)
     local outline = GetCurrentCharacterOutline(self, row)
     if outline then
-        local lineWidth = math.max(1, tonumber(self.Table.lineWidth) or 1)
-        outline:ClearAllPoints()
-        outline:SetPoint("TOPLEFT", row, "TOPLEFT", lineWidth, -lineWidth)
-        outline:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -lineWidth, lineWidth)
+        SetPixelAnchor(outline, function()
+            local px = Theme:GetPixelSize(outline, Theme.Table.lineWidth)
+            outline:ClearAllPoints()
+            outline:SetPoint("TOPLEFT", row, "TOPLEFT", 0, RowOutlineTop(row, px))
+            outline:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", 0, 0)
+        end)
         outline:SetShown(isCurrent == true)
     end
 end
 
 function Theme:HideCurrentCharacterOutline(owner)
     local outline = owner and owner.__yiboCurrentCharacterOutline
-    if outline then outline:Hide(); outline:ClearAllPoints() end
+    if outline then outline:Hide(); SetPixelAnchor(outline, nil); outline:ClearAllPoints() end
+end
+
+-- Height of the content actually visible in a Core scroll viewport, measured
+-- from its top.  nil means the content reaches (or passes) the viewport
+-- bottom, or the viewport does not report its content height.
+local function VisibleContentHeight(viewport)
+    local content = tonumber(viewport.contentHeight)
+    local height = viewport.GetHeight and viewport:GetHeight() or 0
+    if not content or height <= 1 then return nil end
+    local visible = content - ((viewport.GetVerticalScroll and viewport:GetVerticalScroll()) or 0)
+    if visible >= height then return nil end
+    return math.max(0, visible)
+end
+
+local function ReanchorViewportOutline(viewport)
+    local outline = viewport and viewport.__yiboCurrentOutline
+    if outline and outline:IsShown() and outline.__yiboPixelAnchor then outline.__yiboPixelAnchor() end
+end
+Theme.ReanchorViewportOutline = ReanchorViewportOutline
+
+-- A column outline follows the viewport's content: it ends at the last data
+-- row when the rows are shorter than the window, and re-anchors on scroll,
+-- resize and content-height changes.
+local function WatchViewport(viewport, outline)
+    viewport.__yiboCurrentOutline = outline
+    if viewport.__yiboOutlineWatched or not viewport.HookScript then return end
+    viewport.__yiboOutlineWatched = true
+    -- Pages may pass a plain Frame as the viewport; only ScrollFrames have
+    -- OnVerticalScroll, and HookScript raises for an unsupported script.
+    for _, script in ipairs({ "OnVerticalScroll", "OnSizeChanged" }) do
+        if not viewport.HasScript or viewport:HasScript(script) then
+            viewport:HookScript(script, ReanchorViewportOutline)
+        end
+    end
+end
+
+local function AnchorColumnOutline(outline, header, viewport, x, width, bottomX, topY)
+    local px = Theme:GetPixelSize(outline, Theme.Table.lineWidth)
+    outline:ClearAllPoints()
+    -- Left edge covers the previous column's right rule; right edge covers
+    -- this column's own right rule.
+    outline:SetPoint("TOPLEFT", header, "TOPLEFT", x - px, topY)
+    outline:SetPoint("TOPRIGHT", header, "TOPLEFT", x + width, topY)
+    local visible = VisibleContentHeight(viewport)
+    if visible then
+        outline:SetPoint("BOTTOMLEFT", viewport, "TOPLEFT", bottomX - px, -visible)
+        outline:SetPoint("BOTTOMRIGHT", viewport, "TOPLEFT", bottomX + width, -visible)
+    else
+        outline:SetPoint("BOTTOMLEFT", viewport, "BOTTOMLEFT", bottomX - px, 0)
+        outline:SetPoint("BOTTOMRIGHT", viewport, "BOTTOMLEFT", bottomX + width, 0)
+    end
 end
 
 -- Character-column pages report visible column bounds only. Core owns the
 -- overlay lifecycle and all anchor arithmetic, including viewport alignment.
+-- Contract: the outline starts at `header`'s top edge (`x` is relative to
+-- `header`), so pass the frame whose top is the character header's top -
+-- usually the current character's header cell with x = 0 - and end at the
+-- visible content of `viewport` (`viewportX` relative to `viewport`).
 function Theme:UpdateCurrentCharacterColumnOutline(owner, header, viewport, x, width, shown, viewportX)
-    if owner and owner.__yiboLegacyCurrentOutline then
-        local outline = owner
-        if not shown or not header or not viewport or not x or not width then
-            self:SetCurrentCharacterOutline(outline, false)
-            return
-        end
-        local lineWidth = math.max(1, tonumber(self.Table.lineWidth) or 1)
-        local frameTop = header:GetTop() or 0
-        local viewportTop = viewport:GetTop() or frameTop
-        local viewportBottom = viewport:GetBottom() or 0
-        local headerBottom = header:GetBottom() or frameTop
-        local top = math.min(frameTop, viewportTop)
-        local bottom = math.max(viewportBottom, headerBottom)
-        local topX = x
-        local bottomX = viewportX == nil and x or viewportX
-        outline:ClearAllPoints()
-        outline:SetPoint("TOPLEFT", header, "TOPLEFT", topX + lineWidth, -(frameTop - top) - lineWidth)
-        outline:SetPoint("TOPRIGHT", header, "TOPLEFT", topX + width - lineWidth, -(frameTop - top) - lineWidth)
-        outline:SetPoint("BOTTOMLEFT", viewport, "BOTTOMLEFT", bottomX + lineWidth, lineWidth)
-        outline:SetPoint("BOTTOMRIGHT", viewport, "BOTTOMLEFT", bottomX + width - lineWidth, lineWidth)
-        self:SetCurrentCharacterOutline(outline, true)
-        return
-    end
-    local outline = GetCurrentCharacterOutline(self, owner)
+    local legacy = owner and owner.__yiboLegacyCurrentOutline
+    local outline = legacy and owner or GetCurrentCharacterOutline(self, owner)
     if not outline then return end
     if not shown or not header or not viewport or not x or not width then
         outline:Hide()
         return
     end
-    local lineWidth = math.max(1, tonumber(self.Table.lineWidth) or 1)
-    outline:ClearAllPoints()
-    outline:SetPoint("TOPLEFT", header, "TOPLEFT", x + lineWidth, -lineWidth)
-    outline:SetPoint("TOPRIGHT", header, "TOPLEFT", x + width - lineWidth, -lineWidth)
     local bottomX = viewportX == nil and x or viewportX
-    outline:SetPoint("BOTTOMLEFT", viewport, "BOTTOMLEFT", bottomX + lineWidth, lineWidth)
-    outline:SetPoint("BOTTOMRIGHT", viewport, "BOTTOMLEFT", bottomX + width - lineWidth, lineWidth)
+    WatchViewport(viewport, outline)
+    -- Legacy handles once started at the lower of header/viewport tops, which
+    -- silently dropped the header on pages whose viewport sits below it.  Both
+    -- handle styles now share one rule: header top to visible content end.
+    SetPixelAnchor(outline, function()
+        AnchorColumnOutline(outline, header, viewport, x, width, bottomX, 0)
+    end)
     outline:Show()
 end
 
 function Theme:CreateButton(parent, width, label, kind)
     local button = CreateFrame("Button", nil, parent, "BackdropTemplate")
     button:SetSize(width or 84, self.Size.standard)
-    button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Theme:ApplyPixelBackdrop(button)
     button.kind = kind or "default"
     button.label = self:CreateText(button, self.Font.body, self.Colors.text, "CENTER")
     button.label:SetAllPoints()
@@ -545,7 +836,7 @@ function Theme:CreateDropdown(parent, width, options)
     dropdown.menu:SetFrameLevel((popupOwner:GetFrameLevel() or 0) + 30)
     dropdown.menu:SetToplevel(true)
     dropdown.menu:EnableMouse(true)
-    dropdown.menu:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Theme:ApplyPixelBackdrop(dropdown.menu)
     dropdown.menu:SetBackdropColor(Color(self.Colors.panel)); dropdown.menu:SetBackdropBorderColor(Color(self.Colors.line))
     dropdown.menu:Hide()
     dropdown.menu.buttons = {}
@@ -653,7 +944,7 @@ function Theme:CreateMultiSelectDropdown(parent, width, options)
     dropdown.menu:SetFrameStrata(popupOwner:GetFrameStrata() or "DIALOG")
     dropdown.menu:SetFrameLevel((popupOwner:GetFrameLevel() or 0) + 30)
     dropdown.menu:SetToplevel(true); dropdown.menu:EnableMouse(true)
-    dropdown.menu:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Theme:ApplyPixelBackdrop(dropdown.menu)
     dropdown.menu:SetBackdropColor(Color(self.Colors.panel)); dropdown.menu:SetBackdropBorderColor(Color(self.Colors.line))
     dropdown.menu:Hide(); dropdown.menu.checks = {}
     TrackDropdown(dropdown)
@@ -749,7 +1040,7 @@ function Theme:CreateBusinessTabs(parent, definitions, onSelect)
         local id = definition.id
         local button = CreateFrame("Button", nil, tabs, "BackdropTemplate")
         button:SetSize(definition.width or 112, 34); button:SetPoint("TOPLEFT", left, 0)
-        button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+        Theme:ApplyPixelBackdrop(button)
         button.label = self:CreateText(button, self.Font.body, self.Colors.text, "CENTER")
         button.label:SetPoint("CENTER"); button.label:SetText(definition.title)
         button:SetScript("OnClick", function() if onSelect then onSelect(id) end end)
@@ -762,27 +1053,33 @@ function Theme:CreateBusinessTabs(parent, definitions, onSelect)
     tabs.activeGap = overlay:CreateTexture(nil, "OVERLAY")
     tabs.activeGap:SetHeight(2); tabs.activeGap:SetColorTexture(unpack(self.Colors.chrome))
     tabs.ruleLeft = overlay:CreateTexture(nil, "OVERLAY"); tabs.ruleRight = overlay:CreateTexture(nil, "OVERLAY")
-    for _, line in ipairs({ tabs.ruleLeft, tabs.ruleRight }) do line:SetHeight(1); line:SetColorTexture(unpack(self.Colors.accent)) end
+    -- The active tab opens into the page: its bottom edge is covered and the
+    -- baseline joins its side edges.  Every offset is one line width.
+    local function LayoutActive()
+        local active = tabs.activeID and tabs.buttons[tabs.activeID]
+        if not active then tabs.activeGap:Hide(); return end
+        local px = Theme:GetPixelSize(tabs, Theme.Table.lineWidth)
+        tabs.activeGap:ClearAllPoints()
+        tabs.activeGap:SetPoint("BOTTOMLEFT", active, "BOTTOMLEFT", px, 0)
+        tabs.activeGap:SetPoint("BOTTOMRIGHT", active, "BOTTOMRIGHT", -px, 0)
+        tabs.activeGap:Show()
+        tabs.ruleLeft:ClearAllPoints(); tabs.ruleRight:ClearAllPoints()
+        tabs.ruleLeft:SetPoint("BOTTOMLEFT", tabs, "BOTTOMLEFT", 0, 0); tabs.ruleLeft:SetPoint("BOTTOMRIGHT", active, "BOTTOMLEFT", px, 0)
+        tabs.ruleRight:SetPoint("BOTTOMLEFT", active, "BOTTOMRIGHT", -px, 0); tabs.ruleRight:SetPoint("BOTTOMRIGHT", tabs, "BOTTOMRIGHT", 0, 0)
+    end
+    self:ApplyPixelRule(tabs.ruleLeft, "horizontal", { color = self.Colors.accent })
+    SetPixelAnchor(tabs.ruleRight, LayoutActive)
+    self:ApplyPixelRule(tabs.ruleRight, "horizontal", { color = self.Colors.accent })
     function tabs:SetActive(id)
-        local active
+        self.activeID = nil
         for key, button in pairs(self.buttons) do
             button.active = key == id
-            if button.active then active = button end
+            if button.active then self.activeID = key end
             button:SetBackdropColor(unpack(button.active and Theme.Colors.chrome or Theme.Colors.bg))
             button:SetBackdropBorderColor(unpack(button.active and Theme.Colors.accent or Theme.Colors.matrixLine))
             button.label:SetTextColor(unpack(button.active and Theme.Colors.text or Theme.Colors.muted))
         end
-        if active then
-            self.activeGap:ClearAllPoints()
-            self.activeGap:SetPoint("BOTTOMLEFT", active, "BOTTOMLEFT", 1, 0)
-            self.activeGap:SetPoint("BOTTOMRIGHT", active, "BOTTOMRIGHT", -1, 0)
-            self.activeGap:Show()
-            self.ruleLeft:ClearAllPoints(); self.ruleRight:ClearAllPoints()
-            self.ruleLeft:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 0, 0); self.ruleLeft:SetPoint("BOTTOMRIGHT", active, "BOTTOMLEFT", 1, 0)
-            self.ruleRight:SetPoint("BOTTOMLEFT", active, "BOTTOMRIGHT", -1, 0); self.ruleRight:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", 0, 0)
-        else
-            self.activeGap:Hide()
-        end
+        LayoutActive()
     end
     return tabs
 end
@@ -796,7 +1093,7 @@ function Theme:CreateCheckbox(parent, label)
     button:SetBackdropColor(0, 0, 0, 0)
     button.box = CreateFrame("Frame", nil, button, "BackdropTemplate")
     button.box:SetSize(16, 16); button.box:SetPoint("LEFT", 0, 0)
-    button.box:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Theme:ApplyPixelBackdrop(button.box)
     button.mark = button.box:CreateTexture(nil, "OVERLAY")
     button.mark:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
     button.mark:SetPoint("CENTER")
@@ -931,7 +1228,7 @@ function Theme:CreateScrollFrame(parent)
     bar:SetMinMaxValues(0, 0)
     bar:SetValueStep(1)
     if bar.SetObeyStepOnDrag then bar:SetObeyStepOnDrag(true) end
-    bar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Theme:ApplyPixelBackdrop(bar)
     bar:SetBackdropColor(Color(self.Colors.bg))
     bar:SetBackdropBorderColor(Color(self.Colors.lineSoft))
     local thumb = bar:CreateTexture(nil, "ARTWORK")
@@ -983,6 +1280,7 @@ function Theme:CreateScrollFrame(parent)
     function scroll:SetContentHeight(height)
         self.contentHeight = math.max(0, tonumber(height) or 0)
         self:RefreshScrollbar()
+        Theme.ReanchorViewportOutline(self)
     end
     scroll:SetScript("OnVerticalScroll", function(control, offset)
         if not syncing then

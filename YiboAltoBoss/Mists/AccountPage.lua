@@ -10,6 +10,10 @@ local CHARACTER_MIN_WIDTH = Theme:GetCharacterMatrixColumnWidth()
 local HEADER_H, COMPACT_HEADER_H, ROW_H, CELL_H = Theme.Table.groupHeight, Theme.Table.headerHeight, Theme.Table.rowHeight, 24
 local GROUP_GAP = 2
 local FIXED_CELL = { 0.025, 0.145, 0.16, 0.98 }
+-- Ordinary status cells sit inside an already ruled row.  Their own frame
+-- would run parallel to the row rules, so only semantic states (killed,
+-- goal, unobserved) and hover draw a cell border.
+local CELL_NO_BORDER = { 0, 0, 0, 0 }
 
 local function Text(parent, size, justify, color)
     return Theme:CreateText(parent, size or Theme.Font.body, color or C.text, justify or "LEFT")
@@ -339,7 +343,7 @@ local function GetRow(instance, index)
     if row then return row end
     row = CreateFrame("Frame", nil, instance.body, "BackdropTemplate")
     row:SetHeight(ROW_H)
-    row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
     row.fixedBackground = row:CreateTexture(nil, "BACKGROUND", nil, 1)
     row.fixedBackground:SetPoint("TOPLEFT")
     row.fixedBackground:SetPoint("BOTTOMLEFT")
@@ -356,6 +360,13 @@ local function GetRow(instance, index)
     return row
 end
 
+-- Stacked rows share one pixel boundary: every row draws its sides and
+-- bottom, and only the first row draws the matrix's top edge.  Sublevel -1
+-- keeps the rules above column tints but below the fixed/character group gap.
+local function SetRowBorder(row, rowIndex)
+    Theme:CreatePixelBorder(row, { color = C.matrixLine, sublevel = -1, sides = { top = rowIndex == 1, right = true, bottom = true, left = true } })
+end
+
 local function GetCell(row, index)
     local cell = row.cells[index]
     if cell then return cell end
@@ -369,6 +380,7 @@ local function SetSemanticButton(control, text, fill, title, lines)
     control:SetText(text)
     control:SetState("default")
     control:SetBackdropColor(fill[1], fill[2], fill[3], fill[4] or 1)
+    control:SetBackdropBorderColor(unpack(CELL_NO_BORDER))
     control.label:SetTextColor(C.text[1], C.text[2], C.text[3])
     control:SetScript("OnClick", nil)
     Theme:BindTooltip(control, title, lines)
@@ -378,6 +390,7 @@ local function SetEmptyButton(control)
     control:SetText("")
     control:SetState("disabled")
     control:SetBackdropColor(FIXED_CELL[1], FIXED_CELL[2], FIXED_CELL[3], FIXED_CELL[4])
+    control:SetBackdropBorderColor(unpack(CELL_NO_BORDER))
     control:SetScript("OnEnter", nil)
     control:SetScript("OnLeave", nil)
     control:SetScript("OnClick", nil)
@@ -424,7 +437,7 @@ local function SetStatus(cell, status, key, boss)
         local labels = { completed = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.DEFEATED"), available = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NOT_DEFEATED"), unobserved = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.NOT_OBSERVED") }
         local text = labels[status] or _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.UNAVAILABLE_2")
         cell:SetText(text); cell:SetState("default")
-        local fill, border, labelColor = C.chrome, C.matrixLine, C.text
+        local fill, border, labelColor = C.chrome, CELL_NO_BORDER, C.text
         if completed then fill, border, labelColor = C.successSurface, C.success, C.success
         elseif status == "unobserved" then fill, border, labelColor = FIXED_CELL, C.muted, C.muted end
         cell:SetBackdropColor(fill[1], fill[2], fill[3], fill[4] or 1)
@@ -447,7 +460,7 @@ local function SetStatus(cell, status, key, boss)
         cell.label:SetTextColor(C.success[1], C.success[2], C.success[3])
     else
         cell:SetBackdropColor(C.chrome[1], C.chrome[2], C.chrome[3], C.chrome[4])
-        cell:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
+        cell:SetBackdropBorderColor(unpack(CELL_NO_BORDER))
         cell.label:SetTextColor(C.text[1], C.text[2], C.text[3])
     end
     cell:SetScript("OnLeave", function(control)
@@ -455,7 +468,7 @@ local function SetStatus(cell, status, key, boss)
         else control:SetBackdropColor(C.chrome[1], C.chrome[2], C.chrome[3], C.chrome[4]) end
         local labelColor = killed and C.success or C.text
         control.label:SetTextColor(labelColor[1], labelColor[2], labelColor[3])
-        local border = killed and C.success or C.matrixLine
+        local border = killed and C.success or CELL_NO_BORDER
         control:SetBackdropBorderColor(border[1], border[2], border[3], border[4] or 1)
     end)
     cell:SetScript("OnClick", function() YAB.ToggleBossKill(key, boss.key) end)
@@ -650,7 +663,7 @@ local function RefreshAccountPageByCharacterColumns(instance, context)
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", instance.body, "TOPLEFT", 0, -((rowIndex - 1) * ROW_H)); row:SetSize(instance.gridWidth, ROW_H)
         local rowTone = Theme:GetDataRowColor(rowIndex)
         row:SetBackdropColor(rowTone[1], rowTone[2], rowTone[3], rowTone[4] or 0.88)
-        row:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
+        SetRowBorder(row, rowIndex)
         -- The frozen boss/action segment is still part of this data row.
         -- Give it the same parity tone instead of a single flat slab.
         row.fixedBackground:SetColorTexture(rowTone[1], rowTone[2], rowTone[3], rowTone[4] or 0.88)
@@ -785,7 +798,7 @@ function YAB.RefreshAccountPage(instance, context)
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", instance.body, "TOPLEFT", 0, -((rowIndex - 1) * ROW_H)); row:SetSize(instance.gridWidth, ROW_H)
         local tone = Theme:GetDataRowColor(rowIndex)
         row:SetBackdropColor(tone[1], tone[2], tone[3], tone[4] or 0.88)
-        row:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
+        SetRowBorder(row, rowIndex)
         row.fixedBackground:SetWidth(fixedWidth); row.fixedBackground:SetColorTexture(tone[1], tone[2], tone[3], tone[4] or 0.88)
         row.groupGap:Hide(); row.action:Hide(); row.phase:Hide()
         local widths = { { width = characterWidth } }

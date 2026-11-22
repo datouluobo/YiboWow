@@ -29,4 +29,9 @@ if Core.UITheme then
     Theme.CreateCurrentCharacterOutline = Theme.CreateCurrentCharacterOutline or function() return CreateFrame("Frame") end
     Theme.UpdateCurrentCharacterColumnOutline = Theme.UpdateCurrentCharacterColumnOutline or function() end
     Theme.ApplyDataColumnTints = Theme.ApplyDataColumnTints or function() end
+    -- Core API14 / pixel-line:1 (Core owns line thickness).
+    Theme.ApplyPixelBackdrop = Theme.ApplyPixelBackdrop or function(_, frame) return frame end
+    Theme.ApplyPixelRule = Theme.ApplyPixelRule or function(_, texture) return texture end
+    Theme.GetPixelSize = Theme.GetPixelSize or function(_, _, pixels) return pixels or 1 end
+    Theme.SetPixelAnchor = Theme.SetPixelAnchor or function(_, _, anchor) if anchor then anchor() end end
 end

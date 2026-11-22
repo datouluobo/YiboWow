@@ -1,0 +1,41 @@
+﻿YiboVault\_NonRelease\Tests\AccountPageFreshnessSpec.lua | exit=0 | AccountPageFreshnessSpec: OK
+YiboVault\_NonRelease\Tests\AccountPageSettingsSpec.lua | exit=0 | AccountPageSettingsSpec: OK
+YiboVault\_NonRelease\Tests\AuctionHouseSpec.lua | exit=0 | AuctionHouseSpec: OK
+YiboVault\_NonRelease\Tests\AuctionItemsQuerySpec.lua | exit=0 | AuctionItemsQuerySpec: OK
+YiboVault\_NonRelease\Tests\ChatOutputSpec.lua | exit=0 | ChatOutputSpec: OK
+YiboVault\_NonRelease\Tests\GuildBankTransferSpec.lua | exit=0 | GuildBankTransferSpec: OK
+YiboVault\_NonRelease\Tests\MailItemsSpec.lua | exit=0 | MailItemsSpec: OK
+YiboVault\_NonRelease\Tests\MailProviderSpec.lua | exit=0 | PASS: status changes refresh one character; mixed/archive and older-provider notifications refresh all possible transit recipients
+YiboVault\_NonRelease\Tests\PersonalCountsSpec.lua | exit=0 | PersonalCountsSpec: OK
+YiboVault\_NonRelease\Tests\RevisionEventsSpec.lua | exit=0 | RevisionEventsSpec: OK
+YiboVault\_NonRelease\Tests\Stage0ContractSpec.lua | exit=0 | YiboVault/YiboMail stage 0 contract spec passed
+YiboVault\_NonRelease\Tests\StorageGridSpec.lua | exit=0 | YiboVault storage grid spec passed
+YiboVault\_NonRelease\Tests\StoragePageCreateSpec.lua | exit=0 | YiboVault storage page create spec passed
+YiboVault\_NonRelease\Tests\StorageSearchSpec.lua | exit=0 | YiboVault storage search spec passed
+YiboVault\_NonRelease\Tests\StorageSummarySpec.lua | exit=0 | YiboVault storage summary spec passed
+YiboVault\_NonRelease\Tests\TooltipSpec.lua | exit=0 | YiboVault tooltip spec passed
+YiboReputation\_NonRelease\Tests\ForeverDiscoverySpec.lua | exit=0 | ForeverReputationDiscoverySpec passed successfully.
+YiboTaskHub\_NonRelease\Tests\ActionIntegrationSpec.lua | exit=1 | C:\Program Files (x86)\Lua\5.1\lua.exe: YiboTodo/Model/Snapshot.lua:329: attempt to call method 'GetAllCached' (a nil value)
+YiboTaskHub\_NonRelease\Tests\BossTargetsSpec.lua | exit=1 | C:\Program Files (x86)\Lua\5.1\lua.exe: YiboTodo/Model/Snapshot.lua:329: attempt to call method 'GetAllCached' (a nil value)
+YiboTaskHub\_NonRelease\Tests\MailSourceSpec.lua | exit=1 | C:\Program Files (x86)\Lua\5.1\lua.exe: YiboTodo/Model/Snapshot.lua:329: attempt to call method 'GetAllCached' (a nil value)
+YiboTaskHub\_NonRelease\Tests\OverviewSpec.lua | exit=1 | C:\Program Files (x86)\Lua\5.1\lua.exe: YiboTodo/Model/Snapshot.lua:329: attempt to call method 'GetAllCached' (a nil value)
+YiboTaskHub\_NonRelease\Tests\SurfacesSpec.lua | exit=1 | C:\Program Files (x86)\Lua\5.1\lua.exe: YiboTodo/Model/Snapshot.lua:329: attempt to call method 'GetAllCached' (a nil value)
+YiboTaskHub\_NonRelease\Tests\TodoSourcesSpec.lua | exit=1 | C:\Program Files (x86)\Lua\5.1\lua.exe: YiboTodo/Model/Snapshot.lua:329: attempt to call method 'GetAllCached' (a nil value)
+YiboBuilds\_NonRelease\Tests\Core13Spec.lua | exit=0 | Core13Spec passed: 1065 checks
+YiboBuilds\_NonRelease\Tests\EquipmentAugmentSpec.lua | exit=0 | EquipmentAugmentSpec passed: tooltip detection, bag buckle candidates, scroll identity/craft/legacy filtering, equipment rescan
+YiboBuilds\_NonRelease\Tests\GemCandidatesSpec.lua | exit=0 | GemCandidatesSpec passed: 228 checks (zh/en)
+YiboBuilds\_NonRelease\Tests\MistsTargetGuardSpec.lua | exit=1 | C:\Program Files (x86)\Lua\5.1\lua.exe: ...iboBuilds\_NonRelease\Tests\MistsTargetGuardSpec.lua:15: attempt to index global 'YiboBuilds' (a nil value)
+YiboBuilds\_NonRelease\Tests\SocketOrderSpec.lua | exit=0 | SocketOrderSpec passed: 58 checks (zh/en)
+YiboAltoBoss\_NonRelease\Tests\EstimateBatchPerformanceSpec.lua | exit=0 | estimate batches: 200 x 10 bosses: 0.023 s; full database preparations=200
+YiboAltoBoss\_NonRelease\Tests\HolidayBossSpec.lua | exit=0 | HolidayBossSpec: 286 checks passed
+YiboAltoBoss\_NonRelease\Tests\HotspotsPerformanceSpec.lua | exit=0 | directory 10000 lookups, 100 maps: 0.002 s
+YiboAltoBoss\_NonRelease\Tests\InstanceKillsSpec.lua | exit=0 | InstanceKillsSpec: 57 checks passed
+YiboAltoBoss\_NonRelease\Tests\LockoutPagePerformanceSpec.lua | exit=0 | lockout page 20 refreshes, 20 characters, 10 columns, 100 catalog entries: 0.031 s; catalog copies=20 status=4000 binds=4000
+YiboAltoBoss\_NonRelease\Tests\LockoutProjectionSpec.lua | exit=0 | LockoutProjectionSpec: 21 checks passed
+YiboAltoBoss\_NonRelease\Tests\MultiTargetSpec.lua | exit=0 | MultiTargetSpec: 31 checks passed
+YiboAltoBoss\_NonRelease\Tests\OverviewPerformanceSpec.lua | exit=0 | overview: 1000 iterations, 20 characters, 30 bosses: 0.212 s, GetBossList calls=2000
+YiboAltoBoss\_NonRelease\Tests\PhaseEstimatePerformanceSpec.lua | exit=0 | phase estimates: 200 refreshes, 10 bosses, 12 phases: 0.100 s, state reads=24000, estimates=2000
+YiboAltoBoss\_NonRelease\Tests\PhasePagePerformanceSpec.lua | exit=0 | phase 500 refreshes, 10 bosses, 12 phases: 0.382 s, phase column scans=500, state lookups=60000
+_NonRelease\BuildsForever\Smoke.lua | exit=1 | C:\Program Files (x86)\Lua\5.1\lua.exe: _NonRelease\BuildsForever\Smoke.lua:148: attempt to index local 'da' (a nil value)
+_NonRelease\ReputationForever\Smoke.lua | exit=1 | C:\Program Files (x86)\Lua\5.1\lua.exe: _NonRelease\ReputationForever\Smoke.lua:3: empty visible list is not confirmed absence
+_NonRelease\VaultForever\Smoke.lua | exit=0 | VaultForever Smoke passed: 3158 checks (actual Core/Vault manifests, simulated client)

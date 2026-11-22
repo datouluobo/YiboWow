@@ -44,6 +44,9 @@
 | `YiboMailForeverProbe` | `/ymf` | 已占用；Forever 邮件只读观察，未部署/实机验证 |
 | `YiboTodoProbe` | `/ytp` | 已占用；Mists 原生 API/事件采样 |
 | `YiboCurrencyProbe` | `/ycp` | 已占用；Mists／Forever 原生金币与货币列表采样，双目标客户端待验 |
+| `YiboLegacyForeverProbe` | `/ylg` | 已占用；Forever 传承只读取证，2026-11-20已联接正式客户端，待运行核验 |
+| `YiboTransmogForeverProbe` | `/ytf` | 已占用；Forever 幻化只读取证，2026-11-21已联接正式客户端，0.1.1 已实机运行 T0／T3 |
+| `YiboCorePixelLineProbe` | `/ypx` | 已占用；2026-11-21 新建，Core pixel-line:1 三端像素线前提验证；2026-11-21 已联接 MoP 并实机运行（见探针 Evidence-Mists-20261121.md）；2026-11-21 已联接 Forever/Retail，未运行 |
 
 探针命令具体用途及链接状态以各探针 README 和客户端 Junction 实查为准；本表记录命令占用，历史探针未登记或没有 Slash 命令不推定可复用。
 

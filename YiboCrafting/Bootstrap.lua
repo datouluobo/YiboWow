@@ -8,14 +8,15 @@ end
 function Addon:Initialize()
     if self.initialized then return true end
     if self.CLIENT_SUPPORTED==false then return nil,Core.Locale:Get(self.NAME,"FOREVER.WRONG_MANIFEST") end
-    if not (Core and Core.CheckAPIVersion and Core:CheckAPIVersion(13) and Core.HasCapability and Core.Locale) then
+    if not (Core and Core.CheckAPIVersion and Core:CheckAPIVersion(14) and Core.HasCapability and Core.Locale) then
         return nil, self.STARTUP_REQUIREMENTS
     end
     for name, version in pairs({ ["localization"] = 1, ["basic-input"] = 1, ["item-resolver"] = 1,
         ["character-name-format"] = 1, ["character-identity"] = 1, ["account-view"] = 2,
         ["account-entry"] = 2, ["account-surface-budget"] = 2, ["character-cleanup"] = 1,
         ["characters"] = 1, ["data-domains"] = 1, ["events"] = 1, ["fields"] = 1,
-        ["business-services"] = 1, ["business-providers"] = 1, ["business-item-actions"] = 2 }) do
+        ["business-services"] = 1, ["business-providers"] = 1, ["business-item-actions"] = 2,
+        ["pixel-line"] = 1 }) do
         if not Core:HasCapability(name, version) then return nil, L("UPGRADE") .. " (" .. name .. ":" .. version .. ")" end
     end
     if not (Core.IsInitialized and Core:IsInitialized()) then return nil, L("CORE_NOT_READY") end
@@ -25,10 +26,13 @@ function Addon:Initialize()
         and type(Core.Characters.FormatName) == "function"
         and type(Core.UITheme.CreateMatrixHeader) == "function"
         and type(Core.UITheme.SetCharacterHeader) == "function"
+        and type(Core.UITheme.ApplyPixelBackdrop) == "function"
+        and type(Core.UITheme.ApplyPixelRule) == "function"
+        and type(Core.UITheme.SetPixelAnchor) == "function"
         and type(Core.AccountView.GetScrollSurfaceWidth) == "function") then return nil, L("UPGRADE") end
     local db, errorMessage = self.Store:Initialize()
     if not db then return nil, errorMessage end
-    local registered, registerError = Core:RegisterAddon(self.NAME, { version = self.VERSION, requiredAPI = 13 })
+    local registered, registerError = Core:RegisterAddon(self.NAME, { version = self.VERSION, requiredAPI = 14 })
     if not registered then return nil, registerError end
     if Core.CharacterCleanup then
         local cleanup, cleanupError = Core.CharacterCleanup:RegisterOwner(self.NAME, {

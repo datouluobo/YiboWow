@@ -8,7 +8,7 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["ERROR.TRANSFER_MIGRATION"] = "Legacy send review could not finish: %s. Log in again to retry.",
         ["HISTORY.LEGACY_TRANSFER_REVIEW"] = "This send predates transit tracking and has no receipt or return evidence. Verification is required.",
         ["FOREVER.WRONG_CLIENT"] = "Mail did not start: install the matching client build.",
-        ["FOREVER.CORE_REQUIRED"] = "Mail requires a matching YiboCore build with API 13 and the inbox capabilities. Please upgrade Core.",
+        ["FOREVER.CORE_REQUIRED"] = "Mail requires a matching YiboCore build with API 14 and the inbox capabilities. Please upgrade Core.",
         ["FOREVER.STORE_MISMATCH"] = "Mail did not start: saved data format or client scope does not match. Existing data was preserved.",
         ["FOREVER.NOT_READY"] = "Mail has not started. Check the startup message.",
         ["FOREVER.TITLE"] = "Inbox",
@@ -48,7 +48,7 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["FOREVER.ITEM_ID"] = "Item %d",
 
         ["APP.PREFIX"] = "|cff20e070[Yibo]|r Mail: ",
-        ["BOOTSTRAP.UPGRADE_CORE"] = "Upgrade YiboCore: Mail requires API 13, character-identity:2, character-identity-cache:1 and account-identity-context:1, plus its existing public capabilities.",
+        ["BOOTSTRAP.UPGRADE_CORE"] = "Upgrade YiboCore: Mail requires API 14, pixel-line:1, character-identity:2, character-identity-cache:1 and account-identity-context:1, plus its existing public capabilities.",
         ["ENTRY.TITLE"] = "[Yibo] YiboMail - Mail Assistant",
         ["HISTORY.NEEDS_REVIEW"] = "Needs review",
         ["RULE.CONTACTS"] = "Contacts",

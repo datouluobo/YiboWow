@@ -33,6 +33,7 @@ function Addon:ResolveCurrentGuildBankKeys(characters, options)
     if not identity then return {} end
     if options.guildKey and options.guildKey ~= identity.key then return {} end
     if self:IsGuildHidden(identity.key) and not options.includeHiddenGuilds then return {} end
+    if options.guildKey then return { identity.key } end
     for _, character in ipairs(characters) do
         if character.id == identity.viewer then return { identity.key } end
     end

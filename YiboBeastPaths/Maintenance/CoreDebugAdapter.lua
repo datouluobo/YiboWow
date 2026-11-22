@@ -17,10 +17,10 @@ end
 
 local function GetCore()
     local core = _G.YiboCore
-    if not (core and core.CheckAPIVersion and core:CheckAPIVersion(13)
+    if not (core and core.CheckAPIVersion and core:CheckAPIVersion(14)
         and core.HasCapability) then return nil, T("CORE_REQUIRED") end
     for name, version in pairs({ localization = 1, ["basic-input"] = 1,
-        ["account-view"] = 2, ["account-surface-budget"] = 1 }) do
+        ["account-view"] = 2, ["account-surface-budget"] = 1, ["pixel-line"] = 1 }) do
         if not core:HasCapability(name, version) then return nil, T("CORE_REQUIRED") end
     end
     if not (core.IsInitialized and core:IsInitialized()) then return nil, T("CORE_NOT_READY") end
@@ -30,6 +30,8 @@ local function GetCore()
         and core.AccountView.ShowSettings
         and core.UITheme and core.UITheme.CreateInput
         and core.UITheme.CreateButton and core.UITheme.CreateText
+        and type(core.UITheme.ApplyPixelBackdrop) == "function"
+        and type(core.UITheme.ApplyPixelRule) == "function"
         and ns.RegisterLocale(core)) then return nil, T("CORE_REQUIRED") end
     return core
 end
@@ -100,7 +102,7 @@ local function TryRegister()
     -- Initialize defaults before the early ADDON_LOADED registration so a new
     -- profile's visible page does not depend on PLAYER_LOGIN event ordering.
     if YBP.InitDebugDB then YBP:InitDebugDB() end
-    local addon, err = core:RegisterAddon(ADDON_ID, { requiredAPI = 13, version = "1.9.1" })
+    local addon, err = core:RegisterAddon(ADDON_ID, { requiredAPI = 14, version = "1.10.0" })
     if not addon then unavailableReason = err; return false end
     if not ns.OfflinePetPage then
         local settings, settingsErr = core:RegisterSettingsPanel(ADDON_ID, {

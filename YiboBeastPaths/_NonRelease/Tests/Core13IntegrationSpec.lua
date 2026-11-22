@@ -28,18 +28,19 @@ local function scenario(options)
     function ybp:RefreshWorldMapButton() end
     local core
     if not options.absent then
-        core = { ready = options.ready ~= false, api = options.api or 13,
+        core = { ready = options.ready ~= false, api = options.api or 14,
             Registry = {}, SettingsRegistry = {}, UITheme = {}, AccountView = {}, Events = {},
             Capabilities = { Register = function() end } }
         function core:CheckAPIVersion(version) return self.api >= version end
         function core:IsInitialized() return self.ready end
         function core:HasCapability(name) return name ~= options.missing end
-        for _, key in ipairs({ "CreateInput", "CreateScrollFrame", "CreateButton", "CreateText" }) do
+        for _, key in ipairs({ "CreateInput", "CreateScrollFrame", "CreateButton", "CreateText",
+            "ApplyPixelBackdrop", "ApplyPixelRule" }) do
             core.UITheme[key] = function() end
         end
         function core:RegisterAddon(_, metadata)
-            check(metadata.requiredAPI == 13)
-            check(metadata.version == "1.9.1", "Registered YBP version must match the revision")
+            check(metadata.requiredAPI == 14)
+            check(metadata.version == "1.10.0", "Registered YBP version must match the revision")
             counts.addons = counts.addons + 1; return {}
         end
         function core:RegisterSettingsPanel(_, definition)
@@ -78,7 +79,9 @@ local function scenario(options)
     init.OnEvent(init, "ADDON_LOADED", "YiboBeastPaths")
     return ybp, core, ns, counts, settings, pages, callbacks, init
 end
-for _, options in ipairs({ { absent = true }, { api = 6 }, { missing = "basic-input" },
+-- api = 13: a pre-pixel-line Core must be refused.
+for _, options in ipairs({ { absent = true }, { api = 6 }, { api = 13 }, { missing = "pixel-line" },
+    { missing = "basic-input" },
     { missing = "account-view" }, { missing = "localization" }, { missing = "account-surface-budget" },
     { mists = false } }) do
     local ybp, _, ns, counts = scenario(options)

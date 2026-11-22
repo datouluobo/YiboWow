@@ -5,7 +5,7 @@
 ## Notes: Retail development build: GUID directory, isolated saves and shared account UI. Client acceptance pending.
 ## Notes-zhCN: 正式服开发版：GUID角色目录、独立存档与公共账号界面，待客户端验收。
 ## Author: YiboSoft
-## Version: 0.1.0
+## Version: 0.2.0
 ## IconTexture: Interface\AddOns\YiboCore\Media\YiboCoreIcon-128
 ## SavedVariables: YiboCoreRetailDB
 ## OptionalDeps: LibDataBroker-1.1

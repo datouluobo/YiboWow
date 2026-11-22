@@ -62,7 +62,8 @@ core.AccountView = {
     GetColumnPage=function() end, GetScrollSurfaceWidth=function() end, UpdateColumnPager=function() end,
 }
 core.Entry = { RegisterBusinessEntry=function(_, _, definition) entries=entries+1; return definition end }
-core.UITheme = { CreateInput=function() end }
+core.UITheme = { CreateInput=function() end, ApplyPixelBackdrop=function(_, f) return f end,
+    CreatePixelBorder=function() return { SetColor=function() end, SetShown=function() end, SetSides=function() end } end }
 core.Contracts = { Register=function(_, _, definition) return definition end, NotifyChanged=function() end }
 core.BusinessItemActions = { Bind=function() end, Handle=function() end, Unbind=function() end, TooltipLines=function() end }
 assert(loadfile("YiboReputation/Bootstrap.lua"))("YiboReputation")
@@ -96,9 +97,46 @@ local savedHasCapability = core.HasCapability
 core.HasCapability = function(_, name, version) return name ~= "account-surface-budget" or version <= 1 end
 Check(not addon.CoreIntegration:Initialize() and pages == 0, "old scroll budget rejected before registration")
 core.HasCapability = savedHasCapability
+-- pixel-line migration: an API13 Core (or one without pixel-line:1) is refused.
+local savedCheckAPI = core.CheckAPIVersion
+core.CheckAPIVersion = function(_, version) return version <= 13 end
+Check(not addon.CoreIntegration:Initialize() and pages == 0, "API13 Core rejected before registration")
+-- Release fix 2026-11-22: a refused Core (and a wrong client) must leave an existing store byte-identical.
+local function Serialize(value)
+    if type(value) == "string" then return string.format("%q", value) end
+    if type(value) ~= "table" then return tostring(value) end
+    local keys, parts = {}, { "{" }
+    for key in pairs(value) do keys[#keys + 1] = key end
+    table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
+    for _, key in ipairs(keys) do parts[#parts + 1] = "[" .. Serialize(key) .. "]=" .. Serialize(value[key]) .. "," end
+    return table.concat(parts) .. "}"
+end
+local existing = { keep = "yes", treeExpanded = { [1270] = true },
+    settings = { hoverMode = "tree", viewMode = "tree", previewColumns = { a = true }, monitoredFactionIDs = { 1270 }, matrixLevelExpr = "bad" } }
+local existingText, printsBefore = Serialize(existing), #prints
+YiboReputationDB = existing
+bootstrap.callback(bootstrap, "ADDON_LOADED", "YiboReputation")
+Check(not addon.CoreIntegration.initialized and pages == 0 and YiboReputationDB == existing and Serialize(existing) == existingText,
+    "API13 Core: existing store byte-identical after ADDON_LOADED refusal")
+Check(#prints > printsBefore and tostring(prints[#prints]):find("API14", 1, true), "API13 Core: upgrade message printed")
+core.CheckAPIVersion = savedCheckAPI
+addon.CLIENT_SUPPORTED, printsBefore = false, #prints
+bootstrap.callback(bootstrap, "ADDON_LOADED", "YiboReputation")
+Check(not addon.CoreIntegration.initialized and pages == 0 and YiboReputationDB == existing and Serialize(existing) == existingText,
+    "wrong client: existing store byte-identical")
+Check(#prints == printsBefore + 1, "wrong client: one wrong-manifest message")
+addon.CLIENT_SUPPORTED = true
+YiboReputationDB = nil
+core.CheckAPIVersion = function(_, version) return version <= 13 end
+bootstrap.callback(bootstrap, "ADDON_LOADED", "YiboReputation")
+Check(YiboReputationDB == nil and pages == 0, "API13 Core: missing store is not created")
+core.CheckAPIVersion = savedCheckAPI
+core.HasCapability = function(_, name) return name ~= "pixel-line" end
+Check(not addon.CoreIntegration:Initialize() and pages == 0, "Core without pixel-line rejected")
+core.HasCapability = savedHasCapability
 local ok, err = addon.CoreIntegration:Initialize()
 Check(not ok and err:find("1.12.4",1,true), "old collector rejected")
-Check(YiboReputationDB.characters==nil and pages==0 and entries==0, "no partial initialization")
+Check(YiboReputationDB==nil and pages==0 and entries==0, "no partial initialization; refused Core leaves the saved store uncreated")
 core.DataDomains._definitions.reputation=nil
 core.VERSION="1.12.3"; Check(not addon.CoreIntegration:Initialize(), "old version rejected")
 core.VERSION="1.12.4"

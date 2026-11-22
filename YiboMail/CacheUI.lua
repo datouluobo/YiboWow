@@ -346,7 +346,7 @@ function UI:Owners(root, characters, entries, state, x, top, width, height)
         local row = root.ownerRows[index]
         if not row then
             row = CreateFrame("Button", nil, root.ownersContent, "BackdropTemplate")
-            row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+            Theme:ApplyPixelBackdrop(row) -- 2-unit gap between owner cards: standalone border.
             row.icon = row:CreateTexture(nil, "ARTWORK"); row.icon:SetSize(24, 24); row.icon:SetPoint("LEFT", 6, 0)
             row.name = Text(row); row.meta = Text(row, Theme.Font.meta, Theme.Colors.muted)
             row.risk = Text(row, Theme.Font.meta, Theme.Colors.warning)
@@ -497,8 +497,13 @@ function UI:RenderList(root, offset)
             local tile = root.tiles[used]
             if not tile then
                 tile = CreateFrame("Button", nil, root.listContent, "BackdropTemplate")
-                tile:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-                tile.icon = tile:CreateTexture(nil, "ARTWORK"); tile.icon:SetPoint("TOPLEFT", 1, -1); tile.icon:SetPoint("BOTTOMRIGHT", -1, 1)
+                Theme:ApplyPixelBackdrop(tile)
+                tile.icon = tile:CreateTexture(nil, "ARTWORK")
+                local icon = tile.icon
+                Theme:SetPixelAnchor(icon, function()
+                    local inset = Theme:GetPixelSize(tile, 1)
+                    icon:ClearAllPoints(); icon:SetPoint("TOPLEFT", inset, -inset); icon:SetPoint("BOTTOMRIGHT", -inset, inset)
+                end)
                 tile.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
                 tile.count = tile:CreateFontString(nil, "OVERLAY", "NumberFontNormal"); tile.count:SetPoint("BOTTOMRIGHT", -3, 3)
                 root.tiles[used] = tile

@@ -105,7 +105,7 @@ assert(Hub.CoreIntegration:Initialize())
 Equal(pages.taskhub.previewEnabled, true, "O4 Core hover enabled")
 Equal(entries.yth.pageID, "taskhub")
 local registeredTaskHub = Core.Registry:Get("YiboTaskHub")
-Equal(registeredTaskHub.requiredAPI, 13, "TaskHub declares API 13")
+Equal(registeredTaskHub.requiredAPI, 14, "TaskHub declares API 14")
 Equal(entries.yth.defaultChannels.minimap, false, "TaskHub minimap entry defaults off")
 Equal(entries.yth.defaultChannels.broker, false, "TaskHub broker entry defaults off")
 Equal(entries.yth.defaultChannels.builtinBar, false, "TaskHub built-in bar entry defaults off")
@@ -435,8 +435,12 @@ Hub.CoreIntegration.initialized = false
 Core.CheckAPIVersion = function(_, minimum) return minimum <= 12 end
 local initResult, initError = Hub.CoreIntegration:Initialize()
 Equal(initResult, nil, "API 12 Core stops center initialization")
-Equal(initError:find("API 13", 1, true) ~= nil, true, "API 12 failure explains required upgrade")
-Equal(registeredTaskHub.requiredAPI, 13, "registered TaskHub minimum remains API 13")
+Equal(initError:find("API 14", 1, true) ~= nil, true, "API 12 failure explains required upgrade")
+Hub.CoreIntegration.initialized = false
+Core.CheckAPIVersion = function(_, minimum) return minimum <= 13 end
+initResult, initError = Hub.CoreIntegration:Initialize()
+Equal(initResult, nil, "API 13 Core is refused (pixel-line requires API 14)")
+Equal(registeredTaskHub.requiredAPI, 14, "registered TaskHub minimum remains API 14")
 Core.CheckAPIVersion = checkAPI
 local hasCapability = Core.HasCapability
 Core.HasCapability = function(self, name, version)

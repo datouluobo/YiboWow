@@ -3,10 +3,27 @@ local ADDON_NAME = ...
 local Addon = _G.YiboTodo or {}
 _G.YiboTodo = Addon
 Addon.NAME = ADDON_NAME or "YiboTodo"
-Addon.VERSION = "1.2.6"
-Addon.REQUIRED_CORE_API = 13
+Addon.VERSION = "1.3.0"
+Addon.REQUIRED_CORE_API = 14
 Addon.CATALOG_VERSION = 16
 Addon.RULESET_ID = "mop-classic-50504"
+-- This package is Mists-only. The actual client identity is checked before
+-- YiboTodoDB is touched or anything is registered with Core.
+Addon.MatchesTarget = type(WOW_PROJECT_MISTS_CLASSIC) == "number" and WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC
+-- Static bilingual startup text: on a wrong client the Core language service
+-- may be missing or uninitialized, so this message must not depend on it.
+local STARTUP_TEXT = {
+    en = { WRONG_MISTS = "Install the YiboTodo package for Mists. YiboTodo stopped without changing saved data." },
+    zh = { WRONG_MISTS = "请安装 YiboTodo 熊猫人之谜版本。YiboTodo 已停止，未改动存档。" },
+}
+function Addon:GetStartupText(key)
+    local locale = GetLocale and GetLocale()
+    local language = (locale == "zhCN" or locale == "zhTW") and "zh" or "en"
+    return STARTUP_TEXT[language][key] or STARTUP_TEXT.en[key] or tostring(key)
+end
+function Addon:PrintStartupMessage(key)
+    if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r " .. self:GetStartupText(key)) end
+end
 Addon.Catalog = Addon.Catalog or { activities = {}, groups = {}, recipes = {}, rulesets = {}, farmOperations = {}, dailyActivities = {}, specialActivities = {}, monitoringGroups = {} }
 Addon.Catalog.farmOperations = Addon.Catalog.farmOperations or {}
 Addon.Catalog.dailyActivities = Addon.Catalog.dailyActivities or {}
@@ -34,7 +51,7 @@ function Addon:T(key, ...)
     -- This fallback is limited to the bootstrap failure path: the older Core
     -- being reported cannot provide the required localization service.
     if key == "ERROR.CORE_REQUIRED" then
-        return "YiboTodo requires YiboCore API v13 with localization:1, character-identity:1, character-name-format:1, account-entry:2, and calendar-day-query:1. Please update YiboCore."
+        return "YiboTodo requires YiboCore API v14 with localization:1, pixel-line:1, character-identity:1, character-name-format:1, account-entry:2, and calendar-day-query:1. Please update YiboCore."
     elseif key == "ERROR.INTEGRATION" then
         return string.format("Core integration failed: %s", tostring((...)))
     elseif key == "CHAT.PREFIX" then

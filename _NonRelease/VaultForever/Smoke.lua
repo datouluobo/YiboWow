@@ -57,7 +57,7 @@ local function Boot(saved, coreSaved, configure, forever)
     return env, core, env.YiboVault, event, Flush, data
 end
 local env, core, vault, event, flush, data = Boot()
-Check(vault.initialized and vault.VERSION == "0.6.5-api1", "Vault initialized on actual Core")
+Check(vault.initialized and vault.VERSION == "0.7.0-api1", "Vault initialized on actual Core")
 Check(env.YiboVaultDB.sentinel == "mists" and not env.YiboVaultDB.byCharacter, "MoP saved table untouched")
 Check(vault.Items:HasCapability("source.bags", 1) and vault.Items:HasCapability("source.bank", 1), "honest source capabilities")
 Check(not vault.GuildBank and not vault.MailItems and not vault.AuctionHouse, "unsupported modules not loaded")
@@ -78,12 +78,12 @@ Check(#query.records == 5 and query.totals.totalQuantity == 7, "all bags and equ
 Check(vault:GetCharacterCoverage(env.TEST_GUID, "bags")["5"].completedScan, "native reagent bag included")
 query.records[1].quantity = 999
 Check(vault.Items:Query({ sources = { "bags", "equipment" } }).totals.totalQuantity == 7, "query cannot mutate inventory authority")
-local unsupported, why = vault.Items:Query({ scope = { mode = "account" } })
-Check(not unsupported and why == "scope-not-supported", "account query unavailable")
-unsupported, why = vault.Items:Query({ scope = { mode = "characters", characterIDs = { "OtherGUID" } } })
-Check(not unsupported and why == "scope-not-supported", "other-character query unavailable")
+Check(vault.Items:Query({ scope = { mode = "account" } }).totals.totalQuantity == 7, "account query includes current character")
+Check(#vault.Items:Query({ scope = { mode = "characters", characterIDs = { "OtherGUID" } } }).records == 0, "unknown character cannot disclose records")
 Check(vault.AccountPage:Status("bank", env.TEST_GUID) == "bank_pending", "unvisited bank has no completed coverage")
-Check(not vault.Items:HasCapability("items.personal-counts", 1) and not vault.Items:GetPersonalCounts({}), "unimplemented count contract not claimed")
+Check(vault.Items:HasCapability("items.personal-counts", 1)
+    and vault.Items:GetPersonalCounts({ itemIDs = { 42 } }).characters[env.TEST_GUID].items[42].bags == 3,
+    "indexed personal counts return the collected stack")
 core:RegisterAddon("VaultTestConsumer", { requiredAPI = 13 })
 local descriptor = assert(core.Contracts:Resolve("vault.items", { major = 1, minMinor = 1 }))
 local fromService = assert(core.Contracts:Call("VaultTestConsumer", descriptor, "Query", { sources = { "equipment" } }))
@@ -93,6 +93,12 @@ Check(core.AccountView.activePageID == "vault-items", "window opens through Core
 local page = core.AccountView.frame.instances["vault-items"]
 Check(#page.renderedRecords == 3 and page.renderedStatus == "known", "bag rows visible")
 Check(page.rosterScroll:IsShown() and page.grid[1]:IsShown() and not page.header:IsShown(), "main workspace uses roster and item grid")
+Check(page.capacity:IsShown() and #page.freeGroups > 0, "storage displays known capacity and grouped free slots")
+local definition
+for _, candidate in ipairs(core.AccountView:GetRegisteredPages()) do
+    if candidate.id == "vault-items" then definition = candidate end
+end
+Check(type(definition.settings.CreateSettingsPanel) == "function", "Vault registers the shared settings panel with Core")
 page.grid[1]:Fire("OnEnter")
 Check(env.GameTooltip.link=="item:"..page.grid[1].record.itemID and env.GameTooltip:IsShown(),"item grid opens the native tooltip")
 page.grid[1]:Fire("OnLeave")
@@ -106,6 +112,8 @@ for _, locations in pairs(vault.db.byCharacter[rosterAlt.id].bags) do
     for _, record in ipairs(locations) do record.characterID = rosterAlt.id end
 end
 local currentCharacter = core.Characters:GetCurrent({ identityOnly = true })
+core.Database:GetDB().characters.byID[rosterAlt.id] = rosterAlt
+core.Characters:InvalidateAllCache()
 local getVisible = core.AccountView.GetVisibleCharacters
 local sortCharacters = core.CharacterSort.Sort
 core.AccountView.GetVisibleCharacters = function() return { currentCharacter, rosterAlt, { id = "Elsewhere", name = "Elsewhere", realm = "Other" } } end
@@ -119,7 +127,7 @@ Check(#scoped.characterIDs == 3, "tooltip all-realms scope includes other realms
 vault.db.settings.tooltipRealmScope = nil
 core.AccountView.GetVisibleCharacters, core.CharacterSort.Sort = getVisible, sortCharacters
 local tooltipScope = { mode = "characters", characterIDs = { currentCharacter.id, rosterAlt.id } }
-local tooltipResult = vault:QueryTooltip(tooltipScope, 42)
+local tooltipResult = vault.Items:Query({ scope = tooltipScope, itemID = 42 })
 Check(#tooltipResult.records == 2 and tooltipResult.coverage.bags[rosterAlt.id], "tooltip reads current and offline snapshots")
 local oldScope = vault.AccountPage.GetTooltipScope
 vault.AccountPage.GetTooltipScope = function() return tooltipScope, { currentCharacter, rosterAlt }, false end
@@ -139,14 +147,38 @@ Check(#env.GameTooltip.hooks.OnShow == hooks, "repeated initialization does not 
 Check(vault:TooltipSourceSnapshotAvailable("bank", { ["7"] = { completedScan = true } }, function(state) return state.completedScan end), "Forever bank uses observed tab coverage")
 vault.AccountPage.GetTooltipScope = oldScope
 local rosterContext = {characters={core.Characters:GetCurrent(),rosterAlt},surfaceAvailableWidth=920}
+local altMail = { sourceID = "alt-inbox", source = "mail", characterID = rosterAlt.id,
+    itemID = 42, quantity = 2, location = { container = "inbox", slot = 1, attachmentIndex = 1 } }
+vault:ReplaceLocation(rosterAlt.id, "mail", "inbox", { altMail }, altMail.location, nil, { status = "stale" })
+local altAuction = { sourceID = "alt-auction", source = "auction", characterID = rosterAlt.id,
+    itemID = 7099, quantity = 4, auctionID = 20, location = { container = "auction", slot = 1 } }
+vault:ReplaceLocation(rosterAlt.id, "auction", "auction", { altAuction }, altAuction.location, nil, { status = "stale" })
 vault.AccountPage:Refresh(page,rosterContext)
 local readsBeforeAlt = data.reads
 page.selectedCharacter = rosterAlt.id
 vault.AccountPage:Refresh(page,rosterContext)
 Check(page.rosterButtons[2].state=="selected" and page.renderedStatus=="stale" and page.refresh.state=="disabled"
     and not page.tabs["guild-bank"]:IsShown() and data.reads==readsBeforeAlt, "other character uses historical physical cache without a native read")
+page.tabs.mail:Fire("OnClick")
+vault.AccountPage:Refresh(page, rosterContext)
+Check(#page.renderedRecords == 1 and page.renderedRecords[1].characterID == rosterAlt.id
+    and page.renderedRecords[1].state == "stale", "offline mail is available through the storage tab")
+page.selectedCharacter = currentCharacter.id
+page.search:SetValue("7099")
+vault.AccountPage:Refresh(page, rosterContext)
+Check(#page.renderedRecords == 1 and page.renderedRecords[1].characterID == rosterAlt.id
+    and page.renderedRecords[1].state == "stale", "account search finds an offline auction from the current character view")
+page.tabs.bags:Fire("OnClick")
+vault.AccountPage:Refresh(page, { characters = rosterContext.characters, preview = true, surfaceAvailableWidth = 920 })
+local previewAlt
+for _, row in ipairs(page.rows) do
+    if row.record and row.record.characterID == rosterAlt.id then previewAlt = row.labels.character:GetText() end
+end
+Check(previewAlt and previewAlt:find("Alt", 1, true), "entry preview identifies the offline owner")
 page.selectedCharacter = nil
 vault.db.byCharacter[rosterAlt.id] = nil
+core.Database:GetDB().characters.byID[rosterAlt.id] = nil
+core.Characters:InvalidateAllCache()
 core.AccountView:NotifyPageChanged("vault-items"); flush()
 Check(page.tabs.bags.label:GetText() == vault:T("FOREVER.bags"), "bag button renders localized label rather than height")
 Check(page.tabs.equipment.label:GetText() == vault:T("FOREVER.equipment"), "equipment button renders localized label rather than height")
@@ -209,6 +241,8 @@ local _, _, bad = Boot(badSave)
 Check(not bad.initialized and badSave.sentinel and not badSave.byCharacter, "future schema preserved and stopped")
 local _, _, missing = Boot(nil, nil, function(_, c) c.CheckAPIVersion = function() return false end end)
 Check(not missing.initialized and not missing.db, "old Core stops before database initialization")
+local _, _, api13 = Boot(nil, nil, function(_, c) c.CheckAPIVersion = function(_, version) return version <= 13 end end)
+Check(not api13.initialized and not api13.db, "API13 Core (no pixel-line) stops before database initialization")
 local _, _, mismatch = Boot(nil, nil, function(e) e.WOW_PROJECT_ID = 19 end)
 Check(not mismatch.initialized and not mismatch.db, "wrong target stopped")
 Check(#env.TEST_MESSAGES == 1, "only intentional early-scan feedback; no hidden Core callback errors: " .. table.concat(env.TEST_MESSAGES, " | "))
@@ -372,7 +406,7 @@ do
     local bankReads = bank.reads
     panel.search:SetValue("9001", true); drain()
     Check(#panel.renderedRecords == 1 and panel.renderedRecords[1].source == "bank"
-        and panel.grid[1].locationText == v:T("FOREVER.SEARCH_STALE_LOCATION", v:T("FOREVER.BANK_SLOT", 101, 1))
+        and panel.grid[1].locationText:find(v:T("FOREVER.SEARCH_STALE_LOCATION", v:T("FOREVER.BANK_SLOT", 101, 1)), 1, true)
         and bank.reads == bankReads, "storage search labels cached bank results without reading the closed bank")
     panel.search.clearButton.scripts.OnClick(); drain()
     before = bank.reads; panel.refresh.scripts.OnClick(); e.SlashCmdList.YIBOVAULT("scan"); drain()

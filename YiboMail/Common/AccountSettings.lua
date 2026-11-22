@@ -99,9 +99,11 @@ function Settings:GetDefinition()
                 GridOption("shortcutColumns", Addon:T("UI.TEXT_0375"), gridX + (columnWidth + 12) / 2, 6, columns)
                 section.previewSlots = section.previewSlots or {}
                 for index = 1, 72 do
-                    local slot = section.previewSlots[index] or CreateFrame("Frame", nil, section, "BackdropTemplate")
-                    section.previewSlots[index] = slot
-                    slot:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+                    local slot = section.previewSlots[index]
+                    if not slot then
+                        slot = CreateFrame("Frame", nil, section, "BackdropTemplate"); section.previewSlots[index] = slot
+                        Theme:ApplyPixelBackdrop(slot, { background = false }) -- Gapped tiles: standalone border.
+                    end
                     slot:SetBackdropBorderColor(unpack(Theme.Colors.lineSoft))
                 end
                 section.previewX, section.previewY = gridX, gridY + 104

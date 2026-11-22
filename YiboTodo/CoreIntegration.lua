@@ -3,16 +3,48 @@ local Integration = {}
 Addon.CoreIntegration = Integration
 local ICON = "Interface\\AddOns\\YiboTodo\\Media\\YiboTodoIcon"
 
-function Integration:Initialize()
-    if self.initialized then return true end
+-- Core must be present, initialized, API14 and expose every capability used
+-- below. Returns Core, or nil plus the localized upgrade message.
+function Integration:CheckCore()
     local Core = _G.YiboCore
-    if not (Core and Core.CheckAPIVersion and Core:CheckAPIVersion(Addon.REQUIRED_CORE_API)
+    if not (Core and type(Core.IsInitialized) == "function" and Core:IsInitialized()
+        and Core.CheckAPIVersion and Core:CheckAPIVersion(Addon.REQUIRED_CORE_API)
         and Core.HasCapability and Core:HasCapability("localization", 1)
+        and Core:HasCapability("pixel-line", 1) and Core.UITheme
+        and type(Core.UITheme.ApplyPixelBackdrop) == "function" and type(Core.UITheme.CreatePixelBorder) == "function"
         and Core:HasCapability("calendar-day-query", 1) and Core.Calendar and type(Core.Calendar.ReadDay) == "function"
         and Core:HasCapability("account-view", 2) and Core:HasCapability("character-identity", 1)
         and Core:HasCapability("character-name-format", 1) and Core:HasCapability("account-entry", 2)
         and Core.Locale and type(Core.Locale.Get) == "function" and Core.AccountView and Core.Entry and Core.Characters
         and type(Core.Characters.FormatName) == "function") then return nil, Addon:T("ERROR.CORE_REQUIRED") end
+    return Core
+end
+
+-- Runs at ADDON_LOADED before YiboTodoDB is created or modified. The result
+-- is cached so repeated lifecycle events print at most one message.
+function Integration:CheckStartup()
+    if self.startupChecked then return self.startupReady == true end
+    self.startupChecked = true
+    if not Addon.MatchesTarget then
+        Addon.startupBlocked = "wrong-target"
+        Addon:PrintStartupMessage("WRONG_MISTS")
+        return false
+    end
+    local core, err = self:CheckCore()
+    if not core then
+        Addon.startupBlocked = "core"
+        Addon:Print(Addon:T("ERROR.INTEGRATION", tostring(err)))
+        return false
+    end
+    self.startupReady = true
+    return true
+end
+
+function Integration:Initialize()
+    if self.initialized then return true end
+    if Addon.startupBlocked == "wrong-target" then return nil, Addon:GetStartupText("WRONG_MISTS") end
+    local Core, coreErr = self:CheckCore()
+    if not Core then return nil, coreErr end
     Addon.Core = Core
     local function MoveCharacterData(oldID, newID)
         if Addon.Database:MoveCharacterData(oldID, newID) then Addon:NotifyChanged() end

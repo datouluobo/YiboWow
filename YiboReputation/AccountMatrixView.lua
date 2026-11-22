@@ -330,9 +330,11 @@ function Addon:RefreshMatrixView(parent, context)
     for index = #columns + 1, #parent.matrixHeaders do parent.matrixHeaders[index]:Hide() end
     local dataRowIndex = 0
     for rowIndex, entry in ipairs(display) do
-        local node, row = entry.node, parent.matrixRows[rowIndex] or CreateFrame("Button", nil, parent.matrixBody, "BackdropTemplate"); parent.matrixRows[rowIndex] = row; row:SetSize(tableWidth, Theme.Table.rowHeight); row:ClearAllPoints(); row:SetPoint("TOPLEFT", parent.matrixBody, "TOPLEFT", 0, -((rowIndex-1)*Theme.Table.rowHeight)); row:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8x8",edgeFile="Interface\\Buttons\\WHITE8x8",edgeSize=1}); row.matrixNode = node
+        local node, row = entry.node, parent.matrixRows[rowIndex] or CreateFrame("Button", nil, parent.matrixBody, "BackdropTemplate"); parent.matrixRows[rowIndex] = row; row:SetSize(tableWidth, Theme.Table.rowHeight); row:ClearAllPoints(); row:SetPoint("TOPLEFT", parent.matrixBody, "TOPLEFT", 0, -((rowIndex-1)*Theme.Table.rowHeight)); row:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8x8"}); row.matrixNode = node
+        -- Stacked rows share one pixel boundary: only the first row draws the top edge.
+        Theme:CreatePixelBorder(row, { color = Theme.Colors.matrixLine, sides = { top = rowIndex == 1, right = true, bottom = true, left = true } })
         if node.kind == "faction" then dataRowIndex = dataRowIndex + 1 end
-        local grouped = #node.children > 0; local shade = node.kind == "expansion" and Theme.Colors.selected or (node.kind == "category" and Theme.Colors.toolbar or Theme:GetDataRowColor(dataRowIndex)); row:SetBackdropColor(shade[1],shade[2],shade[3],shade[4] or 1); Theme:ApplyDataColumnTints(row, columns, Theme.Table.rowHeight); row:SetBackdropBorderColor(Theme.Colors.matrixLine[1],Theme.Colors.matrixLine[2],Theme.Colors.matrixLine[3],Theme.Colors.matrixLine[4])
+        local grouped = #node.children > 0; local shade = node.kind == "expansion" and Theme.Colors.selected or (node.kind == "category" and Theme.Colors.toolbar or Theme:GetDataRowColor(dataRowIndex)); row:SetBackdropColor(shade[1],shade[2],shade[3],shade[4] or 1); Theme:ApplyDataColumnTints(row, columns, Theme.Table.rowHeight)
         row.cells = row.cells or {}; row.icon = row.icon or row:CreateTexture(nil,"ARTWORK")
         if not row.star then
             row.star = Theme:CreateButton(row, starWidth, "☆", "secondary"); row.star:SetHeight(20); row.star:EnableMouse(true); row.star:RegisterForClicks("LeftButtonUp"); row.star:SetFrameLevel(row:GetFrameLevel() + 5)

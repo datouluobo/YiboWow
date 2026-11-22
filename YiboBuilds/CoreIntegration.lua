@@ -8,6 +8,8 @@ function Integration:Initialize()
     if not Addon:HasCompatibleCore() or not Addon.AccountPage then
         return nil, Addon.STARTUP_REQUIREMENTS
     end
+    -- Defaults are filled only after client, Core readiness, API and capabilities passed.
+    Addon:EnsureDB()
     Addon.Core = Core
     local registered, err = Core:RegisterAddon(Addon.NAME, { version = Addon.VERSION, requiredAPI = Addon.REQUIRED_CORE_API })
     if not registered then return nil, err end

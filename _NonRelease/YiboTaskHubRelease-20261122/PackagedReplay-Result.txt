@@ -1,0 +1,52 @@
+﻿# YiboTaskHub 0.7.0 packaged replay 2026-11-22 (rebuilt after wrong-target fix)
+# package SHA256 AC3B3ED51B54AF42A10CFB72C7CD70910ABCB966C317AA06707406A69173F8C7; Clean-Mists / Overlay-Mists re-extracted from it; overlay start = Builds/Archive previous release
+## rebuilt package (clean + overlay), extended Spec (wrongTargetPatterns)
+YiboTaskHub: 26 boots
+  section clean/api13                  13 passed, 0 failed
+  section clean/install                41 passed, 0 failed
+  section clean/wrong-target           63 passed, 0 failed
+  section overlay/api13                13 passed, 0 failed
+  section overlay/install              41 passed, 0 failed
+  section overlay/wrong-target         63 passed, 0 failed
+YiboTaskHub packaged replay: 234 passed, 0 failed
+exit=0
+
+## superseded package (SHA256 in Superseded/) with the same extended Spec, before rebuild (for comparison)
+YiboTaskHub: 26 boots
+  section clean/api13                  13 passed, 0 failed
+  section clean/install                41 passed, 0 failed
+  section clean/wrong-target           30 passed, 33 failed
+  section overlay/api13                13 passed, 0 failed
+  section overlay/install              41 passed, 0 failed
+  section overlay/wrong-target         30 passed, 33 failed
+YiboTaskHub packaged replay: 168 passed, 66 failed
+exit=1
+
+## previous release package, wrong-target only (comparison, original Spec; previous release predates the fix)
+YiboTaskHub: 6 boots
+  section previous-release/install     2 passed, 0 failed
+  section previous-release/wrong-target 13 passed, 11 failed
+YiboTaskHub packaged replay: 15 passed, 11 failed
+  FAIL previous-release/wrong-Forever/none: addon not initialized
+  FAIL previous-release/wrong-Forever/none: no Core registration {["CleanupOwner"]=0,["RegisterAddon"]=1,["RegisterBusinessEntry"]=1,["RegisterPage"]=1}
+  FAIL previous-release/wrong-Forever/none: saved variables untouched
+  FAIL previous-release/wrong-Forever/previous: addon not initialized
+  FAIL previous-release/wrong-Forever/previous: no Core registration {["CleanupOwner"]=0,["RegisterAddon"]=1,["RegisterBusinessEntry"]=1,["RegisterPage"]=1}
+  FAIL previous-release/wrong-Retail/none: addon not initialized
+  FAIL previous-release/wrong-Retail/none: no Core registration {["CleanupOwner"]=0,["RegisterAddon"]=1,["RegisterBusinessEntry"]=1,["RegisterPage"]=1}
+  FAIL previous-release/wrong-Retail/none: saved variables untouched
+  FAIL previous-release/wrong-Retail/previous: addon not initialized
+  FAIL previous-release/wrong-Retail/previous: no Core registration {["CleanupOwner"]=0,["RegisterAddon"]=1,["RegisterBusinessEntry"]=1,["RegisterPage"]=1}
+  FAIL previous-release/wrong-Forever/mists-core/none: saved variables untouched
+exit=1
+
+## printed messages, rebuilt Clean package (no saved store; SV=false means the store was not created)
+YiboTaskHub	Forever	Core-Forever	zhCN	SV=false
+   |cff20e070[Yibo]|r 请安装 YiboTaskHub 熊猫人之谜版本。行动中心已停止，未改动存档。
+YiboTaskHub	Retail	Core-Retail	enUS	SV=false
+   |cff20e070[Yibo]|r Install the YiboTaskHub package for Mists. Action Hub stopped without changing saved data.
+YiboTaskHub	Forever	Core-Mists	zhCN	SV=false
+   |cff20e070[Yibo]|r 核心：Core 未启动：客户端与加载清单不匹配，请安装对应客户端的 Core。
+   |cff20e070[Yibo]|r 请安装 YiboTaskHub 熊猫人之谜版本。行动中心已停止，未改动存档。
+YiboTaskHub	Mists	Core-Mists-API13	enUS	SV=false
+   |cff20e070[Yibo]|r Action Hub: Upgrade YiboCore to 1.13.0 / API 14 and ensure localization:1, pixel-line:1 and the Action Hub capabilities are available.

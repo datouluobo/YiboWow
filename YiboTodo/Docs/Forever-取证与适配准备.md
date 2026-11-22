@@ -42,3 +42,7 @@
 ## 验证与后续门槛
 
 本轮新增探针72项离线模拟、3份Lua语法通过；正式Todo源码未变化，没有新业务回归结论。新增探针实机未运行，专业诊断、冷却变化、跨周期、重载/完整退出恢复均待集中采样。收到满足最小范围的样本后再建立正式Forever实现及相应离线测试；此状态不是“开发完成”“测试通过”或“可发布”。
+
+## 像素线宽接入（API 14 / pixel-line:1，2026-11-22）
+
+正式 Mists 账号页（`AccountPage.lua`）已迁到 Core 像素线：数据行 `ROW_GAP = 0` 相互贴合，改为仅填充背景加 `CreatePixelBorder`（首行画顶边，其余行只画左右与底边），相邻行共用一条线；账号共享行位于首行正上方，只画顶边与左右边；项目图标框与当前角色可执行描边改用 `ApplyPixelBackdrop`。最低 Core 提高到 API 14 并要求 `pixel-line:1`、`ApplyPixelBackdrop`、`CreatePixelBorder`，`ERROR.CORE_REQUIRED` 中英文同步更新。上文 Forever 适配的 Core 基线随之从 API13 改为 API14；Forever 实现尚未建立，本条不代表 Forever 已接入。

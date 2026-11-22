@@ -1,0 +1,9 @@
+## Interface: 120105
+## Title: |cff20e070[Yibo]|r YiboCore Pixel Line Probe
+## Notes: Non-release physical-pixel line probe for YiboCore pixel-line:1.
+## Author: YiboSoft
+## Version: 0.1.0
+## SavedVariables: YiboCorePixelLineProbeDB
+## X-Yibo-Target: Retail
+
+Probe.lua

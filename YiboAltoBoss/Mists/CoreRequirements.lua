@@ -11,15 +11,18 @@ local required = {
     { "localization", 1 }, { "characters", 1 }, { "character-identity", 1 },
     { "character-name-format", 1 }, { "basic-input", 1 }, { "account-view", 2 },
     { "account-surface-budget", 2 }, { "account-preview-field-groups", 1 }, { "account-entry", 2 }, { "character-cleanup", 1 }, { "level-filter", 1 },
+    { "pixel-line", 1 },
 }
-local ready = Core and Core.CheckAPIVersion and Core:CheckAPIVersion(13)
+local ready = Core and Core.CheckAPIVersion and Core:CheckAPIVersion(14)
     and Core.HasCapability and Core.IsInitialized and Core:IsInitialized()
     and Core.ItemConfirmation and type(Core.ItemConfirmation.Show) == "function"
     and Core.Calendar and type(Core.Calendar.ReadDay) == "function"
     and Core.Locale and type(Core.Locale.Register) == "function" and type(Core.Locale.Get) == "function"
     and Core.Characters and type(Core.Characters.Get) == "function"
     and type(Core.Characters.FormatName) == "function" and type(Core.Characters.ResolveLegacyKey) == "function"
-    and Core.UITheme and type(Core.UITheme.CreateInput) == "function"
+    and Core.UITheme and type(Core.UITheme.CreateInput) == "function" and type(Core.UITheme.CreatePixelBorder) == "function"
+    and type(Core.UITheme.ApplyPixelBackdrop) == "function" and type(Core.UITheme.ApplyPixelRule) == "function"
+    and type(Core.UITheme.GetPixelSize) == "function" and type(Core.UITheme.SetPixelAnchor) == "function"
     and Core.AccountView and type(Core.AccountView.RegisterPage) == "function"
     and type(Core.AccountView.GetScrollSurfaceWidth) == "function"
     and Core.Entry and type(Core.Entry.RegisterBusinessEntry) == "function"

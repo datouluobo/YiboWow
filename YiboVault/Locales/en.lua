@@ -44,7 +44,7 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["FOREVER.GUILD_SLOT"] = "Guild tab %d / Slot %d",
         ["FOREVER.GUILD_CACHE"] = "Includes guild-bank snapshots observed by this character",
         ["FOREVER.STATUS_empty"] = "Scan complete: no items",
-        ["BOOT.CORE_REQUIRED"] = "Requires a matching YiboCore build with API 13 and the declared Vault capabilities. Please upgrade Core.",
+        ["BOOT.CORE_REQUIRED"] = "Requires a matching YiboCore build with API 14 and the declared Vault capabilities. Please upgrade Core.",
         ["FOREVER.STORE_MISMATCH"] = "Vault could not start: the saved data format or client scope does not match. Existing data was preserved.",
         ["FOREVER.CLIENT_MISMATCH"] = "Vault could not start: install the matching client build.",
         ["FOREVER.NOT_READY"] = "Vault has not started. Check the startup message and upgrade Core if required.",

@@ -1,0 +1,4 @@
+## Interface: 50504, 16001, 120105
+## Title: |cff20e070[Yibo]|r YiboCore Pixel Line Probe
+## X-Yibo-Target: Hint
+Hint.lua

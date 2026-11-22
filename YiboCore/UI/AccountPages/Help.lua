@@ -44,7 +44,7 @@ local function CreateHelp(parent)
 
     for index, operation in ipairs(OPERATIONS) do
         local card = CreateFrame("Frame", nil, parent.content, "BackdropTemplate")
-        card:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+        Theme:ApplyPixelBackdrop(card)
         card:SetBackdropColor(COLORS.panel[1], COLORS.panel[2], COLORS.panel[3], 0.72)
         card:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.58)
 

@@ -43,7 +43,7 @@ local function Boot(saved,configure,defaultManifest,language)
     return e,c,e.YiboCrafting,fire,Flush,d
 end
 local e,c,a,fire,flush,d=Boot()
-Check(a.initialized and a.VERSION=="0.1.5" and c:IsInitialized() and c:CheckAPIVersion(13),"Crafting and compatible Core target manifests start")
+Check(a.initialized and a.VERSION=="0.2.0" and c:IsInitialized() and c:CheckAPIVersion(13),"Crafting and compatible Core target manifests start")
 Check(e.YiboCraftingDB.sentinel=="mists" and not e.YiboCraftingDB.characters,"Mists store untouched")
 Check(not a.RecipeCatalog and not a.GoalTargets and not a.RecipeStateScanner,"MoP catalog and spell assumptions excluded")
 fire("PLAYER_ENTERING_WORLD"); flush()

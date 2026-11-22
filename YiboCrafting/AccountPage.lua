@@ -58,9 +58,15 @@ local function SetColor(text, color)
     text:SetTextColor(color[1], color[2], color[3])
 end
 
+-- Width of the panels' Core pixel border in UI units.  Content sits exactly
+-- inside it, so insets use one border and budgets use two.
+local function BorderPixel(panel)
+    return Theme:GetPixelSize(panel, 1)
+end
+
 local function Panel(parent)
     local frame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    frame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Theme:ApplyPixelBackdrop(frame)
     frame:SetBackdropColor(C.panel[1], C.panel[2], C.panel[3], C.panel[4])
     frame:SetBackdropBorderColor(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
     return frame
@@ -291,9 +297,10 @@ local function Row(parent, index)
     row.name = Label(row)
     row.meta = Label(row, Theme.Font.assist, C.muted)
     row.cells = {}
+    -- The row's only line is its bottom rule; Core keeps it one physical pixel.
     row.rule = row:CreateTexture(nil, "OVERLAY")
-    row.rule:SetColorTexture(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
-    row.rule:SetHeight(1); row.rule:SetPoint("BOTTOMLEFT"); row.rule:SetPoint("BOTTOMRIGHT")
+    row.rule:SetPoint("BOTTOMLEFT"); row.rule:SetPoint("BOTTOMRIGHT")
+    Theme:ApplyPixelRule(row.rule, "horizontal", { color = C.matrixLine })
     parent.rows[index] = row
     return row
 end
@@ -324,10 +331,16 @@ local function SetProductHit(row, entry, iconOffset, iconSize, onClick)
     hit:Show()
 end
 
-local function PositionScroll(panel, top)
-    panel.scroll:ClearAllPoints()
-    panel.scroll:SetPoint("TOPLEFT", panel, "TOPLEFT", 1, -top)
-    panel.scroll:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -1, 1)
+-- `top` is the content offset below the panel's top border; pass
+-- `absoluteTop` when it is measured from the panel edge (title areas).
+-- Core re-runs the anchor after every pixel-size change.
+local function PositionScroll(panel, top, absoluteTop)
+    Theme:SetPixelAnchor(panel.scroll, function()
+        local px = BorderPixel(panel)
+        panel.scroll:ClearAllPoints()
+        panel.scroll:SetPoint("TOPLEFT", panel, "TOPLEFT", px, -(absoluteTop and top or top + px))
+        panel.scroll:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -px, px)
+    end)
 end
 
 -- Scroll over the complete catalog while retaining only enough row frames for
@@ -351,6 +364,7 @@ local function RenderVisibleRows(panel, items, totalHeight, paint)
             if item.top + item.height <= offset then low = middle + 1
             else high = middle - 1 end
         end
+        if panel.onVisibleRange then panel.onVisibleRange(low) end
         local last = low - 1
         for index = low, #panel.visibleItems do
             local item = panel.visibleItems[index]
@@ -441,6 +455,7 @@ function Page:Create(parent)
         end)
     end
     ui.matrix = Panel(parent)
+    self.matrixPanel = ui.matrix -- Pixel-size reference for surface metrics.
     ui.matrix.header = CreateFrame("Frame", nil, ui.matrix)
     ui.matrix.header.title = Label(ui.matrix.header, Theme.Font.assist, C.muted)
     ui.matrix.header.cells = {}
@@ -528,16 +543,13 @@ local function ToolbarHeight(context, mode, width)
         + Field(L("SELECT_PROFESSION"), 88) + Field(L("HAS_UNLEARNED"), 88) + modes + (mode == "recipes" and 34 or 28) + 12
     return fields + 120 > width and 70 or 32
 end
+-- Profession names are shown in the recipe column header, not as rows.
 local function MatrixBodyHeight(entries)
-    local height, last = 0, nil
-    for _, entry in ipairs(entries) do
-        height = height + H + (entry.professionID ~= last and 26 or 0); last = entry.professionID
-    end
-    return height
+    return #entries * H
 end
-local function MatrixFixedHeight(context, width, headerHeight)
+local function MatrixFixedHeight(context, width, headerHeight, px)
     local inset = Theme:GetMatrixInsets(false)
-    return inset.top + inset.bottom + ToolbarHeight(context, "recipes", width) + 5 + (headerHeight or 42) + 2 + 32
+    return inset.top + inset.bottom + ToolbarHeight(context, "recipes", width) + 5 + (headerHeight or 42) + 2 * px + 32
 end
 function Page:GetMatrixEntries(context, entries, state, toolbarHeight)
     local characters = self:CharactersForProfession(context.characters, state.professionFilter)
@@ -558,7 +570,8 @@ function Page:GetMatrixSurfaceMetrics(context)
     local characters = self:CharactersForProfession(context.characters, state.professionFilter)
     local recipeWidth = math.max(225, Theme:GetIconTextColumnWidth(23, Theme.Font.body, L("RECIPE_NAME"), 8))
     local inset = Theme:GetMatrixInsets(false)
-    local naturalWidth = math.max(760, recipeWidth + MatrixCharacterWidth() * #characters + inset.left + inset.right + 2)
+    local px = BorderPixel(self.matrixPanel)
+    local naturalWidth = math.max(760, recipeWidth + MatrixCharacterWidth() * #characters + inset.left + inset.right + 2 * px)
     local width = math.max(1, math.min(naturalWidth, context.surfaceAvailableWidth or naturalWidth) - inset.left - inset.right)
     local snapshot = context.craftingSurfaceSnapshot
     if not snapshot then
@@ -566,7 +579,7 @@ function Page:GetMatrixSurfaceMetrics(context)
         snapshot = { entries = entries, professions = professions, names = names }; context.craftingSurfaceSnapshot = snapshot
     end
     local entries = self:GetMatrixEntries(context, snapshot.entries, state, ToolbarHeight(context, "recipes", width))
-    local fixedHeight = MatrixFixedHeight(context, width)
+    local fixedHeight = MatrixFixedHeight(context, width, nil, px)
     return { minContentWidth = 760, naturalContentWidth = naturalWidth,
         minContentHeight = context.preview and 180 or 470,
         naturalContentHeight = context.preview and math.min(360, context.surfaceAvailableHeight or 360) or 640,
@@ -644,9 +657,8 @@ end
 
 local function RenderSimpleList(panel, entries, selected, width, click)
     panel.title:SetPoint("TOPLEFT", panel, "TOPLEFT", 12, -11)
-    panel.scroll:ClearAllPoints(); panel.scroll:SetPoint("TOPLEFT", panel, "TOPLEFT", 1, -42)
-    panel.scroll:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -1, 1)
-    width = math.max(1, width - 2)
+    PositionScroll(panel, 42, true)
+    width = math.max(1, width - 2 * BorderPixel(panel))
     for index, entry in ipairs(entries) do
         local row = Row(panel, index)
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", panel.body, "TOPLEFT", 0, -(index - 1) * 38)
@@ -731,10 +743,11 @@ function Page:RenderMatrix(parent, context, entries, names)
     local characters = context.characters or {}
     local showNames = not context.GetFieldVisible or context:GetFieldVisible("recipe-name")
     local showStates = not context.GetFieldVisible or context:GetFieldVisible("recipe-state")
-    PositionScroll(panel, 43)
+    PositionScroll(panel, 42)
     local inset = Theme:GetMatrixInsets(false)
-    local fixedHeight = MatrixFixedHeight(context, ui.matrixWidth)
-    local width = math.max(1, Core.AccountView:GetScrollSurfaceWidth(context, parent, MatrixBodyHeight(entries), fixedHeight) - inset.left - inset.right - 2)
+    local px = BorderPixel(panel)
+    local fixedHeight = MatrixFixedHeight(context, ui.matrixWidth, nil, px)
+    local width = math.max(1, Core.AccountView:GetScrollSurfaceWidth(context, parent, MatrixBodyHeight(entries), fixedHeight) - inset.left - inset.right - 2 * px)
     local recipeWidth = math.max(225, Theme:GetIconTextColumnWidth(23, Theme.Font.body, L("RECIPE_NAME"), 8))
     local characterWidth = Core.AccountView:FitRepeatedColumnWidth(
         width, recipeWidth, #characters, MatrixCharacterWidth(), MatrixCharacterMinWidth())
@@ -742,15 +755,21 @@ function Page:RenderMatrix(parent, context, entries, names)
     local displayCharacters = #entries > 0 and showStates and shown or {}
     local headerHeight = pageInfo and pageInfo.pages and pageInfo.pages > 1 and 72 or 42
     if headerHeight > 42 then
-        fixedHeight = MatrixFixedHeight(context, ui.matrixWidth, headerHeight)
-        width = math.max(1, Core.AccountView:GetScrollSurfaceWidth(context, parent, MatrixBodyHeight(entries), fixedHeight) - inset.left - inset.right - 2)
+        fixedHeight = MatrixFixedHeight(context, ui.matrixWidth, headerHeight, px)
+        width = math.max(1, Core.AccountView:GetScrollSurfaceWidth(context, parent, MatrixBodyHeight(entries), fixedHeight) - inset.left - inset.right - 2 * px)
         characterWidth = Core.AccountView:FitRepeatedColumnWidth(width, recipeWidth, #characters, MatrixCharacterWidth(), MatrixCharacterMinWidth())
         shown, pageInfo = Core.AccountView:GetColumnPage(ID, "characters", characters, width, recipeWidth, characterWidth)
         displayCharacters = #entries > 0 and showStates and shown or {}
     end
-    PositionScroll(panel, headerHeight + 1)
-    panel.header:ClearAllPoints(); panel.header:SetPoint("TOPLEFT", panel, "TOPLEFT", 1, -1)
-    panel.header:SetHeight(headerHeight); panel.header:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -1, -1)
+    PositionScroll(panel, headerHeight)
+    -- The header and the scroll share the same left border inset, so the
+    -- outline's viewport x below stays equal to the header cell's x.
+    Theme:SetPixelAnchor(panel.header, function()
+        local inner = BorderPixel(panel)
+        panel.header:ClearAllPoints(); panel.header:SetPoint("TOPLEFT", panel, "TOPLEFT", inner, -inner)
+        panel.header:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -inner, -inner)
+    end)
+    panel.header:SetHeight(headerHeight)
     panel.header.title:ClearAllPoints(); panel.header.title:SetPoint("BOTTOMLEFT", panel.header, "BOTTOMLEFT", 8, 0)
     panel.header.title:SetSize(math.max(1, recipeWidth - 8), 42)
     panel.header.title:SetText(L("RECIPE_HEADER"))
@@ -765,38 +784,43 @@ function Page:RenderMatrix(parent, context, entries, names)
     if not panel.gutterBound then panel.scroll:BindScrollbarGutter(panel.header); panel.gutterBound = true end
     panel.currentOutline = panel.currentOutline or Theme:CreateCurrentCharacterOutline(panel)
     local currentID = Core.Characters:GetCurrentID()
-    local currentX
+    local currentX, currentHeader
     for index, character in ipairs(displayCharacters) do
-        if character.id == currentID then currentX = recipeWidth + (index - 1) * characterWidth end
-    end
-    Theme:UpdateCurrentCharacterColumnOutline(panel.currentOutline, panel.header, panel.scroll,
-        currentX, characterWidth, currentX ~= nil)
-    local items, top, lastProfession = {}, 0, nil
-    for _, entry in ipairs(entries) do
-        if entry.professionID ~= lastProfession then
-            items[#items + 1] = { kind = "group", name = ProfessionName(entry.professionID, names), top = top, height = 26 }
-            top = top + 26
-            lastProfession = entry.professionID
+        if character.id == currentID then
+            currentX, currentHeader = recipeWidth + (index - 1) * characterWidth, panel.header.cells[index]
         end
-        items[#items + 1] = { kind = "recipe", entry = entry, top = top, height = H }
+    end
+    -- The header strip is taller than the character cells (pager row), so the
+    -- outline starts at the current character's own header cell.
+    Theme:UpdateCurrentCharacterColumnOutline(panel.currentOutline, currentHeader, panel.scroll,
+        0, characterWidth, currentX ~= nil, currentX)
+    -- Profession names live in the recipe column header instead of taking a
+    -- separate row.  The header follows the profession of the first visible
+    -- row; when several professions are listed, the first recipe of each
+    -- profession also carries a small profession tag.
+    local items, top, lastProfession, professionCount = {}, 0, nil, 0
+    for _, entry in ipairs(entries) do
+        local first = entry.professionID ~= lastProfession
+        if first then lastProfession = entry.professionID; professionCount = professionCount + 1 end
+        items[#items + 1] = { kind = "recipe", entry = entry, top = top, height = H, professionStart = first }
         top = top + H
     end
+    local function SetProfessionHeader(firstIndex)
+        local item = items[firstIndex] or items[1]
+        local name = item and ProfessionName(item.entry.professionID, names)
+        panel.header.title:SetText(name and L("RECIPE_HEADER_PROFESSION", name) or L("RECIPE_HEADER"))
+    end
+    panel.onVisibleRange = SetProfessionHeader
+    SetProfessionHeader(1)
     panel.contentWidth = width
     RenderVisibleRows(panel, items, top, function(row, item, index)
         row.meta:Hide()
-        if item.kind == "group" then
-            Theme:ApplyDataColumnTints(row, {}, H)
-            row:SetBackdropColor(C.panel[1], C.panel[2], C.panel[3], C.panel[4])
-            row.icon:Hide()
-            if row.iconHit then row.iconHit:Hide() end
-            row.name:ClearAllPoints(); row.name:SetPoint("LEFT", row, "LEFT", 9, 0)
-            row.name:SetWidth(recipeWidth - 18); row.name:SetText(item.name); SetColor(row.name, C.muted)
-            for _, cell in ipairs(row.cells) do cell:Hide() end
-            if row.nameHit then row.nameHit:Hide() end
-            if Core.BusinessItemActions then Core.BusinessItemActions:Unbind(row) end
-            for _, hit in ipairs(row.goalHits or {}) do hit:Hide() end
-            row:SetScript("OnEnter", nil); row:SetScript("OnLeave", nil); row:SetScript("OnClick", nil)
-            return
+        local tag = professionCount > 1 and item.professionStart and ProfessionName(item.entry.professionID, names)
+        local tagWidth = 0
+        if tag then
+            row.meta:ClearAllPoints(); row.meta:SetPoint("RIGHT", row, "LEFT", recipeWidth - 6, 0)
+            row.meta:SetText(tag); SetColor(row.meta, C.muted); row.meta:SetShown(showNames)
+            tagWidth = math.ceil((row.meta:GetStringWidth() or 0) + 6)
         end
         local entry = item.entry
         local columnWidths = {}
@@ -809,7 +833,7 @@ function Page:RenderMatrix(parent, context, entries, names)
         row.icon:SetTexture(entry.icon or "Interface\\Icons\\INV_Misc_QuestionMark"); row.icon:Show()
         local actionPadding = Addon.GoalTargets and Addon.GoalTargets.ref and 18 or 0
         row.name:ClearAllPoints(); row.name:SetPoint("LEFT", row.icon, "RIGHT", 6 + actionPadding, 0)
-        row.name:SetWidth(recipeWidth - 36 - 2 * actionPadding); row.name:SetText(entry.name); SetColor(row.name, C.text)
+        row.name:SetWidth(math.max(1, recipeWidth - 36 - 2 * actionPadding - tagWidth)); row.name:SetText(entry.name); SetColor(row.name, C.text)
         row.name:SetShown(showNames); row.icon:SetShown(showNames)
         for cellIndex, character in ipairs(shown) do
             local cell = row.cells[cellIndex] or Label(row, Theme.Font.assist, C.muted, "CENTER")
@@ -958,9 +982,8 @@ function Page:RenderProfessionMode(parent, context, entries, professionList, nam
     end
     ui.list.header:ClearAllPoints(); ui.list.header:SetPoint("TOPLEFT", ui.list, "TOPLEFT", 12, -12)
     ui.list.header:SetText(L("RECIPE_COUNT", #selected))
-    ui.list.scroll:ClearAllPoints(); ui.list.scroll:SetPoint("TOPLEFT", ui.list, "TOPLEFT", 1, -42)
-    ui.list.scroll:SetPoint("BOTTOMRIGHT", ui.list, "BOTTOMRIGHT", -1, 1)
-    local width = math.max(1, ui.listWidth - 2)
+    PositionScroll(ui.list, 42, true)
+    local width = math.max(1, ui.listWidth - 2 * BorderPixel(ui.list))
     local selectedEntry
     for _, entry in ipairs(selected) do
         if entry.key == ui.state.selectedRecipe then selectedEntry = entry; break end

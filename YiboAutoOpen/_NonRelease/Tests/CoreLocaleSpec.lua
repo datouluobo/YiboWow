@@ -40,7 +40,9 @@ YiboCore = {
         Size = {standard=28,compact=26}, Space = {xs=4},
         CreateText = function() return frame() end,
         CreateButton = function() return frame() end,
-        CreateDropdown = function() return frame() end },
+        CreateDropdown = function() return frame() end,
+        -- Core API14 pixel backdrop used by the real Input.lua.
+        ApplyPixelBackdrop = function(_, f) return f end },
 }
 caps.localization = 1
 dofile('YiboCore/UI/Input.lua')

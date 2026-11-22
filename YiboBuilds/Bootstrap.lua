@@ -3,18 +3,19 @@ local Addon = _G.YiboBuilds or {}
 _G.YiboBuilds = Addon
 
 Addon.NAME = ADDON_NAME or "YiboBuilds"
-Addon.VERSION = "1.5.3"
-Addon.REQUIRED_CORE_API = 13
+Addon.VERSION = "1.6.0"
+Addon.REQUIRED_CORE_API = 14
 Addon.PAGE_ID = "builds"
 Addon.ICON = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon"
 
 -- A bilingual bootstrap error is needed when the language service is unavailable.
-Addon.STARTUP_REQUIREMENTS = "YiboBuilds: 请升级 YiboCore 至 1.12.5 / API13 并启用所需能力。 / Upgrade YiboCore to 1.12.5 / API13 with the required capabilities."
+Addon.STARTUP_REQUIREMENTS = "YiboBuilds: 请升级 YiboCore 至 1.13.0 / API14 并启用所需能力。 / Upgrade YiboCore to 1.13.0 / API14 with the required capabilities."
 Addon.REQUIRED_CAPABILITIES = {
     ["localization"] = 1, ["character-name-format"] = 1, ["character-identity"] = 1,
     ["account-view"] = 2, ["account-entry"] = 2,
     ["character-cleanup"] = 2, ["business-providers"] = 1,
     ["business-item-actions"] = 1, ["characters"] = 1,
+    ["pixel-line"] = 1,
 }
 function Addon:HasCompatibleCore()
     if type(WOW_PROJECT_CAMELOT)=="number" and WOW_PROJECT_ID==WOW_PROJECT_CAMELOT then return false end
@@ -24,11 +25,24 @@ function Addon:HasCompatibleCore()
     for name, version in pairs(self.REQUIRED_CAPABILITIES) do
         if not core:HasCapability(name, version) then return false end
     end
+    local theme = core.UITheme
     return core.Characters and type(core.Characters.FormatName) == "function"
         and core.AccountView and core.Entry and core.Contracts and core.CharacterCleanup
         and core.BusinessItemActions and core.Defaults
+        and theme and type(theme.ApplyPixelBackdrop) == "function"
+        and type(theme.ApplyPixelRule) == "function" and type(theme.CreatePixelBorder) == "function"
 end
-if type(WOW_PROJECT_CAMELOT)=="number" and WOW_PROJECT_ID==WOW_PROJECT_CAMELOT then return end
+if type(WOW_PROJECT_CAMELOT)=="number" and WOW_PROJECT_ID==WOW_PROJECT_CAMELOT then
+    -- Wrong package for this client: one notice, before any frame, Core query or saved-variable access.
+    -- Core's language service is not consulted here, so the client locale picks the text.
+    if DEFAULT_CHAT_FRAME then
+        local locale = GetLocale and GetLocale()
+        DEFAULT_CHAT_FRAME:AddMessage("|cff20e070[Yibo]|r " .. ((locale == "zhCN" or locale == "zhTW")
+            and "YiboBuilds：这是熊猫人之谜版本，不适用于当前客户端。请安装与当前客户端对应的 YiboBuilds 版本。"
+            or "YiboBuilds: this is the Mists package and does not run on this client. Install the YiboBuilds package for your client."))
+    end
+    return
+end
 function Addon:T(key, ...)
     return _G.YiboCore.Locale:Get(self.NAME, key, ...)
 end
@@ -123,7 +137,7 @@ frame:RegisterEvent("PLAYER_LOGOUT")
 pcall(frame.RegisterEvent, frame, "GET_ITEM_INFO_RECEIVED")
 frame:SetScript("OnEvent", function(_, event, name, success)
     if event == "ADDON_LOADED" then
-        if name == ADDON_NAME then Addon:EnsureDB() end
+        -- The saved store is prepared only after CoreIntegration:Initialize has verified Core (PLAYER_LOGIN).
         return
     end
     if event ~= "PLAYER_LOGIN" and not (Addon.CoreIntegration and Addon.CoreIntegration.initialized) then return end

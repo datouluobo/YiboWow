@@ -260,7 +260,15 @@ function Test-YiboLuaEntries {
     if ($version -notmatch ('Lua ' + [regex]::Escape($LuaVersion) + '(?:\.|\s)')) { throw "Expected Lua $LuaVersion, found: $version" }
     foreach ($entry in $Entries) {
         if (-not $entry.Relative.EndsWith('.lua', [StringComparison]::OrdinalIgnoreCase)) { continue }
-        if ($null -ne $entry.Content) { $diagnostic = ($entry.Content | & $compiler.Source -p - 2>&1 | Out-String) }
+        if ($null -ne $entry.Content) {
+            # Piping into a native process depends on the host's $OutputEncoding
+            # and can prepend bytes luac rejects; compile a BOM-less temp file.
+            $temporary = [IO.Path]::Combine([IO.Path]::GetTempPath(), [IO.Path]::GetRandomFileName() + '.lua')
+            try {
+                [IO.File]::WriteAllText($temporary, [string]$entry.Content, (New-Object Text.UTF8Encoding($false)))
+                $diagnostic = (& $compiler.Source -p $temporary 2>&1 | Out-String)
+            } finally { Remove-Item -LiteralPath $temporary -Force -ErrorAction SilentlyContinue }
+        }
         else { $diagnostic = (& $compiler.Source -p $entry.Source 2>&1 | Out-String) }
         if ($LASTEXITCODE -ne 0) { throw "Lua syntax failed for $($entry.Relative): $diagnostic" }
     }

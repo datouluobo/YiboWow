@@ -49,9 +49,10 @@ function Integration:Initialize()
     if not (Core and Core.CheckAPIVersion and Core.AccountView and Core.Entry and Core.Characters) then
         return nil, YQB.T("CORE.UNAVAILABLE")
     end
-    local compatible = Core:CheckAPIVersion(13)
+    local compatible = Core:CheckAPIVersion(14)
     if not compatible then return nil, YQB.T("CORE.UPGRADE") end
     if not (Core.HasCapability and Core:HasCapability("localization", 1)
+        and Core:HasCapability("pixel-line", 1)
         and Core:HasCapability("character-name-format", 1)
         and Core:HasCapability("character-identity", 1)
         and Core:HasCapability("basic-input", 1)
@@ -61,11 +62,13 @@ function Integration:Initialize()
         and type(Core.AccountView.GetScrollSurfaceWidth) == "function"
         and Core.RegisterAddon and Core.AccountView.RegisterPage
         and Core.Entry.RegisterBusinessEntry and Core.Characters.FormatName
-        and Core.UITheme.CreateInput) then
+        and Core.UITheme.CreateInput
+        and type(Core.UITheme.ApplyPixelBackdrop) == "function"
+        and type(Core.UITheme.CreatePixelBorder) == "function") then
         return nil, YQB.T("CORE.UPGRADE")
     end
 
-    local addon, addonError = Core:RegisterAddon("YiboQuestBlocker", { version = "3.1.1", requiredAPI = 13 })
+    local addon, addonError = Core:RegisterAddon("YiboQuestBlocker", { version = "3.2.0", requiredAPI = 14 })
     if not addon then return nil, addonError end
     local database = YQB.GetDatabase()
     database.filters = database.filters or {}

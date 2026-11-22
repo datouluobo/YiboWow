@@ -12,15 +12,21 @@ for _, lang in ipairs({ "zh", "en" }) do
     dofile("YiboBuilds/Data/SocketEffectCatalog.lua")
     dofile("YiboBuilds/GoalTargets.lua")
     core.Characters.Get = function(_, id) return id == "Player:1" and {id=id} end
-    for _, failure in ipairs({ "localization", "character-name-format", "character-identity", "account-view", "account-entry", "character-cleanup", "business-providers", "business-item-actions", "characters" }) do
+    for _, failure in ipairs({ "localization", "character-name-format", "character-identity", "account-view", "account-entry", "character-cleanup", "business-providers", "business-item-actions", "characters", "pixel-line" }) do
         host.missing = failure
         local ok, err = addon.CoreIntegration:Initialize()
-        Check(not ok and err:find("API13", 1, true), "missing capability must show upgrade prompt: " .. failure)
+        Check(not ok and err:find("API14", 1, true), "missing capability must show upgrade prompt: " .. failure)
         Check(host.pages == 0 and host.ownerRegistrations == 0, "missing capability must stop before writes")
     end
     host.missing, host.api = nil, 12
     Check(not addon.CoreIntegration:Initialize() and host.pages == 0, "old API must stop")
-    host.api, host.ready = 13, false
+    host.api = 13
+    Check(not addon.CoreIntegration:Initialize() and host.pages == 0, "API13 Core without pixel-line must stop")
+    local applyBackdrop = core.UITheme.ApplyPixelBackdrop
+    host.api, core.UITheme.ApplyPixelBackdrop = 14, nil
+    Check(not addon.CoreIntegration:Initialize() and host.pages == 0, "missing pixel-line method must stop")
+    core.UITheme.ApplyPixelBackdrop = applyBackdrop
+    host.api, host.ready = 14, false
     Check(not addon.CoreIntegration:Initialize() and host.pages == 0, "unready Core must stop")
     host.ready = true
     Check(addon.CoreIntegration:Initialize(), "current Core must initialize")
@@ -73,7 +79,7 @@ for _, lang in ipairs({ "zh", "en" }) do
     Check(not db.characters.future, "future timestamp cannot bypass deletion")
 end
 -- Check TOC-order loading stops before localized UI evaluation on old Core.
-local host = Setup("en"); host.api = 12
+local host = Setup("en"); host.api = 13
 YiboBuilds.AccountPage = nil; dofile("YiboBuilds/AccountPage.lua")
 Check(YiboBuilds.AccountPage == nil, "old Core must not build module metadata")
 print("Core13Spec passed: " .. checks .. " checks")

@@ -40,7 +40,7 @@ local function RegisterResources(Core)
         ["MAINTENANCE_UNAVAILABLE"] = "路线维护功能当前不可用。",
         ["BUSINESS_SETTINGS"] = "业务设置",
         ["MAINTENANCE_OPEN"] = "前往路线维护",
-        ["MAINTENANCE_STATUS"] = "路线维护可修改本地路线数据。Core：API13；业务页：%s。",
+        ["MAINTENANCE_STATUS"] = "路线维护可修改本地路线数据。Core：API14；业务页：%s。",
         ["TITLE"] = "隐兽寻踪",
         ["ROUTES_ON"] = "宠物路线: 开",
         ["ROUTES_OFF"] = "宠物路线: 关",
@@ -49,7 +49,7 @@ local function RegisterResources(Core)
         ["STATUS_ON"] = "当前状态: 已开启",
         ["STATUS_OFF"] = "当前状态: 已关闭",
         ["MINIMAP_UNAVAILABLE"] = "|cff20e070[Yibo]|r 隐兽寻踪：小地图调试信息不可用",
-        ["CORE_REQUIRED"] = "|cff20e070[Yibo]|r 隐兽寻踪：路线维护需要 YiboCore API13 及所需公共能力，请安装或升级匹配客户端的 Core。",
+        ["CORE_REQUIRED"] = "|cff20e070[Yibo]|r 隐兽寻踪：路线维护需要 YiboCore API14 及所需公共能力，请安装或升级匹配客户端的 Core。",
         ["COMMAND_HELP"] = "|cff20e070[Yibo]|r 隐兽寻踪：用法: /ybp, /ybp show, /ybp hide, /ybp stable, /ybp debug, /ybp mmdebug",
         ["TAB_CALIBRATE"] = "路线校准",
         ["TAB_FUSION"] = "融合工作台",
@@ -224,7 +224,7 @@ local function RegisterResources(Core)
         ["MAINTENANCE_UNAVAILABLE"] = "Route maintenance is unavailable.",
         ["BUSINESS_SETTINGS"] = "Business settings",
         ["MAINTENANCE_OPEN"] = "Open maintenance",
-        ["MAINTENANCE_STATUS"] = "Route maintenance edits local route data. Core: API13. Page: %s.",
+        ["MAINTENANCE_STATUS"] = "Route maintenance edits local route data. Core: API14. Page: %s.",
         ["TITLE"] = "Beast Paths",
         ["ROUTES_ON"] = "Pet routes: On",
         ["ROUTES_OFF"] = "Pet routes: Off",
@@ -233,7 +233,7 @@ local function RegisterResources(Core)
         ["STATUS_ON"] = "Status: Enabled",
         ["STATUS_OFF"] = "Status: Disabled",
         ["MINIMAP_UNAVAILABLE"] = "|cff20e070[Yibo]|r Beast Paths: Minimap diagnostics unavailable",
-        ["CORE_REQUIRED"] = "|cff20e070[Yibo]|r Beast Paths: Route maintenance requires YiboCore API13 and its required capabilities. Install or upgrade Core for your client.",
+        ["CORE_REQUIRED"] = "|cff20e070[Yibo]|r Beast Paths: Route maintenance requires YiboCore API14 and its required capabilities. Install or upgrade Core for your client.",
         ["COMMAND_HELP"] = "|cff20e070[Yibo]|r Beast Paths: /ybp, /ybp show, /ybp hide, /ybp stable, /ybp debug, /ybp mmdebug",
         ["TAB_CALIBRATE"] = "Calibration",
         ["TAB_FUSION"] = "Route fusion",
@@ -395,7 +395,8 @@ function ns.Text(key, ...)
         return core.Locale:Get("YiboBeastPaths", key, ...)
     end
     -- Explicit standalone compatibility: Core is optional for map routes.
-    -- Hosted maintenance never initializes without the API13 contract.
+    -- Hosted maintenance never initializes without the API14 contract; this
+    -- locale gate stays at API13 because it only needs localization:1.
     local locale = GetLocale and GetLocale() or "enUS"
     local language = (locale == "zhCN" or locale == "zhTW") and "zh" or "en"
     local text = ns.LocaleResources[language][key] or ("[YiboBeastPaths:" .. key .. "]")

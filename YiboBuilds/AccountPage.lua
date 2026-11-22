@@ -29,42 +29,13 @@ local function PixelRound(value, frame)
         or (UIParent and UIParent.GetEffectiveScale and UIParent:GetEffectiveScale()) or 1
     return math.floor(value * scale + 0.5) / scale
 end
+-- Icon rims use Core pixel-line borders (API 14): exactly AUGMENT_EDGE_SIZE
+-- physical pixels, re-applied by Core when the UI scale changes.
 local function CreatePixelBorder(frame)
-    local border = {}
-    for _, edge in ipairs({ "top", "right", "bottom", "left" }) do
-        local texture = frame:CreateTexture(nil, "OVERLAY")
-        texture:SetDrawLayer("OVERLAY", 2)
-        texture:SetTexture("Interface\\Buttons\\WHITE8x8")
-        if edge == "top" then
-            texture:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-            texture:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
-            texture:SetHeight(PixelRound(AUGMENT_EDGE_SIZE, frame))
-        elseif edge == "right" then
-            texture:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
-            texture:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
-            texture:SetWidth(PixelRound(AUGMENT_EDGE_SIZE, frame))
-        elseif edge == "bottom" then
-            texture:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
-            texture:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
-            texture:SetHeight(PixelRound(AUGMENT_EDGE_SIZE, frame))
-        else
-            texture:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-            texture:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
-            texture:SetWidth(PixelRound(AUGMENT_EDGE_SIZE, frame))
-        end
-        border[edge] = texture
-    end
-    return border
+    return Theme:CreatePixelBorder(frame, { layer = "OVERLAY", sublevel = 2, pixels = AUGMENT_EDGE_SIZE })
 end
 local function SetPixelBorderColor(border, color)
-    for _, texture in pairs(border) do texture:SetVertexColor(color[1], color[2], color[3], 1) end
-end
-local function RefreshPixelBorder(border, frame)
-    local edgeSize = PixelRound(AUGMENT_EDGE_SIZE, frame)
-    for edge, texture in pairs(border) do
-        if edge == "top" or edge == "bottom" then texture:SetHeight(edgeSize)
-        else texture:SetWidth(edgeSize) end
-    end
+    border:SetColor(color[1], color[2], color[3], 1)
 end
 local SLOT_LABELS = {
     [INVSLOT_HEAD or 1] = Addon:T("UI.HEAD"), [INVSLOT_NECK or 2] = Addon:T("UI.NECK"), [INVSLOT_SHOULDER or 3] = Addon:T("UI.SHOULDER"),
@@ -248,12 +219,12 @@ local function CreateIconButton(parent)
     button.engineering.icon:SetAllPoints(); button.engineering.icon:SetTexture("Interface\\Icons\\Trade_Engineering")
     button.buckle = CreateFrame("Button", nil, parent, "BackdropTemplate")
     button.buckle:SetSize(16, 16)
-    button.buckle:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Theme:ApplyPixelBackdrop(button.buckle, { background = false })
     button.buckle.icon = button.buckle:CreateTexture(nil, "ARTWORK")
     button.buckle.icon:SetAllPoints(); button.buckle.icon:SetTexture("Interface\\Icons\\INV_Misc_EngGizmos_30")
     button.base = CreateFrame("Button", nil, parent, "BackdropTemplate")
     button.base:SetSize(16, 16)
-    button.base:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Theme:ApplyPixelBackdrop(button.base, { background = false })
     button.base.icon = button.base:CreateTexture(nil, "ARTWORK")
     button.base.icon:SetAllPoints(); button.base.icon:SetTexture("Interface\\Icons\\Trade_BlackSmithing")
     button:RegisterForClicks("LeftButtonUp")
@@ -523,7 +494,7 @@ local function CreatePreviewCell(parent)
     cell.itemFrame = CreateFrame("Frame", nil, cell, "BackdropTemplate")
     cell.itemFrame:SetSize(32, 32)
     cell.itemFrame:SetPoint("CENTER", 0, 0)
-    cell.itemFrame:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Theme:ApplyPixelBackdrop(cell.itemFrame, { background = false })
     cell.itemFrame:SetBackdropColor(0, 0, 0, 0)
     cell.itemFrame:SetBackdropBorderColor(0, 0, 0, 0)
     cell.itemFrame:EnableMouse(false)
@@ -589,7 +560,7 @@ end
 function Page.Create(parent)
     parent:HookScript("OnHide", function() parent.buildsGlyphProbeID = nil end)
     parent.buildsRoster = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    parent.buildsRoster:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Theme:ApplyPixelBackdrop(parent.buildsRoster)
     parent.buildsRoster:SetBackdropColor(C.nav[1], C.nav[2], C.nav[3], 0.95); parent.buildsRoster:SetBackdropBorderColor(C.lineSoft[1], C.lineSoft[2], C.lineSoft[3], C.lineSoft[4])
     parent.buildsRoster.title = Text(parent.buildsRoster, Theme.Font.section, C.text)
     parent.buildsRoster.title:SetPoint("TOPLEFT", Theme.Space.sm, -Theme.Space.sm); parent.buildsRoster.title:SetText(Addon:T("UI.CHARACTERS"))
@@ -602,7 +573,7 @@ function Page.Create(parent)
     parent.buildsRoster.rows = {}
 
     parent.buildsMain = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    parent.buildsMain:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Theme:ApplyPixelBackdrop(parent.buildsMain)
     parent.buildsMain:SetBackdropColor(C.panel[1], C.panel[2], C.panel[3], 0.96); parent.buildsMain:SetBackdropBorderColor(C.lineSoft[1], C.lineSoft[2], C.lineSoft[3], C.lineSoft[4])
 
     parent.buildsToolbar = CreateFrame("Frame", nil, parent.buildsMain)
@@ -616,7 +587,7 @@ function Page.Create(parent)
     parent.buildsToolbar.buildToggle:SetFrameLevel(parent.buildsMain:GetFrameLevel() + 10)
     parent.buildsToolbar.specIcon = CreateFrame("Button", nil, parent.buildsToolbar, "BackdropTemplate")
     parent.buildsToolbar.specIcon:SetSize(28, 28)
-    parent.buildsToolbar.specIcon:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Theme:ApplyPixelBackdrop(parent.buildsToolbar.specIcon, { background = false })
     parent.buildsToolbar.specIcon:SetBackdropBorderColor(C.accent[1], C.accent[2], C.accent[3], 1)
     parent.buildsToolbar.specIcon.texture = parent.buildsToolbar.specIcon:CreateTexture(nil, "ARTWORK")
     parent.buildsToolbar.specIcon.texture:SetPoint("TOPLEFT", 2, -2); parent.buildsToolbar.specIcon.texture:SetPoint("BOTTOMRIGHT", -2, 2)
@@ -673,7 +644,7 @@ function Page.Create(parent)
     detail:SetPoint("TOPLEFT", parent.buildsBuild, "TOPLEFT", 8, -8)
     detail:SetPoint("BOTTOMRIGHT", parent.buildsBuild, "BOTTOMRIGHT", -8, 8)
     detail:SetFrameLevel(parent.buildsBuild:GetFrameLevel() + 3)
-    detail:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    Theme:ApplyPixelBackdrop(detail)
     detail:SetBackdropColor(C.panel[1], C.panel[2], C.panel[3], 1)
     detail:SetBackdropBorderColor(C.lineSoft[1], C.lineSoft[2], C.lineSoft[3], 1)
     detail.itemIcon = detail:CreateTexture(nil, "ARTWORK")
@@ -767,7 +738,7 @@ local function BuildCell(parent, pool, index)
     row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
     row.rule = row:CreateTexture(nil, "BORDER")
     row.rule:SetColorTexture(C.matrixLine[1], C.matrixLine[2], C.matrixLine[3], C.matrixLine[4])
-    row.rule:SetPoint("BOTTOMLEFT"); row.rule:SetPoint("BOTTOMRIGHT"); row.rule:SetHeight(1)
+    row.rule:SetPoint("BOTTOMLEFT"); row.rule:SetPoint("BOTTOMRIGHT"); Theme:ApplyPixelRule(row.rule, "horizontal")
     row.icon = row:CreateTexture(nil, "ARTWORK"); row.icon:SetPoint("LEFT", 7, 0); row.icon:SetSize(34, 34)
     row.iconBorder = row:CreateTexture(nil, "BORDER")
     row.iconBorder:SetColorTexture(C.line[1], C.line[2], C.line[3], C.line[4])
@@ -1471,6 +1442,12 @@ local function RenderEquipmentDetail(parent, snapshot)
         local row = detail.rows[used]
         if not row then
             row = CreateFrame("Button", nil, detail.body, "BackdropTemplate")
+            -- Core keeps this backdrop at 1 physical pixel and rebuilds it on
+            -- scale changes, so plain rows hide it by color instead of
+            -- SetBackdrop(nil) (a later rebuild would bring it back).
+            Theme:ApplyPixelBackdrop(row)
+            row:SetBackdropColor(0, 0, 0, 0)
+            row:SetBackdropBorderColor(0, 0, 0, 0)
             row.text = Text(row, Theme.Font.meta, C.text)
             row.text:SetAllPoints(row)
             row.text:SetWordWrap(true)
@@ -1495,8 +1472,6 @@ local function RenderEquipmentDetail(parent, snapshot)
         row:SetHeight(rowHeight)
         local actionable = visual and visual.actionable
         if actionable then
-            row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
             row:SetBackdropColor(C.accent[1], C.accent[2], C.accent[3], visual.selected and 0.20 or 0.09)
             row:SetBackdropBorderColor(C.accent[1], C.accent[2], C.accent[3], visual.selected and 0.95 or 0.48)
             row:SetHeight(46)
@@ -1515,7 +1490,8 @@ local function RenderEquipmentDetail(parent, snapshot)
             row.action:SetText(visual.badge or Addon:T("UI.USE"))
             row.action:Show()
         else
-            row:SetBackdrop(nil)
+            row:SetBackdropColor(0, 0, 0, 0)
+            row:SetBackdropBorderColor(0, 0, 0, 0)
             row.subtitle:Hide()
             row.action:Hide()
             row.text:SetWordWrap(true)
@@ -1735,7 +1711,6 @@ local function PlaceEquipment(parent, snapshot)
         button.itemLevel:SetWidth(math.max(1, button:GetWidth() - 6))
         button.itemLevel:SetText(itemLevel and tostring(math.floor(itemLevel)) or "")
         button.itemLevel:SetShown(itemLevel and true or false)
-        RefreshPixelBorder(button.border, button)
         local itemBorderRed, itemBorderGreen, itemBorderBlue = ItemBorderColor(item)
         SetPixelBorderColor(button.border, { itemBorderRed, itemBorderGreen, itemBorderBlue })
         button.selection:SetShown(parent.buildsSelectedEquipmentSlot == slotID and item and item.itemLink and true or false)
@@ -1764,7 +1739,6 @@ local function PlaceEquipment(parent, snapshot)
             -- Socket indexes run from the equipment icon toward the model.
             if side == "left" or side == "weapon-right" then gem:SetPoint("TOPLEFT", button.socketRail, "TOPLEFT", (gemIndex - 1) * gemStep, 0)
             else gem:SetPoint("TOPRIGHT", button.socketRail, "TOPRIGHT", -(gemIndex - 1) * gemStep, 0) end
-            RefreshPixelBorder(gem.border, gem)
             gem.icon:ClearAllPoints()
             gem.icon:SetAllPoints(gem)
             gem.icon:SetTexCoord(unpack(GEM_ICON_TEXCOORD))

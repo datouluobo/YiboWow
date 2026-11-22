@@ -4,7 +4,8 @@ local globals = { IsSecret = "issecretvalue", CursorInfo = "GetCursorInfo", Clea
     PlayerName = "UnitName", AddonEnableLegacy = "GetAddOnEnableState", LooseIcons = "GetLooseMacroIcons",
     LooseItemIcons = "GetLooseMacroItemIcons", MacroIcons = "GetMacroIcons", MacroItemIcons = "GetMacroItemIcons",
     MacroCount = "GetNumMacroIcons", MacroIcon = "GetMacroIconInfo", Combat = "InCombatLockdown",
-    PopupShow = "StaticPopup_Show", PopupHide = "StaticPopup_Hide", StateDriver = "RegisterStateDriver" }
+    PopupShow = "StaticPopup_Show", PopupHide = "StaticPopup_Hide", StateDriver = "RegisterStateDriver",
+    PhysicalScreenSize = "GetPhysicalScreenSize" }
 Core.Client:ConfigureSurface("Forever", Core._private.CreateClientSurface(function(key)
     if key == "ItemEvent" then return "GET_ITEM_INFO_RECEIVED" end
     if key == "ItemInfo" then return GetItemInfo or (C_Item and C_Item.GetItemInfo) end

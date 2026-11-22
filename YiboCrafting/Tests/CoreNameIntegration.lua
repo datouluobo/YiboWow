@@ -10,7 +10,7 @@ local function Frame()
 end
 
 local login, printed, writes, registrations, requestedAPI
-local api, capability = 13, true
+local api, capability = 14, true
 local formatted = {}
 local function FormatName(_, identity, options)
     formatted[#formatted + 1] = { identity = identity, options = options }
@@ -32,6 +32,10 @@ local theme = {
     MeasureText = function() return 60 end,
     CreateText = function() return Frame() end,
     CreateMatrixHeader = function() return Frame() end,
+    ApplyPixelBackdrop = function(_, frame) return frame end,
+    ApplyPixelRule = function(_, texture) return texture end,
+    GetPixelSize = function(_, _, pixels) return pixels or 1 end,
+    SetPixelAnchor = function(_, _, anchor) if anchor then anchor() end end,
     SetCharacterHeader = function(_, header, character, context, options)
         headerCalls[#headerCalls + 1] = { header = header, character = character, context = context, options = options }
     end,
@@ -43,7 +47,7 @@ YiboCore = {
     Characters = { FormatName = FormatName },
     DataDomains = { Get = function() return { state = "known", data = { professions = { { id = 202 } } } } end },
     ItemResolver = {},
-    RegisterAddon = function(_, _, info) registrations = registrations + 1; assert(info.requiredAPI == 13); return true end,
+    RegisterAddon = function(_, _, info) registrations = registrations + 1; assert(info.requiredAPI == 14); return true end,
     Print = function(_, message) printed = message end,
     AccountView = {
         GetScrollSurfaceWidth = function(_, context, parent) return context.surfaceAvailableWidth or 600 end,
@@ -66,11 +70,13 @@ local function Reject()
     YiboCrafting.initialized = nil
     login(nil, "PLAYER_LOGIN")
     assert(not YiboCrafting.initialized and writes == 0 and registrations == 0)
-    assert(printed and printed:find("API13", 1, true))
-    assert(requestedAPI == 13)
+    assert(printed and printed:find("API14", 1, true))
+    assert(requestedAPI == 14)
 end
 api = 12; Reject()
-api = 13; capability = false; Reject()
+-- pixel-line migration: an API13 Core is refused.
+api = 13; Reject()
+api = 14; capability = false; Reject()
 capability = true; YiboCore.Characters.FormatName = nil; Reject()
 YiboCore.Characters.FormatName = FormatName; theme.SetCharacterHeader = nil; Reject()
 local createHeader = theme.CreateMatrixHeader
@@ -85,7 +91,7 @@ assert(YiboCrafting:Initialize() == nil and writes == 0, "Core readiness must pr
 YiboCore.IsInitialized = wasReady
 local hasCapability = YiboCore.HasCapability
 for _, missing in ipairs({"localization","basic-input","item-resolver","character-identity","account-view","characters","data-domains","events","fields",
-    "account-entry","account-surface-budget","character-cleanup","business-services","business-providers","business-item-actions"}) do
+    "account-entry","account-surface-budget","character-cleanup","business-services","business-providers","business-item-actions","pixel-line"}) do
     YiboCore.HasCapability = function(_, name) return name ~= missing end
     assert(YiboCrafting:Initialize() == nil and writes == 0, "missing capability must stop initialization: " .. missing)
 end

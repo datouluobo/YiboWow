@@ -5,7 +5,7 @@
 ## Notes: Forever development build: current character items and viewable guild-bank snapshots. Client acceptance pending.
 ## Notes-zhCN: 无限开发版：当前角色背包、装备、角色银行、邮件附件、本人拍卖与可查看公会银行快照，待客户端验收。
 ## Author: YiboSoft
-## Version: 0.6.5-api1
+## Version: 0.7.0-api1
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
 ## SavedVariables: YiboVaultForeverDB
@@ -18,6 +18,10 @@ Locales\zh.lua
 Locales\en.lua
 Store.lua
 Items.lua
+PersonalCounts.lua
+GoalTargets.lua
+Common\BagCapacity.lua
+Common\Settings.lua
 Common\ItemRecords.lua
 Common\Collector.lua
 Common\CoreIntegration.lua
@@ -27,6 +31,7 @@ Forever\MailProvider.lua
 Forever\Auction.lua
 Forever\GuildBank.lua
 Forever\AccountPage.lua
+Common\TooltipScope.lua
 Forever\Tooltip.lua
 Tooltip.lua
 Forever\Bootstrap.lua

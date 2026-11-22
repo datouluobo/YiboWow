@@ -1,5 +1,14 @@
 # YiboCore Changelog / 近期更新
 
+## 1.13.0（MoP）/ 0.3.0（无限服）/ 0.2.0（正式服）· API14 — 2026-11-22
+
+- 像素线宽：表格、按钮、边框与描边的 1 线宽按物理像素绘制，任意分辨率与 UI 缩放下粗细一致；改 UI 缩放（含 NDui、EllesmereUI 等整合界面）后立即刷新，无需重载。
+- 去除多重格线：相邻行只共用一条线；当前角色描边画在格线上，从表头开始、止于最后一行。
+- 双行角色表头（角色名＋服务器）整组垂直居中；表头文字与正文对齐。
+- 新公开接口 `pixel-line:1`（API14）：像素线、按边边框和随缩放重新定位，供业务插件使用。
+- 兼容现有业务插件；已适配 API14 的业务插件新版本需要本版 Core。
+
+English: API14 adds `pixel-line:1`. All 1-thickness lines are drawn as exactly one physical pixel at any resolution and UI scale and refresh immediately when the scale changes, including scale set by UI suites. Adjacent rows share a single rule, the current-character outline sits on the grid lines and ends at the last row, and two-line character headers are vertically centred. Existing business addons keep working; their API14 releases require this Core.
 ## Forever 0.2.4 / API13 — 2026-11-17
 
 - 角色档案碎银铜币展示：适配不足 1 金（不足 10000 铜）时的精确格式化，支持 `35银35铜`、`50银`、`45铜`（英文为 `35s35c`、`50s`、`45c`），零余额保持 `0金` / `0g`，整金保持纯金币呈现。
