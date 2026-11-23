@@ -1,5 +1,7 @@
 # YiboVault
 
+当前开发版本为 Mists `1.4.0-api1`、Forever `0.8.0-api1`，最低 Core API14。本轮拍卖时间及在途金币仍待双端实机验收。[更新日志](CHANGELOG.md)
+
 2026-10-30：[性能修复](../Docs/其它插件-性能修复-2026-10-30.md)将 Mists 悬停范围与当前角色定位改为既有轻量身份；物品/公会/在途查询和存档保持，最低 API13 / character-identity:1 不变。离线通过，新字节实机待验。
 
 2026-10-25：[MoP 发布前检查](Docs/Mists-发布前检查-20261025.md)。MoP `1.2.4-api1` 已列离线、覆盖安装及干净代码目录实机测试通过，本次仅声明手动覆盖安装，尚未发布。正式包与受测运行文件一致性及可发布结论见该记录；CurseForge客户端自动更新未验证。
@@ -8,7 +10,7 @@
 
 > 文档状态更新（2026-10-16）：现有功能已由用户确认实机验收收口。当前源码版本与发行证据见[状态总览](../Docs/仓库当前状态总览.md)，后续任务见[延期清单](../Docs/后续开发任务清单.md)。下文旧版本的开发／待验收描述按其原日期理解；当前版本渠道状态没有明确证据时保留待核对。
 
-当前 MoP 版本：`1.2.4-api1`（发布候选）。`1.2.4` 为插件版本，`api1` 为对外 `Items` API 版本。当前工作树要求 YiboCore 1.12.0 / API 13，并检查 `localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`character-identity:1` 与 `account-entry:2`；缺失或版本不足时停止 Vault 初始化并提示升级。Core 的语言、名称、输入、入口和物品显示能力只通过公开接口使用。YiboCurrency 是可选调用方。Vault 通过 Core 发现 `mail.items`，提供方兼容时消费邮件快照及可选在途投影；缺失或不兼容时独立采集。Vault 通过 `vault.items` 提供只读库存查询，Service 契约仍为 `business-services:1`，见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。YiboCore 不包含在本插件下载中，仅从其[官方 CurseForge 项目](https://www.curseforge.com/wow/addons/yibocore)获取。
+2026-10-25 MoP 发布候选 `1.2.4-api1`。`1.2.4` 为插件版本，`api1` 为对外 `Items` API 版本。该版本要求 YiboCore 1.12.0 / API 13，并检查 `localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`character-identity:1` 与 `account-entry:2`；缺失或版本不足时停止 Vault 初始化并提示升级。Core 的语言、名称、输入、入口和物品显示能力只通过公开接口使用。YiboCurrency 是可选调用方。Vault 通过 Core 发现 `mail.items`，提供方兼容时消费邮件快照及可选在途投影；缺失或不兼容时独立采集。Vault 通过 `vault.items` 提供只读库存查询，Service 契约仍为 `business-services:1`，见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。YiboCore 不包含在本插件下载中，仅从其[官方 CurseForge 项目](https://www.curseforge.com/wow/addons/yibocore)获取。
 
 正式版变化见 [更新日志](CHANGELOG.md)。
 

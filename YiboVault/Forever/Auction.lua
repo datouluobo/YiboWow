@@ -66,7 +66,7 @@ local function Capture(character)
     local sold = Enum and Enum.AuctionStatus and Enum.AuctionStatus.Sold
     if type(active) ~= "number" or type(sold) ~= "number" or active == sold then error("auction-status-unavailable") end
     local count = Integer(Read(C_AuctionHouse.GetNumOwnedAuctions), 0, 10000)
-    local records, entries = {}, {}
+    local records, entries, timings = {}, {}, {}
     for index = 1, count do
         local entry = Read(C_AuctionHouse.GetOwnedAuctionInfo, index)
         if type(entry) ~= "table" then error("auction-entry-unavailable") end
@@ -91,9 +91,12 @@ local function Capture(character)
             record.sourceClass, record.status, record.stackCount = "listed", status, quantity
             signature.itemID, signature.quantity, signature.link = itemID, quantity, link
             records[#records + 1] = record
+            timings[#timings + 1] = Addon.AuctionTiming:ReadObservation(entry, record)
+        else
+            timings[#timings + 1] = { auctionID = id, excluded = true }
         end
     end
-    return records, entries, count
+    return records, entries, count, timings
 end
 local function Stage()
     if not Addon._ready.auction then return nil, Addon._auctionPendingReason or "auction-awaiting-results" end
@@ -102,7 +105,7 @@ local function Stage()
     if not character then error("current-character-unavailable") end
     local revision = Addon._auctionResultsRevision
     local records, entries, count = Capture(character)
-    local _, after, finalCount = Capture(character)
+    local _, after, finalCount, timings = Capture(character)
     if finalCount ~= count then error("auction-count-changed") end
     for id, entry in pairs(entries) do
         local other = after[id]
@@ -112,7 +115,7 @@ local function Stage()
     if not Addon:IsAuctionReadable() or not current or current.id ~= character.id or revision ~= Addon._auctionResultsRevision then return nil, "auction-context-changed" end
     if Read(C_AuctionHouse.HasFullOwnedAuctionResults) ~= true then return nil, "auction-incomplete" end
     table.sort(records, function(a, b) return a.auctionID < b.auctionID end)
-    return { records = records, characterID = character.id }
+    return { records = records, timings = timings, characterID = character.id }
 end
 function Addon:ScanAuctions()
     if not self:IsAuctionReadable() then return nil, "auction-closed" end
@@ -131,6 +134,7 @@ function Addon:ScanAuctions()
     end
     self._auctionPendingReason, self._auctionQueryWaiting = nil, false
     self:ReplaceLocation(result.characterID, "auction", "auction", result.records, { container = "auction" })
+    self.AuctionTiming:Commit(result.characterID, result.timings, true)
     return true
 end
 function Addon:CloseAuctions()

@@ -402,6 +402,8 @@ CoreScrollBudget10、EntryBar1133、Contracts90、CharacterNames77与84文件语
 
 ## CAP-005：通用跨业务能力连接
 
+2026-11-24 Mail／Vault 的 Mists 与 Forever 复用 Core API14／`business-services:1`，通过 `mail.items` 1.2 可选传递按角色汇总的在途金币。Vault 监听契约就绪、变更与注销，金额单独显示，原有物品来源仍可独立使用。复用 CAP-004 账号页与 CAP-009 owner 中英文资源。双端 128 项专项与组合包回放通过，实机待验，Core 能力版本维持现状。[契约](../../Docs/YiboVault-Mail-API-v1-契约.md)
+
 2026-10-29 Mail 在途服务：本地私有查询返回给已注册 Core.Contracts，由 Core 完成唯一边界隔离，直接 Mail API 仍复制，没有给业务消费方内部表引用。mail.items v1版本、缓存代次、失败和匹配语义不变；62项离线回归含双路径返回值修改隔离，实机待验，见[登录快照记录](../../Docs/Mail-登录提醒与账号快照-2026-10-29.md)。
 
 2026-10-29 Mail 登录占用审查：本次仅 Store 在既有就绪入口内共享值完全相同的附件观察，属于 Mail 私有数据管理；不新增 Core 公共能力或版本，不改 Contracts／角色目录／公开副本隔离。59 项离线回归通过，用户实数据只读重放保留全值，Mists／Forever 新字节实机待验。见[登录记录](../../Docs/Mail-登录常驻内存-2026-10-29.md)。

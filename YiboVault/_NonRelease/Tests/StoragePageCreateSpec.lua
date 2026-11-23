@@ -77,6 +77,7 @@ dofile("_NonRelease/CoreIdentityDomainsR1/LoadClient.lua")
 dofile('YiboCore/Runtime/ItemResolver.lua')
 local dataRevision = 1
 _G.YiboVault = { Items = {
+    GetMailTransitMoney = function() return {} end,
     GetRevision = function() return dataRevision end,
     GetStorageSummary = function() return { characters = {}, guilds = {} } end,
     Query = function() return { records = {} } end,

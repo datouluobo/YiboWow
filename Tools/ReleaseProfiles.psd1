@@ -407,7 +407,7 @@
                     CurseForgeFlavor = 'mists'
                     CurseForgeVersionNames = @('5.5.4')
                     LuaVersion = '5.1'
-                    ValidationState = 'mists-1.2.4-manual-install-client-accepted'
+                    ValidationState = 'mists-1.4.0-api1-auction-and-mail-transit-client-pending-20261124'
                 }
                 Forever = @{
                     SourceToc = 'YiboVault_Forever.toc'
@@ -417,7 +417,7 @@
                     CurseForgeFlavor = 'forever'
                     CurseForgeVersionNames = @('1.60.1')
                     LuaVersion = '5.1'
-                    ValidationState = 'forever-0.6.6-api1-mists-parity-client-pending-20261120'
+                    ValidationState = 'forever-0.8.0-api1-auction-and-mail-transit-client-pending-20261124'
                 }
             }
         }

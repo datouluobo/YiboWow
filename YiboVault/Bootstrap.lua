@@ -10,6 +10,7 @@ function Addon:Initialize()
     if self.Items.WarmPersonalCountsIndex then self.Items:WarmPersonalCountsIndex() end
     if self.Tooltip then self.Tooltip:Install() end
     self.initialized = true
+    if self.AuctionTiming then self.AuctionTiming:Prune(); self.AuctionTiming:RegisterEvents(self.Frame) end
     if self.AuctionHouse and self.AuctionHouse.ScheduleExpiry then self.AuctionHouse:ScheduleExpiry() end
     self.MailProvider:Install()
     self.Frame:RegisterEvent("PLAYER_LOGIN")
@@ -51,6 +52,7 @@ Addon.Frame:SetScript("OnEvent", function(_, event, ...)
         Addon:OnEvent(event, ...)
         if Addon.GuildBank then Addon.GuildBank:OnEvent(event, ...) end
         if Addon.AuctionHouse then Addon.AuctionHouse:OnEvent(event, ...) end
+        if Addon.AuctionTiming then Addon.AuctionTiming:OnEvent(event, ...) end
         if Addon.MailItems then Addon.MailItems:OnEvent(event, ...) end
     end
 end)

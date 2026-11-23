@@ -72,6 +72,7 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["FOREVER.STATUS_error"] = "Read failed; previous snapshot kept",
 
         ["MAIL.IN_TRANSIT"] = "In transit",
+        ["MAIL.TRANSIT_MONEY"] = "In-transit gold %.4f",
         ["MAIL.IN_TRANSIT_FROM"] = "In transit · Sent by: %s",
         ["MAIL.TRANSIT_SHORT"] = "T",
         ["TEXT.ACCOUNT_CHARACTERS_SAVE_THE_CURRENT_DIRECT_68F438"] = "Account characters (save the current directory scope)",

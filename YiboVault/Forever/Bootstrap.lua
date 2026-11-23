@@ -17,6 +17,8 @@ function Addon:Initialize()
     if not ok then self:Print(reason); return false end
     if not self:RegisterWithCore() then return false end
     self.initialized = true
+    self.AuctionTiming:Prune()
+    self.AuctionTiming:RegisterEvents(self.Frame)
     if self.MailProvider then self.MailProvider:Install() end
     self.Items:WarmPersonalCountsIndex()
     self.Tooltip:Install()
@@ -32,7 +34,10 @@ Addon.Frame:RegisterEvent("ADDON_LOADED")
 Addon.Frame:SetScript("OnEvent", function(_, event, ...)
     if event == "ADDON_LOADED" then
         if (...) == Addon.NAME then Addon:Initialize() end
-    elseif Addon.initialized then Addon:OnEvent(event, ...) end
+    elseif Addon.initialized then
+        Addon:OnEvent(event, ...)
+        Addon.AuctionTiming:OnEvent(event, ...)
+    end
 end)
 local Core = _G.YiboCore
 if Core and Core.Events then Core.Events:Register("CORE_READY", Addon, function() Addon:Initialize() end) end

@@ -72,6 +72,7 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["FOREVER.STATUS_error"] = "读取失败，保留历史快照",
 
         ["MAIL.IN_TRANSIT"] = "在途",
+        ["MAIL.TRANSIT_MONEY"] = "在途金币 %.4f 金",
         ["MAIL.IN_TRANSIT_FROM"] = "在途 · 寄件角色：%s",
         ["MAIL.TRANSIT_SHORT"] = "途",
         ["TEXT.ACCOUNT_CHARACTERS_SAVE_THE_CURRENT_DIRECT_68F438"] = "账号角色（保存当前目录范围）",

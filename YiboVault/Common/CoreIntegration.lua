@@ -63,5 +63,17 @@ function Addon:RegisterWithCore()
     if self.GoalTargets then self.GoalTargets:Initialize() end
     local service, serviceError = self.Items:RegisterService()
     if not service then self:Print(serviceError); return false end
+    if core.Events and not self.mailTransitMoneyListener then
+        local function RefreshMoney(_, descriptor, change)
+            if descriptor.name == "mail.items" and descriptor.version.major == 1 and descriptor.version.minor >= 2
+                and (type(change) ~= "table" or change.transfersUnchanged ~= true) then
+                core.AccountView:NotifyPageChanged(self.AccountPage.ID)
+            end
+        end
+        for _, event in ipairs({ "BUSINESS_CONTRACT_REGISTERED", "BUSINESS_CONTRACT_UNREGISTERED", "BUSINESS_CONTRACT_CHANGED" }) do
+            core.Events:Register(event, self, RefreshMoney)
+        end
+        self.mailTransitMoneyListener = true
+    end
     return true
 end

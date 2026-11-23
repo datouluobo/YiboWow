@@ -117,6 +117,7 @@ function AuctionHouse:Finish(reason, errorMessage)
     local changed, coverage = Addon:ReplaceLocation(character.id, "auction", "auction", state.records, {
         auctionHouse = true,
     })
+    if state.timings then Addon.AuctionTiming:Commit(character.id, state.timings, state.complete) end
     self.lastStatus = "complete"
     self.lastResult = string.format(Addon:T("TEXT.READ_D_AUCTION_LISTINGS_SUCCESSFULLY_S_F19F0F"), #state.records, changed and Addon:T("TEXT.CACHE_UPDATED_A90A54") or Addon:T("TEXT.NO_CONTENT_CHANGES_B20790"))
     return coverage
@@ -141,7 +142,8 @@ function AuctionHouse:Capture(reason)
         self:Finish(reason, Addon:T("TEXT.CHARACTER_CONTEXT_IS_UNAVAILABLE_OR_HAS_CH_4082F8"))
         return
     end
-    local records = {}
+    local records, timings = {}, {}
+    local timing = Addon.AuctionTiming
     local previousByID = {}
     for _, record in ipairs(Addon:GetCachedCharacterRecords(character.id, "auction")) do
         if record.auctionID ~= nil then previousByID[tostring(record.auctionID)] = record end
@@ -159,6 +161,7 @@ function AuctionHouse:Capture(reason)
             return
         end
         records[#records + 1] = record
+        if timing then timings[#timings + 1] = timing:ReadObservation(auction, record) end
     end
     local countOK, finalCount = pcall(api.GetNumOwnedAuctions)
     if not countOK or finalCount ~= count then
@@ -167,6 +170,14 @@ function AuctionHouse:Capture(reason)
     end
     table.sort(records, function(left, right) return left.sourceID < right.sourceID end)
     state.records = records
+    if timing then
+        if type(api.HasFullOwnedAuctionResults) == "function" then
+            local fullOK, full = pcall(api.HasFullOwnedAuctionResults)
+            if fullOK and full == true then state.timings, state.complete = timings, true end
+        else
+            state.timings = timings
+        end
+    end
     self:Finish(reason)
     local currentTime, currentClock = Addon:Now()
     if currentClock == "server" then Addon:ExpireAuctions(currentTime) end

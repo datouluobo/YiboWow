@@ -95,6 +95,9 @@ function Page:Create(parent)
     parent.refresh:SetScript("OnClick", function() if parent.refresh.state == "disabled" or not Page:CanRefresh(Addon.db.settings.foreverSource) then return end; Addon:ScanInitial("manual"); Core.AccountView:NotifyPageChanged(PAGE_ID) end)
     parent.status = Theme:CreateText(parent, Theme.Font.assist, Theme.Colors.muted)
     parent.status:SetPoint("TOPLEFT", 12, -82); parent.status:SetPoint("RIGHT", -12, 0); parent.status:SetHeight(26)
+    parent.transitMoney = Theme:CreateText(parent, Theme.Font.assist, Theme.Colors.text)
+    parent.transitMoney:SetPoint("RIGHT", -12, 0); parent.transitMoney:SetHeight(20)
+    parent.transitMoney:Hide()
     parent.capacity = Theme:CreateText(parent, Theme.Font.assist, Theme.Colors.muted)
     parent.capacity:SetHeight(24)
     parent.header = CreateFrame("Frame", nil, parent); parent.header:SetPoint("TOPLEFT", 12, -114); parent.header:SetPoint("TOPRIGHT", -12, -114); parent.header:SetHeight(26)
@@ -369,6 +372,15 @@ function Page:Refresh(parent, context)
     end
     local options = { sources = not searching and { source } or nil }
     options.scope = { mode = "characters", characterIDs = (preview or searching) and ids or id and { id } or {} }
+    local copper = 0
+    if not searching and source == "mail" then
+        local transitMoney = Addon.Items:GetMailTransitMoney(options.scope)
+        for _, characterID in ipairs(options.scope.characterIDs) do copper = copper + (transitMoney[characterID] or 0) end
+    end
+    local moneyHeight = copper > 0 and 22 or 0
+    parent.transitMoney:SetPoint("TOPLEFT", left, -112)
+    parent.transitMoney:SetText(copper > 0 and Addon:T("MAIL.TRANSIT_MONEY", copper / 10000) or "")
+    parent.transitMoney:SetShown(copper > 0)
     if not preview and not searching and source == "guild-bank" and parent.explicitGuild
         and self:CanOpenGuild(parent.explicitGuild) then
         options.guildKey, options.includeHiddenGuilds = parent.explicitGuild, true
@@ -409,8 +421,9 @@ function Page:Refresh(parent, context)
         parent.capacity:SetPoint("TOPLEFT", left, parent.container:IsShown() and -147 or -113)
         parent.capacity:SetText(Addon.BagCapacity:Format(area))
         parent.capacity:SetShown(area and area.totalSlots ~= nil or false)
-        parent.scroll:SetPoint("TOPLEFT",left,parent.capacity:IsShown() and (parent.container:IsShown() and -175 or -141)
-            or (parent.container:IsShown() and -153 or -116))
+        local gridTop = parent.capacity:IsShown() and (parent.container:IsShown() and -175 or -141)
+            or (parent.container:IsShown() and -153 or -116)
+        parent.scroll:SetPoint("TOPLEFT",left,gridTop - moneyHeight)
         self:PaintGrid(parent)
         parent.renderedRecords,parent.renderedStatus = parent.gridRecords,status
         return
@@ -420,7 +433,9 @@ function Page:Refresh(parent, context)
     parent.capacity:Hide()
     for _, label in ipairs(parent.emptySlots) do label:Hide() end
     for _, tile in ipairs(parent.grid) do tile:Hide() end
-    parent.scroll:SetPoint("TOPLEFT",12,-144)
+    parent.header:SetPoint("TOPLEFT", 12, -114 - moneyHeight)
+    parent.header:SetPoint("TOPRIGHT", -12, -114 - moneyHeight)
+    parent.scroll:SetPoint("TOPLEFT",12,-144 - moneyHeight)
     local width = math.max(320, parent.scroll:GetWidth() - 20)
     parent.content:SetWidth(width)
     local columns, x = {}, 0
@@ -495,9 +510,12 @@ function Page:Register()
         scope = {mode="realms", mainOnly=true, allTitle=Addon:T("TEXT.ALL_REALMS_A166AB")},
         HasCharacterSnapshot = HasCharacterSnapshot,
         GetEligibleCharacters = function(characters)
+            local ids = {}
+            for index, character in ipairs(characters) do ids[index] = character.id end
+            local transitMoney = Addon.Items:GetMailTransitMoney({ mode = "characters", characterIDs = ids })
             local result = {}
             for _, character in ipairs(characters) do
-                if HasCharacterSnapshot(character) then
+                if transitMoney[character.id] or HasCharacterSnapshot(character) then
                     result[#result+1] = character
                 end
             end

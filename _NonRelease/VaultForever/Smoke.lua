@@ -57,7 +57,7 @@ local function Boot(saved, coreSaved, configure, forever)
     return env, core, env.YiboVault, event, Flush, data
 end
 local env, core, vault, event, flush, data = Boot()
-Check(vault.initialized and vault.VERSION == "0.7.0-api1", "Vault initialized on actual Core")
+Check(vault.initialized and vault.VERSION == "0.8.0-api1", "Vault initialized on actual Core")
 Check(env.YiboVaultDB.sentinel == "mists" and not env.YiboVaultDB.byCharacter, "MoP saved table untouched")
 Check(vault.Items:HasCapability("source.bags", 1) and vault.Items:HasCapability("source.bank", 1), "honest source capabilities")
 Check(not vault.GuildBank and not vault.MailItems and not vault.AuctionHouse, "unsupported modules not loaded")

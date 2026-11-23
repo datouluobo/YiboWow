@@ -298,8 +298,13 @@ function StoragePage:Create(parent)
         page.areaButtons[index] = button
     end
 
+    page.transitMoney = Text(page, Theme.Font.assist, Colors.text)
+    page.transitMoney:SetPoint("TOPLEFT", page.header, "BOTTOMLEFT", 8, -40)
+    page.transitMoney:SetPoint("RIGHT", page.header, "RIGHT", -8, 0)
+    page.transitMoney:SetHeight(20)
+    page.transitMoney:Hide()
     page.grid = Theme:CreateScrollFrame(page)
-    page.grid:SetPoint("TOPLEFT", page.header, "BOTTOMLEFT", 0, -42)
+    page.grid:SetPoint("TOPLEFT", page.header, "BOTTOMLEFT", 0, page.transitMoney:IsShown() and -62 or -42)
     page.grid:SetPoint("BOTTOMRIGHT", page, "BOTTOMRIGHT", -12, 12)
     page.itemsContent = CreateFrame("Frame", nil, page.grid)
     page.itemsContent:SetSize(1, 1)
@@ -526,6 +531,7 @@ function StoragePage:Refresh(host, context)
     page.showHidden:SetChecked(page.showHiddenGuilds == true)
     local needle = string.lower((page.search:GetText() or ""):match("^%s*(.-)%s*$"))
     local searching = needle ~= ""
+    local transitMoney = not searching and Addon.Items:GetMailTransitMoney(scope) or {}
     local summaryByID = {}
     for _, entry in ipairs(summary.characters) do summaryByID[entry.characterID] = entry end
     local owners, ownerByKey = {}, {}
@@ -545,7 +551,8 @@ function StoragePage:Refresh(host, context)
         owner.tabs = {}
         for _, area in ipairs(CHARACTER_AREAS) do
             local scanned = entry and entry[area.id] or area.id == "auction" and owner.auction
-            owner.tabs[#owner.tabs + 1] = { id = area.id, label = area.label, enabled = scanned ~= nil }
+            owner.tabs[#owner.tabs + 1] = { id = area.id, label = area.label,
+                enabled = scanned ~= nil or (area.id == "mail" and transitMoney[character.id] ~= nil) }
         end
         owners[#owners + 1] = owner
         ownerByKey[owner.key] = owner
@@ -615,6 +622,9 @@ function StoragePage:Refresh(host, context)
     end
     page.renderedOwner, page.renderedArea = page.selectedOwner, page.area
     page.selectedHiddenGuildKey = selected and selected.hidden and selected.guildKey or nil
+    local copper = page.area == "mail" and selected and transitMoney[selected.key]
+    page.transitMoney:SetText(copper and Addon:T("MAIL.TRANSIT_MONEY", copper / 10000) or "")
+    page.transitMoney:SetShown(not not copper)
     self:LayoutChrome(page)
 
     local current = Core.Characters:GetCurrent()

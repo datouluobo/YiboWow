@@ -77,7 +77,7 @@ end
 local frameShown = true
 AuctionHouseFrame = { IsShown = function() return frameShown end }
 dofile("YiboVault/_NonRelease/Tests/Fixture.lua").Install()
-dofile("YiboVault/AuctionHouse.lua")
+dofile("YiboVault/Mists/AuctionHouse.lua")
 local auctionHouse = YiboVault.AuctionHouse
 
 auctionHouse:OnEvent("AUCTION_HOUSE_SHOW")

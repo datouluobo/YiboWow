@@ -1,5 +1,5 @@
 local Addon = _G.YiboVault
-Addon.RELEASE_VERSION = "0.7.0"
+Addon.RELEASE_VERSION = "0.8.0"
 Addon.VERSION = Addon.RELEASE_VERSION .. "-api" .. Addon.API_VERSION
 Addon.Target = { id = "Forever", guildBankSlots = 98, savedVariable = "YiboVaultForeverDB" }
 Addon.CLIENT_SUPPORTED = type(WOW_PROJECT_CAMELOT) == "number" and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT

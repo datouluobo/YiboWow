@@ -19,6 +19,18 @@ function Items:GetRevision()
     return tonumber(Addon.db and Addon.db.revision) or 0
 end
 
+function Items:GetMailTransitMoney(scope)
+    local contracts = Addon.Core.Contracts
+    local descriptor = contracts:Resolve("mail.items", { major = 1, minMinor = 2 })
+    if not descriptor then return {} end
+    local result = contracts:Call(Addon.NAME, descriptor, "GetTransitMoney", { scope = scope })
+    local byCharacter = {}
+    for id, copper in pairs(type(result) == "table" and type(result.byCharacter) == "table" and result.byCharacter or {}) do
+        if type(id) == "string" and type(copper) == "number" and copper > 0 and copper % 1 == 0 then byCharacter[id] = copper end
+    end
+    return byCharacter
+end
+
 local function ValidateScope(scope)
     if scope == nil then return true end
     if type(scope) ~= "table" then return nil, "invalid-scope" end
@@ -374,10 +386,23 @@ end
 
 function Items:RegisterService()
     self.serviceDefinition = self.serviceDefinition or {
-        name = "vault.items", kind = "service", providerID = Addon.NAME .. ":inventory", version = { major = 1, minor = 1 },
+        name = "vault.items", kind = "service", providerID = Addon.NAME .. ":inventory", version = { major = 1, minor = 2 },
         methods = {
             Query = function(request) return Items:Query(request) end,
             GetPersonalCounts = function(request) return Items:GetPersonalCounts(request) end,
+            GetAuctionTimings = function(request)
+                if request ~= nil and type(request) ~= "table" then return nil, "invalid-options" end
+                local scope = request and request.scope
+                local valid, err = ValidateScope(scope)
+                if not valid then return nil, err end
+                local now, clock = Addon:Now()
+                if clock ~= "server" then return nil, "server-clock-unavailable" end
+                local result = { byCharacter = {} }
+                for _, character in ipairs(ResolveCharacters(scope, true)) do
+                    result.byCharacter[character.id] = Addon.AuctionTiming:GetByCharacter(character.id, now)
+                end
+                return result
+            end,
             HasCapability = function(request) return Items:HasCapability(request.name, request.minimumVersion) end,
         },
     }
