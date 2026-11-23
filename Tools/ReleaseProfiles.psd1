@@ -264,7 +264,7 @@
                     CurseForgeFlavor = 'mists'
                     CurseForgeVersionNames = @('5.5.4')
                     LuaVersion = '5.1'
-                    ValidationState = 'existing-mists-baseline'
+                    ValidationState = 'mists-1.5.0-api1-mail-transit-client-pending-20261124'
                 }
                 Forever = @{
                     SourceToc = 'YiboMail_Forever.toc'
@@ -276,7 +276,7 @@
                     CurseForgeFlavor = 'forever'
                     CurseForgeVersionNames = @('1.60.1')
                     LuaVersion = '5.1'
-                    ValidationState = 'forever-0.2.0-api1-mail-parity-client-pending-20261119'
+                    ValidationState = 'forever-0.4.0-api1-mail-transit-client-pending-20261124'
                 }
             }
         }

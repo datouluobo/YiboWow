@@ -32,6 +32,11 @@ end
 Page.Fields, Page.SummaryFields = pageFields, fields
 
 local VALID_SCAN = { known = true, ["known-empty"] = true, partial = true }
+local UNSCANNED = { coverage = {}, records = {}, visibleKeys = {} }
+local previewExpiryKinds = {
+    { "send", "EXPIRY.PREVIEW_TRANSIT" }, { "listing", "EXPIRY.PREVIEW_IF_UNSOLD" },
+    { "auction", "EXPIRY.PREVIEW_AUCTION_RETURN" }, { "missing", "EXPIRY.PREVIEW_UNVERIFIED" },
+}
 
 local function Escape(value)
     return tostring(value or ""):gsub("|", "||")
@@ -97,7 +102,7 @@ local function Statistics(character, snapshot, now)
     return stats
 end
 local function Summary(character, context)
-    local snapshot = Addon.db.byCharacter[character.id]
+    local snapshot = Addon.db.byCharacter[character.id] or UNSCANNED
     local coverage = snapshot.coverage
     local stats = Statistics(character, snapshot, Addon:Now())
     local counts = Addon.Copy(stats.counts)
@@ -120,10 +125,31 @@ local function Summary(character, context)
     elseif counts.unknown > 0 then expires = Addon:T("UI.TEXT_0398")
     end
     counts.nearest = counts.expired > 0 and Addon:T("UI.TEXT_0253") or (expires ~= "—" and (Addon:T("UI.TEXT_0391") .. expires) or nil)
+    local preview = context and context.mailPreview and context.mailPreview[character.id]
+    local money = availableMoney > 0 and Addon.ViewModel:Money(availableMoney) or "—"
+    if preview and preview.transitCopper > 0 then
+        local transit = Addon:T("EXPIRY.PREVIEW_TRANSIT_MONEY", Addon.ViewModel:Money(preview.transitCopper))
+        money = availableMoney > 0 and (money .. " · " .. transit) or transit
+    end
+    if preview and next(preview.times) then
+        local parts = expires ~= "—" and { expires } or {}
+        for _, kind in ipairs(previewExpiryKinds) do
+            local remaining = preview.times[kind[1]]
+            if remaining then
+                local text = Addon:T(kind[2], Addon.Expiry:FormatDuration(remaining))
+                if remaining < 0 and kind[1] ~= "missing" then text = Addon:T("EXPIRY.PREVIEW_UNVERIFIED", text) end
+                parts[#parts + 1] = text
+                if remaining <= 259200 then expiryColorSeverity = 2
+                elseif remaining <= 604800 then expiryColorSeverity = math.max(expiryColorSeverity, 1) end
+            end
+        end
+        expires = table.concat(parts, " · ")
+    end
 
     local status = coverage.observedAt and date("%m-%d %H:%M", coverage.observedAt) or "—"
     local live = Addon.Items:GetState(character.id)
-    if live.status == "error" then status = Addon:T("UI.TEXT_0562") .. status
+    if preview and not coverage.observedAt then status = Addon:T("EXPIRY.UNSCANNED")
+    elseif live.status == "error" then status = Addon:T("UI.TEXT_0562") .. status
     elseif live.status == "stale" then status = Addon:T("UI.TEXT_0169") .. " · " .. status
     elseif coverage.status == "partial" then status = Addon:T("UI.TEXT_0609") .. status end
     local alerts = {}
@@ -141,18 +167,35 @@ local function Summary(character, context)
         character = name,
         realm = identity and identity ~= name and character.realm or "",
         class = character.class,
-        count = mailCount,
-        attachments = tostring(attachmentSlots),
-        money = availableMoney > 0 and Addon.ViewModel:Money(availableMoney) or "—",
+        count = coverage.observedAt and mailCount or "—",
+        attachments = coverage.observedAt and tostring(attachmentSlots) or "—",
+        money = money,
         expires = expires,
         status = status,
         alert = #alerts > 0 and table.concat(alerts, " · ") or "—",
-        cod = tostring(codCount), backlog = tostring(backlog),
+        cod = coverage.observedAt and tostring(codCount) or "—", backlog = tostring(backlog),
         _counts = counts,
         _severity = severity,
         _expiryColorSeverity = expiryColorSeverity,
         _nextExpiry = nextExpiry,
     }, snapshot
+end
+
+local function HasPreviewData(data, showExpiry, showMoney)
+    return (showExpiry and next(data.times)) or (showMoney and data.transitCopper > 0)
+end
+
+local function LoadPreview(context)
+    local showExpiry, showMoney = context:GetFieldVisible("expires"), context:GetFieldVisible("money")
+    if not Addon.Expiry or not (showExpiry or showMoney) then return end
+    local characters = context.characters or {}
+    local byCharacter = showExpiry and Addon.Expiry:ReadAuctionTimings(characters) or {}
+    local now, preview = Addon:Now(), {}
+    for _, character in ipairs(characters) do
+        local data = Addon.Expiry:GetPreview(character.id, byCharacter[character.id], now)
+        if HasPreviewData(data, showExpiry, showMoney) then preview[character.id] = data end
+    end
+    context.mailPreview = preview
 end
 
 local function GetPreviewAlert(context)
@@ -393,7 +436,8 @@ function Page:RefreshSummary(parent, context)
         row:SetScript("OnEnter", character and function()
             if GameTooltip then
                 GameTooltip:SetOwner(row, "ANCHOR_RIGHT"); GameTooltip:SetText(values.character)
-                GameTooltip:AddLine(Addon.CacheModel:Coverage(character), 1, 1, 1, true)
+                local coverage = self:HasSnapshot(character) and Addon.CacheModel:Coverage(character) or Addon:T("EXPIRY.UNSCANNED")
+                GameTooltip:AddLine(coverage, 1, 1, 1, true)
                 GameTooltip:AddLine(values.alert, 1, 1, 1, true)
                 for _, field in ipairs(columns) do
                     GameTooltip:AddLine(field.title .. Addon:T("UI.TEXT_0653") .. tostring(values[field.id] or "—"), 1, 1, 1, true)
@@ -467,6 +511,7 @@ function Page:Refresh(parent, context)
     parent.mailPreview:SetShown(context.preview)
     parent.mailWorkspace:SetShown(not context.preview)
     if context.preview then
+        if not context.mailPreview then LoadPreview(context) end
         self:RefreshSummary(parent.mailPreview, context)
         parent.mailPreview.elapsed = 0
         parent.mailPreview:SetScript("OnUpdate", function(frame, elapsed)
@@ -474,6 +519,12 @@ function Page:Refresh(parent, context)
             if frame.elapsed >= 30 then
                 frame.elapsed = 0
                 if frame:IsShown() then
+                    LoadPreview(context)
+                    for _, character in ipairs(context.characters) do
+                        if context.mailPreview and not self:HasSnapshot(character) and not context.mailPreview[character.id] then
+                            context:Refresh(); return
+                        end
+                    end
                     local hasAlert = GetPreviewAlert(context) ~= nil
                     if hasAlert ~= frame.mailHasAlert then context:Refresh()
                     else Page:RefreshSummary(frame, context) end
@@ -579,8 +630,17 @@ function Page:Register()
         HasCharacterSnapshot = function(character) return Page:HasSnapshot(character) or Addon.HistoryModel:HasHistory(character) end,
         GetEligibleCharacters = function(characters, baseContext)
             local eligible = {}
+            local preview = baseContext and baseContext.preview
+            local settings = Addon.db.settings.previewColumns
+            local showExpiry = preview and Addon.Expiry and settings.expires
+            local showMoney = preview and Addon.Expiry and settings.money
+            local auctions = showExpiry and Addon.Expiry:ReadAuctionTimings(characters or {}) or {}
+            local now = (showExpiry or showMoney) and Addon:Now()
             for _, character in ipairs(characters or {}) do
-                if Page:HasSnapshot(character) or (not (baseContext and baseContext.preview) and Addon.HistoryModel:HasHistory(character)) then eligible[#eligible + 1] = character end
+                if Page:HasSnapshot(character) or (not preview and Addon.HistoryModel:HasHistory(character))
+                    or (now and HasPreviewData(Addon.Expiry:GetPreview(character.id, auctions[character.id], now), showExpiry, showMoney)) then
+                    eligible[#eligible + 1] = character
+                end
             end
             return eligible
         end,
@@ -593,6 +653,7 @@ function Page:Register()
             Addon.db.settings.previewColumns[id] = not not visible
         end,
         GetHoverMetrics = function(context)
+            if context then LoadPreview(context) end
             local rows = #(context and context.characters or {}) + 1
             local hasAlert = GetPreviewAlert(context) ~= nil
             local _, _, tableWidth = GetPreviewColumns(context)

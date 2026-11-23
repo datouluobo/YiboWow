@@ -1,5 +1,15 @@
 # YiboVault / YiboMail Public API v1 契约
 
+### 在途金币（`mail.items` 1.2）
+
+Mail 继续持有寄件、收件核对与超期判断。Vault 通过 Core 可选调用 `GetTransitMoney({ scope = { mode = "characters", characterIDs = {...} } })`，返回 `{ byCharacter = { [characterID] = copper } }`。有效角色的零值表示没有跟踪中的在途金币，角色未知时省略；缺少兼容服务时 Vault 保留原有物品视图。纯金币信和物品附带金币都计入，已扫描匹配、已退回、到付、发送失败与超期未核实金额均排除。查询复用 Mail 悬停的金额口径。Vault 在对应角色的邮件来源单独渲染金额，不放入 `GetTransfers().records`、Vault 的物品查询结果、库存数量、容量或物品搜索。既有 `mail.items` 1.0／1.1 方法保持兼容。
+
+### 本人拍卖时间（`vault.items` 1.2）
+
+Vault 拥有本人上架及流拍事实。Mail 通过 Core 的 `Resolve("vault.items", { major = 1, minMinor = 2 })` 可选调用 `GetAuctionTimings({ scope = { mode = "characters", characterIDs = {...} } })`，只用于 Mail 悬停。原有 `Query`、`GetPersonalCounts` 和 `mail.items` 保持兼容。请求按本目标 Core 角色 GUID 限定。返回 `{byCharacter = { [characterID] = { status, observedAt, records } } }`，由 Core 隔离副本。条目含 `auctionID`、`itemID`、`quantity`、`observedAt`、`status` 和服务器 Unix 秒。`active` 条目表示已观测的无竞价上架，其 `endsAt` 来自原生剩余秒数。`expired` 条目带 `endedAt`，来源为已识别上架的原生到期事件。已售、取消和结果不明的消失不投影为流拍。没有已完成拍卖采集时，角色状态保持未采集或相应失败状态；空记录仅表示没有可推算的项目。Vault 保留流拍证据 90 天，并通过既有契约变更事件通知，负载 `source = "auction"`、`reason = "auction-timing"`。缺少兼容服务时，Mail 仍展示自己的期限。
+
+Mail 拥有同账号在途、收到的退件及邮件期限。它用 `endsAt` 推算条件退件、用 `endedAt` 推算已流拍待收退件，并以本地邮箱证据抵消已扫到的同批退件。Vault 的拍卖计时方法只读取本人拍卖快照。双方 TOC 均依赖 Core，Mail 不向 Vault 写入拍卖或邮箱状态。
+
 2026-11-19 Forever货币附件边界：Mail内部快照可保存currencyID附件，但mail.items major1/minor1的记录和数量仍只包含普通物品；货币不占用itemID/itemKey/changedItemIDs，也不作为物品在途收件证据。仅含货币的已扫描邮箱可返回known及零物品记录，不能据零物品量认定收件箱known-empty。货币变化仍发布changedMailKeys和revision以失效缓存；Vault继续只读公开物品投影，不能从Mail私有存档另取货币或伪装为物品。此处不新增货币钱包来源或跨插件能力，详见[Mail内部附件契约](../YiboMail/Docs/Forever-货币附件支持-2026-11-19.md)。
 
 2026-11-18 Forever部分覆盖：GetByCharacter返回当前已载入窗口，GetState/coverage保留partial、currentCount、totalCount和unscannedCount；已复核的可见附件为observed，未载入邮件不生成记录。includeStale=false仍可读取已观测的当前附件，不能据返回量推断完整收件箱总量。Vault Forever保留partial并采用同一鲜度语义，不将其伪装成完整或旧数据；0已载入而total>0不会返回known-empty。失效/读取失败仍保留最近完成快照并返回相应旧/错误状态。

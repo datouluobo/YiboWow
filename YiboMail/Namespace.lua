@@ -1,6 +1,6 @@
 local Addon = {}
 _G.YiboMail = Addon
-Addon.NAME, Addon.VERSION, Addon.API_VERSION = "YiboMail", "1.4.0-api1", 1
+Addon.NAME, Addon.VERSION, Addon.API_VERSION = "YiboMail", "1.5.0-api1", 1
 Addon.REQUIRED_CORE_API = 14
 Addon.INBOX_QUERY_SCOPE = "account"
 Addon.STABLE_INBOX_LIMIT = 100

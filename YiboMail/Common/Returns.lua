@@ -225,8 +225,10 @@ function Queue:OnReturnScan(mails, visible, total, committed)
     local action = pending.action
     Addon:WithPublicationBatch(function()
         if not committed then Addon.Scanner:CommitCollection(mails, visible, total, true) end
-        if not self.returnPlan.deleteEmpty then
-            local snapshot = Addon.db.byCharacter[action.characterID]
+        local snapshot = Addon.db.byCharacter[action.characterID]
+        if self.returnPlan.deleteEmpty then
+            if snapshot and Addon.Expiry then Addon.Expiry:ConfirmRemoval(snapshot, action.mailKey) end
+        else
             local source = snapshot and snapshot.records[action.mailKey]
             if source and source.state == "unverified" and source.signature == action.signature then
                 source.state = "returned-archived"

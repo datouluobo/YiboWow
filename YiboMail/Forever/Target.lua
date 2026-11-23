@@ -1,5 +1,5 @@
 local Addon = _G.YiboMail
-Addon.VERSION = "0.3.0-api1"
+Addon.VERSION = "0.4.0-api1"
 Addon.Target = { id = "Forever", savedVariable = "YiboMailForeverDB", storageScope = "current-character" }
 Addon.INBOX_QUERY_SCOPE = "account"
 Addon.STABLE_INBOX_LIMIT = false

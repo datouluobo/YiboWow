@@ -110,6 +110,7 @@ function Addon:Initialize()
     self._initializing = nil
     if not executed or not ok then self:Print(executed and err or tostring(ok)); return false end
     self.initialized=true
+    if self.Expiry then self.Expiry:Seed(); self.Expiry:WatchAuctionTimings() end
     if self.FEATURES.contacts then self.Recipients:RequestFriends(true) end
     self:PruneHistory()
     if self.GoalTargets then self.GoalTargets:Initialize() end

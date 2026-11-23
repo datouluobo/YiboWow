@@ -257,17 +257,19 @@ function Items:GetTransfers(characterID)
 end
 function Items:RegisterService()
     local contracts = Addon.Core.Contracts
+    local transfers = Addon.CAPABILITIES["mail-items.transfers"] == 1
     self.serviceDefinition = self.serviceDefinition or {
         name = "mail.items", kind = "service", providerID = Addon.NAME .. ":inbox",
-        version = { major = 1, minor = Addon.CAPABILITIES["mail-items.transfers"] == 1 and 1 or 0 },
+        version = { major = 1, minor = transfers and (Addon.Expiry and 2 or 1) or 0 },
         methods = {
             GetState = function(request) return Items:GetState(request and request.characterID) end,
             GetByCharacter = function(request) return Items:GetByCharacter(request and request.characterID, request and request.options) end,
             GetTransfers = function(request) return GetTransferResult(request and request.characterID) end,
+            GetTransitMoney = transfers and Addon.Expiry and function(request) return Items:GetTransitMoney(request) end or nil,
             GetRevision = function() return Items:GetRevision() end,
         },
     }
-    if Addon.CAPABILITIES["mail-items.transfers"] ~= 1 then self.serviceDefinition.methods.GetTransfers = nil end
+    if not transfers then self.serviceDefinition.methods.GetTransfers = nil end
     local ref, err = contracts:Register(Addon.NAME, self.serviceDefinition)
     if not ref then return nil, err end
     self.serviceRef = ref
@@ -362,6 +364,16 @@ local function Resolve(scope)
         if scope.mode == "account" or character.realm == scope.realm then result[#result + 1] = character end
     end
     return result
+end
+function Items:GetTransitMoney(request)
+    if request ~= nil and type(request) ~= "table" then return nil, "invalid-options" end
+    local characters, err = Resolve(request and request.scope)
+    if not characters then return nil, err end
+    local now, byCharacter = Addon:Now(), {}
+    for _, character in ipairs(characters) do
+        byCharacter[character.id] = Addon.Expiry:GetPreview(character.id, nil, now).transitCopper
+    end
+    return { byCharacter = byCharacter }
 end
 function Items:Query(options)
     if options ~= nil and type(options) ~= "table" then return nil, "invalid-options" end

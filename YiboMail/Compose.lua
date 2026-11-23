@@ -24,7 +24,8 @@ function Compose:OnEvent(event)
     end
     if event == "MAIL_SEND_SUCCESS" and self.pendingSend then
         self.pendingSend.state = "in-transit"
-        self.pendingSend.attemptedAt, self.pendingSend.observedAt = self.pendingSend.observedAt, Addon:Now()
+        self.pendingSend.attemptedAt = self.pendingSend.observedAt
+        self.pendingSend.observedAt, self.pendingSend.clockSource = Addon:Now()
         if Addon.Recipients and Addon.Recipients.ObserveSuccessfulMail then
             -- Gold proves an ordinary mail under this client's faction rules;
             -- attachment-only mail may contain cross-faction account-bound items.

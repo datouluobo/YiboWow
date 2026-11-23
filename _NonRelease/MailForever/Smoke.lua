@@ -2,7 +2,7 @@ local Boot = dofile("_NonRelease/MailForever/Harness.lua")
 local checks = 0
 local function Check(value, name) checks = checks + 1; assert(value, name) end
 local e,c,m,fire,flush,data,load = Boot()
-Check(m.initialized and m.VERSION == "0.3.0-api1", "real Forever Mail manifest starts")
+Check(m.initialized and m.VERSION == "0.4.0-api1", "real Forever Mail manifest starts")
 Check(e.YiboMailDB.sentinel == "mists" and not e.YiboMailDB.byCharacter, "Mail Mists store untouched")
 Check(m.Queue and m.Returns and m.CollectionRuntime and m.FEATURES.collect and m.NativeUI
     and m.Compose and m.Recipients and m.ActionTodo, "shared collection/send/contact/action modules enabled")
@@ -61,7 +61,7 @@ Check(transfers and #transfers.records==0 and transferError==nil, "transfer quer
 m.Target = targetConfig
 c:RegisterAddon("MailConsumer",{requiredAPI=13})
 local descriptor = assert(c.Contracts:Resolve("mail.items",{major=1,minMinor=0}))
-Check(descriptor.version.minor == 1 and c.Contracts:Call("MailConsumer",descriptor,"GetByCharacter",{characterID=e.TEST_GUID}).quantity == 5, "Core routes versioned Mail snapshot contract")
+Check(descriptor.version.minor == 2 and c.Contracts:Call("MailConsumer",descriptor,"GetByCharacter",{characterID=e.TEST_GUID}).quantity == 5, "Core routes versioned Mail snapshot contract")
 c.AccountView.frame:Hide(); Check(c.AccountView:ShowPreview("mail-inbox",e.Minimap), "Core owns Mail preview")
 Check(panel.mailPreview:IsShown() and not workspace:IsShown() and m.AccountPage:GetSummary(c.Characters:GetCurrent()).count=="2", "Mail preview summarizes one character")
 Check(m.AccountPage:GetSummary(c.Characters:GetCurrent()).attachments=="2"

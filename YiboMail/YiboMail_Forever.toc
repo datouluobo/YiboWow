@@ -5,7 +5,7 @@
 ## Notes: Forever development build: account snapshots, collection, contacts, rule sending and transit tracking. Client acceptance pending.
 ## Notes-zhCN: 无限开发版：账号快照、收件、联系人、规则寄与在途记录，待实机验证。
 ## Author: YiboSoft
-## Version: 0.3.0-api1
+## Version: 0.4.0-api1
 ## RequiredDeps: YiboCore
 ## Group: YiboCore
 ## SavedVariables: YiboMailForeverDB
@@ -17,6 +17,7 @@ Locales\zh.lua
 Locales\en.lua
 Store.lua
 Recipients.lua
+Common/Expiry.lua
 Common/RecipientRuntime.lua
 RecipientUI.lua
 SendRules.lua

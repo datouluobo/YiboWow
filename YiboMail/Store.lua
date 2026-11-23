@@ -73,7 +73,9 @@ function Addon:InitializeDatabase()
                 if saved[key] ~= nil and type(saved[key]) ~= "table" then return nil, "store-mismatch" end
             end
             for _, snapshot in pairs(saved.byCharacter or {}) do
-                if type(snapshot) ~= "table" or type(snapshot.records) ~= "table" or type(snapshot.visibleKeys) ~= "table" or type(snapshot.coverage) ~= "table" then return nil, "store-mismatch" end
+                if type(snapshot) ~= "table" or type(snapshot.records) ~= "table" or type(snapshot.visibleKeys) ~= "table" or type(snapshot.coverage) ~= "table"
+                    or (snapshot.expiryEntries ~= nil and type(snapshot.expiryEntries) ~= "table")
+                    or (snapshot.auctionExpiryReceipts ~= nil and type(snapshot.auctionExpiryReceipts) ~= "table") then return nil, "store-mismatch" end
             end
         end
     end
@@ -176,15 +178,23 @@ function Addon:AppendHistory(snapshot, record, copies)
     stored.timeBasis = stored.timeBasis or (stored.recipient and "send-result" or "operation-result")
     snapshot.history = snapshot.history or {}
     snapshot.history[#snapshot.history + 1] = stored
+    return stored
+end
+function Addon:GetOrCreateMailSnapshot(characterID, character)
+    local snapshot = self.db.byCharacter[characterID]
+    if not snapshot then
+        snapshot = { records = {}, visibleKeys = {}, coverage = { status = "not-yet-scanned" }, character = self.Copy(character or {}) }
+        self.db.byCharacter[characterID] = snapshot
+    end
+    return snapshot
 end
 function Addon:AddHistory(characterID, record, copies)
     local snapshot = self.db.byCharacter[characterID]
     if not snapshot then
-        local character = self.Core.Characters:GetCurrent({ identityOnly = true })
-        snapshot = { records = {}, visibleKeys = {}, coverage = { status = "not-yet-scanned" }, character = self.Copy(character or {}) }
-        self.db.byCharacter[characterID] = snapshot
+        snapshot = self:GetOrCreateMailSnapshot(characterID, self.Core.Characters:GetCurrent({ identityOnly = true }))
     end
-    self:AppendHistory(snapshot, record, copies)
+    local stored = self:AppendHistory(snapshot, record, copies)
+    if self.Expiry then self.Expiry:OnHistory(snapshot, stored) end
     local keys, ids = {}, {}
     if record.mail and record.mail.mailKey then keys[1] = record.mail.mailKey end
     if record.item then ids[1] = record.item.itemID end
@@ -193,6 +203,7 @@ end
 function Addon:PruneHistory()
     local now = self:Now()
     for characterID, snapshot in pairs(self.db.byCharacter) do
+        if self.Expiry then self.Expiry:Prune(snapshot, now) end
         local keys, ids, seen, changed = {}, {}, {}, false
         for key, mail in pairs(snapshot.records) do
             if mail.state == "unverified" and now - (mail.stateEnteredAt or now) >= self.db.settings.unverifiedDays * 86400 then
@@ -273,6 +284,7 @@ function Addon:CommitScan(character, mails, coverage)
     local now = coverage.observedAt
     local old = self.db.byCharacter[character.id] or { records = {}, visibleKeys = {}, coverage = {} }
     local previous = old.visibleKeys
+    local transitMoneyChanged = self.Expiry and self.Expiry:OnScan(old, character, mails, coverage)
     local before, after = Groups(previous, old.records), Groups(mails)
     local knownSignatures
     local function Known(signature)
@@ -369,7 +381,7 @@ function Addon:CommitScan(character, mails, coverage)
         end
         if #markers == 0 then self.db.collectedMailMarkers[character.id] = nil end
     end
-    if #changed > 0 or stateChanged then self:Publish(character.id, changed, itemIDs, "scan") end
+    if #changed > 0 or stateChanged or transitMoneyChanged then self:Publish(character.id, changed, itemIDs, "scan") end
     if self.FEATURES.account and self.Core.AccountView then
         if self.publicationBatch then self.publicationBatch.refreshPage = true
         else self.Core.AccountView:NotifyPageChanged("mail-inbox") end

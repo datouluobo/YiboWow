@@ -1,12 +1,16 @@
 # YiboMail - 邮件助手
 
+当前开发版本为 Mists `1.5.0-api1`、Forever `0.4.0-api1`，最低 Core API14。本轮邮件倒计时及在途金币仍待双端实机验收。[更新日志](CHANGELOG.md)
+
+2026-11-23 工作树的 Mail 入口悬停可显示在途邮件、可选 Vault 退件和超过期限的待核实时间。扫到后改用原生期限，去向不明且超期时显示负数。双端实机待验，见[邮件倒计时推算与验收](Docs/邮件倒计时推算与验收.md)。
+
 Forever开发源码（2026-11-19）新增货币附件：支持邮箱/账号快照、货币筛选与汇总、收取及历史，保持货币ID与物品ID隔离；不将货币计入Vault物品库存或提供为物品API记录。代码和离线验证完成，游戏内到账及显示待验收，见[货币附件专项](Docs/Forever-货币附件支持-2026-11-19.md)。
 
 > 文档状态更新（2026-10-16，Mists基线）：现有Mists功能已由用户确认实机验收收口。Forever开发目标另行验收，当前保持待实机验证。当前源码版本与发行证据见[状态总览](../Docs/仓库当前状态总览.md)，后续任务见[延期清单](../Docs/后续开发任务清单.md)。下文旧版本的开发／待验收描述按其原日期理解；当前版本渠道状态没有明确证据时保留待核对。
 
 ![YiboMail 邮件助手](Media/YiboMailIcon-128.png)
 
-Mists当前版本 `1.3.0-api1` 提供原生邮箱增强，以及由 YiboCore 承载的收件箱、账号总览、历史记录三个标签页，可选 Broker/小地图入口、六列邮件悬停摘要和登录到期提醒。基础功能最低依赖 **YiboCore 1.12.1 / API v13**、`localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`item-picker:2`、`character-identity:1`、`characters:1`、`character-cleanup:1`、`account-view:2`、`account-preview-characters:1`、`account-character-admission:1`、`account-surface-budget:1` 和 `account-entry:2`；并检查 `Core.ItemConfirmation:Show`；缺失时提示升级并停止基础初始化。Mail 的静态玩家文案使用稳定 ASCII 语言 key 和 Mail 自有中英文资源，语言由 Core 账号设置统一选择，并在重载后应用。打开游戏邮箱即可收取和发送；跨角色查看可从 Core 统一窗口访问。Mail 通过 Core 的 `mail.items` v1.1 服务向 Vault 提供当前收件附件及可解析的成功发件在途记录；收件记录匹配后不再报告为在途。契约见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
+Mists `1.3.0-api1` 基线提供原生邮箱增强，以及由 YiboCore 承载的收件箱、账号总览、历史记录三个标签页，可选 Broker/小地图入口、六列邮件悬停摘要和登录到期提醒。基础功能最低依赖 **YiboCore 1.12.1 / API v13**、`localization:1`、`business-services:1`、`character-name-format:1`、`basic-input:1`、`item-resolver:1`、`item-picker:2`、`character-identity:1`、`characters:1`、`character-cleanup:1`、`account-view:2`、`account-preview-characters:1`、`account-character-admission:1`、`account-surface-budget:1` 和 `account-entry:2`；并检查 `Core.ItemConfirmation:Show`；缺失时提示升级并停止基础初始化。Mail 的静态玩家文案使用稳定 ASCII 语言 key 和 Mail 自有中英文资源，语言由 Core 账号设置统一选择，并在重载后应用。打开游戏邮箱即可收取和发送；跨角色查看可从 Core 统一窗口访问。Mail 通过 Core 的 `mail.items` v1.1 服务向 Vault 提供当前收件附件及可解析的成功发件在途记录；收件记录匹配后不再报告为在途。契约见 [API v9](../YiboCore/Docs/API-v9-业务服务与刷新.md)。
 
 按物品或分类为收件人建立规则后，规则寄件页会汇总命中物品、按角色整理并按单封附件容量拆分寄件批次。玩家集中核对后即可逐封确认发送；保存的分配规则能大幅减少重复查找物品、选择收件人和手工装填，是多角色物资转移的主要省时点。
 
@@ -56,6 +60,7 @@ Locales/zh.lua
 Locales/en.lua
 Store.lua
 Recipients.lua
+Common/Expiry.lua
 Common/RecipientRuntime.lua
 RecipientUI.lua
 SendRules.lua
