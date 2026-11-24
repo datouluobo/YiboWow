@@ -4,7 +4,7 @@
 ## Title-zhTW: |cff20e070[Yibo]|r YiboAutoOpen - 自动开包
 ## Notes: 安全地自动开启账号目录中的容器物品。
 ## Author: YiboSoft
-## Version: 0.1.2
+## Version: 0.1.3
 ## IconTexture: Interface\AddOns\YiboAutoOpen\Media\YiboAutoOpenIcon-128
 ## SavedVariables: YiboAutoOpenForeverDB
 ## RequiredDeps: YiboCore

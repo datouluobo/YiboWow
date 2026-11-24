@@ -68,3 +68,9 @@
 
 - Mists 1.2.10 沿用 1.2.9 已实测的锁箱逻辑，运行代码仅更新版本常量。主工作树使用统一构建器生成 `Builds/YiboAutoOpen-mists-v1.2.10-curseforge.zip`，SHA-256 为 `f16076189e4d1532b41a7aa7a861e7e9b0eda178fd4ea0445e2f0622db8ebbb6`。包内只有 Mists 的默认加载清单 `YiboAutoOpen.toc`，接口为 50504，存档为 `YiboAutoOpenDB`。
 - 干净解压及保留 1.2.7 旧文件覆盖后的离线回放均通过。两版包的文件路径集合一致。回放核对误目标写库前停止、Mists 无 Core 启动、单次初始化与事件注册、旧目录和设置保留；配套 Core 设置集成另有 229 项通过。游戏联接的工作树同步 1.2.10。1.2.10 安装包的实机覆盖、退出后恢复及交易代开锁继续待验，尚未上传渠道。
+
+## 2026-11-24 Forever 0.1.3 共享代码候选包
+
+- Mists 和 Forever 都加载 `BagAdapter.lua`、`Queue.lua`。Mists 提供按格读取箱锁及解锁后延时复查的目标实现。Forever 暂未接入这两个接口，默认目录为空。离线复核确认，手动加入的箱子在背包格未被临时占用时可进入 Forever 候选队列，因此真实锁箱有被尝试开启的可能。无限服锁箱的原生提示、使用结果和解锁后事件仍待本服样本。[Forever 锁箱条目参考](https://github.com/Gogo1951/Open-Sesame/blob/main/Data/Camelot/Lockbox-Skill-Levels-Camelot.lua)
+- 统一构建器生成 `Builds/YiboAutoOpen-forever-v0.1.3-curseforge.zip`，SHA-256 为 `e16295f9892e6179c58c773a4896f106578237b0780fc3ffdfde89ab161a0db3`。选用 `YiboAutoOpen_Forever.toc`，包内仅以 `YiboAutoOpen.toc` 加载，Interface 16001，存档身份 `YiboAutoOpenForeverDB`。目标 TOC 仅更新版本号，Core 强依赖继续要求就绪、API13、`localization:1`、`basic-input:1`、`item-resolver:1` 和现有方法。此次无新增入口、注册、Core 公共调用、语言资源或存档 schema。Mists 1.2.10 包的 TOC 内容及全部 Lua 载荷已与当前 Mists 源码核对一致。
+- 已验：双端构建检查与 Lua 回归通过。Forever 0.1.3 干净解压和保留 0.1.2 旧文件覆盖的离线回放通过，包路径集合一致。核对误装、Core 缺失或版本不足时不写库、单次初始化和事件注册、旧目录与设置保留，以及与 0.1.2 一致的候选行为。Forever 新包为待实机候选，真实开包、覆盖与退出恢复继续待验，尚未上传渠道。
