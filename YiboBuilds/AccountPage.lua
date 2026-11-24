@@ -1664,7 +1664,8 @@ end
 local function PlaceEquipment(parent, snapshot)
     local box = parent.buildsEquipment
     local boxHeight = box.layoutHeight or box:GetHeight() or 500
-    local rowHeight = math.max(39, math.min(80, math.floor((boxHeight - 125) / 8)))
+    local rowHeight = parent.buildsCompact and math.max(22, math.min(52, math.floor((boxHeight - 75) / 8)))
+        or math.max(39, math.min(80, math.floor((boxHeight - 125) / 8)))
     local maxIconSize = math.min(ICON_SIZE, rowHeight - 5)
     local augmentSize = math.min(AUGMENT_ICON_SIZE, math.floor((maxIconSize - 2) / 2))
     local iconSize = augmentSize * 2 + 2
@@ -1859,10 +1860,10 @@ local function PlaceEquipment(parent, snapshot)
                     Addon.Snapshot:ScheduleEquipmentCapture()
                 end
             end
-            if parent.buildsSelectedEquipmentSlot and parent.buildsBuildCollapsed then
+            if parent.buildsSelectedEquipmentSlot and parent.buildsBuildCollapsed and not parent.buildsCompact then
                 parent.buildsBuildCollapsed = false
                 Addon.buildsBuildCollapsed = false
-                Core.AccountView:RefreshPage(true)
+                Core.AccountView:RefreshPage()
             else
                 Addon.AccountPage.Refresh(parent, parent.buildsContext)
             end
@@ -2021,14 +2022,15 @@ local function RenderBuildColumns(parent, slotData, record)
         local glyph = glyphs and (index <= 3 and glyphs.major and glyphs.major[index] or index > 3 and glyphs.minor and glyphs.minor[index - 3])
         glyph = glyph or { name = Addon:T("UI.NOT_SELECTED"), icon = "Interface\\Icons\\INV_Misc_QuestionMark" }
         local left = BuildCell(build, build.talents, index); left:ClearAllPoints(); left:SetPoint("TOPLEFT", build, "TOPLEFT", 8, -42 - (index - 1) * rowHeight); left:SetSize(talentColumnWidth, rowHeight - 3)
-        left.icon:SetSize(56, 56); left.iconBorder:SetSize(60, 60)
+        local iconSize = parent.buildsCompact and math.max(16, math.min(56, rowHeight - 8)) or 56
+        left.icon:SetSize(iconSize, iconSize); left.iconBorder:SetSize(iconSize + 4, iconSize + 4)
         left.label:ClearAllPoints(); left.label:SetPoint("LEFT", left.icon, "RIGHT", 10, 0); left.label:SetPoint("RIGHT", left, "RIGHT", -8, 0)
         left.icon:SetTexture(talent.icon); left.label:SetText(SnapshotName(talent, "talent")); left.meta:Hide(); left.rule:Hide(); left:SetBackdropColor(C.chrome[1], C.chrome[2], C.chrome[3], 0.5); SetSpellTooltip(left, talent); left:Show()
         local glyphTop = 42 + (index - 1) * glyphRowHeight
         local right = BuildCell(build, build.glyphs, index); right:ClearAllPoints(); right:SetPoint("TOPLEFT", build, "TOPLEFT", glyphLeft, -glyphTop); right:SetSize(glyphColumnWidth, glyphRowHeight - 3)
         local isMajor = index <= 3
         local border = isMajor and C.warning or C.accent
-        local glyphIconSize = isMajor and 56 or 40
+        local glyphIconSize = isMajor and iconSize or math.min(40, iconSize)
         right.icon:SetSize(glyphIconSize, glyphIconSize); right.iconBorder:SetSize(glyphIconSize + 4, glyphIconSize + 4)
         right.icon:SetTexture(glyph.icon); right.meta:SetShown(LayoutGlyphCellText(right, SnapshotName(glyph, "glyph"), GlyphRequirementText(glyph), glyphColumnWidth, ClassColor(parent.buildsSelectedCharacter))); right.rule:Hide(); right.iconBorder:SetColorTexture(border[1], border[2], border[3], 1); right:SetBackdropColor(C.chrome[1], C.chrome[2], C.chrome[3], 0.5); SetSpellTooltip(right, glyph); right:Show()
     end
@@ -2054,15 +2056,19 @@ local function SetupMainButtons(parent)
     end)
     toolbar.buildToggle:SetScript("OnClick", function()
         parent.buildsSelectedEquipmentSlot = nil
+        if parent.buildsCompact then
+            parent.buildsCompactPane = parent.buildsCompactPane == "build" and "equipment" or "build"
+            Addon.AccountPage.Refresh(parent, parent.buildsContext)
+            return
+        end
         parent.buildsBuildCollapsed = not parent.buildsBuildCollapsed
-        -- Keep the page's layout state available to Core before it measures the
-        -- next surface.  The refresh below may resize the shared account frame.
         Addon.buildsBuildCollapsed = parent.buildsBuildCollapsed
-        Core.AccountView:RefreshPage(true)
+        Core.AccountView:RefreshPage()
     end)
     toolbar.buildToggle:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:AddLine(parent.buildsBuildCollapsed and Addon:T("UI.EXPAND_TALENTS_AND_GLYPHS") or Addon:T("UI.COLLAPSE_TALENTS_AND_GLYPHS"))
+        GameTooltip:AddLine(parent.buildsCompact and self.label:GetText()
+            or (parent.buildsBuildCollapsed and Addon:T("UI.EXPAND_TALENTS_AND_GLYPHS") or Addon:T("UI.COLLAPSE_TALENTS_AND_GLYPHS")))
         GameTooltip:Show()
     end)
     toolbar.buildToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -2112,23 +2118,28 @@ local function LayoutMain(parent)
     if parent.buildsPreviewToggle then parent.buildsPreviewToggle:Hide() end
     if parent.buildsPreviewHeader then parent.buildsPreviewHeader:Hide() end
     if parent.buildsPreviewBody then parent.buildsPreviewBody:Hide() end
-    local availableWidth = parent:GetWidth() or 0
-    local availableHeight = parent:GetHeight() or 0
+    local context = parent.buildsContext or {}
+    local availableWidth = context.surfaceAvailableWidth or parent:GetWidth() or 0
+    local availableHeight = context.surfaceAvailableHeight or parent:GetHeight() or 0
     if availableWidth < 1 then availableWidth = 860 end
     if availableHeight < 1 then availableHeight = 520 end
     local collapsed = parent.buildsBuildCollapsed == true
+    local compact = availableWidth < 800
+    parent.buildsCompact = compact
     -- Folding hides only the build pane.  The roster and equipment pane retain
     -- their expanded widths, so the visual hierarchy does not jump.
-    local rosterWidth = (collapsed or availableWidth >= 1050) and 210 or (availableWidth >= 850 and 185 or 160)
+    local rosterWidth = compact and math.max(108, math.min(136, math.floor(availableWidth * 0.24)))
+        or ((collapsed or availableWidth >= 1050) and 210 or (availableWidth >= 850 and 185 or 160))
     parent.buildsRoster:ClearAllPoints(); parent.buildsRoster:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top); parent.buildsRoster:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", inset.left, inset.bottom); parent.buildsRoster:SetWidth(rosterWidth)
     parent.buildsMain:ClearAllPoints(); parent.buildsMain:SetPoint("TOPLEFT", parent.buildsRoster, "TOPRIGHT", Theme.Space.sm, 0); parent.buildsMain:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset.right, inset.bottom)
     parent.buildsToolbar:ClearAllPoints(); parent.buildsToolbar:SetPoint("TOPLEFT", parent.buildsMain, "TOPLEFT", Theme.Space.sm, -Theme.Space.sm); parent.buildsToolbar:SetPoint("TOPRIGHT", parent.buildsMain, "TOPRIGHT", -Theme.Space.sm, -Theme.Space.sm); parent.buildsToolbar:SetHeight(Theme.Size.standard)
+    parent.buildsToolbar.primary:ClearAllPoints(); parent.buildsToolbar.secondary:ClearAllPoints()
+    parent.buildsToolbar.specIcon:ClearAllPoints(); parent.buildsToolbar.status:ClearAllPoints()
     parent.buildsToolbar.primary:SetPoint("LEFT"); parent.buildsToolbar.secondary:SetPoint("LEFT", parent.buildsToolbar.primary, "RIGHT", 4, 0)
     parent.buildsToolbar.specIcon:SetPoint("LEFT", parent.buildsToolbar.secondary, "RIGHT", 12, 0)
     parent.buildsToolbar.specName:SetPoint("LEFT", parent.buildsToolbar.specIcon, "RIGHT", 6, 0)
     parent.buildsToolbar.status:SetPoint("RIGHT")
     local mainWidth = availableWidth - inset.left - inset.right - rosterWidth - Theme.Space.sm
-    local mainHeight = availableHeight - inset.top - inset.bottom
     Addon.buildsBuildCollapsed = collapsed
     -- The folded layout still needs a usable action strip. Keep the status and
     -- toggle in a fixed right-side group, and give the specialization label a
@@ -2136,10 +2147,35 @@ local function LayoutMain(parent)
     parent.buildsToolbar.specName:SetWidth(collapsed and 72 or 96)
     parent.buildsToolbar.status:SetWidth(collapsed and 132 or 180)
     parent.buildsToolbar.buildToggle:SetSize(44, Theme.Size.compact)
+    parent.buildsToolbar.primary:SetWidth(94); parent.buildsToolbar.secondary:SetWidth(94)
+    if compact then
+        local toolbar = parent.buildsToolbar
+        local toolbarWidth = mainWidth - Theme.Space.sm * 2
+        toolbar:SetHeight(Theme.Size.compact * 2 + Theme.Space.xxs)
+        toolbar.primary:ClearAllPoints(); toolbar.primary:SetPoint("TOPLEFT")
+        toolbar.secondary:ClearAllPoints(); toolbar.secondary:SetPoint("TOPLEFT", toolbar.primary, "TOPRIGHT", Theme.Space.xxs, 0)
+        local specWidth = math.max(1, math.min(94, math.floor((toolbarWidth - 112) / 2)))
+        toolbar.primary:SetWidth(specWidth); toolbar.secondary:SetWidth(specWidth)
+        toolbar.specIcon:ClearAllPoints(); toolbar.specIcon:SetPoint("BOTTOMLEFT")
+        toolbar.specIcon:SetSize(24, 24)
+        toolbar.specName:SetWidth(math.max(1, math.floor(toolbarWidth * 0.45) - 24))
+        toolbar.status:ClearAllPoints(); toolbar.status:SetPoint("BOTTOMRIGHT")
+        toolbar.status:SetWidth(math.floor(toolbarWidth * 0.48))
+        toolbar.buildToggle:SetSize(100, Theme.Size.compact)
+    else
+        parent.buildsToolbar.specIcon:SetSize(28, 28)
+    end
     local equipmentWidth = collapsed and FoldedEquipmentWidth() or math.floor((mainWidth - Theme.Space.sm * 3) * 0.55)
     parent.buildsConfirm:ClearAllPoints(); parent.buildsConfirm:SetPoint("BOTTOMLEFT", parent.buildsMain, "BOTTOMLEFT", Theme.Space.sm, Theme.Space.sm); parent.buildsConfirm:SetPoint("BOTTOMRIGHT", parent.buildsMain, "BOTTOMRIGHT", -Theme.Space.sm, Theme.Space.sm); parent.buildsConfirm:SetHeight(48)
     parent.buildsEquipment:ClearAllPoints(); parent.buildsEquipment:SetPoint("TOPLEFT", parent.buildsToolbar, "BOTTOMLEFT", 0, -Theme.Space.sm); parent.buildsEquipment:SetPoint("BOTTOMLEFT", parent.buildsConfirm, "TOPLEFT", 0, Theme.Space.sm)
-    if collapsed then
+    if compact then
+        equipmentWidth = math.max(1, mainWidth - Theme.Space.sm * 2)
+        parent.buildsEquipment:SetWidth(equipmentWidth)
+        parent.buildsBuild:ClearAllPoints(); parent.buildsBuild:SetAllPoints(parent.buildsEquipment)
+        parent.buildsEquipment.layoutWidth, parent.buildsBuild.layoutWidth = equipmentWidth, equipmentWidth
+        parent.buildsBuild.layoutHeight = math.max(1, availableHeight - inset.top - inset.bottom
+            - parent.buildsToolbar:GetHeight() - Theme.Space.sm * 4 - 48)
+    elseif collapsed then
         parent.buildsEquipment:SetWidth(equipmentWidth)
         parent.buildsEquipment.layoutWidth = equipmentWidth
         parent.buildsBuild:Hide()
@@ -2150,12 +2186,17 @@ local function LayoutMain(parent)
         parent.buildsBuild.layoutWidth = mainWidth - Theme.Space.sm * 3 - equipmentWidth
         parent.buildsBuild.layoutHeight = parent.buildsBuild:GetHeight()
     end
-    parent.buildsEquipment.layoutHeight = parent.buildsEquipment:GetHeight()
+    parent.buildsEquipment.layoutHeight = compact and parent.buildsBuild.layoutHeight or parent.buildsEquipment:GetHeight()
     parent.buildsToolbar.appearance:ClearAllPoints(); parent.buildsToolbar.appearance:SetPoint("TOP", parent.buildsEquipment, "TOP", 0, -10)
     parent.buildsToolbar.buildToggle:ClearAllPoints()
     -- Anchor the control to the equipment pane so it remains usable after the
     -- account window contracts to the folded layout width.
-    parent.buildsToolbar.buildToggle:SetPoint("BOTTOMRIGHT", parent.buildsEquipment, "BOTTOMRIGHT", -8, 8)
+    if compact then
+        parent.buildsToolbar.buildToggle:SetPoint("TOPRIGHT", parent.buildsToolbar, "TOPRIGHT")
+    else
+        parent.buildsToolbar.buildToggle:SetPoint("BOTTOMRIGHT", parent.buildsEquipment, "BOTTOMRIGHT", -8, 8)
+        parent.buildsEquipment:Show()
+    end
 end
 
 function Page.Refresh(parent, context)
@@ -2226,7 +2267,9 @@ function Page.Refresh(parent, context)
     local mode = Addon:GetSettings().appearanceMode
     parent.buildsToolbar.appearance:SetText(not IsCurrent(selected) and Addon:T("UI.ORIGINAL_TRANSMOG") or (mode == "transmog" and Addon:T("UI.ORIGINAL_CFF20E070TRANSMOG_R") or Addon:T("UI.CFF20E070ORIGINAL_R_TRANSMOG")))
     parent.buildsToolbar.appearance:SetState(IsCurrent(selected) and "default" or "disabled")
-    parent.buildsToolbar.buildToggle:SetText(parent.buildsBuildCollapsed and ">>" or "<<")
+    parent.buildsToolbar.buildToggle:SetText(parent.buildsCompact
+        and Addon:T(parent.buildsCompactPane == "build" and "UI.EQUIPMENT" or "UI.TALENT")
+        or (parent.buildsBuildCollapsed and ">>" or "<<"))
     parent.buildsToolbar.buildToggle:SetState("default")
     local equipmentStatus = Addon.Snapshot:GetEquipmentStatus(slotData)
     local equipmentStatusText = ({
@@ -2242,6 +2285,12 @@ function Page.Refresh(parent, context)
     RenderBuildColumns(parent, slotData, record)
     local catalogOpen = parent.buildsGlyphCatalogOpen == true
     local detailOpen = parent.buildsEquipment.detail:IsShown()
+    if parent.buildsCompact then
+        local showBuild = parent.buildsCompactPane == "build" or parent.buildsSelectedEquipmentSlot ~= nil
+        parent.buildsEquipment:SetShown(not showBuild)
+        parent.buildsBuild:SetShown(showBuild)
+        detailOpen = showBuild and parent.buildsSelectedEquipmentSlot ~= nil
+    end
     parent.buildsBuild.catalog:SetShown(catalogOpen and not detailOpen)
     parent.buildsBuild.catalogMajor:SetShown(catalogOpen and not detailOpen)
     parent.buildsBuild.catalogMinor:SetShown(catalogOpen and not detailOpen)
@@ -2481,7 +2530,7 @@ function Page.GetSurfaceMetrics(context)
     -- width, including the roster and surrounding gutters.
     local collapsed = Addon.buildsBuildCollapsed == true
     local contentWidth = collapsed and FoldedContentWidth() or EXPANDED_CONTENT_WIDTH
-    return { minContentWidth = contentWidth, naturalContentWidth = contentWidth, minContentHeight = 520, naturalContentHeight = 680, horizontalOverflow = "none", verticalOverflow = "content" }
+    return { minContentWidth = 470, naturalContentWidth = contentWidth, minContentHeight = 454, naturalContentHeight = 680, horizontalOverflow = "none", verticalOverflow = "content" }
 end
 
 function Page.GetHoverMetrics(context)

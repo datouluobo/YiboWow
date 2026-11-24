@@ -57,10 +57,12 @@ dofile("YiboCore/Locales/zhCN.lua")
 dofile("YiboCore/Locales/enUS.lua")
 dofile("YiboCore/Runtime/Events.lua")
 dofile("YiboCore/Runtime/Registry.lua")
+dofile("YiboCore/Runtime/SettingsRegistry.lua")
 dofile("YiboCore/Runtime/Contracts.lua")
 dofile("YiboCore/Runtime/EntryConfig.lua")
 dofile("YiboCore/Util/CharacterSort.lua")
 local Core = YiboCore
+local currentCoreAPI = Core.API_VERSION
 Core.Print = function() end
 Core.Client = {
     ReadGUID = function() return UnitGUID("player"), "known" end,
@@ -235,7 +237,7 @@ check(parent.currencyRows[1].entry.id == "money", "hover transpose never transpo
 settings.hoverTranspose = false
 Addon:RefreshCurrencyPage(parent, previewContext)
 check(parent.currencyRows[1].entry.id == "money" and parent.currencyHeaders[3]:IsShown(), "switching transpose off restores pooled matrix frames")
--- Natural sizing must budget the scrollbar before a minimum-width roster is paged.
+-- The compact shell leaves room for the actual scrollbar and pages the remaining columns.
 local originalCatalog, originalColumnWidth = Addon.Catalog, Core.UITheme.GetCharacterMatrixColumnWidth
 Addon.Catalog = {}
 for i = 1, 54 do Addon.Catalog[i] = { id = "test:" .. i, source = "money", title = "Gold " .. i } end
@@ -243,13 +245,14 @@ Core.UITheme.GetCharacterMatrixColumnWidth = function() return 52 end
 local naturalContext = { characters = roster, scope = "all", preview = false }
 local originalCreate = view.CreateFrame
 local shell = Node(UIParent); shell:SetSize(760, 640)
+shell.nav = Node(shell)
 view.CreateFrame = function() return shell end
 view:ApplyPageSize(page, naturalContext)
-local completeWidth = shell:GetWidth() - Core.UITheme:GetNavigationWidth() - Core.UITheme.Geometry.shellBorder * 2 - 1
-naturalContext.surfaceAvailableWidth = completeWidth
+local completeWidth = naturalContext.surfaceAvailableWidth
 view.CreateFrame = originalCreate
 Addon:RefreshCurrencyPage(parent, naturalContext)
-check(pageInfo.pages == 1 and pageInfo.last == 13, "natural width includes scrollbar and keeps every minimum-width character column")
+check(shell:GetWidth() == 736 and shell:GetHeight() == 544 and pageInfo.pages > 1 and pageInfo.total == 13,
+    "the complete roster is paged inside the fixed shell")
 check(parent.currencyBody:GetWidth() <= completeWidth - Core.UITheme.Geometry.scrollbarGutter, "natural matrix leaves the scrollbar outside data columns")
 Addon.Catalog, Core.UITheme.GetCharacterMatrixColumnWidth = originalCatalog, originalColumnWidth
 Addon:RefreshCurrencyPage(parent, { characters = characters, scope = "all", preview = false, surfaceAvailableWidth = 1400 })
@@ -366,4 +369,5 @@ check(Addon.Store:Get(characters[1].id, "carriedTokens").data.items[123].carried
 check(not Addon:ToggleHoverCurrency("item:123") and not Addon:SetCurrencyDisplay("item:123", "main", true), "stale controls cannot recreate removed catalog selections")
 Core.CreateItemPicker = originalPicker
 view.UpdateColumnPager = updatePager
+Core.API_VERSION = currentCoreAPI
 print("API13Spec (" .. Core.Locale:GetLanguage() .. "): " .. checks .. " checks passed")

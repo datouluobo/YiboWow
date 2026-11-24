@@ -977,12 +977,14 @@ Core PixelLineSpec 64 项通过；Core 既有 7 组、Mail 3 组、Currency API1
 
 ## CAP-014 紧凑账号页和列宽
 
-Core 提供 API14 下的可选能力 `account-compact-layout:1`。页面声明、列宽参数、空间限制及试点适用范围见[窗口尺寸与溢出契约第 6.6 节](Core-0.3-窗口尺寸与溢出契约.md#66-紧凑账号页试点)。本能力处于试点，现有发布的 API14 仍需检查能力版本。
+Core 在 API14 下提供 `account-compact-layout:2`，包含试点的 v1 测宽接口。页面声明、列宽参数和空间限制见[窗口尺寸与溢出契约第 6.6 节](Core-0.3-窗口尺寸与溢出契约.md#66-固定账号主窗口和紧凑布局)。已发行的 API14 是否具备该能力，仍由能力检查确定。
 
 | 插件 | 状态 | 接入范围与验证 | 最近审查 |
 |---|---|---|---|
 | YiboAltoBoss | 部分接入 | Mists 副本进度主视图使用固定窗口和按列分页。首领页、悬停及 Forever 使用原布局。Mists 已测 Core 中英文模式。 | 2026-11-24 |
 | YiboCrafting | 部分接入 | Mists 专业配方主视图使用固定窗口和角色／状态实测列宽。配方搜索列表复用现有可视行复用机制。悬停及 Forever 使用原布局。 | 2026-11-24 |
-| 其余业务插件 | 待评估 | 未接入本次试点。 | 2026-11-24 |
+| 其余 Core 托管页 | 部分接入 | 共用固定外框。下面的推广记录列出业务侧适配，三目标双语离线通过，待集中实机检查。 | 2026-11-24 |
 
 各目标构建和实机范围见[试点验收与回滚](../../Docs/主窗口紧凑列宽试点-验收与回滚.md)。
+
+2026-11-24 推广阶段。Core 三目标将统一固定外框提升为 `account-compact-layout:2`，保留 v1 测宽接口。Core 注册的主页面及设置自动使用固定壳。YiboAltoBoss、YiboCrafting Mists 延续试点配置，YiboAutoOpen、YiboBeastPaths、YiboBuilds、YiboCrafting Forever、YiboCurrency Mists、YiboLegendary、YiboMail、YiboQuestBlocker、YiboReputation Forever、YiboTaskHub、YiboTodo、YiboVault按本次触及页面补齐窄布局。Todo 明确检查既有 `account-surface-budget:2` 及列分页方法，其余沿用已声明的账号页能力。离线证据与实机待验项见[统一窗口实施记录](../../Docs/统一账号主窗口-实施与验证.md)。

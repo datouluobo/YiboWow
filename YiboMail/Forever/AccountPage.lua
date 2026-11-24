@@ -332,7 +332,7 @@ function Page:Register()
                 return {minContentWidth=500, naturalContentWidth=655, minContentHeight=94,
                     naturalContentHeight=75 + math.max(1, #context.characters) * 30}
             end
-            return {minContentWidth=700, naturalContentWidth=1040, minContentHeight=237, naturalContentHeight=477}
+            return {minContentWidth=440, naturalContentWidth=1040, minContentHeight=237, naturalContentHeight=477}
         end,
         Create = function(parent) Page:Create(parent) end, Refresh = function(parent, context) Page:Refresh(parent, context) end })
     if not page then return nil, err end

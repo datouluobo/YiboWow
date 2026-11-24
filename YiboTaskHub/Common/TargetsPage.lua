@@ -112,7 +112,7 @@ local function Row(parent, rows, index, width, step)
     row:ClearAllPoints(); row:SetPoint("TOPLEFT", 0, -64 - (index - 1) * step); row:SetSize(width, step - 2)
     row.label:SetHeight(step - 8)
     row.main:SetHeight(step - 4); row.remove:SetHeight(step - 4)
-    row.label:SetWidth(math.max(80, width - 136))
+    row.label:SetWidth(math.max(1, width - 136))
     row.main:ClearAllPoints(); row.main:SetPoint("TOPRIGHT", -58, 0)
     row.remove:ClearAllPoints(); row.remove:SetPoint("TOPRIGHT", 0, 0)
     row.check:Hide(); row.label:Show(); row.main:Show(); row.remove:Show(); row:Show()
@@ -134,16 +134,24 @@ function Page.Refresh(frame, context)
     end
     frame.role:SetOptions(options); frame.role:SetValue(frame.characterID)
     frame.copyTo:SetEnabled(frame.characterID ~= nil); frame.copyFrom:SetEnabled(frame.characterID ~= nil)
-    local width, height = math.max(620, frame:GetWidth() - 12), math.max(150, frame:GetHeight() - 80)
+    local width = math.max(1, (context.surfaceAvailableWidth or frame:GetWidth()) - 12)
+    local compact = width < 690
+    local top = compact and 64 or 44
+    local height = math.max(150, frame:GetHeight() - top - 36)
     local leftWidth = math.floor(width * 0.46); local rightWidth = width - leftWidth - 20
-    frame.left:SetPoint("TOPLEFT", 4, -44); frame.left:SetSize(leftWidth, height)
-    frame.right:SetPoint("TOPLEFT", leftWidth + 24, -44); frame.right:SetSize(rightWidth, height)
+    frame.role:SetWidth(math.max(1, math.min(260, width - 258)))
+    frame.copyTo:ClearAllPoints(); frame.copyTo:SetPoint("LEFT", frame.role, "RIGHT", 8, 0)
+    frame.copyFrom:ClearAllPoints(); frame.copyFrom:SetPoint("LEFT", frame.copyTo, "RIGHT", 8, 0)
+    frame.left:ClearAllPoints(); frame.left:SetPoint("TOPLEFT", 4, -top); frame.left:SetSize(leftWidth, height)
+    frame.right:ClearAllPoints(); frame.right:SetPoint("TOPLEFT", leftWidth + 24, -top); frame.right:SetSize(rightWidth, height)
     local capacity = math.max(1, math.floor((height - 140) / 38))
     local entryStep = Theme().Size.standard + 2
     local entryCapacity = math.max(1, math.floor((height - 140) / entryStep))
     for _, list in ipairs({ frame.leftRows, frame.rightRows }) do for _, row in ipairs(list) do row:Hide() end end
     local goals = frame.characterID and Addon.BossTargets:List(frame.characterID) or {}
     frame.summary:SetText(#goals .. Addon:T("TEXT.GOALS_SHOWN_AUTOMATICALLY.A724B2") .. (Addon.db.settings.bossTargetsAutoDisplay and Addon:T("TEXT.ON.256783") or Addon:T("TEXT.OFF.6C14BD")))
+    frame.summary:ClearAllPoints()
+    frame.summary:SetPoint("TOPLEFT", compact and 4 or 540, compact and -40 or -12)
     frame.summary:SetPoint("RIGHT", frame, "RIGHT", -4, 0)
     local first
     frame.leftPage, first = Pager(frame.leftPrev, frame.leftNext, frame.leftFooter, frame.leftPage, #goals, capacity, frame.left)
@@ -176,7 +184,10 @@ function Page.Refresh(frame, context)
     local mode, entries = frame.mode or "catalog", {}
     if mode == "catalog" then
         frame.rightTitle:SetText(Addon:T("TEXT.ADD_BOSS_GOALS.2B65F3")); frame.search:Show(); frame.filter:Show()
-        frame.search:SetWidth(math.max(100, rightWidth - 140)); frame.filter:ClearAllPoints(); frame.filter:SetPoint("TOPRIGHT", 0, -28)
+        local filterWidth = math.min(130, math.floor(rightWidth * 0.45))
+        frame.search:SetWidth(math.max(1, rightWidth - filterWidth - 8))
+        frame.filter:SetWidth(math.max(1, filterWidth))
+        frame.filter:ClearAllPoints(); frame.filter:SetPoint("TOPRIGHT", 0, -28)
         frame.filter:SetValue(frame.filterValue or "all")
         for _, entry in ipairs(catalog and catalog.targets or {}) do if (not frame.filterValue or frame.filterValue == "all" or entry.kind == frame.filterValue) and Addon.BossTargets:Matches(entry, frame.query) then entries[#entries + 1] = entry end end
         local selectedCount = 0; for _ in pairs(frame.worldSelection or {}) do selectedCount = selectedCount + 1 end
@@ -193,7 +204,10 @@ function Page.Refresh(frame, context)
                 if d.id == frame.draft.difficultyID then selected = d end
             end end
             frame.difficulty:SetOptions(difficulties); frame.difficulty:SetValue(frame.draft.difficultyID); frame.difficulty:Show()
-            frame.difficulty:SetWidth(math.max(110, rightWidth - 170)); frame.scope:ClearAllPoints(); frame.scope:SetPoint("TOPRIGHT", 0, -28)
+            local scopeWidth = math.min(160, math.floor(rightWidth * 0.52))
+            frame.difficulty:SetWidth(math.max(1, rightWidth - scopeWidth - 8))
+            frame.scope:SetWidth(math.max(1, scopeWidth))
+            frame.scope:ClearAllPoints(); frame.scope:SetPoint("TOPRIGHT", 0, -28)
             local scopes = { { value = "all", label = Addon:T("TEXT.ALL_BOSSES_IN_RAID.11F973") } }
             if selected and not selected.finalEncounterID and frame.draft.scope == "final" then frame.draft.scope = "boss" end
             if selected and selected.finalEncounterID then

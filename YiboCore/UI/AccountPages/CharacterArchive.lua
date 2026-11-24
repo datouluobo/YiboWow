@@ -83,6 +83,8 @@ local function CreateCharacters(parent)
     parent.listHeader.zone = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); parent.listHeader.zone:SetPoint("LEFT", parent.listHeader.level, "RIGHT", 6, 0); parent.listHeader.zone:SetWidth(78); parent.listHeader.zone:SetText(Core:Text("CORE.LOCATION"))
     parent.listHeader.itemLevel = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); parent.listHeader.itemLevel:SetPoint("LEFT", parent.listHeader.zone, "RIGHT", 6, 0); parent.listHeader.itemLevel:SetWidth(42); parent.listHeader.itemLevel:SetText(Core:Text("CORE.ITEM_LEVEL"))
     parent.listHeader.professions = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); parent.listHeader.professions:SetPoint("LEFT", parent.listHeader.itemLevel, "RIGHT", 6, 0); parent.listHeader.professions:SetText(Core:Text("CORE.PROFESSIONS"))
+    parent.pagerAnchor = CreateFrame("Frame", nil, parent)
+    parent.pagerAnchor:SetPoint("TOPRIGHT", -Theme.Space.xs, -Theme.Space.xs)
     parent.scroll = Theme:CreateScrollFrame(parent)
     parent.scroll:SetPoint("TOPLEFT", 20, -106); parent.scroll:SetPoint("BOTTOMRIGHT", -Theme.Space.xs, 12)
     parent.listContent = CreateFrame("Frame", nil, parent.scroll)
@@ -198,13 +200,39 @@ local function GetArchiveColumnGap(fields, index)
     return tonumber(fields[index].gapAfter) or ARCHIVE_COLUMN_GAP
 end
 
-local function GetArchiveTableWidth(fields, widths)
+local function GetArchiveTableWidth(fields, widths, gap)
     local width = 16
     for index, columnWidth in ipairs(widths) do
         width = width + columnWidth
-        if index < #widths then width = width + GetArchiveColumnGap(fields, index) end
+        if index < #widths then width = width + (gap and gap(index) or GetArchiveColumnGap(fields, index)) end
     end
     return width
+end
+
+local function GetCompactArchiveColumns(parent, context, fields, characters, snapshot, inset)
+    local budget = AccountView:GetScrollSurfaceWidth(context, parent, #characters * Theme.Table.rowHeight,
+        inset.top + Theme.Table.headerHeight + Theme.Space.xs + inset.bottom + Theme.Size.compact)
+    budget = math.max(1, budget - inset.left - inset.right - 16)
+    local widths = {}
+    for _, field in ipairs(fields) do
+        local values, iconWidth = {}, nil
+        for index, character in ipairs(characters) do
+            local text, value = ArchiveFieldText(character, field, snapshot)
+            values[index] = text
+            if field.GetIcon and field.GetIcon(value, character) and text ~= "—" then iconWidth = 16 end
+        end
+        widths[field] = Theme:GetCompactColumnWidth(field.title, values, iconWidth)
+    end
+    local identity = fields[1] and fields[1].id == "character.identity" and table.remove(fields, 1)
+    local fixed = identity and math.min(widths[identity], math.max(1, math.floor(budget * 0.45))) or 0
+    local shown, info = AccountView:GetColumnPageByWidth("characters", "fields", fields, budget, fixed,
+        function(field) return math.min(widths[field], math.max(1, budget - fixed)) end)
+    if identity then table.insert(shown, 1, identity) end
+    local visibleWidths = {}
+    for index, field in ipairs(shown) do
+        visibleWidths[index] = field == identity and fixed or math.min(widths[field], math.max(1, budget - fixed))
+    end
+    return shown, visibleWidths, info
 end
 
 local function RefreshCharacters(parent, context)
@@ -240,9 +268,22 @@ local function RefreshCharacters(parent, context)
     parent.listContent:SetWidth(contentWidth)
     local fields = GetArchiveFields(preview)
     local providerSnapshot = Core.ArchiveFields and Core.ArchiveFields:Read(characters, fields)
-    local widths = GetArchiveColumnWidths(fields, characters, providerSnapshot)
-    local tableWidth = GetArchiveTableWidth(fields, widths)
-    local surfaceWidth = math.max(contentWidth, tableWidth)
+    local widths, pageInfo
+    local function ColumnGap(index)
+        return preview and GetArchiveColumnGap(fields, index) or 0
+    end
+    if preview then
+        widths = GetArchiveColumnWidths(fields, characters, providerSnapshot)
+    else
+        fields, widths, pageInfo = GetCompactArchiveColumns(parent, context, fields, characters, providerSnapshot, inset)
+        if pageInfo.pages > 1 then
+            parent.listHeader:ClearAllPoints()
+            parent.listHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top - Theme.Size.standard)
+        end
+    end
+    AccountView:UpdateColumnPager(parent, "characters", "fields", pageInfo, parent.pagerAnchor, Core:Text("CORE.TABLE"))
+    local tableWidth = GetArchiveTableWidth(fields, widths, ColumnGap)
+    local surfaceWidth = preview and math.max(contentWidth, tableWidth) or tableWidth
     parent.listContent:SetWidth(surfaceWidth)
     parent.listHeader:SetWidth(surfaceWidth)
     parent.listHeader.name:Hide(); parent.listHeader.level:Hide(); parent.listHeader.zone:Hide(); parent.listHeader.itemLevel:Hide(); parent.listHeader.professions:Hide()
@@ -252,7 +293,7 @@ local function RefreshCharacters(parent, context)
         local cell = parent.listHeader.dynamicCells[fieldIndex]
         if not cell then cell = AddText(parent.listHeader, "GameFontNormalSmall", nil, COLORS.muted); cell:SetWordWrap(false); parent.listHeader.dynamicCells[fieldIndex] = cell end
         local width = widths[fieldIndex]
-        cell:ClearAllPoints(); cell:SetPoint("LEFT", x, 0); cell:SetWidth(width); cell:SetJustifyH("LEFT"); cell:SetText(field.title); cell:Show(); x = x + width + GetArchiveColumnGap(fields, fieldIndex)
+        cell:ClearAllPoints(); cell:SetPoint("LEFT", x, 0); cell:SetWidth(width); cell:SetJustifyH("LEFT"); cell:SetText(field.title); cell:Show(); x = x + width + ColumnGap(fieldIndex)
     end
     for fieldIndex = #fields + 1, #parent.listHeader.dynamicCells do parent.listHeader.dynamicCells[fieldIndex]:Hide() end
     for index, character in ipairs(characters) do
@@ -306,13 +347,13 @@ local function RefreshCharacters(parent, context)
             local color = field.GetColor and field.GetColor(value, character)
             local r, g, b = color and color[1] or COLORS.muted[1], color and color[2] or COLORS.muted[2], color and color[3] or COLORS.muted[3]
             cell:SetTextColor(r, g, b)
-            cell:Show(); x = x + width + GetArchiveColumnGap(fields, fieldIndex)
+            cell:Show(); x = x + width + ColumnGap(fieldIndex)
         end
         for fieldIndex = #fields + 1, #row.dynamicCells do row.dynamicCells[fieldIndex]:Hide() end
         local isCurrent = currentID == character.id
         local rowTone = Theme:GetDataRowColor(index)
         row:SetBackdropColor(rowTone[1], rowTone[2], rowTone[3], rowTone[4] or 0.88)
-        Theme:ApplyDataColumnTints(row, widths, rowHeight, 8, function(fieldIndex) return GetArchiveColumnGap(fields, fieldIndex) end)
+        Theme:ApplyDataColumnTints(row, widths, rowHeight, 8, ColumnGap)
         -- Stacked rows share one boundary: each row draws its sides and bottom,
         -- and only the first row draws the table's top edge.
         Theme:CreatePixelBorder(row, { color = COLORS.matrixLine, sides = { top = index == 1, right = true, bottom = true, left = true } })

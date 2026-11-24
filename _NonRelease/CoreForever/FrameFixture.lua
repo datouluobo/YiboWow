@@ -20,6 +20,16 @@ function methods:SetFont(_, size) self.fontSize = size end
 function methods:GetStringWidth() return #(self.text or ""):gsub("[\128-\191]", "") * (self.fontSize or 16) * 0.75 end
 function methods:GetChildren() return unpack(self.children) end
 function methods:GetParent() return self.parent end
+function methods:SetParent(parent)
+    if self.parent == parent then return end
+    if self.parent then
+        for index, child in ipairs(self.parent.children) do
+            if child == self then table.remove(self.parent.children, index); break end
+        end
+    end
+    self.parent = parent
+    if parent then parent.children[#parent.children + 1] = self end
+end
 function methods:GetFrameLevel() return self._frameLevel end
 function methods:SetFrameLevel(v) self._frameLevel = v end
 function methods:GetFrameStrata() return self.strata or "MEDIUM" end

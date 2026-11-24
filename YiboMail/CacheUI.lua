@@ -596,7 +596,7 @@ function UI:Refresh(parent, context)
             identityWidth = math.max(identityWidth, Theme:MeasureText(Theme.Font.body, Name(character)) + 132,
                 Theme:MeasureText(Theme.Font.meta, character.realm) + 42)
         end
-        left = math.min(284, identityWidth + 24); contentWidth = width - left + 8
+        left = math.min(284, identityWidth + 24, math.floor(width * 0.38)); contentWidth = width - left + 8
         local global = (state.search or ""):find("%S") ~= nil
         entries = Model:GetMails(context, state)
         data = state.mode == "items" and Model:GetGroups(entries, state.sort, state.search) or entries
@@ -626,7 +626,7 @@ function UI:Refresh(parent, context)
     else
         local identityWidth = 230
         for _, character in ipairs(characters) do identityWidth = math.max(identityWidth, Theme:MeasureText(Theme.Font.body, Name(character)) + 132) end
-        left = math.min(284, identityWidth + 24); contentWidth = width - left + 8
+        left = math.min(284, identityWidth + 24, math.floor(width * 0.38)); contentWidth = width - left + 8
         root.heading:SetText(Addon:T("UI.TEXT_0170"))
         root.note:SetText(Addon:T("HISTORY.RETENTION_NOTE", Addon.db.settings.historyDays))
         root.note:SetWordWrap(true); root.note:SetHeight(0)

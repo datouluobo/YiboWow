@@ -154,7 +154,7 @@ local context = { characters = chars, preview = false, GetFieldVisible = functio
 end }
 local eligible = definition.GetEligibleCharacters(chars, context); assert(#eligible == 3)
 local metrics = definition.GetSurfaceMetrics(context)
-assert(metrics.minContentWidth == 1000 and metrics.naturalContentWidth >= 1154)
+assert(metrics.minContentWidth <= 470 and metrics.naturalContentWidth >= 1154)
 assert(#definition.GetEligibleCharacters(chars, { preview = true }) == 2)
 assert(#Addon.CacheModel:Characters(context) == 2)
 local result = Addon.CacheModel:GetMails(context, { character = "A", search = " ore ", sort = "expiry" })

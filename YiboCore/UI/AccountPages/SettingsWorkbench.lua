@@ -162,14 +162,13 @@ local function CreateHostedSettingsSection(parent, title, width, height)
     return section
 end
 
-local function RefreshSettings(parent)
+local function RefreshSettings(parent, context)
     local settings = Settings()
     -- The settings host follows the available right pane.  Individual controls
     -- may stay compact, but hosted plugin sections can use the spare width
     -- instead of leaving a narrow legacy panel stranded on the left.
-    local settingsViewportWidth = parent.scroll:GetWidth() or 0
-    if settingsViewportWidth <= 100 then settingsViewportWidth = (parent:GetWidth() or 658) - 38 end
-    parent.content:SetWidth(math.max(300, settingsViewportWidth - 18))
+    local availableWidth = context and context.surfaceAvailableWidth or parent:GetWidth()
+    parent.content:SetWidth(math.max(1, availableWidth - 20 - Theme.Space.xs - Theme.Geometry.scrollbarGutter - 4))
     local targetID = AccountView.settingsTargetPageID or "display"
     local settingsOnlyID = type(targetID) == "string" and targetID:match("^addon%-settings:(.+)$")
     local selected = AccountView._pages[targetID]
@@ -351,12 +350,12 @@ local function RefreshSettings(parent)
     -- hover fields. Widths deliberately favor the selected-value text over
     -- empty whitespace between controls.
     local width = parent.content:GetWidth() or 600
-    local available=width-48
+    local available=math.max(1,width-48)
     local widths={math.floor(available*0.16),math.floor(available*0.06),math.floor(available*0.08),math.floor(available*0.10),math.floor(available*0.08),math.floor(available*0.17),math.floor(available*0.17)}
     local x=2
     local columns={}
     for i,w in ipairs(widths) do columns[i]={x=x,width=w,y=0};x=x+w+6 end
-    columns[8]={x=x,width=math.max(60,width-x-4),y=0}
+    columns[8]={x=x,width=math.max(1,width-x-4),y=0}
     local DISPLAY_COLUMNS={page=columns[1],visible=columns[2],entryLabel=columns[3],entryMode=columns[4],mainFields=columns[6],previewFields=columns[7],option=columns[8]}
     local channelStart=columns[3].x
     local displayRowHeight=30
@@ -398,6 +397,9 @@ local function RefreshSettings(parent)
         local row = SettingsRow(parent, index, "business-entry")
         row:ClearAllPoints(); row:SetPoint("TOPLEFT", 2, -y); row:SetWidth(parent.content:GetWidth() or 600); row:SetHeight(Theme.Size.standard)
         PlaceDisplayColumn(row.title, "page"); row.title:SetText(page.title);row.title:SetHeight(Theme.Size.standard)
+        row.title:SetWordWrap(false)
+        row:EnableMouse(true)
+        Theme:BindTooltip(row, page.title)
         PlaceDisplayColumn(row.visible, "visible")
         row.visible.label:SetText("");row.visible.label:Hide()
         row.visible:Show();row.visible:SetHeight(Theme.Size.standard)
@@ -909,13 +911,16 @@ local function RefreshSettings(parent)
         else
             FinishGridRow();index=index+1
             local header=SettingsRow(parent,index,"order-actions")
-            header:ClearAllPoints();header:SetPoint("TOPLEFT",2,-y);header:SetWidth(width);header:SetHeight(36)
+            header:ClearAllPoints();header:SetPoint("TOPLEFT",2,-y);header:SetWidth(width)
             header.labels=header.labels or {}
+            local headerHeight = Theme.Size.standard
             for i,key in ipairs({"ENTRY.HEADER_PAGE","ENTRY.HEADER_SHOW","ENTRY.CHANNEL_MINIMAP","ENTRY.HEADER_BROKER","ENTRY.HEADER_BAR","CORE.TABLE","CORE.HOVER","ENTRY.HEADER_LAYOUT"}) do
                 local label=header.labels[i] or AddText(header,"GameFontNormalSmall",nil,COLORS.muted);header.labels[i]=label
-                label:ClearAllPoints();label:SetPoint("TOPLEFT",columns[i].x,0);label:SetWidth(columns[i].width);label:SetHeight(34);label:SetWordWrap(true);label:SetText(Core:Text(key))
+                label:ClearAllPoints();label:SetPoint("TOPLEFT",columns[i].x,0);label:SetWidth(math.max(1,columns[i].width))
+                label:SetWordWrap(true);label:SetText(Core:Text(key));label:SetHeight(math.max(Theme.Size.standard,label:GetStringHeight()))
+                headerHeight = math.max(headerHeight, label:GetHeight())
             end
-            header:Show();y=y+38
+            header:SetHeight(headerHeight);header:Show();y=y+headerHeight+4
             CoreEntryRow({})
             ArchiveEntryRow()
             local pages={}
@@ -937,9 +942,7 @@ local function RefreshSettings(parent)
         end
     else
         local details = settingsOnly or (selected and selected.settings) or {}
-        if details.description then
-            local text = SettingsRow(parent, index + 1, "heading"); index = index + 1; PlaceSettingsRow(text, y); text:SetText(details.description); text:SetTextColor(COLORS.muted[1], COLORS.muted[2], COLORS.muted[3]); text:Show(); y = y + 28
-        end
+        if details.description then Note(details.description) end
             if type(details.CreateSettingsPanel) == "function" then
                 AddonPanel(details)
             else

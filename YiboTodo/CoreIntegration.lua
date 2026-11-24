@@ -14,8 +14,10 @@ function Integration:CheckCore()
         and type(Core.UITheme.ApplyPixelBackdrop) == "function" and type(Core.UITheme.CreatePixelBorder) == "function"
         and Core:HasCapability("calendar-day-query", 1) and Core.Calendar and type(Core.Calendar.ReadDay) == "function"
         and Core:HasCapability("account-view", 2) and Core:HasCapability("character-identity", 1)
+        and Core:HasCapability("account-surface-budget", 2)
         and Core:HasCapability("character-name-format", 1) and Core:HasCapability("account-entry", 2)
         and Core.Locale and type(Core.Locale.Get) == "function" and Core.AccountView and Core.Entry and Core.Characters
+        and type(Core.AccountView.GetScrollSurfaceWidth) == "function" and type(Core.AccountView.GetColumnPageByWidth) == "function"
         and type(Core.Characters.FormatName) == "function") then return nil, Addon:T("ERROR.CORE_REQUIRED") end
     return Core
 end

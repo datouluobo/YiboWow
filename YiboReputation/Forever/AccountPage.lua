@@ -252,6 +252,12 @@ function Page:Refresh(parent, context)
         end
         parent.matchCount:SetText(count)
     end
+    if not context.preview then
+        local toolbarWidth = math.max(1, (context.surfaceAvailableWidth or parent:GetWidth()) - 40)
+        parent.search:SetWidth(math.min(250, math.floor(toolbarWidth * 0.48)))
+        parent.rankFilter:SetWidth(math.min(160, math.floor(toolbarWidth * 0.29)))
+        parent.watchFilter:SetWidth(math.min(112, math.floor(toolbarWidth * 0.23)))
+    end
     local headerY = context.preview and -94 or -165
     parent.header:SetPoint("TOPLEFT", 12, headerY); parent.header:SetPoint("TOPRIGHT", -12, headerY)
     parent.scroll:SetPoint("TOPLEFT", 12, headerY - 30)
@@ -415,7 +421,7 @@ function Page:Register()
                 return {minContentWidth=290, naturalContentWidth=188 + #context.characters * 94, minContentHeight=94,
                     naturalContentHeight=48 + math.max(1, #Addon.Store.db.settings.watchedFactionIDs) * rowHeight}
             end
-            return {minContentWidth=720,naturalContentWidth=1040,minContentHeight=311,naturalContentHeight=531}
+            return {minContentWidth=440,naturalContentWidth=1040,minContentHeight=311,naturalContentHeight=531}
         end,
         Create=function(parent) Page:Create(parent) end,Refresh=function(parent,context) Page:Refresh(parent,context) end})
     if not ok then return nil,err end

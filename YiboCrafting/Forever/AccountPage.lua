@@ -300,6 +300,10 @@ function Page:Refresh(parent,context)
     end
     parent.toolbar:SetShown(not context.preview)
     if not context.preview then
+        local toolbarWidth = math.max(1, (context.surfaceAvailableWidth or parent:GetWidth()) - 40)
+        parent.search:SetWidth(math.min(190, math.floor(toolbarWidth * 0.38)))
+        parent.professionFilter:SetWidth(math.min(146, math.floor(toolbarWidth * 0.28)))
+        parent.learningFilter:SetWidth(math.min(126, math.floor(toolbarWidth * 0.24)))
         if profileKnown or selected==nil then
             parent.professionFilter:SetOptions(options)
             parent.professionFilter:SetValue(names[selected] and selected or "all")
@@ -368,7 +372,7 @@ function Page:Register()
                 return {minContentWidth=600,naturalContentWidth=math.max(650,242+#context.characters*104),
                     minContentHeight=174,naturalContentHeight=328}
             end
-            return {minContentWidth=700,naturalContentWidth=1000,minContentHeight=337,naturalContentHeight=537}
+            return {minContentWidth=440,naturalContentWidth=1000,minContentHeight=337,naturalContentHeight=537}
         end,
         Create=function(parent) Page:Create(parent) end,Refresh=function(parent,context) Page:Refresh(parent,context) end})
     if not ok then return nil,err end

@@ -2,6 +2,8 @@
 dofile("YiboCurrency/_NonRelease/Tests/API13Spec.lua")
 dofile("YiboCore/Util/LevelFilter.lua")
 local Core, view, checks = YiboCore, YiboCore.AccountView, 0
+Core.Client.IsInCombat = function() return false end
+Core.Client.RegisterCombatDriver = function() return false end
 local function Check(value, message) checks = checks + 1; assert(value, message) end
 local function Near(a, b) return math.abs(a - b) < 0.01 end
 local frame = CreateFrame("Frame", nil, UIParent); frame:SetSize(760, 500); frame:Hide()
@@ -16,24 +18,18 @@ local body, naturalWidth, fixed, preferredHeight = 800, 1000.25, 40, 340
 local page = assert(view:RegisterPage("YiboCurrency", { id = "scroll-budget-test", title = "Budget", previewEnabled = true, defaultEnabled = true, Create = function() end, Refresh = function() end,
     GetSurfaceMetrics = function() return { minContentWidth = 300, naturalContentWidth = naturalWidth,
         minContentHeight = 100, naturalContentHeight = preferredHeight, scrollContentHeight = body, scrollFixedHeight = fixed } end }))
-local shellWidth = Core.UITheme:GetNavigationWidth() + Core.UITheme.Geometry.shellBorder * 2 + 1
 local context = view:BuildContext(page)
 view:ApplyPageSize(page, context)
 Check(Core:HasCapability("account-surface-budget", 2), "Core declares scroll budget v2")
-Check(Near(frame:GetWidth(), math.ceil(naturalWidth) + shellWidth + 16), "Core expands natural width for the actual vertical track")
+Check(frame:GetWidth() == 736 and frame:GetHeight() == 544, "normal window keeps the shared size")
+local available = context.surfaceAvailableWidth
 local parent = CreateFrame("Frame"); parent:SetSize(1000, 340)
 Check(view:GetScrollSurfaceWidth({ surfaceAvailableWidth = 1000 }, parent, 800, 40) == 984, "renderer consumes exactly one shared gutter")
 Check(view:GetScrollSurfaceWidth({ surfaceAvailableWidth = 1000 }, parent, 300, 40) == 1000, "exact fit has no phantom gutter")
 body, naturalWidth = 0, 300
-view:ApplyPageSize(page, context) -- Save a narrower user window.
+view:ApplyPageSize(page, context)
+Check(context.surfaceAvailableWidth == available and frame:GetWidth() == 736, "normal surface budget is independent of the page's scroll track")
 body, naturalWidth = 800, 1000.25
-view:ApplyPageSize(page, context)
-Check(Near(frame:GetWidth(), math.ceil(naturalWidth) + shellWidth + 16), "a saved narrow width cannot trigger premature pagination")
--- A saved tall window can eliminate a track even when preferred height is short.
-local db = Core.Database:GetDB()
-for key, size in pairs(db.settings.accountView.pageSizes) do if key:find(page.id, 1, true) then size.height = 950; size.width = math.ceil(naturalWidth) + shellWidth end end
-view:ApplyPageSize(page, context)
-Check(Near(frame:GetWidth(), math.ceil(naturalWidth) + shellWidth), "saved tall height releases the gutter instead of using preferred height")
 -- Preview sizing uses final anchored height, not only full-screen estimates.
 frame:Hide(); frame.preview = false
 local anchor = CreateFrame("Frame")

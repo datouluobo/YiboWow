@@ -685,8 +685,8 @@ function Page:Register()
                     elseif field.groupID == "history" then historyWidth = historyWidth + field.width end
                 end
             end
-            return { minContentWidth = 1000, naturalContentWidth = math.max(1154, width + 34, inboxWidth, historyWidth),
-                minContentHeight = 480, naturalContentHeight = 620, horizontalOverflow = "none", verticalOverflow = "none" }
+            return { minContentWidth = 470, naturalContentWidth = math.max(1154, width + 34, inboxWidth, historyWidth),
+                minContentHeight = 420, naturalContentHeight = 620, horizontalOverflow = "none", verticalOverflow = "none" }
         end,
         Create = function(parent) Page:Create(parent) end,
         Refresh = function(parent, context) Page:Refresh(parent, context) end,

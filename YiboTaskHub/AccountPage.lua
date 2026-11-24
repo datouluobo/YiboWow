@@ -178,10 +178,11 @@ local function PlaceCells(band, width, context)
     for i, field in ipairs(fields) do
         local size = width * field.weight / total
         local text = band.cells[i]
-        text:ClearAllPoints(); text:SetPoint("LEFT", x + 6, 0); text:SetWidth(math.max(1, size - 12)); text:SetHeight(Theme().Table.rowHeight)
+        local inset = Theme().Table.cellInset
+        text:ClearAllPoints(); text:SetPoint("LEFT", x + inset, 0); text:SetWidth(math.max(1, size - inset * 2)); text:SetHeight(Theme().Table.rowHeight)
         text:Show()
         if field.id == "action" then band.actionWidth = size end
-        if field.id == "work" then band.workOffset = x + 6 end
+        if field.id == "work" then band.workOffset = x + inset end
         x = x + size
     end
     for i = #fields + 1, #band.cells do band.cells[i]:Hide() end
@@ -385,6 +386,6 @@ function Page.GetSurfaceMetrics(context)
     end
     local theme = Theme()
     local height = theme.Table.headerHeight + (count + bars + 2) * theme.Table.rowHeight + 16
-    return { minContentWidth = 860, naturalContentWidth = 1040, minContentHeight = 180,
+    return { minContentWidth = 476, naturalContentWidth = 1040, minContentHeight = 180,
         naturalContentHeight = height, horizontalOverflow = "content", verticalOverflow = "none" }
 end
