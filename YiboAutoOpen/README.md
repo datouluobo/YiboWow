@@ -1,8 +1,10 @@
-# YiboAutoOpen 1.2.5
+# YiboAutoOpen 1.2.10（Mists）
 
 > 文档状态更新（2026-10-16）：现有功能已由用户确认实机验收收口。当前源码版本与发行证据见[状态总览](../Docs/仓库当前状态总览.md)，后续任务见[延期清单](../Docs/后续开发任务清单.md)。下文旧版本的开发／待验收描述按其原日期理解；当前版本渠道状态没有明确证据时保留待核对。
 
 Safely opens containers from an explicit account-wide allowlist, one at a time. By default, the addon scans items already in your bags after login.
+
+Locked boxes in the MoP Classic allowlist are skipped silently. Once you unlock a box, it becomes eligible on the next bag scan.
 
 Jaggal Clam (24476) is manual-only on MoP Classic. Adding it shows a manual-opening notice without adding it to the catalog. Existing catalog entries for this item are removed when the addon initializes; right-click the clam in your bags to open it.
 
@@ -48,9 +50,11 @@ The current icon uses `Media/YiboAutoOpenIcon`: the default TGA is 64 px and the
 
 ---
 
-# YiboAutoOpen 1.2.5
+# YiboAutoOpen 1.2.10（Mists）
 
 安全地逐个开启账号目录中的容器。目录是明确的允许列表，不依赖客户端并不稳定的“可拾取”标记；默认会在登录时扫描已有物品。
+
+MoP 客户端中，目录里已锁的箱子会被静默跳过。手动解锁后，下次扫描背包时就能参与自动开启。
 
 YiboCore 是可选增强，不是运行依赖。未安装 Core 时，自动开包和下方四个 `/yao` 命令仍可独立使用；物品目录可通过命令添加、删除和查看。统一设置工作台要求 YiboCore API v13 与 `localization:1`；兼容版本可管理自动开包开关、登录扫描、空位阈值、聊天提示、目录和确认框位置。
 
