@@ -37,6 +37,34 @@ for _, target in ipairs({'Forever','Mists','Retail'}) do
         local stableWidth,stableHeight=frame:GetWidth(),frame:GetHeight()
         view:ShowPage('characters'); flush()
         Check(frame:GetWidth()==stableWidth and frame:GetHeight()==stableHeight,'repeat layout stable')
+
+        local compact = { compactLayout = true, title = 'Compact', Create = function() end, Refresh = function() end,
+            GetSurfaceMetrics = function() error('compact pages use their fixed surface') end,
+            GetMeasuredHeight = function() error('compact pages do not grow after rendering') end }
+        for n=1,2 do
+            local page = {}
+            for key,value in pairs(compact) do page[key]=value end
+            page.id = 'compact.'..n
+            Check(view:RegisterPage('LayoutFixture'..n,page),'compact fixture page')
+        end
+        local savedWidth,savedHeight=settings.width,settings.height
+        view:ShowPage('compact.1')
+        Check(frame:GetWidth()==736 and frame:GetHeight()==544,'first compact page uses a 736 by 544 shell')
+        local setSize,writes=frame.SetSize,0
+        frame.SetSize=function(self,...)
+            writes=writes+1
+            return setSize(self,...)
+        end
+        view:RefreshPage()
+        view:ShowPage('compact.2')
+        Check(writes==0,'refresh and compact page switch leave the shell dimensions alone')
+        Check(settings.width==savedWidth and settings.height==savedHeight,'compact shell does not write global saved dimensions')
+        local padding=theme.Geometry.compactColumnInset*2+theme.Geometry.compactColumnTolerance
+        local body=theme:MeasureText(theme.Font.body,'Sample')
+        Check(theme:GetCompactColumnWidth('',{'Sample','?'})==body+padding,'compact text column measures the widest displayed cell')
+        Check(theme:GetCompactColumnWidth('',{'Sample'},16)==body+16+theme.Table.iconTextGap+padding,'compact icon-text column charges one icon and gap')
+        view:ShowPage('characters')
+        Check(frame.nav:GetWidth()==theme:GetNavigationWidth() and not frame.compactLayout,'regular page restores regular navigation')
     end
 end
-print('PASS archive/navigation bounds: '..checks..' checks across three targets/two languages')
+print('PASS archive/navigation bounds and compact layout: '..checks..' checks across three targets/two languages')

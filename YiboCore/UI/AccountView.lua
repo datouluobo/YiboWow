@@ -257,12 +257,12 @@ local function ScreenBounds()
     return safe.width, safe.height
 end
 
-local function ShellMetrics(preview)
+local function ShellMetrics(preview, navigationWidth)
     local geometry = Theme.Geometry
     if preview then
         return geometry.shellBorder * 2, geometry.titleBar + geometry.shellBorder * 2
     end
-    return Theme:GetNavigationWidth() + geometry.shellBorder * 2 + 1, geometry.titleBar + geometry.shellBorder * 2
+    return (navigationWidth or Theme:GetNavigationWidth()) + geometry.shellBorder * 2 + 1, geometry.titleBar + geometry.shellBorder * 2
 end
 
 local function ClampWindowSize(width, height)
@@ -1071,7 +1071,7 @@ function AccountView:CreateFrame()
     frame:SetScript("OnDragStop", FinishWindowDrag)
     frame:SetScript("OnSizeChanged", function(self, width, height)
         UpdateWindowClamp(self, height)
-        if not self.preview and width >= 760 and height >= 150 then
+        if not self.preview and not self.compactLayout and width >= 760 and height >= 150 then
             settings.width, settings.height = math.floor(width + 0.5), math.floor(height + 0.5)
             if self._pageSizePage and self._pageSizeContext then
                 SavePageSize(self._pageSizePage, self._pageSizeContext, width, height)
@@ -1242,11 +1242,35 @@ local function NavigationRequiredHeight(page)
     return Theme.Geometry.titleBar + Theme.Geometry.shellBorder * 2 + navigationHeight
 end
 
+local function CompactNavigationWidth(page)
+    local width = 140
+    for _, item in ipairs(NavigationPages(page.id)) do
+        width = math.max(width, Theme:MeasureText(Theme.Font.assist, item.title) + 32)
+    end
+    return width
+end
+
 function AccountView:ApplyPageSize(page, context, forceAutoFitWidth)
     local frame = self:CreateFrame()
     if frame.preview then return end
     local maxWidth, maxHeight = ScreenBounds()
-    local shellWidth, shellHeight = ShellMetrics(false)
+    local wasCompact = frame.compactLayout
+    frame.compactLayout = page.compactLayout == true
+    local navigationWidth = frame.compactLayout and CompactNavigationWidth(page) or Theme:GetNavigationWidth()
+    if (frame.compactLayout or wasCompact) and math.abs(frame.nav:GetWidth() - navigationWidth) > 0.01 then
+        frame.nav:SetWidth(navigationWidth)
+    end
+    local shellWidth, shellHeight = ShellMetrics(false, navigationWidth)
+    if frame.compactLayout then
+        local width = math.min(maxWidth, Theme.Geometry.compactAccountWidth)
+        local height = math.min(maxHeight, Theme.Geometry.compactAccountHeight)
+        context.surfaceAvailableWidth = math.max(1, width - shellWidth)
+        context.surfaceAvailableHeight = math.max(1, height - shellHeight)
+        if math.abs(frame:GetWidth() - width) > 0.01 or math.abs(frame:GetHeight() - height) > 0.01 then
+            frame:SetSize(width, height)
+        end
+        return
+    end
     -- A matrix may use the whole safe screen width before resorting to
     -- pagination.  Its natural width describes every character column;
     -- pagination begins only when that width reaches this hard boundary.
@@ -1309,7 +1333,7 @@ function AccountView:ApplyPageSize(page, context, forceAutoFitWidth)
 end
 
 function AccountView:ApplyMeasuredPageHeight(page, instance, context)
-    if self.frame.preview or type(page.GetMeasuredHeight) ~= "function" then return end
+    if self.frame.preview or self.frame.compactLayout or type(page.GetMeasuredHeight) ~= "function" then return end
     local ok, measured = xpcall(function() return page.GetMeasuredHeight(instance, context) end, function(message) return tostring(message) end)
     if not ok or type(measured) ~= "number" or measured <= 0 then return end
     local frame = self.frame
@@ -1340,6 +1364,8 @@ function AccountView:RefreshNavigation()
     local frame = self:CreateFrame()
     if frame.preview then return end
     local pages = NavigationPages(self.activePageID)
+    local height = frame.compactLayout and Theme.Size.compact or Theme.Table.rowHeight
+    local step = height + (frame.compactLayout and Theme.Geometry.compactNavigationGap or Theme.Space.xxs)
     for index, page in ipairs(pages) do
         local button = frame.navButtons[index]
         if not button then
@@ -1354,11 +1380,11 @@ function AccountView:RefreshNavigation()
             frame.navButtons[index] = button
         end
         local coreChild=page.settingsTargetID=="core" or page.settingsTargetID=="sorting" or page.settingsTargetID=="display" or page.settingsTargetID=="bar"
-        local inset, step = coreChild and 16 or 8, Theme.Table.rowHeight + Theme.Space.xxs
-        if button.navigationInset ~= inset or button.navigationStep ~= step or button.navigationHeight ~= Theme.Table.rowHeight then
+        local inset = coreChild and 16 or 8
+        if button.navigationInset ~= inset or button.navigationStep ~= step or button.navigationHeight ~= height then
             button:ClearAllPoints();button:SetPoint("TOPLEFT",inset,-8-(index-1)*step);button:SetPoint("TOPRIGHT",-8,-8-(index-1)*step)
-            button:SetHeight(Theme.Table.rowHeight)
-            button.navigationInset, button.navigationStep, button.navigationHeight = inset, step, Theme.Table.rowHeight
+            button:SetHeight(height)
+            button.navigationInset, button.navigationStep, button.navigationHeight = inset, step, height
         end
         button.pageID = page.id; button.settingsTargetID = page.settingsTargetID; button.section = page.section
         if button.label:GetText() ~= page.title then button.label:SetText(page.title) end
@@ -1595,7 +1621,7 @@ function AccountView:ShowPage(pageID, options, forceAutoFitWidth)
     else
         instance:SetAllPoints(self.frame.content)
     end
-    local shellWidth = ShellMetrics(context.preview)
+    local shellWidth = ShellMetrics(context.preview, self.frame.nav:GetWidth())
     local contentWidth = math.max(1, (self.frame:GetWidth() or 1) - shellWidth)
     -- Business renderers must consume the width chosen for this layout pass,
     -- never a stale frame width left by the previously visible page.
@@ -1682,10 +1708,17 @@ function AccountView:ApplyNormalLayout()
     frame:SetScript("OnLeave", nil)
     frame:SetFrameStrata("DIALOG")
     frame:SetToplevel(true)
-    settings.width, settings.height = ClampWindowSize(settings.width, settings.height)
-    self._applyingPageSize = true
-    frame:SetSize(settings.width, settings.height)
-    self._applyingPageSize = nil
+    local page = self._pages[self.activePageID]
+    if page and page.compactLayout then
+        self:ApplyPageSize(page, {})
+    else
+        if frame.compactLayout then frame.nav:SetWidth(Theme:GetNavigationWidth()) end
+        frame.compactLayout = false
+        settings.width, settings.height = ClampWindowSize(settings.width, settings.height)
+        self._applyingPageSize = true
+        frame:SetSize(settings.width, settings.height)
+        self._applyingPageSize = nil
+    end
     frame:ClearAllPoints()
     frame:SetPoint(settings.point or "CENTER", UIParent, settings.relativePoint or "CENTER", settings.x or 0, settings.y or 0)
     frame.nav:Show(); frame.settingsButton:Show(); frame.close:Show(); self:UpdateSortButton()
@@ -2085,5 +2118,6 @@ Core.Capabilities:Register("account-preview-characters", 1)
 Core.Capabilities:Register("account-character-admission", 1)
 Core.Capabilities:Register("account-surface-realm-scope", 1)
 Core.Capabilities:Register("account-surface-budget", 2)
+Core.Capabilities:Register("account-compact-layout", 1)
 
 Core.Capabilities:Register("account-identity-context", 1)

@@ -974,3 +974,15 @@ Core PixelLineSpec 64 项通过；Core 既有 7 组、Mail 3 组、Currency API1
 2026-11-22 CAP-013 SetPixelAnchor 接入完成：Mail（图标内缩，InboxRelease 98）、Vault 物品图标、Reputation Forever 进度条、TaskHub HUD、Builds Forever 天赋角标、AltoBoss 两端页签衔接、Crafting Mists 面板内缩与宽高预算（按 2 个物理像素）均改为 `SetPixelAnchor`，并在各自方法检查中加入 `SetPixelAnchor`。全工作区 145 个在用测试 114 通过，失败均与 2026-11-20 基线一致；431 文件语法与 20 个目标 ValidateOnly 通过。实机待验：不重载改缩放后上述位置仍贴 1 像素边框。
 
 2026-11-22 CAP-013 业务插件发布检查：Core API14 已发布（Mists 1.13.0／Forever 0.3.0／Retail 0.2.0）。AltoBoss 2.9.0/0.2.0、Builds 1.6.0/0.2.0、Mail 1.4.0/0.3.0-api1、Vault 1.3.0/0.7.0-api1、Reputation 1.8.0/0.2.0、Crafting 1.3.0/0.2.0、QuestBlocker 3.2.0、Todo 1.3.0、TaskHub 0.7.0、Legendary 2.3.0、BeastPaths 1.10.0（universal）完成正式包与打包回放，构建器读取最低 Core 14（Crafting Forever 13）。各插件接入状态在用户实机确认基础上记为已接入，发布状态以各发布记录为准；Todo、TaskHub 误装保护缺失与 BeastPaths 分包例外待用户决定。
+
+## CAP-014 紧凑账号页和列宽
+
+Core 提供 API14 下的可选能力 `account-compact-layout:1`。页面声明、列宽参数、空间限制及试点适用范围见[窗口尺寸与溢出契约第 6.6 节](Core-0.3-窗口尺寸与溢出契约.md#66-紧凑账号页试点)。本能力处于试点，现有发布的 API14 仍需检查能力版本。
+
+| 插件 | 状态 | 接入范围与验证 | 最近审查 |
+|---|---|---|---|
+| YiboAltoBoss | 部分接入 | Mists 副本进度主视图使用固定窗口和按列分页。首领页、悬停及 Forever 使用原布局。Mists 已测 Core 中英文模式。 | 2026-11-24 |
+| YiboCrafting | 部分接入 | Mists 专业配方主视图使用固定窗口和角色／状态实测列宽。配方搜索列表复用现有可视行复用机制。悬停及 Forever 使用原布局。 | 2026-11-24 |
+| 其余业务插件 | 待评估 | 未接入本次试点。 | 2026-11-24 |
+
+各目标构建和实机范围见[试点验收与回滚](../../Docs/主窗口紧凑列宽试点-验收与回滚.md)。

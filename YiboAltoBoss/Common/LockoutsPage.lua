@@ -116,25 +116,26 @@ local function Release(pool, start)
     for index = start or 1, #pool do pool[index]:Hide() end
 end
 
-local function HeaderCell(parent, x, width, title, secondary)
+local function HeaderCell(parent, x, width, title, secondary, inset)
     local header = Theme:CreateMatrixHeader(parent)
     header:SetWidth(width)
     header:SetPoint("TOPLEFT", x, 0)
-    Theme:SetMatrixHeader(header, title, secondary and { secondary = secondary } or nil)
+    Theme:SetMatrixHeader(header, title, { secondary = secondary, inset = inset })
     return header
 end
 
-local function StatusCell(parent, index, x, y, column, charKey, definition, view)
+local function StatusCell(parent, index, x, column, charKey, definition, view, width, data)
     local cell = parent.cells[index] or CreateFrame("Button", nil, parent, "BackdropTemplate")
     parent.cells[index] = cell
     cell:Show()
-    cell:SetSize(CELL_W, ROW_H)
-    cell:SetPoint("TOPLEFT", x, y)
+    cell:SetSize(width, ROW_H)
+    cell:SetPoint("TOPLEFT", x, 0)
     cell:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
     -- Cells in one row touch horizontally (rows keep a 2-unit gap), so each
     -- cell owns its top, bottom and right edge and only the first draws left.
     Theme:CreatePixelBorder(cell, { color = C.matrixLine, sides = { top = true, right = true, bottom = true, left = index == 1 } })
-    local status, label = view.status(charKey, column)
+    local status, label
+    if data then status, label = data.status, data.label else status, label = view.status(charKey, column) end
     local color = status == "clear" and C.success or (status == "locked" or status == "progress") and C.accent or C.muted
     cell:SetBackdropColor(color[1] * 0.18, color[2] * 0.18, color[3] * 0.18, 0.95)
     cell.text = cell.text or Text(cell, Theme.Font.body, color, "CENTER")
@@ -162,35 +163,63 @@ function YAB.CreateProgressPage(parent, view)
     parent.scroll = Theme:CreateScrollFrame(parent); parent.scroll:BindScrollbarGutter(parent.header)
     parent.body = CreateFrame("Frame", nil, parent.scroll); parent.scroll:SetScrollChild(parent.body)
     parent.headers, parent.rows = {}, {}
-    if view.empty then
+    if view.empty or view.compactEmpty then
         parent.empty = Text(parent.body, Theme.Font.body, C.muted)
         parent.empty:SetPoint("TOPLEFT", 6, -4)
     end
     return parent
 end
 
-function YAB.RefreshProgressPage(instance, context, view)
+function YAB.RefreshProgressPage(instance, context, view, compact)
     if not (context and context.preview and view.empty) then YAB.SetAccountBusinessPage(view.id) end
     local inset = Theme:GetMatrixInsets(context and context.preview)
     local keys = YAB.GetAccountCharacterKeys(context)
-    local allColumns = view.columns(context)
+    local allColumns = compact and compact.columns or view.columns(context)
+    local tableTop = TAB_H + (compact and Theme.Size.standard + Theme.Space.xs or 0)
     instance.businessTabs:SetActive(view.tab)
     instance.header:ClearAllPoints()
-    instance.header:SetPoint("TOPLEFT", inset.left, -TAB_H)
-    instance.header:SetPoint("TOPRIGHT", -inset.right, -TAB_H)
+    instance.header:SetPoint("TOPLEFT", inset.left, -tableTop)
+    instance.header:SetPoint("TOPRIGHT", -inset.right, -tableTop)
     instance.body:ClearAllPoints()
     instance.scroll:ClearAllPoints(); instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs)
     instance.scroll:SetPoint("BOTTOMRIGHT", instance, "BOTTOMRIGHT", -inset.right, inset.bottom)
     instance.body:SetPoint("TOPLEFT", instance.scroll, "TOPLEFT", 0, 0)
-    local charWidth = math.max(150, Theme:MeasureText(Theme.Font.body, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTER")) + Theme.Space.lg * 2)
+    local characterTitle = Core.Locale:Get("YiboAltoBoss", "UI.CHARACTER")
     local availableWidth = math.max(
         1,
         Core.AccountView:GetScrollSurfaceWidth(context, instance, #keys * (ROW_H + 2),
-            TAB_H + Theme.Table.headerHeight + Theme.Space.xs + inset.bottom) - inset.left - inset.right
+            tableTop + Theme.Table.headerHeight + Theme.Space.xs + inset.bottom) - inset.left - inset.right
     )
-    local columns, pageInfo = Core.AccountView:GetColumnPage(
-        view.id, "instances", allColumns, availableWidth, charWidth, CELL_W
-    )
+    local columns, pageInfo, charWidth
+    local widths, titles, values, names = {}, {}, {}, {}
+    local cellInset = compact and Theme.Geometry.compactColumnInset
+    if compact then
+        for index, key in ipairs(keys) do
+            names[index] = YAB.FormatCharacterName(key, context.scope == "all" and "all" or "current")
+        end
+        charWidth = Theme:GetCompactColumnWidth(characterTitle, names)
+        local widest = 0
+        for _, column in ipairs(allColumns) do
+            local samples, byCharacter = {}, {}
+            local title = compact.title(column)
+            for index, key in ipairs(keys) do
+                local status, label = view.status(key, column)
+                label = compact.label(status, label)
+                samples[index], byCharacter[key] = label, { status = status, label = label }
+            end
+            local width = Theme:GetCompactColumnWidth(title, samples)
+            widths[column], titles[column], values[column] = width, title, byCharacter
+            widest = math.max(widest, width)
+        end
+        charWidth = math.min(charWidth, math.max(1, availableWidth - widest))
+        for column, width in pairs(widths) do widths[column] = math.min(width, math.max(1, availableWidth - charWidth)) end
+        columns, pageInfo = Core.AccountView:GetColumnPageByWidth(
+            view.id, compact.pageKey, allColumns, availableWidth, charWidth, function(column) return widths[column] end
+        )
+    else
+        charWidth = math.max(150, Theme:MeasureText(Theme.Font.body, characterTitle) + Theme.Space.lg * 2)
+        columns, pageInfo = Core.AccountView:GetColumnPage(view.id, "instances", allColumns, availableWidth, charWidth, CELL_W)
+    end
     local definitions = {}
     if view.goalActions and #keys > 0 and #columns > 0 and YAB.GoalTargets and YAB.GoalTargets.ref then
         local targets = YAB.TargetCatalog:Query().targets
@@ -206,26 +235,31 @@ function YAB.RefreshProgressPage(instance, context, view)
     end
     -- Pagination shares the tab row so no separate status strip interrupts
     -- the active tab's connection to the matrix header.
-    Core.AccountView:UpdateColumnPager(instance, view.id, "instances", pageInfo, instance.businessTabs, view.title())
+    Core.AccountView:UpdateColumnPager(instance, view.id, compact and compact.pageKey or "instances", pageInfo, instance.businessTabs, view.title())
     Release(instance.headers)
-    local empty = view.empty and (#allColumns == 0 or #keys == 0)
+    local compactEmpty = compact and #allColumns == 0
+    local empty = compactEmpty or view.empty and (#allColumns == 0 or #keys == 0)
     if instance.empty then
-        instance.empty:SetText(empty and view.empty(#allColumns == 0, context) or "")
+        instance.empty:SetText(compactEmpty and view.compactEmpty() or empty and view.empty(#allColumns == 0, context) or "")
         instance.empty:SetShown(empty == true)
         instance.empty:SetWidth(math.max(1, availableWidth - 12))
     end
     if not empty then
-        instance.headers[1] = HeaderCell(instance.header, 0, charWidth, _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.CHARACTER"))
+        instance.headers[1] = HeaderCell(instance.header, 0, charWidth, characterTitle, nil, cellInset)
     end
+    local offsets, tableWidth = {}, charWidth
     for index, column in ipairs(empty and {} or columns) do
         local abbreviation = column.abbreviation or (view.tab == "lockouts" and "INST")
         local header = HeaderCell(
             instance.header,
-            charWidth + (index - 1) * CELL_W,
-            CELL_W,
-            column.shortName or column.name,
-            abbreviation and ("(" .. abbreviation .. ")") or nil
+            tableWidth,
+            widths[column] or CELL_W,
+            titles[column] or column.shortName or column.name,
+            not compact and abbreviation and ("(" .. abbreviation .. ")") or nil,
+            cellInset
         )
+        offsets[index] = tableWidth
+        tableWidth = tableWidth + (widths[column] or CELL_W)
         Theme:BindTooltip(header, abbreviation and string.format("%s (%s)", column.name, abbreviation) or column.name)
         instance.headers[index + 1] = header
     end
@@ -241,22 +275,33 @@ function YAB.RefreshProgressPage(instance, context, view)
         row:SetPoint("TOPRIGHT", 0, -y)
         row.cells = row.cells or {}
         row.preview = context and context.preview
-        local name = YAB.FormatCharacterName(charKey, context and context.scope == "all" and "all" or "current")
+        local name = names[rowIndex] or YAB.FormatCharacterName(charKey, context and context.scope == "all" and "all" or "current")
         row.label = row.label or Text(row, Theme.Font.body, C.text, "LEFT")
-        row.label:SetPoint("LEFT", 6, 0)
-        row.label:SetWidth(charWidth - 12)
+        row.label:ClearAllPoints()
+        row.label:SetPoint("LEFT", cellInset or Theme.Table.cellPadding, 0)
+        row.label:SetWidth(math.max(1, charWidth - (cellInset or Theme.Table.cellPadding) * 2))
         row.label:SetText(name)
+        if compact then
+            row:EnableMouse(true)
+            Theme:BindTooltip(row, name)
+        elseif row.tooltipTitle then
+            row:EnableMouse(false)
+            Theme:ClearTooltip(row)
+        end
         local color = CharacterColor(charKey)
         row.label:SetTextColor(color.r or color[1], color.g or color[2], color.b or color[3])
-        for index, column in ipairs(columns) do StatusCell(row, index, charWidth + (index - 1) * CELL_W, 0, column, charKey, definitions[index], view) end
+        for index, column in ipairs(columns) do
+            StatusCell(row, index, offsets[index], column, charKey, definitions[index], view,
+                widths[column] or CELL_W, values[column] and values[column][charKey])
+        end
         Release(row.cells, #columns + 1)
         y = y + ROW_H + 2
     end
     if empty then y = ROW_H end
     Release(instance.rows, (empty and 0 or #keys) + 1)
-    instance.body:SetSize(math.max(1, charWidth + #columns * CELL_W), math.max(1, y))
+    instance.body:SetSize(math.max(1, tableWidth), math.max(1, y))
     instance.scroll:SetContentHeight(math.max(1, y)); instance.scroll:RefreshScrollbar()
-    instance.renderedContentHeight = TAB_H + Theme.Table.headerHeight
+    instance.renderedContentHeight = tableTop + Theme.Table.headerHeight
         + Theme.Space.xs + math.max(1, y) + inset.bottom
 end
 

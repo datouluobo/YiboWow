@@ -85,6 +85,7 @@ function YAB.GetLockoutColumns(context)
                 local difficultyName = goal.difficultyName
                 for _, d in ipairs(definition and definition.difficulties or {}) do if d.id == difficultyID then difficultyName = d.name end end
                 local base = mapID and byMap[mapID]
+                local isRaid = definition and definition.isRaid
                 local fallback
                 if base then
                     fallback = {}
@@ -92,13 +93,16 @@ function YAB.GetLockoutColumns(context)
                     -- Match the projected difficulty rather than an arbitrary
                     -- saved lockout for the same instance.
                     fallback.key, fallback.difficultyID = key, difficultyID
+                    if isRaid == nil then isRaid = base.isRaid end
                 end
                 if mapID then plannedMaps[mapID] = true end
                 planned[#planned + 1] = { key = key, plannedCatalogID = goal.catalogID, plannedDifficultyID = difficultyID,
                     name = goal.title .. " · " .. tostring(difficultyName), shortName = goal.title,
                     abbreviation = ((definition and definition.aliases[1]) or goal.title) .. "·" .. tostring(difficultyName),
                     difficultyName = difficultyName, difficultyID = difficultyID,
-                    mapID = mapID, instanceID = mapID, isRaid = definition and definition.isRaid,
+                    mapID = mapID, instanceID = mapID, isRaid = isRaid,
+                    expansion = base and base.expansion or definition and definition.expansion,
+                    tierOrder = base and base.tierOrder,
                     fallbackColumn = fallback }
             end
         end

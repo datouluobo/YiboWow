@@ -278,6 +278,7 @@ function Integration:Initialize()
         previewEnabled = true,
         hideFromSettings = true,
         internal = true,
+        compactLayout = true,
         compactWidth = true,
         autoFitWidth = true,
         autoFitHeight = true,

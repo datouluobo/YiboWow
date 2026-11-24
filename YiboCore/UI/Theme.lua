@@ -108,6 +108,11 @@ Theme.Geometry = {
     -- Scrollbars live in this existing outer inset, never on top of matrix
     -- data and never as permanently reserved empty table width.
     scrollbarGutter = 16,
+    compactAccountWidth = 736,
+    compactAccountHeight = 544,
+    compactNavigationGap = 2,
+    compactColumnInset = 4,
+    compactColumnTolerance = 2,
     mainSafety = { left = 16, right = 16, top = 80, bottom = 32 },
     previewSafety = { left = 16, right = 16, top = 16, bottom = 16, anchorGap = 8 },
 }
@@ -465,6 +470,19 @@ function Theme:GetNavigationWidth()
     end
     self.Geometry.navigation = width
     return width
+end
+
+function Theme:GetCompactColumnWidth(header, values, iconWidth)
+    local bodyWidth, measured = 0, {}
+    for _, value in ipairs(values) do
+        if not measured[value] then
+            measured[value] = true
+            bodyWidth = math.max(bodyWidth, self:MeasureText(self.Font.body, value))
+        end
+    end
+    if iconWidth and iconWidth > 0 then bodyWidth = bodyWidth + iconWidth + self.Table.iconTextGap end
+    return math.max(self:MeasureText(self.Font.assist, header), bodyWidth)
+        + self.Geometry.compactColumnInset * 2 + self.Geometry.compactColumnTolerance
 end
 
 -- Dense table columns are measured by Core so business pages never invent

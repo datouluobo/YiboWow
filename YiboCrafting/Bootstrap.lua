@@ -7,16 +7,16 @@ end
 
 function Addon:Initialize()
     if self.initialized then return true end
-    if self.CLIENT_SUPPORTED==false then return nil,Core.Locale:Get(self.NAME,"FOREVER.WRONG_MANIFEST") end
     if not (Core and Core.CheckAPIVersion and Core:CheckAPIVersion(14) and Core.HasCapability and Core.Locale) then
         return nil, self.STARTUP_REQUIREMENTS
     end
+    if not self.CLIENT_SUPPORTED then return nil, L("WRONG_CLIENT") end
     for name, version in pairs({ ["localization"] = 1, ["basic-input"] = 1, ["item-resolver"] = 1,
         ["character-name-format"] = 1, ["character-identity"] = 1, ["account-view"] = 2,
         ["account-entry"] = 2, ["account-surface-budget"] = 2, ["character-cleanup"] = 1,
         ["characters"] = 1, ["data-domains"] = 1, ["events"] = 1, ["fields"] = 1,
         ["business-services"] = 1, ["business-providers"] = 1, ["business-item-actions"] = 2,
-        ["pixel-line"] = 1 }) do
+        ["pixel-line"] = 1, ["account-compact-layout"] = 1 }) do
         if not Core:HasCapability(name, version) then return nil, L("UPGRADE") .. " (" .. name .. ":" .. version .. ")" end
     end
     if not (Core.IsInitialized and Core:IsInitialized()) then return nil, L("CORE_NOT_READY") end
