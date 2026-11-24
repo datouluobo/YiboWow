@@ -72,7 +72,7 @@ local function Run(target, language)
     local function CheckVisit(route, id, notices)
         local label = target .. " " .. language .. " " .. route
         assert(view.activePageID == id, label .. " route")
-        assert(frame:GetWidth() == 736 and frame:GetHeight() == 544, label .. " window size")
+        assert(frame:GetWidth() == 800 and frame:GetHeight() == 544, label .. " window size")
         assert(not frame.pageViewport or not frame.pageViewport:IsShown(), label .. " overflow")
         assert(#env.TEST_MESSAGES == notices, label .. " " .. tostring(env.TEST_MESSAGES[notices + 1]))
     end

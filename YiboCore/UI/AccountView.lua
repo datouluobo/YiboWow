@@ -169,6 +169,11 @@ function AccountView:GetColumnPagerWidth(noun, total)
 end
 
 function AccountView:UpdateColumnPager(parent, pageID, stateKey, info, anchor, noun)
+    local frame = self.frame
+    local page = self._pages[pageID]
+    local footer = frame and not frame.preview and self.activePageID == pageID and page and page.columnPager
+        and frame.columnPagerFooter
+    local owner = footer or parent
     parent.yiboColumnPager = parent.yiboColumnPager or {}
     local pager = parent.yiboColumnPager
     self._columnPagers = self._columnPagers or {}
@@ -176,15 +181,26 @@ function AccountView:UpdateColumnPager(parent, pageID, stateKey, info, anchor, n
     pager.previous = pager.previous or Theme:CreateButton(parent, Theme.Size.compact, "‹", "secondary")
     pager.next = pager.next or Theme:CreateButton(parent, Theme.Size.compact, "›", "secondary")
     pager.label = pager.label or Theme:CreateText(parent, Theme.Font.assist, COLORS.text, "RIGHT")
+    for _, control in ipairs({ pager.previous, pager.next, pager.label }) do
+        if control:GetParent() ~= owner then control:SetParent(owner) end
+    end
     pager.previous:ClearAllPoints(); pager.next:ClearAllPoints(); pager.label:ClearAllPoints()
-    pager.next:SetPoint("TOPRIGHT", anchor or parent, "TOPRIGHT", 0, 0)
+    if footer then
+        pager.next:SetPoint("RIGHT", footer, "RIGHT")
+        pager.label:SetPoint("LEFT", footer, "LEFT")
+        pager.label:SetWordWrap(false)
+    else
+        pager.next:SetPoint("TOPRIGHT", anchor or parent, "TOPRIGHT", 0, 0)
+    end
     pager.previous:SetPoint("RIGHT", pager.next, "LEFT", -Theme.Space.xxs, 0)
     pager.label:SetPoint("RIGHT", pager.previous, "LEFT", -Theme.Space.xs, 0)
     local show = info and info.pages > 1
     pager.previous:SetShown(show); pager.next:SetShown(show); pager.label:SetShown(show)
+    if footer then footer:SetShown(show == true) end
     if not show then return end
     local text = string.format("%s %d–%d / %d · %d/%d", noun or Core:Text("CORE.CHARACTER"), info.first, info.last, info.total, info.page, info.pages)
-    pager.label:SetText(text); pager.label:SetWidth(Theme:MeasureText(Theme.Font.assist, text))
+    pager.label:SetText(text)
+    if not footer then pager.label:SetWidth(Theme:MeasureText(Theme.Font.assist, text)) end
     pager.previous:SetState(info.page > 1 and "default" or "disabled")
     pager.next:SetState(info.page < info.pages and "default" or "disabled")
     pager.previous:SetScript("OnClick", function() if info.page > 1 then AccountView:SetColumnPage(pageID, stateKey, info.page - 1, info.pages) end end)
@@ -192,10 +208,8 @@ function AccountView:UpdateColumnPager(parent, pageID, stateKey, info, anchor, n
 end
 
 function AccountView:HideColumnPagers()
-    -- Pagers are hosted in the shared title bar so they never consume matrix
-    -- width.  Their lifetime must nevertheless remain page-local: otherwise
-    -- a pager from a character-column matrix survives into a row-oriented
-    -- page, where it is both misleading and inoperative.
+    local frame = self.frame
+    if frame and frame.columnPagerFooter then frame.columnPagerFooter:Hide() end
     for pager in pairs(self._columnPagers or {}) do
         if pager.previous then pager.previous:Hide() end
         if pager.next then pager.next:Hide() end
@@ -1159,6 +1173,11 @@ function AccountView:CreateFrame()
     frame.navScroll:SetScrollChild(frame.navContent)
     frame.content = CreateFrame("Frame", nil, frame)
     frame.content:SetPoint("TOPLEFT", frame.nav, "TOPRIGHT", 1, 0); frame.content:SetPoint("BOTTOMRIGHT", -1, 1)
+    frame.columnPagerFooter = CreateFrame("Frame", nil, frame.content)
+    frame.columnPagerFooter:SetPoint("BOTTOMLEFT", Theme.Space.xs, Theme.Space.xs)
+    frame.columnPagerFooter:SetPoint("BOTTOMRIGHT", -Theme.Space.xs, Theme.Space.xs)
+    frame.columnPagerFooter:SetHeight(Theme.Size.compact)
+    frame.columnPagerFooter:Hide()
     frame.scopeBar = CreateFrame("Frame", nil, frame.titleBar)
     frame.scopeBar:SetSize(1, Theme.Size.standard); frame.scopeBar.buttons = {}; frame.scopeBar:Hide()
     frame.navButtons, frame.instances = {}, {}
@@ -1271,7 +1290,9 @@ local function PlacePage(frame, instance, page, context, scopeRow)
     local widthShell, heightShell = ShellMetrics(context.preview, frame.nav:GetWidth())
     local scopeHeight = scopeRow and Theme.Size.standard + Theme.Space.xs or 0
     local width = math.max(1, frame:GetWidth() - widthShell)
-    local height = math.max(1, frame:GetHeight() - heightShell - scopeHeight)
+    context.columnPagerInFooter = not context.preview and page.columnPager == true
+    local footerHeight = context.columnPagerInFooter and Theme.Size.compact + Theme.Space.xs or 0
+    local height = math.max(1, frame:GetHeight() - heightShell - scopeHeight - footerHeight)
     context.surfaceAvailableWidth, context.surfaceAvailableHeight = width, height
     local metrics = not context.preview and page.addonName and not page.compactLayout and SurfaceMetrics(page, context)
     local contentWidth = math.max(width, metrics and metrics.minContentWidth or 0)
@@ -1293,7 +1314,7 @@ local function PlacePage(frame, instance, page, context, scopeRow)
     if not (horizontal or vertical) then
         instance:ClearAllPoints()
         instance:SetPoint("TOPLEFT", frame.content, "TOPLEFT", 0, -scopeHeight)
-        instance:SetPoint("BOTTOMRIGHT", frame.content, "BOTTOMRIGHT")
+        instance:SetPoint("BOTTOMRIGHT", frame.content, "BOTTOMRIGHT", 0, footerHeight)
         return
     end
 
@@ -1303,7 +1324,7 @@ local function PlacePage(frame, instance, page, context, scopeRow)
     end
     host:ClearAllPoints()
     host:SetPoint("TOPLEFT", frame.content, "TOPLEFT", 0, -scopeHeight)
-    host:SetPoint("BOTTOMRIGHT", frame.content, "BOTTOMRIGHT")
+    host:SetPoint("BOTTOMRIGHT", frame.content, "BOTTOMRIGHT", 0, footerHeight)
     local viewportWidth = math.max(1, width - (vertical and gutter or 0))
     local viewportHeight = math.max(1, height - (horizontal and gutter or 0))
     contentWidth = math.max(viewportWidth, metrics.minContentWidth)

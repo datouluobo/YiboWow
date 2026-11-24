@@ -25,7 +25,11 @@ for _, target in ipairs({ 'Forever', 'Mists', 'Retail' }) do
             Check(core:RegisterAddon(owner, { requiredAPI = 13 }), 'fixture owner')
             Check(view:RegisterPage(owner, {
                 id = 'layout.' .. n, title = 'Layout ' .. n,
-                Create = function() end, Refresh = Paint,
+                columnPager = n == 2,
+                Create = function() end, Refresh = n == 2 and function(parent, context)
+                    Paint(parent, context)
+                    view:UpdateColumnPager(parent, 'layout.2', 'fields', { page = 1, pages = 2, first = 1, last = 4, total = 8 }, parent)
+                end or Paint,
                 GetSurfaceMetrics = n == 1 and function()
                     return { minContentWidth = 880, minContentHeight = 560, naturalContentWidth = 1200 }
                 end or function() return { minContentWidth = 120, minContentHeight = 120 } end,
@@ -39,7 +43,7 @@ for _, target in ipairs({ 'Forever', 'Mists', 'Retail' }) do
         view:Toggle('characters'); flush()
         local frame = view.frame
         local function Fixed(label)
-            Check(frame:GetWidth() == 736 and frame:GetHeight() == 544, label)
+            Check(frame:GetWidth() == 800 and frame:GetHeight() == 544, label)
         end
         Fixed('archive uses the common shell')
         local archive = frame.instances.characters
@@ -72,11 +76,17 @@ for _, target in ipairs({ 'Forever', 'Mists', 'Retail' }) do
         Fixed('regular business page uses the same shell')
         Check(not frame.pageViewport:IsShown() and instance:GetParent() == frame.content, 'overflow viewport detaches cleanly')
         Check(frame.instances['layout.2'].surfaceWidth == budget, 'regular business page receives the actual pane width')
+        local paged = frame.instances['layout.2']
+        local _, _, _, _, bottomInset = paged:GetPoint(2)
+        Check(frame.columnPagerFooter:IsShown() and paged.yiboColumnPager.next:GetParent() == frame.columnPagerFooter,
+            'column pager lives in the Core footer')
+        Check(bottomInset == theme.Size.compact + theme.Space.xs, 'page content stops above the pager')
 
         for _, section in ipairs({ 'general', 'core', 'sorting', 'bar', 'display' }) do
             view:ShowSettings(section)
             view:ShowPage('settings'); flush()
             Fixed('settings share the same shell')
+            Check(not frame.columnPagerFooter:IsShown(), 'settings hide the previous page pager')
             local page = frame.instances.settings
             Check(page.content:GetWidth() < budget and page.settingsContentHeight > 0, 'settings fit and measure the actual content pane')
             Check(frame.nav:GetWidth() == navWidth, 'switching navigation groups keeps the left divider fixed')
@@ -97,7 +107,7 @@ for _, target in ipairs({ 'Forever', 'Mists', 'Retail' }) do
 
         env.UIParent:SetSize(700, 500)
         view:RefreshPage()
-        Check(frame:GetWidth() < 736 and frame:GetHeight() < 544, 'small screens cap the common outer dimensions')
+        Check(frame:GetWidth() < 800 and frame:GetHeight() < 544, 'small screens cap the common outer dimensions')
     end
 end
 

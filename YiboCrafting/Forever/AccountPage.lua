@@ -355,7 +355,7 @@ function Page:Register()
         local profile=Addon:GetProfessionProfile()
         return character.id==Core.Characters:GetCurrentID() and profile and profile.state=="known" and #(profile.data.professions or {})>0
     end
-    local ok,err=Core.AccountView:RegisterPage(Addon.NAME,{id=Addon.PAGE_ID,title=Addon:T("FOREVER.TITLE"),fields=self:Fields(),defaultEnabled=true,previewEnabled=true,
+    local ok,err=Core.AccountView:RegisterPage(Addon.NAME,{id=Addon.PAGE_ID,columnPager=true,title=Addon:T("FOREVER.TITLE"),fields=self:Fields(),defaultEnabled=true,previewEnabled=true,
         scope={mode="realms", previewOnly=true},
         HasCharacterSnapshot=function(character) return Addon.Store.db.characters[character.id] ~= nil end,
         GetEligibleCharacters=function(characters,context)

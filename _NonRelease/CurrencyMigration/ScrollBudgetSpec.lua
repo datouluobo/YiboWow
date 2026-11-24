@@ -21,14 +21,14 @@ local page = assert(view:RegisterPage("YiboCurrency", { id = "scroll-budget-test
 local context = view:BuildContext(page)
 view:ApplyPageSize(page, context)
 Check(Core:HasCapability("account-surface-budget", 2), "Core declares scroll budget v2")
-Check(frame:GetWidth() == 736 and frame:GetHeight() == 544, "normal window keeps the shared size")
+Check(frame:GetWidth() == 800 and frame:GetHeight() == 544, "normal window keeps the shared size")
 local available = context.surfaceAvailableWidth
 local parent = CreateFrame("Frame"); parent:SetSize(1000, 340)
 Check(view:GetScrollSurfaceWidth({ surfaceAvailableWidth = 1000 }, parent, 800, 40) == 984, "renderer consumes exactly one shared gutter")
 Check(view:GetScrollSurfaceWidth({ surfaceAvailableWidth = 1000 }, parent, 300, 40) == 1000, "exact fit has no phantom gutter")
 body, naturalWidth = 0, 300
 view:ApplyPageSize(page, context)
-Check(context.surfaceAvailableWidth == available and frame:GetWidth() == 736, "normal surface budget is independent of the page's scroll track")
+Check(context.surfaceAvailableWidth == available and frame:GetWidth() == 800, "normal surface budget is independent of the page's scroll track")
 body, naturalWidth = 800, 1000.25
 -- Preview sizing uses final anchored height, not only full-screen estimates.
 frame:Hide(); frame.preview = false

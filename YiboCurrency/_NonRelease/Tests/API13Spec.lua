@@ -251,7 +251,7 @@ view:ApplyPageSize(page, naturalContext)
 local completeWidth = naturalContext.surfaceAvailableWidth
 view.CreateFrame = originalCreate
 Addon:RefreshCurrencyPage(parent, naturalContext)
-check(shell:GetWidth() == 736 and shell:GetHeight() == 544 and pageInfo.pages > 1 and pageInfo.total == 13,
+check(shell:GetWidth() == 800 and shell:GetHeight() == 544 and pageInfo.pages > 1 and pageInfo.total == 13,
     "the complete roster is paged inside the fixed shell")
 check(parent.currencyBody:GetWidth() <= completeWidth - Core.UITheme.Geometry.scrollbarGutter, "natural matrix leaves the scrollbar outside data columns")
 Addon.Catalog, Core.UITheme.GetCharacterMatrixColumnWidth = originalCatalog, originalColumnWidth

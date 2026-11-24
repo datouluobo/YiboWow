@@ -404,7 +404,7 @@ function Page:PaintRows(parent, scrollOnly)
     for index=used+1,#parent.rows do parent.rows[index].faction=nil; parent.rows[index]:Hide() end
 end
 function Page:Register()
-    local ok,err=Core.AccountView:RegisterPage(Addon.NAME,{id=Addon.PAGE_ID,title=Addon:T("FOREVER.TITLE"),fields=self:Fields(),defaultEnabled=true,previewEnabled=true,
+    local ok,err=Core.AccountView:RegisterPage(Addon.NAME,{id=Addon.PAGE_ID,columnPager=true,title=Addon:T("FOREVER.TITLE"),fields=self:Fields(),defaultEnabled=true,previewEnabled=true,
         scope={mode="realms", previewOnly=true},
         HasCharacterSnapshot=function(character) return Addon.Store.db.characters[character.id] ~= nil end,
         GetEligibleCharacters=function(characters, context)

@@ -276,7 +276,7 @@ local function RefreshCharacters(parent, context)
         widths = GetArchiveColumnWidths(fields, characters, providerSnapshot)
     else
         fields, widths, pageInfo = GetCompactArchiveColumns(parent, context, fields, characters, providerSnapshot, inset)
-        if pageInfo.pages > 1 then
+        if pageInfo.pages > 1 and not context.columnPagerInFooter then
             parent.listHeader:ClearAllPoints()
             parent.listHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top - Theme.Size.standard)
         end
@@ -397,7 +397,7 @@ local function GetCharacterHoverMetrics(context)
 end
 
 AccountView._pages.characters = Core.Locale:Bind(function() return {
-    id = "characters", title = Core:Text("CORE.CHARACTER_ARCHIVE"), order = -10, internal = true, previewEnabled = true,
+    id = "characters", columnPager = true, title = Core:Text("CORE.CHARACTER_ARCHIVE"), order = -10, internal = true, previewEnabled = true,
     Create = CreateCharacters, Refresh = RefreshCharacters,
     GetSurfaceMetrics = GetCharacterSurfaceMetrics,
     GetHoverMetrics = GetCharacterHoverMetrics,

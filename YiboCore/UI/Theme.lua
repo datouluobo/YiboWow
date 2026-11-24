@@ -108,7 +108,7 @@ Theme.Geometry = {
     -- Scrollbars live in this existing outer inset, never on top of matrix
     -- data and never as permanently reserved empty table width.
     scrollbarGutter = 16,
-    compactAccountWidth = 736,
+    compactAccountWidth = 800,
     compactAccountHeight = 544,
     compactNavigationGap = 2,
     compactColumnInset = 4,
@@ -130,16 +130,14 @@ function Theme:GetCharacterHeaderHeight(context)
 end
 
 function Theme:GetCharacterMatrixColumnWidth(context, characters)
-    -- Character names are player-entered data, not a fixed-width field. Use
-    -- the visible roster between a compact four-CJK-glyph floor and the
-    -- supported six-glyph ceiling. Realm text is a secondary line in
-    -- all-realm scope and does not widen a character-status column.
+    -- Measure the same name (including the configured short name) as the header.
     local minimum = self:MeasureText(self.Font.assist, "字字字字")
     local maximum = self:MeasureText(self.Font.assist, "字字字字字字")
     local identity = minimum
     for _, character in ipairs(characters or (context and context.characters) or {}) do
-        local name = Core.Characters:FormatName({ name = tostring(character and character.name or Core:Text("CORE.UNKNOWN_CHARACTER")) })
-        identity = math.max(identity, math.min(maximum, self:MeasureText(self.Font.assist, name)))
+        local original = context and context.page and context.page.header and context.page.header.characterNameMode == "full"
+        local name = Core.Characters:FormatName(character, { nameMode = original and "original" or "short" })
+        identity = math.max(identity, self:MeasureText(self.Font.assist, name))
         -- In the cross-realm projection the realm is rendered on the second
         -- line. Reserve enough of the same 4–6 glyph budget for that smaller
         -- label, so it cannot paint into the adjacent character column.
@@ -156,16 +154,10 @@ end
 -- compensation around this value.
 function Theme:GetCharacterRowHeaderWidth(withProfessionIcon, context, characters)
     local minimum = self:MeasureText(self.Font.body, "字字字字")
-    local maximum = self:MeasureText(self.Font.body, "字字字字字字")
     local identity = minimum
     for _, character in ipairs(characters or (context and context.characters) or {}) do
-        local name = Core.Characters:FormatName({ name = tostring(character and character.name or Core:Text("CORE.UNKNOWN_CHARACTER")) })
-        identity = math.max(identity, math.min(maximum, self:MeasureText(self.Font.body, name)))
-        if ShowCharacterRealm(context) then
-            local realm = tostring(character and character.realm or Core:Text("CORE.UNKNOWN_REALM"))
-            local fullName = Core.Characters:FormatName({ name = name, realm = realm }, { realmMode = "full" })
-            identity = math.max(identity, self:MeasureText(self.Font.body, fullName))
-        end
+        local name = Core.Characters:FormatName(character, { nameMode = "short", realmMode = ShowCharacterRealm(context) and "full" or "omit" })
+        identity = math.max(identity, self:MeasureText(self.Font.body, name))
     end
     local width = identity + self.Table.cellPadding * 2
     if withProfessionIcon then width = width + 16 + self.Table.iconTextGap end

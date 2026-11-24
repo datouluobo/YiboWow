@@ -8,6 +8,7 @@ local Helpers = AccountView._internal
 local AddText = Helpers.AddText
 local Copy = Helpers.Copy
 local PageEnabled = Helpers.PageEnabled
+local SUMMARY_TOP, SUMMARY_PITCH, ACTION_PITCH = 54, 42, 38
 
 local function CreateOverview(parent)
     parent.scroll = Theme:CreateScrollFrame(parent)
@@ -64,7 +65,8 @@ local function RefreshOverview(parent, context)
     for index, line in ipairs(lines) do
         local button = parent.lines[index]
         if not button then
-            button = CreateFrame("Button", nil, parent.content, "BackdropTemplate"); button:SetHeight(38); button:SetPoint("TOPLEFT", 20, -104 - ((index - 1) * 42)); button:SetPoint("TOPRIGHT", -20, -104 - ((index - 1) * 42))
+            local y = -SUMMARY_TOP - ((index - 1) * SUMMARY_PITCH)
+            button = CreateFrame("Button", nil, parent.content, "BackdropTemplate"); button:SetHeight(38); button:SetPoint("TOPLEFT", 20, y); button:SetPoint("TOPRIGHT", -20, y)
             Theme:ApplyPixelBackdrop(button); button:SetBackdropColor(0.03, 0.10, 0.12, 0.85); button:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.45)
             button.title = AddText(button, "GameFontNormalSmall", nil, COLORS.accent); button.title:SetPoint("LEFT", 10, 0); button.title:SetWidth(125)
             button.text = AddText(button, "GameFontNormalSmall", nil, COLORS.text); button.text:SetPoint("LEFT", button.title, "RIGHT", 8, 0); button.text:SetPoint("RIGHT", -10, 0)
@@ -73,16 +75,16 @@ local function RefreshOverview(parent, context)
         button.title:SetText(line.title); button.text:SetText(line.text); button.pageID = line.pageID; button:Show()
     end
     for index = #lines + 1, #parent.lines do parent.lines[index]:Hide() end
-    local actionBase = -80 - (#lines * 42)
-    parent.actionHeading:ClearAllPoints(); parent.actionHeading:SetPoint("TOPLEFT", 20, actionBase)
+    local actionBase = SUMMARY_TOP + #lines * SUMMARY_PITCH + Theme.Space.xs
+    parent.actionHeading:ClearAllPoints(); parent.actionHeading:SetPoint("TOPLEFT", 20, -actionBase)
     local actionLimit = 8
     if context and context.preview then
         -- 悬停预览没有滚动区。按当前内容区高度收紧行动条数，确保每一条
         -- 都完整落在窗口内，而不是让底部条目溢出预览框。
         local availableHeight = parent:GetHeight() or 0
-        local firstActionBottom = 170 + (#lines * 42)
+        local firstActionBottom = actionBase + 24 + 34
         if availableHeight >= firstActionBottom then
-            actionLimit = math.min(8, 1 + math.floor((availableHeight - firstActionBottom) / 38))
+            actionLimit = math.min(8, 1 + math.floor((availableHeight - firstActionBottom) / ACTION_PITCH))
         else
             actionLimit = 0
         end
@@ -99,12 +101,13 @@ local function RefreshOverview(parent, context)
             button.text = AddText(button, "GameFontNormalSmall", nil, COLORS.muted); button.text:SetPoint("LEFT", button.title, "RIGHT", 8, 0); button.text:SetPoint("RIGHT", -9, 0)
             button:SetScript("OnClick", function(self) AccountView:ShowPage(self.pageID) end); parent.actions[index] = button
         end
-        button:ClearAllPoints(); button:SetPoint("TOPLEFT", parent.content, "TOPLEFT", 20, actionBase - 24 - ((index - 1) * 38)); button:SetPoint("TOPRIGHT", parent.content, "TOPRIGHT", -20, actionBase - 24 - ((index - 1) * 38))
+        local y = -actionBase - 24 - ((index - 1) * ACTION_PITCH)
+        button:ClearAllPoints(); button:SetPoint("TOPLEFT", parent.content, "TOPLEFT", 20, y); button:SetPoint("TOPRIGHT", parent.content, "TOPRIGHT", -20, y)
         button.title:SetText((action.pageTitle or Core:Text("CORE.ADDON")) .. " · " .. (action.title or Core:Text("CORE.CHARACTER"))); button.text:SetText(action.text or "")
         button.pageID = action.pageID; button:Show()
     end
     for index = visibleActionCount + 1, #parent.actions do parent.actions[index]:Hide() end
-    local contentHeight = 136 + #lines * 42 + visibleActionCount * 38
+    local contentHeight = actionBase + 24 + visibleActionCount * ACTION_PITCH + Theme.Space.xs
     parent.content:SetSize(math.max(1, parent.scroll:GetWidth() or 1), math.max(1, contentHeight))
     parent.scroll:SetContentHeight(parent.content:GetHeight())
     parent.scroll:RefreshScrollbar()

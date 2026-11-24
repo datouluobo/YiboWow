@@ -79,7 +79,7 @@ function Integration:Initialize()
         if not ok then return nil, cleanupErr end
     end
     local page, pageErr = Core.AccountView:RegisterPage(Addon.NAME, {
-        id = "todo", title = Addon:T("PAGE.TITLE"), icon = ICON, order = 35, defaultEnabled = true, previewEnabled = true, compactWidth = true, scope = { mode = "realms", allTitle = Addon:T("PAGE.ALL_REALMS") },
+        id = "todo", columnPager = true, title = Addon:T("PAGE.TITLE"), icon = ICON, order = 35, defaultEnabled = true, previewEnabled = true, compactWidth = true, scope = { mode = "realms", allTitle = Addon:T("PAGE.ALL_REALMS") },
         firstUseTip = { title = Addon:T("PAGE.FIRST_USE_TITLE"), lines = { Addon:T("PAGE.FIRST_USE_BODY") } },
         characterFilter = {
             defaultExpression = "",

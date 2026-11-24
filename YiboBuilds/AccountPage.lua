@@ -724,7 +724,9 @@ local function RosterRow(parent, index)
     row.classIcon = row:CreateTexture(nil, "ARTWORK")
     row.classIcon:SetSize(30, 30); row.classIcon:SetPoint("LEFT", 7, 0)
     row.name = Text(row, Theme.Font.body, C.text)
-    row.name:SetPoint("LEFT", row.classIcon, "RIGHT", 8, 0); row.name:SetPoint("RIGHT", -30, 0)
+    row.name:SetWordWrap(false)
+    row.realm = Text(row, Theme.Font.meta, C.muted)
+    row.realm:SetWordWrap(false)
     row.level = Text(row, Theme.Font.assist, C.muted, "RIGHT")
     row.level:SetPoint("RIGHT", -8, 0)
     parent.buildsRoster.rows[index] = row
@@ -2113,7 +2115,7 @@ local function SetupMainButtons(parent)
     end)
 end
 
-local function LayoutMain(parent)
+local function LayoutMain(parent, characters)
     local inset = Theme:GetMatrixInsets(false)
     if parent.buildsPreviewToggle then parent.buildsPreviewToggle:Hide() end
     if parent.buildsPreviewHeader then parent.buildsPreviewHeader:Hide() end
@@ -2128,8 +2130,24 @@ local function LayoutMain(parent)
     parent.buildsCompact = compact
     -- Folding hides only the build pane.  The roster and equipment pane retain
     -- their expanded widths, so the visual hierarchy does not jump.
-    local rosterWidth = compact and math.max(108, math.min(136, math.floor(availableWidth * 0.24)))
-        or ((collapsed or availableWidth >= 1050) and 210 or (availableWidth >= 850 and 185 or 160))
+    local rosterWidth = (collapsed or availableWidth >= 1050) and 210 or (availableWidth >= 850 and 185 or 160)
+    if compact then
+        local roster = parent.buildsRoster
+        local nameWidth, levelWidth, realmWidth = 0, 0, 0
+        for _, character in ipairs(characters) do
+            nameWidth = math.max(nameWidth, Theme:MeasureText(Theme.Font.body, CharacterLabel(character)))
+            levelWidth = math.max(levelWidth, Theme:MeasureText(Theme.Font.assist, tostring(character.level or "")))
+            if context.scope == "all" then
+                realmWidth = math.max(realmWidth, Theme:MeasureText(Theme.Font.meta, character.realm or ""))
+            end
+        end
+        local rowWidth = 45 + math.max(nameWidth + levelWidth + 12, realmWidth + 7)
+        local gutter = #characters * ROSTER_ROW_HEIGHT > availableHeight - 38 - Theme.Space.xs * 2 - 1
+            and Theme.Geometry.scrollbarGutter or 0
+        rosterWidth = math.max(125, rowWidth + 2 * Theme.Space.xs + gutter)
+        rosterWidth = math.ceil(math.min(rosterWidth, math.max(125, availableWidth - 345)))
+        roster.nameRightInset = levelWidth + 12
+    end
     parent.buildsRoster:ClearAllPoints(); parent.buildsRoster:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top); parent.buildsRoster:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", inset.left, inset.bottom); parent.buildsRoster:SetWidth(rosterWidth)
     parent.buildsMain:ClearAllPoints(); parent.buildsMain:SetPoint("TOPLEFT", parent.buildsRoster, "TOPRIGHT", Theme.Space.sm, 0); parent.buildsMain:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset.right, inset.bottom)
     parent.buildsToolbar:ClearAllPoints(); parent.buildsToolbar:SetPoint("TOPLEFT", parent.buildsMain, "TOPLEFT", Theme.Space.sm, -Theme.Space.sm); parent.buildsToolbar:SetPoint("TOPRIGHT", parent.buildsMain, "TOPRIGHT", -Theme.Space.sm, -Theme.Space.sm); parent.buildsToolbar:SetHeight(Theme.Size.standard)
@@ -2204,9 +2222,9 @@ function Page.Refresh(parent, context)
     parent.buildsContext = context
     local preview = context and context.preview
     if preview then return Page.RefreshPreview(parent, context) end
-    LayoutMain(parent)
-    parent.buildsEmpty:Hide(); parent.buildsRoster:Show(); parent.buildsMain:Show()
     local characters = Eligible(context)
+    LayoutMain(parent, characters)
+    parent.buildsEmpty:Hide(); parent.buildsRoster:Show(); parent.buildsMain:Show()
     local selected
     for _, character in ipairs(characters) do if character.id == parent.buildsSelectedID then selected = character break end end
     if not selected then
@@ -2222,8 +2240,19 @@ function Page.Refresh(parent, context)
         local row = RosterRow(parent, index); row:ClearAllPoints(); row:SetPoint("TOPLEFT", parent.buildsRoster.body, "TOPLEFT", 0, -((index - 1) * ROSTER_ROW_HEIGHT)); row:SetPoint("RIGHT", parent.buildsRoster.body, "RIGHT", 0, 0); row:SetHeight(ROSTER_ROW_HEIGHT - 2)
         local coords = CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[character.class]
         if coords then row.classIcon:SetTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES"); row.classIcon:SetTexCoord(unpack(coords)); row.classIcon:Show() else row.classIcon:Hide() end
-        row.name:SetText(CharacterLabel(character, context)); local color = ClassColor(character); row.name:SetTextColor(color.r, color.g, color.b)
+        local compact, showRealm = parent.buildsCompact, parent.buildsCompact and context.scope == "all"
+        row.name:ClearAllPoints()
+        row.name:SetPoint("LEFT", row, "LEFT", coords and 45 or 7, showRealm and 8 or 0)
+        row.name:SetPoint("RIGHT", row, "RIGHT", -(compact and parent.buildsRoster.nameRightInset or 30), showRealm and 8 or 0)
+        row.name:SetText(CharacterLabel(character, not compact and context or nil))
+        local color = ClassColor(character); row.name:SetTextColor(color.r, color.g, color.b)
+        row.realm:ClearAllPoints()
+        row.realm:SetPoint("LEFT", row, "LEFT", coords and 45 or 7, -9)
+        row.realm:SetPoint("RIGHT", row, "RIGHT", -7, -9)
+        row.realm:SetText(showRealm and character.realm or "")
+        row.realm:SetShown(showRealm)
         row.level:SetText(tostring(character.level or ""))
+        Theme:BindTooltip(row, Core.Characters:FormatName(character, { realmMode = "full" }))
         row:SetState(character.id == parent.buildsSelectedID and "selected" or "default")
         row:SetScript("OnClick", function() parent.buildsSelectedID = character.id; Addon.AccountPage.Refresh(parent, parent.buildsContext) end); row:Show()
     end

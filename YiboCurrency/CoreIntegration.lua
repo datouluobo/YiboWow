@@ -51,7 +51,7 @@ function Integration:Initialize()
     local archived, archiveError = Addon.ArchiveProvider:Initialize()
     if not archived then return nil, archiveError end
     local page, pageError = Core.AccountView:RegisterPage(Addon.NAME, {
-        id = PAGE_ID, title = Addon:T("CURRENCY.CURRENCY_OVERVIEW_370A71"), icon = ICON, order = 50, previewEnabled = true, defaultEnabled = true, autoFitWidth = true, scope = { mode = "realms", allTitle = Addon:T("CURRENCY.ALL_REALMS_A166AB") },
+        id = PAGE_ID, columnPager = true, title = Addon:T("CURRENCY.CURRENCY_OVERVIEW_370A71"), icon = ICON, order = 50, previewEnabled = true, defaultEnabled = true, autoFitWidth = true, scope = { mode = "realms", allTitle = Addon:T("CURRENCY.ALL_REALMS_A166AB") },
         GetFieldDefinitions = function() return Addon:GetFieldDefinitions() end,
         GetPreviewFields = function() return Core.Defaults:Copy(Addon:GetSettings().previewColumns) end,
         SetPreviewFieldVisible = function(id, visible)

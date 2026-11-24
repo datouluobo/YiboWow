@@ -271,21 +271,35 @@ function UI:HistoryValues(value)
         subject = Escape(value.subject):gsub("[\r\n]+", " "), content = Addon.HistoryModel:Content(value):gsub("[\r\n]+", " "), result = Addon.HistoryModel:Outcome(value),
         icon = value.items[1], itemList = value.items, extraContent = Addon.HistoryModel:Content(value, true) }
 end
-function UI:HistoryLayout(root, fields, width, data)
+function UI:HistoryLayout(root, fields, width, data, characters)
     local weight, minimum = 0, 0
+    local ownerWidth, ownerColumn = 0, nil
+    for _, character in ipairs(characters or {}) do
+        ownerWidth = math.max(ownerWidth, Theme:MeasureText(Theme.Font.body, Identity(character)) + 12)
+    end
     local budgets = { time = { 110, 110 }, character = { 100, 150 }, counterpart = { 100, 150 },
         subject = { 110, 200 }, content = { 160, 250 }, result = { 110, 160 } }
     for _, field in ipairs(fields) do
         local budget = budgets[field.key] or { 80, field.width }
         field.minimum = math.max(budget[1], Theme:MeasureText(Theme.Font.body, field.title) + 12)
+        if field.key == "character" and ownerWidth > 0 then
+            ownerColumn = field
+            ownerWidth = math.min(math.floor(width * 0.42), math.max(ownerWidth, Theme:MeasureText(Theme.Font.body, field.title) + 12))
+            field.minimum = math.max(field.minimum, ownerWidth)
+        end
         field.width = math.min(field.maxWidth or math.huge, math.max(field.minimum, budget[2]))
         minimum, weight = minimum + field.minimum, weight + field.width
     end
     if weight > width then
         local room = math.max(0, width - minimum)
         for _, field in ipairs(fields) do
-            field.width = minimum > width and field.minimum * width / minimum
-                or field.minimum + (field.width - field.minimum) * room / math.max(1, weight - minimum)
+            if minimum > width and ownerColumn and ownerWidth > width * ownerColumn.minimum / minimum then
+                field.width = field == ownerColumn and ownerWidth
+                    or field.minimum * (width - ownerWidth) / math.max(1, minimum - ownerColumn.minimum)
+            else
+                field.width = minimum > width and field.minimum * width / minimum
+                    or field.minimum + (field.width - field.minimum) * room / math.max(1, weight - minimum)
+            end
         end
     elseif weight < width then
         local flexible = 0
@@ -670,7 +684,7 @@ function UI:Refresh(parent, context)
             local offsets, heights, tableWidth
             local listWidth = contentWidth - (contentHeight > viewportHeight and Theme.Geometry.scrollbarGutter or 0)
             if workspace.tab == "history" then
-                offsets, heights, contentHeight, tableWidth = self:HistoryLayout(root, fields, listWidth, data)
+                offsets, heights, contentHeight, tableWidth = self:HistoryLayout(root, fields, listWidth, data, context.characters)
             elseif not items then
                 local weight = 0; for _, field in ipairs(fields) do weight = weight + field.width end
                 for _, field in ipairs(fields) do field.fittedWidth = listWidth * field.width / math.max(1, weight) end

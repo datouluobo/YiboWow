@@ -32,7 +32,7 @@ local MIN_PROJECT_COLUMN_WIDTH = ProjectColumnWidth(MIN_PROJECT_SLOTS)
 
 local function CharacterLabel(character, showRealm)
     local name = tostring(character and character.name or "?")
-    local formatted = Addon.Core.Characters:FormatName(character, { nameMode = "original", realmMode = showRealm and "full" or "omit" })
+    local formatted = Addon.Core.Characters:FormatName(character, { nameMode = "short", realmMode = showRealm and "full" or "omit" })
     return formatted or name
 end
 
@@ -494,13 +494,13 @@ function Page.Refresh(frame, context)
         local fixedHeight = inset.top + Theme.Table.headerHeight + inset.bottom
         local bodyHeight, edges = rows * (ROW_HEIGHT + ROW_GAP), inset.left + inset.right
         local budget = view:GetScrollSurfaceWidth(context, frame, bodyHeight, fixedHeight) - edges
-        if tableWidth > budget then
+        if tableWidth > budget and not context.columnPagerInFooter then
             budget = view:GetScrollSurfaceWidth(context, frame, bodyHeight, fixedHeight + Theme.Size.standard) - edges
         end
         projects, pageInfo = view:GetColumnPageByWidth("todo", "projects", projects, budget, characterWidth,
             function(column) return column.width + COLUMN_GAP end)
     end
-    local pagerHeight = pageInfo and pageInfo.pages > 1 and Theme.Size.standard or 0
+    local pagerHeight = not context.columnPagerInFooter and pageInfo and pageInfo.pages > 1 and Theme.Size.standard or 0
     frame.pagerAnchor:ClearAllPoints()
     frame.pagerAnchor:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -inset.right, -inset.top)
     Addon.Core.AccountView:UpdateColumnPager(frame, "todo", "projects", pageInfo, frame.pagerAnchor, Addon:T("COLUMN.PROJECTS"))

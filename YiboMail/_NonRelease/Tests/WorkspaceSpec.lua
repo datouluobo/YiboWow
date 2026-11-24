@@ -431,6 +431,14 @@ local recordIndex, recordTop = Addon.CacheUI:ListIndex({ offsets = offsets, heig
 assert(recordIndex == 2 and recordTop == offsets[2])
 local historyValues = Addon.CacheUI:HistoryValues(shortHistory)
 assert(not historyValues.character:find(a.realm, 1, true) and historyValues.result == '首次发现')
+local compactHistoryFields = Addon.Copy(historyFields)
+Addon.CacheUI:HistoryLayout(historyRoot, compactHistoryFields, 390, { shortHistory, longHistory }, { a, b })
+local fittedOwner
+for _, field in ipairs(compactHistoryFields) do if field.key == "character" then fittedOwner = field.fittedWidth end end
+local otherRealmHistory = Addon.Copy(shortHistory)
+otherRealmHistory.character = b
+local ownerWidth = YiboCore.UITheme:MeasureText(YiboCore.UITheme.Font.body, Addon.CacheUI:HistoryValues(otherRealmHistory).character) + 12
+assert(fittedOwner >= math.min(math.floor(390 * 0.42), ownerWidth))
 shortHistory.character = b
 assert(Addon.CacheUI:HistoryValues(shortHistory).character:find(b.realm, 1, true))
 local historyRow = Frame(historyRoot)

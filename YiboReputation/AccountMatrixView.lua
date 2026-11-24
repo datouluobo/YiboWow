@@ -267,10 +267,25 @@ function Addon:RefreshMatrixView(parent, context)
             end },
         })
     end
-    toolbar.search:ClearAllPoints(); toolbar.search:SetPoint("LEFT", toolbar, "LEFT"); toolbar.search:SetValue(settings.matrixSearch or "")
-    local x = 152
+    local x, y, rowHeight = 0, 0, Theme.Size.compact
+    local toolbarWidth = math.max(1, (context.surfaceAvailableWidth or parent:GetWidth()) - inset.left - inset.right)
+    local function PlaceControl(control, width)
+        width = math.min(width, toolbarWidth)
+        if x > 0 and x + width > toolbarWidth then x, y = 0, y + rowHeight + Theme.Space.xxs end
+        control:ClearAllPoints()
+        control:SetPoint("TOPLEFT", toolbar, "TOPLEFT", x, -y)
+        control:SetSize(width, rowHeight)
+        x = x + width + Theme.Space.xxs
+    end
+    PlaceControl(toolbar.search, 144)
+    toolbar.search:SetValue(settings.matrixSearch or "")
     for index, choice in ipairs({ {"all", self:T("MATRIX.ALL")}, {"monitored", self:T("MATRIX.MONITORED")} }) do
-        local button = toolbar.filterButtons[index] or Theme:CreateButton(toolbar, 68, choice[2], "secondary"); toolbar.filterButtons[index] = button; button:SetHeight(Theme.Size.compact); button:ClearAllPoints(); button:SetPoint("LEFT", toolbar, "LEFT", x, 0); button:SetText(choice[2]); button:SetState(settings.matrixFilter == choice[1] and "selected" or "default"); button:SetScript("OnClick", function() settings.matrixFilter = choice[1]; Addon:RefreshMatrixView(parent, context) end); x = x + 72
+        local button = toolbar.filterButtons[index] or Theme:CreateButton(toolbar, 68, choice[2], "secondary")
+        toolbar.filterButtons[index] = button
+        PlaceControl(button, math.max(68, Theme:MeasureText(Theme.Font.body, choice[2]) + 16))
+        button:SetText(choice[2])
+        button:SetState(settings.matrixFilter == choice[1] and "selected" or "default")
+        button:SetScript("OnClick", function() settings.matrixFilter = choice[1]; Addon:RefreshMatrixView(parent, context) end)
     end
     for index = 3, #toolbar.filterButtons do toolbar.filterButtons[index]:Hide() end
     local function SetAllExpanded(value)
@@ -281,8 +296,17 @@ function Addon:RefreshMatrixView(parent, context)
         expanded.__all = value
         Addon:RefreshMatrixView(parent, context)
     end
-    toolbar.expand = toolbar.expand or Theme:CreateButton(toolbar, 72, "", "secondary"); toolbar.expand:SetText(self:T("MATRIX.EXPAND")); toolbar.expand:SetHeight(Theme.Size.compact); toolbar.expand:ClearAllPoints(); toolbar.expand:SetPoint("LEFT", toolbar, "LEFT", x + Theme.Space.xxs, 0); toolbar.expand:SetScript("OnClick", function() SetAllExpanded(true) end)
-    toolbar.collapse = toolbar.collapse or Theme:CreateButton(toolbar, 72, "", "secondary"); toolbar.collapse:SetText(self:T("MATRIX.COLLAPSE")); toolbar.collapse:SetHeight(Theme.Size.compact); toolbar.collapse:ClearAllPoints(); toolbar.collapse:SetPoint("LEFT", toolbar.expand, "RIGHT", Theme.Space.xxs, 0); toolbar.collapse:SetScript("OnClick", function() SetAllExpanded(false) end)
+    local expand, collapse = self:T("MATRIX.EXPAND"), self:T("MATRIX.COLLAPSE")
+    toolbar.expand = toolbar.expand or Theme:CreateButton(toolbar, 72, "", "secondary")
+    PlaceControl(toolbar.expand, math.max(72, Theme:MeasureText(Theme.Font.body, expand) + 16))
+    toolbar.expand:SetText(expand)
+    toolbar.expand:SetScript("OnClick", function() SetAllExpanded(true) end)
+    toolbar.collapse = toolbar.collapse or Theme:CreateButton(toolbar, 72, "", "secondary")
+    PlaceControl(toolbar.collapse, math.max(72, Theme:MeasureText(Theme.Font.body, collapse) + 16))
+    toolbar.collapse:SetText(collapse)
+    toolbar.collapse:SetScript("OnClick", function() SetAllExpanded(false) end)
+    local toolbarHeight = y + rowHeight
+    toolbar:SetHeight(toolbarHeight)
     local headerHeight = Theme:GetCharacterHeaderHeight(context)
     parent.matrixHeader:ClearAllPoints(); parent.matrixHeader:SetPoint("TOPLEFT", toolbar, "BOTTOMLEFT", 0, -Theme.Space.xs); parent.matrixHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -inset.right, 0); parent.matrixHeader:SetHeight(headerHeight)
     parent.matrixScroll:ClearAllPoints(); parent.matrixScroll:SetPoint("TOPLEFT", parent.matrixHeader, "BOTTOMLEFT", 0, 0); parent.matrixScroll:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset.right, inset.bottom)
@@ -303,7 +327,7 @@ function Addon:RefreshMatrixView(parent, context)
         return true
     end
     for _, node in ipairs(parent.matrixNodeCache) do Add(node, 0, query ~= "" or filter ~= "all") end
-    local fixedHeight = inset.top + Theme.Size.compact + Theme.Space.xs + headerHeight + inset.bottom
+    local fixedHeight = inset.top + toolbarHeight + Theme.Space.xs + headerHeight + inset.bottom
     local availableWidth = math.max(1, Core.AccountView:GetScrollSurfaceWidth(context, parent, #display * Theme.Table.rowHeight, fixedHeight) - inset.left - inset.right)
     local characterWidth = self:GetMatrixCharacterColumnWidth(context, availableWidth, nameWidth, #allCharacters)
     local characters, pageInfo = Core.AccountView:GetColumnPage("reputation", "matrix", allCharacters, availableWidth, nameWidth, characterWidth)

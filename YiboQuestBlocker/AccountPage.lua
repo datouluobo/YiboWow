@@ -100,6 +100,38 @@ local function PreferredCharacterWidth(context)
     return Theme:GetCharacterMatrixColumnWidth(context)
 end
 
+local function MainControls(width)
+    local pad, gap, height = Theme.Space.xs, Theme.Space.sm, Theme.Size.standard
+    local available = math.max(1, width - pad * 2)
+    local modeWidth = 156
+    for _, option in ipairs(YQB.GetProcessModeOptions()) do
+        modeWidth = math.max(modeWidth, Theme:MeasureText(Theme.Font.body, option.label) + 36)
+    end
+    local controls = {}
+    for index, key in ipairs({ "PAGE.DAILY", "PAGE.NORMAL", "PAGE.HIDE_COMPLETE" }) do
+        controls[index] = Theme:MeasureText(Theme.Font.body, YQB.T(key)) + 26
+    end
+    controls[4] = modeWidth
+    local x, y, positions = 0, 0, {}
+    for index, natural in ipairs(controls) do
+        local size = math.min(natural, available)
+        if x > 0 and x + size > available then x, y = 0, y + height + Theme.Space.xxs end
+        positions[index] = { x = pad + x, y = y, width = size }
+        x = x + size + gap
+    end
+    local labelWidth = Theme:MeasureText(Theme.Font.assist, YQB.T("PAGE.QUEST_ID"))
+    local addWidths = {
+        math.max(86, Theme:MeasureText(Theme.Font.body, YQB.T("PAGE.ADD_CURRENT")) + 14),
+        math.max(62, Theme:MeasureText(Theme.Font.body, YQB.T("PAGE.ADD_GLOBAL")) + 14),
+    }
+    local abandonWidth = math.min(available, math.max(174, Theme:MeasureText(Theme.Font.body, YQB.T("PAGE.ABANDON")) + 14,
+        Theme:MeasureText(Theme.Font.body, YQB.T("PAGE.PAUSED_ABANDON")) + 14))
+    local inputWidth = math.min(108, math.max(48, available - labelWidth - addWidths[1] - addWidths[2] - pad * 3))
+    local secondRow = labelWidth + inputWidth + addWidths[1] + addWidths[2] + abandonWidth + pad * 4 > available
+    return positions, y + height, { inputWidth, addWidths[1], addWidths[2], abandonWidth },
+        (secondRow and 2 or 1) * height + (secondRow and Theme.Space.xxs or 0)
+end
+
 local function ClearRows(instance)
     for _, row in ipairs(instance.rows) do row:Hide() end
     instance.rowCount = 0
@@ -273,10 +305,10 @@ function Page.Create(instance)
     instance.toolbar = CreateFrame("Frame", nil, instance, "BackdropTemplate"); instance.toolbar:SetPoint("TOPLEFT", mainInset.left, -mainInset.top); instance.toolbar:SetPoint("TOPRIGHT", -mainInset.right, -mainInset.top); instance.toolbar:SetHeight(Theme.Size.standard)
     Theme:ApplyPixelBackdrop(instance.toolbar, { background = true, pixels = 1 })
     instance.toolbar:SetBackdropColor(COLORS.toolbar[1], COLORS.toolbar[2], COLORS.toolbar[3], 0.9); instance.toolbar:SetBackdropBorderColor(COLORS.line[1], COLORS.line[2], COLORS.line[3], 0.52)
-    instance.daily = Check(instance.toolbar, YQB.T("PAGE.DAILY")); instance.daily:SetPoint("LEFT", 7, 0)
-    instance.normal = Check(instance.toolbar, YQB.T("PAGE.NORMAL")); instance.normal:SetPoint("LEFT", instance.daily.label, "RIGHT", Theme.Space.sm, 0)
-    instance.hideComplete = Check(instance.toolbar, YQB.T("PAGE.HIDE_COMPLETE")); instance.hideComplete:SetPoint("LEFT", instance.normal.label, "RIGHT", Theme.Space.sm, 0)
-    instance.processMode = Theme:CreateDropdown(instance.toolbar, 156, YQB.GetProcessModeOptions()); instance.processMode:SetPoint("LEFT", instance.hideComplete.label, "RIGHT", Theme.Space.sm, 0)
+    instance.daily = Check(instance.toolbar, YQB.T("PAGE.DAILY"))
+    instance.normal = Check(instance.toolbar, YQB.T("PAGE.NORMAL"))
+    instance.hideComplete = Check(instance.toolbar, YQB.T("PAGE.HIDE_COMPLETE"))
+    instance.processMode = Theme:CreateDropdown(instance.toolbar, 156, YQB.GetProcessModeOptions())
     instance.level = Theme:CreateInput(instance.toolbar, {
         width = 104, height = 20, maxLetters = 80, placeholder = YQB.T("PAGE.LEVEL"),
         Validate = function(text)
@@ -357,7 +389,25 @@ function Page.Refresh(instance, context)
         instance.processMode:SetParent(instance.toolbar)
         local mainInset = Theme:GetMatrixInsets(false)
         instance.toolbar:ClearAllPoints(); instance.toolbar:SetPoint("TOPLEFT", mainInset.left, -mainInset.top); instance.toolbar:SetPoint("TOPRIGHT", -mainInset.right, -mainInset.top)
-        instance.processMode:ClearAllPoints(); instance.processMode:SetPoint("LEFT", instance.hideComplete.label, "RIGHT", Theme.Space.sm, 0)
+        local width = context.surfaceAvailableWidth or instance:GetWidth()
+        local positions, toolbarHeight, widths, actionHeight = MainControls(width - mainInset.left - mainInset.right)
+        for index, control in ipairs({ instance.daily, instance.normal, instance.hideComplete, instance.processMode }) do
+            local position = positions[index]
+            control:ClearAllPoints()
+            control:SetPoint("TOPLEFT", instance.toolbar, "TOPLEFT", position.x, -position.y)
+            control:SetWidth(position.width)
+            if control.label then control.label:SetWordWrap(false) end
+        end
+        instance.toolbar:SetHeight(toolbarHeight)
+        instance.addPanel:SetHeight(actionHeight)
+        instance.manualLabel:ClearAllPoints()
+        instance.manualLabel:SetPoint("TOPLEFT", instance.addPanel, "TOPLEFT", Theme.Space.xs, 0)
+        instance.manualLabel:SetHeight(Theme.Size.standard)
+        instance.abandon:ClearAllPoints()
+        instance.abandon:SetPoint("BOTTOMRIGHT", instance.addPanel, "BOTTOMRIGHT", -Theme.Space.xs, 0)
+        for index, control in ipairs({ instance.manual, instance.addChar, instance.addGlobal, instance.abandon }) do
+            control:SetWidth(widths[index])
+        end
         instance.processMode:Show()
         instance.header:SetPoint("TOPLEFT", instance.toolbar, "BOTTOMLEFT", 0, -Theme.Space.sm); instance.header:SetPoint("TOPRIGHT", instance.toolbar, "BOTTOMRIGHT", 0, -Theme.Space.sm)
         instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs); instance.scroll:SetPoint("BOTTOMRIGHT", instance.addPanel, "TOPRIGHT", 0, Theme.Space.sm)
@@ -440,9 +490,6 @@ function Page.GetSurfaceMetrics(context)
     local fixedWidth = 250 + (context:GetFieldVisible("global") and GLOBAL_W or 0)
     local characterCount = #(context.characters or {})
     local columnWidth = PreferredCharacterWidth(context)
-    -- Metrics describe the complete role matrix.  AccountView expands the
-    -- outer window to its safe screen edge before the shared pager selects a
-    -- subset of these character columns for rendering.
     local characterColumns = context:GetFieldVisible("characters") and (characterCount * columnWidth) or 0
     local globalColumn = context:GetFieldVisible("global") and GLOBAL_W or 0
     local blocked = #(YQB.GetBlockedQuestList() or {})
@@ -471,7 +518,9 @@ function Page.GetSurfaceMetrics(context)
     -- Keeping this formula structural prevents a future title/control change
     -- from creating a window taller than the matrix it contains.
     local headerHeight = Theme:GetCharacterHeaderHeight(context)
-    local mainFixedHeight = mainInset.top + Theme.Size.standard + Theme.Space.sm + headerHeight + Theme.Space.xs + Theme.Space.sm + 29 + mainInset.bottom
+    local width = (context.surfaceAvailableWidth or Theme.Geometry.compactAccountWidth - Theme:GetNavigationWidth()) - mainInset.left - mainInset.right
+    local _, toolbarHeight, _, actionHeight = MainControls(width)
+    local mainFixedHeight = mainInset.top + toolbarHeight + Theme.Space.sm + headerHeight + Theme.Space.xs + Theme.Space.sm + actionHeight + mainInset.bottom
     local previewFixedHeight = previewInset.top + headerHeight + Theme.Space.xs + previewInset.bottom
     return {
         minContentWidth = fixedWidth + (context:GetFieldVisible("characters") and COMPACT_CHARACTER_COL_W or 0) + sideInset.left + sideInset.right,
