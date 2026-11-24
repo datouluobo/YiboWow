@@ -1666,14 +1666,23 @@ end
 local function PlaceEquipment(parent, snapshot)
     local box = parent.buildsEquipment
     local boxHeight = box.layoutHeight or box:GetHeight() or 500
-    local rowHeight = parent.buildsCompact and math.max(22, math.min(52, math.floor((boxHeight - 75) / 8)))
-        or math.max(39, math.min(80, math.floor((boxHeight - 125) / 8)))
+    local compact = parent.buildsCompact
+    local rowHeight = math.max(39, math.min(80, math.floor((boxHeight - 125) / 8)))
     local maxIconSize = math.min(ICON_SIZE, rowHeight - 5)
     local augmentSize = math.min(AUGMENT_ICON_SIZE, math.floor((maxIconSize - 2) / 2))
     local iconSize = augmentSize * 2 + 2
-    local currentRowEnd = 12 + 7 * rowHeight + iconSize
-    local weaponStart = boxHeight - 30 - iconSize
-    local availableRowExtra = math.max(0, math.floor((weaponStart - currentRowEnd - 2) / 7))
+    local top, weaponBottom = 12, 30
+    if compact then
+        local rows = #LEFT_SLOTS + 1
+        local gap = Theme.Space.xxs
+        iconSize = math.min(ICON_SIZE, math.floor((boxHeight - top - weaponBottom - gap * (rows - 1)) / rows))
+        rowHeight = iconSize + gap
+        augmentSize = math.min(AUGMENT_ICON_SIZE, math.floor((iconSize - 4) / 2))
+    end
+    local sideGaps = #LEFT_SLOTS - 1
+    local currentRowEnd = top + sideGaps * rowHeight + iconSize
+    local weaponStart = boxHeight - weaponBottom - iconSize
+    local availableRowExtra = math.max(0, math.floor((weaponStart - currentRowEnd - 2) / sideGaps))
     local rowStep = rowHeight + math.min(4, availableRowExtra)
     local boxWidth = box.layoutWidth or box:GetWidth() or 360
     local left, right = 42, boxWidth - iconSize - 42
@@ -1695,12 +1704,12 @@ local function PlaceEquipment(parent, snapshot)
             -- The icon pair has one compact intentional gap; only the gem and
             -- enchant rails extend outward from it.
             local weaponGap = Theme.Space.sm
-            local previousWeaponSize = math.min(ICON_SIZE - 2, rowHeight - 5)
+            local previousWeaponSize = compact and iconSize or math.min(ICON_SIZE - 2, rowHeight - 5)
             local weaponOffset = math.floor((previousWeaponSize + weaponGap) / 2)
-            local weaponBottomOffset = PixelRound(30 + (previousWeaponSize - iconSize) / 2, button)
+            local weaponBottomOffset = PixelRound(weaponBottom + (previousWeaponSize - iconSize) / 2, button)
             button:SetPoint("BOTTOM", box, "BOTTOM", side == "weapon-left" and -weaponOffset or weaponOffset, weaponBottomOffset)
         else
-            button:SetPoint("TOPLEFT", box, "TOPLEFT", side == "left" and left or right, -12 - (visualIndex - 1) * rowStep)
+            button:SetPoint("TOPLEFT", box, "TOPLEFT", side == "left" and left or right, -top - (visualIndex - 1) * rowStep)
         end
         button.slotLabel:ClearAllPoints()
         if side == "left" then button.slotLabel:SetPoint("RIGHT", button, "LEFT", -4, 0); button.slotLabel:SetJustifyH("RIGHT")
@@ -1711,19 +1720,23 @@ local function PlaceEquipment(parent, snapshot)
         button.icon:SetDesaturated(not (item and item.itemLink))
         local itemLevel = slotID ~= (INVSLOT_BODY or 4) and slotID ~= (INVSLOT_TABARD or 19)
             and item and item.itemLink and Addon.Snapshot:GetItemLevel(item)
-        button.itemLevel:SetWidth(math.max(1, button:GetWidth() - 6))
+        local levelFontSize = compact and Theme.Font.meta or Theme.Font.section
+        if button.itemLevelFontSize ~= levelFontSize then
+            button.itemLevel:SetFont(STANDARD_TEXT_FONT, levelFontSize, "OUTLINE")
+            button.itemLevelFontSize = levelFontSize
+        end
+        button.itemLevel:SetWidth(math.max(1, iconSize - (compact and 4 or 6)))
         button.itemLevel:SetText(itemLevel and tostring(math.floor(itemLevel)) or "")
         button.itemLevel:SetShown(itemLevel and true or false)
         local itemBorderRed, itemBorderGreen, itemBorderBlue = ItemBorderColor(item)
         SetPixelBorderColor(button.border, { itemBorderRed, itemBorderGreen, itemBorderBlue })
         button.selection:SetShown(parent.buildsSelectedEquipmentSlot == slotID and item and item.itemLink and true or false)
         local socketCount = item and item.gems and #item.gems or 0
-        local augmentSize = math.min(PixelRound(AUGMENT_ICON_SIZE, button), PixelRound(iconSize, button))
-        local gemSize = augmentSize
+        local gemSize = PixelRound(compact and augmentSize or math.min(AUGMENT_ICON_SIZE, iconSize), button)
         local gemGap = PixelRound(AUGMENT_ICON_GAP, button.socketRail)
         local gemStep = gemSize + gemGap
         local railWidth = socketCount > 0 and (socketCount * gemSize + (socketCount - 1) * gemGap) or gemSize
-        local rowOutset = PixelRound(math.max(0, 2 * augmentSize - iconSize + PixelRound(2, button)), button)
+        local rowOutset = compact and 0 or PixelRound(math.max(0, 2 * gemSize - iconSize + PixelRound(2, button)), button)
         local socketOutset = PixelRound(rowOutset / 2, button)
         local effectOutset = rowOutset - socketOutset
         button.socketRail:ClearAllPoints()
@@ -1764,7 +1777,7 @@ local function PlaceEquipment(parent, snapshot)
             SetAugmentTooltip(gem, socketTitle, socket and socket.itemLink)
         end
         button.enchant:ClearAllPoints()
-        button.enchant:SetSize(augmentSize, augmentSize)
+        button.enchant:SetSize(gemSize, gemSize)
         local isWaist = slotID == (INVSLOT_WAIST or 6)
         local itemClassID, itemSubclassID
         if item and item.itemLink and GetItemInfo then
@@ -1777,8 +1790,8 @@ local function PlaceEquipment(parent, snapshot)
         local isEngineeringInstalled = engineeringState == "installed"
         local canEngineering = isEngineeringInstalled or engineeringState == "base-missing"
         local nearOffset = PixelRound(4, button)
-        local enchantOffset = isWaist and (augmentSize + PixelRound(1, button)) or nearOffset
-        if isRanged then enchantOffset = nearOffset + augmentSize + PixelRound(AUGMENT_ICON_GAP, button) end
+        local enchantOffset = isWaist and (gemSize + PixelRound(1, button)) or nearOffset
+        if isRanged then enchantOffset = nearOffset + gemSize + gemGap end
         if side == "left" or side == "weapon-right" then button.enchant:SetPoint("BOTTOMLEFT", button, "BOTTOMRIGHT", enchantOffset, -effectOutset)
         else button.enchant:SetPoint("BOTTOMRIGHT", button, "BOTTOMLEFT", -enchantOffset, -effectOutset) end
         local enchant = item and item.enchant
@@ -1819,12 +1832,12 @@ local function PlaceEquipment(parent, snapshot)
             -- reserving the absent enchant position.
             engineeringOffset = PixelRound(4, button)
         else
-            engineeringOffset = PixelRound((isHand and item and item.blacksmithSockets and item.blacksmithSockets.state == "base-missing") and 38 or (augmentSize + 1), button)
+            engineeringOffset = PixelRound((isHand and item and item.blacksmithSockets and item.blacksmithSockets.state == "base-missing") and 38 or (gemSize + 1), button)
         end
         if canEnchant then
-            engineeringOffset = math.max(engineeringOffset, enchantOffset + augmentSize + PixelRound(AUGMENT_ICON_GAP, button))
+            engineeringOffset = math.max(engineeringOffset, enchantOffset + gemSize + gemGap)
         end
-        button.engineering:SetSize(augmentSize, augmentSize)
+        button.engineering:SetSize(gemSize, gemSize)
         if side == "left" or side == "weapon-right" then button.engineering:SetPoint("BOTTOMLEFT", button, "BOTTOMRIGHT", engineeringOffset, -effectOutset)
         else button.engineering:SetPoint("BOTTOMRIGHT", button, "BOTTOMLEFT", -engineeringOffset, -effectOutset) end
         button.engineering.icon:SetDesaturated(not isEngineeringInstalled)
@@ -1833,6 +1846,8 @@ local function PlaceEquipment(parent, snapshot)
         button.engineering:SetShown(isHead and isEngineeringInstalled or ((isWaist or isBack or isHand or isRanged) and canEngineering) or false)
         SetEngineeringTooltip(button.engineering, engineeringTitle, engineering, item, isEngineeringInstalled)
         button.base:ClearAllPoints()
+        local markerSize = compact and gemSize or 16
+        button.base:SetSize(markerSize, markerSize)
         local blacksmithSockets = item and item.blacksmithSockets
         local blacksmithMissing = blacksmithSockets and blacksmithSockets.state == "base-missing"
         local isBlacksmithSlot = slotID == (INVSLOT_WRIST or 9) or slotID == (INVSLOT_HAND or 10)
@@ -1843,12 +1858,25 @@ local function PlaceEquipment(parent, snapshot)
         button.base:SetShown(isBlacksmithSlot and blacksmithMissing and true or false)
         SetAugmentTooltip(button.base, Addon:T("UI.NO_BLACKSMITH_SOCKET"))
         button.buckle:ClearAllPoints()
+        button.buckle:SetSize(markerSize, markerSize)
         if side == "left" or side == "weapon-right" then button.buckle:SetPoint("BOTTOMLEFT", button, "BOTTOMRIGHT", 4, 2)
         else button.buckle:SetPoint("BOTTOMRIGHT", button, "BOTTOMLEFT", -4, 2) end
         button.buckle.icon:SetDesaturated(true)
         button.buckle:SetBackdropBorderColor(C.warning[1], C.warning[2], C.warning[3], 1)
         button.buckle:SetShown(isWaist and item and item.itemLink and buckleMissing or false)
         SetAugmentTooltip(button.buckle, Addon:T("UI.NO_BELT_BUCKLE"))
+        if compact then
+            local outward = side == "left" or side == "weapon-right"
+            local edge, other = outward and "BOTTOMLEFT" or "BOTTOMRIGHT", outward and "BOTTOMRIGHT" or "BOTTOMLEFT"
+            local offset = nearOffset
+            for _, effect in ipairs({ button.buckle, button.base, button.enchant, button.engineering }) do
+                if effect:IsShown() then
+                    effect:ClearAllPoints()
+                    effect:SetPoint(edge, button, other, outward and offset or -offset, 0)
+                    offset = offset + gemSize + gemGap
+                end
+            end
+        end
         SetNativeItemTooltip(button, item)
         button:SetScript("OnClick", function()
             if not (item and item.itemLink) then return end
@@ -2184,25 +2212,33 @@ local function LayoutMain(parent, characters)
         parent.buildsToolbar.specIcon:SetSize(28, 28)
     end
     local equipmentWidth = collapsed and FoldedEquipmentWidth() or math.floor((mainWidth - Theme.Space.sm * 3) * 0.55)
-    parent.buildsConfirm:ClearAllPoints(); parent.buildsConfirm:SetPoint("BOTTOMLEFT", parent.buildsMain, "BOTTOMLEFT", Theme.Space.sm, Theme.Space.sm); parent.buildsConfirm:SetPoint("BOTTOMRIGHT", parent.buildsMain, "BOTTOMRIGHT", -Theme.Space.sm, Theme.Space.sm); parent.buildsConfirm:SetHeight(48)
-    parent.buildsEquipment:ClearAllPoints(); parent.buildsEquipment:SetPoint("TOPLEFT", parent.buildsToolbar, "BOTTOMLEFT", 0, -Theme.Space.sm); parent.buildsEquipment:SetPoint("BOTTOMLEFT", parent.buildsConfirm, "TOPLEFT", 0, Theme.Space.sm)
+    parent.buildsConfirm:ClearAllPoints()
+    parent.buildsEquipment:ClearAllPoints()
+    parent.buildsEquipment:SetPoint("TOPLEFT", parent.buildsToolbar, "BOTTOMLEFT", 0, -Theme.Space.sm)
     if compact then
+        parent.buildsConfirm:SetPoint("BOTTOMRIGHT", parent.buildsToolbar, "BOTTOMRIGHT")
+        parent.buildsConfirm:SetHeight(Theme.Size.compact)
+        parent.buildsEquipment:SetPoint("BOTTOMLEFT", parent.buildsMain, "BOTTOMLEFT", Theme.Space.sm, Theme.Space.sm)
         equipmentWidth = math.max(1, mainWidth - Theme.Space.sm * 2)
         parent.buildsEquipment:SetWidth(equipmentWidth)
         parent.buildsBuild:ClearAllPoints(); parent.buildsBuild:SetAllPoints(parent.buildsEquipment)
         parent.buildsEquipment.layoutWidth, parent.buildsBuild.layoutWidth = equipmentWidth, equipmentWidth
         parent.buildsBuild.layoutHeight = math.max(1, availableHeight - inset.top - inset.bottom
-            - parent.buildsToolbar:GetHeight() - Theme.Space.sm * 4 - 48)
-    elseif collapsed then
-        parent.buildsEquipment:SetWidth(equipmentWidth)
-        parent.buildsEquipment.layoutWidth = equipmentWidth
-        parent.buildsBuild:Hide()
+            - parent.buildsToolbar:GetHeight() - Theme.Space.sm * 3)
     else
+        parent.buildsConfirm:SetPoint("BOTTOMLEFT", parent.buildsMain, "BOTTOMLEFT", Theme.Space.sm, Theme.Space.sm)
+        parent.buildsConfirm:SetPoint("BOTTOMRIGHT", parent.buildsMain, "BOTTOMRIGHT", -Theme.Space.sm, Theme.Space.sm)
+        parent.buildsConfirm:SetHeight(48)
+        parent.buildsEquipment:SetPoint("BOTTOMLEFT", parent.buildsConfirm, "TOPLEFT", 0, Theme.Space.sm)
         parent.buildsEquipment:SetWidth(equipmentWidth)
-        parent.buildsBuild:ClearAllPoints(); parent.buildsBuild:SetPoint("TOPLEFT", parent.buildsEquipment, "TOPRIGHT", Theme.Space.sm, 0); parent.buildsBuild:SetPoint("BOTTOMRIGHT", parent.buildsConfirm, "TOPRIGHT", 0, Theme.Space.sm); parent.buildsBuild:Show()
         parent.buildsEquipment.layoutWidth = equipmentWidth
-        parent.buildsBuild.layoutWidth = mainWidth - Theme.Space.sm * 3 - equipmentWidth
-        parent.buildsBuild.layoutHeight = parent.buildsBuild:GetHeight()
+        if collapsed then
+            parent.buildsBuild:Hide()
+        else
+            parent.buildsBuild:ClearAllPoints(); parent.buildsBuild:SetPoint("TOPLEFT", parent.buildsEquipment, "TOPRIGHT", Theme.Space.sm, 0); parent.buildsBuild:SetPoint("BOTTOMRIGHT", parent.buildsConfirm, "TOPRIGHT", 0, Theme.Space.sm); parent.buildsBuild:Show()
+            parent.buildsBuild.layoutWidth = mainWidth - Theme.Space.sm * 3 - equipmentWidth
+            parent.buildsBuild.layoutHeight = parent.buildsBuild:GetHeight()
+        end
     end
     parent.buildsEquipment.layoutHeight = compact and parent.buildsBuild.layoutHeight or parent.buildsEquipment:GetHeight()
     parent.buildsToolbar.appearance:ClearAllPoints(); parent.buildsToolbar.appearance:SetPoint("TOP", parent.buildsEquipment, "TOP", 0, -10)
@@ -2304,7 +2340,9 @@ function Page.Refresh(parent, context)
     local equipmentStatusText = ({
         missing = Addon:T("UI.NO_EQUIPMENT_SNAPSHOT"), unsaved = Addon:T("UI.EQUIPMENT_AWAITING_AUTOMATIC_SAVE"), changed = Addon:T("UI.EQUIPMENT_CHANGED_AWAITING_AUTOMATIC_SAVE"), saved = Addon:T("UI.EQUIPMENT_SAVED"),
     })[equipmentStatus] or Addon:T("UI.NO_EQUIPMENT_SNAPSHOT")
-    parent.buildsToolbar.status:SetText((record.lastActiveSlot == slot and Addon:T("UI.ACTIVE") or Addon:T("UI.BACKUP_BUILD")) .. " · " .. equipmentStatusText)
+    local slotStatus = Addon:T(record.lastActiveSlot == slot and "UI.ACTIVE" or "UI.BACKUP_BUILD")
+    local canSave = IsCurrent(selected) and record.lastActiveSlot == slot and (equipmentStatus == "unsaved" or equipmentStatus == "changed")
+    parent.buildsToolbar.status:SetText(parent.buildsCompact and canSave and slotStatus or (slotStatus .. " · " .. equipmentStatusText))
     PlaceEquipment(parent, equipment)
     parent.buildsEquipmentSnapshot = equipment
     RenderEquipmentDetail(parent, equipment)
@@ -2333,14 +2371,26 @@ function Page.Refresh(parent, context)
     parent.buildsBuild.allGlyphs:SetState(catalogOpen and "selected" or "default")
     parent.buildsBuild.currentGlyphs:SetShown(not detailOpen)
     parent.buildsBuild.allGlyphs:SetShown(not detailOpen)
-    local canSave = IsCurrent(selected) and record.lastActiveSlot == slot and (equipmentStatus == "unsaved" or equipmentStatus == "changed")
     parent.buildsConfirm:SetState(canSave and "selected" or "disabled")
-    parent.buildsConfirm:SetText(({
-        missing = Addon:T("UI.NO_EQUIPMENT_SNAPSHOT"),
-        unsaved = Addon:T("UI.SAVE_BUILD_EQUIPMENT_NOW"),
-        changed = Addon:T("UI.UPDATE_BUILD_EQUIPMENT_NOW"),
-        saved = Addon:T("UI.BUILD_EQUIPMENT_SAVED"),
-    })[equipmentStatus] or Addon:T("UI.NO_EQUIPMENT_SNAPSHOT"))
+    parent.buildsConfirm:SetShown(not parent.buildsCompact or canSave == true)
+    if parent.buildsCompact then
+        if canSave then
+            local toolbar, label = parent.buildsToolbar, Addon:T("UI.SAVE_EQUIPMENT")
+            local width = math.ceil(Theme:MeasureText(Theme.Font.body, label) + Theme.Space.sm * 2)
+            parent.buildsConfirm:SetWidth(width)
+            parent.buildsConfirm:SetText(label)
+            toolbar.status:ClearAllPoints()
+            toolbar.status:SetPoint("BOTTOMRIGHT", parent.buildsConfirm, "BOTTOMLEFT", -Theme.Space.xs, 0)
+            toolbar.status:SetWidth(math.max(1, toolbar.status:GetWidth() - width - Theme.Space.xs))
+        end
+    else
+        parent.buildsConfirm:SetText(({
+            missing = Addon:T("UI.NO_EQUIPMENT_SNAPSHOT"),
+            unsaved = Addon:T("UI.SAVE_BUILD_EQUIPMENT_NOW"),
+            changed = Addon:T("UI.UPDATE_BUILD_EQUIPMENT_NOW"),
+            saved = Addon:T("UI.BUILD_EQUIPMENT_SAVED"),
+        })[equipmentStatus] or Addon:T("UI.NO_EQUIPMENT_SNAPSHOT"))
+    end
     parent.buildsConfirm:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         local title = ({

@@ -99,10 +99,33 @@ local function Run(target, language)
     if target == "Mists" then
         local builds, taskHub, mail = env.YiboBuilds, env.YiboTaskHub, env.YiboMail
         local current = assert(core.Characters:GetCurrent({ identityOnly = true }))
-        builds.Snapshot:EnsureCharacter(current)
+        local record = builds.Snapshot:EnsureCharacter(current)
+        record.lastActiveSlot = "primary"
+        local slot = record.slots.primary
+        slot.observedEquipment = { slots = {
+            [tostring(env.INVSLOT_HEAD or 1)] = { gems = { { socketType = "red" } }, enchant = { state = "uninstalled" } },
+        } }
         VisitPage(builds.PAGE_ID)
         local instance = frame.instances[builds.PAGE_ID]
         assert(instance.buildsCompact and instance.buildsEquipment:IsShown() and not instance.buildsBuild:IsShown())
+        local equipment = instance.buildsEquipment
+        local head, wrist = equipment.items[env.INVSLOT_HEAD or 1], equipment.items[env.INVSLOT_WRIST or 9]
+        local weapon = equipment.items[env.INVSLOT_MAINHAND or 16]
+        local _, _, _, _, wristY = wrist:GetPoint(1)
+        local _, _, _, _, weaponY = weapon:GetPoint(1)
+        assert(equipment.layoutHeight + wristY - wrist:GetHeight() > weaponY + weapon:GetHeight(),
+            "last side slot has clearance above the weapons")
+        assert(head.gems[1]:IsShown() and head.enchant:IsShown()
+            and head.gems[1]:GetHeight() + head.enchant:GetHeight() < head:GetHeight(),
+            "the socket and enhancement tracks fit the equipment slot height")
+        local _, saveAnchor = instance.buildsConfirm:GetPoint(1)
+        assert(instance.buildsConfirm:IsShown() and saveAnchor == instance.buildsToolbar,
+            "pending equipment exposes a toolbar action")
+        slot.confirmedEquipment = slot.observedEquipment
+        local previousHeight = equipment.layoutHeight
+        VisitPage(builds.PAGE_ID)
+        assert(not instance.buildsConfirm:IsShown() and equipment.layoutHeight == previousHeight,
+            "equipment height stays stable when the save action is no longer needed")
         local toggle = instance.buildsToolbar.buildToggle
         for _, pane in ipairs({ "build", "equipment" }) do
             local notices = #env.TEST_MESSAGES

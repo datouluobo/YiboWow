@@ -199,6 +199,7 @@ Core.Locale:Register("YiboBuilds", "en", {
     ["UI.RING_2"] = "Ring 2",
     ["UI.RING_2_2"] = "Ring 2",
     ["UI.SAVE_BUILD_EQUIPMENT_NOW"] = "Save build equipment now  >",
+    ["UI.SAVE_EQUIPMENT"] = "Save gear",
     ["UI.SECONDARY_SPECIALIZATION"] = "Secondary specialization",
     ["UI.SECONDARY_TALENTS"] = "Secondary talents",
     ["UI.SELECT"] = "Select ›",
