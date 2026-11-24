@@ -43,7 +43,7 @@ local function Boot(saved,configure,defaultManifest,language)
     return e,c,e.YiboCrafting,fire,Flush,d
 end
 local e,c,a,fire,flush,d=Boot()
-Check(a.initialized and a.VERSION=="0.2.0" and c:IsInitialized() and c:CheckAPIVersion(13),"Crafting and compatible Core target manifests start")
+Check(a.initialized and a.VERSION=="0.2.0" and c:IsInitialized() and c:CheckAPIVersion(14),"Crafting and compatible Core target manifests start")
 Check(e.YiboCraftingDB.sentinel=="mists" and not e.YiboCraftingDB.characters,"Mists store untouched")
 Check(not a.RecipeCatalog and not a.GoalTargets and not a.RecipeStateScanner,"MoP catalog and spell assumptions excluded")
 fire("PLAYER_ENTERING_WORLD"); flush()
@@ -152,7 +152,7 @@ d2.emptyProfile=true; f2("SKILL_LINES_CHANGED"); fl2()
 Check(#c2.DataDomains:Get(e2.TEST_GUID,"professions").data.professions==0,"explicit skill event can confirm no professions")
 e2.SlashCmdList.YIBOCRAFTING(""); fl2()
 Check(not a2:OwnsProfession(197),"removed profession cannot authorize recipe scan")
-for _,cap in ipairs({"profession-profile","data-domains","localization","account-surface-budget","character-cleanup","basic-input"}) do
+for _,cap in ipairs({"profession-profile","data-domains","localization","account-surface-budget","character-cleanup","basic-input","account-compact-layout"}) do
     local env,_,addon=Boot(nil,function(_,core) local old=core.HasCapability; core.HasCapability=function(self,name,version) return name~=cap and old(self,name,version) end end)
     Check(not addon.initialized and env.YiboCraftingForeverDB==nil,"required capability checked before DB: "..cap)
 end
@@ -160,7 +160,8 @@ for _,mutate in ipairs({function(db) db.schema=2 end,function(db) db.clientScope
     local bad=c.Defaults:Copy(disk); mutate(bad); local _,_,addon=Boot(bad); Check(not addon.initialized,"incompatible saved schema/scope rejected")
 end
 local de,_,da=Boot(nil,nil,true)
-Check(not da.initialized and not de.YiboCraftingDB.characters,"forced default manifest cannot write on Forever")
+Check(not (da and da.initialized) and not de.YiboCraftingDB.characters and not de.YiboCraftingForeverDB,
+    "forced default manifest cannot write on Forever")
 for _,case in ipairs({{"zhCN","auto","zh"},{"enUS","auto","en"},{"zhCN","en","en"},{"enUS","zh","zh"}}) do
     local coreSave=c.Defaults:Copy(c.Database:GetDB()); coreSave.settings.language=case[2]
     local env,core,addon,native,drain,data=Boot(nil,nil,nil,{client=case[1],savedCore=coreSave})
@@ -168,6 +169,12 @@ for _,case in ipairs({{"zhCN","auto","zh"},{"enUS","auto","en"},{"zhCN","en","en
     local page=core.AccountView.frame.instances.crafting
     Check(core.Locale:GetLanguage()==case[3] and page.rows[1].labels.learned:GetText()==addon:T("UI.LEARNED")
         and page.search.placeholder:GetText()==addon:T("FOREVER.SEARCH"),"four session language modes")
+    local theme=core.UITheme
+    for field, text in pairs({learned=addon:T("FOREVER.NOT_LEARNED"),state=addon:T("FOREVER.OBSERVED")}) do
+        Check(page.labels[field]:GetWidth() >= theme:MeasureText(theme.Font.assist,page.labels[field]:GetText())
+            and page.rows[1].labels[field]:GetWidth() >= theme:MeasureText(theme.Font.body,text),
+            "compact recipe column fits translated header and status: "..case[3].."/"..field)
+    end
     Check(#core.Locale:GetMissingEnglish("YiboCrafting")==0,"Crafting target resources complete")
 end
 Check(#e.TEST_MESSAGES==0,"no hidden callbacks: "..table.concat(e.TEST_MESSAGES," | "))

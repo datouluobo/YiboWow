@@ -319,10 +319,31 @@ function Page:Refresh(parent,context)
     parent.professions:SetText(#summary>0 and table.concat(summary," · ") or Addon:T("FOREVER.PROFILE_PENDING"))
     parent.status:SetText(self:Status()); parent.refresh:SetShown(not context.preview)
     parent.refresh:SetState(Addon.Scanner.inWorld and Addon.Scanner.open and "default" or "disabled")
-    local width,columns,x,total=math.max(320,parent.scroll:GetWidth()-20),{},0,0
-    local fields,weights=context.fields or self:Fields(),{profession=2,recipe=3.5,learned=1,state=1.6}
-    for _,field in ipairs(fields) do total=total+(weights[field.id] or 1) end
-    for _,field in ipairs(fields) do local w=width*(weights[field.id] or 1)/math.max(1,total); columns[#columns+1]={id=field.id,x=x,width=math.max(1,w-8)}; x=x+w; parent.labels[field.id]:SetText(field.title) end
+    local width = math.max(320, parent.scroll:GetWidth()-20)
+    local fields = context.fields or self:Fields()
+    local statusSamples = {
+        learned = { Addon:T("UI.LEARNED"), Addon:T("FOREVER.NOT_LEARNED") },
+        state = { Addon:T("FOREVER.OBSERVED"), Addon:T("FOREVER.OLD") },
+    }
+    local flexibleWeights = { profession = 2, recipe = 3.5 }
+    local statusWidths, available, weight = {}, width, 0
+    for _, field in ipairs(fields) do
+        local samples = statusSamples[field.id]
+        if samples then
+            local measured = Theme:GetCompactColumnWidth(field.title, samples)
+            statusWidths[field.id] = measured
+            available = available - measured
+        else
+            weight = weight + flexibleWeights[field.id]
+        end
+    end
+    local columns, x = {}, 0
+    for _, field in ipairs(fields) do
+        local columnWidth = statusWidths[field.id] or math.max(9, available * flexibleWeights[field.id] / weight)
+        columns[#columns+1] = { id = field.id, x = x, width = columnWidth - 8 }
+        parent.labels[field.id]:SetText(field.title)
+        x = x + columnWidth
+    end
     Layout(parent.header,parent.labels,columns); parent.content:SetWidth(width)
     parent.renderedRecipes,parent.columns,parent.rowWidth=recipes,columns,width
     parent.content:SetHeight(math.max(1,#recipes*30)); parent.scroll:SetContentHeight(#recipes*30)

@@ -145,7 +145,9 @@ for _,bad in ipairs({{schema=99},{schema=1,clientScope={target="Mists"},characte
 end
 local bad=c.Defaults:Copy(saved); bad.characters[e.TEST_GUID].slots[19]=nil
 local be,_,ba=Boot(bad); Check(not ba.initialized and be.YiboBuildsForeverDB==bad,"incomplete stored snapshot rejected before mutation")
-local de,_,da=Boot(nil,nil,true); Check(not da.CoreIntegration.initialized and de.YiboBuildsDB.sentinel and not de.YiboBuildsDB.characters,"default MoP manifest cannot initialize on Forever")
+local de,_,da=Boot(nil,nil,true)
+Check(not (da and da.CoreIntegration and da.CoreIntegration.initialized) and de.YiboBuildsDB.sentinel
+    and not de.YiboBuildsDB.characters and not de.YiboBuildsForeverDB,"default manifest cannot initialize on Forever")
 for _,case in ipairs({{client="zhCN",expected="角色构筑"},{client="enUS",expected="Character builds"},{client="enUS",savedCore={settings={language="zh"}},expected="角色构筑"},{client="zhCN",savedCore={settings={language="en"}},expected="Character builds"}}) do
  local le,lc,la,lf,lfl=Boot(nil,nil,nil,case); lf("PLAYER_ENTERING_WORLD"); lfl(); le.SlashCmdList.YIBOBUILDS(""); lfl()
  Check(la:T("FOREVER.TITLE")==case.expected,"client and manual language respected: "..case.client..case.expected)
@@ -290,13 +292,17 @@ tp.talentSearch.clearButton:Fire("OnClick")
 Check(not tp.talentQuery and not tp.talentSearchCount:IsShown(),"shared clear button restores unfiltered tree")
 tp.scroll:SetWidth(330)
 ta.AccountPage:Refresh(tp,tp.context)
-Check(not tp.showTree and #tp.renderedRows==0 and tp.talentTreeHint:GetText()==ta:T("FOREVER.TALENT_TREE_WIDEN"),
-    "narrow tree shows a width hint instead of a list")
+Check(tp.showTree and #tp.renderedRows==0 and not tp.talentTreeHint:IsShown()
+    and tp.talentTree.tiles[1]:GetWidth() < 34 and tp.talentTree.tiles[1]:GetWidth() >= 24,
+    "narrow tree shrinks nodes while preserving the native view")
+local tooNarrow,_,issue=ta.TalentTree:Render(tp.talentTree,talent,240)
+Check(not tooNarrow and issue=="width","tree rejects widths below the minimum tile spacing")
 Check(ta.Talents:GetRankText({maxRanks=7},5)==ta:T("FOREVER.TALENT_RANK_DETAIL",ta:T("FOREVER.TALENT_RANK_UNKNOWN"),"7")
     and ta.Talents:GetRankText({},5)==ta:T("FOREVER.TALENT_RANK_VALUE",5),"missing native ranks remain unknown and old snapshots show invested rank")
 tp.scroll:SetWidth(720)
 ta.AccountPage:Refresh(tp,tp.context)
-Check(tp.showTree and not tp.talentTreeHint:IsShown() and tp.talentView==nil,"restoring space restores the sole talent view")
+Check(tp.showTree and not tp.talentTreeHint:IsShown() and tp.talentView==nil
+    and tp.talentTree.tiles[1]:GetWidth()==34,"restoring space restores full-size nodes")
 tp.equipmentTab:GetScript("OnClick")(tp.equipmentTab)
 Check(not tp.showTalents and #tp.renderedEquipment==19,"equipment tab returns to the same equipment")
 tp.talentsTab:GetScript("OnClick")(tp.talentsTab)

@@ -3,7 +3,7 @@ local Theme = _G.YiboCore and _G.YiboCore.UITheme
 local Tree = {}
 Addon.TalentTree = Tree
 
-local tileSize, padding = 34, 24
+local preferredTileSize, minimumTileSize, tileGap, padding = 34, 24, 6, 24
 
 local function PaintNodeTooltip(owner, node, investedRank, description)
     local talents = Addon.Talents
@@ -82,21 +82,24 @@ local function Layout(tree, width)
     if spanY > 0 then scaleY = math.min(scaleY, 1000 / spanY) end
     local left = (width - spanX * scaleX) / 2
     local ranks, positions, nodes = {}, {}, {}
+    local tileSize = preferredTileSize
     for _, node in ipairs(tree.nodes) do ranks[node.id] = node.rank end
     for _, node in ipairs(graph) do
         local x, y = left + (node.x - minX) * scaleX, 42 + (node.y - minY) * scaleY
         for _, other in ipairs(nodes) do
-            if math.abs(x - other.x) < tileSize + 6 and math.abs(y - other.y) < tileSize + 6 then return nil, "width" end
+            local separation = math.max(math.abs(x - other.x), math.abs(y - other.y))
+            tileSize = math.min(tileSize, separation - tileGap)
         end
         local point = { x = x, y = y, rank = ranks[node.id] or 0, node = node }
         nodes[#nodes + 1], positions[node.id] = point, point
     end
-    return { title = Addon.Talents:GetTreeTitle(tree), nodes = nodes, positions = positions, height = 70 + spanY * scaleY }
+    if tileSize < minimumTileSize then return nil, "width" end
+    return { title = Addon.Talents:GetTreeTitle(tree), nodes = nodes, positions = positions,
+        height = 70 + spanY * scaleY, tileSize = math.floor(tileSize) }
 end
 
 local function CreateTile(frame)
     local tile = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    tile:SetSize(tileSize, tileSize)
     Theme:ApplyPixelBackdrop(tile, { background = false })
     tile:EnableMouse(true)
     tile.icon = tile:CreateTexture(nil, "ARTWORK")
@@ -154,6 +157,7 @@ function Tree:Render(frame, snapshot, width, matches)
                 end
             end
             tile:ClearAllPoints()
+            tile:SetSize(layout.tileSize, layout.tileSize)
             tile:SetPoint("CENTER", frame, "TOPLEFT", point.x, -top - point.y)
             -- The rank badge sits just inside the 1-pixel tile border; Core
             -- re-applies the inset whenever the pixel size changes.
