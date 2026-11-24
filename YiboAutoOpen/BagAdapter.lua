@@ -78,22 +78,27 @@ function Bags:FindEligibleItems(entries, quarantined)
     local retryAfter, found = nil, {}
     local seen = {}
     local now = GetTime and GetTime() or 0
+    local readContainerLock = Addon.Target and Addon.Target.ReadContainerLock
     for bag = 4, 0, -1 do for slot = self:GetNumSlots(bag), 1, -1 do
         local item = self:GetItemInfo(bag, slot)
         if item and item.itemID and entries[item.itemID] and not quarantined[item.itemID] then
             local manualOnly = Addon.Catalog and ((Addon.Catalog.IsManualOnly and Addon.Catalog:IsManualOnly(item.itemID)) or (Addon.Catalog.manualOnly and Addon.Catalog.manualOnly[item.itemID]))
-            if manualOnly then
-                -- This item remains in the catalog for visibility, but needs a player click.
-            elseif item.locked == true then
-                retryAfter = retryAfter and math.min(retryAfter, 0.5) or 0.5
-            else
-                local start, duration = self:GetCooldown(bag, slot, item.itemID)
-                local readyAt = (start or 0) + (duration or 0)
-                if not start or start == 0 or readyAt <= now then
-                    if not seen[item.itemID] then found[#found + 1] = { bag = bag, slot = slot, item = item }; seen[item.itemID] = true end
-                else
-                    local remaining = math.max(0.1, readyAt - now + 0.05)
-                    retryAfter = retryAfter and math.min(retryAfter, remaining) or remaining
+            if not manualOnly then
+                local containerLocked = false
+                if item.locked ~= true and readContainerLock then
+                    containerLocked = readContainerLock(bag, slot)
+                end
+                if item.locked == true or containerLocked == nil then
+                    retryAfter = retryAfter and math.min(retryAfter, 0.5) or 0.5
+                elseif not containerLocked then
+                    local start, duration = self:GetCooldown(bag, slot, item.itemID)
+                    local readyAt = (start or 0) + (duration or 0)
+                    if not start or start == 0 or readyAt <= now then
+                        if not seen[item.itemID] then found[#found + 1] = { bag = bag, slot = slot, item = item }; seen[item.itemID] = true end
+                    else
+                        local remaining = math.max(0.1, readyAt - now + 0.05)
+                        retryAfter = retryAfter and math.min(retryAfter, remaining) or remaining
+                    end
                 end
             end
         end

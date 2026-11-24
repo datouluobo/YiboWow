@@ -7,6 +7,7 @@
 ## 队列模型
 
 - 每次处理前根据最新背包状态重建候选集合；仅包含目录白名单中、非手动专用、未锁定、冷却完成且未隔离的物品。背包数据未就绪、锁定和冷却物品不算失败候选。
+- Mists 按背包格读取原生物品提示中的 `LOCKED` 行。上锁的容器静默跳过，仍保留在目录中。同 ID 的其它已解锁副本可正常入队。提示尚在加载时延后检查，已确认上锁的容器随背包或施法恢复事件重新检查。
 - 队列调度单位是物品 ID（而非槽位）。同 ID 多个槽位不制造重复队列项；每次实际开启前仍重新定位该 ID 的当前槽位，避免背包移动后使用陈旧槽位。
 - 同时只允许一个 `pending` 开启操作。扫描事件不得取消或覆盖正在等待结果的操作。
 - 成功：清零该 ID 的失败计数；重新读取背包并继续处理仍存在的候选。
@@ -48,3 +49,28 @@
 4. A 失败等待期间发生读条或进出副本：不把临时安全暂停记作新失败；世界恢复清除自动隔离并重扫。
 5. 玩家取消绑定确认：该 ID 保留人工隔离，世界恢复不清除；显式手动重试才清除。
 6. 等待期间槽位移动、物品离包或 ID 变化：按最新背包重定位/丢弃过期候选，不误用旧槽位。
+
+## 2026-11-24 Mists 1.2.8 锁箱修复
+
+- 用户截图显示霜钢宝箱（43622）的原生提示为“已锁”，YAO 对其打印 15 秒重试提示。背包槽的 `isLocked` 表示暂时占用；Mists 适配用独立的隐藏 `GameTooltip:SetBagItem` 按格读取 `LOCKED`。共享 `BagAdapter` 在候选扫描和实际取用前的重定位共用该检查，沿用已有事件和失败队列。[暴雪 Mists 5.5.4 容器 API 与事件定义](https://github.com/Gethe/wow-ui-source/blob/5.5.4/Interface/AddOns/Blizzard_APIDocumentationGenerated/ContainerDocumentation.lua)
+- Mists 源码使用 `YiboAutoOpen_Mists.toc`（Interface 50504），玩家包加载 `YiboAutoOpen.toc`。目标清单仅改版号，已有 Lua 引用、技术名、安装目录和 `YiboAutoOpenDB` 身份及 schema 保持，无新增 XML、加载路径或注册。已审查写库前的目标保护与初始化幂等性。Mists 独立运行继续适用，Core 设置沿用既有就绪、API13 和能力门槛。锁定文字来自客户端，本次没有新增文案、Core 公共调用或 CAP-009 接入变化。
+- Forever 0.1.2 不启用 Mists 读取器，沿用 `YiboAutoOpen_Forever.toc`（Interface 16001）、玩家包 `YiboAutoOpen.toc` 与 `YiboAutoOpenForeverDB`。写库前的目标、Core 就绪、API13 和能力检查继续适用。本轮只做共享代码的离线兼容回归。
+- 已验：17 组 Lua 回归覆盖锁箱静默跳过、同 ID 混放、提示待加载，以及解锁后下次扫描重新入队。Forever 目标 21 项及 Mists／Forever 设置集成 229／235 项通过。统一构建器生成 Mists 单目标候选包并通过 Forever 预检，Mists ZIP 干净解压与保留 1.2.7 旧文件覆盖后的离线加载和设置检查通过。本地化报告中，YAO 的硬编码候选为既有默认 TOC 提示。
+- 待实机：在 Mists 中确认锁箱留在背包且超过旧 15 秒退避窗口也无聊天提示，普通容器照常处理，手动解锁后无需重新添加目录即可自动开启。覆盖安装保留旧文件，验证正确加载、原目录和设置、重载和完整退出恢复。未判定可发布。
+
+## 2026-11-24 Mists 1.2.9 解锁后复查
+
+- 用户实测 1.2.8 时未见重试提示，盗贼解锁后也未自动打开。最近写入的 MoP 存档显示自动开启已启用，目录包含 43622。旧版在事件到达时立即扫描，客户端当时可能仍提供解锁前的提示。Mists 1.2.9 在玩家自己的开锁法术（1804）成功或交易关闭时复用队列调度，另做一次 0.5 秒后的扫描。[Mists 开锁法术与复查时序参考](https://github.com/Gogo1951/Open-Sesame/blob/main/README-Technical.md#auto-opening-queue)
+- 现有事件注册、初始化、误目标写库保护、Core 接入与存档身份沿用上节，目标 TOC 仅更新版号。游戏现用联接已可读取 1.2.9 的 Mists 清单和修复字节。Forever 目标不提供该复查策略。
+- 双端 Lua 回归及游戏联接工作树的双目标构建预检通过。专项用真实队列和背包适配模拟首次扫描仍读到上锁，延迟扫描读取解锁并调用开箱，覆盖玩家开锁及交易关闭。用户在 MoP 客户端确认霜钢宝箱（43622）由盗贼解锁后自动打开。交易代开锁的自动开启仍待实机。
+
+## 2026-11-24 Mists 1.2.10 安装包
+
+- Mists 1.2.10 沿用 1.2.9 已实测的锁箱逻辑，运行代码仅更新版本常量。主工作树使用统一构建器生成 `Builds/YiboAutoOpen-mists-v1.2.10-curseforge.zip`，SHA-256 为 `f16076189e4d1532b41a7aa7a861e7e9b0eda178fd4ea0445e2f0622db8ebbb6`。包内只有 Mists 的默认加载清单 `YiboAutoOpen.toc`，接口为 50504，存档为 `YiboAutoOpenDB`。
+- 干净解压及保留 1.2.7 旧文件覆盖后的离线回放均通过。两版包的文件路径集合一致。回放核对误目标写库前停止、Mists 无 Core 启动、单次初始化与事件注册、旧目录和设置保留；配套 Core 设置集成另有 229 项通过。游戏联接的工作树同步 1.2.10。1.2.10 安装包的实机覆盖、退出后恢复及交易代开锁继续待验，尚未上传渠道。
+
+## 2026-11-24 Forever 0.1.3 共享代码候选包
+
+- Mists 和 Forever 都加载 `BagAdapter.lua`、`Queue.lua`。Mists 提供按格读取箱锁及解锁后延时复查的目标实现。Forever 暂未接入这两个接口，默认目录为空。离线复核确认，手动加入的箱子在背包格未被临时占用时可进入 Forever 候选队列，因此真实锁箱有被尝试开启的可能。无限服锁箱的原生提示、使用结果和解锁后事件仍待本服样本。[Forever 锁箱条目参考](https://github.com/Gogo1951/Open-Sesame/blob/main/Data/Camelot/Lockbox-Skill-Levels-Camelot.lua)
+- 统一构建器生成 `Builds/YiboAutoOpen-forever-v0.1.3-curseforge.zip`，SHA-256 为 `e16295f9892e6179c58c773a4896f106578237b0780fc3ffdfde89ab161a0db3`。选用 `YiboAutoOpen_Forever.toc`，包内仅以 `YiboAutoOpen.toc` 加载，Interface 16001，存档身份 `YiboAutoOpenForeverDB`。目标 TOC 仅更新版本号，Core 强依赖继续要求就绪、API13、`localization:1`、`basic-input:1`、`item-resolver:1` 和现有方法。此次无新增入口、注册、Core 公共调用、语言资源或存档 schema。Mists 1.2.10 包的 TOC 内容及全部 Lua 载荷已与当前 Mists 源码核对一致。
+- 已验：双端构建检查与 Lua 回归通过。Forever 0.1.3 干净解压和保留 0.1.2 旧文件覆盖的离线回放通过，包路径集合一致。核对误装、Core 缺失或版本不足时不写库、单次初始化和事件注册、旧目录与设置保留，以及与 0.1.2 一致的候选行为。Forever 新包为待实机候选，真实开包、覆盖与退出恢复继续待验，尚未上传渠道。

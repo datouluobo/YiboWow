@@ -4,6 +4,7 @@ local SENSITIVE_OPEN_EVENTS = { MERCHANT_SHOW = true, BANKFRAME_OPENED = true, M
 local SENSITIVE_CLOSE_EVENTS = { MERCHANT_CLOSED = true, BANKFRAME_CLOSED = true, MAIL_CLOSED = true, TRADE_CLOSED = true, AUCTION_HOUSE_CLOSED = true, GUILDBANKFRAME_CLOSED = true, VOID_STORAGE_CLOSE = true }
 local MAX_UNKNOWN_OUTCOME_CHECKS = 3
 local UNKNOWN_OUTCOME_RECHECK_DELAY = 0.5
+local getContainerRescanDelay = Addon.Target and Addon.Target.GetContainerRescanDelay
 local function EnsureCandidateQueue()
     Addon.runtime.candidateQueue = Addon.runtime.candidateQueue or {}
     Addon.runtime.candidateSet = Addon.runtime.candidateSet or {}
@@ -354,6 +355,10 @@ function Queue:OnEvent(event, ...)
         local openEvent = { MERCHANT_CLOSED="MERCHANT_SHOW", BANKFRAME_CLOSED="BANKFRAME_OPENED", MAIL_CLOSED="MAIL_SHOW", TRADE_CLOSED="TRADE_SHOW", AUCTION_HOUSE_CLOSED="AUCTION_HOUSE_SHOW", GUILDBANKFRAME_CLOSED="GUILDBANKFRAME_OPENED", VOID_STORAGE_CLOSE="VOID_STORAGE_OPEN" }
         Addon.Safety:SetSensitive(openEvent[event], false); self:RequestRecoveryScan(5)
     elseif event:find("^UNIT_SPELLCAST_") then local unit = ...; if unit == "player" and event ~= "UNIT_SPELLCAST_START" and (not InCombatLockdown or not InCombatLockdown()) then self:RequestRecoveryScan(5) end end
+    if getContainerRescanDelay then
+        local delay = getContainerRescanDelay(event, ...)
+        if delay then self:ScheduleDeferredScan(delay) end
+    end
 end
 function Queue:ScheduleWorldReadyScans()
     if Addon.Safety and Addon.Safety.ReconcileSensitiveFrames then Addon.Safety:ReconcileSensitiveFrames() end
