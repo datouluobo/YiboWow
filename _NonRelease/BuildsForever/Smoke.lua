@@ -247,6 +247,8 @@ local tp=tc.AccountView.frame.instances.builds
 tp.talentsTab:GetScript("OnClick")(tp.talentsTab)
 Check(tp.showTalents and tp.showTree and not tp.doll:IsShown() and #tp.talentTree.tiles==52
     and tp.talentTree.tiles[1].rank:GetText()=="5" and tp.talentTree.tiles[5].rank:GetText()=="0","talent tab draws spent and unspent nodes")
+local _,_,_,_,talentTop=tp.scroll:GetPoint(1)
+Check(talentTop == -76 and not tp.status:IsShown(),"known talent tree starts below two compact rows")
 Check(#tp.talentTree.lines==1 and tp.talentTree.lines[1].startPoint[3]<tp.talentTree.lines[1].endPoint[3],
     "native endpoints draw once and unresolved endpoints do not invent links")
 Check(tp.talentTree.titles[1]:GetText()==ta:T("FOREVER.TALENT_TREE_AVAILABLE",1089,10,0),"explicit zero available points display")
@@ -278,6 +280,8 @@ Check(te.GameTooltip.lines[3].text=="Native spell description 105331","choice no
 tp.talentSearch:SetValue("  NATIVE TALENT  ",true)
 Check(tp.showTree and #tp.talentMatchOffsets==1 and tp.talentMatchOffsets[1].tile==tp.talentTree.tiles[1]
     and tp.talentSearchCount:GetText()==ta:T("FOREVER.TALENT_SEARCH_COUNT",1),"trimmed case-insensitive name search retains the tree and identifies the matching node")
+local _,_,_,_,searchedTop=tp.scroll:GetPoint(1)
+Check(searchedTop == talentTop and tp.talentNext:IsShown(),"search results share the toolbar without taking another row")
 tp.talentSearch:SetValue("105048",true)
 Check(tp.talentMatchOffsets[1].tile==tp.talentTree.tiles[52] and tp.talentTree.tiles[52].point.rank==0,
     "node ID search includes uninvested nodes from the saved geometry")

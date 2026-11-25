@@ -98,6 +98,14 @@ local function Run(target, language)
 
     if target == "Mists" then
         local builds, taskHub, mail = env.YiboBuilds, env.YiboTaskHub, env.YiboMail
+        VisitPage("alto-lockouts")
+        local filters = frame.instances["alto-lockouts"].lockoutFilters
+        local _, _, _, _, filterY = filters:GetPoint(1)
+        local tabHeight = env.YAB.GetBusinessTabHeight()
+        local expectedFilterY = language == "zhCN" and -(tabHeight - core.UITheme.Size.standard) / 2
+            or -tabHeight - core.UITheme.Space.xxs
+        assert(filters:IsShown() and filterY == expectedFilterY,
+            "lockout filters share the tabs when they fit and move together to a second row otherwise")
         local current = assert(core.Characters:GetCurrent({ identityOnly = true }))
         local record = builds.Snapshot:EnsureCharacter(current)
         record.lastActiveSlot = "primary"

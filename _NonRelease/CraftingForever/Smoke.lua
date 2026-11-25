@@ -136,6 +136,9 @@ Check(panel.matrix.recipeCount==2 and not panel.refresh:IsShown(),"preview reuse
 c.AccountView:HidePreview(); c.AccountView:Toggle("crafting")
 d.shown=false; fire("TRADE_SKILL_CLOSE"); flush()
 Check(not a.Store:IsFresh(e.TEST_GUID,197,1001) and #panel.renderedRecipes==2,"close retains stale snapshot")
+local _,_,_,_,recipeTop=panel.scroll:GetPoint(1)
+Check(recipeTop >= -147 and not panel.status:IsShown() and panel.refreshStatus==a:T("FOREVER.CLOSED"),
+    "recorded recipe list reclaims the closed-status row and keeps its meaning in the refresh tooltip")
 local disk=c.Defaults:Copy(e.YiboCraftingForeverDB)
 local e2,c2,a2,f2,fl2,d2=Boot(disk)
 f2("PLAYER_ENTERING_WORLD"); fl2(); e2.SlashCmdList.YIBOCRAFTING(""); fl2()

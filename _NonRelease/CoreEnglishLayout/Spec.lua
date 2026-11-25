@@ -20,6 +20,7 @@ for _, target in ipairs({ 'Forever', 'Mists', 'Retail' }) do
         local function Paint(parent, context)
             parent.surfaceWidth, parent.surfaceHeight = context.surfaceAvailableWidth, context.surfaceAvailableHeight
         end
+        local columnCount = 8
         for n = 1, 16 do
             local owner = 'LayoutFixture' .. n
             Check(core:RegisterAddon(owner, { requiredAPI = 13 }), 'fixture owner')
@@ -28,7 +29,11 @@ for _, target in ipairs({ 'Forever', 'Mists', 'Retail' }) do
                 columnPager = n == 2,
                 Create = function() end, Refresh = n == 2 and function(parent, context)
                     Paint(parent, context)
-                    view:UpdateColumnPager(parent, 'layout.2', 'fields', { page = 1, pages = 2, first = 1, last = 4, total = 8 }, parent)
+                    local columns = {}
+                    for index = 1, columnCount do columns[index] = index end
+                    local width = context.surfaceAvailableHeight >= 480 and 4 or 3
+                    local _, info = view:GetColumnPage('layout.2', 'fields', columns, width, 0, 1, 1)
+                    view:UpdateColumnPager(parent, 'layout.2', 'fields', info, parent)
                 end or Paint,
                 GetSurfaceMetrics = n == 1 and function()
                     return { minContentWidth = 880, minContentHeight = 560, naturalContentWidth = 1200 }
@@ -81,6 +86,19 @@ for _, target in ipairs({ 'Forever', 'Mists', 'Retail' }) do
         Check(frame.columnPagerFooter:IsShown() and paged.yiboColumnPager.next:GetParent() == frame.columnPagerFooter,
             'column pager lives in the Core footer')
         Check(bottomInset == theme.Size.compact + theme.Space.xs, 'page content stops above the pager')
+        local pagedHeight = paged.surfaceHeight
+        paged.yiboColumnPager.next:GetScript('OnClick')()
+        Check(settings.columnPages['layout.2'].fields == 2,
+            'next keeps the selected page when the footer changes the column count')
+        columnCount = 4
+        view:RefreshPage()
+        local _, _, _, _, singleInset = paged:GetPoint(2)
+        Check(not frame.columnPagerFooter:IsShown() and singleInset == 0
+            and paged.surfaceHeight == pagedHeight + bottomInset, 'single page gets the entire pager height back')
+        columnCount = 8
+        view:RefreshPage()
+        Check(frame.columnPagerFooter:IsShown() and paged.surfaceHeight == pagedHeight,
+            'bringing back the pager restores the previous data height')
 
         for _, section in ipairs({ 'general', 'core', 'sorting', 'bar', 'display' }) do
             view:ShowSettings(section)
@@ -89,6 +107,8 @@ for _, target in ipairs({ 'Forever', 'Mists', 'Retail' }) do
             Check(not frame.columnPagerFooter:IsShown(), 'settings hide the previous page pager')
             local page = frame.instances.settings
             Check(page.content:GetWidth() < budget and page.settingsContentHeight > 0, 'settings fit and measure the actual content pane')
+            local _, _, _, _, top = page.scroll:GetPoint(1)
+            Check(top == -42, 'settings viewport follows the single heading row')
             Check(frame.nav:GetWidth() == navWidth, 'switching navigation groups keeps the left divider fixed')
         end
         view:ShowPage('about'); flush()

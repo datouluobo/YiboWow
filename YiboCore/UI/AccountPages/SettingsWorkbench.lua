@@ -16,13 +16,14 @@ local ArchiveFieldVisible = Helpers.ArchiveFieldVisible
 local GetPreviewFieldVisible = Helpers.GetPreviewFieldVisible
 local PROFILE_FILTER_LABELS = Core.Locale:Bind(function() return { all = Core:Text("CORE.ALL_CHARACTERS"), profiled = Core:Text("CORE.WITH_PROFILES"), missing = Core:Text("CORE.WITHOUT_PROFILES") } end)
 local function CreateSettings(parent)
-    parent.heading = AddText(parent, "GameFontNormalLarge", nil, COLORS.text); parent.heading:SetPoint("TOPLEFT", 20, -18)
-    parent.hint = AddText(parent, "GameFontNormalSmall", nil, COLORS.muted); parent.hint:SetPoint("TOPLEFT", 20, -47)
+    parent.heading = AddText(parent, "GameFontNormalLarge", nil, COLORS.text); parent.heading:SetPoint("TOPLEFT", 20, -10)
+    parent.heading:SetHeight(Theme.Size.compact)
     parent.resetLayout = CreateChromeButton(parent, 116, 22, Core:Text("CORE.RESET_LAYOUT"))
-    parent.resetLayout:SetPoint("TOPRIGHT", -20, -18)
+    parent.resetLayout:SetPoint("TOPRIGHT", -20, -12)
     parent.resetLayout:SetScript("OnClick", function() AccountView:ResetWindowLayout() end)
     parent.scroll = Theme:CreateScrollFrame(parent)
-    parent.scroll:SetPoint("TOPLEFT", 20, -76); parent.scroll:SetPoint("BOTTOMRIGHT", -Theme.Space.xs, 14)
+    parent.scroll:SetPoint("TOPLEFT", parent, "TOPLEFT", 20, -42)
+    parent.scroll:SetPoint("BOTTOMRIGHT", -Theme.Space.xs, 14)
     parent.content = CreateFrame("Frame", nil, parent.scroll); parent.content:SetWidth(620); parent.scroll:SetScrollChild(parent.content)
     parent.rows = {}
     parent.rowPools = {}
@@ -181,12 +182,8 @@ local function RefreshSettings(parent, context)
     end
     local titles = { bar = Core:Text("ENTRY.TAB_BAR"), general = Core:Text("CORE.CORE_SETTINGS"), display = Core:Text("CORE.DISPLAY_ENTRIES_385"), sorting = Core:Text("CORE.CHARACTERS_SORTING_386"), core = Core:Text("CORE.WINDOW_387") }
     parent.heading:SetText(titles[targetID] or ((selected and selected.title) or (settingsOnly and settingsOnly.title) or Core:Text("CORE.ADDON_388")) .. Core:Text("CORE.SETTINGS_389"))
-    parent.hint:SetText(barMode and Core:Text("ENTRY.BAR_PAGE_HINT") or generalMode and Core:Text("ENTRY.GENERAL_HINT") or displayMode and Core:Text("CORE.MANAGE_CORE_AND_ADDON_PAGES_SEPARATE_ENTRIES") or (sortingMode and Core:Text("CORE.MANAGE_CHARACTERS_SORTING_CACHES_AND_BUSINESS_PAGE") or (coreMode and Core:Text("CORE.MANAGE_WINDOW_LAYOUT_TARGET_ADD_GESTURES_AND") or Core:Text("CORE.ONLY_THIS_ADDON_S_BUSINESS_RULES_AND"))))
     parent.resetLayout:SetShown(coreMode)
-    local showHint=not (generalMode or coreMode or sortingMode or displayMode or barMode)
-    parent.hint:SetShown(showHint)
-    parent.hint:SetPoint("TOPRIGHT", -20, -47);parent.hint:SetWordWrap(true)
-    parent.scroll:SetPoint("TOPLEFT",20,showHint and -math.max(76,57+parent.hint:GetStringHeight()) or -56)
+    parent.heading:SetPoint("TOPRIGHT", coreMode and -144 or -20, -10)
 
     local index, y, gridColumn = 0, 0, 0
     local function RefreshVisibleSettings()

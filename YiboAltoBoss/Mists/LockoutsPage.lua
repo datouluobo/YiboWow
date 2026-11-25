@@ -83,7 +83,8 @@ function YAB.RefreshLockoutsPage(instance, context)
         { value = "raid", label = Text("LOCKOUT.COMPACT_RAIDS") },
         { value = "dungeon", label = Text("LOCKOUT.COMPACT_DUNGEONS") },
     }
-    local width = context.surfaceAvailableWidth - Theme.Space.xs * 3
+    local gap = Theme.Space.xs
+    local width = context.surfaceAvailableWidth - gap * 3
     local kindWidth = math.max(Theme:MeasureText(Theme.Font.body, types[1].label), Theme:MeasureText(Theme.Font.body, types[2].label),
         Theme:MeasureText(Theme.Font.body, Text("UI.OTHER"))) + Theme.Space.md * 2
     local kind, selected = filters.kindID or "raid", {}
@@ -96,7 +97,18 @@ function YAB.RefreshLockoutsPage(instance, context)
         end
     end
     if hasOther or kind == "other" then types[#types + 1] = { value = "other", label = Text("UI.OTHER") } end
-    filters.expansion:SetWidth(math.max(1, math.min(expansionWidth + Theme.Space.md * 2, width - kindWidth)))
+    expansionWidth = expansionWidth + Theme.Space.md * 2
+    local tabsWidth = gap
+    for _, tab in ipairs(YAB.BusinessTabs) do tabsWidth = tabsWidth + tab.width + 2 end
+    local inline = tabsWidth + expansionWidth + gap + kindWidth + gap * 2 <= context.surfaceAvailableWidth
+    local extraRow = not inline and #expansionOptions > 0
+    local top = inline and -(YAB.GetBusinessTabHeight() - Theme.Size.standard) / 2
+        or -YAB.GetBusinessTabHeight() - Theme.Space.xxs
+    filters:SetShown(#expansionOptions > 0)
+    filters:ClearAllPoints()
+    filters:SetPoint("TOPLEFT", instance, "TOPLEFT", inline and tabsWidth + gap or gap, top)
+    filters:SetPoint("TOPRIGHT", -gap, top)
+    filters.expansion:SetWidth(math.max(1, math.min(expansionWidth, width - kindWidth)))
     filters.kind:SetWidth(kindWidth)
     filters.expansion:SetOptions(expansionOptions)
     filters.expansion:SetValue(filters.expansionID)
@@ -105,6 +117,7 @@ function YAB.RefreshLockoutsPage(instance, context)
 
     return YAB.RefreshProgressPage(instance, context, view, {
         columns = selected,
+        filterRowHeight = extraRow and Theme.Size.standard + gap or 0,
         pageKey = tostring(filters.expansionID) .. ":" .. kind,
         title = function(column)
             if column.plannedCatalogID then return column.abbreviation or column.name end

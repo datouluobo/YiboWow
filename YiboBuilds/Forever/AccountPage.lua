@@ -6,6 +6,10 @@ local rightSlots = { 10, 6, 7, 8, 11, 12, 13, 14 }
 local weaponSlots = { 16, 17, 18 }
 local rowHeight, rowStep, dollHeight = 36, 42, 384
 local labelIDs = { "slot", "item", "enchant" }
+local function HideTooltip(owner)
+    if GameTooltip.IsOwned and GameTooltip:IsOwned(owner) then GameTooltip:Hide() end
+end
+
 local function TalentMatches(snapshot, query)
     if not query then return end
     local matches = {}
@@ -34,10 +38,13 @@ local function JumpToTalent(parent)
 end
 
 function Page:Fields() return {{id="slot",title=Addon:T("FOREVER.SLOT"),defaultVisible=true},{id="item",title=Addon:T("FOREVER.ITEM"),defaultVisible=true}} end
-function Page:Status()
-    local _,state=Addon.Store:Get(Core.Characters:GetCurrentID())
+local function EquipmentStatus(state)
     local keys={known="FOREVER.KNOWN",stale="FOREVER.STALE",error="FOREVER.ERROR",unknown="FOREVER.UNKNOWN"}
     return Addon:T(keys[state] or "FOREVER.UNKNOWN")
+end
+function Page:Status()
+    local _, state = Addon.Store:Get(Core.Characters:GetCurrentID())
+    return EquipmentStatus(state)
 end
 local function SavedItemLabel(item)
     local link = item.itemLink
@@ -219,6 +226,11 @@ function Page:Create(parent)
     parent.refresh:SetScript("OnClick",function()
         if parent.showTalents then Addon.Talents:Scan() else Addon.Scanner:Scan(true) end
     end)
+    parent.refresh:HookScript("OnEnter", function(button)
+        if parent.refreshStatus then Theme:ShowTooltip(button, button.label:GetText(), { parent.refreshStatus }) end
+    end)
+    parent.refresh:HookScript("OnLeave", HideTooltip)
+    parent.refresh:HookScript("OnHide", HideTooltip)
     parent.talentsTab=Theme:CreateButton(parent,76,Addon:T("FOREVER.TALENTS"))
     parent.talentsTab:SetPoint("TOPRIGHT",-12,-48)
     parent.enhancementsTab=Theme:CreateButton(parent,104,Addon:T("FOREVER.ENHANCEMENTS"))
@@ -311,9 +323,6 @@ local function CreatePreviewCell(parent)
     cell:SetScript("OnEnter", function(self)
         ShowItemTooltip(self, self.item, self.slotName, self.itemName)
     end)
-    local function HideTooltip(self)
-        if GameTooltip.IsOwned and GameTooltip:IsOwned(self) then GameTooltip:Hide() end
-    end
     cell:SetScript("OnLeave", HideTooltip)
     cell:SetScript("OnHide", HideTooltip)
     return cell
@@ -343,7 +352,9 @@ function Page:RefreshEquipmentPreview(parent, context)
     for _, row in ipairs(parent.rows) do row:Hide() end
     parent.showTalents = false
     parent.activeTab = "equipment"
+    parent.scroll:ClearAllPoints()
     parent.scroll:SetPoint("TOPLEFT", 12, -40)
+    parent.scroll:SetPoint("BOTTOMRIGHT", -12, 10)
 
     local width = math.max(1, (context.surfaceAvailableWidth or parent.scrollWidth) - 28)
     local nameWidth = math.min(170, math.floor(width * 0.23))
@@ -409,11 +420,62 @@ function Page:RefreshEquipmentPreview(parent, context)
     for index = count + 1, #parent.previewRows do parent.previewRows[index]:Hide() end
     if count == 0 then
         parent.previewHeader:Hide()
+        parent.status:ClearAllPoints()
+        parent.status:SetPoint("TOPLEFT", 12, -12)
+        parent.status:SetPoint("TOPRIGHT", -12, -12)
+        parent.status:SetHeight(Theme.Size.standard)
         parent.status:SetText(Addon:T("FOREVER.UNKNOWN"))
         parent.status:Show()
     end
     parent.content:SetSize(width, math.max(1, count * previewRowHeight))
     parent.scroll:SetContentHeight(count * previewRowHeight)
+end
+
+local function LayoutMainControls(parent, context, showFilter, showHeader)
+    local inset, gap, step = Theme.Space.sm, Theme.Space.xs, Theme.Size.standard + Theme.Space.xxs
+    local width = (context.surfaceAvailableWidth or parent:GetWidth()) - inset * 2
+    local right = -inset
+    local top = Theme.Space.xs
+    local tabsWidth = parent.equipmentTab:GetWidth() + parent.enhancementsTab:GetWidth() + parent.talentsTab:GetWidth() + 12
+    local headingWidth = Theme:MeasureText(Theme.Font.section, parent.heading:GetText())
+    local joined = headingWidth + tabsWidth + parent.refresh:GetWidth() + gap * 2 <= width
+
+    parent.heading:ClearAllPoints()
+    parent.heading:SetPoint("TOPLEFT", inset, -top)
+    parent.heading:SetPoint("TOPRIGHT", right - parent.refresh:GetWidth() - gap - (joined and tabsWidth + gap or 0), -top)
+    parent.heading:SetHeight(Theme.Size.standard)
+    parent.refresh:SetPoint("TOPRIGHT", right, -top)
+    parent.talentsTab:SetPoint("TOPRIGHT", joined and right - parent.refresh:GetWidth() - gap or right,
+        -(joined and top or top + step))
+    top = top + step * (joined and 1 or 2)
+
+    if showFilter then
+        parent.enhancementSlot:SetPoint("TOPLEFT", inset, -top)
+        parent.enhancementHint:SetPoint("TOPRIGHT", right, -top)
+        parent.talentSearch:SetPoint("TOPLEFT", inset, -top)
+        parent.talentNext:SetPoint("TOPRIGHT", right, -top)
+        parent.talentSearchCount:ClearAllPoints()
+        parent.talentSearchCount:SetPoint("TOPLEFT", parent.talentSearch, "TOPRIGHT", gap, 0)
+        parent.talentSearchCount:SetPoint("TOPRIGHT",
+            parent.talentNext:IsShown() and right - parent.talentNext:GetWidth() - gap or right, -top)
+        top = top + step
+    end
+    for _, label in ipairs({ parent.status, parent.talentTreeHint }) do
+        if label:IsShown() then
+            label:ClearAllPoints()
+            label:SetPoint("TOPLEFT", inset, -top)
+            label:SetWidth(width)
+            label:SetWordWrap(true)
+            local height = math.max(Theme.Font.assist, label:GetStringHeight())
+            label:SetHeight(height)
+            top = top + height + Theme.Space.xxs
+        end
+    end
+    parent.header:SetPoint("TOPLEFT", inset, -top)
+    parent.header:SetPoint("TOPRIGHT", right, -top)
+    parent.scroll:ClearAllPoints()
+    parent.scroll:SetPoint("TOPLEFT", parent, "TOPLEFT", inset, -(top + (showHeader and Theme.Size.standard or 0)))
+    parent.scroll:SetPoint("BOTTOMRIGHT", -inset, 10)
 end
 
 function Page:Refresh(parent,context)
@@ -429,13 +491,12 @@ function Page:Refresh(parent,context)
         for _, row in ipairs(parent.previewRows) do row:Hide() end
     end
     parent.heading:Show()
-    parent.status:Show()
     local id=Core.Characters:GetCurrentID()
     local character=context.characters and context.characters[1]; if character and character.id~=id then character=nil end
     local activeTab=not context.preview and parent.selectedTab or "equipment"
     local showTalents,showEnhancements=activeTab=="talents",activeTab=="enhancements"
-    local snapshot
-    if character and not showTalents then snapshot=Addon.Store:Get(id) end
+    local snapshot, state
+    if character and not showTalents then snapshot, state = Addon.Store:Get(id) end
     local equipment={}
     for slot=1,19 do if snapshot then equipment[#equipment+1]={slot=slot,item=snapshot.slots[slot]} end end
     parent.heading:SetText(character and Core.Characters:FormatName(character,{realmMode="full"}) or Addon:T("FOREVER.CURRENT"))
@@ -443,11 +504,9 @@ function Page:Refresh(parent,context)
         button:SetShown(not context.preview)
         button:SetState(activeTab==tab and "selected" or "default")
     end
-    parent.status:SetPoint("RIGHT",context.preview and -12 or -286,0)
-    local rows,status,talentSnapshot=equipment,self:Status()
+    local rows,status,talentSnapshot=equipment,EquipmentStatus(state)
     local enhancementHint
     if showTalents then
-        local state
         if character then talentSnapshot,state=Addon.Talents:Get(id) end
         local keys={known="FOREVER.TALENT_KNOWN",stale="FOREVER.TALENT_STALE",unknown="FOREVER.TALENT_UNKNOWN"}
         status=Addon:T(keys[state or "unknown"])
@@ -470,6 +529,8 @@ function Page:Refresh(parent,context)
     parent.enhancementSlot:SetShown(showEnhancements)
     parent.enhancementHint:SetText(enhancementHint or "")
     parent.enhancementHint:SetShown(enhancementHint~=nil)
+    parent.refreshStatus = status
+    parent.status:SetShown(state ~= "known")
     parent.status:SetText(status); parent.refresh:SetShown(not context.preview)
     parent.refresh:SetState(Addon.Scanner.inWorld and "default" or "disabled")
     local width,columns,x,total=math.max(320,parent.scrollWidth-20),{},0,0
@@ -493,18 +554,11 @@ function Page:Refresh(parent,context)
     parent.talentNext:SetShown(showTalentNext)
     local showTalentSummary=showTree and talentMatches~=nil
     parent.talentSearchCount:SetShown(showTalentSummary)
-    if showTalentSummary then
-        parent.talentSearchCount:ClearAllPoints()
-        parent.talentSearchCount:SetPoint("TOPLEFT",12,-128)
-        parent.talentSearchCount:SetPoint("TOPRIGHT",showTalentNext and -125 or -12,-128)
-        parent.talentSearchCount:SetText(Addon:T("FOREVER.TALENT_SEARCH_COUNT", #offsets))
-    end
+    if showTalentSummary then parent.talentSearchCount:SetText(Addon:T("FOREVER.TALENT_SEARCH_COUNT", #offsets)) end
     parent.doll:SetShown(showDoll and true or false)
-    parent.header:SetShown(not showDoll and not showTalents)
-    local toolbarHeight=showTalentSummary and 68 or (showTalents or showEnhancements) and 36 or 0
-    parent.header:SetPoint("TOPLEFT",12,-96-toolbarHeight)
-    parent.header:SetPoint("TOPRIGHT",-12,-96-toolbarHeight)
-    parent.scroll:SetPoint("TOPLEFT", 12, ((showDoll or showTree) and -96 or -126)-toolbarHeight)
+    local showHeader = not showDoll and not showTalents
+    parent.header:SetShown(showHeader)
+    LayoutMainControls(parent, context, showTree or showEnhancements, showHeader)
     if parent.showDoll ~= showDoll or parent.activeTab ~= activeTab or parent.showTree ~= showTree then
         parent.scroll:SetVerticalScroll(0)
     end

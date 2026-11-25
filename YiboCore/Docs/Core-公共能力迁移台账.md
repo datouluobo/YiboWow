@@ -990,3 +990,5 @@ Core 在 API14 下提供 `account-compact-layout:2`，包含试点的 v1 测宽�
 2026-11-24 推广阶段。Core 三目标将统一固定外框提升为 `account-compact-layout:2`，保留 v1 测宽接口。Core 注册的主页面及设置自动使用固定壳。YiboAltoBoss、YiboCrafting Mists 延续试点配置，YiboAutoOpen、YiboBeastPaths、YiboBuilds、YiboCrafting Forever、YiboCurrency Mists、YiboLegendary、YiboMail、YiboQuestBlocker、YiboReputation Forever、YiboTaskHub、YiboTodo、YiboVault按本次触及页面补齐窄布局。Todo 明确检查既有 `account-surface-budget:2` 及列分页方法，其余沿用已声明的账号页能力。离线证据与实机待验项见[统一窗口实施记录](../../Docs/统一账号主窗口-实施与验证.md)。
 
 2026-11-24 MoP 集中实机修订。Core 固定外框调整为 800 × 544，现有 `UpdateColumnPager` 按页面的可选 `columnPager` 声明提供主窗口底部位置。角色档案、AltoBoss、Currency、QuestBlocker、Reputation、Todo 及 Crafting Forever 在相关主页面声明底部分页，悬停保留原调用锚点。声明可被较早的 Core 忽略，继续兼容已有能力门槛。MoP 中英文切页、实测列数及复测范围见[统一窗口实施记录](../../Docs/统一账号主窗口-实施与验证.md#mop-集中实机)。
+
+2026-11-25 内容区高度试点。Core 三端自动回收单页分页的 34 UI 单位及设置顶部通用说明空间。YiboBuilds Forever、YiboCrafting Forever、YiboAltoBoss Mists 复用现有 Core 视口预算、字号／宽度测量、设置和分页，原有能力门槛保留。三端双语和业务专项离线通过，试点及后续验证范围见[统一窗口实施记录](../../Docs/统一账号主窗口-实施与验证.md#内容区高度试点2026-11-25)。

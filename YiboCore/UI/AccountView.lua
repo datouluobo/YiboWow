@@ -1286,12 +1286,12 @@ local function CreatePageViewport(parent)
     return host
 end
 
-local function PlacePage(frame, instance, page, context, scopeRow)
+local function PlacePage(frame, instance, page, context, scopeRow, showColumnPager)
     local widthShell, heightShell = ShellMetrics(context.preview, frame.nav:GetWidth())
     local scopeHeight = scopeRow and Theme.Size.standard + Theme.Space.xs or 0
     local width = math.max(1, frame:GetWidth() - widthShell)
     context.columnPagerInFooter = not context.preview and page.columnPager == true
-    local footerHeight = context.columnPagerInFooter and Theme.Size.compact + Theme.Space.xs or 0
+    local footerHeight = showColumnPager and Theme.Size.compact + Theme.Space.xs or 0
     local height = math.max(1, frame:GetHeight() - heightShell - scopeHeight - footerHeight)
     context.surfaceAvailableWidth, context.surfaceAvailableHeight = width, height
     local metrics = not context.preview and page.addonName and not page.compactLayout and SurfaceMetrics(page, context)
@@ -1626,7 +1626,8 @@ function AccountView:ShowPage(pageID, options)
         instance = CreateFrame("Frame", nil, self.frame.content)
         self.frame.instances[page.id] = instance
     end
-    PlacePage(self.frame, instance, page, context, RefreshScopeBar(self.frame, context))
+    local scopeRow = RefreshScopeBar(self.frame, context)
+    PlacePage(self.frame, instance, page, context, scopeRow)
     if creating then CallPage(instance, page, Core:Text("CORE.CREATE"), context) end
     instance:Show()
     if options.preview then
@@ -1644,7 +1645,19 @@ function AccountView:ShowPage(pageID, options)
     -- Hide the previous page's control first so page switches never leave
     -- stale actions in the shared chrome.
     self:ClearTitleBarControl()
+    local pagerSettings = context.columnPagerInFooter and Settings()
+    local previousPages = pagerSettings and Copy(pagerSettings.columnPages[page.id])
+    local previousStructures = pagerSettings and Copy(pagerSettings.columnPageStructures[page.id])
     CallPage(instance, page, Core:Text("CORE.REFRESH"), context)
+    if pagerSettings and self.frame.columnPagerFooter:IsShown() then
+        -- Measure with the full pane first. A visible footer can reduce row
+        -- capacity and introduce a scrollbar. Only the final slice should
+        -- update the selection and the structure used to preserve that page.
+        pagerSettings.columnPages[page.id] = previousPages
+        pagerSettings.columnPageStructures[page.id] = previousStructures
+        PlacePage(self.frame, instance, page, context, scopeRow, true)
+        CallPage(instance, page, Core:Text("CORE.REFRESH"), context)
+    end
     -- Pages may create or hide a title-bar pager while refreshing. Resolve
     -- the identity only after that chrome is final for this pass.
     SetHeaderIdentity(self.frame, page, page.title)
