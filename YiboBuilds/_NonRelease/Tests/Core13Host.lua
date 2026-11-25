@@ -8,8 +8,6 @@ local function Setup(language)
         UITheme = { Colors = {}, Font = {},
             ApplyPixelBackdrop = function(_, frame) return frame end,
             ApplyPixelRule = function(_, texture) return texture end,
-            CreateMatrixHeader = function() end,
-            SetMatrixHeader = function() end,
             CreatePixelBorder = function() return { SetColor = function() end, SetShown = function() end, SetSides = function() end } end,
         }, Capabilities = { Register = function() end },
         CheckAPIVersion = function(_, required) return state.api >= required end,

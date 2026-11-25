@@ -1,23 +1,5 @@
 # Forever 天赋取证与适配准备
 
-## 2026-11-25 主副构筑的装备保存
-
-- 本服 1.60.1.71037 的 Camelot 天赋界面通过 `GetActiveSpecGroup` 与 `GetCombatConfigIDForSpecGroup` 取活动配置。激活按钮走 `SetActiveSpecGroup`，已暂存的配点通过原生「应用改动」提交。这是独立于 Builds 装备快照的两项原生操作。Builds 读取已经提交的天赋，存在暂存改动时提示从游戏天赋页应用。 [无限服主副配置界面](https://github.com/reckhou/WoWBlzCode/blob/acb81d6eece0bd7f221456a634a54904ba0b043a/Forever/BlizzardInterfaceCode/Interface/AddOns/Blizzard_PlayerSpells/Camelot/ClassTalents/Blizzard_ClassTalentsFrame.lua#L111-L124) · [原生激活](https://github.com/reckhou/WoWBlzCode/blob/acb81d6eece0bd7f221456a634a54904ba0b043a/Forever/BlizzardInterfaceCode/Interface/AddOns/Blizzard_PlayerSpells/Camelot/ClassTalents/Blizzard_ClassTalentsFrame.lua#L367-L371) · [原生应用按钮](https://github.com/reckhou/WoWBlzCode/blob/acb81d6eece0bd7f221456a634a54904ba0b043a/Forever/BlizzardInterfaceCode/Interface/AddOns/Blizzard_SharedTalentUI/Blizzard_SharedTalentFrameTemplates.lua#L108-L118)
-- Builds 的装备观察与已保存快照分开。首次可靠观察后可待保存，当前穿戴与已存版本的装备 ID 或可读物品链接内容不同时显示有变化，两份一致时显示已保存。缓存暂缺的链接不据此认定一致，也不会覆盖一份完整的已存快照。悬停当前装备的配置内变化标记按已存版本计算。
-- 首次观察另一活动配置时保存前一配置最后一次完整装备，正常小退、重载与退出走 `PLAYER_LOGOUT` 保存。切换事件使用本服 `ACTIVE_TALENT_GROUP_CHANGED`。装备页「立即保存」只适用于当前角色的活动原生配置，并在采集前后检查身份和配置，确认完整的穿戴快照。备用和离线构筑优先展示已存装备。操作写入插件会话存档，客户端按正常 SavedVariables 写盘时机持久化。
-- 已有配置的完整装备快照可作为初始已存版本。没有原生配置归属的旧记录仍只显示历史装备。继续使用 `YiboBuildsForeverDB`，`savedEquipment` 为可选附加字段。清理按已存和观测快照分别检查删除时间。Core API14、能力、实际目标及单次初始化守卫沿用，源目标 TOC 仍为 `YiboBuilds_Forever.toc`，玩家包仍加载 `YiboBuilds.toc`（16001）。无新增加载引用，MoP 代码未改。
-- Task 相关工作暂缓。按用户要求不测试、不重新打包。待实机核对主副切换事件和缓存时序、保存前后状态、重载及完整退出恢复、干净安装与保留旧文件覆盖。
-
-## 2026-11-25 当前与备用构筑存档
-
-- 原生截图已见主要配置和锁定的次要配置，已有样本也能稳定读到活动配置 ID。本轮补齐 YiboBuilds 的独立观测与浏览。次要配置解锁后的 ID、实际切换事件和切换后装备的原生行为仍待取证，沿用本服原生规则。
-- `YiboBuildsForeverDB` 增加可选 `configurations`，使用 Core 角色 GUID 与本服原生活动配置 ID 归档装备及已提交天赋。两类数据各自采集，读取期间活动 ID 变化时拒绝采样。成功观察过的最近活动配置为当前，最近观察到的另一配置为备用。打开插件视图只切换读取对象，不调用游戏切换配置或装备。
-- 旧的单份角色快照继续作为没有配置归属的历史记录读取，首次取得原生配置快照后按其归属显示。旧快照不会补入当前或备用配置。原生 ID 缺失时，未曾分配置的角色仍可采集无归属装备，已有分配置存档的角色保留最后可信数据。角色缓存清理逐份处理新旧装备与天赋记录。
-- 悬停提供当前装备、备用装备、当前天赋、备用天赋。装备按槽显示，天赋按空间展示投入节点与点数摘要。选择一行或图标可跳到该角色对应构筑及完整页面，无备用观测显示对应空态。
-- 使用既有 Forever 启动链和 `YiboBuilds_Forever.toc`（16001），玩家包实际加载名仍为 `YiboBuilds.toc`。Native 目标守卫、Core 就绪／API14 及能力检查、单次初始化、SavedVariables 名与默认提示清单保持。没有新 TOC、XML 或间接引用。沿用 Core 角色 GUID、页面、入口、缓存清理与中英文资源。Mists 源码未改。
-- 后续差异按本服机制处理。普通附魔候选与施加有明确需求，实际卷轴、权限与施加路径待本服取证。工程、锻造增强槽位和雕文的对应机制待确认，避免先搬用 MoP 目录。行动中心只有出现真实可追踪的增强目标再接入。此前已确认无珠宝玩法，宝石功能继续排除。
-- 按用户要求，本轮未运行测试、未重建候选包。自然解锁与切换、历史数据恢复、真实入口布局、旧包覆盖与双语显示待验。
-
 ## 2026-11-10 Builds Forever 0.1.16 天赋说明自动更新
 
 悬停树节点或列表行时，已有说明直接显示。说明仍未就绪且原生读取请求成功发起时，只在同一个提示持续打开期间短暂复查，最多八次。移开鼠标、隐藏或复用行时终止等待，超过上限继续显示暂不可读提示。节点仍由原生快照提供。

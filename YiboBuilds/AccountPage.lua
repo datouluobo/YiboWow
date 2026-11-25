@@ -5,7 +5,6 @@ Addon.AccountPage = Page
 
 local Core = _G.YiboCore
 local Theme = Core.UITheme
-local EquipmentView = Addon.EquipmentView
 local C = Theme.Colors
 local ClearPendingGem
 local ICON_SIZE = 42
@@ -16,7 +15,9 @@ local AUGMENT_EDGE_SIZE = 1
 -- Crop the same thin rim from every gem so the socket border is the only
 -- visible frame and left/right rails have consistent visual weight.
 local GEM_ICON_TEXCOORD = { 0.08, 0.92, 0.08, 0.92 }
+local ROSTER_ROW_HEIGHT = 56
 local CATALOG_ROW_HEIGHT = 56
+local EXPANDED_CONTENT_WIDTH = 1120
 local SOCKET_BORDER_COLORS = {
     red = { 0.92, 0.18, 0.18 }, yellow = { 0.96, 0.76, 0.12 }, blue = { 0.16, 0.48, 0.96 },
     prismatic = { 0.91, 0.96, 1.00 }, meta = { 0.78, 0.48, 1.00 }, sha = { 0.88, 0.20, 0.72 },
@@ -48,13 +49,20 @@ local SLOT_LABELS = {
 -- MoP's paper doll has two weapon slots.  Bows, guns and wands are equipped
 -- in the main-hand slot; the pre-MoP ranged slot is cache-compatible only and
 -- must not be rendered or tried on by this page.
+-- Match the paper doll: eight slots on each side, weapons beneath the model.
+local LEFT_SLOTS = { INVSLOT_HEAD or 1, INVSLOT_NECK or 2, INVSLOT_SHOULDER or 3, INVSLOT_BACK or 15, INVSLOT_CHEST or 5, INVSLOT_SHIRT or 4, INVSLOT_TABARD or 19, INVSLOT_WRIST or 9 }
+local RIGHT_SLOTS = { INVSLOT_HAND or 10, INVSLOT_WAIST or 6, INVSLOT_LEGS or 7, INVSLOT_FEET or 8, INVSLOT_FINGER1 or 11, INVSLOT_FINGER2 or 12, INVSLOT_TRINKET1 or 13, INVSLOT_TRINKET2 or 14 }
 local BOTTOM_SLOTS = { INVSLOT_MAINHAND or 16, INVSLOT_OFFHAND or 17 }
-local SLOT_ORDER, SLOT_POSITIONS = EquipmentView.PaperDollSlots(BOTTOM_SLOTS)
+local SLOT_ORDER = {}
+for _, slots in ipairs({ LEFT_SLOTS, RIGHT_SLOTS, BOTTOM_SLOTS }) do
+    for _, slotID in ipairs(slots) do SLOT_ORDER[#SLOT_ORDER + 1] = slotID end
+end
 
 local function FoldedEquipmentWidth()
-    local layout = EquipmentView.GetMainLayout(EquipmentView.MainContentWidth)
-    local width = EquipmentView.SplitEquipmentPane(layout.width - Theme.Space.sm * 2)
-    return width
+    local inset = Theme:GetMatrixInsets(false)
+    local rosterWidth = 210
+    local expandedMainWidth = EXPANDED_CONTENT_WIDTH - inset.left - inset.right - rosterWidth - Theme.Space.sm
+    return math.floor((expandedMainWidth - Theme.Space.sm * 3) * 0.55)
 end
 
 local EQUIPMENT_COLUMNS = {
@@ -108,8 +116,14 @@ local function ClassColor(character)
     return color or { r = C.text[1], g = C.text[2], b = C.text[3] }
 end
 
+local function CharacterLabel(character, context)
+    return Core.Characters:FormatName(character, {
+        nameMode = "short", realmMode = context and context.scope == "all" and "full" or "omit",
+    }) or Addon:T("UI.UNKNOWN_CHARACTER")
+end
+
 local function PreviewCharacterLabel(character, context, slotData)
-    local label = EquipmentView.CharacterLabel(character, context)
+    local label = CharacterLabel(character, context)
     local confirmed = slotData and slotData.confirmedEquipment
     local observed = slotData and slotData.observedEquipment
     local itemLevel = confirmed and tonumber(confirmed.itemLevel)
@@ -124,8 +138,10 @@ end
 
 local function ItemBorderColor(item)
     local link = item and item.itemLink
-    local red, green, blue = EquipmentView.ItemQualityColor(link)
-    if red then return red, green, blue end
+    if type(link) == "string" then
+        local red, green, blue = string.match(link, "|c%x%x(%x%x)(%x%x)(%x%x)")
+        if red and green and blue then return tonumber(red, 16) / 255, tonumber(green, 16) / 255, tonumber(blue, 16) / 255 end
+    end
     -- Older equipment snapshots can retain an item ID/link without the
     -- hyperlink color prefix. Ask the client for the cached item quality
     -- before falling back to the neutral frame color.
@@ -141,8 +157,14 @@ local function ItemBorderColor(item)
                 local ok, _, _, value = pcall(GetItemInfo, itemRef)
                 if ok then quality = value end
             end
-            red, green, blue = EquipmentView.ItemQualityColor(nil, quality)
-            if red then return red, green, blue end
+            local color = quality ~= nil and ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[quality]
+            if color then
+                return color.r or color[1], color.g or color[2], color.b or color[3]
+            end
+            if quality ~= nil and GetItemQualityColor then
+                local red, green, blue = GetItemQualityColor(quality)
+                if red and green and blue then return red, green, blue end
+            end
         end
     end
     local itemID = tonumber(item and item.itemID) or (type(link) == "string" and tonumber(link:match("item:(%d+)")))
@@ -408,15 +430,32 @@ local function PreviewColumns(context, characters, matrixMode, mode)
     local columns = { { id = "name", title = Addon:T("UI.CHARACTER"), width = nameWidth } }
     local settings = Addon:GetSettings().previewColumns
     if matrixMode == "equipment" then
+        local visibleEquipment = {}
         for _, equipmentColumn in ipairs(EQUIPMENT_COLUMNS) do
             if settings[equipmentColumn.id] ~= false then
-                columns[#columns + 1] = {id=equipmentColumn.id, slotID=equipmentColumn.slotID,
-                    title=equipmentColumn.title, gapAfter=equipmentColumn.gapAfter}
+                visibleEquipment[#visibleEquipment + 1] = equipmentColumn
             end
         end
+        local equipmentWidth, groupGap = 40, 6
         local availableWidth = tonumber(context and context.surfaceAvailableWidth)
-        local inset = Theme:GetMatrixInsets(true)
-        EquipmentView.FitEquipmentColumns(columns, availableWidth and availableWidth - inset.left - inset.right)
+        if availableWidth and #visibleEquipment > 0 then
+            local inset = Theme:GetMatrixInsets(true)
+            local availableColumns = math.max(0, availableWidth - inset.left - inset.right - nameWidth)
+            local gapCount = 0
+            for _, equipmentColumn in ipairs(visibleEquipment) do
+                if equipmentColumn.gapAfter then gapCount = gapCount + 1 end
+            end
+            local calculated = math.floor((availableColumns - gapCount * groupGap) / #visibleEquipment)
+            equipmentWidth = math.max(36, math.min(40, calculated))
+            if equipmentWidth == 36 then groupGap = 4 end
+            if availableColumns < (#visibleEquipment * equipmentWidth + gapCount * groupGap) then
+                nameWidth = math.max(112, availableWidth - inset.left - inset.right - #visibleEquipment * equipmentWidth - gapCount * groupGap)
+            end
+        end
+        for _, equipmentColumn in ipairs(visibleEquipment) do
+            columns[#columns + 1] = { id = equipmentColumn.id, slotID = equipmentColumn.slotID, title = equipmentColumn.title, width = equipmentWidth, gapAfter = equipmentColumn.gapAfter and groupGap or nil }
+        end
+        columns[1].width = nameWidth
         return columns
     end
     local function Add(id, title)
@@ -443,7 +482,7 @@ local function PreviewCharacters(context)
 end
 
 local function PreviewRowHeight(matrixMode)
-    return matrixMode == "equipment" and EquipmentView.EquipmentPreviewRowHeight() or Theme.Table.previewRowHeight
+    return matrixMode == "equipment" and (Theme.Table.previewRowHeight + 16) or Theme.Table.previewRowHeight
 end
 
 local function CreatePreviewCell(parent)
@@ -452,7 +491,33 @@ local function CreatePreviewCell(parent)
     cell:RegisterForClicks("LeftButtonUp")
     cell.text = Text(cell, Theme.Font.assist, C.text, "LEFT")
     cell.text:SetAllPoints()
-    EquipmentView.CreatePreviewItem(cell)
+    cell.itemFrame = CreateFrame("Frame", nil, cell, "BackdropTemplate")
+    cell.itemFrame:SetSize(32, 32)
+    cell.itemFrame:SetPoint("CENTER", 0, 0)
+    Theme:ApplyPixelBackdrop(cell.itemFrame, { background = false })
+    cell.itemFrame:SetBackdropColor(0, 0, 0, 0)
+    cell.itemFrame:SetBackdropBorderColor(0, 0, 0, 0)
+    cell.itemFrame:EnableMouse(false)
+    cell.itemIcon = cell.itemFrame:CreateTexture(nil, "ARTWORK")
+    cell.itemIcon:SetPoint("TOPLEFT", 2, -2); cell.itemIcon:SetPoint("BOTTOMRIGHT", -2, 2)
+    cell.itemIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+    cell.itemLevel = Text(cell.itemFrame, Theme.Font.body, C.text, "CENTER")
+    cell.itemLevel:SetPoint("BOTTOM", cell.itemFrame, "BOTTOM", 0, 1)
+    cell.itemLevel:SetWidth(32)
+    cell.itemLevel:SetHeight(15)
+    cell.itemLevel:SetJustifyV("BOTTOM")
+    cell.itemLevel:SetShadowOffset(1, -1)
+    cell.itemLevel:SetDrawLayer("OVERLAY", 7)
+    cell.itemChanged = Text(cell.itemFrame, Theme.Font.body, C.warning, "RIGHT")
+    cell.itemChanged:SetPoint("TOPRIGHT", cell.itemFrame, "TOPRIGHT", -2, -1)
+    cell.itemChanged:SetWidth(14)
+    cell.itemChanged:SetHeight(16)
+    cell.itemChanged:SetText("!")
+    cell.itemChanged:SetShadowOffset(1, -1)
+    cell.itemChanged:SetDrawLayer("OVERLAY", 7)
+    cell.itemChanged:Hide()
+    cell.itemLevel:Hide()
+    cell.itemFrame:Hide()
     return cell
 end
 
@@ -494,10 +559,18 @@ end
 
 function Page.Create(parent)
     parent:HookScript("OnHide", function() parent.buildsGlyphProbeID = nil end)
-    parent.buildsRoster = EquipmentView.CreateCharacterSelector(parent, Addon:T("UI.CHARACTERS"), function(id)
-        parent.buildsSelectedID = id
-        Page.Refresh(parent, parent.buildsContext)
-    end)
+    parent.buildsRoster = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    Theme:ApplyPixelBackdrop(parent.buildsRoster)
+    parent.buildsRoster:SetBackdropColor(C.nav[1], C.nav[2], C.nav[3], 0.95); parent.buildsRoster:SetBackdropBorderColor(C.lineSoft[1], C.lineSoft[2], C.lineSoft[3], C.lineSoft[4])
+    parent.buildsRoster.title = Text(parent.buildsRoster, Theme.Font.section, C.text)
+    parent.buildsRoster.title:SetPoint("TOPLEFT", Theme.Space.sm, -Theme.Space.sm); parent.buildsRoster.title:SetText(Addon:T("UI.CHARACTERS"))
+    parent.buildsRoster.scroll = Theme:CreateScrollFrame(parent.buildsRoster)
+    parent.buildsRoster.scroll:SetPoint("TOPLEFT", Theme.Space.xs, -38)
+    parent.buildsRoster.scroll:SetPoint("BOTTOMRIGHT", -Theme.Space.xs, Theme.Space.xs)
+    parent.buildsRoster.body = CreateFrame("Frame", nil, parent.buildsRoster.scroll)
+    parent.buildsRoster.scroll:SetScrollChild(parent.buildsRoster.body)
+    parent.buildsRoster.scroll:HookScript("OnSizeChanged", function(scroll) parent.buildsRoster.body:SetWidth(math.max(1, scroll:GetWidth())) end)
+    parent.buildsRoster.rows = {}
 
     parent.buildsMain = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     Theme:ApplyPixelBackdrop(parent.buildsMain)
@@ -521,18 +594,46 @@ function Page.Create(parent)
     parent.buildsToolbar.specName = Text(parent.buildsToolbar, Theme.Font.assist, C.text)
     parent.buildsToolbar.specName:SetWidth(96)
 
-    parent.buildsEquipment = EquipmentView.CreateEquipmentPane(parent.buildsMain)
+    parent.buildsEquipment = CreateFrame("Frame", nil, parent.buildsMain, "BackdropTemplate")
+    parent.buildsEquipment:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+    parent.buildsEquipment:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], 0.55)
     parent.buildsEquipment.model = CreateFrame("DressUpModel", nil, parent.buildsEquipment)
+    parent.buildsEquipment.model:SetPoint("TOPLEFT", 58, -4); parent.buildsEquipment.model:SetPoint("BOTTOMRIGHT", -58, 4)
     parent.buildsEquipment.model:SetFrameLevel(parent.buildsEquipment:GetFrameLevel() + 1)
     parent.buildsEquipment.model:EnableMouse(false)
-    parent.buildsEquipment.modelControl = EquipmentView.CreateModelControl(parent.buildsEquipment, parent.buildsEquipment.model)
+    parent.buildsEquipment.modelControl = CreateFrame("Frame", nil, parent.buildsEquipment)
+    parent.buildsEquipment.modelControl:SetPoint("TOPLEFT", 110, -45)
+    parent.buildsEquipment.modelControl:SetPoint("BOTTOMRIGHT", -110, 58)
+    parent.buildsEquipment.modelControl:SetFrameLevel(parent.buildsEquipment.model:GetFrameLevel() + 1)
+    parent.buildsEquipment.modelControl:EnableMouse(true)
+    parent.buildsEquipment.modelControl:EnableMouseWheel(true)
+    parent.buildsEquipment.modelControl:RegisterForDrag("LeftButton")
+    parent.buildsEquipment.modelControl:SetScript("OnDragStart", function(self)
+        self.lastCursorX = GetCursorPosition()
+    end)
+    parent.buildsEquipment.modelControl:SetScript("OnDragStop", function(self) self.lastCursorX = nil end)
+    parent.buildsEquipment.modelControl:SetScript("OnUpdate", function(self)
+        if not self.lastCursorX then return end
+        local x = GetCursorPosition()
+        local delta = (x - self.lastCursorX) / (self:GetEffectiveScale() or 1)
+        self.lastCursorX = x
+        local model = parent.buildsEquipment.model
+        model.buildsFacing = (model.buildsFacing or (model.GetFacing and model:GetFacing()) or 0) + delta * 0.012
+        if model.SetFacing then model:SetFacing(model.buildsFacing) end
+    end)
+    parent.buildsEquipment.modelControl:SetScript("OnMouseWheel", function(_, delta)
+        local model = parent.buildsEquipment.model
+        model.buildsZoom = math.max(0.65, math.min(1.55, (model.buildsZoom or 1) - delta * 0.08))
+        if model.SetCamDistanceScale then model:SetCamDistanceScale(model.buildsZoom)
+        elseif model.SetModelScale then model:SetModelScale(1 / model.buildsZoom) end
+    end)
     parent.buildsEquipment.modelHint = Text(parent.buildsEquipment.modelControl, Theme.Font.meta, C.muted, "CENTER")
     parent.buildsEquipment.modelHint:SetPoint("BOTTOM", parent.buildsEquipment, "BOTTOM", 0, 90)
     parent.buildsEquipment.modelHint:Hide()
     parent.buildsEquipment.empty = Text(parent.buildsEquipment, Theme.Font.assist, C.muted, "CENTER")
     parent.buildsEquipment.empty:SetAllPoints(); parent.buildsEquipment.empty:SetText(Addon:T("UI.SELECT_A_CHARACTER_TO_VIEW_EQUIPMENT"))
     parent.buildsEquipment.items = {}
-    parent.buildsToolbar.appearance = EquipmentView.CreateAppearanceToggle(parent.buildsEquipment)
+    parent.buildsToolbar.appearance = Theme:CreateButton(parent.buildsEquipment, 120, Addon:T("UI.ORIGINAL_TRANSMOG"), "secondary")
     parent.buildsToolbar.appearance:SetFrameLevel(parent.buildsEquipment.model:GetFrameLevel() + 2)
 
     parent.buildsBuild = CreateFrame("Frame", nil, parent.buildsMain, "BackdropTemplate")
@@ -616,6 +717,20 @@ function Page.Create(parent)
     parent.buildsEmpty:SetAllPoints(); parent.buildsEmpty:SetText(Addon:T("UI.NO_BUILD_SNAPSHOTS_LOG_IN_TO_A_CHARACTER_AND_ALLOW_TIME_TO_SYNC"))
 end
 
+local function RosterRow(parent, index)
+    local row = parent.buildsRoster.rows[index]
+    if row then return row end
+    row = Theme:CreateButton(parent.buildsRoster.body, 1, "", "secondary")
+    row.classIcon = row:CreateTexture(nil, "ARTWORK")
+    row.classIcon:SetSize(30, 30); row.classIcon:SetPoint("LEFT", 7, 0)
+    row.name = Text(row, Theme.Font.body, C.text)
+    row.name:SetPoint("LEFT", row.classIcon, "RIGHT", 8, 0); row.name:SetPoint("RIGHT", -30, 0)
+    row.level = Text(row, Theme.Font.assist, C.muted, "RIGHT")
+    row.level:SetPoint("RIGHT", -8, 0)
+    parent.buildsRoster.rows[index] = row
+    return row
+end
+
 local function BuildCell(parent, pool, index)
     local row = pool[index]
     if row then return row end
@@ -679,8 +794,15 @@ local function EquipmentButton(parent, slotID)
     button.engineering:SetFrameLevel(button:GetFrameLevel() + 1)
     button.buckle:SetFrameLevel(button:GetFrameLevel() + 1)
     button.base:SetFrameLevel(button:GetFrameLevel() + 1)
-    button.slotLabel = EquipmentView.CreateSlotLabel(button)
-    button.itemLevel = EquipmentView.CreatePaperDollItemLevel(button)
+    button.slotLabel = Text(button, Theme.Font.meta, C.muted, "RIGHT")
+    button.slotLabel:SetWidth(30)
+    button.itemLevel = Text(button, Theme.Font.section, { 0.78, 0.62, 1 }, "RIGHT")
+    button.itemLevel:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -3, 2)
+    button.itemLevel:SetWidth(ICON_SIZE - 6)
+    button.itemLevel:SetHeight(18)
+    button.itemLevel:SetFont(STANDARD_TEXT_FONT, Theme.Font.section, "OUTLINE")
+    button.itemLevel:SetDrawLayer("OVERLAY", 7)
+    button.itemLevel:Hide()
     parent.buildsEquipment.items[slotID] = button
     return button
 end
@@ -1541,22 +1663,54 @@ end
 
 local function PlaceEquipment(parent, snapshot)
     local box = parent.buildsEquipment
-    local layout = EquipmentView.GetPaperDollLayout(box:GetWidth(), box:GetHeight())
-    local iconSize = layout.iconSize
-    EquipmentView.LayoutModel(box, box.model, box.modelControl, parent.buildsToolbar.appearance, layout)
+    local boxHeight = box.layoutHeight or box:GetHeight() or 500
+    local rowHeight = math.max(39, math.min(80, math.floor((boxHeight - 125) / 8)))
+    local maxIconSize = math.min(ICON_SIZE, rowHeight - 5)
+    local augmentSize = math.min(AUGMENT_ICON_SIZE, math.floor((maxIconSize - 2) / 2))
+    local iconSize = augmentSize * 2 + 2
+    local currentRowEnd = 12 + 7 * rowHeight + iconSize
+    local weaponStart = boxHeight - 30 - iconSize
+    local availableRowExtra = math.max(0, math.floor((weaponStart - currentRowEnd - 2) / 7))
+    local rowStep = rowHeight + math.min(4, availableRowExtra)
+    local boxWidth = box.layoutWidth or box:GetWidth() or 360
+    local left, right = 42, boxWidth - iconSize - 42
     for _, slotID in ipairs(SLOT_ORDER) do
         local button = EquipmentButton(parent, slotID)
         local item = snapshot and snapshot.slots and snapshot.slots[tostring(slotID)]
-        local position = SLOT_POSITIONS[slotID]
-        EquipmentView.AnchorEquipmentSlot(button, layout, position.side, position.index, #BOTTOM_SLOTS)
-        local side = position.side
-        if side == "weapon" then side = position.index == 1 and "weapon-left" or "weapon-right" end
+        local side, visualIndex
+        for index, id in ipairs(LEFT_SLOTS) do if id == slotID then side, visualIndex = "left", index; break end end
+        if not side then for index, id in ipairs(RIGHT_SLOTS) do if id == slotID then side, visualIndex = "right", index; break end end end
+        if not side then
+            for index, id in ipairs(BOTTOM_SLOTS) do
+                if id == slotID then side, visualIndex = index == 1 and "weapon-left" or "weapon-right", index; break end
+            end
+        end
+        button:SetSize(iconSize, iconSize)
+        button:ClearAllPoints()
+        if side == "weapon-left" or side == "weapon-right" then
+            -- Keep the two weapon slots together in the model's lower centre.
+            -- The icon pair has one compact intentional gap; only the gem and
+            -- enchant rails extend outward from it.
+            local weaponGap = Theme.Space.sm
+            local previousWeaponSize = math.min(ICON_SIZE - 2, rowHeight - 5)
+            local weaponOffset = math.floor((previousWeaponSize + weaponGap) / 2)
+            local weaponBottomOffset = PixelRound(30 + (previousWeaponSize - iconSize) / 2, button)
+            button:SetPoint("BOTTOM", box, "BOTTOM", side == "weapon-left" and -weaponOffset or weaponOffset, weaponBottomOffset)
+        else
+            button:SetPoint("TOPLEFT", box, "TOPLEFT", side == "left" and left or right, -12 - (visualIndex - 1) * rowStep)
+        end
+        button.slotLabel:ClearAllPoints()
+        if side == "left" then button.slotLabel:SetPoint("RIGHT", button, "LEFT", -4, 0); button.slotLabel:SetJustifyH("RIGHT")
+        elseif side == "right" then button.slotLabel:SetPoint("LEFT", button, "RIGHT", 4, 0); button.slotLabel:SetJustifyH("LEFT")
+        else button.slotLabel:SetPoint("TOP", button, "BOTTOM", 0, -4); button.slotLabel:SetJustifyH("CENTER") end
         button.slotLabel:SetText(SLOT_LABELS[slotID] or "")
         button.icon:SetTexture(item and item.icon or nil)
         button.icon:SetDesaturated(not (item and item.itemLink))
         local itemLevel = slotID ~= (INVSLOT_BODY or 4) and slotID ~= (INVSLOT_TABARD or 19)
             and item and item.itemLink and Addon.Snapshot:GetItemLevel(item)
-        EquipmentView.RenderPaperDollItemLevel(button.itemLevel, itemLevel and tostring(math.floor(itemLevel)) or nil, button:GetWidth())
+        button.itemLevel:SetWidth(math.max(1, button:GetWidth() - 6))
+        button.itemLevel:SetText(itemLevel and tostring(math.floor(itemLevel)) or "")
+        button.itemLevel:SetShown(itemLevel and true or false)
         local itemBorderRed, itemBorderGreen, itemBorderBlue = ItemBorderColor(item)
         SetPixelBorderColor(button.border, { itemBorderRed, itemBorderGreen, itemBorderBlue })
         button.selection:SetShown(parent.buildsSelectedEquipmentSlot == slotID and item and item.itemLink and true or false)
@@ -1765,7 +1919,11 @@ local function RefreshModel(parent, character, equipment)
             if item and item.itemLink then pcall(model.TryOn, model, item.itemLink) end
         end
     end
-    EquipmentView.RestoreModelView(model)
+    if model.buildsFacing and model.SetFacing then model:SetFacing(model.buildsFacing) end
+    if model.buildsZoom then
+        if model.SetCamDistanceScale then model:SetCamDistanceScale(model.buildsZoom)
+        elseif model.SetModelScale then model:SetModelScale(1 / model.buildsZoom) end
+    end
     model:Show()
 end
 
@@ -1949,28 +2107,28 @@ local function SetupMainButtons(parent)
     end)
 end
 
-local function LayoutMain(parent, context, characters, selected)
+local function LayoutMain(parent)
+    local inset = Theme:GetMatrixInsets(false)
     if parent.buildsPreviewToggle then parent.buildsPreviewToggle:Hide() end
     if parent.buildsPreviewHeader then parent.buildsPreviewHeader:Hide() end
     if parent.buildsPreviewBody then parent.buildsPreviewBody:Hide() end
-    local availableWidth = context and context.surfaceAvailableWidth or parent:GetWidth()
-    if availableWidth < 1 then availableWidth = EquipmentView.MainContentWidth end
+    local availableWidth = parent:GetWidth() or 0
+    local availableHeight = parent:GetHeight() or 0
+    if availableWidth < 1 then availableWidth = 860 end
+    if availableHeight < 1 then availableHeight = 520 end
     local collapsed = parent.buildsBuildCollapsed == true
-    local margin = Theme.Space.sm
-    local minimum = collapsed and FoldedEquipmentWidth() + 2 * margin or EquipmentView.MinBuildPaneWidth
-    local layout = EquipmentView.GetMainLayout(availableWidth, minimum, collapsed and EquipmentView.RosterMaxWidth or nil)
-    local inset = layout.inset
-    EquipmentView.RenderCharacterSelector(parent.buildsRoster, parent, layout, characters, selected, context)
-    local top = inset.top
-    if not layout.rosterWidth then top = top + Theme.Size.standard + margin end
-    parent.buildsMain:ClearAllPoints()
-    parent.buildsMain:SetPoint("TOPLEFT", parent, "TOPLEFT", layout.left, -top)
-    parent.buildsMain:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset.right, inset.bottom)
+    -- Folding hides only the build pane.  The roster and equipment pane retain
+    -- their expanded widths, so the visual hierarchy does not jump.
+    local rosterWidth = (collapsed or availableWidth >= 1050) and 210 or (availableWidth >= 850 and 185 or 160)
+    parent.buildsRoster:ClearAllPoints(); parent.buildsRoster:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top); parent.buildsRoster:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", inset.left, inset.bottom); parent.buildsRoster:SetWidth(rosterWidth)
+    parent.buildsMain:ClearAllPoints(); parent.buildsMain:SetPoint("TOPLEFT", parent.buildsRoster, "TOPRIGHT", Theme.Space.sm, 0); parent.buildsMain:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset.right, inset.bottom)
     parent.buildsToolbar:ClearAllPoints(); parent.buildsToolbar:SetPoint("TOPLEFT", parent.buildsMain, "TOPLEFT", Theme.Space.sm, -Theme.Space.sm); parent.buildsToolbar:SetPoint("TOPRIGHT", parent.buildsMain, "TOPRIGHT", -Theme.Space.sm, -Theme.Space.sm); parent.buildsToolbar:SetHeight(Theme.Size.standard)
     parent.buildsToolbar.primary:SetPoint("LEFT"); parent.buildsToolbar.secondary:SetPoint("LEFT", parent.buildsToolbar.primary, "RIGHT", 4, 0)
     parent.buildsToolbar.specIcon:SetPoint("LEFT", parent.buildsToolbar.secondary, "RIGHT", 12, 0)
     parent.buildsToolbar.specName:SetPoint("LEFT", parent.buildsToolbar.specIcon, "RIGHT", 6, 0)
     parent.buildsToolbar.status:SetPoint("RIGHT")
+    local mainWidth = availableWidth - inset.left - inset.right - rosterWidth - Theme.Space.sm
+    local mainHeight = availableHeight - inset.top - inset.bottom
     Addon.buildsBuildCollapsed = collapsed
     -- The folded layout still needs a usable action strip. Keep the status and
     -- toggle in a fixed right-side group, and give the specialization label a
@@ -1978,23 +2136,22 @@ local function LayoutMain(parent, context, characters, selected)
     parent.buildsToolbar.specName:SetWidth(collapsed and 72 or 96)
     parent.buildsToolbar.status:SetWidth(collapsed and 132 or 180)
     parent.buildsToolbar.buildToggle:SetSize(44, Theme.Size.compact)
-    local innerWidth = layout.width - 2 * margin
-    local equipmentWidth, _, buildWidth = EquipmentView.SplitEquipmentPane(innerWidth)
-    if collapsed then equipmentWidth = math.min(innerWidth, FoldedEquipmentWidth()) end
-    local confirmHeight = 48
-    parent.buildsConfirm:ClearAllPoints(); parent.buildsConfirm:SetPoint("BOTTOMLEFT", parent.buildsMain, "BOTTOMLEFT", margin, margin); parent.buildsConfirm:SetPoint("BOTTOMRIGHT", parent.buildsMain, "BOTTOMRIGHT", -margin, margin); parent.buildsConfirm:SetHeight(confirmHeight)
-    local availableHeight = parent:GetHeight() - top - inset.bottom
-    local equipmentHeight = availableHeight - Theme.Size.standard - confirmHeight - 4 * margin
-    EquipmentView.LayoutEquipmentPane(parent.buildsEquipment, equipmentWidth, equipmentHeight, parent.buildsToolbar, "BOTTOMLEFT", -margin)
+    local equipmentWidth = collapsed and FoldedEquipmentWidth() or math.floor((mainWidth - Theme.Space.sm * 3) * 0.55)
+    parent.buildsConfirm:ClearAllPoints(); parent.buildsConfirm:SetPoint("BOTTOMLEFT", parent.buildsMain, "BOTTOMLEFT", Theme.Space.sm, Theme.Space.sm); parent.buildsConfirm:SetPoint("BOTTOMRIGHT", parent.buildsMain, "BOTTOMRIGHT", -Theme.Space.sm, Theme.Space.sm); parent.buildsConfirm:SetHeight(48)
+    parent.buildsEquipment:ClearAllPoints(); parent.buildsEquipment:SetPoint("TOPLEFT", parent.buildsToolbar, "BOTTOMLEFT", 0, -Theme.Space.sm); parent.buildsEquipment:SetPoint("BOTTOMLEFT", parent.buildsConfirm, "TOPLEFT", 0, Theme.Space.sm)
     if collapsed then
+        parent.buildsEquipment:SetWidth(equipmentWidth)
+        parent.buildsEquipment.layoutWidth = equipmentWidth
         parent.buildsBuild:Hide()
     else
-        parent.buildsBuild:ClearAllPoints()
-        parent.buildsBuild:SetPoint("TOPLEFT", parent.buildsEquipment, "TOPRIGHT", margin, 0)
-        parent.buildsBuild:SetPoint("BOTTOMRIGHT", parent.buildsConfirm, "TOPRIGHT", 0, margin)
-        parent.buildsBuild:Show()
-        parent.buildsBuild.layoutWidth = buildWidth
+        parent.buildsEquipment:SetWidth(equipmentWidth)
+        parent.buildsBuild:ClearAllPoints(); parent.buildsBuild:SetPoint("TOPLEFT", parent.buildsEquipment, "TOPRIGHT", Theme.Space.sm, 0); parent.buildsBuild:SetPoint("BOTTOMRIGHT", parent.buildsConfirm, "TOPRIGHT", 0, Theme.Space.sm); parent.buildsBuild:Show()
+        parent.buildsEquipment.layoutWidth = equipmentWidth
+        parent.buildsBuild.layoutWidth = mainWidth - Theme.Space.sm * 3 - equipmentWidth
+        parent.buildsBuild.layoutHeight = parent.buildsBuild:GetHeight()
     end
+    parent.buildsEquipment.layoutHeight = parent.buildsEquipment:GetHeight()
+    parent.buildsToolbar.appearance:ClearAllPoints(); parent.buildsToolbar.appearance:SetPoint("TOP", parent.buildsEquipment, "TOP", 0, -10)
     parent.buildsToolbar.buildToggle:ClearAllPoints()
     -- Anchor the control to the equipment pane so it remains usable after the
     -- account window contracts to the folded layout width.
@@ -2006,15 +2163,31 @@ function Page.Refresh(parent, context)
     parent.buildsContext = context
     local preview = context and context.preview
     if preview then return Page.RefreshPreview(parent, context) end
+    LayoutMain(parent)
+    parent.buildsEmpty:Hide(); parent.buildsRoster:Show(); parent.buildsMain:Show()
     local characters = Eligible(context)
-    local current = Core.Characters:GetCurrent()
-    local selected = EquipmentView.SelectCharacter(characters, parent.buildsSelectedID, current and current.id)
+    local selected
+    for _, character in ipairs(characters) do if character.id == parent.buildsSelectedID then selected = character break end end
+    if not selected then
+        for _, character in ipairs(characters) do if IsCurrent(character) then selected = character break end end
+    end
+    selected = selected or characters[1]
     parent.buildsSelectedID = selected and selected.id
     parent.buildsSelectedCharacter = selected
-    LayoutMain(parent, context, characters, selected)
-    parent.buildsEmpty:SetShown(not selected)
-    parent.buildsMain:SetShown(selected ~= nil)
-    if not selected then return end
+    local rosterWidth = math.max(1, parent.buildsRoster.scroll:GetWidth() or 160)
+    parent.buildsRoster.body:SetSize(rosterWidth, math.max(1, #characters * ROSTER_ROW_HEIGHT))
+    parent.buildsRoster.scroll:SetContentHeight(parent.buildsRoster.body:GetHeight())
+    for index, character in ipairs(characters) do
+        local row = RosterRow(parent, index); row:ClearAllPoints(); row:SetPoint("TOPLEFT", parent.buildsRoster.body, "TOPLEFT", 0, -((index - 1) * ROSTER_ROW_HEIGHT)); row:SetPoint("RIGHT", parent.buildsRoster.body, "RIGHT", 0, 0); row:SetHeight(ROSTER_ROW_HEIGHT - 2)
+        local coords = CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[character.class]
+        if coords then row.classIcon:SetTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES"); row.classIcon:SetTexCoord(unpack(coords)); row.classIcon:Show() else row.classIcon:Hide() end
+        row.name:SetText(CharacterLabel(character, context)); local color = ClassColor(character); row.name:SetTextColor(color.r, color.g, color.b)
+        row.level:SetText(tostring(character.level or ""))
+        row:SetState(character.id == parent.buildsSelectedID and "selected" or "default")
+        row:SetScript("OnClick", function() parent.buildsSelectedID = character.id; Addon.AccountPage.Refresh(parent, parent.buildsContext) end); row:Show()
+    end
+    for index = #characters + 1, #parent.buildsRoster.rows do parent.buildsRoster.rows[index]:Hide() end
+    if not selected then parent.buildsEmpty:Show(); parent.buildsRoster:Hide(); parent.buildsMain:Hide(); return end
     local record = Addon.Snapshot:GetCharacter(selected.id)
     if IsCurrent(selected) and parent.buildsGlyphProbeID ~= selected.id then
         parent.buildsGlyphProbeID = selected.id
@@ -2121,42 +2294,63 @@ function Page:OnSocketEvent(event)
     self:RefreshOpenDetail()
 end
 
-local function PreviewModeButtons()
-    return {
+function Page.RefreshPreview(parent, context)
+    parent.buildsEmpty:Hide(); parent.buildsRoster:Hide(); parent.buildsMain:Hide()
+    -- The account projection is activity-relative: “当前” means each role's
+    -- own last-used specialization, while “备用” is its other slot.
+    local settings = Addon:GetSettings()
+    local matrixMode = settings.previewMatrixMode == "spec" and "spec" or "equipment"
+    local mode = (matrixMode == "equipment" and settings.previewEquipmentMode or settings.previewSpecMode) == "backup" and "backup" or "current"
+    if matrixMode == "equipment" then settings.previewEquipmentMode = mode else settings.previewSpecMode = mode end
+    local characters = PreviewCharacters(context)
+    local columns = PreviewColumns(context, characters, matrixMode, mode)
+    parent.buildsPreviewToggle = parent.buildsPreviewToggle or CreateFrame("Frame", nil, parent)
+    local buttons = parent.buildsPreviewToggle.buttons or {}
+    local buttonDefinitions = {
         { id = "currentEquipment", label = Addon:T("UI.CURRENT_EQUIPMENT"), matrix = "equipment", mode = "current" },
         { id = "backupEquipment", label = Addon:T("UI.BACKUP_EQUIPMENT"), matrix = "equipment", mode = "backup" },
         { id = "currentSpec", label = Addon:T("UI.CURRENT_SPECIALIZATION"), matrix = "spec", mode = "current" },
         { id = "backupSpec", label = Addon:T("UI.BACKUP_SPECIALIZATION"), matrix = "spec", mode = "backup" },
     }
-end
-
-function Page.RefreshPreview(parent, context)
-    parent.buildsEmpty:Hide(); parent.buildsRoster:Hide(); parent.buildsRoster.picker:Hide(); parent.buildsMain:Hide()
-    -- The account projection is activity-relative: “当前” means each role's
-    -- own last-used specialization, while “备用” is its other slot.
-    local settings = Addon:GetSettings()
-    local matrixMode = settings.previewMatrixMode == "spec" and "spec" or "equipment"
-    local modeKey = matrixMode == "equipment" and "previewEquipmentMode" or "previewSpecMode"
-    local mode = settings[modeKey] == "backup" and "backup" or "current"
-    settings[modeKey] = mode
-    local characters = PreviewCharacters(context)
-    local columns = PreviewColumns(context, characters, matrixMode, mode)
-    parent.buildsPreviewToggle = parent.buildsPreviewToggle or CreateFrame("Frame", nil, parent)
+    parent.buildsPreviewToggle:SetSize(340, Theme.Size.compact)
     local selectedID = matrixMode == "equipment"
         and (mode == "backup" and "backupEquipment" or "currentEquipment")
         or (mode == "backup" and "backupSpec" or "currentSpec")
-    EquipmentView.RenderPreviewModes(parent.buildsPreviewToggle, PreviewModeButtons(), selectedID, function(definition)
-        settings.previewMatrixMode = definition.matrix
-        settings[definition.matrix == "equipment" and "previewEquipmentMode" or "previewSpecMode"] = definition.mode
-        Addon:NotifyChanged()
-        Page.RefreshPreview(parent, context)
-    end, context)
+    for index, definition in ipairs(buttonDefinitions) do
+        local button = buttons[index] or Theme:CreateButton(parent.buildsPreviewToggle, 82, "", "disclosure")
+        buttons[index] = button
+        button.kind = "disclosure"
+        button:SetSize(82, Theme.Size.compact)
+        button:ClearAllPoints()
+        if index == 1 then button:SetPoint("LEFT") else button:SetPoint("LEFT", buttons[index - 1], "RIGHT", 4, 0) end
+        button:SetText(definition.label)
+        button:SetState(definition.id == selectedID and "selected" or "default")
+        local textColor = definition.id == selectedID and C.accent or C.text
+        button.label:SetTextColor(textColor[1], textColor[2], textColor[3])
+        button:SetScript("OnClick", function()
+            settings.previewMatrixMode = definition.matrix
+            settings[definition.matrix == "equipment" and "previewEquipmentMode" or "previewSpecMode"] = definition.mode
+            Addon:NotifyChanged()
+            Page.RefreshPreview(parent, context)
+        end)
+        button:Show()
+    end
+    parent.buildsPreviewToggle.buttons = buttons
+    if parent.buildsPreviewToggle.specButton then parent.buildsPreviewToggle.specButton:Hide() end
+    if parent.buildsPreviewToggle.equipmentButton then parent.buildsPreviewToggle.equipmentButton:Hide() end
+    if context and context.SetTitleBarControl then context:SetTitleBarControl(parent.buildsPreviewToggle, 340) else parent.buildsPreviewToggle:Hide() end
     parent.buildsPreviewHeader = parent.buildsPreviewHeader or CreateFrame("Frame", nil, parent)
     parent.buildsPreviewBody = parent.buildsPreviewBody or CreateFrame("Frame", nil, parent)
     local inset = Theme:GetMatrixInsets(true)
     parent.buildsPreviewHeader:ClearAllPoints(); parent.buildsPreviewHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", inset.left, -inset.top)
-    local width = EquipmentView.RenderPreviewHeader(parent.buildsPreviewHeader, columns)
-    local x
+    local width, x = 0, 0
+    parent.buildsPreviewHeaders = parent.buildsPreviewHeaders or {}
+    for index, col in ipairs(columns) do
+        local header = parent.buildsPreviewHeaders[index] or Theme:CreateMatrixHeader(parent.buildsPreviewHeader); parent.buildsPreviewHeaders[index] = header
+        header:ClearAllPoints(); header:SetPoint("TOPLEFT", parent.buildsPreviewHeader, "TOPLEFT", x, 0); header:SetSize(col.width, Theme.Table.headerHeight); Theme:SetMatrixHeader(header, col.title, { height = Theme.Table.headerHeight, inset = 2 }); header:Show(); x = x + col.width + (col.gapAfter or 0)
+    end
+    for index = #columns + 1, #parent.buildsPreviewHeaders do parent.buildsPreviewHeaders[index]:Hide() end
+    width = x; parent.buildsPreviewHeader:SetSize(width, Theme.Table.headerHeight)
     parent.buildsPreviewRows = parent.buildsPreviewRows or {}
     for ri, character in ipairs(characters) do
         local record = Addon.Snapshot:GetCharacter(character.id); local slotData = Addon.Snapshot:GetProjectedSlot(record, mode)
@@ -2196,12 +2390,31 @@ function Page.RefreshPreview(parent, context)
                 -- pending confirmation instead of rendering every slot empty.
                 local equipment = slotData and (slotData.observedEquipment or slotData.confirmedEquipment)
                 local item = equipment and equipment.slots and equipment.slots[tostring(col.slotID)]
-                local icon = item and item.icon
-                cell.text:Hide()
-                EquipmentView.RenderPreviewItem(cell, math.max(1, math.min(32, col.width - 3)), icon, {ItemBorderColor(item)},
-                    icon and GetPreviewItemLevel(item) or nil, icon and Addon.Snapshot:GetEquipmentStatus(slotData) == "changed")
-                value = ""
-                SetPreviewItemTooltip(cell, icon and item or nil)
+                if item and item.icon then
+                    cell.text:Hide(); cell.itemFrame:Show(); cell.itemLevel:Show()
+                    local equipmentChanged = Addon.Snapshot:GetEquipmentStatus(slotData) == "changed"
+                    cell.itemChanged:SetShown(equipmentChanged)
+                    cell.itemIcon:SetTexture(item.icon)
+                    cell.itemIcon:SetDesaturated(false)
+                    cell.itemIcon:SetVertexColor(1, 1, 1, 1)
+                    cell.itemFrame:SetBackdropBorderColor(ItemBorderColor(item))
+                    local itemLevel = GetPreviewItemLevel(item)
+                    cell.itemLevel:SetText(itemLevel and tostring(itemLevel) or "")
+                    cell.itemLevel:SetTextColor(C.text[1], C.text[2], C.text[3])
+                    value = ""
+                    SetPreviewItemTooltip(cell, item)
+                else
+                    cell.text:Hide(); cell.itemFrame:Show(); cell.itemLevel:Show()
+                    cell.itemChanged:Hide()
+                    cell.itemIcon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+                    cell.itemIcon:SetDesaturated(true)
+                    cell.itemIcon:SetVertexColor(0.45, 0.5, 0.5, 0.65)
+                    cell.itemFrame:SetBackdropBorderColor(C.muted[1], C.muted[2], C.muted[3], 1)
+                    cell.itemLevel:SetText("")
+                    cell.itemLevel:SetTextColor(C.muted[1], C.muted[2], C.muted[3])
+                    value = ""
+                    SetPreviewItemTooltip(cell, nil)
+                end
             elseif col.id == "equipment" then
                 value = slotData and slotData.confirmedEquipment and Addon:T("UI.CONFIRMED") or slotData and slotData.observedEquipment and Addon:T("UI.PENDING_CONFIRMATION") or "—"
                 SetPreviewEquipmentTooltip(cell, slotData and (slotData.confirmedEquipment or slotData.observedEquipment), slotData and slotData.confirmedEquipment ~= nil)
@@ -2243,29 +2456,32 @@ function Page.RefreshPreview(parent, context)
     parent.buildsPreviewBody:ClearAllPoints(); parent.buildsPreviewBody:SetPoint("TOPLEFT", parent.buildsPreviewHeader, "BOTTOMLEFT", 0, 0); parent.buildsPreviewBody:SetSize(width, math.max(1, #characters * PreviewRowHeight(matrixMode))); parent.buildsPreviewBody:Show(); parent.buildsPreviewHeader:Show()
 end
 
+local function FoldedContentWidth()
+    local inset = Theme:GetMatrixInsets(false)
+    local rosterWidth = 210
+    local equipmentWidth = FoldedEquipmentWidth()
+    -- The folded main panel fits the fixed-width equipment pane and gutters.
+    return inset.left + rosterWidth + Theme.Space.sm + equipmentWidth + Theme.Space.sm * 2 + inset.right
+end
+
 function Page.GetSurfaceMetrics(context)
     local inset = Theme:GetMatrixInsets(context and context.preview)
     if context and context.preview then
         local characters = PreviewCharacters(context)
         local settings = Addon:GetSettings()
         local matrixMode = settings.previewMatrixMode == "spec" and "spec" or "equipment"
-        local modeKey = matrixMode == "equipment" and "previewEquipmentMode" or "previewSpecMode"
-        local mode = settings[modeKey] == "backup" and "backup" or "current"
+        local mode = (matrixMode == "equipment" and settings.previewEquipmentMode or settings.previewSpecMode) == "backup" and "backup" or "current"
         local columns = PreviewColumns(context, characters, matrixMode, mode)
         local width = inset.left + inset.right
-        for _, column in ipairs(columns) do width = width + column.width + (column.gapAfter or 0) end
-        width = math.max(width, EquipmentView.GetPreviewModesWidth(PreviewModeButtons()) + inset.left + inset.right)
+        for _, column in ipairs(columns) do width = width + column.width end
         local height = inset.top + Theme.Table.headerHeight + math.max(1, #characters) * PreviewRowHeight(matrixMode) + inset.bottom
         return { minContentWidth = width, naturalContentWidth = width, minContentHeight = height, naturalContentHeight = height, horizontalOverflow = "content", verticalOverflow = "none" }
     end
     -- Folding removes the build pane but preserves the expanded equipment-pane
     -- width, including the roster and surrounding gutters.
     local collapsed = Addon.buildsBuildCollapsed == true
-    local gap = Theme.Space.sm
-    local foldedWidth = FoldedEquipmentWidth() + 2 * gap
-    local minimumWidth = (collapsed and foldedWidth or EquipmentView.MinBuildPaneWidth) + inset.left + inset.right
-    local naturalWidth = collapsed and (minimumWidth + EquipmentView.RosterMaxWidth + gap) or EquipmentView.MainContentWidth
-    return { minContentWidth = minimumWidth, naturalContentWidth = naturalWidth, minContentHeight = 520, naturalContentHeight = 680, horizontalOverflow = "none", verticalOverflow = "content" }
+    local contentWidth = collapsed and FoldedContentWidth() or EXPANDED_CONTENT_WIDTH
+    return { minContentWidth = contentWidth, naturalContentWidth = contentWidth, minContentHeight = 520, naturalContentHeight = 680, horizontalOverflow = "none", verticalOverflow = "content" }
 end
 
 function Page.GetHoverMetrics(context)

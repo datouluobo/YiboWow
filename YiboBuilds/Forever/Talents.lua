@@ -45,20 +45,8 @@ function Talents:Valid(row)
     return true
 end
 
-function Talents:GetActiveConfig()
-    local specs = C_SpecializationInfo
-    if specs and type(specs.GetActiveSpecGroup) == "function" and type(specs.GetCombatConfigIDForSpecGroup) == "function" then
-        local group = Read(specs.GetActiveSpecGroup)
-        local configID = (group == 1 or group == 2) and Read(specs.GetCombatConfigIDForSpecGroup, group)
-        return ID(configID) and configID or nil
-    end
-    local id = Read(C_ClassTalents and C_ClassTalents.GetActiveConfigID)
-    return ID(id) and id or nil
-end
-
-function Talents:HasStagedChanges()
-    local configID = self:GetActiveConfig()
-    return configID ~= nil and Read(C_Traits and C_Traits.ConfigHasStagedChanges, configID) == true
+local function ActiveConfig()
+    return Read(C_ClassTalents and C_ClassTalents.GetActiveConfigID)
 end
 
 local function MayReadConfig(configID)
@@ -271,11 +259,10 @@ local function SameTrees(first, second)
     return true
 end
 
-function Talents:Get(id, mode)
-    if not id then return nil, "unknown" end
-    local row, configID = Store:ReadSnapshot(id, "talents", mode)
-    local state = row and (mode ~= "backup" and self.freshID == id and self.freshConfig == configID and "known" or "stale")
-        or "unknown"
+function Talents:Get(id)
+    if not id or id ~= Addon.Core.Characters:GetCurrentID() then return nil, "unknown" end
+    local row = Store.db.talents and Store.db.talents[id]
+    local state = self.freshID == id and "known" or (row and "stale" or "unknown")
     return row and Addon.Core.Defaults:Copy(row) or nil, state
 end
 
@@ -283,10 +270,10 @@ function Talents:Scan()
     if not Addon.initialized or not Addon.Scanner.inWorld or Read(IsLoggedIn) ~= true then return false end
     local id = Addon.Core.Characters:GetCurrentID()
     if not id then return false end
-    local configID, stamp = self:GetActiveConfig(), Read(GetServerTime)
+    local configID, stamp = ActiveConfig(), Read(GetServerTime)
     local first = ID(configID) and MayReadConfig(configID) and ReadTrees(configID)
     local second = first and ReadTrees(configID)
-    if not second or not SameTrees(first, second) or self:GetActiveConfig() ~= configID or not MayReadConfig(configID)
+    if not second or not SameTrees(first, second) or ActiveConfig() ~= configID or not MayReadConfig(configID)
         or id ~= Addon.Core.Characters:GetCurrentID() or not Store:Integer(stamp, 0, 9007199254740991) then
         self.freshID = nil
         Addon:NotifyChanged()
@@ -294,8 +281,9 @@ function Talents:Scan()
     end
     -- Levels and point costs are separate native observations.
     for _, tree in ipairs(second) do tree.observedNodeIDs = nil end
-    Store:WriteSnapshot(id, "talents", configID, { observedAt = stamp, trees = second })
-    self.freshID, self.freshConfig = id, configID
+    Store.db.talents = Store.db.talents or {}
+    Store.db.talents[id] = { observedAt = stamp, trees = second }
+    self.freshID = id
     Addon:NotifyChanged()
     return true
 end

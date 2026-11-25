@@ -1,8 +1,6 @@
 local Addon = _G.YiboBuilds
 local talentEvents = { TRAIT_CONFIG_UPDATED = true, TRAIT_NODE_CHANGED = true,
-    TRAIT_TREE_CURRENCY_INFO_UPDATED = true, PLAYER_TALENT_UPDATE = true, ACTIVE_TALENT_GROUP_CHANGED = true }
-local enchantEvents = { TRADE_SKILL_SHOW = true, TRADE_SKILL_CLOSE = true,
-    TRADE_SKILL_DATA_SOURCE_CHANGED = true, TRADE_SKILL_LIST_UPDATE = true, TRADE_SKILL_DETAILS_UPDATE = true }
+    TRAIT_TREE_CURRENCY_INFO_UPDATED = true, PLAYER_TALENT_UPDATE = true }
 function Addon:Initialize()
     if self.initialized then return true end
     if type(WOW_PROJECT_CAMELOT) ~= "number" or WOW_PROJECT_ID ~= WOW_PROJECT_CAMELOT then
@@ -25,8 +23,7 @@ function Addon:Initialize()
         { core and core.AccountView, "RegisterPage", "NotifyPageChanged", "Toggle" },
         { core and core.Entry, "RegisterBusinessEntry" }, { core and core.CharacterCleanup, "RegisterOwner" },
         { core and core.ItemResolver, "GetInfo", "Parse" }, { core and core.Defaults, "Copy" },
-        { core and core.UITheme, "CreateText", "CreateButton", "CreateScrollFrame", "CreateInput", "CreateDropdown", "ApplyPixelBackdrop",
-            "GetPixelSize", "SetPixelAnchor", "CreateMatrixHeader", "SetMatrixHeader", "GetDataRowColor" } }) do
+        { core and core.UITheme, "CreateText", "CreateButton", "CreateScrollFrame", "CreateInput", "CreateDropdown", "ApplyPixelBackdrop", "GetPixelSize", "SetPixelAnchor" } }) do
         for index = 2, #group do if type(group[1]) ~= "table" or type(group[1][group[index]]) ~= "function" then valid = false end end
     end
     if not valid then
@@ -42,7 +39,7 @@ function Addon:Initialize()
         Inspect = function(character)
             local db = Addon.Store.db
             local id=character.id
-            return { hasData = self.Store:HasSnapshot(id) or (db.characters[id] ~= nil or (db.talents or {})[id] ~= nil)
+            return { hasData = db.characters[id] ~= nil or (db.talents or {})[id] ~= nil
                 or (type(db.equipmentBaselines) == "table" and db.equipmentBaselines[id] ~= nil), label = Addon:T("FOREVER.TITLE") }
         end,
         Delete = function(character, _, context) return Addon.Store:Delete(character, context) end })
@@ -55,7 +52,6 @@ function Addon:Initialize()
     end
     for _, event in ipairs({ "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "PLAYER_LOGOUT", "PLAYER_EQUIPMENT_CHANGED", "BAG_UPDATE_DELAYED", "UNIT_INVENTORY_CHANGED", "GET_ITEM_INFO_RECEIVED" }) do Register(event) end
     for event in pairs(talentEvents) do Register(event) end
-    for event in pairs(enchantEvents) do Register(event) end
     return true
 end
 SLASH_YIBOBUILDS1 = "/ybb"
@@ -82,11 +78,6 @@ Addon.Frame:SetScript("OnEvent", function(_, event, ...)
             Addon:NotifyChanged()
         elseif talentEvents[event] then
             Addon.Talents:Request()
-            if event == "TRAIT_CONFIG_UPDATED" or event == "PLAYER_TALENT_UPDATE" or event == "ACTIVE_TALENT_GROUP_CHANGED" then
-                Addon.Scanner:Request(false)
-            end
-        elseif enchantEvents[event] then
-            Addon:NotifyChanged()
         end
     end
 end)

@@ -18,7 +18,6 @@ dofile("YiboBuilds/Data/EngineeringCatalog.lua")
 dofile("YiboBuilds/Data/EngineeringApply.lua")
 dofile("YiboBuilds/Data/ApplyTargets.lua")
 dofile("YiboBuilds/Snapshot.lua")
-dofile("YiboBuilds/Common/EquipmentView.lua")
 dofile("YiboBuilds/AccountPage.lua")
 CreateFrame = nil
 local readEngineering = assert(FindUpvalue(YiboBuilds.Snapshot.CaptureSlot, "ReadEngineeringEnchantID"))

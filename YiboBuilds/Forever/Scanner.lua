@@ -22,23 +22,18 @@ function Scanner:Pass()
     return slots,count
 end
 function Scanner:Fail() Addon.Store.freshID,Addon.Store.error=nil,true; Addon:NotifyChanged(); return false end
-function Scanner:Scan(confirmEmpty, saveConfig)
+function Scanner:Scan(confirmEmpty)
     if not Addon.initialized or not self.inWorld then return false end
     local logged,inGame=Read(IsLoggedIn); if not logged or inGame~=true then return false end
     local id=Addon.Core.Characters:GetCurrentID(); if not id then return false end
     local timed,stamp=Read(GetServerTime)
     if not timed or not Addon.Store:Integer(stamp,0,9007199254740991) then return self:Fail() end
-    local configID=Addon.Talents:GetActiveConfig()
-    if saveConfig and configID ~= saveConfig then return false end
     local first,count=self:Pass(); if not first then return self:Fail() end
     local second,otherCount=self:Pass(); if not second then return self:Fail() end
     for slot=1,19 do if first[slot].itemID~=second[slot].itemID or first[slot].itemLink~=second[slot].itemLink then return self:Fail() end end
-    if not self.inWorld or id~=Addon.Core.Characters:GetCurrentID() or count~=otherCount
-        or configID~=Addon.Talents:GetActiveConfig() then return self:Fail() end
+    if not self.inWorld or id~=Addon.Core.Characters:GetCurrentID() or count~=otherCount then return self:Fail() end
     if count==0 and not confirmEmpty then Addon.Store.freshID,Addon.Store.error=nil,nil; Addon:NotifyChanged(); return false end
-    local captured, saved = Addon.Store:Commit(id,{slots=second,observedAt=stamp},configID,saveConfig ~= nil)
-    if not captured then return self:Fail() end
-    return not saveConfig or saved == true
+    return Addon.Store:Commit(id,{slots=second,observedAt=stamp})
 end
 function Scanner:Cancel() self.generation=self.generation+1; self.queued,self.confirmEmpty=false,nil end
 function Scanner:Request(confirmEmpty)
@@ -53,13 +48,7 @@ function Scanner:Request(confirmEmpty)
 end
 function Scanner:OnEvent(event,unit)
     if event=="PLAYER_ENTERING_WORLD" then self:Cancel(); self.inWorld=true; self:Request(false)
-    elseif event=="PLAYER_LEAVING_WORLD" or event=="PLAYER_LOGOUT" then
-        if event=="PLAYER_LOGOUT" then
-            if self.inWorld then self:Scan(self.confirmEmpty) end
-            local id = Addon.Core.Characters:GetCurrentID()
-            if id then Addon.Store:SaveObservedEquipment(id) end
-        end
-        self:Cancel(); self.inWorld=false; Addon.Store.freshID=nil; Addon:NotifyChanged()
+    elseif event=="PLAYER_LEAVING_WORLD" or event=="PLAYER_LOGOUT" then self:Cancel(); self.inWorld=false; Addon.Store.freshID=nil; Addon:NotifyChanged()
     elseif event=="PLAYER_EQUIPMENT_CHANGED" or (event=="UNIT_INVENTORY_CHANGED" and unit=="player") then self:Request(true)
     elseif event=="BAG_UPDATE_DELAYED" then self:Request(false)
     elseif event=="GET_ITEM_INFO_RECEIVED" then Addon:NotifyChanged() end

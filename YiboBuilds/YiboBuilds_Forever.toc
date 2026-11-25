@@ -5,7 +5,7 @@
 ## Notes: Read-only equipment and invested talent snapshots for the current character. Requires YiboCore API14.
 ## Notes-zhCN: 当前角色装备与已投入天赋只读快照，需要 YiboCore API14。
 ## Author: YiboSoft
-## Version: 0.3.0
+## Version: 0.2.0
 ## IconTexture: Interface\AddOns\YiboBuilds\Media\YiboBuildsIcon-128
 ## SavedVariables: YiboBuildsForeverDB
 ## RequiredDeps: YiboCore
@@ -19,6 +19,5 @@ Forever/Scanner.lua
 Forever/Talents.lua
 Forever/TalentTree.lua
 Forever/Enhancements.lua
-Common/EquipmentView.lua
 Forever/AccountPage.lua
 Forever/Bootstrap.lua
