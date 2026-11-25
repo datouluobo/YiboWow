@@ -4,15 +4,16 @@ local saved = { retained = true }
 YiboBuildsDB = saved
 YiboCore = setmetatable({}, {__index = function() error("Mists queried Core on Forever") end})
 CreateFrame = function() error("Mists registered a frame on Forever") end
-local files = 0
-for line in io.lines("YiboBuilds/YiboBuilds.toc") do
+local files, version = 0, nil
+for line in io.lines("YiboBuilds/YiboBuilds_Mists.toc") do
+    version = version or line:match("^## Version:%s*(%S+)")
     local path = line:match("^([^#].-%.lua)%s*$")
     if path then
         dofile("YiboBuilds/" .. path:gsub("\\", "/"))
         files = files + 1
     end
 end
-assert(files > 0 and YiboBuilds.VERSION == "1.5.1")
+assert(files > 0 and version and YiboBuilds.VERSION == version)
 assert(YiboBuildsDB == saved and saved.retained and next(saved, "retained") == nil)
 assert(not YiboBuilds.Snapshot and not YiboBuilds.AccountPage and not YiboBuilds.Gems and not YiboBuilds.SocketReader)
 print("MistsTargetGuardSpec passed: " .. files .. " TOC files, no frames/Core queries/SavedVariables writes")
