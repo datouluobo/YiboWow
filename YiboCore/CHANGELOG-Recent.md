@@ -1,5 +1,13 @@
 # YiboCore Changelog / 近期更新
 
+## 1.14.0（MoP）/ 0.4.0（无限服）/ 0.3.0（正式服）· API14 — 2026-11-25
+
+- 账号主窗口与设置共用尺寸。支持拖动、输入宽高、锁定比例和恢复默认尺寸，重载后保留偏好。
+- 角色档案固定身份列，其余字段按实际列宽分页。紧凑布局改善总览、设置和业务页可用空间。
+- 提供 `account-compact-layout:2`。新增 `account-surface-realm-scope:2` 批量查询服务器筛选所需角色，保留旧版查询接口。
+
+English: The account window and settings share a saved size, with drag resizing, numeric dimensions, aspect-ratio lock, and a reset to default. The character archive keeps the identity column visible and paginates other fields by width. API14 adds compact account layout support and a batched realm-scope query compatible with existing addons.
+
 ## 1.13.0（MoP）/ 0.3.0（无限服）/ 0.2.0（正式服）· API14 — 2026-11-22
 
 - 像素线宽：表格、按钮、边框与描边的 1 线宽按物理像素绘制，任意分辨率与 UI 缩放下粗细一致；改 UI 缩放（含 NDui、EllesmereUI 等整合界面）后立即刷新，无需重载。

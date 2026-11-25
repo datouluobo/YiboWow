@@ -1,7 +1,7 @@
 local Core = _G.YiboCore
 
 -- Loaded only by the Forever manifest. Shared code consumes policy, not product IDs.
-Core.VERSION = "0.3.0"
+Core.VERSION = "0.4.0"
 Core._private.target = {
     id = "Forever",
     savedVariable = "YiboCoreForeverDB",

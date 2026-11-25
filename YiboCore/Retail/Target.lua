@@ -1,5 +1,5 @@
 local Core = _G.YiboCore
-Core.VERSION = "0.2.0"
+Core.VERSION = "0.3.0"
 Core._private.target = {
     id = "Retail", savedVariable = "YiboCoreRetailDB",
     requireGUID = true, legacyImports = false, requireStampedStore = true,
