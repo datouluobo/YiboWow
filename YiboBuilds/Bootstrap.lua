@@ -3,7 +3,7 @@ local Addon = _G.YiboBuilds or {}
 _G.YiboBuilds = Addon
 
 Addon.NAME = ADDON_NAME or "YiboBuilds"
-Addon.VERSION = "1.6.0"
+Addon.VERSION = "1.6.1"
 Addon.REQUIRED_CORE_API = 14
 Addon.PAGE_ID = "builds"
 Addon.ICON = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon"
@@ -31,6 +31,7 @@ function Addon:HasCompatibleCore()
         and core.BusinessItemActions and core.Defaults
         and theme and type(theme.ApplyPixelBackdrop) == "function"
         and type(theme.ApplyPixelRule) == "function" and type(theme.CreatePixelBorder) == "function"
+        and type(theme.CreateMatrixHeader) == "function" and type(theme.SetMatrixHeader) == "function"
 end
 if type(WOW_PROJECT_CAMELOT)=="number" and WOW_PROJECT_ID==WOW_PROJECT_CAMELOT then
     -- Wrong package for this client: one notice, before any frame, Core query or saved-variable access.

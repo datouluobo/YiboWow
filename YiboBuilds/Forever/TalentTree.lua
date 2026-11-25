@@ -3,7 +3,7 @@ local Theme = _G.YiboCore and _G.YiboCore.UITheme
 local Tree = {}
 Addon.TalentTree = Tree
 
-local tileSize, padding = 34, 24
+local preferredTileSize, minimumTileSize, tileGap, padding = 34, 24, 6, 24
 
 local function PaintNodeTooltip(owner, node, investedRank, description)
     local talents = Addon.Talents
@@ -73,30 +73,35 @@ local function Axis(nodes, key, spacing)
     return values[1], values[#values] - values[1], gap < math.huge and spacing / gap or 1
 end
 
-local function Layout(tree, width)
+local function Layout(tree, width, compact, heightBudget)
     local graph = Addon.Talents:GetGraph(tree)
     if not graph then return nil, "geometry" end
-    local minX, spanX, scaleX = Axis(graph, "x", 58)
-    local minY, spanY, scaleY = Axis(graph, "y", 54)
+    local size = compact and 26 or preferredTileSize
+    local minX, spanX, scaleX = Axis(graph, "x", compact and 42 or 58)
+    local minY, spanY, scaleY = Axis(graph, "y", compact and 38 or 54)
     if spanX > 0 then scaleX = math.min(scaleX, (width - 2 * padding) / spanX) end
-    if spanY > 0 then scaleY = math.min(scaleY, 1000 / spanY) end
+    if spanY > 0 then
+        scaleY = math.min(scaleY, 1000 / spanY)
+        if heightBudget and heightBudget > 70 then scaleY = math.min(scaleY, (heightBudget - 70) / spanY) end
+    end
     local left = (width - spanX * scaleX) / 2
     local ranks, positions, nodes = {}, {}, {}
     for _, node in ipairs(tree.nodes) do ranks[node.id] = node.rank end
     for _, node in ipairs(graph) do
         local x, y = left + (node.x - minX) * scaleX, 42 + (node.y - minY) * scaleY
         for _, other in ipairs(nodes) do
-            if math.abs(x - other.x) < tileSize + 6 and math.abs(y - other.y) < tileSize + 6 then return nil, "width" end
+            local separation = math.max(math.abs(x - other.x), math.abs(y - other.y))
+            size = math.min(size, separation - tileGap)
         end
         local point = { x = x, y = y, rank = ranks[node.id] or 0, node = node }
         nodes[#nodes + 1], positions[node.id] = point, point
     end
-    return { title = Addon.Talents:GetTreeTitle(tree), nodes = nodes, positions = positions, height = 70 + spanY * scaleY }
+    if size < minimumTileSize then return nil, "width" end
+    return { title = Addon.Talents:GetTreeTitle(tree), nodes = nodes, positions = positions, height = 70 + spanY * scaleY, size = math.floor(size) }
 end
 
 local function CreateTile(frame)
     local tile = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    tile:SetSize(tileSize, tileSize)
     Theme:ApplyPixelBackdrop(tile, { background = false })
     tile:EnableMouse(true)
     tile.icon = tile:CreateTexture(nil, "ARTWORK")
@@ -123,10 +128,12 @@ function Tree:Create(parent)
     return frame
 end
 
-function Tree:Render(frame, snapshot, width, matches)
+function Tree:Render(frame, snapshot, width, matches, compact, heightBudget)
     local layouts = {}
-    for _, tree in ipairs(snapshot and snapshot.trees or {}) do
-        local layout, issue = Layout(tree, width)
+    local trees = snapshot and snapshot.trees or {}
+    for _, tree in ipairs(trees) do
+        local layout, issue = Layout(tree, width, compact, heightBudget and heightBudget / #trees)
+        if not layout and issue == "width" and heightBudget then layout, issue = Layout(tree, width, compact) end
         if not layout then frame:Hide(); return nil, nil, issue end
         layouts[#layouts + 1] = layout
     end
@@ -137,6 +144,8 @@ function Tree:Render(frame, snapshot, width, matches)
         frame.titles[index] = title
         title:ClearAllPoints()
         title:SetPoint("TOPLEFT", 4, -top)
+        title:SetPoint("TOPRIGHT", -4, -top)
+        title:SetWordWrap(false)
         title:SetText(layout.title)
         title:Show()
         local drawn = {}
@@ -155,6 +164,7 @@ function Tree:Render(frame, snapshot, width, matches)
             end
             tile:ClearAllPoints()
             tile:SetPoint("CENTER", frame, "TOPLEFT", point.x, -top - point.y)
+            tile:SetSize(layout.size, layout.size)
             -- The rank badge sits just inside the 1-pixel tile border; Core
             -- re-applies the inset whenever the pixel size changes.
             Theme:SetPixelAnchor(tile.badge, function()

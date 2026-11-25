@@ -974,3 +974,7 @@ Core PixelLineSpec 64 项通过；Core 既有 7 组、Mail 3 组、Currency API1
 2026-11-22 CAP-013 SetPixelAnchor 接入完成：Mail（图标内缩，InboxRelease 98）、Vault 物品图标、Reputation Forever 进度条、TaskHub HUD、Builds Forever 天赋角标、AltoBoss 两端页签衔接、Crafting Mists 面板内缩与宽高预算（按 2 个物理像素）均改为 `SetPixelAnchor`，并在各自方法检查中加入 `SetPixelAnchor`。全工作区 145 个在用测试 114 通过，失败均与 2026-11-20 基线一致；431 文件语法与 20 个目标 ValidateOnly 通过。实机待验：不重载改缩放后上述位置仍贴 1 像素边框。
 
 2026-11-22 CAP-013 业务插件发布检查：Core API14 已发布（Mists 1.13.0／Forever 0.3.0／Retail 0.2.0）。AltoBoss 2.9.0/0.2.0、Builds 1.6.0/0.2.0、Mail 1.4.0/0.3.0-api1、Vault 1.3.0/0.7.0-api1、Reputation 1.8.0/0.2.0、Crafting 1.3.0/0.2.0、QuestBlocker 3.2.0、Todo 1.3.0、TaskHub 0.7.0、Legendary 2.3.0、BeastPaths 1.10.0（universal）完成正式包与打包回放，构建器读取最低 Core 14（Crafting Forever 13）。各插件接入状态在用户实机确认基础上记为已接入，发布状态以各发布记录为准；Todo、TaskHub 误装保护缺失与 BeastPaths 分包例外待用户决定。
+
+2026-11-25 YiboBuilds Forever 工作台对齐继续使用 API14。CAP-004 将已有账号范围和角色准入扩展到主窗，悬停通过 Core 统一页面入口跳转。CAP-003/007/009 沿用物品解析、角色 GUID 和双语资源，总装等读取 Core 角色档案投影，单件装等按装备链接使用本服原生查询。无新增 Core 契约或最低版本变化。源码离线 147 项、双目标包回放 77 项通过，实机待验。见[工作台验证](../../YiboBuilds/Docs/Forever-当前角色装备最小适配与验收.md)。
+
+2026-11-25 YiboBuilds Forever 0.3.0／MoP 1.6.1 的共用角色选择继续通过 Core 角色名称与账号范围契约，面板、下拉框、滚动列表和矩阵表头继续使用 Core 主题。两端 API14 与现有能力门槛保持。新包干净安装与保留旧文件覆盖共 77 项模拟检查通过，实际画面待验。

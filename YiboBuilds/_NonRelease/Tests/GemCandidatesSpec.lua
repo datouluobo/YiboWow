@@ -21,6 +21,7 @@ local function Check(value, message)
 end
 for _, language in ipairs({ "zh", "en" }) do
     Setup(language)
+    dofile("YiboBuilds/Common/EquipmentView.lua")
     dofile("YiboBuilds/AccountPage.lua")
     local gems, page = YiboBuilds.Gems, YiboBuilds.AccountPage
     local items = {

@@ -4,6 +4,7 @@ local function Check(value, message) checks = checks + 1; assert(value, message)
 for _, lang in ipairs({ "zh", "en" }) do
     local host = Setup(lang)
     dofile("YiboBuilds/Snapshot.lua")
+    dofile("YiboBuilds/Common/EquipmentView.lua")
     dofile("YiboBuilds/AccountPage.lua")
     dofile("YiboBuilds/CoreIntegration.lua")
     local addon, core = YiboBuilds, YiboCore
@@ -57,14 +58,7 @@ for _, lang in ipairs({ "zh", "en" }) do
     local old = { name = "未知天赋" }
     Check(addon.Snapshot:GetDisplayName(old) == (lang == "en" and "Unknown talent" or "未知天赋") and old.name == "未知天赋", "legacy label rendered without mutation")
     Check(addon.Snapshot:GetDisplayName({name="Native API Name"}) == "Native API Name", "native name preserved")
-    local function Find(fn, target, seen)
-        seen = seen or {}; if seen[fn] then return end; seen[fn] = true
-        for i=1,100 do local name, value = debug.getupvalue(fn,i); if not name then break end
-            if name == target then return value end
-            if type(value) == "function" then local found = Find(value,target,seen); if found then return found end end
-        end
-    end
-    local label = assert(Find(addon.AccountPage.Refresh,"CharacterLabel"))
+    local label = addon.EquipmentView.CharacterLabel
     Check(label({ name="Player",realm="Realm" },{scope="all"}) == "Player-Realm" and host.nameOptions.nameMode == "short", "all-realm formatting")
     Check(label({ name="Player",realm="Realm" },{scope="realm"}) == "Player" and host.nameOptions.realmMode == "omit", "single-realm formatting")
     local db = addon:EnsureDB()
