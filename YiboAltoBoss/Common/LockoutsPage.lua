@@ -227,7 +227,16 @@ function YAB.RefreshProgressPage(instance, context, view, compact)
             for _, definition in ipairs(targets) do
                 if definition.kind == "instance" and (definition.id == column.plannedCatalogID
                     or definition.mapID and definition.mapID == column.instanceID) then
-                    definitions[index] = definition
+                    if column.plannedCatalogID or not column.difficultyID then
+                        definitions[index] = definition
+                    else
+                        for _, difficulty in ipairs(definition.difficulties) do
+                            if difficulty.id == column.difficultyID then
+                                definitions[index] = definition
+                                break
+                            end
+                        end
+                    end
                     break
                 end
             end

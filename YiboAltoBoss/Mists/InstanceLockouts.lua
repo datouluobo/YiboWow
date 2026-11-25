@@ -144,6 +144,49 @@ local function ShortName(name)
     return name
 end
 
+-- The Dungeon Finder includes heroic-only maps the Pandaria tier omits.
+local PANDARIA_DUNGEONS = {
+    { mapID = 1011, nameKey = "LOCKOUT.MISTS_MAP_1011", abbreviation = "SNT", normal = true },
+    { mapID = 959, nameKey = "LOCKOUT.MISTS_MAP_959", abbreviation = "SPM", normal = true },
+    { mapID = 962, nameKey = "LOCKOUT.MISTS_MAP_962", abbreviation = "GSS", normal = true },
+    { mapID = 1004, nameKey = "LOCKOUT.MISTS_MAP_1004", abbreviation = "SM" },
+    { mapID = 1001, nameKey = "LOCKOUT.MISTS_MAP_1001", abbreviation = "SH" },
+    { mapID = 1007, nameKey = "LOCKOUT.MISTS_MAP_1007", abbreviation = "Scholo" },
+    { mapID = 960, nameKey = "LOCKOUT.MISTS_MAP_960", abbreviation = "TJS", normal = true },
+    { mapID = 961, nameKey = "LOCKOUT.MISTS_MAP_961", abbreviation = "SSB", normal = true },
+    { mapID = 994, nameKey = "LOCKOUT.MISTS_MAP_994", abbreviation = "MSP", normal = true },
+}
+
+function YAB.GetPandariaDungeonColumns(difficultyID, columns)
+    local planned, result = {}, {}
+    for _, column in ipairs(columns) do
+        if column.plannedCatalogID and column.mapID and column.difficultyID == difficultyID then
+            planned[column.mapID] = column
+        end
+    end
+    local difficultyName = GetDifficultyInfo and GetDifficultyInfo(difficultyID)
+    for _, dungeon in ipairs(PANDARIA_DUNGEONS) do
+        if difficultyID ~= 1 or dungeon.normal then
+            local mapID = dungeon.mapID
+            local name = GetRealZoneText and GetRealZoneText(mapID)
+            if not name or name == "" then name = Core.Locale:Get("YiboAltoBoss", dungeon.nameKey) end
+            local column = {
+                key = mapID .. ":" .. difficultyID, instanceID = mapID, mapID = mapID, isRaid = false,
+                name = name, shortName = ShortName(name), abbreviation = dungeon.abbreviation,
+                difficultyID = difficultyID, difficultyName = difficultyName,
+            }
+            if planned[mapID] then
+                local target = Core.Defaults:Copy(planned[mapID])
+                target.fallbackColumn = column
+                target.shortName, target.abbreviation = column.shortName, column.abbreviation
+                column = target
+            end
+            result[#result + 1] = column
+        end
+    end
+    return result
+end
+
 local function BuildInstanceCatalog()
     if instanceCatalog then return instanceCatalog end
     instanceCatalog = {}

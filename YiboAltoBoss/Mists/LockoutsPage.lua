@@ -3,6 +3,7 @@ local YAB = _G.YAB
 local Core = _G.YiboCore
 local Theme = Core.UITheme
 local function Text(key) return Core.Locale:Get("YiboAltoBoss", key) end
+local PANDARIA_TIER = 1
 
 function YAB.SetAccountBusinessPage(pageID)
     YiboAltoBossDB = YiboAltoBossDB or {}
@@ -45,7 +46,7 @@ function YAB.CreateLockoutsPage(parent)
         Core.AccountView:RefreshPage()
     end)
     filters.kind:SetOnValueChanged(function(value)
-        filters.kindID = value
+        if filters.expansionID == PANDARIA_TIER then filters.pandariaKind = value else filters.kindID = value end
         Core.AccountView:RefreshPage()
     end)
     parent:HookScript("OnHide", function()
@@ -70,24 +71,36 @@ function YAB.RefreshLockoutsPage(instance, context)
     for _, column in ipairs(allColumns) do
         local id = column.tierOrder or 999
         if not expansions[id] then
-            local label = column.expansion or Text("UI.OTHER")
+            local label = id == PANDARIA_TIER and Text("LOCKOUT.MISTS_EXPANSION") or column.expansion or Text("UI.OTHER")
             expansions[id] = true
             expansionOptions[#expansionOptions + 1] = { value = id, label = label }
             expansionWidth = math.max(expansionWidth, Theme:MeasureText(Theme.Font.body, label))
         end
     end
+    if not expansions[PANDARIA_TIER] then
+        local label = Text("LOCKOUT.MISTS_EXPANSION")
+        expansionOptions[#expansionOptions + 1] = { value = PANDARIA_TIER, label = label }
+        expansions[PANDARIA_TIER] = true
+        expansionWidth = math.max(expansionWidth, Theme:MeasureText(Theme.Font.body, label))
+    end
     table.sort(expansionOptions, function(a, b) return a.value < b.value end)
-    if not expansions[filters.expansionID] then filters.expansionID = expansionOptions[1] and expansionOptions[1].value end
+    if not expansions[filters.expansionID] then filters.expansionID = expansionOptions[1].value end
 
-    local types = {
-        { value = "raid", label = Text("LOCKOUT.COMPACT_RAIDS") },
-        { value = "dungeon", label = Text("LOCKOUT.COMPACT_DUNGEONS") },
-    }
+    local pandaria = filters.expansionID == PANDARIA_TIER
+    local types = { { value = "raid", label = Text("LOCKOUT.COMPACT_RAIDS") } }
+    if pandaria then
+        types[#types + 1] = { value = 1, label = Text("LOCKOUT.MISTS_NORMAL") }
+        types[#types + 1] = { value = 2, label = Text("LOCKOUT.MISTS_HEROIC") }
+        types[#types + 1] = { value = 237, label = Text("LOCKOUT.MISTS_CELESTIAL") }
+    else
+        types[#types + 1] = { value = "dungeon", label = Text("LOCKOUT.COMPACT_DUNGEONS") }
+    end
     local gap = Theme.Space.xs
     local width = context.surfaceAvailableWidth - gap * 3
-    local kindWidth = math.max(Theme:MeasureText(Theme.Font.body, types[1].label), Theme:MeasureText(Theme.Font.body, types[2].label),
-        Theme:MeasureText(Theme.Font.body, Text("UI.OTHER"))) + Theme.Space.md * 2
-    local kind, selected = filters.kindID or "raid", {}
+    local kind = filters.kindID or "raid"
+    if pandaria then kind = filters.pandariaKind or "raid" end
+    local pandariaDungeon = pandaria and type(kind) == "number"
+    local selected = {}
     local hasOther = false
     for _, column in ipairs(allColumns) do
         if (column.tierOrder or 999) == filters.expansionID then
@@ -97,6 +110,10 @@ function YAB.RefreshLockoutsPage(instance, context)
         end
     end
     if hasOther or kind == "other" then types[#types + 1] = { value = "other", label = Text("UI.OTHER") } end
+    if pandariaDungeon then selected = YAB.GetPandariaDungeonColumns(kind, allColumns) end
+    local kindWidth = 0
+    for _, option in ipairs(types) do kindWidth = math.max(kindWidth, Theme:MeasureText(Theme.Font.body, option.label)) end
+    kindWidth = kindWidth + Theme.Space.md * 2
     expansionWidth = expansionWidth + Theme.Space.md * 2
     local tabsWidth = gap
     for _, tab in ipairs(YAB.BusinessTabs) do tabsWidth = tabsWidth + tab.width + 2 end
@@ -120,7 +137,7 @@ function YAB.RefreshLockoutsPage(instance, context)
         filterRowHeight = extraRow and Theme.Size.standard + gap or 0,
         pageKey = tostring(filters.expansionID) .. ":" .. kind,
         title = function(column)
-            if column.plannedCatalogID then return column.abbreviation or column.name end
+            if column.plannedCatalogID and not pandariaDungeon then return column.abbreviation or column.name end
             return (Core.Locale:GetLanguage() == "zh" and column.shortName or column.abbreviation) or column.name
         end,
         label = function(status, label)

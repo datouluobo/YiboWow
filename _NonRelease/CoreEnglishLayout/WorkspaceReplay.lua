@@ -99,13 +99,33 @@ local function Run(target, language)
     if target == "Mists" then
         local builds, taskHub, mail = env.YiboBuilds, env.YiboTaskHub, env.YiboMail
         VisitPage("alto-lockouts")
-        local filters = frame.instances["alto-lockouts"].lockoutFilters
+        local lockouts = frame.instances["alto-lockouts"]
+        local filters = lockouts.lockoutFilters
         local _, _, _, _, filterY = filters:GetPoint(1)
         local tabHeight = env.YAB.GetBusinessTabHeight()
         local expectedFilterY = language == "zhCN" and -(tabHeight - core.UITheme.Size.standard) / 2
             or -tabHeight - core.UITheme.Space.xxs
         assert(filters:IsShown() and filterY == expectedFilterY,
             "lockout filters share the tabs when they fit and move together to a second row otherwise")
+        for index, count in ipairs({ 6, 9, 9 }) do
+            local notices = #env.TEST_MESSAGES
+            local button = assert(filters.kind.menu.buttons[index + 1])
+            button:GetScript("OnClick")(button)
+            CheckVisit("lockouts/" .. button.option.value, "alto-lockouts", notices)
+            local shown, pager = 0, lockouts.yiboColumnPager
+            repeat
+                for column = 2, #lockouts.headers do
+                    if lockouts.headers[column]:IsShown() then shown = shown + 1 end
+                end
+                assert(shown <= count, "dungeon pages do not overrun the category")
+                if not pager.next:IsShown() or pager.next.state == "disabled" then break end
+                pager.next:GetScript("OnClick")(pager.next)
+                CheckVisit("lockouts next", "alto-lockouts", notices)
+            until shown == count
+            assert(shown == count,
+                string.format("%s Pandaria difficulty %s displays %d of %d dungeon columns",
+                    language, button.option.value, shown, count))
+        end
         local current = assert(core.Characters:GetCurrent({ identityOnly = true }))
         local record = builds.Snapshot:EnsureCharacter(current)
         record.lastActiveSlot = "primary"
