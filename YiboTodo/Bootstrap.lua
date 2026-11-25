@@ -90,13 +90,13 @@ frame:SetScript("OnEvent", function(_, event, ...)
     elseif event == "TRADE_SKILL_SHOW" or event == "TRADE_SKILL_LIST_UPDATE" or event == "TRADE_SKILL_UPDATE" then
         QueueProfessionScan()
     elseif event == "UNIT_SPELLCAST_SUCCEEDED" and Addon.initialized then
-        local _, _, spellID = ...
+        local unit, _, spellID = ...
         local provider = Addon.Providers.Registry:Get("farm-operation-observation")
         if provider then
             local changed = provider:RecordSucceededCast(...)
             if changed then Addon:NotifyChanged() end
         end
-        if IsTrackedProfessionSpell(spellID) then
+        if unit == "player" and IsTrackedProfessionSpell(spellID) then
             local current = Addon.Core and Addon.Core.Characters and Addon.Core.Characters:GetCurrent({ identityOnly = true })
             local characterID = current and current.id
             local pending = characterID and scanQueuedByCharacter[characterID]

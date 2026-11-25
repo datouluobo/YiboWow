@@ -55,6 +55,7 @@ local characters = { { id = "C", name = "星河", realm = "测试" }, { id = "D"
 local currentID = "C"
 Core.Characters = {
     GetAll = function() return Core.Defaults:Copy(characters) end,
+    GetAllCached = function() return Core.Defaults:Copy(characters) end,
     GetCurrent = function() for _, c in ipairs(characters) do if c.id == currentID then return Core.Defaults:Copy(c) end end end,
     Get = function(_, id) for _, c in ipairs(characters) do if c.id == id then return Core.Defaults:Copy(c) end end end,
     FormatName = function(_, c) return c and c.name end,
@@ -105,7 +106,7 @@ C_Calendar = { GetMonthInfo = function() return os.date("*t", clock) end,
     GetNumDayEvents = function() return 1 end, GetDayEvent = function() return {title="Darkmoon Faire"} end }
 dofile("YiboTodo/Namespace.lua")
 dofile("YiboCore/_NonRelease/Tests/LoadCalendar.lua")
-for _, file in ipairs({ "Database", "Catalog/MonitoringGroupCatalog", "Catalog/ActivityCatalog", "Catalog/CooldownGroupCatalog", "Catalog/CooldownCatalog_MoP", "Catalog/Ruleset_50504", "Catalog/FarmOperationCatalog", "Catalog/DailyActivityCatalog_MoP", "Catalog/DailyActivityCatalog_Legacy", "Catalog/SpecialActivityCatalog_MoP", "Catalog/Validator", "Model/Schedule", "Model/State", "Model/Snapshot", "ActionTodo", "ActionNomi", "ActionActivities", "ActionContracts", "Providers/Registry", "Providers/ProfessionCooldown", "Providers/FarmOperationObservation", "Providers/DailyQuest", "Mists/Darkmoon", "Providers/SpecialActivity" }) do dofile("YiboTodo/" .. file .. ".lua") end
+for _, file in ipairs({ "Database", "Catalog/MonitoringGroupCatalog", "Catalog/ActivityCatalog", "Catalog/CooldownGroupCatalog", "Catalog/CooldownCatalog_MoP", "Catalog/Ruleset_50504", "Catalog/FarmOperationCatalog", "Catalog/DailyActivityCatalog_MoP", "Catalog/DailyActivityCatalog_Legacy", "Catalog/SpecialActivityCatalog_MoP", "Catalog/Validator", "Model/Schedule", "Model/State", "Model/Snapshot", "ActionTodo", "ActionNomi", "ActionActivities", "ActionContracts", "Providers/Registry", "Mists/ProfessionCooldown", "Providers/FarmOperationObservation", "Providers/DailyQuest", "Mists/Darkmoon", "Providers/SpecialActivity" }) do dofile("YiboTodo/" .. file .. ".lua") end
 local Todo = YiboTodo
 Todo.Core = Core
 Todo.Database:Initialize()

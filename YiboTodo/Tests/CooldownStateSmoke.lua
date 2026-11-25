@@ -80,7 +80,7 @@ Addon.Now = function() return clock end
 GetGameTime = function() return gameHour, gameMinute end
 Addon.Settings = { GetMode = function() return "required" end }
 Addon.Core = {
-    Characters = { GetAll = function() return { { id = "snapshot-character" } } end,
+    Characters = { GetAllCached = function() return { { id = "snapshot-character" } } end,
         GetCurrent = function() return { id = "snapshot-character" } end },
     DataDomains = {
         Get = function()
@@ -106,11 +106,11 @@ clock, gameHour, gameMinute = 100120, 7, 1
 assert(Addon.Snapshot:GetCharacter("snapshot-character").activities["mop.tailoring.celestial-cloth"].state == "estimated", "snapshot refreshes at 07:00")
 
 Addon.db.byCharacter["unscanned-character"] = {}
-Addon.Core.Characters.GetAll = function() return { { id = "unscanned-character" } } end
+Addon.Core.Characters.GetAllCached = function() return { { id = "unscanned-character" } } end
 Addon.Snapshot:Invalidate()
 assert(Addon.Snapshot:GetCharacter("unscanned-character").activities["mop.tailoring.celestial-cloth"].state == "unknown", "switching to an unscanned character does not show a craft as ready")
 
-Addon.Core.Characters.GetAll = function() return { { id = "snapshot-character" } } end
+Addon.Core.Characters.GetAllCached = function() return { { id = "snapshot-character" } } end
 Addon.db.settings = { modeOverrides = { cooldownGroup = {} } }
 dofile("YiboTodo/Settings.lua")
 Addon.Settings:SetMode("cooldownGroup", "mop.tailoring.celestial-cloth", "hidden")
@@ -147,7 +147,7 @@ Addon.Core = {
         end,
     },
 }
-dofile("YiboTodo/Providers/ProfessionCooldown.lua")
+dofile("YiboTodo/Mists/ProfessionCooldown.lua")
 local observations = assert(Addon.Providers.Registry:Get("profession-cooldown"):Collect())
 assert(observations["mop.tailoring.celestial-cloth"].recipes[143011].readyAt == 4600, "provider collects celestial cloth")
 assert(observations["mop.alchemy.living-steel"].recipes[114780].readyAt == 4600, "provider keeps living steel collection")
@@ -225,5 +225,42 @@ local provider = Addon.Providers.Registry:Get("profession-cooldown")
 activeCharacterID = "second-character"
 local collected, collectReason = provider:CollectForCurrentCharacter("first-character")
 assert(collected == false and collectReason == "character-changed", "stale profession scan cannot write to the character selected after a switch")
+
+local energy = Group("mop.engineering.jards-energy-source")
+Addon.Now = function() return clock end
+GetGameTime = function() return 14, 36 end
+GetNumTradeSkills = function() return 1 end
+GetTradeSkillRecipeLink = function() return "|Henchant:139176|h[Energy Source]|h" end
+GetTradeSkillLine = function() return "Engineering" end
+GetTradeSkillCooldown = function() return nil end
+C_Spell = { GetSpellCooldown = function() return { startTime = 0, duration = 0 } end }
+Addon.Core.DataDomains.Get = function()
+    return { state = "known", data = { primaryProfessions = { { id = 202, name = "Engineering" } } } }
+end
+
+local handleEvent
+CreateFrame = function()
+    return { RegisterEvent = function() end, SetScript = function(_, _, handler) handleEvent = handler end }
+end
+Addon.initialized = true
+dofile("YiboTodo/Bootstrap.lua")
+handleEvent(nil, "UNIT_SPELLCAST_SUCCEEDED", "target", "other-cast", 139176)
+assert(not Addon.Database:GetProvider(activeCharacterID, provider.id), "other units cannot mark the logged-in character's recipe complete")
+
+handleEvent(nil, "UNIT_SPELLCAST_SUCCEEDED", "player", "own-cast", 139176)
+local record = Addon.Database:GetProvider(activeCharacterID, provider.id)
+local firstCastAt = clock
+assert(State:Evaluate(energy, record.observations[energy.id], clock, 600).state == "cooldown", "own successful craft marks the recipe complete immediately")
+clock = firstCastAt + 1
+assert(provider:CollectForCurrentCharacter(activeCharacterID))
+assert(record.observations[energy.id].observedAt == firstCastAt, "a scan during cooldown propagation preserves the original cast timestamp")
+clock = firstCastAt + 2
+assert(provider:CollectForCurrentCharacter(activeCharacterID))
+local refreshedEnergy = record.observations[energy.id]
+assert(refreshedEnergy.source == "own-tradeskill-window", "a subsequent window scan replaces a stale spellcast record")
+assert(State:Evaluate(energy, refreshedEnergy, clock, 600).state == "actionable", "empty trade cooldown and explicit zero spell cooldown confirm ready")
+GetTradeSkillCooldown = function() return 3600, true end
+assert(provider:CollectForCurrentCharacter(activeCharacterID))
+assert(State:Evaluate(energy, record.observations[energy.id], clock, 600).state == "cooldown", "a positive recipe cooldown still confirms completion")
 
 print("YiboTodo cooldown state smoke passed")

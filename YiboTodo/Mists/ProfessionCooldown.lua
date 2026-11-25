@@ -1,6 +1,7 @@
 local Addon = _G.YiboTodo
 local Registry = Addon.Providers.Registry
 local Provider = { id = "profession-cooldown", schemaVersion = 1, activityKinds = { "profession-cooldown" } }
+local CRAFT_COOLDOWN_SETTLE_SECONDS = 2
 
 local function CallBoolean(owner, name)
     local fn = owner and owner[name]
@@ -60,8 +61,8 @@ local function SpellCooldownRemaining(spellID)
         local ok, value, length = pcall(GetSpellCooldown, spellID)
         if ok then start, duration = value, length end
     end
-    start, duration = tonumber(start) or 0, tonumber(duration) or 0
-    if start <= 0 or duration <= 0 then return nil end
+    if start == 0 and duration == 0 then return 0 end
+    if not start or not duration or start <= 0 or duration <= 0 then return nil end
     local now = type(GetTime) == "function" and GetTime() or 0
     return math.max(0, start + duration - now)
 end
@@ -217,35 +218,23 @@ function Provider:CollectForCurrentCharacter(expectedCharacterID, refreshTarget)
     -- have already passed the shipped verification gate.
     if #Addon:GetActiveRecipes() == 0 then return true, "baseline-window-observed" end
     if not next(observations) then return true, "no-tracked-recipe-in-window" end
+    local now = Addon:Now()
     local record = Addon.Database:GetProvider(character.id, self.id, true)
     record.revision = (tonumber(record.revision) or 0) + 1
-    record.lastAttemptAt, record.lastSuccessAt, record.state, record.errorCode = Addon:Now(), Addon:Now(), "known", nil
+    record.lastAttemptAt, record.lastSuccessAt, record.state, record.errorCode = now, now, "known", nil
     -- Each profession window only exposes that profession's recipe list.
     -- Merge its groups into the character record instead of erasing the
     -- observations collected from the other primary profession.
     record.observations = record.observations or {}
     for groupID, observation in pairs(observations) do
-        local previous, group = record.observations[groupID], Addon.Catalog.groups[groupID]
-        -- A successful craft proves today's daily lockout. Some client list
-        -- updates still report zero afterwards; a later scan cannot undo the
-        -- successful event before the source-owned daily boundary.
-        if previous and previous.source == "spellcast-success" and group and group.resetKind == "daily-07"
-            and not Addon.Model.Schedule:CrossedReset(previous.observedAt, Addon:Now(), group.resetHour) then
-            local lockedUntil
-            for _, confirmed in pairs(previous.recipes or {}) do
-                if confirmed.cooldownKnown and confirmed.readyAt and confirmed.readyAt > Addon:Now() then
-                    lockedUntil = math.max(lockedUntil or 0, confirmed.readyAt)
-                end
-            end
-            for _, value in pairs(observation.recipes or {}) do
-                if lockedUntil and value.learned and value.craftable ~= false then
-                    value.cooldownKnown, value.readyAt = true, lockedUntil
-                    value.remainingAtScan = lockedUntil - Addon:Now()
-                    observation.source = "spellcast-success"
-                end
-            end
+        local previous = record.observations[groupID]
+        -- The recipe API can lag a successful cast. Keep the original cast
+        -- timestamp so successive window scans cannot extend this interval.
+        local awaitingCooldown = previous and previous.source == "spellcast-success"
+            and now >= previous.observedAt and now - previous.observedAt < CRAFT_COOLDOWN_SETTLE_SECONDS
+        if not awaitingCooldown then
+            record.observations[groupID] = observation
         end
-        record.observations[groupID] = observation
     end
     Addon:NotifyChanged(true, refreshTarget)
     return true, reason

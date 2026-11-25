@@ -5,7 +5,7 @@
 ## 架构与目录
 
 - `Catalog/`：活动、冷却、冷却组和客户端规则；所有条目使用稳定 ID。
-- `Providers/`：从专业窗口、任务、农场或账号事实采集原始观察；Provider 不直接决定页面文案。
+- `Providers/` 保存任务、农场和账号事实的观察逻辑，`Mists/ProfessionCooldown.lua` 采集 MoP 专业窗口。Provider 不直接决定页面文案。
 - `Model/`：规范化状态、时间语义、账号快照和统计。
 - `Database.lua`：SavedVariables 结构、revision 与迁移。
 - `AccountPage.lua`：统一账号页面的业务布局和字段投影。
@@ -84,7 +84,9 @@ Todo 的单一业务设置页保存父监控组和子项覆盖；这是业务投
 
 ### 行动中心每日准备投影
 
-专业 Model.State 的 estimated 由 ActionTodo 投影为 preparation，reason 明示预计与核对材料，confidence 仍为 estimated。freshness known 仅说明本周期派生状态有效，observedAt 不改变；不能据此完成目标，GoalTargets 只将 confirmed cooldown 转 completed。专业未知或未观察仍 unknown。账号快照和精确查询共享 DecorateProfessionProject，避免图标与动作描述分叉。成功制作事件的同周期日冷却优先于滞后零冷却扫描，跨重置恢复正常扫描语义。
+专业 Model.State 的 estimated 由 ActionTodo 投影为 preparation，reason 明示预计与核对材料，confidence 仍为 estimated。freshness known 仅说明本周期派生状态有效，observedAt 不改变；不能据此完成目标，GoalTargets 只将 confirmed cooldown 转 completed。专业未知或未观察仍 unknown。账号快照和精确查询共享 DecorateProfessionProject，避免图标与动作描述分叉。
+
+当前玩家的制作成功事件即时记录冷却。专业窗口扫描在事件后的两秒内保留该记录和原始时间，等待客户端同步冷却。之后以本人专业窗口的新观察刷新状态。已索引的配方在法术 API 明确返回起始时间和时长均为零时可确认无冷却。
 
 已观察到 learned/craftable 但 cooldownKnown=false 时，State 返回 actionable/confidence=profession；ActionTodo 同步投影 preparation，并提示确认冷却与材料。不得将无数值冷却视为已完成，也不改变未观察过的 unknown。
 

@@ -1,4 +1,10 @@
-# YiboTodo 1.3.0
+# YiboTodo 1.3.1
+
+## YiboTodo 1.3.1 — 商业冷却修复（2026-11-25）
+
+- 修复熊猫人之谜中贾德的特制能量源实际可制作、账号待办却显示已完成的问题。打开本人专业窗口会用新观察更新状态。
+- 只有当前玩家的制作成功事件会记录冷却。制作后的短暂同步期间保留完成状态。
+- Fixed a Mists issue where Jard's Peculiar Energy Source could show as completed while ready to craft.
 
 ## YiboTodo 1.3.0 — 像素线宽（2026-11-22）
 
