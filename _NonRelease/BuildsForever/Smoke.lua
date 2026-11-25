@@ -33,7 +33,9 @@ local function Boot(saved,configure,defaultManifest,language)
     fire("ADDON_LOADED"); fire("PLAYER_LOGIN")
     e.YiboBuildsDB={sentinel="mists"}; e.YiboBuildsForeverDB=saved
     if configure then configure(e,c,d) end
+    local manifestVersion
     for line in io.lines("YiboBuilds/"..(defaultManifest and "YiboBuilds.toc" or "YiboBuilds_Forever.toc")) do
+        manifestVersion=manifestVersion or line:match("^## Version:%s*(%S+)")
         line=line:gsub("\r",""); if line:match("%.lua$") then load("YiboBuilds/"..line:gsub("\\","/"),"YiboBuilds") end
     end
     fire("ADDON_LOADED","YiboBuilds")
@@ -41,10 +43,10 @@ local function Boot(saved,configure,defaultManifest,language)
         for i=1,20 do if #e.TEST_TIMERS==0 then return end; local timers=e.TEST_TIMERS; e.TEST_TIMERS={}; for _,timer in ipairs(timers) do timer[2]() end end
         error("timer loop")
     end
-    return e,c,e.YiboBuilds,fire,Flush,d
+    return e,c,e.YiboBuilds,fire,Flush,d,manifestVersion
 end
-local e,c,a,fire,flush,d=Boot()
-Check(a.initialized and a.VERSION=="0.2.0","Forever builds manifest starts")
+local e,c,a,fire,flush,d,manifestVersion=Boot()
+Check(a.initialized and manifestVersion and a.VERSION==manifestVersion,"Forever starts with the version declared in its manifest")
 Check(e.YiboBuildsDB.sentinel=="mists" and not e.YiboBuildsDB.characters,"Mists store untouched")
 Check(not a.Snapshot and not a.GoalTargets and not a.EnchantCatalog,"MoP talents and augmentation excluded")
 Check(not a.Scanner:Scan(true) and d.reads==0,"no reads before entering world")
