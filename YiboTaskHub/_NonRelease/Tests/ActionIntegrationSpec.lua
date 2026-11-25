@@ -34,6 +34,7 @@ local function Frame(parent)
     end })
 end
 CreateFrame = function(_, _, parent) return Frame(parent) end
+UIParent = Frame()
 local function Equal(a, b, label)
     checks = checks + 1
     assert(a == b, (label or "value") .. ": " .. tostring(a) .. " ~= " .. tostring(b))
@@ -58,6 +59,7 @@ local characters = { { id = "C", name = "星河", realm = "测试" }, { id = "D"
 local currentID = "C"
 Core.Characters = {
     GetAll = function() return Core.Defaults:Copy(characters) end,
+    GetAllCached = function() return Core.Defaults:Copy(characters) end,
     GetCurrent = function() for _, c in ipairs(characters) do if c.id == currentID then return Core.Defaults:Copy(c) end end end,
     Get = function(_, id) for _, c in ipairs(characters) do if c.id == id then return Core.Defaults:Copy(c) end end end,
     FormatName = function(_, c) return c and c.name end,

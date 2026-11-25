@@ -62,7 +62,7 @@ YAB = { CoreReady = true }
 dofile("YiboAltoBoss/Common/Locale.lua"); dofile("YiboAltoBoss/Common/LockoutLocale.lua")
 local bosses, columns = {}, {}
 for i = 1, 54 do bosses[i] = { key = "boss" .. i, name = "Boss " .. i } end
-for i = 1, 13 do columns[i] = { id = "instance" .. i, name = "Instance " .. i, abbreviation = "I" .. i, isRaid = true } end
+for i = 1, 13 do columns[i] = { id = "instance" .. i, name = "Instance " .. i, abbreviation = "I" .. i, isRaid = true, tierOrder = 1 } end
 YAB.GetBossList = function() return bosses end
 YAB.GetAccountCharacterKeys = function() return keys end
 YAB.GetCharacterIdentity = function(key) for _, c in ipairs(roster) do if c.id == key then return c end end end
