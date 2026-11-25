@@ -1,0 +1,10 @@
+## Interface: 16001
+## Title: |cff20e070[Yibo]|r YiboLegacyForeverProbe
+## Notes: Non-release read-only Legacy challenge, tree and reward-track evidence.
+## Notes-zhCN: 非发布只读传承挑战、传承树与奖励轨道取证。
+## Author: YiboSoft
+## Version: 0.1.2
+## SavedVariables: YiboLegacyForeverProbeDB
+
+Locale.lua
+Probe.lua

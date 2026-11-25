@@ -6,8 +6,9 @@
 
 ## 分类导航
 
-- **可加载客户端探针**：`Yibo*Probe/`、`Yibo*R4/`、`!YiboCalendarTrace/` 等。已完成的 Retail TOC 选择夹具暂存于 [`_ManualDelete-2026-11-02/CompletedTocProbes/`](./_ManualDelete-2026-11-02/CompletedTocProbes/)。稳定命名和加载规则见[非发布探针命名与组织规范](../Docs/非发布探针命名与组织规范.md)。各目录是否当前链接，以客户端 AddOns 的实际 Junction 为准。
-- **业务诊断拆出的原生 API 探针**：`YiboCurrencyProbe/`、`YiboLegendaryProbe/`、`YiboMountsProbe/`、`YiboTodoProbe/`，不读业务插件内部对象。Currency 探针支持 Mists 与 Forever，两个客户端的 Junction 已建立，实机待测；其余三个为 Mists 目标。MoP AddOns 中四个同名 Junction 已建立并核对目标。
+- **游戏内探针总索引**：查阅 [`Docs/非发布探针索引.md`](../Docs/非发布探针索引.md)。创建、复用或部署探针前先检索该页；本机 Mists、Retail、Forever 客户端探针 Junction 已于 2026-11-25 断开，源码保留在 `_NonRelease/`。
+
+- **可加载客户端探针**：源码、用途和复用关系以[非发布探针索引](../Docs/非发布探针索引.md)为准；命名与加载规则见[非发布探针命名与组织规范](../Docs/非发布探针命名与组织规范.md)。不要根据历史记录推断客户端当前仍有 Junction。
 - **客户端/系统诊断**：`ClientUpdateDiagnosis/`、`CalendarAnchor/`、`MailPerformance20261029/` 等。包含原始追踪、样本和分析文件，可能体积大且不一定可再生。
 - **离线测试与契约夹具**：`Core*R*`、`CoreConsumerR3/`、`CurrencyMigration/`、`TaskGoalIntegration/`、`MailReturn/`、`MatrixBudget/` 等。由代码或文档引用，不能与游戏探针混为一类。
 - **构建与发布快照**：`Release-*/`、`*-Release-*`、`Packaging/`、`VaultReleaseCheck-*/`、`Mounts-*/` 等。保留阶段源、打包内容、校验与回放证据；同一插件可能有多轮版本快照。

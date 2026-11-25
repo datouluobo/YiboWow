@@ -1,0 +1,10 @@
+## Interface: 16001
+## Title: |cff20e070[Yibo]|r YiboTransmogForeverProbe
+## Notes: Non-release read-only transmog collection, source, quest reward and display-state evidence.
+## Notes-zhCN: 非发布只读幻化收藏、来源、任务奖励与显示状态取证。
+## Author: YiboSoft
+## Version: 0.1.2
+## SavedVariables: YiboTransmogForeverProbeDB
+
+Locale.lua
+Probe.lua

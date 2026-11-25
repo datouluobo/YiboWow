@@ -4,7 +4,7 @@ param(
     [string]$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path,
     [string]$OutputRoot = (Join-Path (Resolve-Path (Join-Path $PSScriptRoot '../../..')).Path 'Builds'),
     [string]$Target = 'Mists',
-    [ValidateSet('Both', 'CurseForge', 'GitHub')][string]$Channel = 'Both',
+    [ValidateSet('Both', 'CurseForge', 'GitHub')][string]$Channel = 'CurseForge',
     [string]$Version,
     [switch]$ValidateOnly,
     [switch]$KeepStaging

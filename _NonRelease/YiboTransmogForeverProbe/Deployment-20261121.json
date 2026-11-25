@@ -1,0 +1,14 @@
+{
+  "Date": "2026-11-22",
+  "Source": "D:\\Development\\YiboWow\\_NonRelease\\YiboTransmogForeverProbe",
+  "Install": "D:\\Program\\World of Warcraft Forever\\World of Warcraft\\_forever_\\Interface\\AddOns\\YiboTransmogForeverProbe",
+  "LinkType": "Junction",
+  "Target": "D:\\Development\\YiboWow\\_NonRelease\\YiboTransmogForeverProbe",
+  "Version": "0.1.2",
+  "Command": "/ytf",
+  "Interface": 16001,
+  "SHA256": "D22E3B3184A3099000F9CACD41B8DAEC87F940F22CD65E355A0ED1C82A5FCCE5",
+  "Scope": "Read-only transmog collection, source, set, quest reward, bag item and display-state observations for YiboTransmog evidence; GetQuestReward post-hook records the chosen index only; no setters, no business store writes",
+  "OfflineCheck": "0.1.0/0.1.1 mocks as before. 0.1.2: luac -p; real saved store (12 samples) accepted, quest-complete without item rewards not sampled",
+  "ClientRun": "0.1.1 on build 70959 2026-11-21: T0, T3 (samples 1-9). 0.1.1 on build 71037 2026-11-22: T1, T2, extra T3 (samples 34-45). 0.1.2 not run yet"
+}

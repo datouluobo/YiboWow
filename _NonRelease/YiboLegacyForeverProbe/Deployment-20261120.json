@@ -1,0 +1,14 @@
+{
+  "Date": "2026-11-20",
+  "Source": "D:\\Development\\YiboWow\\_NonRelease\\YiboLegacyForeverProbe",
+  "Install": "D:\\Program\\World of Warcraft Forever\\World of Warcraft\\_forever_\\Interface\\AddOns\\YiboLegacyForeverProbe",
+  "LinkType": "Junction",
+  "Target": "D:\\Development\\YiboWow\\_NonRelease\\YiboLegacyForeverProbe",
+  "Version": "0.1.2",
+  "Command": "/ylg",
+  "Interface": 16001,
+  "SHA256": "6B96FC945F2330726320A4D16B3AA86D26CE7B8642D44FC300E6BC349ECD3DC2",
+  "Scope": "Read-only Legacy challenge/tree/renown observations for YiboLegacy evidence; no business store writes",
+  "OfflineCheck": "luac -p passed; Lua 5.1 mock run of scan/ach/report passed",
+  "ClientRun": "0.1.0 ran on build 70959 (L0, two characters) and 0.1.1 (L0 full scan, 111 achievements) on 2026-11-20; 0.1.2 ran 2026-11-20 and returned all four renown rewards"
+}

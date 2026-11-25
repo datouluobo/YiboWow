@@ -1,0 +1,13 @@
+{
+  "Date": "2026-11-18",
+  "Source": "D:\\Development\\YiboWow\\_NonRelease\\YiboMailForeverProbe",
+  "Install": "D:\\Program\\World of Warcraft Forever\\World of Warcraft\\_forever_\\Interface\\AddOns\\YiboMailForeverProbe",
+  "LinkType": "Junction",
+  "Target": "D:\\Development\\YiboWow\\_NonRelease\\YiboMailForeverProbe",
+  "Version": "0.1.2",
+  "Command": "/ymf",
+  "Interface": 16001,
+  "SHA256": "38E8F92CDACBB847E73A07195982A0847615DCB88B6AB34968679527ED22489F",
+  "Scope": "Read-only native mail observations; no business store writes",
+  "ClientRun": "Not performed; full client restart required for discovery"
+}
