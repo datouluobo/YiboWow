@@ -214,14 +214,16 @@ function Page:Snapshot(context)
             end
         end
     end
-    local list, professionList = {}, {}
+    local list, professionList, professionLabels = {}, {}, {}
     for _, entry in pairs(records) do
         entry.categoryID = Addon.CategoryCatalog and Addon.CategoryCatalog.GetID and Addon.CategoryCatalog:GetID(entry.professionID, entry.id)
         entry.icon = ItemIcon(entry.outputItemID) or entry.spellIcon
         list[#list + 1] = entry
     end
     for professionID in pairs(ids) do
-        professionList[#professionList + 1] = { id = professionID, name = ProfessionName(professionID, names) }
+        local name = ProfessionName(professionID, names)
+        professionLabels[professionID] = name
+        professionList[#professionList + 1] = { id = professionID, name = name }
     end
     table.sort(professionList, function(a, b)
         local left, right = PROFESSION_ORDER[a.id] or 150, PROFESSION_ORDER[b.id] or 150
@@ -231,7 +233,7 @@ function Page:Snapshot(context)
     table.sort(list, function(a, b)
         local leftOrder, rightOrder = PROFESSION_ORDER[a.professionID] or 150, PROFESSION_ORDER[b.professionID] or 150
         if leftOrder ~= rightOrder then return leftOrder < rightOrder end
-        local left, right = ProfessionName(a.professionID, names), ProfessionName(b.professionID, names)
+        local left, right = professionLabels[a.professionID], professionLabels[b.professionID]
         if left ~= right then return left < right end
         if a.name ~= b.name then return a.name < b.name end
         return a.id < b.id

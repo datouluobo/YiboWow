@@ -7,7 +7,7 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["GOAL.SELECT_DIFFICULTY"] = "请选择副本难度。",
 
         ["GOAL.OPTION_GROUP"] = "首领分组 %d",
-        ["CORE.UPGRADE_REQUIRED"] = "请升级 YiboCore 至 1.13.0 / API 14，并确认 localization:1、pixel-line:1 及行动中心所需能力可用。",
+        ["CORE.UPGRADE_REQUIRED"] = "请升级 YiboCore 至支持 account-surface-realm-scope:2 的 API 14 版本。",
         ["CORE.BOSS_CAPABILITY_REQUIRED"] = "刷取目标需要 YiboCore API 14 的业务 Service 与标签页能力。",
         ["ERROR.GOAL_SERVICE"] = "目标服务注册失败。",
         ["ERROR.BOSS_TARGET_SERVICE"] = "刷取目标服务注册失败。",

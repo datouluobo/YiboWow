@@ -15,6 +15,7 @@ function Integration:CheckCore()
         and core:HasCapability("business-item-actions", 1) and core:HasCapability("business-providers", 1) and core:HasCapability("account-view", 2)
         and core:HasCapability("character-identity", 1) and core:HasCapability("character-name-format", 1) and core.Contracts and core.Contracts.List
         and core:HasCapability("account-character-admission", 1)
+        and core:HasCapability("account-surface-realm-scope", 2)
         and core:HasCapability("account-surface-budget", 1)
         and core:HasCapability("account-entry", 2)
         and core:HasCapability("builtin-entry-bar", 1)
@@ -29,7 +30,7 @@ function Integration:CheckCore()
         and type(core.UITheme.CreateMultiSelectDropdown) == "function"
         and core.UITheme.CreateCheckbox and core.Entry and core.AccountView and core.AccountView.GetVisibleCharacters
         and type(core.AccountView.SetPageScope) == "function") then
-        local message = "Upgrade YiboCore to API 14 with pixel-line:1."
+        local message = "Upgrade YiboCore to API 14 with account-surface-realm-scope:2."
         if localeReady then
             local ok, text = pcall(Addon.T, Addon, "CORE.UPGRADE_REQUIRED")
             if ok and type(text) == "string" and text:sub(1, 1) ~= "[" then message = text end
@@ -85,7 +86,14 @@ function Integration:Initialize()
         SetPreviewFieldVisible = function(id, visible) return Addon.Settings:SetPreviewField(id, visible) end,
         settings = { title = Addon:T("PAGE.TITLE"), description = Addon:T("PAGE.SETTINGS_DESCRIPTION"),
             CreateSettingsPanel = function(parent, context) return Addon.Settings:CreatePanel(parent, context) end },
-        scope = { mode = "realms", allTitle = Addon:T("SCOPE.ALL_REALMS") },
+        scope = { mode = "realms", allTitle = Addon:T("SCOPE.ALL_REALMS"), GetSnapshotCharacters = function(characters)
+            local byCharacter = Addon.Snapshot:Build(characters).byCharacter
+            local eligible = {}
+            for _, character in ipairs(characters) do
+                if byCharacter[character.id] then eligible[#eligible + 1] = character end
+            end
+            return eligible
+        end },
         Create = Addon.AccountPage.Create, Refresh = Addon.AccountPage.Refresh,
         GetSurfaceMetrics = Addon.AccountPage.GetSurfaceMetrics,
         GetEligibleCharacters = function(characters, context)
@@ -97,7 +105,6 @@ function Integration:Initialize()
             for _, character in ipairs(characters) do if shown[character.id] then eligible[#eligible + 1] = character end end
             return eligible
         end,
-        HasCharacterSnapshot = function(character) return Addon.Snapshot:Build({ character }).byCharacter[character.id] ~= nil end,
         GetSummary = function(characters)
             local count = Addon.AccountPage:Stats(Addon.AccountPage:Filter(Addon.Snapshot:Build(characters)))
             return Addon:T("SUMMARY.SOURCE_WORK", count)

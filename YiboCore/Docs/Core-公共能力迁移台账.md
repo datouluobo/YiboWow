@@ -6,6 +6,8 @@
 
 2026-11-11 CAP-004 新增 `account-surface-realm-scope:1`。Forever Builds、Crafting、Currency、Mail、Reputation 声明范围只作用于入口悬停，Vault 声明只作用于仓储主窗。六个消费者在写库前检查能力，Core API13 保持。共享 Core 界面适用于 Mists、Forever、Retail。各目标既有清单及默认包清单、写库保护、Core 就绪、一次初始化、SavedVariables 身份、引用和旧文件覆盖路径保持。Forever 更新版本，其他目标通过回归和构建预检。292 项合批模拟及单角色真实存档回放通过，覆盖实机与切角色待验。见[范围契约](API-v5-业务插件接入指南.md)。
 
+2026-11-25 CAP-004 提供 `account-surface-realm-scope:2` 批量服务器准入，原有范围消费者继续支持版本 1。YiboTaskHub Mists 启动前要求版本 2。33 角色存档回放验证开页不再逐角色调业务提供方，实机待验。见[范围契约](API-v5-业务插件接入指南.md)。
+
 2026-11-11 Vault Forever 0.6.3-api1 主窗复用 CAP-002 输入、CAP-003 物品解析、CAP-004 托管页和下拉、CAP-007 GUID、CAP-009 双语资源。API13 和能力版本沿用，启动补查公开下拉方法。3145 项 Forever 模拟和双目标构建通过，实机待验。
 
 2026-11-11 Crafting Forever 0.1.4 配方悬停矩阵复用 CAP-002 输入、CAP-004 服务器范围和列分页、CAP-007 GUID、CAP-009 语言、CAP-011 专业档案。API13 和能力版本沿用，增加公开方法门槛。108 项 Forever 模拟和双目标构建通过，实机待验。

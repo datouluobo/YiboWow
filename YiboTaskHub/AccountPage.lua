@@ -232,6 +232,11 @@ function Page.Create(frame)
     frame:HookScript("OnHide", function() frame.sessionRows, frame.sessionKey = nil, nil end)
 end
 
+local function SnapshotForSurface(context)
+    if not context.taskHubSnapshot then context.taskHubSnapshot = Addon.Snapshot:Build(context.characters) end
+    return context.taskHubSnapshot
+end
+
 function Page.Refresh(frame, context)
     if frame.refreshing then return end
     frame.refreshing, frame.context = true, context
@@ -246,7 +251,8 @@ function Page.Refresh(frame, context)
     frame.source:Show(); frame.workFilter:Show(); frame.summary:Show(); frame.header:Show(); frame.footer:Show()
     local theme, h = Theme(), Theme().Table.rowHeight
     local width = math.max(1, (context.surfaceAvailableWidth or frame:GetWidth()) - 8)
-    local value = Addon.Snapshot:Build(context.characters)
+    local value = SnapshotForSurface(context)
+    context.taskHubSnapshot = nil
     frame.value = value
     local rawRows = Page:Retain(Page:Filter(value), frame, context)
     local rows = Page:Organize(rawRows, frame.expanded)
@@ -378,7 +384,7 @@ end
 
 function Page.GetSurfaceMetrics(context)
     if context.preview then return Addon.Preview:GetMetrics(context) end
-    local value = Addon.Snapshot:Build(context.characters)
+    local value = SnapshotForSurface(context)
     local active = Page.frame and Page.frame:IsShown() and Page.frame
     local rows = Page:Organize(Page:Retain(Page:Filter(value), active, context), {})
     local count, bars, previous = #rows, #rows == 0 and 1 or (rows[1].section == "others" and 1 or 0), nil

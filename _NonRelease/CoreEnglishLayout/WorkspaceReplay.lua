@@ -103,6 +103,21 @@ local function Run(target, language)
 
     if target == "Mists" then
         local builds, taskHub, mail = env.YiboBuilds, env.YiboTaskHub, env.YiboMail
+        local snapshot, calls = taskHub.Snapshot.Build, 0
+        taskHub.Snapshot.Build = function(...)
+            calls = calls + 1
+            return snapshot(...)
+        end
+        VisitPage("taskhub")
+        assert(calls == 2, "TaskHub batches scope admission and shares the rendered snapshot with measurement")
+        taskHub.Snapshot.Build = snapshot
+        local hasCapability = core.HasCapability
+        core.HasCapability = function(self, name, minimum)
+            if name == "account-surface-realm-scope" then return minimum <= 1 end
+            return hasCapability(self, name, minimum)
+        end
+        assert(not taskHub.CoreIntegration:CheckCore(), "TaskHub requires the batch realm-scope contract")
+        core.HasCapability = hasCapability
         for _, id in ipairs({ "legendary", "addon-settings:mounts" }) do
             view:ShowSettings(id)
             local objects = #env.TEST_FRAMES

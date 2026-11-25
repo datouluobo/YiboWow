@@ -739,6 +739,9 @@ function AccountView:RegisterPage(addonName, definition)
     end
     if definition.scope ~= nil then
         if type(definition.scope) == "table" and definition.scope.mode == "realms" then
+            if definition.scope.GetSnapshotCharacters ~= nil and type(definition.scope.GetSnapshotCharacters) ~= "function" then
+                return nil, "invalid-snapshot-character-reader"
+            end
             -- Realm scopes are derived by Core from its character directory and
             -- the page's business-snapshot admission callback.
         elseif type(definition.scope) ~= "table" or type(definition.scope.default) ~= "string" or type(definition.scope.values) ~= "table" then
@@ -1076,9 +1079,18 @@ local function GetScopeDefinition(page, characters, preview)
         local native = not current and Core.Client and Core.Client:ReadNameRealm()
         local currentRealm = (current and current.realm) or (native and native.realm) or "Unknown"
         local realms = {}
-        for _, character in ipairs(characters or Core.Characters:GetAllCached()) do
+        characters = characters or Core.Characters:GetAllCached()
+        local readBatch = page.scope.GetSnapshotCharacters
+        if readBatch then
+            local ok, result = xpcall(function() return readBatch(characters) end, tostring)
+            if not ok then
+                Core:Print(Core:Text("CORE.ACCOUNT_PAGE_161") .. tostring(page.title or page.id) .. Core:Text("CORE.COULD_NOT_READ_CHARACTER_SNAPSHOTS") .. result)
+            end
+            characters = ok and type(result) == "table" and result or {}
+        end
+        for _, character in ipairs(characters) do
             local admitted = true
-            if type(page.HasCharacterSnapshot) == "function" then
+            if not readBatch and type(page.HasCharacterSnapshot) == "function" then
                 local ok, result = xpcall(function() return page.HasCharacterSnapshot(character) end, function(message) return tostring(message) end)
                 admitted = ok and result == true
                 if not ok then Core:Print(Core:Text("CORE.ACCOUNT_PAGE_161") .. tostring(page.title or page.id) .. Core:Text("CORE.COULD_NOT_READ_CHARACTER_SNAPSHOTS") .. result) end
@@ -2388,7 +2400,7 @@ Core.Capabilities:Register("account-view", 2)
 Core.Capabilities:Register("account-dynamic-fields", 1)
 Core.Capabilities:Register("account-preview-characters", 1)
 Core.Capabilities:Register("account-character-admission", 1)
-Core.Capabilities:Register("account-surface-realm-scope", 1)
+Core.Capabilities:Register("account-surface-realm-scope", 2)
 Core.Capabilities:Register("account-surface-budget", 2)
 Core.Capabilities:Register("account-compact-layout", 2)
 
