@@ -186,13 +186,19 @@ for _, target in ipairs({ 'Forever', 'Mists', 'Retail' }) do
         local grip = frame.resizeGrip
         grip:Fire('OnDragStart')
         cursorX, cursorY = 160, -40
-        frame:Fire('OnUpdate', 0.06)
-        Check(SizeIs(960, 584) and SameAnchor() and grip.readout:IsShown(), 'drag updates geometry live from the same top-left')
+        local beforeResize = writes
+        for index = 1, 30 do
+            cursorX = 130 + index
+            frame:Fire('OnUpdate', 0.016)
+        end
+        Check(SizeIs(800, 544) and SameAnchor() and grip.readout:IsShown()
+            and grip.outline:GetWidth() == 960 and grip.outline:GetHeight() == 584
+            and writes == beforeResize, 'drag moves only the outline, without resizing the business viewport')
         view:RefreshPage()
-        Check(SizeIs(960, 584) and settings.windowSize.width == nil, 'refresh does not replace or commit the active drag')
+        Check(SizeIs(800, 544) and settings.windowSize.width == nil, 'refresh does not replace or commit the active drag')
         grip:Fire('OnDragStop')
         Check(SizeIs(960, 584) and settings.windowSize.width == 960 and settings.windowSize.height == 584
-            and not grip.readout:IsShown(), 'drag release commits one shared size')
+            and not grip.readout:IsShown() and writes == beforeResize + 1, 'drag release commits one shared size')
 
         settings.x, settings.y = 32, -92
         view:RefreshWindowLayout()

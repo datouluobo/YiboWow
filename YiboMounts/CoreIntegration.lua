@@ -35,23 +35,28 @@ end
 function Integration:CreateSettingsPanel(parent, context)
     local Theme = Core.UITheme
     local settings = NS:GetSettings().collectionStatus
-    local section = context.createSection(parent, NS:L("SETTINGS_COLLECTION_STATUS"), parent:GetWidth() or 600, 154)
-    section:ClearAllPoints()
-    section:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
-    section:SetWidth(parent:GetWidth() or 600)
-    local description = AddText(context, section, NS:L("SETTINGS_COLLECTION_STATUS_DESCRIPTION"), Theme.Font.assist, Theme.Colors.muted)
-    description:SetPoint("TOPLEFT", 12, -42)
-    description:SetPoint("TOPRIGHT", -12, 0)
-    description:SetHeight(34)
-
-    local collected = context.createCheckbox(section, NS:L("SETTINGS_COLLECTION_STATUS_COLLECTED"))
-    collected:SetPoint("TOPLEFT", 12, -82)
-    collected.label:SetFontObject("GameFontNormalSmall")
+    local panel = parent.yiboMountsSettings
+    if not panel then
+        local section = context.createSection(parent, NS:L("SETTINGS_COLLECTION_STATUS"), parent:GetWidth(), 154)
+        section:ClearAllPoints()
+        section:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
+        local description = AddText(context, section, NS:L("SETTINGS_COLLECTION_STATUS_DESCRIPTION"), Theme.Font.assist, Theme.Colors.muted)
+        description:SetPoint("TOPLEFT", 12, -42)
+        description:SetPoint("TOPRIGHT", -12, 0)
+        description:SetHeight(34)
+        local collected = context.createCheckbox(section, NS:L("SETTINGS_COLLECTION_STATUS_COLLECTED"))
+        collected:SetPoint("TOPLEFT", 12, -82)
+        collected.label:SetFontObject("GameFontNormalSmall")
+        local uncollected = context.createCheckbox(section, NS:L("SETTINGS_COLLECTION_STATUS_UNCOLLECTED"))
+        uncollected:SetPoint("LEFT", collected, "RIGHT", 28, 0)
+        uncollected.label:SetFontObject("GameFontNormalSmall")
+        panel = { section = section, collected = collected, uncollected = uncollected }
+        parent.yiboMountsSettings = panel
+    end
+    local collected, uncollected = panel.collected, panel.uncollected
+    panel.section:SetWidth(parent:GetWidth())
+    panel.section:Show()
     collected:SetChecked(settings.showCollected)
-
-    local uncollected = context.createCheckbox(section, NS:L("SETTINGS_COLLECTION_STATUS_UNCOLLECTED"))
-    uncollected:SetPoint("LEFT", collected, "RIGHT", 28, 0)
-    uncollected.label:SetFontObject("GameFontNormalSmall")
     uncollected:SetChecked(settings.showUncollected)
 
     collected:SetScript("OnClick", function(control)
@@ -63,8 +68,6 @@ function Integration:CreateSettingsPanel(parent, context)
         control:SetChecked(settings.showUncollected)
     end)
 
-    parent.yiboMountsSettings = parent.yiboMountsSettings or {}
-    parent.yiboMountsSettings.section = section
     return 154
 end
 

@@ -664,8 +664,16 @@ function UI:Initialize()
         end,
         GetEligibleCharacters=function(characters) return UI:GetEligibleCharacters(characters) end,
         settings={title=Addon:T("PAGE.TITLE"), description=Addon:T("PAGE.SETTINGS_DESCRIPTION"), CreateSettingsPanel=function(parent,host)
-            local section=host.createSection(parent,Addon:T("PAGE.SETTINGS_SECTION"),parent:GetWidth() or 600,70)
-            local label=host.createText(section,12,C.muted); label:SetPoint("TOPLEFT",4,-4); label:SetText(Addon:T("PAGE.MANUAL_EVIDENCE_NOTE"))
+            local section = parent.legendarySettingsSection
+            if not section then
+                section = host.createSection(parent, Addon:T("PAGE.SETTINGS_SECTION"), parent:GetWidth(), 70)
+                local label = host.createText(section, 12, C.muted)
+                label:SetPoint("TOPLEFT", 4, -4)
+                label:SetText(Addon:T("PAGE.MANUAL_EVIDENCE_NOTE"))
+                parent.legendarySettingsSection = section
+            end
+            section:SetWidth(parent:GetWidth())
+            section:Show()
             return 70
         end},
         fields=UI:GetPreviewSettingsFields(), GetPreviewFields=function() return UI:GetPreviewColumns() end,

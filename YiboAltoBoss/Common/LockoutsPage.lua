@@ -116,11 +116,14 @@ local function Release(pool, start)
     for index = start or 1, #pool do pool[index]:Hide() end
 end
 
-local function HeaderCell(parent, x, width, title, secondary, inset)
-    local header = Theme:CreateMatrixHeader(parent)
+local function HeaderCell(instance, index, x, width, title, secondary, inset)
+    local header = instance.headers[index] or Theme:CreateMatrixHeader(instance.header)
+    instance.headers[index] = header
     header:SetWidth(width)
+    header:ClearAllPoints()
     header:SetPoint("TOPLEFT", x, 0)
     Theme:SetMatrixHeader(header, title, { secondary = secondary, inset = inset })
+    header:Show()
     return header
 end
 
@@ -254,13 +257,14 @@ function YAB.RefreshProgressPage(instance, context, view, compact)
         instance.empty:SetWidth(math.max(1, availableWidth - 12))
     end
     if not empty then
-        instance.headers[1] = HeaderCell(instance.header, 0, charWidth, characterTitle, nil, cellInset)
+        HeaderCell(instance, 1, 0, charWidth, characterTitle, nil, cellInset)
     end
     local offsets, tableWidth = {}, charWidth
     for index, column in ipairs(empty and {} or columns) do
         local abbreviation = column.abbreviation or (view.tab == "lockouts" and "INST")
         local header = HeaderCell(
-            instance.header,
+            instance,
+            index + 1,
             tableWidth,
             widths[column] or CELL_W,
             titles[column] or column.shortName or column.name,
@@ -270,7 +274,6 @@ function YAB.RefreshProgressPage(instance, context, view, compact)
         offsets[index] = tableWidth
         tableWidth = tableWidth + (widths[column] or CELL_W)
         Theme:BindTooltip(header, abbreviation and string.format("%s (%s)", column.name, abbreviation) or column.name)
-        instance.headers[index + 1] = header
     end
     local y = 0
     Release(instance.rows)

@@ -95,8 +95,7 @@ local function ColumnIdentity(column, index)
 end
 
 local function ResizingColumn(view, pageID, key)
-    local drag = view.frame and view.frame.windowResize
-    local pages = view._resizingColumnAnchors or (drag and drag.columnAnchors)
+    local pages = view._resizingColumnAnchors
     return pages and pages[pageID] and pages[pageID][key]
 end
 
@@ -326,14 +325,14 @@ end
 local function MainWindowSize(frame)
     local bounds = WindowBounds(frame)
     local width, height, ratio = WindowPreference()
-    local resize = frame and (frame.windowResize or frame.windowDrag)
+    local resize = frame and frame.windowDrag
     if resize then return resize.width, resize.height, bounds end
     width, height = FitWindowSize(width, height, ratio, bounds)
     return width, height, bounds
 end
 
-function AccountView:RefreshWindowLayout(anchors)
-    self._resizingColumnAnchors = anchors or self._visibleColumnAnchors and Copy(self._visibleColumnAnchors)
+function AccountView:RefreshWindowLayout()
+    self._resizingColumnAnchors = self._visibleColumnAnchors and Copy(self._visibleColumnAnchors)
     self:RefreshPage()
     self._resizingColumnAnchors = nil
 end
@@ -459,7 +458,7 @@ local function FinishWindowResize(frame, commit)
     if not resize then return end
     frame.windowResize = nil
     frame:SetScript("OnUpdate", resize.previousUpdate)
-    frame.resizeGrip.readout:Hide()
+    frame.resizeGrip.outline:Hide()
     PaintResizeGrip(frame.resizeGrip, false)
     if commit and not Core.Client:IsInCombat() then
         local widthChanged, heightChanged = resize.width ~= resize.startWidth, resize.height ~= resize.startHeight
@@ -467,8 +466,8 @@ local function FinishWindowResize(frame, commit)
             local saved = Settings().windowSize
             if widthChanged or resize.ratio then saved.width = resize.width end
             if heightChanged or resize.ratio then saved.height = resize.height end
+            AccountView:RefreshWindowLayout()
         end
-        AccountView:RefreshWindowLayout(resize.columnAnchors)
     end
 end
 
@@ -483,13 +482,13 @@ local function BeginWindowResize(frame)
     local resize = {
         startX = cursorX / scale, startY = cursorY / scale,
         startWidth = width, startHeight = height, width = width, height = height,
-        ratio = ratio, elapsed = 0, previousUpdate = frame:GetScript("OnUpdate"),
-        columnAnchors = AccountView._visibleColumnAnchors and Copy(AccountView._visibleColumnAnchors),
+        ratio = ratio, bounds = WindowBounds(frame), previousUpdate = frame:GetScript("OnUpdate"),
     }
     frame.windowResize = resize
     PaintResizeGrip(frame.resizeGrip, true)
     frame.resizeGrip.readout.text:SetText(string.format("%d × %d", width, height))
-    frame.resizeGrip.readout:Show()
+    frame.resizeGrip.outline:SetSize(width, height)
+    frame.resizeGrip.outline:Show()
     frame:SetScript("OnUpdate", function(self, elapsed)
         if Core.Client:IsInCombat() then FinishWindowResize(self, false); return end
         local x, y = Core.Client:ReadCursorPosition()
@@ -501,17 +500,12 @@ local function BeginWindowResize(frame)
                 -- Project the pointer onto the locked diagonal; neither axis takes over at a threshold.
                 width = (width + height / ratio) / (1 + 1 / (ratio * ratio))
             end
-            width, height = FitWindowSize(width, height, ratio, WindowBounds(self))
+            width, height = FitWindowSize(width, height, ratio, resize.bounds)
             if width ~= resize.width or height ~= resize.height then
-                resize.width, resize.height, resize.dirty = width, height, true
-                self:SetSize(width, height)
+                resize.width, resize.height = width, height
+                self.resizeGrip.outline:SetSize(width, height)
                 self.resizeGrip.readout.text:SetText(string.format("%d × %d", width, height))
             end
-        end
-        resize.elapsed = resize.elapsed + elapsed
-        if resize.dirty and resize.elapsed >= 0.05 then
-            resize.elapsed, resize.dirty = 0, nil
-            AccountView:RefreshWindowLayout(resize.columnAnchors)
         end
         if resize.previousUpdate then resize.previousUpdate(self, elapsed) end
     end)
@@ -536,15 +530,20 @@ local function CreateWindowResizeGrip(frame)
         grip.lines[index] = line
     end
     PaintResizeGrip(grip, false)
-    local readout = CreateFrame("Frame", nil, grip, "BackdropTemplate")
-    readout:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -Theme.Space.xs, Theme.Geometry.accountResizeGrip)
+    local outline = CreateFrame("Frame", nil, frame)
+    outline:SetPoint("TOPLEFT", frame)
+    outline:SetFrameLevel(grip:GetFrameLevel() + 1)
+    Theme:CreatePixelBorder(outline, { color = COLORS.accent })
+    outline:Hide()
+    grip.outline = outline
+    local readout = CreateFrame("Frame", nil, outline, "BackdropTemplate")
+    readout:SetPoint("BOTTOMRIGHT", outline, "BOTTOMRIGHT", -Theme.Space.xs, Theme.Geometry.accountResizeGrip)
     Theme:ApplyPixelBackdrop(readout)
     readout:SetBackdropColor(unpack(COLORS.chrome))
     readout:SetBackdropBorderColor(unpack(COLORS.line))
     readout:SetSize(112, Theme.Size.compact)
     readout.text = Theme:CreateText(readout, Theme.Font.assist, COLORS.text, "CENTER")
     readout.text:SetPoint("CENTER")
-    readout:Hide()
     grip.readout = readout
     grip:SetScript("OnEnter", function(self)
         if frame.windowResize or Core.Client:IsInCombat() then return end
@@ -926,8 +925,14 @@ end
 
 function AccountView:GetVisibleFields(pageID, overrides)
     local visible = {}
+    local saved = Settings().fields[pageID] or {}
     for _, field in ipairs(self:GetFieldDefinitions(pageID)) do
-        if self:GetFieldVisible(pageID, field, overrides) then visible[#visible + 1] = Copy(field) end
+        local enabled
+        if overrides then enabled = overrides[field.id] end
+        if enabled == nil then enabled = saved[field.id] end
+        if enabled == true or (enabled == nil and field.defaultVisible ~= false) then
+            visible[#visible + 1] = field
+        end
     end
     return visible
 end
@@ -1501,7 +1506,7 @@ function AccountView:ApplyPageSize(_, context)
     local frame = self:CreateFrame()
     if frame.preview then return end
     local width, height, bounds = MainWindowSize(frame)
-    local navWidth = frame.windowResize and frame.nav:GetWidth() or MainNavigationWidth()
+    local navWidth = MainNavigationWidth()
     AnchorMainWindow(frame, bounds)
     if math.abs(frame.nav:GetWidth() - navWidth) > 0.01 then frame.nav:SetWidth(navWidth) end
     if math.abs(frame:GetWidth() - width) > 0.01 or math.abs(frame:GetHeight() - height) > 0.01 then

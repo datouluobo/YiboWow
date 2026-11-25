@@ -103,6 +103,12 @@ local function Run(target, language)
 
     if target == "Mists" then
         local builds, taskHub, mail = env.YiboBuilds, env.YiboTaskHub, env.YiboMail
+        for _, id in ipairs({ "legendary", "addon-settings:mounts" }) do
+            view:ShowSettings(id)
+            local objects = #env.TEST_FRAMES
+            for _ = 1, 20 do view:RefreshPage() end
+            assert(#env.TEST_FRAMES == objects, id .. " settings reuse controls on refresh")
+        end
         VisitPage("alto-lockouts")
         local lockouts = frame.instances["alto-lockouts"]
         local filters = lockouts.lockoutFilters
@@ -131,6 +137,9 @@ local function Run(target, language)
                 string.format("%s Pandaria difficulty %s displays %d of %d dungeon columns",
                     language, button.option.value, shown, count))
         end
+        local header = lockouts.headers[1]
+        VisitPage("alto-lockouts")
+        assert(lockouts.headers[1] == header, "lockout refresh reuses rendered headers")
         local current = assert(core.Characters:GetCurrent({ identityOnly = true }))
         local record = builds.Snapshot:EnsureCharacter(current)
         record.lastActiveSlot = "primary"

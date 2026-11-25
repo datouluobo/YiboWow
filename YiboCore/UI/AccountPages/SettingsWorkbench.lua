@@ -858,7 +858,7 @@ local function RefreshSettings(parent, context)
             AccountView:SetWindowAspectLocked(locked)
         end)
         sizeNote = Note(Core:Text("CORE.WINDOW_SIZE_LIMIT", size.maxWidth, size.maxHeight))
-        if not AccountView.frame.windowResize and (size.width ~= size.preferredWidth or size.height ~= size.preferredHeight) then
+        if size.width ~= size.preferredWidth or size.height ~= size.preferredHeight then
             Note(Core:Text("CORE.WINDOW_SIZE_PREFERRED", size.preferredWidth, size.preferredHeight))
         end
         SetGridMinimum(230, 2)

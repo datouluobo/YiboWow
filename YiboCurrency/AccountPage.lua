@@ -261,7 +261,7 @@ end
 function Addon:RefreshCurrencyPage(parent, context)
     local preview = context.preview == true
     local characters = Eligible(context.characters)
-    local entries = self:GetDisplayCatalog(preview)
+    local entries = self:GetDisplayCatalog(preview, context.fields)
     local projection = self:GetCurrencyProjection(context, characters, entries)
     if #entries == 0 then
         self:LayoutEmptyHover(parent, Addon:T("CURRENCY.NO_CURRENCIES_SELECTED_A32524"), Addon:T("CURRENCY.CHOOSE_MAIN_VIEW_OR_HOVER_CURRENCIES_IN_CORE_SETTINGS_D_E1E09E"))
@@ -324,7 +324,7 @@ end
 function Addon:GetCurrencySurfaceMetrics(context)
     local preview = context.preview == true
     local inset = Theme:GetMatrixInsets(preview)
-    local characters, entries = Eligible(context.characters), self:GetDisplayCatalog(preview)
+    local characters, entries = Eligible(context.characters), self:GetDisplayCatalog(preview, context.fields)
     local projection = self:GetCurrencyProjection(context, characters, entries)
     if #entries == 0 then
         return { minContentWidth = 420 + inset.left + inset.right, naturalContentWidth = 420 + inset.left + inset.right,

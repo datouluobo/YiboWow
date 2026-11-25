@@ -57,9 +57,10 @@ end
 
 function Addon:GetFieldDefinitions()
     local fields = {}
+    local visible = self:GetSettings().visible
     for _, entry in ipairs(self:GetCatalog()) do
         fields[#fields + 1] = { id = entry.id, title = entry.title, group = entry.expansion,
-            defaultVisible = self:GetSettings().visible[entry.id] ~= false }
+            defaultVisible = visible[entry.id] ~= false }
     end
     return fields
 end
@@ -102,10 +103,11 @@ function Addon:GetMonitoredCatalog()
     for _, entry in ipairs(self:GetCatalog()) do if self:IsMonitored(entry) then result[#result + 1] = entry end end
     return result
 end
-function Addon:GetDisplayCatalog(preview)
+function Addon:GetDisplayCatalog(preview, fields)
     if preview then return self:GetMonitoredCatalog() end
-    local result = {}
-    for _, entry in ipairs(self:GetCatalog()) do if self:IsVisible(entry) then result[#result + 1] = entry end end
+    local result, visible = {}, {}
+    for _, field in ipairs(fields or Core.AccountView:GetVisibleFields("currency")) do visible[field.id] = true end
+    for _, entry in ipairs(self:GetCatalog()) do if visible[entry.id] then result[#result + 1] = entry end end
     return result
 end
 

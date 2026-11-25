@@ -245,6 +245,7 @@ Core.UITheme.GetCharacterMatrixColumnWidth = function() return 52 end
 local naturalContext = { characters = roster, scope = "all", preview = false }
 local originalCreate = view.CreateFrame
 local shell = Node(UIParent); shell:SetSize(760, 640)
+shell.GetPoint = function() return "TOPLEFT", UIParent, "TOPLEFT", 16, -80 end
 shell.nav = Node(shell)
 view.CreateFrame = function() return shell end
 view:ApplyPageSize(page, naturalContext)
