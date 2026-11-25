@@ -58,7 +58,12 @@ end
 function methods:IsInIMEComposition() return self.composing == true end
 function methods:GetText() return self.text or "" end
 function methods:SetFocus() self.focused = true; self:Fire("OnEditFocusGained") end
-function methods:ClearFocus() self.focused, self.composing = false, false end
+function methods:HasFocus() return self.focused == true end
+function methods:ClearFocus()
+    local wasFocused = self.focused
+    self.focused, self.composing = false, false
+    if wasFocused then self:Fire("OnEditFocusLost") end
+end
 function methods:ClearLines() self.lines = {} end
 function methods:NumLines() return #(self.lines or {}) end
 function methods:SetHyperlink(link) self.link = link; self.lines = { { text = "Native item: " .. link } } end
@@ -73,6 +78,10 @@ function methods:GetScript(k) return self.scripts[k] end
 function methods:HookScript(k, v) self.hooks[k] = self.hooks[k] or {}; table.insert(self.hooks[k], v) end
 function methods:CreateFontString() return Frame(self) end
 function methods:CreateTexture() return Frame(self) end
+function methods:CreateLine() return Frame(self) end
+function methods:SetStartPoint(...) self.startPoint = { ... } end
+function methods:SetEndPoint(...) self.endPoint = { ... } end
+function methods:SetThickness(value) self.thickness = value end
 function methods:SetShown(v) if v then self:Show() else self:Hide() end end
 function methods:IsShown() return self.shown and (not self.parent or self.parent:IsShown()) end
 function methods:Show() local was = self.shown; self.shown = true; if not was then self:Fire("OnShow") end end

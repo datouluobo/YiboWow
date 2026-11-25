@@ -64,6 +64,10 @@ function methods:GetScript(k) return self.scripts[k] end
 function methods:HookScript(k, v) self.hooks[k] = self.hooks[k] or {}; table.insert(self.hooks[k], v) end
 function methods:CreateFontString() return Frame(self) end
 function methods:CreateTexture() return Frame(self) end
+function methods:CreateLine() return Frame(self) end
+function methods:SetStartPoint() end
+function methods:SetEndPoint() end
+function methods:SetThickness() end
 function methods:SetShown(v) if v then self:Show() else self:Hide() end end
 function methods:IsShown() return self.shown and (not self.parent or self.parent:IsShown()) end
 function methods:Show() local was = self.shown; self.shown = true; if not was then self:Fire("OnShow") end end
@@ -522,12 +526,15 @@ dofile("_NonRelease/CoreIdentityDomainsR1/LoadClient.lua")
 local shell = YiboCore.AccountView:CreateFrame()
 shell:Fire('OnSizeChanged', 960, 880)
 assert(shell.clampInsets[4] == 880 - YiboCore.UITheme.Geometry.titleBar)
-UIParent:SetSize(1600, 1000); shell:SetSize(960, 880); shell:Show()
+UIParent:SetSize(1600, 1000); shell:SetSize(960, 720); shell:Show()
 shell:Fire('OnDragStart'); assert(shell.windowDrag and not shell.moving)
-cursorX, cursorY = 480, 1280; shell:Fire('OnUpdate', 0.016)
-assert(shell.points[1][4] == 140 and shell.points[1][5] == 740, 'Track both cursor axes using effective UI scale')
+cursorX, cursorY = 480, 1320; shell:Fire('OnUpdate', 0.016)
+assert(shell.points[1][3] == 'TOPLEFT' and shell.points[1][4] == 140 and shell.points[1][5] == -240,
+    'Track both cursor axes using effective UI scale')
+cursorY = 1280; shell:Fire('OnUpdate', 0.016)
+assert(shell.points[1][5] == -248, 'Keep the bottom edge inside the safe screen')
 shell:Fire('OnDragStop'); assert(not shell.windowDrag and not shell:GetScript('OnUpdate'))
-assert(YiboCore.AccountView:GetSettings().x == 140 and YiboCore.AccountView:GetSettings().y == 740)
+assert(YiboCore.AccountView:GetSettings().x == 140 and YiboCore.AccountView:GetSettings().y == -248)
 shell.preview = true; shell:Fire('OnSizeChanged', 960, 880)
 assert(shell.clampInsets[4] == 0, 'Hover previews retain full-frame clamping')
 combat = true; shell.preview = false; shell:Fire('OnSizeChanged', 960, 880)

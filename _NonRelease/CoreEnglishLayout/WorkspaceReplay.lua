@@ -69,11 +69,16 @@ local function Run(target, language)
     local pages = {}
     for id in pairs(view._pages) do if id ~= "settings" then pages[#pages + 1] = id end end
     table.sort(pages)
+    local expectedWidth, expectedHeight = 800, 544
     local function CheckVisit(route, id, notices)
-        local label = target .. " " .. language .. " " .. route
+        local label = string.format("%s %s %d×%d %s", target, language, expectedWidth, expectedHeight, route)
         assert(view.activePageID == id, label .. " route")
-        assert(frame:GetWidth() == 800 and frame:GetHeight() == 544, label .. " window size")
-        assert(not frame.pageViewport or not frame.pageViewport:IsShown(), label .. " overflow")
+        assert(frame:GetWidth() == expectedWidth and frame:GetHeight() == expectedHeight, label .. " window size")
+        local host = frame.pageViewport
+        if host and host:IsShown() then
+            assert(expectedWidth < 800 and host.instance == frame.instances[id] and not host.horizontal:IsShown(),
+                label .. " overflow")
+        end
         assert(#env.TEST_MESSAGES == notices, label .. " " .. tostring(env.TEST_MESSAGES[notices + 1]))
     end
     local function VisitPage(id)
@@ -189,6 +194,18 @@ local function Run(target, language)
             end
         end
         assert(visibleHeaders > 1, "Todo displays project columns")
+    end
+    local navWidth = frame.nav:GetWidth()
+    for _, size in ipairs({ { 960, 544 }, { 960, 600 }, { 736, 544 } }) do
+        expectedWidth, expectedHeight = size[1], size[2]
+        assert(view:SetWindowDimension("width", expectedWidth) and view:SetWindowDimension("height", expectedHeight))
+        for _, id in ipairs(pages) do VisitPage(id) end
+        for _, id in ipairs(settings) do
+            local notices = #env.TEST_MESSAGES
+            view:ShowSettings(id)
+            CheckVisit("settings/" .. id, "settings", notices)
+        end
+        assert(frame.nav:GetWidth() == navWidth, "resizing keeps the navigation divider fixed")
     end
     print(string.format("%s %s: %d main routes, %d settings routes%s",
         target, language, #pages, #settings, target == "Mists" and ", Builds/TaskHub/Mail/Todo subviews" or ""))

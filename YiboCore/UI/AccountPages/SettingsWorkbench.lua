@@ -18,7 +18,8 @@ local PROFILE_FILTER_LABELS = Core.Locale:Bind(function() return { all = Core:Te
 local function CreateSettings(parent)
     parent.heading = AddText(parent, "GameFontNormalLarge", nil, COLORS.text); parent.heading:SetPoint("TOPLEFT", 20, -10)
     parent.heading:SetHeight(Theme.Size.compact)
-    parent.resetLayout = CreateChromeButton(parent, 116, 22, Core:Text("CORE.RESET_LAYOUT"))
+    local resetPosition = Core:Text("CORE.RESET_WINDOW_POSITION")
+    parent.resetLayout = CreateChromeButton(parent, Theme:MeasureText(Theme.Font.body, resetPosition) + 24, 22, resetPosition)
     parent.resetLayout:SetPoint("TOPRIGHT", -20, -12)
     parent.resetLayout:SetScript("OnClick", function() AccountView:ResetWindowLayout() end)
     parent.scroll = Theme:CreateScrollFrame(parent)
@@ -70,12 +71,14 @@ local function SettingsRow(parent, index, kind)
         elseif kind == "addon-panel" then
             row = CreateFrame("Frame", nil, parent.content)
             row:SetWidth(600)
-        elseif kind == "input" then
+        elseif kind == "input" or kind == "window-dimension" then
             row = CreateFrame("Frame", nil, parent.content)
             row:SetHeight(Theme.Size.standard)
             row.label = AddText(row, "GameFontNormalSmall", nil, COLORS.muted)
             row.label:SetPoint("LEFT", 0, 0)
-            row.input = Theme:CreateInput(row,{width=120,maxLetters=64})
+            local dimension = kind == "window-dimension"
+            row.input = Theme:CreateInput(row, { width = dimension and 72 or 120, maxLetters = dimension and 5 or 64,
+                numeric = dimension })
             row.input:SetHeight(Theme.Size.standard)
             row.input:SetTextInsets(7, 7, 0, 0)
         elseif kind == "dropdown" then
@@ -183,7 +186,7 @@ local function RefreshSettings(parent, context)
     local titles = { bar = Core:Text("ENTRY.TAB_BAR"), general = Core:Text("CORE.CORE_SETTINGS"), display = Core:Text("CORE.DISPLAY_ENTRIES_385"), sorting = Core:Text("CORE.CHARACTERS_SORTING_386"), core = Core:Text("CORE.WINDOW_387") }
     parent.heading:SetText(titles[targetID] or ((selected and selected.title) or (settingsOnly and settingsOnly.title) or Core:Text("CORE.ADDON_388")) .. Core:Text("CORE.SETTINGS_389"))
     parent.resetLayout:SetShown(coreMode)
-    parent.heading:SetPoint("TOPRIGHT", coreMode and -144 or -20, -10)
+    parent.heading:SetPoint("TOPRIGHT", coreMode and -(parent.resetLayout:GetWidth() + 28) or -20, -10)
 
     local index, y, gridColumn = 0, 0, 0
     local function RefreshVisibleSettings()
@@ -240,6 +243,7 @@ local function RefreshSettings(parent, context)
         row:SetWidth(parent.content:GetWidth()-4);row:SetWordWrap(true)
         row:SetText(text);row:SetTextColor(COLORS.muted[1],COLORS.muted[2],COLORS.muted[3]);row:Show()
         y=y+math.max(24,row:GetStringHeight()+8)
+        return row
     end
     local function Check(label, checked, callback)
         index = index + 1; local row = SettingsRow(parent, index, "check")
@@ -821,6 +825,44 @@ local function RefreshSettings(parent, context)
         Check(Core:Text("CORE.INCLUDE_HIDDEN_CHARACTERS_IN_HOVER_FILTER"), archive.filters.preview.includeHidden == true, function(checked) archive.filters.preview.includeHidden = checked end)
         Input(Core:Text("CORE.HOVER_LEVEL_FILTER"), archive.filters.preview.levelExpr, function(value) Helpers.SetArchiveLevelFilter("preview", value) end)
     elseif coreMode then
+        local size = AccountView:GetWindowSizeSettings()
+        local sizeNote
+        SetGridMinimum(160, 3)
+        local function Dimension(axis, label)
+            index = index + 1
+            local row = SettingsRow(parent, index, "window-dimension")
+            local labelWidth = Theme:MeasureText(Theme.Font.assist, label)
+            PlaceFormControl(row, labelWidth + row.input:GetWidth() + Theme.Space.xs)
+            row.label:SetWidth(labelWidth)
+            row.label:SetText(label)
+            local input = row.input
+            input:ClearAllPoints()
+            input:SetPoint("LEFT", row.label, "RIGHT", Theme.Space.xs, 0)
+            if not input:HasFocus() then input:SetValue(size[axis]) end
+            input:SetScript("OnEditFocusLost", function(control) control:SetValue(size[axis]) end)
+            input:SetScript("OnEscapePressed", function(control) control:ClearFocus() end)
+            input:SetScript("OnEnterPressed", function(control)
+                local draft = control:GetText()
+                control:ClearFocus()
+                local applied, lower, upper = AccountView:SetWindowDimension(axis, draft)
+                if not applied and lower then
+                    sizeNote:SetText(Core:Text("CORE.WINDOW_SIZE_RANGE", lower, upper))
+                    sizeNote:SetTextColor(unpack(COLORS.danger))
+                end
+            end)
+            row:Show()
+        end
+        Dimension("width", Core:Text("CORE.WINDOW_WIDTH"))
+        Dimension("height", Core:Text("CORE.WINDOW_HEIGHT"))
+        Check(Core:Text("CORE.WINDOW_LOCK_ASPECT"), size.ratio ~= nil, function(locked)
+            AccountView:SetWindowAspectLocked(locked)
+        end)
+        sizeNote = Note(Core:Text("CORE.WINDOW_SIZE_LIMIT", size.maxWidth, size.maxHeight))
+        if not AccountView.frame.windowResize and (size.width ~= size.preferredWidth or size.height ~= size.preferredHeight) then
+            Note(Core:Text("CORE.WINDOW_SIZE_PREFERRED", size.preferredWidth, size.preferredHeight))
+        end
+        SetGridMinimum(230, 2)
+        Button(Core:Text("CORE.WINDOW_RESTORE_SIZE"), function() AccountView:ResetWindowSize() end)
         Heading(Core:Text("CORE.ADD_TO_ACTION_CENTER"))
         local actions = Core.BusinessItemActions
         local options = actions:GetOptions()
@@ -834,8 +876,6 @@ local function RefreshSettings(parent, context)
             { value = "corner", label = Core:Text("CORE.GOLD_CORNER_AT_BOTTOM_LEFT") }, { value = "dot", label = Core:Text("CORE.TEAL_DOT_AT_BOTTOM_LEFT") },
         }, function(value) local ok, err = actions:SetOptions({ markerStyle = value }); if not ok then Core:Print(err) end; AccountView:RefreshPage() end)
         Heading(Core:Text("CORE.MIDDLE_CLICK_OR_CTRL_CLICK_AGAIN_TO"))
-        Heading(Core:Text("CORE.WINDOW_LAYOUT"))
-        Button(Core:Text("CORE.RESET_WINDOW_POSITION"), function() AccountView:ResetWindowLayout() end)
     elseif displayMode or generalMode or barMode then
         SetGridMinimum(260,2)
         local section=barMode and "bar" or "entries"

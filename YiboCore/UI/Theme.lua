@@ -103,6 +103,7 @@ Theme.Geometry = {
     previewInset = 6,
     titleBar = 46,
     navigation = 140,
+    accountNavigationMax = 224,
     shellBorder = 1,
     scopeBar = 30,
     -- Scrollbars live in this existing outer inset, never on top of matrix
@@ -110,6 +111,9 @@ Theme.Geometry = {
     scrollbarGutter = 16,
     compactAccountWidth = 800,
     compactAccountHeight = 544,
+    accountMinimumWidth = 736,
+    accountMinimumHeight = 544,
+    accountResizeGrip = 20,
     compactNavigationGap = 2,
     compactColumnInset = 4,
     compactColumnTolerance = 2,

@@ -44,10 +44,7 @@ Settings = function()
     settings.columnPages = type(settings.columnPages) == "table" and settings.columnPages or {}
     settings.columnPageStructures = type(settings.columnPageStructures) == "table" and settings.columnPageStructures or {}
     settings.customCharacterOrder = Core.CharacterSort:NormalizeOrder(settings.customCharacterOrder)
-    settings.layoutMode = settings.layoutMode == "manual" and "manual" or "auto"
-    settings.pageLayouts = settings.pageLayouts or {}
-    settings.width = tonumber(settings.width) or 1120
-    settings.height = tonumber(settings.height) or 650
+    settings.windowSize = type(settings.windowSize) == "table" and settings.windowSize or {}
     if settings.anchorVersion ~= 2 then
         settings.point, settings.relativePoint, settings.x, settings.y = "TOPLEFT", "TOPLEFT", 16, -80
         settings.anchorVersion = 2
@@ -90,6 +87,27 @@ function AccountView:FitRepeatedColumnWidth(availableWidth, fixedWidth, columnCo
     return math.max(minimum, math.min(preferred, fitted))
 end
 
+local function ColumnIdentity(column, index)
+    if type(column) == "table" then
+        return column.id or column.key or column.characterID or (column.character and column.character.id) or index
+    end
+    return column
+end
+
+local function ResizingColumn(view, pageID, key)
+    local drag = view.frame and view.frame.windowResize
+    local pages = view._resizingColumnAnchors or (drag and drag.columnAnchors)
+    return pages and pages[pageID] and pages[pageID][key]
+end
+
+local function RememberFirstColumn(view, pageID, key, column, index)
+    if not view.frame or view.frame.preview then return end
+    view._visibleColumnAnchors = view._visibleColumnAnchors or {}
+    local pages = view._visibleColumnAnchors
+    pages[pageID] = pages[pageID] or {}
+    pages[pageID][key] = ColumnIdentity(column, index)
+end
+
 -- Page against the current table viewport, after measuring fixed and repeated columns.
 function AccountView:GetColumnPage(pageID, stateKey, columns, availableWidth, fixedWidth, columnWidth, currentID)
     local count = #(columns or {})
@@ -108,12 +126,14 @@ function AccountView:GetColumnPage(pageID, stateKey, columns, availableWidth, fi
     -- ordinary refreshes preserve the user's manually selected page.
     local settings = Settings()
     settings.columnPageStructures[pageID] = settings.columnPageStructures[pageID] or {}
-    local identities, currentIndex = {}, nil
+    local identities, currentIndex, resizeIndex = {}, nil, nil
+    local resizeAnchor = ResizingColumn(self, pageID, stateKey)
     local currentCharacter = Core.Characters and Core.Characters:GetCurrent({ identityOnly = true })
     local currentIdentity = currentID or (currentCharacter and currentCharacter.id)
     for index, column in ipairs(columns or {}) do
         local identity = type(column) == "table" and (column.id or column.characterID or (column.character and column.character.id)) or column
         identities[index] = tostring(identity or index)
+        if resizeAnchor and resizeAnchor == ColumnIdentity(column, index) then resizeIndex = index end
         if currentIdentity and (identity == currentIdentity or (type(column) == "table" and column.character and column.character.id == currentIdentity)) then currentIndex = index end
     end
     local structure = table.concat(identities, "\31") .. "|" .. tostring(capacity)
@@ -121,9 +141,11 @@ function AccountView:GetColumnPage(pageID, stateKey, columns, availableWidth, fi
         settings.columnPageStructures[pageID][stateKey] = structure
         if currentIndex then current = math.max(1, math.ceil(currentIndex / capacity)) end
     end
+    if resizeIndex then current = math.ceil(resizeIndex / capacity) end
     pages[pageID][stateKey] = current
     local first = count > 0 and ((current - 1) * capacity + 1) or 0
     local last = count > 0 and math.min(count, current * capacity) or 0
+    RememberFirstColumn(self, pageID, stateKey, count > 0 and columns[first], first)
     local visible = {}
     for index = first, last do visible[#visible + 1] = columns[index] end
     return visible, { page = current, pages = totalPages, first = first, last = last, capacity = capacity, total = count }
@@ -134,7 +156,8 @@ function AccountView:GetColumnPageByWidth(pageID, stateKey, columns, availableWi
     local limit = math.max(1, tonumber(availableWidth) or 1)
     local base = math.max(0, tonumber(fixedWidth) or 0)
     local allPages, currentPage, used = {}, {}, base
-    for _, column in ipairs(columns or {}) do
+    local resizeAnchor, resizePage = ResizingColumn(self, pageID, stateKey), nil
+    for index, column in ipairs(columns or {}) do
         local width = math.max(1, tonumber(getWidth(column)) or 1)
         -- Repeated-column fitting intentionally produces fractional widths.
         -- Accept a tiny accumulated residue so an exact fit never ejects the
@@ -143,15 +166,17 @@ function AccountView:GetColumnPageByWidth(pageID, stateKey, columns, availableWi
             allPages[#allPages + 1], currentPage, used = currentPage, {}, base
         end
         currentPage[#currentPage + 1], used = column, used + width
+        if resizeAnchor and resizeAnchor == ColumnIdentity(column, index) then resizePage = #allPages + 1 end
     end
     if #currentPage > 0 or #allPages == 0 then allPages[#allPages + 1] = currentPage end
     local pages = Settings().columnPages
     pages[pageID] = pages[pageID] or {}
-    local current = math.max(1, math.min(tonumber(pages[pageID][stateKey]) or 1, #allPages))
+    local current = resizePage or math.max(1, math.min(tonumber(pages[pageID][stateKey]) or 1, #allPages))
     pages[pageID][stateKey] = current
     local first = 1
     for index = 1, current - 1 do first = first + #allPages[index] end
     local visible = allPages[current]
+    RememberFirstColumn(self, pageID, stateKey, visible[1], first)
     return visible, { page = current, pages = #allPages, first = first, last = first + #visible - 1, total = count }
 end
 
@@ -217,19 +242,6 @@ function AccountView:HideColumnPagers()
     end
 end
 
-function AccountView:ResetWindowLayout()
-    local settings = Settings()
-    settings.point, settings.relativePoint, settings.x, settings.y = "TOPLEFT", "TOPLEFT", 16, -80
-    settings.width, settings.height = 1120, 650
-    settings.layoutMode = "auto"
-    settings.pageLayouts = {}
-    settings.pageSizes = {}
-    if self.frame then
-        self:ApplyNormalLayout()
-        if self.frame:IsShown() and self.activePageID then self:ShowPage(self.activePageID, { autoFit = true }) end
-    end
-end
-
 local function SafeRect(preview)
     local safety = preview and Theme.Geometry.previewSafety or Theme.Geometry.mainSafety
     local width = UIParent:GetWidth() or 1600
@@ -247,6 +259,15 @@ local function ScreenBounds()
     return safe.width, safe.height
 end
 
+local function SetResizeBounds(frame, minWidth, minHeight, maxWidth, maxHeight)
+    if frame.SetResizeBounds then
+        frame:SetResizeBounds(minWidth, minHeight, maxWidth, maxHeight)
+    else
+        if frame.SetMinResize then frame:SetMinResize(minWidth, minHeight) end
+        if frame.SetMaxResize then frame:SetMaxResize(maxWidth, maxHeight) end
+    end
+end
+
 local function ShellMetrics(preview, navigationWidth)
     local geometry = Theme.Geometry
     if preview then
@@ -255,9 +276,132 @@ local function ShellMetrics(preview, navigationWidth)
     return (navigationWidth or Theme:GetNavigationWidth()) + geometry.shellBorder * 2 + 1, geometry.titleBar + geometry.shellBorder * 2
 end
 
-local function MainWindowSize()
-    local maxWidth, maxHeight = ScreenBounds()
-    return math.min(maxWidth, Theme.Geometry.compactAccountWidth), math.min(maxHeight, Theme.Geometry.compactAccountHeight)
+local function Clamp(value, lower, upper)
+    return math.max(lower, math.min(value, upper))
+end
+
+local function Round(value)
+    return math.floor(value + 0.5)
+end
+
+local function WindowPreference()
+    local saved = Settings().windowSize
+    local width, height, ratio = tonumber(saved.width), tonumber(saved.height), tonumber(saved.ratio)
+    local geometry = Theme.Geometry
+    width = width and width > 0 and width < math.huge and width or geometry.compactAccountWidth
+    height = height and height > 0 and height < math.huge and height or geometry.compactAccountHeight
+    ratio = ratio and ratio > 0 and ratio < math.huge and ratio or nil
+    return width, height, ratio
+end
+
+local function WindowBounds(frame)
+    local settings, safe = Settings(), SafeRect(false)
+    local screenTop = UIParent:GetHeight()
+    local drag = frame and frame.windowDrag
+    local left = drag and drag.left or tonumber(settings.x) or safe.left
+    local top = drag and drag.top or (tonumber(settings.y) or -Theme.Geometry.mainSafety.top)
+    if not drag and settings.relativePoint ~= "BOTTOMLEFT" then top = screenTop + top end
+    local minWidth = math.min(Theme.Geometry.accountMinimumWidth, safe.width)
+    local minHeight = math.min(Theme.Geometry.accountMinimumHeight, safe.height)
+    left = Clamp(left, safe.left, safe.right - minWidth)
+    top = Clamp(top, safe.bottom + minHeight, safe.top)
+    return {
+        left = left, top = top, minWidth = minWidth, minHeight = minHeight,
+        maxWidth = math.floor(safe.right - left), maxHeight = math.floor(top - safe.bottom),
+    }
+end
+
+local function FitWindowSize(width, height, ratio, bounds)
+    if not ratio then
+        return Clamp(Round(width), math.min(math.ceil(bounds.minWidth), bounds.maxWidth), bounds.maxWidth),
+            Clamp(Round(height), math.min(math.ceil(bounds.minHeight), bounds.maxHeight), bounds.maxHeight)
+    end
+    -- Use one interval for the pair, so clamping at either edge preserves the ratio.
+    local maxWidth = math.max(1, math.floor(math.min(bounds.maxWidth, bounds.maxHeight * ratio) + 0.0001))
+    local minWidth = math.min(maxWidth, math.ceil(math.max(bounds.minWidth, bounds.minHeight * ratio) - 0.0001))
+    width = Clamp(Round(width), minWidth, maxWidth)
+    return width, Clamp(Round(width / ratio), 1, bounds.maxHeight)
+end
+
+local function MainWindowSize(frame)
+    local bounds = WindowBounds(frame)
+    local width, height, ratio = WindowPreference()
+    local resize = frame and (frame.windowResize or frame.windowDrag)
+    if resize then return resize.width, resize.height, bounds end
+    width, height = FitWindowSize(width, height, ratio, bounds)
+    return width, height, bounds
+end
+
+function AccountView:RefreshWindowLayout(anchors)
+    self._resizingColumnAnchors = anchors or self._visibleColumnAnchors and Copy(self._visibleColumnAnchors)
+    self:RefreshPage()
+    self._resizingColumnAnchors = nil
+end
+
+local function AnchorMainWindow(frame, bounds)
+    local point, relative, relativePoint, x, y = frame:GetPoint(1)
+    local offsetY = bounds.top - UIParent:GetHeight()
+    if point == "TOPLEFT" and relative == UIParent and relativePoint == "TOPLEFT"
+        and x == bounds.left and y == offsetY then return end
+    frame:ClearAllPoints()
+    frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", bounds.left, offsetY)
+end
+
+function AccountView:GetWindowSizeSettings()
+    local width, height, bounds = MainWindowSize(self.frame)
+    local preferredWidth, preferredHeight, ratio = WindowPreference()
+    local minWidth, minHeight = FitWindowSize(0, 0, ratio, bounds)
+    local maxWidth, maxHeight = FitWindowSize(bounds.maxWidth, bounds.maxHeight, ratio, bounds)
+    return { width = width, height = height, ratio = ratio, preferredWidth = preferredWidth, preferredHeight = preferredHeight,
+        minWidth = minWidth, minHeight = minHeight, maxWidth = maxWidth, maxHeight = maxHeight }
+end
+
+function AccountView:SetWindowDimension(axis, input)
+    if Core.Client:IsInCombat() or (self.frame and self.frame.preview) then return false end
+    local value = tonumber(input)
+    local size = self:GetWindowSizeSettings()
+    local changingWidth = axis == "width"
+    local lower, upper = size.minHeight, size.maxHeight
+    if changingWidth then lower, upper = size.minWidth, size.maxWidth end
+    if not value or value < lower or value > upper or value ~= math.floor(value) then return false, lower, upper end
+    if value == size[axis] then return true end
+    local saved = Settings().windowSize
+    if size.ratio then
+        local width = changingWidth and value or Round(value * size.ratio)
+        saved.width, saved.height = FitWindowSize(width, Round(width / size.ratio), size.ratio, WindowBounds(self.frame))
+    else
+        saved[axis] = value
+    end
+    self:RefreshWindowLayout()
+    return true
+end
+
+function AccountView:SetWindowAspectLocked(locked)
+    if Core.Client:IsInCombat() or (self.frame and self.frame.preview) then return end
+    local size = self:GetWindowSizeSettings()
+    local saved = Settings().windowSize
+    if locked then
+        saved.ratio = size.width / size.height
+        saved.height = Round(size.preferredWidth / saved.ratio)
+    else
+        saved.ratio = nil
+    end
+end
+
+function AccountView:ResetWindowSize()
+    if Core.Client:IsInCombat() then return end
+    local saved = Settings().windowSize
+    saved.width, saved.height = nil, nil
+    if saved.ratio then saved.ratio = Theme.Geometry.compactAccountWidth / Theme.Geometry.compactAccountHeight end
+    self:RefreshWindowLayout()
+end
+
+function AccountView:ResetWindowLayout()
+    if Core.Client:IsInCombat() then return end
+    local settings = Settings()
+    settings.point, settings.relativePoint = "TOPLEFT", "TOPLEFT"
+    settings.x, settings.y = Theme.Geometry.mainSafety.left, -Theme.Geometry.mainSafety.top
+    self:RefreshWindowLayout()
 end
 
 local function UpdateWindowClamp(frame, height)
@@ -269,21 +413,23 @@ local function UpdateWindowClamp(frame, height)
 end
 
 local function FinishWindowDrag(frame)
-    if not frame.windowDrag then return end
-    local previousUpdate = frame.windowDrag.previousUpdate
-    frame.windowDrag = nil; frame:SetScript("OnUpdate", previousUpdate)
-    local point, _, relativePoint, x, y = frame:GetPoint(1)
+    local drag = frame.windowDrag
+    if not drag then return end
+    frame.windowDrag = nil; frame:SetScript("OnUpdate", drag.previousUpdate)
     local settings = Settings()
-    settings.point, settings.relativePoint, settings.x, settings.y = point, relativePoint, x, y
+    settings.point, settings.relativePoint = "TOPLEFT", "TOPLEFT"
+    settings.x, settings.y = drag.left, drag.top - UIParent:GetHeight()
+    if not Core.Client:IsInCombat() then AccountView:RefreshWindowLayout() end
 end
 
 local function BeginWindowDrag(frame)
-    if frame.preview or frame.windowDrag or (Core.Client:IsInCombat()) then return end
+    if frame.preview or frame.windowDrag or frame.windowResize or Core.Client:IsInCombat() then return end
     local scale = frame:GetEffectiveScale()
     local cursorX, cursorY = Core.Client:ReadCursorPosition()
     local left, top = frame:GetLeft(), frame:GetTop()
     if not left or not top or not cursorX or not cursorY or not scale or scale <= 0 then return end
-    frame.windowDrag = { offsetX = cursorX / scale - left, offsetY = cursorY / scale - top,
+    frame.windowDrag = { offsetX = cursorX / scale - left, offsetY = cursorY / scale - top, left = left, top = top,
+        width = frame:GetWidth(), height = frame:GetHeight(),
         previousUpdate = frame:GetScript("OnUpdate") }
     frame:SetScript("OnUpdate", function(self, elapsed)
         local drag = self.windowDrag
@@ -293,11 +439,127 @@ local function BeginWindowDrag(frame)
         local effectiveScale = self:GetEffectiveScale()
         if not x or not y or not effectiveScale or effectiveScale <= 0 then FinishWindowDrag(self); return end
         x, y = x / effectiveScale - drag.offsetX, y / effectiveScale - drag.offsetY
-        x = math.max(0, math.min(x, math.max(0, UIParent:GetWidth() - self:GetWidth())))
-        y = math.max(Theme.Geometry.titleBar, math.min(y, UIParent:GetHeight()))
-        self:ClearAllPoints(); self:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x, y)
+        local safe = SafeRect(false)
+        drag.left = Clamp(x, safe.left, math.max(safe.left, safe.right - self:GetWidth()))
+        drag.top = Clamp(y, math.min(safe.top, safe.bottom + self:GetHeight()), safe.top)
+        AnchorMainWindow(self, drag)
         if drag.previousUpdate then drag.previousUpdate(self, elapsed) end
     end)
+end
+
+local function PaintResizeGrip(grip, active)
+    local color = active and COLORS.accent or COLORS.muted
+    for _, line in ipairs(grip.lines) do
+        line:SetColorTexture(color[1], color[2], color[3], active and 1 or 0.85)
+    end
+end
+
+local function FinishWindowResize(frame, commit)
+    local resize = frame.windowResize
+    if not resize then return end
+    frame.windowResize = nil
+    frame:SetScript("OnUpdate", resize.previousUpdate)
+    frame.resizeGrip.readout:Hide()
+    PaintResizeGrip(frame.resizeGrip, false)
+    if commit and not Core.Client:IsInCombat() then
+        local widthChanged, heightChanged = resize.width ~= resize.startWidth, resize.height ~= resize.startHeight
+        if widthChanged or heightChanged then
+            local saved = Settings().windowSize
+            if widthChanged or resize.ratio then saved.width = resize.width end
+            if heightChanged or resize.ratio then saved.height = resize.height end
+        end
+        AccountView:RefreshWindowLayout(resize.columnAnchors)
+    end
+end
+
+local function BeginWindowResize(frame)
+    if frame.preview or frame.windowDrag or frame.windowResize or Core.Client:IsInCombat() then return end
+    local cursorX, cursorY = Core.Client:ReadCursorPosition()
+    local scale = frame:GetEffectiveScale()
+    if not cursorX or not cursorY or not scale or scale <= 0 then return end
+    GameTooltip:Hide()
+    local width, height = Round(frame:GetWidth()), Round(frame:GetHeight())
+    local _, _, ratio = WindowPreference()
+    local resize = {
+        startX = cursorX / scale, startY = cursorY / scale,
+        startWidth = width, startHeight = height, width = width, height = height,
+        ratio = ratio, elapsed = 0, previousUpdate = frame:GetScript("OnUpdate"),
+        columnAnchors = AccountView._visibleColumnAnchors and Copy(AccountView._visibleColumnAnchors),
+    }
+    frame.windowResize = resize
+    PaintResizeGrip(frame.resizeGrip, true)
+    frame.resizeGrip.readout.text:SetText(string.format("%d × %d", width, height))
+    frame.resizeGrip.readout:Show()
+    frame:SetScript("OnUpdate", function(self, elapsed)
+        if Core.Client:IsInCombat() then FinishWindowResize(self, false); return end
+        local x, y = Core.Client:ReadCursorPosition()
+        local effectiveScale = self:GetEffectiveScale()
+        if x and y and effectiveScale > 0 then
+            local width = resize.startWidth + x / effectiveScale - resize.startX
+            local height = resize.startHeight + resize.startY - y / effectiveScale
+            if ratio then
+                -- Project the pointer onto the locked diagonal; neither axis takes over at a threshold.
+                width = (width + height / ratio) / (1 + 1 / (ratio * ratio))
+            end
+            width, height = FitWindowSize(width, height, ratio, WindowBounds(self))
+            if width ~= resize.width or height ~= resize.height then
+                resize.width, resize.height, resize.dirty = width, height, true
+                self:SetSize(width, height)
+                self.resizeGrip.readout.text:SetText(string.format("%d × %d", width, height))
+            end
+        end
+        resize.elapsed = resize.elapsed + elapsed
+        if resize.dirty and resize.elapsed >= 0.05 then
+            resize.elapsed, resize.dirty = 0, nil
+            AccountView:RefreshWindowLayout(resize.columnAnchors)
+        end
+        if resize.previousUpdate then resize.previousUpdate(self, elapsed) end
+    end)
+end
+
+local function CreateWindowResizeGrip(frame)
+    local grip = CreateFrame("Button", nil, frame)
+    local inset = Theme.Space.xxs / 2
+    -- Keep the part inside the window within the existing eight-unit content inset.
+    grip:SetPoint("CENTER", frame, "BOTTOMRIGHT", inset, -inset)
+    grip:SetSize(Theme.Geometry.accountResizeGrip, Theme.Geometry.accountResizeGrip)
+    grip:SetFrameLevel(frame:GetFrameLevel() + 12)
+    grip:EnableMouse(true)
+    grip:RegisterForDrag("LeftButton")
+    grip.lines = {}
+    for index = 1, 3 do
+        local size = 2 + index * 2
+        local line = grip:CreateLine(nil, "ARTWORK")
+        line:SetThickness(1)
+        line:SetStartPoint("CENTER", grip, -size - inset, 2 + inset)
+        line:SetEndPoint("CENTER", grip, -2 - inset, size + inset)
+        grip.lines[index] = line
+    end
+    PaintResizeGrip(grip, false)
+    local readout = CreateFrame("Frame", nil, grip, "BackdropTemplate")
+    readout:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -Theme.Space.xs, Theme.Geometry.accountResizeGrip)
+    Theme:ApplyPixelBackdrop(readout)
+    readout:SetBackdropColor(unpack(COLORS.chrome))
+    readout:SetBackdropBorderColor(unpack(COLORS.line))
+    readout:SetSize(112, Theme.Size.compact)
+    readout.text = Theme:CreateText(readout, Theme.Font.assist, COLORS.text, "CENTER")
+    readout.text:SetPoint("CENTER")
+    readout:Hide()
+    grip.readout = readout
+    grip:SetScript("OnEnter", function(self)
+        if frame.windowResize or Core.Client:IsInCombat() then return end
+        PaintResizeGrip(self, true)
+        GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+        GameTooltip:AddLine(Core:Text("CORE.WINDOW_RESIZE_DRAG"))
+        GameTooltip:Show()
+    end)
+    grip:SetScript("OnLeave", function(self)
+        if not frame.windowResize then PaintResizeGrip(self, false) end
+        GameTooltip:Hide()
+    end)
+    grip:SetScript("OnDragStart", function() BeginWindowResize(frame) end)
+    grip:SetScript("OnDragStop", function() FinishWindowResize(frame, true) end)
+    return grip
 end
 
 local function SurfaceMetrics(page, context)
@@ -1035,20 +1297,13 @@ function AccountView:CreateFrame()
     -- The secure driver must be able to operate on the shell even when the
     -- current page has no secure action buttons of its own.
     local frame = CreateFrame("Frame", "YiboCoreAccountView", UIParent, "BackdropTemplate,SecureHandlerBaseTemplate")
-    local settings = Settings()
-    frame:SetSize(MainWindowSize())
-    frame:SetPoint(settings.point or "CENTER", UIParent, settings.relativePoint or "CENTER", settings.x or 0, settings.y or 0)
+    local width, height, bounds = MainWindowSize()
+    frame:SetSize(width, height)
+    frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", bounds.left, bounds.top - UIParent:GetHeight())
     frame:SetMovable(true)
-    -- No resize affordance is exposed to players, but programmatic autosizing
-    -- must remain unconstrained by stale minimum bounds from older versions.
+    -- The grip applies Core's bounds while the same shell also hosts the natural-size preview.
     frame:SetResizable(true)
-    local screenWidth, screenHeight = ScreenBounds()
-    if frame.SetResizeBounds then
-        frame:SetResizeBounds(1, 1, screenWidth, screenHeight)
-    else
-        if frame.SetMinResize then frame:SetMinResize(1, 1) end
-        if frame.SetMaxResize then frame:SetMaxResize(screenWidth, screenHeight) end
-    end
+    SetResizeBounds(frame, 1, 1, ScreenBounds())
     frame:SetClampedToScreen(true)
     UpdateWindowClamp(frame, frame:GetHeight())
     frame:SetToplevel(true)
@@ -1063,6 +1318,7 @@ function AccountView:CreateFrame()
         if not self.preview then self:Raise() end
     end)
     frame:SetScript("OnHide", function(self)
+        FinishWindowResize(self, false)
         FinishWindowDrag(self)
         if self.scopeBar and self.scopeBar.menu then self.scopeBar.menu:Hide() end
         -- UISpecialFrames closes the frame directly.  A hover preview must
@@ -1162,6 +1418,7 @@ function AccountView:CreateFrame()
     frame.close:SetScript("OnEnter", function(control) control.label:SetTextColor(COLORS.text[1], COLORS.text[2], COLORS.text[3]) end)
     frame.close:SetScript("OnLeave", function(control) control:SetState() end)
     frame.close:SetScript("OnClick", function() frame:Hide() end)
+    frame.resizeGrip = CreateWindowResizeGrip(frame)
     frame.nav = CreateFrame("Frame", nil, frame)
     frame.nav:SetPoint("TOPLEFT", 1, -47); frame.nav:SetPoint("BOTTOMLEFT", 1, 1); frame.nav:SetWidth(Theme:GetNavigationWidth())
     frame.nav.bg = frame.nav:CreateTexture(nil, "BACKGROUND"); frame.nav.bg:SetAllPoints(); frame.nav.bg:SetColorTexture(COLORS.nav[1], COLORS.nav[2], COLORS.nav[3], COLORS.nav[4])
@@ -1228,26 +1485,27 @@ local function NavigationPages(activePageID)
     return pages
 end
 
-local function MainNavigationWidth(width)
-    local measured = 140
+local function MainNavigationWidth()
+    local measured = Theme.Geometry.navigation
     for _, mode in ipairs({ "overview", "settings" }) do
         for _, item in ipairs(NavigationPages(mode)) do
             local inset = item.settingsTargetID and 40 or 32
             measured = math.max(measured, Theme:MeasureText(Theme.Font.assist, item.title) + inset)
         end
     end
-    return math.min(measured, math.max(1, math.floor(width / 3)))
+    local safeWidth = ScreenBounds()
+    return math.min(measured, Theme.Geometry.accountNavigationMax, math.max(1, math.floor(safeWidth / 3)))
 end
 
 function AccountView:ApplyPageSize(_, context)
     local frame = self:CreateFrame()
     if frame.preview then return end
-    local width, height = MainWindowSize()
-    local navWidth = MainNavigationWidth(width)
+    local width, height, bounds = MainWindowSize(frame)
+    local navWidth = frame.windowResize and frame.nav:GetWidth() or MainNavigationWidth()
+    AnchorMainWindow(frame, bounds)
     if math.abs(frame.nav:GetWidth() - navWidth) > 0.01 then frame.nav:SetWidth(navWidth) end
     if math.abs(frame:GetWidth() - width) > 0.01 or math.abs(frame:GetHeight() - height) > 0.01 then
-        local maxWidth, maxHeight = ScreenBounds()
-        if frame.SetResizeBounds then frame:SetResizeBounds(1, 1, maxWidth, maxHeight) end
+        SetResizeBounds(frame, 1, 1, ScreenBounds())
         frame:SetSize(width, height)
     end
     local shellWidth, shellHeight = ShellMetrics(false, navWidth)
@@ -1713,7 +1971,6 @@ end
 
 function AccountView:ApplyNormalLayout()
     local frame = self:CreateFrame()
-    local settings = Settings()
     frame.preview = false
     UpdateWindowClamp(frame, frame:GetHeight())
     frame:SetMovable(true)
@@ -1722,9 +1979,9 @@ function AccountView:ApplyNormalLayout()
     frame:SetScript("OnLeave", nil)
     frame:SetFrameStrata("DIALOG")
     frame:SetToplevel(true)
+    SetResizeBounds(frame, 1, 1, ScreenBounds())
     self:ApplyPageSize(nil, {})
-    frame:ClearAllPoints()
-    frame:SetPoint(settings.point or "CENTER", UIParent, settings.relativePoint or "CENTER", settings.x or 0, settings.y or 0)
+    frame.resizeGrip:Show()
     frame.nav:Show(); frame.settingsButton:Show(); frame.close:Show(); self:UpdateSortButton()
     SetHeaderIdentity(frame, self._pages.overview, Core:Text("CORE.ACCOUNT_OVERVIEW_CHARACTER_STATUS"))
     frame.content:ClearAllPoints()
@@ -1849,6 +2106,8 @@ function AccountView:ShowPreview(pageID, anchor, forceRefresh)
     -- the pointer leaves the entry instead of remaining in preview layout.
     if not rebuildingVisiblePreview then
         self.restoreNormalWindowAfterPreview = frame:IsShown() and not frame.preview
+        FinishWindowResize(frame, false)
+        FinishWindowDrag(frame)
     end
     frame:SetAttribute("isHoverPreview", "1")
     frame:SetAttribute("restoreMainAfterPreview", self.restoreNormalWindowAfterPreview and "1" or nil)
@@ -1889,14 +2148,12 @@ function AccountView:ShowPreview(pageID, anchor, forceRefresh)
         width = math.min(safe.width, math.max(width, math.ceil(metrics.preferredWidth + gutter)))
     end
     frame.preview = true
+    frame.resizeGrip:Hide()
     UpdateWindowClamp(frame, frame:GetHeight())
     -- The normal window installs a large minimum resize bound.  A hover is
     -- intentionally allowed to shrink to its measured content height.
-    if frame.SetResizeBounds then frame:SetResizeBounds(metrics.minWidth, metrics.minHeight, math.max(metrics.minWidth, safe.width), math.max(metrics.minHeight, safe.height))
-    else
-        if frame.SetMinResize then frame:SetMinResize(metrics.minWidth, metrics.minHeight) end
-        if frame.SetMaxResize then frame:SetMaxResize(math.max(metrics.minWidth, safe.width), math.max(metrics.minHeight, safe.height)) end
-    end
+    SetResizeBounds(frame, metrics.minWidth, metrics.minHeight,
+        math.max(metrics.minWidth, safe.width), math.max(metrics.minHeight, safe.height))
     frame:SetMovable(false)
     frame:EnableMouse(true)
     frame:SetScript("OnEnter", self.previewOnEnter)
@@ -2116,8 +2373,12 @@ end)
 Core.Events:Register("CHARACTER_CACHE_DELETED", AccountView, function(self)
     self:RefreshPage()
 end)
-Core.Events:Register("DISPLAY_SIZE_CHANGED", AccountView, AccountView.RefreshPage)
-Core.Events:Register("UI_SCALE_CHANGED", AccountView, AccountView.RefreshPage)
+local function RefreshWindowGeometry(view)
+    if view.frame then FinishWindowResize(view.frame, false) end
+    view:RefreshWindowLayout()
+end
+Core.Events:Register("DISPLAY_SIZE_CHANGED", AccountView, RefreshWindowGeometry)
+Core.Events:Register("UI_SCALE_CHANGED", AccountView, RefreshWindowGeometry)
 Core.Capabilities:Register("account-view", 2)
 Core.Capabilities:Register("account-dynamic-fields", 1)
 Core.Capabilities:Register("account-preview-characters", 1)
