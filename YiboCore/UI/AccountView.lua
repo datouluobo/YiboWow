@@ -44,38 +44,13 @@ Settings = function()
     settings.columnPages = type(settings.columnPages) == "table" and settings.columnPages or {}
     settings.columnPageStructures = type(settings.columnPageStructures) == "table" and settings.columnPageStructures or {}
     settings.customCharacterOrder = Core.CharacterSort:NormalizeOrder(settings.customCharacterOrder)
-    settings.layoutMode = settings.layoutMode == "manual" and "manual" or "auto"
-    settings.pageLayouts = settings.pageLayouts or {}
-    settings.width = tonumber(settings.width) or 1120
-    settings.height = tonumber(settings.height) or 650
+    settings.windowSize = type(settings.windowSize) == "table" and settings.windowSize or {}
     if settings.anchorVersion ~= 2 then
         settings.point, settings.relativePoint, settings.x, settings.y = "TOPLEFT", "TOPLEFT", 16, -80
         settings.anchorVersion = 2
     end
     settings.entry = Core.EntryConfig:Normalize(settings.entry)
     return settings
-end
-
-local function PageSizeKey(page, context)
-    local pageID = page and page.id or "overview"
-    local mode = context and context.viewMode or "default"
-    return tostring(pageID) .. ":" .. tostring(mode)
-end
-
-local function GetPageSize(page, context)
-    local settings = Settings()
-    local key = PageSizeKey(page, context)
-    local saved = settings.pageSizes[key]
-    return saved, key
-end
-
-local function SavePageSize(page, context, width, height)
-    local settings = Settings()
-    local saved, key = GetPageSize(page, context)
-    settings.pageSizes[key] = saved or {}
-    settings.pageSizes[key].width = math.floor((tonumber(width) or 0) + 0.5)
-    settings.pageSizes[key].height = math.floor((tonumber(height) or 0) + 0.5)
-    return settings.pageSizes[key]
 end
 
 function AccountView:GetSettings()
@@ -112,9 +87,27 @@ function AccountView:FitRepeatedColumnWidth(availableWidth, fixedWidth, columnCo
     return math.max(minimum, math.min(preferred, fitted))
 end
 
--- Character matrices use the complete natural width first.  Paging is only
--- needed after the caller has reached the screen-safe width; the caller passes
--- that actual width into this helper on every render.
+local function ColumnIdentity(column, index)
+    if type(column) == "table" then
+        return column.id or column.key or column.characterID or (column.character and column.character.id) or index
+    end
+    return column
+end
+
+local function ResizingColumn(view, pageID, key)
+    local pages = view._resizingColumnAnchors
+    return pages and pages[pageID] and pages[pageID][key]
+end
+
+local function RememberFirstColumn(view, pageID, key, column, index)
+    if not view.frame or view.frame.preview then return end
+    view._visibleColumnAnchors = view._visibleColumnAnchors or {}
+    local pages = view._visibleColumnAnchors
+    pages[pageID] = pages[pageID] or {}
+    pages[pageID][key] = ColumnIdentity(column, index)
+end
+
+-- Page against the current table viewport, after measuring fixed and repeated columns.
 function AccountView:GetColumnPage(pageID, stateKey, columns, availableWidth, fixedWidth, columnWidth, currentID)
     local count = #(columns or {})
     local usableWidth = math.max(1, tonumber(availableWidth) or 1) - math.max(0, tonumber(fixedWidth) or 0)
@@ -132,12 +125,14 @@ function AccountView:GetColumnPage(pageID, stateKey, columns, availableWidth, fi
     -- ordinary refreshes preserve the user's manually selected page.
     local settings = Settings()
     settings.columnPageStructures[pageID] = settings.columnPageStructures[pageID] or {}
-    local identities, currentIndex = {}, nil
+    local identities, currentIndex, resizeIndex = {}, nil, nil
+    local resizeAnchor = ResizingColumn(self, pageID, stateKey)
     local currentCharacter = Core.Characters and Core.Characters:GetCurrent({ identityOnly = true })
     local currentIdentity = currentID or (currentCharacter and currentCharacter.id)
     for index, column in ipairs(columns or {}) do
         local identity = type(column) == "table" and (column.id or column.characterID or (column.character and column.character.id)) or column
         identities[index] = tostring(identity or index)
+        if resizeAnchor and resizeAnchor == ColumnIdentity(column, index) then resizeIndex = index end
         if currentIdentity and (identity == currentIdentity or (type(column) == "table" and column.character and column.character.id == currentIdentity)) then currentIndex = index end
     end
     local structure = table.concat(identities, "\31") .. "|" .. tostring(capacity)
@@ -145,9 +140,11 @@ function AccountView:GetColumnPage(pageID, stateKey, columns, availableWidth, fi
         settings.columnPageStructures[pageID][stateKey] = structure
         if currentIndex then current = math.max(1, math.ceil(currentIndex / capacity)) end
     end
+    if resizeIndex then current = math.ceil(resizeIndex / capacity) end
     pages[pageID][stateKey] = current
     local first = count > 0 and ((current - 1) * capacity + 1) or 0
     local last = count > 0 and math.min(count, current * capacity) or 0
+    RememberFirstColumn(self, pageID, stateKey, count > 0 and columns[first], first)
     local visible = {}
     for index = first, last do visible[#visible + 1] = columns[index] end
     return visible, { page = current, pages = totalPages, first = first, last = last, capacity = capacity, total = count }
@@ -158,7 +155,8 @@ function AccountView:GetColumnPageByWidth(pageID, stateKey, columns, availableWi
     local limit = math.max(1, tonumber(availableWidth) or 1)
     local base = math.max(0, tonumber(fixedWidth) or 0)
     local allPages, currentPage, used = {}, {}, base
-    for _, column in ipairs(columns or {}) do
+    local resizeAnchor, resizePage = ResizingColumn(self, pageID, stateKey), nil
+    for index, column in ipairs(columns or {}) do
         local width = math.max(1, tonumber(getWidth(column)) or 1)
         -- Repeated-column fitting intentionally produces fractional widths.
         -- Accept a tiny accumulated residue so an exact fit never ejects the
@@ -167,15 +165,17 @@ function AccountView:GetColumnPageByWidth(pageID, stateKey, columns, availableWi
             allPages[#allPages + 1], currentPage, used = currentPage, {}, base
         end
         currentPage[#currentPage + 1], used = column, used + width
+        if resizeAnchor and resizeAnchor == ColumnIdentity(column, index) then resizePage = #allPages + 1 end
     end
     if #currentPage > 0 or #allPages == 0 then allPages[#allPages + 1] = currentPage end
     local pages = Settings().columnPages
     pages[pageID] = pages[pageID] or {}
-    local current = math.max(1, math.min(tonumber(pages[pageID][stateKey]) or 1, #allPages))
+    local current = resizePage or math.max(1, math.min(tonumber(pages[pageID][stateKey]) or 1, #allPages))
     pages[pageID][stateKey] = current
     local first = 1
     for index = 1, current - 1 do first = first + #allPages[index] end
     local visible = allPages[current]
+    RememberFirstColumn(self, pageID, stateKey, visible[1], first)
     return visible, { page = current, pages = #allPages, first = first, last = first + #visible - 1, total = count }
 end
 
@@ -193,6 +193,11 @@ function AccountView:GetColumnPagerWidth(noun, total)
 end
 
 function AccountView:UpdateColumnPager(parent, pageID, stateKey, info, anchor, noun)
+    local frame = self.frame
+    local page = self._pages[pageID]
+    local footer = frame and not frame.preview and self.activePageID == pageID and page and page.columnPager
+        and frame.columnPagerFooter
+    local owner = footer or parent
     parent.yiboColumnPager = parent.yiboColumnPager or {}
     local pager = parent.yiboColumnPager
     self._columnPagers = self._columnPagers or {}
@@ -200,15 +205,26 @@ function AccountView:UpdateColumnPager(parent, pageID, stateKey, info, anchor, n
     pager.previous = pager.previous or Theme:CreateButton(parent, Theme.Size.compact, "‹", "secondary")
     pager.next = pager.next or Theme:CreateButton(parent, Theme.Size.compact, "›", "secondary")
     pager.label = pager.label or Theme:CreateText(parent, Theme.Font.assist, COLORS.text, "RIGHT")
+    for _, control in ipairs({ pager.previous, pager.next, pager.label }) do
+        if control:GetParent() ~= owner then control:SetParent(owner) end
+    end
     pager.previous:ClearAllPoints(); pager.next:ClearAllPoints(); pager.label:ClearAllPoints()
-    pager.next:SetPoint("TOPRIGHT", anchor or parent, "TOPRIGHT", 0, 0)
+    if footer then
+        pager.next:SetPoint("RIGHT", footer, "RIGHT")
+        pager.label:SetPoint("LEFT", footer, "LEFT")
+        pager.label:SetWordWrap(false)
+    else
+        pager.next:SetPoint("TOPRIGHT", anchor or parent, "TOPRIGHT", 0, 0)
+    end
     pager.previous:SetPoint("RIGHT", pager.next, "LEFT", -Theme.Space.xxs, 0)
     pager.label:SetPoint("RIGHT", pager.previous, "LEFT", -Theme.Space.xs, 0)
     local show = info and info.pages > 1
     pager.previous:SetShown(show); pager.next:SetShown(show); pager.label:SetShown(show)
+    if footer then footer:SetShown(show == true) end
     if not show then return end
     local text = string.format("%s %d–%d / %d · %d/%d", noun or Core:Text("CORE.CHARACTER"), info.first, info.last, info.total, info.page, info.pages)
-    pager.label:SetText(text); pager.label:SetWidth(Theme:MeasureText(Theme.Font.assist, text))
+    pager.label:SetText(text)
+    if not footer then pager.label:SetWidth(Theme:MeasureText(Theme.Font.assist, text)) end
     pager.previous:SetState(info.page > 1 and "default" or "disabled")
     pager.next:SetState(info.page < info.pages and "default" or "disabled")
     pager.previous:SetScript("OnClick", function() if info.page > 1 then AccountView:SetColumnPage(pageID, stateKey, info.page - 1, info.pages) end end)
@@ -216,27 +232,12 @@ function AccountView:UpdateColumnPager(parent, pageID, stateKey, info, anchor, n
 end
 
 function AccountView:HideColumnPagers()
-    -- Pagers are hosted in the shared title bar so they never consume matrix
-    -- width.  Their lifetime must nevertheless remain page-local: otherwise
-    -- a pager from a character-column matrix survives into a row-oriented
-    -- page, where it is both misleading and inoperative.
+    local frame = self.frame
+    if frame and frame.columnPagerFooter then frame.columnPagerFooter:Hide() end
     for pager in pairs(self._columnPagers or {}) do
         if pager.previous then pager.previous:Hide() end
         if pager.next then pager.next:Hide() end
         if pager.label then pager.label:Hide() end
-    end
-end
-
-function AccountView:ResetWindowLayout()
-    local settings = Settings()
-    settings.point, settings.relativePoint, settings.x, settings.y = "TOPLEFT", "TOPLEFT", 16, -80
-    settings.width, settings.height = 1120, 650
-    settings.layoutMode = "auto"
-    settings.pageLayouts = {}
-    settings.pageSizes = {}
-    if self.frame then
-        self:ApplyNormalLayout()
-        if self.frame:IsShown() and self.activePageID then self:ShowPage(self.activePageID, { autoFit = true }) end
     end
 end
 
@@ -257,20 +258,149 @@ local function ScreenBounds()
     return safe.width, safe.height
 end
 
-local function ShellMetrics(preview)
+local function SetResizeBounds(frame, minWidth, minHeight, maxWidth, maxHeight)
+    if frame.SetResizeBounds then
+        frame:SetResizeBounds(minWidth, minHeight, maxWidth, maxHeight)
+    else
+        if frame.SetMinResize then frame:SetMinResize(minWidth, minHeight) end
+        if frame.SetMaxResize then frame:SetMaxResize(maxWidth, maxHeight) end
+    end
+end
+
+local function ShellMetrics(preview, navigationWidth)
     local geometry = Theme.Geometry
     if preview then
         return geometry.shellBorder * 2, geometry.titleBar + geometry.shellBorder * 2
     end
-    return Theme:GetNavigationWidth() + geometry.shellBorder * 2 + 1, geometry.titleBar + geometry.shellBorder * 2
+    return (navigationWidth or Theme:GetNavigationWidth()) + geometry.shellBorder * 2 + 1, geometry.titleBar + geometry.shellBorder * 2
 end
 
-local function ClampWindowSize(width, height)
-    local maxWidth, maxHeight = ScreenBounds()
-    local minWidth, minHeight = math.min(760, maxWidth), math.min(150, maxHeight)
-    width = math.max(minWidth, math.min(tonumber(width) or 1120, maxWidth))
-    height = math.max(minHeight, math.min(tonumber(height) or 650, maxHeight))
-    return width, height, minWidth, minHeight, maxWidth, maxHeight
+local function Clamp(value, lower, upper)
+    return math.max(lower, math.min(value, upper))
+end
+
+local function Round(value)
+    return math.floor(value + 0.5)
+end
+
+local function WindowPreference()
+    local saved = Settings().windowSize
+    local width, height, ratio = tonumber(saved.width), tonumber(saved.height), tonumber(saved.ratio)
+    local geometry = Theme.Geometry
+    width = width and width > 0 and width < math.huge and width or geometry.compactAccountWidth
+    height = height and height > 0 and height < math.huge and height or geometry.compactAccountHeight
+    ratio = ratio and ratio > 0 and ratio < math.huge and ratio or nil
+    return width, height, ratio
+end
+
+local function WindowBounds(frame)
+    local settings, safe = Settings(), SafeRect(false)
+    local screenTop = UIParent:GetHeight()
+    local drag = frame and frame.windowDrag
+    local left = drag and drag.left or tonumber(settings.x) or safe.left
+    local top = drag and drag.top or (tonumber(settings.y) or -Theme.Geometry.mainSafety.top)
+    if not drag and settings.relativePoint ~= "BOTTOMLEFT" then top = screenTop + top end
+    local minWidth = math.min(Theme.Geometry.accountMinimumWidth, safe.width)
+    local minHeight = math.min(Theme.Geometry.accountMinimumHeight, safe.height)
+    left = Clamp(left, safe.left, safe.right - minWidth)
+    top = Clamp(top, safe.bottom + minHeight, safe.top)
+    return {
+        left = left, top = top, minWidth = minWidth, minHeight = minHeight,
+        maxWidth = math.floor(safe.right - left), maxHeight = math.floor(top - safe.bottom),
+    }
+end
+
+local function FitWindowSize(width, height, ratio, bounds)
+    if not ratio then
+        return Clamp(Round(width), math.min(math.ceil(bounds.minWidth), bounds.maxWidth), bounds.maxWidth),
+            Clamp(Round(height), math.min(math.ceil(bounds.minHeight), bounds.maxHeight), bounds.maxHeight)
+    end
+    -- Use one interval for the pair, so clamping at either edge preserves the ratio.
+    local maxWidth = math.max(1, math.floor(math.min(bounds.maxWidth, bounds.maxHeight * ratio) + 0.0001))
+    local minWidth = math.min(maxWidth, math.ceil(math.max(bounds.minWidth, bounds.minHeight * ratio) - 0.0001))
+    width = Clamp(Round(width), minWidth, maxWidth)
+    return width, Clamp(Round(width / ratio), 1, bounds.maxHeight)
+end
+
+local function MainWindowSize(frame)
+    local bounds = WindowBounds(frame)
+    local width, height, ratio = WindowPreference()
+    local resize = frame and frame.windowDrag
+    if resize then return resize.width, resize.height, bounds end
+    width, height = FitWindowSize(width, height, ratio, bounds)
+    return width, height, bounds
+end
+
+function AccountView:RefreshWindowLayout()
+    self._resizingColumnAnchors = self._visibleColumnAnchors and Copy(self._visibleColumnAnchors)
+    self:RefreshPage()
+    self._resizingColumnAnchors = nil
+end
+
+local function AnchorMainWindow(frame, bounds)
+    local point, relative, relativePoint, x, y = frame:GetPoint(1)
+    local offsetY = bounds.top - UIParent:GetHeight()
+    if point == "TOPLEFT" and relative == UIParent and relativePoint == "TOPLEFT"
+        and x == bounds.left and y == offsetY then return end
+    frame:ClearAllPoints()
+    frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", bounds.left, offsetY)
+end
+
+function AccountView:GetWindowSizeSettings()
+    local width, height, bounds = MainWindowSize(self.frame)
+    local preferredWidth, preferredHeight, ratio = WindowPreference()
+    local minWidth, minHeight = FitWindowSize(0, 0, ratio, bounds)
+    local maxWidth, maxHeight = FitWindowSize(bounds.maxWidth, bounds.maxHeight, ratio, bounds)
+    return { width = width, height = height, ratio = ratio, preferredWidth = preferredWidth, preferredHeight = preferredHeight,
+        minWidth = minWidth, minHeight = minHeight, maxWidth = maxWidth, maxHeight = maxHeight }
+end
+
+function AccountView:SetWindowDimension(axis, input)
+    if Core.Client:IsInCombat() or (self.frame and self.frame.preview) then return false end
+    local value = tonumber(input)
+    local size = self:GetWindowSizeSettings()
+    local changingWidth = axis == "width"
+    local lower, upper = size.minHeight, size.maxHeight
+    if changingWidth then lower, upper = size.minWidth, size.maxWidth end
+    if not value or value < lower or value > upper or value ~= math.floor(value) then return false, lower, upper end
+    if value == size[axis] then return true end
+    local saved = Settings().windowSize
+    if size.ratio then
+        local width = changingWidth and value or Round(value * size.ratio)
+        saved.width, saved.height = FitWindowSize(width, Round(width / size.ratio), size.ratio, WindowBounds(self.frame))
+    else
+        saved[axis] = value
+    end
+    self:RefreshWindowLayout()
+    return true
+end
+
+function AccountView:SetWindowAspectLocked(locked)
+    if Core.Client:IsInCombat() or (self.frame and self.frame.preview) then return end
+    local size = self:GetWindowSizeSettings()
+    local saved = Settings().windowSize
+    if locked then
+        saved.ratio = size.width / size.height
+        saved.height = Round(size.preferredWidth / saved.ratio)
+    else
+        saved.ratio = nil
+    end
+end
+
+function AccountView:ResetWindowSize()
+    if Core.Client:IsInCombat() then return end
+    local saved = Settings().windowSize
+    saved.width, saved.height = nil, nil
+    if saved.ratio then saved.ratio = Theme.Geometry.compactAccountWidth / Theme.Geometry.compactAccountHeight end
+    self:RefreshWindowLayout()
+end
+
+function AccountView:ResetWindowLayout()
+    if Core.Client:IsInCombat() then return end
+    local settings = Settings()
+    settings.point, settings.relativePoint = "TOPLEFT", "TOPLEFT"
+    settings.x, settings.y = Theme.Geometry.mainSafety.left, -Theme.Geometry.mainSafety.top
+    self:RefreshWindowLayout()
 end
 
 local function UpdateWindowClamp(frame, height)
@@ -282,21 +412,23 @@ local function UpdateWindowClamp(frame, height)
 end
 
 local function FinishWindowDrag(frame)
-    if not frame.windowDrag then return end
-    local previousUpdate = frame.windowDrag.previousUpdate
-    frame.windowDrag = nil; frame:SetScript("OnUpdate", previousUpdate)
-    local point, _, relativePoint, x, y = frame:GetPoint(1)
+    local drag = frame.windowDrag
+    if not drag then return end
+    frame.windowDrag = nil; frame:SetScript("OnUpdate", drag.previousUpdate)
     local settings = Settings()
-    settings.point, settings.relativePoint, settings.x, settings.y = point, relativePoint, x, y
+    settings.point, settings.relativePoint = "TOPLEFT", "TOPLEFT"
+    settings.x, settings.y = drag.left, drag.top - UIParent:GetHeight()
+    if not Core.Client:IsInCombat() then AccountView:RefreshWindowLayout() end
 end
 
 local function BeginWindowDrag(frame)
-    if frame.preview or frame.windowDrag or (Core.Client:IsInCombat()) then return end
+    if frame.preview or frame.windowDrag or frame.windowResize or Core.Client:IsInCombat() then return end
     local scale = frame:GetEffectiveScale()
     local cursorX, cursorY = Core.Client:ReadCursorPosition()
     local left, top = frame:GetLeft(), frame:GetTop()
     if not left or not top or not cursorX or not cursorY or not scale or scale <= 0 then return end
-    frame.windowDrag = { offsetX = cursorX / scale - left, offsetY = cursorY / scale - top,
+    frame.windowDrag = { offsetX = cursorX / scale - left, offsetY = cursorY / scale - top, left = left, top = top,
+        width = frame:GetWidth(), height = frame:GetHeight(),
         previousUpdate = frame:GetScript("OnUpdate") }
     frame:SetScript("OnUpdate", function(self, elapsed)
         local drag = self.windowDrag
@@ -306,15 +438,131 @@ local function BeginWindowDrag(frame)
         local effectiveScale = self:GetEffectiveScale()
         if not x or not y or not effectiveScale or effectiveScale <= 0 then FinishWindowDrag(self); return end
         x, y = x / effectiveScale - drag.offsetX, y / effectiveScale - drag.offsetY
-        x = math.max(0, math.min(x, math.max(0, UIParent:GetWidth() - self:GetWidth())))
-        y = math.max(Theme.Geometry.titleBar, math.min(y, UIParent:GetHeight()))
-        self:ClearAllPoints(); self:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x, y)
+        local safe = SafeRect(false)
+        drag.left = Clamp(x, safe.left, math.max(safe.left, safe.right - self:GetWidth()))
+        drag.top = Clamp(y, math.min(safe.top, safe.bottom + self:GetHeight()), safe.top)
+        AnchorMainWindow(self, drag)
         if drag.previousUpdate then drag.previousUpdate(self, elapsed) end
     end)
 end
 
+local function PaintResizeGrip(grip, active)
+    local color = active and COLORS.accent or COLORS.muted
+    for _, line in ipairs(grip.lines) do
+        line:SetColorTexture(color[1], color[2], color[3], active and 1 or 0.85)
+    end
+end
+
+local function FinishWindowResize(frame, commit)
+    local resize = frame.windowResize
+    if not resize then return end
+    frame.windowResize = nil
+    frame:SetScript("OnUpdate", resize.previousUpdate)
+    frame.resizeGrip.outline:Hide()
+    PaintResizeGrip(frame.resizeGrip, false)
+    if commit and not Core.Client:IsInCombat() then
+        local widthChanged, heightChanged = resize.width ~= resize.startWidth, resize.height ~= resize.startHeight
+        if widthChanged or heightChanged then
+            local saved = Settings().windowSize
+            if widthChanged or resize.ratio then saved.width = resize.width end
+            if heightChanged or resize.ratio then saved.height = resize.height end
+            AccountView:RefreshWindowLayout()
+        end
+    end
+end
+
+local function BeginWindowResize(frame)
+    if frame.preview or frame.windowDrag or frame.windowResize or Core.Client:IsInCombat() then return end
+    local cursorX, cursorY = Core.Client:ReadCursorPosition()
+    local scale = frame:GetEffectiveScale()
+    if not cursorX or not cursorY or not scale or scale <= 0 then return end
+    GameTooltip:Hide()
+    local width, height = Round(frame:GetWidth()), Round(frame:GetHeight())
+    local _, _, ratio = WindowPreference()
+    local resize = {
+        startX = cursorX / scale, startY = cursorY / scale,
+        startWidth = width, startHeight = height, width = width, height = height,
+        ratio = ratio, bounds = WindowBounds(frame), previousUpdate = frame:GetScript("OnUpdate"),
+    }
+    frame.windowResize = resize
+    PaintResizeGrip(frame.resizeGrip, true)
+    frame.resizeGrip.readout.text:SetText(string.format("%d × %d", width, height))
+    frame.resizeGrip.outline:SetSize(width, height)
+    frame.resizeGrip.outline:Show()
+    frame:SetScript("OnUpdate", function(self, elapsed)
+        if Core.Client:IsInCombat() then FinishWindowResize(self, false); return end
+        local x, y = Core.Client:ReadCursorPosition()
+        local effectiveScale = self:GetEffectiveScale()
+        if x and y and effectiveScale > 0 then
+            local width = resize.startWidth + x / effectiveScale - resize.startX
+            local height = resize.startHeight + resize.startY - y / effectiveScale
+            if ratio then
+                -- Project the pointer onto the locked diagonal; neither axis takes over at a threshold.
+                width = (width + height / ratio) / (1 + 1 / (ratio * ratio))
+            end
+            width, height = FitWindowSize(width, height, ratio, resize.bounds)
+            if width ~= resize.width or height ~= resize.height then
+                resize.width, resize.height = width, height
+                self.resizeGrip.outline:SetSize(width, height)
+                self.resizeGrip.readout.text:SetText(string.format("%d × %d", width, height))
+            end
+        end
+        if resize.previousUpdate then resize.previousUpdate(self, elapsed) end
+    end)
+end
+
+local function CreateWindowResizeGrip(frame)
+    local grip = CreateFrame("Button", nil, frame)
+    local inset = Theme.Space.xxs / 2
+    -- Keep the part inside the window within the existing eight-unit content inset.
+    grip:SetPoint("CENTER", frame, "BOTTOMRIGHT", inset, -inset)
+    grip:SetSize(Theme.Geometry.accountResizeGrip, Theme.Geometry.accountResizeGrip)
+    grip:SetFrameLevel(frame:GetFrameLevel() + 12)
+    grip:EnableMouse(true)
+    grip:RegisterForDrag("LeftButton")
+    grip.lines = {}
+    for index = 1, 3 do
+        local size = 2 + index * 2
+        local line = grip:CreateLine(nil, "ARTWORK")
+        line:SetThickness(1)
+        line:SetStartPoint("CENTER", grip, -size - inset, 2 + inset)
+        line:SetEndPoint("CENTER", grip, -2 - inset, size + inset)
+        grip.lines[index] = line
+    end
+    PaintResizeGrip(grip, false)
+    local outline = CreateFrame("Frame", nil, frame)
+    outline:SetPoint("TOPLEFT", frame)
+    outline:SetFrameLevel(grip:GetFrameLevel() + 1)
+    Theme:CreatePixelBorder(outline, { color = COLORS.accent })
+    outline:Hide()
+    grip.outline = outline
+    local readout = CreateFrame("Frame", nil, outline, "BackdropTemplate")
+    readout:SetPoint("BOTTOMRIGHT", outline, "BOTTOMRIGHT", -Theme.Space.xs, Theme.Geometry.accountResizeGrip)
+    Theme:ApplyPixelBackdrop(readout)
+    readout:SetBackdropColor(unpack(COLORS.chrome))
+    readout:SetBackdropBorderColor(unpack(COLORS.line))
+    readout:SetSize(112, Theme.Size.compact)
+    readout.text = Theme:CreateText(readout, Theme.Font.assist, COLORS.text, "CENTER")
+    readout.text:SetPoint("CENTER")
+    grip.readout = readout
+    grip:SetScript("OnEnter", function(self)
+        if frame.windowResize or Core.Client:IsInCombat() then return end
+        PaintResizeGrip(self, true)
+        GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+        GameTooltip:AddLine(Core:Text("CORE.WINDOW_RESIZE_DRAG"))
+        GameTooltip:Show()
+    end)
+    grip:SetScript("OnLeave", function(self)
+        if not frame.windowResize then PaintResizeGrip(self, false) end
+        GameTooltip:Hide()
+    end)
+    grip:SetScript("OnDragStart", function() BeginWindowResize(frame) end)
+    grip:SetScript("OnDragStop", function() FinishWindowResize(frame, true) end)
+    return grip
+end
+
 local function SurfaceMetrics(page, context)
-    local metrics = { minContentWidth = 582, naturalContentWidth = 942, minContentHeight = 150, naturalContentHeight = 603, fixedLeftWidth = 0, fixedTopHeight = 0, horizontalOverflow = "content", verticalOverflow = "content" }
+    local metrics = { minContentWidth = 0, minContentHeight = 0 }
     local callback = page.GetSurfaceMetrics or page.GetLayoutMetrics
     if type(callback) ~= "function" then return metrics end
     local ok, supplied = xpcall(function() return callback(context) end, function(message) return tostring(message) end)
@@ -332,18 +580,8 @@ local function SurfaceMetrics(page, context)
         minContentHeight = (tonumber(supplied.minHeight) or 0) - heightShell,
         naturalContentHeight = (tonumber(supplied.preferredHeight) or 0) - heightShell,
     } or supplied
-    for _, key in ipairs({ "minContentWidth", "naturalContentWidth", "minContentHeight", "naturalContentHeight", "fixedLeftWidth", "fixedTopHeight" }) do
-        local value = tonumber(values[key])
-        if value and value >= 0 then metrics[key] = key:find("Width", 1, true) and math.ceil(value) or math.floor(value + 0.5) end
-    end
-    CopyScrollMetrics(metrics, values)
-    metrics.naturalContentWidth = math.ceil(math.max(metrics.minContentWidth, tonumber(values.naturalContentWidth) or metrics.naturalContentWidth))
-    metrics.naturalContentHeight = math.max(metrics.minContentHeight, metrics.naturalContentHeight)
-    -- A paginated matrix reports its full roster in naturalContentWidth.
-    -- ApplyPageSize consumes that width up to the screen-safe edge; a page's
-    -- column pager is used only after that edge has been reached.
-    metrics.horizontalOverflow = (supplied.horizontalOverflow == "paginate" or supplied.horizontalOverflow == "matrix") and supplied.horizontalOverflow or "content"
-    metrics.verticalOverflow = supplied.verticalOverflow == "none" and "none" or "content"
+    metrics.minContentWidth = math.max(0, math.ceil(tonumber(values.minContentWidth) or 0))
+    metrics.minContentHeight = math.max(0, math.ceil(tonumber(values.minContentHeight) or 0))
     return metrics
 end
 
@@ -385,7 +623,8 @@ local function SetHeaderIdentity(frame, page, subtitle)
     end
     -- Use complete identity levels instead of a clipped title or the old
     -- redundant “账号角色预览” suffix.
-    local scopeWidth = frame.scopeBar and frame.scopeBar:IsShown() and ((frame.scopeBar:GetWidth() or 0) + Theme.Space.sm) or 0
+    local scopeWidth = frame.scopeBar and frame.scopeBar:IsShown() and not frame.scopeOwnRow
+        and ((frame.scopeBar:GetWidth() or 0) + Theme.Space.sm) or 0
     -- Hover previews hide normal controls.  Reserving their invisible width
     -- caused both an empty title bar and server controls outside the shell.
     local controlsWidth = not frame.preview and frame.controls and frame.controls:IsShown() and (frame.controls:GetWidth() or 0) or 0
@@ -500,6 +739,9 @@ function AccountView:RegisterPage(addonName, definition)
     end
     if definition.scope ~= nil then
         if type(definition.scope) == "table" and definition.scope.mode == "realms" then
+            if definition.scope.GetSnapshotCharacters ~= nil and type(definition.scope.GetSnapshotCharacters) ~= "function" then
+                return nil, "invalid-snapshot-character-reader"
+            end
             -- Realm scopes are derived by Core from its character directory and
             -- the page's business-snapshot admission callback.
         elseif type(definition.scope) ~= "table" or type(definition.scope.default) ~= "string" or type(definition.scope.values) ~= "table" then
@@ -686,8 +928,14 @@ end
 
 function AccountView:GetVisibleFields(pageID, overrides)
     local visible = {}
+    local saved = Settings().fields[pageID] or {}
     for _, field in ipairs(self:GetFieldDefinitions(pageID)) do
-        if self:GetFieldVisible(pageID, field, overrides) then visible[#visible + 1] = Copy(field) end
+        local enabled
+        if overrides then enabled = overrides[field.id] end
+        if enabled == nil then enabled = saved[field.id] end
+        if enabled == true or (enabled == nil and field.defaultVisible ~= false) then
+            visible[#visible + 1] = field
+        end
     end
     return visible
 end
@@ -831,9 +1079,18 @@ local function GetScopeDefinition(page, characters, preview)
         local native = not current and Core.Client and Core.Client:ReadNameRealm()
         local currentRealm = (current and current.realm) or (native and native.realm) or "Unknown"
         local realms = {}
-        for _, character in ipairs(characters or Core.Characters:GetAllCached()) do
+        characters = characters or Core.Characters:GetAllCached()
+        local readBatch = page.scope.GetSnapshotCharacters
+        if readBatch then
+            local ok, result = xpcall(function() return readBatch(characters) end, tostring)
+            if not ok then
+                Core:Print(Core:Text("CORE.ACCOUNT_PAGE_161") .. tostring(page.title or page.id) .. Core:Text("CORE.COULD_NOT_READ_CHARACTER_SNAPSHOTS") .. result)
+            end
+            characters = ok and type(result) == "table" and result or {}
+        end
+        for _, character in ipairs(characters) do
             local admitted = true
-            if type(page.HasCharacterSnapshot) == "function" then
+            if not readBatch and type(page.HasCharacterSnapshot) == "function" then
                 local ok, result = xpcall(function() return page.HasCharacterSnapshot(character) end, function(message) return tostring(message) end)
                 admitted = ok and result == true
                 if not ok then Core:Print(Core:Text("CORE.ACCOUNT_PAGE_161") .. tostring(page.title or page.id) .. Core:Text("CORE.COULD_NOT_READ_CHARACTER_SNAPSHOTS") .. result) end
@@ -888,9 +1145,7 @@ function AccountView:SetPageScope(pageID, scopeID)
         -- rendered.
         self:ShowPreview(pageID, self.previewAnchor, true)
     elseif self.activePageID == pageID then
-        -- Auto-sized main pages should follow the selected realm's matrix
-        -- width.  ApplyPageSize still preserves a user's manual page size.
-        self:ShowPage(pageID, { autoFit = true })
+        self:ShowPage(pageID)
     end
     return true
 end
@@ -935,6 +1190,7 @@ local function RefreshScopeBar(frame, context)
         frame.controls:SetSize(256, Theme.Size.standard)
         frame.controls:SetPoint("TOPRIGHT", frame.titleBar, "TOPRIGHT", -14, -8)
     end
+    frame.scopeOwnRow = false
     if not (pageAllowsScope and scope and #scope.values > 2) then
         bar:Hide()
         if bar.menu then bar.menu:Hide() end
@@ -951,6 +1207,15 @@ local function RefreshScopeBar(frame, context)
     local selectedOther, directOther = scopeMetrics.selectedOther, scopeMetrics.directOther
     local currentWidth, otherWidth, allWidth = scopeMetrics.currentWidth, scopeMetrics.otherWidth, scopeMetrics.allWidth
     local otherTitle, barWidth = scopeMetrics.otherTitle, scopeMetrics.width
+    frame.scopeOwnRow = not frame.preview and barWidth + 256 + Theme.Space.sm * 2 + 22 > frame:GetWidth()
+    if frame.scopeOwnRow then
+        local budget = frame:GetWidth() - ShellMetrics(false, frame.nav:GetWidth()) - Theme.Space.xs * 4
+        local scale = math.min(1, math.max(3, budget) / (currentWidth + otherWidth + allWidth))
+        currentWidth = math.max(1, math.floor(currentWidth * scale))
+        otherWidth = math.max(1, math.floor(otherWidth * scale))
+        allWidth = math.max(1, math.floor(allWidth * scale))
+        barWidth = currentWidth + otherWidth + allWidth + Theme.Space.xs * 2
+    end
     bar.current = bar.current or Theme:CreateButton(bar, currentWidth, "", "secondary")
     bar.other = bar.other or Theme:CreateButton(bar, otherWidth, "", "secondary")
     bar.all = bar.all or Theme:CreateButton(bar, allWidth, "", "secondary")
@@ -959,6 +1224,8 @@ local function RefreshScopeBar(frame, context)
     if frame.preview then
         -- No hidden normal controls may reserve title-bar space in a preview.
         bar:SetPoint("RIGHT", frame.titleBar, "RIGHT", -Theme.Space.sm, 0)
+    elseif frame.scopeOwnRow then
+        bar:SetPoint("TOPLEFT", frame.content, "TOPLEFT", Theme.Space.xs, -Theme.Space.xxs)
     else
         bar:SetPoint("RIGHT", frame.controls, "LEFT", -Theme.Space.sm, 0)
     end
@@ -1013,9 +1280,9 @@ local function RefreshScopeBar(frame, context)
     end
     bar.current:Show(); bar.other:Show(); bar.all:Show()
     for _, control in ipairs(bar.buttons) do control:Hide() end
-    frame.compactTitle = (frame.titleBar:GetWidth() or 0) < (barWidth + (frame.preview and 72 or 330))
+    frame.compactTitle = not frame.scopeOwnRow and (frame.titleBar:GetWidth() or 0) < (barWidth + (frame.preview and 72 or 330))
     bar:Show()
-    return false
+    return frame.scopeOwnRow
 end
 
 -- The account shell can contain secure action controls supplied by a business
@@ -1047,41 +1314,28 @@ function AccountView:CreateFrame()
     -- The secure driver must be able to operate on the shell even when the
     -- current page has no secure action buttons of its own.
     local frame = CreateFrame("Frame", "YiboCoreAccountView", UIParent, "BackdropTemplate,SecureHandlerBaseTemplate")
-    local settings = Settings()
-    settings.width, settings.height = ClampWindowSize(settings.width, settings.height)
-    frame:SetSize(settings.width, settings.height)
-    frame:SetPoint(settings.point or "CENTER", UIParent, settings.relativePoint or "CENTER", settings.x or 0, settings.y or 0)
+    local width, height, bounds = MainWindowSize()
+    frame:SetSize(width, height)
+    frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", bounds.left, bounds.top - UIParent:GetHeight())
     frame:SetMovable(true)
-    -- No resize affordance is exposed to players, but programmatic autosizing
-    -- must remain unconstrained by stale minimum bounds from older versions.
+    -- The grip applies Core's bounds while the same shell also hosts the natural-size preview.
     frame:SetResizable(true)
-    local screenWidth, screenHeight = ScreenBounds()
-    if frame.SetResizeBounds then
-        frame:SetResizeBounds(1, 1, screenWidth, screenHeight)
-    else
-        if frame.SetMinResize then frame:SetMinResize(1, 1) end
-        if frame.SetMaxResize then frame:SetMaxResize(screenWidth, screenHeight) end
-    end
+    SetResizeBounds(frame, 1, 1, ScreenBounds())
     frame:SetClampedToScreen(true)
-    UpdateWindowClamp(frame, settings.height)
+    UpdateWindowClamp(frame, frame:GetHeight())
     frame:SetToplevel(true)
     frame:EnableMouse(true)
     frame:RegisterForDrag("LeftButton")
     frame:SetScript("OnDragStart", BeginWindowDrag)
     frame:SetScript("OnDragStop", FinishWindowDrag)
-    frame:SetScript("OnSizeChanged", function(self, width, height)
+    frame:SetScript("OnSizeChanged", function(self, _, height)
         UpdateWindowClamp(self, height)
-        if not self.preview and width >= 760 and height >= 150 then
-            settings.width, settings.height = math.floor(width + 0.5), math.floor(height + 0.5)
-            if self._pageSizePage and self._pageSizeContext then
-                SavePageSize(self._pageSizePage, self._pageSizeContext, width, height)
-            end
-        end
     end)
     frame:SetScript("OnShow", function(self)
         if not self.preview then self:Raise() end
     end)
     frame:SetScript("OnHide", function(self)
+        FinishWindowResize(self, false)
         FinishWindowDrag(self)
         if self.scopeBar and self.scopeBar.menu then self.scopeBar.menu:Hide() end
         -- UISpecialFrames closes the frame directly.  A hover preview must
@@ -1181,11 +1435,23 @@ function AccountView:CreateFrame()
     frame.close:SetScript("OnEnter", function(control) control.label:SetTextColor(COLORS.text[1], COLORS.text[2], COLORS.text[3]) end)
     frame.close:SetScript("OnLeave", function(control) control:SetState() end)
     frame.close:SetScript("OnClick", function() frame:Hide() end)
+    frame.resizeGrip = CreateWindowResizeGrip(frame)
     frame.nav = CreateFrame("Frame", nil, frame)
     frame.nav:SetPoint("TOPLEFT", 1, -47); frame.nav:SetPoint("BOTTOMLEFT", 1, 1); frame.nav:SetWidth(Theme:GetNavigationWidth())
     frame.nav.bg = frame.nav:CreateTexture(nil, "BACKGROUND"); frame.nav.bg:SetAllPoints(); frame.nav.bg:SetColorTexture(COLORS.nav[1], COLORS.nav[2], COLORS.nav[3], COLORS.nav[4])
+    frame.navScroll = Theme:CreateScrollFrame(frame.nav)
+    frame.navScroll:SetPoint("TOPLEFT", frame.nav, "TOPLEFT")
+    frame.navScroll:SetPoint("BOTTOMRIGHT", frame.nav, "BOTTOMRIGHT")
+    frame.navContent = CreateFrame("Frame", nil, frame.navScroll)
+    frame.navContent:SetPoint("TOPLEFT", frame.navScroll, "TOPLEFT")
+    frame.navScroll:SetScrollChild(frame.navContent)
     frame.content = CreateFrame("Frame", nil, frame)
     frame.content:SetPoint("TOPLEFT", frame.nav, "TOPRIGHT", 1, 0); frame.content:SetPoint("BOTTOMRIGHT", -1, 1)
+    frame.columnPagerFooter = CreateFrame("Frame", nil, frame.content)
+    frame.columnPagerFooter:SetPoint("BOTTOMLEFT", Theme.Space.xs, Theme.Space.xs)
+    frame.columnPagerFooter:SetPoint("BOTTOMRIGHT", -Theme.Space.xs, Theme.Space.xs)
+    frame.columnPagerFooter:SetHeight(Theme.Size.compact)
+    frame.columnPagerFooter:Hide()
     frame.scopeBar = CreateFrame("Frame", nil, frame.titleBar)
     frame.scopeBar:SetSize(1, Theme.Size.standard); frame.scopeBar.buttons = {}; frame.scopeBar:Hide()
     frame.navButtons, frame.instances = {}, {}
@@ -1236,96 +1502,127 @@ local function NavigationPages(activePageID)
     return pages
 end
 
-local function NavigationRequiredHeight(page)
-    local count = #NavigationPages(page and page.id)
-    local navigationHeight = Theme.Space.xs * 2 + count * Theme.Table.rowHeight + math.max(0, count - 1) * Theme.Space.xxs
-    return Theme.Geometry.titleBar + Theme.Geometry.shellBorder * 2 + navigationHeight
+local function MainNavigationWidth()
+    local measured = Theme.Geometry.navigation
+    for _, mode in ipairs({ "overview", "settings" }) do
+        for _, item in ipairs(NavigationPages(mode)) do
+            local inset = item.settingsTargetID and 40 or 32
+            measured = math.max(measured, Theme:MeasureText(Theme.Font.assist, item.title) + inset)
+        end
+    end
+    local safeWidth = ScreenBounds()
+    return math.min(measured, Theme.Geometry.accountNavigationMax, math.max(1, math.floor(safeWidth / 3)))
 end
 
-function AccountView:ApplyPageSize(page, context, forceAutoFitWidth)
+function AccountView:ApplyPageSize(_, context)
     local frame = self:CreateFrame()
     if frame.preview then return end
-    local maxWidth, maxHeight = ScreenBounds()
-    local shellWidth, shellHeight = ShellMetrics(false)
-    -- A matrix may use the whole safe screen width before resorting to
-    -- pagination.  Its natural width describes every character column;
-    -- pagination begins only when that width reaches this hard boundary.
-    context.surfaceAvailableWidth = math.max(1, maxWidth - shellWidth)
-    context.surfaceAvailableHeight = math.max(1, maxHeight - shellHeight)
-    local settings, metrics = Settings(), SurfaceMetrics(page, context)
-    local preferredWidth = metrics.naturalContentWidth + shellWidth
-    local preferredHeight = metrics.naturalContentHeight + shellHeight
-    -- Most account pages are matrix-like and retain the shared 760px floor.
-    -- A page may explicitly opt into a compact layout when its content has a
-    -- fixed, small column set (for example a short icon-only task table).
-    local widthFloor = page.compactWidth and 360 or 760
-    local minWidth = math.max(widthFloor, metrics.minContentWidth + shellWidth)
-    local scopeMetrics = GetScopeControlMetrics(context.scopeDefinition, context.scope)
-    if scopeMetrics then
-        -- Main windows show normal controls beside the range selector.  Both
-        -- must fit inside the shell; the title may disappear, controls may not.
-        local headerWidth = scopeMetrics.width + 256 + Theme.Space.sm * 2 + 22
-        minWidth = math.max(minWidth, headerWidth)
+    local width, height, bounds = MainWindowSize(frame)
+    local navWidth = MainNavigationWidth()
+    AnchorMainWindow(frame, bounds)
+    if math.abs(frame.nav:GetWidth() - navWidth) > 0.01 then frame.nav:SetWidth(navWidth) end
+    if math.abs(frame:GetWidth() - width) > 0.01 or math.abs(frame:GetHeight() - height) > 0.01 then
+        SetResizeBounds(frame, 1, 1, ScreenBounds())
+        frame:SetSize(width, height)
     end
-    -- The screen-safe width is the only horizontal ceiling for a data page.
-    preferredWidth = math.min(preferredWidth, maxWidth)
-    -- Individual pages own their safe minimum height.  A global 430 px floor
-    -- left large empty regions below compact data matrices.
-    local minHeight = math.max(150, metrics.minContentHeight + shellHeight, NavigationRequiredHeight(page))
-    if page.id == "settings" then
-        minWidth, minHeight = math.max(minWidth, 820), math.max(minHeight, 560)
-        preferredWidth, preferredHeight = math.max(preferredWidth, 960), math.max(preferredHeight, 720)
-    end
-    local savedSize = GetPageSize(page, context)
-    local width, height = preferredWidth, preferredHeight
-    if savedSize and savedSize.width and savedSize.height and not page.autoFitWidth and not forceAutoFitWidth then
-        width, height = savedSize.width, savedSize.height
-    elseif savedSize and savedSize.width and not page.autoFitWidth and not forceAutoFitWidth then
-        width = savedSize.width
-    end
-    if savedSize and savedSize.height and not page.autoFitHeight then
-        height = savedSize.height
-    end
-    if page.id=="help" then
-        local aboutSize=GetPageSize({id="about"},context)
-        height=aboutSize and aboutSize.height or preferredHeight
-    end
-    width = math.max(math.min(widthFloor, maxWidth), math.min(math.max(minWidth, width), maxWidth))
-    height = math.max(math.min(minHeight, maxHeight), math.min(math.max(minHeight, height), maxHeight))
-    if metrics.scrollContentHeight then
-        local gutter = ScrollSurfaceGutter(metrics.scrollContentHeight, height - shellHeight, metrics.scrollFixedHeight)
-        -- A saved narrow width cannot paginate a complete matrix before the safe edge.
-        width = math.min(maxWidth, math.max(width, math.ceil(metrics.naturalContentWidth + shellWidth + gutter)))
-    end
-    if math.abs((frame:GetWidth() or 0) - width) < 1 and math.abs((frame:GetHeight() or 0) - height) < 1 then return end
-    self._applyingPageSize = true
-    frame._pageSizePage, frame._pageSizeContext = page, context
-    frame:SetResizable(true)
-    if frame.SetResizeBounds then frame:SetResizeBounds(1, 1, maxWidth, maxHeight) end
-    frame:SetSize(width, height)
-    self._applyingPageSize = nil
-    settings.width, settings.height = width, height
-    SavePageSize(page, context, width, height)
+    local shellWidth, shellHeight = ShellMetrics(false, navWidth)
+    context.surfaceAvailableWidth = math.max(1, width - shellWidth)
+    context.surfaceAvailableHeight = math.max(1, height - shellHeight)
 end
 
-function AccountView:ApplyMeasuredPageHeight(page, instance, context)
-    if self.frame.preview or type(page.GetMeasuredHeight) ~= "function" then return end
-    local ok, measured = xpcall(function() return page.GetMeasuredHeight(instance, context) end, function(message) return tostring(message) end)
-    if not ok or type(measured) ~= "number" or measured <= 0 then return end
-    local frame = self.frame
-    -- The page instance fills Core's content area.  Preserve the shell's
-    -- actual chrome height, then replace only the content portion with the
-    -- post-layout measurement supplied by the page.
-    local shellHeight = math.max(0, (frame:GetHeight() or 0) - (instance:GetHeight() or 0))
-    local maxWidth, maxHeight = ScreenBounds()
-    local targetHeight = math.min(maxHeight, math.max(NavigationRequiredHeight(page), math.floor(measured + shellHeight + 0.5)))
-    if math.abs((frame:GetHeight() or 0) - targetHeight) < 1 then return end
-    self._applyingPageSize = true
-    if frame.SetResizeBounds then frame:SetResizeBounds(1, 1, maxWidth, maxHeight) end
-    frame:SetHeight(targetHeight)
-    self._applyingPageSize = nil
-    Settings().height = targetHeight
-    SavePageSize(page, context, frame:GetWidth(), targetHeight)
+local function CreatePageViewport(parent)
+    local host = CreateFrame("Frame", nil, parent)
+    host.scroll = Theme:CreateScrollFrame(host)
+    host.body = CreateFrame("Frame", nil, host.scroll)
+    host.body:SetPoint("TOPLEFT", host.scroll, "TOPLEFT")
+    host.scroll:SetScrollChild(host.body)
+
+    local bar = CreateFrame("Slider", nil, host, "BackdropTemplate")
+    bar:SetOrientation("HORIZONTAL")
+    bar:SetPoint("BOTTOMLEFT", host, "BOTTOMLEFT")
+    bar:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT")
+    bar:SetHeight(Theme.Geometry.scrollbarGutter)
+    bar:SetValueStep(1)
+    Theme:ApplyPixelBackdrop(bar)
+    bar:SetBackdropColor(unpack(COLORS.bg))
+    bar:SetBackdropBorderColor(unpack(COLORS.lineSoft))
+    local thumb = bar:CreateTexture(nil, "ARTWORK")
+    thumb:SetSize(24, 10)
+    thumb:SetColorTexture(unpack(COLORS.accent))
+    bar:SetThumbTexture(thumb)
+    bar:SetScript("OnValueChanged", function(_, offset)
+        host.offset = offset
+        if host.instance then
+            host.instance:ClearAllPoints()
+            host.instance:SetPoint("TOPLEFT", host.body, "TOPLEFT", -offset, 0)
+        end
+    end)
+    host.horizontal = bar
+    return host
+end
+
+local function PlacePage(frame, instance, page, context, scopeRow, showColumnPager)
+    local widthShell, heightShell = ShellMetrics(context.preview, frame.nav:GetWidth())
+    local scopeHeight = scopeRow and Theme.Size.standard + Theme.Space.xs or 0
+    local width = math.max(1, frame:GetWidth() - widthShell)
+    context.columnPagerInFooter = not context.preview and page.columnPager == true
+    local footerHeight = showColumnPager and Theme.Size.compact + Theme.Space.xs or 0
+    local height = math.max(1, frame:GetHeight() - heightShell - scopeHeight - footerHeight)
+    context.surfaceAvailableWidth, context.surfaceAvailableHeight = width, height
+    local metrics = not context.preview and page.addonName and not page.compactLayout and SurfaceMetrics(page, context)
+    local contentWidth = math.max(width, metrics and metrics.minContentWidth or 0)
+    local contentHeight = math.max(height, metrics and metrics.minContentHeight or 0)
+    local horizontal, vertical = contentWidth > width, contentHeight > height
+    local gutter = Theme.Geometry.scrollbarGutter
+    if horizontal then vertical = contentHeight > height - gutter and metrics.minContentHeight > height - gutter end
+    if vertical then horizontal = contentWidth > width - gutter and metrics.minContentWidth > width - gutter end
+
+    local host = frame.pageViewport
+    if host and host.instance and (host.instance ~= instance or not (horizontal or vertical)) then
+        local preceding = host.instance
+        host.instance = nil
+        preceding:SetParent(frame.content)
+        preceding:ClearAllPoints()
+        preceding:SetAllPoints(frame.content)
+        host:Hide()
+    end
+    if not (horizontal or vertical) then
+        instance:ClearAllPoints()
+        instance:SetPoint("TOPLEFT", frame.content, "TOPLEFT", 0, -scopeHeight)
+        instance:SetPoint("BOTTOMRIGHT", frame.content, "BOTTOMRIGHT", 0, footerHeight)
+        return
+    end
+
+    if not host then
+        host = CreatePageViewport(frame.content)
+        frame.pageViewport = host
+    end
+    host:ClearAllPoints()
+    host:SetPoint("TOPLEFT", frame.content, "TOPLEFT", 0, -scopeHeight)
+    host:SetPoint("BOTTOMRIGHT", frame.content, "BOTTOMRIGHT", 0, footerHeight)
+    local viewportWidth = math.max(1, width - (vertical and gutter or 0))
+    local viewportHeight = math.max(1, height - (horizontal and gutter or 0))
+    contentWidth = math.max(viewportWidth, metrics.minContentWidth)
+    contentHeight = math.max(viewportHeight, metrics.minContentHeight)
+    host.scroll:ClearAllPoints()
+    host.scroll:SetPoint("TOPLEFT", host, "TOPLEFT")
+    host.scroll:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", 0, horizontal and gutter or 0)
+    host.scroll:EnableMouseWheel(vertical)
+    if host.instance ~= instance then
+        host.instance, host.offset = instance, 0
+        instance:SetParent(host.body)
+        host.scroll:SetVerticalScroll(0)
+    end
+    host:Show()
+    host.body:SetSize(viewportWidth, contentHeight)
+    host.scroll:SetContentHeight(contentHeight)
+    host.horizontal:SetMinMaxValues(0, math.max(0, contentWidth - viewportWidth))
+    host.horizontal:SetValue(math.min(host.offset or 0, contentWidth - viewportWidth))
+    host.horizontal:SetShown(horizontal)
+    instance:ClearAllPoints()
+    instance:SetPoint("TOPLEFT", host.body, "TOPLEFT", -(host.offset or 0), 0)
+    instance:SetSize(contentWidth, contentHeight)
+    context.surfaceAvailableWidth, context.surfaceAvailableHeight = contentWidth, contentHeight
 end
 
 function AccountView:SetPreviewHoverCallbacks(onEnter, onLeave)
@@ -1340,12 +1637,25 @@ function AccountView:RefreshNavigation()
     local frame = self:CreateFrame()
     if frame.preview then return end
     local pages = NavigationPages(self.activePageID)
+    local height = Theme.Size.compact
+    local step = height + Theme.Geometry.compactNavigationGap
+    local contentHeight = Theme.Space.xs * 2 + #pages * step - Theme.Geometry.compactNavigationGap
+    local viewportHeight = frame:GetHeight() - Theme.Geometry.titleBar
+    local gutter = contentHeight > viewportHeight and Theme.Geometry.scrollbarGutter or 0
+    frame.navContent:SetSize(math.max(1, frame.nav:GetWidth() - gutter), contentHeight)
+    frame.navScroll:SetContentHeight(contentHeight)
+    local mode = self.activePageID == "settings" and "settings" or "pages"
+    if frame.navMode ~= mode then
+        frame.navMode = mode
+        frame.navScroll:SetVerticalScroll(0)
+    end
     for index, page in ipairs(pages) do
         local button = frame.navButtons[index]
         if not button then
-            button = CreateFrame("Button", nil, frame.nav, "BackdropTemplate")
+            button = CreateFrame("Button", nil, frame.navContent, "BackdropTemplate")
             button:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
             button.label = AddText(button, "GameFontNormalSmall", nil, COLORS.text); button.label:SetPoint("LEFT", 9, 0); button.label:SetPoint("RIGHT", -6, 0)
+            button.label:SetWordWrap(false)
             button:SetScript("OnClick", function(self)
                 if self.back then AccountView:GoBack()
                 elseif self.settingsTargetID then AccountView:SelectSettingsTarget(self.settingsTargetID)
@@ -1354,14 +1664,19 @@ function AccountView:RefreshNavigation()
             frame.navButtons[index] = button
         end
         local coreChild=page.settingsTargetID=="core" or page.settingsTargetID=="sorting" or page.settingsTargetID=="display" or page.settingsTargetID=="bar"
-        local inset, step = coreChild and 16 or 8, Theme.Table.rowHeight + Theme.Space.xxs
-        if button.navigationInset ~= inset or button.navigationStep ~= step or button.navigationHeight ~= Theme.Table.rowHeight then
+        local inset = coreChild and 16 or 8
+        if button.navigationInset ~= inset or button.navigationStep ~= step or button.navigationHeight ~= height then
             button:ClearAllPoints();button:SetPoint("TOPLEFT",inset,-8-(index-1)*step);button:SetPoint("TOPRIGHT",-8,-8-(index-1)*step)
-            button:SetHeight(Theme.Table.rowHeight)
-            button.navigationInset, button.navigationStep, button.navigationHeight = inset, step, Theme.Table.rowHeight
+            button:SetHeight(height)
+            button.navigationInset, button.navigationStep, button.navigationHeight = inset, step, height
         end
         button.pageID = page.id; button.settingsTargetID = page.settingsTargetID; button.section = page.section
         if button.label:GetText() ~= page.title then button.label:SetText(page.title) end
+        if Theme:MeasureText(Theme.Font.assist, page.title) + inset + 23 > frame.navContent:GetWidth() then
+            Theme:BindTooltip(button, page.title)
+        elseif button.tooltipTitle then
+            Theme:ClearTooltip(button)
+        end
         local selected = not page.back and (page.settingsTargetID and self.activePageID == "settings" and self.settingsTargetPageID == page.settingsTargetID or self.activePageID == page.id)
         local canGoBack = page.back and #self._navigationHistory > 0
         button.back = page.back == true
@@ -1392,7 +1707,7 @@ function AccountView:SetTitleBarControl(control, width)
     control:SetParent(frame.titleBar)
     control:SetFrameLevel((frame.titleBar:GetFrameLevel() or 0) + 2)
     control:ClearAllPoints()
-    if frame.scopeBar and frame.scopeBar:IsShown() then
+    if frame.scopeBar and frame.scopeBar:IsShown() and not frame.scopeOwnRow then
         control:SetPoint("RIGHT", frame.scopeBar, "LEFT", -Theme.Space.sm, 0)
     else
         control:SetPoint("RIGHT", frame.titleBar, "RIGHT", -Theme.Space.sm, 0)
@@ -1540,7 +1855,7 @@ function AccountView:GoBack()
     return false
 end
 
-function AccountView:ShowPage(pageID, options, forceAutoFitWidth)
+function AccountView:ShowPage(pageID, options)
     options = options or {}
     -- Some hosted pages (for example YiboTodo) contain secure action buttons.
     -- Switching pages hides every inactive page instance, which WoW forbids
@@ -1576,30 +1891,19 @@ function AccountView:ShowPage(pageID, options, forceAutoFitWidth)
             self.frame:SetAttribute("isHoverPreview", nil)
             self.frame:SetAttribute("restoreMainAfterPreview", nil)
         end
-        self.frame._pageSizePage, self.frame._pageSizeContext = page, context
     end
-    if not options.preview then self:ApplyPageSize(page, context, forceAutoFitWidth) end
+    if not options.preview then self:ApplyPageSize(page, context) end
     self:HideColumnPagers()
     for id, instance in pairs(self.frame.instances) do if id ~= page.id then instance:Hide() end end
     local instance = self.frame.instances[page.id]
-    if not instance then
+    local creating = not instance
+    if creating then
         instance = CreateFrame("Frame", nil, self.frame.content)
-        instance:SetAllPoints(self.frame.content)
         self.frame.instances[page.id] = instance
-        CallPage(instance, page, Core:Text("CORE.CREATE"), context)
     end
-    instance:ClearAllPoints()
-    if RefreshScopeBar(self.frame, context) then
-        instance:SetPoint("TOPLEFT", self.frame.scopeBar, "BOTTOMLEFT", -20, -4)
-        instance:SetPoint("BOTTOMRIGHT", self.frame.content, "BOTTOMRIGHT")
-    else
-        instance:SetAllPoints(self.frame.content)
-    end
-    local shellWidth = ShellMetrics(context.preview)
-    local contentWidth = math.max(1, (self.frame:GetWidth() or 1) - shellWidth)
-    -- Business renderers must consume the width chosen for this layout pass,
-    -- never a stale frame width left by the previously visible page.
-    context.surfaceAvailableWidth = contentWidth
+    local scopeRow = RefreshScopeBar(self.frame, context)
+    PlacePage(self.frame, instance, page, context, scopeRow)
+    if creating then CallPage(instance, page, Core:Text("CORE.CREATE"), context) end
     instance:Show()
     if options.preview then
         -- 悬停投影不能改变正式窗口最后打开的页面；否则 Core 默认入口会
@@ -1616,11 +1920,22 @@ function AccountView:ShowPage(pageID, options, forceAutoFitWidth)
     -- Hide the previous page's control first so page switches never leave
     -- stale actions in the shared chrome.
     self:ClearTitleBarControl()
+    local pagerSettings = context.columnPagerInFooter and Settings()
+    local previousPages = pagerSettings and Copy(pagerSettings.columnPages[page.id])
+    local previousStructures = pagerSettings and Copy(pagerSettings.columnPageStructures[page.id])
     CallPage(instance, page, Core:Text("CORE.REFRESH"), context)
+    if pagerSettings and self.frame.columnPagerFooter:IsShown() then
+        -- Measure with the full pane first. A visible footer can reduce row
+        -- capacity and introduce a scrollbar. Only the final slice should
+        -- update the selection and the structure used to preserve that page.
+        pagerSettings.columnPages[page.id] = previousPages
+        pagerSettings.columnPageStructures[page.id] = previousStructures
+        PlacePage(self.frame, instance, page, context, scopeRow, true)
+        CallPage(instance, page, Core:Text("CORE.REFRESH"), context)
+    end
     -- Pages may create or hide a title-bar pager while refreshing. Resolve
     -- the identity only after that chrome is final for this pass.
     SetHeaderIdentity(self.frame, page, page.title)
-    self:ApplyMeasuredPageHeight(page, instance, context)
     self:RefreshNavigation()
     self:UpdateSortButton()
     if not options.preview and type(page.firstUseTip) == "table" then
@@ -1629,7 +1944,7 @@ function AccountView:ShowPage(pageID, options, forceAutoFitWidth)
     end
 end
 
-function AccountView:RefreshPage(forceAutoFitWidth)
+function AccountView:RefreshPage()
     if not (self.frame and self.frame:IsShown()) then return end
     if Core.Client:IsInCombat() then
         self._refreshPendingAfterCombat = true
@@ -1643,7 +1958,7 @@ function AccountView:RefreshPage(forceAutoFitWidth)
         -- a data notification must render the new page state.
         self:ShowPreview(self.previewPageID, self.previewAnchor, true)
     elseif self.activePageID then
-        self:ShowPage(self.activePageID, self.activePageOptions, forceAutoFitWidth)
+        self:ShowPage(self.activePageID, self.activePageOptions)
     end
 end
 
@@ -1673,7 +1988,6 @@ end
 
 function AccountView:ApplyNormalLayout()
     local frame = self:CreateFrame()
-    local settings = Settings()
     frame.preview = false
     UpdateWindowClamp(frame, frame:GetHeight())
     frame:SetMovable(true)
@@ -1682,12 +1996,9 @@ function AccountView:ApplyNormalLayout()
     frame:SetScript("OnLeave", nil)
     frame:SetFrameStrata("DIALOG")
     frame:SetToplevel(true)
-    settings.width, settings.height = ClampWindowSize(settings.width, settings.height)
-    self._applyingPageSize = true
-    frame:SetSize(settings.width, settings.height)
-    self._applyingPageSize = nil
-    frame:ClearAllPoints()
-    frame:SetPoint(settings.point or "CENTER", UIParent, settings.relativePoint or "CENTER", settings.x or 0, settings.y or 0)
+    SetResizeBounds(frame, 1, 1, ScreenBounds())
+    self:ApplyPageSize(nil, {})
+    frame.resizeGrip:Show()
     frame.nav:Show(); frame.settingsButton:Show(); frame.close:Show(); self:UpdateSortButton()
     SetHeaderIdentity(frame, self._pages.overview, Core:Text("CORE.ACCOUNT_OVERVIEW_CHARACTER_STATUS"))
     frame.content:ClearAllPoints()
@@ -1812,6 +2123,8 @@ function AccountView:ShowPreview(pageID, anchor, forceRefresh)
     -- the pointer leaves the entry instead of remaining in preview layout.
     if not rebuildingVisiblePreview then
         self.restoreNormalWindowAfterPreview = frame:IsShown() and not frame.preview
+        FinishWindowResize(frame, false)
+        FinishWindowDrag(frame)
     end
     frame:SetAttribute("isHoverPreview", "1")
     frame:SetAttribute("restoreMainAfterPreview", self.restoreNormalWindowAfterPreview and "1" or nil)
@@ -1852,14 +2165,12 @@ function AccountView:ShowPreview(pageID, anchor, forceRefresh)
         width = math.min(safe.width, math.max(width, math.ceil(metrics.preferredWidth + gutter)))
     end
     frame.preview = true
+    frame.resizeGrip:Hide()
     UpdateWindowClamp(frame, frame:GetHeight())
     -- The normal window installs a large minimum resize bound.  A hover is
     -- intentionally allowed to shrink to its measured content height.
-    if frame.SetResizeBounds then frame:SetResizeBounds(metrics.minWidth, metrics.minHeight, math.max(metrics.minWidth, safe.width), math.max(metrics.minHeight, safe.height))
-    else
-        if frame.SetMinResize then frame:SetMinResize(metrics.minWidth, metrics.minHeight) end
-        if frame.SetMaxResize then frame:SetMaxResize(math.max(metrics.minWidth, safe.width), math.max(metrics.minHeight, safe.height)) end
-    end
+    SetResizeBounds(frame, metrics.minWidth, metrics.minHeight,
+        math.max(metrics.minWidth, safe.width), math.max(metrics.minHeight, safe.height))
     frame:SetMovable(false)
     frame:EnableMouse(true)
     frame:SetScript("OnEnter", self.previewOnEnter)
@@ -2079,11 +2390,18 @@ end)
 Core.Events:Register("CHARACTER_CACHE_DELETED", AccountView, function(self)
     self:RefreshPage()
 end)
+local function RefreshWindowGeometry(view)
+    if view.frame then FinishWindowResize(view.frame, false) end
+    view:RefreshWindowLayout()
+end
+Core.Events:Register("DISPLAY_SIZE_CHANGED", AccountView, RefreshWindowGeometry)
+Core.Events:Register("UI_SCALE_CHANGED", AccountView, RefreshWindowGeometry)
 Core.Capabilities:Register("account-view", 2)
 Core.Capabilities:Register("account-dynamic-fields", 1)
 Core.Capabilities:Register("account-preview-characters", 1)
 Core.Capabilities:Register("account-character-admission", 1)
-Core.Capabilities:Register("account-surface-realm-scope", 1)
+Core.Capabilities:Register("account-surface-realm-scope", 2)
 Core.Capabilities:Register("account-surface-budget", 2)
+Core.Capabilities:Register("account-compact-layout", 2)
 
 Core.Capabilities:Register("account-identity-context", 1)

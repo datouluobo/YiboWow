@@ -358,7 +358,7 @@ function Page:Refresh(parent, context)
     parent.renderedSnapshot = snapshot
 end
 function Page:Register()
-    local ok, err = Core.AccountView:RegisterPage(Addon.NAME, { id = Addon.PAGE_ID,
+    local ok, err = Core.AccountView:RegisterPage(Addon.NAME, { id = Addon.PAGE_ID, columnPager = true,
         title = Addon:T("FOREVER.TITLE"), fields = self:Fields(), defaultEnabled = true, previewEnabled = true,
         GetFieldDefinitions = function() return Page:Fields() end,
         settings = { title = Addon:T("FOREVER.TITLE"), description = Addon:T("FOREVER.CUSTOM_HELP"),

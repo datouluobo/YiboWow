@@ -199,6 +199,7 @@ Core.Locale:Register("YiboBuilds", "zh", {
     ["UI.RING_2"] = "戒2",
     ["UI.RING_2_2"] = "戒指2",
     ["UI.SAVE_BUILD_EQUIPMENT_NOW"] = "立即保存此构筑装备  >",
+    ["UI.SAVE_EQUIPMENT"] = "保存装备",
     ["UI.SECONDARY_SPECIALIZATION"] = "副专精",
     ["UI.SECONDARY_TALENTS"] = "副天赋",
     ["UI.SELECT"] = "选择 ›",

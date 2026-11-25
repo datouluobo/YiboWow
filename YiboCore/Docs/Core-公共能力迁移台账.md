@@ -6,6 +6,8 @@
 
 2026-11-11 CAP-004 新增 `account-surface-realm-scope:1`。Forever Builds、Crafting、Currency、Mail、Reputation 声明范围只作用于入口悬停，Vault 声明只作用于仓储主窗。六个消费者在写库前检查能力，Core API13 保持。共享 Core 界面适用于 Mists、Forever、Retail。各目标既有清单及默认包清单、写库保护、Core 就绪、一次初始化、SavedVariables 身份、引用和旧文件覆盖路径保持。Forever 更新版本，其他目标通过回归和构建预检。292 项合批模拟及单角色真实存档回放通过，覆盖实机与切角色待验。见[范围契约](API-v5-业务插件接入指南.md)。
 
+2026-11-25 CAP-004 提供 `account-surface-realm-scope:2` 批量服务器准入，原有范围消费者继续支持版本 1。YiboTaskHub Mists 启动前要求版本 2。33 角色存档回放验证开页不再逐角色调业务提供方，实机待验。见[范围契约](API-v5-业务插件接入指南.md)。
+
 2026-11-11 Vault Forever 0.6.3-api1 主窗复用 CAP-002 输入、CAP-003 物品解析、CAP-004 托管页和下拉、CAP-007 GUID、CAP-009 双语资源。API13 和能力版本沿用，启动补查公开下拉方法。3145 项 Forever 模拟和双目标构建通过，实机待验。
 
 2026-11-11 Crafting Forever 0.1.4 配方悬停矩阵复用 CAP-002 输入、CAP-004 服务器范围和列分页、CAP-007 GUID、CAP-009 语言、CAP-011 专业档案。API13 和能力版本沿用，增加公开方法门槛。108 项 Forever 模拟和双目标构建通过，实机待验。
@@ -653,6 +655,8 @@ CAP-008 设置与状态同步追加审查：Core 统一设置提供右上角按�
 
 ## CAP-009：公共语言服务与账号语言偏好
 
+2026-11-25 YiboAltoBoss Mists 2.9.0 五人副本难度筛选增加 13 对 owner 资源，动态地图名称继续取客户端原文。API14 与 `localization:1` 门槛沿用。中文及 Core 英文手动模式实机通过，原生英文客户端待验证，见[统一窗口实施记录](../../Docs/统一账号主窗口-实施与验证.md#mop-五人副本难度复测2026-11-25)。
+
 2026-10-30：Legendary新增ERROR.CLIENT_REQUIRED并补充身份能力升级资源，QuestBlocker新增CORE.STARTUP_REQUIREMENTS，Mounts新增CLIENT_REQUIRED；均使用双语稳定key，Mounts沿用已记录的独立来源内置词条例外。18项自动/手动语言资源检查与静态缺英文/参数检查通过；客户端及其他既有语言延期范围未据此完成。详见[性能修复](../../Docs/其它插件-性能修复-2026-10-30.md)。
 
 R2 Retail（2026-10-27）：复用563个资源与localization:1，无新增硬编码或业务接入；正式服中文各页基础显示已确认，英文／手动语言、原生名称及IME仍待实际客户端验证。见[本阶段记录](R2-01-02-Retail目标与构建实施验收.md)。
@@ -974,3 +978,21 @@ Core PixelLineSpec 64 项通过；Core 既有 7 组、Mail 3 组、Currency API1
 2026-11-22 CAP-013 SetPixelAnchor 接入完成：Mail（图标内缩，InboxRelease 98）、Vault 物品图标、Reputation Forever 进度条、TaskHub HUD、Builds Forever 天赋角标、AltoBoss 两端页签衔接、Crafting Mists 面板内缩与宽高预算（按 2 个物理像素）均改为 `SetPixelAnchor`，并在各自方法检查中加入 `SetPixelAnchor`。全工作区 145 个在用测试 114 通过，失败均与 2026-11-20 基线一致；431 文件语法与 20 个目标 ValidateOnly 通过。实机待验：不重载改缩放后上述位置仍贴 1 像素边框。
 
 2026-11-22 CAP-013 业务插件发布检查：Core API14 已发布（Mists 1.13.0／Forever 0.3.0／Retail 0.2.0）。AltoBoss 2.9.0/0.2.0、Builds 1.6.0/0.2.0、Mail 1.4.0/0.3.0-api1、Vault 1.3.0/0.7.0-api1、Reputation 1.8.0/0.2.0、Crafting 1.3.0/0.2.0、QuestBlocker 3.2.0、Todo 1.3.0、TaskHub 0.7.0、Legendary 2.3.0、BeastPaths 1.10.0（universal）完成正式包与打包回放，构建器读取最低 Core 14（Crafting Forever 13）。各插件接入状态在用户实机确认基础上记为已接入，发布状态以各发布记录为准；Todo、TaskHub 误装保护缺失与 BeastPaths 分包例外待用户决定。
+
+## CAP-014 紧凑账号页和列宽
+
+Core 在 API14 下提供 `account-compact-layout:2`，包含试点的 v1 测宽接口。页面声明、列宽参数和空间限制见[窗口尺寸与溢出契约第 6.6 节](Core-0.3-窗口尺寸与溢出契约.md#66-固定账号主窗口和紧凑布局)。已发行的 API14 是否具备该能力，仍由能力检查确定。
+
+| 插件 | 状态 | 接入范围与验证 | 最近审查 |
+|---|---|---|---|
+| YiboAltoBoss | 部分接入 | Mists 副本进度主视图使用固定窗口和按列分页。首领页、悬停及 Forever 使用原布局。Mists 已测 Core 中英文模式。 | 2026-11-24 |
+| YiboCrafting | 部分接入 | Mists 专业配方主视图使用固定窗口和角色／状态实测列宽。Forever 主表的学习与数据状态列复用 Core 测宽，最低为 API14／紧凑布局 1，低版本在写库前停止。双语实机和目标离线检查通过。悬停沿用现有投影。 | 2026-11-24 |
+| 其余 Core 托管页 | 部分接入 | 共用固定外框。下面的推广记录列出业务侧适配，三目标双语离线通过，待集中实机检查。 | 2026-11-24 |
+
+各目标构建和实机范围见[试点验收与回滚](../../Docs/主窗口紧凑列宽试点-验收与回滚.md)。
+
+2026-11-24 推广阶段。Core 三目标将统一固定外框提升为 `account-compact-layout:2`，保留 v1 测宽接口。Core 注册的主页面及设置自动使用固定壳。YiboAltoBoss、YiboCrafting Mists 延续试点配置，YiboAutoOpen、YiboBeastPaths、YiboBuilds、YiboCrafting Forever、YiboCurrency Mists、YiboLegendary、YiboMail、YiboQuestBlocker、YiboReputation Forever、YiboTaskHub、YiboTodo、YiboVault按本次触及页面补齐窄布局。Todo 明确检查既有 `account-surface-budget:2` 及列分页方法，其余沿用已声明的账号页能力。离线证据与实机待验项见[统一窗口实施记录](../../Docs/统一账号主窗口-实施与验证.md)。
+
+2026-11-24 MoP 集中实机修订。Core 固定外框调整为 800 × 544，现有 `UpdateColumnPager` 按页面的可选 `columnPager` 声明提供主窗口底部位置。角色档案、AltoBoss、Currency、QuestBlocker、Reputation、Todo 及 Crafting Forever 在相关主页面声明底部分页，悬停保留原调用锚点。声明可被较早的 Core 忽略，继续兼容已有能力门槛。MoP 中英文切页、实测列数及复测范围见[统一窗口实施记录](../../Docs/统一账号主窗口-实施与验证.md#mop-集中实机)。
+
+2026-11-25 内容区高度试点。Core 三端自动回收单页分页的 34 UI 单位及设置顶部通用说明空间。YiboBuilds Forever、YiboCrafting Forever、YiboAltoBoss Mists 复用现有 Core 视口预算、字号／宽度测量、设置和分页，原有能力门槛保留。三端双语和业务专项离线通过，试点及后续验证范围见[统一窗口实施记录](../../Docs/统一账号主窗口-实施与验证.md#内容区高度试点2026-11-25)。

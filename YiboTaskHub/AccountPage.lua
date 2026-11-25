@@ -178,10 +178,11 @@ local function PlaceCells(band, width, context)
     for i, field in ipairs(fields) do
         local size = width * field.weight / total
         local text = band.cells[i]
-        text:ClearAllPoints(); text:SetPoint("LEFT", x + 6, 0); text:SetWidth(math.max(1, size - 12)); text:SetHeight(Theme().Table.rowHeight)
+        local inset = Theme().Table.cellInset
+        text:ClearAllPoints(); text:SetPoint("LEFT", x + inset, 0); text:SetWidth(math.max(1, size - inset * 2)); text:SetHeight(Theme().Table.rowHeight)
         text:Show()
         if field.id == "action" then band.actionWidth = size end
-        if field.id == "work" then band.workOffset = x + 6 end
+        if field.id == "work" then band.workOffset = x + inset end
         x = x + size
     end
     for i = #fields + 1, #band.cells do band.cells[i]:Hide() end
@@ -205,8 +206,9 @@ function Page.Create(frame)
     frame.summary:SetJustifyH("RIGHT")
     frame.header = Band(frame)
     frame.header.fill:SetColorTexture(unpack(theme.Colors.toolbar))
-    frame.previous = theme:CreateButton(frame, 58, Addon:T("TEXT.PREVIOUS.B41561"), "secondary")
-    frame.next = theme:CreateButton(frame, 58, Addon:T("TEXT.NEXT.67A246"), "secondary")
+    local previousLabel, nextLabel = Addon:T("TEXT.PREVIOUS.B41561"), Addon:T("TEXT.NEXT.67A246")
+    frame.previous = theme:CreateButton(frame, math.max(58, theme:MeasureText(theme.Font.body, previousLabel) + 16), previousLabel, "secondary")
+    frame.next = theme:CreateButton(frame, math.max(58, theme:MeasureText(theme.Font.body, nextLabel) + 16), nextLabel, "secondary")
     frame.previous:SetHeight(theme.Table.rowHeight); frame.next:SetHeight(theme.Table.rowHeight)
     frame.previous:SetPoint("BOTTOMRIGHT", frame.next, "BOTTOMLEFT", -4, 0)
     frame.next:SetPoint("BOTTOMRIGHT", -4, 4)
@@ -230,6 +232,11 @@ function Page.Create(frame)
     frame:HookScript("OnHide", function() frame.sessionRows, frame.sessionKey = nil, nil end)
 end
 
+local function SnapshotForSurface(context)
+    if not context.taskHubSnapshot then context.taskHubSnapshot = Addon.Snapshot:Build(context.characters) end
+    return context.taskHubSnapshot
+end
+
 function Page.Refresh(frame, context)
     if frame.refreshing then return end
     frame.refreshing, frame.context = true, context
@@ -244,7 +251,8 @@ function Page.Refresh(frame, context)
     frame.source:Show(); frame.workFilter:Show(); frame.summary:Show(); frame.header:Show(); frame.footer:Show()
     local theme, h = Theme(), Theme().Table.rowHeight
     local width = math.max(1, (context.surfaceAvailableWidth or frame:GetWidth()) - 8)
-    local value = Addon.Snapshot:Build(context.characters)
+    local value = SnapshotForSurface(context)
+    context.taskHubSnapshot = nil
     frame.value = value
     local rawRows = Page:Retain(Page:Filter(value), frame, context)
     local rows = Page:Organize(rawRows, frame.expanded)
@@ -376,7 +384,7 @@ end
 
 function Page.GetSurfaceMetrics(context)
     if context.preview then return Addon.Preview:GetMetrics(context) end
-    local value = Addon.Snapshot:Build(context.characters)
+    local value = SnapshotForSurface(context)
     local active = Page.frame and Page.frame:IsShown() and Page.frame
     local rows = Page:Organize(Page:Retain(Page:Filter(value), active, context), {})
     local count, bars, previous = #rows, #rows == 0 and 1 or (rows[1].section == "others" and 1 or 0), nil
@@ -385,6 +393,6 @@ function Page.GetSurfaceMetrics(context)
     end
     local theme = Theme()
     local height = theme.Table.headerHeight + (count + bars + 2) * theme.Table.rowHeight + 16
-    return { minContentWidth = 860, naturalContentWidth = 1040, minContentHeight = 180,
+    return { minContentWidth = 476, naturalContentWidth = 1040, minContentHeight = 180,
         naturalContentHeight = height, horizontalOverflow = "content", verticalOverflow = "none" }
 end

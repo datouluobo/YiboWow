@@ -11,7 +11,7 @@ local required = {
     { "localization", 1 }, { "characters", 1 }, { "character-identity", 1 },
     { "character-name-format", 1 }, { "basic-input", 1 }, { "account-view", 2 },
     { "account-surface-budget", 2 }, { "account-preview-field-groups", 1 }, { "account-entry", 2 }, { "character-cleanup", 1 }, { "level-filter", 1 },
-    { "pixel-line", 1 },
+    { "pixel-line", 1 }, { "account-compact-layout", 1 },
 }
 local ready = Core and Core.CheckAPIVersion and Core:CheckAPIVersion(14)
     and Core.HasCapability and Core.IsInitialized and Core:IsInitialized()

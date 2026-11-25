@@ -7,7 +7,7 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["GOAL.SELECT_DIFFICULTY"] = "Choose an instance difficulty.",
 
         ["GOAL.OPTION_GROUP"] = "Boss group %d",
-        ["CORE.UPGRADE_REQUIRED"] = "Upgrade YiboCore to 1.13.0 / API 14 and ensure localization:1, pixel-line:1 and the Action Hub capabilities are available.",
+        ["CORE.UPGRADE_REQUIRED"] = "Upgrade YiboCore to an API 14 version with account-surface-realm-scope:2.",
         ["CORE.BOSS_CAPABILITY_REQUIRED"] = "Boss targets require the YiboCore API 14 business service and tab capabilities.",
         ["ERROR.GOAL_SERVICE"] = "Could not register the goal service.",
         ["ERROR.BOSS_TARGET_SERVICE"] = "Could not register the boss target service.",

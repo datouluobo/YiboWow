@@ -153,7 +153,7 @@ local instances = {
 
 local function Register(view, field, label, scopedSettings)
     return Core.AccountView:RegisterPage(addonName, {
-        id = view.id, title = view.title(), icon = icon, previewEnabled = true, defaultEnabled = true,
+        id = view.id, title = view.title(), icon = icon, previewEnabled = true, defaultEnabled = true, columnPager = true,
         order = scopedSettings and 30 or 31, internal = not scopedSettings, hideFromSettings = not scopedSettings,
         fields = { { id = field, title = Text(label), defaultVisible = true } },
         scope = { mode = "realms" },

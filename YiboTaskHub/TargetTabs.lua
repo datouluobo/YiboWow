@@ -32,8 +32,9 @@ function Page.Refresh(frame, context)
 end
 function Page.GetSurfaceMetrics(context)
     if not context.preview and (Page.activeTab == "targets" or Page.activeTab == "goals") then
-        local height = Page.activeTab == "targets" and 418 or math.max(380, Addon.GoalEditor.requiredHeight or 0)
-        return { minContentWidth = 860, naturalContentWidth = 1040, minContentHeight = height, naturalContentHeight = math.max(530, height), horizontalOverflow = "none", verticalOverflow = "none" }
+        local editor = Addon.GoalEditor
+        local height = Page.activeTab == "targets" and 418 or math.max(380, editor.draft and editor.requiredHeight or 0)
+        return { minContentWidth = 466, naturalContentWidth = 1040, minContentHeight = height, naturalContentHeight = math.max(530, height), horizontalOverflow = "none", verticalOverflow = "none" }
     end
     local result = OverviewMetrics(context)
     if not context.preview then result.minContentHeight, result.naturalContentHeight = result.minContentHeight + 38, result.naturalContentHeight + 38 end

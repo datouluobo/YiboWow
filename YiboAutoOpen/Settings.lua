@@ -59,11 +59,14 @@ function Settings:CreatePanel(parent, host)
         if host.bindTooltip then host.bindTooltip(panel.refresh, Addon:T("TOOLTIP.REFRESH"), { Addon:T("TOOLTIP.NAMES"), Addon:T("TOOLTIP.RETRY") }) end
     end
     panel.host = host; self.panel = panel; panel:Show()
-    local availableWidth = math.max(parent:GetWidth() or 0, panel:GetWidth() or 0)
+    local availableWidth = parent:GetWidth()
     local compact = availableWidth >= 1100
     local medium = availableWidth >= 700
     local function Anchor(frame, point, relativeTo, relativePoint, x, y)
         frame:ClearAllPoints(); frame:SetPoint(point, relativeTo, relativePoint, x, y)
+    end
+    if medium then
+        panel.checks[1]:SetWidth(200); panel.checks[2]:SetWidth(260); panel.checks[3]:SetWidth(300)
     end
     if compact then
         Anchor(panel.checks[1], "TOPLEFT", panel, "TOPLEFT", 12, -34)
@@ -101,23 +104,28 @@ function Settings:CreatePanel(parent, host)
         Anchor(panel.refresh, "TOPRIGHT", panel, "TOPRIGHT", -12, -188)
         panel.listTop = 224
     else
-        Anchor(panel.checks[1], "TOPLEFT", panel, "TOPLEFT", 12, -34)
-        Anchor(panel.checks[2], "TOPLEFT", panel, "TOPLEFT", 220, -34)
-        Anchor(panel.confirmHeader, "TOPLEFT", panel, "TOPLEFT", 12, -58)
-        Anchor(panel.checks[3], "TOPLEFT", panel, "TOPLEFT", 12, -78)
-        Anchor(panel.spaceLabel, "TOPLEFT", panel, "TOPLEFT", 12, -106)
+        for index, check in ipairs(panel.checks) do
+            check:SetWidth(math.max(1, availableWidth - 24))
+            Anchor(check, "TOPLEFT", panel, "TOPLEFT", 12, index == 3 and -104 or -34 - (index - 1) * 26)
+        end
+        Anchor(panel.confirmHeader, "TOPLEFT", panel, "TOPLEFT", 12, -86)
+        Anchor(panel.spaceLabel, "TOPLEFT", panel, "TOPLEFT", 12, -134)
         Anchor(panel.space, "LEFT", panel.spaceLabel, "RIGHT", 8, 0)
-        Anchor(panel.mode, "TOPLEFT", panel, "TOPLEFT", 300, -96)
+        Anchor(panel.mode, "TOPLEFT", panel, "TOPLEFT", 12, -160)
         Anchor(panel.retry, "LEFT", panel.mode, "RIGHT", 10, 0)
-        Anchor(panel.add, "TOPLEFT", panel, "TOPLEFT", 12, -144); panel.add:SetWidth(300)
+        local dropWidth = math.min(180, math.floor(availableWidth * 0.36))
+        Anchor(panel.add, "TOPLEFT", panel, "TOPLEFT", 12, -198)
+        panel.add:SetWidth(math.max(1, availableWidth - dropWidth - 100))
         Anchor(panel.addButton, "LEFT", panel.add, "RIGHT", 8, 0)
-        Anchor(panel.drop, "LEFT", panel.addButton, "RIGHT", 8, 0); panel.drop:SetWidth(180)
-        Anchor(panel.message, "TOPLEFT", panel, "TOPLEFT", 12, -174)
-        Anchor(panel.catalog, "TOPLEFT", panel, "TOPLEFT", 12, -204)
-        Anchor(panel.refresh, "TOPRIGHT", panel, "TOPRIGHT", -12, -192)
-        panel.listTop = 228
+        Anchor(panel.drop, "LEFT", panel.addButton, "RIGHT", 8, 0); panel.drop:SetWidth(math.max(1, dropWidth))
+        Anchor(panel.message, "TOPLEFT", panel, "TOPLEFT", 12, -230)
+        Anchor(panel.catalog, "TOPLEFT", panel, "TOPLEFT", 12, -265)
+        Anchor(panel.refresh, "TOPRIGHT", panel, "TOPRIGHT", -12, -253)
+        panel.listTop = 293
     end
     panel.confirmHeader:SetText(Addon:T("SETTING.CONFIRM"))
+    panel.status:SetWidth(math.max(1, availableWidth - 24)); panel.status:SetWordWrap(false)
+    panel.message:SetWidth(math.max(1, availableWidth - 24)); panel.message:SetWordWrap(false)
     local function Refresh() host.refreshPage() end
     panel.checks[1]:SetChecked(Addon.db.enabled); panel.checks[1]:SetScript("OnClick", function(c) Addon.db.enabled = not c:GetChecked(); if not Addon.db.enabled then Addon.Queue:Clear() else Addon:Refresh() end; Refresh() end)
     panel.checks[2]:SetChecked(Addon.db.scanExistingOnLogin); panel.checks[2]:SetScript("OnClick", function(c) Addon.db.scanExistingOnLogin = not c:GetChecked(); Refresh() end)
@@ -146,7 +154,6 @@ function Settings:CreatePanel(parent, host)
     -- Core resolves the hosted row width before invoking this panel.  Using
     -- that stable width avoids locking the catalog to a stale two-column
     -- layout during the child's first layout pass.
-    availableWidth = math.max(600, parent:GetWidth() or 600)
     local minimumColumnWidth = 280
     local columnCount = math.max(1, math.min(3, math.floor((availableWidth - 24 + 12) / (minimumColumnWidth + 12))))
     local rowsPerColumn = math.max(1, math.ceil(#items / columnCount))
@@ -184,7 +191,7 @@ function Settings:CreatePanel(parent, host)
     Anchor(panel.confirmSourceHeader, "TOPLEFT", panel, "TOPLEFT", 12, -confirmSourceTop)
     panel.confirmSourceHeader:SetText(Addon:T("SOURCE.COUNT", #confirmSources))
     Anchor(panel.confirmSourceInput, "TOPLEFT", panel, "TOPLEFT", 12, -(confirmSourceTop + 28))
-    panel.confirmSourceInput:SetWidth(math.max(260, math.min(420, availableWidth - 190)))
+    panel.confirmSourceInput:SetWidth(math.max(1, math.min(420, availableWidth - 92)))
     panel.confirmSourceInput:SetText("")
     panel.confirmSourceInput.onSubmit = function(c) panel.confirmSourceAddButton:Click(); c:ClearFocus() end
     Anchor(panel.confirmSourceAddButton, "LEFT", panel.confirmSourceInput, "RIGHT", 8, 0)

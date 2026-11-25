@@ -61,7 +61,7 @@ function Page:Register()
         defaultEnabled = true,
         previewEnabled = false,
         GetSurfaceMetrics = function()
-            return { minContentWidth = 650, naturalContentWidth = 1000,
+            return { minContentWidth = 488, naturalContentWidth = 1000,
                 minContentHeight = 490, naturalContentHeight = 630 }
         end,
         scope = { mode = "realms", allTitle = Addon:T("TEXT.ALL_REALMS_A166AB") },

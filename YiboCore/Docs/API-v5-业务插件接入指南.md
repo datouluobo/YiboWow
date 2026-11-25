@@ -20,6 +20,8 @@ Core 负责角色目录、账号窗口、入口生命周期，以及身份、经
 
 Core API13 的 `account-surface-realm-scope:1` 支持在 `scope={mode="realms"}` 中声明 `previewOnly=true` 或 `mainOnly=true`。前者让服务器范围仅应用于入口悬停，后者仅应用于主窗。应用范围的视图仍复用 Core 的会话服务器选择、快照准入和排序。未选择有效范围且当前服务器没有可用记录时，默认使用所有服务器。使用这些字段的消费者须在初始化前检查能力版本。
 
+API14 的 `account-surface-realm-scope:2` 支持可选的 `scope.GetSnapshotCharacters(characters)`。Core 在生成服务器选项时调用一次，消费方返回输入列表中拥有该业务快照的角色子集。返回空表、错误或非表时只保留所有服务器选项。已有 `HasCharacterSnapshot` 在未声明批量回调时继续使用。此回调仅控制服务器菜单，页面角色准入依然由 `GetEligibleCharacters` 负责。行动中心启动前检查版本 2。
+
 业务插件只提供列定义、业务数据和当前角色列的标识；Core 独占矩阵保护间距、角色身份列测量、顶部角色列宽、交替行/列底纹、当前角色框的锚定与 viewport 裁切、列分页器和纵向滚动条沟槽。禁止以本地常量补偿 padding、图标间隔、滚动条宽度或分页按钮位置；禁止自行调用 `SetPoint` 重锚定当前角色框。
 
 ```lua

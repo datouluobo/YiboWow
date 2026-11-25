@@ -173,6 +173,7 @@ end
 
 -- opts: client (Mists/Forever/Retail), coreRoot, addonRoot, addon, saved
 -- (table SVname -> value), coreSaved, locale, configure(env) before Core.
+-- For source replay, pass coreManifest and addons (root, name, manifest, saved).
 function H.Boot(opts)
     local client = opts.client or "Mists"
     local env = setmetatable({ TEST_GUID = "Player-4800-0ABCDEF1", TEST_MESSAGES = {}, TEST_TIMERS = {}, TEST_ERRORS = {},
@@ -205,8 +206,8 @@ function H.Boot(opts)
             for _, timer in ipairs(timers) do timer[2]() end
         end
     end
-    local function LoadAddon(root, name, saved)
-        local files, meta = ReadToc(root .. "/" .. name .. ".toc")
+    local function LoadAddon(root, name, saved, manifest)
+        local files, meta = ReadToc(root .. "/" .. (manifest or name .. ".toc"))
         env.TEST_META[name] = meta
         local private = {}
         for _, file in ipairs(files) do
@@ -225,7 +226,7 @@ function H.Boot(opts)
         coreSaved = { marker = "core-keep", schemaVersion = 11, settings = { language = "auto" },
             clientScope = { target = client, projectID = PROJECTS[client], rulesetState = "unknown" }, characters = { byID = {} } }
     end
-    local coreFiles = LoadAddon(opts.coreRoot, "YiboCore", { [CORE_STORES[client]] = coreSaved })
+    local coreFiles = LoadAddon(opts.coreRoot, "YiboCore", { [CORE_STORES[client]] = coreSaved }, opts.coreManifest)
     local Core = env.YiboCore
 
     -- Count business registrations made by this addon (successful only).
@@ -245,7 +246,11 @@ function H.Boot(opts)
         Wrap(Core.Entry, "RegisterBusinessEntry", "RegisterBusinessEntry")
         Wrap(Core.CharacterCleanup, "RegisterOwner", "CleanupOwner")
     end
-    local files, meta = LoadAddon(opts.addonRoot, opts.addon, opts.saved)
+    local files, meta
+    if opts.addon then files, meta = LoadAddon(opts.addonRoot, opts.addon, opts.saved) end
+    for _, entry in ipairs(opts.addons or {}) do
+        LoadAddon(entry.root, entry.name, entry.saved, entry.manifest)
+    end
     env.TEST_LOGGED_IN = true
     Event("PLAYER_LOGIN")
     Event("PLAYER_ENTERING_WORLD", true, false)

@@ -23,4 +23,5 @@ Mists/RecipeCatalog.lua
 RecipeStateScanner.lua
 Mists/GoalTargets.lua
 AccountPage.lua
+Mists/RecipeComparison.lua
 Bootstrap.lua

@@ -44,20 +44,16 @@ view.GetColumnPageByWidth = function(self, pageID, stateKey, columns, width, fix
 end
 local pagerState = {}
 view.UpdateColumnPager = function(_, _, _, _, info) pagerState[stage] = info or false end
-local shellWidth = Theme:GetNavigationWidth() + Theme.Geometry.shellBorder * 2 + 1
 local function Exercise(name, metricsFn, renderFn, instance, context, limited)
     stage = name
     local metrics = metricsFn(context)
     Check(type(metrics.scrollContentHeight) == "number" and type(metrics.scrollFixedHeight) == "number", name .. " opts into Core budget")
-    local shell = Frame(760, 250); shell.preview = false
-    view.CreateFrame = function() return shell end
-    view:ApplyPageSize({ id = "budget-" .. name, title = name, GetSurfaceMetrics = metricsFn }, context)
-    context.surfaceAvailableWidth = shell:GetWidth() - shellWidth
-    context.surfaceAvailableHeight = shell:GetHeight() - Theme.Geometry.titleBar - 2
+    context.surfaceAvailableWidth = limited and 420 or 1700
+    context.surfaceAvailableHeight = 300
     instance:SetSize(context.surfaceAvailableWidth, context.surfaceAvailableHeight)
     renderFn(instance, context)
     Check((budgets[name] or 0) > 0, name .. " renderer consumes Core budget")
-    if slices[name] then Check(limited and slices[name].info.pages > 1 or not limited and slices[name].info.pages == 1, name .. " pages only at the actual screen boundary") end
+    if slices[name] then Check(limited and slices[name].info.pages > 1 or not limited and slices[name].info.pages == 1, name .. " pages against actual content width") end
     return metricsFn(context)
 end
 
@@ -66,7 +62,7 @@ YAB = { CoreReady = true }
 dofile("YiboAltoBoss/Common/Locale.lua"); dofile("YiboAltoBoss/Common/LockoutLocale.lua")
 local bosses, columns = {}, {}
 for i = 1, 54 do bosses[i] = { key = "boss" .. i, name = "Boss " .. i } end
-for i = 1, 13 do columns[i] = { id = "instance" .. i, name = "Instance " .. i, abbreviation = "I" .. i } end
+for i = 1, 13 do columns[i] = { id = "instance" .. i, name = "Instance " .. i, abbreviation = "I" .. i, isRaid = true } end
 YAB.GetBossList = function() return bosses end
 YAB.GetAccountCharacterKeys = function() return keys end
 YAB.GetCharacterIdentity = function(key) for _, c in ipairs(roster) do if c.id == key then return c end end end
@@ -216,6 +212,7 @@ Check(not YAB.CoreReady, "Boss early gate rejects old budget")
 YAB.CoreReady = true; dofile("YiboAltoBoss/Mists/CoreIntegration.lua")
 Check(not YAB.CoreIntegration:Initialize(), "Boss integration rejects old budget")
 dofile("YiboCrafting/Bootstrap.lua")
+YiboCrafting.CLIENT_SUPPORTED = true
 local ok, errorMessage = YiboCrafting:Initialize()
 Check(not ok and errorMessage:find("account-surface-budget:2", 1, true), "Crafting rejects old budget with upgrade detail")
 SlashCmdList = SlashCmdList or {}

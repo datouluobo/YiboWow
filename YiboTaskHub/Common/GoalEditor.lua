@@ -64,7 +64,11 @@ function Editor.Create(frame)
 end
 function Editor.Refresh(frame, context)
     frame.context = context or frame.context
+    local previousRequiredHeight = Editor.requiredHeight
     Editor.requiredHeight = nil
+    local width = math.max(1, (frame.context.surfaceAvailableWidth or frame:GetWidth()) - 16)
+    local fieldGap = Theme().Space.xs
+    local fieldWidth = math.max(1, math.floor((width - fieldGap) / 2))
     for _, row in ipairs(frame.rows) do row:Hide() end
     for _, field in ipairs(frame.fields) do field:Hide() end
     frame.previous:SetShown(not Editor.draft); frame.next:SetShown(not Editor.draft)
@@ -73,7 +77,8 @@ function Editor.Refresh(frame, context)
     for _, entry in ipairs(Editor:Entries()) do if entry.targetType == "boss" then bossSource = true end end
     frame.add:SetShown(listMode); frame.boss:SetShown(listMode and bossSource); frame.role:SetShown(listMode)
     frame.hint:ClearAllPoints(); frame.hint:SetPoint("TOPLEFT", 8, listMode and -80 or -38)
-    frame.hint:SetWidth(math.max(300, frame:GetWidth() - 16))
+    frame.hint:SetWidth(width)
+    frame.hint:SetWordWrap(true)
     if frame.addControls then frame.addControls:Hide() end
     if Editor.adding then
         if frame.actions then frame.actions:Hide() end
@@ -87,7 +92,8 @@ function Editor.Refresh(frame, context)
         local entries = Editor:Entries()
         for i, entry in ipairs(entries) do
             local b = controls.buttons[i] or Button(controls, "", 300, 0, 0, function() end); controls.buttons[i] = b
-            b:ClearAllPoints(); b:SetPoint("TOPLEFT", 8 + ((i - 1) % 2) * 320, -78 - math.floor((i - 1) / 2) * 44)
+            b:ClearAllPoints(); b:SetPoint("TOPLEFT", 8 + ((i - 1) % 2) * (fieldWidth + fieldGap), -78 - math.floor((i - 1) / 2) * 44)
+            b:SetWidth(math.min(300, fieldWidth))
             b:SetText(entry.title); b:SetScript("OnClick", function()
                 Editor.adding = nil
                 if entry.targetType == "boss" then
@@ -136,6 +142,8 @@ function Editor.Refresh(frame, context)
         draft.scope = draft.scope or { mode = "character" }; draft.conditions = draft.conditions or {}
         frame.title:SetText(Addon:T("TEXT.CONFIGURE_GOAL.7C0C68"))
         local normalized, err = Addon.Goals:Normalize(draft)
+        frame.hint:SetText(Editor.message or err or (normalized and (normalized.reason or normalized.title)) or Addon:T("TEXT.CHOOSE_GOAL_OPTIONS.B73249"))
+        local fieldTop = math.max(72, 38 + frame.hint:GetStringHeight() + 10)
         local fields = normalized and normalized.fields or Editor.lastFields or {}
         if normalized and normalized.fields then Editor.lastFields = normalized.fields end
         if (normalized and normalized.needsCharacter) or
@@ -154,8 +162,10 @@ function Editor.Refresh(frame, context)
         for i, definition in ipairs(fields) do
             local field = frame.fields[i] or CreateFrame("Frame", nil, frame); frame.fields[i] = field
             field:ClearAllPoints()
-            field:SetPoint("TOPLEFT", 8 + ((i - 1) % 2) * 400, -72 - math.floor((i - 1) / 2) * 60); field:SetSize(380, 54)
+            field:SetPoint("TOPLEFT", 8 + ((i - 1) % 2) * (fieldWidth + fieldGap), -fieldTop - math.floor((i - 1) / 2) * 60)
+            field:SetSize(fieldWidth, 54)
             field.label = field.label or Text(field, "", 0, 0); field.label:SetText(definition.label)
+            field.label:SetWidth(fieldWidth); field.label:SetWordWrap(false)
             if field.select then field.select:Hide() end
             if field.input then field.input:Hide() end
             if field.multi then field.multi:Hide() end
@@ -172,12 +182,14 @@ function Editor.Refresh(frame, context)
                 local d = field.select or Theme():CreateDropdown(field, 360, {})
                 field.select = d
                 d:SetMenuPageSize(8)
+                d:SetWidth(fieldWidth)
                 d:SetPoint("TOPLEFT", 0, -22); d:SetOptions(definition.options or {}); d:SetValue(container[key])
                 d:SetEnabled(#(definition.options or {}) > 0)
                 d:SetOnValueChanged(function(v) field.SetValue(v); Refresh() end); d:Show()
             elseif definition.kind == "multiselect" then
                 local d = field.multi or Theme():CreateMultiSelectDropdown(field, 360, {})
                 field.multi = d
+                d:SetWidth(fieldWidth)
                 d:SetPoint("TOPLEFT", 0, -22); d:SetSummary(definition.label)
                 local options = {}
                 for index, option in ipairs(definition.options or {}) do
@@ -203,14 +215,15 @@ function Editor.Refresh(frame, context)
             else
                 local input = field.input or Theme():CreateInput(field, { width = 360, OnChanged = function(v) if not field.silent then field.SetValue(v) end end })
                 field.input = input
+                input:SetWidth(fieldWidth)
                 input:SetPoint("TOPLEFT", 0, -22); field.silent = true; input:SetText(tostring(container[key] or "")); field.silent = false; input:Show()
             end
             field:Show()
         end
         local row = frame.actions or CreateFrame("Frame", nil, frame); frame.actions = row
-        Editor.requiredHeight = 82 + math.ceil(#fields / 2) * 60 + 80 + 38
+        local actionTop = fieldTop + math.ceil(#fields / 2) * 60 + 10
         row:Show()
-        row:ClearAllPoints(); row:SetPoint("TOPLEFT", 8, -82 - math.ceil(#fields / 2) * 60); row:SetSize(800, 60)
+        row:ClearAllPoints(); row:SetPoint("TOPLEFT", 8, -actionTop)
         row.save = row.save or Button(row, Addon:T("TEXT.SAVE_GOAL.9E77AC"), 110, 0, 0, function() end)
         row.save:SetScript("OnClick", function()
             local result, message
@@ -223,9 +236,13 @@ function Editor.Refresh(frame, context)
         row.cancel = row.cancel or Button(row, Addon:T("TEXT.CANCEL.4D0B46"), 80, 120, 0, function() Editor.draft, Editor.editingID = nil, nil; Refresh() end)
         row.sourceActions = row.sourceActions or {}
         for _, button in ipairs(row.sourceActions) do button:Hide() end
+        local x, y, actionWidth = 210, 0, math.min(240, width)
         for index, action in ipairs(normalized and normalized.actions or {}) do
-            local button = row.sourceActions[index] or Button(row, "", 240, 210 + (index - 1) * 248, 0, function() end)
+            if x + actionWidth > width then x, y = 0, y + 38 end
+            local button = row.sourceActions[index] or Button(row, "", actionWidth, 0, 0, function() end)
             row.sourceActions[index] = button
+            button:ClearAllPoints(); button:SetPoint("TOPLEFT", x, -y); button:SetWidth(actionWidth)
+            x = x + actionWidth + fieldGap
             button:SetText(action.label)
             button:SetScript("OnClick", function()
                 local expected, intent = action, draft
@@ -253,7 +270,9 @@ function Editor.Refresh(frame, context)
             end)
             button:Show()
         end
-        frame.hint:SetText(Editor.message or err or (normalized and (normalized.reason or normalized.title)) or Addon:T("TEXT.CHOOSE_GOAL_OPTIONS.B73249"))
+        row:SetSize(width, y + 38)
+        Editor.requiredHeight = actionTop + y + 38 + 38
+        if previousRequiredHeight ~= Editor.requiredHeight then Refresh() end
         frame.footer:SetText(""); return
     end
     if frame.actions then frame.actions:Hide() end
@@ -274,9 +293,10 @@ function Editor.Refresh(frame, context)
     for _, source in ipairs(Addon.Contracts:GetGoalResults(characters)) do
         for _, task in ipairs(source.result.data.tasks) do statuses[task.goalID] = task end
     end
-    local capacity = math.max(1, math.floor((frame:GetHeight() - 154) / 56)); Editor.capacity = capacity
-    local pages = math.max(1, math.ceil(#list / capacity)); Editor.page = math.min(pages, math.max(1, Editor.page))
     frame.hint:SetText(Editor.message or (#list == 0 and Addon:T("TEXT.NO_GOALS_IN_THIS_SCOPE_CLICK_ADD_GOA.0C159F") .. Addon.Core.BusinessItemActions:GestureLabel() .. Addon:T("TEXT..F92669") or Addon:T("TEXT.THE_OVERVIEW_SHOWS_TASKS_COMPLETED_A.584C7A")))
+    local listTop = math.max(108, 80 + frame.hint:GetStringHeight() + 8)
+    local capacity = math.max(1, math.floor((frame:GetHeight() - listTop - 46) / 56)); Editor.capacity = capacity
+    local pages = math.max(1, math.ceil(#list / capacity)); Editor.page = math.min(pages, math.max(1, Editor.page))
     for i = 1, capacity do
         local goal = list[(Editor.page - 1) * capacity + i]
         if goal then
@@ -302,13 +322,14 @@ function Editor.Refresh(frame, context)
                         end })
                 end)
             end
-            local width = math.max(740, frame:GetWidth() - 16)
-            row:SetSize(width, 52); row:ClearAllPoints(); row:SetPoint("TOPLEFT", 8, -108 - (i - 1) * 56)
-            row.title:SetWidth(width - 310); row.title:SetWordWrap(false)
-            row.detail:SetWidth(width - 310); row.detail:SetWordWrap(false)
-            for index, button in ipairs({ row.remove, row.pause, row.edit, row.copy }) do
-                button:ClearAllPoints(); button:SetPoint("TOPRIGHT", -(index - 1) * 80, -8)
+            row:SetSize(width, 52); row:ClearAllPoints(); row:SetPoint("TOPLEFT", 8, -listTop - (i - 1) * 56)
+            local buttonOffset = 0
+            for _, button in ipairs({ row.remove, row.pause, row.edit, row.copy }) do
+                button:ClearAllPoints(); button:SetPoint("TOPRIGHT", -buttonOffset, -8)
+                buttonOffset = buttonOffset + button:GetWidth() + Theme().Space.xxs
             end
+            row.title:SetWidth(math.max(1, width - buttonOffset - fieldGap)); row.title:SetWordWrap(false)
+            row.detail:SetWidth(math.max(1, width - buttonOffset - fieldGap)); row.detail:SetWordWrap(false)
             row.goal = goal
             row.copy:SetEnabled(goal.intent.scope.mode == "character")
             local task = statuses[goal.id]

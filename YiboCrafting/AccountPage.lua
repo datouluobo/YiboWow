@@ -26,6 +26,7 @@ local UNKNOWN_CATEGORY = "unknown"
 local function CategoryKey(professionID, category, categoryID)
     return tostring(professionID) .. ":" .. tostring(categoryID or category or UNKNOWN_CATEGORY)
 end
+Page.CategoryKey = CategoryKey
 local ProductInfoReady
 local cachedProductNames = {}
 
@@ -213,14 +214,16 @@ function Page:Snapshot(context)
             end
         end
     end
-    local list, professionList = {}, {}
+    local list, professionList, professionLabels = {}, {}, {}
     for _, entry in pairs(records) do
         entry.categoryID = Addon.CategoryCatalog and Addon.CategoryCatalog.GetID and Addon.CategoryCatalog:GetID(entry.professionID, entry.id)
         entry.icon = ItemIcon(entry.outputItemID) or entry.spellIcon
         list[#list + 1] = entry
     end
     for professionID in pairs(ids) do
-        professionList[#professionList + 1] = { id = professionID, name = ProfessionName(professionID, names) }
+        local name = ProfessionName(professionID, names)
+        professionLabels[professionID] = name
+        professionList[#professionList + 1] = { id = professionID, name = name }
     end
     table.sort(professionList, function(a, b)
         local left, right = PROFESSION_ORDER[a.id] or 150, PROFESSION_ORDER[b.id] or 150
@@ -230,7 +233,7 @@ function Page:Snapshot(context)
     table.sort(list, function(a, b)
         local leftOrder, rightOrder = PROFESSION_ORDER[a.professionID] or 150, PROFESSION_ORDER[b.professionID] or 150
         if leftOrder ~= rightOrder then return leftOrder < rightOrder end
-        local left, right = ProfessionName(a.professionID, names), ProfessionName(b.professionID, names)
+        local left, right = professionLabels[a.professionID], professionLabels[b.professionID]
         if left ~= right then return left < right end
         if a.name ~= b.name then return a.name < b.name end
         return a.id < b.id
@@ -403,6 +406,7 @@ local function BindVisibleRows(panel)
         if panel.renderVisible then panel.renderVisible() end
     end)
 end
+Page.BindVisibleRows = BindVisibleRows
 
 function Page:Create(parent)
     parent.crafting = {}
@@ -736,6 +740,33 @@ local function SetRecipeNameHit(row, entry, left, width, onClick)
     hit:SetScript("OnClick", onClick)
     hit:Show()
     row:SetScript("OnEnter", nil); row:SetScript("OnLeave", nil)
+end
+
+function Page:RenderCompactRecipeList(panel, entries, onSelect)
+    local rowHeight, inset, iconWidth = Theme.Table.rowHeight, Theme.Geometry.compactColumnInset, 16
+    local nameLeft = inset + iconWidth + Theme.Table.iconTextGap
+    local items = {}
+    for index, entry in ipairs(entries) do
+        items[index] = { entry = entry, top = (index - 1) * rowHeight, height = rowHeight }
+    end
+    RenderVisibleRows(panel, items, #items * rowHeight, function(row, item, index)
+        local entry = item.entry
+        local fill = entry.key == panel.selectedKey and C.selected or Theme:GetDataRowColor(index)
+        row:SetBackdropColor(fill[1], fill[2], fill[3], fill[4])
+        row.icon:SetPoint("LEFT", inset, 0)
+        row.icon:SetSize(iconWidth, iconWidth)
+        row.icon:SetTexture(entry.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+        row.name:SetPoint("LEFT", nameLeft, 0)
+        row.name:SetPoint("RIGHT", -inset, 0)
+        row.name:SetWordWrap(false)
+        row.name:SetText(entry.name)
+        row.meta:Hide()
+        local function Select() onSelect(entry) end
+        row:SetScript("OnClick", Select)
+        SetRecipeNameHit(row, entry, nameLeft, panel.contentWidth - nameLeft - inset, Select)
+        SetProductHit(row, entry, inset, iconWidth, Select)
+        if Addon.GoalTargets and Addon.GoalTargets.ref then Addon.GoalTargets:BindRecipeHits(row, entry) end
+    end)
 end
 
 function Page:RenderMatrix(parent, context, entries, names)
@@ -1168,6 +1199,7 @@ function Page:Register()
     local page, err = Core.AccountView:RegisterPage(Addon.NAME, {
         id = ID, title = L("PAGE_TITLE"), order = 50, defaultEnabled = true,
         previewEnabled = true, autoFitWidth = true,
+        compactLayout = true,
         fields = {
             { id = "recipe-name", title = L("RECIPE_NAME"), defaultVisible = true },
             { id = "recipe-state", title = L("LEARNING_STATE"), defaultVisible = true },
@@ -1223,8 +1255,8 @@ function Page:Register()
                 scrollContentHeight = metrics.scrollContentHeight, scrollFixedHeight = metrics.scrollFixedHeight,
                 horizontalOverflow = "paginate", verticalOverflow = "content" }
         end,
-        Create = function(parent) Page:Create(parent) end,
-        Refresh = function(parent, context) Page:Refresh(parent, context) end,
+        Create = function(parent) parent:SetClipsChildren(true) end,
+        Refresh = function(parent, context) Page:RenderAccountPage(parent, context) end,
     })
     if not page then return nil, err end
     local entry, entryError = Core.Entry:RegisterBusinessEntry(Addon.NAME, {

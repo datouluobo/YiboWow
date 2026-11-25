@@ -440,8 +440,13 @@ end
 function UI:LayoutMainHeader(page, width, context)
     local header = page.detail.header
     local characterWidth = Theme:GetCharacterRowHeaderWidth(true, context, context and context.characters)
-    local tracks = { character = characterWidth, stage = 184, progress = 150, action = math.max(180, width - characterWidth - 334) }
     local titles = { character = Addon:T("HEADER.CHARACTER"), stage = Addon:T("HEADER.STAGE"), progress = Addon:T("HEADER.PROGRESS"), action = Addon:T("HEADER.ACTION") }
+    local budget = width - CELL_INSET * 2
+    local character = math.min(characterWidth, math.floor(budget * 0.31))
+    local remaining = budget - character
+    local stage = math.min(184, math.floor(remaining * 0.35))
+    local progress = math.min(150, math.floor(remaining * 0.25))
+    local tracks = { character = character, stage = stage, progress = progress, action = remaining - stage - progress }
     local offset = CELL_INSET
     for _, key in ipairs({ "character", "stage", "progress", "action" }) do
         local cell = header.cells[key]
@@ -460,7 +465,8 @@ function UI:RefreshMain(context)
     page:Show(); page.detail:Show(); page.detail.header:Show(); page.detail.scroll:Show()
     page.detail.content:Show(); page.detail.scroll:SetVerticalScroll(0)
     self:LayoutTargetBar(page:GetWidth())
-    local width = math.max(620, page.detail:GetWidth() or 620); local tracks = self:LayoutMainHeader(page, width, context)
+    local width = math.max(1, page.detail:GetWidth() or context.surfaceAvailableWidth)
+    local tracks = self:LayoutMainHeader(page, width, context)
     local roster = self:GetMainRoster(context, page.roster)
     page.roster = roster
     for id, button in pairs(page.targets.buttons) do
@@ -614,7 +620,7 @@ function UI:GetSurfaceMetrics(context)
         return {minContentWidth=310,naturalContentWidth=width+Theme.Space.xs*2,minContentHeight=math.max(122, fixedHeight + Theme.Table.previewRowHeight),naturalContentHeight=fixedHeight+rows*Theme.Table.previewRowHeight,scrollContentHeight=rows*Theme.Table.previewRowHeight,scrollFixedHeight=fixedHeight,fixedLeftWidth=fixed[1] and fixed[1].previewMinWidth or 0,fixedTopHeight=legendHeight+Theme.Space.xxs+Theme.Table.headerHeight,horizontalOverflow="paginate",verticalOverflow="content"}
     end
     local targetBar = self:GetTargetBarLayout(context and context.surfaceAvailableWidth or 900)
-    return {minContentWidth=720,naturalContentWidth=910,minContentHeight=270,naturalContentHeight=math.min(640,targetBar.height+126+rows*ROW_HEIGHT),horizontalOverflow="none",verticalOverflow="content"}
+    return {minContentWidth=440,naturalContentWidth=910,minContentHeight=270,naturalContentHeight=math.min(640,targetBar.height+126+rows*ROW_HEIGHT),horizontalOverflow="none",verticalOverflow="content"}
 end
 -- Core uses the page's natural surface metrics for this matrix. Do not expose
 -- a second post-render height measurement: asynchronous refreshes can run
@@ -658,8 +664,16 @@ function UI:Initialize()
         end,
         GetEligibleCharacters=function(characters) return UI:GetEligibleCharacters(characters) end,
         settings={title=Addon:T("PAGE.TITLE"), description=Addon:T("PAGE.SETTINGS_DESCRIPTION"), CreateSettingsPanel=function(parent,host)
-            local section=host.createSection(parent,Addon:T("PAGE.SETTINGS_SECTION"),parent:GetWidth() or 600,70)
-            local label=host.createText(section,12,C.muted); label:SetPoint("TOPLEFT",4,-4); label:SetText(Addon:T("PAGE.MANUAL_EVIDENCE_NOTE"))
+            local section = parent.legendarySettingsSection
+            if not section then
+                section = host.createSection(parent, Addon:T("PAGE.SETTINGS_SECTION"), parent:GetWidth(), 70)
+                local label = host.createText(section, 12, C.muted)
+                label:SetPoint("TOPLEFT", 4, -4)
+                label:SetText(Addon:T("PAGE.MANUAL_EVIDENCE_NOTE"))
+                parent.legendarySettingsSection = section
+            end
+            section:SetWidth(parent:GetWidth())
+            section:Show()
             return 70
         end},
         fields=UI:GetPreviewSettingsFields(), GetPreviewFields=function() return UI:GetPreviewColumns() end,

@@ -18,6 +18,14 @@ function Page:Create(parent)
     parent.heading:SetPoint("TOPLEFT",12,-10); parent.heading:SetPoint("RIGHT",-130,0); parent.heading:SetHeight(26)
     parent.refresh=Theme:CreateButton(parent,100,Addon:T("FOREVER.REFRESH")); parent.refresh:SetPoint("TOPRIGHT",-12,-10)
     parent.refresh:SetScript("OnClick",function() Addon.Scanner:Scan() end)
+    parent.refresh:HookScript("OnEnter", function(button)
+        if parent.refreshStatus then Theme:ShowTooltip(button, button.label:GetText(), { parent.refreshStatus }) end
+    end)
+    local function HideRefreshTooltip(button)
+        if GameTooltip.IsOwned and GameTooltip:IsOwned(button) then GameTooltip:Hide() end
+    end
+    parent.refresh:HookScript("OnLeave", HideRefreshTooltip)
+    parent.refresh:HookScript("OnHide", HideRefreshTooltip)
     parent.professions=Theme:CreateText(parent,Theme.Font.body,Theme.Colors.text)
     parent.professions:SetPoint("TOPLEFT",12,-48); parent.professions:SetPoint("RIGHT",-12,0); parent.professions:SetHeight(60)
     parent.status=Theme:CreateText(parent,Theme.Font.assist,Theme.Colors.muted)
@@ -29,7 +37,7 @@ function Page:Create(parent)
         width=190,height=28,maxLetters=80,placeholder=Addon:T("FOREVER.SEARCH"),
         OnChanged=function() FilterChanged(parent) end,
     })
-    parent.search:SetPoint("LEFT")
+    parent.search:SetPoint("LEFT", toolbar, "TOPLEFT", 0, -Theme.Size.standard / 2)
     Theme:AttachClearButton(parent.search)
     parent.professionFilter=Theme:CreateDropdown(toolbar,146)
     parent.professionFilter:SetPoint("LEFT",parent.search,"RIGHT",8,0)
@@ -189,6 +197,7 @@ function Page:RefreshMatrix(parent, context)
     for _, control in ipairs({parent.heading,parent.refresh,parent.professions,parent.status,parent.toolbar,parent.header}) do control:Hide() end
     for _, row in ipairs(parent.rows) do row:Hide() end
     ui.toolbar:Show(); ui.header:Show(); ui.footer:Show()
+    parent.scroll:ClearAllPoints()
     parent.scroll:SetPoint("TOPLEFT",12,-76)
     parent.scroll:SetPoint("BOTTOMRIGHT",-12,34)
     local options, admitted = {{value="all",label=Addon:T("UI.ALL_CHARACTERS")}}, {}
@@ -254,6 +263,72 @@ function Page:RefreshMatrix(parent, context)
     parent.scroll:SetContentHeight(#displayed*matrixRowHeight)
 end
 
+local function LayoutMainControls(parent, context, options, summary, count)
+    local inset, gap = Theme.Space.sm, Theme.Space.xs
+    local width = (context.surfaceAvailableWidth or parent:GetWidth()) - inset * 2
+    local top, step = Theme.Space.xs, Theme.Size.standard + Theme.Space.xxs
+    local headingWidth = Theme:MeasureText(Theme.Font.section, parent.heading:GetText())
+    local summaryWidth = Theme:MeasureText(Theme.Font.body, summary)
+    local summaryInline = summary ~= "" and headingWidth + summaryWidth + parent.refresh:GetWidth() + gap * 2 <= width
+    parent.heading:ClearAllPoints()
+    parent.heading:SetPoint("TOPLEFT", inset, -top)
+    parent.heading:SetPoint("TOPRIGHT", -inset - parent.refresh:GetWidth() - gap
+        - (summaryInline and summaryWidth + gap or 0), -top)
+    parent.heading:SetHeight(Theme.Size.standard)
+    parent.refresh:SetPoint("TOPRIGHT", -inset, -top)
+    parent.professions:SetText(summary)
+    parent.professions:SetShown(summary ~= "")
+    top = top + step
+    for _, label in ipairs({ parent.professions, parent.status }) do
+        if label:IsShown() then
+            label:ClearAllPoints()
+            if label == parent.professions and summaryInline then
+                label:SetPoint("RIGHT", parent.refresh, "LEFT", -gap, 0)
+                label:SetSize(summaryWidth, Theme.Size.standard)
+                label:SetWordWrap(false)
+            else
+                label:SetPoint("TOPLEFT", inset, -top)
+                label:SetWidth(width)
+                label:SetWordWrap(true)
+                local height = math.max(Theme.Font.body, label:GetStringHeight())
+                label:SetHeight(height)
+                top = top + height + Theme.Space.xxs
+            end
+        end
+    end
+
+    local professionWidth = 0
+    for _, option in ipairs(options) do
+        professionWidth = math.max(professionWidth, Theme:MeasureText(Theme.Font.body, option.label) + 32)
+    end
+    local learningWidth = 0
+    for _, option in ipairs(parent.learningFilter.options) do
+        learningWidth = math.max(learningWidth, Theme:MeasureText(Theme.Font.body, option.label) + 32)
+    end
+    local searchMinimum = 120
+    professionWidth = math.min(professionWidth, width - learningWidth - gap * 2 - searchMinimum)
+    local countWidth = Theme:MeasureText(Theme.Font.assist, count)
+    local remaining = width - professionWidth - learningWidth - gap * 2
+    local inlineCount = count == "" or remaining >= searchMinimum + countWidth + gap
+    parent.search:SetWidth(math.min(190, remaining - (inlineCount and count ~= "" and countWidth + gap or 0)))
+    parent.professionFilter:SetWidth(professionWidth)
+    parent.learningFilter:SetWidth(learningWidth)
+    parent.matchCount:ClearAllPoints()
+    if inlineCount then
+        parent.matchCount:SetPoint("LEFT", parent.learningFilter, "RIGHT", gap, 0)
+        parent.matchCount:SetPoint("RIGHT")
+    else
+        parent.matchCount:SetPoint("TOPLEFT", 0, -step)
+        parent.matchCount:SetPoint("TOPRIGHT", 0, -step)
+    end
+    parent.matchCount:SetHeight(Theme.Size.standard)
+    parent.matchCount:SetShown(count ~= "")
+    parent.toolbar:SetPoint("TOPLEFT", inset, -top)
+    parent.toolbar:SetPoint("TOPRIGHT", -inset, -top)
+    parent.toolbar:SetHeight(inlineCount and Theme.Size.standard or step + Theme.Size.standard)
+    return top + step * (inlineCount and 1 or 2)
+end
+
 function Page:Refresh(parent,context)
     if parent.wasPreview ~= context.preview then parent.scroll:SetVerticalScroll(0) end
     parent.wasPreview = context.preview
@@ -263,8 +338,7 @@ function Page:Refresh(parent,context)
         ui.toolbar:Hide(); ui.header:Hide(); ui.footer:Hide()
         for _, row in ipairs(ui.rows) do row:Hide() end
     end
-    parent.heading:Show(); parent.professions:Show(); parent.status:Show(); parent.header:Show()
-    parent.scroll:SetPoint("BOTTOMRIGHT",-12,10)
+    parent.heading:Show(); parent.header:Show()
     local id=Core.Characters:GetCurrentID()
     local character=context.characters and context.characters[1]; if character and character.id~=id then character=nil end
     local profile=character and Addon:GetProfessionProfile()
@@ -298,27 +372,59 @@ function Page:Refresh(parent,context)
             end
         end
     end
-    parent.toolbar:SetShown(not context.preview)
-    if not context.preview then
-        if profileKnown or selected==nil then
-            parent.professionFilter:SetOptions(options)
-            parent.professionFilter:SetValue(names[selected] and selected or "all")
-        end
-        parent.matchCount:SetText(totalRecipes==0 and "" or (#recipes==0 and Addon:T("FOREVER.NO_MATCH")
-            or Addon:T("FOREVER.MATCH_COUNT",#recipes,totalRecipes)))
+    parent.toolbar:Show()
+    if profileKnown or selected==nil then
+        parent.professionFilter:SetOptions(options)
+        parent.professionFilter:SetValue(names[selected] and selected or "all")
     end
-    local headerY=context.preview and -160 or -197
-    parent.header:SetPoint("TOPLEFT",12,headerY); parent.header:SetPoint("TOPRIGHT",-12,headerY)
-    parent.scroll:SetPoint("TOPLEFT",12,headerY-30)
+    local count = totalRecipes==0 and "" or (#recipes==0 and Addon:T("FOREVER.NO_MATCH")
+        or Addon:T("FOREVER.MATCH_COUNT",#recipes,totalRecipes))
+    parent.matchCount:SetText(count)
     table.sort(recipes,function(a,b) return a.professionID==b.professionID and a.recipe.recipeID<b.recipe.recipeID or a.professionID<b.professionID end)
     parent.heading:SetText(character and Core.Characters:FormatName(character,{realmMode="full"}) or Addon:T("FOREVER.CURRENT"))
-    parent.professions:SetText(#summary>0 and table.concat(summary," · ") or Addon:T("FOREVER.PROFILE_PENDING"))
-    parent.status:SetText(self:Status()); parent.refresh:SetShown(not context.preview)
-    parent.refresh:SetState(Addon.Scanner.inWorld and Addon.Scanner.open and "default" or "disabled")
-    local width,columns,x,total=math.max(320,parent.scroll:GetWidth()-20),{},0,0
-    local fields,weights=context.fields or self:Fields(),{profession=2,recipe=3.5,learned=1,state=1.6}
-    for _,field in ipairs(fields) do total=total+(weights[field.id] or 1) end
-    for _,field in ipairs(fields) do local w=width*(weights[field.id] or 1)/math.max(1,total); columns[#columns+1]={id=field.id,x=x,width=math.max(1,w-8)}; x=x+w; parent.labels[field.id]:SetText(field.title) end
+    local scanner = Addon.Scanner
+    local browsingSnapshot = totalRecipes > 0 and not scanner.open and (scanner.state == "closed" or scanner.state == "unknown")
+    local status = Addon:T("FOREVER.PROFILE_PENDING")
+    if browsingSnapshot then
+        status = Addon:T("FOREVER.CLOSED")
+    elseif profileKnown then
+        status = self:Status()
+    end
+    parent.status:SetText(status)
+    parent.status:SetShown(not browsingSnapshot)
+    parent.refreshStatus = status
+    parent.refresh:Show()
+    parent.refresh:SetState(scanner.inWorld and scanner.open and "default" or "disabled")
+    local headerTop = LayoutMainControls(parent, context, options, table.concat(summary, " · "), count)
+    parent.header:SetPoint("TOPLEFT",12,-headerTop); parent.header:SetPoint("TOPRIGHT",-12,-headerTop)
+    parent.scroll:ClearAllPoints()
+    parent.scroll:SetPoint("TOPLEFT",parent,"TOPLEFT",12,-headerTop-Theme.Size.standard)
+    parent.scroll:SetPoint("BOTTOMRIGHT",-12,10)
+    local width = math.max(320, parent.scroll:GetWidth()-20)
+    local fields = context.fields or self:Fields()
+    local statusSamples = {
+        learned = { Addon:T("UI.LEARNED"), Addon:T("FOREVER.NOT_LEARNED") },
+        state = { Addon:T("FOREVER.OBSERVED"), Addon:T("FOREVER.OLD") },
+    }
+    local flexibleWeights = { profession = 2, recipe = 3.5 }
+    local statusWidths, available, weight = {}, width, 0
+    for _, field in ipairs(fields) do
+        local samples = statusSamples[field.id]
+        if samples then
+            local measured = Theme:GetCompactColumnWidth(field.title, samples)
+            statusWidths[field.id] = measured
+            available = available - measured
+        else
+            weight = weight + flexibleWeights[field.id]
+        end
+    end
+    local columns, x = {}, 0
+    for _, field in ipairs(fields) do
+        local columnWidth = statusWidths[field.id] or math.max(9, available * flexibleWeights[field.id] / weight)
+        columns[#columns+1] = { id = field.id, x = x, width = columnWidth - 8 }
+        parent.labels[field.id]:SetText(field.title)
+        x = x + columnWidth
+    end
     Layout(parent.header,parent.labels,columns); parent.content:SetWidth(width)
     parent.renderedRecipes,parent.columns,parent.rowWidth=recipes,columns,width
     parent.content:SetHeight(math.max(1,#recipes*30)); parent.scroll:SetContentHeight(#recipes*30)
@@ -351,7 +457,7 @@ function Page:Register()
         local profile=Addon:GetProfessionProfile()
         return character.id==Core.Characters:GetCurrentID() and profile and profile.state=="known" and #(profile.data.professions or {})>0
     end
-    local ok,err=Core.AccountView:RegisterPage(Addon.NAME,{id=Addon.PAGE_ID,title=Addon:T("FOREVER.TITLE"),fields=self:Fields(),defaultEnabled=true,previewEnabled=true,
+    local ok,err=Core.AccountView:RegisterPage(Addon.NAME,{id=Addon.PAGE_ID,columnPager=true,title=Addon:T("FOREVER.TITLE"),fields=self:Fields(),defaultEnabled=true,previewEnabled=true,
         scope={mode="realms", previewOnly=true},
         HasCharacterSnapshot=function(character) return Addon.Store.db.characters[character.id] ~= nil end,
         GetEligibleCharacters=function(characters,context)
@@ -368,7 +474,7 @@ function Page:Register()
                 return {minContentWidth=600,naturalContentWidth=math.max(650,242+#context.characters*104),
                     minContentHeight=174,naturalContentHeight=328}
             end
-            return {minContentWidth=700,naturalContentWidth=1000,minContentHeight=337,naturalContentHeight=537}
+            return {minContentWidth=440,naturalContentWidth=1000,minContentHeight=337,naturalContentHeight=537}
         end,
         Create=function(parent) Page:Create(parent) end,Refresh=function(parent,context) Page:Refresh(parent,context) end})
     if not ok then return nil,err end

@@ -99,7 +99,7 @@ function Integration:Initialize()
         if not cleanupRegistered then return nil, cleanupError end
     end
     local page, pageError = Core.AccountView:RegisterPage("YiboQuestBlocker", {
-        id = PAGE_ID, title = YQB.T("PAGE.TITLE"), icon = "Interface\\AddOns\\YiboQuestBlocker\\Media\\YiboQuestBlockerIcon", order = 40, previewEnabled = true,
+        id = PAGE_ID, columnPager = true, title = YQB.T("PAGE.TITLE"), icon = "Interface\\AddOns\\YiboQuestBlocker\\Media\\YiboQuestBlockerIcon", order = 40, previewEnabled = true,
         fields = {
             { id = "global", title = YQB.T("PAGE.GLOBAL_FIELD"), defaultVisible = true },
             { id = "characters", title = YQB.T("PAGE.CHARACTER_FIELD"), defaultVisible = true },

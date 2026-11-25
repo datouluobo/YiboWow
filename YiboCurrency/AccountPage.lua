@@ -261,7 +261,7 @@ end
 function Addon:RefreshCurrencyPage(parent, context)
     local preview = context.preview == true
     local characters = Eligible(context.characters)
-    local entries = self:GetDisplayCatalog(preview)
+    local entries = self:GetDisplayCatalog(preview, context.fields)
     local projection = self:GetCurrencyProjection(context, characters, entries)
     if #entries == 0 then
         self:LayoutEmptyHover(parent, Addon:T("CURRENCY.NO_CURRENCIES_SELECTED_A32524"), Addon:T("CURRENCY.CHOOSE_MAIN_VIEW_OR_HOVER_CURRENCIES_IN_CORE_SETTINGS_D_E1E09E"))
@@ -290,6 +290,11 @@ function Addon:RefreshCurrencyPage(parent, context)
     local characterWidth = CharacterColumnWidth(characters, context, entries, projection)
     local minimum = MinimumCharacterWidth(characters, context, entries, projection)
     currencyWidth = math.min(currencyWidth, math.max(160, available - totalWidth - #characters * minimum))
+    if not preview then
+        currencyWidth = math.min(currencyWidth, math.floor(available * 0.48))
+        totalWidth = math.min(totalWidth, math.floor(available * 0.23))
+        minimum = math.min(minimum, math.max(1, available - currencyWidth - totalWidth))
+    end
     characterWidth = Core.AccountView:FitRepeatedColumnWidth(available, currencyWidth + totalWidth, #characters, characterWidth, minimum)
     shown, pageInfo = Core.AccountView:GetColumnPage(PAGE_ID, "matrix", characters, available, currencyWidth + totalWidth, characterWidth)
     ConfigureToolbar(parent, characters, shown, pageInfo)
@@ -319,7 +324,7 @@ end
 function Addon:GetCurrencySurfaceMetrics(context)
     local preview = context.preview == true
     local inset = Theme:GetMatrixInsets(preview)
-    local characters, entries = Eligible(context.characters), self:GetDisplayCatalog(preview)
+    local characters, entries = Eligible(context.characters), self:GetDisplayCatalog(preview, context.fields)
     local projection = self:GetCurrencyProjection(context, characters, entries)
     if #entries == 0 then
         return { minContentWidth = 420 + inset.left + inset.right, naturalContentWidth = 420 + inset.left + inset.right,
@@ -339,7 +344,7 @@ function Addon:GetCurrencySurfaceMetrics(context)
     local columnWidth = CharacterColumnWidth(characters, context, entries, projection)
     local fixedHeight = inset.top + Theme:GetCharacterHeaderHeight(context) + inset.bottom
         + (preview and 0 or Theme.Size.compact + Theme.Space.sm)
-    return { minContentWidth = currencyWidth + totalWidth + (#characters > 0 and columnWidth or 0) + inset.left + inset.right,
+    return { minContentWidth = preview and currencyWidth + totalWidth + (#characters > 0 and columnWidth or 0) + inset.left + inset.right or 420,
         naturalContentWidth = currencyWidth + totalWidth + #characters * columnWidth + inset.left + inset.right,
         scrollContentHeight = #entries * ROW_HEIGHT, scrollFixedHeight = fixedHeight,
         minContentHeight = fixedHeight + ROW_HEIGHT, naturalContentHeight = fixedHeight + math.min(#entries, 20) * ROW_HEIGHT,

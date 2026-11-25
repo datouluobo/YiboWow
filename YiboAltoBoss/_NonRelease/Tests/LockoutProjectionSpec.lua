@@ -32,6 +32,25 @@ YiboAltoBossDB = { settings = {}, characters = {
     A = { instanceLockoutsObservedAt = 1000 },
     B = { instanceLockoutsObservedAt = 1000, instanceLockouts = { raid = saved } },
 } }
+local normal = YAB.GetPandariaDungeonColumns(1, {})
+local heroic = YAB.GetPandariaDungeonColumns(2, {})
+local celestial = YAB.GetPandariaDungeonColumns(237, {})
+check(#normal == 6 and #heroic == 9 and #celestial == 9, "Pandaria difficulty lists match the Dungeon Finder")
+check(normal[1].mapID == 1011 and normal[1].abbreviation == "SNT"
+    and normal[3].mapID == 962 and normal[3].abbreviation == "GSS", "Pandaria labels match native map IDs")
+check(heroic[4].mapID == 1004 and heroic[5].mapID == 1001 and heroic[6].mapID == 1007,
+    "Pandaria Heroic includes the three heroic-only dungeons")
+for index, column in ipairs(heroic) do
+    check(celestial[index].mapID == column.mapID and celestial[index].key ~= column.key,
+        "Celestial covers the same maps using independent difficulty keys")
+end
+local heroicLockouts = YiboAltoBossDB.characters.B.instanceLockouts
+heroicLockouts[heroic[1].key] = { instanceID = heroic[1].mapID, name = heroic[1].name, difficultyID = 2,
+    resetAt = 2000, bossCount = 1, bosses = { { killed = true } } }
+check(YAB.GetLockoutStatus("B", heroic[1]) == "clear", "Heroic reports its saved lockout")
+check(YAB.GetLockoutStatus("B", normal[1]) == "open" and YAB.GetLockoutStatus("B", celestial[1]) == "open",
+    "Heroic lockout does not leak into Normal or Celestial")
+heroicLockouts[heroic[1].key] = nil
 local baseColumn = { key = "legacy:580", mapID = 580, instanceID = 580, name = "Sunwell Plateau", isRaid = true }
 local ordinaryColumns = { baseColumn, { key = "stocks", mapID = 34, instanceID = 34, name = "The Stockade" } }
 YAB.GetLockoutColumns = function() return ordinaryColumns end

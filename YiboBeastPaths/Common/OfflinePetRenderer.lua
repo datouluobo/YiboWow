@@ -140,6 +140,10 @@ function ns.CreateOfflinePetRenderer(core, text)
     end
     local function renderMain(parent, context, row, invalidStore)
         local width = math.max(240, (parent.scroll:GetWidth() or 0) - 16)
+        local controlsWidth = math.max(1, (context.surfaceAvailableWidth or parent:GetWidth()) - 32)
+        parent.characterSelect:SetWidth(math.min(220, math.floor(controlsWidth * 0.39)))
+        parent.search:SetWidth(math.min(190, math.floor(controlsWidth * 0.33)))
+        parent.familySelect:SetWidth(math.min(145, math.floor(controlsWidth * 0.28)))
         parent.content:SetWidth(width)
         local families, seen = { { value = "", label = text("STABLE_ALL_FAMILIES") } }, {}
         for _, group in ipairs({ row and row.active or {}, row and row.stable or {} }) do
@@ -339,7 +343,7 @@ function ns.CreateOfflinePetRenderer(core, text)
     end
     function renderer.GetSurfaceMetrics(context)
         local count = #(context.characters or {})
-        return { minContentWidth = context.preview and 320 or 700, naturalContentWidth = context.preview and 540 or 1100,
+        return { minContentWidth = context.preview and 320 or 440, naturalContentWidth = context.preview and 540 or 1100,
             minContentHeight = context.preview and 120 or 400, naturalContentHeight = context.preview and 300 or 720,
             scrollContentHeight = count * 88, scrollFixedHeight = 30 }
     end

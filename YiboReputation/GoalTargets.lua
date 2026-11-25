@@ -58,13 +58,18 @@ function Targets:Initialize()
     self.ref = Core.Contracts:Register("YiboReputation", self.definition)
     return self.ref ~= nil
 end
-function Targets:BindRow(row, node, characters)
+function Targets:BindRow(row, node, characters, readSnapshot)
     if not self.ref then return end
     row.goalHits = row.goalHits or {}
     for _, hit in ipairs(row.goalHits) do hit:Hide(); Core.BusinessItemActions:Unbind(hit) end
     if node.kind ~= "faction" then return end
     for i, character in ipairs(characters) do
-        local hit = row.goalHits[i] or CreateFrame("Button", nil, row); row.goalHits[i] = hit
+        local hit = row.goalHits[i]
+        if not hit then
+            hit = CreateFrame("Button", nil, row)
+            Core.UITheme:BindTooltip(hit)
+            row.goalHits[i] = hit
+        end
         hit:ClearAllPoints(); hit:SetAllPoints(row.cells[i + 1]); hit:SetFrameLevel(row:GetFrameLevel() + 2)
         hit:RegisterForClicks("AnyUp")
         local intent = { providerID = self.PROVIDER, objectID = node.factionID, scope = { mode = "character", characterID = character.id }, conditions = {} }
@@ -73,9 +78,11 @@ function Targets:BindRow(row, node, characters)
             if Core.BusinessItemActions:Handle(self, button) then return end
             local original = row:GetScript("OnClick"); if original then original(row, button) end
         end)
-        local snapshot = Addon:GetSnapshot(character.id)
-        local data = Addon:GetFactionData(snapshot, node.factionID)
-        Core.UITheme:BindTooltip(hit, node.title, Core.BusinessItemActions:TooltipLines({ { kind = "text", text = data and Addon:FormatReputation(data) or Addon:T("GOAL.SYNC") } }, hit))
+        hit:SetScript("OnEnter", function(control)
+            local data = Addon:GetFactionData(readSnapshot(character), node.factionID)
+            local lines = { { kind = "text", text = data and Addon:FormatReputation(data) or Addon:T("GOAL.SYNC") } }
+            Core.UITheme:ShowTooltip(control, node.title, Core.BusinessItemActions:TooltipLines(lines, control))
+        end)
         hit:Show()
     end
 end

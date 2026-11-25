@@ -348,28 +348,43 @@ function Page:Refresh(parent, context)
     local current = Core.Characters:GetCurrentID()
     local offline = id and id ~= current
     local left = preview and 12 or sidebarWidth+24
+    local width = context.surfaceAvailableWidth or parent:GetWidth()
     parent.rosterScroll:SetShown(not preview)
     parent.showHidden:SetShown(not preview)
     parent.header:SetShown(preview == true)
     parent.heading:SetPoint("TOPLEFT",left,-10)
-    parent.status:SetPoint("TOPLEFT",left,-82)
     parent.heading:SetText(preview and Addon:T("TEXT.ITEM_OVERVIEW_70B215")
         or character and Core.Characters:FormatName(character, { realmMode = "full" }) or Addon:T("TEXT.ITEM_OVERVIEW_70B215"))
-    parent.heading:SetPoint("RIGHT", context.preview and -12 or -348, 0)
+    local searchWidth = math.min(320, math.floor((width-left) * 0.52))
+    parent.search:SetWidth(math.max(1, searchWidth))
+    parent.heading:SetPoint("RIGHT", preview and -12 or -(searchWidth + 24), 0)
     parent.search:SetShown(not context.preview)
     local query = context.preview and "" or parent.search:GetText():match("^%s*(.-)%s*$"):lower()
     local searching = query ~= ""
     local source = Addon.db.settings.foreverSource
     if offline and source == "guild-bank" and not preview then source = "bags" end
-    local tabWidth = preview and 110 or math.max(80, math.min(100, math.floor(((context.surfaceAvailableWidth or 960)-left-122)/6)-6))
-    for index, tabSource in ipairs(sources) do
+    local gap, tabPitch, count = 6, 36, 0
+    local usable = math.max(1, width - left - 12)
+    local columns = preview and #sources or math.max(1, math.min(#sources, math.floor((usable + gap) / 86)))
+    local tabWidth = preview and 110 or math.max(1, math.min(110, math.floor((usable + gap) / columns) - gap))
+    for _, tabSource in ipairs(sources) do
         local button = parent.tabs[tabSource]
         local allowed = preview or not offline or tabSource ~= "guild-bank"
         button:SetWidth(tabWidth)
-        button:SetPoint("TOPLEFT",left+(index-1)*(tabWidth+6),-45)
+        if allowed then
+            button:ClearAllPoints()
+            button:SetPoint("TOPLEFT", left + (count % columns) * (tabWidth + gap), -45 - math.floor(count / columns) * tabPitch)
+            count = count + 1
+        end
         button:SetShown(allowed)
         button:SetState(not searching and tabSource == source and "selected" or "default")
     end
+    local tabOffset = math.max(0, math.floor((count - 1) / columns)) * tabPitch
+    parent.status:ClearAllPoints()
+    parent.status:SetPoint("TOPLEFT", left, -82 - tabOffset)
+    parent.status:SetPoint("TOPRIGHT", preview and -12 or -124, -82 - tabOffset)
+    parent.refresh:ClearAllPoints()
+    parent.refresh:SetPoint("TOPRIGHT", -12, -78 - tabOffset)
     local options = { sources = not searching and { source } or nil }
     options.scope = { mode = "characters", characterIDs = (preview or searching) and ids or id and { id } or {} }
     local copper = 0
@@ -378,7 +393,7 @@ function Page:Refresh(parent, context)
         for _, characterID in ipairs(options.scope.characterIDs) do copper = copper + (transitMoney[characterID] or 0) end
     end
     local moneyHeight = copper > 0 and 22 or 0
-    parent.transitMoney:SetPoint("TOPLEFT", left, -112)
+    parent.transitMoney:SetPoint("TOPLEFT", left, -112 - tabOffset)
     parent.transitMoney:SetText(copper > 0 and Addon:T("MAIL.TRANSIT_MONEY", copper / 10000) or "")
     parent.transitMoney:SetShown(copper > 0)
     if not preview and not searching and source == "guild-bank" and parent.explicitGuild
@@ -415,15 +430,16 @@ function Page:Refresh(parent, context)
         local guildKey, tabs
         if guildCoverage then guildKey, tabs = next(guildCoverage) end
         parent.gridRecords = SelectContainer(parent, records, source, searching, id, tabs and tabs.locations)
+        parent.container:SetPoint("TOPLEFT", left, -117 - tabOffset)
         local area = not searching and Addon.Items:GetSourceCapacity(source, id, parent.container.value, guildKey)
         parent.freeGroups = Addon.BagCapacity:Group(area, source)
         parent.capacity:ClearAllPoints()
-        parent.capacity:SetPoint("TOPLEFT", left, parent.container:IsShown() and -147 or -113)
+        parent.capacity:SetPoint("TOPLEFT", left, (parent.container:IsShown() and -147 or -113) - tabOffset)
         parent.capacity:SetText(Addon.BagCapacity:Format(area))
         parent.capacity:SetShown(area and area.totalSlots ~= nil or false)
         local gridTop = parent.capacity:IsShown() and (parent.container:IsShown() and -175 or -141)
             or (parent.container:IsShown() and -153 or -116)
-        parent.scroll:SetPoint("TOPLEFT",left,gridTop - moneyHeight)
+        parent.scroll:SetPoint("TOPLEFT",left,gridTop - moneyHeight - tabOffset)
         self:PaintGrid(parent)
         parent.renderedRecords,parent.renderedStatus = parent.gridRecords,status
         return
@@ -506,7 +522,9 @@ function Page:Register()
     local definition = {
         id = PAGE_ID, title = Addon:T("TEXT.ITEM_OVERVIEW_70B215"), defaultEnabled = true, previewEnabled = true,
         fields = Fields(), GetPreviewFields = function() return Addon.db.settings.previewColumns end,
-        GetSurfaceMetrics = function() return { minContentWidth = 870, naturalContentWidth = 960, minContentHeight = 240, naturalContentHeight = 520 } end,
+        GetSurfaceMetrics = function(context)
+            return { minContentWidth = context.preview and 870 or 440, naturalContentWidth = 960, minContentHeight = 300, naturalContentHeight = 520 }
+        end,
         scope = {mode="realms", mainOnly=true, allTitle=Addon:T("TEXT.ALL_REALMS_A166AB")},
         HasCharacterSnapshot = HasCharacterSnapshot,
         GetEligibleCharacters = function(characters)

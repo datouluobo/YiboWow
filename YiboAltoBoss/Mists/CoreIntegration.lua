@@ -221,7 +221,7 @@ function Integration:Initialize()
         YiboAltoBossDB.filters.levelExpr = "90"
     end
     local page, errorMessage = Core.AccountView:RegisterPage("YiboAltoBoss", {
-        id = PAGE_ID,
+        id = PAGE_ID, columnPager = true,
         title = addonTitle,
         icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YiboAltoBossIcon",
         order = 30,
@@ -271,13 +271,14 @@ function Integration:Initialize()
         return nil, errorMessage
     end
     local lockoutPage, lockoutError = Core.AccountView:RegisterPage("YiboAltoBoss", {
-        id = LOCKOUT_PAGE_ID,
+        id = LOCKOUT_PAGE_ID, columnPager = true,
         title = _G.YiboCore.Locale:Get("YiboAltoBoss", "UI.INSTANCES"),
         icon = "Interface\\AddOns\\YiboAltoBoss\\Media\\YiboAltoBossIcon",
         order = 31,
         previewEnabled = true,
         hideFromSettings = true,
         internal = true,
+        compactLayout = true,
         compactWidth = true,
         autoFitWidth = true,
         autoFitHeight = true,
