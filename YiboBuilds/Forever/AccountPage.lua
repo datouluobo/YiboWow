@@ -5,6 +5,7 @@ local slotKeys={"FOREVER.SLOT_HEAD","FOREVER.SLOT_NECK","FOREVER.SLOT_SHOULDER",
 local weaponSlots = { 16, 17, 18 }
 local slotOrder, slotPositions = EquipmentView.PaperDollSlots(weaponSlots)
 local labelIDs = { "slot", "item" }
+local enchantIcon = "Interface\\Icons\\INV_Enchant_DustStrange"
 local function HideTooltip(owner)
     if GameTooltip:IsOwned(owner) then GameTooltip:Hide() end
 end
@@ -123,11 +124,10 @@ local function CreateSlot(doll, parent, slot, side)
     button.enchant:SetBackdropBorderColor(unpack(Theme.Colors.accent))
     button.enchant.icon = button.enchant:CreateTexture(nil, "ARTWORK")
     button.enchant.icon:SetAllPoints()
-    button.enchant.icon:SetTexture("Interface\\Icons\\INV_Enchant_DustStrange")
     button.enchant:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:ClearLines()
-        GameTooltip:AddLine(Addon:T("FOREVER.ENCHANT"))
+        GameTooltip:AddLine(button.enchantTitle or Addon:T("FOREVER.ENCHANT"))
         GameTooltip:AddLine(EnchantDisplay(button.item, button.enchantID), 1, 1, 1, true)
         GameTooltip:Show()
     end)
@@ -214,6 +214,9 @@ local function RenderDoll(doll, width, height, snapshot, modelSource, detailSlot
         button.iconFrame:SetBackdropBorderColor(unpack(detailSlot == slot and Theme.Colors.accent or color or Theme.Colors.line))
         EquipmentView.RenderPaperDollItemLevel(button.level, ItemLevel(item, slot), layout.iconSize)
         button.enchantID = Addon.Enhancements:Read(item)
+        local title, icon = Addon.Enhancements:GetInstalledSource(button.enchantID)
+        button.enchantTitle = title
+        button.enchant.icon:SetTexture(icon or enchantIcon)
         button.enchant:SetShown((button.enchantID or 0) > 0)
     end
     local model = doll.model
@@ -348,7 +351,6 @@ function Page:Create(parent)
     detail.item:SetWordWrap(false)
     detail.enchant = Theme:CreateText(detail, Theme.Font.assist, Theme.Colors.muted)
     detail.enchant:SetPoint("TOPLEFT", 12, -66)
-    detail.enchant:SetText(Addon:T("FOREVER.ENCHANT"))
     detail.effect = Theme:CreateText(detail, Theme.Font.body, Theme.Colors.text)
     detail.effect:SetPoint("TOPLEFT", 12, -86)
     detail.effect:SetPoint("TOPRIGHT", -12, -86)
@@ -887,7 +889,10 @@ function Page:Refresh(parent,context)
         detail.slot:SetText(Addon:T(slotKeys[slot]))
         detail.item:SetText(name)
         detail.item:SetTextColor(unpack(color or Theme.Colors.text))
-        detail.effect:SetText(EnchantDisplay(detailItem, Addon.Enhancements:Read(detailItem)))
+        local enchantID = Addon.Enhancements:Read(detailItem)
+        local title = Addon.Enhancements:GetInstalledSource(enchantID)
+        detail.enchant:SetText(title or Addon:T("FOREVER.ENCHANT"))
+        detail.effect:SetText(EnchantDisplay(detailItem, enchantID))
         detail:SetHeight(RenderEnchantCandidates(detail, slot, detailItem, not not current))
     end
     if combined then talentSnapshot = Addon.Talents:Get(id, mode) end

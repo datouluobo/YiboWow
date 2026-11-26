@@ -157,6 +157,15 @@ function Enhancements:Read(item)
     if Addon.Store:Integer(enchantID, 0, 2147483647) then return enchantID end
 end
 
+function Enhancements:GetInstalledSource(enchantID)
+    local source = Addon.ForeverArmorKits[enchantID]
+    if not source then return end
+    local info = source.itemID and Addon.Core.ItemResolver:GetInfo(source.itemID)
+    local fallback = source.itemID == 2304 and "FOREVER.LIGHT_ARMOR_KIT" or "FOREVER.ARMOR_KIT"
+    local name = info and info.name or Addon:T(fallback)
+    return Addon:T("FOREVER.LEATHERWORKING_ENHANCEMENT", name), info and info.icon or source.icon
+end
+
 function Enhancements:GetEnchantEffect(item, enchantID)
     if not enchantID or enchantID==0 then return nil end
     local lineTypes=Enum and Enum.TooltipDataLineType

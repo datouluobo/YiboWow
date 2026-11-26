@@ -569,6 +569,63 @@ ec.AccountView.frame:Hide()
 Check(ec.AccountView:ShowPreview("builds",ee.Minimap) and ep.activeTab=="equipment"
     and not ep.slotDetail:IsShown() and #ep.previewRows[1].cells==19,"inline detail does not change the entry preview")
 Check(ep.previewHeader:IsShown() and ep.previewHeader.columns[2]:IsShown(),"entry preview shows slot headers")
+local function ArmorKitLinks(env)
+    local links = {
+        [5] = "|cnIQ2:|Hitem:257344:15:::::::15:1484::11:::::::|h[Chest]|h|r",
+        [7] = "|cnIQ2:|Hitem:263330:15:::::::15:1484::11:::::::|h[Legs]|h|r",
+        [10] = "|cnIQ2:|Hitem:263306:15:::::::15:1484::11:::::::|h[Gloves]|h|r",
+    }
+    local ids = { [5] = 257344, [7] = 263330, [10] = 263306, [16] = 1016 }
+    links[16] = "|cffffffff|Hitem:1016:555:0|h[Weapon]|h|r"
+    env.GetInventoryItemID = function(_,slot) return ids[slot] end
+    env.GetInventoryItemLink = function(_,slot) return links[slot] end
+    local getItemInfo = env.GetItemInfo
+    env.GetItemInfo = function(id)
+        if id==2304 then
+            if env.kitCached then return "Native armor kit", "item:2304", nil,nil,nil,nil,nil,nil,nil,17001 end
+            return
+        end
+        return getItemInfo(id)
+    end
+    env.Enum = {TooltipDataLineType={ItemEnchantmentPermanent=44}}
+    env.C_TooltipInfo = {GetHyperlink=function(link)
+        if link:find(":15:",1,true) then
+            return {lines={{type=44, enchantID=15, leftText="Native stamina and armor effect"}}}
+        end
+    end}
+end
+local ke,kc,ka,kf,kflush=Boot(nil,ArmorKitLinks,nil,{client="enUS"})
+kf("PLAYER_ENTERING_WORLD"); kflush()
+ke.SlashCmdList.YIBOBUILDS(""); kflush()
+local kitPanel=kc.AccountView.frame.instances.builds
+for _, slot in ipairs({5,7,10}) do
+    local badge=kitPanel.doll.slots[slot].enchant
+    Check(badge:IsShown() and badge.icon:GetTexture()==133611,
+        "each observed armor kit shows its real icon before the item cache loads")
+end
+local chest=kitPanel.doll.slots[5].enchant
+chest:Fire("OnEnter")
+Check(ke.GameTooltip.lines[1].text=="Light Armor Kit · Leatherworking"
+    and ke.GameTooltip.lines[2].text=="Native stamina and armor effect", "armor kit tooltip identifies Leatherworking and retains the native effect")
+ke.kitCached=true
+kf("GET_ITEM_INFO_RECEIVED",2304); kflush()
+Check(chest.icon:GetTexture()==17001, "item resolver supplies the native armor kit icon after loading")
+chest:Fire("OnClick")
+Check(kitPanel.slotDetail.enchant:GetText()=="Native armor kit · Leatherworking"
+    and kitPanel.slotDetail.effect:GetText()=="Native stamina and armor effect", "slot detail identifies the installed kit using its native name")
+local weapon=kitPanel.doll.slots[16].enchant
+weapon:Fire("OnEnter")
+Check(weapon.icon:GetTexture()=="Interface\\Icons\\INV_Enchant_DustStrange"
+    and ke.GameTooltip.lines[1].text==ka:T("FOREVER.ENCHANT"), "unmapped effects retain the generic enchant display")
+for _, kit in ipairs({{8481,2313,133609},{8484,4265,133610},{8489,252462,133602},{8719,279258,4632799}}) do
+    local enchantID, itemID, expectedIcon = unpack(kit)
+    local title, icon = ka.Enhancements:GetInstalledSource(enchantID)
+    Check(ka.ForeverArmorKits[enchantID].itemID==itemID and icon==1
+        and title:find(ka:T("FOREVER.LEATHERWORKING_ENHANCEMENT","Item"..itemID),1,true),
+        "advanced or new kit resolves its own native item")
+    Check(ka.ForeverArmorKits[enchantID].icon==expectedIcon,"advanced or new kit carries its DB2 icon")
+end
+Check(not ka.Enhancements:GetInstalledSource(16), "Mists enhancement IDs are kept out of Forever")
 local legacy=c.Defaults:Copy(saved)
 legacy.equipmentBaselines={[e.TEST_GUID]=c.Defaults:Copy(legacy.characters[e.TEST_GUID])}
 local ce,cc,ca,_,cflush=Boot(legacy)

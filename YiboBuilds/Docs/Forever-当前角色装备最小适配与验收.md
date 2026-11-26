@@ -1,5 +1,23 @@
 # Forever 当前角色装备最小适配与验收
 
+## 2026-11-26 双端护甲片来源目录
+
+用户实机确认轻型护甲片角标、制皮来源和原生效果显示正确。Forever 以 1.60.1.71139 客户端 DB2 为输入，从 `SpellEffect`（永久施加与产物）、`SpellItemEnchantment`、`ItemEffect`、`ItemXItemEffect`、`SkillLineAbility` 和 `Item` 建立来源关系。仅使用 `ItemSparse` 有名称的来源物品；多个已命名制皮物品共用同一增强时只显示制皮护甲片及可确认的共同图标。四条无名称的同图标记录未作为独立物品描述。生成器先检查 15 唯一对应 2304。输出 15 个增强，包含中型 8481（2313）、重型 8484（4265）、厚重 8487（8173）、毛皮 8490（15564）、熔火 2503（18251）、力效／秘法系列及蛮皮 8719（279258）。纸娃娃及详情用 Core ItemResolver 读取物品名称与图标，图标未缓存时使用同一 DB2 的 FileDataID。原生效果文字仍由装备提示提供。 [71139 法术效果 CSV](https://wago.tools/db2/SpellEffect/csv?build=1.60.1.71139)
+
+将上述七张同版本 CSV 放到一个目录后，运行 `python YiboBuilds/_NonRelease/Tools/GenerateForeverArmorKits.py <CSV目录> --build 1.60.1.71139`。已用同一输入独立重生并比较输出哈希一致。
+
+MoP 复用本目标的 EnchantCatalog 与 CraftSources，按制皮配方来源显示物品图片及专业，覆盖纸娃娃角标、悬停和槽位详情。普通附魔、增强候选和施加路径沿用既有实现。MoP 启动在写库前补查 Core 的 `item-resolver:1` 与 `GetInfo`。双端继续要求 API14 与既有能力，重复启动只注册一次。源清单为 `YiboBuilds_Forever.toc`（16001）及 `YiboBuilds_Mists.toc`（50504），各单目标包实际加载 `YiboBuilds.toc`。Forever 在增强实现前加载目标数据。存档仍为 `YiboBuildsForeverDB` 与 `YiboBuildsDB`，本次只改来源展示。
+
+Forever 178 项模拟、MoP Core 接入 1073 项和装备增强等专项通过。三端双语窗口 630 项及工作区回放通过，MoP 轻型／重型图标、双语制皮详情和普通附魔回退均有直接用例。双端统一构建及引用、包内容逐文件核对通过。Mists 31 文件、Forever 22 文件，保留 1.6.0／0.2.0 旧文件覆盖及干净安装回放通过 77 项，含存档保护、API13 拒绝、错目标停写及单次注册。版本沿用 1.6.1／0.3.1，测试包独立存放。高级护甲片和 MoP 角标实机、客户端覆盖与完整退出恢复待验。
+
+## 2026-11-26 已安装护甲片来源
+
+用户在无限服 1.60.1.71139 确认上一轮构筑功能已恢复。截图中的守望者的法衣、追踪者的裤子和夜爪手套分别为物品 257344、263330、263306，三条保存链接的永久增强字段均为 15。效果由客户端返回，用户确认实际施加的是制皮护甲片。制皮配方 2152 产出轻型护甲片 2304，本服效果为耐力 +1、护甲 +8。 [本服物品与效果](https://theforeverera.com/zh-cn/items/2304/) · [本服配方](https://theforeverera.com/zh-cn/recipes/leatherworking/light-armor-kit/)
+
+本服导出的装备提示 API 根据装备链接提供增强效果，专业 API 根据已知配方查询产物。未发现已安装增强 ID 反查消耗物品或专业的公开接口。Forever 端按已核对的 15 → 2304 映射显示「轻型护甲片 · 制皮」，用 Core ItemResolver 读取客户端名称及图标，物品未缓存时使用该物品的原生图标路径和中英文名称。效果文字继续使用原生提示，未登记的增强沿用通用附魔显示。 [无限服客户端 API 导出](https://github.com/reckhou/WoWBlzCode/tree/master/Forever/BlizzardInterfaceCode/Interface/AddOns/Blizzard_APIDocumentationGenerated)
+
+范围为 Forever 人偶角标、悬停及槽位详情。沿用 Core API14、item-resolver:1 和 localization:1。当前版本号、构建清单、目标保护、初始化及存档身份沿用。Forever 169 项模拟覆盖三个原始链接、冷缓存及原生图标、附魔通用展示和原生效果。双端构建预检与三端双语窗口回放通过。新角标及详情的实机刷新待验，上一轮留存旧文件覆盖和完整退出仍按原台账验收。
+
 ## 2026-11-26 统一窗口基线上的构筑恢复
 
 - 从 `62b5677` 恢复 Forever 0.3.1 的角色构筑工作台。宽窗可并排看装备和天赋，窄窗切换角色或页签。人偶保留本服 19 槽和原型／当前外观切换。Core 继续管理固定外框及入口，页内工具栏按可用宽度排版。天赋搜索结果同排展示，节点按空间缩放，必要时纵向滚动。

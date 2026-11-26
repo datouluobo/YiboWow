@@ -169,18 +169,17 @@ local function ItemBorderColor(item)
     end
     local itemID = tonumber(item and item.itemID) or (type(link) == "string" and tonumber(link:match("item:(%d+)")))
     if itemID then
-        Page.pendingBorderItemInfo = Page.pendingBorderItemInfo or {}
-        Page.pendingBorderItemInfo[itemID] = true
+        Page.pendingItemInfo = Page.pendingItemInfo or {}
+        Page.pendingItemInfo[itemID] = true
     end
     return C.line[1], C.line[2], C.line[3]
 end
 
 function Page:OnItemInfoReceived(itemID, success)
     itemID = tonumber(itemID)
-    if not (success and itemID and self.pendingBorderItemInfo and self.pendingBorderItemInfo[itemID]) then return end
-    self.pendingBorderItemInfo[itemID] = nil
-    -- The first paint can run before the client has cached item quality and
-    -- uses a neutral rim. Repaint the visible page when that data arrives.
+    if not (success and itemID and self.pendingItemInfo and self.pendingItemInfo[itemID]) then return end
+    self.pendingItemInfo[itemID] = nil
+    -- Repaint cached equipment borders and enhancement sources when item data arrives.
     Addon:NotifyChanged()
 end
 
@@ -311,7 +310,23 @@ local function EnchantIDFromItem(item)
     return enchantID
 end
 
-local function SetEnchantTooltip(button, item, enchantID, isEnchanted)
+local function LeatherworkingEnhancement(enchantID)
+    local source = enchantID and Addon.EnchantCatalog[enchantID]
+    local itemID = source and source.itemID
+    local craft = itemID and Addon.CraftSources[itemID]
+    for _, skill in pairs(craft and craft.skills or {}) do
+        if skill[1] == 165 then
+            local info = Core.ItemResolver:GetInfo(itemID)
+            if not info.name or not info.icon then
+                Page.pendingItemInfo = Page.pendingItemInfo or {}
+                Page.pendingItemInfo[itemID] = true
+            end
+            return info
+        end
+    end
+end
+
+local function SetEnchantTooltip(button, item, enchantID, isEnchanted, leatherworking)
     button:EnableMouse(true)
     button:SetScript("OnEnter", function(self)
         equipmentTooltipOwner = self
@@ -323,6 +338,7 @@ local function SetEnchantTooltip(button, item, enchantID, isEnchanted)
             local source = enchantID and Addon.EnchantCatalog and Addon.EnchantCatalog[enchantID]
             if source and source.itemID and source.itemID > 0 then
                 GameTooltip:SetHyperlink("item:" .. source.itemID)
+                if leatherworking then GameTooltip:AddLine(Addon:T("UI.LEATHERWORKING")) end
                 GameTooltip:Show()
                 return
             end
@@ -1601,7 +1617,12 @@ local function RenderEquipmentDetail(parent, snapshot)
     end
     if #gems == 0 then AddRow(Addon:T("UI.THIS_ITEM_HAS_NO_CONFIRMED_SOCKETS")) end
     local enchant = item.enchant
-    if enchant and enchant.state == "installed" then AddRow(Addon:T("UI.ENCHANT") .. (enchant.name or Addon:T("UI.INSTALLED")), enchant.tooltipLink)
+    local leatherworking = LeatherworkingEnhancement(EnchantIDFromItem(item))
+    if leatherworking then
+        local name = leatherworking.name or (enchant and enchant.name) or Addon:T("UI.INSTALLED")
+        AddRow(Addon:T("UI.LEATHERWORKING") .. " · " .. name, leatherworking.link or "item:" .. leatherworking.itemID,
+            nil, nil, { icon = leatherworking.icon })
+    elseif enchant and enchant.state == "installed" then AddRow(Addon:T("UI.ENCHANT") .. (enchant.name or Addon:T("UI.INSTALLED")), enchant.tooltipLink)
     elseif enchant and enchant.state == "uninstalled" then AddRow(Addon:T("UI.ENCHANT_NOT_INSTALLED")) end
     local engineering = item.engineering
     if engineering and engineering.state == "installed" then AddRow(Addon:T("UI.ENGINEERING") .. (engineering.name or Addon:T("UI.INSTALLED")), engineering.tooltipLink)
@@ -1802,9 +1823,11 @@ local function PlaceEquipment(parent, snapshot)
         -- confirmed enchant display, but do not invent an "unenchanted" state
         -- until a fresh capture records that this MoP slot supports one.
         local canEnchant = isEnchanted or enchantState == "uninstalled" or enchantState == "base-missing"
+        local leatherworking = LeatherworkingEnhancement(enchantID)
+        button.enchant.icon:SetTexture(leatherworking and leatherworking.icon or "Interface\\Icons\\Trade_Engraving")
         button.enchant.icon:SetDesaturated(not isEnchanted)
         button.enchant:SetShown(canEnchant and not isRanged or false)
-        SetEnchantTooltip(button.enchant, item, enchantID, isEnchanted)
+        SetEnchantTooltip(button.enchant, item, enchantID, isEnchanted, leatherworking)
         button.engineering:ClearAllPoints()
         local engineeringTitle
         local isBack = slotID == (INVSLOT_BACK or 15)

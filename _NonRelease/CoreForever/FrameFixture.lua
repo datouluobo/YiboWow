@@ -117,6 +117,8 @@ function methods:GetCenter() return 500, 400 end
 function methods:GetNormalTexture() return self.normalTexture end
 function methods:SetOwner(owner) self.owner = owner end
 function methods:GetOwner() return self.owner end
+function methods:SetTexture(texture) self.texture = texture end
+function methods:GetTexture() return self.texture end
 function methods:SetShadowOffset(x, y) self.shadowOffset = {x, y} end
 function methods:IsOwned(owner) return self.owner == owner end
 function methods:StopMovingOrSizing() end

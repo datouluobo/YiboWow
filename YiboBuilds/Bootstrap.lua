@@ -3,7 +3,7 @@ local Addon = _G.YiboBuilds or {}
 _G.YiboBuilds = Addon
 
 Addon.NAME = ADDON_NAME or "YiboBuilds"
-Addon.VERSION = "1.6.1"
+Addon.VERSION = "1.6.2"
 Addon.REQUIRED_CORE_API = 14
 Addon.PAGE_ID = "builds"
 Addon.ICON = "Interface\\AddOns\\YiboBuilds\\Media\\YiboBuildsIcon"
@@ -15,7 +15,7 @@ Addon.REQUIRED_CAPABILITIES = {
     ["account-view"] = 2, ["account-entry"] = 2,
     ["character-cleanup"] = 2, ["business-providers"] = 1,
     ["business-item-actions"] = 1, ["characters"] = 1,
-    ["pixel-line"] = 1,
+    ["pixel-line"] = 1, ["item-resolver"] = 1,
 }
 function Addon:HasCompatibleCore()
     if type(WOW_PROJECT_CAMELOT)=="number" and WOW_PROJECT_ID==WOW_PROJECT_CAMELOT then return false end
@@ -29,6 +29,7 @@ function Addon:HasCompatibleCore()
     return core.Characters and type(core.Characters.FormatName) == "function"
         and core.AccountView and core.Entry and core.Contracts and core.CharacterCleanup
         and core.BusinessItemActions and core.Defaults
+        and core.ItemResolver and type(core.ItemResolver.GetInfo) == "function"
         and theme and type(theme.ApplyPixelBackdrop) == "function"
         and type(theme.ApplyPixelRule) == "function" and type(theme.CreatePixelBorder) == "function"
 end

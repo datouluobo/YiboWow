@@ -25,6 +25,7 @@ local function Setup(language)
         Entry = { RegisterBusinessEntry = function(_, _, value) state.entries = state.entries + 1; state.entry = value; return value end },
         CharacterCleanup = { RegisterOwner = function(_, _, value) state.ownerRegistrations = state.ownerRegistrations + 1; state.owner = value; return true end },
         Contracts = { Register = function() return {} end, NotifyChanged = function() end }, BusinessItemActions = {},
+        ItemResolver = { GetInfo = function(_, itemID) return {itemID = itemID} end },
     }
     dofile("YiboCore/Util/Defaults.lua")
     dofile("YiboCore/Runtime/Locale.lua")

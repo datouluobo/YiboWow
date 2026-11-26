@@ -16,6 +16,7 @@ local function Configure(env)
     env.UnitLevel = function() return 90 end
     local methods = getmetatable(env.UIParent).__index
     methods.SetInventoryItem = function() return false end
+    methods.GetSpell = function() end
     methods.HasFocus = function(self) return self.focused == true end
     methods.Disable = function(self) self:SetEnabled(false) end
     methods.Enable = function(self) self:SetEnabled(true) end
@@ -200,6 +201,42 @@ local function Run(target, language)
             assert(instance.buildsEquipment:IsShown() == (pane == "equipment"))
             assert(instance.buildsBuild:IsShown() == (pane == "build"))
         end
+        local readItem = env.GetItemInfo
+        local kitNames = {[2304] = "Light Armor Kit", [4265] = "Heavy Armor Kit"}
+        local kitIcons = {[2304] = 133611, [4265] = 133610}
+        env.GetItemInfo = function(item)
+            if kitNames[item] then
+                return kitNames[item], "item:" .. item, 1, nil, nil, nil, nil, nil, nil, kitIcons[item]
+            end
+            return readItem(item)
+        end
+        local chestID, legsID = env.INVSLOT_CHEST or 5, env.INVSLOT_LEGS or 7
+        local gear = slot.observedEquipment.slots
+        gear[tostring(chestID)] = {itemID = 1005, itemLink = "item:1005:15:0"}
+        gear[tostring(legsID)] = {itemID = 1007, itemLink = "item:1007:17:0", enchant = {state = "installed"}}
+        VisitPage(builds.PAGE_ID)
+        local chest = equipment.items[chestID]
+        assert(chest.enchant.icon:GetTexture() == kitIcons[2304]
+            and equipment.items[legsID].enchant.icon:GetTexture() == kitIcons[4265],
+            "Mists uses its own light and heavy kit IDs and native item icons")
+        chest.enchant:Fire("OnEnter")
+        assert(env.GameTooltip.link == "item:2304" and env.GameTooltip.lines[2].text == builds:T("UI.LEATHERWORKING"),
+            "kit hover retains the native item tooltip and identifies Leatherworking")
+        chest:Fire("OnClick")
+        local detail = equipment.detail
+        local kitRow
+        for _, row in ipairs(detail.rows) do
+            if row:IsShown() and row.text:GetText() == builds:T("UI.LEATHERWORKING") .. " · Light Armor Kit" then
+                kitRow = row
+            end
+        end
+        assert(detail:IsShown() and kitRow and kitRow.icon:GetTexture() == kitIcons[2304],
+            "Mists slot details show the kit icon and Leatherworking")
+        gear[tostring(chestID)] = {itemID = 1005, itemLink = "item:1005:24:0", enchant = {state = "installed"}}
+        VisitPage(builds.PAGE_ID)
+        assert(chest.enchant.icon:GetTexture() == "Interface\\Icons\\Trade_Engraving",
+            "non-kit effects restore the ordinary enchant icon on the reused slot")
+        env.GetItemInfo = readItem
         local settings = builds:GetSettings()
         settings.previewMatrixMode, settings.previewEquipmentMode, settings.previewSpecMode = "equipment", false, "backup"
         frame:Hide()

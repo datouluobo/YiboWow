@@ -12,7 +12,7 @@ for _, lang in ipairs({ "zh", "en" }) do
     dofile("YiboBuilds/Data/SocketEffectCatalog.lua")
     dofile("YiboBuilds/GoalTargets.lua")
     core.Characters.Get = function(_, id) return id == "Player:1" and {id=id} end
-    for _, failure in ipairs({ "localization", "character-name-format", "character-identity", "account-view", "account-entry", "character-cleanup", "business-providers", "business-item-actions", "characters", "pixel-line" }) do
+    for _, failure in ipairs({ "localization", "character-name-format", "character-identity", "account-view", "account-entry", "character-cleanup", "business-providers", "business-item-actions", "characters", "pixel-line", "item-resolver" }) do
         host.missing = failure
         local ok, err = addon.CoreIntegration:Initialize()
         Check(not ok and err:find("API14", 1, true), "missing capability must show upgrade prompt: " .. failure)
