@@ -24,6 +24,9 @@ local function Boot(saved,configure,defaultManifest,language)
                 self.unit = unit
             end
             frame.ClearModel = function(self) self.unit = nil end
+            frame.TryOn = function(_, link) d.triedOn = link end
+            frame.SetFacing = function(_, value) d.modelFacing = value end
+            frame.SetCamDistanceScale = function(_, value) d.modelZoom = value end
         end
         return frame
     end
@@ -58,11 +61,22 @@ assert(not c.AccountView._pages.builds.lastError,c.AccountView._pages.builds.las
 Check(state=="known" and row.slots[1].itemID==1001 and row.slots[2].itemID==0 and row.slots[16].itemID==1016,"whole equipment and explicit empty slots captured")
 Check(panel.doll:IsShown() and panel.doll.model.unit=="player" and #panel.renderedEquipment==19,
     "main page shows the character model with all saved slots")
-Check(panel.doll.slots[1].itemLabel:GetText()=="Item1001" and panel.doll.slots[2].itemLabel:GetText()==a:T("FOREVER.EMPTY")
-    and panel.doll.slots[18].item.itemID==0,"slot cards show names and explicit empties including ranged")
+Check(panel.doll.slots[1].itemName=="Item1001" and panel.doll.slots[2].itemName==a:T("FOREVER.EMPTY")
+    and panel.doll.slots[18].item.itemID==0,"slot icons retain names and explicit empties for hover, including ranged")
 Check(panel.doll.slots[1].slotLabel:GetText()==a:T("FOREVER.SLOT_HEAD"),"localized slot labels")
-panel.scroll:SetWidth(460)
-a.AccountPage:Refresh(panel,{characters={c.Characters:GetCurrent()},fields=a.AccountPage:Fields()})
+local cursorX = 120
+e.GetCursorPosition = function() return cursorX, 0 end
+panel.doll.modelControl:Fire("OnDragStart")
+cursorX = 140
+panel.doll.modelControl:Fire("OnUpdate")
+panel.doll.modelControl:Fire("OnDragStop")
+panel.doll.modelControl:Fire("OnMouseWheel", 1)
+Check(math.abs(d.modelFacing-0.24)<0.0001 and math.abs(d.modelZoom-0.92)<0.0001,"live model supports rotation and zoom")
+panel.doll.appearanceToggle:Fire("OnClick")
+Check(d.triedOn and panel.doll.model.original,"original appearance applies saved equipment links")
+panel.doll.appearanceToggle:Fire("OnClick")
+Check(not panel.doll.model.original and panel.doll.model.unit=="player","current appearance restores the live player model")
+a.AccountPage:Refresh(panel,{characters={c.Characters:GetCurrent()},fields=a.AccountPage:Fields(),surfaceAvailableWidth=350})
 Check(not panel.doll:IsShown() and panel.rows[1].labels.item:GetText()=="Item1001","narrow window retains readable list")
 panel.rows[1]:Fire("OnEnter")
 Check(e.GameTooltip.link==row.slots[1].itemLink,"narrow equipment list opens the saved native item tooltip")
@@ -77,6 +91,7 @@ local before=d.reads; for i=1,20 do fire("PLAYER_EQUIPMENT_CHANGED") end; flush(
 Check(d.reads-before==38,"equipment event burst merged into two passes")
 before=d.reads; fire("UNIT_INVENTORY_CHANGED","target"); flush(); Check(d.reads==before,"other unit ignored")
 d.items[1]=1002; fire("UNIT_INVENTORY_CHANGED","player"); flush(); Check(a.Store:Get(e.TEST_GUID).slots[1].itemID==1002,"equipment replacement captured")
+Check(a.Store.changedSlots[e.TEST_GUID][1] and not a.Store.changedSlots[e.TEST_GUID][5],"only changed slots are marked")
 d.items[1]=nil; fire("PLAYER_EQUIPMENT_CHANGED"); flush(); Check(a.Store:Get(e.TEST_GUID).slots[1].itemID==0,"unequip clears only through full successful scan")
 d.items[1]=1001; a.Scanner:Scan(true)
 for _,flag in ipairs({"fail","changing","badLink","secret"}) do
@@ -102,11 +117,11 @@ e.GetInventoryItemLink=function(unit,slot)
 end
 d.uncached=true; a:NotifyChanged(); flush()
 a.Scanner:Scan(true); flush()
-Check(panel.doll.slots[1].itemLabel:GetText()=="Saved item name" and panel.doll.slots[1].itemLabel.textColor[1]==0.12,
-    "native named-quality hyperlink preserves its exact label and native color without an item cache")
+Check(panel.doll.slots[1].itemName=="Saved item name",
+    "native named-quality hyperlink preserves its exact label without an item cache")
 d.noLink=true; a.Scanner:Scan(true); flush()
-Check(panel.doll.slots[1].itemLabel:GetText()==a:T("FOREVER.UNCACHED",1001),"uncached item without a link falls back to stable ID")
-d.uncached=nil; fire("GET_ITEM_INFO_RECEIVED",1001); flush(); Check(panel.doll.slots[1].itemLabel:GetText()=="Item1001","item cache event updates display")
+Check(panel.doll.slots[1].itemName==a:T("FOREVER.UNCACHED",1001),"uncached item without a link falls back to stable ID")
+d.uncached=nil; fire("GET_ITEM_INFO_RECEIVED",1001); flush(); Check(panel.doll.slots[1].itemName=="Item1001","item cache event updates display")
 d.noLink=nil; e.GetInventoryItemLink=originalItemLink; a.Scanner:Scan(true); flush()
 local loads = d.modelLoads
 a.Scanner:Scan(true); flush()
@@ -124,6 +139,11 @@ f2("PLAYER_ENTERING_WORLD"); fl2(); c2.AccountView.frame:Hide()
 Check(c2.AccountView:ShowPreview("builds",e2.Minimap),"Core preview opens")
 local preview = c2.AccountView.frame.instances.builds
 Check(#preview.previewRows[1].cells==19 and not preview.refresh:IsShown() and not preview.header:IsShown(),"preview renders an equipment icon row")
+Check(preview.previewModeStrip:GetParent()==c2.AccountView.frame.titleBar and preview.previewModeStrip:IsShown(),
+    "the shared preview mode strip is hosted in the Core title bar")
+preview.previewModeStrip.buttons[2]:Fire("OnClick")
+Check(a2.AccountPage.previewMode==2 and preview.previewModeStrip.buttons[2].state=="selected","backup equipment mode can be selected from the title bar")
+preview.previewModeStrip.buttons[1]:Fire("OnClick")
 Check(preview.previewRows[1].cells[2].item.itemID==0,"confirmed empty slot remains in the matrix")
 preview.previewRows[1].cells[1]:Fire("OnEnter")
 Check(e2.GameTooltip.link==a2.Store:Get(e2.TEST_GUID).slots[1].itemLink,"entry preview uses the full link from the same equipment snapshot")
@@ -134,6 +154,22 @@ a2.Store.db.characters[other.id] = otherGear
 a2.AccountPage:Refresh(preview,{preview=true, characters={c2.Characters:GetCurrent(), other}})
 Check(preview.previewRows[1].cells[1].item.itemID~=0 and preview.previewRows[2].cells[1].item.itemID==0,
     "two GUIDs render their own snapshots")
+e2.GetDetailedItemLevelInfo = function(link) if link == otherGear.slots[5].itemLink then return 37 end end
+other.profile = {itemLevel=28}
+local visible = c2.AccountView.GetVisibleCharacters
+c2.AccountView.GetVisibleCharacters = function() return { c2.Characters:GetCurrent(), other } end
+c2.AccountView:SetPageScope("builds", "all")
+Check(preview.previewRows[2].name:GetText():find("[28]", 1, true) and preview.previewRows[2].cells[5].itemLevel:GetText()=="37",
+    "preview shows Core character item level and link-specific slot item level")
+preview.previewRows[2].cells[5]:Fire("OnClick")
+Check(not c2.AccountView.frame.preview and preview.selectedCharacterID==other.id and preview.renderedEquipment[1].item.itemID==0,
+    "hover cell opens the corresponding cached character in the main window")
+Check(select(2,a2.Store:Get(other.id))=="stale" and preview.refresh:GetScript("OnClick")~=nil,
+    "another character's equipment remains a historical snapshot")
+local scans = d2.reads
+preview.refresh:Fire("OnClick")
+Check(d2.reads==scans, "cached-character refresh cannot scan the logged-in character")
+c2.AccountView.GetVisibleCharacters = visible
 f2("PLAYER_EQUIPMENT_CHANGED"); a2.Store:Delete({id=e2.TEST_GUID}); fl2(); Check(not a2.Store:Get(e2.TEST_GUID),"cleanup cancels queued repopulation")
 a2.Scanner:Scan(true); a2.Store:Delete({id=e2.TEST_GUID},{replay=true,deletedAt=199999}); Check(a2.Store:Get(e2.TEST_GUID)~=nil,"cleanup replay preserves newer snapshot")
 a2.Store:Delete({id="Other"}); Check(select(2,a2.Store:Get(e2.TEST_GUID))=="known","other character cleanup does not invalidate current")
@@ -246,11 +282,31 @@ Check(state=="known" and talent.trees[1].points==10 and #talent.trees[1].nodes==
 Check(not ta.Talents:Get("Other"),"talent snapshot is current-character only")
 te.SlashCmdList.YIBOBUILDS(""); tflush()
 local tp=tc.AccountView.frame.instances.builds
+local workbenchContext, previousWidth = tp.context, tp.scroll:GetWidth()
+tp.scroll:SetWidth(920)
+ta.AccountPage:Refresh(tp,{characters={tc.Characters:GetCurrent()},fields=ta.AccountPage:Fields(),surfaceAvailableWidth=1100})
+Check(tp.showCombined and tp.doll:IsShown() and tp.talentHeading:IsShown() and tp.roster:IsShown(),
+    "wide workbench displays cached character navigation and equipment beside talents")
+tp.collapseTalents:Fire("OnClick")
+Check(not tp.showCombined and tp.doll:IsShown() and not tp.talentHeading:IsShown(),"collapse leaves the full equipment workbench")
+tp.collapseTalents:Fire("OnClick")
+local oldHeight = tp:GetHeight()
+tp:SetHeight(420)
+ta.AccountPage:Refresh(tp,{characters={tc.Characters:GetCurrent()},fields=ta.AccountPage:Fields(),surfaceAvailableWidth=760})
+Check(not tp.roster:IsShown() and tp.roster.picker:IsShown() and tp.roster.picker.value==te.TEST_GUID
+    and tp.doll:IsShown() and not tp.showCombined, "compact workbench preserves the selection and gives the equipment pane the full width")
+Check(tp.doll:GetHeight() <= tp:GetHeight() - 10 and tp.doll:GetWidth() < 760,
+    "shared equipment pane fits inside the compact viewport")
+tp:SetHeight(oldHeight)
+tp.scroll:SetWidth(previousWidth)
+ta.AccountPage:Refresh(tp,workbenchContext)
 tp.talentsTab:GetScript("OnClick")(tp.talentsTab)
 Check(tp.showTalents and tp.showTree and not tp.doll:IsShown() and #tp.talentTree.tiles==52
     and tp.talentTree.tiles[1].rank:GetText()=="5" and tp.talentTree.tiles[5].rank:GetText()=="0","talent tab draws spent and unspent nodes")
 local _,_,_,_,talentTop=tp.scroll:GetPoint(1)
-Check(talentTop == -76 and not tp.status:IsShown(),"known talent tree starts below two compact rows")
+local _,_,_,_,searchTop=tp.talentSearch:GetPoint(1)
+Check(talentTop == searchTop - tc.UITheme.Size.standard - tc.UITheme.Space.xxs
+    and not tp.status:IsShown(), "known talent tree starts below the compact search row")
 Check(#tp.talentTree.lines==1 and tp.talentTree.lines[1].startPoint[3]<tp.talentTree.lines[1].endPoint[3],
     "native endpoints draw once and unresolved endpoints do not invent links")
 Check(tp.talentTree.titles[1]:GetText()==ta:T("FOREVER.TALENT_TREE_AVAILABLE",1089,10,0),"explicit zero available points display")
@@ -283,7 +339,7 @@ tp.talentSearch:SetValue("  NATIVE TALENT  ",true)
 Check(tp.showTree and #tp.talentMatchOffsets==1 and tp.talentMatchOffsets[1].tile==tp.talentTree.tiles[1]
     and tp.talentSearchCount:GetText()==ta:T("FOREVER.TALENT_SEARCH_COUNT",1),"trimmed case-insensitive name search retains the tree and identifies the matching node")
 local _,_,_,_,searchedTop=tp.scroll:GetPoint(1)
-Check(searchedTop == talentTop and tp.talentNext:IsShown(),"search results share the toolbar without taking another row")
+Check(searchedTop == talentTop and tp.talentNext:IsShown(), "search results stay on the same row")
 tp.talentSearch:SetValue("105048",true)
 Check(tp.talentMatchOffsets[1].tile==tp.talentTree.tiles[52] and tp.talentTree.tiles[52].point.rank==0,
     "node ID search includes uninvested nodes from the saved geometry")
@@ -296,19 +352,18 @@ tp.talentNext:Fire("OnClick")
 Check(#tp.talentMatchOffsets>1 and tp.talentMatchIndex==2,"next match advances within the native tree")
 tp.talentSearch.clearButton:Fire("OnClick")
 Check(not tp.talentQuery and not tp.talentSearchCount:IsShown(),"shared clear button restores unfiltered tree")
-tp.scroll:SetWidth(330)
-ta.AccountPage:Refresh(tp,tp.context)
-Check(tp.showTree and #tp.renderedRows==0 and not tp.talentTreeHint:IsShown()
-    and tp.talentTree.tiles[1]:GetWidth() < 34 and tp.talentTree.tiles[1]:GetWidth() >= 24,
+local fullTalentContext=tp.context
+ta.AccountPage:Refresh(tp,{characters={tc.Characters:GetCurrent()},fields=ta.AccountPage:Fields(),surfaceAvailableWidth=350})
+Check(tp.showTree and #tp.renderedRows==0 and not tp.talentTreeHint:IsShown(),
+    "the existing responsive layout fits this native tree at the compact width")
+Check(tp.talentTree.tiles[1]:GetWidth() < 34 and tp.talentTree.tiles[1]:GetWidth() >= 24,
     "narrow tree shrinks nodes while preserving the native view")
 local tooNarrow,_,issue=ta.TalentTree:Render(tp.talentTree,talent,240)
-Check(not tooNarrow and issue=="width","tree rejects widths below the minimum tile spacing")
+Check(not tooNarrow and issue=="width", "tree rejects widths below minimum tile spacing")
 Check(ta.Talents:GetRankText({maxRanks=7},5)==ta:T("FOREVER.TALENT_RANK_DETAIL",ta:T("FOREVER.TALENT_RANK_UNKNOWN"),"7")
     and ta.Talents:GetRankText({},5)==ta:T("FOREVER.TALENT_RANK_VALUE",5),"missing native ranks remain unknown and old snapshots show invested rank")
-tp.scroll:SetWidth(720)
-ta.AccountPage:Refresh(tp,tp.context)
-Check(tp.showTree and not tp.talentTreeHint:IsShown() and tp.talentView==nil
-    and tp.talentTree.tiles[1]:GetWidth()==34,"restoring space restores full-size nodes")
+ta.AccountPage:Refresh(tp,fullTalentContext)
+Check(tp.showTree and not tp.talentTreeHint:IsShown() and tp.talentView==nil,"restoring space restores the sole talent view")
 tp.equipmentTab:GetScript("OnClick")(tp.equipmentTab)
 Check(not tp.showTalents and #tp.renderedEquipment==19,"equipment tab returns to the same equipment")
 tp.talentsTab:GetScript("OnClick")(tp.talentsTab)
@@ -339,8 +394,11 @@ local historical,historicalState=ra.Talents:Get(re.TEST_GUID)
 Check(historicalState=="stale" and historical.trees[1].points==17 and historical.trees[1].nodes[2].rank==2
     and #ra.Talents:GetGraph(historical.trees[1])==52,"saved graph and unequal rank and point totals restore without a native API")
 local oldTalentSave=tc.Defaults:Copy(te.YiboBuildsForeverDB)
-oldTalentSave.talents[te.TEST_GUID].trees[1].graph=nil
-oldTalentSave.talents[te.TEST_GUID].trees[1].points=11
+local oldTalent=ta.Talents:Get(te.TEST_GUID)
+oldTalent.trees[1].graph=nil
+oldTalent.trees[1].points=11
+oldTalentSave.configurations=nil
+oldTalentSave.talents={[te.TEST_GUID]=oldTalent}
 local oe,oc,oa,_,oflush=Boot(oldTalentSave)
 local oldSnapshot=oa.Talents:Get(oe.TEST_GUID)
 Check(oldSnapshot.trees[1].points==11 and not oa.Talents:GetGraph(oldSnapshot.trees[1]),"0.1.2 rank-only records remain readable")
@@ -376,6 +434,46 @@ Check(td.currencyReads-readsBefore==3 and not ta.Talents.queued
 tf("TRAIT_NODE_CHANGED"); ta.Store:Delete({id=te.TEST_GUID}); tflush()
 Check(not ta.Talents:Get(te.TEST_GUID),"Core cleanup removes talent snapshot and cancels queued scan")
 Check(#e.TEST_MESSAGES==0,"no hidden errors: "..table.concat(e.TEST_MESSAGES," | "))
+local function DualConfig(env, core, data)
+    TalentFixture(env, core, data)
+    data.activeGroup = 1
+    env.C_SpecializationInfo = {
+        GetActiveSpecGroup = function() return data.activeGroup end,
+        GetCombatConfigIDForSpecGroup = function(group) return 705206 + group end,
+    }
+    local getConfigInfo = env.C_Traits.GetConfigInfo
+    env.C_Traits.GetConfigInfo = function(id) return getConfigInfo(id == 705208 and 705207 or id) end
+end
+local dualEnv,dualCore,dual,dualFire,dualFlush,dualData = Boot(nil,DualConfig)
+local dualID = dualEnv.TEST_GUID
+dualFire("PLAYER_ENTERING_WORLD"); dualFlush()
+dualEnv.SlashCmdList.YIBOBUILDS(""); dualFlush()
+local dualPanel = dualCore.AccountView.frame.instances.builds
+Check(dual.Store:EquipmentSaveState(dualID)=="pending" and dualPanel.saveNow:IsShown(), "new native configuration can save equipment")
+dualPanel.saveNow:Fire("OnClick"); dualFlush()
+Check(dual.Store:EquipmentSaveState(dualID)=="saved", "manual save persists the complete equipped snapshot")
+dualData.items[1]=1002
+dualFire("PLAYER_EQUIPMENT_CHANGED"); dualFlush()
+local changed, _, changedSlots = dual.Store:EquipmentSaveState(dualID)
+Check(changed=="changed" and changedSlots[1] and not changedSlots[5], "equipment change marks only the affected slot")
+dualData.noLink=true
+Check(not dual.Scanner:Scan(true,705207), "missing gear links cannot overwrite the saved snapshot")
+dualData.noLink=nil
+dual.Scanner:Scan(true)
+dualData.activeGroup,dualData.items[1],dualData.points=2,1003,12
+dualFire("ACTIVE_TALENT_GROUP_CHANGED"); dualFlush()
+Check(dual.Store:Get(dualID).slots[1].itemID==1003 and dual.Store:Get(dualID,"backup").slots[1].itemID==1002,
+    "switching native configuration saves the previous gear and captures new gear separately")
+Check(dual.Talents:Get(dualID).trees[1].points==12 and dual.Talents:Get(dualID,"backup").trees[1].points==10,
+    "current and backup talents follow independent native configurations")
+dualPanel.buildModeButton:Fire("OnClick")
+Check(dualPanel.renderedEquipment[1].item.itemID==1002 and not dualPanel.saveNow:IsShown(),
+    "viewing backup gear does not offer a save")
+dualFire("PLAYER_LOGOUT")
+local dualSaved = dualCore.Defaults:Copy(dualEnv.YiboBuildsForeverDB)
+local _,_,dualReload = Boot(dualSaved)
+Check(dualReload.initialized and dualReload.Store:Get(dualID).slots[1].itemID==1003
+    and dualReload.Store:Get(dualID,"backup").slots[1].itemID==1002, "both saved configurations survive a fresh load")
 local function EnhancementLinks(env, _, fixture)
     env.GetInventoryItemLink=function(_,slot)
         if slot==1 then return "|cffffffff|Hitem:1001:555:0:0:0:0:0|h[Item1001]|h|r" end
@@ -396,46 +494,81 @@ local ee,ec,ea,ef,eflush,ed=Boot(saved,EnhancementLinks)
 ef("PLAYER_ENTERING_WORLD"); eflush()
 ee.SlashCmdList.YIBOBUILDS(""); eflush()
 local ep=ec.AccountView.frame.instances.builds
+Check(ep.doll.slots[1].enchant:IsShown() and not ep.doll.slots[5].enchant:IsShown(),
+    "equipped enchant appears beside the affected slot only")
 ep.doll.slots[2]:Fire("OnClick")
 Check(ep.activeTab=="equipment","an empty doll slot does not open enhancement details")
 local gearReads=ed.reads
 ep.doll.slots[1]:Fire("OnClick")
-Check(ep.activeTab=="enhancements" and ep.enhancementSlot.value==1 and #ep.renderedRows==1
-    and ep.renderedRows[1].slot==1 and ep.rows[1].labels.enchant:GetText()=="#555",
-    "occupied doll slot opens its own enchant record")
-ep.enhancementSlot:Fire("OnClick")
-ep.enhancementSlot.menu.buttons[3]:Fire("OnClick")
-Check(ep.enhancementSlot.value==2 and #ep.renderedRows==0
-    and ep.enhancementHint:GetText()==ea:T("FOREVER.ENHANCEMENT_EMPTY_SLOT"),
-    "slot picker reports an empty slot without inventing an enchant state")
-ep.equipmentTab:Fire("OnClick")
-ep.scroll:SetWidth(450)
-ea.AccountPage:Refresh(ep,ep.context)
+Check(ep.activeTab=="equipment" and ep.detailSlot==1 and ep.doll:IsShown()
+    and ep.slotDetail.effect:GetText()=="#555", "occupied doll slot opens its enchant record alongside equipment")
+ep.doll.slots[1]:Fire("OnClick")
+Check(not ep.slotDetail:IsShown(), "a second click on the same slot closes its inline detail")
+local narrowContext={characters={ec.Characters:GetCurrent()},fields=ea.AccountPage:Fields(),surfaceAvailableWidth=350}
+ea.AccountPage:Refresh(ep,narrowContext)
 ep.rows[5]:Fire("OnClick")
-Check(ep.activeTab=="enhancements" and ep.enhancementSlot.value==5 and #ep.renderedRows==1 and ed.reads==gearReads,
+Check(ep.activeTab=="equipment" and ep.detailSlot==5 and ep.slotDetail:IsShown() and ed.reads==gearReads,
     "compact equipment list opens slot details without scanning again")
+Check(ep.slotDetail.effect:GetText()==ea:T("FOREVER.NO_ENCHANT"),"blank enchant field is explicit absence")
 ed.items[5]=nil; ef("PLAYER_EQUIPMENT_CHANGED"); eflush()
-Check(ep.enhancementSlot.value==5 and #ep.renderedRows==0 and ep.enhancementHint:IsShown(),
-    "unequipping the selected slot keeps it selected and clears its enchant record")
+Check(not ep.detailSlot and not ep.slotDetail:IsShown(), "unequipping closes an obsolete slot detail")
 ed.items[5]=1005; ef("PLAYER_EQUIPMENT_CHANGED"); eflush()
-Check(#ep.renderedRows==1 and not ep.enhancementHint:IsShown(),"equipping the selected slot restores its live detail")
-ep.enhancementsTab:GetScript("OnClick")(ep.enhancementsTab)
-Check(ep.activeTab=="enhancements" and not ep.doll:IsShown() and #ep.renderedRows==3,"enhancement tab lists only occupied slots")
-Check(#ep.columns==3 and ep.columns[3].id=="enchant" and not ep.labels.gems,"Forever enhancement page has no socket column")
-Check(ep.rows[1].labels.enchant:GetText()=="#555","enchant ID comes from the equipped link")
-Check(ep.rows[2].labels.enchant:GetText()==ea:T("FOREVER.NO_ENCHANT"),"blank enchant field is explicit absence")
-Check(ep.rows[3].labels.enchant:GetText()==ea:T("FOREVER.ENHANCEMENT_UNKNOWN"),"uncached equipped link does not imply no enhancements")
+ep.slotDetail.close:Fire("OnClick")
 ep.rows[1]:Fire("OnEnter")
 Check(ee.GameTooltip.link==ep.renderedRows[1].item.itemLink,"native tooltip uses full equipped link")
+ep.rows[1]:Fire("OnClick")
 ed.enchantEffect=true
 ef("GET_ITEM_INFO_RECEIVED"); eflush()
-Check(ep.rows[1].labels.enchant:GetText()=="Native enchant effect","native enchant text takes precedence over the numeric fallback")
+Check(ep.slotDetail.effect:GetText()=="Native enchant effect","native enchant text takes precedence over the numeric fallback")
+ee.Enum.Profession = {Enchanting=333}
+ee.Enum.TradeskillRecipeType = {Enchant=1}
+ee.Enum.CraftingReagentType = {Basic=1}
+ee.Enum.TradeskillSlotDataType = {Reagent=1}
+ee.ProfessionsFrame = ee.CreateFrame("Frame")
+ee.ItemLocation = {CreateFromEquipmentSlot=function(_, slot) return {slot=slot} end}
+local equippedGUID, craft, opened = "Equipped-1"
+ee.C_Item = {
+    GetItemGUID=function(location) return location.slot==1 and equippedGUID end,
+    GetItemCount=function() return 1 end,
+}
+ee.C_TradeSkillUI = {
+    IsTradeSkillReady=function() return true end,
+    IsTradeSkillLinked=function() return false end, IsTradeSkillGuild=function() return false end,
+    IsTradeSkillGuildMember=function() return false end, IsNPCCrafting=function() return false end,
+    GetBaseProfessionInfo=function() return {profession=333} end,
+    GetAllRecipeIDs=function() return {101,102,103,104} end,
+    GetRecipeInfo=function(id)
+        return {name="Recipe "..id, learned=id~=104, isEnchantingRecipe=true,
+            supportsQualities=id==102, craftable=true, disabled=false}
+    end,
+    GetRecipeSchematic=function()
+        return {recipeType=1, reagentSlotSchematics={{required=true, reagentType=1, dataSlotType=1,
+            reagents={{itemID=2001}}, quantityRequired=2}}}
+    end,
+    GetEnchantItems=function(id) return { id==103 and "Other-slot" or "Equipped-1" } end,
+    GetCraftableCount=function() return 1 end,
+    CraftEnchant=function(...) craft={...} end,
+    OpenRecipe=function(id) opened=id end,
+}
+ee.ProfessionsFrame:Show()
+ef("TRADE_SKILL_SHOW"); eflush()
+local candidates = ep.slotDetail.candidateRows
+Check(#candidates==2 and candidates[1].candidate.ready and not candidates[2].candidate.ready
+    and candidates[1].candidate.materials[1].quantity==2, "slot detail shows only learned recipes targeting its gear and lists required materials")
+candidates[2].action:Fire("OnClick")
+Check(opened==102 and not craft, "a recipe requiring native choices opens in the profession window")
+candidates[1].action:Fire("OnClick")
+Check(craft and craft[1]==101 and craft[2]==1 and craft[4].slot==1, "apply submits one native request for the validated slot")
+craft=nil
+equippedGUID="Replacement"
+candidates[1].action:Fire("OnClick")
+Check(not craft, "replacing the equipped instance invalidates the pending native action")
 Check(ea.Enhancements:Read({itemID=1002,itemLink="item:1001:555:0"})==nil,"mismatched stored link is unknown")
 Check(ea.Enhancements:Read({itemID=1001,itemLink="item:1001"})==nil,"missing enchant field is unknown")
 ec.AccountView.frame:Hide()
 Check(ec.AccountView:ShowPreview("builds",ee.Minimap) and ep.activeTab=="equipment"
-    and not ep.enhancementsTab:IsShown() and #ep.previewRows[1].cells==19,"enhancement tab does not change the entry preview")
-Check(ep.activeTab=="equipment" and not ep.enhancementSlot:IsShown(),"entry preview remains a read-only equipment projection")
+    and not ep.slotDetail:IsShown() and #ep.previewRows[1].cells==19,"inline detail does not change the entry preview")
+Check(ep.previewHeader:IsShown() and ep.previewHeader.columns[2]:IsShown(),"entry preview shows slot headers")
 local legacy=c.Defaults:Copy(saved)
 legacy.equipmentBaselines={[e.TEST_GUID]=c.Defaults:Copy(legacy.characters[e.TEST_GUID])}
 local ce,cc,ca,_,cflush=Boot(legacy)

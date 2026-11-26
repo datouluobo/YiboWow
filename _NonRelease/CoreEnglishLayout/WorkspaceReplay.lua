@@ -200,6 +200,19 @@ local function Run(target, language)
             assert(instance.buildsEquipment:IsShown() == (pane == "equipment"))
             assert(instance.buildsBuild:IsShown() == (pane == "build"))
         end
+        local settings = builds:GetSettings()
+        settings.previewMatrixMode, settings.previewEquipmentMode, settings.previewSpecMode = "equipment", false, "backup"
+        frame:Hide()
+        assert(view:ShowPreview(builds.PAGE_ID), "Builds hover opens")
+        local modes = instance.buildsPreviewToggle.buttons
+        assert(modes[1].state == "selected" and settings.previewSpecMode == "backup",
+            "legacy equipment settings do not inherit the backup specialization")
+        modes[2]:GetScript("OnClick")(modes[2])
+        assert(modes[2].state == "selected", "explicit backup equipment mode remains available")
+        modes[4]:GetScript("OnClick")(modes[4])
+        assert(modes[4].state == "selected" and settings.previewEquipmentMode == "backup",
+            "specialization mode keeps the independent equipment preference")
+        view:Toggle(builds.PAGE_ID)
         for _, tab in ipairs({ "goals", "targets", "overview" }) do
             taskHub.AccountPage.activeTab = tab
             VisitPage(taskHub.PAGE_ID)

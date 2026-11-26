@@ -117,6 +117,8 @@ function methods:GetCenter() return 500, 400 end
 function methods:GetNormalTexture() return self.normalTexture end
 function methods:SetOwner(owner) self.owner = owner end
 function methods:GetOwner() return self.owner end
+function methods:SetShadowOffset(x, y) self.shadowOffset = {x, y} end
+function methods:IsOwned(owner) return self.owner == owner end
 function methods:StopMovingOrSizing() end
 function methods:RegisterEvent(event)
     if TEST_FOREVER and event == "PLAYERBANKSLOTS_CHANGED" then error("Removed event in simulated client") end

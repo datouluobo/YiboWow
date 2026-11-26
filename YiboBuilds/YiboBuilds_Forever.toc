@@ -19,5 +19,6 @@ Forever/Scanner.lua
 Forever/Talents.lua
 Forever/TalentTree.lua
 Forever/Enhancements.lua
+Common/EquipmentView.lua
 Forever/AccountPage.lua
 Forever/Bootstrap.lua

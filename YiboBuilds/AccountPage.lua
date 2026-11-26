@@ -2428,8 +2428,9 @@ function Page.RefreshPreview(parent, context)
     -- own last-used specialization, while “备用” is its other slot.
     local settings = Addon:GetSettings()
     local matrixMode = settings.previewMatrixMode == "spec" and "spec" or "equipment"
-    local mode = (matrixMode == "equipment" and settings.previewEquipmentMode or settings.previewSpecMode) == "backup" and "backup" or "current"
-    if matrixMode == "equipment" then settings.previewEquipmentMode = mode else settings.previewSpecMode = mode end
+    local modeKey = matrixMode == "equipment" and "previewEquipmentMode" or "previewSpecMode"
+    local mode = settings[modeKey] == "backup" and "backup" or "current"
+    settings[modeKey] = mode
     local characters = PreviewCharacters(context)
     local columns = PreviewColumns(context, characters, matrixMode, mode)
     parent.buildsPreviewToggle = parent.buildsPreviewToggle or CreateFrame("Frame", nil, parent)
@@ -2598,7 +2599,8 @@ function Page.GetSurfaceMetrics(context)
         local characters = PreviewCharacters(context)
         local settings = Addon:GetSettings()
         local matrixMode = settings.previewMatrixMode == "spec" and "spec" or "equipment"
-        local mode = (matrixMode == "equipment" and settings.previewEquipmentMode or settings.previewSpecMode) == "backup" and "backup" or "current"
+        local modeKey = matrixMode == "equipment" and "previewEquipmentMode" or "previewSpecMode"
+        local mode = settings[modeKey] == "backup" and "backup" or "current"
         local columns = PreviewColumns(context, characters, matrixMode, mode)
         local width = inset.left + inset.right
         for _, column in ipairs(columns) do width = width + column.width end
