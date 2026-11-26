@@ -1,20 +1,4 @@
-## Interface: 50504
-## Title: |cff20e070[Yibo]|r YiboQuestBlocker - Quest Blocker
-## Title-zhCN: |cff20e070[Yibo]|r YiboQuestBlocker
-## Title-zhTW: |cff20e070[Yibo]|r YiboQuestBlocker
-## Notes: Quest blocker and automatic rejection for selected quests.
-## Notes-zhCN: 任务屏蔽管理器 - 自动拒绝指定任务
-## Notes-zhTW: 任務封鎖管理器 - 自動拒絕指定任務
-## Author: Reasonix
-## Version: 3.2.0
-## IconTexture: Interface\AddOns\YiboQuestBlocker\Media\YiboQuestBlockerIcon-128
-## SavedVariables: YiboQuestBlockerDB
-## RequiredDeps: YiboCore
-## Group: YiboCore
-## LoadOnDemand: 0
+## Interface: 50504, 16001
+## Title: |cff20e070[Yibo]|r YiboQuestBlocker
 
-Locale.lua
-YiboQuestBlocker_Core.lua
-AccountPage.lua
-Settings.lua
-CoreIntegration.lua
+Common\TocHint.lua

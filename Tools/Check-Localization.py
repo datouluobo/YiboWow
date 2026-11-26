@@ -23,6 +23,7 @@ ADDON_REFERENCE = re.compile(r'(?:Addon:T|YQB\.T)\(\s*"([^"\n]+)"')
 REGISTER = re.compile(r'Core\.Locale:Register\(\s*"([^"\n]+)"\s*,\s*"(zh|en)"\s*,\s*\{')
 FORMAT = re.compile(r'%(?:[-+ #0]*\d*(?:\.\d+)?[cdiouxXeEfgGqs]|%)')
 EXCEPTIONS = {
+    'YiboQuestBlocker/Common/TocHint.lua': 'Missing-target hint uses client language before Core can initialize.',
     'YiboCore/Data/Domains/Professions.lua': 'Client-native profession aliases; stable skill-line IDs own identity.',
     'YiboMail/SendRules.lua': 'Native item-category markers used only to recognize obsolete client categories; never displayed.',
     'YiboReputation/Bootstrap.lua': 'Bilingual upgrade prompt used only when Core.Locale is unavailable; the normal startup path uses owner resources.',
@@ -37,7 +38,7 @@ INPUT_PUNCTUATION = {
     'YiboTaskHub/BossTargets.lua': {'"："', '"·"', '"（"', '"）"'},
 }
 PERSISTED_TOKENS = {
-    'YiboQuestBlocker/YiboQuestBlocker_Core.lua': {
+    'YiboQuestBlocker/Mists/Migrations.lua': {
         '"以上"': 'Legacy levelOp value read only while migrating saved settings; preserve the stored token.',
         '"以下"': 'Legacy levelOp value read only while migrating saved settings; preserve the stored token.',
         '"等于"': 'Legacy levelOp value read only while migrating saved settings; preserve the stored token.',

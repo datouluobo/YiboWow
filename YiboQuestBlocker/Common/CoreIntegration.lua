@@ -1,6 +1,5 @@
 local Core = _G.YiboCore
 local YQB = _G.YQB
-if not (YQB and YQB.CoreCompatible) then return end
 local Integration = {}
 YQB.CoreIntegration = Integration
 
@@ -46,36 +45,9 @@ end
 
 function Integration:Initialize()
     if self.initialized then return true end
-    if not (Core and Core.CheckAPIVersion and Core.AccountView and Core.Entry and Core.Characters) then
-        return nil, YQB.T("CORE.UNAVAILABLE")
-    end
-    local compatible = Core:CheckAPIVersion(14)
-    if not compatible then return nil, YQB.T("CORE.UPGRADE") end
-    if not (Core.HasCapability and Core:HasCapability("localization", 1)
-        and Core:HasCapability("pixel-line", 1)
-        and Core:HasCapability("character-name-format", 1)
-        and Core:HasCapability("character-identity", 1)
-        and Core:HasCapability("basic-input", 1)
-        and Core:HasCapability("account-view", 2)
-        and Core:HasCapability("account-entry", 2)
-        and Core:HasCapability("account-surface-budget", 2)
-        and type(Core.AccountView.GetScrollSurfaceWidth) == "function"
-        and Core.RegisterAddon and Core.AccountView.RegisterPage
-        and Core.Entry.RegisterBusinessEntry and Core.Characters.FormatName
-        and Core.UITheme.CreateInput
-        and type(Core.UITheme.ApplyPixelBackdrop) == "function"
-        and type(Core.UITheme.CreatePixelBorder) == "function") then
-        return nil, YQB.T("CORE.UPGRADE")
-    end
-
-    local addon, addonError = Core:RegisterAddon("YiboQuestBlocker", { version = "3.2.0", requiredAPI = 14 })
+    if not YQB.CoreCompatible then return nil end
+    local addon, addonError = Core:RegisterAddon("YiboQuestBlocker", { version = YQB.Target.version, requiredAPI = YQB.REQUIRED_CORE_API })
     if not addon then return nil, addonError end
-    local database = YQB.GetDatabase()
-    database.filters = database.filters or {}
-    if database.filters.levelExpr == nil or database.filters.levelExpr == "" then
-        database.filters.levelExpr = "90"
-        YQB.PersistDB()
-    end
     if Core.CharacterCleanup then
         local cleanupRegistered, cleanupError = Core.CharacterCleanup:RegisterOwner("YiboQuestBlocker", {
         Inspect = function(character)
@@ -104,9 +76,9 @@ function Integration:Initialize()
             { id = "global", title = YQB.T("PAGE.GLOBAL_FIELD"), defaultVisible = true },
             { id = "characters", title = YQB.T("PAGE.CHARACTER_FIELD"), defaultVisible = true },
         },
-        scope = { mode = "realms", allTitle = YQB.T("PAGE.ALL_REALMS") },
+        scope = YQB.Target.realmScope and { mode = "realms", allTitle = YQB.T("PAGE.ALL_REALMS") } or nil,
         characterFilter = {
-            defaultExpression = "90",
+            defaultExpression = YQB.Target.defaultLevel,
             GetExpression = function() return YQB.GetLevelFilterExpr() end,
             SetExpression = function(expression) return YQB.SetLevelFilterExpr(expression) end,
         },
@@ -157,14 +129,4 @@ end
 
 function YQB.OpenAccountPage()
     if Core.AccountView then Core.AccountView:Toggle(PAGE_ID) end
-end
-
-local initialized, initializeError = Integration:Initialize()
-if not initialized and Core and Core.Print then
-    Core:Print(YQB.T("CORE.INTEGRATION_FAILED", tostring(initializeError)))
-end
-
-SLASH_YQB1 = "/yqb"
-SlashCmdList["YQB"] = function()
-    YQB.OpenAccountPage()
 end

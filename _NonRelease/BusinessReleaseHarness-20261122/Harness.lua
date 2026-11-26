@@ -247,7 +247,7 @@ function H.Boot(opts)
         Wrap(Core.CharacterCleanup, "RegisterOwner", "CleanupOwner")
     end
     local files, meta
-    if opts.addon then files, meta = LoadAddon(opts.addonRoot, opts.addon, opts.saved) end
+    if opts.addon then files, meta = LoadAddon(opts.addonRoot, opts.addon, opts.saved, opts.addonManifest) end
     for _, entry in ipairs(opts.addons or {}) do
         LoadAddon(entry.root, entry.name, entry.saved, entry.manifest)
     end

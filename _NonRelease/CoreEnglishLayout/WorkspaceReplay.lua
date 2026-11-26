@@ -1,8 +1,17 @@
 local Harness = dofile("_NonRelease/BusinessReleaseHarness-20261122/Harness.lua")
-local dual = { "YiboAltoBoss", "YiboAutoOpen", "YiboBuilds", "YiboCrafting", "YiboCurrency", "YiboMail", "YiboReputation", "YiboVault" }
-local mists = { "YiboMounts", "YiboLegendary", "YiboQuestBlocker", "YiboTaskHub", "YiboTodo" }
+local dual = { "YiboAltoBoss", "YiboAutoOpen", "YiboBuilds", "YiboCrafting", "YiboCurrency", "YiboMail", "YiboQuestBlocker", "YiboReputation", "YiboVault" }
+local mists = { "YiboMounts", "YiboLegendary", "YiboTaskHub", "YiboTodo" }
 
 local function Configure(env)
+    env.Enum = env.Enum or {}
+    env.Enum.QuestFrequency = { Default = 0, Daily = 1, Weekly = 2, ResetByScheduler = 3 }
+    env.C_QuestLog.GetInfo = function() end
+    env.C_QuestLog.IsComplete = function() return false end
+    env.C_QuestLog.IsRepeatableQuest = function() return false end
+    env.C_QuestLog.IsOnQuest = function() return false end
+    env.C_QuestLog.GetTitleForQuestID = function() end
+    env.GetQuestID = function() end
+    env.GetTitleText = function() end
     env.UIParent:SetSize(1280, 720)
     env.UnitLevel = function() return 90 end
     local methods = getmetatable(env.UIParent).__index

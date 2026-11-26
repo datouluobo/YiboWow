@@ -305,7 +305,7 @@ ameMode=original/short` 与 `realmMode=omit/sameRealm/full` 独立选择；同�
 | YiboLegendary | 不适用 | 当前业务页与业务设置未发现本地 EditBox | 新增输入时使用公共控件；无接入版本；当前范围验收确认 2026-10-16，语言候选延期见 CAP-009 |
 | YiboMail | 当前适用范围实机已收口 | 当前工作树 1.2.9-api1 / API13；Core 托管设置中的适用输入接入 basic-input:1 | 用户2026-10-16确认当前功能实机收口；历史接口、实现观察和兼容边界保留，后续变更按实际范围审查 |
 | YiboMounts | 不适用 | 图鉴及 Core 设置适配未发现本地 EditBox | 新增输入时使用公共控件；无接入版本；客户端验收完成：用户确认 2026-10-16 |
-| YiboQuestBlocker | 部分接入（代码完成／客户端验收完成） | 工作树 3.1.0：等级表达式与数字任务 ID 使用 Core `CreateInput`；检查 `basic-input:1` | 任务 ID 校验和等级表达式规则仍归业务；IME 输入法、回车提交与焦点生命周期客户端验收完成核对 / API13 / 2026-10-12；客户端验收完成：用户确认 2026-10-16 |
+| YiboQuestBlocker | 部分接入（双目标代码与离线验证完成） | 2026-11-26：Mists 3.2.1／Forever 0.1.0 统一使用 `CreateInput` 和 `Core.LevelFilter`，启动检查 API14、`basic-input:1`、`level-filter:1`。任务 ID 校验及目标默认值在业务层 | 双目标构建及包回放通过，MoP 既有输入控件客户端证据保留。新字节及 Forever 实机输入待验。 [实现与验收](../../YiboQuestBlocker/YiboQuestBlocker_设计文档.md#11-双目标实现与验收2026-11-26) |
 | YiboReputation | 部分接入（API13 代码完成，客户端验收完成） | 1.7.1 矩阵搜索使用 `Theme:CreateInput`，检查 `basic-input:1`；保留输入值、清空按钮并复用 IME 处理 | 中文输入法合成、清空／焦点及英文布局客户端验收完成核对 / 2026-10-15；客户端验收完成：用户确认 2026-10-16 |
 | YiboTaskHub | 部分接入（本轮范围） | 2026-10-10 0.4.0 TargetsPage 的搜索使用 CreateInput(clearable=true)，复用清空与 IME 处理；检查 API11 / basic-input:1 及方法；BossTargetsSpec 覆盖缺失能力停止和真实标签页操作 | 新增输入均已收拢，中文输入法与客户端布局验收完成；无物品选择需求；客户端验收完成：用户确认 2026-10-16 |
 | YiboTodo | 不适用 | 当前待办设置与页面未发现本地 EditBox | 新增输入时使用公共控件；无接入版本；当前范围验收确认 2026-10-16，语言候选延期见 CAP-009 |
@@ -337,6 +337,8 @@ R1-09（2026-10-27）：物品缓存失败与includeBags读取失败文案分开
 | YiboVault | 部分接入（展示及本轮MoP原生链接解析代码完成） | StoragePage 格子复用 `item-resolver:1` 加载展示；2026-10-22 Mists/Collector缺itemID时使用Parse，Common/CoreIntegration检查API13、能力及Parse／GetInfo／Request | 新解析及缺Parse停止专项、双端与覆盖模拟通过，新增路径实机待验；无损variantKey由业务记录格式保留，详见拆分验收。旧展示用户2026-10-16确认范围保留，未触及解析调用继续按后续修改审查 / 2026-10-22 |
 
 ## CAP-004：账号页面、入口与设置接入基线
+
+2026-11-26 YiboQuestBlocker 的共用悬停接入现有 `context:SetTitleBarControl`，由 Core 管理暂停／恢复按钮的标题栏位置及页面切换清理。沿用 API14／`account-view:2` 门槛。使用 Core Forever 0.3.0／MoP 1.13.0 的离线包回放通过。用户实测 Forever 0.1.3 的新样式和暂停／恢复通过，MoP 新按钮实机待验。
 
 2026-10-29切页生命周期：Core共享设置host的refreshPanel／refreshPage限于当前可见、注册身份及托管所有者匹配的设置目标，隐藏或离开时不执行旧UI工作；返回原目标时保留旧控件回调可用，业务notifyPageChanged独立。预览导航省去旧主页面重绘、布局重复恢复，保留公开退出／入口开关及重复悬停的返回状态。API／能力不变，无新增业务接入，既有插件接入状态不升级；66项适用回归及三个目标构建校验通过，新字节实机待验。契约见[接入指南](API-v6-业务插件增量接入指南.md)，证据见[专项记录](../../Docs/Core-切页回调与预览生命周期-2026-10-29.md)。
 

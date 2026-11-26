@@ -8,7 +8,9 @@ for _,client in ipairs({'zhCN','enUS'}) do for _,mode in ipairs({'auto','zh','en
     if mode~='auto' then locale.previewLanguage=mode end
     e.load('YiboLegendary/Bootstrap.lua','YiboLegendary')
     e.load('YiboLegendary/Locales/Interface.lua')
-    e.load('YiboQuestBlocker/Locale.lua')
+    e.YQB={}
+    e.load('YiboQuestBlocker/Common/Locale.lua')
+    e.YQB.RegisterLocales()
     local ns={};e.load('YiboMounts/Namespace.lua','YiboMounts',ns)
     e.load('YiboMounts/Locale/zhCN.lua','YiboMounts',ns)
     e.load('YiboMounts/Locale/enUS.lua','YiboMounts',ns)
@@ -16,10 +18,11 @@ for _,client in ipairs({'zhCN','enUS'}) do for _,mode in ipairs({'auto','zh','en
     ns.CoreIntegration={localeAvailable=true}
     local values={e.YiboLegendary:T('ERROR.CLIENT_REQUIRED'),locale:Get('YiboQuestBlocker','CORE.STARTUP_REQUIREMENTS'),ns:L('CLIENT_REQUIRED')}
     local english=mode=='en' or (mode=='auto' and client=='enUS')
-    for _,value in ipairs(values) do
+    for index,value in ipairs(values) do
         checks=checks+1
         assert(type(value)=='string' and value:sub(1,1)~='[','startup key resolves')
-        assert((value:find('Mists Classic',1,true)~=nil)==english,'Core session language applies')
+        local marker = index == 2 and "the matching client" or "Mists Classic"
+        assert((value:find(marker,1,true)~=nil)==english,'Core session language applies')
     end
 end end
 print('PASS: '..checks..' startup resource checks across Chinese/English clients and auto/manual languages (offline)')

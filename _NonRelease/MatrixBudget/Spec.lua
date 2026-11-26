@@ -138,7 +138,8 @@ Check(#legendary.details.preview.rows == #roster, "Legendary keeps every admitte
 
 -- QuestBlocker includes the same complete-scope groups on all character pages.
 YQB = { CoreCompatible = true }
-dofile("YiboQuestBlocker/Locale.lua")
+dofile("YiboQuestBlocker/Common/Locale.lua")
+YQB.RegisterLocales()
 local questDB = { settings = {}, filters = {}, characterData = {} }
 local blocked = {}; for i = 1, 54 do blocked[i] = { id = i, name = "Quest " .. i } end
 YQB.GetDatabase = function() return questDB end
@@ -148,11 +149,11 @@ YQB.GetCurrentQuestList = function() return { { id = 999, name = "Current" } } e
 YQB.GetCurrentCharacterID = function() return keys[1] end
 YQB.IsQuestBlockedByAny = function() return false end
 YQB.GetBlockStatus = function() return {} end
-YQB.GetProcessModeOptions = function() return {} end
-YQB.GetProcessMode = function() return "all" end
+YQB.GetRuntimeSettings = function() return {} end
 YQB.IsProcessingPaused = function() return false end
 YQB.ValidateLevelExpr = function() return true, "" end
-dofile("YiboQuestBlocker/AccountPage.lua")
+dofile("YiboQuestBlocker/Common/AccountPage.lua")
+dofile("YiboQuestBlocker/Common/Settings.lua")
 local questPage = Frame(); YQB.AccountPage.Create(questPage)
 Exercise("quest", YQB.AccountPage.GetSurfaceMetrics, YQB.AccountPage.Refresh, questPage, Context())
 Exercise("quest-hover", YQB.AccountPage.GetSurfaceMetrics, YQB.AccountPage.Refresh, questPage, Context(true))
@@ -195,7 +196,7 @@ Check(emptyTargetColumns.naturalContentWidth < legendary:GetSurfaceMetrics(Conte
 
 -- Source invariant supplements runtime checks: business matrices must not own a track constant or screen budget.
 for _, path in ipairs({ "YiboAltoBoss/Mists/AccountPage.lua", "YiboAltoBoss/Common/LockoutsPage.lua", "YiboCrafting/AccountPage.lua",
-    "YiboLegendary/UI.lua", "YiboQuestBlocker/AccountPage.lua", "YiboCurrency/AccountPage.lua", "YiboReputation/AccountMatrixView.lua" }) do
+    "YiboLegendary/UI.lua", "YiboQuestBlocker/Common/AccountPage.lua", "YiboCurrency/AccountPage.lua", "YiboReputation/AccountMatrixView.lua" }) do
     local file = assert(io.open(path, "r")); local source = file:read("*a"); file:close()
     Check(not source:find("scrollbarGutter", 1, true) and not source:find("PREVIEW_SCROLLBAR_GUTTER", 1, true)
         and not source:find("GetScreenWidth", 1, true) and not source:find("GetPhysicalScreen", 1, true), path .. " delegates scroll/screen geometry to Core")
@@ -220,17 +221,17 @@ dofile("YiboLegendary/Bootstrap.lua")
 YiboLegendary.Print = function() failures = failures + 1 end
 local previousDB = YiboLegendary.db; YiboLegendary:Initialize()
 Check(failures == 1 and YiboLegendary.db == previousDB, "Legendary rejects old budget before data initialization")
-dofile("YiboQuestBlocker/Locale.lua")
-Check(not YQB.CoreCompatible, "Quest early gate rejects old budget")
-YQB.CoreCompatible = true; dofile("YiboQuestBlocker/CoreIntegration.lua")
-Check(not YQB.CoreIntegration:Initialize(), "Quest integration rejects old budget")
+YQB.Target = { supported = true }
+YQB.CoreCompatible = false
+dofile("YiboQuestBlocker/Common/Bootstrap.lua")
+Check(not YQB.Initialize() and not YQB.CoreCompatible, "Quest early gate rejects old budget")
 Core.HasCapability = function() return true end
 view.GetScrollSurfaceWidth = nil
 dofile("YiboAltoBoss/Mists/CoreRequirements.lua")
 Check(not YAB.CoreReady, "Boss rejects missing public width method")
 Check(not YiboCrafting:Initialize(), "Crafting rejects missing public width method")
 YiboLegendary:Initialize(); Check(failures == 2 and YiboLegendary.db == previousDB, "Legendary rejects missing public width method")
-Check(not YQB.CoreIntegration:Initialize(), "Quest rejects missing public width method")
+Check(not YQB.Initialize(), "Quest rejects missing public width method")
 Core.HasCapability, Core.RegisterAddon = originalHas, originalRegister
 view.GetColumnPageByWidth = nativeVariablePager
 view.GetScrollSurfaceWidth, view.GetColumnPage = nativeBudget, nativePager

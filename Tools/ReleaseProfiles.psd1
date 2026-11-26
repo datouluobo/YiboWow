@@ -299,17 +299,29 @@
             }
         }
         YiboQuestBlocker = @{
-            VersionFile = 'YiboQuestBlocker.toc'
-            VersionPattern = '^## Version:\s*([^\r\n]+)'
-            RequiredCoreFile = 'CoreIntegration.lua'
-            RequiredCorePattern = 'Core:CheckAPIVersion\((\d+)\)'
+            VersionFile = 'Mists/Target.lua'
+            VersionPattern = '^\s*version\s*=\s*"([^"]+)"'
+            RequiredCoreFile = 'Common/Bootstrap.lua'
+            RequiredCorePattern = '^local REQUIRED_CORE_API\s*=\s*(\d+)'
             VersionIncludesAPI = $false
             ResourceDirectories = @('Media')
             ExtraFiles = @()
             Targets = @{
-                Mists = @{
-                    SourceToc = 'YiboQuestBlocker.toc'
+                Forever = @{
+                    SourceToc = 'YiboQuestBlocker_Forever.toc'
                     LoadToc = 'YiboQuestBlocker.toc'
+                    VersionFile = 'Forever/Target.lua'
+                    Interfaces = @(16001)
+                    CurseForgeFlavor = 'forever'
+                    CurseForgeVersionNames = @('1.60.1')
+                    LuaVersion = '5.1'
+                    ValidationState = 'offline-client-pending'
+                }
+                Mists = @{
+                    SourceToc = 'YiboQuestBlocker_Mists.toc'
+                    LoadToc = 'YiboQuestBlocker.toc'
+                    VersionFile = 'Mists/Target.lua'
+                    VersionPattern = '(?m)^\s*version\s*=\s*"([^"]+)"'
                     Interfaces = @(50504)
                     CurseForgeFlavor = 'mists'
                     CurseForgeVersionNames = @('5.5.4')

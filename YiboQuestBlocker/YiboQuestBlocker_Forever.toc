@@ -1,0 +1,29 @@
+## Interface: 16001
+## Title: |cff20e070[Yibo]|r YiboQuestBlocker - Quest Blocker
+## Title-zhCN: |cff20e070[Yibo]|r YiboQuestBlocker
+## Title-zhTW: |cff20e070[Yibo]|r YiboQuestBlocker
+## Notes: Manage account and character quest rules and see matching offers.
+## Notes-zhCN: 管理账号和角色任务规则，在接取前提示命中任务。
+## Notes-zhTW: 管理帳號和角色任務規則，在接取前提示命中任務。
+## Author: Reasonix
+## Version: 0.2.0
+## IconTexture: Interface\AddOns\YiboQuestBlocker\Media\YiboQuestBlockerIcon-128
+## SavedVariables: YiboQuestBlockerForeverDB
+## RequiredDeps: YiboCore
+## Group: YiboCore
+## LoadOnDemand: 0
+
+Forever\Target.lua
+Common\Locale.lua
+Common\Store.lua
+Common\Rules.lua
+Common\QuestView.lua
+Forever\QuestLog.lua
+Forever\ProtectedQuests.lua
+Forever\QuestHandling.lua
+Forever\QuestReject.lua
+Forever\QuestOffers.lua
+Common\AccountPage.lua
+Common\Settings.lua
+Common\CoreIntegration.lua
+Common\Bootstrap.lua

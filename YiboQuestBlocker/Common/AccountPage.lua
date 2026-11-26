@@ -1,10 +1,8 @@
 local YQB = _G.YQB
-if not (YQB and YQB.CoreCompatible) then return end
+if not (_G.YiboCore and _G.YiboCore.UITheme) then return end
 local Core = _G.YiboCore
 local Theme = _G.YiboCore.UITheme
 
--- Core 页面只组合 QuestBlocker 已有的数据与业务操作；任务拦截、缓存和
--- SavedVariables 仍完全由 Core.lua 负责。
 local Page = {}
 YQB.AccountPage = Page
 
@@ -47,7 +45,7 @@ local function CharacterDisplayName(characterID)
 end
 
 local function DB()
-    return YQB.GetDatabase and YQB.GetDatabase() or _G.YiboQuestBlockerDB or {}
+    return YQB.GetDatabase()
 end
 
 local function IsGroupExpanded(groupKey)
@@ -103,15 +101,13 @@ end
 local function MainControls(width)
     local pad, gap, height = Theme.Space.xs, Theme.Space.sm, Theme.Size.standard
     local available = math.max(1, width - pad * 2)
-    local modeWidth = 156
-    for _, option in ipairs(YQB.GetProcessModeOptions()) do
-        modeWidth = math.max(modeWidth, Theme:MeasureText(Theme.Font.body, option.label) + 36)
-    end
     local controls = {}
     for index, key in ipairs({ "PAGE.DAILY", "PAGE.NORMAL", "PAGE.HIDE_COMPLETE" }) do
         controls[index] = Theme:MeasureText(Theme.Font.body, YQB.T(key)) + 26
     end
-    controls[4] = modeWidth
+    for index, option in ipairs(YQB.ProcessingOptions) do
+        controls[index + 3] = Theme:MeasureText(Theme.Font.body, YQB.T(option.label)) + 26
+    end
     local x, y, positions = 0, 0, {}
     for index, natural in ipairs(controls) do
         local size = math.min(natural, available)
@@ -124,8 +120,11 @@ local function MainControls(width)
         math.max(86, Theme:MeasureText(Theme.Font.body, YQB.T("PAGE.ADD_CURRENT")) + 14),
         math.max(62, Theme:MeasureText(Theme.Font.body, YQB.T("PAGE.ADD_GLOBAL")) + 14),
     }
-    local abandonWidth = math.min(available, math.max(174, Theme:MeasureText(Theme.Font.body, YQB.T("PAGE.ABANDON")) + 14,
-        Theme:MeasureText(Theme.Font.body, YQB.T("PAGE.PAUSED_ABANDON")) + 14))
+    local abandonWidth = 0
+    if YQB.AbandonRejectedQuestsInLog then
+        abandonWidth = math.min(available, math.max(174, Theme:MeasureText(Theme.Font.body, YQB.T("PAGE.ABANDON")) + 14,
+            Theme:MeasureText(Theme.Font.body, YQB.T("PAGE.PAUSED_ABANDON")) + 14))
+    end
     local inputWidth = math.min(108, math.max(48, available - labelWidth - addWidths[1] - addWidths[2] - pad * 3))
     local secondRow = labelWidth + inputWidth + addWidths[1] + addWidths[2] + abandonWidth + pad * 4 > available
     return positions, y + height, { inputWidth, addWidths[1], addWidths[2], abandonWidth },
@@ -243,8 +242,32 @@ local function RenderQuest(instance, item, characters, showGlobal, showCharacter
     instance.dataRowCount = instance.dataRowCount + 1
     if row.groupArrow then row.groupArrow:Hide() end
     row.task:ClearAllPoints(); row.task:SetPoint("LEFT", row, "LEFT", 8, 0)
-    row.task:SetText("[" .. item.id .. "] " .. tostring(item.name or YQB.T("PAGE.UNKNOWN_QUEST")))
-    row.task:SetTextColor(COLORS.text[1], COLORS.text[2], COLORS.text[3])
+    local protection = YQB.GetQuestProtection and YQB.GetQuestProtection(item.id)
+    local inLog = not currentTask and YQB.IsQuestInLog and YQB.IsQuestInLog(item.id)
+    local taskText = "[" .. item.id .. "] " .. tostring(item.name or YQB.T("PAGE.UNKNOWN_QUEST"))
+    local handlingStatus = not currentTask and YQB.GetQuestHandlingStatus and YQB.GetQuestHandlingStatus(item.id)
+    if handlingStatus then
+        taskText = taskText .. YQB.T("FOREVER.ABANDON_ROW", YQB.T(handlingStatus))
+    elseif inLog then
+        taskText = taskText .. YQB.T("FOREVER.IN_LOG")
+    end
+    row.task:SetText(taskText)
+    if protection then
+        row.task:SetTextColor(1, 0.82, 0.25)
+        row:EnableMouse(true)
+        row:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+            GameTooltip:SetText(taskText)
+            GameTooltip:AddLine(protection, 1, 0.82, 0.25, true)
+            GameTooltip:Show()
+        end)
+        row:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    else
+        row.task:SetTextColor(COLORS.text[1], COLORS.text[2], COLORS.text[3])
+        row:SetScript("OnEnter", nil)
+        row:SetScript("OnLeave", nil)
+        row:EnableMouse(false)
+    end
     row.task:SetWidth(instance.taskWidth - 12)
     -- Keep row parity readable even for the current-task group. Its border
     -- carries that state, so the fill remains comparable with adjacent rows.
@@ -258,7 +281,7 @@ local function RenderQuest(instance, item, characters, showGlobal, showCharacter
     if showGlobal then
         row.global:SetPoint("LEFT", row, "LEFT", x + math.floor((GLOBAL_W - STATUS_HIT) / 2), 0); SetStatusCheckbox(row.global, status.global, false)
         row.global:SetScript("OnClick", function()
-            if status.global then YQB.RemoveBlock(item.id, "global") else YQB.AddBlock(item.id, "global") end
+            if status.global then YQB.RemoveBlock(item.id, "global") else YQB.AddBlock(item.id, "global", item.name) end
         end)
         x = x + GLOBAL_W
     end
@@ -268,7 +291,7 @@ local function RenderQuest(instance, item, characters, showGlobal, showCharacter
         local cell = AddCell(row, index); cell:ClearAllPoints(); cell:SetPoint("LEFT", row, "LEFT", x + math.floor((characterWidth - STATUS_HIT) / 2), 0)
         cell:SetShown(showCharacters); SetStatusCheckbox(cell, status[key], key == YQB.GetCurrentCharacterID())
         cell:SetScript("OnClick", function()
-            if status[key] then YQB.RemoveCharBlock(item.id, key) else YQB.AddCharBlock(item.id, key) end
+            if status[key] then YQB.RemoveCharBlock(item.id, key) else YQB.AddCharBlock(item.id, key, item.name) end
         end)
         x = x + characterWidth
     end
@@ -308,7 +331,20 @@ function Page.Create(instance)
     instance.daily = Check(instance.toolbar, YQB.T("PAGE.DAILY"))
     instance.normal = Check(instance.toolbar, YQB.T("PAGE.NORMAL"))
     instance.hideComplete = Check(instance.toolbar, YQB.T("PAGE.HIDE_COMPLETE"))
-    instance.processMode = Theme:CreateDropdown(instance.toolbar, 156, YQB.GetProcessModeOptions())
+    instance.processingChecks = YQB.CreateProcessingCheckboxes(instance.toolbar, function()
+        if instance.context then instance.context:Refresh() end
+    end)
+    instance.pauseButton = Button(instance, "", 28)
+    instance.pauseButton:Hide()
+    instance.pauseButton.icon = instance.pauseButton:CreateTexture(nil, "ARTWORK")
+    instance.pauseButton.icon:SetSize(12, 13)
+    instance.pauseButton.icon:SetPoint("CENTER")
+    instance.pauseButton.icon:SetDesaturated(true)
+    instance.pauseButton.icon:SetBlendMode("ADD")
+    instance.pauseButton.icon:SetVertexColor(COLORS.accent[1], COLORS.accent[2], COLORS.accent[3], 1)
+    instance.pauseButton:SetScript("OnClick", function()
+        YQB.SetProcessingOption("paused", not YQB.IsProcessingPaused())
+    end)
     instance.level = Theme:CreateInput(instance.toolbar, {
         width = 104, height = 20, maxLetters = 80, placeholder = YQB.T("PAGE.LEVEL"),
         Validate = function(text)
@@ -340,23 +376,23 @@ function Page.Create(instance)
     instance.manual:SetPoint("LEFT", instance.manualLabel, "RIGHT", 6, 0)
     instance.addChar = Button(instance.addPanel, YQB.T("PAGE.ADD_CURRENT"), 92); instance.addChar:SetPoint("LEFT", instance.manual, "RIGHT", 8, 0)
     instance.addGlobal = Button(instance.addPanel, YQB.T("PAGE.ADD_GLOBAL"), 68); instance.addGlobal:SetPoint("LEFT", instance.addChar, "RIGHT", 6, 0)
-    instance.abandon = Button(instance.addPanel, YQB.T("PAGE.ABANDON"), 174); instance.abandon:SetPoint("RIGHT", -7, 0)
+    if YQB.AbandonRejectedQuestsInLog then
+        instance.abandon = Button(instance.addPanel, YQB.T("PAGE.ABANDON"), 174)
+        instance.abandon:SetScript("OnClick", function()
+            if not YQB.IsProcessingPaused() then YQB.AbandonRejectedQuestsInLog() end
+        end)
+    end
     local function RefreshFromControl() if instance.context then instance.context:Refresh() end end
     instance.daily:SetScript("OnClick", function(self) self:SetChecked(not self:GetChecked()); DB().filters.showDaily = self:GetChecked(); YQB.PersistDB(); RefreshFromControl() end)
     instance.normal:SetScript("OnClick", function(self) self:SetChecked(not self:GetChecked()); DB().filters.showNormal = self:GetChecked(); YQB.PersistDB(); RefreshFromControl() end)
     instance.hideComplete:SetScript("OnClick", function(self) self:SetChecked(not self:GetChecked()); DB().filters.hideComplete = self:GetChecked(); YQB.PersistDB(); RefreshFromControl() end)
-    instance.processMode:SetOnValueChanged(function(mode)
-        YQB.SetProcessMode(mode); RefreshFromControl()
-    end)
     local function Add(scope)
-        local id = tonumber(instance.manual:GetText()); if not id then return end
+        local id = tonumber(instance.manual:GetText())
+        if not id or id <= 0 or id ~= math.floor(id) then return end
         YQB.AddBlock(id, scope); instance.manual:SetValue("")
     end
     instance.addChar:SetScript("OnClick", function() Add("char") end)
     instance.addGlobal:SetScript("OnClick", function() Add("global") end)
-    instance.abandon:SetScript("OnClick", function()
-        if not YQB.IsProcessingPaused() then YQB.AbandonRejectedQuestsInLog() end
-    end)
 end
 
 function Page.Refresh(instance, context)
@@ -370,14 +406,19 @@ function Page.Refresh(instance, context)
     instance.hideComplete:SetShown(not preview); instance.hideComplete.label:SetShown(not preview)
     -- Character admission is configured centrally in Core 常规设置 → 角色过滤.
     instance.level:Hide(); instance.levelLabel:Hide()
-    instance.manualLabel:SetShown(not preview); instance.manual:SetShown(not preview); instance.addChar:SetShown(not preview); instance.addGlobal:SetShown(not preview); instance.abandon:SetShown(not preview)
+    instance.manualLabel:SetShown(not preview); instance.manual:SetShown(not preview); instance.addChar:SetShown(not preview); instance.addGlobal:SetShown(not preview)
+    if instance.abandon then instance.abandon:SetShown(not preview) end
     for _, control in ipairs(instance.scopeButtons or {}) do control:Hide() end
     instance.header:ClearAllPoints(); instance.scroll:ClearAllPoints()
     local inset = Theme:GetMatrixInsets(preview)
     if preview then
-        -- Preview state belongs in Core's title-bar action slot.  This keeps
-        -- the compact hover projection focused on the matrix itself.
-        context:SetTitleBarControl(instance.processMode, 156)
+        local paused = YQB.IsProcessingPaused()
+        instance.pauseButton.icon:SetTexture(paused and "Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up"
+            or "Interface\\TimeManager\\PauseButton")
+        -- Only the center symbol is needed. The themed button supplies the frame.
+        instance.pauseButton.icon:SetTexCoord(0.29, 0.70, 0.28, 0.74)
+        instance.pauseButton:SetState(paused and "selected" or "default")
+        context:SetTitleBarControl(instance.pauseButton)
         instance.header:SetPoint("TOPLEFT", instance, "TOPLEFT", inset.left, -inset.top); instance.header:SetPoint("TOPRIGHT", instance, "TOPRIGHT", -inset.right, -inset.top)
         instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs); instance.scroll:SetPoint("BOTTOMRIGHT", -inset.right, inset.bottom)
     else
@@ -386,12 +427,13 @@ function Page.Refresh(instance, context)
         -- persistent bottom action panel; that panel itself keeps the 20px
         -- shell-bottom inset.
         context:ClearTitleBarControl()
-        instance.processMode:SetParent(instance.toolbar)
         local mainInset = Theme:GetMatrixInsets(false)
         instance.toolbar:ClearAllPoints(); instance.toolbar:SetPoint("TOPLEFT", mainInset.left, -mainInset.top); instance.toolbar:SetPoint("TOPRIGHT", -mainInset.right, -mainInset.top)
         local width = context.surfaceAvailableWidth or instance:GetWidth()
         local positions, toolbarHeight, widths, actionHeight = MainControls(width - mainInset.left - mainInset.right)
-        for index, control in ipairs({ instance.daily, instance.normal, instance.hideComplete, instance.processMode }) do
+        local controls = { instance.daily, instance.normal, instance.hideComplete }
+        for _, control in ipairs(instance.processingChecks) do controls[#controls + 1] = control end
+        for index, control in ipairs(controls) do
             local position = positions[index]
             control:ClearAllPoints()
             control:SetPoint("TOPLEFT", instance.toolbar, "TOPLEFT", position.x, -position.y)
@@ -403,21 +445,24 @@ function Page.Refresh(instance, context)
         instance.manualLabel:ClearAllPoints()
         instance.manualLabel:SetPoint("TOPLEFT", instance.addPanel, "TOPLEFT", Theme.Space.xs, 0)
         instance.manualLabel:SetHeight(Theme.Size.standard)
-        instance.abandon:ClearAllPoints()
-        instance.abandon:SetPoint("BOTTOMRIGHT", instance.addPanel, "BOTTOMRIGHT", -Theme.Space.xs, 0)
+        if instance.abandon then
+            instance.abandon:ClearAllPoints()
+            instance.abandon:SetPoint("BOTTOMRIGHT", instance.addPanel, "BOTTOMRIGHT", -Theme.Space.xs, 0)
+        end
         for index, control in ipairs({ instance.manual, instance.addChar, instance.addGlobal, instance.abandon }) do
             control:SetWidth(widths[index])
         end
-        instance.processMode:Show()
         instance.header:SetPoint("TOPLEFT", instance.toolbar, "BOTTOMLEFT", 0, -Theme.Space.sm); instance.header:SetPoint("TOPRIGHT", instance.toolbar, "BOTTOMRIGHT", 0, -Theme.Space.sm)
         instance.scroll:SetPoint("TOPLEFT", instance.header, "BOTTOMLEFT", 0, -Theme.Space.xs); instance.scroll:SetPoint("BOTTOMRIGHT", instance.addPanel, "TOPRIGHT", 0, Theme.Space.sm)
     end
     instance.title:SetText(YQB.T("PAGE.TITLE"))
     instance.daily:SetChecked(filters.showDaily); instance.normal:SetChecked(filters.showNormal); instance.hideComplete:SetChecked(filters.hideComplete)
-    instance.processMode:SetValue(YQB.GetProcessMode())
-    local paused = YQB.IsProcessingPaused()
-    instance.abandon:SetState(paused and "disabled" or "default")
-    instance.abandon:SetText(paused and YQB.T("PAGE.PAUSED_ABANDON") or YQB.T("PAGE.ABANDON"))
+    YQB.RefreshProcessingCheckboxes(instance.processingChecks)
+    if instance.abandon then
+        local paused = YQB.IsProcessingPaused()
+        instance.abandon:SetState(paused and "disabled" or "default")
+        instance.abandon:SetText(paused and YQB.T("PAGE.PAUSED_ABANDON") or YQB.T("PAGE.ABANDON"))
+    end
     instance.level:SetValue(filters.levelExpr or "")
     local globalCount, charCount, total = YQB.GetStats()
     instance.summary:SetText(YQB.T("PAGE.SUMMARY", globalCount, charCount, total))
@@ -447,7 +492,8 @@ function Page.Refresh(instance, context)
     Header(instance, characters, showGlobal, showCharacters, context)
     ClearRows(instance)
     local blocked = YQB.GetBlockedQuestList()
-    local blockedExpanded = RenderGroup(instance, YQB.T("PAGE.BLOCKED_GROUP", #blocked), characters, showGlobal, showCharacters, "blocked")
+    local blockedGroupKey = (YQB.Target and YQB.Target.blockedGroup) or "PAGE.BLOCKED_GROUP"
+    local blockedExpanded = RenderGroup(instance, YQB.T(blockedGroupKey, #blocked), characters, showGlobal, showCharacters, "blocked")
     if blockedExpanded then
         for _, item in ipairs(blocked) do RenderQuest(instance, item, characters, showGlobal, showCharacters, false) end
     end
@@ -455,7 +501,11 @@ function Page.Refresh(instance, context)
     local currentVisible = false
     for _, character in ipairs(allCharacters) do if character.id == YQB.GetCurrentCharacterID() then currentVisible = true; break end end
     if currentVisible then
-        local currentExpanded = RenderGroup(instance, YQB.T("PAGE.CURRENT_GROUP", CharacterDisplayName(YQB.GetCurrentCharacterID())), characters, showGlobal, showCharacters, "current")
+        local offers = YQB.GetQuestOffers and not YQB.IsProcessingPaused() and YQB.GetQuestOffers()
+        if offers and #offers > 0 and RenderGroup(instance, YQB.T("FOREVER.OFFERS", #offers), characters, showGlobal, showCharacters, "offers") then
+            for _, item in ipairs(offers) do RenderQuest(instance, item, characters, showGlobal, showCharacters, true) end
+        end
+        local currentExpanded = RenderGroup(instance, CharacterDisplayName(YQB.GetCurrentCharacterID()), characters, showGlobal, showCharacters, "current")
         if currentExpanded then
             for _, item in ipairs(current) do
                 if not YQB.IsQuestBlockedByAny(item.id) then RenderQuest(instance, item, characters, showGlobal, showCharacters, true) end
@@ -506,6 +556,8 @@ function Page.GetSurfaceMetrics(context)
     local rows = (IsGroupExpanded("blocked") and (blocked + 1) or 1)
     if currentVisible then
         rows = rows + (IsGroupExpanded("current") and (current + 1) or 1)
+        local offers = YQB.GetQuestOffers and not YQB.IsProcessingPaused() and YQB.GetQuestOffers()
+        if offers and #offers > 0 then rows = rows + 1 + (IsGroupExpanded("offers") and #offers or 0) end
     end
     local mainInset = Theme:GetMatrixInsets(false)
     local previewInset = Theme:GetMatrixInsets(true)
