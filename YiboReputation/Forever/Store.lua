@@ -99,16 +99,20 @@ function Store:GetSessionChange(id, factionID)
     local current = self.db.characters[id].factions[factionID]
     return baseline and current and current.value - baseline.value or nil
 end
-function Store:ToggleWatched(id, factionID)
-    if not id or id ~= Addon.Core.Characters:GetCurrentID() or not self:Integer(factionID, 1, 2147483647) then return false end
-    local snapshot = self.db.characters[id]
-    if not snapshot or not snapshot.factions[factionID] then return false end
+function Store:ToggleWatched(factionID)
+    if not self:Integer(factionID, 1, 2147483647) then return false end
     local order = self.db.settings.watchedFactionIDs
     local position
     for index, selected in ipairs(order) do
         if selected == factionID then position = index; break end
     end
-    if position then table.remove(order, position) else order[#order + 1] = factionID end
+    if position then
+        table.remove(order, position)
+    elseif self:GetFactionDirectory()[factionID] then
+        order[#order + 1] = factionID
+    else
+        return false
+    end
     Addon:NotifyChanged()
     return true
 end

@@ -3,12 +3,7 @@ local Addon = _G.YiboReputation
 -- no reliable way to distinguish a normal standing from a friendship rank,
 -- so never render it as current reputation data.
 local REPUTATION_SNAPSHOT_VERSION = 5
-local STANDING_KEYS = { [1]="STANDING.1", [2]="STANDING.2", [3]="STANDING.3", [4]="STANDING.4", [5]="STANDING.5", [6]="STANDING.6", [7]="STANDING.7", [8]="STANDING.8" }
-local function Standing(rank)
- local key = STANDING_KEYS[tonumber(rank)]
- return key and Addon:T(key) or nil
-end
-local STANDING_COLORS = { [1]={0.95,0.28,0.28},[2]={0.95,0.42,0.24},[3]={0.98,0.68,0.22},[4]={0.92,0.86,0.36},[5]={0.30,0.88,0.40},[6]={0.32,0.70,1.00},[7]={0.70,0.48,1.00},[8]={0.96,0.78,0.20} }
+local function Standing(rank) return Addon.Display:Standing(tonumber(rank)) end
 -- Friendship ranks are a six-step relationship ladder, not normal standing
 -- IDs.  Their colors intentionally reuse normal reputation standings 3–8:
 -- 陌生人→冷淡 through 挚友→崇拜.
@@ -30,12 +25,10 @@ function Addon:GetReputationColor(data)
  local friend = self:GetFriendship(data)
  if friend then
   local standing = FRIENDSHIP_COLOR_STANDINGS[tonumber(friend.rank)] or FRIENDSHIP_NAME_COLOR_STANDINGS[friend.name]
-  return STANDING_COLORS[standing] or {0.90,0.96,0.97}
+  return self.Display:Color(standing) or {0.90,0.96,0.97}
  end
- local current, maximum = Progress(data)
- if current and maximum and current >= maximum - 1 then return STANDING_COLORS[8] end
  local standing = tonumber(data and data.standingID)
- return STANDING_COLORS[standing] or {0.90,0.96,0.97}
+ return self.Display:Color(standing) or {0.90,0.96,0.97}
 end
 function Addon:FormatState(snapshot)
  if not snapshot then return self:T("STATE.UNSYNCED") end
@@ -49,6 +42,7 @@ end
 function Addon:IsComplete(data)
  local friend = self:GetFriendship(data)
  if friend then return friend.rank and friend.maxRank and friend.rank >= friend.maxRank end
+ if tonumber(data and data.standingID) ~= 8 then return false end
  local current, maximum = Progress(data)
  return current and maximum and current >= maximum - 1
 end
@@ -67,7 +61,7 @@ function Addon:FormatReputation(data, options)
  local label = Standing(tonumber(data.standingID)) or self:T("STATE.UNKNOWN")
  if not value or not min or not max or max <= min then return label end
  local current, maximum = value - min, max - min
- if current >= maximum - 1 then return Standing(8) end
+ if self:IsComplete(data) then return label end
  return self:T("FORMAT.REPUTATION_PROGRESS", label, current, maximum, math.floor(current*100/maximum))
 end
 function Addon:FormatCompact(data)
@@ -80,8 +74,8 @@ function Addon:FormatCompact(data)
   if current and min and max and max > min and current - min >= max - min - 1 then return self:T("FRIENDSHIP.FALLBACK_6") end
   return current and min and max and max > min and tostring(current-min) or "?"
  end
- local current, maximum = Progress(data); local standing = tonumber(data.standingID)
- if current and maximum and current >= maximum - 1 then return Standing(8) end
+ local current, maximum = Progress(data)
+ if self:IsComplete(data) then return Standing(8) end
  if current and maximum then return tostring(current) end
  return "?"
 end
@@ -99,7 +93,7 @@ function Addon:FormatMatrix(data, showProgress)
  local label = Standing(tonumber(data.standingID)) or self:T("STATE.UNKNOWN")
  if showProgress and value and min and max and max > min then
   local current, maximum = value-min, max-min
-  if current >= maximum - 1 then return Standing(8) end
+  if self:IsComplete(data) then return label end
   return string.format("%s %d/%d", label, current, maximum)
  end
  return label

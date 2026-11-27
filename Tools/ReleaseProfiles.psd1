@@ -331,9 +331,9 @@
             }
         }
         YiboReputation = @{
-            VersionFile = 'Bootstrap.lua'
+            VersionFile = 'Mists/Bootstrap.lua'
             VersionPattern = '^Addon\.NAME, Addon\.VERSION\s*=\s*"YiboReputation",\s*"([^"]+)"'
-            RequiredCoreFile = 'CoreIntegration.lua'
+            RequiredCoreFile = 'Mists/CoreIntegration.lua'
             RequiredCorePattern = '^local REQUIRED_CORE_API\s*=\s*(\d+)'
             VersionIncludesAPI = $false
             ResourceDirectories = @('Media')
@@ -346,7 +346,7 @@
                     CurseForgeFlavor = 'mists'
                     CurseForgeVersionNames = @('5.5.4')
                     LuaVersion = '5.1'
-                    ValidationState = 'existing-mists-baseline'
+                    ValidationState = 'mists-shared-matrix-offline-pass-client-pending-20261127'
                 }
                 Forever = @{
                     SourceToc = 'YiboReputation_Forever.toc'
@@ -359,7 +359,7 @@
                     CurseForgeFlavor = 'forever'
                     CurseForgeVersionNames = @('1.60.1')
                     LuaVersion = '5.1'
-                    ValidationState = 'forever-0.1.9-realm-scope-client-pending-20261111'
+                    ValidationState = 'forever-shared-matrix-offline-pass-client-pending-20261127'
                 }
             }
         }

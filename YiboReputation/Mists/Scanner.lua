@@ -85,6 +85,18 @@ function Scanner:Collect()
         enumeratedCount=enumeratedCount, registeredCount=registeredCount }, "known", discovered
 end
 
+local function SessionValue(row)
+    if row.friendship then return tonumber(row.friendship.reaction) end
+    return tonumber(row.value)
+end
+
+function Scanner:GetSessionChange(characterID, row)
+    local baseline = self.sessionID == characterID and self.sessionStart[row.factionID]
+    local value = baseline and SessionValue(row)
+    if value and baseline.friendship == (row.friendship ~= nil)
+        and (row.factionID ~= 1168 or baseline.name == row.name) then return value - baseline.value end
+end
+
 function Addon:ScanCurrent(reason)
     local character = Core.Characters:GetCurrent({ identityOnly=true })
     if not character or not UnitGUID or character.id ~= UnitGUID("player") then return nil, "identity-not-ready" end
@@ -97,7 +109,17 @@ function Addon:ScanCurrent(reason)
         self:CommitSnapshot(character.id, nil, "error", { reason=reason, error=changed })
         return nil, changed
     end
-    if snapshot and state == "known" then
+    if state == "known" then
+        local scanner = self.Scanner
+        if scanner.sessionID ~= character.id then scanner.sessionID, scanner.sessionStart = character.id, {} end
+        for id, row in pairs(data.factions) do
+            local value = SessionValue(row)
+            local baseline = scanner.sessionStart[id]
+            local friendship = row.friendship ~= nil
+            if value and (not baseline or baseline.friendship ~= friendship or (id == 1168 and baseline.name ~= row.name)) then
+                scanner.sessionStart[id] = { value = value, friendship = friendship, name = row.name }
+            end
+        end
         for id in pairs(detail or {}) do
             self.FactionRegistry[id] = self.FactionRegistry[id] or { factionID=id, discovered=true }
         end

@@ -76,6 +76,7 @@ function Scanner:Scan()
     local second, afterCount = self:Collect(known, stamp)
     if not second then return self:Fail(afterCount) end
     if count ~= afterCount or not Equal(first, second) or id ~= Addon.Core.Characters:GetCurrentID() or not self.inWorld then return self:Fail("error") end
+    if not next(second) and previous and next(previous.factions) then return self:Fail("pending") end
     return Addon.Store:Commit(id, second, stamp)
 end
 function Scanner:Fail(state)

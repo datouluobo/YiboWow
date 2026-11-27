@@ -58,7 +58,7 @@ function Targets:Initialize()
     self.ref = Core.Contracts:Register("YiboReputation", self.definition)
     return self.ref ~= nil
 end
-function Targets:BindRow(row, node, characters, readSnapshot)
+function Targets:BindRow(row, node, characters)
     if not self.ref then return end
     row.goalHits = row.goalHits or {}
     for _, hit in ipairs(row.goalHits) do hit:Hide(); Core.BusinessItemActions:Unbind(hit) end
@@ -79,8 +79,10 @@ function Targets:BindRow(row, node, characters, readSnapshot)
             local original = row:GetScript("OnClick"); if original then original(row, button) end
         end)
         hit:SetScript("OnEnter", function(control)
-            local data = Addon:GetFactionData(readSnapshot(character), node.factionID)
-            local lines = { { kind = "text", text = data and Addon:FormatReputation(data) or Addon:T("GOAL.SYNC") } }
+            local lines = {}
+            for _, text in ipairs(row.displays[i].details) do
+                lines[#lines + 1] = { kind = "text", text = text }
+            end
             Core.UITheme:ShowTooltip(control, node.title, Core.BusinessItemActions:TooltipLines(lines, control))
         end)
         hit:Show()

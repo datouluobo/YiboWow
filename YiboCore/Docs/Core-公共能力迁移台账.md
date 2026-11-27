@@ -1004,3 +1004,7 @@ Core 在 API14 下提供 `account-compact-layout:2`，包含试点的 v1 测宽�
 2026-11-24 MoP 集中实机修订。Core 固定外框调整为 800 × 544，现有 `UpdateColumnPager` 按页面的可选 `columnPager` 声明提供主窗口底部位置。角色档案、AltoBoss、Currency、QuestBlocker、Reputation、Todo 及 Crafting Forever 在相关主页面声明底部分页，悬停保留原调用锚点。声明可被较早的 Core 忽略，继续兼容已有能力门槛。MoP 中英文切页、实测列数及复测范围见[统一窗口实施记录](../../Docs/统一账号主窗口-实施与验证.md#mop-集中实机)。
 
 2026-11-25 内容区高度试点。Core 三端自动回收单页分页的 34 UI 单位及设置顶部通用说明空间。YiboBuilds Forever、YiboCrafting Forever、YiboAltoBoss Mists 复用现有 Core 视口预算、字号／宽度测量、设置和分页，原有能力门槛保留。三端双语和业务专项离线通过，试点及后续验证范围见[统一窗口实施记录](../../Docs/统一账号主窗口-实施与验证.md#内容区高度试点2026-11-25)。
+
+2026-11-27 Reputation Mists 1.8.0／Forever 0.2.0 共享矩阵，接入状态为部分接入。CAP-004／014 共用 Core 托管页、角色范围、视口预算 2、分页和字段显隐。CAP-001／007 共用角色表头、短名和 GUID 选择。CAP-002 使用 Core 输入，CAP-009 使用原 owner 双语资源，CAP-013 使用 `pixel-line:1` 的按边线框和像素锚点。启动继续要求 API14 和各目标所需能力，存档所有权、CAP-010 清理及 Mists CAP-005／008 目标操作沿用。两端实际清单和临时包回放通过，界面、语言及缩放实机待验。 [双端实施与验收](../../YiboReputation/Docs/双端共享矩阵-实施与验收.md)
+
+2026-11-27 Reputation 首轮截图修订复用 CAP-004／014 的视口预算 2、FitRepeatedColumnWidth 与角色分页，启动核对已有方法，API14 门槛沿用。CAP-009 双语资源更新旧快照、阵营排序与 Core 角色排序。Core 三端双语窗口 630 项、工作区回放和三端构建预检通过。Reputation 双端构建和 179 项打包回放通过，客户端布局待验。 [修订证据](../../YiboReputation/Docs/双端共享矩阵-实施与验收.md#首轮截图修订)

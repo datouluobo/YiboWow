@@ -203,34 +203,5 @@ YiboVault:OnEvent('UNIT_INVENTORY_CHANGED', 'player')
 YiboVault:OnEvent('PLAYER_EQUIPMENT_CHANGED', 1)
 assert(#timers == 1); Flush(); assert(equipmentScans == 1)
 
-local tooltipDraws, domainReads, cursor = 0, 0, 160
-core.UITheme.Colors.text = { 1, 1, 1 }
-core.DataDomains.Get = function() domainReads = domainReads + 1; error('hover must use the render snapshot') end
-YiboReputation = {
-    GetSnapshot = function() domainReads = domainReads + 1; error('hover must use the render snapshot') end,
-    FormatState = function() return nil end,
-    GetFactionData = function(_, snapshot) return snapshot end,
-    FormatCompact = function() return '1K' end,
-    FormatReputation = function(_, snapshot) return snapshot.detail end,
-}
-dofile('YiboReputation/MonitoredPreview.lua')
-local showTooltip
-for index = 1, 30 do
-    local name, value = debug.getupvalue(YiboReputation.RefreshMonitoredPreview, index)
-    if not name then break end
-    if name == 'ShowMonitoredTooltip' then showTooltip = value end
-end
-assert(showTooltip)
-GetCursorPosition = function() return cursor end
-GameTooltip = { shown = false, Hide = function(self) self.shown = false end,
-    IsShown = function(self) return self.shown end,
-    SetOwner = function() end, ClearLines = function() tooltipDraws = tooltipDraws + 1 end,
-    AddLine = function() end, Show = function(self) self.shown = true end }
-local row = { GetLeft = function() return 0 end,
-    monitoredTooltip = { nameWidth = 150, cellWidth = 80, factionID = 1,
-        characters = { { id = 'A' }, { id = 'B' } }, snapshots = { A = { detail = '1000/3000' }, B = { detail = '2000/3000' } } } }
-for i = 1, 100 do showTooltip(row) end
-assert(tooltipDraws == 1 and domainReads == 0)
-cursor = 240; showTooltip(row); assert(tooltipDraws == 2 and domainReads == 0)
-row.monitoredTooltipColumn = nil; showTooltip(row); assert(tooltipDraws == 3)
-print('PASS: service lifecycle/isolation; page burst/visibility; shared item idle/timeout; raid response loop; lossless currency deltas; equipment settle/filter/coalescing; stationary reputation hover reuses snapshot and tooltip')
+dofile("_NonRelease/ReputationMigration/HoverSpec.lua")
+print("PASS: service lifecycle/isolation; page burst/visibility; shared item idle/timeout; raid response loop; lossless currency deltas; equipment settle/filter/coalescing; shared reputation hover")

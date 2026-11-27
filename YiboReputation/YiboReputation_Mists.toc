@@ -4,7 +4,7 @@
 ## Title-zhTW: |cff20e070[Yibo]|r YiboReputation - 声望之路
 ## Notes: 多角色声望浏览与比较
 ## Author: YiboSoft
-## Version: 1.8.0
+## Version: 1.9.0
 ## IconTexture: Interface\AddOns\YiboReputation\Media\YiboReputationIcon-128
 ## SavedVariables: YiboReputationDB
 ## RequiredDeps: YiboCore
@@ -12,21 +12,21 @@
 ## LoadOnDemand: 0
 ## X-Yibo-Target: Mists
 
-Bootstrap.lua
+Mists/Bootstrap.lua
 Locales/Interface.lua
-ReputationCatalog.lua
-Store.lua
-Migration.lua
-Scanner.lua
-ReputationHierarchy.lua
-ReputationFormat.lua
-Friendship.lua
-Nomi.lua
-AccountMatrixView.lua
-CurrentCharacterPreview.lua
-MonitoredPreview.lua
-PreviewController.lua
-Settings.lua
-GoalTargets.lua
-CoreIntegration.lua
-Commands.lua
+Common/Display.lua
+Mists/ReputationCatalog.lua
+Mists/Store.lua
+Mists/Migration.lua
+Mists/Scanner.lua
+Mists/ReputationHierarchy.lua
+Mists/ReputationFormat.lua
+Mists/Friendship.lua
+Mists/Nomi.lua
+Mists/MatrixData.lua
+Common/AccountMatrixView.lua
+Common/Page.lua
+Mists/Settings.lua
+Mists/GoalTargets.lua
+Mists/CoreIntegration.lua
+Mists/Commands.lua

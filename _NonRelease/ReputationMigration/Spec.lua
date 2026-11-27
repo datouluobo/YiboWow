@@ -59,20 +59,25 @@ local pageDefinition
 core.AccountView = {
     NotifyPageChanged=function() notifications = notifications+1 end,
     RegisterPage=function(_, _, definition) pages=pages+1; pageDefinition=definition; return definition end,
-    GetColumnPage=function() end, GetScrollSurfaceWidth=function() end, UpdateColumnPager=function() end,
+    Toggle=function() end, FitRepeatedColumnWidth=function() end, GetColumnPage=function() end, GetScrollSurfaceWidth=function() end, UpdateColumnPager=function() end,
 }
 core.Entry = { RegisterBusinessEntry=function(_, _, definition) entries=entries+1; return definition end }
-core.UITheme = { CreateInput=function() end, ApplyPixelBackdrop=function(_, f) return f end,
+core.UITheme = { CreateInput=function() end, CreateDropdown=function() end, SetPixelAnchor=function() end, GetPixelSize=function() return 1 end, ApplyPixelBackdrop=function(_, f) return f end,
     CreatePixelBorder=function() return { SetColor=function() end, SetShown=function() end, SetSides=function() end } end }
 core.Contracts = { Register=function(_, _, definition) return definition end, NotifyChanged=function() end }
 core.BusinessItemActions = { Bind=function() end, Handle=function() end, Unbind=function() end, TooltipLines=function() end }
-assert(loadfile("YiboReputation/Bootstrap.lua"))("YiboReputation")
+WOW_PROJECT_MISTS_CLASSIC, WOW_PROJECT_ID = 19, 19
+assert(loadfile("YiboReputation/Mists/Bootstrap.lua"))("YiboReputation")
 local addon = YiboReputation
 local bootstrap = frames[#frames]
 dofile("YiboReputation/Locales/Interface.lua")
-for _, file in ipairs({ "ReputationCatalog", "Store", "Migration", "Scanner", "ReputationHierarchy", "Friendship", "ReputationFormat", "GoalTargets", "CoreIntegration" }) do
-    dofile("YiboReputation/"..file..".lua")
+dofile("YiboReputation/Common/Display.lua")
+for _, file in ipairs({ "ReputationCatalog", "Store", "Migration", "Scanner", "ReputationHierarchy", "Friendship", "ReputationFormat", "GoalTargets", "MatrixData" }) do
+    dofile("YiboReputation/Mists/"..file..".lua")
 end
+dofile("YiboReputation/Common/AccountMatrixView.lua")
+dofile("YiboReputation/Common/Page.lua")
+dofile("YiboReputation/Mists/CoreIntegration.lua")
 local function Character(id, snapshot)
     db.characters.byID[id] = { id=id, name=id, realm="Realm", domains=snapshot and {reputation=Copy(snapshot)} or {}, seenOrder=1 }
 end

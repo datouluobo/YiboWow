@@ -18,10 +18,10 @@ function Addon:Initialize()
     end
     for _, group in ipairs({ { core, "RegisterAddon", "Text" }, { core and core.Locale, "Get" },
         { core and core.Characters, "GetCurrentID", "GetCurrent", "FormatName" },
-        { core and core.AccountView, "RegisterPage", "NotifyPageChanged", "Toggle", "GetColumnPage", "UpdateColumnPager" },
+        { core and core.AccountView, "RegisterPage", "NotifyPageChanged", "Toggle", "GetColumnPage", "FitRepeatedColumnWidth", "GetScrollSurfaceWidth", "UpdateColumnPager" },
         { core and core.Entry, "RegisterBusinessEntry" }, { core and core.CharacterCleanup, "RegisterOwner" },
         { core and core.Defaults, "Copy" },
-        { core and core.UITheme, "CreateText", "CreateButton", "CreateScrollFrame", "CreateInput", "CreateDropdown", "ApplyPixelBackdrop", "GetPixelSize", "SetPixelAnchor" } }) do
+        { core and core.UITheme, "CreateText", "CreateButton", "CreateScrollFrame", "CreateInput", "CreateDropdown", "ApplyPixelBackdrop", "CreatePixelBorder", "SetPixelAnchor", "GetPixelSize", "GetMatrixInsets", "GetCharacterMatrixColumnWidth", "CreateMatrixHeader" } }) do
         for index = 2, #group do if type(group[1]) ~= "table" or type(group[1][group[index]]) ~= "function" then valid = false end end
     end
     if not valid then
@@ -37,7 +37,7 @@ function Addon:Initialize()
         Inspect = function(character) return { hasData = Addon.Store.db.characters[character.id] ~= nil, label = Addon:T("FOREVER.TITLE") } end,
         Delete = function(character, _, context) return Addon.Store:Delete(character, context) end })
     if not ok then self:Print(err); return false end
-    ok, err = self.AccountPage:Register(); if not ok then self:Print(err); return false end
+    ok, err = self:RegisterMatrixPage({ ShowScopeBar = function() return true end }); if not ok then self:Print(err); return false end
     self.initialized, self._unsupportedEvents = true, {}
     for _, event in ipairs({ "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "PLAYER_LOGOUT", "UPDATE_FACTION", "FACTION_STANDING_CHANGED", "BAG_UPDATE_DELAYED" }) do
         local registered, reason = pcall(self.Frame.RegisterEvent, self.Frame, event)
@@ -52,8 +52,8 @@ SlashCmdList.YIBOREPUTATION = function(message)
         Addon:Print(core and core.Locale and core.Locale.Get and Addon:T("FOREVER.CORE_REQUIRED") or "YiboReputation requires YiboCore API 14."); return
     end
     local command = string.lower((message or ""):match("^%s*(%S*)") or "")
-    if command == "scan" then Addon.Scanner:Scan(); Addon:Print(Addon.AccountPage:Status())
-    elseif command == "status" then Addon:Print(Addon.AccountPage:Status())
+    if command == "scan" then Addon.Scanner:Scan(); Addon:Print(Addon:ScanStatus())
+    elseif command == "status" then Addon:Print(Addon:ScanStatus())
     else Addon.Core.AccountView:Toggle(Addon.PAGE_ID) end
 end
 Addon.Frame:RegisterEvent("ADDON_LOADED")

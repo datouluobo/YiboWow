@@ -66,6 +66,8 @@ local mockCore = {
         end,
         NotifyPageChanged = function() end,
         Toggle = function() end,
+        GetScrollSurfaceWidth = function() end,
+        FitRepeatedColumnWidth = function() end,
         GetColumnPage = function() return {}, {} end,
         UpdateColumnPager = function() end,
     },
@@ -128,6 +130,10 @@ local mockCore = {
             function inp:GetText() return "" end
             return inp
         end,
+        CreatePixelBorder = function() end,
+        GetMatrixInsets = function() end,
+        GetCharacterMatrixColumnWidth = function() end,
+        CreateMatrixHeader = function() end,
         ApplyPixelBackdrop = function(_, f) return f end,
         GetPixelSize = function(_, _, n) return n or 1 end,
         SetPixelAnchor = function(_, _, fn) if fn then fn() end end,
@@ -151,7 +157,10 @@ dofile("YiboReputation/Locales/Interface.lua")
 dofile("YiboReputation/Forever/Store.lua")
 dofile("YiboReputation/Forever/Scanner.lua")
 dofile("YiboReputation/Forever/Format.lua")
-dofile("YiboReputation/Forever/AccountPage.lua")
+dofile("YiboReputation/Common/Display.lua")
+dofile("YiboReputation/Forever/MatrixData.lua")
+dofile("YiboReputation/Common/AccountMatrixView.lua")
+dofile("YiboReputation/Common/Page.lua")
 dofile("YiboReputation/Forever/Bootstrap.lua")
 
 local Addon = _G.YiboReputation
@@ -229,7 +238,7 @@ assertEqual(char2Snapshot.factions[101].value, 100, "Char-2 actively retrieved S
 assertEqual(char2Snapshot.factions[102], nil, "Char-2 unavailable faction 102 is nil")
 
 -- Test 5: Watch faction and check monitored preview
-assertTrue(Addon.Store:ToggleWatched("player-reputation-guid-2", 101), "Toggle watch should succeed")
+assertTrue(Addon.Store:ToggleWatched(101), "Toggle watch should succeed")
 assertEqual(Addon.Store.db.settings.watchedFactionIDs[1], 101, "Watched factions should contain 101")
 
 -- Test 6: Delete character cleans snapshot but retains directory

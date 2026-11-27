@@ -1,8 +1,8 @@
 local ADDON_NAME = ...
 local Addon = _G.YiboReputation or {}
 _G.YiboReputation = Addon
-Addon.NAME, Addon.VERSION = "YiboReputation", "1.8.0"
-Addon.CLIENT_SUPPORTED = not (type(WOW_PROJECT_CAMELOT) == "number" and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT)
+Addon.NAME, Addon.VERSION = "YiboReputation", "1.9.0"
+Addon.CLIENT_SUPPORTED = type(WOW_PROJECT_MISTS_CLASSIC) == "number" and WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC
 -- YiboReputationDB is created or normalized only by EnsureDB, which CoreIntegration:Initialize
 -- calls after the client, Core readiness, API and capability checks.
 
@@ -16,15 +16,13 @@ function Addon:EnsureDB()
     if type(YiboReputationDB) ~= "table" then YiboReputationDB = {} end
     Defaults(YiboReputationDB, { settings = { hoverMode = "monitored", monitoredFactionIDs = {}, defaultExpansion = "auto", defaultMatrixFilter = "all", matrixLevelExpr = "", showFriendshipTotal = false }, matrixExpanded = {}, nomi = {} })
     local settings = YiboReputationDB.settings
-    -- The old dual-view state and preview-column projection are deliberately
-    -- not carried forward.  Keep the only meaningful preference: friendship
-    -- detail.  Old tree expansion is useful as a starting matrix expansion.
+    -- Use old tree expansion as a starting point for the matrix.
     if YiboReputationDB.treeExpanded and not next(YiboReputationDB.matrixExpanded) then
         for key, value in pairs(YiboReputationDB.treeExpanded) do
             YiboReputationDB.matrixExpanded["matrix:" .. tostring(key)] = value
         end
     end
-    settings.viewMode, settings.expansion, settings.category, settings.previewColumns = nil, nil, nil, nil
+    settings.viewMode, settings.expansion, settings.category = nil, nil, nil
     -- Hover is an account-level preview.  The former current-character tree
     -- duplicated the game UI and produced a second, unrelated layout mode.
     settings.hoverMode = "monitored"
@@ -71,7 +69,7 @@ local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(_, event, name)
     if event ~= "ADDON_LOADED" or name ~= ADDON_NAME then return end
-    if not Addon.CLIENT_SUPPORTED then Addon:Print(Addon:T("FOREVER.WRONG_MANIFEST")); return end
+    if not Addon.CLIENT_SUPPORTED then Addon:Print(Addon:T("MISTS.WRONG_CLIENT")); return end
     local core = _G.YiboCore
     if core and core.IsInitialized and core:IsInitialized() then Initialize()
     elseif core and core.Events and core.Events.Register then

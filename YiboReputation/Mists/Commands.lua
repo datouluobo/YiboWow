@@ -22,5 +22,5 @@ SlashCmdList["YIBOREPUTATION"]=function(message)
   end
  end
  if command=="tree" then Addon:Print(Addon:T("PAGE.HOVER_MODE")) end
- if Addon.CoreIntegration and Addon.CoreIntegration.initialized then _G.YiboCore.AccountView:ShowPage("reputation",{autoFit=true}) else Addon:Print(Addon:T("ERROR.NOT_READY")) end
+ if Addon.CoreIntegration and Addon.CoreIntegration.initialized then _G.YiboCore.AccountView:Toggle("reputation") else Addon:Print(Addon:T("ERROR.NOT_READY")) end
 end
