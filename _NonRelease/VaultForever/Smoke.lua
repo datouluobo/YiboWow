@@ -57,7 +57,7 @@ local function Boot(saved, coreSaved, configure, forever)
     return env, core, env.YiboVault, event, Flush, data
 end
 local env, core, vault, event, flush, data = Boot()
-Check(vault.initialized and vault.VERSION == "0.8.0-api1", "Vault initialized on actual Core")
+Check(vault.initialized and vault.VERSION == "0.9.0-api1", "Vault initialized on actual Core")
 Check(env.YiboVaultDB.sentinel == "mists" and not env.YiboVaultDB.byCharacter, "MoP saved table untouched")
 Check(vault.Items:HasCapability("source.bags", 1) and vault.Items:HasCapability("source.bank", 1), "honest source capabilities")
 Check(not vault.GuildBank and not vault.MailItems and not vault.AuctionHouse, "unsupported modules not loaded")
@@ -92,7 +92,7 @@ env.SlashCmdList.YIBOVAULT("open"); flush()
 Check(core.AccountView.activePageID == "vault-items", "window opens through Core")
 local page = core.AccountView.frame.instances["vault-items"]
 Check(#page.renderedRecords == 3 and page.renderedStatus == "known", "bag rows visible")
-Check(page.rosterScroll:IsShown() and page.grid[1]:IsShown() and not page.header:IsShown(), "main workspace uses roster and item grid")
+Check(page.rosterScroll:IsShown() and page.grid[1]:IsShown(), "main workspace uses roster and item grid")
 Check(page.capacity:IsShown() and #page.freeGroups > 0, "storage displays known capacity and grouped free slots")
 local definition
 for _, candidate in ipairs(core.AccountView:GetRegisteredPages()) do
@@ -105,6 +105,53 @@ page.grid[1]:Fire("OnLeave")
 Check(page.container:IsShown(), "multiple scanned bag containers expose a selector")
 page.container.menu.buttons[3]:Fire("OnClick"); flush()
 Check(#page.renderedRecords==1 and page.grid[1].record.location.container==1, "container selection filters the grid")
+
+-- Exercise the real viewport renderer, scroll hook and cell reuse without a native scan.
+do
+    local host = env.CreateFrame("Frame", nil, env.UIParent)
+    vault.AccountPage:Create(host)
+    host.scroll:SetSize(235, 160)
+    local records = {}
+    for index = 1, 400 do
+        local record = vault.Copy(page.renderedRecords[1])
+        record.itemID, record.sourceID = 10000 + index, "grid-fixture:" .. index
+        record.itemLink = "item:" .. record.itemID
+        records[index] = record
+    end
+    host.gridRecords = records
+    host.freeGroups = { { emptyLabelKey = "TEXT.EMPTY_A3EEF8", emptySlots = 4 } }
+    vault.AccountPage:PaintGrid(host)
+    flush()
+    Check(#host.grid < 100 and host.grid[1].slotIndex == 1, "large grids allocate only viewport rows plus overscan")
+    local recycled = host.grid[1]
+    recycled:Fire("OnEnter")
+    Check(env.GameTooltip:IsOwned(recycled), "the first visible tile owns its tooltip")
+    host.scroll:SetVerticalScroll(700)
+    flush()
+    Check(host.grid[1] == recycled and recycled.slotIndex > 1
+        and recycled.record == records[recycled.slotIndex], "scrolling rebinds an existing tile to its current slot")
+    Check(not env.GameTooltip:IsShown(), "reusing a tile closes its old item tooltip")
+    recycled:Fire("OnEnter")
+    Check(env.GameTooltip.link == recycled.record.itemLink, "the reused tile opens the new item's tooltip")
+    recycled:Fire("OnLeave")
+
+    host.scroll:SetVerticalScroll(host.scroll:GetVerticalScrollRange())
+    flush()
+    local freeTile
+    for _, tile in ipairs(host.grid) do
+        if tile.slotIndex == #records + 1 then freeTile = tile; break end
+    end
+    Check(freeTile and freeTile.emptyLabel:IsShown() and not freeTile.icon:IsShown() and not freeTile.record,
+        "a reused tile shows the final empty-slot group without retaining an item")
+    Check(not core.BusinessItemActions.bindings[freeTile], "an empty-slot tile cannot invoke a previous item target")
+
+    host.gridRecords, host.freeGroups = { records[1] }, {}
+    vault.AccountPage:PaintGrid(host)
+    flush()
+    Check(host.grid[1].slotIndex == 1 and host.grid[1].record == records[1] and not host.grid[2]:IsShown(),
+        "shrinking the results clamps the viewport and hides surplus cells")
+end
+
 page.container.menu.buttons[1]:Fire("OnClick"); flush()
 local rosterAlt = {id="VaultRosterAlt",name="Alt",realm="Realm"}
 vault.db.byCharacter[rosterAlt.id] = core.Defaults:Copy(vault.db.byCharacter[env.TEST_GUID])
@@ -155,7 +202,7 @@ local altAuction = { sourceID = "alt-auction", source = "auction", characterID =
 vault:ReplaceLocation(rosterAlt.id, "auction", "auction", { altAuction }, altAuction.location, nil, { status = "stale" })
 vault.AccountPage:Refresh(page,rosterContext)
 local readsBeforeAlt = data.reads
-page.selectedCharacter = rosterAlt.id
+page.browse:SelectOwner(rosterAlt.id)
 vault.AccountPage:Refresh(page,rosterContext)
 Check(page.rosterButtons[2].state=="selected" and page.renderedStatus=="stale" and page.refresh.state=="disabled"
     and not page.tabs["guild-bank"]:IsShown() and data.reads==readsBeforeAlt, "other character uses historical physical cache without a native read")
@@ -163,19 +210,31 @@ page.tabs.mail:Fire("OnClick")
 vault.AccountPage:Refresh(page, rosterContext)
 Check(#page.renderedRecords == 1 and page.renderedRecords[1].characterID == rosterAlt.id
     and page.renderedRecords[1].state == "stale", "offline mail is available through the storage tab")
-page.selectedCharacter = currentCharacter.id
+page.browse:SelectOwner(currentCharacter.id)
 page.search:SetValue("7099")
 vault.AccountPage:Refresh(page, rosterContext)
 Check(#page.renderedRecords == 1 and page.renderedRecords[1].characterID == rosterAlt.id
     and page.renderedRecords[1].state == "stale", "account search finds an offline auction from the current character view")
-page.tabs.bags:Fire("OnClick")
-vault.AccountPage:Refresh(page, { characters = rosterContext.characters, preview = true, surfaceAvailableWidth = 920 })
-local previewAlt
-for _, row in ipairs(page.rows) do
-    if row.record and row.record.characterID == rosterAlt.id then previewAlt = row.labels.character:GetText() end
+Check(page.rosterButtons[1].ownerID == rosterAlt.id and not page.rosterButtons[2]:IsShown(),
+    "search roster shows only matching holders")
+page.search:SetValue("42")
+vault.AccountPage:Refresh(page, rosterContext)
+Check(page.rosterButtons[1].ownerID == currentCharacter.id and page.rosterButtons[2].ownerID == rosterAlt.id,
+    "shared item ID groups matches by holder in account order")
+page.rosterButtons[1]:Fire("OnClick"); flush()
+Check(#page.renderedRecords > 0, "selected holder has search results")
+for _, row in ipairs(page.renderedRecords) do
+    Check(row.characterID == currentCharacter.id, "the grid contains only the selected holder's records")
 end
-Check(previewAlt and previewAlt:find("Alt", 1, true), "entry preview identifies the offline owner")
-page.selectedCharacter = nil
+page.rosterButtons[2]:Fire("OnClick"); flush()
+Check(#page.renderedRecords == 2 and page.renderedRecords[1].characterID == rosterAlt.id
+    and page.renderedRecords[2].characterID == rosterAlt.id, "offline holder keeps its separate bag and mail results")
+page.search.clearButton:Fire("OnClick"); flush()
+Check(page.rosterButtons[1].state == "selected" and page.rosterButtons[1].ownerID == currentCharacter.id
+    and page.tabs.mail.state == "selected",
+    "clear restores the original current holder and mail source")
+page.tabs.bags:Fire("OnClick")
+page.browse:SelectOwner(nil)
 vault.db.byCharacter[rosterAlt.id] = nil
 core.Database:GetDB().characters.byID[rosterAlt.id] = nil
 core.Characters:InvalidateAllCache()
@@ -187,19 +246,25 @@ page.tabs.equipment.scripts.OnClick(); flush()
 Check(page.tabs.equipment.state == "selected" and page.tabs.bags.state == "default", "selected source tab follows displayed snapshot")
 Check(#page.renderedRecords == 2, "equipment tab renders same query snapshot")
 Check(page.grid[1].itemName:match("NativeItem"), "metadata rendered through Core resolver")
-local mainSourceID = page.renderedRecords[1].sourceID
 local searchReads = data.reads
 page.search:SetValue("  NATIVEITEM  ", true); flush()
 Check(#page.renderedRecords == 5 and page.status:GetText() == vault:T("FOREVER.SEARCH_COUNT", 5), "storage search matches names across bags and equipment")
 page.search:SetValue("6948", true); flush()
 Check(#page.renderedRecords == 1 and page.renderedRecords[1].source == "bags" and data.reads == searchReads, "ID search uses saved locations without scanning")
 core.AccountView.frame:Hide()
-Check(core.AccountView:ShowPreview("vault-items", env.Minimap), "Core owns preview window")
-Check(page.renderedRecords[1].sourceID == mainSourceID and not page.refresh:IsShown() and not page.search:IsShown(), "preview shows the selected source without transient search")
-core.AccountView:HidePreview()
-core.AccountView:Toggle("vault-items")
+Check(core.Entry:SetEntryChannel("yva", "broker", true), "Core enables the Vault Broker channel")
+local broker = env.LibStub:GetLibrary("LibDataBroker-1.1"):GetDataObjectByName("YiboVault")
+Check(broker and broker.type == "launcher", "Vault Broker is a launcher")
+broker.OnEnter(env.Minimap)
+broker.OnTooltipShow({ GetOwner = function() return env.Minimap end })
 flush()
-Check(#page.renderedRecords == 1 and page.search:IsShown(), "search resumes on return to the main page")
+Check(not core.AccountView.frame:IsShown() and not core.AccountView:ShowPreview("vault-items", env.Minimap),
+    "Broker hover and Core preview requests do not open Vault")
+broker.OnClick(env.Minimap, "LeftButton")
+flush()
+Check(core.AccountView.frame:IsShown() and #page.renderedRecords == 1
+    and page.search:GetText() == "6948" and vault.db.settings.foreverSource == "equipment",
+    "Broker opens the Vault main page and restores the current search and browse source")
 page.search:SetValue("no match", true); flush()
 Check(#page.renderedRecords == 0 and page.status:GetText() == vault:T("TEXT.NO_CACHED_ITEMS_MATCH_89E336"), "search miss has its own status")
 page.search.clearButton.scripts.OnClick(); flush()
@@ -354,8 +419,6 @@ do
     Check(detail[2].count == 8 and detail[2].fresh, "real service returns only the tracked item's bank total")
     Check(panel.renderedStatus == "known" and #panel.renderedRecords == 2 and panel.refresh.state == "default", "bank source displayed through actual Core page")
     Check(panel.grid[1].locationText:match("101"), "bank location uses actual container ID")
-    c.AccountView.frame:Hide(); Check(c.AccountView:ShowPreview("vault-items", e.Minimap), "Core bank preview opens")
-    Check(#panel.renderedRecords == 2 and panel.renderedStatus == "known" and not panel.refresh:IsShown(), "bank preview shares page snapshot")
     c.AccountView:HidePreview(); c.AccountView:Toggle("vault-items")
     local before = bank.reads
     bank.items[101][1].stackCount = 11
@@ -494,8 +557,6 @@ do
     Check(v.Items:Query({ sources = { "mail" } }).totals.totalQuantity == 6, "mail query returns detached snapshot")
     local coverage = v:GetCharacterCoverage(e.TEST_GUID, "mail").inbox
     Check(coverage.currentCount == 2 and coverage.totalCount == 2 and coverage.unscannedCount == 0, "full inbox coverage persisted")
-    c.AccountView.frame:Hide(); Check(c.AccountView:ShowPreview("vault-items", e.Minimap), "Core mail preview opens")
-    Check(#panel.renderedRecords == 2 and not panel.refresh:IsShown(), "mail preview shares attachment snapshot")
     c.AccountView:HidePreview(); c.AccountView:Toggle("vault-items")
     inbox.items[1][1].qty = 7
     local before = inbox.countReads
@@ -594,8 +655,6 @@ do
     Check(panel.renderedStatus == "known" and #panel.renderedRecords == 2 and panel.grid[1].locationText:match("501"), "auction page renders same active snapshot and auction ID")
     q.records[1].quantity = 999
     Check(v.Items:Query({ sources = { "auction" } }).totals.totalQuantity == 6, "auction query detached from saved authority")
-    c.AccountView.frame:Hide(); Check(c.AccountView:ShowPreview("vault-items", e.Minimap), "auction Core preview opens")
-    Check(#panel.renderedRecords == 2 and not panel.refresh:IsShown(), "auction preview shares page snapshot")
     c.AccountView:HidePreview(); c.AccountView:Toggle("vault-items")
     market.entries[1].quantity = 7
     local before = market.countCalls
@@ -706,8 +765,28 @@ do
     fire("GUILDBANKBAGSLOTS_CHANGED"); drain()
     Check(v.Items:Query({ sources = { "guild-bank" } }).totals.totalQuantity == 7 and panel.renderedStatus == "known", "all viewable guild tabs collected without reading forbidden tab")
     Check(panel.grid[2].locationText:match("98"), "guild final slot and tab location rendered")
-    c.AccountView.frame:Hide(); Check(c.AccountView:ShowPreview("vault-items", e.Minimap), "guild preview owned by Core")
-    Check(#panel.renderedRecords == 2 and not panel.refresh:IsShown(), "guild preview shares authorized snapshot")
+    Check(not panel.container:IsShown() and panel.guildTabs[1].label:GetText() == v:T("FOREVER.ALL_GUILD_TABS"),
+        "guild tabs use buttons and keep the all-tabs view")
+    Check(panel.guildTabs[2].tabKey == 1 and panel.guildTabs[3].tabKey == 3 and #panel.guildTabs == 3,
+        "only authorized, collected tab buttons exist")
+    v.AccountPage:Refresh(panel, { characters = { c.Characters:GetCurrent() }, surfaceAvailableWidth = 400 })
+    local _, _, _, tabX, tabY = panel.guildTabs[3]:GetPoint(1)
+    Check(tabX == 0 and tabY == -34, "guild tabs wrap within the narrow workspace")
+    local beforeQueries = bank.queries
+    panel.guildTabs[3]:Fire("OnClick"); drain()
+    Check(panel.guildTabs[3].state == "selected" and #panel.renderedRecords == 1 and panel.grid[1].record.location.tabID == 3,
+        "guild button displays the selected cached tab")
+    Check(bank.queries == beforeQueries, "changing the Vault tab does not request a native tab")
+    panel.search:SetValue("4002", true); drain()
+    Check(panel.rosterButtons[1].ownerID == key and not (panel.rosterButtons[2] and panel.rosterButtons[2]:IsShown())
+        and panel.renderedRecords[1].guildKey == key, "authorized guild results are grouped independently of the character")
+    panel.rosterButtons[1]:Fire("OnClick"); drain()
+    panel.search.clearButton:Fire("OnClick"); drain()
+    Check(panel.selectedGuildTab == 3 and panel.guildTabs[3].state == "selected" and #panel.renderedRecords == 1,
+        "clear restores the original guild source and cached tab")
+    panel.guildTabs[1]:Fire("OnClick"); drain()
+    Check(#panel.renderedRecords == 2, "all-tabs button restores both authorized tabs")
+
     c.AccountView:HidePreview(); c.AccountView:Toggle("vault-items")
     local before = bank.reads
     bank.items[3][98].qty = 4
@@ -724,7 +803,11 @@ do
     local queryBefore = bank.queries
     fire("GUILDBANK_UPDATE_TABS"); drain()
     Check(bank.queries == queryBefore, "same-tab metadata event does not loop read requests")
+    panel.guildTabs[2]:Fire("OnClick"); drain()
+    Check(panel.selectedGuildTab == 1, "authorized guild tab is selectable before revocation")
     bank.tabs[1].view = false; fire("GUILDBANK_UPDATE_TABS"); drain()
+    Check(panel.selectedGuildTab == "all" and panel.guildTabs[2].tabKey == 3 and not panel.guildTabs[3]:IsShown(),
+        "revoked tab disappears and the selected view falls back to all authorized tabs")
     Check(v.Items:Query({ sources = { "guild-bank" }, includeHiddenGuilds = true }).totals.totalQuantity == 4 and not v:GetGuildCoverage(key)["1"], "revoked permission hides cached records even with hidden-guild override")
     Check(v.db.byGuild[key].tabs["1"][1].quantity == 5, "revoked cache retained as inaccessible archive")
     local revokedID = v.db.byGuild[key].tabs["1"][1].itemID

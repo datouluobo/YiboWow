@@ -62,9 +62,14 @@ function theme:CreateCheckbox()
     return checkbox
 end
 function theme:CreateScrollFrame() return Widget() end
-function theme:CreateInput()
+function theme:CreateInput(_, options)
     local input = Widget('EditBox')
     input.placeholder, input.clearButton = Widget(), Widget()
+    input.GetText = function(self) return self.text or "" end
+    input.SetValue = function(self, value, notify)
+        self.text = value
+        if notify then options.OnChanged(value, false, self) end
+    end
     return input
 end
 function theme:GetDataRowColor() return { 0.2, 0.3, 0.4, 1 } end
@@ -87,6 +92,8 @@ YiboVault.Core = YiboCore
 dofile("YiboVault/_NonRelease/Tests/Fixture.lua").Install()
 dofile("YiboVault/Common/BagCapacity.lua")
 dofile("YiboVault/Mists/BagCapacity.lua")
+dofile("YiboVault/Common/StorageLayout.lua")
+dofile("YiboVault/Common/StorageBrowse.lua")
 dofile("YiboVault/StoragePage.lua")
 local host = Widget()
 YiboVault.StoragePage:Create(host)
@@ -208,11 +215,11 @@ _G.RAID_CLASS_COLORS = { MAGE = { r = 0.3, g = 0.8, b = 1 } }
 YiboVault.Items.GetStorageSummary = function()
     return { characters = {
         { characterID = "one", bags = { locations = {} } },
-        { characterID = "two", bags = { locations = {} } },
+        { characterID = "two", bags = { locations = {} }, bank = { locations = {} } },
     }, guilds = { { guildKey = "guild-1", guildName = "Guild", realm = "Realm",
         tabs = { locations = { { location = { tabID = 2, tabName = "Materials" }, status = "known" } } } } } }
 end
-page.selectedOwner = "two"
+page.browse:SelectOwner("two")
 YiboVault.StoragePage:Refresh(host, { characters = {
     { id = "one", name = "One", realm = "Realm", class = "MAGE" },
     { id = "two", name = "Two", realm = "Realm" },
@@ -235,7 +242,7 @@ assert(#page.tabs == 5 and page.areaButtons[1].label.text == "背包"
     and page.areaButtons[4].label.text == "拍卖"
     and page.areaButtons[5].label.text == "装备",
     "character owners always display five source tabs in the requested order")
-page.selectedOwner = "guild-1"
+page.browse:SelectOwner("guild-1")
 YiboVault.Items.Query = function()
     return { records = { { source = "guild-bank", guildKey = "guild-1",
         location = { tabID = 2 }, sourceID = "guild-1:2:1", itemID = 200, quantity = 5 } } }
@@ -248,6 +255,22 @@ assert(page.areaButtons[1].state == "disabled" and page.areaButtons[2].state == 
     "unscanned guild pages stay disabled while scanned pages remain selectable")
 assert(page.slots[1] and page.slots[1].itemID == 200 and page.slots[1].quantity == 5,
     "guild records must appear beneath their guild tab after owner grouping")
+page.ownerRows[3].scripts.OnClick(page.ownerRows[3])
+page.areaButtons[3].scripts.OnClick()
+assert(page.selectedOwner == "two" and page.area == "bank", "bank is selected before searching")
+local delayedRefresh
+_G.C_Timer = { After = function(_, callback) delayedRefresh = callback end }
+_G.GetItemInfo = function(id)
+    if tonumber(id) == 200 then return "Guild Materials" end
+end
+page.search:SetValue("  GUILD MATERIALS  ", true)
+delayedRefresh()
+assert(page.selectedOwner == "guild-1" and page.area == "tab:2" and page.slots[1].itemID == 200
+    and page.owners.contentHeight == 44, "name search groups authorized guild items on their scanned tab")
+page.search:SetValue("", true)
+delayedRefresh()
+assert(page.selectedOwner == "two" and page.area == "bank" and page.owners.contentHeight == 132,
+    "clearing search restores the original MoP owner and source")
 YiboVault.Items.GetStorageSummary = function(_, scope)
     assert(#scope.characterIDs == 1 and scope.characterIDs[1] == "one",
         "the warehouse summary must receive only the selected realm's character IDs")
@@ -258,7 +281,7 @@ YiboVault.Items.Query = function(_, options)
         "item query must use the same selected realm as the owner list")
     return { records = {} }
 end
-page.selectedOwner = "guild-1"
+page.browse:SelectOwner("guild-1")
 YiboVault.StoragePage:Refresh(host, { scope = "realm:Realm", characters = {
     { id = "one", name = "One", realm = "Realm", class = "MAGE" },
     { id = "two", name = "Two", realm = "Other" },

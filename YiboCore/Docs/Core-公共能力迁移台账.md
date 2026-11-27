@@ -10,6 +10,8 @@
 
 2026-11-11 Vault Forever 0.6.3-api1 主窗复用 CAP-002 输入、CAP-003 物品解析、CAP-004 托管页和下拉、CAP-007 GUID、CAP-009 双语资源。API13 和能力版本沿用，启动补查公开下拉方法。3145 项 Forever 模拟和双目标构建通过，实机待验。
 
+2026-11-27 Vault 主窗第三批，MoP 1.4.0-api1 搜索名称接入 CAP-003 的 `ItemResolver:GetInfo`，与 Forever 0.8.0-api1 共用名称／ID 匹配和持有者归组。沿用 API14、`item-resolver:1` 及启动方法检查。CAP-002／004／007／009 继续使用公共输入、页面与控件、角色身份及既有语言资源。两端规格、构建及安装包干净和覆盖回放通过，游戏内交互待验，CAP-003 部分接入。[实施记录](../../YiboVault/Docs/Forever-MoP基线接入-2026-11-20.md#2026-11-27-共用主窗浏览与搜索)
+
 2026-11-11 Crafting Forever 0.1.4 配方悬停矩阵复用 CAP-002 输入、CAP-004 服务器范围和列分页、CAP-007 GUID、CAP-009 语言、CAP-011 专业档案。API13 和能力版本沿用，增加公开方法门槛。108 项 Forever 模拟和双目标构建通过，实机待验。
 
 2026-11-11 Currency Forever 0.1.8 复用 CAP-004 范围、列分页及悬停字段设置、CAP-007 GUID 和 CAP-009 语言。通过现有 `character-archive.fields` Provider 接入档案金币，初始化查 `character-archive-providers:1`、`business-providers:1` 与实际方法。Core API13 保持，未增加公共契约。118 项 Forever 模拟、档案和 MoP 余额回归通过，实机待验。

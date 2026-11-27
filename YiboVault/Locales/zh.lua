@@ -55,6 +55,7 @@ if Core and Core.Locale and type(Core.Locale.Register) == "function" then
         ["FOREVER.QUANTITY"] = "数量",
         ["FOREVER.bags"] = "背包",
         ["FOREVER.equipment"] = "装备",
+        ["FOREVER.ALL_GUILD_TABS"] = "全部页签",
         ["FOREVER.ALL_CONTAINERS"] = "全部容器",
         ["FOREVER.CONTAINER_NUMBER"] = "容器 %d",
         ["FOREVER.TAB_NUMBER"] = "第 %d 页",

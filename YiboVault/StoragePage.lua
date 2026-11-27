@@ -1,11 +1,14 @@
 local Addon = _G.YiboVault
 local Core = _G.YiboCore
 local Theme = Core.UITheme
+local Layout = Addon.StorageLayout
+local Browse = Addon.StorageBrowse
 local Colors = Theme.Colors
 local StoragePage = {}
 Addon.StoragePage = StoragePage
 local CELL_SIZE, CELL_GAP, CELL_MIN_COLUMN_GAP = 42, 5, 3
-local ITEM_ROW_HEIGHT, ITEM_ROW_OVERSCAN = CELL_SIZE + CELL_GAP, 2
+local ITEM_ROW_HEIGHT = CELL_SIZE + CELL_GAP
+local gridGeometry = { size = CELL_SIZE, gap = CELL_MIN_COLUMN_GAP, inset = 2, rowHeight = ITEM_ROW_HEIGHT, spread = true }
 local OWNER_HEIGHT = 42
 local OWNER_WIDTH, CONTENT_LEFT = 190, 217
 
@@ -136,9 +139,8 @@ local function CreateOwnerRow(page, index)
     row.meta:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -6, 3)
     row.meta:SetHeight(15)
     row:SetScript("OnClick", function(control)
-        page.selectedOwner = control.ownerKey
+        page.browse:SelectOwner(control.ownerKey, true)
         if page.explicitGuildKey ~= control.ownerKey then page.explicitGuildKey = nil end
-        page.area = nil
         page.grid:SetVerticalScroll(0)
         StoragePage:Refresh(page, page.context)
     end)
@@ -146,8 +148,8 @@ local function CreateOwnerRow(page, index)
     return row
 end
 
-local function CreateItemCell(page, index)
-    local cell = CreateFrame("Button", nil, page.itemsContent, "BackdropTemplate")
+local function CreateItemCell(content)
+    local cell = CreateFrame("Button", nil, content, "BackdropTemplate")
     cell:SetSize(CELL_SIZE, CELL_SIZE)
     -- Grid tiles keep a CELL_GAP between them; each owns its one-pixel frame.
     Theme:ApplyPixelBackdrop(cell)
@@ -194,7 +196,7 @@ local function CreateItemCell(page, index)
         control:SetBackdropBorderColor(unpack(control.borderColor or Colors.lineSoft))
         if GameTooltip then GameTooltip._yiboVaultGuildKey = nil; GameTooltip:Hide() end
     end)
-    page.itemCells[index] = cell
+    cell:SetScript("OnHide", function(control) Layout:HideCellTooltip(control) end)
     return cell
 end
 
@@ -203,7 +205,7 @@ function StoragePage:Create(parent)
     page:SetAllPoints(parent)
     parent.yiboVaultStoragePage = page
     self.page = page
-    page.area = "bags"
+    page.browse = Browse:New("bags")
     page.ownerRows, page.itemCells, page.areaButtons = {}, {}, {}
     page.pendingItemInfo = {}
     page:RegisterEvent("GET_ITEM_INFO_RECEIVED")
@@ -221,14 +223,8 @@ function StoragePage:Create(parent)
 
     page.search = Theme:CreateInput(page, {
         width = 340, height = 30, placeholder = Addon:T("TEXT.SEARCH_ACCOUNT_ITEMS_BY_NAME_OR_ID_CD46C9"), clearable = true,
-        OnChanged = function(_, _, control)
-            local active = (control:GetText() or ""):match("%S") ~= nil
-            if active and not page.searchActive then
-                page.browseOwner, page.browseArea = page.selectedOwner, page.area
-            elseif not active and page.searchActive then
-                page.selectedOwner, page.area = page.browseOwner, page.browseArea
-            end
-            page.searchActive = active
+        OnChanged = function(value)
+            page.browse:SetQuery(value)
             if page.grid then page.grid:SetVerticalScroll(0) end
             page.searchRefreshSerial = (page.searchRefreshSerial or 0) + 1
             local serial = page.searchRefreshSerial
@@ -289,8 +285,7 @@ function StoragePage:Create(parent)
         local button = Theme:CreateButton(page, 105, "", "secondary")
         button:SetPoint("TOPLEFT", page.header, "BOTTOMLEFT", (index - 1) * 111, -4)
         button:SetScript("OnClick", function()
-            if button.tabEnabled and page.area ~= button.tabKey then
-                page.area = button.tabKey
+            if page.browse:SelectSource(button.tabKey, button.tabEnabled) then
                 page.grid:SetVerticalScroll(0)
                 self:Refresh(page, page.context)
             end
@@ -323,40 +318,22 @@ end
 function StoragePage:LayoutChrome(page)
     local width = math.max(1, page.header:GetWidth() or 1)
     local visible = page.tabs or CHARACTER_AREAS
-    local gap = 4
-    local buttonWidth = #visible > 0 and math.max(1, (width - (#visible - 1) * gap) / #visible) or 1
-    for index, button in ipairs(page.areaButtons) do
-        local tab = visible[index]
-        button:ClearAllPoints()
-        button:SetShown(tab ~= nil)
-        if tab then
-            button.tabKey, button.tabEnabled = tab.id, tab.enabled == true
-            button.label:SetText(tab.label)
-            button:SetState(not button.tabEnabled and "disabled" or tab.id == page.area and "selected" or "default")
-            button:SetWidth(buttonWidth)
-            button:SetPoint("TOPLEFT", page.header, "BOTTOMLEFT", (index - 1) * (buttonWidth + gap), -4)
-        else
-            button.tabKey, button.tabEnabled = nil, false
-        end
-    end
+    Layout:PlaceTabs(page.areaButtons, visible, page.area, page.header, width, math.max(1, #visible), 4, 28, 4)
     page.grid:ClearAllPoints()
     page.grid:SetPoint("TOPLEFT", page.header, "BOTTOMLEFT", 0, -42)
     page.grid:SetPoint("BOTTOMRIGHT", page, "BOTTOMRIGHT", -12, 12)
 end
 
 function StoragePage:GetGridColumns(width)
-    local usable = math.max(CELL_SIZE, (width or 0) - 4)
-    return math.max(1, math.floor((usable + CELL_MIN_COLUMN_GAP) / (CELL_SIZE + CELL_MIN_COLUMN_GAP)))
+    return Layout:GridColumns(width or 0, CELL_SIZE, CELL_MIN_COLUMN_GAP, 2)
 end
 
 function StoragePage:GetGridColumnOffset(width, columns, column)
-    if columns <= 1 then return 2 end
-    local distance = math.max(0, (width or 0) - 4 - CELL_SIZE) / (columns - 1)
-    return 2 + math.floor((column - 1) * distance + 0.5)
+    return Layout:GridOffset(width or 0, columns, column, CELL_SIZE, CELL_MIN_COLUMN_GAP, 2, true)
 end
 
 function StoragePage:GetGridContentHeight(slotCount, columns)
-    return math.max(1, 4 + math.ceil(slotCount / columns) * (CELL_SIZE + CELL_GAP))
+    return Layout:GridHeight(slotCount, columns, ITEM_ROW_HEIGHT, 2)
 end
 
 function StoragePage:BuildSlots(records, areaID, freeSlots, freeGroups)
@@ -383,6 +360,7 @@ end
 function StoragePage:UpdateItemCell(page, cell, record, index)
     local item = record and record.itemID and record or nil
     local emptySlots = record and record.emptySlots
+    Layout:ClearReusedCellTooltip(cell, cell.item, item)
     if Addon.GoalTargets then Addon.GoalTargets:Bind(cell, item) end
     cell.item = item
     cell.hiddenGuildKey = item and item.source == "guild-bank" and page.selectedHiddenGuildKey or nil
@@ -423,76 +401,24 @@ end
 function StoragePage:LayoutCells(page)
     if not page.grid or not page.itemsContent then return end
     local slots = page.slots or {}
-    local width = math.max(1, page.grid:GetWidth() or 1)
-    local columns = self:GetGridColumns(width)
-    page.itemsContent:SetWidth(width)
-    local rowCount = math.ceil(#slots / columns)
-    local rowHeight = ITEM_ROW_HEIGHT
-    local viewportHeight = math.max(rowHeight * 6, page.grid:GetHeight() or 0)
-    local scrollTop = math.max(0, page.grid:GetVerticalScroll() or 0)
-    local firstRow = math.max(1, math.floor(scrollTop / rowHeight) + 1 - ITEM_ROW_OVERSCAN)
-    local lastRow = math.min(rowCount,
-        math.ceil((scrollTop + viewportHeight) / rowHeight) + ITEM_ROW_OVERSCAN)
-    local poolIndex = 0
-    for row = firstRow, lastRow do
-        for column = 1, columns do
-            local slotIndex = (row - 1) * columns + column
-            if slotIndex > #slots then break end
-            poolIndex = poolIndex + 1
-            local cell = page.itemCells[poolIndex] or CreateItemCell(page, poolIndex)
-            cell.slotIndex = slotIndex
-            self:UpdateItemCell(page, cell, slots[slotIndex], slotIndex)
-            cell:ClearAllPoints()
-            cell:SetPoint("TOPLEFT", page.itemsContent, "TOPLEFT",
-                self:GetGridColumnOffset(width, columns, column),
-                -2 - (row - 1) * rowHeight)
-            cell:Show()
-        end
-    end
-    for index = poolIndex + 1, #page.itemCells do
-        page.itemCells[index].slotIndex = nil
-        page.itemCells[index]:Hide()
-    end
-    local contentHeight = self:GetGridContentHeight(#slots, columns)
-    page.itemsContent:SetHeight(contentHeight)
-    page.grid:SetContentHeight(contentHeight)
+    Layout:RenderGrid(page.grid, page.itemsContent, page.itemCells, #slots, gridGeometry, CreateItemCell,
+        function(cell, slot) self:UpdateItemCell(page, cell, slots[slot], slot) end)
 end
 
-local function MatchRecord(record, needle)
-    if needle == "" then return true end
-    local id = tostring(record.itemID or "")
-    if string.find(id, needle, 1, true) then return true end
-    local itemID = tonumber(record.itemID)
-    local name = itemID and itemNameCache[itemID]
-    if not name and type(GetItemInfo) == "function" then
-        name = GetItemInfo(record.itemLink or record.itemID)
-        if name and itemID then
-            name = string.lower(name)
-            itemNameCache[itemID] = name
-        end
+local function SearchItemName(record)
+    local itemID = record.itemID
+    local name = itemNameCache[itemID]
+    if not name then
+        local info = Core.ItemResolver:GetInfo(itemID)
+        name = info and info.name
+        itemNameCache[itemID] = name
     end
-    return name and string.find(name, needle, 1, true) ~= nil
+    return name
 end
 
-local function OwnerKey(record)
-    if record.source == "guild-bank" then return record.guildKey end
-    return record.characterID
-end
-
-function StoragePage:CollectMatches(records, needle, ownerByKey)
-    for _, record in ipairs(records or {}) do
-        if MatchRecord(record, needle) then
-            local owner = ownerByKey[OwnerKey(record)]
-            if owner then
-                local area = record.source == "guild-bank" and GuildTabKey(record.location and record.location.tabID)
-                    or record.source
-                owner.records[area] = owner.records[area] or {}
-                owner.records[area][#owner.records[area] + 1] = record
-                owner.counts[area] = (owner.counts[area] or 0) + record.quantity
-                owner.matchQuantity = owner.matchQuantity + record.quantity
-            end
-        end
-    end
+local function RecordArea(record)
+    return record.source == "guild-bank" and GuildTabKey(record.location and record.location.tabID)
+        or record.source
 end
 
 function StoragePage:Refresh(host, context)
@@ -502,8 +428,8 @@ function StoragePage:Refresh(host, context)
     if self.pendingGuildKey then
         page.explicitGuildKey = self.pendingGuildKey
         page.showHiddenGuilds = true
-        page.selectedOwner = self.pendingGuildKey
-        page.area = nil
+        page.browse.normal.owner = self.pendingGuildKey
+        page.browse.normal.source = nil
         self.pendingGuildKey = nil
     end
     page.context = context or page.context
@@ -529,8 +455,7 @@ function StoragePage:Refresh(host, context)
     end
     local summary, query, auctionStates = snapshot.summary, snapshot.query, snapshot.auctionStates
     page.showHidden:SetChecked(page.showHiddenGuilds == true)
-    local needle = string.lower((page.search:GetText() or ""):match("^%s*(.-)%s*$"))
-    local searching = needle ~= ""
+    local needle, searching = page.browse:SetQuery(page.search:GetText())
     local transitMoney = not searching and Addon.Items:GetMailTransitMoney(scope) or {}
     local summaryByID = {}
     for _, entry in ipairs(summary.characters) do summaryByID[entry.characterID] = entry end
@@ -546,8 +471,7 @@ function StoragePage:Refresh(host, context)
         local owner = { key = character.id, label = displayName or character.id,
             realm = character.realm, entry = entry, character = character,
             auction = auction and auction.completedScan and {
-                hasStale = auction.status ~= "known" and auction.status ~= "known-empty" } or nil,
-            records = {}, counts = {}, matchQuantity = 0 }
+                hasStale = auction.status ~= "known" and auction.status ~= "known-empty" } or nil }
         owner.tabs = {}
         for _, area in ipairs(CHARACTER_AREAS) do
             local scanned = entry and entry[area.id] or area.id == "auction" and owner.auction
@@ -562,8 +486,7 @@ function StoragePage:Refresh(host, context)
         local guildName = guild.guildName or Addon:T("TEXT.GUILD_AE2266")
         local hidden = Addon:IsGuildHidden(guild.guildKey)
         local owner = { key = guild.guildKey, label = guild.realm and (guildName .. " · " .. tostring(guild.realm)) or guildName,
-            realm = guild.realm, guildKey = guild.guildKey, hidden = hidden, tabAreas = {}, tabs = {},
-            records = {}, counts = {}, matchQuantity = 0 }
+            realm = guild.realm, guildKey = guild.guildKey, hidden = hidden, tabAreas = {}, tabs = {} }
         for _, tab in ipairs(guild.tabs.locations or {}) do
             local tabID = tonumber(tab.location and tab.location.tabID)
             if tabID and tabID >= 1 and tabID <= GUILD_TAB_COUNT then
@@ -585,38 +508,24 @@ function StoragePage:Refresh(host, context)
         ownerByKey[owner.key] = owner
     end
 
-    self:CollectMatches(query.records, needle, ownerByKey)
-    self:CollectMatches(query.transitRecords, needle, ownerByKey)
+    local groups = Browse:GroupRecords(query.records, query.transitRecords, needle, SearchItemName, RecordArea, ownerByKey)
     if searching then
-        local matched = {}
+        local matched, matchedByKey = {}, {}
         for _, owner in ipairs(owners) do
-            if owner.matchQuantity > 0 then matched[#matched + 1] = owner end
-        end
-        owners = matched
-    end
-
-    local selected
-    for _, owner in ipairs(owners) do
-        if owner.key == page.selectedOwner then selected = owner; break end
-    end
-    selected = selected or owners[1]
-    page.selectedOwner = selected and selected.key
-    if selected then
-        page.tabs = selected.tabs
-        local valid = false
-        for _, tab in ipairs(selected.tabs) do
-            if tab.id == page.area and tab.enabled then valid = true; break end
-        end
-        if not valid then
-            page.area = nil
-            for _, tab in ipairs(selected.tabs) do
-                if tab.enabled then page.area = tab.id; break end
+            if groups[owner.key] and groups[owner.key].quantity > 0 then
+                matched[#matched + 1] = owner
+                matchedByKey[owner.key] = owner
             end
         end
-    else
-        page.tabs = {}
-        page.area = nil
+        owners, ownerByKey = matched, matchedByKey
     end
+
+    local selection = page.browse:Selection()
+    local selected = Browse:ResolveOwner(selection, owners, ownerByKey)
+    page.tabs = selected and selected.tabs or {}
+    selection.owner = selected and selected.key
+    selection.source = Browse:ResolveSource(selection.source, page.tabs)
+    page.selectedOwner, page.area = selection.owner, selection.source
     if page.renderedOwner ~= page.selectedOwner or page.renderedArea ~= page.area then
         page.grid:SetVerticalScroll(0)
     end
@@ -645,7 +554,7 @@ function StoragePage:Refresh(host, context)
         row.name:SetTextColor(classColor and classColor.r or Colors.text[1],
             classColor and classColor.g or Colors.text[2], classColor and classColor.b or Colors.text[3])
         row.meta:SetText((owner.hidden and Addon:T("TEXT.HIDDEN_EXCLUDED_FROM_TOTALS_9EDBA9") or tostring(owner.realm or ""))
-            .. (searching and (Addon:T("TEXT.MATCH_6E5E57") .. tostring(owner.matchQuantity)) or ""))
+            .. (searching and (Addon:T("TEXT.MATCH_6E5E57") .. tostring(groups[owner.key].quantity)) or ""))
         local coords = owner.character and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[owner.character.class]
         if coords then
             row.icon:SetTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES")
@@ -689,7 +598,8 @@ function StoragePage:Refresh(host, context)
     page.composition:SetText(bagArea and CompositionText(bagArea) or
         (selected and selected.guildKey and CapacityText(area) or ""))
 
-    local records = selected and selected.records[page.area] or {}
+    local group = selected and groups[selected.key]
+    local records = group and group.bySource[page.area] or {}
     table.sort(records, function(left, right) return tostring(left.sourceID) < tostring(right.sourceID) end)
     local freeSlots = not searching and area and tonumber(area.freeSlots) or nil
     local freeGroups = not searching and Addon.BagCapacity:Group(area, page.area) or nil
@@ -709,9 +619,9 @@ function StoragePage:OpenGuild(guildKey)
     if page then
         page.explicitGuildKey = guildKey
         page.showHiddenGuilds = true
-        page.selectedOwner = guildKey
-        page.area = nil
         page.search:SetValue("", true)
+        page.browse:SetQuery("")
+        page.browse:SelectOwner(guildKey, true)
         -- The explicit refresh after opening the page supersedes the delayed
         -- search refresh scheduled by the shared input's change callback.
         page.searchRefreshSerial = (page.searchRefreshSerial or 0) + 1
@@ -722,7 +632,7 @@ function StoragePage:OpenGuild(guildKey)
         self.pendingGuildKey = nil
         page.explicitGuildKey = guildKey
         page.showHiddenGuilds = true
-        page.selectedOwner = guildKey
+        page.browse:SelectOwner(guildKey)
         self:Refresh(page, page.context)
     end
 end
