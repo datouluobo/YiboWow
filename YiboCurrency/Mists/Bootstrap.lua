@@ -1,6 +1,6 @@
 local Addon = _G.YiboCurrency or {}
 _G.YiboCurrency = Addon
-Addon.NAME, Addon.VERSION = "YiboCurrency", "1.1.3"
+Addon.NAME, Addon.VERSION = "YiboCurrency", "1.1.4"
 
 function Addon:IsMistsClient()
     return type(WOW_PROJECT_MISTS_CLASSIC) == "number" and WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC

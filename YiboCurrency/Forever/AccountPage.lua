@@ -1,21 +1,70 @@
 local Addon, Core = _G.YiboCurrency, _G.YiboCore or {}
 local Page, Theme = {}, Core.UITheme; Addon.AccountPage = Page
-function Page:Fields()
-    local fields = {}
-    local ids, items, custom = {}, Addon.Store:Items(), {}
+function Addon:GetCatalog()
+    local ids, items, custom = {}, self.Store:Items(), {}
     for id in pairs(items) do ids[#ids + 1] = id end
     table.sort(ids)
     for _, id in ipairs(ids) do
         local info = Core.ItemResolver:GetInfo(id)
-        custom[#custom + 1] = { itemID = id, title = info.name or items[id] }
+        custom[#custom + 1] = { itemID = id, title = info.name or items[id], icon = info.icon }
     end
-    local nativeDir = Addon.Store and Addon.Store:GetNativeDirectory()
-    local catalog = Addon:BuildDiscoveredCatalog(Addon.Catalog, nativeDir, custom)
-    for _, entry in ipairs(catalog) do
-        fields[#fields + 1] = { id = entry.id, title = entry.title or (entry.titleKey and Addon:T(entry.titleKey)), defaultVisible = true }
-    end
-    return fields
+    return self:BuildDiscoveredCatalog(self.Catalog, self.Store:GetNativeDirectory(), custom, self.NativeCatalog)
 end
+
+function Page:Fields()
+    local catalog, visible = Addon:GetCatalog(), {}
+    for _, entry in ipairs(catalog) do
+        if entry.source == "currency" then visible[entry.id] = false end
+    end
+    return Addon:BuildDisplayFields(catalog, visible)
+end
+
+function Addon:IsMonitored(entry)
+    local saved = self:GetSettings().previewColumns[entry.id]
+    if saved == nil then return entry.id == "money" end
+    return saved == true
+end
+
+function Addon:GetIcon(entry)
+    return entry.icon or "Interface\\Icons\\INV_Misc_QuestionMark"
+end
+
+function Addon:GetProjectionSnapshots(character)
+    return { money = self:ReadArchiveMoney(character.id) }
+end
+
+function Addon:GetProjectionCharacterMeta(character, projection)
+    local money = projection.snapshots[character.id].money
+    return money.observedAt or 0, money.state
+end
+
+function Addon:GetValue(character, entry, projection)
+    local id = character.id
+    local quantity, state
+    if entry.source == "item" then
+        local fresh
+        quantity, fresh = self.Store:GetCachedItemCount(id, entry.itemID)
+        state = fresh and "known" or "stale"
+    elseif entry.source == "currency" then
+        quantity, state = self.Store:GetNativeCurrency(id, entry.currencyID)
+        if id == Core.Characters:GetCurrentID() and self.Scanner.inWorld then
+            if state ~= "known" then return nil, "unknown" end
+        elseif state == "known" then
+            state = "stale"
+        end
+    else
+        local money = projection and projection.snapshots[id].money or self:ReadArchiveMoney(id)
+        quantity, state = money.value, money.state
+    end
+    if quantity ~= nil then return { quantity = quantity }, state end
+    return nil, "unknown"
+end
+
+function Addon:ValueState(value, state)
+    if not value then return "unknown" end
+    return state == "known" and "known" or "bank"
+end
+
 local function StatusText(state)
     local keys = { known = "FOREVER.KNOWN", stale = "FOREVER.STALE", error = "FOREVER.ERROR", unknown = "FOREVER.UNKNOWN" }
     return Addon:T(keys[state] or "FOREVER.UNKNOWN")
@@ -62,7 +111,6 @@ function Page:Create(parent)
     parent.itemMatches:SetHeight(28)
     parent.itemTitle = Theme:CreateText(parent, Theme.Font.assist, Theme.Colors.muted)
     parent.itemTitle:SetHeight(24)
-    parent.itemTitle:SetText(Addon:T("FOREVER.CUSTOM_SECTION"))
     parent.itemChangeTitle = Theme:CreateText(parent, Theme.Font.assist, Theme.Colors.muted, "RIGHT")
     parent.itemChangeTitle:SetHeight(24)
     parent.itemChangeTitle:SetWidth(96)
@@ -85,240 +133,151 @@ local function HideItemDetail(row)
     if GameTooltip.IsOwned and GameTooltip:IsOwned(row) then GameTooltip:Hide() end
 end
 
-local function ShowItemDetail(row)
-    if not row.itemID then return end
+local function ShowItemDetail(row, characterID, itemID, title, count)
     GameTooltip:SetOwner(row,"ANCHOR_RIGHT")
     GameTooltip:ClearLines()
-    GameTooltip:AddLine(row.name:GetText())
-    GameTooltip:AddDoubleLine(Addon:T("FOREVER.CUSTOM_CARRIED"),row.count:GetText())
+    GameTooltip:AddLine(title)
+    GameTooltip:AddDoubleLine(Addon:T("FOREVER.CUSTOM_CARRIED"),count)
     local labels={equipment="FOREVER.CUSTOM_VAULT_EQUIPPED",bank="FOREVER.CUSTOM_VAULT_BANK"}
-    for _, detail in ipairs(Addon.CustomItems:GetVaultDetails(row.characterID,row.itemID) or {}) do
+    for _, detail in ipairs(Addon.CustomItems:GetVaultDetails(characterID, itemID) or {}) do
         GameTooltip:AddDoubleLine(Addon:T(labels[detail.source]),ItemCountText(detail.count,detail.fresh))
     end
     GameTooltip:Show()
 end
 
-local function RenderItems(parent, fields, id, top, preview)
-    local query=preview and "" or parent.itemSearch:GetText():match("^%s*(.-)%s*$"):lower()
-    local byID=query:match("^%d+$") and tonumber(query)
-    local visible,total = 0,0
-    local items=Addon.Store:Items()
-    for _, field in ipairs(fields) do
-        local itemID = tonumber(field.id:match("^item:(%d+)$"))
-        local savedName=itemID and items[itemID]
-        if savedName then total=total+1 end
-        local matches=savedName and (query=="" or byID==itemID or (not byID
-            and (field.title:lower():find(query,1,true) or savedName:lower():find(query,1,true))))
-        if matches then
-            visible = visible + 1
-            local row = parent.itemRows[visible]
-            if not row then
-                row = CreateFrame("Frame", nil, parent.itemContent, "BackdropTemplate")
-                row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-                row:SetHeight(28)
-                row.name = Theme:CreateText(row, Theme.Font.body, Theme.Colors.text)
-                row.name:SetPoint("LEFT", 8, 0); row.name:SetWordWrap(false)
-                row.count = Theme:CreateText(row, Theme.Font.body, Theme.Colors.text, "RIGHT")
-                row.count:SetWidth(112)
-                row.name:SetPoint("RIGHT",row.count,"LEFT",-8,0)
-                row.change = Theme:CreateText(row, Theme.Font.body, Theme.Colors.muted, "RIGHT")
-                row.change:SetPoint("RIGHT", -8, 0); row.change:SetWidth(96)
-                row:EnableMouse(true)
-                row:SetScript("OnEnter",ShowItemDetail)
-                row:SetScript("OnLeave",HideItemDetail)
-                row:SetScript("OnHide",HideItemDetail)
-                parent.itemRows[visible] = row
+function Addon:ShowCurrencyDetail(row, character, entry)
+    if not character or not entry.itemID then return end
+    local value, state = self:ProjectionValue(row.projection, character, entry)
+    ShowItemDetail(row, character.id, entry.itemID, entry.title,
+        ItemCountText(value and value.quantity, state == "known"))
+    return true
+end
+
+function Addon:FormatCompact(value, entry)
+    if not value then return self:T("FOREVER.CUSTOM_UNKNOWN") end
+    if entry and entry.source == "money" then return Page:Format(value.quantity) end
+    return string.format("%.0f", value.quantity)
+end
+
+function Addon:FormatCell(value, state, entry)
+    local text = self:FormatCompact(value, entry)
+    if value and state ~= "known" then return self:T("FOREVER.CUSTOM_STALE", text), "bank" end
+    return text, self:ValueState(value, state)
+end
+
+Addon.FormatExact = Addon.FormatCompact
+
+function Addon:FormatLimitCell(value, state, entry, formatter)
+    return formatter(self, value, state, entry)
+end
+
+function Addon:FormatProjectionTotal(total, entry)
+    if entry.totalAllowed == false then return "—" end
+    local value = total.confirmed > 0 and { quantity = total.quantity } or nil
+    local text = self:FormatCell(value, total.complete and "known" or "stale", entry)
+    return text
+end
+
+local function RenderBalances(parent, entries, character, top, projection)
+    local query = parent.itemSearch:GetText():match("^%s*(.-)%s*$"):lower()
+    local byID = query:match("^%d+$") and tonumber(query)
+    local matches, total = {}, 0
+    local hasNative = false
+    local items = Addon.Store:Items()
+    for _, entry in ipairs(entries) do
+        local itemID = entry.itemID
+        if entry.source == "currency" then
+            hasNative = true
+            matches[#matches + 1] = entry
+        elseif itemID then
+            total = total + 1
+            if query == "" or byID == itemID or (not byID
+                and (entry.title:lower():find(query, 1, true) or items[itemID]:lower():find(query, 1, true))) then
+                matches[#matches + 1] = entry
             end
-            if row.itemID~=itemID or row.characterID~=id then HideItemDetail(row) end
-            row.itemID,row.characterID=itemID,id
-            row:SetPoint("TOPLEFT", 0, -(visible - 1) * 28)
-            row:SetPoint("TOPRIGHT", 0, -(visible - 1) * 28)
-            row:SetBackdropColor(unpack(visible % 2 == 0 and Theme.Colors.alternate or Theme.Colors.row))
-            row.count:SetPoint("RIGHT", preview and -8 or -112, 0)
-            local count, fresh, change = Addon.Store:GetItemCount(id, itemID)
-            row.name:SetText(Addon:T("FOREVER.CUSTOM_ITEM_LABEL", field.title, tostring(itemID)))
-            row.count:SetText(ItemCountText(count,fresh))
-            row.count:SetTextColor(unpack(fresh and Theme.Colors.text or Theme.Colors.muted))
-            if not preview then
-                local text = change and string.format(change > 0 and "%+.0f" or "%.0f", change) or Addon:T("FOREVER.CUSTOM_NO_SESSION")
-                local color = change and (change > 0 and Theme.Colors.accent or change < 0 and Theme.Colors.warning) or Theme.Colors.muted
-                row.change:SetText(text)
-                row.change:SetTextColor(unpack(color))
-            end
-            row.change:SetShown(not preview)
-            row:Show()
         end
     end
-    for index = visible + 1, #parent.itemRows do parent.itemRows[index]:Hide() end
-    local showSearch=not preview and total>0
-    parent.itemSearch:SetShown(showSearch)
-    parent.itemMatches:SetShown(showSearch)
-    if showSearch then
-        parent.itemSearch:SetPoint("TOPLEFT",12,top)
+    local id = character and character.id
+    local width = math.max(1, parent.itemScroll:GetWidth() - 20)
+    local height = Addon:RenderCurrencyTable(parent.itemScroll, parent.itemContent, parent.itemRows, matches, width, 28, function(row, entry)
+        if not row.name then
+            row.name = Theme:CreateText(row, Theme.Font.body, Theme.Colors.text)
+            row.name:SetPoint("LEFT", 8, 0)
+            row.name:SetWordWrap(false)
+            row.count = Theme:CreateText(row, Theme.Font.body, Theme.Colors.text, "RIGHT")
+            row.count:SetWidth(112)
+            row.count:SetPoint("RIGHT", -112, 0)
+            row.name:SetPoint("RIGHT", row.count, "LEFT", -8, 0)
+            row.change = Theme:CreateText(row, Theme.Font.body, Theme.Colors.muted, "RIGHT")
+            row.change:SetPoint("RIGHT", -8, 0)
+            row.change:SetWidth(96)
+            row:SetScript("OnLeave", HideItemDetail)
+            row:SetScript("OnHide", HideItemDetail)
+        end
+        if row.itemID ~= entry.itemID or row.characterID ~= id then HideItemDetail(row) end
+        row.itemID, row.characterID = entry.itemID, id
+        row:SetScript("OnEnter", entry.itemID and function()
+            ShowItemDetail(row, id, entry.itemID, row.name:GetText(), row.count:GetText())
+        end or nil)
+        local value, state, change
+        if character then
+            value, state = Addon:ProjectionValue(projection, character, entry)
+            if entry.itemID then
+                local _, _, sessionChange = Addon.Store:GetItemCount(id, entry.itemID)
+                change = sessionChange
+            end
+        end
+        row.name:SetText(entry.itemID and Addon:T("FOREVER.CUSTOM_ITEM_LABEL", entry.title, tostring(entry.itemID))
+            or ("|T" .. tostring(Addon:GetIcon(entry)) .. ":16:16|t " .. entry.title))
+        local countText = Addon:FormatCell(value, state, entry)
+        row.count:SetText(countText)
+        row.count:SetTextColor(unpack(state == "known" and Theme.Colors.text or Theme.Colors.muted))
+        local label = change and string.format(change > 0 and "%+.0f" or "%.0f", change) or Addon:T("FOREVER.CUSTOM_NO_SESSION")
+        local color = change and (change > 0 and Theme.Colors.accent or change < 0 and Theme.Colors.warning) or Theme.Colors.muted
+        row.change:SetText(label)
+        row.change:SetTextColor(unpack(color))
+    end)
+
+    parent.itemSearch:SetShown(total > 0)
+    parent.itemMatches:SetShown(total > 0)
+    if total > 0 then
+        parent.itemSearch:SetPoint("TOPLEFT", 12, top)
         parent.itemMatches:ClearAllPoints()
-        parent.itemMatches:SetPoint("TOPLEFT",parent.itemSearch,"TOPRIGHT",12,0)
-        parent.itemMatches:SetPoint("TOPRIGHT",-12,top)
-        parent.itemMatches:SetText(visible==0 and Addon:T("FOREVER.CUSTOM_NO_MATCH")
-            or Addon:T("FOREVER.CUSTOM_MATCHES",visible,total))
-        top=top-36
+        parent.itemMatches:SetPoint("TOPLEFT", parent.itemSearch, "TOPRIGHT", 12, 0)
+        parent.itemMatches:SetPoint("TOPRIGHT", -12, top)
+        parent.itemMatches:SetText(#matches == 0 and Addon:T("FOREVER.CUSTOM_NO_MATCH")
+            or Addon:T("FOREVER.CUSTOM_MATCHES", #matches, total))
+        top = top - 36
     end
     parent.itemTitle:ClearAllPoints()
-    parent.itemTitle:SetPoint("TOPLEFT", 12, top); parent.itemTitle:SetPoint("RIGHT", -12, 0)
-    parent.itemTitle:SetShown(visible > 0)
+    parent.itemTitle:SetPoint("TOPLEFT", 12, top)
+    parent.itemTitle:SetPoint("RIGHT", -12, 0)
+    local titleKey = hasNative and (total > 0 and "FOREVER.CURRENCIES_AND_ITEMS" or "CURRENCY.STANDARD_CURRENCY_F0C941")
+        or "FOREVER.CUSTOM_SECTION"
+    parent.itemTitle:SetText(Addon:T(titleKey))
+    parent.itemTitle:SetShown(height > 0)
     parent.itemChangeTitle:SetPoint("TOPRIGHT", -40, top)
-    parent.itemChangeTitle:SetShown(visible > 0 and not preview)
+    parent.itemChangeTitle:SetShown(height > 0)
     parent.itemScroll:ClearAllPoints()
-    parent.itemScroll:SetPoint("TOPLEFT", 12, top - 26); parent.itemScroll:SetPoint("BOTTOMRIGHT", -12, 10)
-    parent.itemContent:SetWidth(math.max(1, parent.itemScroll:GetWidth() - 20))
-    parent.itemContent:SetHeight(math.max(1, visible * 28))
-    parent.itemScroll:SetContentHeight(visible * 28)
-    parent.itemScroll:SetShown(visible > 0)
-end
-local function MatrixValue(page, fieldID, value, complete)
-    if value == nil then return Addon:T("FOREVER.CUSTOM_UNKNOWN") end
-    local text = fieldID == "money" and page:Format(value) or string.format("%.0f", value)
-    return complete and text or Addon:T("FOREVER.CUSTOM_STALE", text)
+    parent.itemScroll:SetPoint("TOPLEFT", 12, top - 26)
+    parent.itemScroll:SetPoint("BOTTOMRIGHT", -12, 10)
+    parent.itemScroll:SetShown(height > 0)
 end
 
-local function MatrixCell(row, id)
-    local cell = row.cells[id]
-    if cell then return cell end
-    cell = CreateFrame("Frame", nil, row)
-    cell.count = Theme:CreateText(cell, Theme.Font.body, Theme.Colors.text, "CENTER")
-    cell.count:SetAllPoints(cell)
-    cell.count:SetWordWrap(false)
-    cell:SetScript("OnEnter", ShowItemDetail)
-    cell:SetScript("OnLeave", HideItemDetail)
-    cell:SetScript("OnHide", HideItemDetail)
-    row.cells[id] = cell
-    return cell
-end
+function Page:Refresh(host, context)
+    local preview = context.preview == true
+    host.currencyMain:SetShown(not preview)
+    host.currencyPreview:SetShown(preview)
 
-function Page:RefreshMatrix(parent, context)
-    if not parent.matrixHeader then
-        parent.matrixHeader = CreateFrame("Frame", nil, parent)
-        parent.matrixHeader:SetPoint("TOPLEFT", 12, -6)
-        parent.matrixHeader:SetHeight(30)
-        parent.matrixScroll = Theme:CreateScrollFrame(parent)
-        parent.matrixScroll:SetPoint("TOPLEFT", 12, -37)
-        parent.matrixScroll:SetPoint("BOTTOMRIGHT", -12, 8)
-        parent.matrixContent = CreateFrame("Frame", nil, parent.matrixScroll)
-        parent.matrixScroll:SetScrollChild(parent.matrixContent)
-        parent.matrixHeader.cells, parent.matrixRows = {}, {}
-    end
-    for _, control in ipairs({parent.heading,parent.refresh,parent.status,parent.balanceTitle,parent.balance,
-        parent.sessionTitle,parent.sessionChange,parent.itemSearch,parent.itemMatches,parent.itemTitle,parent.itemChangeTitle,parent.itemScroll}) do control:Hide() end
-    parent.matrixHeader:Show()
-    parent.matrixScroll:Show()
-
-    local characters = context.characters or {}
-    local width = math.max(1, (context.surfaceAvailableWidth or parent.matrixScroll:GetWidth()) - 36)
-    local currencyWidth, totalWidth, characterWidth = 154, 112, 112
-    local visible, pageInfo = Core.AccountView:GetColumnPage(Addon.PAGE_ID, "currency-matrix", characters,
-        width, currencyWidth + totalWidth, characterWidth)
-    Core.AccountView:UpdateColumnPager(parent, Addon.PAGE_ID, "currency-matrix", pageInfo, nil, Core:Text("CORE.CHARACTER"))
-    local function Place(cell, x, w)
-        cell:SetPoint("TOPLEFT", x, 0)
-        cell:SetSize(w, 30)
-        cell:Show()
-    end
-    local function Header(id, x, w, title)
-        local cell = MatrixCell(parent.matrixHeader, id)
-        cell.count:SetText(title)
-        Place(cell, x, w)
-    end
-    for _, cell in pairs(parent.matrixHeader.cells) do cell:Hide() end
-    Header("currency", 0, currencyWidth, Addon:T("FOREVER.MATRIX_CURRENCY"))
-    Header("total", currencyWidth, totalWidth, Addon:T("FOREVER.MATRIX_TOTAL"))
-    for index, character in ipairs(visible) do
-        Header(character.id, currencyWidth + totalWidth + (index-1)*characterWidth,
-            characterWidth, Core.Characters:FormatName(character, {realmMode="full"}))
+    if preview then
+        local parent = host.currencyPreview
+        if not parent.currencyHeader then Addon:CreateCurrencyPage(parent) end
+        Addon:RefreshCurrencyPage(parent, context)
+        return
     end
 
-    local count = 0
-    local preferences = self:GetMatrixPreferences()
-    for _, field in ipairs(self:Fields()) do
-        if preferences[field.id] then
-            count = count + 1
-            local row = parent.matrixRows[count]
-            if not row then
-                row = CreateFrame("Frame", nil, parent.matrixContent, "BackdropTemplate")
-                row:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8x8"})
-                row.cells = {}
-                parent.matrixRows[count] = row
-            end
-            local itemID = tonumber(field.id:match("^item:(%d+)$"))
-            local currencyID = tonumber(field.id:match("^currency:(%d+)$"))
-            local values, fresh, total, observed, complete = {}, {}, 0, 0, true
-            for _, character in ipairs(characters) do
-                local id = character.id
-                if itemID then
-                    values[id], fresh[id] = Addon.Store:GetCachedItemCount(id, itemID)
-                elseif currencyID then
-                    local quantity, state = Addon.Store:GetNativeCurrency(id, currencyID)
-                    values[id] = quantity
-                    fresh[id] = (state == "known")
-                else
-                    local money = Addon:ReadArchiveMoney(id)
-                    values[id], fresh[id] = money.value, money.state == "known"
-                end
-                if values[id] ~= nil then
-                    total = total + values[id]
-                    observed = observed + 1
-                end
-                complete = complete and fresh[id]
-            end
-            row.fieldID = field.id
-            row:SetPoint("TOPLEFT", 0, -(count-1)*30)
-            row:SetSize(currencyWidth + totalWidth + #visible * characterWidth, 30)
-            row:SetBackdropColor(unpack(count % 2 == 0 and Theme.Colors.alternate or Theme.Colors.row))
-            local name = MatrixCell(row, "currency")
-            local nativeDir = Addon.Store:GetNativeDirectory()
-            local icon = itemID and Core.ItemResolver:GetInfo(itemID).icon
-                or (currencyID and nativeDir[currencyID] and nativeDir[currencyID].icon)
-                or (not itemID and not currencyID and "Interface\\MoneyFrame\\UI-GoldIcon")
-            name.count:SetText(icon and ("|T" .. icon .. ":15:15|t " .. field.title) or field.title)
-            name.count:SetJustifyH("LEFT")
-            Place(name, 0, currencyWidth)
-            local totalCell = MatrixCell(row, "total")
-            totalCell.count:SetText(MatrixValue(self, field.id, observed > 0 and total or nil, complete))
-            Place(totalCell, currencyWidth, totalWidth)
-            local shown = {currency=true, total=true}
-            for index, character in ipairs(visible) do
-                local id = character.id
-                local cell = MatrixCell(row, id)
-                shown[id] = true
-                cell.count:SetText(MatrixValue(self, field.id, values[id], fresh[id]))
-                cell.itemID, cell.characterID, cell.name = itemID, id, name.count
-                cell:EnableMouse(itemID ~= nil)
-                Place(cell, currencyWidth + totalWidth + (index-1)*characterWidth, characterWidth)
-            end
-            for id, cell in pairs(row.cells) do if not shown[id] then cell:Hide() end end
-            row:Show()
-        end
-    end
-    for index = count + 1, #parent.matrixRows do parent.matrixRows[index]:Hide() end
-    parent.matrixRowCount = count
-    parent.matrixContent:SetSize(width, math.max(1, count * 30))
-    parent.matrixScroll:SetContentHeight(count * 30)
-end
-
-function Page:GetMatrixPreferences()
-    local saved = Addon.Store.db.settings.previewColumns
-    local result = {money=saved.money ~= false}
-    for itemID in pairs(Addon.Store:Items()) do
-        local key = "item:" .. itemID
-        result[key] = saved[key] == true
-    end
-    return result
-end
-
-function Page:Refresh(parent, context)
-    if context.preview then self:RefreshMatrix(parent, context); return end
-    if parent.matrixHeader then parent.matrixHeader:Hide(); parent.matrixScroll:Hide() end
-    parent.heading:Show(); parent.status:Show()
-    if parent.itemPreview~=context.preview then parent.itemScroll:SetVerticalScroll(0) end
-    parent.itemPreview=context.preview
+    local parent = host.currencyMain
+    if not parent.heading then self:Create(parent) end
     local id = Core.Characters:GetCurrentID()
     local character = context.characters and context.characters[1]
     if character and character.id ~= id then character = nil end
@@ -326,18 +285,33 @@ function Page:Refresh(parent, context)
     if character then snapshot, state = Addon.Store:Get(id) end
     parent.heading:SetText(character and Core.Characters:FormatName(character, { realmMode = "full" }) or Addon:T("FOREVER.CURRENT"))
     parent.status:SetText(StatusText(state))
-    parent.refresh:SetShown(not context.preview)
+    parent.refresh:Show()
     parent.refresh:SetState(Addon.Scanner.inWorld and id and "default" or "disabled")
-    local show = false
-    local fields = context.fields or self:Fields()
-    for _, field in ipairs(fields) do if field.id == "money" then show = true end end
+    local moneyEntry
+    local entries = Addon:GetDisplayCatalog(false, context.fields)
+    for _, entry in ipairs(entries) do
+        if entry.source == "money" then moneyEntry = entry end
+    end
+    local projection = Addon:GetCurrencyProjection(context, character and { character } or {}, entries)
+    local show = moneyEntry ~= nil
     parent.balanceTitle:SetText(Addon:T("FOREVER.BALANCE")); parent.balanceTitle:SetShown(show)
     local balance = Addon:T("FOREVER.NO_BALANCE")
-    if snapshot then
-        balance = context.preview and self:Format(snapshot.moneyCopper) or FormatCoinIcons(snapshot.moneyCopper)
+    if moneyEntry and character then
+        local value = Addon:ProjectionValue(projection, character, moneyEntry)
+        if value then balance = FormatCoinIcons(value.quantity) end
     end
     parent.balance:SetText(balance); parent.balance:SetShown(show)
-    local showSession = show and not context.preview
+    if show and character and Addon.GoalTargets.ref then
+        local hit = parent.balanceGoal or CreateFrame("Button", nil, parent)
+        parent.balanceGoal = hit
+        hit:SetAllPoints(parent.balance)
+        Addon.GoalTargets:Bind(hit, moneyEntry.id, character.id)
+        Theme:BindTooltip(hit, moneyEntry.title, { Addon:T("UI.GOAL_HINT", Core.BusinessItemActions:GestureLabel()) })
+        hit:Show()
+    elseif parent.balanceGoal then
+        parent.balanceGoal:Hide()
+    end
+    local showSession = show
     parent.sessionTitle:SetShown(showSession)
     parent.sessionChange:SetShown(showSession)
     if showSession then
@@ -354,7 +328,7 @@ function Page:Refresh(parent, context)
         parent.sessionChange:SetText(value)
         parent.sessionChange:SetTextColor(unpack(color))
     end
-    RenderItems(parent, fields, character and id or nil, showSession and -253 or show and -174 or -96, context.preview)
+    RenderBalances(parent, entries, character, showSession and -253 or -96, projection)
     parent.renderedSnapshot = snapshot
 end
 function Page:Register()
@@ -362,25 +336,20 @@ function Page:Register()
         title = Addon:T("FOREVER.TITLE"), fields = self:Fields(), defaultEnabled = true, previewEnabled = true,
         GetFieldDefinitions = function() return Page:Fields() end,
         settings = { title = Addon:T("FOREVER.TITLE"), description = Addon:T("FOREVER.CUSTOM_HELP"),
-            CreateSettingsPanel = function(parent, context) return Addon.CustomItems:CreateSettingsPanel(parent, context) end },
+            CreateSettingsPanel = function(parent, context) return Addon:CreateSettingsPanel(parent, context) end },
         scope = {mode="realms", previewOnly=true},
         GetPreviewFieldDefinitions = function()
             local fields = Page:Fields()
             for _, field in ipairs(fields) do field.defaultVisible = field.id == "money" end
             return fields
         end,
-        GetPreviewFields = function() return Page:GetMatrixPreferences() end,
+        GetPreviewFields = function()
+            local result = {}
+            for _, entry in ipairs(Addon:GetCatalog()) do result[entry.id] = Addon:IsMonitored(entry) end
+            return result
+        end,
         SetPreviewFieldVisible = function(id, visible)
-            if type(id) ~= "string" then return false end
-            if id ~= "money" then
-                local itemID = tonumber(id:match("^item:(%d+)$"))
-                local currencyID = tonumber(id:match("^currency:(%d+)$"))
-                if not (itemID and id == "item:" .. itemID and Addon.Store:Items()[itemID])
-                    and not (currencyID and id == "currency:" .. currencyID and Addon.Store:GetNativeDirectory()[currencyID]) then
-                    return false
-                end
-            end
-            Addon.Store.db.settings.previewColumns[id] = visible == true; Addon:NotifyChanged(); return true
+            return Addon:SetCurrencyDisplay(id, "hover", visible)
         end,
         HasCharacterSnapshot = function(character)
             local db, id = Addon.Store.db, character.id
@@ -404,23 +373,25 @@ function Page:Register()
         end,
         GetSurfaceMetrics = function(context)
             local preview = context and context.preview
-            if preview then
-                local rows = 0
-                for _, shown in pairs(Page:GetMatrixPreferences()) do if shown then rows = rows + 1 end end
-                return {minContentWidth=420, naturalContentWidth=302 + #context.characters * 112,
-                    minContentHeight=80, naturalContentHeight=48 + math.max(1, rows) * 30}
-            end
-            local items = 0
+            if preview then return Addon:GetCurrencySurfaceMetrics(context) end
+            local rows, hasItems = 0, false
             for _, field in ipairs(context and context.fields or Page:Fields()) do
-                if field.id:match("^item:") then items = items + 1 end
+                if field.id ~= "money" then rows = rows + 1 end
+                if field.id:match("^item:") then hasItems = true end
             end
-            local toolbar = not preview and items > 0 and 36 or 0
-            local extra = items > 0 and 26 + math.min(6, items) * 28 or 0
+            local toolbar = hasItems and 36 or 0
+            local extra = rows > 0 and 26 + math.min(6, rows) * 28 or 0
             return { minContentWidth = 420, naturalContentWidth = 640,
-                minContentHeight = (preview and 180 or 253) + (items > 0 and 64 or 0) + toolbar,
-                naturalContentHeight = (preview and 220 or 265) + extra + toolbar }
+                minContentHeight = 253 + (rows > 0 and 64 or 0) + toolbar,
+                naturalContentHeight = 265 + extra + toolbar }
         end,
-        Create = function(parent) Page:Create(parent) end,
+        Create = function(parent)
+            -- Core reuses this page instance when switching between main and preview.
+            parent.currencyMain = CreateFrame("Frame", nil, parent)
+            parent.currencyMain:SetAllPoints(parent)
+            parent.currencyPreview = CreateFrame("Frame", nil, parent)
+            parent.currencyPreview:SetAllPoints(parent)
+        end,
         Refresh = function(parent, context) Page:Refresh(parent, context) end })
     if not ok then return nil, err end
     return Core.Entry:RegisterBusinessEntry(Addon.NAME, { id = "ycu", brokerName = "YiboCurrency", pageID = Addon.PAGE_ID,

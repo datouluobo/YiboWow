@@ -1,5 +1,16 @@
 2026-11-18 YiboMail Forever发件扩展：CAP-003接入既有item-picker:2/CreateItemPicker，CAP-007接入character-identity:2与account-identity-context:1用于联系人/规则；API13及对应能力/方法在写库前检查，不保留并行回退。CAP-004/009继续复用托管页面/设置和owner资源。Vault Forever经Core.Contracts消费mail.items v1.1离线角色在途；未新增Core公共API。真实Mail/Vault清单发送/失败/在途与隔离、双目标规则专项及缺依赖回归通过；金币发送继续客户端原生确认。实机与覆盖恢复待验，部分接入。见[Mail整体记录](../../YiboMail/Docs/Forever-整体适配方案-2026-11-17.md)。
 
+2026-11-27 Currency Mists 1.1.3 工作树 CAP-004 接入既有 Core 图文列宽测量，仅用于至尊石系列悬停短名。API13 保持并检查实际方法。MoP 双语、Forever 回归及双目标构建预检通过，MoP 实机待验。[目录与显示验收](../../YiboCurrency/Docs/货币目录与显示管理-实施与验收.md#2026-11-27-mop-至尊石悬停名称)
+
+2026-11-27 Currency Forever 0.1.9 工作树 CAP-004 接入 Core 图标加文字列宽测量，用于悬停金币字段，并在初始化检查实际方法。API13 和既有能力版本沿用。普通与转置单金币离线验证和双端构建预检通过，实机待验。[主窗复验与列宽](../../YiboCurrency/Docs/双端货币目标-第三批验收.md#主窗截图复验与金币列宽)
+
+2026-11-27 Currency 第三批货币目标（CAP-005／CAP-008／CAP-009，Mists 1.1.3／Forever 0.1.9）。既有 action.targets v1.1 和 Core 操作绑定接入 Forever，沿用 API13 及可选目标能力。双端离线通过，Forever 的消费端尚未接入，当前范围为部分接入。[第三批验收](../../YiboCurrency/Docs/双端货币目标-第三批验收.md)
+
+2026-11-27 Currency 第二批设置共享（CAP-003／CAP-004／CAP-009，Mists 1.1.3／Forever 0.1.9 工作树）。共用 Core 物品选择与确认、动态主窗字段、悬停列分页和语言服务。API13 及能力版本沿用，Forever 入口补查字段读写、确认和按宽分页方法。本次接入范围部分接入，双端离线与构建通过，实机待验。[第二批验收](../../YiboCurrency/Docs/双端设置与悬停转置-第二批验收.md)
+
+2026-11-27 Currency 第一批表格共享（CAP-001／CAP-004／CAP-009，Mists 1.1.3／Forever 0.1.9 工作树）。Forever 共用 Core 角色表头、颜色、列宽、分页与滚动视口，动态字段补查 `account-dynamic-fields:1`，沿用 API13、`account-surface-budget:2` 和语言服务。双端离线回放与构建通过，本批新增接入范围为部分接入，实机待验。[双端验收](../../YiboCurrency/Docs/双端目录与表格共享-第一批验收.md)
+
+
 2026-11-18 YiboMail Forever收件表面：CAP-003复用Core.ItemConfirmation:Show完成批量退信/空信删除确认，API13与既有能力保持，初始化对collect增加Show方法检查，缺失在业务写库前停止；CAP-004/007/009沿用托管账号页、GUID与owner语言。真实目标清单UI安装/缺依赖/队列和退信离线通过，客户端确认与操作待验，记部分接入。见[Mail整体记录](../../YiboMail/Docs/Forever-整体适配方案-2026-11-17.md)。
 
 2026-11-13 YiboBeastPaths 1.9.0：离线兽栏 CAP-001／002／004／007／009／010 按 API13 和所需能力接入角色格式、Core 输入下拉、托管页面／预览／入口、身份、owner 双语及清理 owner；角色选择检查 `basic-input:1` 和公开下拉方法。仍为**部分接入**：两端正向观察及退出重登恢复已实机验证，完整性仍未确认；真实旧档升级、部分客户端路径和双语验收待做。两目标真实 Core 合成数据页面及幂等／错目标离线检查通过；见[采集判据审查](../../YiboBeastPaths/Docs/1.9-采集判据审查-20261113.md)。下列旧版“待接入”行按历史范围理解。

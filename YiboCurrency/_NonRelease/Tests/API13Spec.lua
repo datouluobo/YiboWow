@@ -109,11 +109,11 @@ dofile("YiboCurrency/Store.lua")
 dofile("YiboCurrency/Migration.lua")
 dofile("YiboCurrency/Scanner.lua")
 dofile("YiboCurrency/ArchiveProvider.lua")
-dofile("YiboCurrency/Data.lua")
+dofile("YiboCurrency/Mists/Data.lua")
 dofile("YiboCurrency/VaultIntegration.lua")
-dofile("YiboCurrency/Projection.lua")
-dofile("YiboCurrency/AccountPage.lua")
-dofile("YiboCurrency/GoalTargets.lua")
+dofile("YiboCurrency/Common/Projection.lua")
+dofile("YiboCurrency/Common/AccountPage.lua")
+dofile("YiboCurrency/Common/GoalTargets.lua")
 dofile("YiboCurrency/CoreIntegration.lua")
 GetMoney = function() return 10000 end
 C_CurrencyInfo = { GetCurrencyInfo = function(id) if id == 392 then return { name = "Honor", quantity = 42 } end end }
@@ -213,12 +213,13 @@ for i = 1, 13 do roster[i] = { id = "R" .. i, name = "R" .. i, realm = "Realm", 
 local pageInfo
 local updatePager = view.UpdateColumnPager
 view.UpdateColumnPager = function(_, _, _, _, info) pageInfo = info end
-Addon:RefreshCurrencyPage(parent, { characters = roster, scope = "all", preview = false, surfaceAvailableWidth = 1100 })
+local compactFields = { { id = "money" } }
+Addon:RefreshCurrencyPage(parent, { characters = roster, fields = compactFields, scope = "all", preview = false, surfaceAvailableWidth = 1100 })
 check(pageInfo.pages == 1 and pageInfo.last == 13, "all 13 characters fit the compact main matrix")
 local visibleHeaders = 0
 for _, header in ipairs(parent.currencyHeaders) do if header:IsShown() then visibleHeaders = visibleHeaders + 1 end end
 check(visibleHeaders == 15 and parent.currencyBody:GetWidth() <= 1100, "complete main matrix stays inside available width")
-Addon:RefreshCurrencyPage(parent, { characters = roster, scope = "all", preview = false, surfaceAvailableWidth = 360 })
+Addon:RefreshCurrencyPage(parent, { characters = roster, fields = compactFields, scope = "all", preview = false, surfaceAvailableWidth = 360 })
 check(pageInfo.pages > 1, "only real screen overflow retains Core safety pagination")
 settings.hoverTranspose = true
 settings.previewColumns["currency:392"] = true
@@ -268,6 +269,58 @@ local function FindRow(host, id)
 end
 local function MainContext() return { characters = characters, scope = "all", preview = false, surfaceAvailableWidth = 1400 } end
 local function HoverContext() return { characters = characters, scope = "all", preview = true, surfaceAvailableWidth = 1400 } end
+local previousPreviewColumns = settings.previewColumns
+settings.previewColumns = { money = true }
+Addon:RefreshCurrencyPage(parent, HoverContext())
+local goldCell = FindRow(parent, "money").cells[1]
+check(goldCell:GetWidth() >= Core.UITheme:GetIconTextColumnWidth(16, Core.UITheme.Font.body,
+    Addon:GetCatalogEntry("money").title, 4) - Core.UITheme.Table.cellPadding, "short labels keep a four-character column")
+
+settings.previewColumns = { ["currency:738"] = true }
+for _, context in ipairs({
+    { characters = roster, scope = "all", preview = false, surfaceAvailableWidth = 620 },
+    { characters = roster, scope = "all", preview = true, surfaceAvailableWidth = 620 },
+}) do
+    Addon:RefreshCurrencyPage(parent, context)
+    local row = FindRow(parent, "currency:738")
+    local cell, title = row.cells[1], row.entry.title
+    check(cell:GetText():sub(-#title) == title, "Lesser Charm keeps its full name")
+    check(cell:GetWidth() >= Core.UITheme:GetIconTextColumnWidth(16, Core.UITheme.Font.body, title, 4)
+        - Core.UITheme.Table.cellPadding, "Lesser Charm keeps space for its full name and icon while characters paginate")
+    check(parent.currencyBody:GetWidth() <= 620, "the matrix fits its viewport with full currency names")
+end
+settings.hoverTranspose = true
+Addon:RefreshCurrencyPage(parent, HoverContext())
+local charmTitle = Addon:GetCatalogEntry("currency:738").title
+local charmHeader = parent.currencyHeaders[2]
+check(charmHeader.label:GetText():sub(-#charmTitle) == charmTitle
+    and charmHeader:GetWidth() >= Core.UITheme:GetIconTextColumnWidth(16, Core.UITheme.Font.body, charmTitle, 4)
+        - Core.UITheme.Table.cellPadding, "the transposed currency header also fits Lesser Charm")
+settings.hoverTranspose = false
+
+settings.previewColumns = { ["currency:3350"] = true, ["currency:3414"] = true, ["currency:3416"] = true }
+local stonePreview = HoverContext()
+stonePreview.characters, stonePreview.surfaceAvailableWidth = roster, 700
+Addon:RefreshCurrencyPage(parent, stonePreview)
+for _, id in ipairs({ "currency:3350", "currency:3414", "currency:3416" }) do
+    local row = FindRow(parent, id)
+    local cell = row.cells[1]
+    local shortTitle = row.entry.shortTitle
+    check(cell:GetText():sub(-#shortTitle) == shortTitle, id .. " displays its distinct short name")
+    check(cell:GetWidth() >= Core.UITheme:GetIconTextColumnWidth(16, Core.UITheme.Font.body, shortTitle) - Core.UITheme.Table.cellPadding,
+        id .. " keeps room for its icon and full short name in a crowded hover")
+    row.scripts.OnEnter(row)
+    check(GameTooltip.lines[1] == row.entry.title, id .. " keeps its full tooltip name")
+end
+settings.hoverTranspose = true
+Addon:RefreshCurrencyPage(parent, HoverContext())
+for _, index in ipairs({ 2, 3, 4 }) do
+    local entry = Addon:GetMonitoredCatalog()[index - 1]
+    local text = parent.currencyHeaders[index].label:GetText()
+    check(text:sub(-#entry.shortTitle) == entry.shortTitle, entry.id .. " uses its short name in transposed hover")
+end
+settings.hoverTranspose = false
+settings.previewColumns = previousPreviewColumns
 check(Addon:AddCustomItem(123), "custom currency registers after frame pool was used by built-in currencies")
 check(Addon.Store:Commit(characters[1].id, "carriedTokens", { items = { [123] = { carried = 7 } } }, "known"), "custom balance snapshot is valid")
 Addon:RefreshCurrencyPage(parent, MainContext())
@@ -301,7 +354,7 @@ Core.CreateItemPicker = function(_, owner, config)
     function picker:SetValue(value) self.input:SetText(value) end
     return picker
 end
-dofile("YiboCurrency/Settings.lua")
+dofile("YiboCurrency/Common/Settings.lua")
 local host, settingsContext = Node(UIParent), { notifyPageChanged = function() end }
 host:SetWidth(1100)
 settingsContext.refreshPanel = function() Addon:CreateSettingsPanel(host, settingsContext) end

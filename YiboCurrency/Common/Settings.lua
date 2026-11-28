@@ -1,6 +1,7 @@
 local Addon, Core = _G.YiboCurrency, _G.YiboCore
 local Theme = Core.UITheme
 local CATALOG_PAGE_SIZE = 24
+local pickerOptions = Addon.CatalogPickerOptions or { dropMode = "add" }
 
 local function FindCatalogItem(itemID)
     for _, entry in ipairs(Addon:GetCatalog()) do
@@ -16,7 +17,7 @@ local RemoveOperation = {
     end,
     Confirm = function(info)
         local entry = Addon:GetCustomItem(info.itemID)
-        return string.format(Addon:T("CURRENCY.REMOVE_S_ITEMID_S_FROM_THE_CUSTOM_CURRENCY_CATALOG_ITS__CCE950"), entry.title, info.itemID)
+        return Addon:T("CURRENCY.REMOVE_S_ITEMID_S_FROM_THE_CUSTOM_CURRENCY_CATALOG_ITS__CCE950", entry.title, tostring(info.itemID))
     end,
     Execute = function(info)
         local entry, err = Addon:RemoveCustomItem(info.itemID)
@@ -27,8 +28,8 @@ local RemoveOperation = {
 }
 
 function Addon:ConfirmRemoveCustomItem(itemID, refreshPage, owner)
-    if not (self.CoreIntegration and self.CoreIntegration.initialized) then
-        self:Print(self:UpgradeMessage()); return
+    if not (self.initialized or (self.CoreIntegration and self.CoreIntegration.initialized)) then
+        self:Print(self.UpgradeMessage and self:UpgradeMessage() or self:T("FOREVER.CORE_REQUIRED")); return
     end
     local info = { itemID = tonumber(itemID) }
     local ok, message = RemoveOperation.Validate(info)
@@ -70,9 +71,11 @@ local function ItemPicker(panel, context)
     local picker = panel.itemPicker
     if not picker then
         picker = Core:CreateItemPicker(panel, {
-            resolve = { allowID = true, allowLink = true, allowName = true, match = "exact", includeBags = true,
+            placeholder = pickerOptions.placeholderKey and Addon:T(pickerOptions.placeholderKey),
+            candidateDropdown = pickerOptions.candidateDropdown,
+            resolve = pickerOptions.resolve or { allowID = true, allowLink = true, allowName = true, match = "exact", includeBags = true,
                 candidates = function() return Addon:GetCatalog() end },
-            enterAction = "add", dropMode = "add",
+            enterAction = "add", dropMode = pickerOptions.dropMode,
             Exists = function(info) return FindCatalogItem(info.itemID) ~= nil end,
             add = {
                 label = Addon:T("UI.CATALOG_ADD"),
@@ -82,10 +85,9 @@ local function ItemPicker(panel, context)
                 end,
                 Confirm = function(info) return Addon:T("CURRENCY.ADD_S_ITEMID_S_TO_THE_CUSTOM_CURRENCY_CATALOG_A3D0C3", info.name, info.itemID) end,
                 Execute = function(info)
-                    local entry, err = Addon:AddCustomItem(info.itemID)
+                    local entry, err = Addon:AddCatalogItem(info)
                     if not entry then return false, err end
                     panel.catalogFilter = "custom"
-                    panel.catalogPage = math.max(1, math.ceil(#Addon:GetSettings().customItems / CATALOG_PAGE_SIZE))
                     panel.pendingCatalogID = entry.id
                     Addon:NotifyChanged()
                     return true, Addon:T("UI.CUSTOM_ADDED", entry.title)
@@ -176,16 +178,35 @@ local function CatalogList(panel, picker, context, y, reservedHeight)
             local control = row[surface] or Theme:CreateCheckbox(row, ""); row[surface] = control
             local offset = surface == "main" and nameWidth + (mainWidth - 16) / 2 or nameWidth + mainWidth + (hoverWidth - 16) / 2
             control:ClearAllPoints(); control:SetPoint("LEFT", row, "LEFT", offset, 0); control:SetWidth(24)
-            control:SetChecked(surface == "main" and Addon:IsVisible(entry) or surface == "hover" and Addon:IsMonitored(entry)); control:Show()
+            local isMain = surface == "main"
+            local isSelected = isMain and Addon.IsVisible or Addon.IsMonitored
+            control:SetChecked(isSelected(Addon, entry))
+            control:Show()
             control:SetScript("OnClick", function(button)
-                local enabled = surface == "main" and not Addon:IsVisible(entry) or surface == "hover" and not Addon:IsMonitored(entry)
-                Addon:SetCurrencyDisplay(entry.id, surface, enabled); button:SetChecked(enabled)
-                RefreshSettings(context)
+                local enabled = not isSelected(Addon, entry)
+                if Addon:SetCurrencyDisplay(entry.id, surface, enabled) then
+                    button:SetChecked(enabled)
+                    RefreshSettings(context)
+                end
             end)
-            Theme:BindTooltip(control, entry.title, { Addon:T(surface == "main" and "UI.DISPLAY_MAIN_HINT" or "UI.DISPLAY_HOVER_HINT") })
+            local hintKey = isMain and "UI.DISPLAY_MAIN_HINT" or (pickerOptions.hoverHintKey or "UI.DISPLAY_HOVER_HINT")
+            Theme:BindTooltip(control, entry.title, { Addon:T(hintKey) })
         end
+        row:RegisterForClicks("LeftButtonUp")
         row:SetScript("OnClick", entry.isCustom and function() picker:SetValue(tostring(entry.itemID)) end or nil)
-        Theme:BindTooltip(row, entry.title, { entry.isCustom and Addon:T("UI.CATALOG_SELECT_CUSTOM", tostring(entry.itemID)) or Addon:T("UI.CATALOG_BUILTIN_HINT") })
+        local rowHint = entry.isCustom and Addon:T("UI.CATALOG_SELECT_CUSTOM", tostring(entry.itemID)) or Addon:T("UI.CATALOG_BUILTIN_HINT")
+        local hints = { rowHint }
+        local targets = Addon.GoalTargets
+        local characterID = Addon.bindNativeGoalsInSettings and entry.source == "currency"
+            and targets and targets.ref and Core.Characters:GetCurrentID()
+        if characterID then
+            targets:Bind(row, entry.id, characterID)
+            hints[#hints + 1] = Addon:T("UI.GOAL_HINT", Core.BusinessItemActions:GestureLabel())
+        elseif row.currencyGoalBound then
+            Core.BusinessItemActions:Unbind(row)
+        end
+        row.currencyGoalBound = not not characterID
+        Theme:BindTooltip(row, entry.title, hints)
         row:Show()
     end
     for index = count + 1, #panel.rows do panel.rows[index]:Hide() end
@@ -215,32 +236,45 @@ function Addon:CreateSettingsPanel(parent, context)
     local panel = parent.ycuSettings or CreateFrame("Frame", nil, parent); parent.ycuSettings = panel
     panel:ClearAllPoints(); panel:SetPoint("TOPLEFT", parent, "TOPLEFT"); panel:SetWidth(parent:GetWidth()); panel:Show()
     local picker = ItemPicker(panel, context)
+    local onLayoutChanged = picker.config.OnLayoutChanged
+    picker.config.OnLayoutChanged = nil
     local pickerHeight = picker:Layout(panel:GetWidth())
+    picker.config.OnLayoutChanged = onLayoutChanged
     local transpose = panel.transpose or Theme:CreateCheckbox(panel, Addon:T("UI.HOVER_TRANSPOSE")); panel.transpose = transpose
     transpose:SetWidth(panel:GetWidth())
     transpose.label:SetWordWrap(true); transpose:SetHeight(math.max(Theme.Size.standard, transpose.label:GetStringHeight() + Theme.Space.sm))
-    transpose:SetChecked(Addon:GetSettings().hoverTranspose == true); transpose:Show()
+    transpose:SetChecked(Addon:IsHoverTransposed() == true); transpose:Show()
     transpose:SetScript("OnClick", function(control)
-        local enabled = not Addon:GetSettings().hoverTranspose
+        local enabled = not Addon:IsHoverTransposed()
         Addon:GetSettings().hoverTranspose = enabled; control:SetChecked(enabled)
         context.notifyPageChanged(); RefreshSettings(context)
     end)
-    local note = Label(panel, "catalogHelp", Addon:T("UI.CATALOG_MANAGE_HINT"), 0, Theme.Colors.muted)
+    local note = Label(panel, "catalogHelp", Addon:T(pickerOptions.helpKey or "UI.CATALOG_MANAGE_HINT"), 0, Theme.Colors.muted)
     note:SetWidth(picker.layoutContentWidth); note:SetWordWrap(true)
-    local reservedHeight = Theme.Size.standard * 2 + transpose:GetHeight() + Theme.Space.md + note:GetStringHeight() + Theme.Space.sm + pickerHeight
+    local reservedHeight = Theme.Size.standard + note:GetStringHeight() + Theme.Space.sm + pickerHeight
     local y = 0
+    transpose:ClearAllPoints()
+    local transposeHeight = transpose:GetHeight() + Theme.Space.md
+    if Addon.showTransposeAboveCatalog then
+        transpose:SetPoint("TOPLEFT", panel, "TOPLEFT")
+        y = transposeHeight
+    else
+        reservedHeight = reservedHeight + Theme.Size.standard + transposeHeight
+    end
     Label(panel, "display", Addon:T("UI.CATALOG_DISPLAY"), y); y = y + Theme.Size.standard
     y = CatalogList(panel, picker, context, y, panel.catalogFilter == "custom" and reservedHeight or 0)
     if panel.catalogFilter ~= "custom" then
-        transpose:Hide(); picker:Hide()
+        transpose:SetShown(Addon.showTransposeAboveCatalog == true); picker:Hide()
         for _, key in ipairs({ "business", "custom", "catalogHelp" }) do
             if panel.ycuLabels[key] then panel.ycuLabels[key]:Hide() end
         end
         panel:SetHeight(y); return y
     end
-    Label(panel, "business", Addon:T("UI.BUSINESS_SETTINGS"), y); y = y + Theme.Size.standard
-    transpose:ClearAllPoints(); transpose:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, -y); transpose:Show()
-    y = y + transpose:GetHeight() + Theme.Space.md
+    if not Addon.showTransposeAboveCatalog then
+        Label(panel, "business", Addon:T("UI.BUSINESS_SETTINGS"), y); y = y + Theme.Size.standard
+        transpose:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, -y)
+        y = y + transposeHeight
+    end
     Label(panel, "custom", Addon:T("UI.CATALOG_MANAGE"), y); y = y + Theme.Size.standard
     note:ClearAllPoints(); note:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, -y); note:Show()
     y = y + note:GetStringHeight() + Theme.Space.sm

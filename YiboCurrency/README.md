@@ -1,6 +1,6 @@
 # YiboCurrency - 货币管家
 
-当前版本：**1.1.0**。本版统一货币显示与目录管理，设置分为“内置”和“自定义与其它”两页；离线回归通过，实际客户端复验待完成。 请配套使用 **YiboCore 1.12.6 / API13**，启动时检查 `account-surface-budget:2` 及实际方法。
+当前源码版本为 **MoP 1.1.4／无限服 0.2.0**。双端共用货币目录投影、表格组件、悬停和设置。MoP 货币名称按实际字宽展开，无限服可分别勾选 5 项预置货币在主窗和悬停显示。请配套支持所需能力的 **YiboCore API13 或更高版本**。[双端验收记录](Docs/双端货币目标-第三批验收.md)
 
 YiboCurrency 1.1.0依赖 **YiboCore 1.12.6 / API13**，并要求 `character-archive-providers:1`、`character-cleanup:2`、`account-dynamic-fields:1` 等实际接入能力。使用 `/ycu` 打开统一账号窗口；`/ycu probe` 输出诊断。缺少必要能力时提示升级并停止初始化。
 

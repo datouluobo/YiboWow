@@ -11,18 +11,24 @@ function Addon:Initialize()
         and type(core.IsInitialized) == "function" and core:IsInitialized() and type(core.HasCapability) == "function"
     if valid then
         for name, version in pairs({ localization = 1, ["character-name-format"] = 1, ["character-identity"] = 1,
-            characters = 1, ["character-cleanup"] = 2, ["account-view"] = 2, ["account-entry"] = 2,
+            characters = 1, ["character-cleanup"] = 2, ["account-view"] = 2, ["account-entry"] = 2, ["account-dynamic-fields"] = 1,
             ["account-preview-characters"] = 1, ["account-character-admission"] = 1, ["account-surface-realm-scope"] = 1, ["account-surface-budget"] = 2,
             ["character-archive-providers"] = 1, ["business-providers"] = 1, ["item-picker"] = 1, ["item-resolver"] = 1, ["basic-input"] = 1 }) do
             if not core:HasCapability(name, version) then valid = false end
         end
     end
+    valid = valid and type(self.CreateCurrencyPage) == "function" and type(self.CreateSettingsPanel) == "function"
     for _, group in ipairs({ { core, "RegisterAddon", "CreateItemPicker", "Text" }, { core and core.Locale, "Get" },
         { core and core.Characters, "GetCurrentID", "GetCurrent", "FormatName", "Get" },
-        { core and core.AccountView, "RegisterPage", "NotifyPageChanged", "Toggle", "GetColumnPage", "UpdateColumnPager" },
+        { core and core.AccountView, "RegisterPage", "NotifyPageChanged", "Toggle", "GetScrollSurfaceWidth",
+            "GetColumnPage", "GetColumnPageByWidth", "FitRepeatedColumnWidth", "UpdateColumnPager",
+            "GetFieldVisible", "SetFieldVisible" },
         { core and core.Contracts, "Register", "NotifyChanged" }, { core and core.Entry, "RegisterBusinessEntry" }, { core and core.CharacterCleanup, "RegisterOwner" },
-        { core and core.Defaults, "Copy" }, { core and core.ItemResolver, "GetInfo", "Parse", "Request" },
-        { core and core.UITheme, "CreateText", "CreateButton", "CreateScrollFrame", "CreateDropdown", "CreateInput" } }) do
+        { core and core.ItemConfirmation, "Show" }, { core and core.Defaults, "Copy" }, { core and core.ItemResolver, "GetInfo", "Parse", "Request" },
+        { core and core.UITheme, "CreateText", "CreateButton", "CreateCheckbox", "BindTooltip", "CreateScrollFrame", "CreateDropdown", "CreateInput",
+            "GetMatrixInsets", "GetCharacterHeaderHeight", "GetCharacterMatrixColumnWidth", "GetCharacterRowHeaderWidth", "GetDataRowColor",
+            "CreateMatrixHeader", "SetMatrixHeader", "SetCharacterHeader", "MeasureText", "GetIconTextColumnWidth",
+            "UpdateCurrentCharacterColumnOutline", "UpdateCurrentCharacterRowOutline", "HideCurrentCharacterOutline" } }) do
         for index = 2, #group do if type(group[1]) ~= "table" or type(group[1][group[index]]) ~= "function" then valid = false end end
     end
     if not valid then
@@ -48,6 +54,7 @@ function Addon:Initialize()
     if not ok then self:Print(err); return false end
     ok, err = self.ArchiveProvider:Initialize(); if not ok then self:Print(err); return false end
     ok, err = self.AccountPage:Register(); if not ok then self:Print(err); return false end
+    self.GoalTargets:Initialize()
     self.initialized, self._unsupportedEvents = true, {}
     for _, event in ipairs({ "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "PLAYER_LOGOUT", "PLAYER_MONEY", "BAG_UPDATE_DELAYED", "CURRENCY_DISPLAY_UPDATE", "UNIT_INVENTORY_CHANGED" }) do
         local registered, reason = pcall(self.Frame.RegisterEvent, self.Frame, event)

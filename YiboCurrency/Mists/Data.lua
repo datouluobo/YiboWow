@@ -56,32 +56,12 @@ function Addon:AddCustomItem(itemID, expansion)
 end
 
 function Addon:GetFieldDefinitions()
-    local fields = {}
-    local visible = self:GetSettings().visible
-    for _, entry in ipairs(self:GetCatalog()) do
-        fields[#fields + 1] = { id = entry.id, title = entry.title, group = entry.expansion,
-            defaultVisible = visible[entry.id] ~= false }
-    end
-    return fields
+    return self:BuildDisplayFields(self:GetCatalog(), self:GetSettings().visible)
 end
-function Addon:IsVisible(entry)
-    return Core.AccountView:GetFieldVisible("currency", entry.id)
+function Addon:AddCatalogItem(info)
+    return self:AddCustomItem(info.itemID)
 end
-function Addon:GetCatalogEntry(reference)
-    local id = type(reference) == "table" and reference.id or reference
-    for _, entry in ipairs(self:GetCatalog()) do if entry.id == id then return entry end end
-end
-function Addon:SetCurrencyDisplay(reference, surface, visible)
-    local entry = self:GetCatalogEntry(reference)
-    if not entry then return false end
-    if surface == "main" then
-        Core.AccountView:SetFieldVisible("currency", entry.id, visible == true)
-    elseif surface == "hover" then
-        self:GetSettings().previewColumns[entry.id] = visible == true
-        self:NotifyChanged()
-    else return false end
-    return true
-end
+
 function Addon:SetVisible(entry, value)
     return self:SetCurrencyDisplay(entry, "main", value)
 end
@@ -94,23 +74,8 @@ function Addon:ToggleHoverCurrency(reference)
     local entry = self:GetCatalogEntry(reference)
     if not entry then return false end
     local enabled = not self:IsMonitored(entry)
-    if not self:SetCurrencyDisplay(entry.id, "hover", enabled) then return false end
-    self:Print(self:T(enabled and "UI.MONITOR_ADDED" or "UI.MONITOR_REMOVED", entry.title))
-    return true
+    return self:SetCurrencyDisplay(entry.id, "hover", enabled)
 end
-function Addon:GetMonitoredCatalog()
-    local result = {}
-    for _, entry in ipairs(self:GetCatalog()) do if self:IsMonitored(entry) then result[#result + 1] = entry end end
-    return result
-end
-function Addon:GetDisplayCatalog(preview, fields)
-    if preview then return self:GetMonitoredCatalog() end
-    local result, visible = {}, {}
-    for _, field in ipairs(fields or Core.AccountView:GetVisibleFields("currency")) do visible[field.id] = true end
-    for _, entry in ipairs(self:GetCatalog()) do if visible[entry.id] then result[#result + 1] = entry end end
-    return result
-end
-
 function Addon:GetIcon(entry)
     if entry.icon then return entry.icon end
     if entry.itemID and GetItemIcon then
@@ -181,6 +146,20 @@ function Addon:GetValue(character, entry, projection)
     if cell.quantity == nil then return nil, "unavailable" end
     if cell.state == "stale" or (cell.observedAt and self.Store.Now() - cell.observedAt > self.Store.MAX_AGE) then state = "historical" end
     return Copy(cell), state
+end
+
+function Addon:GetProjectionSnapshots(character)
+    return {
+        native = self.Store:Get(character.id, "native"),
+        carriedTokens = self.Store:Get(character.id, "carriedTokens"),
+    }
+end
+
+function Addon:GetProjectionCharacterMeta(character, projection)
+    local cached = projection and projection.snapshots[character.id] or self:GetProjectionSnapshots(character)
+    local economy, items = cached.native, cached.carriedTokens
+    return math.max(tonumber(economy and economy.observedAt) or 0, tonumber(items and items.observedAt) or 0),
+        (economy and economy.state) or (items and items.state) or "not-yet-scanned"
 end
 
 function Addon:ValueState(value, state)

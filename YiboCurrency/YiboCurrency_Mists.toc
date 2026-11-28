@@ -6,7 +6,7 @@
 ## Notes-zhCN: 多角色货币余额总览
 ## Notes-zhTW: 多角色貨幣餘額總覽
 ## Author: YiboSoft
-## Version: 1.1.3
+## Version: 1.1.4
 ## IconTexture: Interface\AddOns\YiboCurrency\Media\YiboCurrencyIcon-128
 ## SavedVariables: YiboCurrencyDB
 ## RequiredDeps: YiboCore
@@ -22,12 +22,12 @@ Mists/Catalog.lua
 Store.lua
 Migration.lua
 Scanner.lua
-Data.lua
+Mists/Data.lua
 VaultIntegration.lua
-Projection.lua
-AccountPage.lua
-Settings.lua
+Common/Projection.lua
+Common/AccountPage.lua
+Common/Settings.lua
 ArchiveProvider.lua
 CoreIntegration.lua
-GoalTargets.lua
+Common/GoalTargets.lua
 Mists/Commands.lua

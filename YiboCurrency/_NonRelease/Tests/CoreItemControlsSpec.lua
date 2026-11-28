@@ -151,8 +151,9 @@ Core.AccountView = {
     GetFieldVisible = function(_, _, id) return fieldVisibility[id] ~= false end,
     SetFieldVisible = function(_, _, id, visible) fieldVisibility[id] = visible end,
 }
-dofile("YiboCurrency/Data.lua")
-dofile("YiboCurrency/Settings.lua")
+dofile("YiboCurrency/Common/Catalog.lua")
+dofile("YiboCurrency/Mists/Data.lua")
+dofile("YiboCurrency/Common/Settings.lua")
 local host = CreateFrame("Frame", nil, UIParent)
 local refresh, reflows = 0, 0
 local context = { notifyPageChanged = function() end, refreshPage = function() refresh = refresh + 1 end }

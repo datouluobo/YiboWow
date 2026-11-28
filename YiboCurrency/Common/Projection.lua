@@ -1,4 +1,4 @@
-local Addon, Core = _G.YiboCurrency, _G.YiboCore
+local Addon = _G.YiboCurrency
 
 -- One read model is shared by surface sizing, rows, totals and row tooltips.
 -- It lives only in Core's per-refresh context; no SavedVariables are added.
@@ -15,10 +15,7 @@ function Addon:GetCurrencyProjection(context, characters, entries)
         end
     end
     for _, character in ipairs(characters) do
-        projection.snapshots[character.id] = {
-            native = self.Store:Get(character.id, "native"),
-            carriedTokens = self.Store:Get(character.id, "carriedTokens"),
-        }
+        projection.snapshots[character.id] = self:GetProjectionSnapshots(character)
     end
     projection.vault = self.GetVaultPersonalCounts and self:GetVaultPersonalCounts(characters, itemIDs)
     for _, entry in ipairs(entries) do
@@ -28,17 +25,25 @@ function Addon:GetCurrencyProjection(context, characters, entries)
         for _, character in ipairs(characters) do
             local value, state = self:GetValue(character, entry, projection)
             values[character.id] = { value = value, state = state }
-            local kind = self:ValueState(value, state)
-            if kind == "known" or kind == "bank" then
-                local quantity = entry.source == "item" and (value.total or value.carried or value.quantity) or value.quantity
-                if quantity ~= nil then total, confirmed = total + quantity, confirmed + 1 end
-                if kind == "bank" then bankPending = true end
-            else missing = missing + 1 end
+            if entry.totalAllowed ~= false then
+                local kind = self:ValueState(value, state)
+                if kind == "known" or kind == "bank" then
+                    local quantity = entry.source == "item" and (value.total or value.carried or value.quantity) or value.quantity
+                    if quantity ~= nil then total, confirmed = total + quantity, confirmed + 1 end
+                    if kind == "bank" then bankPending = true end
+                else missing = missing + 1 end
+            end
         end
         projection.totals[entry.id] = { quantity = total, confirmed = confirmed,
-            missing = missing, bankPending = bankPending, complete = missing == 0 and not bankPending }
+            missing = missing, bankPending = bankPending, complete = entry.totalAllowed ~= false and missing == 0 and not bankPending }
     end
     return projection
+end
+
+function Addon:FormatProjectionTotal(total, entry)
+    if entry.totalAllowed == false then return "—" end
+    return self:FormatCompact({ quantity = total.quantity }, entry)
+        .. (total.complete and "" or (total.bankPending and "~" or "?"))
 end
 
 function Addon:ProjectionValue(projection, character, entry)

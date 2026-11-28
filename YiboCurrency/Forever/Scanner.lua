@@ -39,7 +39,7 @@ function Scanner:Scan(confirmZero, confirmItems)
         and Addon.NativeAPI and Addon.NativeDiscovery and Addon.Store.nativeStore then
         local adapter = Addon.NativeAPI:ForClient(_G)
         local existingDir = Addon.Store:GetNativeDirectory()
-        local directory, observations, complete = Addon.NativeDiscovery:Collect(adapter, existingDir, stamp)
+        local directory, observations = Addon.NativeDiscovery:Collect(adapter, existingDir, stamp, Addon.NativeCatalog)
         if Addon.Store.nativeStore:Commit(id, directory, observations) then
             Addon.Store.freshObservationsID = id
             Addon.Store.freshObservations = observations

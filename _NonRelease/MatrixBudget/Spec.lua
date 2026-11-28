@@ -196,7 +196,7 @@ Check(emptyTargetColumns.naturalContentWidth < legendary:GetSurfaceMetrics(Conte
 
 -- Source invariant supplements runtime checks: business matrices must not own a track constant or screen budget.
 for _, path in ipairs({ "YiboAltoBoss/Mists/AccountPage.lua", "YiboAltoBoss/Common/LockoutsPage.lua", "YiboCrafting/AccountPage.lua",
-    "YiboLegendary/UI.lua", "YiboQuestBlocker/Common/AccountPage.lua", "YiboCurrency/AccountPage.lua", "YiboReputation/Common/AccountMatrixView.lua" }) do
+    "YiboLegendary/UI.lua", "YiboQuestBlocker/Common/AccountPage.lua", "YiboCurrency/Common/AccountPage.lua", "YiboReputation/Common/AccountMatrixView.lua" }) do
     local file = assert(io.open(path, "r")); local source = file:read("*a"); file:close()
     Check(not source:find("scrollbarGutter", 1, true) and not source:find("PREVIEW_SCROLLBAR_GUTTER", 1, true)
         and not source:find("GetScreenWidth", 1, true) and not source:find("GetPhysicalScreen", 1, true), path .. " delegates scroll/screen geometry to Core")

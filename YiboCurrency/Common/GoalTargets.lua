@@ -17,7 +17,7 @@ function Targets:Normalize(r)
     return { intent = clean, title = entry.title .. " ≥ " .. c.quantity, identity = self.PROVIDER .. ":" .. clean.scope.characterID .. ":" .. entry.id .. ":" .. c.mode, fields = fields }
 end
 function Targets:Evaluate(r)
-    local db = Addon:EnsureDB()
+    local db = Addon.Store.db
     local result = { sourceEpoch = db.goalSourceEpoch, revision = db.goalRevision or 0, sourceTitle = Addon:T("CURRENCY.CURRENCY_TRACKER_D84A55"), evaluations = {} }
     for _, goal in ipairs(r.goals or {}) do
         local clean, err = self:Normalize({ intent = goal.intent })
@@ -45,12 +45,19 @@ function Targets:Initialize()
         and type(core.BusinessItemActions.Handle) == "function" and type(core.BusinessItemActions.Unbind) == "function"
         and type(core.BusinessItemActions.GestureLabel) == "function") then core:Print(Addon:T("CURRENCY.GOAL_ACTIONS_REQUIRE_CORE_API13_WITH_GOAL_PROVIDER_AND__DE2E6B")); return end
     if self.ref then return true end
-    local db = Addon:EnsureDB()
+    local db = Addon.Store.db
     db.goalSourceEpoch = db.goalSourceEpoch or ("yibocurrency:" .. GetServerTime() .. ":" .. math.random(100000,999999))
     self.definition = { name = "action.targets", kind = "provider", providerID = self.PROVIDER, version = { major = 1, minor = 1 },
         methods = { GetEntry = function() return { title = Addon:T("CURRENCY.CURRENCY_219994"), pageID = "currency" } end, Normalize = function(r) return Targets:Normalize(r) end, Evaluate = function(r) return Targets:Evaluate(r) end } }
     self.ref = core.Contracts:Register("YiboCurrency", self.definition); return self.ref ~= nil
 end
+function Targets:NotifyChanged()
+    if not self.ref then return end
+    local db = Addon.Store.db
+    db.goalRevision = (db.goalRevision or 0) + 1
+    Core.Contracts:NotifyChanged(Addon.NAME, self.ref, { reason = "currency-changed" })
+end
+
 function Targets:Bind(control, objectID, characterID, original)
     if not self.ref then return end
     local core = Core

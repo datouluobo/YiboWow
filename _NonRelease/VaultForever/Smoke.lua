@@ -397,7 +397,7 @@ do
         LoadManifest(load, "YiboCurrency", "YiboCurrency_Forever.toc")
         event("ADDON_LOADED", "YiboCurrency")
         Check(client.YiboCurrency.initialized and not client.YiboVault, "real Currency manifest starts before optional Vault provider")
-        Check(client.YiboCurrency.CustomItems:Add({ itemID = 9001, name = "NativeItem9001" }), "track the bank fixture item")
+        Check(client.YiboCurrency:AddCatalogItem({ itemID = 9001, name = "NativeItem9001" }), "track the bank fixture item")
     end)
     local currency = e.YiboCurrency
     Check(v.initialized and v._unsupportedEvents.PLAYERBANKSLOTS_CHANGED, "unsupported optional bank event does not break startup")
@@ -461,7 +461,7 @@ do
     bank.open = false; fire("BANKFRAME_CLOSED"); drain()
     Check(panel.renderedStatus == "stale" and #panel.renderedRecords == 2, "closed bank keeps previous snapshot with stale status")
     c.AccountView:Toggle("currency"); drain()
-    local token = c.AccountView.frame.instances.currency.itemRows[1]
+    local token = c.AccountView.frame.instances.currency.currencyMain.itemRows[1]
     token:Fire("OnEnter")
     Check(e.GameTooltip.lines[2].value == "3" and e.GameTooltip.lines[4].value == currency:T("FOREVER.CUSTOM_STALE", "11"),
         "real Currency tooltip shows independent carried and historical bank counts")

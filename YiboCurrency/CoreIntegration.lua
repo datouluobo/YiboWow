@@ -29,7 +29,7 @@ function Integration:Initialize()
         { Core.Entry, "RegisterBusinessEntry" }, { Core.CharacterCleanup, "RegisterOwner", "IsLegacyImportBlocked" },
         { Core.DataDomains, "Get", "GetDefinitions" }, { Core.Events, "Register" },
         { Core.LevelFilter, "Validate" }, { Core.ItemConfirmation, "Show" },
-        { Core.UITheme, "CreateInput", "CreateCheckbox", "CreateButton", "CreateText", "BindTooltip", "GetDataRowColor", "MeasureText", "SetCharacterHeader", "GetCharacterMatrixColumnWidth", "GetCharacterRowHeaderWidth" },
+        { Core.UITheme, "CreateInput", "CreateCheckbox", "CreateButton", "CreateText", "BindTooltip", "GetDataRowColor", "MeasureText", "GetIconTextColumnWidth", "SetCharacterHeader", "GetCharacterMatrixColumnWidth", "GetCharacterRowHeaderWidth" },
         { Core.Defaults, "Copy" },
     }
     if not Core.ItemResolver then return nil, upgrade end
@@ -102,7 +102,10 @@ function Integration:Initialize()
     Addon.Scanner:Initialize()
     return true
 end
-function Addon:NotifyChanged() if self.GoalTargets and self.GoalTargets.ref then local db = self:EnsureDB(); db.goalRevision = (db.goalRevision or 0) + 1; Core.Contracts:NotifyChanged(self.NAME, self.GoalTargets.ref, { reason = "currency-changed" }) end; if Core and Core.AccountView then Core.AccountView:NotifyPageChanged(PAGE_ID) end end
+function Addon:NotifyChanged()
+    if self.GoalTargets then self.GoalTargets:NotifyChanged() end
+    if Core and Core.AccountView then Core.AccountView:NotifyPageChanged(PAGE_ID) end
+end
 function Addon:OpenAccountPage()
     if not Integration.initialized then Addon:Print(Addon:UpgradeMessage()); return end
     Core.AccountView:Toggle(PAGE_ID)

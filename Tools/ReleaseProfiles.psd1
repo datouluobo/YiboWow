@@ -210,7 +210,7 @@
                     CurseForgeFlavor = 'mists'
                     CurseForgeVersionNames = @('5.5.4')
                     LuaVersion = '5.1'
-                    ValidationState = 'existing-mists-baseline'
+                    ValidationState = 'mists-1.1.4-source-layout-confirmed-package-client-pending-20261128'
                 }
                 Forever = @{
                     SourceToc = 'YiboCurrency_Forever.toc'
@@ -223,7 +223,7 @@
                     CurseForgeFlavor = 'forever'
                     CurseForgeVersionNames = @('1.60.1')
                     LuaVersion = '5.1'
-                    ValidationState = 'forever-0.1.9-realm-scope-client-pending-20261111'
+                    ValidationState = 'forever-0.2.0-source-preview-confirmed-package-client-pending-20261128'
                 }
             }
         }

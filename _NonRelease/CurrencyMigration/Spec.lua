@@ -22,14 +22,15 @@ WOW_PROJECT_ID, WOW_PROJECT_MISTS_CLASSIC = 19, 19
 dofile("YiboCurrency/Mists/Bootstrap.lua")
 dofile("YiboCurrency/Locales/zhCN.lua")
 dofile("YiboCurrency/Locales/enUS.lua")
+dofile("YiboCurrency/Common/Catalog.lua")
 dofile("YiboCurrency/Store.lua")
 dofile("YiboCurrency/Migration.lua")
 dofile("YiboCurrency/Scanner.lua")
-dofile("YiboCurrency/Data.lua")
+dofile("YiboCurrency/Mists/Data.lua")
 dofile("YiboCurrency/VaultIntegration.lua")
-dofile("YiboCurrency/Projection.lua")
+dofile("YiboCurrency/Common/Projection.lua")
 dofile("YiboCurrency/ArchiveProvider.lua")
-dofile("YiboCurrency/GoalTargets.lua")
+dofile("YiboCurrency/Common/GoalTargets.lua")
 local Addon = YiboCurrency
 Addon.NotifyChanged = function() end
 Addon.Catalog = { { id = "money", source = "money", title = "Gold" },

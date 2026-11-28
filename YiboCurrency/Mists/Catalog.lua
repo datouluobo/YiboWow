@@ -2,9 +2,9 @@ local Addon = _G.YiboCurrency
 
 -- The order below is the native Currency tab's functional grouping. Status is
 -- data provenance, not a visibility rule: legacy balances remain readable.
-local function Currency(id, title, short, expansion, sourceType, status)
+local function Currency(id, title, short, expansion, sourceType, status, preservePreviewLabel)
     return { id = "currency:" .. id, currencyID = id, title = title, shortTitle = short, icon = nil,
-        expansion = expansion, source = "currency", sourceType = sourceType or Addon:T("CURRENCY.STANDARD_CURRENCY_F0C941"),
+        expansion = expansion, source = "currency", preservePreviewLabel = preservePreviewLabel, sourceType = sourceType or Addon:T("CURRENCY.STANDARD_CURRENCY_F0C941"),
         status = status or Addon:T("CURRENCY.LEGACY_BALANCE_BEED3F"), totalAllowed = true, verified = "pending-client" }
 end
 
@@ -52,9 +52,9 @@ Addon.Catalog = {
     Currency(396, Addon:T("CURRENCY.VALOR_POINTS_5983A0"), Addon:T("CURRENCY.VALOR_5C5DBB"), Addon:T("CURRENCY.CATACLYSM_MISTS_OF_PANDARIA_AFE11B"), nil, CURRENT),
     Currency(614, Addon:T("CURRENCY.MOTE_OF_DARKNESS_56A6A6"), Addon:T("CURRENCY.DARKNESS_0B9A38"), Addon:T("CURRENCY.CATACLYSM_DRAGON_SOUL_DBCD00"), nil, LEGACY),
     Currency(615, Addon:T("CURRENCY.ESSENCE_OF_CORRUPTED_DEATHWING_3026C9"), Addon:T("CURRENCY.DEATHWING_ESSENCE_110D73"), Addon:T("CURRENCY.CATACLYSM_DRAGON_SOUL_DBCD00"), nil, LEGACY),
-    Currency(3350, Addon:T("CURRENCY.CELESTIAL_STONE_FRAGMENT_317581"), Addon:T("CURRENCY.STONE_FRAGMENTS_C6B724"), Addon:T("CURRENCY.MISTS_OF_PANDARIA_21D5E3"), nil, CURRENT),
-    Currency(3414, Addon:T("CURRENCY.CELESTIAL_STONE_CHUNK_1752F6"), Addon:T("CURRENCY.STONE_CHUNKS_187562"), Addon:T("CURRENCY.MISTS_OF_PANDARIA_21D5E3"), nil, CURRENT),
-    Currency(3416, Addon:T("CURRENCY.CELESTIAL_STONE_CLUSTER_7EF901"), Addon:T("CURRENCY.STONE_CLUSTERS_23419C"), Addon:T("CURRENCY.MISTS_OF_PANDARIA_21D5E3"), nil, CURRENT),
+    Currency(3350, Addon:T("CURRENCY.CELESTIAL_STONE_FRAGMENT_317581"), Addon:T("CURRENCY.STONE_FRAGMENTS_C6B724"), Addon:T("CURRENCY.MISTS_OF_PANDARIA_21D5E3"), nil, CURRENT, true),
+    Currency(3414, Addon:T("CURRENCY.CELESTIAL_STONE_CHUNK_1752F6"), Addon:T("CURRENCY.STONE_CHUNKS_187562"), Addon:T("CURRENCY.MISTS_OF_PANDARIA_21D5E3"), nil, CURRENT, true),
+    Currency(3416, Addon:T("CURRENCY.CELESTIAL_STONE_CLUSTER_7EF901"), Addon:T("CURRENCY.STONE_CLUSTERS_23419C"), Addon:T("CURRENCY.MISTS_OF_PANDARIA_21D5E3"), nil, CURRENT, true),
 
     -- 熊猫人之谜
     Currency(776, Addon:T("CURRENCY.WARFORGED_SEAL_5B96AD"), Addon:T("CURRENCY.WARFORGED_E45D39"), Addon:T("CURRENCY.MISTS_OF_PANDARIA_21D5E3"), nil, CURRENT),

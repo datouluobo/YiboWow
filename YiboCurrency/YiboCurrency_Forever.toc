@@ -5,7 +5,7 @@
 ## Notes: Current character money snapshot. Requires YiboCore API13.
 ## Notes-zhCN: 当前角色金币只读快照，需要 YiboCore API13。
 ## Author: YiboSoft
-## Version: 0.1.9
+## Version: 0.2.0
 ## IconTexture: Interface\AddOns\YiboCurrency\Media\YiboCurrencyIcon-128
 ## SavedVariables: YiboCurrencyForeverDB
 ## RequiredDeps: YiboCore
@@ -25,5 +25,9 @@ Forever/Store.lua
 Forever/Scanner.lua
 Forever/CustomItems.lua
 ArchiveProvider.lua
+Common/Projection.lua
+Common/AccountPage.lua
+Common/Settings.lua
+Common/GoalTargets.lua
 Forever/AccountPage.lua
 Forever/Bootstrap.lua

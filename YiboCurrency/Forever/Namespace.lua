@@ -1,4 +1,4 @@
-local Addon = { NAME = "YiboCurrency", VERSION = "0.1.9", PAGE_ID = "currency" }
+local Addon = { NAME = "YiboCurrency", VERSION = "0.2.0", PAGE_ID = "currency" }
 _G.YiboCurrency = Addon
 Addon.Frame = CreateFrame("Frame")
 function Addon:T(key, ...) return _G.YiboCore.Locale:Get(self.NAME, key, ...) end
@@ -7,6 +7,7 @@ function Addon:Print(message)
 end
 function Addon:NotifyChanged()
     if not self.Core then return end
+    self.GoalTargets:NotifyChanged()
     self.Core.AccountView:NotifyPageChanged(self.PAGE_ID)
     if self.ArchiveProvider and self.ArchiveProvider.ref then
         self.Core.Contracts:NotifyChanged(self.NAME, self.ArchiveProvider.ref, {reason="currency-changed"})

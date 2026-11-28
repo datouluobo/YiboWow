@@ -21,7 +21,7 @@ end
 -- Existing entries are copied so a failed or partial scan cannot remove them.
 -- Adapter:List() returns rows, complete; Adapter:Detail(id) returns a row or nil.
 -- The caller chooses when and where the returned delta is committed.
-function Discovery:Collect(adapter, existing, stamp)
+function Discovery:Collect(adapter, existing, stamp, nativeCatalog)
     assert(type(adapter) == "table" and type(adapter.List) == "function" and type(adapter.Detail) == "function")
     assert(ValidCount(stamp))
     local directory, observations = {}, {}
@@ -42,10 +42,15 @@ function Discovery:Collect(adapter, existing, stamp)
             complete = false
         end
     end
-    for id, entry in pairs(directory) do
+    local queryIDs = {}
+    for id in pairs(directory) do queryIDs[id] = true end
+    for id in pairs(nativeCatalog or {}) do queryIDs[id] = true end
+    for id in pairs(queryIDs) do
         local detailOK, detail = pcall(adapter.Detail, adapter, id)
         if detailOK and ValidIdentity(detail) and detail.id == id then
+            local entry = directory[id] or { id = id, discoveredAt = stamp }
             entry.name, entry.icon, entry.updatedAt = detail.name, detail.icon or entry.icon, stamp
+            directory[id] = entry
             if ValidCount(detail.quantity) then
                 observations[id] = { quantity = detail.quantity, observedAt = stamp, state = "known" }
             end

@@ -324,11 +324,11 @@ Equal(Task(unknown.id).readiness, "unknown", "unknown instance not inferred")
 -- Remaining business providers keep their own completion interpretation.
 Register("YiboCurrency")
 local balance, balanceState = 3, "known"
-YiboCurrency = { NAME="YiboCurrency", Core=Core, db={}, EnsureDB=function(self)return self.db end,
+YiboCurrency = { NAME="YiboCurrency", Core=Core, Store={db={}},
  GetCatalog=function()return {{id="money",title="金币",source="money"}}end,
  GetValue=function()return {quantity=balance},balanceState end }
 Localize("YiboCurrency", { "zhCN", "enUS" })
-dofile("YiboCurrency/GoalTargets.lua"); local Currency=YiboCurrency.GoalTargets;assert(Currency:Initialize())
+dofile("YiboCurrency/Common/GoalTargets.lua"); local Currency=YiboCurrency.GoalTargets;assert(Currency:Initialize())
 local money=assert(Hub.Goals:Add({providerID=Currency.PROVIDER,objectID="money",scope={characterID="C"},conditions={quantity=5,mode="maintain"}}))
 Equal(Task(money.id).readiness,"actionable"); balanceState="stale";balance=10;Hub.Contracts:Invalidate(Currency.PROVIDER)
 Equal(Task(money.id).readiness,"unknown","stale money cannot satisfy")

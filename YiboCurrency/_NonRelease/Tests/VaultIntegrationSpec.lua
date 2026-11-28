@@ -43,7 +43,7 @@ for id, snapshot in pairs(snapshots) do
     currencyDB.characters[id] = { carriedTokens = { state = "partial", observedAt = GetServerTime(), revision = 1,
         provenance = { kind = "client-carried" }, data = { items = items } } }
 end
-dofile("YiboCurrency/Data.lua")
+dofile("YiboCurrency/Mists/Data.lua")
 dofile("YiboCurrency/VaultIntegration.lua")
 local entry = { source = "item", itemID = 72988, verified = "implemented" }
 local balance = YiboCurrency:TotalFor(characters, entry)
@@ -129,7 +129,7 @@ assert(accountCounts.characters["A-Realm"].items[888].bags == 1
     and accountCounts.characters["B-Realm"].items[888].bags == 1
     and accountCounts.characters["C-Realm"].items[888].bank == nil,
     "batch counts distinguish known zero from unscanned sources")
-dofile("YiboCurrency/Projection.lua")
+dofile("YiboCurrency/Common/Projection.lua")
 local countCalls, originalCounts = 0, YiboVault.Items.GetPersonalCounts
 YiboVault.Items.GetPersonalCounts = function(self, options)
     countCalls = countCalls + 1
